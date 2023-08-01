@@ -47,7 +47,7 @@ class XmdsPlayerBundleListener
         $forceUpdate = false;
         $bundlePath = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'assets/bundle.min.js';
         if (!file_exists($bundlePath)) {
-            $result = copy(PROJECT_ROOT . '/modules/bundle.min.js', $bundlePath);
+            $result = @copy(PROJECT_ROOT . '/modules/bundle.min.js', $bundlePath);
             if (!$result) {
                 throw new GeneralException('Unable to copy asset');
             }

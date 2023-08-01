@@ -82,7 +82,7 @@ class Asset implements \JsonSerializable
         // Verify the asset is cached and update its path.
         $assetPath = $libraryLocation . 'assets/' . $this->getFilename();
         if (!file_exists($assetPath) || $forceUpdate) {
-            $result = copy(PROJECT_ROOT . $this->path, $assetPath);
+            $result = @copy(PROJECT_ROOT . $this->path, $assetPath);
             if (!$result) {
                 throw new GeneralException('Unable to copy asset');
             }

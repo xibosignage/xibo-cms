@@ -277,12 +277,18 @@ class MaintenanceDailyTask implements TaskInterface
     private function cacheAssets(): void
     {
         // Assets
+        $failedCount = 0;
         $assets = array_merge($this->moduleFactory->getAllAssets(), $this->moduleTemplateFactory->getAllAssets());
         foreach ($assets as $asset) {
-            $asset->updateAssetCache($this->libraryLocation, true);
+            try {
+                $asset->updateAssetCache($this->libraryLocation, true);
+            } catch (GeneralException $exception) {
+                $failedCount++;
+                $this->log->error('Unable to copy asset: ' . $asset->id . ', e: ' . $exception->getMessage());
+            }
         }
 
-        $this->appendRunMessage(__('Assets cached'));
+        $this->appendRunMessage(sprintf(__('Assets cached, %d failed.'), $failedCount));
     }
 
     /**
