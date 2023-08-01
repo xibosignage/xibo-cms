@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -305,12 +305,12 @@ class DataSetColumn implements \JsonSerializable
     /**
      * Delete
      */
-    public function delete()
+    public function delete(bool $isDeletingDataset = false): void
     {
         $this->getStore()->update('DELETE FROM `datasetcolumn` WHERE DataSetColumnID = :dataSetColumnId', ['dataSetColumnId' => $this->dataSetColumnId]);
 
-        // Delete column
-        if (($this->dataSetColumnTypeId == 1) || ($this->dataSetColumnTypeId == 3)) {
+        // Delete column (unless remote, or dropping the whole dataset)
+        if (!$isDeletingDataset && $this->dataSetColumnTypeId !== 2) {
             $this->getStore()->update('ALTER TABLE `dataset_' . $this->dataSetId . '` DROP `' . $this->heading . '`', []);
         }
     }
