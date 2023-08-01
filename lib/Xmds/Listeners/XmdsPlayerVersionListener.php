@@ -89,7 +89,7 @@ class XmdsPlayerVersionListener
 
         if ($event->getFileType() === 'playersoftware') {
             $version = $this->playerVersionFactory->getById($event->getRealId());
-            $event->setRelativePathToLibrary('/playersoftware/' . $version->fileName);
+            $event->setRelativePathToLibrary('playersoftware/' . $version->fileName);
         }
     }
 }

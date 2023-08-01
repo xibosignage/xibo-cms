@@ -2654,12 +2654,12 @@ $metroRenderContainer.xiboMetroRender(properties, itemsHTML, colors);
 $metroRenderContainer.find('.cell').xiboImageRender(properties);
         ]]></onTemplateRender>
         <assets>
-            <asset id="colors1" type="path" mime="image/png" path="/modules/assets/metro-colors/colors1.png"></asset>
-            <asset id="colors2" type="path" mime="image/png" path="/modules/assets/metro-colors/colors2.png"></asset>
-            <asset id="colors3" type="path" mime="image/png" path="/modules/assets/metro-colors/colors3.png"></asset>
-            <asset id="colors4" type="path" mime="image/png" path="/modules/assets/metro-colors/colors4.png"></asset>
-            <asset id="colors5" type="path" mime="image/png" path="/modules/assets/metro-colors/colors5.png"></asset>
-            <asset id="colors6" type="path" mime="image/png" path="/modules/assets/metro-colors/colors6.png"></asset>
+            <asset id="colors1" type="path" mime="image/png" path="/modules/assets/metro-colors/colors1.png" cmsOnly="true"></asset>
+            <asset id="colors2" type="path" mime="image/png" path="/modules/assets/metro-colors/colors2.png" cmsOnly="true"></asset>
+            <asset id="colors3" type="path" mime="image/png" path="/modules/assets/metro-colors/colors3.png" cmsOnly="true"></asset>
+            <asset id="colors4" type="path" mime="image/png" path="/modules/assets/metro-colors/colors4.png" cmsOnly="true"></asset>
+            <asset id="colors5" type="path" mime="image/png" path="/modules/assets/metro-colors/colors5.png" cmsOnly="true"></asset>
+            <asset id="colors6" type="path" mime="image/png" path="/modules/assets/metro-colors/colors6.png" cmsOnly="true"></asset>
         </assets>
     </template>
 </templates>

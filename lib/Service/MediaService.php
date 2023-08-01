@@ -300,6 +300,10 @@ class MediaService implements MediaServiceInterface
             mkdir($libraryFolder . '/savedreport', 0777, true);
         }
 
+        if (!file_exists($libraryFolder . '/assets')) {
+            mkdir($libraryFolder . '/assets', 0777, true);
+        }
+
         // Check that we are now writable - if not then error
         if (!is_writable($libraryFolder)) {
             throw new ConfigurationException(__('Library not writable'));

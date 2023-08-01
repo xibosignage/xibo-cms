@@ -910,6 +910,8 @@ class Soap
                                     continue;
                                 }
 
+                                $asset->updateAssetCache($libraryLocation);
+
                                 // Add a new required file for this.
                                 try {
                                     $this->addDependency(
@@ -944,6 +946,8 @@ class Soap
                                         if (!$asset->isSendToPlayer()) {
                                             continue;
                                         }
+
+                                        $asset->updateAssetCache($libraryLocation);
 
                                         // Add a new required file for this.
                                         try {
@@ -2738,7 +2742,7 @@ class Soap
             ->createForGetDependency(
                 $this->display->displayId,
                 $dependency->fileType,
-                $isSupportsDependency ? $dependency->id : $dependency->legacyId,
+                $dependency->legacyId,
                 $dependency->id,
                 $dependencyBasePath,
                 $isSupportsDependency

@@ -24,6 +24,8 @@ namespace Xibo\Xmds\Listeners;
 
 use Xibo\Event\XmdsDependencyListEvent;
 use Xibo\Event\XmdsDependencyRequestEvent;
+use Xibo\Listener\ListenerCacheTrait;
+use Xibo\Listener\ListenerConfigTrait;
 use Xibo\Listener\ListenerLoggerTrait;
 
 /**
@@ -34,22 +36,36 @@ use Xibo\Listener\ListenerLoggerTrait;
 class XmdsPlayerBundleListener
 {
     use ListenerLoggerTrait;
+    use ListenerConfigTrait;
 
     public function onDependencyList(XmdsDependencyListEvent $event)
     {
         $this->getLogger()->debug('onDependencyList: XmdsPlayerBundleListener');
 
         // Output the player bundle
-        $bundlePath = PROJECT_ROOT . '/modules/bundle.min.js';
-        $bundleSize = filesize($bundlePath);
+        $forceUpdate = false;
+        $bundlePath = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'assets/bundle.min.js';
+        if (!file_exists($bundlePath)) {
+            copy(PROJECT_ROOT . '/modules/bundle.min.js', $bundlePath);
+            $forceUpdate = true;
+        }
+
+        // Get the bundle MD5
+        $bundleMd5CachePath = $bundlePath . '.md5';
+        if (!file_exists($bundleMd5CachePath) || $forceUpdate) {
+            $bundleMd5 = md5_file($bundlePath);
+            file_put_contents($bundleMd5CachePath, $bundleMd5);
+        } else {
+            $bundleMd5 = file_get_contents($bundlePath . '.md5');
+        }
 
         $event->addDependency(
             'bundle',
             1,
-            PROJECT_ROOT . '/modules/bundle.min.js',
-            $bundleSize,
-            md5_file($bundlePath),
-            false,
+            'assets/bundle.min.js',
+            filesize($bundlePath),
+            $bundleMd5,
+            true,
             -1
         );
     }
@@ -58,10 +74,8 @@ class XmdsPlayerBundleListener
     {
         // Can we return this type of file?
         if ($event->getFileType() === 'bundle' && $event->getRealId() == 1) {
-            // Yes!
-            // we only set a full path as this file not available over HTTP (it can't be because it isn't stored
-            // under the library folder).
-            $event->setFullPath(PROJECT_ROOT . '/modules/bundle.min.js');
+            // Set the path
+            $event->setRelativePathToLibrary('assets/bundle.min.js');
 
             // No need to carry on, we've found it.
             $event->stopPropagation();

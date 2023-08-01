@@ -29,9 +29,12 @@ use Xibo\Event\MaintenanceDailyEvent;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\FontFactory;
 use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\ModuleFactory;
+use Xibo\Factory\ModuleTemplateFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\DatabaseLogHandler;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Service\MediaService;
 use Xibo\Service\MediaServiceInterface;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
@@ -58,10 +61,18 @@ class MaintenanceDailyTask implements TaskInterface
 
     /** @var DataSetFactory */
     private $dataSetFactory;
-    /**
-     * @var FontFactory
-     */
+
+    /** @var FontFactory */
     private $fontFactory;
+
+    /** @var ModuleFactory */
+    private $moduleFactory;
+
+    /** @var ModuleTemplateFactory */
+    private $moduleTemplateFactory;
+
+    /** @var string */
+    private $libraryLocation;
 
     /** @inheritdoc */
     public function setFactories($container)
@@ -72,6 +83,8 @@ class MaintenanceDailyTask implements TaskInterface
         $this->dataSetFactory = $container->get('dataSetFactory');
         $this->mediaService = $container->get('mediaService');
         $this->fontFactory = $container->get('fontFactory');
+        $this->moduleFactory = $container->get('moduleFactory');
+        $this->moduleTemplateFactory = $container->get('moduleTemplateFactory');
         return $this;
     }
 
@@ -80,8 +93,20 @@ class MaintenanceDailyTask implements TaskInterface
     {
         $this->runMessage = '# ' . __('Daily Maintenance') . PHP_EOL . PHP_EOL;
 
-        // Long running task
+        // Long-running task
         set_time_limit(0);
+
+        // Make sure our library structure is as it should be
+        $this->libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+        MediaService::ensureLibraryExists($this->libraryLocation);
+
+        // TODO: should we remove all bundle/asset cache before we start?
+
+        // Player bundle
+        $this->cachePlayerBundle();
+
+        // Cache Assets
+        $this->cacheAssets();
 
         // Import layouts
         $this->importLayouts();
@@ -134,7 +159,7 @@ class MaintenanceDailyTask implements TaskInterface
 
     /**
      * Import Layouts
-     * @throws GeneralException
+     * @throws GeneralException|\FontLib\Exception\FontNotFoundException
      */
     private function importLayouts()
     {
@@ -235,5 +260,37 @@ class MaintenanceDailyTask implements TaskInterface
         } else {
             $this->runMessage .= ' - ' . __('Not Required.') . PHP_EOL . PHP_EOL;
         }
+    }
+
+    /**
+     * Refresh the cache of assets
+     * @return void
+     * @throws GeneralException
+     */
+    private function cacheAssets(): void
+    {
+        // Assets
+        $assets = array_merge($this->moduleFactory->getAllAssets(), $this->moduleTemplateFactory->getAllAssets());
+        foreach ($assets as $asset) {
+            $asset->updateAssetCache($this->libraryLocation, true);
+        }
+
+        $this->appendRunMessage(__('Assets cached'));
+    }
+
+    /**
+     * Cache the player bundle.
+     * @return void
+     */
+    private function cachePlayerBundle(): void
+    {
+        // Output the player bundle
+        $bundlePath = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'assets/bundle.min.js';
+        $bundleMd5CachePath = $bundlePath . '.md5';
+
+        copy(PROJECT_ROOT . '/modules/bundle.min.js', $bundlePath);
+        file_put_contents($bundleMd5CachePath, md5_file($bundlePath));
+
+        $this->appendRunMessage(__('Player bundle cached'));
     }
 }
