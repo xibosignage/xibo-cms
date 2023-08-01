@@ -129,6 +129,10 @@ class Asset implements \JsonSerializable
         );
     }
 
+    /**
+     * Get the file name for this asset
+     * @return string
+     */
     public function getFilename(): string
     {
         return basename($this->path);
