@@ -101,22 +101,5 @@ class AddFontsTableMigration extends AbstractMigration
         if (file_exists($libraryLocation . 'fonts.css')) {
             @unlink($libraryLocation . 'fonts.css');
         }
-
-        // add a task that will re-generate fonts.css for the player
-        $this->table('task')
-            ->insert([
-            [
-                'name' => 'Generate Player font css',
-                'class' => '\Xibo\XTR\GeneratePlayerCssTask',
-                'options' => '[]',
-                'schedule' => '*/5 * * * * *',
-                'isActive' => '1',
-                'configFile' => '/tasks/player-css.task',
-                'pid' => 0,
-                'lastRunDt' => 0,
-                'lastRunDuration' => 0,
-                'lastRunExitCode' => 0
-            ],
-        ])->save();
     }
 }

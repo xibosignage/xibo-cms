@@ -24,7 +24,6 @@ namespace Xibo\XTR;
 
 use Carbon\Carbon;
 use Xibo\Controller\Module;
-use Xibo\Entity\Font;
 use Xibo\Event\MaintenanceDailyEvent;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\FontFactory;
@@ -97,19 +96,33 @@ class MaintenanceDailyTask implements TaskInterface
         set_time_limit(0);
 
         // Make sure our library structure is as it should be
-        $this->libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
-        MediaService::ensureLibraryExists($this->libraryLocation);
-
-        // TODO: should we remove all bundle/asset cache before we start?
-
-        // Player bundle
-        $this->cachePlayerBundle();
-
-        // Cache Assets
-        $this->cacheAssets();
+        try {
+            $this->libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+            MediaService::ensureLibraryExists($this->libraryLocation);
+        } catch (\Exception $exception) {
+            $this->getLogger()->error('Library structure invalid, e = ' . $exception->getMessage());
+            $this->appendRunMessage(__('Library structure invalid'));
+        }
 
         // Import layouts
         $this->importLayouts();
+
+        try {
+            $this->appendRunMessage(__('## Build caches'));
+
+            // TODO: should we remove all bundle/asset cache before we start?
+            // Player bundle
+            $this->cachePlayerBundle();
+
+            // Cache Assets
+            $this->cacheAssets();
+
+            // Fonts
+            $this->mediaService->setUser($this->userFactory->getSystemUser())->updateFontsCss();
+        } catch (\Exception $exception) {
+            $this->getLogger()->error('Failure to build caches, e = ' . $exception->getMessage());
+            $this->appendRunMessage(__('Failure to build caches'));
+        }
 
         // Tidy logs
         $this->tidyLogs();
@@ -211,10 +224,11 @@ class MaintenanceDailyTask implements TaskInterface
                 }
             }
 
+            // Fonts
+            // -----
             // install fonts from the theme folder
             $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
             $fontFolder =  $this->config->uri('fonts', true);
-            $fontsAdded = false;
             foreach (array_diff(scandir($fontFolder), array('..', '.')) as $file) {
                 // check if we already have this font file
                 if (count($this->fontFactory->getByFileName($file)) <= 0) {
@@ -231,7 +245,6 @@ class MaintenanceDailyTask implements TaskInterface
                         continue;
                     }
 
-                    /** @var Font $font */
                     $font = $this->fontFactory->createEmpty();
                     $font->modifiedBy = $this->userFactory->getSystemUser()->userName;
                     $font->name = $fontLib->getFontName() . ' ' . $fontLib->getFontSubfamily();
@@ -241,17 +254,11 @@ class MaintenanceDailyTask implements TaskInterface
                     $font->md5 = md5_file($filePath);
                     $font->save();
 
-                    $fontsAdded = true;
                     $copied = copy($filePath, $libraryLocation . 'fonts/' . $file);
                     if (!$copied) {
                         $this->getLogger()->error('importLayouts: Unable to copy fonts to ' . $libraryLocation);
                     }
                 }
-            }
-
-            if ($fontsAdded) {
-                // if we added any fonts here fonts.css file
-                $this->mediaService->setUser($this->userFactory->getSystemUser())->updateFontsCss();
             }
 
             $this->config->changeSetting('DEFAULTS_IMPORTED', 1);
