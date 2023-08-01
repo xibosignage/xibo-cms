@@ -29,10 +29,6 @@ const playlistEditorExternalContainerTemplate =
 const messageTemplate = require('../templates/message.hbs');
 const loadingTemplate = require('../templates/loading.hbs');
 const contextMenuTemplate = require('../templates/context-menu.hbs');
-const deleteElementModalContentTemplate =
-  require('../templates/delete-element-modal-content.hbs');
-const deleteMultiElementModalContentTemplate =
-  require('../templates/delete-multi-element-modal-content.hbs');
 
 // Include modules
 const Playlist = require('../playlist-editor/playlist.js');
@@ -221,7 +217,7 @@ pE.loadEditor = function(inline = false) {
         formHelpers.setup(pE, pE.playlist);
 
         // Handle inputs
-        pE.initElements();
+        pE.handleInputs();
 
         // Load user preferences
         pE.loadAndSavePref('useLibraryDuration', 0);
@@ -356,7 +352,7 @@ pE.selectObject = function({
  *  - order position for widget
  */
 pE.dropItemAdd = function(droppable, card, {positionToAdd = null} = {}) {
-  this.playlist.addElement(droppable, card, positionToAdd);
+  this.playlist.addObject(droppable, card, positionToAdd);
 };
 
 /**
@@ -418,115 +414,36 @@ pE.deleteSelectedObject = function() {
  * @param {number} objectId
  */
 pE.deleteObject = function(objectType, objectId) {
-  const createDeleteModal = function(objectType,
-    objectId,
-    hasMedia = false,
-    showDeleteFromLibrary = false,
-  ) {
-    bootbox.hideAll();
+  pE.common.showLoadingScreen('deleteObject');
 
-    const htmlContent = deleteElementModalContentTemplate({
-      mainMessage: deleteMenuTrans.mainMessage.replace('%obj%', objectType),
-      hasMedia: hasMedia,
-      showDeleteFromLibrary: showDeleteFromLibrary,
-      trans: deleteMenuTrans,
+  // Delete object from the layout
+  pE.playlist.deleteObject(objectType, objectId)
+    .then((_res) => {
+      // Success
+      pE.common.hideLoadingScreen('deleteObject');
+
+      // Remove selected object if the deleted was selected
+      if (pE.selectedObject.widgetId === objectId) {
+        pE.selectedObject = {};
+      }
+
+      // Reload data
+      pE.reloadData();
+    }).catch((error) => { // Fail/error
+      pE.common.hideLoadingScreen('deleteObject');
+
+      // Show error returned or custom message to the user
+      let errorMessage = '';
+
+      if (typeof error == 'string') {
+        errorMessage = error;
+      } else {
+        errorMessage = error.errorThrown;
+      }
+
+      toastr.error(errorMessagesTrans.deleteFailed
+        .replace('%error%', errorMessage));
     });
-
-    bootbox.dialog({
-      title: editorsTrans.deleteTitle.replace('%obj%', objectType),
-      message: htmlContent,
-      size: 'large',
-      buttons: {
-        cancel: {
-          label: editorsTrans.no,
-          className: 'btn-white btn-bb-cancel',
-        },
-        confirm: {
-          label: editorsTrans.yes,
-          className: 'btn-danger btn-bb-confirm',
-          callback: function() {
-            // Empty options object
-            let options = null;
-
-            // If delete media is checked, pass that as a param for delete
-            if ($(this).find('input#deleteMedia').is(':checked')) {
-              options = {
-                deleteMedia: 1,
-              };
-            }
-
-            pE.common.showLoadingScreen('deleteObject');
-
-            // Delete element from the layout
-            pE.playlist.deleteElement(objectType, objectId, options)
-              .then((res) => { // Success
-                pE.common.hideLoadingScreen('deleteObject');
-
-                // Remove selected object
-                pE.selectedObject = {};
-
-                // Reload data
-                pE.reloadData();
-              }).catch((error) => { // Fail/error
-                pE.common.hideLoadingScreen('deleteObject');
-                pE.reloadData();
-              }).catch((error) => { // Fail/error
-                pE.common.hideLoadingScreen('deleteObject');
-
-                // Show error returned or custom message to the user
-                let errorMessage = '';
-
-                if (typeof error == 'string') {
-                  errorMessage = error;
-                } else {
-                  errorMessage = error.errorThrown;
-                }
-
-                toastr.error(errorMessagesTrans.deleteFailed
-                  .replace('%error%', errorMessage));
-              });
-          },
-        },
-      },
-    }).attr('data-test', 'deleteObjectModal');
-  };
-
-  if (objectType === 'widget') {
-    const widgetToDelete =
-    pE.getElementByTypeAndId('widget', 'widget_' + objectId);
-
-    if (widgetToDelete.isRegionSpecific()) {
-      createDeleteModal(objectType, objectId);
-    } else {
-      pE.common.showLoadingScreen('checkMediaIsUsed');
-
-      const linkToAPI = urlsForApi.media.isUsed;
-      const requestPath =
-        linkToAPI.url.replace(':id', widgetToDelete.mediaIds[0]);
-
-      // Request with count as being 2, for the published layout and draft
-      $.get(requestPath + '?count=1')
-        .done(function(res) {
-          if (res.success) {
-            createDeleteModal(objectType, objectId, true, !res.data.isUsed);
-          } else {
-            if (res.login) {
-              window.location.href = window.location.href;
-              location.reload();
-            } else {
-              toastr.error(res.message);
-            }
-          }
-
-          pE.common.hideLoadingScreen('checkMediaIsUsed');
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-          pE.common.hideLoadingScreen('checkMediaIsUsed');
-
-          // Output error to console
-          console.error(jqXHR, textStatus, errorThrown);
-        });
-    }
-  }
 };
 
 /**
@@ -535,190 +452,66 @@ pE.deleteObject = function(objectType, objectId) {
  * @param {string[]} objectIds - Object ids to delete
  */
 pE.deleteMultipleObjects = function(objectsType, objectIds) {
-  const createMultiDeleteModal = function(objectArray) {
-    bootbox.hideAll();
+  if (objectsType === 'widget') {
+    pE.common.showLoadingScreen('deleteObjects');
 
-    const htmlContent = deleteMultiElementModalContentTemplate({
-      mainMessage: deleteMenuTrans.deleteMultipleObjects,
-      objectArray: objectArray,
-      trans: deleteMenuTrans,
-    });
+    let deletedIndex = 0;
 
-    // Create buttons object
-    const buttons = {
-      cancel: {
-        label: editorsTrans.no,
-        className: 'btn-white btn-bb-cancel',
-      },
-    };
+    const deleteNext = function() {
+      const widgetId = objectIds[deletedIndex];
 
-    // Select all button ( if there are 2 or more checkboxes )
-    if ($(htmlContent).find('input[type="checkbox"]').length > 1) {
-      buttons.selectAll = {
-        label: editorsTrans.selectAll,
-        className: 'btn-warning btn-bb-selectall',
-        callback: function() {
-          $(this).find('input[type="checkbox"]').prop('checked', true);
-          return false;
-        },
-      };
-    }
+      // Leave multi select mode
+      pE.toggleMultiselectMode(false);
 
-    buttons.confirm = {
-      label: editorsTrans.yes,
-      className: 'btn-danger btn-bb-confirm',
-      callback: function() {
-        const $objects = $(this).find('.multi-delete-element');
-        let deletedElements = 0;
-        let index = 0;
+      // Delete object from the playlist
+      pE.playlist.deleteObject('widget', widgetId)
+        .then((_res) => { // Success
+          deletedIndex++;
 
-        // Show modal
-        pE.common.showLoadingScreen('deleteObjects');
+          if (deletedIndex == objectIds.length) {
+            // Hide loading screen
+            pE.common.hideLoadingScreen('deleteObjects');
 
-        // Leave multi select mode
-        pE.toggleMultiselectMode(false);
+            // Remove selected object if it's one in the objectIds
+            if (
+              objectIds.indexOf(pE.selectedObject.widgetId) > -1
+            ) {
+              pE.selectedObject = {};
+            }
 
-        const deleteObject = function() {
-          const $element = $($objects[index]);
+            // Reload data
+            pE.reloadData();
 
-          // Empty options object
-          let options = null;
-          const objectId = $element.data('id');
-          const objectType = $element.data('type');
+            // Hide/close modal
+            bootbox.hideAll();
+          } else {
+            deleteNext();
+          }
+        }).catch((error) => { // Fail/error
+          pE.common.hideLoadingScreen('deleteObjects');
 
-          // If delete media is checked, pass that as a param for delete
-          if ($element.find('input.deleteMedia').is(':checked')) {
-            options = {
-              deleteMedia: 1,
-            };
+          // Show error returned or custom message to the user
+          let errorMessage = '';
+
+          if (typeof error == 'string') {
+            errorMessage = error;
+          } else {
+            errorMessage = error.errorThrown;
           }
 
-          // Delete element from the playlist
-          pE.playlist.deleteElement(objectType, objectId, options)
-            .then((res) => { // Success
-              deletedElements++;
+          toastr.error(errorMessagesTrans.deleteFailed
+            .replace('%error%', errorMessage));
 
-              if (deletedElements == $objects.length) {
-                // Hide loading screen
-                pE.common.hideLoadingScreen('deleteObjects');
+          // Reload data
+          pE.reloadData();
 
-                // Remove selected object
-                pE.selectedObject = {};
-
-                // Reload data
-                pE.reloadData();
-
-                // Hide/close modal
-                bootbox.hideAll();
-              } else {
-                index++;
-                deleteObject();
-              }
-            }).catch((error) => { // Fail/error
-              pE.common.hideLoadingScreen('deleteObjects');
-
-              // Show error returned or custom message to the user
-              let errorMessage = '';
-
-              if (typeof error == 'string') {
-                errorMessage = error;
-              } else {
-                errorMessage = error.errorThrown;
-              }
-
-              toastr.error(errorMessagesTrans.deleteFailed
-                .replace('%error%', errorMessage));
-
-              // Reload data
-              pE.reloadData();
-
-              // Hide/close modal
-              bootbox.hideAll();
-            });
-        };
-
-        deleteObject();
-
-        return false;
-      },
-    };
-
-    bootbox.dialog({
-      title: editorsTrans.deleteMultipleTitle,
-      message: htmlContent,
-      size: 'large',
-      buttons: buttons,
-    }).attr('data-test', 'deleteObjectModal');
-  };
-
-  if (objectsType === 'widget') {
-    pE.common.showLoadingScreen('checkMediaIsUsed');
-    const arrayOfWidgets = [];
-    let index = 0;
-
-    const getWidgetStatus = function() {
-      const widgetId = objectIds[index];
-      const widgetToDelete =
-      pE.getElementByTypeAndId('widget', 'widget_' + widgetId);
-      const linkToAPI = urlsForApi.media.isUsed;
-      const requestPath =
-      linkToAPI.url.replace(':id', widgetToDelete.mediaIds[0]);
-
-      if (widgetToDelete.isRegionSpecific()) {
-        arrayOfWidgets.push({
-          objectId: widgetId,
-          objectType: 'widget',
-          objectName: widgetToDelete.widgetName,
-          hasMedia: false,
-          dataUsed: false,
+          // Hide/close modal
+          bootbox.hideAll();
         });
-
-        if (arrayOfWidgets.length == objectIds.length) {
-          createMultiDeleteModal(arrayOfWidgets);
-          pE.common.hideLoadingScreen('checkMediaIsUsed');
-        } else {
-          index++;
-          getWidgetStatus();
-        }
-      } else {
-        // Request with count as being 2, for the published layout and draft
-        $.get(requestPath + '?count=1')
-          .done(function(res) {
-            if (res.success) {
-              arrayOfWidgets.push({
-                objectId: widgetId,
-                objectType: 'widget',
-                objectName: widgetToDelete.widgetName,
-                hasMedia: true,
-                dataUsed: res.data.isUsed,
-              });
-
-              if (arrayOfWidgets.length == objectIds.length) {
-                createMultiDeleteModal(arrayOfWidgets);
-                pE.common.hideLoadingScreen('checkMediaIsUsed');
-              } else {
-                index++;
-                getWidgetStatus();
-              }
-            } else {
-              if (res.login) {
-                window.location.href = window.location.href;
-                location.reload();
-              } else {
-                toastr.error(res.message);
-              }
-            }
-          }).fail(function(jqXHR, textStatus, errorThrown) {
-            pE.common.hideLoadingScreen('checkMediaIsUsed');
-
-            // Output error to console
-            console.error(jqXHR, textStatus, errorThrown);
-          });
-      }
     };
 
-    // Start getting widget status
-    getWidgetStatus();
+    // Start deleting
+    deleteNext();
   }
 };
 
@@ -733,6 +526,16 @@ pE.refreshEditor = function(
     reloadPropertiesPanel = false,
   } = {},
 ) {
+  // if we don't have a selected widget
+  // and there's at least one on the playlist, select the first one
+  if (
+    $.isEmptyObject(this.selectedObject) &&
+    Object.values(this.playlist.widgets).length > 0
+  ) {
+    this.selectedObject = Object.values(this.playlist.widgets)[0];
+    this.selectedObject.selected = true;
+  }
+
   // Remove temporary data
   (reloadPropertiesPanel) && this.clearTemporaryData();
 
@@ -747,7 +550,7 @@ pE.refreshEditor = function(
   (reloadPropertiesPanel) && this.propertiesPanel.render(this.selectedObject);
 
   // Update elements based on manager changes
-  this.updateElements();
+  this.updateObjects();
 
   // Show properties panel
   $('.properties-panel-container').addClass('opened');
@@ -762,7 +565,7 @@ pE.refreshEditor = function(
 pE.reloadData = function(
   {
     reloadEditor = true,
-    reloadToolbar = true,
+    reloadToolbar = false,
     reloadPropertiesPanel = true,
   } = {},
 ) {
@@ -927,21 +730,21 @@ pE.clearTemporaryData = function() {
 };
 
 /**
- * Get element from the main object ( playlist )
- * @param {string} type - type of the element to get
- * @param {number} id - id of the element to get
- * @return {object} element
+ * Get object from the playlist
+ * @param {string} type - type of the object to get
+ * @param {number} id - id of the object to get
+ * @return {object} object
  */
-pE.getElementByTypeAndId = function(type, id) {
-  let element = {};
+pE.getObjectByTypeAndId = function(type, id) {
+  let object = {};
 
   if (type === 'playlist') {
-    element = pE.playlist;
+    object = pE.playlist;
   } else if (type === 'widget') {
-    element = pE.playlist.widgets[id];
+    object = pE.playlist.widgets[id];
   }
 
-  return element;
+  return object;
 };
 
 /**
@@ -967,7 +770,7 @@ pE.openContextMenu = function(obj, position = {x: 0, y: 0}) {
   }
 
   // Get object
-  const playlistObject = pE.getElementByTypeAndId(objType, objId);
+  const playlistObject = pE.getObjectByTypeAndId(objType, objId);
 
   // Create menu and append to the designer div
   // ( using the object extended with translations )
@@ -1100,9 +903,9 @@ pE.importFromProvider = function(items) {
   const requestItems = [];
   let itemsResult = items;
 
-  itemsResult.forEach((element) => {
-    if (isNaN(element)) {
-      requestItems.push(element);
+  itemsResult.forEach((item) => {
+    if (isNaN(item)) {
+      requestItems.push(item);
     }
   });
 
@@ -1130,16 +933,16 @@ pE.importFromProvider = function(items) {
       if (res.success) {
         pE.common.hideLoadingScreen();
 
-        res.data.forEach((newElement) => {
+        res.data.forEach((newItem) => {
           let addFlag = true;
-          if (newElement.isError) {
+          if (newItem.isError) {
             addFlag = false;
-            toastr.error(newElement.error, newElement.item.id);
+            toastr.error(newItem.error, newItem.item.id);
           }
 
-          itemsResult.forEach((oldElement, key) => {
-            if (isNaN(oldElement) && newElement.item.id == oldElement.id) {
-              itemsResult[key] = (addFlag) ? newElement.media.mediaId : null;
+          itemsResult.forEach((oldItem, key) => {
+            if (isNaN(oldItem) && newItem.item.id == oldItem.id) {
+              itemsResult[key] = (addFlag) ? newItem.media.mediaId : null;
             }
           });
         });
@@ -1176,7 +979,7 @@ pE.importFromProvider = function(items) {
 /**
  * Handle inputs
  */
-pE.initElements = function() {
+pE.handleInputs = function() {
   const $playlistTimeline =
     pE.editorContainer.find('#playlist-timeline');
 
@@ -1189,7 +992,7 @@ pE.initElements = function() {
       return pE.common.hasTarget(draggable, 'playlist');
     },
     drop: function(event, ui) {
-      pE.playlist.addElement(event.target, ui.draggable[0]);
+      pE.playlist.addObject(event.target, ui.draggable[0]);
     },
   }).attr('data-type', 'playlist');
 
@@ -1203,7 +1006,7 @@ pE.initElements = function() {
   });
 
   // Editor container select ( faking drag and drop )
-  // to add a element to the playlist
+  // to add a object to the playlist
   $playlistTimeline
     .click(function(e) {
       if (
@@ -1261,9 +1064,9 @@ pE.initElements = function() {
 };
 
 /**
- * Update elements in the playlist editor
+ * Update objects in the playlist editor
  */
-pE.updateElements = function() {
+pE.updateObjects = function() {
   // Update undo button with changes history
   const checkHistory = this.checkHistory();
   const undoActiveTitle =
@@ -1287,7 +1090,7 @@ pE.updateElements = function() {
 };
 
 /**
- * Toggle multiple element select mode
+ * Toggle multiple select mode
  * @param {boolean} forceSelect - Force select mode
  */
 pE.toggleMultiselectMode = function(forceSelect = null) {

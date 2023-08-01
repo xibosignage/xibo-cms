@@ -28,7 +28,7 @@ const Viewer = function(parent, container) {
   this.reload = true;
 
   // Element dimensions inside the viewer container
-  this.containerElementDimensions = null;
+  this.containerObjectDimensions = null;
 
   // State of the inline editor (  0: off, 1: on, 2: edit )
   this.inlineEditorState = 0;
@@ -64,11 +64,11 @@ const Viewer = function(parent, container) {
 
 /**
  * Calculate element scale to fit inside the container
- * @param {object} element - original object to be rendered
+ * @param {object} object - original object to be rendered
  * @param {object} container - container to render the element to
  * @return {object} Object containing dimensions for the object
  */
-Viewer.prototype.scaleElement = function(element, container) {
+Viewer.prototype.scaleObject = function(object, container) {
   // Get container dimensions
   const containerDimensions = {
     width: container.width(),
@@ -78,20 +78,20 @@ Viewer.prototype.scaleElement = function(element, container) {
   // Get element dimensions
   const elementDimensions = {
     width: parseFloat(
-      (element.dimensions) ? element.dimensions.width : element.width),
+      (object.dimensions) ? object.dimensions.width : object.width),
     height: parseFloat(
-      (element.dimensions) ? element.dimensions.height : element.height),
+      (object.dimensions) ? object.dimensions.height : object.height),
     scale: 1,
     top: 0,
     left: 0,
   };
 
   // Calculate ratio
-  const elementRatio = elementDimensions.width / elementDimensions.height;
+  const objectRatio = elementDimensions.width / elementDimensions.height;
   const containerRatio = containerDimensions.width / containerDimensions.height;
 
   // Calculate scale factor
-  if (elementRatio > containerRatio) {
+  if (objectRatio > containerRatio) {
     // element is more "landscapish" than the container
     // Scale is calculated using width
     elementDimensions.scale =
@@ -192,12 +192,12 @@ Viewer.prototype.render = function(forceReload = false) {
   $viewerContainer.css('border', 'none');
 
   // Apply viewer scale to the layout
-  this.containerElementDimensions =
-    this.scaleElement(lD.layout, $viewerContainer);
+  this.containerObjectDimensions =
+    this.scaleObject(lD.layout, $viewerContainer);
 
   this.orientation = this.getLayoutOrientation(
-    this.containerElementDimensions.width,
-    this.containerElementDimensions.height,
+    this.containerObjectDimensions.width,
+    this.containerObjectDimensions.height,
   );
 
   // Apply viewer scale to the layout
@@ -207,7 +207,7 @@ Viewer.prototype.render = function(forceReload = false) {
     type: 'layout',
     renderLayout: true,
     containerStyle: 'layout-player',
-    dimensions: this.containerElementDimensions,
+    dimensions: this.containerObjectDimensions,
     layout: scaledLayout,
     trans: viewerTrans,
     theme: this.theme,
@@ -219,7 +219,7 @@ Viewer.prototype.render = function(forceReload = false) {
 
   // Render background image or color to the preview
   if (lD.layout.backgroundImage === null) {
-    $viewerContainer.find('.viewer-element')
+    $viewerContainer.find('.viewer-object')
       .css('background', lD.layout.backgroundColor);
   } else {
     // Get API link
@@ -227,15 +227,15 @@ Viewer.prototype.render = function(forceReload = false) {
     // Replace ID in the link
     linkToAPI = linkToAPI.replace(':id', lD.layout.layoutId);
 
-    $viewerContainer.find('.viewer-element')
+    $viewerContainer.find('.viewer-object')
       .css({
         background:
           'url(\'' + linkToAPI + '?preview=1&width=' +
-          (lD.layout.width * this.containerElementDimensions.scale) +
+          (lD.layout.width * this.containerObjectDimensions.scale) +
           '&height=' +
           (
             lD.layout.height *
-            this.containerElementDimensions.scale
+            this.containerObjectDimensions.scale
           ) +
           '&proportional=0&layoutBackgroundId=' +
           lD.layout.backgroundImage + '\') top center no-repeat',
@@ -331,10 +331,10 @@ Viewer.prototype.handleInteractions = function() {
     // Scale value to original size ( and parse to int )
     position.top = parseInt(
       position.top /
-      self.containerElementDimensions.scale);
+      self.containerObjectDimensions.scale);
     position.left = parseInt(
       position.left /
-      self.containerElementDimensions.scale);
+      self.containerObjectDimensions.scale);
 
     return position;
   };
@@ -467,9 +467,11 @@ Viewer.prototype.handleInteractions = function() {
   // Handle click and double click
   let clicks = 0;
   let timer = null;
-  $viewerContainer.parent().find('.viewer-element-select').off()
+  $viewerContainer.parent().find('.viewer-object-select').off()
     .on('mousedown', function(e) {
       e.stopPropagation();
+
+      const shiftIsPressed = e.shiftKey;
 
       // Right click open context menu
       if (e.which == 3) {
@@ -480,7 +482,7 @@ Viewer.prototype.handleInteractions = function() {
         // Edit region if it's a playlist
         // Get region object
         const regionObject =
-          lD.getElementByTypeAndId('region', playlistId);
+          lD.getObjectByTypeAndId('region', playlistId);
         // Open playlist editor
         lD.openPlaylistEditor(
           regionObject.playlists.playlistId,
@@ -490,18 +492,18 @@ Viewer.prototype.handleInteractions = function() {
       // Get click position
       const clickPosition = {
         left: e.pageX -
-          $viewerContainer.find('.layout.viewer-element-select').offset().left,
+          $viewerContainer.find('.layout.viewer-object-select').offset().left,
         top: e.pageY -
-          $viewerContainer.find('.layout.viewer-element-select').offset().top,
+          $viewerContainer.find('.layout.viewer-object-select').offset().top,
       };
 
       // Scale value to original size ( and parse to int )
       clickPosition.top = parseInt(
         clickPosition.top /
-        self.containerElementDimensions.scale);
+        self.containerObjectDimensions.scale);
       clickPosition.left = parseInt(
         clickPosition.left /
-        self.containerElementDimensions.scale);
+        self.containerObjectDimensions.scale);
 
       // Click on layout or layout wrapper to clear selection
       // or add item to the layout
@@ -575,51 +577,77 @@ Viewer.prototype.handleInteractions = function() {
               $(e.target).hasClass('designer-region') &&
               !$(e.target).hasClass('selected')
             ) {
-              // Select region
-              lD.selectObject({
-                target: $(e.target),
-              });
-              self.selectElement($(e.target));
+              // If we're multi selecting, deselect all
+              if (shiftIsPressed) {
+                lD.selectObject();
+              } else {
+                // Select region
+                lD.selectObject({
+                  target: $(e.target),
+                });
+              }
+
+              self.selectElement($(e.target), shiftIsPressed);
             } else if (
               $(e.target).data('subType') === 'zone' &&
               $(e.target).hasClass('designer-region') &&
               !$(e.target).hasClass('selected')
             ) {
-              // Select zone
-              lD.selectObject({
-                target: $(e.target),
-              });
-              self.selectElement($(e.target));
+              // If we're multi selecting, deselect all
+              if (shiftIsPressed) {
+                lD.selectObject();
+              } else {
+                // Select zone
+                lD.selectObject({
+                  target: $(e.target),
+                });
+              }
+              self.selectElement($(e.target), shiftIsPressed);
             } else if (
               $(e.target).find('.designer-widget').length > 0 &&
               !$(e.target).find('.designer-widget').hasClass('selected') &&
               !$(e.target).hasClass('selected')
             ) {
-              // Select widget if exists
-              lD.selectObject({
-                target: $(e.target).find('.designer-widget'),
-              });
-              self.selectElement($(e.target));
+              // If we're multi selecting, deselect all
+              if (shiftIsPressed) {
+                lD.selectObject();
+              } else {
+                // Select widget if exists
+                lD.selectObject({
+                  target: $(e.target).find('.designer-widget'),
+                });
+              }
+              self.selectElement($(e.target), shiftIsPressed);
             } else if (
               $(e.target).hasClass('designer-element') &&
               !$(e.target).hasClass('selected')
             ) {
-              // Select element if exists
-              lD.selectObject({
-                target: $(e.target),
-                clickPosition: clickPosition,
-              });
-              self.selectElement($(e.target));
+              // If we're multi selecting, deselect all
+              if (shiftIsPressed) {
+                lD.selectObject();
+              } else {
+                // Select element if exists
+                lD.selectObject({
+                  target: $(e.target),
+                  clickPosition: clickPosition,
+                });
+              }
+              self.selectElement($(e.target), shiftIsPressed);
             } else if (
               $(e.target).hasClass('group-select-overlay') &&
               !$(e.target).parent().hasClass('selected')
             ) {
-              // Select element if exists
-              lD.selectObject({
-                target: $(e.target).parent(),
-                clickPosition: clickPosition,
-              });
-              self.selectElement($(e.target).parent());
+              // If we're multi selecting, deselect all
+              if (shiftIsPressed) {
+                lD.selectObject();
+              } else {
+                // Select element if exists
+                lD.selectObject({
+                  target: $(e.target).parent(),
+                  clickPosition: clickPosition,
+                });
+              }
+              self.selectElement($(e.target).parent(), shiftIsPressed);
             }
           }, 200);
         } else {
@@ -641,7 +669,7 @@ Viewer.prototype.handleInteractions = function() {
             lD.selectObject({
               target: $(e.target),
             });
-            self.selectElement($(e.target));
+            self.selectElement($(e.target), shiftIsPressed);
           } else if (
             $(e.target).hasClass('group-select-overlay')
           ) {
@@ -761,25 +789,25 @@ Viewer.prototype.handleInteractions = function() {
  */
 Viewer.prototype.update = function() {
   const $viewerContainer = this.DOMObject;
-  const $viewElement = $viewerContainer.find('.viewer-element');
+  const $viewElement = $viewerContainer.find('.viewer-object');
   const self = this;
 
   // Hide viewer element
   $viewElement.hide();
 
   // Apply viewer scale to the layout
-  this.containerElementDimensions =
-    this.scaleElement(lD.layout, $viewerContainer);
+  this.containerObjectDimensions =
+    this.scaleObject(lD.layout, $viewerContainer);
 
   // Apply viewer scale to the layout
   lD.layout.scale($viewerContainer);
 
   $viewElement.css({
-    width: this.containerElementDimensions.width,
-    height: this.containerElementDimensions.height,
-    top: this.containerElementDimensions.top,
-    left: this.containerElementDimensions.left,
-    scale: this.containerElementDimensions.scale,
+    width: this.containerObjectDimensions.width,
+    height: this.containerObjectDimensions.height,
+    top: this.containerObjectDimensions.top,
+    left: this.containerObjectDimensions.left,
+    scale: this.containerObjectDimensions.scale,
   });
 
   // Show viewer element
@@ -865,7 +893,7 @@ Viewer.prototype.renderRegion = function(
   $container.html(loadingTemplate());
 
   // Apply scaling
-  const containerElementDimensions = {
+  const containerObjectDimensions = {
     width: $container.width(),
     height: $container.height(),
   };
@@ -878,8 +906,8 @@ Viewer.prototype.renderRegion = function(
   );
 
   requestPath +=
-    '?width=' + containerElementDimensions.width +
-    '&height=' + containerElementDimensions.height;
+    '?width=' + containerObjectDimensions.width +
+    '&height=' + containerObjectDimensions.height;
 
   // If it's not a playlist, add widget to request
   if (!isPlaylist) {
@@ -910,13 +938,13 @@ Viewer.prototype.renderRegion = function(
 
     if (isPlaylist) {
       $.extend(true, options, {
-        elementType: 'playlist',
+        objectType: 'playlist',
       });
     } else {
       $.extend(true, options, {
         id: widget.id,
         widgetId: widget.widgetId,
-        elementType: (widget.type + '_' + widget.subType),
+        objectType: (widget.type + '_' + widget.subType),
         editable: widget.isEditable,
         parentId: widget.regionId,
         selected: widget.selected,
@@ -934,7 +962,7 @@ Viewer.prototype.renderRegion = function(
 
     // If it's playlist, add playlist edit button
     if (isPlaylist) {
-      $container.append(`<div class="playlist-edit-btn viewer-element-select"
+      $container.append(`<div class="playlist-edit-btn viewer-object-select"
         title="${viewerTrans.editPlaylist}">
           <i class="fa fa-list-ol" aria-hidden="true"></i>
       </div>`);
@@ -1028,10 +1056,10 @@ Viewer.prototype.updateElement = _.throttle(function(
 
   // Calculate scaled dimensions
   element.scaledDimensions = {
-    height: element.height * lD.viewer.containerElementDimensions.scale,
-    left: element.left * lD.viewer.containerElementDimensions.scale,
-    top: element.top * lD.viewer.containerElementDimensions.scale,
-    width: element.width * lD.viewer.containerElementDimensions.scale,
+    height: element.height * lD.viewer.containerObjectDimensions.scale,
+    left: element.left * lD.viewer.containerObjectDimensions.scale,
+    top: element.top * lD.viewer.containerObjectDimensions.scale,
+    width: element.width * lD.viewer.containerObjectDimensions.scale,
   };
 
   // Update element index
@@ -1057,12 +1085,12 @@ Viewer.prototype.updateElementGroup = _.throttle(function(
 
     // Calculate scaled dimensions
     element.scaledDimensions = {
-      height: element.height * lD.viewer.containerElementDimensions.scale,
+      height: element.height * lD.viewer.containerObjectDimensions.scale,
       left: (element.left - elementGroup.left) *
-        lD.viewer.containerElementDimensions.scale,
+        lD.viewer.containerObjectDimensions.scale,
       top: (element.top - elementGroup.top) *
-        lD.viewer.containerElementDimensions.scale,
-      width: element.width * lD.viewer.containerElementDimensions.scale,
+        lD.viewer.containerObjectDimensions.scale,
+      width: element.width * lD.viewer.containerObjectDimensions.scale,
     };
 
     // Update element index
@@ -1104,10 +1132,10 @@ Viewer.prototype.updateRegion = _.throttle(function(
   // Calculate scaled dimensions
   region.scaledDimensions = {
     height: region.dimensions.height *
-      lD.viewer.containerElementDimensions.scale,
-    left: region.dimensions.left * lD.viewer.containerElementDimensions.scale,
-    top: region.dimensions.top * lD.viewer.containerElementDimensions.scale,
-    width: region.dimensions.width * lD.viewer.containerElementDimensions.scale,
+      lD.viewer.containerObjectDimensions.scale,
+    left: region.dimensions.left * lD.viewer.containerObjectDimensions.scale,
+    top: region.dimensions.top * lD.viewer.containerObjectDimensions.scale,
+    width: region.dimensions.width * lD.viewer.containerObjectDimensions.scale,
   };
 
   // Update region container dimensions
@@ -1167,7 +1195,7 @@ Viewer.prototype.renderElement = function(
   const $canvasRegionContainer = this.DOMObject.find(`#${canvas.id}`);
 
   // Scale element based on viewer scale
-  const viewerScale = this.containerElementDimensions.scale;
+  const viewerScale = this.containerObjectDimensions.scale;
   const elementRenderDimensions = {
     height: element.height * viewerScale,
     left: element.left * viewerScale,
@@ -1214,7 +1242,7 @@ Viewer.prototype.renderElement = function(
     );
 
     // Get group object
-    const group = lD.getElementByTypeAndId(
+    const group = lD.getObjectByTypeAndId(
       'element-group',
       element.groupId,
       'widget_' + element.regionId + '_' + element.widgetId,
@@ -1228,7 +1256,8 @@ Viewer.prototype.renderElement = function(
     // If group has source, add it to the container
     // or update it
     if (
-      group.slot != undefined
+      group.slot != undefined &&
+      group.slot != null
     ) {
       const $slot = $groupContainer.find('.slot');
       if ($slot.length > 0) {
@@ -1396,7 +1425,10 @@ Viewer.prototype.renderElementContent = function(
     }
 
     // If we have slot, show it as a val+1
-    if (element.slot != undefined) {
+    if (
+      element.slot != undefined &&
+      element.slot != null
+    ) {
       element.slotView = Number(element.slot) + 1;
     }
 
@@ -1412,7 +1444,7 @@ Viewer.prototype.renderElementContent = function(
     $elementContainer.html($(viewerElementContentTemplate({
       element: element,
       template: template,
-      scale: self.containerElementDimensions.scale,
+      scale: self.containerObjectDimensions.scale,
       originalWidth: element.width,
       originalHeight: element.height,
       trans: propertiesPanelTrans,
@@ -1653,8 +1685,9 @@ Viewer.prototype.initMoveable = function() {
 
     // If dragged object is an element inside a group
     // use the group position to get the global position
-    if ($(e.target).parent().hasClass('designer-element-group')) {
-      const parentPos = $(e.target).parent().position();
+    if ($(e.target).parents('.designer-element-group').length > 0) {
+      const parentPos =
+        $(e.target).parents('.designer-element-group').position();
       elLeft = parentPos.left + e.left;
       elTop = parentPos.top + e.top;
     }
@@ -1663,7 +1696,7 @@ Viewer.prototype.initMoveable = function() {
     // if not outside of the container
     if (
       elLeft > -e.width + remainingMargin &&
-      elLeft + remainingMargin < this.containerElementDimensions.width
+      elLeft + remainingMargin < this.containerObjectDimensions.width
     ) {
       e.target.style.left = `${e.left}px`;
     }
@@ -1672,7 +1705,7 @@ Viewer.prototype.initMoveable = function() {
     // if not outside of the container
     if (
       elTop > -e.height + remainingMargin &&
-      elTop + remainingMargin < this.containerElementDimensions.height
+      elTop + remainingMargin < this.containerObjectDimensions.height
     ) {
       e.target.style.top = `${e.top}px`;
     }
@@ -1686,7 +1719,9 @@ Viewer.prototype.initMoveable = function() {
         lD.selectedObject.type == 'region' ||
         lD.selectedObject.type == 'widget'
       ) &&
-        self.saveRegionProperties(e.target, true, true, false);
+        self.saveRegionProperties(e.target, {
+          hasMoved: true,
+        });
 
       // Save element properties
       // if it's not a group
@@ -1713,6 +1748,85 @@ Viewer.prototype.initMoveable = function() {
     }
   });
 
+  /* drag group */
+  this.moveable.on('dragGroup', (ev) => {
+    const remainingMargin = 20;
+
+    ev.events.forEach((e) => {
+      let elLeft = e.left;
+      let elTop = e.top;
+
+      // If dragged object is an element inside a group
+      // use the group position to get the global position
+      if ($(e.target).parents('.designer-element-group').length > 0) {
+        const parentPos =
+          $(e.target).parents('.designer-element-group').position();
+        elLeft = parentPos.left + e.left;
+        elTop = parentPos.top + e.top;
+      }
+
+      // Update horizontal position
+      // if not outside of the container
+      if (
+        elLeft > -e.width + remainingMargin &&
+        elLeft + remainingMargin < this.containerObjectDimensions.width
+      ) {
+        e.target.style.left = `${e.left}px`;
+      }
+
+      // Update vertical position
+      // if not outside of the container
+      if (
+        elTop > -e.height + remainingMargin &&
+        elTop + remainingMargin < this.containerObjectDimensions.height
+      ) {
+        e.target.style.top = `${e.top}px`;
+      }
+    });
+    // Margin to prevent dragging outside of the container
+  }).on('dragGroupEnd', (e) => {
+    if (e.isDrag) {
+      e.targets.forEach((target) => {
+        const targetType = $(target).data('type');
+
+        // Save transformation
+        saveTransformation(target);
+
+        // Save region properties
+        (
+          targetType == 'region' || targetType == 'widget'
+        ) &&
+          self.saveRegionProperties(target, {
+            hasMoved: true,
+            justTransform: true,
+          });
+
+        // Save element properties
+        // if it's not a group
+        (
+          targetType == 'element' &&
+          $(target).parents('.designer-element-group').length === 0
+        ) &&
+          self.saveElementProperties(target, true);
+
+        // Save element group properties
+        (targetType == 'element-group') &&
+          self.saveElementGroupProperties(target);
+
+        // Save element included in a group
+        (
+          targetType == 'element' &&
+          $(target).parents('.designer-element-group').length > 0
+        ) &&
+        self.saveElementGroupProperties(
+          $(target).parents('.designer-element-group'),
+          true,
+          false,
+        );
+      });
+    }
+  });
+
   /* resizable */
   this.moveable.on('resize', (e) => {
     e.target.style.cssText += `width: ${e.width}px; height: ${e.height}px`;
@@ -1724,8 +1838,8 @@ Viewer.prototype.initMoveable = function() {
 
     // Update element dimension properties
     selectedObject.transform({
-      width: parseFloat(e.width / self.containerElementDimensions.scale),
-      height: parseFloat(e.height / self.containerElementDimensions.scale),
+      width: parseFloat(e.width / self.containerObjectDimensions.scale),
+      height: parseFloat(e.height / self.containerObjectDimensions.scale),
     }, false);
 
     // Update target object
@@ -1753,7 +1867,10 @@ Viewer.prototype.initMoveable = function() {
       (lD.selectedObject.type == 'region') ||
       (lD.selectedObject.type == 'widget')
     ) &&
-      self.saveRegionProperties(e.target, true, moved, true);
+      self.saveRegionProperties(e.target, {
+        hasMoved: moved,
+        hasScaled: true,
+      });
 
     // Save element properties
     (
@@ -1817,18 +1934,23 @@ Viewer.prototype.initMoveable = function() {
 /**
  * Save the new position of the region
  * @param {object} region - Region object
- * @param {boolean} updateRegion - Update region rendering
- * @param {boolean} hasMoved - Has region moved
- * @param {boolean} hasScaled - Has region scaled
+ * @param {object} [options] - options
+ * @param {boolean=} updateRegion - Update region rendering
+ * @param {boolean=} hasMoved - Has region moved
+ * @param {boolean=} hasScaled - Has region scaled
+ * @param {boolean=} justTransform - Has region scaled
  */
 Viewer.prototype.saveRegionProperties = function(
   region,
-  updateRegion = true,
-  hasMoved = false,
-  hasScaled = false,
+  {
+    updateRegion = true,
+    hasMoved = false,
+    hasScaled = false,
+    justTransform = false,
+  } = {},
 ) {
   const self = this;
-  const scale = self.containerElementDimensions.scale;
+  const scale = self.containerObjectDimensions.scale;
   const regionId = $(region).attr('id');
   const transform = {};
   const regionObject = lD.layout.regions[regionId];
@@ -1851,8 +1973,11 @@ Viewer.prototype.saveRegionProperties = function(
     transform.left = regionObject.dimensions.left;
   }
 
-  // If we're saving the region, update it
-  if (regionId == lD.selectedObject.id) {
+  // if we just want to transform the region
+  if (justTransform) {
+    regionObject.transform(transform, true);
+  } else if (regionId == lD.selectedObject.id) {
+    // If we're saving the region, update it
     regionObject.transform(transform, false);
 
     if (typeof window.regionChangesForm === 'function') {
@@ -1863,7 +1988,10 @@ Viewer.prototype.saveRegionProperties = function(
       (updateRegion) &&
         lD.viewer.updateRegion(regionObject);
     }
-  } else if (regionId == lD.selectedObject.parent.id) {
+  } else if (
+    lD.selectedObject.parent &&
+    regionId == lD.selectedObject.parent.id
+  ) {
     // If we're saving the region through the widget
     // update parent region and update the position values on the form
     regionObject.transform(transform, false);
@@ -1890,11 +2018,11 @@ Viewer.prototype.saveElementProperties = function(
   save = true,
 ) {
   const self = this;
-  const scale = self.containerElementDimensions.scale;
+  const scale = self.containerObjectDimensions.scale;
 
   const $element = $(element);
   const elementId = $element.attr('id');
-  const parentWidget = lD.getElementByTypeAndId(
+  const parentWidget = lD.getObjectByTypeAndId(
     'widget',
     'widget_' + $element.data('regionId') + '_' + $element.data('widgetId'),
     'canvas',
@@ -1963,7 +2091,7 @@ Viewer.prototype.saveElementGroupProperties = function(
   savingGroup = true,
 ) {
   const self = this;
-  const scale = self.containerElementDimensions.scale;
+  const scale = self.containerObjectDimensions.scale;
 
   // Get group position
   const $elementGroup = $(elementGroup);
@@ -1974,7 +2102,7 @@ Viewer.prototype.saveElementGroupProperties = function(
     height: $elementGroup.height(),
   };
 
-  const groupObject = lD.getElementByTypeAndId(
+  const groupObject = lD.getObjectByTypeAndId(
     'element-group',
     $elementGroup.attr('id'),
     'widget_' + $elementGroup.data('regionId') + '_' +
@@ -2113,14 +2241,19 @@ Viewer.prototype.saveElementGroupProperties = function(
 /**
  * Select element
  * @param {object} element - Element object
+ * @param {boolean} multiSelect - Select another object
  * @param {boolean} removeEditFromGroup
  */
 Viewer.prototype.selectElement = function(
   element = null,
+  multiSelect = false,
   removeEditFromGroup = true,
 ) {
+  const self = this;
+
   // Deselect all elements
-  this.DOMObject.find('.selected').removeClass('selected');
+  (!multiSelect) &&
+    this.DOMObject.find('.selected').removeClass('selected');
 
   // Remove all editing from groups
   // if we're not selecting an element from that group
@@ -2141,6 +2274,27 @@ Viewer.prototype.selectElement = function(
 
   // Update moveable
   this.updateMoveable(true);
+
+  // Handle context menu on multiselect
+  if (multiSelect) {
+    $('body')
+      .off('contextmenu.group')
+      .on(
+        'contextmenu.group',
+        '.moveable-control-box .moveable-area',
+        function(ev) {
+          const $selectedElements = self.DOMObject.find('.selected');
+
+          lD.openGroupContextMenu($selectedElements, {
+            x: ev.pageX,
+            y: ev.pageY,
+          });
+
+          // Prevent browser default context menu to open
+          return false;
+        },
+      );
+  }
 };
 
 /**
@@ -2158,11 +2312,16 @@ Viewer.prototype.updateMoveable = function(
   // Get selected element
   const $selectedElement = this.DOMObject.find('.selected');
 
+  const multipleSelected = ($selectedElement.length > 1);
+
   // Update moveable if we have a selected element, and is not a drawerWidget
   if (
-    $selectedElement &&
-    $.contains(document, $selectedElement[0]) &&
-    !$selectedElement.hasClass('drawerWidget')
+    multipleSelected ||
+    (
+      $selectedElement &&
+      $.contains(document, $selectedElement[0]) &&
+      !$selectedElement.hasClass('drawerWidget')
+    )
   ) {
     if ($selectedElement.hasClass('designer-element-group')) {
       this.moveable.dragTarget =
@@ -2172,7 +2331,10 @@ Viewer.prototype.updateMoveable = function(
     }
 
     // Set rotatable
-    if ($selectedElement.data('canRotate')) {
+    if (
+      !multipleSelected &&
+      $selectedElement.data('canRotate')
+    ) {
       this.moveable.rotatable = true;
       this.moveable.throttleRotate = 1;
     } else {
@@ -2180,7 +2342,9 @@ Viewer.prototype.updateMoveable = function(
     }
 
     // Update snap to elements targets
-    if (
+    if (multipleSelected) {
+      this.moveable.elementGuidelines = [];
+    } else if (
       updateTarget &&
       this.moveableOptions.snapToElements
     ) {
@@ -2215,15 +2379,26 @@ Viewer.prototype.updateMoveable = function(
 
     // Update target only when needed
     if (updateTarget) {
-      this.moveable.target = $selectedElement[0];
+      if (multipleSelected) {
+        this.moveable.target = $selectedElement;
+      } else {
+        this.moveable.target = $selectedElement[0];
 
-      // Show snap controls
-      this.DOMObject.parent().find('.snap-controls').show();
+        // Show snap controls
+        this.DOMObject.parent().find('.snap-controls').show();
 
-      // Initialise tooltips
-      this.parent.common.reloadTooltips(
-        this.DOMObject.parent().find('.snap-controls'),
-      );
+        // Initialise tooltips
+        this.parent.common.reloadTooltips(
+          this.DOMObject.parent().find('.snap-controls'),
+        );
+      }
+    }
+
+    // Don't resize when selecting multiple items
+    if (multipleSelected) {
+      this.moveable.resizable = false;
+    } else {
+      this.moveable.resizable = true;
     }
 
     // Always update the moveable area
@@ -2310,12 +2485,12 @@ Viewer.prototype.updateMoveableOptions = function({
     (this.moveableOptions.snapToElements = snapToElements);
 
   // Container scale
-  const scale = (this.containerElementDimensions) ?
-    this.containerElementDimensions.scale : 1;
-  const containerWidth = (this.containerElementDimensions) ?
-    this.containerElementDimensions.width : lD.layout.width;
-  const containerHeight = (this.containerElementDimensions) ?
-    this.containerElementDimensions.height : lD.layout.height;
+  const scale = (this.containerObjectDimensions) ?
+    this.containerObjectDimensions.scale : 1;
+  const containerWidth = (this.containerObjectDimensions) ?
+    this.containerObjectDimensions.width : lD.layout.width;
+  const containerHeight = (this.containerObjectDimensions) ?
+    this.containerObjectDimensions.height : lD.layout.height;
 
   // Toggle snap
   if (
@@ -2326,7 +2501,7 @@ Viewer.prototype.updateMoveableOptions = function({
     this.moveable.snappable = true;
     this.moveable.snapThreshold = snapThreshold;
     this.moveable.snapContainer =
-      this.DOMObject.find('.viewer-element.layout')[0];
+      this.DOMObject.find('.viewer-object.layout')[0];
 
     this.moveable.snapDirections = {
       top: true,
@@ -2566,21 +2741,21 @@ Viewer.prototype.createActionHighlights = function(actionData, level) {
   const typeSelectorMap = {
     region: '.designer-region:not(.designer-region-playlist)',
     widget: '.designer-region:not(.designer-region-playlist) .designer-widget',
-    layout: '.viewer-element.layout',
+    layout: '.viewer-object.layout',
   };
 
   // Clear previous highlights
   this.clearActionHighlights();
 
-  const highlightElement = function(elementType, elementId, highlightType) {
+  const highlightElement = function(objectType, elementId, highlightType) {
     // Find element on viewer
-    const $viewerElement = self.DOMObject.find(
-      typeSelectorMap[elementType] +
-      '[data-' + elementType + '-id="' + elementId + '"]',
+    const $viewerObject = self.DOMObject.find(
+      typeSelectorMap[objectType] +
+      '[data-' + objectType + '-id="' + elementId + '"]',
     );
 
     // Add highlight class
-    $viewerElement.addClass(
+    $viewerObject.addClass(
       `action-highlight action-highlight-${highlightType} highlight-${level}`,
     );
   };
@@ -2621,7 +2796,7 @@ Viewer.prototype.addActionEditArea = function(
   createOrEdit,
 ) {
   const self = this;
-  const $layoutContainer = this.DOMObject.find('.viewer-element.layout');
+  const $layoutContainer = this.DOMObject.find('.viewer-object.layout');
   const createOverlayArea = function(type) {
     // If target is "screen", use "layout" to highlight
     const targetType =
@@ -2640,7 +2815,7 @@ Viewer.prototype.addActionEditArea = function(
     });
 
     // Get target
-    const $targetRegion = self.parent.getElementByTypeAndId(
+    const $targetRegion = self.parent.getObjectByTypeAndId(
       targetType,
       targetType + '_' + actionData.targetId,
     );
@@ -2712,7 +2887,7 @@ Viewer.prototype.addActionEditArea = function(
     const $actionArea = createOverlayArea('edit');
 
     // Get widget from drawer be loaded
-    const widgetToRender = lD.getElementByTypeAndId(
+    const widgetToRender = lD.getObjectByTypeAndId(
       'widget',
       'widget_' + lD.layout.drawer.regionId + '_' + actionData.widgetId,
       'drawer',

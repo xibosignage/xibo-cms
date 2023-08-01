@@ -566,7 +566,7 @@ Widget.prototype.getNextWidget = function(reverse = false) {
   const app = this.editorObject;
 
   // Get region widgets
-  const region = app.getElementByTypeAndId('region', this.regionId);
+  const region = app.getObjectByTypeAndId('region', this.regionId);
   const widgets = region.widgets;
 
   // Calculate new index
@@ -772,7 +772,10 @@ Widget.prototype.removeElement = function(
 
   // Remove element from a group
   let savedAlready = false;
-  if (elementGroupId) {
+  if (
+    elementGroupId &&
+    this.elementGroups[elementGroupId]
+  ) {
     delete this.elementGroups[elementGroupId].elements[elementId];
 
     // If group is empty, remove it
@@ -796,17 +799,6 @@ Widget.prototype.removeElement = function(
     }
   }
 
-  // Save changes to widget
-  (save && !savedAlready) && this.saveElements();
-
-  // If object is selected, remove it from selection
-  if (this.editorObject.selectedObject.elementId == elementId) {
-    this.editorObject.selectObject({
-      reloadViewer: false,
-    });
-    lD.viewer.selectElement(null, false);
-  }
-
   // Check if there's no more elements in widget and remove it
   if (Object.keys(this.elements).length == 0) {
     // Check if parent region is canvas, and it only has a global widget,
@@ -827,10 +819,10 @@ Widget.prototype.removeElement = function(
     }
 
     // Remove widget
-    app.layout.deleteElement('widget', this.widgetId).then(() => {
+    app.layout.deleteObject('widget', this.widgetId).then(() => {
       // Remove region if it's empty
       if (removeRegion) {
-        app.layout.deleteElement('region', this.parent.regionId).then(() => {
+        app.layout.deleteObject('region', this.parent.regionId).then(() => {
           // Reload layout
           app.reloadData(app.layout,
             {
@@ -846,6 +838,18 @@ Widget.prototype.removeElement = function(
       }
     });
   } else {
+    // Only save if we're not removing the widget
+    // Save changes to widget
+    (save && !savedAlready) && this.saveElements();
+
+    // If object is selected, remove it from selection
+    if (this.editorObject.selectedObject.elementId == elementId) {
+      this.editorObject.selectObject({
+        reloadViewer: false,
+      });
+      lD.viewer.selectElement(null, false, false);
+    }
+
     // If we're not removing widget, we need ot update element map
     this.updateElementMap();
   }
@@ -854,9 +858,11 @@ Widget.prototype.removeElement = function(
 /**
  * Remove element group
  * @param {string} groupId - id of the group to remove
+ * @param {boolean} save - save at the last element
  */
 Widget.prototype.removeElementGroup = function(
   groupId,
+  save = true,
 ) {
   const self = this;
   // Get element group
@@ -877,7 +883,7 @@ Widget.prototype.removeElementGroup = function(
       // Delete element from widget
       self.removeElement(
         element.elementId,
-        lastElement,
+        lastElement && save,
       );
     });
 

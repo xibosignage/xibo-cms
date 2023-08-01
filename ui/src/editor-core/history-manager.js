@@ -8,7 +8,7 @@ const Change = require('../editor-core/change.js');
 const managerTemplate = require('../templates/history-manager.hbs');
 
 // Map from a operation to its inverse, and
-// detail if the operation is done on the element or the layout
+// detail if the operation is done on the object or the layout
 const inverseChangeMap = {
   transform: {
     inverse: 'transform',
@@ -204,7 +204,7 @@ HistoryManager.prototype.uploadChange = function(
         change.uploaded = true;
         change.uploading = false;
 
-        // Update the Id of the change with the new element
+        // Update the Id of the change with the new object
         if (updateId) {
           if (change.type === 'create' || change.type === 'addWidget') {
             change.target.id = data.id;
@@ -278,8 +278,8 @@ HistoryManager.prototype.revertChange = function() {
       // Get data to apply
       let data = lastChange.oldState;
 
-      // Get element by type,from the main object
-      const element = app.getElementByTypeAndId(
+      // Get object by type,from the main object
+      const object = app.getObjectByTypeAndId(
         lastChange.target.type, // Type
         lastChange.target.type + '_' + lastChange.target.id, // Id
       );
@@ -289,8 +289,8 @@ HistoryManager.prototype.revertChange = function() {
         data = JSON.parse(data.regions)[0];
       }
 
-      // Apply inverse operation to the element
-      element[inverseOperation](data, false);
+      // Apply inverse operation to the object
+      object[inverseOperation](data, false);
 
       // Remove change from history
       self.changeHistory.pop();

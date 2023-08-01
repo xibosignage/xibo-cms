@@ -180,25 +180,25 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
   // Group modules by group property
   const moduleGroups = {};
   for (let i = 0; i < moduleListFiltered.length; i++) {
-    const element = moduleListFiltered[i];
+    const module = moduleListFiltered[i];
 
-    // Check if element.group is an object
-    if (typeof element.group == 'object' && !(element.group instanceof Array)) {
-      if (!moduleGroups[element.group.id]) {
-        moduleGroups[element.group.id] = {
-          name: element.group.name,
-          type: element.group.id,
-          icon: element.group.icon,
+    // Check if module.group is an object
+    if (typeof module.group == 'object' && !(module.group instanceof Array)) {
+      if (!moduleGroups[module.group.id]) {
+        moduleGroups[module.group.id] = {
+          name: module.group.name,
+          type: module.group.id,
+          icon: module.group.icon,
           cardType: 'moduleGroup',
           modules: [],
         };
       }
 
       // Add module to group
-      moduleGroups[element.group.id].modules.push(element);
+      moduleGroups[module.group.id].modules.push(module);
 
       // Remove module from moduleListFiltered and decrement i
-      moduleListFiltered.splice(moduleListFiltered.indexOf(element), 1);
+      moduleListFiltered.splice(moduleListFiltered.indexOf(module), 1);
       i--;
     }
   }
@@ -213,10 +213,10 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
     return (a.name < b.name) ? -1 : 1;
   });
 
-  usersList.forEach((element) => {
+  usersList.forEach((user) => {
     usersListFiltered.push({
-      userId: element.userId.toString(),
-      name: element.userName,
+      userId: user.userId.toString(),
+      name: user.userName,
     });
   });
 
@@ -529,7 +529,7 @@ Toolbar.prototype.loadPrefs = function() {
 
   const app = this.parent;
 
-  // Request elements based on filters
+  // Request items based on filters
   const self = this;
   $.ajax({
     url: linkToAPI.url + '?preference=toolbar',
@@ -697,7 +697,7 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
   // Save using the API
   const linkToAPI = urlsForApi.user.savePref;
 
-  // Request elements based on filters
+  // Request items based on filters
   $.ajax({
     url: linkToAPI.url,
     type: linkToAPI.type,
@@ -787,7 +787,7 @@ Toolbar.prototype.render = function() {
         `</strong>&nbsp;` + layoutEditorTrans.readOnlyModeMessage +
         `</div>`);
 
-    // Prepend the element to the bottom toolbar's content
+    // Prepend the item to the bottom toolbar's content
     $readOnlyMessage.prependTo(
       this.DOMObject.find('.container-toolbar .navbar-collapse'),
     ).click(lD.layout.checkout);
@@ -852,7 +852,7 @@ Toolbar.prototype.loadContent = function(menu = -1, forceReload = false) {
       card.maxSize = libraryUpload.maxSize;
       card.maxSizeMessage = libraryUpload.maxSizeMessage;
 
-      // Filter elements
+      // Filter items
       if (
         this.menuItems[menu].filters.name.value &&
         !card.name.toLowerCase().includes(
@@ -871,7 +871,7 @@ Toolbar.prototype.loadContent = function(menu = -1, forceReload = false) {
       }
     }
 
-    // Add elements to menu content
+    // Add items to menu content
     this.menuItems[menu].content = {
       favourites: favouriteModules,
       cards: otherModules,
@@ -882,19 +882,19 @@ Toolbar.prototype.loadContent = function(menu = -1, forceReload = false) {
     const actionsFiltered = [];
 
     for (let index = 0; index < this.interactiveList.length; index++) {
-      const element = this.interactiveList[index];
+      const item = this.interactiveList[index];
 
-      // Filter elements
+      // Filter items
       if (
         this.menuItems[menu].filters.name.value &&
-        !element.name.toLowerCase().includes(
+        !item.name.toLowerCase().includes(
           this.menuItems[menu].filters.name.value.toLowerCase(),
         )
       ) {
         continue;
       }
 
-      actionsFiltered.push(element);
+      actionsFiltered.push(item);
     }
 
     // Add card to menu content

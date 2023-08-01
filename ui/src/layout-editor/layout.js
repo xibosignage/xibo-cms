@@ -540,19 +540,19 @@ Layout.prototype.delete = function() {
 };
 
 /**
- * Add a new empty element to the layout
- * @param {string} elementType - element type (widget, region, ...)
- * @param {object} options - Position to add the element to
- * @param {object} [options.positionToAdd] - Position to add the element to
- * @param {object} [options.elementSubtype] - Element subtype
- * @param {object} [options.dimensions] - Element dimensions
+ * Add a new empty object to the layout
+ * @param {string} objectType - object type (widget, region, ...)
+ * @param {object} options - Position to add the object to
+ * @param {object} [options.positionToAdd] - Position to add the object to
+ * @param {object} [options.objectSubtype] - object subtype
+ * @param {object} [options.dimensions] - object dimensions
  * @return {object} - Manager change
  */
-Layout.prototype.addElement = function(
-  elementType,
+Layout.prototype.addObject = function(
+  objectType,
   {
     positionToAdd = null,
-    elementSubtype = null,
+    objectSubtype = null,
     dimensions = null,
   } = {},
 ) {
@@ -564,9 +564,9 @@ Layout.prototype.addElement = function(
   }
 
   // If element is type region, add type flag
-  if (elementType === 'region') {
+  if (objectType === 'region') {
     newValues = Object.assign(newValues, {
-      type: elementSubtype,
+      type: objectSubtype,
     });
   }
 
@@ -579,7 +579,7 @@ Layout.prototype.addElement = function(
   // an option to update the Id on the change to the newly created object
   return lD.historyManager.addChange(
     'create',
-    elementType, // targetType
+    objectType, // targetType
     null, // targetId
     null, // oldValues
     newValues, // newValues
@@ -590,51 +590,55 @@ Layout.prototype.addElement = function(
 };
 
 /**
- * Delete an element in the layout, by ID
- * @param {string} elementType - element type (widget, region, ...)
- * @param {number} elementId - element id
+ * Delete an object in the layout, by ID
+ * @param {string} objectType - object type (widget, region, ...)
+ * @param {number} objectId - object id
  * @param {object =} [options] - Delete submit params/options
  * @return {object} - Manager change
+ * @return {Promise} - Promise object
  */
-Layout.prototype.deleteElement =
-  function(elementType, elementId, options = null) {
-    lD.common.showLoadingScreen('deleteElement');
+Layout.prototype.deleteObject = function(
+  objectType,
+  objectId,
+  options = null,
+) {
+  lD.common.showLoadingScreen('deleteObject');
 
-    // Save all changes first
-    return lD.historyManager.saveAllChanges().then((res) => {
-    // Remove changes from the history array
-      return lD.historyManager.removeAllChanges(
-        elementType,
-        elementId,
-      ).then((res) => {
-      // Unselect selected object before deleting
-        lD.selectObject();
+  // Save all changes first
+  return lD.historyManager.saveAllChanges().then((res) => {
+  // Remove changes from the history array
+    return lD.historyManager.removeAllChanges(
+      objectType,
+      objectId,
+    ).then((_res) => {
+    // Unselect selected object before deleting
+      lD.selectObject();
 
-        lD.common.hideLoadingScreen('deleteElement');
+      lD.common.hideLoadingScreen('deleteObject');
 
-        // Create a delete type change, upload it
-        // but don't add it to the history array
-        return lD.historyManager.addChange(
-          'delete',
-          elementType, // targetType
-          elementId, // targetId
-          null, // oldValues
-          options, // newValues
-          {
-            addToHistory: false, // options.addToHistory
-          },
-        );
-      }).catch(function() {
-        lD.common.hideLoadingScreen('deleteElement');
-
-        toastr.error(errorMessagesTrans.removeAllChangesFailed);
-      });
+      // Create a delete type change, upload it
+      // but don't add it to the history array
+      return lD.historyManager.addChange(
+        'delete',
+        objectType, // targetType
+        objectId, // targetId
+        null, // oldValues
+        options, // newValues
+        {
+          addToHistory: false, // options.addToHistory
+        },
+      );
     }).catch(function() {
-      lD.common.hideLoadingScreen('deleteElement');
+      lD.common.hideLoadingScreen('deleteObject');
 
-      toastr.error(errorMessagesTrans.saveAllChangesFailed);
+      toastr.error(errorMessagesTrans.removeAllChangesFailed);
     });
-  };
+  }).catch(function() {
+    lD.common.hideLoadingScreen('deleteObject');
+
+    toastr.error(errorMessagesTrans.saveAllChangesFailed);
+  });
+};
 
 /**
  * Save playlist order
@@ -658,7 +662,7 @@ Layout.prototype.savePlaylistOrder = function(playlist, widgets) {
 
   for (let index = 0; index < widgets.length; index++) {
     const widget =
-      lD.getElementByTypeAndId(
+      lD.getObjectByTypeAndId(
         'widget',
         $(widgets[index]).attr('id'), 'region_' + playlist.regionId,
       );
@@ -880,10 +884,10 @@ Layout.prototype.getCanvas = function() {
     // Create canvas as a region
     // always add to the top left
     // and with the same dimensions as the layout
-    self.addElement(
+    self.addObject(
       'region',
       {
-        elementSubtype: 'canvas',
+        objectSubtype: 'canvas',
         positionToAdd: {
           top: 0,
           left: 0,
@@ -964,7 +968,7 @@ Layout.prototype.moveWidgetInRegion = function(regionId, widgetId, moveType) {
   // Get playlist
   const region = this.DOMObject.find('#' + regionId);
   const playlist =
-    lD.getElementByTypeAndId(
+    lD.getObjectByTypeAndId(
       $(region).data('type'),
       $(region).attr('id'),
     ).playlists;

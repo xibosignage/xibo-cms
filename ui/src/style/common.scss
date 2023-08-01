@@ -236,7 +236,7 @@ $fa-font-path: "~font-awesome/fonts";
             }
         }
 
-        .deleteBtn {
+        .deleteBtn, .deleteGroupElementsBtn{
             color: lighten($xibo-color-semantic-error, 5%);
 
             &:hover {

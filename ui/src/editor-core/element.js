@@ -232,7 +232,7 @@ Element.prototype.transform = function(transform) {
  */
 Element.prototype.getData = function() {
   const self = this;
-  const parentWidget = lD.getElementByTypeAndId(
+  const parentWidget = lD.getObjectByTypeAndId(
     'widget',
     'widget_' + this.regionId + '_' + this.widgetId,
     'canvas',

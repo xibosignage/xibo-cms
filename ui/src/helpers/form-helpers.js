@@ -776,10 +776,10 @@ const formHelpers = function() {
       region = this.namespace.mainRegion;
     } else if (this.namespace.selectedObject.type == 'widget') {
       const widget = this.namespace.selectedObject;
-      region = this.namespace.getElementByTypeAndId('region', widget.regionId);
+      region = this.namespace.getObjectByTypeAndId('region', widget.regionId);
     } else if (this.namespace.selectedObject.type == 'region') {
       region =
-        this.namespace.getElementByTypeAndId(
+        this.namespace.getObjectByTypeAndId(
           'region',
           this.namespace.selectedObject.id,
         );
@@ -845,7 +845,7 @@ const formHelpers = function() {
         } else {
           // Calculate scale based on the region previewed in the viewer
           scale =
-            this.namespace.viewer.DOMObject.find('.viewer-element').width() /
+            this.namespace.viewer.DOMObject.find('.viewer-object').width() /
             regionDimensions.width;
         }
       }

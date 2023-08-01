@@ -1,0 +1,17 @@
+<div class="context-menu-overlay" oncontextmenu="return false">
+    <div class="context-menu context-menu-group">
+        <div class="main-button-container d-flex flex-column">
+            {{#if canBeGrouped}}
+                <div class="context-menu-btn groupElementsBtn" data-title="{{trans.groupElements}}" data-action="Group" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
+                    <i class="fas fa-chain"></i><span>{{trans.groupElements}}</span>
+                </div>
+            {{/if}}
+
+            {{#if canBeDeleted}}
+                <div class="context-menu-btn deleteGroupElementsBtn" data-title="{{trans.deleteGroupElements}}" data-action="Delete" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
+                    <i class="fa fa-trash"></i><span>{{trans.deleteGroupElements}}</span>
+                </div>
+            {{/if}}
+        </div>
+    </div>
+</div>

@@ -150,7 +150,7 @@ ElementGroup.prototype.updateGroupDimensions = function(
 
   if (reload) {
     const widget =
-      lD.getElementByTypeAndId(
+      lD.getObjectByTypeAndId(
         'widget',
         'widget_' + self.regionId + '_' + self.widgetId,
         'canvas',

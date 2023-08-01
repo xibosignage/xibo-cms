@@ -356,13 +356,13 @@ body {
             position: absolute;
         }
 
-        .viewer-element {
+        .viewer-object {
             position: relative;
             overflow: clip;
             // overflow-clip-margin: 6px;
         }
 
-        .viewer-element .module-preview-icon {
+        .viewer-object .module-preview-icon {
             font-size: 4em;
             margin-top: 10px;
         }
@@ -1043,7 +1043,7 @@ body {
             left: 0;
             outline: 2px dashed $xibo-color-primary;
             outline-offset: 1px;
-            z-index: $viewer-element-group-overlay-z-index;
+            z-index: $viewer-object-group-overlay-z-index;
         }
 
         &.selected {
@@ -1062,7 +1062,7 @@ body {
             padding: 2px 5px;
             font-weight: bold;
             border-radius: 4px;
-            z-index: $viewer-element-group-bts-z-index;
+            z-index: $viewer-object-group-bts-z-index;
             opacity: 0.3;
             width: 1.8rem;
             text-align: center;
@@ -1122,7 +1122,7 @@ body {
             padding: 2px 5px;
             font-weight: bold;
             border-radius: 4px;
-            z-index: $viewer-element-group-bts-z-index;
+            z-index: $viewer-object-group-bts-z-index;
             opacity: 0.3;
         }
 
@@ -1283,7 +1283,7 @@ body {
         }
 
         /* Layout viewer theme */
-        .viewer-element {
+        .viewer-object {
             &.theme-light {
                 .designer-region::before, .designer-widget.selected {
                     @include set-transparent-color(outline-color, $xibo-color-neutral-0, 0.5);

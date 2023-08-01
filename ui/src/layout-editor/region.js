@@ -223,7 +223,7 @@ Region.prototype.editPropertyForm = function(property) {
     },
   }).attr('id', calculatedId).attr('data-test', 'region' + property + 'Form');
 
-  // Request and load element form
+  // Request and load property form
   $.ajax({
     url: requestPath,
     type: linkToAPI.type,
