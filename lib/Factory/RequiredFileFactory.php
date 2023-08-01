@@ -130,10 +130,11 @@ class RequiredFileFactory extends BaseFactory
      * @param int $displayId
      * @param string $fileType The file type of this dependency
      * @param int $id The ID of this dependency
+     * @param bool $isUseRealId Should we use the realId as a lookup?
      * @return RequiredFile
      * @throws NotFoundException
      */
-    public function getByDisplayAndDependency($displayId, $fileType, $id, bool $isUseRealId = true)
+    public function getByDisplayAndDependency($displayId, $fileType, $id, bool $isUseRealId = true): RequiredFile
     {
         if (!$isUseRealId && $id < 0) {
             $fileType = self::getLegacyFileType($id);
@@ -170,8 +171,10 @@ class RequiredFileFactory extends BaseFactory
         return match (true) {
             $id < 0 && $id > Dependency::LEGACY_ID_OFFSET_FONT * -1 => 'bundle',
             $id === Dependency::LEGACY_ID_OFFSET_FONT * -1 => 'fontCss',
-            $id < Dependency::LEGACY_ID_OFFSET_FONT * -1 && $id > Dependency::LEGACY_ID_OFFSET_PLAYER_SOFTWARE * -1 => 'font',
-            $id < Dependency::LEGACY_ID_OFFSET_PLAYER_SOFTWARE * -1 && $id > Dependency::LEGACY_ID_OFFSET_ASSET * -1 => 'playersoftware',
+            $id < Dependency::LEGACY_ID_OFFSET_FONT * -1
+                && $id > Dependency::LEGACY_ID_OFFSET_PLAYER_SOFTWARE * -1 => 'font',
+            $id < Dependency::LEGACY_ID_OFFSET_PLAYER_SOFTWARE * -1
+                && $id > Dependency::LEGACY_ID_OFFSET_ASSET * -1 => 'playersoftware',
             $id < Dependency::LEGACY_ID_OFFSET_PLAYER_SOFTWARE * -1 => 'asset',
         };
     }
@@ -383,11 +386,17 @@ class RequiredFileFactory extends BaseFactory
                 if (empty($fileType)) {
                     throw new NotFoundException(__('Missing fileType'));
                 }
+
+                // File type media means that we will use a special negative itemId to get out the actual file.
+                if ($fileType === 'media') {
+                    $itemId = intval($itemId);
+                }
+
                 $file = $this->getByDisplayAndDependency(
                     $displayId,
                     $fileType,
                     $itemId,
-                    !($fileType == 'media' && $itemId < 0)
+                    !($fileType === 'media' && $itemId < 0)
                 );
 
                 // Update $file->path with the path on disk (likely /assets/$itemId)
