@@ -25,6 +25,7 @@ namespace Xibo\Xmds\Listeners;
 use Xibo\Event\XmdsDependencyRequestEvent;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\ModuleTemplateFactory;
+use Xibo\Listener\ListenerConfigTrait;
 use Xibo\Listener\ListenerLoggerTrait;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -34,6 +35,7 @@ use Xibo\Support\Exception\NotFoundException;
 class XmdsAssetsListener
 {
     use ListenerLoggerTrait;
+    use ListenerConfigTrait;
 
     /** @var \Xibo\Factory\ModuleFactory */
     private $moduleFactory;
@@ -62,8 +64,11 @@ class XmdsAssetsListener
                     ->getAssetsFromAnywhereById($event->getRealId(), $this->moduleTemplateFactory);
 
                 if ($asset->isSendToPlayer()) {
+                    // Make sure the asset cache is there
+                    $asset->updateAssetCache($this->getConfig()->getSetting('LIBRARY_LOCATION'));
+
                     // Return the full path to this asset
-                    $event->setFullPath(PROJECT_ROOT . $asset->path);
+                    $event->setRelativePathToLibrary('assets/' . $asset->getFilename());
                     $event->stopPropagation();
                 } else {
                     $this->getLogger()->debug('onDependencyRequest: asset found but is cms only');

@@ -173,6 +173,11 @@ if (isset($_GET['file'])) {
             throw new \Xibo\Support\Exception\InstanceSuspendedException('Bandwidth Exceeded');
         }
 
+        // Bandwidth
+        // Add the size to the bytes we have already requested.
+        $file->bytesRequested = $file->bytesRequested + $file->size;
+        $file->save();
+
         // Issue magic packet
         $libraryLocation = $container->get('configService')->getSetting('LIBRARY_LOCATION');
         $logger->info('HTTP GetFile request redirecting to ' . $libraryLocation . $file->path);
@@ -186,11 +191,6 @@ if (isset($_GET['file'])) {
         } else {
             header('HTTP/1.0 404 Not Found');
         }
-
-        // Bandwidth
-        // Add the size to the bytes we have already requested.
-        $file->bytesRequested = $file->bytesRequested + $file->size;
-        $file->save();
 
         // Also add to the overall bandwidth used by get file
         $container->get('bandwidthFactory')->createAndSave(

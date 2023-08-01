@@ -1303,10 +1303,14 @@ class LayoutFactory extends BaseFactory
             // Construct the Layout
             if ($playlistDetails !== false) {
                 $playlistDetails = json_decode(($playlistDetails), true);
+            } else {
+                $playlistDetails = [];
             }
 
             if ($nestedPlaylistDetails !== false) {
                 $nestedPlaylistDetails = json_decode($nestedPlaylistDetails, true);
+            } else {
+                $nestedPlaylistDetails = [];
             }
 
             $jsonResults = $this->loadByJson(

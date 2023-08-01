@@ -288,6 +288,7 @@ class Module extends Base
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      * @throws \Xibo\Support\Exception\NotFoundException
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function assetDownload(Request $request, Response $response, string $assetId): Response
     {
@@ -297,10 +298,11 @@ class Module extends Base
 
         // Get this asset from somewhere
         $asset = $this->moduleFactory->getAssetsFromAnywhereById($assetId, $this->moduleTemplateFactory);
+        $asset->updateAssetCache($this->getConfig()->getSetting('LIBRARY_LOCATION'));
 
         $this->getLog()->debug('assetDownload: found appropriate asset for assetId ' . $assetId);
 
         // The asset can serve itself.
-        return $asset->psrResponse($request, $response);
+        return $asset->psrResponse($request, $response, $this->getConfig()->getSetting('SENDFILE_MODE'));
     }
 }

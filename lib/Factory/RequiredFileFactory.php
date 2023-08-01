@@ -36,6 +36,11 @@ class RequiredFileFactory extends BaseFactory
 {
     private $statement = null;
 
+    private $hydrate = [
+        'intProperties' => ['bytesRequested', 'complete'],
+        'stringProperties' => ['realId'],
+    ];
+
     /**
      * @return RequiredFile
      */
@@ -65,7 +70,7 @@ class RequiredFileFactory extends BaseFactory
         $this->statement->execute($params);
 
         foreach ($this->statement->fetchAll(\PDO::FETCH_ASSOC) as $item) {
-            $files[] = $this->createEmpty()->hydrate($item, ['stringProperties' => ['realId']]);
+            $files[] = $this->createEmpty()->hydrate($item, $this->hydrate);
         }
 
         return $files;
@@ -125,10 +130,11 @@ class RequiredFileFactory extends BaseFactory
      * @param int $displayId
      * @param string $fileType The file type of this dependency
      * @param int $id The ID of this dependency
+     * @param bool $isUseRealId Should we use the realId as a lookup?
      * @return RequiredFile
      * @throws NotFoundException
      */
-    public function getByDisplayAndDependency($displayId, $fileType, $id, bool $isUseRealId = true)
+    public function getByDisplayAndDependency($displayId, $fileType, $id, bool $isUseRealId = true): RequiredFile
     {
         if (!$isUseRealId && $id < 0) {
             $fileType = self::getLegacyFileType($id);
@@ -152,7 +158,7 @@ class RequiredFileFactory extends BaseFactory
             throw new NotFoundException(__('Required file not found for Display and Dependency'));
         }
 
-        return $this->createEmpty()->hydrate($result[0], ['stringProperties' => ['realId']]);
+        return $this->createEmpty()->hydrate($result[0], $this->hydrate);
     }
 
     /**
@@ -165,8 +171,10 @@ class RequiredFileFactory extends BaseFactory
         return match (true) {
             $id < 0 && $id > Dependency::LEGACY_ID_OFFSET_FONT * -1 => 'bundle',
             $id === Dependency::LEGACY_ID_OFFSET_FONT * -1 => 'fontCss',
-            $id < Dependency::LEGACY_ID_OFFSET_FONT * -1 && $id > Dependency::LEGACY_ID_OFFSET_PLAYER_SOFTWARE * -1 => 'font',
-            $id < Dependency::LEGACY_ID_OFFSET_PLAYER_SOFTWARE * -1 && $id > Dependency::LEGACY_ID_OFFSET_ASSET * -1 => 'playersoftware',
+            $id < Dependency::LEGACY_ID_OFFSET_FONT * -1
+                && $id > Dependency::LEGACY_ID_OFFSET_PLAYER_SOFTWARE * -1 => 'font',
+            $id < Dependency::LEGACY_ID_OFFSET_PLAYER_SOFTWARE * -1
+                && $id > Dependency::LEGACY_ID_OFFSET_ASSET * -1 => 'playersoftware',
             $id < Dependency::LEGACY_ID_OFFSET_PLAYER_SOFTWARE * -1 => 'asset',
         };
     }
@@ -195,7 +203,7 @@ class RequiredFileFactory extends BaseFactory
             throw new NotFoundException(__('Required file not found for Display and Path'));
         }
 
-        return $this->createEmpty()->hydrate($result[0], ['stringProperties' => ['realId']]);
+        return $this->createEmpty()->hydrate($result[0], $this->hydrate);
     }
 
     /**
@@ -222,7 +230,7 @@ class RequiredFileFactory extends BaseFactory
             throw new NotFoundException(__('Required file not found for Display and Dependency ID'));
         }
 
-        return $this->createEmpty()->hydrate($result[0], ['stringProperties' => ['realId']]);
+        return $this->createEmpty()->hydrate($result[0], $this->hydrate);
     }
 
     /**
@@ -298,6 +306,7 @@ class RequiredFileFactory extends BaseFactory
      * @param $id
      * @param string|int $realId
      * @param $path
+     * @param int $size
      * @param bool $isUseRealId
      * @return RequiredFile
      */
@@ -307,6 +316,7 @@ class RequiredFileFactory extends BaseFactory
         $id,
         $realId,
         $path,
+        int $size,
         bool $isUseRealId = true
     ): RequiredFile {
         try {
@@ -321,6 +331,7 @@ class RequiredFileFactory extends BaseFactory
         $requiredFile->fileType = $fileType;
         $requiredFile->realId = $realId;
         $requiredFile->path = $path;
+        $requiredFile->size = $size;
         return $requiredFile;
     }
 
@@ -357,30 +368,38 @@ class RequiredFileFactory extends BaseFactory
     {
         $params = $this->getSanitizer($request);
         $displayId = $params->getInt('displayId');
-        $itemId = $params->getInt('itemId');
 
         switch ($params->getString('type')) {
             case 'L':
+                $itemId = $params->getInt('itemId');
                 $file = $this->getByDisplayAndLayout($displayId, $itemId);
                 break;
 
             case 'M':
+                $itemId = $params->getInt('itemId');
                 $file = $this->getByDisplayAndMedia($displayId, $itemId);
                 break;
 
             case 'P':
+                $itemId = $params->getString('itemId');
                 $fileType = $params->getString('fileType');
                 if (empty($fileType)) {
                     throw new NotFoundException(__('Missing fileType'));
                 }
+
+                // File type media means that we will use a special negative itemId to get out the actual file.
+                if ($fileType === 'media') {
+                    $itemId = intval($itemId);
+                }
+
                 $file = $this->getByDisplayAndDependency(
                     $displayId,
                     $fileType,
                     $itemId,
-                    !($fileType == 'media' && $itemId < 0)
+                    !($fileType === 'media' && $itemId < 0)
                 );
 
-                // Update $file->path with the path on disk (likely /dependencies/$fileType/$itemId)
+                // Update $file->path with the path on disk (likely /assets/$itemId)
                 $event = new XmdsDependencyRequestEvent($file);
                 $this->getDispatcher()->dispatch($event, XmdsDependencyRequestEvent::$NAME);
 

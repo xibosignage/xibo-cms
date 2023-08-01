@@ -26,6 +26,7 @@ use Illuminate\Support\Str;
 use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Module;
+use Xibo\Entity\ModuleTemplate;
 use Xibo\Entity\Widget;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
@@ -432,8 +433,8 @@ class ModuleFactory extends BaseFactory
     }
 
     /**
-     * @param \Xibo\Entity\ModuleTemplate[] $templates
-     * @return void
+     * @param ModuleTemplate[] $templates
+     * @return Asset[]
      */
     public function getAssetsFromTemplates(array $templates): array
     {
@@ -450,6 +451,21 @@ class ModuleFactory extends BaseFactory
             }
         }
 
+        return $assets;
+    }
+
+    /**
+     * Get all assets
+     * @return Asset[]
+     */
+    public function getAllAssets(): array
+    {
+        $assets = [];
+        foreach ($this->getEnabled() as $module) {
+            foreach ($module->getAssets() as $asset) {
+                $assets[$asset->id] = $asset;
+            }
+        }
         return $assets;
     }
 

@@ -34,7 +34,6 @@ class XmdsDependencyRequestEvent extends Event
     private $fileType;
     private $id;
     private $path;
-    private $fullPath;
     /**
      * @var string|null
      */
@@ -61,25 +60,9 @@ class XmdsDependencyRequestEvent extends Event
         return $this;
     }
 
-    /**
-     * Set the full path to this dependency, including the library folder if applicable.
-     * @param string $fullPath
-     * @return $this
-     */
-    public function setFullPath(string $fullPath): XmdsDependencyRequestEvent
-    {
-        $this->fullPath = $fullPath;
-        return $this;
-    }
-
     public function getRelativePath(): ?string
     {
         return $this->path;
-    }
-
-    public function getFullPath(): ?string
-    {
-        return $this->fullPath;
     }
 
     public function getFileType(): string

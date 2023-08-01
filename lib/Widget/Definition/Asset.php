@@ -28,6 +28,7 @@ use Intervention\Image\ImageManagerStatic as Img;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response;
 use Slim\Http\ServerRequest;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Xmds\Entity\Dependency;
 
@@ -45,6 +46,9 @@ class Asset implements \JsonSerializable
     public $cmsOnly;
 
     public $assetNo;
+
+    private $fileSize;
+    private $md5;
 
     /** @inheritDoc */
     public function jsonSerialize(): array
@@ -68,6 +72,40 @@ class Asset implements \JsonSerializable
     }
 
     /**
+     * @param string $libraryLocation
+     * @param bool $forceUpdate
+     * @return $this
+     * @throws GeneralException
+     */
+    public function updateAssetCache(string $libraryLocation, bool $forceUpdate = false): Asset
+    {
+        // Verify the asset is cached and update its path.
+        $assetPath = $libraryLocation . 'assets/' . $this->getFilename();
+        if (!file_exists($assetPath) || $forceUpdate) {
+            $result = @copy(PROJECT_ROOT . $this->path, $assetPath);
+            if (!$result) {
+                throw new GeneralException('Unable to copy asset');
+            }
+            $forceUpdate = true;
+        }
+
+        // Get the bundle MD5
+        $assetMd5CachePath = $assetPath . '.md5';
+        if (!file_exists($assetMd5CachePath) || $forceUpdate) {
+            $assetMd5 = md5_file($assetPath);
+            file_put_contents($assetMd5CachePath, $assetMd5);
+        } else {
+            $assetMd5 = file_get_contents($assetPath . '.md5');
+        }
+
+        $this->path = $assetPath;
+        $this->md5 = $assetMd5;
+        $this->fileSize = filesize($assetPath);
+
+        return $this;
+    }
+
+    /**
      * Get this asset as a dependency.
      * @return \Xibo\Xmds\Entity\Dependency
      * @throws \Xibo\Support\Exception\NotFoundException
@@ -75,14 +113,9 @@ class Asset implements \JsonSerializable
     public function getDependency(): Dependency
     {
         // Check that this asset is valid.
-        if (!file_exists(PROJECT_ROOT . $this->path)) {
-            throw new NotFoundException(__('Asset not found'));
+        if (!file_exists($this->path)) {
+            throw new NotFoundException(sprintf(__('Asset %s not found'), $this->path));
         }
-
-        // Get the file size and md5 of the asset.
-        // TODO: cache this?
-        $md5 = md5_file(PROJECT_ROOT . $this->path);
-        $size = filesize(PROJECT_ROOT . $this->path);
 
         // Return a dependency
         return new Dependency(
@@ -90,12 +123,16 @@ class Asset implements \JsonSerializable
             $this->id,
             $this->getLegacyId(),
             $this->path,
-            $size,
-            $md5,
-            false
+            $this->fileSize,
+            $this->md5,
+            true
         );
     }
 
+    /**
+     * Get the file name for this asset
+     * @return string
+     */
     public function getFilename(): string
     {
         return basename($this->path);
@@ -103,23 +140,32 @@ class Asset implements \JsonSerializable
 
     /**
      * Generate a PSR response for this asset.
-     * We cannot use sendfile because the asset isn't in the library folder.
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function psrResponse(ServerRequest $request, Response $response): ResponseInterface
+    public function psrResponse(ServerRequest $request, Response $response, string $sendFileMode): ResponseInterface
     {
         // Make sure this asset exists
-        if (!file_exists(PROJECT_ROOT . $this->path)) {
+        if (!file_exists($this->path)) {
             throw new NotFoundException(__('Asset file does not exist'));
         }
 
-        if (Str::startsWith('image', $this->mimeType)) {
-            return Img::make(PROJECT_ROOT . '/' . $this->path)->psrResponse();
+        $response = $response->withHeader('Content-Length', $this->fileSize);
+        $response = $response->withHeader('Content-Type', $this->mimeType);
+
+        // Output the file
+        if ($sendFileMode === 'Apache') {
+            // Send via Apache X-Sendfile header?
+            $response = $response->withHeader('X-Sendfile', $this->path);
+        } else if ($sendFileMode === 'Nginx') {
+            // Send via Nginx X-Accel-Redirect?
+            $response = $response->withHeader('X-Accel-Redirect', '/download/assets/' . $this->getFilename());
+        } else if (Str::startsWith('image', $this->mimeType)) {
+            $response = Img::make('/' . $this->path)->psrResponse();
         } else {
             // Set the right content type.
-            $response = $response->withHeader('Content-Type', $this->mimeType);
-            return $response->withBody(new Stream(fopen(PROJECT_ROOT . $this->path, 'r')));
+            $response = $response->withBody(new Stream(fopen($this->path, 'r')));
         }
+        return $response;
     }
 
     /**

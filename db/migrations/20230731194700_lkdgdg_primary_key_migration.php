@@ -23,20 +23,16 @@
 use Phinx\Migration\AbstractMigration;
 
 /**
- * Add a new column to connectors table (isVisible)
- * Add a new connector (layoutExchange) to connectors table
+ * lkdgdg must have a primary key for MySQL8 clustering
  * @phpcs:disable PSR1.Classes.ClassDeclaration.MissingNamespace
  */
-class AddTwitterConnectorMigration extends AbstractMigration
+class LkdgdgPrimaryKeyMigration extends AbstractMigration
 {
-    public function change()
+    public function change(): void
     {
-        /*$this->table('connectors')
-            ->insert([
-                'className' => '\\Xibo\\Connector\\TwitterConnector',
-                'isEnabled' => 0,
-                'isVisible' => 1
-            ])
-            ->save();*/
+        $pk = $this->fetchAll('SHOW KEYS FROM `lkdgdg` WHERE `Key_name` = \'PRIMARY\'');
+        if (count($pk) <= 0) {
+            $this->execute('ALTER TABLE `lkdgdg` ADD COLUMN `id` INT(11) PRIMARY KEY AUTO_INCREMENT');
+        }
     }
 }
