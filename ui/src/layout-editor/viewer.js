@@ -8,11 +8,11 @@ const viewerLayoutPreview = require('../templates/viewer-layout-preview.hbs');
 const viewerActionEditRegionTemplate =
   require('../templates/viewer-action-edit-region.hbs');
 const loadingTemplate = require('../templates/loading.hbs');
-const viewerObjectTemplate = require('../templates/viewer-object.hbs');
-const viewerObjectGroupTemplate =
-  require('../templates/viewer-object-group.hbs');
-const viewerObjectContentTemplate =
-  require('../templates/viewer-object-content.hbs');
+const viewerElementTemplate = require('../templates/viewer-element.hbs');
+const viewerElementGroupTemplate =
+  require('../templates/viewer-element-group.hbs');
+const viewerElementContentTemplate =
+  require('../templates/viewer-element-content.hbs');
 const drawThrottle = 60;
 
 /**
@@ -1216,7 +1216,7 @@ Viewer.prototype.renderElement = function(
   }
 
   // Render element container
-  const $newElement = $(viewerObjectTemplate({
+  const $newElement = $(viewerElementTemplate({
     element: element,
     dimensions: elementRenderDimensions,
   }));
@@ -1229,7 +1229,7 @@ Viewer.prototype.renderElement = function(
       $canvasRegionContainer.find(`#${element.groupId}`).length == 0
     ) {
       $canvasRegionContainer.append(
-        viewerObjectGroupTemplate({
+        viewerElementGroupTemplate({
           element: element,
           trans: viewerTrans,
         }),
@@ -1441,7 +1441,7 @@ Viewer.prototype.renderElementContent = function(
     }
 
     // Render element with template
-    $elementContainer.html($(viewerObjectContentTemplate({
+    $elementContainer.html($(viewerElementContentTemplate({
       element: element,
       template: template,
       scale: self.containerObjectDimensions.scale,

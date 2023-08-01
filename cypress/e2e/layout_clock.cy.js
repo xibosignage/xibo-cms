@@ -76,7 +76,6 @@ describe('Layout Designer', function() {
     // Delete
     cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_clock-analogue"]').parents('.designer-region').rightclick();
     cy.get('[data-title="Delete"]').click();
-    cy.get('.btn-bb-confirm').click();
     cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_clock-analogue"]').should('not.exist');
   });
 });

@@ -61,7 +61,6 @@ describe('Layout Designer', function() {
 
     cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_mastodon"]').parents('.designer-region').rightclick();
     cy.get('[data-title="Delete"]').click();
-    cy.get('.btn-bb-confirm').click();
     cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_mastodon"]').should('not.exist');
   });
 });
