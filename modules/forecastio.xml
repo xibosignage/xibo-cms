@@ -155,12 +155,13 @@ $content.empty();
 
 // Get current day (main) template and clone its contents
 var currentContainerHTML = $(target).find('.current-day-template').html();
+if (currentContainerHTML) {
+    // Make replacements [] with current day data
+    currentContainerHTML = makeReplacement(currentContainerHTML, items[0]);
 
-// Make replacements [] with current day data
-currentContainerHTML = makeReplacement(currentContainerHTML, items[0]);
-
-// Add current day (main) template to content container
-$content.append(currentContainerHTML);
+    // Add current day (main) template to content container
+    $content.append(currentContainerHTML);
+}
 
 // Make replacements if we have bg-div
 var bgDivHTML = $(target).find('.bg-div').prop('outerHTML');

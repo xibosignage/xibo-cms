@@ -383,6 +383,11 @@ class Widget extends Base
         $widget->setOptionValue('name', 'attrib', $params->getString('name'));
         $widget->setOptionValue('enableStat', 'attrib', $params->getString('enableStat'));
 
+        // Handle special common properties for widgets with data
+        if ($module->isDataProviderExpected()) {
+            $widget->setOptionValue('isRepeatData', 'attrib', $params->getCheckbox('isRepeatData'));
+        }
+
         // Validate common parameters if we don't have a validator present.
         $widgetValidators = $module->getWidgetValidators();
         if (count($widgetValidators) <= 0 && $widget->duration < 0) {

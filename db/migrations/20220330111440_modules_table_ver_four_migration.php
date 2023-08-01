@@ -135,19 +135,12 @@ class ModulesTableVerFourMigration extends AbstractMigration
               (\'core-worldclock-digital-text\', '.$enabled.', '.$previewEnabled.', '.$defaultDuration.', \''.$settings.'\');
             ');
 
+            // Add new modules.
             $this->execute('
             INSERT INTO `module` (`moduleId`, `enabled`, `previewEnabled`, `defaultDuration`, `settings`) VALUES
-              (\'core-canvas\', \'1\', \'1\', \'60\', \'[]\');
-            ');
-
-            $this->execute('
-            INSERT INTO `module` (`moduleId`, `enabled`, `previewEnabled`, `defaultDuration`, `settings`) VALUES
-              (\'core-mastodon\', \'1\', \'1\', \'60\', \'[]\');
-            ');
-
-            $this->execute('
-            INSERT INTO `module` (`moduleId`, `enabled`, `previewEnabled`, `defaultDuration`, `settings`) VALUES
-              (\'core-countdown-custom\', \'1\', \'1\', \'60\', \'[]\');
+              (\'core-canvas\', \'1\', \'1\', \'60\', \'[]\'),
+              (\'core-mastodon\', \'1\', \'1\', \'60\', \'[]\'),
+              (\'core-countdown-custom\', \'1\', \'1\', \'60\', \'[]\')
             ');
         } catch (Exception $e) {
             // Keep the old module table around for diagnosis and just continue on.

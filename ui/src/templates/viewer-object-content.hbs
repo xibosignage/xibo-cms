@@ -26,7 +26,7 @@
     {{/if}}
     {{#if onElementParseData}}
         <script type="text/javascript">
-            function onElementParseData_{{ ../element.id }}(value) {
+            function onElementParseData_{{ ../element.id }}(value, properties) {
                 {{{onElementParseData}}}
             }
         </script>

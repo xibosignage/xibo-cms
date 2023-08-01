@@ -1547,10 +1547,6 @@ Viewer.prototype.renderElementContent = function(
               convertedProperties,
             );
           }
-        } else {
-          if (template.onElementParseData && hasElementParseDataFn) {
-            elementParseDataFn();
-          }
         }
 
         // Compile hbs template with data

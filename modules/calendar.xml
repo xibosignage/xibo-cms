@@ -89,6 +89,17 @@
             <default></default>
         </property>
     </properties>
+    <onDataError><![CDATA[
+    if (typeof httpStatus === 'undefined' || typeof response === 'undefined') {
+        return false;
+    }
+
+    var hasSucceed = response.hasOwnProperty('success') && response.success === true;
+
+    if (!hasSucceed) {
+        return false;
+    }
+]]></onDataError>
     <onParseData><![CDATA[
 // item - element to be parsed
 // properties - object containing the values to be evaluated/used

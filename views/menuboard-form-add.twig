@@ -49,9 +49,6 @@
                 {% endif %}
 
                 {% set title %}{% trans "Name" %}{% endset %}
-                {{ forms.message("This is a feature preview and should not be used in production"|trans, "alert alert-danger") }}
-
-                {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name for this Menu Board" %}{% endset %}
                 {{ forms.input("name", title, "", helpText) }}
 

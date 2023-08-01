@@ -42,6 +42,7 @@ use Xibo\Listener\DataSetDataProviderListener;
 use Xibo\Listener\DisplayGroupListener;
 use Xibo\Listener\LayoutListener;
 use Xibo\Listener\MediaListener;
+use Xibo\Listener\MenuBoardProviderListener;
 use Xibo\Listener\NotificationDataProviderListener;
 use Xibo\Listener\PlaylistListener;
 use Xibo\Listener\SyncGroupListener;
@@ -351,6 +352,12 @@ class ListenersMiddleware implements MiddlewareInterface
             $c->get('widgetFactory'),
             $c->get('store'),
             $c->get('configService')
+        ))
+            ->useLogger($c->get('logger'))
+            ->registerWithDispatcher($dispatcher);
+
+        (new MenuBoardProviderListener(
+            $c->get('menuBoardCategoryFactory')
         ))
             ->useLogger($c->get('logger'))
             ->registerWithDispatcher($dispatcher);

@@ -2247,6 +2247,10 @@ class Schedule extends Base
                 $event->toDt = $dayPart->adjustedEnd->format('U');
             }
 
+            if ($event->eventTypeId == \Xibo\Entity\Schedule::$COMMAND_EVENT) {
+                $event->toDt = $event->fromDt;
+            }
+
             if ($this->isApi($request)) {
                 continue;
             }

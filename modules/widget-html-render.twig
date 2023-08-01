@@ -138,7 +138,7 @@
 {% endfor %}
 {% for templateId, parser in onElementParseData %}
     <script type="text/javascript" id="onElementParseData-{{ templateId }}">
-      function onElementParseData_{{ templateId }}(value) {
+      function onElementParseData_{{ templateId }}(value, properties) {
           {{ parser|raw  }}
       }
     </script>

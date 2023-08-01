@@ -35,7 +35,7 @@ window.Hls = require('hls.js');
 window.transformer = require('../../ui/src/helpers/transformer.js');
 
 // Our own imports
-import '../vendor/xibo-interactive-control.min.js';
+import 'xibo-interactive-control/dist/xibo-interactive-control.min.js';
 import './xibo-calendar-render';
 import './xibo-countdown-render';
 import './xibo-finance-render';

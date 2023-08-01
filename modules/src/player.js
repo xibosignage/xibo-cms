@@ -138,6 +138,30 @@ $(function() {
   }
 
   /**
+   * onDataError callback
+   * @param {Object} widget - Widget
+   * @param {string|number} httpStatus
+   * @param {Object} response - Response body|json
+   */
+  function onDataErrorCallback(widget, httpStatus, response) {
+    if (
+        typeof window[`onDataError_${widget.widgetId}`] === 'function'
+    ) {
+      const onDataError = window[
+          `onDataError_${widget.widgetId}`
+          ](httpStatus, response);
+
+      if (typeof onDataError === 'undefined' || onDataError == false) {
+        xiboIC.reportFault({
+          code: '5001',
+          reason: 'No Data',
+        });
+      }
+    }
+
+  }
+
+  /**
    * Get widget data
    * @param {object} widget
    * @return {Promise}
@@ -158,8 +182,15 @@ $(function() {
           method: 'GET',
           url: widget.url,
         }).done(function(data) {
+          if (data && data.hasOwnProperty('success') &&
+            data.success === false && data.error
+          ) {
+            onDataErrorCallback(widget, data.error, data);
+          }
+
           resolve(data);
         }).fail(function(jqXHR, textStatus, errorThrown) {
+          onDataErrorCallback(widget, jqXHR.status, jqXHR.responseJSON);
           console.log(jqXHR, textStatus, errorThrown);
         });
       } else {
@@ -191,6 +222,10 @@ $(function() {
       dataItems,
       showError,
     } = composeFinalData(widget, data);
+
+    if (dataItems.length === 0 && showError) {
+      xiboIC.expireNow({targetId: widget.widgetId});
+    }
 
     if (showError && data?.message) {
       $target.append(
@@ -418,6 +453,7 @@ $(function() {
           if (widgetElement?.elements?.length > 0) {
             $.each(widgetElement.elements, function(_elemKey, element) {
               const elementCopy = JSON.parse(JSON.stringify(element));
+              const elementProperties = elementCopy?.properties || {};
 
               if (Object.keys(elementCopy).length > 0 &&
                 elementCopy.hasOwnProperty('properties')
@@ -445,7 +481,6 @@ $(function() {
                 hbs = Handlebars.compile($template.html());
               }
 
-              const elementProperties = element?.properties || {};
               const renderElement = (data, isStatic) => {
                 const hbsTemplate = hbs(
                   Object.assign(data, globalOptions),
@@ -496,6 +531,7 @@ $(function() {
                     duration: widgetInfo.duration,
                     marqueeInlineSelector: `.${templateData.id}--item`,
                     parentId: elementCopy.elementId,
+                    effect: elementProperties?.effect || 'noTransition',
                   },
                 );
                 getWidgetData(widgetInfo)
@@ -533,6 +569,7 @@ $(function() {
                           if (onElementParseData) {
                             item[dataOverride] = onElementParseData(
                               item[extendDataWith],
+                              templateData,
                             );
                           }
                         }

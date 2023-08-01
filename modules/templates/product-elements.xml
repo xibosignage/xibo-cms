@@ -1,0 +1,94 @@
+<!--
+  ~ Copyright (C) 2023 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - https://xibosignage.com
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<templates>
+    <template>
+        <id>product_name</id>
+        <extends override="text" with="data.name">text</extends>
+        <title>Name</title>
+        <type>element</type>
+        <dataType>product</dataType>
+        <canRotate>true</canRotate>
+        <startWidth>500</startWidth>
+        <startHeight>100</startHeight>
+        <properties>
+            <property id="effect" type="effectSelector" variant="all">
+                <title>Effect</title>
+                <helpText>Please select the effect that will be used to transition between items.</helpText>
+                <default>noTransition</default>
+            </property>
+        </properties>
+    </template>
+    <template>
+        <id>product_price</id>
+        <extends override="text" with="data.price">text</extends>
+        <title>Price</title>
+        <type>element</type>
+        <dataType>product</dataType>
+        <canRotate>true</canRotate>
+        <startWidth>500</startWidth>
+        <startHeight>100</startHeight>
+        <properties>
+            <property id="currencyCode" type="text">
+                <title>Currency Code</title>
+                <helpText>The 3 digit currency code to apply to the price, e.g. USD/GBP/EUR</helpText>
+                <default></default>
+            </property>
+            <property id="prefix" type="text">
+                <title>Prefix</title>
+                <default></default>
+            </property>
+            <property id="suffix" type="text">
+                <title>Suffix</title>
+                <default></default>
+            </property>
+            <property id="effect" type="effectSelector" variant="all">
+                <title>Effect</title>
+                <helpText>Please select the effect that will be used to transition between items.</helpText>
+                <default>noTransition</default>
+            </property>
+        </properties>
+        <onElementParseData><![CDATA[
+// value - element to be parsed
+// properties
+if (String(value).length === 0) {
+    return '';
+}
+
+var options = {};
+if (properties.currencyCode && properties.currencyCode !== '') {
+    options.style = 'currency';
+    options.currency = properties.currencyCode;
+}
+
+value = new Intl.NumberFormat(undefined, options).format(value);
+
+if (properties.prefix && properties.prefix !== '') {
+    value = properties.prefix + '' + value;
+}
+
+if (properties.suffix && properties.suffix !== '') {
+    value = value + '' + properties.suffix;
+}
+
+return value;
+        ]]></onElementParseData>
+    </template>
+</templates>
