@@ -137,14 +137,14 @@ module.exports = {
   },
 
   /**
-     * Check if element has specific target in data
-     * @param {object} element - Element to check
+     * Check if object has specific target in data
+     * @param {object} object - object to check
      * @param {string[]} targetType - Target to check
      * @return {boolean}
       */
-  hasTarget: function(element, targetType) {
+  hasTarget: function(object, targetType) {
     // Get target data
-    let targetData = $(element).data('target');
+    let targetData = $(object).data('target');
 
     // If target data is not defined, return false
     if (targetData == undefined) {

@@ -1,38 +1,38 @@
-<nav class="navbar viewer-navbar designer-{{element.type}}-selected">
+<nav class="navbar viewer-navbar designer-{{object.type}}-selected">
     <div class="viewer-navbar-info">
         {{! Element Info }}
-        {{#eq element.type "widget"}}
+        {{#eq object.type "widget"}}
             <div class="info d-inline">
                 {{#if regionName}}
                     <span class="label-name align-middle d-inline-block">
                         "{{regionName}}"
                     </span>
-                    {{#ifCond element.widgetName '||' element.moduleName}}
+                    {{#ifCond object.widgetName '||' object.moduleName}}
                         <i class="fas fa-arrow-right align-middle"></i>
                     {{/ifCond}}
                 {{/if}}
-                {{#ifCond element.widgetName '||' element.moduleName}}
+                {{#ifCond object.widgetName '||' object.moduleName}}
                     <span class="label-name align-middle d-inline-block">
-                        {{#if element.widgetName}}"{{element.widgetName}}"{{/if}} {{#if element.moduleName}}({{element.moduleName}}){{/if}}
+                        {{#if object.widgetName}}"{{object.widgetName}}"{{/if}} {{#if object.moduleName}}({{object.moduleName}}){{/if}}
                     </span>
                 {{/ifCond}}
             </div>
-        {{else eq element.type "element"}}
+        {{else eq object.type "element"}}
             <div class="info d-inline">
-                <span class="label-name align-middle" title="{{element.name}}">
-                    {{element.elementType}} - "{{element.id}}"" ({{trans.element}})
+                <span class="label-name align-middle" title="{{object.name}}">
+                    {{object.objectType}} - "{{object.id}}"" ({{trans.element}})
                 </span>
             </div>
-        {{else eq element.type "element-group"}}
+        {{else eq object.type "element-group"}}
             <div class="info d-inline">
-                <span class="label-name align-middle" title="{{element.name}}">
-                    {{element.id}} ({{trans.elementGroup}})
+                <span class="label-name align-middle" title="{{object.name}}">
+                    {{object.id}} ({{trans.elementGroup}})
                 </span>
             </div>
         {{else}}
             <div class="info d-inline">
-                <span class="label-name align-middle" title="{{element.name}}">
-                    "{{element.name}}" ({{lookup trans element.type}})
+                <span class="label-name align-middle" title="{{object.name}}">
+                    "{{object.name}}" ({{lookup trans object.type}})
                 </span>
             </div>
         {{/eq}}
@@ -53,16 +53,16 @@
             {{/if}}
 
             {{#unless readOnlyModeOn}}
-                {{#if element.isPermissionsModifiable}}
+                {{#if object.isPermissionsModifiable}}
                     <button type="button" id="permissions-btn" class="properties-btn btn btn-sm" data-property="Permissions" 
                         data-toggle="tooltip" data-container=".editor-bottom-bar" data-placement="top" data-title="{{trans.tools.permissions.description}}">
                         <i class="tool-icon-permissions card-icon"></i>
                     </button>
                 {{/if}}
 
-                {{#eq element.type "widget"}}
-                    {{#if element.isEditable}}
-                        {{#if element.canAttachAudio}}
+                {{#eq object.type "widget"}}
+                    {{#if object.isEditable}}
+                        {{#if object.canAttachAudio}}
                             <button type="button" id="audio-btn" class="properties-btn btn btn-sm" data-property="Audio" 
                                 data-toggle="tooltip" data-container=".editor-bottom-bar" data-placement="top" data-title="{{trans.tools.audio.description}}">
                                 <i class="tool-icon-audio card-icon"></i>

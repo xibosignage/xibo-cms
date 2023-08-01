@@ -131,7 +131,7 @@ Playlist.prototype.calculateTimeValues = function() {
  * @param {object} draggable - Dragged object
  * @param {number=} addToPosition - Add to specific position in the widget list
  */
-Playlist.prototype.addElement = function(
+Playlist.prototype.addObject = function(
   droppable,
   draggable,
   addToPosition = null,
@@ -348,34 +348,32 @@ Playlist.prototype.addMedia = function(media, addToPosition = null) {
 };
 
 /**
- * Delete an element in the playlist, by ID
- * @param {string} elementType - element type (widget, region, ...)
- * @param {number} elementId - element id
- * @param {object =} [options] - Delete submit params/options
+ * Delete an object in the playlist, by ID
+ * @param {string} objectType - object type (widget, region, ...)
+ * @param {number} objectId - object id
  * @return {Promise} - Promise object
  */
-Playlist.prototype.deleteElement = function(
-  elementType,
-  elementId,
-  options = null,
+Playlist.prototype.deleteObject = function(
+  objectType,
+  objectId,
 ) {
   pE.common.showLoadingScreen();
 
   // Remove changes from the history array
   return pE.historyManager.removeAllChanges(
-    elementType,
-    elementId,
-  ).then((res) => {
+    objectType,
+    objectId,
+  ).then((_res) => {
     pE.common.hideLoadingScreen();
 
     // Create a delete type change
     // upload it but don't add it to the history array
     return pE.historyManager.addChange(
       'delete',
-      elementType, // targetType
-      elementId, // targetId
+      objectType, // targetType
+      objectId, // targetId
       null, // oldValues
-      options, // newValues
+      null, // newValues
       {
         addToHistory: false, // options.addToHistory
       },
@@ -402,9 +400,9 @@ Playlist.prototype.saveOrder = function(widgets) {
   // Get playlist's widgets previous order
   const oldOrder = {};
   let orderIndex = 1;
-  for (const element in pE.playlist.widgets) {
-    if (pE.playlist.widgets.hasOwnProperty(element)) {
-      oldOrder[pE.playlist.widgets[element].widgetId] = orderIndex;
+  for (const widget in pE.playlist.widgets) {
+    if (pE.playlist.widgets.hasOwnProperty(widget)) {
+      oldOrder[pE.playlist.widgets[widget].widgetId] = orderIndex;
       orderIndex++;
     }
   }
@@ -413,7 +411,7 @@ Playlist.prototype.saveOrder = function(widgets) {
   const newOrder = {};
 
   for (let index = 0; index < widgets.length; index++) {
-    const widget = pE.getElementByTypeAndId(
+    const widget = pE.getObjectByTypeAndId(
       'widget',
       $(widgets[index]).attr('id'),
     );

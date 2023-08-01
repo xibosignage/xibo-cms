@@ -69,7 +69,7 @@ PlaylistTimeline.prototype.render = function() {
     drop: function(event, ui) {
       const position = parseInt($(event.target).data('position')) + 1;
 
-      pE.playlist.addElement(event.target, ui.draggable[0], position);
+      pE.playlist.addObject(event.target, ui.draggable[0], position);
     },
   });
 
@@ -104,7 +104,7 @@ PlaylistTimeline.prototype.render = function() {
       );
     },
     drop: function(event, ui) {
-      pE.playlist.addElement(event.target, ui.draggable[0]);
+      pE.playlist.addObject(event.target, ui.draggable[0]);
     },
   });
 
@@ -115,7 +115,7 @@ PlaylistTimeline.prototype.render = function() {
     e.stopPropagation();
 
     const widget =
-      pE.getElementByTypeAndId(
+      pE.getObjectByTypeAndId(
         $(e.target).parents('.playlist-widget').data('type'),
         $(e.target).parents('.playlist-widget').attr('id'),
         $(e.target).parents('.playlist-widget').data('widgetRegion'),
@@ -193,7 +193,7 @@ PlaylistTimeline.prototype.createGrid = function() {
   // If we are in scaled mode
   if (this.scaledTimeline) {
     // Add steps until we fill the timeline
-    // or we reach the number of elements
+    // or we reach the number of items
     const timelineHeight = $timeGrid.parents('.editor-body').height() - 20;
     const targetHeight = (timelineHeight > this.totalTimelineHeight) ?
       timelineHeight : (this.totalTimelineHeight + this.stepHeight * 2);

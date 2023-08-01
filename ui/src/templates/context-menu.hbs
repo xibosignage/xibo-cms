@@ -33,6 +33,12 @@
                 </div>
             {{/if}}
 
+            {{#if canUngroup}}
+                <div class="context-menu-btn" data-title="{{trans.ungroupElements}}" data-action="Ungroup" data-toggle="tooltip" data-container=".context-menu">
+                    <i class="fas fa-chain-broken"></i><span>{{trans.ungroupElements}}</span>
+                </div>
+            {{/if}}
+
             {{#eq type "widget"}}
                 {{#if isEditable}}
                     {{#if canAttachAudio}}

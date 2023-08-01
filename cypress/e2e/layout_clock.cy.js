@@ -39,7 +39,7 @@ describe('Layout Designer', function() {
 
     cy.get('[data-sub-type="clock-analogue"] > .toolbar-card-thumb').click();
 
-    cy.get('.viewer-element.layout.ui-droppable-active').click();
+    cy.get('.viewer-object.layout.ui-droppable-active').click();
 
     // Check if the widget is in the viewer
     cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_clock-analogue"]').should('exist');
@@ -61,11 +61,11 @@ describe('Layout Designer', function() {
     cy.wait('@saveWidget');
 
     // Change the background of the layout
-    cy.get('.viewer-element').click({force: true});
+    cy.get('.viewer-object').click({force: true});
     cy.get('[name="backgroundColor"]').clear().type('#ffffff').trigger('change');
 
     // Validate background color changed wo white
-    cy.get('.viewer-element').should('have.css', 'background-color', 'rgb(255, 255, 255)');
+    cy.get('.viewer-object').should('have.css', 'background-color', 'rgb(255, 255, 255)');
 
     // Check if the name and duration values are the same entered
     cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_clock-analogue"]').parents('.designer-region').click();

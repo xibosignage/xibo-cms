@@ -163,13 +163,13 @@ describe('Layout Designer (Populated/Unchanged)', function() {
         cy.server();
         cy.route('**/region/preview/*').as('loadRegion');
         // Wait for the viewer and region to load
-        cy.get('#layout-viewer-container .viewer-element.layout-player').should('be.visible');
+        cy.get('#layout-viewer-container .viewer-object.layout-player').should('be.visible');
         cy.wait('@loadRegion');
 
         // Click play
         cy.get('.editor-bottom-bar #play-btn').click();
 
         // Check if the fullscreen iframe has loaded
-        cy.get('#layout-viewer-container #layout-viewer .viewer-element > iframe').should('be.visible');
+        cy.get('#layout-viewer-container #layout-viewer .viewer-object > iframe').should('be.visible');
     });
 });

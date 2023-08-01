@@ -8,9 +8,9 @@ const actionsFormTabTemplate =
   require('../templates/actions-form-tab-template.hbs');
 const actionsFormContentTemplate =
   require('../templates/actions-form-content-template.hbs');
-const actionFormElementTemplate =
+const actionFormObjectTemplate =
   require('../templates/actions-form-element-template.hbs');
-const actionFormElementEditTemplate =
+const actionFormObjectEditTemplate =
     require('../templates/actions-form-element-edit-template.hbs');
 const formTemplates = {
   widget: require('../templates/forms/widget.hbs'),
@@ -86,7 +86,7 @@ PropertiesPanel.prototype.save = function(
   ) {
     const oldTarget = target;
 
-    target = app.getElementByTypeAndId(
+    target = app.getObjectByTypeAndId(
       'widget',
       'widget_' + oldTarget.regionId + '_' + oldTarget.widgetId,
       'canvas',
@@ -181,7 +181,7 @@ PropertiesPanel.prototype.save = function(
 
       const reloadData = function() {
         const mainObject =
-          app.getElementByTypeAndId(app.mainObjectType, app.mainObjectId);
+          app.getObjectByTypeAndId(app.mainObjectType, app.mainObjectId);
 
         // If we're saving a widget, reload region on the viewer
         if (
@@ -196,7 +196,7 @@ PropertiesPanel.prototype.save = function(
             }).done(() => {
             if (!target.drawerWidget) {
               app.viewer.renderRegion(
-                app.getElementByTypeAndId('region', target.regionId),
+                app.getObjectByTypeAndId('region', target.regionId),
               );
             } else {
               app.viewer.renderRegion(
@@ -299,7 +299,7 @@ PropertiesPanel.prototype.saveElement = function(
   const app = this.parent;
 
   // Get parent widget
-  const parentWidget = app.getElementByTypeAndId(
+  const parentWidget = app.getObjectByTypeAndId(
     'widget',
     'widget_' + target.regionId + '_' + target.widgetId,
     'canvas',
@@ -397,7 +397,7 @@ PropertiesPanel.prototype.render = function(
     const elementId = target.elementId;
 
     // Get widget and change target
-    target = app.getElementByTypeAndId(
+    target = app.getObjectByTypeAndId(
       'widget',
       'widget_' + target.regionId + '_' + target.widgetId,
       'canvas',
@@ -413,7 +413,7 @@ PropertiesPanel.prototype.render = function(
     targetAux = target;
 
     // Get widget and set it as target
-    target = app.getElementByTypeAndId(
+    target = app.getObjectByTypeAndId(
       'widget',
       'widget_' + target.regionId + '_' + target.widgetId,
       'canvas',
@@ -919,7 +919,7 @@ PropertiesPanel.prototype.render = function(
       // If we change any input, update the target position
       self.DOMObject.find('#positionTab [name]').on(
         'change', _.debounce(function(ev) {
-          const viewerScale = lD.viewer.containerElementDimensions.scale;
+          const viewerScale = lD.viewer.containerObjectDimensions.scale;
           const form = $(ev.currentTarget).parents('#positionTab');
 
           // Prevent layer to be negative
@@ -1032,7 +1032,7 @@ PropertiesPanel.prototype.render = function(
         'click',
         function(ev) {
           const form = $(ev.currentTarget).parents('#positionTab');
-          const viewerScale = lD.viewer.containerElementDimensions.scale;
+          const viewerScale = lD.viewer.containerObjectDimensions.scale;
 
           if (targetAux == undefined) {
             // Widget
@@ -1378,7 +1378,7 @@ PropertiesPanel.prototype.saveRegion = function(
 
 /**
  * Create action tab
- * @param {object} element
+ * @param {object} object
  * @param {object/boolean=} [options.reattach = false] - reattach the tab
  * @param {object/boolean=} [options.clearPrevious = false]
  *  - clear previous tab content
@@ -1387,7 +1387,7 @@ PropertiesPanel.prototype.saveRegion = function(
  * @param {object/string=} [options.openEditActionAfterRender = null]
  */
 PropertiesPanel.prototype.renderActionTab = function(
-  element,
+  object,
   {
     reattach = false,
     clearPrevious = false,
@@ -1409,14 +1409,14 @@ PropertiesPanel.prototype.renderActionTab = function(
 
   // Create tab
   self.DOMObject.find('.nav-tabs').append(
-    actionsFormTabTemplate(element),
+    actionsFormTabTemplate(object),
   );
 
   // Create tab content
   if (!reattach) {
     this.actionForm =
       $(actionsFormContentTemplate({
-        elementType: element.type,
+        objectType: object.type,
         trans: propertiesPanelTrans.actions,
       }));
   }
@@ -1438,8 +1438,8 @@ PropertiesPanel.prototype.renderActionTab = function(
       },
     }).done(function(res) {
       // Filter actions by groups
-      const $elementActionsContainer =
-        self.DOMObject.find('.element-actions');
+      const $itemActionsContainer =
+        self.DOMObject.find('.item-actions');
       const $otherActionsContainer =
         self.DOMObject.find('.other-actions');
 
@@ -1455,16 +1455,16 @@ PropertiesPanel.prototype.renderActionTab = function(
         res.data.forEach((action) => {
           self.addActionToContainer(
             action,
-            element,
-            $elementActionsContainer,
+            object,
+            $itemActionsContainer,
             $otherActionsContainer,
           );
         });
       }
 
       // If container is empty, show message
-      ($elementActionsContainer.find('.action-element').length == 0) &&
-        showEmptyMessage($elementActionsContainer);
+      ($itemActionsContainer.find('.action-element').length == 0) &&
+        showEmptyMessage($itemActionsContainer);
       ($otherActionsContainer.find('.action-element').length == 0) &&
         showEmptyMessage($otherActionsContainer);
 
@@ -1521,10 +1521,10 @@ PropertiesPanel.prototype.addActionToContainer = function(
     action.sourceId == selectedId;
 
   // For layout, compare with "screen"
-  const elementType =
+  const objectType =
     (selectedType == 'layout') ? 'screen' : selectedType;
   action.isTarget =
-    action.target == elementType &&
+    action.target == objectType &&
     action.targetId == selectedId;
 
   // If action target is layout/screen, add the id to the targetId
@@ -1544,7 +1544,7 @@ PropertiesPanel.prototype.addActionToContainer = function(
   }
 
   // Create action and add to container
-  const newAction = actionFormElementTemplate($.extend({}, action, {
+  const newAction = actionFormObjectTemplate($.extend({}, action, {
     trans: propertiesPanelTrans.actions,
   }));
 
@@ -1616,7 +1616,7 @@ PropertiesPanel.prototype.openEditAction = function(action) {
   actionData.layoutCodeSearchURL = urlsForApi.layout.codeSearch.url;
 
   // Create action and add to container
-  const newAction = actionFormElementEditTemplate($.extend({}, actionData, {
+  const newAction = actionFormObjectEditTemplate($.extend({}, actionData, {
     trans: propertiesPanelTrans.actions,
   }));
 

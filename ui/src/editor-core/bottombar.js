@@ -13,9 +13,9 @@ const Bottombar = function(parent, container) {
 
 /**
  * Render bottombar
- * @param {object} element - the element to render the bottombar to
+ * @param {object} object - the object to render the bottombar to
  */
-Bottombar.prototype.render = function(element) {
+Bottombar.prototype.render = function(object) {
   const app = this.parent;
   const readOnlyModeOn = (app?.readOnlyMode === true);
 
@@ -40,8 +40,8 @@ Bottombar.prototype.render = function(element) {
       ) :
       '';
 
-  if (element.type == 'widget') {
-    const parentRegion = lD.getElementByTypeAndId('region', element.regionId);
+  if (object.type == 'widget') {
+    const parentRegion = lD.getObjectByTypeAndId('region', object.regionId);
 
     // Render widget toolbar
     this.DOMObject.html(bottomBarViewerTemplate(
@@ -49,19 +49,19 @@ Bottombar.prototype.render = function(element) {
         regionName: (parentRegion) ? parentRegion.name : '',
         trans: newBottomBarTrans,
         readOnlyModeOn: readOnlyModeOn,
-        element: element,
+        object: object,
         undoActive: checkHistory.undoActive,
         trashActive: trashBinActive,
       },
     ));
-  } else if (element.type == 'layout') {
+  } else if (object.type == 'layout') {
     // Render layout  toolbar
     this.DOMObject.html(bottomBarViewerTemplate(
       {
         trans: newBottomBarTrans,
         readOnlyModeOn: readOnlyModeOn,
         renderLayout: true,
-        element: element,
+        object: object,
         undoActive: checkHistory.undoActive,
         trashActive: trashBinActive,
       },
@@ -82,7 +82,7 @@ Bottombar.prototype.render = function(element) {
       } else {
         lD.viewer.playPreview(
           requestPath,
-          lD.viewer.containerElementDimensions,
+          lD.viewer.containerObjectDimensions,
         );
         this.DOMObject.find('#play-btn i')
           .removeClass('fa-play-circle')
@@ -91,27 +91,27 @@ Bottombar.prototype.render = function(element) {
         lD.viewer.previewPlaying = true;
       }
     }.bind(this));
-  } else if (element.type == 'region') {
+  } else if (object.type == 'region') {
     // Render region toolbar
     this.DOMObject.html(bottomBarViewerTemplate(
       {
         trans: newBottomBarTrans,
         readOnlyModeOn: readOnlyModeOn,
-        element: element,
+        object: object,
         undoActive: checkHistory.undoActive,
         trashActive: trashBinActive,
       },
     ));
   } else if (
-    element.type == 'element' ||
-    element.type == 'element-group'
+    object.type == 'element' ||
+    object.type == 'element-group'
   ) {
     // Render element and element group toolbar
     this.DOMObject.html(bottomBarViewerTemplate(
       {
         trans: newBottomBarTrans,
         readOnlyModeOn: readOnlyModeOn,
-        element: element,
+        object: object,
         trashActive: trashBinActive,
       },
     ));
@@ -135,7 +135,7 @@ Bottombar.prototype.render = function(element) {
 
   // Button handlers
   this.DOMObject.find('#delete-btn').click(function() {
-    if (element.isDeletable) {
+    if (object.isDeletable) {
       lD.deleteSelectedObject();
     }
   });
@@ -146,7 +146,7 @@ Bottombar.prototype.render = function(element) {
 
   this.DOMObject.find('.properties-btn').click(function(e) {
     const buttonData = $(e.currentTarget).data();
-    element.editPropertyForm(
+    object.editPropertyForm(
       buttonData['property'],
       buttonData['propertyType'],
     );

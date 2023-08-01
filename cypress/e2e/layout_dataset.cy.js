@@ -38,7 +38,7 @@ describe('Layout Designer', function() {
 
     cy.get('[data-sub-type="dataset"]').click();
     cy.get('[data-template-id="dataset_table_1"]').click();
-    cy.get('.viewer-element.layout.ui-droppable-active').click();
+    cy.get('.viewer-object.layout.ui-droppable-active').click();
 
     // // Check if the widget is in the viewer
     cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_dataset"]').should('exist');
