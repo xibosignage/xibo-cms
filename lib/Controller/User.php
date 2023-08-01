@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -1910,7 +1910,7 @@ class User extends Base
 
             if ($object->canChangeOwner()) {
                 $object->setOwner($ownerId);
-                $object->save(['notify' => false, 'manageDynamicDisplayLinks' => false]);
+                $object->save(['notify' => false, 'manageDynamicDisplayLinks' => false, 'validate' => false]);
             } else {
                 throw new ConfigurationException(__('Cannot change owner on this Object'));
             }

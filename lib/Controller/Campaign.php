@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -319,7 +319,7 @@ class Campaign extends Base
                         'url' => $this->urlFor($request, 'campaign.edit.form', ['id' => $campaign->campaignId]),
                         'text' => __('Edit'),
                     );
-                } else if ($campaign->type === 'ad' && $this->getUser()->featureEnabled('ad.campaigns')) {
+                } else if ($campaign->type === 'ad' && $this->getUser()->featureEnabled('ad.campaign')) {
                     $campaign->buttons[] = [
                         'id' => 'campaign_button_edit',
                         'linkType' => '_self',
