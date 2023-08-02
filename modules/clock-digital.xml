@@ -43,7 +43,7 @@
             <title>Enter a format for the Digital Clock e.g. [HH:mm] or [DD/MM/YYYY]. See the manual for more information.</title>
         </property>
         <property id="format" type="richText" allowLibraryRefs="true">
-            <title>Enter text or HTML in the box below.</title>
+            <title>Enter text in the box below.</title>
             <default><![CDATA[
 <span style="font-size: 48px; color:#1c1c1c;">[HH:mm:ss]</span>
             ]]></default>
@@ -56,9 +56,9 @@
                 <option name="DD/MM/YYYY">Day/Month/Year</option>
             </options>
         </property>
-        <property id="offset" type="text">
+        <property id="offset" type="number">
             <title>Offset</title>
-            <helpText>The offset in minutes that should be applied to the current time, or if a counter then date/time to run from in the format Y-m-d H:i:s.</helpText>
+            <helpText>The offset in minutes that should be applied to the current time.</helpText>
             <default></default>
         </property>
     </properties>
@@ -87,7 +87,7 @@ xiboIC.set(
         var offset = properties.offset || 0;
         $(".clock").each(function() {
             $(this).html(moment().format($(this).attr("format")));
-            $(this).html(moment().add(' + offset + ', "m").format($(this).attr("format")));
+            $(this).html(moment().add(offset, "m").format($(this).attr("format")));
         });
     }
 );
