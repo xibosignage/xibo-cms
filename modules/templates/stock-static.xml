@@ -23,6 +23,7 @@
         <id>stocks_custom_html</id>
         <type>static</type>
         <dataType>stock</dataType>
+        <showIn>none</showIn>
         <title>Stocks Custom HTML</title>
         <properties>
             <property id="backgroundColor" type="color">
