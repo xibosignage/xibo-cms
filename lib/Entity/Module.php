@@ -549,6 +549,18 @@ class Module implements \JsonSerializable
     }
 
     /**
+     * @return array
+     */
+    public function getSettingsForOutput(): array
+    {
+        $settings = [];
+        foreach ($this->settings as $setting) {
+            $settings[$setting->id] = $setting->value ?? $setting->default;
+        }
+        return $settings;
+    }
+
+    /**
      * Delete this module
      * @return void
      */

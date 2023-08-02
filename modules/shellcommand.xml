@@ -34,26 +34,6 @@
     <defaultDuration>10</defaultDuration>
     <settings></settings>
     <properties>
-        <property id="terminateCommand" type="checkbox">
-            <title>Terminate the command once the duration elapses?</title>
-            <helpText>Should the player forcefully terminate the command after the duration specified. Leave unchecked to let the command terminate naturally.</helpText>
-            <default></default>
-            <visibility>
-                <test>
-                    <condition field="useDuration" type="eq">1</condition>
-                </test>
-            </visibility>
-        </property>
-        <property id="useTaskkill" type="checkbox">
-            <title>Use taskkill to terminate commands?</title>
-            <helpText>On Windows, should the player use taskkill to terminate commands.</helpText>
-            <default></default>
-            <visibility>
-                <test>
-                    <condition field="useDuration" type="eq">1</condition>
-                </test>
-            </visibility>
-        </property>
         <property id="commandType" type="dropdown" mode="single">
             <title>Command Type</title>
             <helpText>Pick a command type</helpText>
@@ -158,6 +138,30 @@
                     <condition field="commandType" type="eq">createCommand</condition>
                 </test>
             </visibility>
+        </property>
+        <property type="message">
+            <title>If you set a duration in the advanced tab additional options for how the command is terminated will become available below this message.</title>
+        </property>
+        <property id="terminateCommand" type="checkbox">
+            <title>Terminate the command once the duration elapses?</title>
+            <helpText>Should the player forcefully terminate the command after the duration specified. Leave unchecked to let the command terminate naturally.</helpText>
+            <default></default>
+            <visibility>
+                <test>
+                    <condition field="useDuration" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="useTaskkill" type="checkbox">
+            <title>Use taskkill to terminate commands?</title>
+            <helpText>On Windows, should the player use taskkill to terminate commands.</helpText>
+            <default></default>
+            <visibility>
+                <test>
+                    <condition field="useDuration" type="eq">1</condition>
+                </test>
+            </visibility>
+            <playerCompatibility windows="only"></playerCompatibility>
         </property>
     </properties>
     <preview>

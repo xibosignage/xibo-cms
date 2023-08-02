@@ -535,7 +535,7 @@ class WidgetHtmlRenderer
                 if ($module->stencil->twig !== null) {
                     $twig['twig'][] = $this->twig->fetchFromString(
                         $this->decorateTranslations($module->stencil->twig),
-                        $module->getPropertyValues()
+                        array_merge($module->getPropertyValues(), ['settings' => $module->getSettingsForOutput()]),
                     );
                 }
                 if ($module->stencil->hbs !== null) {

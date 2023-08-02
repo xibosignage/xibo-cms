@@ -25,6 +25,7 @@
     <description>Custom World Clock</description>
     <class></class>
     <compatibilityClass>\Xibo\Widget\Compatibility\WorldClockWidgetCompatibility</compatibilityClass>
+    <showIn>none</showIn>
     <type>worldclock-digital-custom</type>
     <group id="worldclock" icon="world">World Clock</group>
     <legacyType>worldclock</legacyType>
@@ -161,7 +162,4 @@ if (typeof $(target).data('customClockRendered') === 'undefined') {
 // Scale the element every time
 $(target).xiboLayoutScaler(properties);
     ]]></onRender>
-    <assets>
-        <asset id="worldclock-custom-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/worldclock/worldclock-custom-thumb.png" />
-    </assets>
 </module>

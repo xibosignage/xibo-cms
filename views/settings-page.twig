@@ -912,12 +912,6 @@
                                     {{ forms.checkbox("SCHEDULE_SHOW_LAYOUT_NAME", title, theme.getSetting("SCHEDULE_SHOW_LAYOUT_NAME", 0), helpText, "", "", not theme.isSettingEditable("SCHEDULE_SHOW_LAYOUT_NAME")) }}
                                 {% endif %}
 
-                                {% if theme.isSettingVisible("MODULE_CONFIG_LOCKED_CHECKB") %}
-                                    {% set title %}{% trans "Lock Module Config" %}{% endset %}
-                                    {% set helpText %}{% trans "Is the module config locked? Useful for Service providers." %}{% endset %}
-                                    {{ forms.checkbox("MODULE_CONFIG_LOCKED_CHECKB", title, theme.getSetting("MODULE_CONFIG_LOCKED_CHECKB"), helpText, "", "", not theme.isSettingEditable("MODULE_CONFIG_LOCKED_CHECKB")) }}
-                                {% endif %}
-
                                 {% if theme.isSettingVisible("TASK_CONFIG_LOCKED_CHECKB") %}
                                     {% set title %}{% trans "Lock Task Config" %}{% endset %}
                                     {% set helpText %}{% trans "Is the task config locked? Useful for Service providers." %}{% endset %}
