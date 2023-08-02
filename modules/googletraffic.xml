@@ -78,7 +78,7 @@
         <property id="zoom" type="number">
             <title>Zoom</title>
             <helpText>How far should the map be zoomed in? The higher the number the closer, 1 represents the entire globe.</helpText>
-            <default>1</default>
+            <default>15</default>
         </property>
         <property type="message">
             <title>This module is rendered on the Player which means the Player must have an internet connection.</title>
@@ -106,7 +106,7 @@
 
         ]]></hbs>
         <twig><![CDATA[
-<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ settings.apiKey }}&callback=initMap"></script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ settings.apiKey }}&callback=init"></script>
 
 <style>
 body {
@@ -125,10 +125,36 @@ h1, h2, h3, h4, p {
 </style>
 
 <script type="text/javascript">
-    function initMap() {
+    function init() {
+        var lat = {{ latitude }};
+        var lng = {{ longitude }};
+        // Not preview and useDisplayLocation
+        if ({{useDisplayLocation}} === 1 && !xiboIC.checkIsPreview()) {
+            // Get the lat/lng from player info.
+            xiboIC.info({
+                done: function(xhr) {
+                    info = JSON.parse(xhr.responseText);
+                    if (info && info.latitude) {
+                        lat = info.latitude;
+                    }
+                    if (info && info.longitude) {
+                        lng = info.longitude;
+                    }
+                    initMap(lat, lng);
+                },
+                error: function() {
+                    initMap(lat, lng);
+                }
+            });
+        } else {
+            initMap(lat, lng);
+        }
+    }
+
+    function initMap(lat, lng) {
         var map = new google.maps.Map(document.getElementById('map'), {
             zoom: {{ zoom }},
-            center: {lat: {{ latitude }}, lng: {{ longitude }}},
+            center: {lat: lat, lng: lng},
             disableDefaultUI: true
         });
 
