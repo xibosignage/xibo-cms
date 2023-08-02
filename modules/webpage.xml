@@ -54,7 +54,7 @@
             <helpText>Should this Widget be loaded entirely off screen so that it is ready when shown? Dynamic content will start running off screen.</helpText>
             <default></default>
         </property>
-        <property id="modeId" type="dropdown" mode="single">
+        <property id="modeid" type="dropdown" mode="single">
             <title>Options</title>
             <helpText>How should this web page be embedded?</helpText>
             <default>1</default>
