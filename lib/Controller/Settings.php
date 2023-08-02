@@ -201,6 +201,7 @@ class Settings extends Base
      * @throws InvalidArgumentException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
+     * @phpcs:disable Generic.Files.LineLength.TooLong
      */
     public function update(Request $request, Response $response)
     {
