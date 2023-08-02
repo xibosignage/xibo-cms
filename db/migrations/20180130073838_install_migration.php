@@ -25,6 +25,8 @@ use Phinx\Migration\AbstractMigration;
 /**
  * Class InstallMigration
  *  migration for initial installation of database
+ * @phpcs:disable PSR1.Classes.ClassDeclaration.MissingNamespace
+ * @phpcs:disable Generic.Files.LineLength.TooLong
  */
 class InstallMigration extends AbstractMigration
 {
