@@ -638,11 +638,6 @@ class Settings extends Base
             $this->getConfig()->changeSetting('SCHEDULE_SHOW_LAYOUT_NAME', $sanitizedParams->getCheckbox('SCHEDULE_SHOW_LAYOUT_NAME'));
         }
 
-        if ($this->getConfig()->isSettingEditable('MODULE_CONFIG_LOCKED_CHECKB')) {
-            $this->handleChangedSettings('MODULE_CONFIG_LOCKED_CHECKB', $this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB'), $sanitizedParams->getCheckbox('MODULE_CONFIG_LOCKED_CHECKB'), $changedSettings);
-            $this->getConfig()->changeSetting('MODULE_CONFIG_LOCKED_CHECKB', $sanitizedParams->getCheckbox('MODULE_CONFIG_LOCKED_CHECKB'));
-        }
-
         if ($this->getConfig()->isSettingEditable('TASK_CONFIG_LOCKED_CHECKB')) {
             $this->handleChangedSettings('TASK_CONFIG_LOCKED_CHECKB', $this->getConfig()->getSetting('TASK_CONFIG_LOCKED_CHECKB'), $sanitizedParams->getCheckbox('TASK_CONFIG_LOCKED_CHECKB'), $changedSettings);
             $this->getConfig()->changeSetting('TASK_CONFIG_LOCKED_CHECKB', $sanitizedParams->getCheckbox('TASK_CONFIG_LOCKED_CHECKB'));
