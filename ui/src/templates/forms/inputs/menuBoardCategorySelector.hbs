@@ -1,0 +1,18 @@
+{{> dropdown id=id name=name value=value title=title selectType="dependsSelect" customClass="menu-board-category-selector"
+    options=(arr (obj name='' title='')) optionsTitle="title" optionsValue="name"
+    customData=(arr 
+        (obj name='width' value='100%')
+        (obj name='allow-clear' value='true')
+        (obj name='placeholder--id' value=null)
+        (obj name='placeholder--value' value='')
+        (obj name='search-url-base' value=menuBoardCategorySearchUrl)
+        (obj name='search-url' value=menuBoardCategorySearchUrl)
+        (obj name='search-term' value='name')
+        (obj name='id-property' value='menuCategoryId')
+        (obj name='text-property' value='name')
+        (obj name='selected-property' value='selected')
+        (obj name='initial-value' value=initialValue)
+        (obj name='initial-key' value=initialKey)
+    )
+    helpText=helpText
+}}

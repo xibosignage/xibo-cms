@@ -74,6 +74,12 @@ class MenuBoardProviderListener
             'menuId' => $menuId,
         ];
 
+        $categoryId = $dataProvider->getProperty('categoryId');
+        $this->getLogger()->debug('onProductRequest: $categoryId: ' . $categoryId);
+        if ($categoryId !== null && $categoryId !== "") {
+            $filter['menuCategoryId'] = intval($categoryId);
+        }
+
         // Show Unavailable?
         if ($dataProvider->getProperty('showUnavailable', 0) === 0) {
             $filter['availability'] = 1;
@@ -95,6 +101,7 @@ class MenuBoardProviderListener
         $products = $this->menuBoardCategoryFactory->getProductData([$sort], $filter);
 
         foreach ($products as $menuBoardProduct) {
+            $menuBoardProduct->productOptions = $menuBoardProduct->getOptions();
             $product = $menuBoardProduct->toProduct();
 
             // Convert the image to a library image?

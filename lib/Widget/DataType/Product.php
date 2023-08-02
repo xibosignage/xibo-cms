@@ -61,6 +61,7 @@ class Product implements \JsonSerializable, DataTypeInterface
             'price' => $this->price,
             'description' => $this->description,
             'availability' => $this->availability,
+            'calories' => $this->calories,
             'allergyInfo' => $this->allergyInfo,
             'image' => $this->image,
             'productOptions' => $this->productOptions,

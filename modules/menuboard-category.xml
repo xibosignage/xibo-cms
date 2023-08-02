@@ -24,7 +24,7 @@
     <author>Core</author>
     <description>Display categories from a Menu Board</description>
     <class>\Xibo\Widget\MenuBoardCategoryProvider</class>
-    <dataCacheKey>%menuId%</dataCacheKey>
+    <dataCacheKey>%menuId%_%categoryId%</dataCacheKey>
     <type>menuboard-category</type>
     <dataType>product-category</dataType>
     <schemaVersion>1</schemaVersion>
@@ -34,19 +34,19 @@
     <defaultDuration>60</defaultDuration>
     <settings></settings>
     <properties>
-        <property id="menuId" type="number">
+        <property id="menuId" type="menuBoardSelector">
             <title>Menu</title>
             <helpText>Please select the Menu to use as a source of data for this template.</helpText>
             <rule>
                 <test type="and">
                     <condition type="required"></condition>
-                    <condition type="uri"></condition>
                 </test>
             </rule>
         </property>
-        <property id="categoryId" type="number">
+        <property id="categoryId" type="menuBoardCategorySelector">
             <title>Category</title>
             <helpText>Please select the Category to use as a source of data for this template.</helpText>
+            <dependsOn>menuId</dependsOn>
             <visibility>
                 <test>
                     <condition field="menuId" type="neq"></condition>

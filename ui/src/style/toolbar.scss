@@ -211,6 +211,10 @@
                 color: $xibo-color-primary-d60;
                 font-size: 0.95rem;
                 width: calc(50% - 4px);
+                -webkit-user-select: none;
+                -moz-user-select: none;
+                -ms-user-select: none;
+                user-select: none;
 
                 .card-icon {
                     color: $xibo-color-primary;
@@ -606,20 +610,16 @@
                     }
 
                     .open-submenu {
-                        display: block;
-                        cursor: inherit;
                         position: absolute;
                         z-index: 2;
-                        width: 16px;
-                        @include border-radius(4px 0 4px 0);
                         margin: 0;
                         height: auto;
                         text-align: right;
-                        font-size: 0.85rem;
-                        right: 4px;
-                        top: 50%;
+                        font-size: 1.2rem;
+                        right: 6px;
+                        bottom: 0;
+                        top: auto;
                         left: auto;
-                        transform: translateY(-50%);
                     }
 
                     &.card-selected, &.ui-draggable-dragging {

@@ -1357,7 +1357,7 @@ Viewer.prototype.renderElementContent = function(
   };
 
   // Get element template ( most of the time
-  // template will be already loaded/chached )
+  // template will be already loaded/cached )
   element.getTemplate().then((template) => {
     // Create and render HBS template from template
     const stencil = template.stencil ?
@@ -1492,6 +1492,12 @@ Viewer.prototype.renderElementContent = function(
       element.getData().then((elementData) => {
         const elData = elementData?.data;
         const meta = elementData?.meta;
+
+        // If we don't have data, stop here
+        if (elData === undefined) {
+          return;
+        }
+
         // Check all data elements and make replacements
         for (const key in elData) {
           if (elData.hasOwnProperty(key)) {
@@ -1576,7 +1582,7 @@ Viewer.prototype.renderElementContent = function(
           onTemplateRender && onTemplateRender(
             element.elementId,
             $elementContainer.find('.element-content'),
-            [],
+            elData ? elData : [],
             convertedProperties,
             meta,
           );

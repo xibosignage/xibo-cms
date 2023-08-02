@@ -31,6 +31,10 @@ window.templates = {
     custom: require('./src/templates/forms/inputs/custom.hbs'),
     datasetSelector:
       require('./src/templates/forms/inputs/datasetSelector.hbs'),
+    menuBoardSelector:
+        require('./src/templates/forms/inputs/menuBoardSelector.hbs'),
+    menuBoardCategorySelector:
+        require('./src/templates/forms/inputs/menuBoardCategorySelector.hbs'),
     datasetOrder: require('./src/templates/forms/inputs/datasetOrder.hbs'),
     datasetFilter: require('./src/templates/forms/inputs/datasetFilter.hbs'),
     datasetColumnSelector:

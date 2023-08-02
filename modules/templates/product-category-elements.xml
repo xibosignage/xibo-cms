@@ -26,12 +26,26 @@
         <type>element</type>
         <dataType>product-category</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>product-category-name</thumbnail>
         <startWidth>500</startWidth>
         <startHeight>100</startHeight>
-        <assets>
-            <!-- To replace -->
-            <asset id="product-category-name" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/article/elements/article-title.png" />
-        </assets>
+    </template>
+    <template>
+        <id>product_category_description</id>
+        <extends override="text" with="data.description">text</extends>
+        <title>Description</title>
+        <type>element</type>
+        <dataType>product-category</dataType>
+        <canRotate>true</canRotate>
+        <startWidth>500</startWidth>
+        <startHeight>100</startHeight>
+    </template>
+    <template>
+        <id>product_category_photo</id>
+        <extends override="url" with="data.image">global-image</extends>
+        <type>element</type>
+        <dataType>product-category</dataType>
+        <title>Category Photo</title>
+        <startWidth>100</startWidth>
+        <startHeight>100</startHeight>
     </template>
 </templates>
