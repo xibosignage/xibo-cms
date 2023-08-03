@@ -125,22 +125,7 @@ trait ModuleXmlTrait
                 $defaultValue = $this->getFirstValueOrDefaultFromXmlNode($node, 'default');
 
                 // Is this a variable?
-                if ($defaultValue !== null) {
-                    // If we're not empty, then try and do any variable substitutions
-                    if (!empty($defaultValue)) {
-                        if ($module !== null
-                            && Str::startsWith($defaultValue, '%')
-                            && Str::endsWith($defaultValue, '%')
-                        ) {
-                            $defaultValue = $module->getSetting(str_replace('%', '', $defaultValue));
-                        } else if (Str::startsWith($defaultValue, '#')
-                            && Str::endsWith($defaultValue, '#')
-                        ) {
-                            $defaultValue = $this->getConfig()->getSetting(str_replace('#', '', $defaultValue));
-                        }
-                    }
-                    $defaultValues[$property->id] = $defaultValue;
-                }
+                $defaultValues[$property->id] = $this->decorateWithSettings($module, $defaultValue);
 
                 // Validation (rule) conditions
                 $validationNodes = $node->getElementsByTagName('rule');
@@ -163,7 +148,7 @@ trait ModuleXmlTrait
                                         $conditions[] = [
                                             'field' => $condNode->getAttribute('field'),
                                             'type' => $condNode->getAttribute('type'),
-                                            'value' => $condNode->textContent
+                                            'value' => $this->decorateWithSettings($module, trim($condNode->textContent)),
                                         ];
                                     }
                                 }
@@ -195,7 +180,7 @@ trait ModuleXmlTrait
                                 $optionNode->getAttribute('name'),
                                 $optionNode->getAttribute('image'),
                                 $set,
-                                $optionNode->textContent
+                                trim($optionNode->textContent),
                             );
                         }
                     }
@@ -213,7 +198,7 @@ trait ModuleXmlTrait
                                     $conditions[] = [
                                         'field' => $condNode->getAttribute('field'),
                                         'type' => $condNode->getAttribute('type'),
-                                        'value' => $condNode->textContent
+                                        'value' => $this->decorateWithSettings($module, trim($condNode->textContent)),
                                     ];
                                 }
                             }
@@ -258,6 +243,30 @@ trait ModuleXmlTrait
         }
 
         return $properties;
+    }
+
+    /**
+     * Take a value and decorate it with any module/global settings
+     * @param Module|null $module
+     * @param string|null $value
+     * @return string|null
+     */
+    private function decorateWithSettings(?Module $module, ?string $value): ?string
+    {
+        // If we're not empty, then try and do any variable substitutions
+        if (!empty($value)) {
+            if ($module !== null
+                && Str::startsWith($value, '%')
+                && Str::endsWith($value, '%')
+            ) {
+                $value = $module->getSetting(str_replace('%', '', $value));
+            } else if (Str::startsWith($value, '#')
+                && Str::endsWith($value, '#')
+            ) {
+                $value = $this->getConfig()->getSetting(str_replace('#', '', $value));
+            }
+        }
+        return $value;
     }
 
     /**

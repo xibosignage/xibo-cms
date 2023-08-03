@@ -130,6 +130,21 @@ class ModuleTemplateFactory extends BaseFactory
     }
 
     /**
+     * Get an array of all modules
+     * @return Asset[]
+     */
+    public function getAllAssets(): array
+    {
+        $assets = [];
+        foreach ($this->load() as $template) {
+            foreach ($template->getAssets() as $asset) {
+                $assets[$asset->id] = $asset;
+            }
+        }
+        return $assets;
+    }
+
+    /**
      * Load templates
      * @return \Xibo\Entity\ModuleTemplate[]
      */

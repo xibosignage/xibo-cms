@@ -148,9 +148,6 @@ class Module extends Base
     public function settingsForm(Request $request, Response $response, $id)
     {
         // Can we edit?
-        $moduleConfigLocked = $this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') == 1
-            || $this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked';
-
         if (!$this->getUser()->userTypeId == 1) {
             throw new AccessDeniedException();
         }
@@ -160,7 +157,6 @@ class Module extends Base
         // Pass to view
         $this->getState()->template = 'module-form-settings';
         $this->getState()->setData([
-            'moduleConfigLocked' => $moduleConfigLocked,
             'moduleId' => $id,
             'module' => $module,
         ]);
@@ -288,6 +284,7 @@ class Module extends Base
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      * @throws \Xibo\Support\Exception\NotFoundException
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function assetDownload(Request $request, Response $response, string $assetId): Response
     {
@@ -297,10 +294,11 @@ class Module extends Base
 
         // Get this asset from somewhere
         $asset = $this->moduleFactory->getAssetsFromAnywhereById($assetId, $this->moduleTemplateFactory);
+        $asset->updateAssetCache($this->getConfig()->getSetting('LIBRARY_LOCATION'));
 
         $this->getLog()->debug('assetDownload: found appropriate asset for assetId ' . $assetId);
 
         // The asset can serve itself.
-        return $asset->psrResponse($request, $response);
+        return $asset->psrResponse($request, $response, $this->getConfig()->getSetting('SENDFILE_MODE'));
     }
 }

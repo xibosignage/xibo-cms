@@ -91,7 +91,7 @@
     "font-awesome": "~4.7.0",
     "form-serializer": "~2.5.0",
     "handlebars": "^4.7.7",
-    "hls.js": "^1.1.5",
+    "hls.js": "^1.4.10",
     "html-to-image": "^1.7.0",
     "imagesloaded": "^4.1.4",
     "jquery": "^3.5.1",

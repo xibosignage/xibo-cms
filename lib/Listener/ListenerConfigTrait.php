@@ -20,23 +20,30 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use Phinx\Migration\AbstractMigration;
+namespace Xibo\Listener;
 
-/**
- * Add a new column to connectors table (isVisible)
- * Add a new connector (layoutExchange) to connectors table
- * @phpcs:disable PSR1.Classes.ClassDeclaration.MissingNamespace
- */
-class AddTwitterConnectorMigration extends AbstractMigration
+use Xibo\Service\ConfigServiceInterface;
+
+trait ListenerConfigTrait
 {
-    public function change()
+    /** @var ConfigServiceInterface */
+    private $config;
+
+    /**
+     * @param ConfigServiceInterface $config
+     * @return $this
+     */
+    public function useConfig(ConfigServiceInterface $config)
     {
-        /*$this->table('connectors')
-            ->insert([
-                'className' => '\\Xibo\\Connector\\TwitterConnector',
-                'isEnabled' => 0,
-                'isVisible' => 1
-            ])
-            ->save();*/
+        $this->config = $config;
+        return $this;
+    }
+
+    /**
+     * @return ConfigServiceInterface
+     */
+    protected function getConfig()
+    {
+        return $this->config;
     }
 }

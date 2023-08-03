@@ -696,7 +696,7 @@ class DataSet implements \JsonSerializable
      */
     public function hasData()
     {
-        return $this->getStore()->exists('SELECT id FROM `dataset_' . $this->dataSetId . '` LIMIT 1', []);
+        return $this->getStore()->exists('SELECT id FROM `dataset_' . $this->dataSetId . '` LIMIT 1', [], 'isolated');
     }
 
     /**
@@ -956,8 +956,7 @@ class DataSet implements \JsonSerializable
 
         // Delete Columns
         foreach ($this->columns as $column) {
-            /* @var \Xibo\Entity\DataSetColumn $column */
-            $column->delete();
+            $column->delete(true);
         }
 
         // Delete any dataSet rss

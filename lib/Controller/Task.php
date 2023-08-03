@@ -395,7 +395,11 @@ class Task extends Base
     public function run(Request $request, Response $response, $id)
     {
         // Get this task
-        $task = $this->taskFactory->getById($id);
+        if (is_numeric($id)) {
+            $task = $this->taskFactory->getById($id);
+        } else {
+            $task = $this->taskFactory->getByName($id);
+        }
 
         // Set to running
         $this->getLog()->debug('run: Running Task ' . $task->name

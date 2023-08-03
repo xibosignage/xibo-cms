@@ -24,14 +24,16 @@ namespace Xibo\XTR;
 
 use Carbon\Carbon;
 use Xibo\Controller\Module;
-use Xibo\Entity\Font;
 use Xibo\Event\MaintenanceDailyEvent;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\FontFactory;
 use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\ModuleFactory;
+use Xibo\Factory\ModuleTemplateFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\DatabaseLogHandler;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Service\MediaService;
 use Xibo\Service\MediaServiceInterface;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
@@ -58,10 +60,18 @@ class MaintenanceDailyTask implements TaskInterface
 
     /** @var DataSetFactory */
     private $dataSetFactory;
-    /**
-     * @var FontFactory
-     */
+
+    /** @var FontFactory */
     private $fontFactory;
+
+    /** @var ModuleFactory */
+    private $moduleFactory;
+
+    /** @var ModuleTemplateFactory */
+    private $moduleTemplateFactory;
+
+    /** @var string */
+    private $libraryLocation;
 
     /** @inheritdoc */
     public function setFactories($container)
@@ -72,6 +82,8 @@ class MaintenanceDailyTask implements TaskInterface
         $this->dataSetFactory = $container->get('dataSetFactory');
         $this->mediaService = $container->get('mediaService');
         $this->fontFactory = $container->get('fontFactory');
+        $this->moduleFactory = $container->get('moduleFactory');
+        $this->moduleTemplateFactory = $container->get('moduleTemplateFactory');
         return $this;
     }
 
@@ -80,11 +92,37 @@ class MaintenanceDailyTask implements TaskInterface
     {
         $this->runMessage = '# ' . __('Daily Maintenance') . PHP_EOL . PHP_EOL;
 
-        // Long running task
+        // Long-running task
         set_time_limit(0);
+
+        // Make sure our library structure is as it should be
+        try {
+            $this->libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+            MediaService::ensureLibraryExists($this->libraryLocation);
+        } catch (\Exception $exception) {
+            $this->getLogger()->error('Library structure invalid, e = ' . $exception->getMessage());
+            $this->appendRunMessage(__('Library structure invalid'));
+        }
 
         // Import layouts
         $this->importLayouts();
+
+        try {
+            $this->appendRunMessage(__('## Build caches'));
+
+            // TODO: should we remove all bundle/asset cache before we start?
+            // Player bundle
+            $this->cachePlayerBundle();
+
+            // Cache Assets
+            $this->cacheAssets();
+
+            // Fonts
+            $this->mediaService->setUser($this->userFactory->getSystemUser())->updateFontsCss();
+        } catch (\Exception $exception) {
+            $this->getLogger()->error('Failure to build caches, e = ' . $exception->getMessage());
+            $this->appendRunMessage(__('Failure to build caches'));
+        }
 
         // Tidy logs
         $this->tidyLogs();
@@ -134,7 +172,7 @@ class MaintenanceDailyTask implements TaskInterface
 
     /**
      * Import Layouts
-     * @throws GeneralException
+     * @throws GeneralException|\FontLib\Exception\FontNotFoundException
      */
     private function importLayouts()
     {
@@ -186,10 +224,11 @@ class MaintenanceDailyTask implements TaskInterface
                 }
             }
 
+            // Fonts
+            // -----
             // install fonts from the theme folder
             $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
             $fontFolder =  $this->config->uri('fonts', true);
-            $fontsAdded = false;
             foreach (array_diff(scandir($fontFolder), array('..', '.')) as $file) {
                 // check if we already have this font file
                 if (count($this->fontFactory->getByFileName($file)) <= 0) {
@@ -206,7 +245,6 @@ class MaintenanceDailyTask implements TaskInterface
                         continue;
                     }
 
-                    /** @var Font $font */
                     $font = $this->fontFactory->createEmpty();
                     $font->modifiedBy = $this->userFactory->getSystemUser()->userName;
                     $font->name = $fontLib->getFontName() . ' ' . $fontLib->getFontSubfamily();
@@ -216,17 +254,11 @@ class MaintenanceDailyTask implements TaskInterface
                     $font->md5 = md5_file($filePath);
                     $font->save();
 
-                    $fontsAdded = true;
                     $copied = copy($filePath, $libraryLocation . 'fonts/' . $file);
                     if (!$copied) {
                         $this->getLogger()->error('importLayouts: Unable to copy fonts to ' . $libraryLocation);
                     }
                 }
-            }
-
-            if ($fontsAdded) {
-                // if we added any fonts here fonts.css file
-                $this->mediaService->setUser($this->userFactory->getSystemUser())->updateFontsCss();
             }
 
             $this->config->changeSetting('DEFAULTS_IMPORTED', 1);
@@ -235,5 +267,43 @@ class MaintenanceDailyTask implements TaskInterface
         } else {
             $this->runMessage .= ' - ' . __('Not Required.') . PHP_EOL . PHP_EOL;
         }
+    }
+
+    /**
+     * Refresh the cache of assets
+     * @return void
+     * @throws GeneralException
+     */
+    private function cacheAssets(): void
+    {
+        // Assets
+        $failedCount = 0;
+        $assets = array_merge($this->moduleFactory->getAllAssets(), $this->moduleTemplateFactory->getAllAssets());
+        foreach ($assets as $asset) {
+            try {
+                $asset->updateAssetCache($this->libraryLocation, true);
+            } catch (GeneralException $exception) {
+                $failedCount++;
+                $this->log->error('Unable to copy asset: ' . $asset->id . ', e: ' . $exception->getMessage());
+            }
+        }
+
+        $this->appendRunMessage(sprintf(__('Assets cached, %d failed.'), $failedCount));
+    }
+
+    /**
+     * Cache the player bundle.
+     * @return void
+     */
+    private function cachePlayerBundle(): void
+    {
+        // Output the player bundle
+        $bundlePath = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'assets/bundle.min.js';
+        $bundleMd5CachePath = $bundlePath . '.md5';
+
+        copy(PROJECT_ROOT . '/modules/bundle.min.js', $bundlePath);
+        file_put_contents($bundleMd5CachePath, md5_file($bundlePath));
+
+        $this->appendRunMessage(__('Player bundle cached'));
     }
 }
