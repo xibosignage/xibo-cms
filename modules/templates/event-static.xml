@@ -24,6 +24,7 @@
         <id>event_custom_html</id>
         <type>static</type>
         <dataType>event</dataType>
+        <showIn>none</showIn>
         <title>Events shown with custom HTML</title>
         <properties>
           <property id="customInterval" type="text">

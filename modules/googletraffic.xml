@@ -40,15 +40,12 @@
             <default></default>
         </property>
         <property id="minDuration" type="number">
-            <title>Minimum allowed duration</title>
-            <helpText>Please enter a minimum allowed duration in seconds for this Module. This can be used to prevent run-away charges.</helpText>
-        </property>
-        <property id="resetAllWidgets" type="checkbox">
-            <title>Reset all Widgets to the minimum duration?</title>
-            <default>0</default>
+            <title>Minimum recommended duration</title>
+            <helpText>Please enter a minimum recommended duration in seconds for this Module.</helpText>
+            <default>600</default>
         </property>
         <property type="message" variant="danger">
-            <title>This module uses the Google Traffic JavaScript API which is a paid-for API from Google. Charges will apply each time the map is loaded in the CMS preview and on each Player, therefore we recommend setting a high minimum duration.</title>
+            <title>This module uses the Google Traffic JavaScript API which is a paid-for API from Google. Charges will apply each time the map is loaded in the CMS preview and on each Player, therefore we recommend setting a high widget duration.</title>
             <default></default>
         </property>
     </settings>
@@ -61,7 +58,7 @@
         <property id="latitude" type="number">
             <title>Latitude</title>
             <helpText>The Latitude for this widget</helpText>
-            <default>0</default>
+            <default>#DEFAULT_LAT#</default>
             <visibility>
                 <test>
                     <condition field="useDisplayLocation" type="eq">0</condition>
@@ -71,7 +68,7 @@
         <property id="longitude" type="number">
             <title>Longitude</title>
             <helpText>The Longitude for this widget</helpText>
-            <default>0</default>
+            <default>#DEFAULT_LONG#</default>
             <visibility>
                 <test>
                     <condition field="useDisplayLocation" type="eq">0</condition>
@@ -81,15 +78,26 @@
         <property id="zoom" type="number">
             <title>Zoom</title>
             <helpText>How far should the map be zoomed in? The higher the number the closer, 1 represents the entire globe.</helpText>
-            <default>1</default>
+            <default>15</default>
         </property>
         <property type="message">
             <title>This module is rendered on the Player which means the Player must have an internet connection.</title>
-            <default></default>
         </property>
         <property type="message">
             <title>The Traffic Widget has not been configured yet, please ask your CMS Administrator to look at it for you.</title>
-            <default></default>
+            <visibility>
+                <test>
+                    <condition type="ne">%apiKey%</condition>
+                </test>
+            </visibility>
+        </property>
+        <property type="message" variant="danger">
+            <title>You have entered a duration lower than the recommended minimum, this could cause significant API charges.</title>
+            <visibility>
+                <test>
+                    <condition field="duration" type="lt">%minDuration%</condition>
+                </test>
+            </visibility>
         </property>
     </properties>
     <preview></preview>
@@ -98,7 +106,7 @@
 
         ]]></hbs>
         <twig><![CDATA[
-<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ apiKey }}&callback=initMap"></script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ settings.apiKey }}&callback=init"></script>
 
 <style>
 body {
@@ -117,10 +125,36 @@ h1, h2, h3, h4, p {
 </style>
 
 <script type="text/javascript">
-    function initMap() {
+    function init() {
+        var lat = {{ latitude }};
+        var lng = {{ longitude }};
+        // Not preview and useDisplayLocation
+        if ({{useDisplayLocation}} === 1 && !xiboIC.checkIsPreview()) {
+            // Get the lat/lng from player info.
+            xiboIC.info({
+                done: function(xhr) {
+                    info = JSON.parse(xhr.responseText);
+                    if (info && info.latitude) {
+                        lat = info.latitude;
+                    }
+                    if (info && info.longitude) {
+                        lng = info.longitude;
+                    }
+                    initMap(lat, lng);
+                },
+                error: function() {
+                    initMap(lat, lng);
+                }
+            });
+        } else {
+            initMap(lat, lng);
+        }
+    }
+
+    function initMap(lat, lng) {
         var map = new google.maps.Map(document.getElementById('map'), {
             zoom: {{ zoom }},
-            center: {lat: {{ latitude }}, lng: {{ longitude }}},
+            center: {lat: lat, lng: lng},
             disableDefaultUI: true
         });
 

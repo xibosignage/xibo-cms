@@ -24,7 +24,7 @@
     <author>Core</author>
     <description>Display products from a Menu Board</description>
     <class>\Xibo\Widget\MenuBoardProductProvider</class>
-    <dataCacheKey>%menuId%_%showUnavailable%_%sortField%_%sortDescending%_%lowerLimit%_%upperLimit%</dataCacheKey>
+    <dataCacheKey>%menuId%_%categoryId%_%showUnavailable%_%sortField%_%sortDescending%_%lowerLimit%_%upperLimit%_%showUnavailable%</dataCacheKey>
     <type>menuboard-product</type>
     <dataType>product</dataType>
     <schemaVersion>1</schemaVersion>
@@ -34,13 +34,19 @@
     <defaultDuration>60</defaultDuration>
     <settings></settings>
     <properties>
-        <property id="menuId" type="number">
+        <property id="menuId" type="menuBoardSelector">
             <title>Menu</title>
             <helpText>Please select the Menu to use as a source of data for this template.</helpText>
+            <rule>
+                <test type="and">
+                    <condition type="required"></condition>
+                </test>
+            </rule>
         </property>
-        <property id="categoryId" type="number">
+        <property id="categoryId" type="menuBoardCategorySelector">
             <title>Category</title>
-            <helpText>Filter by Category</helpText>
+            <helpText>Please select the Category to use as a source of data for this template.</helpText>
+            <dependsOn>menuId</dependsOn>
             <visibility>
                 <test>
                     <condition field="menuId" type="neq"></condition>
@@ -51,11 +57,6 @@
             <title>Duration is per item</title>
             <helpText>The duration specified is per item otherwise it is per menu.</helpText>
             <default>0</default>
-            <visibility>
-                <test>
-                    <condition field="dataSetId" type="neq"></condition>
-                </test>
-            </visibility>
         </property>
         <property id="sortField" type="dropdown" mode="single">
             <title>Sort by</title>

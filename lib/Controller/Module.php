@@ -148,9 +148,6 @@ class Module extends Base
     public function settingsForm(Request $request, Response $response, $id)
     {
         // Can we edit?
-        $moduleConfigLocked = $this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') == 1
-            || $this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked';
-
         if (!$this->getUser()->userTypeId == 1) {
             throw new AccessDeniedException();
         }
@@ -160,7 +157,6 @@ class Module extends Base
         // Pass to view
         $this->getState()->template = 'module-form-settings';
         $this->getState()->setData([
-            'moduleConfigLocked' => $moduleConfigLocked,
             'moduleId' => $id,
             'module' => $module,
         ]);

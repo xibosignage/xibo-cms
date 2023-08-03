@@ -7116,16 +7116,16 @@
         },
         {
             "name": "xibosignage/xibo-xmr",
-            "version": "0.10",
+            "version": "0.11",
             "source": {
                 "type": "git",
                 "url": "https://github.com/xibosignage/xibo-xmr.git",
-                "reference": "85df34fc7f6c57bd695fe5bb906a42c73a9aa252"
+                "reference": "e57607709399c28a6b166dda6b550776326cc78a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/xibosignage/xibo-xmr/zipball/85df34fc7f6c57bd695fe5bb906a42c73a9aa252",
-                "reference": "85df34fc7f6c57bd695fe5bb906a42c73a9aa252",
+                "url": "https://api.github.com/repos/xibosignage/xibo-xmr/zipball/e57607709399c28a6b166dda6b550776326cc78a",
+                "reference": "e57607709399c28a6b166dda6b550776326cc78a",
                 "shasum": ""
             },
             "require": {
@@ -7143,12 +7143,8 @@
             ],
             "authors": [
                 {
-                    "name": "Daniel Garner",
-                    "homepage": "https://github.com/dasgarner"
-                },
-                {
                     "name": "Xibo Signage Ltd",
-                    "homepage": "https://xibo.org.uk"
+                    "homepage": "https://xibosignage.com"
                 },
                 {
                     "name": "Xibo Contributors",
@@ -7156,16 +7152,16 @@
                 }
             ],
             "description": "Xibo Message Relay",
-            "homepage": "http://xibo.org.uk",
+            "homepage": "https://xibosignage.com",
             "keywords": [
                 "digital signage",
                 "spring signage",
                 "xibo"
             ],
             "support": {
-                "source": "https://github.com/xibosignage/xibo-xmr/tree/0.10"
+                "source": "https://github.com/xibosignage/xibo-xmr/tree/0.11"
             },
-            "time": "2023-06-26T15:41:14+00:00"
+            "time": "2023-08-02T07:29:55+00:00"
         }
     ],
     "packages-dev": [

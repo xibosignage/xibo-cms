@@ -4,29 +4,41 @@
         {{> inputs/hidden id="name" value=regionName customClass="position-input" }}
     {{/eq}}
 
+    {{#if showElementLayer}}
+        {{set "layerTitle" trans.positionTab.elementLayer}}
+        {{set "layerHelp" trans.positionTab.elementLayerHelp}}
+    {{else}}
+        {{set "layerTitle" trans.positionTab.layer}}
+        {{set "layerHelp" trans.positionTab.layerHelp}}
+    {{/if}}
+
     {{#ifCond zIndex '!=' undefined}}
-        {{> inputs/number value=zIndex id="zIndex" title="Layer" helpText="The z-index" min="0" customClass="position-input" }}
+        {{> inputs/number value=zIndex id="zIndex" title=layerTitle helpText=layerHelp min="0" customClass="position-input" }}
+    {{/ifCond}}
+
+    {{#ifCond zIndexCanvas '!=' undefined}}
+        {{> inputs/number value=zIndexCanvas id="zIndexCanvas" title=trans.positionTab.canvasLayer helpText=trans.positionTab.canvasLayerHelp min="0" customClass="position-canvas-input" }}
     {{/ifCond}}
 
     {{#ifCond top '!=' undefined}}
-        {{> inputs/number value=top id="top" title="Top" helpText="The top position" customClass="position-input" }}
+        {{> inputs/number value=top id="top" title=trans.positionTab.top customClass="position-input" }}
     {{/ifCond}}
 
     {{#ifCond left '!=' undefined}}
-        {{> inputs/number value=left id="left" title="Left" helpText="The left position" customClass="position-input" }}
+        {{> inputs/number value=left id="left" title=trans.positionTab.left customClass="position-input" }}
     {{/ifCond}}
 
     {{#ifCond width '!=' undefined}}
-        {{> inputs/number value=width id="width" title="Width" helpText="The width" customClass="position-input" }}
+        {{> inputs/number value=width id="width" title=trans.positionTab.width customClass="position-input" }}
     {{/ifCond}}
 
     {{#ifCond height '!=' undefined}}
-        {{> inputs/number value=height id="height" title="Height" helpText="The height" customClass="position-input" }}
+        {{> inputs/number value=height id="height" title=trans.positionTab.height customClass="position-input" }}
     {{/ifCond}}
 
     {{#ifCond rotation '!=' undefined}}
-        {{> inputs/number value=rotation id="rotation" title="Rotation" helpText="The rotation" customClass="position-input" }}
+        {{> inputs/number value=rotation id="rotation" title=trans.positionTab.rotation customClass="position-input" }}
     {{/ifCond}}
 
-    {{> button id="setFullScreen" type="btn-block btn-outline-primary inline-btn" name="Make this element full screen." }}
+    {{> button id="setFullScreen" type="btn-block btn-outline-primary inline-btn" name=trans.positionTab.setFullscreen }}
 </div>

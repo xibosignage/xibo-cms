@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -28,7 +28,7 @@ jQuery.fn.extend({
     // All we worry about is the item we have been working on ($(this))
     $(this).each(function(_idx, el) {
       // Mode
-      if (options.modeId == 1) {
+      if (options.modeid == 1) {
         // Open Natively
         // We shouldn't ever get here, because the
         // Layout Designer will not show a preview for mode 1, and
@@ -37,7 +37,7 @@ jQuery.fn.extend({
           width: options.originalWidth,
           height: options.originalHeight,
         });
-      } else if (options.modeId == 3) {
+      } else if (options.modeid == 3) {
         // Best fit, set the scale so that the web-page fits inside the region
 
         // If there is a preview width and height

@@ -54,7 +54,7 @@
             <helpText>Should this Widget be loaded entirely off screen so that it is ready when shown? Dynamic content will start running off screen.</helpText>
             <default></default>
         </property>
-        <property id="modeId" type="dropdown" mode="single">
+        <property id="modeid" type="dropdown" mode="single">
             <title>Options</title>
             <helpText>How should this web page be embedded?</helpText>
             <default>1</default>
@@ -75,7 +75,7 @@
             <default></default>
             <visibility>
                 <test>
-                    <condition field="modeId" type="neq">1</condition>
+                    <condition field="modeid" type="neq">1</condition>
                 </test>
             </visibility>
         </property>
@@ -85,7 +85,7 @@
             <default></default>
             <visibility>
                 <test>
-                    <condition field="modeId" type="neq">1</condition>
+                    <condition field="modeid" type="neq">1</condition>
                 </test>
             </visibility>
         </property>
@@ -95,7 +95,7 @@
             <default></default>
             <visibility>
                 <test>
-                    <condition field="modeId" type="eq">2</condition>
+                    <condition field="modeid" type="eq">2</condition>
                 </test>
             </visibility>
         </property>
@@ -105,7 +105,7 @@
             <default></default>
             <visibility>
                 <test>
-                    <condition field="modeId" type="eq">2</condition>
+                    <condition field="modeid" type="eq">2</condition>
                 </test>
             </visibility>
         </property>
@@ -115,7 +115,7 @@
             <default></default>
             <visibility>
                 <test>
-                    <condition field="modeId" type="eq">2</condition>
+                    <condition field="modeid" type="eq">2</condition>
                 </test>
             </visibility>
         </property>
@@ -126,7 +126,7 @@
             <playerCompatibility android="v3 R303+" windows="v3 R302+" linux="TBC" webos="TBC" tizen="TBC">Fit supported from:</playerCompatibility>
             <visibility>
                 <test>
-                    <condition field="modeId" type="eq">1</condition>
+                    <condition field="modeid" type="eq">1</condition>
                 </test>
             </visibility>
         </property>

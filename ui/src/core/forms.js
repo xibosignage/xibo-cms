@@ -126,6 +126,35 @@ window.forms = {
           }
         }
 
+        // Menu boards selector
+        if (property.type === 'menuBoardSelector') {
+          property.menuBoardSearchUrl = urlsForApi.menuBoard.search.url;
+
+          // If we don't have a value, set value key pair to null
+          if (property.value == '') {
+            property.initialValue = null;
+            property.initialKey = null;
+          } else {
+            property.initialValue = property.value;
+            property.initialKey = 'menuId';
+          }
+        }
+
+        // Menu category selector
+        if (property.type === 'menuBoardCategorySelector') {
+          property.menuBoardCategorySearchUrl =
+            urlsForApi.menuBoard.categorySearch.url;
+
+          // If we don't have a value, set value key pair to null
+          if (property.value == '') {
+            property.initialValue = null;
+            property.initialKey = null;
+          } else {
+            property.initialValue = property.value;
+            property.initialKey = 'menuCategoryId';
+          }
+        }
+
         // Media selector
         if (property.type === 'mediaSelector') {
           property.mediaSearchUrl = urlsForApi.library.get.url;
@@ -1779,6 +1808,34 @@ window.forms = {
           [{
             skipSave: true,
           }]);
+      }
+    });
+
+    // Font selector
+    findElements(
+      '.menu-board-category-selector',
+      target,
+    ).each(function(_k, el) {
+      // Replace search url with the menuId
+      const $el = $(el);
+      const $elSelect = $(el).find('select');
+      const dependsOnName = $el.data('depends-on');
+      const $menu =
+        $(container).find('[name=' + dependsOnName + ']');
+
+      // Get menu value
+      const menuId = $menu.val();
+
+      if (menuId != '') {
+        // Replace URL
+        $elSelect.data(
+          'search-url',
+          $elSelect.data('search-url-base').replace(':id', menuId),
+        );
+
+        // Reset the select2 to update ajax url
+        // $elSelect.select2('destroy');
+        makePagedSelect($elSelect);
       }
     });
 

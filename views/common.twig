@@ -349,6 +349,16 @@
                     type: 'GET'
                 },
             },
+            menuBoard: {
+                search: {
+                    url: "{{ url_for("menuBoard.search") }}",
+                    type: 'GET'
+                },
+                categorySearch: {
+                    url: "{{ url_for("menuBoard.category.search", {id: ':id'}) }}",
+                    type: 'GET'
+                },
+            },
             command: {
                 search: {
                     url: "{{ url_for("command.search") }}",

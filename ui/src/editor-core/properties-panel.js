@@ -947,9 +947,14 @@ PropertiesPanel.prototype.render = function(
 
       // Add position tab after advanced tab
       self.DOMObject.find('[href="#advancedTab"]').parent()
-        .after('<li class="nav-item">' +
-          '<a class="nav-link" href="#positionTab" data-toggle="tab">' +
-          '<i class="fas fa-border-none"></i></a></li>');
+        .after(`<li class="nav-item">
+          <a class="nav-link" href="#positionTab"
+            data-toggle="tab">
+            <i class="fas fa-border-none tooltip-always-on"
+              data-toggle="tooltip"
+              data-title="${propertiesPanelTrans.positioning}"></i>
+          </a>
+        </li>`);
 
       // Add position tab content after advanced tab content
       // If element is in a group, adjust position to the group's
@@ -961,8 +966,20 @@ PropertiesPanel.prototype.render = function(
         positionProperties.top -= targetAux.group.top;
       }
 
+      // If it's an element, or element group, show canvas layer
+      if (
+        targetAux?.type == 'element' ||
+        targetAux?.type == 'element-group'
+      ) {
+        positionProperties.zIndexCanvas = app.layout.canvas.zIndex;
+
+        positionProperties.showElementLayer = true;
+      }
+
       self.DOMObject.find('#advancedTab').after(
-        positionTemplate(positionProperties),
+        positionTemplate(
+          Object.assign(positionProperties, {trans: propertiesPanelTrans}),
+        ),
       );
 
       // Hide make fullscreen button for element groups
@@ -973,20 +990,47 @@ PropertiesPanel.prototype.render = function(
       // If we change any input, update the target position
       self.DOMObject.find('#positionTab [name]').on(
         'change', _.debounce(function(ev) {
-          const viewerScale = lD.viewer.containerObjectDimensions.scale;
           const form = $(ev.currentTarget).parents('#positionTab');
 
-          // Prevent layer to be negative
-          let zIndexVal = Number(form.find('[name="zIndex"]').val());
-          if (
-            zIndexVal &&
-            zIndexVal < 0
-          ) {
-            zIndexVal = 0;
+          const preventNegative = function($field) {
+            // Prevent layer to be negative
+            let fieldValue = Number($field.val());
+            if (fieldValue && fieldValue < 0) {
+              fieldValue = 0;
 
-            // Set form field back to 0
-            form.find('[name="zIndex"]').val(0);
+              // Set form field back to 0
+              $field.val(0);
+            }
+
+            // Return field value
+            return fieldValue;
+          };
+
+          // If we changed the canvas layer, save only the canvas region
+          if (
+            $(ev.currentTarget).parents('.position-canvas-input').length > 0
+          ) {
+            const canvasZIndexVal = preventNegative(
+              form.find('[name="zIndexCanvas"]'),
+            );
+
+            // Save canvas region
+            app.layout.canvas.changeLayer(canvasZIndexVal);
+
+            // Change layer for the viewer object
+            app.viewer.DOMObject.find('.designer-region-canvas')
+              .css('zIndex', canvasZIndexVal);
+
+            // Don't save the rest of the form
+            return;
           }
+
+          const viewerScale = lD.viewer.containerObjectDimensions.scale;
+
+          // Prevent layer to be negative
+          const zIndexVal = preventNegative(
+            form.find('[name="zIndex"]'),
+          );
 
           if (targetAux == undefined) {
             // Widget
@@ -1463,7 +1507,9 @@ PropertiesPanel.prototype.renderActionTab = function(
 
   // Create tab
   self.DOMObject.find('.nav-tabs').append(
-    actionsFormTabTemplate(object),
+    actionsFormTabTemplate({
+      trans: layoutEditorTrans,
+    }),
   );
 
   // Create tab content
