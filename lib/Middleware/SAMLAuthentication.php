@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -27,9 +27,8 @@ use OneLogin\Saml2\Auth;
 use OneLogin\Saml2\Error;
 use OneLogin\Saml2\Settings;
 use OneLogin\Saml2\Utils;
-use Psr\Http\Message\ResponseInterface as Response;
-use Psr\Http\Message\ServerRequestInterface as Request;
-use Slim\Routing\RouteContext;
+use Slim\Http\Response as Response;
+use Slim\Http\ServerRequest as Request;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\LogoutTrait;
 use Xibo\Helper\Random;
@@ -55,7 +54,7 @@ class SAMLAuthentication extends AuthenticationBase
         $app->getContainer()->logoutRoute = 'saml.logout';
 
         // Route providing SAML metadata
-        $app->get('/saml/metadata', function (\Slim\Http\ServerRequest $request, \Slim\Http\Response $response) {
+        $app->get('/saml/metadata', function (Request $request, Response $response) {
             $settings = new Settings($this->getConfig()->samlSettings, true);
             $metadata = $settings->getSPMetadata();
             $errors = $settings->validateMetadata($metadata);
@@ -72,19 +71,19 @@ class SAMLAuthentication extends AuthenticationBase
         });
 
         // SAML Login
-        $app->get('/saml/login', function (\Slim\Http\ServerRequest $request, \Slim\Http\Response $response) {
+        $app->get('/saml/login', function (Request $request, Response $response) {
             // Initiate SAML SSO
             $auth = new Auth($this->getConfig()->samlSettings);
             return $auth->login();
         });
 
         // SAML Logout
-        $app->get('/saml/logout', function (\Slim\Http\ServerRequest $request, \Slim\Http\Response $response) {
+        $app->get('/saml/logout', function (Request $request, Response $response) {
             return $this->samlLogout($request, $response);
         })->setName('saml.logout');
 
         // SAML Assertion Consumer Endpoint
-        $app->post('/saml/acs', function (\Slim\Http\ServerRequest $request, \Slim\Http\Response $response) {
+        $app->post('/saml/acs', function (Request $request, Response $response) {
             // Log some interesting things
             $this->getLog()->debug('Arrived at the ACS route with own URL: ' . Utils::getSelfRoutedURLNoQuery());
 
@@ -278,22 +277,28 @@ class SAMLAuthentication extends AuthenticationBase
                     ]);
                 }
 
-                // Redirect back to the originally-requested url
+                // Redirect back to the originally-requested url, if provided
+                // it is not clear why basename is used here, it seems to be something to do with a logout loop
                 $params =  $request->getParams();
-                $redirect = !isset($params['RelayState']) || (isset($params['RelayState']) && basename($params['RelayState']) == 'login')
+                $relayState = $params['RelayState'] ?? null;
+                $redirect = empty($relayState) || basename($relayState) === 'login'
                     ? $this->getRouteParser()->urlFor('home')
-                    : $params['RelayState'];
+                    : $relayState;
 
                 return $response->withRedirect($redirect);
             }
         });
 
         // Single Logout Service
-        $app->get('/saml/sls', function (\Slim\Http\ServerRequest $request, \Slim\Http\Response $response) use ($app) {
-
+        $app->get('/saml/sls', function (Request $request, Response $response) use ($app) {
+            // Make request to IDP
             $auth = new Auth($app->getContainer()->get('configService')->samlSettings);
             $auth->processSLO(false, null, false, function () use ($request) {
-                $this->completeLogoutFlow($this->getUser($_SESSION['userid'], $request->getAttribute('ip_address')), $this->getSession(), $this->getLog(), $request);
+                // Audit that the IDP has completed this request.
+                $this->getLog()->setIpAddress($request->getAttribute('ip_address'));
+                $this->getLog()->audit('User', 0, 'Idp SLO completed', [
+                    'UserAgent' => $request->getHeader('User-Agent')
+                ]);
             });
 
             $errors = $auth->getErrors();
@@ -301,7 +306,7 @@ class SAMLAuthentication extends AuthenticationBase
             if (empty($errors)) {
                 return $response->withRedirect($this->getRouteParser()->urlFor('home'));
             } else {
-                throw new AccessDeniedException("SLO failed. " . implode(', ', $errors));
+                throw new AccessDeniedException('SLO failed. ' . implode(', ', $errors));
             }
         });
 
@@ -309,8 +314,8 @@ class SAMLAuthentication extends AuthenticationBase
     }
 
     /**
-     * @param \Psr\Http\Message\ServerRequestInterface $request
-     * @param \Psr\Http\Message\ResponseInterface $response
+     * @param \Slim\Http\ServerRequest $request
+     * @param \Slim\Http\Response $response
      * @return \Psr\Http\Message\ResponseInterface|\Slim\Http\Response
      * @throws \OneLogin\Saml2\Error
      */
@@ -322,6 +327,14 @@ class SAMLAuthentication extends AuthenticationBase
             && isset($samlSettings['workflow']['slo'])
             && $samlSettings['workflow']['slo'] == true
         ) {
+            // Complete our own logout flow
+            $this->completeLogoutFlow(
+                $this->getUser($_SESSION['userid'], $request->getAttribute('ip_address')),
+                $this->getSession(),
+                $this->getLog(),
+                $request
+            );
+
             // Initiate SAML SLO
             $auth = new Auth($samlSettings);
             return $response->withRedirect($auth->logout());
