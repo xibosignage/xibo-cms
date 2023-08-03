@@ -945,13 +945,13 @@ Widget.prototype.getData = function() {
 
             // Resolve the promise with the data
             self.cachedData = {
-              data: modulesList[i].sampleData,
+              data: modulesList[i].sampleData || [],
               meta: data?.meta || {},
             };
             resolve(self.cachedData);
           }
         }
-      } else if (data.data.length > 0) {
+      } else {
         // Return the item
         self.cachedData = {data: data.data, meta: data?.meta || {}};
       }
