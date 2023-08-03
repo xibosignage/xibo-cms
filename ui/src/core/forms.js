@@ -63,7 +63,7 @@ window.forms = {
      * @param {string} [targetId] - Target Id ( widget, element, etc.)
      * @param {boolean} [playlistId] - If widget, the playlistId
      * @param {object[]} [propertyGroups] - Groups to add the properties to
-     * @param {boolean} [customClass] - Custom class to add to the form fields
+     * @param {string} [customClass] - Custom class to add to the form fields
      *  - If the properties are for an element
      */
   createFields: function(
@@ -1721,7 +1721,6 @@ window.forms = {
 
       // Effects
       const effects = [
-        {effect: 'none', group: 'all'},
         {effect: 'marqueeLeft', group: 'showAll'},
         {effect: 'marqueeRight', group: 'showAll'},
         {effect: 'marqueeUp', group: 'showAll'},
@@ -1740,14 +1739,9 @@ window.forms = {
 
       // Add option groups
       if (effectsType === 'showAll' || effectsType === 'all') {
+        effects.unshift({effect: 'none', group: 'all'});
         $el.append(
           $('<optgroup label="' + effectsTranslations.showAll + '">'),
-        );
-      }
-
-      if (effectsType === 'showPaged' || effectsType === 'all') {
-        $el.append(
-          $('<optgroup label="' + effectsTranslations.showPaged + '">'),
         );
       }
 
@@ -1762,18 +1756,16 @@ window.forms = {
               effectsTranslations[element.effect] +
               '</option>'));
         } else {
-          $el.find(
-            'optgroup[label="' +
-            effectsTranslations[element.group] +
-            '"]',
-          ).append(
-            $('<option value="' +
-              element.effect +
-              '" data-optgroup="' +
-              element.group +
-              '">' +
-              effectsTranslations[element.effect] +
-              '</option>'));
+          if (element.group === effectsType) {
+            $el.append(
+                $('<option value="' +
+                  element.effect +
+                  '" data-optgroup="' +
+                  element.group +
+                  '">' +
+                  effectsTranslations[element.effect] +
+                  '</option>'));
+          }
         }
       });
 

@@ -39,6 +39,7 @@ jQuery.fn.extend({
       alignmentV: 'top',
       displayDirection: 0,
       parentId: '',
+      groupId: null,
     };
 
     options = $.extend({}, defaults, options);

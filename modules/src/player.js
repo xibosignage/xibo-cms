@@ -451,6 +451,51 @@ $(function() {
 
         $.each(widgetElements, function(_widgetElemKey, widgetElement) {
           if (widgetElement?.elements?.length > 0) {
+            let playerElements = [];
+            let widgetDataInfo = null;
+
+            if (Object.keys(elementsWidget).length > 0 &&
+                elementsWidget.hasOwnProperty(widgetElement.widgetId)
+            ) {
+              widgetDataInfo = elementsWidget[widgetElement.widgetId];
+            }
+            const renderElement = (hbs, data, isStatic) => {
+              const hbsTemplate = hbs(
+                  Object.assign(data, globalOptions),
+              );
+              let cssStyles = {
+                height: data.height,
+                width: data.width,
+                transform: `rotate(${data?.rotation || 0}deg)`,
+              };
+
+              if (isStatic) {
+                cssStyles = {
+                  ...cssStyles,
+                  position: 'absolute',
+                  top: data.top,
+                  left: data.left,
+                  'z-index': data.layer,
+                };
+              }
+
+              const $elemContent = $('<div class="element-content"></div>');
+
+              $elemContent.html($(hbsTemplate).first().prop('outerHTML'));
+
+              if (data.groupId !== undefined &&
+                  data.groupProperties !== undefined) {
+                $elemContent.data('groupId', data.groupId)
+                .data('cycle-effect', data.groupProperties.effect);
+              }
+
+              $content.append($elemContent
+                .attr('id', data.elementId)
+                .addClass(`${data.uniqueID}--item`)
+                .css(cssStyles)
+                .prop('outerHTML'));
+            };
+
             $.each(widgetElement.elements, function(_elemKey, element) {
               const elementCopy = JSON.parse(JSON.stringify(element));
               const elementProperties = elementCopy?.properties || {};
@@ -469,159 +514,186 @@ $(function() {
                 $template = $(templateSelector);
               }
 
-              let hbs = null;
-              let dataOverride = null;
-              let dataOverrideWith = null;
+              elementCopy.hbs = null;
+              elementCopy.dataOverride = null;
+              elementCopy.dataOverrideWith = null;
 
               // Compile the template if it exists
               if ($template && $template.length > 0) {
-                dataOverride = $template?.data('extends-override');
-                dataOverrideWith = $template?.data('extends-with');
+                elementCopy.dataOverride = $template?.data('extends-override');
+                elementCopy.dataOverrideWith = $template?.data('extends-with');
 
-                hbs = Handlebars.compile($template.html());
+                elementCopy.hbs = Handlebars.compile($template.html());
               }
 
-              const renderElement = (data, isStatic) => {
-                const hbsTemplate = hbs(
-                  Object.assign(data, globalOptions),
-                );
-                let cssStyles = {
-                  height: data.height,
-                  width: data.width,
-                  transform: `rotate(${data?.rotation || 0}deg)`,
-                };
-
-                if (isStatic) {
-                  cssStyles = {
-                    ...cssStyles,
-                    position: 'absolute',
-                    top: data.top,
-                    left: data.left,
-                    'z-index': data.layer,
-                  };
-                }
-
-                const $elemContent = $('<div class="element-content"></div>');
-
-                $elemContent.html($(hbsTemplate).first().prop('outerHTML'));
-
-                $content.append($elemContent
-                  .attr('id', data.elementId)
-                  .addClass(`${data.uniqueID}--item`)
-                  .css(cssStyles)
-                  .prop('outerHTML'));
-              };
-              const templateData = Object.assign(
+              elementCopy.templateData = Object.assign(
                 {}, elementProperties, elementCopy, globalOptions,
                 {uniqueID: elementCopy.elementId, prop: elementCopy},
               );
 
               // Get widget info if exists.
-              if (Object.keys(elementsWidget).length > 0 &&
-                elementsWidget.hasOwnProperty(widgetElement.widgetId)
-              ) {
-                const widgetInfo = elementsWidget[widgetElement.widgetId];
-
-                const renderData = Object.assign(
+              if (widgetDataInfo !== null) {
+                elementCopy.renderData = Object.assign(
                   {},
-                  widgetInfo.properties,
+                  widgetDataInfo.properties,
                   elementCopy,
                   globalOptions,
                   {
-                    duration: widgetInfo.duration,
-                    marqueeInlineSelector: `.${templateData.id}--item`,
+                    duration: widgetDataInfo.duration,
+                    marqueeInlineSelector: `.${elementCopy.templateData.id}--item`,
                     parentId: elementCopy.elementId,
-                    effect: elementProperties?.effect || 'noTransition',
                   },
                 );
-                getWidgetData(widgetInfo)
-                  .then(function(data) {
-                    const {
-                      dataItems,
-                    } = composeFinalData(widgetInfo, data);
-                    const maxSlot = Math.max(
-                      ...widgetElement.elements.map(function(elem) {
-                        return elem?.slot || 0;
-                      }),
-                    ) + 1;
 
-                    // For each data item, parse it and add it to the content;
-                    let templateAlreadyAdded = false;
-                    $.each(dataItems, function(_key, item) {
-                      if (hbs) {
-                        const extendDataWith = transformer
-                          .getExtendedDataKey(dataOverrideWith);
+                playerElements.push(elementCopy);
+              } else {
+                (elementCopy.hbs) && renderElement(
+                  elementCopy.hbs,
+                  elementCopy.templateData,
+                  true,
+                );
+              }
+            });
 
-                        if (extendDataWith !== null &&
+            if (widgetDataInfo !== null && playerElements.length > 0) {
+              const elementGroups = playerElements.reduce(
+                function(elemGroups, elemGroup){
+                    let isGroup = elemGroup.hasOwnProperty('groupId');
+
+                    // Initialize object values
+                    if (!isGroup &&
+                      !elemGroups.standalone.hasOwnProperty(elemGroup.id)
+                    ) {
+                      elemGroups.standalone[elemGroup.id] = [];
+                    }
+                    if (isGroup &&
+                      !elemGroups.groups.hasOwnProperty(elemGroup.groupId)
+                    ) {
+                      elemGroups.groups[elemGroup.groupId] = {
+                        ...globalOptions,
+                        ...widgetDataInfo.properties,
+                        ...elemGroup.groupProperties,
+                        uniqueID: elemGroup.groupId,
+                        duration: widgetDataInfo.totalDuration,
+                        slot: elemGroup.slot,
+                        items: [],
+                      };
+                    }
+
+                    // Fill in objects with items
+                    if (!isGroup && Object.keys(elemGroups.standalone).length > 0) {
+                      elemGroups.standalone[elemGroup.id] = [
+                        ...elemGroups.standalone[elemGroup.id],
+                        elemGroup,
+                      ];
+                    }
+                    if (isGroup && Object.keys(elemGroups.groups).length > 0) {
+                      elemGroups.groups[elemGroup.groupId] = {
+                        ...elemGroups.groups[elemGroup.groupId],
+                        items:[
+                          ...elemGroups.groups[elemGroup.groupId].items,
+                          elemGroup,
+                        ],
+                      };
+                    }
+
+                    return elemGroups;
+                }, { standalone: {}, groups: {} });
+
+              getWidgetData(widgetDataInfo)
+                .then(function(data) {
+                  const {
+                    dataItems,
+                  } = composeFinalData(widgetDataInfo, data);
+                  const maxSlot = Math.max(
+                    ...widgetElement.elements.map(function(elem) {
+                      return elem?.slot || 0;
+                    }),
+                  ) + 1;
+
+                  $.each(Object.keys(elementGroups), function(groupKey, group){
+                    const elemGroupItems = elementGroups[groupKey];
+
+                    if (elemGroupItems.length > 0) {
+                      $.each(elemGroupItems, function(itemKey, groupItem){
+
+                      });
+                    }
+                  });
+                  // For each data item, parse it and add it to the content;
+                  let templateAlreadyAdded = false;
+                  $.each(dataItems, function(_key, item) {
+                    if (hbs) {
+                      const extendDataWith = transformer
+                        .getExtendedDataKey(dataOverrideWith);
+
+                      if (extendDataWith !== null &&
                           item.hasOwnProperty(extendDataWith)
-                        ) {
-                          item[dataOverride] = item[extendDataWith];
-                        }
+                      ) {
+                        item[dataOverride] = item[extendDataWith];
+                      }
 
-                        if (typeof window[
+                      if (typeof window[
                           `onElementParseData_${templateData.id}`
-                        ] === 'function'
-                        ) {
-                          const onElementParseData = window[
+                          ] === 'function'
+                      ) {
+                        const onElementParseData = window[
                             `onElementParseData_${templateData.id}`
-                          ];
+                            ];
 
-                          if (onElementParseData) {
-                            item[dataOverride] = onElementParseData(
+                        if (onElementParseData) {
+                          item[dataOverride] = onElementParseData(
                               item[extendDataWith],
                               templateData,
-                            );
-                          }
-                        }
-
-                        if (_key >= element.slot && _key < dataItems?.length) {
-                          const currentSlot = element.slot + 1;
-                          const currentKey = _key + 1;
-                          const moduloEq = currentSlot === maxSlot ?
-                            0 : currentSlot;
-
-                          if (currentKey % maxSlot === moduloEq) {
-                            renderElement(Object.assign(
-                              templateData,
-                              (String(dataOverride).length > 0 &&
-                                String(dataOverrideWith).length > 0) ?
-                                item : {data: item},
-                            ));
-                          }
+                          );
                         }
                       }
-                      templateAlreadyAdded = true;
-                    });
 
-                    if (templateAlreadyAdded) {
-                      $target.xiboElementsRender(
-                        renderData,
-                        $content.find(`.${templateData.uniqueID}--item`),
-                      );
+                      if (_key >= element.slot && _key < dataItems?.length) {
+                        const currentSlot = element.slot + 1;
+                        const currentKey = _key + 1;
+                        const moduloEq = currentSlot === maxSlot ?
+                            0 : currentSlot;
 
-                      // Handle the rendering of the template
-                      if (dataOverride &&
+                        if (currentKey % maxSlot === moduloEq) {
+                          renderElement(Object.assign(
+                              templateData,
+                              (String(dataOverride).length > 0 &&
+                                  String(dataOverrideWith).length > 0) ?
+                                  item : {data: item},
+                          ));
+                        }
+                      }
+                    }
+                    templateAlreadyAdded = true;
+                  });
+
+                  if (templateAlreadyAdded) {
+                    $target.xiboElementsRender(
+                      renderData,
+                      $content.find(`.${templateData.uniqueID}--item`),
+                    );
+
+                    // Handle the rendering of the template
+                    if (dataOverride &&
                         typeof window[
-                          `onTemplateRender_${dataOverride}`
-                        ] === 'function'
-                      ) {
-                        const onTemplateRender = window[
+                            `onTemplateRender_${dataOverride}`
+                            ] === 'function'
+                    ) {
+                      const onTemplateRender = window[
                           `onTemplateRender_${dataOverride}`];
 
-                        onTemplateRender && onTemplateRender(
+                      onTemplateRender && onTemplateRender(
                           elementCopy.elementId,
                           $target,
                           $content.find(`.${templateData.id}--item`),
                           element?.properties,
                           widgetInfo?.meta,
-                        );
-                      }
+                      );
                     }
-                  });
-              } else {
-                (hbs) && renderElement(templateData, true);
-              }
-            });
+                  }
+                });
+            }
           }
         });
       }
