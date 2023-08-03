@@ -613,107 +613,107 @@ $(function() {
                       return elem?.slot || 0;
                     }),
                   ) + 1;
+                  const renderDataItems = function(data, item, slot, groupId, $groupContent){
+                    // For each data item, parse it and add it to the content;
+                    let templateAlreadyAdded = false;
+
+                    $.each(data, function(_dataKey, dataItem) {
+                      if (item.hasOwnProperty('hbs') &&
+                        typeof item.hbs === 'function'
+                      ) {
+                        const extendDataWith = transformer
+                          .getExtendedDataKey(item.dataOverrideWith);
+
+                        if (extendDataWith !== null &&
+                          dataItem.hasOwnProperty(extendDataWith)
+                        ) {
+                          dataItem[item.dataOverride] = dataItem[extendDataWith];
+                        }
+
+                        if (typeof window[
+                          `onElementParseData_${item.templateData.id}`
+                        ] === 'function') {
+                          const onElementParseData = window[
+                            `onElementParseData_${item.templateData.id}`
+                          ];
+
+                          if (onElementParseData) {
+                            dataItem[item.dataOverride] = onElementParseData(
+                              dataItem[extendDataWith],
+                              item.templateData,
+                            );
+                          }
+                        }
+
+                        if (_dataKey >= slot && _dataKey < data?.length) {
+                          const currentSlot = slot + 1;
+                          const currentKey = _dataKey + 1;
+                          const moduloEq = currentSlot === maxSlot ?
+                              0 : currentSlot;
+                          const usedDataKey = currentKey % maxSlot === moduloEq ? currentKey : null;
+                          const $groupContentItem = usedDataKey !== null ?
+                              $(`<div class="${groupId}--item" data-group-key="${usedDataKey}"></div>`) :
+                              null;
+
+                          if (usedDataKey !== null && $groupContentItem !== null) {
+                            if ($groupContent &&
+                              $groupContent.find(
+                                `.${groupId}--item[data-group-key=${currentKey}]`
+                              ).length === 0
+                            ) {
+                              $groupContent.append($groupContentItem);
+                            }
+
+                            const $itemContainer = $groupContent.find(
+                              `.${groupId}--item[data-group-key="${usedDataKey}"]`
+                            );
+
+                            $itemContainer.append(
+                              renderElement(
+                                item.hbs,
+                                Object.assign(
+                                  item.templateData,
+                                (String(item.dataOverride).length > 0 &&
+                                    String(item.dataOverrideWith).length > 0) ?
+                                      dataItem : { data: dataItem },
+                                ))
+                            );
+                          }
+                        }
+                        templateAlreadyAdded = true;
+                      }
+                    });
+
+                    if (templateAlreadyAdded) {
+                      // Handle the rendering of the template
+                      if (item.dataOverride &&
+                        typeof window[
+                          `onTemplateRender_${item.dataOverride}`
+                        ] === 'function'
+                      ) {
+                        const onTemplateRender = window[
+                          `onTemplateRender_${item.dataOverride}`];
+
+                        onTemplateRender && onTemplateRender(
+                          item.elementId,
+                          $target,
+                          $content.find(`.${item.uniqueID}--item`),
+                          item,
+                          widgetDataInfo?.meta,
+                        );
+                      }
+                    }
+                  };
 
                   // Parse group of elements
                   $.each(Object.keys(elementGroups.groups), function(groupIndex, groupId){
                     if (elementGroups.groups.hasOwnProperty(groupId)) {
                       const elemGroup = elementGroups.groups[groupId];
-                      let $groupContent = $(`<div class="${groupId}"></div>`);
+                      const $groupContent = $(`<div class="${groupId}"></div>`);
 
                       if (elemGroup?.items.length > 0) {
                         $.each(elemGroup?.items, function(itemKey, groupItem){
-                          // For each data item, parse it and add it to the content;
-                          let templateAlreadyAdded = false;
-
-                          $.each(dataItems, function(_dataKey, dataItem) {
-                            if (groupItem.hasOwnProperty('hbs') &&
-                              typeof groupItem.hbs === 'function'
-                            ) {
-                              const extendDataWith = transformer
-                                .getExtendedDataKey(groupItem.dataOverrideWith);
-
-                              if (extendDataWith !== null &&
-                                dataItem.hasOwnProperty(extendDataWith)
-                              ) {
-                                dataItem[groupItem.dataOverride] = dataItem[extendDataWith];
-                              }
-
-                              if (typeof window[
-                                  `onElementParseData_${groupItem.templateData.id}`
-                                ] === 'function'
-                              ) {
-                                const onElementParseData = window[
-                                    `onElementParseData_${groupItem.templateData.id}`
-                                    ];
-
-                                if (onElementParseData) {
-                                  dataItem[groupItem.dataOverride] = onElementParseData(
-                                      dataItem[extendDataWith],
-                                      groupItem.templateData,
-                                  );
-                                }
-                              }
-
-                              if (_dataKey >= elemGroup.slot &&
-                                _dataKey < dataItems?.length
-                              ) {
-                                const currentSlot = elemGroup.slot + 1;
-                                const currentKey = _dataKey + 1;
-                                const moduloEq = currentSlot === maxSlot ?
-                                    0 : currentSlot;
-                                const usedDataKey = currentKey % maxSlot === moduloEq ? currentKey : null;
-                                const $groupContentItem = usedDataKey !== null ?
-                                  $(`<div class="${groupId}--item" data-group-key="${usedDataKey}"></div>`) :
-                                  null;
-
-                                if (usedDataKey !== null && $groupContentItem !== null) {
-                                  if ($groupContent &&
-                                    $groupContent.find(
-                                      `.${groupId}--item[data-group-key=${currentKey}]`
-                                    ).length === 0
-                                  ) {
-                                    $groupContent.append($groupContentItem);
-                                  }
-
-                                  const $itemContainer = $groupContent.find(
-                                    `.${groupId}--item[data-group-key="${usedDataKey}"]`
-                                  );
-
-                                  $itemContainer.append(
-                                    renderElement(
-                                      groupItem.hbs,
-                                      Object.assign(
-                                        groupItem.templateData,
-                                        (String(groupItem.dataOverride).length > 0 &&
-                                          String(groupItem.dataOverrideWith).length > 0) ?
-                                            dataItem : { data: dataItem },
-                                    ))
-                                  );
-                                }
-                              }
-                              templateAlreadyAdded = true;
-                            }
-                          });
-
-                          if (templateAlreadyAdded) {
-                            // Handle the rendering of the template
-                            if (groupItem.dataOverride &&
-                              typeof window[
-                              `onTemplateRender_${groupItem.dataOverride}`
-                              ] === 'function'
-                            ) {
-                              const onTemplateRender = window[
-                                `onTemplateRender_${groupItem.dataOverride}`];
-
-                              onTemplateRender && onTemplateRender(
-                                groupItem.elementId,
-                                $target,
-                                $content.find(`.${groupItem.uniqueID}--item`),
-                                groupItem,
-                                widgetDataInfo?.meta,
-                              );
-                            }
-                          }
+                          renderDataItems(dataItems, groupItem, elemGroup.slot, groupId, $groupContent);
                         });
 
                         $content.append($groupContent.prop('outerHTML'));
@@ -729,8 +729,34 @@ $(function() {
                   // Parse standalone elements
                   $.each(Object.keys(elementGroups.standalone), function(itemIndex, itemId) {
                     if (elementGroups.standalone.hasOwnProperty(itemId)) {
-                      const itemObj = elementGroups.standalone[itemId];
+                      const itemsObj = elementGroups.standalone[itemId];
+                      const $groupContent = $(`<div class="${itemId}"></div>`);
 
+                      if (itemsObj.length > 0) {
+                        const itemGroupProps = itemsObj.slice(0, 1)[0];
+                        $.each(itemsObj, function(itemKey, itemObj){
+                          const groupContentID = `${itemId}_page-${itemObj.slot}`;
+                          const $groupContentItem = $(`<div class="${groupContentID}"></div>`);
+                          renderDataItems(
+                            dataItems,
+                            itemObj,
+                            itemObj.slot,
+                            groupContentID,
+                            $groupContentItem,
+                          );
+
+                          $content.append($groupContentItem.prop('outerHTML'));
+
+                          $groupContentItem.xiboElementsRender(
+                            {
+                              ...itemGroupProps,
+                              parentId: groupContentID,
+                              id: groupContentID,
+                            },
+                            $groupContentItem.find(`.${groupContentID}--item`),
+                          );
+                        });
+                      }
                     }
                   });
                   // $.each(dataItems, function(_key, item) {
