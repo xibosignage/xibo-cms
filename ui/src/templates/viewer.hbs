@@ -12,7 +12,12 @@
     {{!-- Render Layout --}}
     <div class="layout-live-preview">
         {{#with layout.canvas}}
-            <div id="{{id}}" class="designer-region-canvas"></div>
+            <div id="{{id}}" 
+                class="designer-region-canvas"
+                style="
+                    position:absolute;
+                    z-index: {{ zIndex }};">
+            </div>
         {{/with}}
         <div id="regions">
             {{#each layout.regions}}
