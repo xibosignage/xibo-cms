@@ -39,38 +39,48 @@ jQuery.fn.extend({
       alignmentV: 'top',
       displayDirection: 0,
       parentId: '',
-      groupId: null,
+      layer: 0,
     };
+    const $content = $('#content');
+    let isGroup = false;
 
     options = $.extend({}, defaults, options);
 
     const elementWrapper = $('<div class="element-wrapper"></div>');
 
-    if (options.parentId) {
-      elementWrapper
-        .addClass(`element-wrapper--${options.parentId}`)
-        .css({
-          width: options.width,
-          height: options.height,
-          position: 'absolute',
-          top: options.top,
-          left: options.left,
-          'z-index': options.layer,
-        });
+    if (String(options.parentId).length > 0) {
+      if (options.parentId === options.id) {
+        isGroup = true;
+      }
+
+      if (!isGroup) {
+        elementWrapper
+          .addClass(`element-wrapper--${options.parentId}`)
+          .css({
+            width: options.width,
+            height: options.height,
+            position: 'absolute',
+            top: options.top,
+            left: options.left,
+            'z-index': options.layer,
+          });
+      }
     }
 
-    if (items?.length > 0) {
+    if (!isGroup && items?.length > 0) {
       elementWrapper.append(items);
     }
 
-    if ($this.find(`#content .element-wrapper--${options.parentId}`)
+    if (!isGroup && $this.find(`.element-wrapper--${options.parentId}`)
       .length === 0) {
-      $this.find('#content').prepend(elementWrapper);
+      $this.prepend(elementWrapper);
     }
 
-    const cycleElement = `#content .element-wrapper--${options.parentId}`;
+    const cycleElement = isGroup ?
+      `.${options.id}` :
+      `.element-wrapper--${options.parentId}`;
 
-    if ($this.find(cycleElement).length) {
+    if ($content.find(cycleElement).length) {
       // Make sure the speed is something sensible
       options.speed = (options.speed <= 200) ? 1000 : options.speed;
 

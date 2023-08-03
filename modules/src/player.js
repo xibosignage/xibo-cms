@@ -447,7 +447,7 @@ $(function() {
     $.each(elements, function(_key, widgetElements) {
       if (widgetElements?.length > 0) {
         const $target = $('body');
-        const $content = $('#content');
+        let $content = $('#content');
 
         $.each(widgetElements, function(_widgetElemKey, widgetElement) {
           if (widgetElement?.elements?.length > 0) {
@@ -466,6 +466,10 @@ $(function() {
               let cssStyles = {
                 height: data.height,
                 width: data.width,
+                position: 'absolute',
+                top: data.top,
+                left: data.left,
+                'z-index': data.layer,
                 transform: `rotate(${data?.rotation || 0}deg)`,
               };
 
@@ -479,21 +483,11 @@ $(function() {
                 };
               }
 
-              const $elemContent = $('<div class="element-content"></div>');
-
-              $elemContent.html($(hbsTemplate).first().prop('outerHTML'));
-
-              if (data.groupId !== undefined &&
-                  data.groupProperties !== undefined) {
-                $elemContent.data('groupId', data.groupId)
-                .data('cycle-effect', data.groupProperties.effect);
-              }
-
-              $content.append($elemContent
+              return $(hbsTemplate).first()
                 .attr('id', data.elementId)
                 .addClass(`${data.uniqueID}--item`)
                 .css(cssStyles)
-                .prop('outerHTML'));
+                .prop('outerHTML');
             };
 
             $.each(widgetElement.elements, function(_elemKey, element) {
@@ -547,10 +541,12 @@ $(function() {
 
                 playerElements.push(elementCopy);
               } else {
-                (elementCopy.hbs) && renderElement(
-                  elementCopy.hbs,
-                  elementCopy.templateData,
-                  true,
+                (elementCopy.hbs) && $content.append(
+                  renderElement(
+                    elementCopy.hbs,
+                    elementCopy.templateData,
+                    true,
+                  )
                 );
               }
             });
@@ -573,8 +569,10 @@ $(function() {
                         ...globalOptions,
                         ...widgetDataInfo.properties,
                         ...elemGroup.groupProperties,
+                        id: elemGroup.groupId,
                         uniqueID: elemGroup.groupId,
                         duration: widgetDataInfo.totalDuration,
+                        parentId: elemGroup.groupId,
                         slot: elemGroup.slot,
                         items: [],
                       };
@@ -605,93 +603,206 @@ $(function() {
                   const {
                     dataItems,
                   } = composeFinalData(widgetDataInfo, data);
-                  const maxSlot = Math.max(
-                    ...widgetElement.elements.map(function(elem) {
+                  const groupValues = Object.values(elementGroups.groups);
+                  const groupItems = groupValues?.length > 0 ?
+                    groupValues.reduce((a, b) => [...a, ...b.items], []) :
+                    null;
+                  const maxSlot = groupItems === null ?
+                    1 :
+                    Math.max(...groupItems.map(function(elem) {
                       return elem?.slot || 0;
                     }),
                   ) + 1;
 
-                  $.each(Object.keys(elementGroups), function(groupKey, group){
-                    const elemGroupItems = elementGroups[groupKey];
+                  // Parse group of elements
+                  $.each(Object.keys(elementGroups.groups), function(groupIndex, groupId){
+                    if (elementGroups.groups.hasOwnProperty(groupId)) {
+                      const elemGroup = elementGroups.groups[groupId];
+                      let $groupContent = $(`<div class="${groupId}"></div>`);
 
-                    if (elemGroupItems.length > 0) {
-                      $.each(elemGroupItems, function(itemKey, groupItem){
+                      if (elemGroup?.items.length > 0) {
+                        $.each(elemGroup?.items, function(itemKey, groupItem){
+                          // For each data item, parse it and add it to the content;
+                          let templateAlreadyAdded = false;
 
-                      });
+                          $.each(dataItems, function(_dataKey, dataItem) {
+                            if (groupItem.hasOwnProperty('hbs') &&
+                              typeof groupItem.hbs === 'function'
+                            ) {
+                              const extendDataWith = transformer
+                                .getExtendedDataKey(groupItem.dataOverrideWith);
+
+                              if (extendDataWith !== null &&
+                                dataItem.hasOwnProperty(extendDataWith)
+                              ) {
+                                dataItem[groupItem.dataOverride] = dataItem[extendDataWith];
+                              }
+
+                              if (typeof window[
+                                  `onElementParseData_${groupItem.templateData.id}`
+                                ] === 'function'
+                              ) {
+                                const onElementParseData = window[
+                                    `onElementParseData_${groupItem.templateData.id}`
+                                    ];
+
+                                if (onElementParseData) {
+                                  dataItem[groupItem.dataOverride] = onElementParseData(
+                                      dataItem[extendDataWith],
+                                      groupItem.templateData,
+                                  );
+                                }
+                              }
+
+                              if (_dataKey >= elemGroup.slot &&
+                                _dataKey < dataItems?.length
+                              ) {
+                                const currentSlot = elemGroup.slot + 1;
+                                const currentKey = _dataKey + 1;
+                                const moduloEq = currentSlot === maxSlot ?
+                                    0 : currentSlot;
+                                const usedDataKey = currentKey % maxSlot === moduloEq ? currentKey : null;
+                                const $groupContentItem = usedDataKey !== null ?
+                                  $(`<div class="${groupId}--item" data-group-key="${usedDataKey}"></div>`) :
+                                  null;
+
+                                if (usedDataKey !== null && $groupContentItem !== null) {
+                                  if ($groupContent &&
+                                    $groupContent.find(
+                                      `.${groupId}--item[data-group-key=${currentKey}]`
+                                    ).length === 0
+                                  ) {
+                                    $groupContent.append($groupContentItem);
+                                  }
+
+                                  const $itemContainer = $groupContent.find(
+                                    `.${groupId}--item[data-group-key="${usedDataKey}"]`
+                                  );
+
+                                  $itemContainer.append(
+                                    renderElement(
+                                      groupItem.hbs,
+                                      Object.assign(
+                                        groupItem.templateData,
+                                        (String(groupItem.dataOverride).length > 0 &&
+                                          String(groupItem.dataOverrideWith).length > 0) ?
+                                            dataItem : { data: dataItem },
+                                    ))
+                                  );
+                                }
+                              }
+                              templateAlreadyAdded = true;
+                            }
+                          });
+
+                          if (templateAlreadyAdded) {
+                            // Handle the rendering of the template
+                            if (groupItem.dataOverride &&
+                              typeof window[
+                              `onTemplateRender_${groupItem.dataOverride}`
+                              ] === 'function'
+                            ) {
+                              const onTemplateRender = window[
+                                `onTemplateRender_${groupItem.dataOverride}`];
+
+                              onTemplateRender && onTemplateRender(
+                                groupItem.elementId,
+                                $target,
+                                $content.find(`.${groupItem.uniqueID}--item`),
+                                groupItem,
+                                widgetDataInfo?.meta,
+                              );
+                            }
+                          }
+                        });
+
+                        $content.append($groupContent.prop('outerHTML'));
+
+                        $groupContent.xiboElementsRender(
+                          elemGroup,
+                          $groupContent.find(`.${elemGroup.id}--item`),
+                        );
+                      }
                     }
                   });
-                  // For each data item, parse it and add it to the content;
-                  let templateAlreadyAdded = false;
-                  $.each(dataItems, function(_key, item) {
-                    if (hbs) {
-                      const extendDataWith = transformer
-                        .getExtendedDataKey(dataOverrideWith);
 
-                      if (extendDataWith !== null &&
-                          item.hasOwnProperty(extendDataWith)
-                      ) {
-                        item[dataOverride] = item[extendDataWith];
-                      }
+                  // Parse standalone elements
+                  $.each(Object.keys(elementGroups.standalone), function(itemIndex, itemId) {
+                    if (elementGroups.standalone.hasOwnProperty(itemId)) {
+                      const itemObj = elementGroups.standalone[itemId];
 
-                      if (typeof window[
-                          `onElementParseData_${templateData.id}`
-                          ] === 'function'
-                      ) {
-                        const onElementParseData = window[
-                            `onElementParseData_${templateData.id}`
-                            ];
-
-                        if (onElementParseData) {
-                          item[dataOverride] = onElementParseData(
-                              item[extendDataWith],
-                              templateData,
-                          );
-                        }
-                      }
-
-                      if (_key >= element.slot && _key < dataItems?.length) {
-                        const currentSlot = element.slot + 1;
-                        const currentKey = _key + 1;
-                        const moduloEq = currentSlot === maxSlot ?
-                            0 : currentSlot;
-
-                        if (currentKey % maxSlot === moduloEq) {
-                          renderElement(Object.assign(
-                              templateData,
-                              (String(dataOverride).length > 0 &&
-                                  String(dataOverrideWith).length > 0) ?
-                                  item : {data: item},
-                          ));
-                        }
-                      }
                     }
-                    templateAlreadyAdded = true;
                   });
-
-                  if (templateAlreadyAdded) {
-                    $target.xiboElementsRender(
-                      renderData,
-                      $content.find(`.${templateData.uniqueID}--item`),
-                    );
-
-                    // Handle the rendering of the template
-                    if (dataOverride &&
-                        typeof window[
-                            `onTemplateRender_${dataOverride}`
-                            ] === 'function'
-                    ) {
-                      const onTemplateRender = window[
-                          `onTemplateRender_${dataOverride}`];
-
-                      onTemplateRender && onTemplateRender(
-                          elementCopy.elementId,
-                          $target,
-                          $content.find(`.${templateData.id}--item`),
-                          element?.properties,
-                          widgetInfo?.meta,
-                      );
-                    }
-                  }
+                  // $.each(dataItems, function(_key, item) {
+                  //   if (hbs) {
+                  //     const extendDataWith = transformer
+                  //       .getExtendedDataKey(dataOverrideWith);
+                  //
+                  //     if (extendDataWith !== null &&
+                  //         item.hasOwnProperty(extendDataWith)
+                  //     ) {
+                  //       item[dataOverride] = item[extendDataWith];
+                  //     }
+                  //
+                  //     if (typeof window[
+                  //         `onElementParseData_${templateData.id}`
+                  //         ] === 'function'
+                  //     ) {
+                  //       const onElementParseData = window[
+                  //           `onElementParseData_${templateData.id}`
+                  //           ];
+                  //
+                  //       if (onElementParseData) {
+                  //         item[dataOverride] = onElementParseData(
+                  //             item[extendDataWith],
+                  //             templateData,
+                  //         );
+                  //       }
+                  //     }
+                  //
+                  //     if (_key >= element.slot && _key < dataItems?.length) {
+                  //       const currentSlot = element.slot + 1;
+                  //       const currentKey = _key + 1;
+                  //       const moduloEq = currentSlot === maxSlot ?
+                  //           0 : currentSlot;
+                  //
+                  //       if (currentKey % maxSlot === moduloEq) {
+                  //         renderElement(Object.assign(
+                  //             templateData,
+                  //             (String(dataOverride).length > 0 &&
+                  //                 String(dataOverrideWith).length > 0) ?
+                  //                 item : {data: item},
+                  //         ));
+                  //       }
+                  //     }
+                  //     templateAlreadyAdded = true;
+                  //   }
+                  // });
+                  //
+                  // if (templateAlreadyAdded) {
+                  //   $target.xiboElementsRender(
+                  //     renderData,
+                  //     $content.find(`.${templateData.uniqueID}--item`),
+                  //   );
+                  //
+                  //   // Handle the rendering of the template
+                  //   if (dataOverride &&
+                  //       typeof window[
+                  //           `onTemplateRender_${dataOverride}`
+                  //           ] === 'function'
+                  //   ) {
+                  //     const onTemplateRender = window[
+                  //         `onTemplateRender_${dataOverride}`];
+                  //
+                  //     onTemplateRender && onTemplateRender(
+                  //         elementCopy.elementId,
+                  //         $target,
+                  //         $content.find(`.${templateData.id}--item`),
+                  //         element?.properties,
+                  //         widgetInfo?.meta,
+                  //     );
+                  //   }
+                  // }
                 });
             }
           }
