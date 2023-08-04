@@ -1217,9 +1217,13 @@ class Schedule extends Base
                 }
 
                 if ($recurrenceRange != null) {
-                    $schedule->recurrenceRange = $recurrenceRange->setTime($recurrenceRange->hour, $recurrenceRange->minute, 0)->format('U');
+                    $schedule->recurrenceRange =
+                        $recurrenceRange->setTime(
+                            $recurrenceRange->hour,
+                            $recurrenceRange->minute,
+                            0
+                        )->format('U');
                 }
-
             } else {
                 $schedule->fromDt = $fromDt->format('U');
 
@@ -1232,9 +1236,12 @@ class Schedule extends Base
                 }
             }
 
-            $logToDt = isset($toDt) ? $toDt->format(DateFormatHelper::getSystemFormat()) : null;
-            $logRecurrenceRange = isset($recurrenceRange) ? $recurrenceRange->format(DateFormatHelper::getSystemFormat()) : null;
-            $this->getLog()->debug('Processed times are: FromDt=' . $fromDt->format(DateFormatHelper::getSystemFormat()) . '. ToDt=' . $logToDt . '. recurrenceRange=' . $logRecurrenceRange );
+            $logToDt = $toDt?->format(DateFormatHelper::getSystemFormat());
+            $logRecurrenceRange = $recurrenceRange?->format(DateFormatHelper::getSystemFormat());
+            $this->getLog()->debug(
+                'Processed times are: FromDt=' . $fromDt->format(DateFormatHelper::getSystemFormat())
+                . '. ToDt=' . $logToDt . '. recurrenceRange=' . $logRecurrenceRange
+            );
         }
 
         // Ready to do the add
