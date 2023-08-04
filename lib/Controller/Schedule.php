@@ -417,8 +417,12 @@ class Schedule extends Base
                 $toDt = Carbon::createFromTimestamp($scheduleEvent->toDt);
 
                 // Set the row from/to date to be an ISO date for display
-                $scheduleEvent->fromDt = Carbon::createFromTimestamp($scheduleEvent->fromDt)->format(DateFormatHelper::getSystemFormat());
-                $scheduleEvent->toDt = Carbon::createFromTimestamp($scheduleEvent->toDt)->format(DateFormatHelper::getSystemFormat());
+                $scheduleEvent->fromDt =
+                    Carbon::createFromTimestamp($scheduleEvent->fromDt)
+                        ->format(DateFormatHelper::getSystemFormat());
+                $scheduleEvent->toDt =
+                    Carbon::createFromTimestamp($scheduleEvent->toDt)
+                        ->format(DateFormatHelper::getSystemFormat());
 
                 $this->getLog()->debug(sprintf('Start date is ' . $fromDt->toRssString() . ' ' . $scheduleEvent->fromDt));
                 $this->getLog()->debug(sprintf('End date is ' . $toDt->toRssString() . ' ' . $scheduleEvent->toDt));
@@ -525,7 +529,12 @@ class Schedule extends Base
         // Reset the seconds
         $date->second(0);
 
-        $this->getLog()->debug(sprintf('Generating eventList for DisplayGroupId ' . $id . ' on date ' . $date->format(DateFormatHelper::getSystemFormat())));
+        $this->getLog()->debug(
+            sprintf(
+                'Generating eventList for DisplayGroupId ' . $id . ' on date '
+                . $date->format(DateFormatHelper::getSystemFormat())
+            )
+        );
 
         // Get a list of scheduled events
         $events = [];
@@ -799,7 +808,7 @@ class Schedule extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    function addForm(Request $request, Response $response, ?string $from, ?int $id): Response|ResponseInterface
+    public function addForm(Request $request, Response $response, ?string $from, ?int $id): Response|ResponseInterface
     {
         // Get the display groups added to the session (if there are some)
         $displayGroupIds = $this->session->get('displayGroupIds');
@@ -1179,9 +1188,12 @@ class Schedule extends Base
                 throw new InvalidArgumentException(__('Please enter a from date'), 'fromDt');
             }
 
-            $logToDt = isset($toDt) ? $toDt->format(DateFormatHelper::getSystemFormat()) : null;
-            $logRecurrenceRange = isset($recurrenceRange) ? $recurrenceRange->format(DateFormatHelper::getSystemFormat()) : null;
-            $this->getLog()->debug('Times received are: FromDt=' . $fromDt->format(DateFormatHelper::getSystemFormat()) . '. ToDt=' . $logToDt . '. recurrenceRange=' . $logRecurrenceRange);
+            $logToDt = $toDt?->format(DateFormatHelper::getSystemFormat());
+            $logRecurrenceRange = $recurrenceRange?->format(DateFormatHelper::getSystemFormat());
+            $this->getLog()->debug(
+                'Times received are: FromDt=' . $fromDt->format(DateFormatHelper::getSystemFormat())
+                . '. ToDt=' . $logToDt . '. recurrenceRange=' . $logRecurrenceRange
+            );
 
             if (!$schedule->isCustomDayPart() && !$schedule->isAlwaysDayPart()) {
                 // Daypart selected
