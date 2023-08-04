@@ -2126,7 +2126,8 @@ class Schedule extends Base
      *      in="query",
      *      required=false,
      *      type="integer",
-     *      description="Filter grid by eventTypeId. 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action, 7=Media Library, 8=Playlist"
+     *      description="Filter grid by eventTypeId.
+     * 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action, 7=Media Library, 8=Playlist"
      *  ),
      *  @SWG\Parameter(
      *      name="fromDt",
