@@ -23,6 +23,7 @@
 namespace Xibo\Widget;
 
 use Carbon\Carbon;
+use Xibo\Event\MenuBoardModifiedDtRequest;
 use Xibo\Event\MenuBoardProductRequest;
 use Xibo\Widget\Provider\DataProviderInterface;
 use Xibo\Widget\Provider\DurationProviderInterface;
@@ -45,6 +46,12 @@ class MenuBoardProductProvider implements WidgetProviderInterface
 
     public function fetchDuration(DurationProviderInterface $durationProvider): WidgetProviderInterface
     {
+        $this->getLog()->debug('fetchDuration');
+        
+        $lowerLimit = $durationProvider->getWidget()->getOptionValue('lowerLimit', 0);
+        $upperLimit = $durationProvider->getWidget()->getOptionValue('upperLimit', 15);
+        $durationProvider->setDuration(($upperLimit - $lowerLimit)
+            * $durationProvider->getWidget()->calculatedDuration);
         return $this;
     }
 
@@ -55,6 +62,15 @@ class MenuBoardProductProvider implements WidgetProviderInterface
 
     public function getDataModifiedDt(DataProviderInterface $dataProvider): ?Carbon
     {
-        return null;
+        $this->getLog()->debug('fetchData: MenuBoardProductProvider passing to modifiedDt request event');
+        $menuId = $dataProvider->getProperty('menuId');
+        if ($menuId !== null) {
+            // Raise an event to get the modifiedDt of this dataSet
+            $event = new MenuBoardModifiedDtRequest($menuId);
+            $this->getDispatcher()->dispatch($event, MenuBoardModifiedDtRequest::$NAME);
+            return max($event->getModifiedDt(), $dataProvider->getWidgetModifiedDt());
+        } else {
+            return null;
+        }
     }
 }

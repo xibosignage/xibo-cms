@@ -22,16 +22,25 @@
 
 namespace Xibo\Widget\Provider;
 
+use Xibo\Entity\Module;
+use Xibo\Entity\Widget;
+
 /**
  * A duration provider is used to return the duration for a Widget which has a media file
  */
 interface DurationProviderInterface
 {
     /**
-     * Get the fully qualified path name of the file that needs its duration assessed
-     * @return string the fully qualified path to the file
+     * Get the Module
+     * @return Module
      */
-    public function getFile(): string;
+    public function getModule(): Module;
+
+    /**
+     * Get the Widget
+     * @return Widget
+     */
+    public function getWidget(): Widget;
 
     /**
      * Get the duration

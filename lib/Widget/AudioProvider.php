@@ -23,6 +23,7 @@
 namespace Xibo\Widget;
 
 use Carbon\Carbon;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Widget\Provider\DataProviderInterface;
 use Xibo\Widget\Provider\DurationProviderInterface;
 use Xibo\Widget\Provider\WidgetProviderInterface;
@@ -42,17 +43,14 @@ class AudioProvider implements WidgetProviderInterface
 
     public function fetchDuration(DurationProviderInterface $durationProvider): WidgetProviderInterface
     {
-        $fileName = $durationProvider->getFile();
-
-        $this->getLog()->debug('AudioProvider: fetchDuration with file: ' . $fileName);
-
-        // If we don't have a file name, then we use the default duration of 0 (end-detect)
-        if (empty($fileName)) {
-            $durationProvider->setDuration(0);
-        } else {
-            $info = new \getID3();
-            $file = $info->analyze($fileName);
-            $durationProvider->setDuration(intval($file['playtime_seconds'] ?? 0));
+        // If we have not been provided a specific duration, we should use the duration stored in the library
+        try {
+            if ($durationProvider->getWidget()->useDuration === 0) {
+                $durationProvider->setDuration($durationProvider->getWidget()->getDurationForMedia());
+            }
+        } catch (NotFoundException) {
+            $this->getLog()->error('fetchDuration: video/audio without primaryMediaId. widgetId: '
+                . $durationProvider->getWidget()->getId());
         }
         return $this;
     }
