@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -290,16 +290,20 @@ class SAMLAuthentication extends AuthenticationBase
         });
 
         // Single Logout Service
-        $app->get('/saml/sls', function (Request $request, Response $response) use ($app) {
+        $app->map(['GET', 'POST'], '/saml/sls', function (Request $request, Response $response) use ($app) {
             // Make request to IDP
             $auth = new Auth($app->getContainer()->get('configService')->samlSettings);
-            $auth->processSLO(false, null, false, function () use ($request) {
-                // Audit that the IDP has completed this request.
-                $this->getLog()->setIpAddress($request->getAttribute('ip_address'));
-                $this->getLog()->audit('User', 0, 'Idp SLO completed', [
-                    'UserAgent' => $request->getHeader('User-Agent')
-                ]);
-            });
+            try {
+                $auth->processSLO(false, null, false, function () use ($request) {
+                    // Audit that the IDP has completed this request.
+                    $this->getLog()->setIpAddress($request->getAttribute('ip_address'));
+                    $this->getLog()->audit('User', 0, 'Idp SLO completed', [
+                        'UserAgent' => $request->getHeader('User-Agent')
+                    ]);
+                });
+            } catch (\Exception $e) {
+                // Ignored - get with getErrors()
+            }
 
             $errors = $auth->getErrors();
 
@@ -348,7 +352,7 @@ class SAMLAuthentication extends AuthenticationBase
      * @return Response
      * @throws \OneLogin\Saml2\Error
      */
-    public function redirectToLogin(Request $request)
+    public function redirectToLogin(\Psr\Http\Message\ServerRequestInterface $request)
     {
         if ($this->isAjax($request)) {
             return $this->createResponse($request)->withJson(ApplicationState::asRequiresLogin());
@@ -360,7 +364,7 @@ class SAMLAuthentication extends AuthenticationBase
     }
 
     /** @inheritDoc */
-    public function getPublicRoutes(Request $request)
+    public function getPublicRoutes(\Psr\Http\Message\ServerRequestInterface $request)
     {
         return array_merge($request->getAttribute('publicRoutes', []), [
             '/saml/metadata',
@@ -380,8 +384,11 @@ class SAMLAuthentication extends AuthenticationBase
     }
 
     /** @inheritDoc */
-    public function addToRequest(Request $request)
+    public function addToRequest(\Psr\Http\Message\ServerRequestInterface $request)
     {
-        return $request->withAttribute('excludedCsrfRoutes', array_merge($request->getAttribute('excludedCsrfRoutes', []), ['/saml/acs']));
+        return $request->withAttribute(
+            'excludedCsrfRoutes',
+            array_merge($request->getAttribute('excludedCsrfRoutes', []), ['/saml/acs', '/saml/sls'])
+        );
     }
 }
