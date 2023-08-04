@@ -80,6 +80,9 @@
                             {% set title %}{% trans 'To Date' %}{% endset %}
                             {{ inline.dateTime("toDt", title, "", "", "custom-date-range", "", "") }}
 
+                            {% set title %}{% trans "Name" %}{% endset %}
+                            {{ inline.inputNameGrid('name', title, "non-agenda-filter") }}
+
                             {% set title %}{% trans 'Event Type' %}{% endset %}
                             {{ inline.dropdown("eventTypeId", "single", title, "", [{eventTypeId: null, eventTypeName: "All"}]|merge(eventTypes), "eventTypeId", "eventTypeName", "", "non-agenda-filter") }}
 
@@ -191,7 +194,7 @@
                                     <th>{% trans 'Name' %}</th>
                                     <th>{% trans 'Start' %}</th>
                                     <th>{% trans 'End' %}</th>
-                                    <th>{% trans 'Campaign' %}</th>
+                                    <th>{% trans 'Event' %}</th>
                                     <th>{% trans 'Campaign ID' %}</th>
                                     <th>{% trans 'Display Groups' %}</th>
                                     <th>{% trans 'SoV' %}</th>
@@ -219,7 +222,7 @@
                     <div class="tab-pane" id="calendar-view">
                         <div class="row">
                             <div class="text-center text-danger col-lg-12" id="calendar-error-message">
-                                <span>{% trans "Please select a Display or Display Group to view the calendar" %}</span>
+                                <span>{% trans "Please select a Display, Display Group or Layout / Campaign to view the calendar" %}</span>
                             </div>
                             <div class="xibo-calendar-controls-container align-content-start justify-content-end col-xl-12 pl-0 form-inline text-right">
                                 <div class="btn-group xibo-calendar-controls xibo-agenda-calendar-controls">
@@ -1229,7 +1232,9 @@
           });
 
         // Set up our show all selector control
-        $('#showAll, #eventTypeId, #recurring, #geoAware, #DisplayList, #DisplayGroupList', dialog)
+        $('#showAll, #eventTypeId, #recurring, #geoAware,' +
+          ' #DisplayList, #DisplayGroupList,' +
+          ' #name, #useRegexForName, #logicalOperatorName', dialog)
           .on('change', function () {
             setTimeout(calendar.view(), 1000);
           });
@@ -1357,10 +1362,12 @@
             className: 'align-middle',
             responsivePriority: 2,
             data: function (data) {
-              if (data.eventTypeId !== 9) {
-                return data.campaign;
-              } else {
+              if (data.eventTypeId === 9) {
                 return data.syncType;
+              } else if (data.eventTypeId === 2) {
+                return data.command;
+              } else {
+                return data.campaign;
               }
             }
           },

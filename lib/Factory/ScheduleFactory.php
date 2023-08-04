@@ -553,6 +553,20 @@ class ScheduleFactory extends BaseFactory
             $params['syncGroupId'] = $parsedFilter->getInt('syncGroupId');
         }
 
+        if ($parsedFilter->getString('name') != null) {
+            $terms = explode(',', $parsedFilter->getString('name'));
+            $logicalOperator = $parsedFilter->getString('logicalOperatorName', ['default' => 'OR']);
+            $this->nameFilter(
+                'schedule',
+                'name',
+                $terms,
+                $body,
+                $params,
+                ($parsedFilter->getCheckbox('useRegexForName') == 1),
+                $logicalOperator
+            );
+        }
+
         // Sorting?
         $order = '';
         if ($parsedFilter->getInt('gridFilter') === 1 && $sortOrder === null) {

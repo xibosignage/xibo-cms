@@ -304,6 +304,9 @@ class Schedule extends Base
             'geoAware' => $sanitizedParams->getInt('geoAware'),
             'recurring' => $sanitizedParams->getInt('recurring'),
             'eventTypeId' => $sanitizedParams->getInt('eventTypeId'),
+            'name' => $sanitizedParams->getString('name'),
+            'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
+            'logicalOperatorName' => $sanitizedParams->getString('logicalOperatorName'),
         ];
 
         if ($campaignId != null) {
@@ -2150,6 +2153,9 @@ class Schedule extends Base
                 'recurring' => $params->getInt('recurring'),
                 'campaignId' => $params->getInt('campaignId'),
                 'displayGroupIds' => $params->getIntArray('displayGroupIds'),
+                'name' => $params->getString('name'),
+                'useRegexForName' => $params->getCheckbox('useRegexForName'),
+                'logicalOperatorName' => $params->getString('logicalOperatorName'),
                 'gridFilter' => 1
             ], $params)
         );
