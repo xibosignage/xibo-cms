@@ -393,6 +393,9 @@ class Module implements \JsonSerializable
         } else if ($this->widgetProvider === null) {
             return null;
         }
+
+        $this->getLog()->debug('calculateDuration: using widget provider');
+
         $durationProvider = $this->moduleFactory->createDurationProvider($this, $widget);
         $this->widgetProvider->fetchDuration($durationProvider);
 
