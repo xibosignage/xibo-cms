@@ -1493,11 +1493,6 @@ Viewer.prototype.renderElementContent = function(
         const elData = elementData?.data;
         const meta = elementData?.meta;
 
-        // If we don't have data, stop here
-        if (elData === undefined) {
-          return;
-        }
-
         // Check all data elements and make replacements
         for (const key in elData) {
           if (elData.hasOwnProperty(key)) {

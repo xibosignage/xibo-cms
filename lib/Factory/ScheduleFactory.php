@@ -70,8 +70,16 @@ class ScheduleFactory extends BaseFactory
      * @param ScheduleExclusionFactory $scheduleExclusionFactory
      * @param User $user
      */
-    public function __construct($config, $pool, $displayGroupFactory, $dayPartFactory, $userFactory, $scheduleReminderFactory, $scheduleExclusionFactory, $user)
-    {
+    public function __construct(
+        $config,
+        $pool,
+        $displayGroupFactory,
+        $dayPartFactory,
+        $userFactory,
+        $scheduleReminderFactory,
+        $scheduleExclusionFactory,
+        $user
+    ) {
         $this->setAclDependencies($user, $userFactory);
         $this->config = $config;
         $this->pool = $pool;
@@ -478,19 +486,29 @@ class ScheduleFactory extends BaseFactory
         // End both dates
 
         if ($parsedFilter->getIntArray('displayGroupIds') != null) {
-            $body .= ' AND `schedule`.eventId IN (SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup` WHERE displayGroupId IN (' . implode(',', $parsedFilter->getIntArray('displayGroupIds')) . ')) ';
+            $body .= ' AND `schedule`.eventId IN (SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup`
+             WHERE displayGroupId IN (' . implode(',', $parsedFilter->getIntArray('displayGroupIds')) . ')) ';
         }
 
         // Future schedules?
-        if ($parsedFilter->getInt('futureSchedulesFrom') !== null && $parsedFilter->getInt('futureSchedulesTo') === null) {
+        if ($parsedFilter->getInt('futureSchedulesFrom') !== null
+            && $parsedFilter->getInt('futureSchedulesTo') === null
+        ) {
             // Get schedules that end after this date, or that recur after this date
-            $body .= ' AND (IFNULL(`schedule`.toDt, `schedule`.fromDt) >= :futureSchedulesFrom OR `schedule`.recurrence_range >= :futureSchedulesFrom OR (IFNULL(`schedule`.recurrence_range, 0) = 0) AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\') ';
+            $body .= ' AND (IFNULL(`schedule`.toDt, `schedule`.fromDt) >= :futureSchedulesFrom
+             OR `schedule`.recurrence_range >= :futureSchedulesFrom OR (IFNULL(`schedule`.recurrence_range, 0) = 0)
+              AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\') ';
             $params['futureSchedulesFrom'] = $parsedFilter->getInt('futureSchedulesFrom');
         }
 
-        if ($parsedFilter->getInt('futureSchedulesFrom') !== null && $parsedFilter->getInt('futureSchedulesTo') !== null) {
+        if ($parsedFilter->getInt('futureSchedulesFrom') !== null
+            && $parsedFilter->getInt('futureSchedulesTo') !== null
+        ) {
             // Get schedules that end after this date, or that recur after this date
-            $body .= ' AND ((schedule.fromDt < :futureSchedulesTo AND IFNULL(`schedule`.toDt, `schedule`.fromDt) >= :futureSchedulesFrom) OR `schedule`.recurrence_range >= :futureSchedulesFrom OR (IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\') ) ';
+            $body .= ' AND ((schedule.fromDt < :futureSchedulesTo 
+            AND IFNULL(`schedule`.toDt, `schedule`.fromDt) >= :futureSchedulesFrom)
+             OR `schedule`.recurrence_range >= :futureSchedulesFrom OR (IFNULL(`schedule`.recurrence_range, 0) = 0
+              AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\') ) ';
             $params['futureSchedulesFrom'] = $parsedFilter->getInt('futureSchedulesFrom');
             $params['futureSchedulesTo'] = $parsedFilter->getInt('futureSchedulesTo');
         }
@@ -551,6 +569,20 @@ class ScheduleFactory extends BaseFactory
         if ($parsedFilter->getInt('syncGroupId') !== null) {
             $body .= ' AND `schedule`.syncGroupId = :syncGroupId ';
             $params['syncGroupId'] = $parsedFilter->getInt('syncGroupId');
+        }
+
+        if ($parsedFilter->getString('name') != null) {
+            $terms = explode(',', $parsedFilter->getString('name'));
+            $logicalOperator = $parsedFilter->getString('logicalOperatorName', ['default' => 'OR']);
+            $this->nameFilter(
+                'schedule',
+                'name',
+                $terms,
+                $body,
+                $params,
+                ($parsedFilter->getCheckbox('useRegexForName') == 1),
+                $logicalOperator
+            );
         }
 
         // Sorting?

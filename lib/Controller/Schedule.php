@@ -304,6 +304,9 @@ class Schedule extends Base
             'geoAware' => $sanitizedParams->getInt('geoAware'),
             'recurring' => $sanitizedParams->getInt('recurring'),
             'eventTypeId' => $sanitizedParams->getInt('eventTypeId'),
+            'name' => $sanitizedParams->getString('name'),
+            'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
+            'logicalOperatorName' => $sanitizedParams->getString('logicalOperatorName'),
         ];
 
         if ($campaignId != null) {
@@ -414,8 +417,12 @@ class Schedule extends Base
                 $toDt = Carbon::createFromTimestamp($scheduleEvent->toDt);
 
                 // Set the row from/to date to be an ISO date for display
-                $scheduleEvent->fromDt = Carbon::createFromTimestamp($scheduleEvent->fromDt)->format(DateFormatHelper::getSystemFormat());
-                $scheduleEvent->toDt = Carbon::createFromTimestamp($scheduleEvent->toDt)->format(DateFormatHelper::getSystemFormat());
+                $scheduleEvent->fromDt =
+                    Carbon::createFromTimestamp($scheduleEvent->fromDt)
+                        ->format(DateFormatHelper::getSystemFormat());
+                $scheduleEvent->toDt =
+                    Carbon::createFromTimestamp($scheduleEvent->toDt)
+                        ->format(DateFormatHelper::getSystemFormat());
 
                 $this->getLog()->debug(sprintf('Start date is ' . $fromDt->toRssString() . ' ' . $scheduleEvent->fromDt));
                 $this->getLog()->debug(sprintf('End date is ' . $toDt->toRssString() . ' ' . $scheduleEvent->toDt));
@@ -522,7 +529,12 @@ class Schedule extends Base
         // Reset the seconds
         $date->second(0);
 
-        $this->getLog()->debug(sprintf('Generating eventList for DisplayGroupId ' . $id . ' on date ' . $date->format(DateFormatHelper::getSystemFormat())));
+        $this->getLog()->debug(
+            sprintf(
+                'Generating eventList for DisplayGroupId ' . $id . ' on date '
+                . $date->format(DateFormatHelper::getSystemFormat())
+            )
+        );
 
         // Get a list of scheduled events
         $events = [];
@@ -796,7 +808,7 @@ class Schedule extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    function addForm(Request $request, Response $response, ?string $from, ?int $id): Response|ResponseInterface
+    public function addForm(Request $request, Response $response, ?string $from, ?int $id): Response|ResponseInterface
     {
         // Get the display groups added to the session (if there are some)
         $displayGroupIds = $this->session->get('displayGroupIds');
@@ -843,7 +855,11 @@ class Schedule extends Base
         if (!empty($from) && !empty($id)) {
             $formNowData = [
                 'eventTypeId' => $this->getEventTypeId($from),
-                'campaign' => (($from == 'Campaign' || $from == 'Layout') ? $this->campaignFactory->getById($id) : null),
+                'campaign' => (
+                    ($from == 'Campaign' || $from == 'Layout')
+                    ? $this->campaignFactory->getById($id)
+                    : null
+                ),
                 'displayGroup' => (($from == 'DisplayGroup') ? [$this->displayGroupFactory->getById($id)] : null),
                 'displayGroupId' => (($from == 'DisplayGroup') ? (int)$id : 0),
                 'mediaId' => (($from === 'Library') ? $id : null),
@@ -896,21 +912,24 @@ class Schedule extends Base
      *  @SWG\Parameter(
      *      name="eventTypeId",
      *      in="formData",
-     *      description="The Event Type Id to use for this Event. 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action, 7=Media Library, 8=Playlist",
+     *      description="The Event Type Id to use for this Event.
+     * 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action, 7=Media Library, 8=Playlist",
      *      type="integer",
      *      required=true
      *  ),
      *  @SWG\Parameter(
      *      name="campaignId",
      *      in="formData",
-     *      description="The Campaign ID to use for this Event. If a Layout is needed then the Campaign specific ID for that Layout should be used.",
+     *      description="The Campaign ID to use for this Event.
+     * If a Layout is needed then the Campaign specific ID for that Layout should be used.",
      *      type="integer",
      *      required=false
      *  ),
      *  @SWG\Parameter(
      *      name="fullScreenCampaignId",
      *      in="formData",
-     *      description="For Media or Playlist eventyType. The Layout specific Campaign ID to use for this Event. This needs to be the Layout created with layout/fullscreen function",
+     *      description="For Media or Playlist eventyType. The Layout specific Campaign ID to use for this Event.
+     * This needs to be the Layout created with layout/fullscreen function",
      *      type="integer",
      *      required=false
      *  ),
@@ -1160,7 +1179,10 @@ class Schedule extends Base
         $schedule->recurrenceDetail = $sanitizedParams->getInt('recurrenceDetail');
         $recurrenceRepeatsOn = $sanitizedParams->getIntArray('recurrenceRepeatsOn');
         $schedule->recurrenceRepeatsOn = (empty($recurrenceRepeatsOn)) ? null : implode(',', $recurrenceRepeatsOn);
-        $schedule->recurrenceMonthlyRepeatsOn = $sanitizedParams->getInt('recurrenceMonthlyRepeatsOn', ['default' => 0]);
+        $schedule->recurrenceMonthlyRepeatsOn = $sanitizedParams->getInt(
+            'recurrenceMonthlyRepeatsOn',
+            ['default' => 0]
+        );
 
         foreach ($sanitizedParams->getIntArray('displayGroupIds', ['default' => []]) as $displayGroupId) {
             $schedule->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
@@ -1176,9 +1198,12 @@ class Schedule extends Base
                 throw new InvalidArgumentException(__('Please enter a from date'), 'fromDt');
             }
 
-            $logToDt = isset($toDt) ? $toDt->format(DateFormatHelper::getSystemFormat()) : null;
-            $logRecurrenceRange = isset($recurrenceRange) ? $recurrenceRange->format(DateFormatHelper::getSystemFormat()) : null;
-            $this->getLog()->debug('Times received are: FromDt=' . $fromDt->format(DateFormatHelper::getSystemFormat()) . '. ToDt=' . $logToDt . '. recurrenceRange=' . $logRecurrenceRange);
+            $logToDt = $toDt?->format(DateFormatHelper::getSystemFormat());
+            $logRecurrenceRange = $recurrenceRange?->format(DateFormatHelper::getSystemFormat());
+            $this->getLog()->debug(
+                'Times received are: FromDt=' . $fromDt->format(DateFormatHelper::getSystemFormat())
+                . '. ToDt=' . $logToDt . '. recurrenceRange=' . $logRecurrenceRange
+            );
 
             if (!$schedule->isCustomDayPart() && !$schedule->isAlwaysDayPart()) {
                 // Daypart selected
@@ -1202,9 +1227,13 @@ class Schedule extends Base
                 }
 
                 if ($recurrenceRange != null) {
-                    $schedule->recurrenceRange = $recurrenceRange->setTime($recurrenceRange->hour, $recurrenceRange->minute, 0)->format('U');
+                    $schedule->recurrenceRange =
+                        $recurrenceRange->setTime(
+                            $recurrenceRange->hour,
+                            $recurrenceRange->minute,
+                            0
+                        )->format('U');
                 }
-
             } else {
                 $schedule->fromDt = $fromDt->format('U');
 
@@ -1217,9 +1246,12 @@ class Schedule extends Base
                 }
             }
 
-            $logToDt = isset($toDt) ? $toDt->format(DateFormatHelper::getSystemFormat()) : null;
-            $logRecurrenceRange = isset($recurrenceRange) ? $recurrenceRange->format(DateFormatHelper::getSystemFormat()) : null;
-            $this->getLog()->debug('Processed times are: FromDt=' . $fromDt->format(DateFormatHelper::getSystemFormat()) . '. ToDt=' . $logToDt . '. recurrenceRange=' . $logRecurrenceRange );
+            $logToDt = $toDt?->format(DateFormatHelper::getSystemFormat());
+            $logRecurrenceRange = $recurrenceRange?->format(DateFormatHelper::getSystemFormat());
+            $this->getLog()->debug(
+                'Processed times are: FromDt=' . $fromDt->format(DateFormatHelper::getSystemFormat())
+                . '. ToDt=' . $logToDt . '. recurrenceRange=' . $logRecurrenceRange
+            );
         }
 
         // Ready to do the add
@@ -1326,14 +1358,20 @@ class Schedule extends Base
             $schedule->fromDt = '';
             $schedule->toDt = '';
         } else {
-            $schedule->fromDt = Carbon::createFromTimestamp($schedule->fromDt)->format(DateFormatHelper::getSystemFormat());
+            $schedule->fromDt =
+                Carbon::createFromTimestamp($schedule->fromDt)
+                    ->format(DateFormatHelper::getSystemFormat());
             if ($schedule->toDt != null) {
-                $schedule->toDt = Carbon::createFromTimestamp($schedule->toDt)->format(DateFormatHelper::getSystemFormat());
+                $schedule->toDt =
+                    Carbon::createFromTimestamp($schedule->toDt)
+                        ->format(DateFormatHelper::getSystemFormat());
             }
         }
 
         if ($schedule->recurrenceRange != null) {
-            $schedule->recurrenceRange = Carbon::createFromTimestamp($schedule->recurrenceRange)->format(DateFormatHelper::getSystemFormat());
+            $schedule->recurrenceRange =
+                Carbon::createFromTimestamp($schedule->recurrenceRange)
+                    ->format(DateFormatHelper::getSystemFormat());
         }
         // Get all reminders
         $scheduleReminders = $this->scheduleReminderFactory->query(null, ['eventId' => $id]);
@@ -1361,19 +1399,22 @@ class Schedule extends Base
         $this->getState()->template = 'schedule-form-edit';
         $this->getState()->setData([
             'event' => $schedule,
-            'campaigns' => $this->campaignFactory->query(null, ['isLayoutSpecific' => -1, 'retired' => 0, 'includeCampaignId' => $schedule->campaignId]),
+            'campaigns' => $this->campaignFactory->query(
+                null,
+                ['isLayoutSpecific' => -1, 'retired' => 0, 'includeCampaignId' => $schedule->campaignId]
+            ),
             'commands' => $this->commandFactory->query(),
             'dayParts' => $this->dayPartFactory->allWithSystem(),
             'displayGroups' => $schedule->displayGroups,
             'campaign' => ($schedule->campaignId != '') ? $this->campaignFactory->getById($schedule->campaignId) : null,
-            'displayGroupIds' => array_map(function($element) {
+            'displayGroupIds' => array_map(function ($element) {
                 return $element->displayGroupId;
             }, $schedule->displayGroups),
             'layoutCodes' => $this->layoutFactory->getLayoutCodes(),
             'reminders' => $scheduleReminders,
             'defaultLat' => $defaultLat,
             'defaultLong' => $defaultLong,
-            'recurringEvent' => ($schedule->recurrenceType != '') ? true : false,
+            'recurringEvent' => $schedule->recurrenceType != '',
             'eventStart' => $eventStart,
             'eventEnd' => $eventEnd,
             'eventTypes' => \Xibo\Entity\Schedule::getEventTypesForm(),
@@ -1393,7 +1434,7 @@ class Schedule extends Base
      * @throws NotFoundException
      * @throws ControllerNotImplemented
      */
-    function deleteRecurrenceForm(Request $request, Response $response, $id)
+    public function deleteRecurrenceForm(Request $request, Response $response, $id)
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // Recurring event start/end
@@ -1499,14 +1540,16 @@ class Schedule extends Base
      *  @SWG\Parameter(
      *      name="eventTypeId",
      *      in="formData",
-     *      description="The Event Type Id to use for this Event. 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action",
+     *      description="The Event Type Id to use for this Event.
+     * 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action",
      *      type="integer",
      *      required=true
      *  ),
      *  @SWG\Parameter(
      *      name="campaignId",
      *      in="formData",
-     *      description="The Campaign ID to use for this Event. If a Layout is needed then the Campaign specific ID for that Layout should be used.",
+     *      description="The Campaign ID to use for this Event.
+     * If a Layout is needed then the Campaign specific ID for that Layout should be used.",
      *      type="integer",
      *      required=false
      *  ),
@@ -1534,7 +1577,8 @@ class Schedule extends Base
      *   @SWG\Parameter(
      *      name="displayGroupIds",
      *      in="formData",
-     *      description="The Display Group IDs for this event. Display specific Group IDs should be used to schedule on single displays.",
+     *      description="The Display Group IDs for this event.
+     * Display specific Group IDs should be used to schedule on single displays.",
      *      type="array",
      *      required=true,
      *      @SWG\Items(type="integer")
@@ -1681,16 +1725,19 @@ class Schedule extends Base
             ? $sanitizedParams->getInt('fullScreenCampaignId')
             : $sanitizedParams->getInt('campaignId');
         $schedule->commandId = $sanitizedParams->getInt('commandId');
-        $schedule->displayOrder = $sanitizedParams->getInt('displayOrder',['default' => $schedule->displayOrder]);
+        $schedule->displayOrder = $sanitizedParams->getInt('displayOrder', ['default' => $schedule->displayOrder]);
         $schedule->isPriority = $sanitizedParams->getInt('isPriority', ['default' => $schedule->isPriority]);
-        $schedule->dayPartId = $sanitizedParams->getInt('dayPartId',['default' => $schedule->dayPartId]);
+        $schedule->dayPartId = $sanitizedParams->getInt('dayPartId', ['default' => $schedule->dayPartId]);
         $schedule->syncTimezone = $sanitizedParams->getCheckbox('syncTimezone');
         $schedule->syncEvent = $this->isSyncEvent($schedule->eventTypeId);
         $schedule->recurrenceType = $sanitizedParams->getString('recurrenceType');
         $schedule->recurrenceDetail = $sanitizedParams->getInt('recurrenceDetail');
         $recurrenceRepeatsOn = $sanitizedParams->getIntArray('recurrenceRepeatsOn');
         $schedule->recurrenceRepeatsOn = (empty($recurrenceRepeatsOn)) ? null : implode(',', $recurrenceRepeatsOn);
-        $schedule->recurrenceMonthlyRepeatsOn = $sanitizedParams->getInt('recurrenceMonthlyRepeatsOn', ['default' => 0]);
+        $schedule->recurrenceMonthlyRepeatsOn = $sanitizedParams->getInt(
+            'recurrenceMonthlyRepeatsOn',
+            ['default' => 0]
+        );
         $schedule->displayGroups = [];
         $schedule->isGeoAware = $sanitizedParams->getCheckbox('isGeoAware');
         $schedule->actionType = $sanitizedParams->getString('actionType');
@@ -1765,9 +1812,12 @@ class Schedule extends Base
                 throw new InvalidArgumentException(__('Please enter a from date'). 'fromDt');
             }
 
-            $logToDt = isset($toDt) ? $toDt->format(DateFormatHelper::getSystemFormat()) : null;
-            $logRecurrenceRange = isset($recurrenceRange) ? $recurrenceRange->format(DateFormatHelper::getSystemFormat()) : null;
-            $this->getLog()->debug('Times received are: FromDt=' . $fromDt->format(DateFormatHelper::getSystemFormat()) . '. ToDt=' . $logToDt . '. recurrenceRange=' . $logRecurrenceRange);
+            $logToDt = $toDt?->format(DateFormatHelper::getSystemFormat());
+            $logRecurrenceRange = $recurrenceRange?->format(DateFormatHelper::getSystemFormat());
+            $this->getLog()->debug(
+                'Times received are: FromDt=' . $fromDt->format(DateFormatHelper::getSystemFormat())
+                . '. ToDt=' . $logToDt . '. recurrenceRange=' . $logRecurrenceRange
+            );
 
             if (!$schedule->isCustomDayPart() && !$schedule->isAlwaysDayPart()) {
                 // Daypart selected
@@ -1788,7 +1838,9 @@ class Schedule extends Base
                     $schedule->toDt = $toDt->setTime($toDt->hour, $toDt->minute, 0)->format('U');
                 }
 
-                $schedule->recurrenceRange = ($recurrenceRange === null) ? null : $recurrenceRange->setTime($recurrenceRange->hour, $recurrenceRange->minute, 0)->format('U');
+                $schedule->recurrenceRange = ($recurrenceRange === null)
+                    ? null
+                    : $recurrenceRange->setTime($recurrenceRange->hour, $recurrenceRange->minute, 0)->format('U');
             } else {
                 $schedule->fromDt = $fromDt->format('U');
 
@@ -2074,7 +2126,8 @@ class Schedule extends Base
      *      in="query",
      *      required=false,
      *      type="integer",
-     *      description="Filter grid by eventTypeId. 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action, 7=Media Library, 8=Playlist"
+     *      description="Filter grid by eventTypeId.
+     * 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action, 7=Media Library, 8=Playlist"
      *  ),
      *  @SWG\Parameter(
      *      name="fromDt",
@@ -2150,6 +2203,9 @@ class Schedule extends Base
                 'recurring' => $params->getInt('recurring'),
                 'campaignId' => $params->getInt('campaignId'),
                 'displayGroupIds' => $params->getIntArray('displayGroupIds'),
+                'name' => $params->getString('name'),
+                'useRegexForName' => $params->getCheckbox('useRegexForName'),
+                'logicalOperatorName' => $params->getString('logicalOperatorName'),
                 'gridFilter' => 1
             ], $params)
         );
