@@ -50,7 +50,14 @@ class MenuBoardProductProvider implements WidgetProviderInterface
         
         $lowerLimit = $durationProvider->getWidget()->getOptionValue('lowerLimit', 0);
         $upperLimit = $durationProvider->getWidget()->getOptionValue('upperLimit', 15);
-        $durationProvider->setDuration(($upperLimit - $lowerLimit)
+        $numItems = $upperLimit - $lowerLimit;
+
+        $itemsPerPage = $durationProvider->getWidget()->getOptionValue('itemsPerPage', 0);
+        if ($itemsPerPage > 0) {
+            $numItems = ceil($numItems / $itemsPerPage);
+        }
+
+        $durationProvider->setDuration(($numItems)
             * $durationProvider->getWidget()->calculatedDuration);
         return $this;
     }
