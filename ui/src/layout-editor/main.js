@@ -3526,7 +3526,7 @@ lD.handleMessage = function(event) {
   const messageFromSender = event.data;
   if (messageFromSender == 'viewerStoppedPlaying') {
     // Refresh designer
-    lDrefreshEditor({
+    lD.refreshEditor({
       reloadToolbar: false,
       reloadViewer: true,
       reloadPropertiesPanel: true,
