@@ -387,6 +387,8 @@ class Module implements \JsonSerializable
                 }
 
                 return $widget->calculatedDuration * $numItems;
+            } else {
+                return null;
             }
         } else if ($this->widgetProvider === null) {
             return null;
