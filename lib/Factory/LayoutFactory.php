@@ -1749,6 +1749,7 @@ class LayoutFactory extends BaseFactory
                     $existingDataSet->save([
                         'activate' => false,
                         'notify' => false,
+                        'testFormulas' => false,
                     ]);
 
                     // Do we need to add data
@@ -1905,8 +1906,13 @@ class LayoutFactory extends BaseFactory
 
         // We need one final pass through all widgets on the layout so that we can set the durations properly.
         foreach ($layout->getAllWidgets() as $widget) {
-            $module = $this->moduleFactory->getByType($widget->type);
-            $widget->calculateDuration($module, $importedFromXlf);
+            try {
+                $module = $this->moduleFactory->getByType($widget->type);
+                $widget->calculateDuration($module, $importedFromXlf);
+            } catch (NotFoundException) {
+                // This widget does not exist in this CMS, so we can ignore this.
+                $this->getLog()->error('createFromZip: widget type ' . $widget->type . ' not available in this CMS');
+            }
 
             // Get global stat setting of widget to set to on/off/inherit
             $widget->setOptionValue('enableStat', 'attrib', $this->config->getSetting('WIDGET_STATS_ENABLED_DEFAULT'));

@@ -194,8 +194,12 @@ class DataSetColumn implements \JsonSerializable
      * Validate
      * @throws InvalidArgumentException
      */
-    public function validate()
+    public function validate($options = [])
     {
+        $options = array_merge([
+            'testFormulas' => true,
+        ], $options);
+
         if ($this->dataSetId == 0 || $this->dataSetId == '')
             throw new InvalidArgumentException(__('Missing dataSetId'), 'dataSetId');
 
@@ -273,33 +277,51 @@ class DataSetColumn implements \JsonSerializable
                 throw new InvalidArgumentException(__('New list content value is invalid as it does not include values for existing data'), 'listcontent');
         }
 
-        // if formula dataSetType is set and formula is not empty, try to execute the SQL to validate it - we're ignoring client side formulas here.
-        if ($this->dataSetColumnTypeId == 2 && $this->formula != '' && substr($this->formula, 0, 1) !== '$') {
-           try {
-               $formula = str_replace('[DisplayId]', 0, $this->formula);
-               $this->getStore()->select('SELECT * FROM (SELECT `id`, ' . $formula . ' AS `' . $this->heading . '`  FROM `dataset_' . $this->dataSetId . '`) dataset WHERE 1 = 1 ', []);
-           } catch (\Exception $e) {
-               $this->getLog()->debug('Formula validation failed with following message ' . $e->getMessage());
-               throw new InvalidArgumentException(__('Provided formula is invalid'), 'formula');
-           }
+        // if formula dataSetType is set and formula is not empty, try to execute the SQL to validate it - we're
+        // ignoring client side formulas here.
+        if ($options['testFormulas']
+            && $this->dataSetColumnTypeId == 2
+            && $this->formula != ''
+            && !str_starts_with($this->formula, '$')
+        ) {
+            try {
+                $formula = str_replace('[DisplayId]', 0, $this->formula);
+                $this->getStore()->select('
+                    SELECT * 
+                      FROM (
+                          SELECT `id`, ' . $formula . ' AS `' . $this->heading . '` 
+                            FROM `dataset_' . $this->dataSetId . '`
+                      ) dataset
+                ', []);
+            } catch (\Exception $e) {
+                $this->getLog()->debug('Formula validation failed with following message ' . $e->getMessage());
+                throw new InvalidArgumentException(__('Provided formula is invalid'), 'formula');
+            }
         }
     }
 
     /**
      * Save
-     * @param array[Optional] $options
+     * @param array $options
      * @throws InvalidArgumentException
      */
     public function save($options = [])
     {
-        $options = array_merge(['validate' => true, 'rebuilding' => false], $options);
+        $options = array_merge([
+            'validate' => true,
+            'rebuilding' => false,
+            'testFormulas' => true,
+        ], $options);
 
-        if ($options['validate'] && !$options['rebuilding'])
-            $this->validate();
-        if ($this->dataSetColumnId == 0)
+        if ($options['validate'] && !$options['rebuilding']) {
+            $this->validate($options);
+        }
+
+        if ($this->dataSetColumnId == 0) {
             $this->add();
-        else
+        } else {
             $this->edit($options);
+        }
     }
 
     /**
