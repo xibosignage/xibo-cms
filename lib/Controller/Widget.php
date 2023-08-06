@@ -1551,7 +1551,7 @@ class Widget extends Base
         $uniqueSlots = 0;
         foreach ($elementJson as $widgetElement) {
             foreach ($widgetElement['elements'] ?? [] as $element) {
-                $slotNo = 'slot_' . $element['slot'] ?? 0;
+                $slotNo = 'slot_' . ($element['slot'] ?? 0);
                 if (!in_array($slotNo, $slots)) {
                     $slots[] = $slotNo;
                     $uniqueSlots++;
