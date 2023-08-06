@@ -212,8 +212,12 @@ class DataSetColumn implements \JsonSerializable
         if ($this->heading == '')
             throw new InvalidArgumentException(__('Please provide a column heading.'), 'heading');
 
-        if (!v::stringType()->alnum()->validate($this->heading) || strtolower($this->heading) == 'id')
-            throw new InvalidArgumentException(__('Please provide an alternative column heading %s can not be used.', $this->heading), 'heading');
+        if (!v::stringType()->alnum()->validate($this->heading) || strtolower($this->heading) == 'id') {
+            throw new InvalidArgumentException(sprintf(
+                __('Please provide an alternative column heading %s can not be used.'),
+                $this->heading
+            ), 'heading');
+        }
 
         if ($this->dataSetColumnTypeId == 2 && $this->formula == '') {
             throw new InvalidArgumentException(__('Please enter a valid formula'), 'formula');
