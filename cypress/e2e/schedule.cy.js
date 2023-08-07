@@ -57,7 +57,7 @@ describe('Campaigns', function() {
     cy.contains('Add Event').click();
 
     cy.get('.col-sm-10 > #eventTypeId').select('Campaign', {force: true});
-    cy.get('#general > :nth-child(2) > .col-sm-10 > .select2 > .selection > .select2-selection')
+    cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection > .select2-selection > .select2-selection__rendered')
       .type('List Campaign Display 1');
     // Wait for Display to load
     cy.wait('@loadDisplaygroups');
@@ -120,7 +120,7 @@ describe('Campaigns', function() {
     cy.get('.select2-container--open .select2-results > ul > li').should('have.length', 1);
     cy.get('.select2-container--open .select2-results > ul > li:first').contains('Layout for Schedule 1').click();
 
-    cy.get('#general > :nth-child(2) > .col-sm-10 > .select2 > .selection > .select2-selection')
+    cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection > .select2-selection > .select2-selection__rendered')
       .type('List Campaign Display 1');
     // Wait for Display to load
     cy.wait('@loadDisplaygroups');
@@ -163,7 +163,7 @@ describe('Campaigns', function() {
     cy.get('#schedule-grid tr:first-child .dropdown-toggle').click();
     cy.get('#schedule-grid tr:first-child .schedule_button_edit').click();
 
-    cy.get('#general > :nth-child(2) > .col-sm-10 > .select2 > .selection > .select2-selection')
+    cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection > .select2-selection > .select2-selection__rendered')
       .type('List Campaign Display 2');
     // Wait for Display to load
     cy.wait('@loadDisplaygroups');
