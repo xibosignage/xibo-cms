@@ -93,13 +93,13 @@ class ModuleFactory extends BaseFactory
     }
 
     /**
-     * @param string $path
-     * @param int|null $duration
+     * @param Module $module
+     * @param Widget $widget
      * @return DurationProviderInterface
      */
-    public function createDurationProvider(string $path, ?int $duration): DurationProviderInterface
+    public function createDurationProvider(Module $module, Widget $widget): DurationProviderInterface
     {
-        return new DurationProvider($path, $duration);
+        return new DurationProvider($module, $widget);
     }
 
     /**

@@ -357,7 +357,8 @@ class ListenersMiddleware implements MiddlewareInterface
             ->registerWithDispatcher($dispatcher);
 
         (new MenuBoardProviderListener(
-            $c->get('menuBoardCategoryFactory')
+            $c->get('menuBoardFactory'),
+            $c->get('menuBoardCategoryFactory'),
         ))
             ->useLogger($c->get('logger'))
             ->registerWithDispatcher($dispatcher);

@@ -260,16 +260,21 @@ $(document).ready(function() {
                     let eventTypes = $('#eventTypeId').serialize();
                     let geoAware = $('#geoAware').serialize();
                     let recurring = $('#recurring').serialize();
+                    let name = $('#name').serialize();
+                    let nameRegEx = 'useRegexForName=' + $('#useRegexForName').is('checked');
+                    let nameLogicalOperator = $('#logicalOperatorName').serialize();
 
-                    !displayGroups ? $calendarErrorMessage.show() : $calendarErrorMessage.hide()
+                    !displayGroups && !displayLayouts ? $calendarErrorMessage.show() : $calendarErrorMessage.hide()
 
                     var url = calendarOptions.eventSource;
 
                     // Append the selected filters
-                    url += '?' + displayLayouts + '&' + eventTypes + '&' + geoAware + '&' + recurring;
+                    url += '?' + displayLayouts + '&' + eventTypes + '&' + geoAware +
+                      '&' + recurring + '&' + name +
+                      '&' + nameRegEx + '&' + nameLogicalOperator;
 
                     // Should we append displays?
-                    if (isShowAll) {
+                    if (!displayGroups && displayLayouts !== '') {
                         // Ignore the display list
                         url += '&' + 'displayGroupIds[]=-1';
                     } else if (displayGroups !== '') {

@@ -554,23 +554,6 @@ PropertiesPanel.prototype.render = function(
       if (res.data.module.properties.length > 0) {
         const widgetProperties = res.data.module.properties;
 
-        // if it's an element group and we have a slot
-        // add property to the top of configure tab
-        if (
-          isElementGroup &&
-          targetAux.slot != undefined
-        ) {
-          widgetProperties.unshift({
-            id: 'slot',
-            title: propertiesPanelTrans.dataSlot,
-            helpText: propertiesPanelTrans.dataSlotHelpText,
-            value: Number(targetAux.slot) + 1,
-            min: minSlotValue,
-            type: 'number',
-            visibility: [],
-          });
-        }
-
         // Configure tab
         forms.createFields(
           widgetProperties,
@@ -579,34 +562,6 @@ PropertiesPanel.prototype.render = function(
           target.playlistId,
           res.data.module.propertyGroups,
         );
-
-        // if we created a new slot for element group input
-        // handle when changed
-        if (
-          isElementGroup &&
-          targetAux.slot != undefined
-        ) {
-          self.DOMObject.find('[name="slot"]')
-            .on('change', function(ev) {
-              let slotValue = $(ev.currentTarget).val();
-
-              // If value is lower than minSlotValue
-              // set it to minSlotValue
-              if (Number(slotValue) < minSlotValue) {
-                slotValue = minSlotValue;
-                $(ev.currentTarget).val(minSlotValue);
-              }
-
-              // update slot for the group
-              targetAux.updateSlot(Number(slotValue) - 1, true);
-
-              // save elements
-              target.saveElements();
-
-              // Render canvas again
-              app.viewer.renderCanvas(app.layout.canvas);
-            });
-        }
       } else {
         // Remove configure tab
         self.DOMObject.find('[href="#configureTab"]').parent().remove();
@@ -629,6 +584,96 @@ PropertiesPanel.prototype.render = function(
           self.DOMObject.find('[href="#appearanceTab"]').tab('show');
         }
       };
+
+      if (isElementGroup) {
+        const groupProperties = [];
+        // if it's an element group and we have a slot
+        // add property to the top of appearance tab
+        if (targetAux.slot !== undefined) {
+          groupProperties.unshift({
+            id: 'slot',
+            title: propertiesPanelTrans.dataSlot,
+            helpText: propertiesPanelTrans.dataSlotHelpText,
+            value: Number(targetAux.slot) + 1,
+            min: minSlotValue,
+            type: 'number',
+            visibility: [],
+          });
+        }
+
+        // if it's an element group and we have effect
+        // add property to the top of appearance tab
+        if (targetAux.effect !== undefined) {
+          groupProperties.unshift({
+            id: 'effect',
+            title: propertiesPanelTrans.effect,
+            helpText: propertiesPanelTrans.effectHelpText,
+            value: targetAux.effect,
+            type: 'effectSelector',
+            variant: 'showPaged',
+            visibility: [],
+          });
+        }
+
+        forms.createFields(
+          groupProperties,
+          self.DOMObject.find('#appearanceTab'),
+          target.widgetId,
+          false,
+          null,
+          'element-group element-group-property',
+        );
+
+        // if we created a new slot for element group input
+        // handle when changed
+        if (targetAux.slot !== undefined) {
+          self.DOMObject.find('[name="slot"]').on('change', function(ev) {
+            let slotValue = $(ev.currentTarget).val();
+
+            // If value is lower than minSlotValue
+            // set it to minSlotValue
+            if (Number(slotValue) < minSlotValue) {
+              slotValue = minSlotValue;
+              $(ev.currentTarget).val(minSlotValue);
+            }
+
+            // update slot for the group
+            targetAux.updateSlot(Number(slotValue) - 1, true);
+
+            // save elements
+            target.saveElements();
+
+            // Render canvas again
+            app.viewer.renderCanvas(app.layout.canvas);
+          });
+        }
+
+        // if we created a new effect for element group input
+        // handle when changed
+        if (targetAux.effect !== undefined) {
+          self.DOMObject.find('[name="effect"]').on('change', function(ev) {
+            let effectValue = $(ev.currentTarget).val();
+
+            // If value is lower than minSlotValue
+            // set it to minSlotValue
+            if (String(effectValue).length === 0) {
+              effectValue = 'noTransition';
+              $(ev.currentTarget).val(effectValue);
+            }
+
+            // update slot for the group
+            targetAux.updateEffect(effectValue, true);
+
+            // save elements
+            target.saveElements();
+
+            // Render canvas again
+            app.viewer.renderCanvas(app.layout.canvas);
+          });
+        }
+
+        showAppearanceTab(true);
+      }
 
       // If we have a template for the widget, create the fields
       if (
@@ -738,6 +783,15 @@ PropertiesPanel.prototype.render = function(
                 visibility: [],
               },
             );
+            commonFields.unshift({
+              id: 'effect',
+              title: propertiesPanelTrans.effect,
+              helpText: propertiesPanelTrans.effectHelpText,
+              value: targetAux.effect,
+              type: 'effectSelector',
+              variant: 'showPaged',
+              visibility: [],
+            });
           }
 
           forms.createFields(

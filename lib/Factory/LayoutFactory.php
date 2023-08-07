@@ -643,9 +643,8 @@ class LayoutFactory extends BaseFactory
      * Load a layout by its XLF
      * @param string $layoutXlf
      * @param null $layout
-     * @return Layout
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
+     * @return \Xibo\Entity\Layout
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function loadByXlf($layoutXlf, $layout = null)
     {
@@ -655,9 +654,6 @@ class LayoutFactory extends BaseFactory
         if ($layout == null) {
             $layout = $this->createEmpty();
         }
-
-        // Get a list of modules for us to use
-        $modules = $this->moduleFactory->getKeyedArrayOfModules();
 
         // Parse the XML and fill in the details for this layout
         $document = new \DOMDocument();
@@ -749,21 +745,6 @@ class LayoutFactory extends BaseFactory
 
                 $this->setWidgetExpiryDatesOrDefault($widget);
 
-                $this->getLog()->debug('Adding Widget to object model. ' . $widget);
-
-                // Does this module type exist?
-                if (!array_key_exists($widget->type, $modules)) {
-                    $this->getLog()->error(sprintf(
-                        'Module Type [%s] in imported Layout does not exist. Allowable types: %s',
-                        $widget->type,
-                        json_encode(array_keys($modules))
-                    ));
-                    continue;
-                }
-
-                $module = $modules[$widget->type];
-                /* @var \Xibo\Entity\Module $module */
-
                 //
                 // Get all widget options
                 //
@@ -785,7 +766,6 @@ class LayoutFactory extends BaseFactory
                             && $widgetOption->value == '2'
                         ) {
                             $widget->type = 'datasetticker';
-                            $module = $modules[$widget->type];
                         }
                     }
                 }
@@ -795,6 +775,15 @@ class LayoutFactory extends BaseFactory
                     count($widget->widgetOptions),
                     $xpathQuery
                 ));
+
+                // Check legacy types from conditions, set widget type and upgrade
+                try {
+                    $module = $this->prepareWidgetAndGetModule($widget);
+                } catch (NotFoundException) {
+                    // Skip this widget
+                    $this->getLog()->info('loadByJson: ' . $widget->type . ' could not be found or resolved');
+                    continue;
+                }
 
                 //
                 // Get the MediaId associated with this widget (using the URI)
@@ -928,8 +917,6 @@ class LayoutFactory extends BaseFactory
         $oldIds = [];
         $newIds = [];
         $widgets = [];
-        // Get a list of modules for us to use
-        $modules = $this->moduleFactory->getKeyedArrayOfModules();
 
         $layout->schemaVersion = (int)$layoutJson['layoutDefinitions']['schemaVersion'];
         $layout->width = $layoutJson['layoutDefinitions']['width'];
@@ -1094,8 +1081,23 @@ class LayoutFactory extends BaseFactory
 
                 $this->getLog()->debug('Adding Widget to object model. ' . $widget);
 
-                // Prepare widget options, check legacy types from conditions, set widget type and upgrade
-                $module = $this->prepareWidgetAndGetModule($widget, $mediaNode['widgetOptions']);
+                // Prepare widget options
+                foreach ($mediaNode['widgetOptions'] as $optionsNode) {
+                    $widgetOption = $this->widgetOptionFactory->createEmpty();
+                    $widgetOption->type = $optionsNode['type'];
+                    $widgetOption->option = $optionsNode['option'];
+                    $widgetOption->value = $optionsNode['value'];
+                    $widget->widgetOptions[] = $widgetOption;
+                }
+
+                // Resolve the module
+                try {
+                    $module = $this->prepareWidgetAndGetModule($widget);
+                } catch (NotFoundException) {
+                    // Skip this widget
+                    $this->getLog()->info('loadByJson: ' . $widget->type . ' could not be found or resolved');
+                    continue;
+                }
 
                 //
                 // Get the MediaId associated with this widget
@@ -1445,7 +1447,7 @@ class LayoutFactory extends BaseFactory
                 $this->getLog()->error('Skipping file on import due to invalid filename. ' . $fileName);
                 continue;
             }
-            
+
             $temporaryFileName = $libraryLocationTemp . $fileName;
 
             // Get the file from the ZIP
@@ -1749,6 +1751,8 @@ class LayoutFactory extends BaseFactory
                     $existingDataSet->save([
                         'activate' => false,
                         'notify' => false,
+                        'testFormulas' => false,
+                        'allowSpacesInHeading' => true,
                     ]);
 
                     // Do we need to add data
@@ -1759,7 +1763,7 @@ class LayoutFactory extends BaseFactory
                             $existingDataSet->dataSetId
                         ));
 
-                        foreach ($item['data'] as $itemData) {
+                        foreach (($item['data'] ?? []) as $itemData) {
                             if (isset($itemData['id'])) {
                                 unset($itemData['id']);
                             }
@@ -1905,6 +1909,7 @@ class LayoutFactory extends BaseFactory
 
         // We need one final pass through all widgets on the layout so that we can set the durations properly.
         foreach ($layout->getAllWidgets() as $widget) {
+            // By now we should not have any modules which don't exist.
             $module = $this->moduleFactory->getByType($widget->type);
             $widget->calculateDuration($module, $importedFromXlf);
 
@@ -1956,10 +1961,27 @@ class LayoutFactory extends BaseFactory
                 $playlistWidget->tempId = $widgetsDetail['tempId'];
                 $playlistWidget->mediaIds = $widgetsDetail['mediaIds'];
                 $playlistWidget->widgetOptions = [];
-                $playlistWidget->schemaVersion = isset($widgetsDetail['schemaVersion']) ? (int)$widgetsDetail['schemaVersion'] : 1;
+                $playlistWidget->schemaVersion = isset($widgetsDetail['schemaVersion'])
+                    ? (int)$widgetsDetail['schemaVersion']
+                    : 1;
 
-                // Prepare widget options, check legacy types from conditions, set widget type and upgrade
-                $module = $this->prepareWidgetAndGetModule($playlistWidget, $widgetsDetail['widgetOptions']);
+                // Prepare widget options
+                foreach ($widgetsDetail['widgetOptions'] as $optionsNode) {
+                    $widgetOption = $this->widgetOptionFactory->createEmpty();
+                    $widgetOption->type = $optionsNode['type'];
+                    $widgetOption->option = $optionsNode['option'];
+                    $widgetOption->value = $optionsNode['value'];
+                    $playlistWidget->widgetOptions[] = $widgetOption;
+                }
+
+                try {
+                    $module = $this->prepareWidgetAndGetModule($playlistWidget);
+                } catch (NotFoundException) {
+                    // Skip this widget
+                    $this->getLog()->info('createNestedPlaylistWidgets: ' . $playlistWidget->type
+                        . ' could not be found or resolved');
+                    continue;
+                }
 
                 if ($playlistWidget->type == 'subplaylist') {
                     // Get the subplaylists from widget option
@@ -2931,17 +2953,8 @@ class LayoutFactory extends BaseFactory
      * Prepare widget options, check legacy types from conditions, set widget type and upgrade
      * @throws NotFoundException
      */
-    private function prepareWidgetAndGetModule(Widget $widget, array $widgetOptions): Module
+    private function prepareWidgetAndGetModule(Widget $widget): Module
     {
-        // Get all widget options
-        foreach ($widgetOptions as $optionsNode) {
-            $widgetOption = $this->widgetOptionFactory->createEmpty();
-            $widgetOption->type = $optionsNode['type'];
-            $widgetOption->option = $optionsNode['option'];
-            $widgetOption->value = $optionsNode['value'];
-            $widget->widgetOptions[] = $widgetOption;
-        }
-
         // Form conditions from the widget's option and value, e.g, templateId==worldclock1
         $widgetConditionMatch = [];
         foreach ($widget->widgetOptions as $option) {
@@ -2955,7 +2968,8 @@ class LayoutFactory extends BaseFactory
             throw new NotFoundException(__('Module not found'));
         }
 
-        // Set the widget type
+        // Set the widget type and then assert the new one
+        $widget->setOriginalValue('type', $widget->type);
         $widget->type = $module->type;
 
         // Upgrade if necessary

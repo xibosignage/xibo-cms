@@ -626,12 +626,13 @@ Widget.prototype.saveElements = function(
 
     // If we have group, add group properties
     if (element.group) {
-      elementObject.groupId = element.group.id,
+      elementObject.groupId = element.group.id;
       elementObject.groupProperties = {
         top: element.group.top,
         left: element.group.left,
         width: element.group.width,
         height: element.group.height,
+        effect: element.group.effect,
       };
 
       // Save group scale type if exists
@@ -640,6 +641,11 @@ Widget.prototype.saveElements = function(
       } else if (element.groupScaleType) {
         elementObject.groupScale = 0;
         elementObject.groupScaleType = element.groupScaleType;
+      }
+    } else {
+      // Save effect if exists
+      if (element.effect !== undefined) {
+        elementObject.effect = element.effect;
       }
     }
 

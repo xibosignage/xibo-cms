@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -25,13 +25,14 @@ namespace Xibo\Widget;
 use Carbon\Carbon;
 use Xibo\Event\NotificationDataRequestEvent;
 use Xibo\Widget\Provider\DataProviderInterface;
-use Xibo\Widget\Provider\DurationProviderInterface;
+use Xibo\Widget\Provider\DurationProviderNumItemsTrait;
 use Xibo\Widget\Provider\WidgetProviderInterface;
 use Xibo\Widget\Provider\WidgetProviderTrait;
 
 class NotificationProvider implements WidgetProviderInterface
 {
     use WidgetProviderTrait;
+    use DurationProviderNumItemsTrait;
 
     public function fetchData(DataProviderInterface $dataProvider): WidgetProviderInterface
     {
@@ -40,11 +41,6 @@ class NotificationProvider implements WidgetProviderInterface
             new NotificationDataRequestEvent($dataProvider),
             NotificationDataRequestEvent::$NAME
         );
-        return $this;
-    }
-
-    public function fetchDuration(DurationProviderInterface $durationProvider): WidgetProviderInterface
-    {
         return $this;
     }
 

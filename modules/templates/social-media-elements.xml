@@ -28,13 +28,6 @@
         <thumbnail>social-media-profile-photo</thumbnail>
         <startWidth>100</startWidth>
         <startHeight>100</startHeight>
-        <properties>
-            <property id="effect" type="effectSelector" variant="showPaged">
-                <title>Effect</title>
-                <helpText>Please select the effect that will be used to transition between items.</helpText>
-                <default>noTransition</default>
-            </property>
-        </properties>
         <assets>
             <asset id="social-media-profile-photo" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/elements/social-media-profile-photo.png" />
         </assets>
@@ -49,13 +42,6 @@
         <thumbnail>social-media-description</thumbnail>
         <startWidth>650</startWidth>
         <startHeight>250</startHeight>
-        <properties>
-            <property id="effect" type="effectSelector" variant="showPaged">
-                <title>Effect</title>
-                <helpText>Please select the effect that will be used to transition between items.</helpText>
-                <default>noTransition</default>
-            </property>
-        </properties>
         <assets>
             <asset id="social-media-description" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/elements/social-media-description.png" />
         </assets>
@@ -70,13 +56,6 @@
         <thumbnail>social-media-username</thumbnail>
         <startWidth>650</startWidth>
         <startHeight>250</startHeight>
-        <properties>
-            <property id="effect" type="effectSelector" variant="showPaged">
-                <title>Effect</title>
-                <helpText>Please select the effect that will be used to transition between items.</helpText>
-                <default>noTransition</default>
-            </property>
-        </properties>
         <assets>
             <asset id="social-media-username" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/elements/social-media-username.png" />
         </assets>
@@ -91,13 +70,6 @@
         <thumbnail>date-thumb</thumbnail>
         <startWidth>450</startWidth>
         <startHeight>80</startHeight>
-        <properties>
-            <property id="effect" type="effectSelector" variant="showPaged">
-                <title>Effect</title>
-                <helpText>Please select the effect that will be used to transition between items.</helpText>
-                <default>noTransition</default>
-            </property>
-        </properties>
         <assets>
             <asset id="date-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/date.png" />
         </assets>
@@ -111,13 +83,6 @@
         <thumbnail>social-media-post-photo</thumbnail>
         <startWidth>100</startWidth>
         <startHeight>100</startHeight>
-        <properties>
-            <property id="effect" type="effectSelector" variant="showPaged">
-                <title>Effect</title>
-                <helpText>Please select the effect that will be used to transition between items.</helpText>
-                <default>noTransition</default>
-            </property>
-        </properties>
         <assets>
             <asset id="social-media-post-photo" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/elements/social-media-post-photo.png" />
         </assets>
@@ -132,13 +97,6 @@
             <hbs></hbs>
             <startWidth>800</startWidth>
             <startHeight>200</startHeight>
-            <properties>
-                <property id="effect" type="effectSelector" variant="showPaged">
-                    <title>Effect</title>
-                    <helpText>Please select the effect that will be used to transition between items.</helpText>
-                    <default>noTransition</default>
-                </property>
-            </properties>
             <elements>
                 <element id="rectangle">
                     <title>Background</title>
@@ -232,13 +190,6 @@
             <hbs></hbs>
             <startWidth>300</startWidth>
             <startHeight>350</startHeight>
-            <properties>
-                <property id="effect" type="effectSelector" variant="showPaged">
-                    <title>Effect</title>
-                    <helpText>Please select the effect that will be used to transition between items.</helpText>
-                    <default>noTransition</default>
-                </property>
-            </properties>
             <elements>
                 <element id="rectangle">
                     <title>Background</title>
@@ -325,13 +276,6 @@
             <hbs></hbs>
             <startWidth>440</startWidth>
             <startHeight>250</startHeight>
-            <properties>
-                <property id="effect" type="effectSelector" variant="showPaged">
-                    <title>Effect</title>
-                    <helpText>Please select the effect that will be used to transition between items.</helpText>
-                    <default>noTransition</default>
-                </property>
-            </properties>
             <elements>
                 <element id="rectangle">
                     <title>Background</title>

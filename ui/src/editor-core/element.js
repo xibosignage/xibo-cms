@@ -53,6 +53,9 @@ const Element = function(data, widgetId, regionId, parentWidget) {
     data.groupScale : 1;
   this.groupScaleType = (data.groupScaleType != undefined) ?
     data.groupScaleType : 'top_left';
+
+  // Animation effect
+  this.effect = data.effect || 'noTransition';
 };
 
 /**

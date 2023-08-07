@@ -29,13 +29,6 @@
         <thumbnail>article-title</thumbnail>
         <startWidth>500</startWidth>
         <startHeight>100</startHeight>
-        <properties>
-            <property id="effect" type="effectSelector" variant="showPaged">
-                <title>Effect</title>
-                <helpText>Please select the effect that will be used to transition between items.</helpText>
-                <default>noTransition</default>
-            </property>
-        </properties>
         <assets>
             <asset id="article-title" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/article/elements/article-title.png" />
         </assets>
@@ -50,13 +43,6 @@
         <thumbnail>article-summary</thumbnail>
         <startWidth>500</startWidth>
         <startHeight>250</startHeight>
-        <properties>
-            <property id="effect" type="effectSelector" variant="showPaged">
-                <title>Effect</title>
-                <helpText>Please select the effect that will be used to transition between items.</helpText>
-                <default>noTransition</default>
-            </property>
-        </properties>
         <assets>
             <asset id="article-summary" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/article/elements/article-summary.png" />
         </assets>
@@ -71,13 +57,6 @@
         <thumbnail>article-content</thumbnail>
         <startWidth>500</startWidth>
         <startHeight>500</startHeight>
-        <properties>
-            <property id="effect" type="effectSelector" variant="showPaged">
-                <title>Effect</title>
-                <helpText>Please select the effect that will be used to transition between items.</helpText>
-                <default>noTransition</default>
-            </property>
-        </properties>
         <assets>
             <asset id="article-content" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/article/elements/article-content.png" />
         </assets>
@@ -92,13 +71,6 @@
         <thumbnail>article-author</thumbnail>
         <startWidth>400</startWidth>
         <startHeight>100</startHeight>
-        <properties>
-            <property id="effect" type="effectSelector" variant="showPaged">
-                <title>Effect</title>
-                <helpText>Please select the effect that will be used to transition between items.</helpText>
-                <default>noTransition</default>
-            </property>
-        </properties>
         <assets>
             <asset id="article-author" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/article/elements/article-author.png" />
         </assets>
@@ -113,13 +85,6 @@
         <thumbnail>article-date</thumbnail>
         <startWidth>400</startWidth>
         <startHeight>100</startHeight>
-        <properties>
-            <property id="effect" type="effectSelector" variant="showPaged">
-                <title>Effect</title>
-                <helpText>Please select the effect that will be used to transition between items.</helpText>
-                <default>noTransition</default>
-            </property>
-        </properties>
         <assets>
             <asset id="article-date" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/date.png" />
         </assets>
@@ -134,13 +99,6 @@
         <thumbnail>article-published-date</thumbnail>
         <startWidth>400</startWidth>
         <startHeight>100</startHeight>
-        <properties>
-            <property id="effect" type="effectSelector" variant="showPaged">
-                <title>Effect</title>
-                <helpText>Please select the effect that will be used to transition between items.</helpText>
-                <default>noTransition</default>
-            </property>
-        </properties>
         <assets>
             <asset id="article-published-date" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/date.png" />
         </assets>
@@ -155,13 +113,6 @@
         <thumbnail>article-image</thumbnail>
         <startWidth>200</startWidth>
         <startHeight>200</startHeight>
-        <properties>
-            <property id="effect" type="effectSelector" variant="showPaged">
-                <title>Effect</title>
-                <helpText>Please select the effect that will be used to transition between items.</helpText>
-                <default>noTransition</default>
-            </property>
-        </properties>
         <assets>
             <asset id="article-image" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/image.png" />
         </assets>
@@ -176,13 +127,6 @@
         <thumbnail>article-link</thumbnail>
         <startWidth>480</startWidth>
         <startHeight>100</startHeight>
-        <properties>
-            <property id="effect" type="effectSelector" variant="showPaged">
-                <title>Effect</title>
-                <helpText>Please select the effect that will be used to transition between items.</helpText>
-                <default>noTransition</default>
-            </property>
-        </properties>
         <assets>
             <asset id="article-link" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/article/elements/article-link.png" />
         </assets>
@@ -197,13 +141,6 @@
         <thumbnail>article-permalink</thumbnail>
         <startWidth>480</startWidth>
         <startHeight>100</startHeight>
-        <properties>
-            <property id="effect" type="effectSelector" variant="showPaged">
-                <title>Effect</title>
-                <helpText>Please select the effect that will be used to transition between items.</helpText>
-                <default>noTransition</default>
-            </property>
-        </properties>
         <assets>
             <asset id="article-permalink" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/article/elements/article-link.png" />
         </assets>

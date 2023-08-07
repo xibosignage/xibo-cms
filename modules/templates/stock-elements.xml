@@ -29,13 +29,6 @@
         <thumbnail>stock-name</thumbnail>
         <startWidth>420</startWidth>
         <startHeight>100</startHeight>
-        <properties>
-            <property id="effect" type="effectSelector" variant="showPaged">
-                <title>Effect</title>
-                <helpText>Please select the effect that will be used to transition between items.</helpText>
-                <default>noTransition</default>
-            </property>
-        </properties>
         <assets>
             <asset id="stock-name" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/stocks/elements/stock-name.png" />
         </assets>
@@ -50,13 +43,6 @@
         <thumbnail>stock-symbol</thumbnail>
         <startWidth>420</startWidth>
         <startHeight>100</startHeight>
-        <properties>
-            <property id="effect" type="effectSelector" variant="showPaged">
-                <title>Effect</title>
-                <helpText>Please select the effect that will be used to transition between items.</helpText>
-                <default>noTransition</default>
-            </property>
-        </properties>
         <assets>
             <asset id="stock-symbol" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/stocks/elements/stock-symbol.png" />
         </assets>
@@ -71,13 +57,6 @@
         <thumbnail>stock-last-trade-price</thumbnail>
         <startWidth>200</startWidth>
         <startHeight>100</startHeight>
-        <properties>
-            <property id="effect" type="effectSelector" variant="showPaged">
-                <title>Effect</title>
-                <helpText>Please select the effect that will be used to transition between items.</helpText>
-                <default>noTransition</default>
-            </property>
-        </properties>
         <assets>
             <asset id="stock-last-trade-price" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/stocks/elements/stock-last-trade-price.png" />
         </assets>
@@ -92,13 +71,6 @@
         <thumbnail>stock-change-percentage</thumbnail>
         <startWidth>200</startWidth>
         <startHeight>100</startHeight>
-        <properties>
-            <property id="effect" type="effectSelector" variant="showPaged">
-                <title>Effect</title>
-                <helpText>Please select the effect that will be used to transition between items.</helpText>
-                <default>noTransition</default>
-            </property>
-        </properties>
         <onElementParseData><![CDATA[
 // value - element to be parsed
 if (String(value).length === 0) {
@@ -141,13 +113,6 @@ if (elementData !== null && elementData.hasOwnProperty('ChangeStyle')) {
         <thumbnail>stock-change-icon</thumbnail>
         <startWidth>80</startWidth>
         <startHeight>60</startHeight>
-        <properties>
-            <property id="effect" type="effectSelector" variant="showPaged">
-                <title>Effect</title>
-                <helpText>Please select the effect that will be used to transition between items.</helpText>
-                <default>noTransition</default>
-            </property>
-        </properties>
         <stencil>
             <hbs><![CDATA[
 <div class="stock-elements-icon" data-css-url="[[assetId=font-awesome]]" style="width: 100%;
