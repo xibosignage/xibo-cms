@@ -72,6 +72,10 @@
             <helpText>Does the calendar feed come from Windows - if unsure leave unselected.</helpText>
             <default>0</default>
         </property>
+        <property id="durationIsPerItem" type="checkbox">
+            <title>Duration is per item</title>
+            <helpText>The duration specified is per item otherwise it is per feed.</helpText>
+        </property>
         <property type="header" variant="main">
             <title>Web Hook triggers</title>
         </property>
