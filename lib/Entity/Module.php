@@ -354,13 +354,52 @@ class Module implements \JsonSerializable
      */
     public function fetchDurationOrDefaultFromFile(string $file): int
     {
-        if ($this->widgetProvider === null) {
-            return $this->defaultDuration;
+        $this->getLog()->debug('fetchDurationOrDefaultFromFile: fetchDuration with file: ' . $file);
+
+        // If we don't have a file name, then we use the default duration of 0 (end-detect)
+        if (empty($file)) {
+            return 0;
+        } else {
+            $info = new \getID3();
+            $file = $info->analyze($file);
+            return intval($file['playtime_seconds'] ?? 0);
         }
-        $durationProvider = $this->moduleFactory->createDurationProvider($file, null);
+    }
+
+    /**
+     * Calculate the duration of this Widget.
+     * @param Widget $widget
+     * @return int|null
+     */
+    public function calculateDuration(Widget $widget): ?int
+    {
+        if ($this->widgetProvider === null && $this->regionSpecific === 1) {
+            // Take some default action to cover the majourity of region specific widgets
+            // Duration can depend on the number of items per page for some widgets
+            // this is a legacy way of working, and our preference is to use elements
+            $numItems = $widget->getOptionValue('numItems', 15);
+
+            if ($widget->getOptionValue('durationIsPerItem', 0) == 1 && $numItems > 1) {
+                // If we have paging involved then work out the page count.
+                $itemsPerPage = $widget->getOptionValue('itemsPerPage', 0);
+                if ($itemsPerPage > 0) {
+                    $numItems = ceil($numItems / $itemsPerPage);
+                }
+
+                return $widget->calculatedDuration * $numItems;
+            } else {
+                return null;
+            }
+        } else if ($this->widgetProvider === null) {
+            return null;
+        }
+
+        $this->getLog()->debug('calculateDuration: using widget provider');
+
+        $durationProvider = $this->moduleFactory->createDurationProvider($this, $widget);
         $this->widgetProvider->fetchDuration($durationProvider);
 
-        return $durationProvider->getDuration();
+        return $durationProvider->isDurationSet() ? $durationProvider->getDuration() : null;
     }
 
     /**

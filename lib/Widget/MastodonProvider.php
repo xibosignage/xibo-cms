@@ -26,7 +26,7 @@ use Carbon\Carbon;
 use GuzzleHttp\Exception\RequestException;
 use Xibo\Widget\DataType\SocialMedia;
 use Xibo\Widget\Provider\DataProviderInterface;
-use Xibo\Widget\Provider\DurationProviderInterface;
+use Xibo\Widget\Provider\DurationProviderNumItemsTrait;
 use Xibo\Widget\Provider\WidgetProviderInterface;
 use Xibo\Widget\Provider\WidgetProviderTrait;
 
@@ -36,6 +36,7 @@ use Xibo\Widget\Provider\WidgetProviderTrait;
 class MastodonProvider implements WidgetProviderInterface
 {
     use WidgetProviderTrait;
+    use DurationProviderNumItemsTrait;
 
     public function fetchData(DataProviderInterface $dataProvider): WidgetProviderInterface
     {
@@ -143,11 +144,6 @@ class MastodonProvider implements WidgetProviderInterface
             $dataProvider->addError(__('Unknown issue getting posts'));
         }
 
-        return $this;
-    }
-
-    public function fetchDuration(DurationProviderInterface $durationProvider): WidgetProviderInterface
-    {
         return $this;
     }
 

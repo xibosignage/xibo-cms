@@ -840,9 +840,8 @@ class DataSet implements \JsonSerializable
         // Columns
         if ($options['saveColumns']) {
             foreach ($this->columns as $column) {
-                /* @var \Xibo\Entity\DataSetColumn $column */
                 $column->dataSetId = $this->dataSetId;
-                $column->save();
+                $column->save($options);
             }
         }
 

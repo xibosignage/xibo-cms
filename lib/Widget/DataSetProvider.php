@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -49,6 +49,12 @@ class DataSetProvider implements WidgetProviderInterface
 
     public function fetchDuration(DurationProviderInterface $durationProvider): WidgetProviderInterface
     {
+        $this->getLog()->debug('fetchDuration');
+
+        $lowerLimit = $durationProvider->getWidget()->getOptionValue('lowerLimit', 0);
+        $upperLimit = $durationProvider->getWidget()->getOptionValue('upperLimit', 15);
+        $durationProvider->setDuration(($upperLimit - $lowerLimit)
+            * $durationProvider->getWidget()->calculatedDuration);
         return $this;
     }
 
