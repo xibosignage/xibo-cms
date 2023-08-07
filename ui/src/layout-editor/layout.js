@@ -243,8 +243,19 @@ Layout.prototype.createDataStructure = function(data) {
           // Mark the region as not empty
           newRegion.isEmpty = false;
 
-          // increase region Duration with widget base duration
-          regionDuration += newWidget.getTotalDuration();
+          // If it's a canvas region, set the duration as the longest widget
+          if (isCanvas) {
+            const widgetDuration = newWidget.getTotalDuration();
+            if (
+              !regionDuration ||
+              widgetDuration > regionDuration
+            ) {
+              regionDuration = widgetDuration;
+            }
+          } else {
+            // Increase region Duration with widget base duration
+            regionDuration += newWidget.getTotalDuration();
+          }
         }
       }
 
