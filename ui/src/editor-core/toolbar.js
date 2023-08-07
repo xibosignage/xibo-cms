@@ -1412,7 +1412,8 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
     if (self.menuItems[menu].sortCol != '') {
       filter.sortCol = self.menuItems[menu].sortCol;
 
-      const sortDir = $sort.siblings('.sort-button-container').data('dir');
+      const sortDir = ($sort.siblings('.sort-button-container')
+        .data('dir')).toUpperCase();
       filter.sortDir = (sortDir) || 'DESC';
     }
 
