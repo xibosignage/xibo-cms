@@ -769,6 +769,7 @@ Widget.prototype.removeElement = function(
 ) {
   const app = this.editorObject;
   const elementGroupId = this.elements[elementId].groupId;
+  const self = this;
 
   // Remove element from DOM
   $(`#${elementId}`).remove();
@@ -807,42 +808,107 @@ Widget.prototype.removeElement = function(
 
   // Check if there's no more elements in widget and remove it
   if (Object.keys(this.elements).length == 0) {
-    // Check if parent region is canvas, and it only has a global widget,
-    // with no elements
-    // If so, remove region as well
-    let removeRegion = (
-      this.parent.subType === 'canvas' &&
-      Object.keys(this.parent.widgets).length === 1
-    );
+    const isGlobalWidget = (this.subType === 'global');
+    let removeCanvasRegion = false;
+    let removeCurrentWidget = false;
+    let unsetCanvasDuration = false;
 
-    if (removeRegion) {
-      // Check that the widget is a global one and is empty
+    // If we deleted the last global element
+    if (isGlobalWidget) {
+      // Check if we have other widgets on the canvas region
+      if (Object.keys(this.parent.widgets).length > 1) {
+        removeCanvasRegion = false;
+        removeCurrentWidget = false;
+        unsetCanvasDuration = true;
+      } else {
+        // Otherwise, just remove the region
+        removeCanvasRegion = true;
+      }
+    } else if (Object.keys(this.parent.widgets).length === 2) {
+      // If it's not a global element, and
+      // we only have this widget and the global
+
+      // Check if the global widget has elements
+      let globalHasElements = true;
       $.each(this.parent.widgets, function(i, e) {
-        if (e.subType !== 'global' || e.elements.length > 0) {
-          removeRegion = false;
+        if (e.subType === 'global' && Object.keys(e.elements).length === 0) {
+          globalHasElements = false;
         }
       });
+
+      // If global has no elements, we delete region altogether
+      if (!globalHasElements) {
+        removeCanvasRegion = true;
+      } else {
+        removeCurrentWidget = true;
+      }
+    } else {
+      // If it's not global, and we have more than 2 widgets, remove this one
+      removeCurrentWidget = true;
     }
 
-    // Remove widget
-    app.layout.deleteObject('widget', this.widgetId).then(() => {
-      // Remove region if it's empty
-      if (removeRegion) {
-        app.layout.deleteObject('region', this.parent.regionId).then(() => {
-          // Reload layout
-          app.reloadData(app.layout,
-            {
-              refreshEditor: true,
-            });
+    const reloadLayout = function() {
+      app.reloadData(app.layout,
+        {
+          refreshEditor: true,
         });
-      } else {
-        // Reload layout
-        app.reloadData(app.layout,
-          {
-            refreshEditor: true,
-          });
-      }
-    });
+    };
+
+    // If we removed all global elements
+    // but we still have other widgets in canvas
+    // Set canvas region duration to null to reset it
+    if (unsetCanvasDuration) {
+      // Save elements first ( to remove them from widget )
+      this.saveElements().then(function() {
+        const linkToAPI = urlsForApi.widget.saveForm;
+        const requestPath = linkToAPI.url.replace(':id', self.widgetId);
+
+        // Data to be saved
+        const dataToSave = {
+          name: self.widgetName,
+          useDuration: false,
+          duration: null,
+        };
+
+        // Set widget duration to 0
+        $.ajax({
+          url: requestPath,
+          type: linkToAPI.type,
+          data: dataToSave,
+        }).done(function(res) {
+          if (res.success) {
+            reloadLayout();
+          } else {
+            // Login Form needed?
+            if (res.login) {
+              window.location.href = window.location.href;
+              location.reload();
+            } else {
+              toastr.error(errorMessagesTrans.formLoadFailed);
+
+              // Just an error we dont know about
+              if (res.message == undefined) {
+                console.error(res);
+              } else {
+                console.error(res.message);
+              }
+            }
+          }
+        }).catch(function(jqXHR, textStatus, errorThrown) {
+          console.error(jqXHR, textStatus, errorThrown);
+          toastr.error(errorMessagesTrans.formLoadFailed);
+        });
+      });
+    } else if (
+      removeCanvasRegion
+    ) {
+      // Remove region
+      app.layout.deleteObject('region', this.parent.regionId)
+        .then(reloadLayout);
+    } else if (removeCurrentWidget) {
+      // Remove widget
+      app.layout.deleteObject('widget', this.widgetId).then(reloadLayout);
+    }
   } else {
     // Only save if we're not removing the widget
     // Save changes to widget
