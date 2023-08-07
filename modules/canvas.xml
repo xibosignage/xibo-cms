@@ -31,7 +31,7 @@
     <assignable>1</assignable>
     <regionSpecific>1</regionSpecific>
     <renderAs>html</renderAs>
-    <defaultDuration>60</defaultDuration>
+    <defaultDuration>1</defaultDuration>
     <settings></settings>
     <properties></properties>
 </module>
