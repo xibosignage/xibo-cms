@@ -998,8 +998,11 @@ class LayoutFactory extends BaseFactory
             $regionIsDrawer = isset($regionJson['isDrawer']) ? (int)$regionJson['isDrawer'] : 0;
             $regionWidgets = $regionJson['regionPlaylist']['widgets'] ?? [];
 
-            // Determine the region type based on how many widgets we have and whether we're the drawer
-            if ($regionIsDrawer === 1) {
+            // Do we have a region type specified (i.e. is the export from v4)
+            // Or determine the region type based on how many widgets we have and whether we're the drawer
+            if (!empty($regionJson['type'] ?? null)) {
+                $regionType = $regionJson['type'];
+            } else if ($regionIsDrawer === 1) {
                 $regionType = 'drawer';
             } else if (count($regionWidgets) === 1) {
                 $regionType = 'frame';
