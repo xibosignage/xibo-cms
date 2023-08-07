@@ -76,8 +76,8 @@
             <default>15</default>
         </property>
         <property id="onlyMedia" type="checkbox">
-            <title>Media Only?</title>
-            <helpText>Only return posts with attached media?</helpText>
+            <title>Only posts with attached media?</title>
+            <helpText>Return only posts which included attached media.</helpText>
             <default>0</default>
         </property>
         <property id="dateFormat" type="text" variant="dateFormat">
