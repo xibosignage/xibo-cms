@@ -571,7 +571,7 @@ $(function() {
                         ...elemGroup.groupProperties,
                         id: elemGroup.groupId,
                         uniqueID: elemGroup.groupId,
-                        duration: widgetDataInfo.totalDuration,
+                        duration: widgetDataInfo.duration,
                         parentId: elemGroup.groupId,
                         slot: elemGroup.slot,
                         items: [],
@@ -582,7 +582,11 @@ $(function() {
                     if (!isGroup && Object.keys(elemGroups.standalone).length > 0) {
                       elemGroups.standalone[elemGroup.id] = [
                         ...elemGroups.standalone[elemGroup.id],
-                        elemGroup,
+                        {
+                          ...elemGroup,
+                          numItems: 1,
+                          duration: widgetDataInfo.duration
+                        },
                       ];
                     }
                     if (isGroup && Object.keys(elemGroups.groups).length > 0) {
@@ -590,7 +594,7 @@ $(function() {
                         ...elemGroups.groups[elemGroup.groupId],
                         items:[
                           ...elemGroups.groups[elemGroup.groupId].items,
-                          elemGroup,
+                          { ...elemGroup, numItems: 1 },
                         ],
                       };
                     }
@@ -603,17 +607,19 @@ $(function() {
                   const {
                     dataItems,
                   } = composeFinalData(widgetDataInfo, data);
-                  const groupValues = Object.values(elementGroups.groups);
-                  const groupItems = groupValues?.length > 0 ?
-                    groupValues.reduce((a, b) => [...a, ...b.items], []) :
-                    null;
-                  const maxSlot = groupItems === null ?
-                    1 :
-                    Math.max(...groupItems.map(function(elem) {
-                      return elem?.slot || 0;
-                    }),
-                  ) + 1;
-                  const renderDataItems = function(data, item, slot, groupId, $groupContent){
+                  const getMaxSlot = (objectsArray, itemsKey, minValue) => {
+                    const groupItems = objectsArray?.length > 0 ?
+                        objectsArray.reduce((a, b) => [...a, ...b[itemsKey]], []) :
+                        null;
+
+                    return groupItems === null ?
+                      minValue :
+                      Math.max(...groupItems.map(function(elem) {
+                            return elem?.slot || 0;
+                          }),
+                      ) + 1;
+                  };
+                  const renderDataItems = function(data, item, slot, maxSlot, groupId, $groupContent){
                     // For each data item, parse it and add it to the content;
                     let templateAlreadyAdded = false;
 
@@ -698,7 +704,7 @@ $(function() {
                           item.elementId,
                           $target,
                           $content.find(`.${item.uniqueID}--item`),
-                          item,
+                          { item, ...item.templateData },
                           widgetDataInfo?.meta,
                         );
                       }
@@ -709,17 +715,30 @@ $(function() {
                   $.each(Object.keys(elementGroups.groups), function(groupIndex, groupId){
                     if (elementGroups.groups.hasOwnProperty(groupId)) {
                       const elemGroup = elementGroups.groups[groupId];
+                      const groupValues = Object.values(elementGroups.groups);
+                      const maxSlot = getMaxSlot(groupValues, 'items', 1);
                       const $groupContent = $(`<div class="${groupId}"></div>`);
 
                       if (elemGroup?.items.length > 0) {
                         $.each(elemGroup?.items, function(itemKey, groupItem){
-                          renderDataItems(dataItems, groupItem, elemGroup.slot, groupId, $groupContent);
+                          renderDataItems(
+                            dataItems,
+                            groupItem,
+                            elemGroup.slot,
+                            maxSlot,
+                            groupId,
+                            $groupContent
+                          );
                         });
 
                         $content.append($groupContent.prop('outerHTML'));
 
                         $groupContent.xiboElementsRender(
-                          elemGroup,
+                          {
+                            ...elemGroup,
+                            itemsPerPage: maxSlot,
+                            numItems: dataItems.length
+                          },
                           $groupContent.find(`.${elemGroup.id}--item`),
                         );
                       }
@@ -730,7 +749,8 @@ $(function() {
                   $.each(Object.keys(elementGroups.standalone), function(itemIndex, itemId) {
                     if (elementGroups.standalone.hasOwnProperty(itemId)) {
                       const itemsObj = elementGroups.standalone[itemId];
-                      const $groupContent = $(`<div class="${itemId}"></div>`);
+                      const itemsValues = Object.values([elementGroups.standalone]);
+                      const maxSlot = getMaxSlot(itemsValues, itemId, 1);
 
                       if (itemsObj.length > 0) {
                         const itemGroupProps = itemsObj.slice(0, 1)[0];
@@ -741,6 +761,7 @@ $(function() {
                             dataItems,
                             itemObj,
                             itemObj.slot,
+                            maxSlot,
                             groupContentID,
                             $groupContentItem,
                           );
@@ -751,6 +772,8 @@ $(function() {
                             {
                               ...itemGroupProps,
                               parentId: groupContentID,
+                              itemsPerPage: maxSlot,
+                              numItems: dataItems.length,
                               id: groupContentID,
                             },
                             $groupContentItem.find(`.${groupContentID}--item`),

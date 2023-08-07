@@ -1539,8 +1539,32 @@ class Widget extends Base
         // Store the target regionId
         $widget->load();
 
+        // Pull out elements directly from the request body
+        $elements = $request->getBody()->getContents();
+        $elementJson = json_decode($elements, true);
+        if ($elementJson === null) {
+            throw new InvalidArgumentException(__('Invalid element JSON'), 'body');
+        }
+
+        // Parse the element JSON to see if we need to set `itemsPerPage`
+        $slots = [];
+        $uniqueSlots = 0;
+        foreach ($elementJson as $widgetElement) {
+            foreach ($widgetElement['elements'] ?? [] as $element) {
+                $slotNo = 'slot_' . $element['slot'] ?? 0;
+                if (!in_array($slotNo, $slots)) {
+                    $slots[] = $slotNo;
+                    $uniqueSlots++;
+                }
+            }
+        }
+
+        if ($uniqueSlots > 0) {
+            $widget->setOptionValue('itemsPerPage', 'attrib', $uniqueSlots);
+        }
+
         // Save elements
-        $widget->setOptionValue('elements', 'raw', $request->getBody()->getContents());
+        $widget->setOptionValue('elements', 'raw', $elements);
 
         // Save
         $widget->save([

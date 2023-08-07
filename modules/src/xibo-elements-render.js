@@ -30,7 +30,7 @@ jQuery.fn.extend({
       takeItemsFrom: 'start',
       reverseOrder: 0,
       itemsPerPage: 1,
-      speed: 2,
+      speed: 1000,
       previewWidth: 0,
       previewHeight: 0,
       scaleOverride: 0,
@@ -84,18 +84,12 @@ jQuery.fn.extend({
       // Make sure the speed is something sensible
       options.speed = (options.speed <= 200) ? 1000 : options.speed;
 
-      const numberOfSlides = options.numItems || items?.length || 1;
+      const numberOfSlides = items?.length || 1;
       const duration = (options.durationIsPerItem) ?
-        options.duration :
+        Math.ceil(options.numItems / items?.length) * options.duration :
         options.duration / numberOfSlides;
       let timeout = duration * 1000;
-      const noTransitionSpeed = 10;
-
-      if (options.effect !== 'noTransition' && options.effect !== 'none') {
-        timeout = timeout - options.speed;
-      } else {
-        timeout = timeout - noTransitionSpeed;
-      }
+      const noTransitionSpeed = 200;
 
       $(cycleElement).addClass('cycle-slideshow').cycle({
         fx: (options.effect === 'noTransition' || options.effect === 'none') ?
