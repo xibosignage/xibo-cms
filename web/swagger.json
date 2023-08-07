@@ -2,7 +2,7 @@
     "swagger": "2.0",
     "info": {
         "title": "Xibo API",
-        "description": "Xibo CMS API.\r\n       Using HTTP formData requests.\r\n       All PUT requests require Content-Type:application/x-www-form-urlencoded header.",
+        "description": "Xibo CMS API.\n       Using HTTP formData requests.\n       All PUT requests require Content-Type:application/x-www-form-urlencoded header.",
         "termsOfService": "https://xibosignage.com/legal",
         "contact": {
             "email": "info@xibo.org.uk"
@@ -380,7 +380,7 @@
                     {
                         "name": "cyclePlaybackEnabled",
                         "in": "formData",
-                        "description": "When cycle based playback is enabled only 1 Layout from this Campaign will be played each time it is in a Schedule loop. The same Layout will be shown until the 'Play count' is achieved.",
+                        "description": "When cycle based playback is enabled only 1 Layout from this Campaign will be played each time\n     * it is in a Schedule loop. The same Layout will be shown until the 'Play count' is achieved.",
                         "required": false,
                         "type": "integer"
                     },
@@ -6510,6 +6510,13 @@
                         "description": "Menu Board Category code identifier",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "description",
+                        "in": "formData",
+                        "description": "Menu Board Category description",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -6562,6 +6569,13 @@
                         "name": "code",
                         "in": "formData",
                         "description": "Menu Board Category code identifier",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "description",
+                        "in": "formData",
+                        "description": "Menu Board Category description",
                         "required": false,
                         "type": "string"
                     }
@@ -6672,9 +6686,9 @@
                     {
                         "name": "price",
                         "in": "formData",
-                        "description": "Menu Board Product price, including the currency symbol if needed",
-                        "required": true,
-                        "type": "string"
+                        "description": "Menu Board Product price",
+                        "required": false,
+                        "type": "decimal"
                     },
                     {
                         "name": "allergyInfo",
@@ -6682,6 +6696,20 @@
                         "description": "Menu Board Product allergyInfo",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "calories",
+                        "in": "formData",
+                        "description": "Menu Board Product calories",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "displayOrder",
+                        "in": "formData",
+                        "description": "Menu Board Product Display Order, used for sorting",
+                        "required": true,
+                        "type": "integer"
                     },
                     {
                         "name": "availability",
@@ -6774,9 +6802,9 @@
                     {
                         "name": "price",
                         "in": "formData",
-                        "description": "Menu Board Product price, including the currency symbol if needed",
-                        "required": true,
-                        "type": "string"
+                        "description": "Menu Board Product price",
+                        "required": false,
+                        "type": "decimal"
                     },
                     {
                         "name": "allergyInfo",
@@ -6784,6 +6812,20 @@
                         "description": "Menu Board Product allergyInfo",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "calories",
+                        "in": "formData",
+                        "description": "Menu Board Product calories",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "displayOrder",
+                        "in": "formData",
+                        "description": "Menu Board Product Display Order, used for sorting",
+                        "required": true,
+                        "type": "integer"
                     },
                     {
                         "name": "availability",
@@ -8321,7 +8363,7 @@
                     {
                         "name": "eventTypeId",
                         "in": "query",
-                        "description": "Filter grid by eventTypeId. 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action, 7=Media Library, 8=Playlist",
+                        "description": "Filter grid by eventTypeId.\n     * 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action, 7=Media Library, 8=Playlist",
                         "required": false,
                         "type": "integer"
                     },
@@ -8394,21 +8436,21 @@
                     {
                         "name": "eventTypeId",
                         "in": "formData",
-                        "description": "The Event Type Id to use for this Event. 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action, 7=Media Library, 8=Playlist",
+                        "description": "The Event Type Id to use for this Event.\n     * 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action, 7=Media Library, 8=Playlist",
                         "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "campaignId",
                         "in": "formData",
-                        "description": "The Campaign ID to use for this Event. If a Layout is needed then the Campaign specific ID for that Layout should be used.",
+                        "description": "The Campaign ID to use for this Event.\n     * If a Layout is needed then the Campaign specific ID for that Layout should be used.",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "fullScreenCampaignId",
                         "in": "formData",
-                        "description": "For Media or Playlist eventyType. The Layout specific Campaign ID to use for this Event. This needs to be the Layout created with layout/fullscreen function",
+                        "description": "For Media or Playlist eventyType. The Layout specific Campaign ID to use for this Event.\n     * This needs to be the Layout created with layout/fullscreen function",
                         "required": false,
                         "type": "integer"
                     },
@@ -8630,14 +8672,14 @@
                     {
                         "name": "eventTypeId",
                         "in": "formData",
-                        "description": "The Event Type Id to use for this Event. 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action",
+                        "description": "The Event Type Id to use for this Event.\n     * 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action",
                         "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "campaignId",
                         "in": "formData",
-                        "description": "The Campaign ID to use for this Event. If a Layout is needed then the Campaign specific ID for that Layout should be used.",
+                        "description": "The Campaign ID to use for this Event.\n     * If a Layout is needed then the Campaign specific ID for that Layout should be used.",
                         "required": false,
                         "type": "integer"
                     },
@@ -8665,7 +8707,7 @@
                     {
                         "name": "displayGroupIds",
                         "in": "formData",
-                        "description": "The Display Group IDs for this event. Display specific Group IDs should be used to schedule on single displays.",
+                        "description": "The Display Group IDs for this event.\n     * Display specific Group IDs should be used to schedule on single displays.",
                         "required": true,
                         "type": "array",
                         "items": {
@@ -12257,26 +12299,6 @@
                 }
             }
         },
-        "Help": {
-            "properties": {
-                "helpId": {
-                    "description": "The ID of this Help Record",
-                    "type": "integer"
-                },
-                "topic": {
-                    "description": "The topic for this Help Record",
-                    "type": "string"
-                },
-                "category": {
-                    "description": "The Category for this Help Record",
-                    "type": "string"
-                },
-                "link": {
-                    "description": "The Link to the Manual for this Help Record",
-                    "type": "string"
-                }
-            }
-        },
         "Layout": {
             "properties": {
                 "layoutId": {
@@ -12654,6 +12676,10 @@
                     "description": "The Menu Board Category name",
                     "type": "string"
                 },
+                "description": {
+                    "description": "The Menu Board Category description",
+                    "type": "string"
+                },
                 "code": {
                     "description": "The Menu Board Category code identifier",
                     "type": "string"
@@ -12684,7 +12710,8 @@
                 },
                 "price": {
                     "description": "The Menu Board Product price",
-                    "type": "string"
+                    "type": "number",
+                    "format": "double"
                 },
                 "description": {
                     "description": "The Menu Board Product description",
@@ -12694,13 +12721,21 @@
                     "description": "The Menu Board Product code identifier",
                     "type": "string"
                 },
+                "displayOrder": {
+                    "description": "The Menu Board Product display order, used for sorting",
+                    "type": "integer"
+                },
                 "availability": {
                     "description": "The Menu Board Product availability",
-                    "type": "string"
+                    "type": "integer"
                 },
                 "allergyInfo": {
                     "description": "The Menu Board Product allergy information",
                     "type": "string"
+                },
+                "calories": {
+                    "description": "The Menu Board Product allergy information",
+                    "type": "integer"
                 },
                 "mediaId": {
                     "description": "The Menu Board Product associated mediaId",
@@ -13550,6 +13585,22 @@
                 "syncGroupId": {
                     "description": "For sync events, the id the the sync group",
                     "type": "integer"
+                },
+                "modifiedBy": {
+                    "description": "The userId of the user that last modified this Schedule",
+                    "type": "integer"
+                },
+                "createdOn": {
+                    "description": "The Date this Schedule was created on",
+                    "type": "string"
+                },
+                "updatedOn": {
+                    "description": "The Date this Schedule was las updated on",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "The name of this Scheduled Event",
+                    "type": "string"
                 }
             }
         },
