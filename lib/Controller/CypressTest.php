@@ -27,6 +27,7 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Display;
 use Xibo\Factory\CampaignFactory;
+use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -61,6 +62,10 @@ class CypressTest extends Base
 
     /** @var FolderFactory */
     private $folderFactory;
+    /**
+     * @var CommandFactory
+     */
+    private $commandFactory;
 
     /**
      * @var DisplayGroupFactory
@@ -102,7 +107,8 @@ class CypressTest extends Base
         $displayFactory,
         $layoutFactory,
         $dayPartFactory,
-        $folderFactory
+        $folderFactory,
+        $commandFactory
     ) {
         $this->store = $store;
         $this->session = $session;
@@ -113,6 +119,7 @@ class CypressTest extends Base
         $this->layoutFactory = $layoutFactory;
         $this->dayPartFactory = $dayPartFactory;
         $this->folderFactory = $folderFactory;
+        $this->commandFactory = $commandFactory;
     }
 
     // <editor-fold desc="Displays">
@@ -251,6 +258,36 @@ class CypressTest extends Base
     }
 
     // </editor-fold>
+
+    public function createCommand(Request $request, Response $response): Response|ResponseInterface
+    {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        $command = $this->commandFactory->create();
+        $command->command = $sanitizedParams->getString('command');
+        $command->description = $sanitizedParams->getString('description');
+        $command->code = $sanitizedParams->getString('code');
+        $command->userId = $this->getUser()->userId;
+        $command->commandString = $sanitizedParams->getString('commandString');
+        $command->validationString = $sanitizedParams->getString('validationString');
+        $availableOn = $sanitizedParams->getArray('availableOn');
+        if (empty($availableOn)) {
+            $command->availableOn = null;
+        } else {
+            $command->availableOn = implode(',', $availableOn);
+        }
+        $command->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 201,
+            'message' => sprintf(__('Added %s'), $command->command),
+            'id' => $command->commandId,
+            'data' => $command
+        ]);
+
+        return $this->render($request, $response);
+    }
 
     /**
      * @throws InvalidArgumentException

@@ -96,6 +96,7 @@ $app->post('/schedule', ['\Xibo\Controller\Schedule','add'])
     ->add(new FeatureAuth($app->getContainer(), ['schedule.add']))
     ->setName('schedule.add');
 
+$app->post('/createCommand', ['\Xibo\Controller\CypressTest','createCommand']);
 $app->post('/createCampaign', ['\Xibo\Controller\CypressTest','createCampaign']);
 $app->post('/scheduleCampaign', ['\Xibo\Controller\CypressTest','scheduleCampaign']);
 $app->post('/displaySetStatus', ['\Xibo\Controller\CypressTest','displaySetStatus']);

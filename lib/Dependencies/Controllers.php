@@ -488,7 +488,8 @@ class Controllers
                     $c->get('displayFactory'),
                     $c->get('layoutFactory'),
                     $c->get('dayPartFactory'),
-                    $c->get('folderFactory')
+                    $c->get('folderFactory'),
+                    $c->get('commandFactory')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;

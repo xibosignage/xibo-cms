@@ -49,6 +49,7 @@ describe('Campaigns', function() {
     cy.intercept('/user/pref').as('userPref');
 
     cy.createCampaign('Campaign for Schedule 1');
+    cy.createCommand('Set Timezone', 'Set timezone', 'TIMEZONE');
 
     // Intercept the POST request to get the schedule Id
     cy.intercept('/schedule').as('postCampaign');
