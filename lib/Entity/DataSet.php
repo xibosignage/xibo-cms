@@ -841,7 +841,7 @@ class DataSet implements \JsonSerializable
         if ($options['saveColumns']) {
             foreach ($this->columns as $column) {
                 $column->dataSetId = $this->dataSetId;
-                $column->save();
+                $column->save($options);
             }
         }
 

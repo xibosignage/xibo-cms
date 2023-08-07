@@ -2490,8 +2490,11 @@ $datasetTableContainer.dataSetRender(properties);
         <dataType>dataset</dataType>
         <showIn>none</showIn>
         <properties>
+            <property id="template" type="code" allowLibraryRefs="true" variant="html">
+                <title>Main Template</title>
+            </property>
             <property id="styleSheet" type="code" allowLibraryRefs="true" variant="css">
-                <title>Sample sheet</title>
+                <title>Optional Stylesheet Template</title>
             </property>
         </properties>
         <stencil>

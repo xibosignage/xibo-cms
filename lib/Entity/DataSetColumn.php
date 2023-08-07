@@ -198,6 +198,7 @@ class DataSetColumn implements \JsonSerializable
     {
         $options = array_merge([
             'testFormulas' => true,
+            'allowSpacesInHeading' => false,
         ], $options);
 
         if ($this->dataSetId == 0 || $this->dataSetId == '')
@@ -212,7 +213,11 @@ class DataSetColumn implements \JsonSerializable
         if ($this->heading == '')
             throw new InvalidArgumentException(__('Please provide a column heading.'), 'heading');
 
-        if (!v::stringType()->alnum()->validate($this->heading) || strtolower($this->heading) == 'id') {
+        // We allow spaces here for backwards compatibility, but only on import and edit.
+        $additionalCharacters = $options['allowSpacesInHeading'] ? ' ' : '';
+        if (!v::stringType()->alnum($additionalCharacters)->validate($this->heading)
+            || strtolower($this->heading) == 'id'
+        ) {
             throw new InvalidArgumentException(sprintf(
                 __('Please provide an alternative column heading %s can not be used.'),
                 $this->heading
@@ -314,7 +319,6 @@ class DataSetColumn implements \JsonSerializable
         $options = array_merge([
             'validate' => true,
             'rebuilding' => false,
-            'testFormulas' => true,
         ], $options);
 
         if ($options['validate'] && !$options['rebuilding']) {
