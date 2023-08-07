@@ -10,19 +10,19 @@
                     {{> inputs/hidden id="type" value=region.type customClass="region-input" }}
                     {{> inputs/text value=region.name id="name" title="Name" helpText="An optional name for this widget" customClass="region-input" }}
                     {{> inputs/text value=region.syncKey id="syncKey" title="Content Synchronisation Key" helpText="If this layout is scheduled using a synchronised event, this key will be used to match with other layouts in the same event." customClass="region-input" }}
-                    {{> inputs/checkbox value=(getOption region.regionOptions "loop") id="loop" title="Loop?" helpText="If there is only one item in this region should it loop?" customClass="region-input" }}
-                    {{> inputs/message messageType="info" title="When should the Region Loop be enabled?"}}
-                    {{> inputs/message messageType="info" title="* If your Region contains more than one Widget, Loop should not be enabled."}}
-                    {{> inputs/message messageType="info" title="* If your Region contains one Widget, and that Widget is a 'fixed' item (eg Text), Loop should not be enabled."}}
-                    {{> inputs/message messageType="info" title="* If your Region contains one Widget, and that Widget needs to update periodically (eg RSS Ticker Widget), Loop can be enabled ONLY if the Widget needs to update MORE frequently than the duration of the overall Layout."}}
+                    {{> inputs/checkbox value=(getOption region.regionOptions "loop") id="loop" title="Loop?" helpText="If there is only one item in this %region.type% should it loop?" customClass="region-input" }}
+                    {{> inputs/message messageType="info" title="When should the %regionType% Loop be enabled?"}}
+                    {{> inputs/message messageType="info" title="* If your %regionType% contains more than one Widget, Loop should not be enabled."}}
+                    {{> inputs/message messageType="info" title="* If your %regionType% contains one Widget, and that Widget is a 'fixed' item (eg Text), Loop should not be enabled."}}
+                    {{> inputs/message messageType="info" title="* If your %regionType% contains one Widget, and that Widget needs to update periodically (eg RSS Ticker Widget), Loop can be enabled ONLY if the Widget needs to update MORE frequently than the duration of the overall Layout."}}
                 </div>
                 <div class="tab-pane" id="positioningTab">
-                    {{> inputs/number value=region.zIndex id="zIndex" title="Layer" helpText="The layering order of this region (z-index). Advanced use only." customClass="position-input" }}
-                    {{> inputs/number value=region.top id="top" title="Top" helpText="The top position of the Region" customClass="position-input" }}
-                    {{> inputs/number value=region.left id="left" title="Left" helpText="The left position of the Region" customClass="position-input" }}
-                    {{> inputs/number value=region.width id="width" title="Width" helpText="The width of the Region" customClass="position-input" }}
-                    {{> inputs/number value=region.height id="height" title="Height" helpText="The height of the Region" customClass="position-input" }}
-                    {{> button id="setFullScreenButton" type="btn-block btn-outline-primary inline-btn" name="Make this Region full screen, dimensions will be set to %layout.width% by %layout.height%." customClass="position-input" }}
+                    {{> inputs/number value=region.zIndex id="zIndex" title="Layer" helpText="The layering order of this %regionType% (z-index). Advanced use only." customClass="position-input" }}
+                    {{> inputs/number value=region.top id="top" title="Top" helpText="The top position of the %regionType%" customClass="position-input" }}
+                    {{> inputs/number value=region.left id="left" title="Left" helpText="The left position of the %regionType%" customClass="position-input" }}
+                    {{> inputs/number value=region.width id="width" title="Width" helpText="The width of the %regionType%" customClass="position-input" }}
+                    {{> inputs/number value=region.height id="height" title="Height" helpText="The height of the %regionType%" customClass="position-input" }}
+                    {{> button id="setFullScreenButton" type="btn-block btn-outline-primary inline-btn" name="Make this %regionType% full screen, dimensions will be set to %layout.width% by %layout.height%." customClass="position-input" }}
                 </div>
             </div>
         </form>
