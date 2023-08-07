@@ -438,6 +438,23 @@ Cypress.Commands.add('scheduleCampaign', function(campaignId, displayName) {
   });
 });
 
+// Create a campaign
+Cypress.Commands.add('createCampaign', function(campaignName) {
+  cy.request({
+    method: 'POST',
+    url: '/api/createCampaign',
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {
+      name: campaignName,
+    },
+  }).then((res) => {
+    return res.body.campaignId;
+  });
+});
+
 //  Set Display Status
 Cypress.Commands.add('displaySetStatus', function(displayName, statusId) {
   cy.request({
