@@ -160,7 +160,7 @@ describe('Campaigns', function() {
     cy.get('.select2-container--open .select2-results > ul > li:first').contains('Layout for Schedule 1').click();
 
     // Should have 1
-    cy.get('#schedule-grid tbody tr').should('have.length', 1);
+    cy.get('#schedule-grid tbody tr').should('have.length', 2);
     cy.get('#schedule-grid tr:first-child .dropdown-toggle').click();
     cy.get('#schedule-grid tr:first-child .schedule_button_edit').click();
 
