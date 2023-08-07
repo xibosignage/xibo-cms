@@ -52,10 +52,6 @@
                 <helpText>The Number of items you want to display</helpText>
                 <default></default>
             </property>
-            <property id="durationIsPerItem" type="checkbox">
-                <title>Duration is per page</title>
-                <helpText>The duration specified is per item otherwise it is per feed.</helpText>
-            </property>
             <property id="itemsSideBySide" type="checkbox">
                 <title>Show items side by side?</title>
                 <helpText>Should items be shown side by side?</helpText>
