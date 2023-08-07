@@ -22,10 +22,13 @@
 
 namespace Xibo\Listener;
 
+use Carbon\Carbon;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Event\MenuBoardCategoryRequest;
+use Xibo\Event\MenuBoardModifiedDtRequest;
 use Xibo\Event\MenuBoardProductRequest;
 use Xibo\Factory\MenuBoardCategoryFactory;
+use Xibo\Factory\MenuBoardFactory;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -35,10 +38,13 @@ class MenuBoardProviderListener
 {
     use ListenerLoggerTrait;
 
+    private MenuBoardFactory $menuBoardFactory;
+
     private MenuBoardCategoryFactory $menuBoardCategoryFactory;
 
-    public function __construct(MenuBoardCategoryFactory $menuBoardCategoryFactory)
+    public function __construct(MenuBoardFactory $menuBoardFactory, MenuBoardCategoryFactory $menuBoardCategoryFactory)
     {
+        $this->menuBoardFactory = $menuBoardFactory;
         $this->menuBoardCategoryFactory = $menuBoardCategoryFactory;
     }
 
@@ -46,6 +52,7 @@ class MenuBoardProviderListener
     {
         $dispatcher->addListener(MenuBoardProductRequest::$NAME, [$this, 'onProductRequest']);
         $dispatcher->addListener(MenuBoardCategoryRequest::$NAME, [$this, 'onCategoryRequest']);
+        $dispatcher->addListener(MenuBoardModifiedDtRequest::$NAME, [$this, 'onModifiedDtRequest']);
         return $this;
     }
 
@@ -76,7 +83,7 @@ class MenuBoardProviderListener
 
         $categoryId = $dataProvider->getProperty('categoryId');
         $this->getLogger()->debug('onProductRequest: $categoryId: ' . $categoryId);
-        if ($categoryId !== null && $categoryId !== "") {
+        if ($categoryId !== null && $categoryId !== '') {
             $filter['menuCategoryId'] = intval($categoryId);
         }
 
@@ -150,5 +157,11 @@ class MenuBoardProviderListener
         $dataProvider->addItem($category);
 
         $dataProvider->setIsHandled();
+    }
+
+    public function onModifiedDtRequest(MenuBoardModifiedDtRequest $event): void
+    {
+        $menu = $this->menuBoardFactory->getById($event->getDataSetId());
+        $event->setModifiedDt(Carbon::createFromTimestamp($menu->modifiedDt));
     }
 }

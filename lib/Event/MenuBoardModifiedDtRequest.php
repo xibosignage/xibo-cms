@@ -19,52 +19,42 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-namespace Xibo\Middleware;
 
-use Slim\App;
+namespace Xibo\Event;
+
+use Carbon\Carbon;
 
 /**
- * Trait CustomMiddlewareTrait
- * Add this trait to all custom middleware
- * @package Xibo\Middleware
+ * Menu Board Product Request.
  */
-trait CustomMiddlewareTrait
+class MenuBoardModifiedDtRequest extends Event
 {
-    /** @var \Slim\App */
-    private $app;
+    public static $NAME = 'menuboard.modifiedDt.request.event';
 
-    /**
-     * @param \Slim\App $app
-     * @return $this
-     */
-    public function setApp(App $app)
+    /** @var int */
+    private $menuId;
+
+    /** @var Carbon */
+    private $modifiedDt;
+
+    public function __construct(int $menuId)
     {
-        $this->app = $app;
+        $this->menuId = $menuId;
+    }
+
+    public function getDataSetId(): int
+    {
+        return $this->menuId;
+    }
+
+    public function setModifiedDt(Carbon $modifiedDt): MenuBoardModifiedDtRequest
+    {
+        $this->modifiedDt = $modifiedDt;
         return $this;
     }
 
-    /**
-     * @return \Slim\App
-     */
-    protected function getApp()
+    public function getModifiedDt(): ?Carbon
     {
-        return $this->app;
-    }
-
-    /**
-     * @return \DI\Container|\Psr\Container\ContainerInterface
-     */
-    protected function getContainer()
-    {
-        return $this->app->getContainer();
-    }
-
-    /***
-     * @param $key
-     * @return mixed
-     */
-    protected function getFromContainer($key)
-    {
-        return $this->getContainer()->get($key);
+        return $this->modifiedDt;
     }
 }

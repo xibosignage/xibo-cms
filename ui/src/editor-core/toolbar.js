@@ -29,7 +29,7 @@ const ToolbarCardLayoutTemplateTemplate =
   require('../templates/toolbar-card-layout-template.hbs');
 const ToolbarContentTemplate = require('../templates/toolbar-content.hbs');
 const ToolbarSearchFormTemplate =
-  require('../templates/toolbar-search-form.hbs');
+require('../templates/toolbar-search-form.hbs');
 const ToolbarContentMediaTemplate =
   require('../templates/toolbar-content-media.hbs');
 const ToolbarContentSubmenuTemplate =
@@ -353,6 +353,19 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
           value: 'both',
         },
       },
+      sort: {
+        mediaId: 'numeric',
+        name: 'alpha',
+        orientation: 'amount',
+        width: 'numeric',
+        height: 'numeric',
+        duration: 'numeric',
+        fileSize: 'numeric',
+        createdDt: 'amount',
+        modifiedDt: 'amount',
+      },
+      sortCol: '',
+      sortDir: 'asc',
       state: '',
       itemCount: 0,
     },
@@ -384,6 +397,16 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
           value: 'both',
         },
       },
+      sort: {
+        mediaId: 'numeric',
+        name: 'alpha',
+        duration: 'numeric',
+        fileSize: 'numeric',
+        createdDt: 'amount',
+        modifiedDt: 'amount',
+      },
+      sortCol: '',
+      sortDir: 'asc',
       state: '',
       itemCount: 0,
     },
@@ -418,6 +441,19 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
           value: 'both',
         },
       },
+      sort: {
+        mediaId: 'numeric',
+        name: 'alpha',
+        orientation: 'amount',
+        width: 'numeric',
+        height: 'numeric',
+        duration: 'numeric',
+        fileSize: 'numeric',
+        createdDt: 'amount',
+        modifiedDt: 'amount',
+      },
+      sortCol: '',
+      sortDir: 'asc',
       state: '',
       itemCount: 0,
     },
@@ -449,6 +485,16 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
           value: 'both',
         },
       },
+      sort: {
+        mediaId: 'numeric',
+        name: 'alpha',
+        duration: 'numeric',
+        fileSize: 'numeric',
+        createdDt: 'amount',
+        modifiedDt: 'amount',
+      },
+      sortCol: '',
+      sortDir: 'asc',
       state: '',
       itemCount: 0,
     },
@@ -591,6 +637,19 @@ Toolbar.prototype.loadPrefs = function() {
         }
       }
 
+      // Load sort
+      if (loadedData.sort) {
+        for (const sortItem in loadedData.sort) {
+          if (loadedData.sort.hasOwnProperty(sortItem)) {
+            const menuIdx = findMenuIndexByName(sortItem);
+            self.menuItems[menuIdx].sortCol =
+              (loadedData.sort[sortItem].sortCol) || '';
+            self.menuItems[menuIdx].sortDir =
+              loadedData.sort[sortItem].sortDir || 'asc';
+          }
+        }
+      }
+
       // Tooltip options
       app.common.displayTooltips =
         (loadedData.displayTooltips == 1 ||
@@ -644,6 +703,7 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
   let displayTooltips = (app.common.displayTooltips) ? 1 : 0;
   let favouriteModules = [];
   const filters = {};
+  const sort = {};
 
   // If we have opened submenu, save parent with name instead of index
   if (
@@ -665,9 +725,10 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
     });
     favouriteModules = widgetMenu.favouriteModules;
 
-    // Save filters
+    // Save filters and sort
     this.menuItems.forEach((menu) => {
       filters[menu.name] = {};
+
       for (const filter in menu.filters) {
         if (
           this.defaultFilters[filter].value != menu.filters[filter].value &&
@@ -676,6 +737,11 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
           filters[menu.name][filter] = menu.filters[filter].value;
         }
       }
+
+      sort[menu.name] = {
+        sortCol: menu.sortCol,
+        sortDir: menu.sortDir,
+      };
     });
   }
 
@@ -685,6 +751,7 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
         option: 'toolbar',
         value: JSON.stringify({
           filters: filters,
+          sort: sort,
           openedMenu: openedMenu,
           openedSubMenu: openedSubMenu,
           displayTooltips: displayTooltips,
@@ -1266,8 +1333,12 @@ Toolbar.prototype.mediaContentCreateWindow = function(menu) {
   const html = ToolbarContentMediaTemplate({
     menuIndex: menu,
     filters: this.menuItems[menu].filters,
+    sort: this.menuItems[menu].sort,
+    sortCol: this.menuItems[menu].sortCol,
+    sortDir: this.menuItems[menu].sortDir,
     trans: toolbarTrans,
     formClass: 'media-search-form',
+    showSort: true,
   });
 
   // Append template to the search main div
@@ -1315,12 +1386,13 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
     $mediaForm.find('.no-results-message').remove();
 
     // Get filter data
-    const filter =
+    const $form =
       self.DOMObject.find(
         '#media-container-' +
         menu +
         ' .media-search-form',
-      ).serializeObject();
+      );
+    const filter = $form.serializeObject();
 
     if (
       self.menuItems[menu].name == 'library' &&
@@ -1334,6 +1406,15 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
 
     // Filter start
     const start = self.menuItems[menu].itemCount;
+
+    // Get sort if exists
+    const $sort = $form.find('#input-sort');
+    if (self.menuItems[menu].sortCol != '') {
+      filter.sortCol = self.menuItems[menu].sortCol;
+
+      const sortDir = $sort.siblings('.sort-button-container').data('dir');
+      filter.sortDir = (sortDir) || 'DESC';
+    }
 
     $.ajax({
       url: librarySearchUrl,
@@ -1437,15 +1518,17 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
 
           // Show more button
           if (res.data.length > 0) {
-            const $showMoreBtn =
-              $('<button class="btn btn-block btn-white show-more">' +
-                toolbarTrans.showMore +
-                '</button>');
-            $mediaContent.after($showMoreBtn);
+            if ($mediaContent.find('.show-more').length == 0) {
+              const $showMoreBtn =
+                $('<button class="btn btn-block btn-white show-more">' +
+                  toolbarTrans.showMore +
+                  '</button>');
+              $mediaContent.after($showMoreBtn);
 
-            $showMoreBtn.off('click').on('click', function() {
-              loadData(false);
-            });
+              $showMoreBtn.off('click').on('click', function() {
+                loadData(false);
+              });
+            }
           } else {
             toastr.info(
               toolbarTrans.noShowMore,
@@ -1500,6 +1583,91 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
 
     self.savePrefs();
   };
+
+  // Handle provider select change
+  const $providerSelect =
+    $mediaContainer.find('.media-search-form #input-provider');
+
+  const providerSelectUpdate = function() {
+    const providerVal = $providerSelect.val();
+    const isRemote = (providerVal === 'remote');
+    $mediaContainer.find('.sort-form-group')
+      .toggleClass('hidden', isRemote);
+
+    // If remote, set sort values to empty
+    if (isRemote) {
+      self.menuItems[menu].sortCol = '';
+    }
+  };
+
+  $providerSelect.off('change.provider')
+    .on('change.provider', providerSelectUpdate);
+  providerSelectUpdate();
+
+  // Handle sort controls
+  const sortButtonUpdate = function($buttonContainer, sortType, sortDir) {
+    const hasSort = (sortType != undefined);
+    // Input group toggle class
+    $buttonContainer.parents('.input-group-toggle')
+      .toggleClass('input-group', hasSort);
+
+    // If we have sortType, update button
+    $buttonContainer.toggleClass('hidden', !hasSort);
+
+    // Update button classes
+    if (hasSort) {
+      // Remove all previous classes
+      $buttonContainer.find('i').attr('class', '');
+
+      // Add class based on type
+      const sortDirVal = (sortDir) ?
+        sortDir : 'asc';
+      $buttonContainer.find('i')
+        .addClass('fa fa-sort-' + sortType + '-' + sortDirVal);
+      $buttonContainer.data('dir', sortDirVal);
+    }
+  };
+
+  // Change sort type changes button
+  const $sortSelect =
+    $mediaContainer.find('.media-search-form #input-sort');
+
+  const $sortButtonContainer =
+    $mediaContainer.find('.sort-button-container');
+
+  $sortSelect.off('change.sort').on('change.sort', function(ev) {
+    // Update option on menu
+    self.menuItems[menu].sortCol = $sortSelect.val();
+
+    sortButtonUpdate(
+      $sortButtonContainer,
+      $sortSelect.find(':selected').data('type'),
+      self.menuItems[menu].sortDir,
+    );
+  });
+
+  // Button click changes sort order
+  $sortButtonContainer.find('.sort-button').off('click.sort')
+    .on('click.sort', function() {
+      self.menuItems[menu].sortDir =
+        (self.menuItems[menu].sortDir == 'asc') ? 'desc' : 'asc';
+
+      sortButtonUpdate(
+        $sortButtonContainer,
+        $sortSelect.find(':selected').data('type'),
+        self.menuItems[menu].sortDir,
+      );
+
+      // Reload data
+      loadData();
+    });
+
+  // Update button on load
+  sortButtonUpdate(
+    $sortButtonContainer,
+    $sortSelect.find(':selected').data('type'),
+    self.menuItems[menu].sortDir,
+  );
 
   // Prevent filter form submit and bind the change event to reload the table
   $mediaContainer.find('.media-search-form').on('submit', function(e) {
@@ -1697,15 +1865,17 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
 
             // Show more button
             if (response.data.length > 0) {
-              const $showMoreBtn =
-                $('<button class="btn btn-block btn-white show-more">' +
-                  toolbarTrans.showMore +
-                  '</button>');
-              $content.after($showMoreBtn);
+              if ($content.find('.show-more').length == 0) {
+                const $showMoreBtn =
+                  $('<button class="btn btn-block btn-white show-more">' +
+                    toolbarTrans.showMore +
+                    '</button>');
+                $content.after($showMoreBtn);
 
-              $showMoreBtn.off('click').on('click', function() {
-                loadData(false);
-              });
+                $showMoreBtn.off('click').on('click', function() {
+                  loadData(false);
+                });
+              }
             } else {
               toastr.info(
                 toolbarTrans.noShowMore,

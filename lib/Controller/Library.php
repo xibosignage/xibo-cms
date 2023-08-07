@@ -804,15 +804,32 @@ class Library extends Base
      * @throws GeneralException
      * @throws NotFoundException
      */
-    public function search(Request $request, Response $response)
+    public function search(Request $request, Response $response): Response
     {
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
         $provider = $parsedQueryParams->getString('provider', ['default' => 'both']);
 
         $searchResults = new SearchResults();
         if ($provider === 'both' || $provider === 'local') {
-            // Construct the SQL
-            $mediaList = $this->mediaFactory->query(['media.name'], $this->gridRenderFilter([
+            // Sorting options.
+            // only allow from a preset list
+            $sortCol = match ($parsedQueryParams->getString('sortCol')) {
+                'mediaId' => '`media`.`mediaId`',
+                'orientation' => '`media`.`orientation`',
+                'width' => '`media`.`width`',
+                'height' => '`media`.`height`',
+                'duration' => '`media`.`duration`',
+                'fileSize' => '`media`.`fileSize`',
+                'createdDt' => '`media`.`createdDt`',
+                'modifiedDt' => '`media`.`modifiedDt`',
+                default => '`media`.`name`',
+            };
+            $sortDir = match ($parsedQueryParams->getString('sortDir')) {
+                'DESC' => ' DESC',
+                default => ' ASC'
+            };
+
+            $mediaList = $this->mediaFactory->query([$sortCol . $sortDir], $this->gridRenderFilter([
                 'name' => $parsedQueryParams->getString('media'),
                 'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
                 'nameExact' => $parsedQueryParams->getString('nameExact'),

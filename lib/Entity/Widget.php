@@ -765,38 +765,27 @@ class Widget implements \JsonSerializable
             $event = new SubPlaylistDurationEvent($this);
             $this->getDispatcher()->dispatch($event, SubPlaylistDurationEvent::$NAME);
             $this->calculatedDuration = $event->getDuration();
-        } else if (($module->type === 'video' || $module->type === 'audio') && $this->useDuration === 0) {
-            // Video/Audio needs handling for the default duration being 0.
-            $this->getLog()->debug('calculateDuration: ' . $module->type . ' without specified duration');
-
-            try {
-                $mediaId = $this->getPrimaryMediaId();
-                $this->calculatedDuration = $this->widgetMediaFactory->getDurationForMediaId($mediaId);
-            } catch (NotFoundException $notFoundException) {
-                $this->getLog()->error('calculateDuration: video/audio without primaryMediaId. widgetId: '
-                    . $this->widgetId);
-            }
-        } else if ($module->regionSpecific === 1) {
-            // Non-file based module
-            $this->getLog()->debug('calculateDuration: ' . $module->type . ', non-file based module.');
-
-            // Duration can depend on the number of items per page for some widgets
-            // this is a legacy way of working, and our preference is to use elements
-            $numItems = $this->getOptionValue('numItems', 15);
-
-            if ($this->getOptionValue('durationIsPerItem', 0) == 1 && $numItems > 1) {
-                // If we have paging involved then work out the page count.
-                $itemsPerPage = $this->getOptionValue('itemsPerPage', 0);
-                if ($itemsPerPage > 0) {
-                    $numItems = ceil($numItems / $itemsPerPage);
-                }
-
-                $this->calculatedDuration = $this->calculatedDuration * $numItems;
+        } else {
+            // Our module will calculate the duration for us.
+            $duration = $module->calculateDuration($this);
+            if ($duration !== null) {
+                $this->calculatedDuration = $duration;
+            } else {
+                $this->getLog()->debug('calculateDuration: Duration not set by module');
             }
         }
 
         $this->getLog()->debug('calculateDuration: set to ' . $this->calculatedDuration);
         return $this;
+    }
+
+    /**
+     * @return int
+     * @throws NotFoundException
+     */
+    public function getDurationForMedia(): int
+    {
+        return $this->widgetMediaFactory->getDurationForMediaId($this->getPrimaryMediaId());
     }
 
     /**

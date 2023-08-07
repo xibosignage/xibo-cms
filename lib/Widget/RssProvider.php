@@ -33,16 +33,17 @@ use Xibo\Helper\Environment;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Widget\DataType\Article;
 use Xibo\Widget\Provider\DataProviderInterface;
-use Xibo\Widget\Provider\DurationProviderInterface;
+use Xibo\Widget\Provider\DurationProviderNumItemsTrait;
 use Xibo\Widget\Provider\WidgetProviderInterface;
 use Xibo\Widget\Provider\WidgetProviderTrait;
 
 /**
- * Downloads a RSS feed and returns Article data types
+ * Downloads an RSS feed and returns Article data types
  */
 class RssProvider implements WidgetProviderInterface
 {
     use WidgetProviderTrait;
+    use DurationProviderNumItemsTrait;
 
     public function fetchData(DataProviderInterface $dataProvider): WidgetProviderInterface
     {
@@ -222,11 +223,6 @@ class RssProvider implements WidgetProviderInterface
             }
         }
 
-        return $this;
-    }
-
-    public function fetchDuration(DurationProviderInterface $durationProvider): WidgetProviderInterface
-    {
         return $this;
     }
 

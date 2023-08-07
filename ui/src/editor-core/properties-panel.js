@@ -509,6 +509,13 @@ PropertiesPanel.prototype.render = function(
       dataToRender.bgImageName = dataToRender.backgrounds[0]?.name || '';
     }
 
+    // if region, add subtype name
+    if (target.type === 'region') {
+      const regionType = (target.subType === 'frame') ?
+        'widget' : target.subType;
+      dataToRender.regionType = propertiesPanelTrans[regionType];
+    }
+
     const propertiesPanelOptions = {
       header: res.dialogTitle,
       style: target.type,

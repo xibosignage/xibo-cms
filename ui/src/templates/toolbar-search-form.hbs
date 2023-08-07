@@ -54,4 +54,23 @@
             </div>
         {{/eq}}
     {{/each}}
+
+    {{#if showSort}}
+        <div class="form-group sort-form-group">
+            <label for="input-sort" class="mb-0">{{trans.searchSortBy}}</label>
+            <div class="{{#if sortCol}}input-group{{/if}} input-group-toggle">
+                <select id="input-sort" class="form-control input-sort">
+                    <option value=""></option>
+                    {{#each sort}}
+                        <option value="{{@key}}" data-type="{{this}}" {{#eq @key ../sortCol}}selected{{/eq}}>{{lookup ../trans.searchSort @key}}</option>
+                    {{/each}}
+                </select>
+                <div class="input-group-append sort-button-container {{#unless sortCol}}hidden{{/unless}}">
+                    <button class="btn btn-outline-secondary sort-button" type="button">
+                        <i class="fa fa-sort-numeric-desc"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    {{/if}}
 </form>

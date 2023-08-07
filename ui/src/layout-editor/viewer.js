@@ -1529,11 +1529,13 @@ Viewer.prototype.renderElementContent = function(
 
         if (extendWithDataKey !== null) {
           if (isInData) {
-            convertedProperties[extendOverrideKey] = elData[extendOverrideKey];
+            convertedProperties[extendOverrideKey] =
+              (elData) && elData[extendOverrideKey];
           } else if (isInMeta) {
             convertedProperties[extendOverrideKey] = meta[metaKey];
           } else {
-            convertedProperties[extendOverrideKey] = elData[extendWithDataKey];
+            convertedProperties[extendOverrideKey] =
+              (elData) && elData[extendWithDataKey];
           }
         }
 
@@ -2963,6 +2965,9 @@ Viewer.prototype.editGroup = function(
   if (!editing) {
     $(groupDOMObject).addClass('editing');
 
+    // Unset canvas z-index
+    self.DOMObject.find('.designer-region-canvas').css('zIndex', '');
+
     // Add overlay and click to close
     self.DOMObject.find('.viewer-overlay').show()
       .off().on('click', () => {
@@ -2982,7 +2987,11 @@ Viewer.prototype.editGroup = function(
     // Hide overlay
     self.DOMObject.find('.viewer-overlay').hide();
 
-    // Set z-index to auto
+    // Unset canvas z-index
+    self.DOMObject.find('.designer-region-canvas')
+      .css('zIndex', lD.layout.canvas.zIndex);
+
+    // Unset group z-index
     $(groupDOMObject).css('z-index', '');
 
     // Remove background color
