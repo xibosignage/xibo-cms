@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -68,12 +68,12 @@ class RequiredFile implements \JsonSerializable
      * Save
      * @return $this
      */
-    public function save()
+    public function save($options = [])
     {
         if ($this->rfId == null) {
             $this->add();
         } else if ($this->hasPropertyChanged('bytesRequested') || $this->hasPropertyChanged('complete')) {
-            $this->edit();
+            $this->edit($options);
         }
 
         return $this;
@@ -104,8 +104,13 @@ class RequiredFile implements \JsonSerializable
     /**
      * Edit
      */
-    private function edit()
+    private function edit($options)
     {
+        $options = array_merge([
+            'connection' => 'default',
+            'useTransaction' => true,
+        ], $options);
+
         try {
             $this->store->updateWithDeadlockLoop('
             UPDATE `requiredfile` SET complete = :complete, bytesRequested = :bytesRequested
@@ -114,7 +119,7 @@ class RequiredFile implements \JsonSerializable
                 'rfId' => $this->rfId,
                 'bytesRequested' => $this->bytesRequested,
                 'complete' => $this->complete
-            ]);
+            ], $options['connection'], $options['useTransaction']);
         } catch (DeadlockException $deadlockException) {
             $this->getLog()->error('Failed to update bytes requested on ' . $this->rfId . ' due to deadlock');
         }
