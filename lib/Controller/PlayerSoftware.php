@@ -699,7 +699,7 @@ class PlayerSoftware extends Base
         $downLoadService = new DownloadService($libraryPath, $sendFileMode);
         $downLoadService->useLogger($this->getLog()->getLoggerInterface());
 
-        return $downLoadService->returnFile($response, $attachmentName, '/playersoftware/download/' . $playerVersion->fileName);
+        return $downLoadService->returnFile($response, $attachmentName, '/download/playersoftware/' . $playerVersion->fileName);
     }
 
     /**
