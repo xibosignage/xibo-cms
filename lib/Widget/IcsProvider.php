@@ -30,7 +30,7 @@ use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Widget\DataType\Event;
 use Xibo\Widget\Provider\DataProviderInterface;
-use Xibo\Widget\Provider\DurationProviderInterface;
+use Xibo\Widget\Provider\DurationProviderNumItemsTrait;
 use Xibo\Widget\Provider\WidgetProviderInterface;
 use Xibo\Widget\Provider\WidgetProviderTrait;
 
@@ -40,6 +40,7 @@ use Xibo\Widget\Provider\WidgetProviderTrait;
 class IcsProvider implements WidgetProviderInterface
 {
     use WidgetProviderTrait;
+    use DurationProviderNumItemsTrait;
 
     /**
      * Fetch the ISC feed and load its data.
@@ -150,12 +151,6 @@ class IcsProvider implements WidgetProviderInterface
             $dataProvider->addError(__('The iCal provided is not valid, please choose a valid feed'));
         }
 
-        return $this;
-    }
-
-    public function fetchDuration(DurationProviderInterface $durationProvider): WidgetProviderInterface
-    {
-        // No special duration requirements
         return $this;
     }
 

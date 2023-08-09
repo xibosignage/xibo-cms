@@ -76,6 +76,16 @@
             <title>Duration is per item</title>
             <helpText>The duration specified is per item otherwise it is per feed.</helpText>
         </property>
+        <property id="numItems" type="number">
+            <title>Number of items</title>
+            <helpText>The number of items you want to display.</helpText>
+            <rule>
+                <test type="or" message="When duration is per item then number of items must be greater than 1">
+                    <condition type="gte">1</condition>
+                    <condition field="durationIsPerItem" type="eq">0</condition>
+                </test>
+            </rule>
+        </property>
         <property type="header" variant="main">
             <title>Web Hook triggers</title>
         </property>
