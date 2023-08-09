@@ -1519,7 +1519,7 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
 
           // Show more button
           if (res.data.length > 0) {
-            if ($mediaContent.find('.show-more').length == 0) {
+            if ($mediaContent.parent().find('.show-more').length == 0) {
               const $showMoreBtn =
                 $('<button class="btn btn-block btn-white show-more">' +
                   toolbarTrans.showMore +
@@ -1866,7 +1866,7 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
 
             // Show more button
             if (response.data.length > 0) {
-              if ($content.find('.show-more').length == 0) {
+              if ($content.parent().find('.show-more').length == 0) {
                 const $showMoreBtn =
                   $('<button class="btn btn-block btn-white show-more">' +
                     toolbarTrans.showMore +

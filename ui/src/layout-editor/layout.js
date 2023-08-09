@@ -605,6 +605,7 @@ Layout.prototype.addObject = function(
  * @param {string} objectType - object type (widget, region, ...)
  * @param {number} objectId - object id
  * @param {object =} [options] - Delete submit params/options
+ * @param {boolean =} [showLoadingScreen] - Show loading screen for the request
  * @return {object} - Manager change
  * @return {Promise} - Promise object
  */
@@ -612,8 +613,10 @@ Layout.prototype.deleteObject = function(
   objectType,
   objectId,
   options = null,
+  showLoadingScreen = true,
 ) {
-  lD.common.showLoadingScreen('deleteObject');
+  (showLoadingScreen) &&
+    lD.common.showLoadingScreen('deleteObject');
 
   // Save all changes first
   return lD.historyManager.saveAllChanges().then((res) => {
@@ -625,7 +628,8 @@ Layout.prototype.deleteObject = function(
     // Unselect selected object before deleting
       lD.selectObject();
 
-      lD.common.hideLoadingScreen('deleteObject');
+      (showLoadingScreen) &&
+        lD.common.hideLoadingScreen('deleteObject');
 
       // Create a delete type change, upload it
       // but don't add it to the history array
@@ -640,12 +644,14 @@ Layout.prototype.deleteObject = function(
         },
       );
     }).catch(function() {
-      lD.common.hideLoadingScreen('deleteObject');
+      (showLoadingScreen) &&
+        lD.common.hideLoadingScreen('deleteObject');
 
       toastr.error(errorMessagesTrans.removeAllChangesFailed);
     });
   }).catch(function() {
-    lD.common.hideLoadingScreen('deleteObject');
+    (showLoadingScreen) &&
+      lD.common.hideLoadingScreen('deleteObject');
 
     toastr.error(errorMessagesTrans.saveAllChangesFailed);
   });
