@@ -129,49 +129,33 @@ return value;
         <startHeight>100</startHeight>
     </template>
     <template>
-        <id>product_options</id>
-        <title>Options</title>
+        <id>product_options_name</id>
+        <title>Options: Name</title>
         <type>element</type>
         <dataType>product</dataType>
         <canRotate>true</canRotate>
         <startWidth>500</startWidth>
         <startHeight>100</startHeight>
         <properties>
-            <property id="optionDirection" type="dropdown" mode="single">
-                <title>Option display direction</title>
-                <default>column</default>
-                <options>
-                    <option name="row">Horizontal</option>
-                    <option name="column">Vertical</option>
-                </options>
-            </property>
-            <property id="optionsGap" type="number">
-                <title>Gap between options</title>
-                <default>4</default>
-            </property>
-            <property id="separatorGap" type="number">
-                <title>Gap between name and value</title>
-                <default>4</default>
+            <property id="optionSlot" type="number">
+                <title>Option slot</title>
+                <default>1</default>
             </property>
             <property id="fontSize" type="number">
                 <title>Font Size</title>
                 <default>24</default>
             </property>
-            <property id="nameColor" type="color">
-                <title>Name Color</title>
+            <property id="fontColor" type="color">
+                <title>Font Color</title>
                 <default>%THEME_COLOR%</default>
             </property>
-            <property id="separatorColor" type="color">
-                <title>Separator Color</title>
-                <default>%THEME_COLOR%</default>
+            <property id="prefix" type="text">
+                <title>Prefix</title>
+                <default></default>
             </property>
-            <property id="valueColor" type="color">
-                <title>Value Color</title>
-                <default>%THEME_COLOR%</default>
-            </property>
-            <property id="optionSeparator" type="text">
-                <title>Option/Value separator</title>
-                <default>:</default>
+            <property id="suffix" type="text">
+                <title>Suffix</title>
+                <default></default>
             </property>
             <property id="horizontalAlign" type="dropdown">
                 <title>Horizontal Align</title>
@@ -194,14 +178,14 @@ return value;
         </properties>
         <stencil>
             <hbs><![CDATA[
-<div class="product-elements-options"
+<div class="product-elements-options-name"
     style="
     display: flex;
-    flex-direction: {{optionDirection}};
-    {{#if optionsGap}}gap: {{optionsGap}}px;{{/if}}
     {{#if horizontalAlign}}
         justify-content: {{horizontalAlign}};
     {{/if}}
+    {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
+    {{#if fontColor}}color: {{fontColor}};{{/if}}
     {{#eq horizontalAlign "flex-start"}}text-align: left;{{/eq}}
     {{#eq horizontalAlign "center"}}text-align: center;{{/eq}}
     {{#eq horizontalAlign "flex-end"}}text-align: right;{{/eq}}
@@ -210,45 +194,121 @@ return value;
     width: 100%; height: 100%;"
 >
 </div>
+            ]]></hbs>
+        </stencil>
+        <onTemplateRender><![CDATA[
+const $productContainer = $(target).find('.product-elements-options-name');
+const optionSlot = Number(properties.optionSlot) - 1;
 
-<div class="product-elements-options-option-template" style="font-size: 0;">
-    <span class="product-elements-options-option-name"
-        style="
-            {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
-            {{#if nameColor}}color: {{nameColor}};{{/if}}
-        ">
-    </span>
-    <span class="product-elements-options-option-separator"
-        style="
-            {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
-            {{#if separatorGap}}margin-right: {{separatorGap}}px;{{/if}}
-            {{#if separatorColor}}color: {{separatorColor}};{{/if}}
-        ">
-    </span>
-    <span class="product-elements-options-option-value"
-        style="
-            {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
-            {{#if valueColor}}color: {{valueColor}};{{/if}}
-        ">
-    </span>
+if (
+    items.productOptions &&
+    items.productOptions.length > 0 &&
+    items.productOptions[optionSlot]
+) {
+    const option = items.productOptions[optionSlot];
+    let name = option.name;
+
+    if (properties.prefix && properties.prefix !== '') {
+        name = properties.prefix + '' + name;
+    }
+
+    if (properties.suffix && properties.suffix !== '') {
+        name = name + '' + properties.suffix;
+    }
+
+    $productContainer.append(name);
+}
+        ]]></onTemplateRender>
+    </template>
+    <template>
+        <id>product_options_value</id>
+        <title>Options: Value</title>
+        <type>element</type>
+        <dataType>product</dataType>
+        <canRotate>true</canRotate>
+        <startWidth>500</startWidth>
+        <startHeight>100</startHeight>
+        <properties>
+            <property id="optionSlot" type="number">
+                <title>Option slot</title>
+                <default>1</default>
+            </property>
+            <property id="fontSize" type="number">
+                <title>Font Size</title>
+                <default>24</default>
+            </property>
+            <property id="fontColor" type="color">
+                <title>Font Color</title>
+                <default>%THEME_COLOR%</default>
+            </property>
+            <property id="prefix" type="text">
+                <title>Prefix</title>
+                <default></default>
+            </property>
+            <property id="suffix" type="text">
+                <title>Suffix</title>
+                <default></default>
+            </property>
+            <property id="horizontalAlign" type="dropdown">
+                <title>Horizontal Align</title>
+                <default>center</default>
+                <options>
+                    <option name="flex-start">Left</option>
+                    <option name="center">Center</option>
+                    <option name="flex-end">Right</option>
+                </options>
+            </property>
+            <property id="verticalAlign" type="dropdown">
+                <title>Vertical Align</title>
+                <default>center</default>
+                <options>
+                    <option name="flex-start">Top</option>
+                    <option name="center">Middle</option>
+                    <option name="flex-end">Bottom</option>
+                </options>
+            </property>
+        </properties>
+        <stencil>
+            <hbs><![CDATA[
+<div class="product-elements-options-value"
+    style="
+    display: flex;
+    {{#if horizontalAlign}}
+        justify-content: {{horizontalAlign}};
+    {{/if}}
+    {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
+    {{#if fontColor}}color: {{fontColor}};{{/if}}
+    {{#eq horizontalAlign "flex-start"}}text-align: left;{{/eq}}
+    {{#eq horizontalAlign "center"}}text-align: center;{{/eq}}
+    {{#eq horizontalAlign "flex-end"}}text-align: right;{{/eq}}
+    {{#if verticalAlign}}align-items: {{verticalAlign}};{{/if}}
+    overflow: hidden;
+    width: 100%; height: 100%;"
+>
 </div>
             ]]></hbs>
         </stencil>
         <onTemplateRender><![CDATA[
-const $productContainer = $(target).find('.product-elements-options');
-const $optionTemplate = $(target).find('.product-elements-options-option-template');
+const $productContainer = $(target).find('.product-elements-options-value');
+const optionSlot = Number(properties.optionSlot) - 1;
 
-if (items.productOptions) {
-    for (let index = 0; index < items.productOptions.length; index++) {
-        const option = items.productOptions[index];
-        const $optionContainer = $optionTemplate.clone();
+if (
+    items.productOptions &&
+    items.productOptions.length > 0 &&
+    items.productOptions[optionSlot]
+) {
+    const option = items.productOptions[optionSlot];
+    let value = option.value;
 
-        $optionContainer.find('.product-elements-options-option-name').html(option.name);
-        $optionContainer.find('.product-elements-options-option-separator').html(properties.optionSeparator);
-        $optionContainer.find('.product-elements-options-option-value').html(option.value);
-
-        $optionContainer.show().appendTo($productContainer);
+    if (properties.prefix && properties.prefix !== '') {
+        value = properties.prefix + '' + value;
     }
+
+    if (properties.suffix && properties.suffix !== '') {
+        value = value + '' + properties.suffix;
+    }
+
+    $productContainer.append(value);
 }
         ]]></onTemplateRender>
     </template>
@@ -286,6 +346,8 @@ if (items.productOptions) {
             </property>
         </properties>
         <onTemplateRender><![CDATA[
+console.log('calories: onTemplateRender');
+
 if (properties.units != '') {
     $(target).find('div:first').append('<span class="calories-label">' + properties.units + '</span>');
 
@@ -297,6 +359,8 @@ if (properties.units != '') {
         $(target).find('.calories-label').css('color', properties.unitColor);
     }
 }
+
+console.log($(target).html());
         ]]></onTemplateRender>
     </template>
 </templates>
