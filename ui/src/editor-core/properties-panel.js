@@ -377,6 +377,7 @@ PropertiesPanel.prototype.render = function(
   const minSlotValue = 1;
   let targetAux;
   let renderElements = false;
+  let hasData = false;
   let isElementGroup = false;
 
   // Hide panel if no target element is passed
@@ -408,6 +409,9 @@ PropertiesPanel.prototype.render = function(
 
     // Set renderElements to true
     renderElements = true;
+
+    // Check if it's element with data
+    hasData = targetAux.hasDataType;
   } else if (target.type === 'element-group') {
     // Save element group in targetAux
     targetAux = target;
@@ -420,6 +424,9 @@ PropertiesPanel.prototype.render = function(
     );
 
     isElementGroup = true;
+
+    // Check if it's element with data
+    hasData = targetAux.hasDataType();
   }
 
   // Show a message if the module is disabled for a widget rendering
@@ -490,12 +497,16 @@ PropertiesPanel.prototype.render = function(
       buttons = formHelpers.widgetFormRenderButtons(formTemplates.buttons);
     }
 
+    // Data to be rendered
+    const dataToRender = res.data;
+
     // If we have a widget, add the widgetId to the data
-    const dataToRender = (target.type != 'widget') ?
-      res.data :
-      Object.assign(res.data, {
-        target: target.widgetId,
-      });
+    if (target.type === 'widget') {
+      dataToRender.target = target.widgetId;
+
+      // Check if we can use is repeat data
+      dataToRender.repeatDataActive = hasData;
+    }
 
     // If the form is a layout
     // Add imageDownloadUrl and libraryAddUrl to the data
@@ -590,6 +601,17 @@ PropertiesPanel.prototype.render = function(
         // if it's an element group and we have a slot
         // add property to the top of appearance tab
         if (targetAux.slot !== undefined) {
+          groupProperties.unshift(
+            {
+              id: 'pinSlot',
+              title: propertiesPanelTrans.pinSlot,
+              helpText: propertiesPanelTrans.pinSlotHelpText,
+              value: targetAux.pinSlot,
+              type: 'checkbox',
+              visibility: [],
+            },
+          );
+
           groupProperties.unshift({
             id: 'slot',
             title: propertiesPanelTrans.dataSlot,
@@ -645,6 +667,15 @@ PropertiesPanel.prototype.render = function(
 
             // Render canvas again
             app.viewer.renderCanvas(app.layout.canvas);
+          });
+
+          // Handle pin slot property
+          self.DOMObject.find('[name="pinSlot"]').on('change', function(ev) {
+            // update pin slot for the group
+            targetAux.updatePinSlot($(ev.currentTarget).is(':checked'));
+
+            // save elements
+            target.saveElements();
           });
         }
 
@@ -774,6 +805,17 @@ PropertiesPanel.prototype.render = function(
           ) {
             commonFields.unshift(
               {
+                id: 'pinSlot',
+                title: propertiesPanelTrans.pinSlot,
+                helpText: propertiesPanelTrans.pinSlotHelpText,
+                value: targetAux.pinSlot,
+                type: 'checkbox',
+                visibility: [],
+              },
+            );
+
+            commonFields.unshift(
+              {
                 id: 'slot',
                 title: propertiesPanelTrans.dataSlot,
                 helpText: propertiesPanelTrans.dataSlotHelpText,
@@ -783,6 +825,7 @@ PropertiesPanel.prototype.render = function(
                 visibility: [],
               },
             );
+
             commonFields.unshift({
               id: 'effect',
               title: propertiesPanelTrans.effect,
@@ -842,6 +885,11 @@ PropertiesPanel.prototype.render = function(
                 }
 
                 value = Number(value) - 1;
+              }
+
+              // If property is pinSlot save it as boolean
+              if (propertyName === 'pinSlot') {
+                value = $target.is(':checked');
               }
 
               // Save group scale to element

@@ -24,6 +24,9 @@ const Element = function(data, widgetId, regionId, parentWidget) {
   this.elementId = data.elementId;
   this.elementType = data.type;
 
+  // has data type ( if it's not global )
+  this.hasDataType = (data.type != 'global');
+
   this.left = data.left;
   this.top = data.top;
   this.width = data.width;
@@ -47,6 +50,7 @@ const Element = function(data, widgetId, regionId, parentWidget) {
 
   // Data slot index
   this.slot = data.slot;
+  this.pinSlot = (data.pinSlot) ? data.pinSlot : false;
 
   // Group scale
   this.groupScale = (data.groupScale != undefined) ?

@@ -652,6 +652,10 @@ Widget.prototype.saveElements = function(
     // Save slot if exists
     if (element.slot != undefined) {
       elementObject.slot = Number(element.slot);
+
+      // Save pin slot option
+      (element.pinSlot != undefined) &&
+        (elementObject.pinSlot = element.pinSlot);
     }
 
     return elementObject;
