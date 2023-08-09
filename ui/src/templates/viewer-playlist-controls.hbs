@@ -1,0 +1,27 @@
+<div class="playlist-edit-btn viewer-object-select"
+     title="{{trans.editTitle}}">
+    <i class="fa fa-list-ol" aria-hidden="true"></i>
+</div>
+{{#if isEmpty}}
+    <div class="playlist-preview-empty">
+        <i alt="{{ "A playlist region" }}"
+           class="module-preview-icon module-icon-subplaylist"></i>
+        <p>{{ trans.empty }}</p>
+    </div>
+{{else}}
+<div class="playlist-preview-paging text-right">
+    <i class="fa fa-arrow-circle-o-left widget-arrow widget-left playlist-preview-paging-prev"
+       data-toggle="tooltip"
+       data-container="#layout-viewer-container"
+       data-placement="bottom"
+       data-title="{{trans.prev}}"></i>
+
+    <span class="preview-paging-message">{{seq}}/{{countOfWidgets}}</span>
+
+    <i class="fa fa-arrow-circle-o-right widget-arrow widget-right playlist-preview-paging-next"
+       data-toggle="tooltip"
+       data-container="#layout-viewer-container"
+       data-placement="bottom"
+       data-title="{{trans.next}}"></i>
+</div>
+{{/if}}

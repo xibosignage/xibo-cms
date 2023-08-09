@@ -604,7 +604,6 @@ class Region extends Base
         $sanitizedQuery = $this->getSanitizer($request->getParams());
 
         $widgetId = $sanitizedQuery->getInt('widgetId', ['default' => null]);
-        $seqGiven = $sanitizedQuery->getInt('seq', ['default' => 1]);
         $seq = $sanitizedQuery->getInt('seq', ['default' => 1]);
 
         // Load our region
@@ -613,7 +612,6 @@ class Region extends Base
             $region->load();
 
             // What type of region are we?
-            $widget = null;
             $additionalContexts = [];
             if ($region->type === 'canvas' || $region->type === 'playlist') {
                 $this->getLog()->debug('preview: canvas or playlist region');
@@ -626,17 +624,9 @@ class Region extends Base
 
                 $countWidgets = count($widgets);
 
-                if ($region->type === 'canvas') {
-                    // Select the widget at the required sequence
-                    $widget = $playlist->getWidgetAt($seq, $widgets);
-                    $widget->load();
-                } else {
-                    // Show a playlist
-                    $this->getState()->html = $this->getView()->fetch('region-playlist-preview.twig', [
-                        'countWidgets' => $countWidgets,
-                        'regionDuration' => $region->duration
-                    ]);
-                }
+                // Select the widget at the required sequence
+                $widget = $playlist->getWidgetAt($seq, $widgets);
+                $widget->load();
             } else {
                 $this->getLog()->debug('preview: single widget');
 
@@ -657,42 +647,29 @@ class Region extends Base
             $this->getLog()->debug('There are ' . $countWidgets . ' widgets.');
 
             // Output a preview
-            if ($widget !== null) {
-                $module = $this->moduleFactory->getByType($widget->type);
-                $this->getState()->html = $this->moduleFactory
-                    ->createWidgetHtmlRenderer()
-                    ->preview(
-                        $module,
-                        $region,
-                        $widget,
-                        $sanitizedQuery,
-                        $this->urlFor(
-                            $request,
-                            'library.download',
-                            [
-                                'regionId' => $region->regionId,
-                                'id' => $widget->getPrimaryMedia()[0] ?? null
-                            ]
-                        ) . '?preview=1',
-                        $additionalContexts
-                    );
-
-                $this->getState()->extra['type'] = $widget->type;
-                $this->getState()->extra['duration'] = $widget->calculatedDuration;
-                $this->getState()->extra['moduleName'] = $module->name;
-                $this->getState()->extra['useDuration'] = $widget->useDuration;
-                $this->getState()->extra['tempId'] = $widget->tempId;
-            }
-
-            $this->getState()->extra['empty'] = $countWidgets <= 0;
-            $this->getState()->extra['number_items'] = $countWidgets;
-            $this->getState()->extra['current_item'] = $seqGiven;
-            $this->getState()->extra['regionDuration'] = $region->duration;
-            $this->getState()->extra['zIndex'] = $region->zIndex;
-        } catch (NotFoundException $e) {
-            // No media to preview
+            $module = $this->moduleFactory->getByType($widget->type);
+            $this->getState()->html = $this->moduleFactory
+                ->createWidgetHtmlRenderer()
+                ->preview(
+                    $module,
+                    $region,
+                    $widget,
+                    $sanitizedQuery,
+                    $this->urlFor(
+                        $request,
+                        'library.download',
+                        [
+                            'regionId' => $region->regionId,
+                            'id' => $widget->getPrimaryMedia()[0] ?? null
+                        ]
+                    ) . '?preview=1',
+                    $additionalContexts
+                );
+            $this->getState()->extra['countOfWidgets'] = $countWidgets;
+            $this->getState()->extra['empty'] = false;
+        } catch (NotFoundException) {
             $this->getState()->extra['empty'] = true;
-            $this->getState()->extra['text'] = __('Empty Region');
+            $this->getState()->extra['text'] = __('Empty Playlist');
         } catch (InvalidArgumentException $e) {
             $this->getState()->extra['empty'] = true;
             $this->getState()->extra['text'] = __('Please correct the error with this Widget');

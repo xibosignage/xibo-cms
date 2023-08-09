@@ -1,3 +1,24 @@
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 /* eslint-disable new-cap */
 // VIEWER Module
 
@@ -13,6 +34,8 @@ const viewerElementGroupTemplate =
   require('../templates/viewer-element-group.hbs');
 const viewerElementContentTemplate =
   require('../templates/viewer-element-content.hbs');
+const viewerPlaylistControlsTemplate =
+  require('../templates/viewer-playlist-controls.hbs');
 const drawThrottle = 60;
 
 /**
@@ -489,6 +512,29 @@ Viewer.prototype.handleInteractions = function() {
           regionObject);
       };
 
+      const playlistPreviewBtnClick = function(playlistId, direction) {
+        // Edit region if it's a playlist
+        // Get region object
+        const regionObject =
+          lD.getObjectByTypeAndId('region', playlistId);
+
+        if (direction === 'prev') {
+          regionObject.playlistSeq--;
+        } else {
+          regionObject.playlistSeq++;
+        }
+
+        // Change the sequence
+        if (regionObject.playlistSeq >
+          regionObject.playlistCountOfWidgets
+        ) {
+          regionObject.playlistSeq = 1;
+        } else if (regionObject.playlistSeq <= 0) {
+          regionObject.playlistSeq = regionObject.playlistCountOfWidgets;
+        }
+        lD.viewer.renderRegion(regionObject);
+      };
+
       // Get click position
       const clickPosition = {
         left: e.pageX -
@@ -562,6 +608,18 @@ Viewer.prototype.handleInteractions = function() {
         // Edit region if it's a playlist
         playlistEditorBtnClick($(e.target)
           .parents('.designer-region-playlist').attr('id'));
+      } else if (
+        $(e.target).hasClass('playlist-preview-paging-prev')
+      ) {
+        // Somewhere in paging clicked.
+        playlistPreviewBtnClick($(e.target)
+          .parents('.designer-region-playlist').attr('id'), 'prev');
+      } else if (
+        $(e.target).hasClass('playlist-preview-paging-next')
+      ) {
+        // Somewhere in paging clicked.
+        playlistPreviewBtnClick($(e.target)
+          .parents('.designer-region-playlist').attr('id'), 'next');
       } else {
         // Select elements inside the layout
         clicks++;
@@ -898,6 +956,9 @@ Viewer.prototype.renderRegion = function(
     height: $container.height(),
   };
 
+  // Get current sequence
+  region.playlistSeq = region.playlistSeq || 1;
+
   // Get request path
   let requestPath = urlsForApi.region.preview.url;
   requestPath = requestPath.replace(
@@ -912,6 +973,8 @@ Viewer.prototype.renderRegion = function(
   // If it's not a playlist, add widget to request
   if (!isPlaylist) {
     requestPath += '&widgetId=' + widget['widgetId'];
+  } else {
+    requestPath += '&seq=' + region.playlistSeq;
   }
 
   // Get HTML for the given element from the API
@@ -960,12 +1023,18 @@ Viewer.prototype.renderRegion = function(
     // Append layout html to the container div
     $container.html(html);
 
-    // If it's playlist, add playlist edit button
+    // If it's playlist add some playlist controls
     if (isPlaylist) {
-      $container.append(`<div class="playlist-edit-btn viewer-object-select"
-        title="${viewerTrans.editPlaylist}">
-          <i class="fa fa-list-ol" aria-hidden="true"></i>
-      </div>`);
+      region.playlistCountOfWidgets = res.extra && res.extra.countOfWidgets ?
+        res.extra.countOfWidgets : 1;
+
+      $container.append(viewerPlaylistControlsTemplate({
+        titleEdit: viewerTrans.editPlaylist,
+        seq: region.playlistSeq,
+        countOfWidgets: region.playlistCountOfWidgets,
+        isEmpty: res.extra && res.extra.empty,
+        trans: viewerTrans,
+      }));
     }
 
     // If widget is selected, update moveable for the region
@@ -1022,7 +1091,9 @@ Viewer.prototype.renderRegion = function(
 
     // Force scale region container
     // by updating region
-    self.updateRegion(region);
+    if (!isPlaylist) {
+      self.updateRegion(region);
+    }
   }.bind(this)).fail(function(res) {
     // Clear request var after response
     self.renderRequest = undefined;
@@ -1152,7 +1223,11 @@ Viewer.prototype.updateRegion = _.throttle(function(
   }
 
   // Update region content
-  lD.viewer.updateRegionContent(region, changed);
+  if (region.subType === 'playlist') {
+    lD.viewer.renderRegionDebounced(region);
+  } else {
+    lD.viewer.updateRegionContent(region, changed);
+  }
 }, drawThrottle);
 
 
