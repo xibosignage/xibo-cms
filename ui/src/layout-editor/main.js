@@ -3006,6 +3006,8 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
       if ($regionsToBeDeleted.length > 0) {
         let deletedIndex = 0;
 
+        lD.common.showLoadingScreen('deleteMultiObject');
+
         // Delete all selected objects
         const deleteNext = function() {
           const $item = $($regionsToBeDeleted[deletedIndex]);
@@ -3013,11 +3015,11 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
           const objId = $item.data('regionId');
           const objType = $item.data('type');
 
-          lD.common.showLoadingScreen('deleteObject');
-
           lD.layout.deleteObject(
             objType,
             objId,
+            null,
+            false,
           ).then((_res) => {
             deletedIndex++;
 
@@ -3026,7 +3028,13 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
               lD.viewer.selectElement();
 
               // Hide loader
-              lD.common.hideLoadingScreen('deleteObject');
+              lD.common.hideLoadingScreen('deleteMultiObject');
+
+              // Reload data and select element when data reloads
+              lD.reloadData(lD.layout,
+                {
+                  refreshEditor: true,
+                });
             } else {
               deleteNext();
             }
