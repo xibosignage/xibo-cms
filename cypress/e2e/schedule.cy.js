@@ -148,6 +148,16 @@ describe('Campaigns', function() {
 
     cy.get('#schedule-grid').contains('Campaign for Schedule 1');
     cy.get('#schedule-grid').contains('Layout for Schedule 1');
+  });
+
+  it.only('edit a scheduled event', function() {
+    cy.intercept('/user/pref').as('userPref');
+    cy.intercept('/schedule?draw=*').as('scheduleGridLoad');
+
+    cy.intercept('/displaygroup?*').as('loadDisplaygroups');
+    cy.intercept('/campaign?isLayoutSpecific=-1*').as('loadLayoutSpecificCampaign');
+
+    cy.visit('/schedule/view');
 
     // ---------
     // Edit a schedule - add another display
@@ -172,11 +182,14 @@ describe('Campaigns', function() {
     cy.get('.select2-container--open .select2-dropdown .select2-results > ul > li').should('have.length', 2);
     cy.get('#select2-displayGroupIds-results > li > ul > li:first').contains('List Campaign Display 2').click();
     cy.get('.modal .modal-footer').contains('Save').click();
-    cy.get('#schedule-grid tbody tr:nth-child(1) td:nth-child(8)').contains('2');
+    cy.get('#schedule-grid tbody tr:nth-child(1) td:nth-child(9)').contains('2');
 
     // ---------
     // Delete the schedule
     cy.get('#schedule-grid tbody tr').should('have.length', 2);
+    cy.wait('@scheduleGridLoad');
+    cy.wait('@userPref');
+    cy.wait('@scheduleGridLoad');
     cy.get('#schedule-grid tr:first-child .dropdown-toggle').click();
     cy.get('#schedule-grid tr:first-child .schedule_button_delete').click();
     cy.get('.bootbox .save-button').click();

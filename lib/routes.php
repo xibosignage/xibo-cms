@@ -27,6 +27,10 @@ use Xibo\Middleware\SuperAdminAuth;
 
 defined('XIBO') or die('Sorry, you are not allowed to directly access this page.');
 
+if (file_exists(PROJECT_ROOT . '/lib/routes-cypress.php')) {
+    include(PROJECT_ROOT . '/lib/routes-cypress.php');
+}
+
 /**
  * @SWG\Swagger(
  *  basePath="/api",
@@ -95,12 +99,6 @@ $app->get('/schedule/{id}/events', ['\Xibo\Controller\Schedule','eventList'])->s
 $app->post('/schedule', ['\Xibo\Controller\Schedule','add'])
     ->add(new FeatureAuth($app->getContainer(), ['schedule.add']))
     ->setName('schedule.add');
-
-$app->post('/createCommand', ['\Xibo\Controller\CypressTest','createCommand']);
-$app->post('/createCampaign', ['\Xibo\Controller\CypressTest','createCampaign']);
-$app->post('/scheduleCampaign', ['\Xibo\Controller\CypressTest','scheduleCampaign']);
-$app->post('/displaySetStatus', ['\Xibo\Controller\CypressTest','displaySetStatus']);
-$app->get('/displayStatusEquals', ['\Xibo\Controller\CypressTest','displayStatusEquals']);
 
 $app->group('', function(RouteCollectorProxy $group) {
     $group->put('/schedule/{id}', ['\Xibo\Controller\Schedule','edit'])
