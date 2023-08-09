@@ -1648,10 +1648,12 @@ class Layout implements \JsonSerializable
                 // Output all properties belonging to the module
                 foreach ($module->properties as $property) {
                     if ($property->isCData()) {
-                        $optionNode = $document->createElement($property->id);
-                        $cdata = $document->createCDATASection($property->value);
-                        $optionNode->appendChild($cdata);
-                        $rawNode->appendChild($optionNode);
+                        if ($property->value !== null) {
+                            $optionNode = $document->createElement($property->id);
+                            $cdata = $document->createCDATASection($property->value);
+                            $optionNode->appendChild($cdata);
+                            $rawNode->appendChild($optionNode);
+                        }
                     } else {
                         // Skip any property named "uri" if we've already injected a special node for that.
                         if ($uriInjected && $property->id == 'uri') {
