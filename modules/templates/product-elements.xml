@@ -345,7 +345,8 @@ if (
                 </visibility>
             </property>
         </properties>
-        <onTemplateRender><![CDATA[if (properties.units != '') {
+        <onTemplateRender><![CDATA[
+if (properties.units != '') {
     $(target).find('div:first').append('<span class="calories-label">' + properties.units + '</span>');
 
     if (properties.unitMargin > 0) {
