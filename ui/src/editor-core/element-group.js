@@ -24,6 +24,7 @@ const ElementGroup = function(data, widgetId, regionId, parentWidget) {
 
   // Data slot index
   this.slot = data.slot;
+  this.pinSlot = (data.pinSlot) ? data.pinSlot : false;
 
   // Set element to have same properties for edit and delete as parent widget
   this.isEditable = (parentWidget) ? parentWidget.isEditable : true;
@@ -51,18 +52,44 @@ ElementGroup.prototype.updateSlot = function(
   });
 };
 
-ElementGroup.prototype.updateEffect = function(
-    effect,
-    forceUpdate = false,
+ElementGroup.prototype.updatePinSlot = function(
+  pinSlot,
 ) {
   const self = this;
 
+  this.pinSlot = pinSlot;
+
+  // All element in group use same slot
+  Object.values(this.elements).forEach((element) => {
+    element.pinSlot = self.pinSlot;
+  });
+};
+
+ElementGroup.prototype.updateEffect = function(
+  effect,
+  forceUpdate = false,
+) {
   if (
-      !this.effect ||
-      forceUpdate
+    !this.effect ||
+    forceUpdate
   ) {
     this.effect = effect;
   }
+};
+
+ElementGroup.prototype.hasDataType = function() {
+  const groupElements = Object.values(this.elements);
+  let hasDataType = false;
+
+  for (let index = 0; index < groupElements.length; index++) {
+    const element = groupElements[index];
+    if (element.hasDataType) {
+      hasDataType = true;
+      break;
+    }
+  }
+
+  return hasDataType;
 };
 
 ElementGroup.prototype.updateGroupDimensions = function(
