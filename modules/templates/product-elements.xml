@@ -345,10 +345,7 @@ if (
                 </visibility>
             </property>
         </properties>
-        <onTemplateRender><![CDATA[
-console.log('calories: onTemplateRender');
-
-if (properties.units != '') {
+        <onTemplateRender><![CDATA[if (properties.units != '') {
     $(target).find('div:first').append('<span class="calories-label">' + properties.units + '</span>');
 
     if (properties.unitMargin > 0) {
@@ -359,8 +356,6 @@ if (properties.units != '') {
         $(target).find('.calories-label').css('color', properties.unitColor);
     }
 }
-
-console.log($(target).html());
         ]]></onTemplateRender>
     </template>
 </templates>
