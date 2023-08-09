@@ -80,7 +80,7 @@
             <title>Number of items</title>
             <helpText>The number of items you want to display.</helpText>
             <rule>
-                <test type="or" message="When duration is per item then number of items must be greater than 1">
+                <test type="or" message="When duration is per item then number of items must be 1 or higher">
                     <condition type="gte">1</condition>
                     <condition field="durationIsPerItem" type="eq">0</condition>
                 </test>

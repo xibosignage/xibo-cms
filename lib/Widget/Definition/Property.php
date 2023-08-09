@@ -189,11 +189,6 @@ class Property implements \JsonSerializable
             throw new ValueTooLargeException(sprintf(__('Value too large for %s'), $this->title), $this->id);
         }
 
-        // If we have a default and the value is equal to the default then ignore
-        if ($this->default !== null && $this->value === $this->default) {
-            return $this;
-        }
-
         // Skip if no validation.
         if ($this->validation === null
             || ($stage === 'save' && !$this->validation->onSave)
@@ -208,14 +203,14 @@ class Property implements \JsonSerializable
 
             foreach ($test->conditions as $condition) {
                 try {
-                    // Assume we're testing the field we belong to.
-                    $testValue = $this->value;
+                    // Assume we're testing the field we belong to, and if that's empty use the default value
+                    $testValue = $this->value ?? $this->default;
 
                     // What value are we testing against (only used by certain types)
                     if (empty($condition->field)) {
                         $valueToTestAgainst = $condition->value;
                     } else {
-                        $valueToTestAgainst = $properties[$condition->field] ?? $condition->value;
+                        $valueToTestAgainst = $properties[$condition->field] ?? $testValue;
 
                         // If a field and a condition value is provided, test against those, ignoring my own field value
                         if ($condition->value !== null) {
