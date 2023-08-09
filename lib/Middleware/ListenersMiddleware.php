@@ -380,7 +380,9 @@ class ListenersMiddleware implements MiddlewareInterface
             ->useConfig($c->get('configService'));
 
         $fontsListener = new XmdsFontsListener($c->get('fontFactory'));
-        $fontsListener->useLogger($c->get('logger'));
+        $fontsListener
+            ->useLogger($c->get('logger'))
+            ->useConfig($c->get('configService'));
 
         $playerVersionListner = new XmdsPlayerVersionListener($c->get('playerVersionFactory'));
         $playerVersionListner->useLogger($c->get('logger'));

@@ -314,7 +314,7 @@ class Font extends Base
         $downLoadService = new DownloadService($libraryPath, $sendFileMode);
         $downLoadService->useLogger($this->getLog()->getLoggerInterface());
 
-        return $downLoadService->returnFile($response, $attachmentName, '/font/download/' . $font->fileName);
+        return $downLoadService->returnFile($response, $attachmentName, '/download/fonts/' . $font->fileName);
     }
 
     /**

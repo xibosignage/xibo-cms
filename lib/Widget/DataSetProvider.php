@@ -49,12 +49,22 @@ class DataSetProvider implements WidgetProviderInterface
 
     public function fetchDuration(DurationProviderInterface $durationProvider): WidgetProviderInterface
     {
-        $this->getLog()->debug('fetchDuration');
+        if ($durationProvider->getWidget()->getOptionValue('durationIsPerItem', 0) == 1) {
+            $this->getLog()->debug('fetchDuration: duration is per item');
 
-        $lowerLimit = $durationProvider->getWidget()->getOptionValue('lowerLimit', 0);
-        $upperLimit = $durationProvider->getWidget()->getOptionValue('upperLimit', 15);
-        $durationProvider->setDuration(($upperLimit - $lowerLimit)
-            * $durationProvider->getWidget()->calculatedDuration);
+            // Count of rows
+            $lowerLimit = $durationProvider->getWidget()->getOptionValue('lowerLimit', 0);
+            $upperLimit = $durationProvider->getWidget()->getOptionValue('upperLimit', 15);
+            $numItems = $upperLimit - $lowerLimit;
+
+            // If we have paging involved then work out the page count.
+            $itemsPerPage = $durationProvider->getWidget()->getOptionValue('rowsPerPage', 0);
+            if ($itemsPerPage > 0) {
+                $numItems = ceil($numItems / $itemsPerPage);
+            }
+
+            $durationProvider->setDuration($durationProvider->getWidget()->calculatedDuration * $numItems);
+        }
         return $this;
     }
 

@@ -25,6 +25,7 @@ namespace Xibo\Xmds\Listeners;
 use Xibo\Event\XmdsDependencyListEvent;
 use Xibo\Event\XmdsDependencyRequestEvent;
 use Xibo\Factory\FontFactory;
+use Xibo\Listener\ListenerConfigTrait;
 use Xibo\Listener\ListenerLoggerTrait;
 use Xibo\Xmds\Entity\Dependency;
 
@@ -34,6 +35,7 @@ use Xibo\Xmds\Entity\Dependency;
 class XmdsFontsListener
 {
     use ListenerLoggerTrait;
+    use ListenerConfigTrait;
 
     use XmdsListenerTrait;
 
@@ -65,7 +67,7 @@ class XmdsFontsListener
 
         // Always add fonts.css to the list.
         // This can have the ID of 1 because it is a different file type and will therefore be unique.
-        $fontsCssPath = PROJECT_ROOT . '/library/fonts/fonts.css';
+        $fontsCssPath = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'fonts/fonts.css';
         $event->addDependency(
             'fontCss',
             1,

@@ -189,11 +189,6 @@ class Property implements \JsonSerializable
             throw new ValueTooLargeException(sprintf(__('Value too large for %s'), $this->title), $this->id);
         }
 
-        // If the value is equal to the default then ignore
-        if ($this->value === $this->default) {
-            return $this;
-        }
-
         // Skip if no validation.
         if ($this->validation === null
             || ($stage === 'save' && !$this->validation->onSave)
@@ -206,13 +201,21 @@ class Property implements \JsonSerializable
             // We have a test, evaulate its conditions.
             $exceptions = [];
 
-            try {
-                foreach ($test->conditions as $condition) {
+            foreach ($test->conditions as $condition) {
+                try {
+                    // Assume we're testing the field we belong to, and if that's empty use the default value
+                    $testValue = $this->value ?? $this->default;
+
                     // What value are we testing against (only used by certain types)
                     if (empty($condition->field)) {
                         $valueToTestAgainst = $condition->value;
                     } else {
-                        $valueToTestAgainst = $properties[$condition->field] ?? $condition->value;
+                        $valueToTestAgainst = $properties[$condition->field] ?? $testValue;
+
+                        // If a field and a condition value is provided, test against those, ignoring my own field value
+                        if ($condition->value !== null) {
+                            $testValue = $condition->value;
+                        }
                     }
 
                     // Do we have a message
@@ -221,7 +224,7 @@ class Property implements \JsonSerializable
                     switch ($condition->type) {
                         case 'required':
                             // We will accept the default value here
-                            if (empty($this->value) && empty($this->default)) {
+                            if (empty($testValue) && empty($this->default)) {
                                 throw new InvalidArgumentException(
                                     $message ?? sprintf(__('Missing required property %s'), $this->title),
                                     $this->id
@@ -230,8 +233,8 @@ class Property implements \JsonSerializable
                             break;
 
                         case 'uri':
-                            if (!empty($this->value)
-                                && !v::url()->validate($this->value)
+                            if (!empty($testValue)
+                                && !v::url()->validate($testValue)
                             ) {
                                 throw new InvalidArgumentException(
                                     $message ?? sprintf(__('%s must be a valid URI'), $this->title),
@@ -241,12 +244,12 @@ class Property implements \JsonSerializable
                             break;
 
                         case 'interval':
-                            if (!empty($this->value)) {
+                            if (!empty($testValue)) {
                                 // Try to create a date interval from it
-                                $dateInterval = CarbonInterval::createFromDateString($this->value);
+                                $dateInterval = CarbonInterval::createFromDateString($testValue);
                                 if ($dateInterval === false) {
                                     throw new InvalidArgumentException(
-                                        // phpcs:ignore Generic.Files.LineLength
+                                    // phpcs:ignore Generic.Files.LineLength
                                         __('That is not a valid date interval, please use natural language such as 1 week'),
                                         'customInterval'
                                     );
@@ -258,7 +261,7 @@ class Property implements \JsonSerializable
 
                                 if ($now->equalTo($check)) {
                                     throw new InvalidArgumentException(
-                                        // phpcs:ignore Generic.Files.LineLength
+                                    // phpcs:ignore Generic.Files.LineLength
                                         $message ?? __('That is not a valid date interval, please use natural language such as 1 week'),
                                         $this->id
                                     );
@@ -266,8 +269,26 @@ class Property implements \JsonSerializable
                             }
                             break;
 
+                        case 'eq':
+                            if ($testValue != $valueToTestAgainst) {
+                                throw new InvalidArgumentException(
+                                    $message ?? sprintf(__('%s must equal %s'), $this->title, $valueToTestAgainst),
+                                    $this->id,
+                                );
+                            }
+                            break;
+
+                        case 'neq':
+                            if ($testValue == $valueToTestAgainst) {
+                                throw new InvalidArgumentException(
+                                    $message ?? sprintf(__('%s must not equal %s'), $this->title, $valueToTestAgainst),
+                                    $this->id,
+                                );
+                            }
+                            break;
+
                         case 'contains':
-                            if (!empty($this->value) && !Str::contains($this->value, $valueToTestAgainst)) {
+                            if (!empty($testValue) && !Str::contains($testValue, $valueToTestAgainst)) {
                                 throw new InvalidArgumentException(
                                     $message ?? sprintf(__('%s must contain %s'), $this->title, $valueToTestAgainst),
                                     $this->id,
@@ -276,9 +297,9 @@ class Property implements \JsonSerializable
                             break;
 
                         case 'ncontains':
-                            if (!empty($this->value) && Str::contains($this->value, $valueToTestAgainst)) {
+                            if (!empty($testValue) && Str::contains($testValue, $valueToTestAgainst)) {
                                 throw new InvalidArgumentException(
-                                    // phpcs:ignore Generic.Files.LineLength
+                                // phpcs:ignore Generic.Files.LineLength
                                     $message ?? sprintf(__('%s must not contain %s'), $this->title, $valueToTestAgainst),
                                     $this->id,
                                 );
@@ -287,12 +308,9 @@ class Property implements \JsonSerializable
 
                         case 'lt':
                             // Value must be < to the condition value, or field value
-                            if ($this->value !== null
-                                && $valueToTestAgainst !== null
-                                && !($this->value < $valueToTestAgainst)
-                            ) {
+                            if (!($testValue < $valueToTestAgainst)) {
                                 throw new InvalidArgumentException(
-                                    // phpcs:ignore Generic.Files.LineLength
+                                // phpcs:ignore Generic.Files.LineLength
                                     $message ?? sprintf(__('%s must be less than %s'), $this->title, $valueToTestAgainst),
                                     $this->id
                                 );
@@ -301,12 +319,9 @@ class Property implements \JsonSerializable
 
                         case 'lte':
                             // Value must be <= to the condition value, or field value
-                            if ($this->value !== null
-                                && $valueToTestAgainst !== null
-                                && !($this->value <= $valueToTestAgainst)
-                            ) {
+                            if (!($testValue <= $valueToTestAgainst)) {
                                 throw new InvalidArgumentException(
-                                    // phpcs:ignore Generic.Files.LineLength
+                                // phpcs:ignore Generic.Files.LineLength
                                     $message ?? sprintf(__('%s must be less than or equal to %s'), $this->title, $valueToTestAgainst),
                                     $this->id
                                 );
@@ -315,12 +330,9 @@ class Property implements \JsonSerializable
 
                         case 'gte':
                             // Value must be >= to the condition value, or field value
-                            if ($this->value !== null
-                                && $valueToTestAgainst !== null
-                                && !($this->value >= $valueToTestAgainst)
-                            ) {
+                            if (!($testValue >= $valueToTestAgainst)) {
                                 throw new InvalidArgumentException(
-                                    // phpcs:ignore Generic.Files.LineLength
+                                // phpcs:ignore Generic.Files.LineLength
                                     $message ?? sprintf(__('%s must be greater than or equal to %s'), $this->title, $valueToTestAgainst),
                                     $this->id
                                 );
@@ -329,12 +341,9 @@ class Property implements \JsonSerializable
 
                         case 'gt':
                             // Value must be > to the condition value, or field value
-                            if ($this->value !== null
-                                && $valueToTestAgainst !== null
-                                && !($this->value > $valueToTestAgainst)
-                            ) {
+                            if (!($testValue > $valueToTestAgainst)) {
                                 throw new InvalidArgumentException(
-                                    // phpcs:ignore Generic.Files.LineLength
+                                // phpcs:ignore Generic.Files.LineLength
                                     $message ?? sprintf(__('%s must be greater than %s'), $this->title, $valueToTestAgainst),
                                     $this->id
                                 );
@@ -344,20 +353,20 @@ class Property implements \JsonSerializable
                         default:
                             // Nothing to validate
                     }
-                }
-            } catch (InvalidArgumentException $invalidArgumentException) {
-                // If we are an AND test, all conditions must pass, so we know already to exception here.
-                if ($test->type === 'and') {
-                    throw $invalidArgumentException;
-                }
+                } catch (InvalidArgumentException $invalidArgumentException) {
+                    // If we are an AND test, all conditions must pass, so we know already to exception here.
+                    if ($test->type === 'and') {
+                        throw $invalidArgumentException;
+                    }
 
-                // We're an OR
-                $exceptions[] = $invalidArgumentException;
+                    // We're an OR
+                    $exceptions[] = $invalidArgumentException;
+                }
             }
 
-            // If we are an OR then make sure at least one of the tests has passed
+            // If we are an OR then make sure all conditions have failed.
             $countOfFailures = count($exceptions);
-            if ($test->type === 'or' && $countOfFailures > 0 && $countOfFailures < count($test->conditions)) {
+            if ($test->type === 'or' && $countOfFailures === count($test->conditions)) {
                 throw $exceptions[0];
             }
         }

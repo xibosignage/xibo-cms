@@ -1,7 +1,7 @@
 <!--
   ~ Copyright (C) 2023 Xibo Signage Ltd
   ~
-  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~ Xibo - Digital Signage - https://xibosignage.com
   ~
   ~ This file is part of Xibo.
   ~
@@ -62,6 +62,16 @@
             <title>Duration is per item</title>
             <helpText>The duration specified is per item otherwise it is per feed.</helpText>
             <default>0</default>
+        </property>
+        <property id="numItems" type="number">
+            <title>Number of items</title>
+            <helpText>The number of items you want to display.</helpText>
+            <rule>
+                <test type="or" message="When duration is per item then number of items must be 1 or higher">
+                    <condition type="gte">1</condition>
+                    <condition field="durationIsPerItem" type="eq">0</condition>
+                </test>
+            </rule>
         </property>
         <property id="dateFormat" type="text" variant="dateFormat">
             <title>Date Format</title>

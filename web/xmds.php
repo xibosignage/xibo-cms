@@ -176,7 +176,7 @@ if (isset($_GET['file'])) {
         // Bandwidth
         // Add the size to the bytes we have already requested.
         $file->bytesRequested = $file->bytesRequested + $file->size;
-        $file->save();
+        $file->save(['useTransaction' => false]);
 
         // Issue magic packet
         $libraryLocation = $container->get('configService')->getSetting('LIBRARY_LOCATION');
@@ -250,7 +250,7 @@ if (isset($_GET['cdn'])) {
         // Bandwidth
         // Add the size to the bytes we have already requested.
         $file->bytesRequested = $file->bytesRequested + $file->size;
-        $file->save();
+        $file->save(['useTransaction' => false]);
 
         // Also add to the overall bandwidth used by get file
         $container->get('bandwidthFactory')->createAndSave(
