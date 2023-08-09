@@ -150,7 +150,7 @@ describe('Campaigns', function() {
     cy.get('#schedule-grid').contains('Layout for Schedule 1');
   });
 
-  it.only('edit a scheduled event', function() {
+  it('should edit a scheduled event', function() {
     cy.intercept('/user/pref').as('userPref');
     cy.intercept('/schedule?draw=*').as('scheduleGridLoad');
 
