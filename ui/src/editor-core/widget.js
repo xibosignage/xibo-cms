@@ -1095,7 +1095,8 @@ Widget.prototype.updateElementMap = function(element) {
     };
 
     if (
-      elementSlot
+      elementSlot != undefined &&
+      elementSlot != null
     ) {
       // Slot set, add to position
       if (!subTypeArray[elementSlot]) {
