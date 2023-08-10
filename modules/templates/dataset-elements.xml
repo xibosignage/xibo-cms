@@ -20,28 +20,9 @@
   -->
 <templates>
     <template>
-        <id>dataset_heading</id>
-        <extends override="text">text</extends>
-        <title>Heading</title>
-        <type>element</type>
-        <dataType>dataset</dataType>
-        <canRotate>true</canRotate>
-        <thumbnail>dataset-heading</thumbnail>
-        <startWidth>360</startWidth>
-        <startHeight>100</startHeight>
-        <properties>
-            <property id="dataTypeId" type="hidden">
-                <default>heading</default>
-            </property>
-        </properties>
-        <assets>
-            <asset id="dataset-heading" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/elements/currency-name.png" />
-        </assets>
-    </template>
-    <template>
         <id>dataset_data_string</id>
         <extends override="text" with="datasetString">text</extends>
-        <title>Data - String</title>
+        <title>String</title>
         <type>element</type>
         <dataType>dataset</dataType>
         <canRotate>true</canRotate>
@@ -72,43 +53,6 @@
                 </visibility>
             </property>
         </properties>
-        <stencil>
-            <hbs><![CDATA[
-<div class="dataset dataset-item dataset-column--{{datasetField}}"
-    style="
-    display: flex;
-    {{#if fontFamily}}font-family: {{fontFamily}};{{/if}}
-    {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
-    {{#if fontColor}}color: {{fontColor}};{{/if}}
-    {{#if bold}}font-weight: bold;{{/if}}
-    {{#if italics}}font-style: italic;{{/if}}
-    {{#if underline}}text-decoration: underline;{{/if}}
-    {{#if showOverflow}}overflow: visible;{{else}}overflow: hidden;{{/if}}
-    {{#if horizontalAlign}}
-        justify-content: {{horizontalAlign}};
-    {{/if}}
-    {{#eq horizontalAlign "flex-start"}}text-align: left;{{/eq}}
-    {{#eq horizontalAlign "center"}}text-align: center;{{/eq}}
-    {{#eq horizontalAlign "flex-end"}}text-align: right;{{/eq}}
-    {{#if verticalAlign}}align-items: {{verticalAlign}};{{/if}}
-    {{#if textWrap}}
-        white-space: break-spaces;
-        {{#if justify}}
-            text-align: justify;
-        {{/if}}
-    {{else}}
-        white-space: nowrap;
-    {{/if}}
-    {{#if lineHeight}}line-height: {{lineHeight}};{{/if}}
-    {{#if verticalAlign}}align-items: {{verticalAlign}};{{/if}}
-    {{#if textWrap}}white-space: break-spaces;{{else}}white-space: nowrap;{{/if}}
-    {{#if textShadow}}text-shadow: {{shadowX}}px {{shadowY}}px {{shadowBlur}}px {{textShadowColor}};{{/if}}
-    width: 100%; height: 100%;"
->
-<div>{{{datasetString}}}</div>
-</div>
-]]></hbs>
-        </stencil>
         <assets>
             <asset id="dataset-data-string" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/elements/currency-name.png" />
         </assets>
@@ -116,7 +60,7 @@
     <template>
         <id>dataset_data_number</id>
         <extends override="text" with="datasetNumber">text</extends>
-        <title>Data - Number</title>
+        <title>Number</title>
         <type>element</type>
         <dataType>dataset</dataType>
         <canRotate>true</canRotate>
@@ -146,51 +90,14 @@
                 </visibility>
             </property>
         </properties>
-        <stencil>
-            <hbs><![CDATA[
-<div class="dataset dataset-item dataset-column--{{datasetField}}"
-    style="
-    display: flex;
-    {{#if fontFamily}}font-family: {{fontFamily}};{{/if}}
-    {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
-    {{#if fontColor}}color: {{fontColor}};{{/if}}
-    {{#if bold}}font-weight: bold;{{/if}}
-    {{#if italics}}font-style: italic;{{/if}}
-    {{#if underline}}text-decoration: underline;{{/if}}
-    {{#if showOverflow}}overflow: visible;{{else}}overflow: hidden;{{/if}}
-    {{#if horizontalAlign}}
-        justify-content: {{horizontalAlign}};
-    {{/if}}
-    {{#eq horizontalAlign "flex-start"}}text-align: left;{{/eq}}
-    {{#eq horizontalAlign "center"}}text-align: center;{{/eq}}
-    {{#eq horizontalAlign "flex-end"}}text-align: right;{{/eq}}
-    {{#if verticalAlign}}align-items: {{verticalAlign}};{{/if}}
-    {{#if textWrap}}
-        white-space: break-spaces;
-        {{#if justify}}
-            text-align: justify;
-        {{/if}}
-    {{else}}
-        white-space: nowrap;
-    {{/if}}
-    {{#if lineHeight}}line-height: {{lineHeight}};{{/if}}
-    {{#if verticalAlign}}align-items: {{verticalAlign}};{{/if}}
-    {{#if textWrap}}white-space: break-spaces;{{else}}white-space: nowrap;{{/if}}
-    {{#if textShadow}}text-shadow: {{shadowX}}px {{shadowY}}px {{shadowBlur}}px {{textShadowColor}};{{/if}}
-    width: 100%; height: 100%;"
->
-<div>{{{datasetNumber}}}</div>
-</div>
-]]></hbs>
-        </stencil>
         <assets>
             <asset id="dataset-data-number" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/elements/currency-name.png" />
         </assets>
     </template>
     <template>
         <id>dataset_data_date</id>
-        <extends override="text">text</extends>
-        <title>Data - Date</title>
+        <extends override="date">date</extends>
+        <title>Date</title>
         <type>element</type>
         <dataType>dataset</dataType>
         <canRotate>true</canRotate>
@@ -225,9 +132,83 @@
         </assets>
     </template>
     <template>
+        <id>dataset_data_extImg</id>
+        <extends override="url">global-image</extends>
+        <title>External Image</title>
+        <type>element</type>
+        <dataType>dataset</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>dataset-data-extImg</thumbnail>
+        <startWidth>360</startWidth>
+        <startHeight>100</startHeight>
+        <properties>
+            <property id="dataTypeId" type="hidden">
+                <default>4</default>
+            </property>
+            <property type="message">
+                <title>Please choose a Dataset from the Configure tab to be able to customise this element.</title>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="eq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="datasetField" type="datasetField">
+                <dependsOn>dataSetId</dependsOn>
+                <title>Select DataSet Field</title>
+                <helpText>Please choose a DataSet field for this element.</helpText>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <assets>
+            <asset id="dataset-data-extImg" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/elements/currency-name.png" />
+        </assets>
+    </template>
+    <template>
+        <id>dataset_data_libImg</id>
+        <extends override="url">global-image</extends>
+        <title>Library Image</title>
+        <type>element</type>
+        <dataType>dataset</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>dataset-data-libImg</thumbnail>
+        <startWidth>360</startWidth>
+        <startHeight>100</startHeight>
+        <properties>
+            <property id="dataTypeId" type="hidden">
+                <default>5</default>
+            </property>
+            <property type="message">
+                <title>Please choose a Dataset from the Configure tab to be able to customise this element.</title>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="eq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="datasetField" type="datasetField">
+                <dependsOn>dataSetId</dependsOn>
+                <title>Select DataSet Field</title>
+                <helpText>Please choose a DataSet field for this element.</helpText>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <assets>
+            <asset id="dataset-data-libImg" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/elements/currency-name.png" />
+        </assets>
+    </template>
+    <template>
         <id>dataset_data_html</id>
         <extends override="text">text</extends>
-        <title>Data - HTML</title>
+        <title>HTML</title>
         <type>element</type>
         <dataType>dataset</dataType>
         <canRotate>true</canRotate>
