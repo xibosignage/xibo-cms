@@ -226,6 +226,13 @@ class Widget extends Base
             $module->schemaVersion
         );
 
+        // Default status setting
+        $widget->setOptionValue(
+            'enableStat',
+            'attrib',
+            $this->getConfig()->getSetting('WIDGET_STATS_ENABLED_DEFAULT')
+        );
+
         // Get the template
         if ($module->isTemplateExpected()) {
             $templateId = $params->getString('templateId', [

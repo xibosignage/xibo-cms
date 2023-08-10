@@ -43,7 +43,7 @@
             <form id="moduleEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.settings", {id: moduleId}) }}">
 
                 {% set title %}{% trans "Preview Enabled?" %}{% endset %}
-                {% set helpText %}{% trans "When Preview is Enabled users will be able to see a preview in the layout designer." %}{% endset %}
+                {% set helpText %}{% trans "When Preview is Enabled users will be able to see a preview in the layout editor." %}{% endset %}
                 {{ forms.checkbox("previewEnabled", title, module.previewEnabled, helpText) }}
 
                 {% set title %}{% trans "Enabled?" %}{% endset %}

@@ -127,7 +127,7 @@
                 createdRow: function (row, data, index) {
                     if (data.version === "" || data.version === null || data.code === 0) {
                         $(row).addClass('table-danger');
-                        $(row).attr('Title', "{{ warningLabel }}");
+                        $(row).attr('Title', "{{ "Please set Player Software Version"|trans }}");
                     }
                 },
             });

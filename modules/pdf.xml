@@ -23,14 +23,14 @@
     <name>PDF</name>
     <author>Core</author>
     <description>Upload PDF files to assign to Layouts</description>
-    <class></class>
+    <class>\Xibo\Widget\PdfProvider</class>
     <type>pdf</type>
     <dataType></dataType>
     <schemaVersion>1</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>0</regionSpecific>
     <renderAs>html</renderAs>
-    <defaultDuration>0</defaultDuration>
+    <defaultDuration>60</defaultDuration>
     <settings>
         <property id="validExtensions" type="text">
             <title>Valid Extensions</title>
@@ -199,6 +199,6 @@ window.addEventListener('resize', function(event) {
 }, true);
     ]]></onInitialize>
     <assets>
-        <asset id="pdfWorkerSrc" type="path" mimeType="text/javascript" path="/modules/vendor/pdf.worker.min.js"></asset>
+        <asset id="pdfWorkerSrc" type="path" mimeType="text/javascript" isAutoInclude="false" path="/modules/assets/pdfjs/pdf.worker.min.js"></asset>
     </assets>
 </module>

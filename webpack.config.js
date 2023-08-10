@@ -216,6 +216,15 @@ const moduleConfig = Object.assign({}, config, {
       jQuery: 'jquery',
     }),
     new CleanWebpackPlugin(['modules/*.min.js']),
+    new CopyWebpackPlugin({
+      patterns: [
+        // Copy directory contents to {output}/
+        {
+          from: 'node_modules/pdfjs-dist/legacy/build/pdf.worker.min.js',
+          to: 'assets/pdfjs/pdf.worker.min.js',
+        },
+      ],
+    }),
   ],
 });
 

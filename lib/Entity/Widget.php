@@ -580,6 +580,25 @@ class Widget implements \JsonSerializable
     }
 
     /**
+     * Get the temporary path
+     * @return string
+     */
+    public function getLibraryTempPath(): string
+    {
+        return $this->widgetMediaFactory->getLibraryTempPath();
+    }
+
+    /**
+     * Get the path of the primary media
+     * @return string
+     * @throws NotFoundException
+     */
+    public function getPrimaryMediaPath(): string
+    {
+        return $this->widgetMediaFactory->getPathForMediaId($this->getPrimaryMediaId());
+    }
+
+    /**
      * Clear Media
      *  this must only clear module media, not "primary" media
      */

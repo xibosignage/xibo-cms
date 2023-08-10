@@ -1091,9 +1091,7 @@ Viewer.prototype.renderRegion = function(
 
     // Force scale region container
     // by updating region
-    if (!isPlaylist) {
-      self.updateRegion(region);
-    }
+    self.updateRegion(region);
   }.bind(this)).fail(function(res) {
     // Clear request var after response
     self.renderRequest = undefined;
@@ -1223,7 +1221,7 @@ Viewer.prototype.updateRegion = _.throttle(function(
   }
 
   // Update region content
-  if (region.subType === 'playlist') {
+  if (region.subType === 'playlist' && changed) {
     lD.viewer.renderRegionDebounced(region);
   } else {
     lD.viewer.updateRegionContent(region, changed);
@@ -1462,6 +1460,7 @@ Viewer.prototype.renderElementContent = function(
     template.assets.forEach((asset) => {
       const assetURL = urlsForApi.module.assetDownload.url;
       if (
+        asset.isAutoInclude &&
         asset.mimeType === 'text/css' &&
         $assetContainer.find('[data-asset-id=' + asset.id + ']').length === 0
       ) {
@@ -1472,6 +1471,7 @@ Viewer.prototype.renderElementContent = function(
       }
 
       if (
+        asset.isAutoInclude &&
         asset.mimeType === 'text/javascript' &&
         $assetContainer.find('[data-asset-id=' + asset.id + ']').length === 0
       ) {

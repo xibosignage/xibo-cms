@@ -43,6 +43,9 @@ class Asset implements \JsonSerializable
     public $mimeType;
 
     /** @var bool */
+    public $autoInclude;
+
+    /** @var bool */
     public $cmsOnly;
 
     public $assetNo;
@@ -59,6 +62,7 @@ class Asset implements \JsonSerializable
             'path' => $this->path,
             'mimeType' => $this->mimeType,
             'cmsOnly' => $this->cmsOnly,
+            'autoInclude' => $this->autoInclude,
         ];
     }
 
@@ -69,6 +73,15 @@ class Asset implements \JsonSerializable
     public function isSendToPlayer(): bool
     {
         return !($this->cmsOnly ?? false);
+    }
+
+    /**
+     * Should this asset be sent to the player?
+     * @return bool
+     */
+    public function isAutoInclude(): bool
+    {
+        return !($this->autoInclude ?? false);
     }
 
     /**
