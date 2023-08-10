@@ -15,6 +15,7 @@ containers/
 web/dist
 cypress/videos/
 modules/bundle*.js*
+modules/assets/pdfjs
 
 # The OpenOOH specification
 openooh/

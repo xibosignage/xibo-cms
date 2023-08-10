@@ -66,6 +66,32 @@ class WidgetMediaFactory extends BaseFactory
     }
 
     /**
+     * @return string
+     */
+    public function getLibraryTempPath(): string
+    {
+        return $this->getConfig()->getSetting('LIBRARY_LOCATION') . '/temp';
+    }
+
+    /**
+     * @param int $mediaId
+     * @return string
+     * @throws NotFoundException
+     */
+    public function getPathForMediaId(int $mediaId): string
+    {
+        $results = $this->getStore()->select('SELECT `storedAs` FROM `media` WHERE `mediaId` = :mediaId', [
+            'mediaId' => $mediaId
+        ]);
+
+        if (count($results) <= 0) {
+            throw new NotFoundException();
+        }
+
+        return $this->getConfig()->getSetting('LIBRARY_LOCATION') . $results[0]['storedAs'];
+    }
+
+    /**
      * Query Media Linked to Widgets
      * @param array $sortOrder
      * @param array $filterBy

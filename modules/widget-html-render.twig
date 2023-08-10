@@ -53,9 +53,9 @@
         {{ item|raw }}
     {% endfor %}
     {% for asset in assets %}
-        {% if asset.mimeType == 'text/css' %}
+        {% if asset.isAutoInclude() and asset.mimeType == 'text/css' %}
         <link rel="stylesheet" media="screen" href="[[assetId={{ asset.id }}]]" />
-        {% elseif asset.mimeType == 'text/javascript' %}
+        {% elseif asset.isAutoInclude() and asset.mimeType == 'text/javascript' %}
         <script id="{{ asset.id }}" type="text/javascript" src="[[assetId={{ asset.id }}]]"></script>
         {% endif %}
     {% endfor %}
