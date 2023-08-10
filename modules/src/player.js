@@ -647,6 +647,25 @@ $(function() {
                             dataItem[extendDataWith];
                         }
 
+                        // Handle special case for setting data for the player
+                        if (item.type === 'dataset' &&
+                          Object.keys(dataItem).length > 0
+                        ) {
+                          if (item.dataOverride !== null &&
+                            item.templateData?.datasetField !== undefined
+                          ) {
+                            item[item.dataOverride] =
+                              dataItem[item.templateData.datasetField];
+
+                            // Change value in templateData if exists
+                            if (item.templateData.hasOwnProperty(
+                              item.dataOverride)) {
+                              item.templateData[item.dataOverride] =
+                                dataItem[item.templateData.datasetField];
+                            }
+                          }
+                        }
+
                         if (typeof window[
                           `onElementParseData_${item.templateData.id}`
                         ] === 'function') {

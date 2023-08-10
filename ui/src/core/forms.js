@@ -126,6 +126,18 @@ window.forms = {
           }
         }
 
+        // Dataset Field selector
+        if (property.type === 'datasetField') {
+          // If we don't have a value, set value key pair to null
+          if (property.value == '') {
+            property.initialValue = null;
+            property.initialKey = null;
+          } else {
+            property.initialValue = property.value;
+            property.initialKey = 'datasetField';
+          }
+        }
+
         // Menu boards selector
         if (property.type === 'menuBoardSelector') {
           property.menuBoardSearchUrl = urlsForApi.menuBoard.search.url;
@@ -211,20 +223,6 @@ window.forms = {
         // Check if variant="autocomplete" exists and create isAutocomplete prop
         if (property.variant && property.variant === 'autocomplete') {
           property.isAutoComplete = true;
-        }
-
-        // Handle datasetField selector
-        if (property.type === 'datasetField') {
-          const $targetElem = $(`#${targetId}`);
-
-          if ($targetElem.length > 0) {
-            const linkToAPI = urlsForApi.module.getData;
-
-            property.widgetUrl =
-              linkToAPI.url
-                .replace(':id', $targetElem.data('widget-id'))
-                .replace(':regionId', $targetElem.data('region-id'));
-          }
         }
 
         // Append the property to the target container
@@ -329,6 +327,15 @@ window.forms = {
                 $(this).popover('hide');
               }, 300);
             });
+          }
+
+          // Handle setting value to datasetField if value is defined
+          if (property.type === 'datasetField') {
+            if (property.value !== undefined &&
+              String(property.value).length > 0
+            ) {
+              $newField.find('select').attr('data-value', property.value);
+            }
           }
 
           // Handle depends on property if not already set
@@ -746,6 +753,7 @@ window.forms = {
       // Initialise the dataset filter clause
       // if the dataset id is not empty
       if (datasetId) {
+        $el.show();
         // Get the dataset columns
         $.ajax({
           url: urlsForApi.dataset.search.url,
@@ -766,31 +774,31 @@ window.forms = {
               $select.empty();
 
               $.each(fieldItems, function(_k, field) {
-                if ($select.data('value') === field.heading) {
-                  $select.append(
-                    $('<option value="' +
-                      field.heading +
-                      '" selected>' +
-                      field.heading +
-                      '</option>',
-                    ),
-                  );
+                $select.append(
+                  $('<option value="' +
+                    field.heading +
+                    '">' +
+                    field.heading +
+                    '</option>',
+                  ),
+                );
+              });
 
-                  // Trigger change event
-                  $select.trigger('change', [{
+              if ($select.data('value') !== undefined) {
+                // Trigger change event
+                $select.val($select.data('value'))
+                  .trigger('change', [{
                     skipSave: true,
                   }]);
-                } else {
-                  $select.append(
-                    $('<option value="' +
-                      field.heading +
-                      '">' +
-                      field.heading +
-                      '</option>',
-                    ),
-                  );
-                }
-              });
+              } else if (fieldItems.length === 1) {
+                // Set default value when 1 option exists
+                $select.val(fieldItems[0].heading).trigger('change');
+              } else if (fieldItems.length > 1) {
+                // Set default value to first option
+                $select.val(fieldItems[0].heading).trigger('change');
+              }
+            } else {
+              $el.hide();
             }
           }
         });

@@ -41,6 +41,15 @@
                     </test>
                 </visibility>
             </property>
+            <property type="message">
+                <title>No field is available for that type of DataSet element.</title>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                        <condition field="datasetField" type="eq"></condition>
+                    </test>
+                </visibility>
+            </property>
             <property id="datasetField" type="datasetField">
                 <dependsOn>dataSetId</dependsOn>
                 <title>Select DataSet Field</title>
@@ -54,7 +63,7 @@
             </property>
         </properties>
         <assets>
-            <asset id="dataset-data-string" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/elements/currency-name.png" />
+            <asset id="dataset-data-string" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/dataset/elements/dataset-string.png" />
         </assets>
     </template>
     <template>
@@ -79,6 +88,15 @@
                     </test>
                 </visibility>
             </property>
+            <property type="message">
+                <title>No field is available for that type of DataSet element.</title>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                        <condition field="datasetField" type="eq"></condition>
+                    </test>
+                </visibility>
+            </property>
             <property id="datasetField" type="datasetField">
                 <dependsOn>dataSetId</dependsOn>
                 <title>Select DataSet Field</title>
@@ -91,7 +109,7 @@
             </property>
         </properties>
         <assets>
-            <asset id="dataset-data-number" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/elements/currency-name.png" />
+            <asset id="dataset-data-number" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/dataset/elements/dataset-number.png" />
         </assets>
     </template>
     <template>
@@ -116,6 +134,15 @@
                     </test>
                 </visibility>
             </property>
+            <property type="message">
+                <title>No field is available for that type of DataSet element.</title>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                        <condition field="datasetField" type="eq"></condition>
+                    </test>
+                </visibility>
+            </property>
             <property id="datasetField" type="datasetField">
                 <dependsOn>dataSetId</dependsOn>
                 <title>Select DataSet Field</title>
@@ -128,7 +155,7 @@
             </property>
         </properties>
         <assets>
-            <asset id="dataset-data-date" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/elements/currency-name.png" />
+            <asset id="dataset-data-date" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/date.png" />
         </assets>
     </template>
     <template>
@@ -139,8 +166,8 @@
         <dataType>dataset</dataType>
         <canRotate>true</canRotate>
         <thumbnail>dataset-data-extImg</thumbnail>
-        <startWidth>360</startWidth>
-        <startHeight>100</startHeight>
+        <startWidth>150</startWidth>
+        <startHeight>150</startHeight>
         <properties>
             <property id="dataTypeId" type="hidden">
                 <default>4</default>
@@ -153,6 +180,15 @@
                     </test>
                 </visibility>
             </property>
+            <property type="message">
+                <title>No field is available for that type of DataSet element.</title>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                        <condition field="datasetField" type="eq"></condition>
+                    </test>
+                </visibility>
+            </property>
             <property id="datasetField" type="datasetField">
                 <dependsOn>dataSetId</dependsOn>
                 <title>Select DataSet Field</title>
@@ -165,7 +201,7 @@
             </property>
         </properties>
         <assets>
-            <asset id="dataset-data-extImg" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/elements/currency-name.png" />
+            <asset id="dataset-data-extImg" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/image.png" />
         </assets>
     </template>
     <template>
@@ -176,8 +212,8 @@
         <dataType>dataset</dataType>
         <canRotate>true</canRotate>
         <thumbnail>dataset-data-libImg</thumbnail>
-        <startWidth>360</startWidth>
-        <startHeight>100</startHeight>
+        <startWidth>150</startWidth>
+        <startHeight>150</startHeight>
         <properties>
             <property id="dataTypeId" type="hidden">
                 <default>5</default>
@@ -190,6 +226,15 @@
                     </test>
                 </visibility>
             </property>
+            <property type="message">
+                <title>No field is available for that type of DataSet element.</title>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                        <condition field="datasetField" type="eq"></condition>
+                    </test>
+                </visibility>
+            </property>
             <property id="datasetField" type="datasetField">
                 <dependsOn>dataSetId</dependsOn>
                 <title>Select DataSet Field</title>
@@ -202,7 +247,7 @@
             </property>
         </properties>
         <assets>
-            <asset id="dataset-data-libImg" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/elements/currency-name.png" />
+            <asset id="dataset-data-libImg" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/image.png" />
         </assets>
     </template>
     <template>
@@ -227,6 +272,15 @@
                     </test>
                 </visibility>
             </property>
+            <property type="message">
+                <title>No field is available for that type of DataSet element.</title>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                        <condition field="datasetField" type="eq"></condition>
+                    </test>
+                </visibility>
+            </property>
             <property id="datasetField" type="datasetField">
                 <dependsOn>dataSetId</dependsOn>
                 <title>Select DataSet Field</title>
@@ -239,7 +293,7 @@
             </property>
         </properties>
         <assets>
-            <asset id="dataset-data-html" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/elements/currency-name.png" />
+            <asset id="dataset-data-html" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/dataset/elements/dataset-html.png" />
         </assets>
     </template>
 </templates>
