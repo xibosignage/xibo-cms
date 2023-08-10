@@ -106,7 +106,7 @@ class PlayerSoftware extends Base
     {
         $this->getState()->template = 'playersoftware-page';
         $this->getState()->setData([
-            'types' => array_map(function($element) {
+            'types' => array_map(function ($element) {
                 return $element->jsonSerialize();
             }, $this->playerVersionFactory->getDistinctType()),
             'versions' => $this->playerVersionFactory->getDistinctVersion(),
