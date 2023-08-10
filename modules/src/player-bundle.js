@@ -20,6 +20,7 @@
  */
 
 /* eslint-disable no-unused-vars */
+const globalThis = require('globalthis/polyfill')();
 window.jQuery = window.$ = require('jquery');
 require('babel-polyfill');
 window.moment = require('moment');
