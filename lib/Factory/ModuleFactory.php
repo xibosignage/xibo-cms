@@ -89,7 +89,7 @@ class ModuleFactory extends BaseFactory
      */
     public function createDataProvider(Module $module, Widget $widget): DataProviderInterface
     {
-        return new DataProvider($module, $widget, $this->config->getGuzzleProxy());
+        return new DataProvider($module, $widget, $this->config->getGuzzleProxy(), $this->getSanitizerService());
     }
 
     /**
