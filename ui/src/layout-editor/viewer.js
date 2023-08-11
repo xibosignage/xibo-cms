@@ -1614,6 +1614,14 @@ Viewer.prototype.renderElementContent = function(
           }
         }
 
+        if (element.elementType === 'dataset' && elData) {
+          if (extendOverrideKey !==null) {
+            convertedProperties[extendOverrideKey] =
+              elData.hasOwnProperty(convertedProperties.datasetField) ?
+                elData[convertedProperties.datasetField] : '';
+          }
+        }
+
         if (extendWithDataKey !== null || metaKey !== null) {
           if (template.onElementParseData && hasElementParseDataFn) {
             convertedProperties[extendOverrideKey] = elementParseDataFn(

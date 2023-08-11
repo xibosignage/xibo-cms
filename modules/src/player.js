@@ -145,11 +145,11 @@ $(function() {
    */
   function onDataErrorCallback(widget, httpStatus, response) {
     if (
-        typeof window[`onDataError_${widget.widgetId}`] === 'function'
+      typeof window[`onDataError_${widget.widgetId}`] === 'function'
     ) {
       const onDataError = window[
-          `onDataError_${widget.widgetId}`
-          ](httpStatus, response);
+        `onDataError_${widget.widgetId}`
+      ](httpStatus, response);
 
       if (typeof onDataError === 'undefined' || onDataError == false) {
         xiboIC.reportFault({
@@ -158,7 +158,6 @@ $(function() {
         });
       }
     }
-
   }
 
   /**
@@ -447,11 +446,11 @@ $(function() {
     $.each(elements, function(_key, widgetElements) {
       if (widgetElements?.length > 0) {
         const $target = $('body');
-        let $content = $('#content');
+        const $content = $('#content');
 
         $.each(widgetElements, function(_widgetElemKey, widgetElement) {
           if (widgetElement?.elements?.length > 0) {
-            let playerElements = [];
+            const playerElements = [];
             let widgetDataInfo = null;
 
             if (Object.keys(elementsWidget).length > 0 &&
@@ -461,7 +460,7 @@ $(function() {
             }
             const renderElement = (hbs, data, isStatic) => {
               const hbsTemplate = hbs(
-                  Object.assign(data, globalOptions),
+                Object.assign(data, globalOptions),
               );
               let cssStyles = {
                 height: data.height,
@@ -534,7 +533,8 @@ $(function() {
                   globalOptions,
                   {
                     duration: widgetDataInfo.duration,
-                    marqueeInlineSelector: `.${elementCopy.templateData.id}--item`,
+                    marqueeInlineSelector: `
+                      .${elementCopy.templateData.id}--item`,
                     parentId: elementCopy.elementId,
                   },
                 );
@@ -546,61 +546,63 @@ $(function() {
                     elementCopy.hbs,
                     elementCopy.templateData,
                     true,
-                  )
+                  ),
                 );
               }
             });
 
             if (widgetDataInfo !== null && playerElements.length > 0) {
               const elementGroups = playerElements.reduce(
-                function(elemGroups, elemGroup){
-                    let isGroup = elemGroup.hasOwnProperty('groupId');
+                function(elemGroups, elemGroup) {
+                  const isGroup = elemGroup.hasOwnProperty('groupId');
 
-                    // Initialize object values
-                    if (!isGroup &&
+                  // Initialize object values
+                  if (!isGroup &&
                       !elemGroups.standalone.hasOwnProperty(elemGroup.id)
-                    ) {
-                      elemGroups.standalone[elemGroup.id] = [];
-                    }
-                    if (isGroup &&
+                  ) {
+                    elemGroups.standalone[elemGroup.id] = [];
+                  }
+                  if (isGroup &&
                       !elemGroups.groups.hasOwnProperty(elemGroup.groupId)
-                    ) {
-                      elemGroups.groups[elemGroup.groupId] = {
-                        ...globalOptions,
-                        ...widgetDataInfo.properties,
-                        ...elemGroup.groupProperties,
-                        id: elemGroup.groupId,
-                        uniqueID: elemGroup.groupId,
+                  ) {
+                    elemGroups.groups[elemGroup.groupId] = {
+                      ...globalOptions,
+                      ...widgetDataInfo.properties,
+                      ...elemGroup.groupProperties,
+                      id: elemGroup.groupId,
+                      uniqueID: elemGroup.groupId,
+                      duration: widgetDataInfo.duration,
+                      parentId: elemGroup.groupId,
+                      slot: elemGroup.slot,
+                      items: [],
+                    };
+                  }
+
+                  // Fill in objects with items
+                  if (!isGroup &&
+                    Object.keys(elemGroups.standalone).length > 0
+                  ) {
+                    elemGroups.standalone[elemGroup.id] = [
+                      ...elemGroups.standalone[elemGroup.id],
+                      {
+                        ...elemGroup,
+                        numItems: 1,
                         duration: widgetDataInfo.duration,
-                        parentId: elemGroup.groupId,
-                        slot: elemGroup.slot,
-                        items: [],
-                      };
-                    }
+                      },
+                    ];
+                  }
+                  if (isGroup && Object.keys(elemGroups.groups).length > 0) {
+                    elemGroups.groups[elemGroup.groupId] = {
+                      ...elemGroups.groups[elemGroup.groupId],
+                      items: [
+                        ...elemGroups.groups[elemGroup.groupId].items,
+                        {...elemGroup, numItems: 1},
+                      ],
+                    };
+                  }
 
-                    // Fill in objects with items
-                    if (!isGroup && Object.keys(elemGroups.standalone).length > 0) {
-                      elemGroups.standalone[elemGroup.id] = [
-                        ...elemGroups.standalone[elemGroup.id],
-                        {
-                          ...elemGroup,
-                          numItems: 1,
-                          duration: widgetDataInfo.duration
-                        },
-                      ];
-                    }
-                    if (isGroup && Object.keys(elemGroups.groups).length > 0) {
-                      elemGroups.groups[elemGroup.groupId] = {
-                        ...elemGroups.groups[elemGroup.groupId],
-                        items:[
-                          ...elemGroups.groups[elemGroup.groupId].items,
-                          { ...elemGroup, numItems: 1 },
-                        ],
-                      };
-                    }
-
-                    return elemGroups;
-                }, { standalone: {}, groups: {} });
+                  return elemGroups;
+                }, {standalone: {}, groups: {}});
 
               getWidgetData(widgetDataInfo)
                 .then(function(data) {
@@ -609,17 +611,25 @@ $(function() {
                   } = composeFinalData(widgetDataInfo, data);
                   const getMaxSlot = (objectsArray, itemsKey, minValue) => {
                     const groupItems = objectsArray?.length > 0 ?
-                        objectsArray.reduce((a, b) => [...a, ...b[itemsKey]], []) :
-                        null;
+                      objectsArray.reduce(
+                        (a, b) => [...a, ...b[itemsKey]], []) :
+                      null;
 
                     return groupItems === null ?
                       minValue :
                       Math.max(...groupItems.map(function(elem) {
-                            return elem?.slot || 0;
-                          }),
+                        return elem?.slot || 0;
+                      }),
                       ) + 1;
                   };
-                  const renderDataItems = function(data, item, slot, maxSlot, groupId, $groupContent){
+                  const renderDataItems = function(
+                    data,
+                    item,
+                    slot,
+                    maxSlot,
+                    groupId,
+                    $groupContent,
+                  ) {
                     // For each data item, parse it and add it to the content;
                     let templateAlreadyAdded = false;
 
@@ -633,7 +643,27 @@ $(function() {
                         if (extendDataWith !== null &&
                           dataItem.hasOwnProperty(extendDataWith)
                         ) {
-                          dataItem[item.dataOverride] = dataItem[extendDataWith];
+                          dataItem[item.dataOverride] =
+                            dataItem[extendDataWith];
+                        }
+
+                        // Handle special case for setting data for the player
+                        if (item.type === 'dataset' &&
+                          Object.keys(dataItem).length > 0
+                        ) {
+                          if (item.dataOverride !== null &&
+                            item.templateData?.datasetField !== undefined
+                          ) {
+                            item[item.dataOverride] =
+                              dataItem[item.templateData.datasetField];
+
+                            // Change value in templateData if exists
+                            if (item.templateData.hasOwnProperty(
+                              item.dataOverride)) {
+                              item.templateData[item.dataOverride] =
+                                dataItem[item.templateData.datasetField];
+                            }
+                          }
                         }
 
                         if (typeof window[
@@ -655,23 +685,30 @@ $(function() {
                           const currentSlot = slot + 1;
                           const currentKey = _dataKey + 1;
                           const moduloEq = currentSlot === maxSlot ?
-                              0 : currentSlot;
-                          const usedDataKey = currentKey % maxSlot === moduloEq ? currentKey : null;
-                          const $groupContentItem = usedDataKey !== null ?
-                              $(`<div class="${groupId}--item" data-group-key="${usedDataKey}"></div>`) :
+                            0 : currentSlot;
+                          const usedDataKey = currentKey % maxSlot ===
+                            moduloEq ? currentKey : null;
+                          const $groupContentItem =
+                            usedDataKey !== null ?
+                              $(`<div class="${groupId}--item"
+                              data-group-key="${usedDataKey}"></div>`) :
                               null;
 
-                          if (usedDataKey !== null && $groupContentItem !== null) {
+                          if (usedDataKey !== null &&
+                            $groupContentItem !== null) {
+                            const groupKey = '.' + groupId +
+                            '--item[data-group-key=%key%]';
+
                             if ($groupContent &&
                               $groupContent.find(
-                                `.${groupId}--item[data-group-key=${currentKey}]`
+                                groupKey.replace('%key%', currentKey),
                               ).length === 0
                             ) {
                               $groupContent.append($groupContentItem);
                             }
 
                             const $itemContainer = $groupContent.find(
-                              `.${groupId}--item[data-group-key="${usedDataKey}"]`
+                              groupKey.replace('%key%', usedDataKey),
                             );
 
                             $itemContainer.append(
@@ -679,10 +716,10 @@ $(function() {
                                 item.hbs,
                                 Object.assign(
                                   item.templateData,
-                                (String(item.dataOverride).length > 0 &&
+                                  (String(item.dataOverride).length > 0 &&
                                     String(item.dataOverrideWith).length > 0) ?
-                                      dataItem : { data: dataItem },
-                                ))
+                                    dataItem : {data: dataItem},
+                                )),
                             );
                           }
                         }
@@ -704,7 +741,7 @@ $(function() {
                           item.elementId,
                           $target,
                           $content.find(`.${item.uniqueID}--item`),
-                          { item, ...item.templateData },
+                          {item, ...item.templateData},
                           widgetDataInfo?.meta,
                         );
                       }
@@ -712,76 +749,81 @@ $(function() {
                   };
 
                   // Parse group of elements
-                  $.each(Object.keys(elementGroups.groups), function(groupIndex, groupId){
-                    if (elementGroups.groups.hasOwnProperty(groupId)) {
-                      const elemGroup = elementGroups.groups[groupId];
-                      const groupValues = Object.values(elementGroups.groups);
-                      const maxSlot = getMaxSlot(groupValues, 'items', 1);
-                      const $groupContent = $(`<div class="${groupId}"></div>`);
+                  $.each(Object.keys(elementGroups.groups),
+                    function(groupIndex, groupId) {
+                      if (elementGroups.groups.hasOwnProperty(groupId)) {
+                        const elemGroup = elementGroups.groups[groupId];
+                        const groupValues = Object.values(elementGroups.groups);
+                        const maxSlot = getMaxSlot(groupValues, 'items', 1);
+                        const $grpContent = $(`<div class="${groupId}"></div>`);
 
-                      if (elemGroup?.items.length > 0) {
-                        $.each(elemGroup?.items, function(itemKey, groupItem){
-                          renderDataItems(
-                            dataItems,
-                            groupItem,
-                            elemGroup.slot,
-                            maxSlot,
-                            groupId,
-                            $groupContent
-                          );
-                        });
+                        if (elemGroup?.items.length > 0) {
+                          $.each(elemGroup?.items,
+                            function(itemKey, groupItem) {
+                              renderDataItems(
+                                dataItems,
+                                groupItem,
+                                elemGroup.slot,
+                                maxSlot,
+                                groupId,
+                                $grpContent,
+                              );
+                            });
 
-                        $content.append($groupContent.prop('outerHTML'));
+                          $content.append($grpContent.prop('outerHTML'));
 
-                        $groupContent.xiboElementsRender(
-                          {
-                            ...elemGroup,
-                            itemsPerPage: maxSlot,
-                            numItems: dataItems.length
-                          },
-                          $groupContent.find(`.${elemGroup.id}--item`),
-                        );
-                      }
-                    }
-                  });
-
-                  // Parse standalone elements
-                  $.each(Object.keys(elementGroups.standalone), function(itemIndex, itemId) {
-                    if (elementGroups.standalone.hasOwnProperty(itemId)) {
-                      const itemsObj = elementGroups.standalone[itemId];
-                      const itemsValues = Object.values([elementGroups.standalone]);
-                      const maxSlot = getMaxSlot(itemsValues, itemId, 1);
-
-                      if (itemsObj.length > 0) {
-                        const itemGroupProps = itemsObj.slice(0, 1)[0];
-                        $.each(itemsObj, function(itemKey, itemObj){
-                          const groupContentID = `${itemId}_page-${itemObj.slot}`;
-                          const $groupContentItem = $(`<div class="${groupContentID}"></div>`);
-                          renderDataItems(
-                            dataItems,
-                            itemObj,
-                            itemObj.slot,
-                            maxSlot,
-                            groupContentID,
-                            $groupContentItem,
-                          );
-
-                          $content.append($groupContentItem.prop('outerHTML'));
-
-                          $groupContentItem.xiboElementsRender(
+                          $grpContent.xiboElementsRender(
                             {
-                              ...itemGroupProps,
-                              parentId: groupContentID,
+                              ...elemGroup,
                               itemsPerPage: maxSlot,
                               numItems: dataItems.length,
-                              id: groupContentID,
                             },
-                            $groupContentItem.find(`.${groupContentID}--item`),
+                            $grpContent.find(`.${elemGroup.id}--item`),
                           );
-                        });
+                        }
                       }
-                    }
-                  });
+                    });
+
+                  // Parse standalone elements
+                  $.each(Object.keys(elementGroups.standalone),
+                    function(itemIndex, itemId) {
+                      if (elementGroups.standalone.hasOwnProperty(itemId)) {
+                        const itemsObj = elementGroups.standalone[itemId];
+                        const itemsValues = Object.values(
+                          [elementGroups.standalone]);
+                        const maxSlot = getMaxSlot(itemsValues, itemId, 1);
+
+                        if (itemsObj.length > 0) {
+                          const itemGroupProps = itemsObj.slice(0, 1)[0];
+                          $.each(itemsObj, function(itemKey, itemObj) {
+                            const grpCln = `${itemId}_page-${itemObj.slot}`;
+                            const $grpItem = $(`<div class="${grpCln}"></div>`);
+
+                            renderDataItems(
+                              dataItems,
+                              itemObj,
+                              itemObj.slot,
+                              maxSlot,
+                              grpCln,
+                              $grpItem,
+                            );
+
+                            $content.append($grpItem.prop('outerHTML'));
+
+                            $grpItem.xiboElementsRender(
+                              {
+                                ...itemGroupProps,
+                                parentId: grpCln,
+                                itemsPerPage: maxSlot,
+                                numItems: dataItems.length,
+                                id: grpCln,
+                              },
+                              $grpItem.find(`.${grpCln}--item`),
+                            );
+                          });
+                        }
+                      }
+                    });
                 });
             }
           }

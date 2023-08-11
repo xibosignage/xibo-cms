@@ -1,0 +1,299 @@
+<!--
+  ~ Copyright (C) 2023 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - https://xibosignage.com
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<templates>
+    <template>
+        <id>dataset_data_string</id>
+        <extends override="text" with="datasetString">text</extends>
+        <title>String</title>
+        <type>element</type>
+        <dataType>dataset</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>dataset-data-string</thumbnail>
+        <startWidth>360</startWidth>
+        <startHeight>100</startHeight>
+        <properties>
+            <property id="dataTypeId" type="hidden">
+                <default>1</default>
+            </property>
+            <property type="message">
+                <title>Please choose a Dataset from the Configure tab to be able to customise this element.</title>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="eq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property type="message">
+                <title>No field is available for that type of DataSet element.</title>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                        <condition field="datasetField" type="eq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="datasetField" type="datasetField">
+                <dependsOn>dataSetId</dependsOn>
+                <title>Select DataSet Field</title>
+                <helpText>Please choose a DataSet field for this element.</helpText>
+                <default></default>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <assets>
+            <asset id="dataset-data-string" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/dataset/elements/dataset-string.png" />
+        </assets>
+    </template>
+    <template>
+        <id>dataset_data_number</id>
+        <extends override="text" with="datasetNumber">text</extends>
+        <title>Number</title>
+        <type>element</type>
+        <dataType>dataset</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>dataset-data-number</thumbnail>
+        <startWidth>360</startWidth>
+        <startHeight>100</startHeight>
+        <properties>
+            <property id="dataTypeId" type="hidden">
+                <default>2</default>
+            </property>
+            <property type="message">
+                <title>Please choose a Dataset from the Configure tab to be able to customise this element.</title>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="eq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property type="message">
+                <title>No field is available for that type of DataSet element.</title>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                        <condition field="datasetField" type="eq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="datasetField" type="datasetField">
+                <dependsOn>dataSetId</dependsOn>
+                <title>Select DataSet Field</title>
+                <helpText>Please choose a DataSet field for this element.</helpText>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <assets>
+            <asset id="dataset-data-number" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/dataset/elements/dataset-number.png" />
+        </assets>
+    </template>
+    <template>
+        <id>dataset_data_date</id>
+        <extends override="date">date</extends>
+        <title>Date</title>
+        <type>element</type>
+        <dataType>dataset</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>dataset-data-date</thumbnail>
+        <startWidth>360</startWidth>
+        <startHeight>100</startHeight>
+        <properties>
+            <property id="dataTypeId" type="hidden">
+                <default>3</default>
+            </property>
+            <property type="message">
+                <title>Please choose a Dataset from the Configure tab to be able to customise this element.</title>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="eq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property type="message">
+                <title>No field is available for that type of DataSet element.</title>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                        <condition field="datasetField" type="eq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="datasetField" type="datasetField">
+                <dependsOn>dataSetId</dependsOn>
+                <title>Select DataSet Field</title>
+                <helpText>Please choose a DataSet field for this element.</helpText>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <assets>
+            <asset id="dataset-data-date" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/date.png" />
+        </assets>
+    </template>
+    <template>
+        <id>dataset_data_extImg</id>
+        <extends override="url">global-image</extends>
+        <title>External Image</title>
+        <type>element</type>
+        <dataType>dataset</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>dataset-data-extImg</thumbnail>
+        <startWidth>150</startWidth>
+        <startHeight>150</startHeight>
+        <properties>
+            <property id="dataTypeId" type="hidden">
+                <default>4</default>
+            </property>
+            <property type="message">
+                <title>Please choose a Dataset from the Configure tab to be able to customise this element.</title>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="eq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property type="message">
+                <title>No field is available for that type of DataSet element.</title>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                        <condition field="datasetField" type="eq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="datasetField" type="datasetField">
+                <dependsOn>dataSetId</dependsOn>
+                <title>Select DataSet Field</title>
+                <helpText>Please choose a DataSet field for this element.</helpText>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <assets>
+            <asset id="dataset-data-extImg" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/image.png" />
+        </assets>
+    </template>
+    <template>
+        <id>dataset_data_libImg</id>
+        <extends override="url">global-image</extends>
+        <title>Library Image</title>
+        <type>element</type>
+        <dataType>dataset</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>dataset-data-libImg</thumbnail>
+        <startWidth>150</startWidth>
+        <startHeight>150</startHeight>
+        <properties>
+            <property id="dataTypeId" type="hidden">
+                <default>5</default>
+            </property>
+            <property type="message">
+                <title>Please choose a Dataset from the Configure tab to be able to customise this element.</title>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="eq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property type="message">
+                <title>No field is available for that type of DataSet element.</title>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                        <condition field="datasetField" type="eq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="datasetField" type="datasetField">
+                <dependsOn>dataSetId</dependsOn>
+                <title>Select DataSet Field</title>
+                <helpText>Please choose a DataSet field for this element.</helpText>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <assets>
+            <asset id="dataset-data-libImg" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/image.png" />
+        </assets>
+    </template>
+    <template>
+        <id>dataset_data_html</id>
+        <extends override="text">text</extends>
+        <title>HTML</title>
+        <type>element</type>
+        <dataType>dataset</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>dataset-data-html</thumbnail>
+        <startWidth>360</startWidth>
+        <startHeight>100</startHeight>
+        <properties>
+            <property id="dataTypeId" type="hidden">
+                <default>6</default>
+            </property>
+            <property type="message">
+                <title>Please choose a Dataset from the Configure tab to be able to customise this element.</title>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="eq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property type="message">
+                <title>No field is available for that type of DataSet element.</title>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                        <condition field="datasetField" type="eq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="datasetField" type="datasetField">
+                <dependsOn>dataSetId</dependsOn>
+                <title>Select DataSet Field</title>
+                <helpText>Please choose a DataSet field for this element.</helpText>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <assets>
+            <asset id="dataset-data-html" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/dataset/elements/dataset-html.png" />
+        </assets>
+    </template>
+</templates>

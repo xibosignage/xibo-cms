@@ -39,6 +39,7 @@ window.templates = {
     datasetFilter: require('./src/templates/forms/inputs/datasetFilter.hbs'),
     datasetColumnSelector:
       require('./src/templates/forms/inputs/datasetColumnSelector.hbs'),
+    datasetField: require('./src/templates/forms/inputs/datasetField.hbs'),
     fontSelector: require('./src/templates/forms/inputs/fontSelector.hbs'),
     effectSelector: require('./src/templates/forms/inputs/effectSelector.hbs'),
     worldClock: require('./src/templates/forms/inputs/worldClock.hbs'),

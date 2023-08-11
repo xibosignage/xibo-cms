@@ -126,6 +126,18 @@ window.forms = {
           }
         }
 
+        // Dataset Field selector
+        if (property.type === 'datasetField') {
+          // If we don't have a value, set value key pair to null
+          if (property.value == '') {
+            property.initialValue = null;
+            property.initialKey = null;
+          } else {
+            property.initialValue = property.value;
+            property.initialKey = 'datasetField';
+          }
+        }
+
         // Menu boards selector
         if (property.type === 'menuBoardSelector') {
           property.menuBoardSearchUrl = urlsForApi.menuBoard.search.url;
@@ -315,6 +327,15 @@ window.forms = {
                 $(this).popover('hide');
               }, 300);
             });
+          }
+
+          // Handle setting value to datasetField if value is defined
+          if (property.type === 'datasetField') {
+            if (property.value !== undefined &&
+              String(property.value).length > 0
+            ) {
+              $newField.find('select').attr('data-value', property.value);
+            }
           }
 
           // Handle depends on property if not already set
@@ -707,6 +728,79 @@ window.forms = {
           updateHiddenField(true);
         }).fail(function(jqXHR, textStatus, errorThrown) {
           console.error(jqXHR, textStatus, errorThrown);
+        });
+      }
+    });
+
+    // Dataset field selector
+    findElements(
+      '.dataset-field-selector',
+      target,
+    ).each(function(_k, el) {
+      const $el = $(el);
+      const $select = $el.find('select');
+      const $dataTypeId = $(container).find('input[name="dataTypeId"]');
+      const datasetId = $el.data('depends-on-value');
+      const getFieldItems = function(fields, search) {
+        return fields.reduce(function(cols, col) {
+          if (String(col.dataTypeId) === String(search)) {
+            return [...cols, col];
+          }
+          return cols;
+        }, []);
+      };
+
+      // Initialise the dataset filter clause
+      // if the dataset id is not empty
+      if (datasetId) {
+        $el.show();
+        // Get the dataset columns
+        $.ajax({
+          url: urlsForApi.dataset.search.url,
+          type: 'GET',
+          data: {
+            dataSetId: datasetId,
+          },
+        }).done(function(data) {
+          // Get the columns
+          const datasetCols = data.data[0].columns || [];
+
+          if ($dataTypeId.length > 0 && datasetCols.length > 0) {
+            // Find columns with given dataTypeId
+            const fieldItems =
+              getFieldItems(datasetCols, $dataTypeId.val()) || [];
+
+            if (fieldItems.length > 0) {
+              $select.empty();
+
+              $.each(fieldItems, function(_k, field) {
+                $select.append(
+                  $('<option value="' +
+                    field.heading +
+                    '">' +
+                    field.heading +
+                    '</option>',
+                  ),
+                );
+              });
+
+              if ($select.data('value') !== undefined) {
+                // Trigger change event
+                $select.val($select.data('value'))
+                  .trigger('change', [{
+                    skipSave: true,
+                  }]);
+              } else if (fieldItems.length === 1) {
+                // Set default value when 1 option exists
+                $select.val(fieldItems[0].heading).trigger('change');
+              } else if (fieldItems.length > 1) {
+                // Set default value to first option
+                $select.val(fieldItems[0].heading).trigger('change');
+              }
+            } else {
+              $el.hide();
+            }
+          }
         });
       }
     });
@@ -1787,7 +1881,7 @@ window.forms = {
         } else {
           if (element.group === effectsType) {
             $el.append(
-                $('<option value="' +
+              $('<option value="' +
                   element.effect +
                   '" data-optgroup="' +
                   element.group +
@@ -1854,7 +1948,7 @@ window.forms = {
         }
 
         // Mark dependency as added to the target
-        $target.data('depends-on-added', true);
+        $target.attr('data-depends-on-added', true);
 
         // Check if the dependency value comes as an array value ( value[1])
         let dependencyArrayIndex = null;
@@ -1865,9 +1959,7 @@ window.forms = {
         }
 
         // Add event listener to the dependency
-        const base = (targetId) ?
-          '#input_' + targetId + '_' + dependency :
-          '#input_' + dependency;
+        const base = '[name="' + dependency + '"]';
 
         // Add event listener to the $base element
         $(container).find(base).on('change', function(ev) {
@@ -1932,7 +2024,7 @@ window.forms = {
           } else {
             // For the remaining cases, set the
             // value of the dependency to the target data attribute
-            $target.data('depends-on-value', valueToSet);
+            $target.attr('data-depends-on-value', valueToSet);
 
             // Reset the target form field
             forms.initFields(container, $target, targetId, readOnlyMode);
@@ -2021,7 +2113,7 @@ window.forms = {
         const isConditionTargetExists = function(test) {
           if (test?.field && targetId) {
             const $conditionTargetElem = $(container).find(
-              `#input_${targetId}_${test.field}`);
+              `[name="${test.field}"]`);
 
             return $conditionTargetElem.length !== 0;
           }
@@ -2030,7 +2122,7 @@ window.forms = {
             for (let i = 0; i < test.conditions.length; i++) {
               const conditionField = test.conditions[i].field;
               const $conditionTargetElem = $(container)
-                .find(`#input_${targetId}_${conditionField}`);
+                .find(`[name="${conditionField}"]`);
 
               if ($conditionTargetElem.length == 0) {
                 return false;
@@ -2053,9 +2145,7 @@ window.forms = {
 
             for (let i = 0; i < testConditions.length; i++) {
               const condition = testConditions[i];
-              const fieldId = (targetId) ?
-                '#input_' + targetId + '_' + condition.field :
-                '#input_' + condition.field;
+              const fieldId = `[name="${condition.field}"]`;
               const $conditionTarget =
                 $(container).find(fieldId);
 
@@ -2096,9 +2186,7 @@ window.forms = {
           // Get all the targets for the test
           for (let i = 0; i < test.conditions.length; i++) {
             // Add the target to the list
-            const fieldId = (targetId) ?
-              '#input_' + targetId + '_' + test.conditions[i].field :
-              '#input_' + test.conditions[i].field;
+            const fieldId = `[name="${test.conditions[i].field}"]`;
             testTargets += fieldId;
 
             // If there are multiple conditions, add a comma
