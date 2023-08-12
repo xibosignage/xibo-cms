@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -133,6 +133,7 @@ class XiboSspConnector implements ConnectorInterface
                 'name' => $partnerId,
                 'enabled' => $params->getCheckbox($partnerId . '_enabled'),
                 'isTest' => $params->getCheckbox($partnerId . '_isTest'),
+                'isUseWidget' => $params->getCheckbox($partnerId . '_isUseWidget'),
                 'currency' => $params->getString($partnerId . '_currency'),
                 'key' => $params->getString($partnerId . '_key'),
                 'sov' => $params->getInt($partnerId . '_sov'),
@@ -333,7 +334,7 @@ class XiboSspConnector implements ConnectorInterface
                 'authorised' => 1,
             ]) as $display) {
                 if (!array_key_exists($display->displayId, $displays)) {
-                    $resolution = explode('x', $display->resolution);
+                    $resolution = explode('x', $display->resolution ?? '');
                     $displays[$display->displayId] = [
                         'displayId' => $display->displayId,
                         'hardwareKey' => $display->license,
