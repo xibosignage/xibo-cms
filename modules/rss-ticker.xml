@@ -28,7 +28,7 @@
     <type>rss-ticker</type>
     <legacyType>ticker</legacyType>
     <dataType>article</dataType>
-    <dataCacheKey>%uri%_%numItems%</dataCacheKey>
+    <dataCacheKey>%uri%_%numItems%_%stripTags%</dataCacheKey>
     <schemaVersion>2</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>1</regionSpecific>

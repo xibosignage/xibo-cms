@@ -27,6 +27,8 @@ use GuzzleHttp\Client;
 use Xibo\Entity\Module;
 use Xibo\Entity\Widget;
 use Xibo\Factory\MediaFactory;
+use Xibo\Helper\SanitizerService;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Xibo default implementation of a Widget Data Provider
@@ -78,6 +80,9 @@ class DataProvider implements DataProviderInterface
     /** @var array Guzzle proxy configuration */
     private $guzzleProxy;
 
+    /** @var SanitizerService */
+    private $sanitizer;
+
     /** @var null cached property values. */
     private $properties = null;
 
@@ -90,11 +95,12 @@ class DataProvider implements DataProviderInterface
      * @param \Xibo\Entity\Widget $widget
      * @param array $guzzleProxy
      */
-    public function __construct(Module $module, Widget $widget, array $guzzleProxy)
+    public function __construct(Module $module, Widget $widget, array $guzzleProxy, SanitizerService $sanitizer)
     {
         $this->module = $module;
         $this->widget = $widget;
         $this->guzzleProxy = $guzzleProxy;
+        $this->sanitizer = $sanitizer;
     }
 
     /**
@@ -416,5 +422,13 @@ class DataProvider implements DataProviderInterface
         }
 
         return $this->client;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getSanitizer(array $params): SanitizerInterface
+    {
+        return $this->sanitizer->getSanitizer($params);
     }
 }
