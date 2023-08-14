@@ -29,8 +29,10 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Event\ConnectorDeletingEvent;
 use Xibo\Event\ConnectorEnabledChangeEvent;
 use Xibo\Event\MaintenanceRegularEvent;
+use Xibo\Event\WidgetEditOptionRequestEvent;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
 class XiboSspConnector implements ConnectorInterface
@@ -61,6 +63,7 @@ class XiboSspConnector implements ConnectorInterface
         $dispatcher->addListener(MaintenanceRegularEvent::$NAME, [$this, 'onRegularMaintenance']);
         $dispatcher->addListener(ConnectorDeletingEvent::$NAME, [$this, 'onDeleting']);
         $dispatcher->addListener(ConnectorEnabledChangeEvent::$NAME, [$this, 'onEnabledChange']);
+        $dispatcher->addListener(WidgetEditOptionRequestEvent::$NAME, [$this, 'onWidgetEditOption']);
         return $this;
     }
 
@@ -498,6 +501,38 @@ class XiboSspConnector implements ConnectorInterface
     {
         $this->getLogger()->debug('onEnabledChange');
         $event->getConfigService()->changeSetting('isAdspaceEnabled', $event->getConnector()->isEnabled);
+    }
+
+    public function onWidgetEditOption(WidgetEditOptionRequestEvent $event)
+    {
+        $this->getLogger()->debug('onWidgetEditOption');
+
+        // Pull the widget we're working with.
+        $widget = $event->getWidget();
+        if ($widget === null) {
+            throw new NotFoundException();
+        }
+
+        // We handle the dashboard widget and the property with id="type"
+        if ($widget->type === 'ssp' && $event->getPropertyId() === 'partnerId') {
+            // Pull in existing information
+            $partnerFilter = $event->getPropertyValue();
+            $options = $event->getOptions();
+
+            foreach ($this->getAvailablePartners() as $partnerId => $partner) {
+                if ((empty($partnerFilter) || $partnerId === $partnerFilter)
+                    && $this->getPartnerSetting($partnerId, 'enabled') == 1
+                ) {
+                    $options[] = [
+                        'id' => $partnerId,
+                        'type' => $partnerId,
+                        'name' => $partner['name'],
+                    ];
+                }
+            }
+
+            $event->setOptions($options);
+        }
     }
 
     // </editor-fold>
