@@ -35,8 +35,9 @@ window.Hls = require('hls.js');
 // Include PDFjs
 window.pdfjsLib = require('pdfjs-dist/legacy/build/pdf.min.js');
 
-// Include common transformer
+// Include common helpers/transformer
 window.transformer = require('../../ui/src/helpers/transformer.js');
+window.ArrayHelper = require('../../ui/src/helpers/array.js');
 
 // Our own imports
 import 'xibo-interactive-control/dist/xibo-interactive-control.min.js';

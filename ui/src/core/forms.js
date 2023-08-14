@@ -743,14 +743,23 @@ window.forms = {
       const datasetId = $el.data('depends-on-value');
       const getFieldItems = function(fields, search) {
         return fields.reduce(function(cols, col) {
-          if (String(col.dataTypeId) === String(search)) {
+          const searchValue = String(search);
+          let searchValues = [];
+
+          if (searchValue.indexOf(',') !== -1) {
+            searchValues = searchValue.split(',');
+          } else {
+            searchValues = [searchValue];
+          }
+
+          if (searchValues.indexOf(String(col.dataTypeId)) !== -1) {
             return [...cols, col];
           }
           return cols;
         }, []);
       };
 
-      // Initialise the dataset filter clause
+      // Initialise the dataset fields
       // if the dataset id is not empty
       if (datasetId) {
         $el.show();

@@ -846,6 +846,15 @@ PropertiesPanel.prototype.render = function(
             'element-property element-common-property',
           );
 
+          // Check for id="datasetField" and move placement to top
+          const hasDatasetField =
+            properties.find((props) => props.id === 'datasetField');
+          const datasetFieldIndex = properties.indexOf(hasDatasetField);
+
+          if (datasetFieldIndex !== -1) {
+            ArrayHelper.move(properties, datasetFieldIndex, 0);
+          }
+
           // Create element fields
           forms.createFields(
             properties,
