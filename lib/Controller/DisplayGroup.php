@@ -680,7 +680,8 @@ class DisplayGroup extends Base
      *  @SWG\Parameter(
      *      name="dynamicCriteria",
      *      in="formData",
-     *      description="The filter criteria for this dynamic group. A comma separated set of regular expressions to apply",
+     *      description="The filter criteria for this dynamic group.
+     * A comma separated set of regular expressions to apply",
      *      type="string",
      *      required=false
      *   ),
@@ -694,7 +695,8 @@ class DisplayGroup extends Base
      *  @SWG\Parameter(
      *      name="dynamicCriteriaTags",
      *      in="formData",
-     *      description="The filter criteria for this dynamic group. A comma separated set of regular expressions to apply",
+     *      description="The filter criteria for this dynamic group.
+     * A comma separated set of regular expressions to apply",
      *      type="string",
      *      required=false
      *   ),
@@ -853,7 +855,8 @@ class DisplayGroup extends Base
      *  @SWG\Parameter(
      *      name="dynamicCriteria",
      *      in="formData",
-     *      description="The filter criteria for this dynamic group. A command separated set of regular expressions to apply",
+     *      description="The filter criteria for this dynamic group.
+     * A command separated set of regular expressions to apply",
      *      type="string",
      *      required=false
      *   ),
@@ -867,7 +870,8 @@ class DisplayGroup extends Base
      *  @SWG\Parameter(
      *      name="dynamicCriteriaTags",
      *      in="formData",
-     *      description="The filter criteria for this dynamic group. A comma separated set of regular expressions to apply",
+     *      description="The filter criteria for this dynamic group.
+     * A comma separated set of regular expressions to apply",
      *      type="string",
      *      required=false
      *   ),
@@ -949,8 +953,12 @@ class DisplayGroup extends Base
         $displayGroup->displayGroup = $parsedRequestParams->getString('displayGroup');
         $displayGroup->description = $parsedRequestParams->getString('description');
         $displayGroup->isDynamic = $parsedRequestParams->getCheckbox('isDynamic');
-        $displayGroup->dynamicCriteria = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getString('dynamicCriteria') : null;
-        $displayGroup->dynamicCriteriaLogicalOperator = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getString('logicalOperatorName') : 'OR';
+        $displayGroup->dynamicCriteria = ($displayGroup->isDynamic == 1)
+            ? $parsedRequestParams->getString('dynamicCriteria')
+            : null;
+        $displayGroup->dynamicCriteriaLogicalOperator = ($displayGroup->isDynamic == 1)
+            ? $parsedRequestParams->getString('logicalOperatorName')
+            : 'OR';
         $displayGroup->folderId = $parsedRequestParams->getInt('folderId', ['default' => $displayGroup->folderId]);
 
         $displayGroup->ref1 = $parsedRequestParams->getString('ref1');
@@ -975,14 +983,24 @@ class DisplayGroup extends Base
             }
 
             $displayGroup->updateTagLinks($tags);
-            $displayGroup->dynamicCriteriaTags = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getString('dynamicCriteriaTags') : null;
-            $displayGroup->dynamicCriteriaExactTags = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getCheckbox('exactTags') : 0;
-            $displayGroup->dynamicCriteriaTagsLogicalOperator = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getString('logicalOperator') : 'OR';
+            $displayGroup->dynamicCriteriaTags = ($displayGroup->isDynamic == 1)
+                ? $parsedRequestParams->getString('dynamicCriteriaTags')
+                : null;
+            $displayGroup->dynamicCriteriaExactTags = ($displayGroup->isDynamic == 1)
+                ? $parsedRequestParams->getCheckbox('exactTags')
+                : 0;
+            $displayGroup->dynamicCriteriaTagsLogicalOperator = ($displayGroup->isDynamic == 1)
+                ? $parsedRequestParams->getString('logicalOperator')
+                : 'OR';
         }
 
         // if we have changed the type from dynamic to non-dynamic or other way around, clear display/dg members
         if ($preEditIsDynamic != $displayGroup->isDynamic) {
-            $this->getLog()->debug('Display Group Id ' . $displayGroup->displayGroupId . ' switched is dynamic from ' . $preEditIsDynamic . ' To ' . $displayGroup->isDynamic . ' Clearing members for this Display Group.');
+            $this->getLog()->debug(
+                'Display Group Id ' . $displayGroup->displayGroupId
+                . ' switched is dynamic from ' . $preEditIsDynamic
+                . ' To ' . $displayGroup->isDynamic . ' Clearing members for this Display Group.'
+            );
             // get an array of assigned displays
             $membersDisplays = $this->displayFactory->getByDisplayGroupId($id);
 
@@ -1120,8 +1138,10 @@ class DisplayGroup extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         if ($displayGroup->isDisplaySpecific == 1) {
-            throw new InvalidArgumentException(__('This is a Display specific Display Group and its assignments cannot be modified.'),
-                'displayGroupId');
+            throw new InvalidArgumentException(
+                __('This is a Display specific Display Group and its assignments cannot be modified.'),
+                'displayGroupId'
+            );
         }
 
         if (!$this->getUser()->checkEditable($displayGroup)) {
@@ -1129,7 +1149,10 @@ class DisplayGroup extends Base
         }
 
         if ($displayGroup->isDynamic == 1) {
-            throw new InvalidArgumentException(__('Displays cannot be manually assigned to a Dynamic Group'), 'isDynamic');
+            throw new InvalidArgumentException(
+                __('Displays cannot be manually assigned to a Dynamic Group'),
+                'isDynamic'
+            );
         }
 
         $displayGroup->load();
@@ -1158,8 +1181,9 @@ class DisplayGroup extends Base
             $displayGroup->assignDisplay($display);
 
             // Store so that we can flag as incomplete
-            if (!in_array($display, $modifiedDisplays))
+            if (!in_array($display, $modifiedDisplays)) {
                 $modifiedDisplays[] = $display;
+            }
         }
 
         // Have we been provided with unassign id's as well?
@@ -1180,8 +1204,9 @@ class DisplayGroup extends Base
             $displayGroup->unassignDisplay($display);
 
             // Store so that we can flag as incomplete
-            if (!in_array($display, $modifiedDisplays))
+            if (!in_array($display, $modifiedDisplays)) {
                 $modifiedDisplays[] = $display;
+            }
         }
 
         // Save the result
@@ -1249,8 +1274,10 @@ class DisplayGroup extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         if ($displayGroup->isDisplaySpecific == 1) {
-            throw new InvalidArgumentException(__('This is a Display specific Display Group and its assignments cannot be modified.'),
-                'displayGroupId');
+            throw new InvalidArgumentException(
+                __('This is a Display specific Display Group and its assignments cannot be modified.'),
+                'displayGroupId'
+            );
         }
 
         $displayGroup->load();
@@ -1261,7 +1288,10 @@ class DisplayGroup extends Base
         }
 
         if ($displayGroup->isDynamic == 1) {
-            throw new InvalidArgumentException(__('Displays cannot be manually unassigned to a Dynamic Group'), 'isDynamic');
+            throw new InvalidArgumentException(
+                __('Displays cannot be manually unassigned to a Dynamic Group'),
+                'isDynamic'
+            );
         }
 
         $displays = $sanitizedParams->getIntArray('displayId', ['default' => []]);
@@ -1344,8 +1374,10 @@ class DisplayGroup extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         if ($displayGroup->isDisplaySpecific == 1) {
-            throw new InvalidArgumentException(__('This is a Display specific Display Group and its assignments cannot be modified.'),
-                'displayGroupId');
+            throw new InvalidArgumentException(
+                __('This is a Display specific Display Group and its assignments cannot be modified.'),
+                'displayGroupId'
+            );
         }
 
         $displayGroup->load();
@@ -1356,7 +1388,10 @@ class DisplayGroup extends Base
         }
 
         if ($displayGroup->isDynamic == 1) {
-            throw new InvalidArgumentException(__('DisplayGroups cannot be manually assigned to a Dynamic Group'), 'isDynamic');
+            throw new InvalidArgumentException(
+                __('DisplayGroups cannot be manually assigned to a Dynamic Group'),
+                'isDynamic'
+            );
         }
 
         $displayGroups = $sanitizedParams->getIntArray('displayGroupId', ['default' => []]);
@@ -1443,7 +1478,10 @@ class DisplayGroup extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         if ($displayGroup->isDisplaySpecific == 1) {
-            throw new InvalidArgumentException(__('This is a Display specific Display Group and its assignments cannot be modified.'), 'displayGroupId');
+            throw new InvalidArgumentException(
+                __('This is a Display specific Display Group and its assignments cannot be modified.'),
+                'displayGroupId'
+            );
         }
 
         if (!$this->getUser()->checkEditable($displayGroup)) {
@@ -1454,7 +1492,10 @@ class DisplayGroup extends Base
         $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
 
         if ($displayGroup->isDynamic == 1) {
-            throw new InvalidArgumentException(__('DisplayGroups cannot be manually unassigned to a Dynamic Group'), 'isDynamic');
+            throw new InvalidArgumentException(
+                __('DisplayGroups cannot be manually unassigned to a Dynamic Group'),
+                'isDynamic'
+            );
         }
 
         $displayGroups = $sanitizedParams->getIntArray('displayGroupId', ['default' => []]);
@@ -2815,7 +2856,10 @@ class DisplayGroup extends Base
             throw new InvalidArgumentException(__('Please provide a Trigger Code'), 'triggerCode');
         }
 
-        $this->playerAction->sendAction($this->displayFactory->getByDisplayGroupId($id), new TriggerWebhookAction($triggerCode));
+        $this->playerAction->sendAction(
+            $this->displayFactory->getByDisplayGroupId($id),
+            new TriggerWebhookAction($triggerCode)
+        );
 
         // Return
         $this->getState()->hydrate([
