@@ -209,7 +209,8 @@ RUN rm /var/www/cms/composer.* && \
     rm /var/www/cms/cypress.config.js && \
     rm -r /var/www/cms/cypress && \
     rm -r /var/www/cms/ui && \
-    rm /var/www/cms/webpack.config.js
+    rm /var/www/cms/webpack.config.js && \
+    rm /var/www/cms/lib/route-cypress.php
 
 # Map a volumes to this folder.
 # Our CMS files, library, cache and backups will be in here.
