@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2022 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -22,7 +22,6 @@
 
 
 namespace Xibo\Service;
-
 
 use Xibo\Entity\Display;
 use Xibo\Helper\Environment;
@@ -78,35 +77,56 @@ class PlayerActionService implements PlayerActionServiceInterface
      */
     public function sendAction($displays, $action)
     {
-        if (!$this->triggerPlayerActions)
+        if (!$this->triggerPlayerActions) {
             return;
+        }
 
         // XMR network address
-        if ($this->xmrAddress == null)
+        if ($this->xmrAddress == null) {
             $this->xmrAddress = $this->getConfig()->getSetting('XMR_ADDRESS');
+        }
 
-        if (!is_array($displays))
+        if (!is_array($displays)) {
             $displays = [$displays];
+        }
 
         // Check ZMQ
-        if (!Environment::checkZmq())
-            throw new ConfigurationException(__('ZeroMQ is required to send Player Actions. Please check your configuration.'));
+        if (!Environment::checkZmq()) {
+            throw new ConfigurationException(
+                __('ZeroMQ is required to send Player Actions. Please check your configuration.')
+            );
+        }
 
-        if ($this->xmrAddress == '')
+        if ($this->xmrAddress == '') {
             throw new InvalidArgumentException(__('XMR address is not set'), 'xmrAddress');
+        }
 
         // Send a message to all displays
         foreach ($displays as $display) {
             /* @var Display $display */
-            if ($display->xmrChannel == '' || $display->xmrPubKey == '')
-                throw new InvalidArgumentException(__('This Player is not configured or ready to receive push commands over XMR. Please contact your administrator.'), 'xmrRegistered');
+            if ($display->xmrChannel == '' || $display->xmrPubKey == '') {
+                throw new InvalidArgumentException(
+                    __(sprintf(
+                        '%s is not configured or ready to receive push commands over XMR.
+                         Please contact your administrator.',
+                        $display->display
+                    )),
+                    'xmrRegistered'
+                );
+            }
 
             $displayAction = clone $action;
 
             try {
                 $displayAction->setIdentity($display->xmrChannel, $display->xmrPubKey);
             } catch (\Exception $exception) {
-                throw new InvalidArgumentException(__('Invalid XMR registration'), 'xmrPubKey');
+                throw new InvalidArgumentException(
+                    __(sprintf(
+                        '%s Invalid XMR registration',
+                        $display->display
+                    )),
+                    'xmrPubKey'
+                );
             }
 
             // Add to collection
@@ -125,15 +145,16 @@ class PlayerActionService implements PlayerActionServiceInterface
      */
     public function processQueue()
     {
-        if (count($this->actions) > 0)
+        if (count($this->actions) > 0) {
             $this->log->debug('Player Action Service is looking to send %d actions', count($this->actions));
-        else
+        } else {
             return;
+        }
 
         // XMR network address
-        if ($this->xmrAddress == null)
+        if ($this->xmrAddress == null) {
             $this->xmrAddress = $this->getConfig()->getSetting('XMR_ADDRESS');
-
+        }
         $failures = 0;
 
         foreach ($this->actions as $action) {
@@ -144,14 +165,20 @@ class PlayerActionService implements PlayerActionServiceInterface
                     $this->log->error('Player action refused by XMR (connected but XMR returned false).');
                     $failures++;
                 }
-
             } catch (PlayerActionException $sockEx) {
                 $this->log->error('Player action connection failed. E = ' . $sockEx->getMessage());
                 $failures++;
             }
         }
 
-        if ($failures > 0)
-            throw new ConfigurationException(sprintf(__('%d of %d player actions failed'), $failures, count($this->actions)));
+        if ($failures > 0) {
+            throw new ConfigurationException(
+                sprintf(
+                    __('%d of %d player actions failed'),
+                    $failures,
+                    count($this->actions)
+                )
+            );
+        }
     }
 }
