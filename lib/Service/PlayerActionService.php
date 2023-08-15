@@ -106,11 +106,11 @@ class PlayerActionService implements PlayerActionServiceInterface
             /* @var Display $display */
             if ($display->xmrChannel == '' || $display->xmrPubKey == '') {
                 throw new InvalidArgumentException(
-                    __(sprintf(
-                        '%s is not configured or ready to receive push commands over XMR.
-                         Please contact your administrator.',
+                    sprintf(
+                        __('%s is not configured or ready to receive push commands over XMR.
+                         Please contact your administrator.'),
                         $display->display
-                    )),
+                    ),
                     'xmrRegistered'
                 );
             }
@@ -121,10 +121,10 @@ class PlayerActionService implements PlayerActionServiceInterface
                 $displayAction->setIdentity($display->xmrChannel, $display->xmrPubKey);
             } catch (\Exception $exception) {
                 throw new InvalidArgumentException(
-                    __(sprintf(
-                        '%s Invalid XMR registration',
+                    sprintf(
+                        __('%s Invalid XMR registration'),
                         $display->display
-                    )),
+                    ),
                     'xmrPubKey'
                 );
             }
