@@ -23,6 +23,7 @@
 namespace Xibo\Widget\Provider;
 
 use Carbon\Carbon;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Data Provider
@@ -107,6 +108,13 @@ interface DataProviderInterface
      * @return mixed
      */
     public function getSetting(string $setting, $default = null);
+
+    /**
+     * Get a Santiziter
+     * @param array $params key/value array of variable to sanitize
+     * @return SanitizerInterface
+     */
+    public function getSanitizer(array $params): SanitizerInterface;
 
     /**
      * Get data already added to this provider

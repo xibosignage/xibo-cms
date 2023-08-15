@@ -362,7 +362,7 @@ class Module implements \JsonSerializable
         } else {
             $info = new \getID3();
             $file = $info->analyze($file);
-            return intval($file['playtime_seconds'] ?? 0);
+            return intval($file['playtime_seconds'] ?? $this->defaultDuration);
         }
     }
 

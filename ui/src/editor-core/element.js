@@ -188,7 +188,7 @@ Element.prototype.getTemplate = function() {
 
             // Add the new properties to the template
             self.template.properties =
-              newProperties.concat(template.properties);
+              template.properties.concat(newProperties);
 
             // If template doesn't have onTemplateRender, use parent's
             if (!template.onTemplateRender) {

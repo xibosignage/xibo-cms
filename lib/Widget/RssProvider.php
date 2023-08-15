@@ -29,6 +29,7 @@ use PicoFeed\Logging\Logger;
 use PicoFeed\Parser\Item;
 use PicoFeed\PicoFeedException;
 use PicoFeed\Reader\Reader;
+use Symfony\Component\HtmlSanitizer\HtmlSanitizerConfig;
 use Xibo\Helper\Environment;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Widget\DataType\Article;
@@ -137,25 +138,37 @@ class RssProvider implements WidgetProviderInterface
                 });
             }
 
+            $sanitizer = null;
+            if ($dataProvider->getProperty('stripTags') != '') {
+                $sanitizer = (new HtmlSanitizerConfig())->allowSafeElements();
+
+                // Add the tags to strip
+                foreach (explode(',', $dataProvider->getProperty('stripTags')) as $forbidden) {
+                    $this->getLog()->debug('fetchData: blocking element ' . $forbidden);
+                    $sanitizer = $sanitizer->blockElement($forbidden);
+                }
+            }
+
             $countItems = 0;
             // Parse each item into an article
             foreach ($feedItems as $item) {
                 /* @var Item $item */
                 $article = new Article();
                 $article->title = $item->getTitle();
-                $article->content = $item->getContent();
                 $article->author = $item->getAuthor();
                 $article->link = $item->getUrl();
                 $article->date = Carbon::instance($item->getDate());
                 $article->publishedDate = Carbon::instance($item->getPublishedDate());
 
+                // Body safe HTML
+                $article->content = $dataProvider->getSanitizer(['content' => $item->getContent()])
+                    ->getHtml('content', [
+                        'htmlSanitizerConfig' => $sanitizer
+                    ]);
+
                 // RSS doesn't support a summary/excerpt tag.
                 $descriptionTag = $item->getTag('description');
-                if (!$descriptionTag) {
-                    $article->summary = strip_tags($article->content);
-                } else {
-                    $article->summary = $descriptionTag[0];
-                }
+                $article->summary = trim($descriptionTag ? strip_tags($descriptionTag[0]) : $article->content);
 
                 // Do we have an image included?
                 if (stripos($item->getEnclosureType(), 'image') > -1) {
@@ -170,19 +183,6 @@ class RssProvider implements WidgetProviderInterface
 
                 if ($dataProvider->getProperty('decodeHtml') == 1) {
                     $article->content = htmlspecialchars_decode($article->content);
-                }
-
-                if ($dataProvider->getProperty('stripTags') != '') {
-                    $doc = new \DOMDocument();
-                    $doc->loadHTML($article->content);
-                    $xpath = new \DOMXPath($doc);
-
-                    foreach (explode(',', $dataProvider->getProperty('stripTags')) as $forbidden) {
-                        foreach ($xpath->query('//' . $forbidden) as $node) {
-                            $node->parentNode->removeChild($node);
-                        }
-                    }
-                    $article->content = $doc->saveHTML();
                 }
 
                 // Return articles based on the value of numItems

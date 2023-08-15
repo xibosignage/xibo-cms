@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -270,6 +270,9 @@ class DataSetData extends Base
                 } else if ($column->dataTypeId == 5) {
                     // Media Id
                     $value = $sanitizedParams->getInt('dataSetColumnId_' . $column->dataSetColumnId);
+                } else if ($column->dataTypeId === 6) {
+                    // HTML
+                    $value = $sanitizedParams->getHtml('dataSetColumnId_' . $column->dataSetColumnId);
                 } else {
                     // String
                     $value = $sanitizedParams->getString('dataSetColumnId_' . $column->dataSetColumnId);
@@ -412,11 +415,11 @@ class DataSetData extends Base
             $existingValue = $existingRow[$column->heading];
             /* @var \Xibo\Entity\DataSetColumn $column */
             if ($column->dataSetColumnTypeId == 1) {
-
                 // Pull out the value
                 $value = $request->getParam('dataSetColumnId_' . $column->dataSetColumnId, null);
 
-                $this->getLog()->debug('Value is: ' . var_export($value, true) . ', existing value is ' . var_export($existingValue, true));
+                $this->getLog()->debug('Value is: ' . var_export($value, true)
+                    . ', existing value is ' . var_export($existingValue, true));
 
                 // Sanitize accordingly
                 if ($column->dataTypeId == 2) {
@@ -437,6 +440,13 @@ class DataSetData extends Base
                     // Media Id
                     if (isset($value)) {
                         $value = $sanitizedParams->getInt('dataSetColumnId_' . $column->dataSetColumnId);
+                    } else {
+                        $value = null;
+                    }
+                } else if ($column->dataTypeId === 6) {
+                    // HTML
+                    if (isset($value)) {
+                        $value = $sanitizedParams->getHtml('dataSetColumnId_' . $column->dataSetColumnId);
                     } else {
                         $value = null;
                     }
