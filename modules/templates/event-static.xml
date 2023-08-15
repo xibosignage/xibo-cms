@@ -27,30 +27,15 @@
         <showIn>none</showIn>
         <title>Events shown with custom HTML</title>
         <properties>
-          <property id="customInterval" type="text">
-              <title>Interval</title>
-              <helpText>Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week.</helpText>
-              <default></default>
-              <rule>
-                  <test>
-                      <condition type="interval"></condition>
-                  </test>
-              </rule>
-          </property>
-          <property id="effect" type="effectSelector" variant="all">
-              <title>Effect</title>
-              <helpText>Please select the effect that will be used to transition between items.</helpText>
-              <default>noTransition</default>
-          </property>
+            <property id="effect" type="effectSelector" variant="all">
+                <title>Effect</title>
+                <helpText>Please select the effect that will be used to transition between items.</helpText>
+                <default>noTransition</default>
+            </property>
             <property id="speed" type="number">
                 <title>Speed</title>
                 <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)</helpText>
                 <default>1000</default>
-            </property>
-            <property id="numItems" type="number">
-                <title>Number of Items</title>
-                <helpText>The Number of items you want to display</helpText>
-                <default></default>
             </property>
             <property id="itemsSideBySide" type="checkbox">
                 <title>Show items side by side?</title>
@@ -59,7 +44,7 @@
             </property>
             <property id="itemsPerPage" type="number">
                 <title>Items per page</title>
-                <helpText>If an effect has been selected from the General tab, how many pages should we split the items across? If you don't enter anything here 1 item will be put on each page.</helpText>
+                <helpText>If an effect has been selected, how many pages should we split the items across? If you don't enter anything here 1 item will be put on each page.</helpText>
                 <default>1</default>
             </property>
             <property id="dateFormat" type="text" variant="dateFormat">
@@ -2794,37 +2779,6 @@ $(target).xiboCalendarRender(properties, items);
                 <helpText>Message to be shown if no events are returned.</helpText>
                 <default>"No upcoming events"</default>
             </property>
-            <property id="customInterval" type="text">
-                <title>Interval</title>
-                <helpText>Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week.</helpText>
-                <default></default>
-                <rule>
-                    <test>
-                        <condition type="interval"></condition>
-                    </test>
-                </rule>
-            </property>
-            <property id="useDateRange" type="checkbox">
-                <title>Select a Date range to return events instead?</title>
-                <helpText>Use the checkbox to return events within defined start and end dates.</helpText>
-                <default>0</default>
-            </property>
-            <property id="rangeStart" type="date" variant="dateTime">
-                <title>Start Date</title>
-                <visibility>
-                    <test>
-                        <condition field="useDateRange" type="eq">1</condition>
-                    </test>
-                </visibility>
-            </property>
-            <property id="rangeEnd" type="date" variant="dateTime">
-                <title>End Date</title>
-                <visibility>
-                    <test>
-                        <condition field="useDateRange" type="eq">1</condition>
-                    </test>
-                </visibility>
-            </property>
             <property id="timeFormat" type="text">
                 <title>Time Format</title>
                 <helpText>The format to apply to event time (default HH:mm).</helpText>
@@ -3133,37 +3087,6 @@ $(target).xiboCalendarRender(properties, items);
                 <title>No events message</title>
                 <helpText>Message to be shown if no events are returned.</helpText>
                 <default>"No upcoming events"</default>
-            </property>
-            <property id="customInterval" type="text">
-                <title>Interval</title>
-                <helpText>Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week.</helpText>
-                <default></default>
-                <rule>
-                    <test>
-                        <condition type="interval"></condition>
-                    </test>
-                </rule>
-            </property>
-            <property id="useDateRange" type="checkbox">
-                <title>Select a Date range to return events instead?</title>
-                <helpText>Use the checkbox to return events within defined start and end dates.</helpText>
-                <default>0</default>
-            </property>
-            <property id="rangeStart" type="date" variant="dateTime">
-                <title>Start Date</title>
-                <visibility>
-                    <test>
-                        <condition field="useDateRange" type="eq">1</condition>
-                    </test>
-                </visibility>
-            </property>
-            <property id="rangeEnd" type="date" variant="dateTime">
-                <title>End Date</title>
-                <visibility>
-                    <test>
-                        <condition field="useDateRange" type="eq">1</condition>
-                    </test>
-                </visibility>
             </property>
             <property id="timeFormat" type="text">
                 <title>Time Format</title>
