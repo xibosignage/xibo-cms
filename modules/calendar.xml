@@ -28,7 +28,7 @@
     <legacyType>calendaradvanced</legacyType>
     <legacyType>calendar</legacyType>
     <dataType>event</dataType>
-    <dataCacheKey>%uri%_%useEventTimezone%_%useCalendarTimezone%_%windowsFormatCalendar%</dataCacheKey>
+    <dataCacheKey>%uri%_%customInterval%_%rangeStart%_%rangeEnd%_%useEventTimezone%_%useCalendarTimezone%_%windowsFormatCalendar%</dataCacheKey>
     <schemaVersion>2</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>1</regionSpecific>
@@ -46,6 +46,37 @@
                     <condition type="uri"></condition>
                 </test>
             </rule>
+        </property>
+        <property id="customInterval" type="text">
+            <title>Interval</title>
+            <helpText>Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week.</helpText>
+            <default></default>
+            <rule>
+                <test>
+                    <condition type="interval"></condition>
+                </test>
+            </rule>
+        </property>
+        <property id="useDateRange" type="checkbox">
+            <title>Select a Date range to return events instead?</title>
+            <helpText>Use the checkbox to return events within defined start and end dates.</helpText>
+            <default>0</default>
+        </property>
+        <property id="rangeStart" type="date" variant="dateTime">
+            <title>Start Date</title>
+            <visibility>
+                <test>
+                    <condition field="useDateRange" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="rangeEnd" type="date" variant="dateTime">
+            <title>End Date</title>
+            <visibility>
+                <test>
+                    <condition field="useDateRange" type="eq">1</condition>
+                </test>
+            </visibility>
         </property>
         <property id="excludeAllDay" type="checkbox">
             <title>Exclude all day events?</title>
@@ -75,6 +106,7 @@
         <property id="durationIsPerItem" type="checkbox">
             <title>Duration is per item</title>
             <helpText>The duration specified is per item otherwise it is per feed.</helpText>
+            <default>0</default>
         </property>
         <property id="numItems" type="number">
             <title>Number of items</title>

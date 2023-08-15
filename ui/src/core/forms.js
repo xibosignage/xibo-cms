@@ -1844,6 +1844,7 @@ window.forms = {
 
       // Effects
       const effects = [
+        {effect: 'none', group: 'showAll'},
         {effect: 'marqueeLeft', group: 'showAll'},
         {effect: 'marqueeRight', group: 'showAll'},
         {effect: 'marqueeUp', group: 'showAll'},
@@ -1860,36 +1861,19 @@ window.forms = {
         {effect: 'tileBlind', group: 'showPaged'},
       ];
 
-      // Add option groups
-      if (effectsType === 'showAll' || effectsType === 'all') {
-        effects.unshift({effect: 'none', group: 'all'});
-        $el.append(
-          $('<optgroup label="' + effectsTranslations.showAll + '">'),
-        );
-      }
-
-      // Add the options to the respective groups
+      // Add the options
       $.each(effects, function(_index, element) {
-        if (element.group === 'all') {
-          // Add before the optgroups
-          $el.prepend(
-            $('<option value="' +
-              element.effect +
-              '">' +
-              effectsTranslations[element.effect] +
-              '</option>'));
-        } else {
-          if (element.group === effectsType) {
-            $el.append(
-              $('<option value="' +
-                  element.effect +
-                  '" data-optgroup="' +
-                  element.group +
-                  '">' +
-                  effectsTranslations[element.effect] +
-                  '</option>'));
-          }
+        if (effectsType !== 'all' && element.group !== effectsType) {
+          return;
         }
+        $el.append(
+          $('<option value="' +
+            element.effect +
+            '" data-optgroup="' +
+            element.group +
+            '">' +
+            effectsTranslations[element.effect] +
+            '</option>'));
       });
 
 

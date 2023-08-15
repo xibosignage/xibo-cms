@@ -305,7 +305,7 @@ class ModuleFactory extends BaseFactory
      */
     public function getByType(string $type, array $conditions = []): Module
     {
-        $this->getLog()->debug('ModuleFactory: getByType');
+        $this->getLog()->debug('ModuleFactory: getByType ' . $type);
         $modules = $this->load();
         usort($modules, function ($a, $b) {
             /** @var Module $a */

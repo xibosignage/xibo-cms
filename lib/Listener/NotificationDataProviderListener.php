@@ -43,7 +43,7 @@ class NotificationDataProviderListener
 
     /** @var \Xibo\Factory\NotificationFactory */
     private $notificationFactory;
-    
+
     /**
      * @var User
      */
@@ -72,12 +72,10 @@ class NotificationDataProviderListener
 
     private function getData(DataProviderInterface $dataProvider)
     {
-        $dateFormat = $dataProvider->getProperty('dateFormat', $this->config->getSetting('DATE_FORMAT'));
-
         $age = $dataProvider->getProperty('age', 0);
 
         $filter = [
-            'releaseDt' => ($age === 0) ? null : Carbon::now()->subMinutes($age)->format('U'),
+            'releaseDt' => ($age === 0) ? null : Carbon::now()->subMinutes($age)->unix(),
             'onlyReleased' => 1,
         ];
 
@@ -93,14 +91,14 @@ class NotificationDataProviderListener
 
         foreach ($notifications as $notification) {
             $item = [];
-            $item['name'] = $dataProvider->getProperty('name');
             $item['subject'] = $notification->subject;
             $item['body'] = strip_tags($notification->body);
-            $item['date'] = Carbon::createFromTimestamp($notification->releaseDt)->translatedFormat($dateFormat);
+            $item['date'] = Carbon::createFromTimestamp($notification->releaseDt)->format('c');
+            $item['createdAt'] = Carbon::createFromTimestamp($notification->createDt)->format('c');
 
             $dataProvider->addItem($item);
         }
-        
+
         $dataProvider->setIsHandled();
     }
 }
