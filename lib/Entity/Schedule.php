@@ -464,8 +464,9 @@ class Schedule implements \JsonSerializable
      */
     private function inScheduleLookAhead()
     {
-        if ($this->isAlwaysDayPart())
+        if ($this->isAlwaysDayPart()) {
             return true;
+        }
 
         // From Date and To Date are in UNIX format
         $currentDate = Carbon::now();
@@ -480,7 +481,8 @@ class Schedule implements \JsonSerializable
             // A recurring event
             $this->getLog()->debug('Checking look ahead based on recurrence');
             // we should check whether the event from date is before the lookahead (i.e. the event has recurred once)
-            // we should also check whether the recurrence range is still valid (i.e. we've not stopped recurring and we don't recur forever)
+            // we should also check whether the recurrence range is still valid
+            // (i.e. we've not stopped recurring and we don't recur forever)
             return (
                 $this->fromDt <= $rfLookAhead->format('U')
                 && ($this->recurrenceRange == 0 || $this->recurrenceRange > $currentDate->format('U'))
@@ -492,7 +494,10 @@ class Schedule implements \JsonSerializable
             return ($this->fromDt >= $currentDate->format('U') && $this->fromDt <= $rfLookAhead->format('U'));
         } else {
             // Compare the event dates
-            $this->getLog()->debug('Checking look ahead based event dates ' . $currentDate->toRssString() . ' / ' . $rfLookAhead->toRssString());
+            $this->getLog()->debug(
+                'Checking look ahead based event dates '
+                . $currentDate->toRssString() . ' / ' . $rfLookAhead->toRssString()
+            );
             return ($this->fromDt <= $rfLookAhead->format('U') && $this->toDt >= $currentDate->format('U'));
         }
     }
@@ -509,8 +514,9 @@ class Schedule implements \JsonSerializable
         ], $options);
 
         // If we are already loaded, then don't do it again
-        if ($this->loaded || $this->eventId == null || $this->eventId == 0)
+        if ($this->loaded || $this->eventId == null || $this->eventId == 0) {
             return;
+        }
 
         $this->displayGroups = $this->displayGroupFactory->getByEventId($this->eventId);
 
@@ -535,8 +541,9 @@ class Schedule implements \JsonSerializable
     {
         $this->load();
 
-        if (!in_array($displayGroup, $this->displayGroups))
+        if (!in_array($displayGroup, $this->displayGroups)) {
             $this->displayGroups[] = $displayGroup;
+        }
     }
 
     /**
@@ -577,6 +584,13 @@ class Schedule implements \JsonSerializable
             throw new InvalidArgumentException(__('The from date is too far in the past.'), 'fromDt');
         }
 
+        if (!empty($this->name) && strlen($this->name) > 50) {
+            throw new InvalidArgumentException(
+                __('Name cannot be longer than 50 characters.'),
+                'name'
+            );
+        }
+
         if ($this->eventTypeId == Schedule::$LAYOUT_EVENT ||
             $this->eventTypeId == Schedule::$CAMPAIGN_EVENT ||
             $this->eventTypeId == Schedule::$OVERLAY_EVENT ||
@@ -591,8 +605,12 @@ class Schedule implements \JsonSerializable
 
             if ($this->isCustomDayPart()) {
                 // validate the dates
-                if ($this->toDt <= $this->fromDt)
-                    throw new InvalidArgumentException(__('Can not have an end time earlier than your start time'), 'start/end');
+                if ($this->toDt <= $this->fromDt) {
+                    throw new InvalidArgumentException(
+                        __('Can not have an end time earlier than your start time'),
+                        'start/end'
+                    );
+                }
             }
 
             $this->commandId = null;
@@ -600,7 +618,10 @@ class Schedule implements \JsonSerializable
             // additional validation for Interrupt Layout event type
             if ($this->eventTypeId == Schedule::$INTERRUPT_EVENT) {
                 if (!v::intType()->notEmpty()->min(0)->max(3600)->validate($this->shareOfVoice)) {
-                    throw new InvalidArgumentException(__('Share of Voice must be a whole number between 0 and 3600'), 'shareOfVoice');
+                    throw new InvalidArgumentException(
+                        __('Share of Voice must be a whole number between 0 and 3600'),
+                        'shareOfVoice'
+                    );
                 }
             }
 
@@ -617,7 +638,10 @@ class Schedule implements \JsonSerializable
             }
 
             if (!v::stringType()->notEmpty()->validate($this->actionTriggerCode)) {
-                throw new InvalidArgumentException(__('Please select a Action trigger code for this event.'), 'actionTriggerCode');
+                throw new InvalidArgumentException(
+                    __('Please select a Action trigger code for this event.'),
+                    'actionTriggerCode'
+                );
             }
 
             if ($this->actionType === 'command') {
@@ -626,7 +650,10 @@ class Schedule implements \JsonSerializable
                 }
             } elseif ($this->actionType === 'navLayout') {
                 if (!v::stringType()->notEmpty()->validate($this->actionLayoutCode)) {
-                    throw new InvalidArgumentException(__('Please select a Layout code for this event.'), 'actionLayoutCode');
+                    throw new InvalidArgumentException(
+                        __('Please select a Layout code for this event.'),
+                        'actionLayoutCode'
+                    );
                 }
                 $this->commandId = null;
             }
@@ -639,7 +666,10 @@ class Schedule implements \JsonSerializable
             if ($this->isCustomDayPart()) {
                 // validate the dates
                 if ($this->toDt <= $this->fromDt) {
-                    throw new InvalidArgumentException(__('Can not have an end time earlier than your start time'), 'start/end');
+                    throw new InvalidArgumentException(
+                        __('Can not have an end time earlier than your start time'),
+                        'start/end'
+                    );
                 }
             }
         } else {
@@ -649,7 +679,10 @@ class Schedule implements \JsonSerializable
 
         // Make sure we have a sensible recurrence setting
         if (!$this->isCustomDayPart() && ($this->recurrenceType == 'Minute' || $this->recurrenceType == 'Hour')) {
-            throw new InvalidArgumentException(__('Repeats selection is invalid for Always or Daypart events'), 'recurrencyType');
+            throw new InvalidArgumentException(
+                __('Repeats selection is invalid for Always or Daypart events'),
+                'recurrencyType'
+            );
         }
         // Check display order is positive
         if ($this->displayOrder < 0) {
@@ -765,10 +798,16 @@ class Schedule implements \JsonSerializable
         if ($options['notify']) {
             // Only if the schedule effects the immediate future - i.e. within the RF Look Ahead
             if ($this->inScheduleLookAhead()) {
-                $this->getLog()->debug('Schedule changing is within the schedule look ahead, will notify ' . count($this->displayGroups) . ' display groups');
+                $this->getLog()->debug(
+                    'Schedule changing is within the schedule look ahead, will notify '
+                    . count($this->displayGroups) . ' display groups'
+                );
                 foreach ($this->displayGroups as $displayGroup) {
                     /* @var DisplayGroup $displayGroup */
-                    $this->getDisplayNotifyService()->collectNow()->notifyByDisplayGroupId($displayGroup->displayGroupId);
+                    $this
+                        ->getDisplayNotifyService()
+                        ->collectNow()
+                        ->notifyByDisplayGroupId($displayGroup->displayGroupId);
                 }
             } else {
                 $this->getLog()->debug('Schedule changing is not within the schedule look ahead');
@@ -820,7 +859,7 @@ class Schedule implements \JsonSerializable
         }
 
         if ($this->eventTypeId === self::$SYNC_EVENT) {
-            $this->getStore()->update('DELETE FROM `schedule_sync` WHERE eventId = :eventId',[
+            $this->getStore()->update('DELETE FROM `schedule_sync` WHERE eventId = :eventId', [
                 'eventId' => $this->eventId
             ]);
         }
@@ -832,10 +871,16 @@ class Schedule implements \JsonSerializable
         if ($options['notify']) {
             // Only if the schedule effects the immediate future - i.e. within the RF Look Ahead
             if ($this->inScheduleLookAhead() && $this->displayNotifyService !== null) {
-                $this->getLog()->debug('Schedule changing is within the schedule look ahead, will notify ' . count($notify) . ' display groups');
+                $this->getLog()->debug(
+                    'Schedule changing is within the schedule look ahead, will notify '
+                    . count($notify) . ' display groups'
+                );
                 foreach ($notify as $displayGroup) {
                     /* @var DisplayGroup $displayGroup */
-                    $this->getDisplayNotifyService()->collectNow()->notifyByDisplayGroupId($displayGroup->displayGroupId);
+                    $this
+                        ->getDisplayNotifyService()
+                        ->collectNow()
+                        ->notifyByDisplayGroupId($displayGroup->displayGroupId);
                 }
             } else if ($this->displayNotifyService === null) {
                 $this->getLog()->info('Notify disabled, dependencies not set');
@@ -1043,15 +1088,18 @@ class Schedule implements \JsonSerializable
         $fromDt = $fromDt->copy();
         $toDt = $toDt->copy();
 
-        if ($this->pool == null)
+        if ($this->pool == null) {
             throw new ConfigurationException(__('Cache pool not available'));
-
-        if ($this->eventId == null)
+        }
+        if ($this->eventId == null) {
             throw new InvalidArgumentException(__('Unable to generate schedule, unknown event'), 'eventId');
-
+        }
         // What if we are requesting a single point in time?
         if ($fromDt == $toDt) {
-            $this->log->debug('Requesting event for a single point in time: ' . $fromDt->format(DateFormatHelper::getSystemFormat()));
+            $this->log->debug(
+                'Requesting event for a single point in time: '
+                . $fromDt->format(DateFormatHelper::getSystemFormat())
+            );
         }
 
         $events = [];
@@ -1062,7 +1110,10 @@ class Schedule implements \JsonSerializable
         $fromDt->startOfMonth();
 
         if ($fromDt == $toDt) {
-            $this->log->debug('From and To Dates are the same after rewinding 1 month, the date is the 1st of the month, adding a month to toDate.');
+            $this->log->debug(
+                'From and To Dates are the same after rewinding 1 month,
+                 the date is the 1st of the month, adding a month to toDate.'
+            );
             $toDt->addMonth();
         }
 
@@ -1076,7 +1127,10 @@ class Schedule implements \JsonSerializable
             // wind back the generate from date
             $fromDt->subMonth();
 
-            $this->getLog()->debug('Expecting events from the prior month to spill over into this one, pulled back the generate from dt to ' . $fromDt->toRssString());
+            $this->getLog()->debug(
+                'Expecting events from the prior month to spill over into this one,
+                 pulled back the generate from dt to ' . $fromDt->toRssString()
+            );
         } else {
             $this->getLog()->debug('The main event has a start and end date within the month, no need to pull it in from the prior month. [eventId:' . $this->eventId . ']');
         }
@@ -1086,7 +1140,6 @@ class Schedule implements \JsonSerializable
 
         // Request month cache
         while ($fromDt < $toDt) {
-
             // Empty scheduleEvents as we are looping through each month
             // we dont want to save previous month events
             $this->scheduleEvents = [];
@@ -1094,10 +1147,12 @@ class Schedule implements \JsonSerializable
             // Events for the month.
             $this->generateMonth($fromDt, $eventStart, $eventEnd);
 
-            $this->getLog()->debug('Filtering Events: ' . json_encode($this->scheduleEvents, JSON_PRETTY_PRINT) . '. fromTimeStamp: ' . $fromTimeStamp . ', toTimeStamp: ' . $toTimeStamp);
+            $this->getLog()->debug(
+                'Filtering Events: ' . json_encode($this->scheduleEvents, JSON_PRETTY_PRINT)
+                . '. fromTimeStamp: ' . $fromTimeStamp . ', toTimeStamp: ' . $toTimeStamp
+            );
 
             foreach ($this->scheduleEvents as $scheduleEvent) {
-
                 // Find the excluded recurring events
                 $exclude = false;
                 foreach ($scheduleExclusions as $exclusion) {
@@ -1134,7 +1189,10 @@ class Schedule implements \JsonSerializable
         // Clear our cache of schedule exclusions
         $scheduleExclusions = null;
 
-        $this->getLog()->debug('Filtered ' . count($this->scheduleEvents) . ' to ' . count($events) . ', events: ' . json_encode($events, JSON_PRETTY_PRINT));
+        $this->getLog()->debug(
+            'Filtered ' . count($this->scheduleEvents) . ' to ' . count($events)
+            . ', events: ' . json_encode($events, JSON_PRETTY_PRINT)
+        );
 
         return $events;
     }
@@ -1154,7 +1212,8 @@ class Schedule implements \JsonSerializable
         $generateFromDt->copy()->startOfMonth();
         $generateToDt = $generateFromDt->copy()->addMonth();
 
-        $this->getLog()->debug('Request for schedule events on eventId ' . $this->eventId
+        $this->getLog()->debug(
+            'Request for schedule events on eventId ' . $this->eventId
             . ' from: ' . Carbon::createFromTimestamp($generateFromDt->format(DateFormatHelper::getSystemFormat()))
             . ' to: ' . Carbon::createFromTimestamp($generateToDt->format(DateFormatHelper::getSystemFormat()))
             . ' [eventId:' . $this->eventId . ']'
@@ -1171,12 +1230,14 @@ class Schedule implements \JsonSerializable
         }
 
         // If we don't have any recurrence, we are done
-        if (empty($this->recurrenceType) || empty($this->recurrenceDetail))
+        if (empty($this->recurrenceType) || empty($this->recurrenceDetail)) {
             return;
+        }
 
         // Detect invalid recurrences and quit early
-        if (!$this->isCustomDayPart() && ($this->recurrenceType == 'Minute' || $this->recurrenceType == 'Hour'))
+        if (!$this->isCustomDayPart() && ($this->recurrenceType == 'Minute' || $this->recurrenceType == 'Hour')) {
             return;
+        }
 
         // Check the cache
         $item = $this->pool->getItem('schedule/' . $this->eventId . '/' . $generateFromDt->format('Y-m'));
@@ -1200,14 +1261,19 @@ class Schedule implements \JsonSerializable
             ? Carbon::createFromTimestamp($this->lastRecurrenceWatermark)
             : Carbon::createFromTimestamp(self::$DATE_MIN);
 
-        $this->getLog()->debug('Recurrence calculation required - last water mark is set to: ' . $lastWatermark->toRssString()
-            . '. Event dates: ' . $start->toRssString() . ' - ' . $end->toRssString() . ' [eventId:' . $this->eventId . ']');
+        $this->getLog()->debug(
+            'Recurrence calculation required - last water mark is set to: ' . $lastWatermark->toRssString()
+            . '. Event dates: ' . $start->toRssString() . ' - '
+            . $end->toRssString() . ' [eventId:' . $this->eventId . ']'
+        );
 
         // Set the temp starts
         // the start date should be the latest of the event start date and the last recurrence date
         if ($lastWatermark > $start && $lastWatermark < $generateFromDt) {
-            $this->getLog()->debug('The last watermark is later than the event start date and the generate from dt, using the watermark for forward population'
-                . ' [eventId:' . $this->eventId . ']');
+            $this->getLog()->debug(
+                'The last watermark is later than the event start date and the generate from dt,
+                 using the watermark for forward population [eventId:' . $this->eventId . ']'
+            );
 
             // Need to set the toDt based on the original event duration and the watermark start date
             $eventDuration = $start->diffInSeconds($end, true);
@@ -1217,7 +1283,7 @@ class Schedule implements \JsonSerializable
             $end = $start->copy()->addSeconds($eventDuration);
 
             if ($start <= $generateToDt && $end >= $generateFromDt) {
-                $this->getLog()->debug('The event start/end is inside the month' );
+                $this->getLog()->debug('The event start/end is inside the month');
                 // If we're a weekly repeat, check that the start date is on a selected day
                 if ($this->recurrenceType !== 'Week'
                     || (!empty($this->recurrenceRepeatsOn)
@@ -1239,17 +1305,21 @@ class Schedule implements \JsonSerializable
             $range = $generateToDt->copy();
         }
 
-        $this->getLog()->debug('[' . $generateFromDt->toRssString() . ' - ' . $generateToDt->toRssString()
-            . '] Looping from ' . $start->toRssString() . ' to ' . $range->toRssString() . ' [eventId:' . $this->eventId . ']');
+        $this->getLog()->debug(
+            '[' . $generateFromDt->toRssString() . ' - ' . $generateToDt->toRssString()
+            . '] Looping from ' . $start->toRssString()
+            . ' to ' . $range->toRssString() . ' [eventId:' . $this->eventId . ']'
+        );
 
         // loop until we have added the recurring events for the schedule
-        while ($start < $range)
-        {
-            $this->getLog()->debug('Loop: ' . $start->toRssString() . ' to ' . $range->toRssString() . ' [eventId:' . $this->eventId . ', end: ' . $end->toRssString() . ']');
+        while ($start < $range) {
+            $this->getLog()->debug(
+                'Loop: ' . $start->toRssString() . ' to ' . $range->toRssString()
+                . ' [eventId:' . $this->eventId . ', end: ' . $end->toRssString() . ']'
+            );
 
             // add the appropriate time to the start and end
-            switch ($this->recurrenceType)
-            {
+            switch ($this->recurrenceType) {
                 case 'Minute':
                     $start->minute($start->minute + $this->recurrenceDetail);
                     $end->minute($end->minute + $this->recurrenceDetail);
@@ -1279,7 +1349,10 @@ class Schedule implements \JsonSerializable
                         // What is the end of this week
                         $endOfWeek = $start->copy()->locale(Translate::GetLocale())->endOfWeek();
 
-                        $this->getLog()->debug('Days selected: ' . $this->recurrenceRepeatsOn . '. End of week = ' . $endOfWeek . ' start date ' . $start . ' [eventId:' . $this->eventId . ']');
+                        $this->getLog()->debug(
+                            'Days selected: ' . $this->recurrenceRepeatsOn . '. End of week = ' . $endOfWeek
+                            . ' start date ' . $start . ' [eventId:' . $this->eventId . ']'
+                        );
 
                         for ($i = 1; $i <= 7; $i++) {
                             // Add a day to the start dates
@@ -1304,12 +1377,13 @@ class Schedule implements \JsonSerializable
                             }
 
                             if ($end > $generateFromDt && $start < $generateToDt) {
-                                $this->getLog()->debug('Adding detail for ' . $start->toAtomString() . ' to ' . $end->toAtomString());
+                                $this->getLog()->debug(
+                                    'Adding detail for ' . $start->toAtomString() . ' to ' . $end->toAtomString()
+                                );
 
                                 if ($this->eventTypeId == self::$COMMAND_EVENT) {
                                     $this->addDetail($start->format('U'), null);
-                                }
-                                else {
+                                } else {
                                     // If we are a daypart event, look up the start/end times for the event
                                     $this->calculateDayPartTimes($start, $end);
 
@@ -1320,7 +1394,9 @@ class Schedule implements \JsonSerializable
                             }
                         }
 
-                        $this->getLog()->debug('Finished 7 day roll forward, start date is ' . $start . ' [eventId:' . $this->eventId . ']');
+                        $this->getLog()->debug(
+                            'Finished 7 day roll forward, start date is ' . $start . ' [eventId:' . $this->eventId . ']'
+                        );
 
                         // If we haven't passed the end of the week, roll forward
                         if ($start < $endOfWeek) {
@@ -1332,7 +1408,9 @@ class Schedule implements \JsonSerializable
                         $start->day($start->day - 7);
                         $end->day($end->day - 7);
 
-                        $this->getLog()->debug('Resetting start date to ' . $start . ' [eventId:' . $this->eventId . ']');
+                        $this->getLog()->debug(
+                            'Resetting start date to ' . $start . ' [eventId:' . $this->eventId . ']'
+                        );
                     }
 
                     // Jump forward a week from the original start date (when we entered this loop)
@@ -1393,7 +1471,10 @@ class Schedule implements \JsonSerializable
 
             // after we have added the appropriate amount, are we still valid
             if ($start > $range) {
-                $this->getLog()->debug('Breaking mid loop because we\'ve exceeded the range. Start: ' . $start->toRssString() . ', range: ' . $range->toRssString() . ' [eventId:' . $this->eventId . ']');
+                $this->getLog()->debug(
+                    'Breaking mid loop because we\'ve exceeded the range. Start: ' . $start->toRssString()
+                    . ', range: ' . $range->toRssString() . ' [eventId:' . $this->eventId . ']'
+                );
                 break;
             }
 
@@ -1401,13 +1482,14 @@ class Schedule implements \JsonSerializable
             $lastWatermark = $start->copy();
 
             // Don't add if we are weekly recurrency (handles it's own adding)
-            if ($this->recurrenceType == 'Week' && !empty($this->recurrenceRepeatsOn))
+            if ($this->recurrenceType == 'Week' && !empty($this->recurrenceRepeatsOn)) {
                 continue;
+            }
 
             if ($start <= $generateToDt && $end >= $generateFromDt) {
-                if ($this->eventTypeId == self::$COMMAND_EVENT)
+                if ($this->eventTypeId == self::$COMMAND_EVENT) {
                     $this->addDetail($start->format('U'), null);
-                else {
+                } else {
                     // If we are a daypart event, look up the start/end times for the event
                     $this->calculateDayPartTimes($start, $end);
 
@@ -1416,7 +1498,10 @@ class Schedule implements \JsonSerializable
             }
         }
 
-        $this->getLog()->debug('Our last recurrence watermark is: ' . $lastWatermark->toRssString() . '[eventId:' . $this->eventId . ']');
+        $this->getLog()->debug(
+            'Our last recurrence watermark is: ' . $lastWatermark->toRssString()
+            . '[eventId:' . $this->eventId . ']'
+        );
 
         // Update our schedule with the new last watermark
         $lastWatermarkTimeStamp = $lastWatermark->format('U');
@@ -1446,8 +1531,9 @@ class Schedule implements \JsonSerializable
     {
         $compKey = 'schedule/' . $this->eventId;
 
-        if ($key !== null)
+        if ($key !== null) {
             $compKey .= '/' . $key;
+        }
 
         $this->pool->deleteItem($compKey);
     }
@@ -1470,7 +1556,9 @@ class Schedule implements \JsonSerializable
             // Get the day part
             $dayPart = $this->getDayPart();
 
-            $this->getLog()->debug('Start and end time for dayPart is ' . $dayPart->startTime . ' - ' . $dayPart->endTime);
+            $this->getLog()->debug(
+                'Start and end time for dayPart is ' . $dayPart->startTime . ' - ' . $dayPart->endTime
+            );
 
             // What day of the week does this start date represent?
             // dayOfWeek is 0 for Sunday to 6 for Saturday
@@ -1481,10 +1569,14 @@ class Schedule implements \JsonSerializable
                     $start->setTimeFromTimeString($exception['start']);
                     $end->setTimeFromTimeString($exception['end']);
 
-                    if ($start >= $end)
+                    if ($start >= $end) {
                         $end->addDay();
+                    }
 
-                    $this->getLog()->debug('Found exception Start and end time for dayPart exception is ' . $exception['start'] . ' - ' . $exception['end']);
+                    $this->getLog()->debug(
+                        'Found exception Start and end time for dayPart exception is '
+                        . $exception['start'] . ' - ' . $exception['end']
+                    );
                     $found = true;
                     break;
                 }
@@ -1535,7 +1627,9 @@ class Schedule implements \JsonSerializable
             }
 
             if (count($diff) > 0) {
-                $this->getLog()->debug('manageAssignments: There are ' . count($diff) . ' existing DisplayGroups on this Event');
+                $this->getLog()->debug(
+                    'manageAssignments: There are ' . count($diff) . ' existing DisplayGroups on this Event'
+                );
                 $ids = array_map(function ($element) {
                     return $element->getId();
                 }, $this->displayGroups);
@@ -1544,7 +1638,10 @@ class Schedule implements \JsonSerializable
 
                 if (count($except) > 0) {
                     foreach ($except as $item) {
-                        $this->getLog()->debug('manageAssignments: calling notify on displayGroupId ' . $diff[$item]->getId());
+                        $this->getLog()->debug(
+                            'manageAssignments: calling notify on displayGroupId '
+                            . $diff[$item]->getId()
+                        );
                         $this->getDisplayNotifyService()->collectNow()->notifyByDisplayGroupId($diff[$item]->getId());
                     }
                 } else {
@@ -1643,21 +1740,19 @@ class Schedule implements \JsonSerializable
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function getNextReminderDate($now, $reminder, $remindSeconds) {
-
+    public function getNextReminderDate($now, $reminder, $remindSeconds)
+    {
         // Determine toDt so that we don't getEvents which never ends
         // adding the recurrencedetail at the end (minute/hour/week) to make sure we get at least 2 next events
         $toDt = $now->copy();
 
         // For a future event we need to forward now to event fromDt
         $fromDt = Carbon::createFromTimestamp($this->fromDt);
-        if ( $fromDt > $toDt ) {
+        if ($fromDt > $toDt) {
             $toDt = $fromDt;
         }
 
-        switch ($this->recurrenceType)
-        {
-
+        switch ($this->recurrenceType) {
             case 'Minute':
                 $toDt->minute(($toDt->minute + $this->recurrenceDetail) + $this->recurrenceDetail);
                 break;
@@ -1689,7 +1784,7 @@ class Schedule implements \JsonSerializable
         // toDt is set so that we get two next events from now
         $scheduleEvents = $this->getEvents($now, $toDt);
 
-        foreach($scheduleEvents as $event) {
+        foreach ($scheduleEvents as $event) {
             if ($reminder->option == ScheduleReminder::$OPTION_BEFORE_START) {
                 $reminderDt = $event->fromDt - $remindSeconds;
                 if ($reminderDt >= $now->format('U')) {
@@ -1722,8 +1817,8 @@ class Schedule implements \JsonSerializable
      * @return string
      * @throws GeneralException
      */
-    public function getEventTitle() {
-
+    public function getEventTitle()
+    {
         // Setting for whether we show Layouts with out permissions
         $showLayoutName = ($this->config->getSetting('SCHEDULE_SHOW_LAYOUT_NAME') == 1);
 
@@ -1752,8 +1847,9 @@ class Schedule implements \JsonSerializable
                 // Campaign
                 $campaign = $this->campaignFactory->getById($this->campaignId);
 
-                if (!$user->checkViewable($campaign))
+                if (!$user->checkViewable($campaign)) {
                     $this->campaign = __('Private Item');
+                }
             }
             $title = __('%s scheduled on %s', $this->campaign, $displayGroupList);
         }
@@ -1765,30 +1861,30 @@ class Schedule implements \JsonSerializable
     {
         $objectAsJson = $this->jsonSerialize();
 
-            foreach ($objectAsJson as $key => $value) {
-                $displayGroups = [];
-                if (is_array($value) && $jsonEncodeArrays) {
-                    if ($key === 'displayGroups') {
-                        foreach($value as $index => $displayGroup) {
-                            /** @var DisplayGroup $displayGroup */
-                            $displayGroups[$index] = $displayGroup->jsonForAudit();
-                        }
-
-                        $objectAsJson[$key] = json_encode($displayGroups);
-                    } else {
-                        $objectAsJson[$key] = json_encode($value);
+        foreach ($objectAsJson as $key => $value) {
+            $displayGroups = [];
+            if (is_array($value) && $jsonEncodeArrays) {
+                if ($key === 'displayGroups') {
+                    foreach ($value as $index => $displayGroup) {
+                        /** @var DisplayGroup $displayGroup */
+                        $displayGroups[$index] = $displayGroup->jsonForAudit();
                     }
-                }
 
-                if (in_array($key, $this->datesToFormat)) {
-                    $objectAsJson[$key] = Carbon::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat());
-                }
-
-                if ($key === 'campaignId' && isset($this->campaignFactory)) {
-                   $campaign = $this->campaignFactory->getById($value);
-                   $objectAsJson['campaign'] = $campaign->campaign;
+                    $objectAsJson[$key] = json_encode($displayGroups);
+                } else {
+                    $objectAsJson[$key] = json_encode($value);
                 }
             }
+
+            if (in_array($key, $this->datesToFormat)) {
+                $objectAsJson[$key] = Carbon::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat());
+            }
+
+            if ($key === 'campaignId' && isset($this->campaignFactory)) {
+                $campaign = $this->campaignFactory->getById($value);
+                $objectAsJson['campaign'] = $campaign->campaign;
+            }
+        }
 
         return $objectAsJson;
     }
@@ -1804,40 +1900,50 @@ class Schedule implements \JsonSerializable
         $changedProperties = [];
 
         foreach ($this->jsonSerialize() as $key => $value) {
-
-            if (!is_array($value) && !is_object($value) && $this->propertyOriginallyExisted($key) && $this->hasPropertyChanged($key)) {
+            if (!is_array($value)
+                && !is_object($value)
+                && $this->propertyOriginallyExisted($key)
+                && $this->hasPropertyChanged($key)
+            ) {
                 if (in_array($key, $this->datesToFormat)) {
-                    $changedProperties[$key] = Carbon::createFromTimestamp($this->getOriginalValue($key))->format(DateFormatHelper::getSystemFormat()) . ' > ' . Carbon::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat());
+                    $changedProperties[$key] = Carbon::createFromTimestamp($this->getOriginalValue($key))
+                            ->format(DateFormatHelper::getSystemFormat())
+                        . ' > ' . Carbon::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat());
                 } else {
                     $changedProperties[$key] = $this->getOriginalValue($key) . ' > ' . $value;
 
                     if ($key === 'campaignId' && isset($this->campaignFactory)) {
                         $campaign = $this->campaignFactory->getById($value);
-                        $changedProperties['campaign'] = $this->getOriginalValue('campaign') . ' > ' . $campaign->campaign;
+                        $changedProperties['campaign'] =
+                            $this->getOriginalValue('campaign') . ' > ' . $campaign->campaign;
                     }
                 }
             }
 
-            if (is_array($value) && $jsonEncodeArrays && $this->propertyOriginallyExisted($key) && $this->hasPropertyChanged($key)) {
+            if (is_array($value)
+                && $jsonEncodeArrays
+                && $this->propertyOriginallyExisted($key)
+                && $this->hasPropertyChanged($key)
+            ) {
                 if ($key === 'displayGroups') {
                     $displayGroups = [];
                     $originalDisplayGroups = [];
 
-                    foreach($this->getOriginalValue($key) as $index => $displayGroup) {
+                    foreach ($this->getOriginalValue($key) as $index => $displayGroup) {
                         /** @var DisplayGroup $displayGroup */
                         $originalDisplayGroups[$index] = $displayGroup->jsonForAudit();
                     }
 
-                    foreach($value as $index => $displayGroup) {
+                    foreach ($value as $index => $displayGroup) {
                         $displayGroups[$index] = $displayGroup->jsonForAudit();
                     }
 
-                    $changedProperties[$key] = json_encode($originalDisplayGroups) . ' > ' . json_encode($displayGroups);
-
+                    $changedProperties[$key] =
+                        json_encode($originalDisplayGroups) . ' > ' . json_encode($displayGroups);
                 } else {
-                    $changedProperties[$key] = json_encode($this->getOriginalValue($key)) . ' > ' . json_encode($value);
+                    $changedProperties[$key] =
+                        json_encode($this->getOriginalValue($key)) . ' > ' . json_encode($value);
                 }
-
             }
         }
 

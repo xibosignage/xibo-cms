@@ -113,8 +113,18 @@ class DisplayGroup extends Base
      * @param CampaignFactory $campaignFactory
      * @param FolderFactory $folderFactory
      */
-    public function __construct($playerAction, $displayFactory, $displayGroupFactory, $layoutFactory, $moduleFactory, $mediaFactory, $commandFactory, $tagFactory, $campaignFactory, $folderFactory)
-    {
+    public function __construct(
+        $playerAction,
+        $displayFactory,
+        $displayGroupFactory,
+        $layoutFactory,
+        $moduleFactory,
+        $mediaFactory,
+        $commandFactory,
+        $tagFactory,
+        $campaignFactory,
+        $folderFactory
+    ) {
         $this->playerAction = $playerAction;
         $this->displayFactory = $displayFactory;
         $this->displayGroupFactory = $displayGroupFactory;
@@ -271,7 +281,10 @@ class DisplayGroup extends Base
 
         $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
 
-        $displayGroups = $this->displayGroupFactory->query($this->gridRenderSort($parsedQueryParams), $this->gridRenderFilter($filter, $parsedQueryParams));
+        $displayGroups = $this->displayGroupFactory->query(
+            $this->gridRenderSort($parsedQueryParams),
+            $this->gridRenderFilter($filter, $parsedQueryParams)
+        );
 
         foreach ($displayGroups as $group) {
             /* @var \Xibo\Entity\DisplayGroup $group */
@@ -296,37 +309,52 @@ class DisplayGroup extends Base
                 // Show the edit button, members button
                 if ($group->isDynamic == 0) {
                     // Group Members
-                    $group->buttons[] = array(
+                    $group->buttons[] = [
                         'id' => 'displaygroup_button_group_members',
-                        'url' => $this->urlFor($request,'displayGroup.members.form', ['id' => $group->displayGroupId]),
+                        'url' => $this->urlFor(
+                            $request,
+                            'displayGroup.members.form',
+                            ['id' => $group->displayGroupId]
+                        ),
                         'text' => __('Members')
-                    );
+                    ];
 
                     $group->buttons[] = ['divider' => true];
                 }
 
                 // Edit
-                $group->buttons[] = array(
+                $group->buttons[] = [
                     'id' => 'displaygroup_button_edit',
                     'url' => $this->urlFor($request, 'displayGroup.edit.form', ['id' => $group->displayGroupId]),
                     'text' => __('Edit')
-                );
+                ];
 
-                $group->buttons[] = array(
+                $group->buttons[] = [
                     'id' => 'displaygroup_button_copy',
                     'url' => $this->urlFor($request, 'displayGroup.copy.form', ['id' => $group->displayGroupId]),
                     'text' => __('Copy')
-                );
+                ];
 
                 if ($this->getUser()->featureEnabled('folder.view')) {
                     // Select Folder
                     $group->buttons[] = [
                         'id' => 'displaygroup_button_selectfolder',
-                        'url' => $this->urlFor($request, 'displayGroup.selectfolder.form', ['id' => $group->displayGroupId]),
+                        'url' => $this->urlFor(
+                            $request,
+                            'displayGroup.selectfolder.form',
+                            ['id' => $group->displayGroupId]
+                        ),
                         'text' => __('Select Folder'),
                         'multi-select' => true,
                         'dataAttributes' => [
-                            ['name' => 'commit-url', 'value' => $this->urlFor($request, 'displayGroup.selectfolder', ['id' => $group->displayGroupId])],
+                            [
+                                'name' => 'commit-url',
+                                'value' => $this->urlFor(
+                                    $request,
+                                    'displayGroup.selectfolder',
+                                    ['id' => $group->displayGroupId]
+                                )
+                            ],
                             ['name' => 'commit-method', 'value' => 'put'],
                             ['name' => 'id', 'value' => 'displaygroup_button_selectfolder'],
                             ['name' => 'text', 'value' => __('Move to Folder')],
@@ -347,7 +375,14 @@ class DisplayGroup extends Base
                     'text' => __('Delete'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'displayGroup.delete', ['id' => $group->displayGroupId])],
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'displayGroup.delete',
+                                ['id' => $group->displayGroupId]
+                            )
+                        ],
                         ['name' => 'commit-method', 'value' => 'delete'],
                         ['name' => 'id', 'value' => 'displaygroup_button_delete'],
                         ['name' => 'text', 'value' => __('Delete')],
@@ -365,18 +400,18 @@ class DisplayGroup extends Base
                 && $this->getUser()->checkEditable($group)
             ) {
                 // File Associations
-                $group->buttons[] = array(
+                $group->buttons[] = [
                     'id' => 'displaygroup_button_fileassociations',
                     'url' => $this->urlFor($request, 'displayGroup.media.form', ['id' => $group->displayGroupId]),
                     'text' => __('Assign Files')
-                );
+                ];
 
                 // Layout Assignments
-                $group->buttons[] = array(
+                $group->buttons[] = [
                     'id' => 'displaygroup_button_layout_associations',
                     'url' => $this->urlFor($request, 'displayGroup.layout.form', ['id' => $group->displayGroupId]),
                     'text' => __('Assign Layouts')
-                );
+                ];
             }
 
             if ($this->getUser()->featureEnabled('displaygroup.modify')
@@ -385,18 +420,36 @@ class DisplayGroup extends Base
                 // Show the modify permissions button
                 $group->buttons[] = [
                     'id' => 'displaygroup_button_permissions',
-                    'url' => $this->urlFor($request, 'user.permissions.form', ['entity' => 'DisplayGroup', 'id' => $group->displayGroupId]),
+                    'url' => $this->urlFor(
+                        $request,
+                        'user.permissions.form',
+                        ['entity' => 'DisplayGroup', 'id' => $group->displayGroupId]
+                    ),
                     'text' => __('Share'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'user.permissions.multi', ['entity' => 'DisplayGroup', 'id' => $group->displayGroupId])],
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'user.permissions.multi',
+                                ['entity' => 'DisplayGroup', 'id' => $group->displayGroupId]
+                            )
+                        ],
                         ['name' => 'commit-method', 'value' => 'post'],
                         ['name' => 'id', 'value' => 'displaygroup_button_permissions'],
                         ['name' => 'text', 'value' => __('Share')],
                         ['name' => 'rowtitle', 'value' => $group->displayGroup],
                         ['name' => 'sort-group', 'value' => 2],
                         ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request, 'user.permissions.multi.form', ['entity' => 'DisplayGroup'])],
+                        [
+                            'name' => 'custom-handler-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'user.permissions.multi.form',
+                                ['entity' => 'DisplayGroup']
+                            )
+                        ],
                         ['name' => 'content-id-name', 'value' => 'displayGroupId']
                     ]
                 ];
@@ -407,30 +460,65 @@ class DisplayGroup extends Base
             ) {
                 $group->buttons[] = ['divider' => true];
 
-                $group->buttons[] = array(
+                $group->buttons[] = [
                     'id' => 'displaygroup_button_command',
                     'url' => $this->urlFor($request, 'displayGroup.command.form', ['id' => $group->displayGroupId]),
-                    'text' => __('Send Command')
-                );
+                    'text' => __('Send Command'),
+                    'multi-select' => true,
+                    'dataAttributes' => [
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'displayGroup.action.command',
+                                ['id' => $group->displayGroupId]
+                            )
+                        ],
+                        ['name' => 'commit-method', 'value' => 'post'],
+                        ['name' => 'id', 'value' => 'displaygroup_button_command'],
+                        ['name' => 'text', 'value' => __('Send Command')],
+                        ['name' => 'sort-group', 'value' => 3],
+                        ['name' => 'rowtitle', 'value' => $group->displayGroup],
+                        ['name' => 'form-callback', 'value' => 'sendCommandMultiSelectFormOpen']
+                    ]
+                ];
 
-                $group->buttons[] = array(
+                $group->buttons[] = [
                     'id' => 'displaygroup_button_collectNow',
                     'url' => $this->urlFor($request, 'displayGroup.collectNow.form', ['id' => $group->displayGroupId]),
                     'text' => __('Collect Now'),
                     'dataAttributes' => [
                         ['name' => 'auto-submit', 'value' => true],
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'displayGroup.action.collectNow', ['id' => $group->displayGroupId])],
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'displayGroup.action.collectNow',
+                                ['id' => $group->displayGroupId]
+                            )
+                        ],
                     ]
-                );
+                ];
 
                 // Trigger webhook
                 $group->buttons[] = [
                     'id' => 'displaygroup_button_trigger_webhook',
-                    'url' => $this->urlFor($request, 'displayGroup.trigger.webhook.form', ['id' => $group->displayGroupId]),
+                    'url' => $this->urlFor(
+                        $request,
+                        'displayGroup.trigger.webhook.form',
+                        ['id' => $group->displayGroupId]
+                    ),
                     'text' => __('Trigger a web hook'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'displayGroup.action.trigger.webhook', ['id' => $group->displayGroupId])],
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'displayGroup.action.trigger.webhook',
+                                ['id' => $group->displayGroupId]
+                            )
+                        ],
                         ['name' => 'commit-method', 'value' => 'post'],
                         ['name' => 'id', 'value' => 'displaygroup_button_trigger_webhook'],
                         ['name' => 'text', 'value' => __('Trigger a web hook')],
@@ -592,7 +680,8 @@ class DisplayGroup extends Base
      *  @SWG\Parameter(
      *      name="dynamicCriteria",
      *      in="formData",
-     *      description="The filter criteria for this dynamic group. A comma separated set of regular expressions to apply",
+     *      description="The filter criteria for this dynamic group.
+     * A comma separated set of regular expressions to apply",
      *      type="string",
      *      required=false
      *   ),
@@ -606,7 +695,8 @@ class DisplayGroup extends Base
      *  @SWG\Parameter(
      *      name="dynamicCriteriaTags",
      *      in="formData",
-     *      description="The filter criteria for this dynamic group. A comma separated set of regular expressions to apply",
+     *      description="The filter criteria for this dynamic group.
+     * A comma separated set of regular expressions to apply",
      *      type="string",
      *      required=false
      *   ),
@@ -765,7 +855,8 @@ class DisplayGroup extends Base
      *  @SWG\Parameter(
      *      name="dynamicCriteria",
      *      in="formData",
-     *      description="The filter criteria for this dynamic group. A command separated set of regular expressions to apply",
+     *      description="The filter criteria for this dynamic group.
+     * A command separated set of regular expressions to apply",
      *      type="string",
      *      required=false
      *   ),
@@ -779,7 +870,8 @@ class DisplayGroup extends Base
      *  @SWG\Parameter(
      *      name="dynamicCriteriaTags",
      *      in="formData",
-     *      description="The filter criteria for this dynamic group. A comma separated set of regular expressions to apply",
+     *      description="The filter criteria for this dynamic group.
+     * A comma separated set of regular expressions to apply",
      *      type="string",
      *      required=false
      *   ),
@@ -861,8 +953,12 @@ class DisplayGroup extends Base
         $displayGroup->displayGroup = $parsedRequestParams->getString('displayGroup');
         $displayGroup->description = $parsedRequestParams->getString('description');
         $displayGroup->isDynamic = $parsedRequestParams->getCheckbox('isDynamic');
-        $displayGroup->dynamicCriteria = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getString('dynamicCriteria') : null;
-        $displayGroup->dynamicCriteriaLogicalOperator = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getString('logicalOperatorName') : 'OR';
+        $displayGroup->dynamicCriteria = ($displayGroup->isDynamic == 1)
+            ? $parsedRequestParams->getString('dynamicCriteria')
+            : null;
+        $displayGroup->dynamicCriteriaLogicalOperator = ($displayGroup->isDynamic == 1)
+            ? $parsedRequestParams->getString('logicalOperatorName')
+            : 'OR';
         $displayGroup->folderId = $parsedRequestParams->getInt('folderId', ['default' => $displayGroup->folderId]);
 
         $displayGroup->ref1 = $parsedRequestParams->getString('ref1');
@@ -887,14 +983,24 @@ class DisplayGroup extends Base
             }
 
             $displayGroup->updateTagLinks($tags);
-            $displayGroup->dynamicCriteriaTags = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getString('dynamicCriteriaTags') : null;
-            $displayGroup->dynamicCriteriaExactTags = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getCheckbox('exactTags') : 0;
-            $displayGroup->dynamicCriteriaTagsLogicalOperator = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getString('logicalOperator') : 'OR';
+            $displayGroup->dynamicCriteriaTags = ($displayGroup->isDynamic == 1)
+                ? $parsedRequestParams->getString('dynamicCriteriaTags')
+                : null;
+            $displayGroup->dynamicCriteriaExactTags = ($displayGroup->isDynamic == 1)
+                ? $parsedRequestParams->getCheckbox('exactTags')
+                : 0;
+            $displayGroup->dynamicCriteriaTagsLogicalOperator = ($displayGroup->isDynamic == 1)
+                ? $parsedRequestParams->getString('logicalOperator')
+                : 'OR';
         }
 
         // if we have changed the type from dynamic to non-dynamic or other way around, clear display/dg members
         if ($preEditIsDynamic != $displayGroup->isDynamic) {
-            $this->getLog()->debug('Display Group Id ' . $displayGroup->displayGroupId . ' switched is dynamic from ' . $preEditIsDynamic . ' To ' . $displayGroup->isDynamic . ' Clearing members for this Display Group.');
+            $this->getLog()->debug(
+                'Display Group Id ' . $displayGroup->displayGroupId
+                . ' switched is dynamic from ' . $preEditIsDynamic
+                . ' To ' . $displayGroup->isDynamic . ' Clearing members for this Display Group.'
+            );
             // get an array of assigned displays
             $membersDisplays = $this->displayFactory->getByDisplayGroupId($id);
 
@@ -1032,8 +1138,10 @@ class DisplayGroup extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         if ($displayGroup->isDisplaySpecific == 1) {
-            throw new InvalidArgumentException(__('This is a Display specific Display Group and its assignments cannot be modified.'),
-                'displayGroupId');
+            throw new InvalidArgumentException(
+                __('This is a Display specific Display Group and its assignments cannot be modified.'),
+                'displayGroupId'
+            );
         }
 
         if (!$this->getUser()->checkEditable($displayGroup)) {
@@ -1041,7 +1149,10 @@ class DisplayGroup extends Base
         }
 
         if ($displayGroup->isDynamic == 1) {
-            throw new InvalidArgumentException(__('Displays cannot be manually assigned to a Dynamic Group'), 'isDynamic');
+            throw new InvalidArgumentException(
+                __('Displays cannot be manually assigned to a Dynamic Group'),
+                'isDynamic'
+            );
         }
 
         $displayGroup->load();
@@ -1070,8 +1181,9 @@ class DisplayGroup extends Base
             $displayGroup->assignDisplay($display);
 
             // Store so that we can flag as incomplete
-            if (!in_array($display, $modifiedDisplays))
+            if (!in_array($display, $modifiedDisplays)) {
                 $modifiedDisplays[] = $display;
+            }
         }
 
         // Have we been provided with unassign id's as well?
@@ -1092,8 +1204,9 @@ class DisplayGroup extends Base
             $displayGroup->unassignDisplay($display);
 
             // Store so that we can flag as incomplete
-            if (!in_array($display, $modifiedDisplays))
+            if (!in_array($display, $modifiedDisplays)) {
                 $modifiedDisplays[] = $display;
+            }
         }
 
         // Save the result
@@ -1161,8 +1274,10 @@ class DisplayGroup extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         if ($displayGroup->isDisplaySpecific == 1) {
-            throw new InvalidArgumentException(__('This is a Display specific Display Group and its assignments cannot be modified.'),
-                'displayGroupId');
+            throw new InvalidArgumentException(
+                __('This is a Display specific Display Group and its assignments cannot be modified.'),
+                'displayGroupId'
+            );
         }
 
         $displayGroup->load();
@@ -1173,7 +1288,10 @@ class DisplayGroup extends Base
         }
 
         if ($displayGroup->isDynamic == 1) {
-            throw new InvalidArgumentException(__('Displays cannot be manually unassigned to a Dynamic Group'), 'isDynamic');
+            throw new InvalidArgumentException(
+                __('Displays cannot be manually unassigned to a Dynamic Group'),
+                'isDynamic'
+            );
         }
 
         $displays = $sanitizedParams->getIntArray('displayId', ['default' => []]);
@@ -1256,8 +1374,10 @@ class DisplayGroup extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         if ($displayGroup->isDisplaySpecific == 1) {
-            throw new InvalidArgumentException(__('This is a Display specific Display Group and its assignments cannot be modified.'),
-                'displayGroupId');
+            throw new InvalidArgumentException(
+                __('This is a Display specific Display Group and its assignments cannot be modified.'),
+                'displayGroupId'
+            );
         }
 
         $displayGroup->load();
@@ -1268,7 +1388,10 @@ class DisplayGroup extends Base
         }
 
         if ($displayGroup->isDynamic == 1) {
-            throw new InvalidArgumentException(__('DisplayGroups cannot be manually assigned to a Dynamic Group'), 'isDynamic');
+            throw new InvalidArgumentException(
+                __('DisplayGroups cannot be manually assigned to a Dynamic Group'),
+                'isDynamic'
+            );
         }
 
         $displayGroups = $sanitizedParams->getIntArray('displayGroupId', ['default' => []]);
@@ -1355,7 +1478,10 @@ class DisplayGroup extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         if ($displayGroup->isDisplaySpecific == 1) {
-            throw new InvalidArgumentException(__('This is a Display specific Display Group and its assignments cannot be modified.'), 'displayGroupId');
+            throw new InvalidArgumentException(
+                __('This is a Display specific Display Group and its assignments cannot be modified.'),
+                'displayGroupId'
+            );
         }
 
         if (!$this->getUser()->checkEditable($displayGroup)) {
@@ -1366,7 +1492,10 @@ class DisplayGroup extends Base
         $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
 
         if ($displayGroup->isDynamic == 1) {
-            throw new InvalidArgumentException(__('DisplayGroups cannot be manually unassigned to a Dynamic Group'), 'isDynamic');
+            throw new InvalidArgumentException(
+                __('DisplayGroups cannot be manually unassigned to a Dynamic Group'),
+                'isDynamic'
+            );
         }
 
         $displayGroups = $sanitizedParams->getIntArray('displayGroupId', ['default' => []]);
@@ -2727,7 +2856,10 @@ class DisplayGroup extends Base
             throw new InvalidArgumentException(__('Please provide a Trigger Code'), 'triggerCode');
         }
 
-        $this->playerAction->sendAction($this->displayFactory->getByDisplayGroupId($id), new TriggerWebhookAction($triggerCode));
+        $this->playerAction->sendAction(
+            $this->displayFactory->getByDisplayGroupId($id),
+            new TriggerWebhookAction($triggerCode)
+        );
 
         // Return
         $this->getState()->hydrate([

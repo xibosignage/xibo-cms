@@ -490,7 +490,7 @@ class Display extends Base
             'clientAddress' => $parsedQueryParams->getString('clientAddress'),
             'mediaInventoryStatus' => $parsedQueryParams->getInt('mediaInventoryStatus'),
             'loggedIn' => $parsedQueryParams->getInt('loggedIn'),
-            'lastAccessed' => ($parsedQueryParams->getDate('lastAccessed') != null) ? $parsedQueryParams->getDate('lastAccessed')->format('U') : null,
+            'lastAccessed' => $parsedQueryParams->getDate('lastAccessed')?->format('U'),
             'displayGroupIdMembers' => $parsedQueryParams->getInt('displayGroupIdMembers'),
             'orientation' => $parsedQueryParams->getString('orientation'),
             'commercialLicence' => $parsedQueryParams->getInt('commercialLicence'),
@@ -499,7 +499,8 @@ class Display extends Base
             'logicalOperatorName' => $parsedQueryParams->getString('logicalOperatorName'),
             'bounds' => $parsedQueryParams->getString('bounds'),
             'syncGroupId' => $parsedQueryParams->getInt('syncGroupId'),
-            'syncGroupIdMembers' => $parsedQueryParams->getInt('syncGroupIdMembers')
+            'syncGroupIdMembers' => $parsedQueryParams->getInt('syncGroupIdMembers'),
+            'xmrRegistered' => $parsedQueryParams->getInt('xmrRegistered'),
         ];
     }
 
@@ -638,6 +639,13 @@ class Display extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *       name="xmrRegistered",
+     *       in="query",
+     *       description="Filter by whether XMR is registed (1 or 0)",
+     *       type="integer",
+     *       required=false
+     *    ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -656,7 +664,7 @@ class Display extends Base
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    function grid(Request $request, Response $response)
+    public function grid(Request $request, Response $response)
     {
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
         // Embed?
@@ -712,7 +720,8 @@ class Display extends Base
                 continue;
             }
 
-            // use try and catch here to cover scenario when there is no default display profile set for any of the existing display types.
+            // use try and catch here to cover scenario
+            // when there is no default display profile set for any of the existing display types.
             $displayProfileName = '';
             try {
                 $defaultDisplayProfile = $this->displayProfileFactory->getDefaultByType($display->clientType);
@@ -803,21 +812,21 @@ class Display extends Base
                 && $this->getUser()->checkEditable($display)
             ) {
                 // Manage
-                $display->buttons[] = array(
+                $display->buttons[] = [
                     'id' => 'display_button_manage',
                     'url' => $this->urlFor($request, 'display.manage', ['id' => $display->displayId]),
                     'text' => __('Manage'),
                     'external' => true
-                );
+                ];
 
                 $display->buttons[] = ['divider' => true];
 
                 // Edit
-                $display->buttons[] = array(
+                $display->buttons[] = [
                     'id' => 'display_button_edit',
                     'url' => $this->urlFor($request, 'display.edit.form', ['id' => $display->displayId]),
                     'text' => __('Edit')
-                );
+                ];
             }
 
             // Delete
@@ -835,7 +844,14 @@ class Display extends Base
                 if (Environment::isDevMode()) {
                     $deleteButton['multi-select'] = true;
                     $deleteButton['dataAttributes'] = [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'display.delete', ['id' => $display->displayId])],
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'display.delete',
+                                ['id' => $display->displayId]
+                            )
+                        ],
                         ['name' => 'commit-method', 'value' => 'delete'],
                         ['name' => 'id', 'value' => 'display_button_delete'],
                         ['name' => 'sort-group', 'value' => 1],
@@ -857,48 +873,73 @@ class Display extends Base
                 && $this->getUser()->checkEditable($display)
             ) {
                 // Authorise
-                $display->buttons[] = array(
+                $display->buttons[] = [
                     'id' => 'display_button_authorise',
                     'url' => $this->urlFor($request, 'display.authorise.form', ['id' => $display->displayId]),
                     'text' => __('Authorise'),
                     'multi-select' => true,
-                    'dataAttributes' => array(
+                    'dataAttributes' => [
                         ['name' => 'auto-submit', 'value' => true],
-                        array('name' => 'commit-url', 'value' => $this->urlFor($request, 'display.authorise', ['id' => $display->displayId])),
-                        array('name' => 'commit-method', 'value' => 'put'),
-                        array('name' => 'id', 'value' => 'display_button_authorise'),
-                        array('name' => 'sort-group', 'value' => 2),
-                        array('name' => 'text', 'value' => __('Toggle Authorise')),
-                        array('name' => 'rowtitle', 'value' => $display->display)
-                    )
-                );
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'display.authorise',
+                                ['id' => $display->displayId]
+                            )
+                        ],
+                        ['name' => 'commit-method', 'value' => 'put'],
+                        ['name' => 'id', 'value' => 'display_button_authorise'],
+                        ['name' => 'sort-group', 'value' => 2],
+                        ['name' => 'text', 'value' => __('Toggle Authorise')],
+                        ['name' => 'rowtitle', 'value' => $display->display]
+                    ]
+                ];
 
                 // Default Layout
-                $display->buttons[] = array(
+                $display->buttons[] = [
                     'id' => 'display_button_defaultlayout',
                     'url' => $this->urlFor($request, 'display.defaultlayout.form', ['id' => $display->displayId]),
                     'text' => __('Default Layout'),
                     'multi-select' => true,
-                    'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor($request, 'display.defaultlayout', ['id' => $display->displayId])),
-                        array('name' => 'commit-method', 'value' => 'put'),
-                        array('name' => 'id', 'value' => 'display_button_defaultlayout'),
-                        array('name' => 'sort-group', 'value' => 2),
-                        array('name' => 'text', 'value' => __('Set Default Layout')),
-                        array('name' => 'rowtitle', 'value' => $display->display),
+                    'dataAttributes' => [
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'display.defaultlayout',
+                                ['id' => $display->displayId]
+                            )
+                        ],
+                        ['name' => 'commit-method', 'value' => 'put'],
+                        ['name' => 'id', 'value' => 'display_button_defaultlayout'],
+                        ['name' => 'sort-group', 'value' => 2],
+                        ['name' => 'text', 'value' => __('Set Default Layout')],
+                        ['name' => 'rowtitle', 'value' => $display->display],
                         ['name' => 'form-callback', 'value' => 'setDefaultMultiSelectFormOpen']
-                    )
-                );
+                    ]
+                ];
 
                 if ($this->getUser()->featureEnabled('folder.view')) {
                     // Select Folder
                     $display->buttons[] = [
                         'id' => 'displaygroup_button_selectfolder',
-                        'url' => $this->urlFor($request, 'displayGroup.selectfolder.form', ['id' => $display->displayGroupId]),
+                        'url' => $this->urlFor(
+                            $request,
+                            'displayGroup.selectfolder.form',
+                            ['id' => $display->displayGroupId]
+                        ),
                         'text' => __('Select Folder'),
                         'multi-select' => true,
                         'dataAttributes' => [
-                            ['name' => 'commit-url', 'value' => $this->urlFor($request, 'displayGroup.selectfolder', ['id' => $display->displayGroupId])],
+                            [
+                                'name' => 'commit-url',
+                                'value' => $this->urlFor(
+                                    $request,
+                                    'displayGroup.selectfolder',
+                                    ['id' => $display->displayGroupId]
+                                )
+                            ],
                             ['name' => 'commit-method', 'value' => 'put'],
                             ['name' => 'id', 'value' => 'displaygroup_button_selectfolder'],
                             ['name' => 'sort-group', 'value' => 2],
@@ -915,15 +956,22 @@ class Display extends Base
                         'url' => $this->urlFor($request, 'display.licencecheck.form', ['id' => $display->displayId]),
                         'text' => __('Check Licence'),
                         'multi-select' => true,
-                        'dataAttributes' => array(
+                        'dataAttributes' => [
                             ['name' => 'auto-submit', 'value' => true],
-                            array('name' => 'commit-url', 'value' => $this->urlFor($request, 'display.licencecheck', ['id' => $display->displayId])),
-                            array('name' => 'commit-method', 'value' => 'put'),
-                            array('name' => 'id', 'value' => 'display_button_checkLicence'),
-                            array('name' => 'sort-group', 'value' => 2),
-                            array('name' => 'text', 'value' => __('Check Licence')),
-                            array('name' => 'rowtitle', 'value' => $display->display)
-                        )
+                            [
+                                'name' => 'commit-url',
+                                'value' => $this->urlFor(
+                                    $request,
+                                    'display.licencecheck',
+                                    ['id' => $display->displayId]
+                                )
+                            ],
+                            ['name' => 'commit-method', 'value' => 'put'],
+                            ['name' => 'id', 'value' => 'display_button_checkLicence'],
+                            ['name' => 'sort-group', 'value' => 2],
+                            ['name' => 'text', 'value' => __('Check Licence')],
+                            ['name' => 'rowtitle', 'value' => $display->display]
+                        ]
                     );
                 }
 
@@ -937,7 +985,11 @@ class Display extends Base
             ) {
                 $display->buttons[] = array(
                     'id' => 'display_button_schedule',
-                    'url' => $this->urlFor($request, 'schedule.add.form', ['id' => $display->displayGroupId, 'from' => 'DisplayGroup']),
+                    'url' => $this->urlFor(
+                        $request,
+                        'schedule.add.form',
+                        ['id' => $display->displayGroupId, 'from' => 'DisplayGroup']
+                    ),
                     'text' => __('Schedule')
                 );
             }
@@ -950,7 +1002,8 @@ class Display extends Base
                         'id' => 'display_button_layouts_jump',
                         'linkType' => '_self',
                         'external' => true,
-                        'url' => $this->urlFor($request, 'layout.view') . '?activeDisplayGroupId=' . $display->displayGroupId,
+                        'url' => $this->urlFor($request, 'layout.view')
+                            . '?activeDisplayGroupId=' . $display->displayGroupId,
                         'text' => __('Jump to Scheduled Layouts')
                     ];
                 }
@@ -970,47 +1023,76 @@ class Display extends Base
                 );
 
                 // Screen Shot
-                $display->buttons[] = array(
+                $display->buttons[] = [
                     'id' => 'display_button_requestScreenShot',
                     'url' => $this->urlFor($request, 'display.screenshot.form', ['id' => $display->displayId]),
                     'text' => __('Request Screen Shot'),
                     'multi-select' => true,
-                    'dataAttributes' => array(
+                    'dataAttributes' => [
                         ['name' => 'auto-submit', 'value' => true],
-                        array('name' => 'commit-url', 'value' => $this->urlFor($request, 'display.requestscreenshot', ['id' => $display->displayId])),
-                        array('name' => 'commit-method', 'value' => 'put'),
-                        array('name' => 'sort-group', 'value' => 3),
-                        array('name' => 'id', 'value' => 'display_button_requestScreenShot'),
-                        array('name' => 'text', 'value' => __('Request Screen Shot')),
-                        array('name' => 'rowtitle', 'value' => $display->display)
-                    )
-                );
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'display.requestscreenshot',
+                                ['id' => $display->displayId]
+                            )
+                        ],
+                        ['name' => 'commit-method', 'value' => 'put'],
+                        ['name' => 'sort-group', 'value' => 3],
+                        ['name' => 'id', 'value' => 'display_button_requestScreenShot'],
+                        ['name' => 'text', 'value' => __('Request Screen Shot')],
+                        ['name' => 'rowtitle', 'value' => $display->display]
+                    ]
+                ];
 
                 // Collect Now
-                $display->buttons[] = array(
+                $display->buttons[] = [
                     'id' => 'display_button_collectNow',
-                    'url' => $this->urlFor($request, 'displayGroup.collectNow.form', ['id' => $display->displayGroupId]),
+                    'url' => $this->urlFor(
+                        $request,
+                        'displayGroup.collectNow.form',
+                        ['id' => $display->displayGroupId]
+                    ),
                     'text' => __('Collect Now'),
                     'multi-select' => true,
-                    'dataAttributes' => array(
+                    'dataAttributes' => [
                         ['name' => 'auto-submit', 'value' => true],
-                        array('name' => 'commit-url', 'value' => $this->urlFor($request, 'displayGroup.action.collectNow', ['id' => $display->displayGroupId])),
-                        array('name' => 'commit-method', 'value' => 'post'),
-                        array('name' => 'sort-group', 'value' => 3),
-                        array('name' => 'id', 'value' => 'display_button_collectNow'),
-                        array('name' => 'text', 'value' => __('Collect Now')),
-                        array('name' => 'rowtitle', 'value' => $display->display)
-                    )
-                );
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'displayGroup.action.collectNow',
+                                ['id' => $display->displayGroupId]
+                            )
+                        ],
+                        ['name' => 'commit-method', 'value' => 'post'],
+                        ['name' => 'sort-group', 'value' => 3],
+                        ['name' => 'id', 'value' => 'display_button_collectNow'],
+                        ['name' => 'text', 'value' => __('Collect Now')],
+                        ['name' => 'rowtitle', 'value' => $display->display]
+                    ]
+                ];
 
                 // Trigger webhook
                 $display->buttons[] = [
                     'id' => 'display_button_trigger_webhook',
-                    'url' => $this->urlFor($request, 'displayGroup.trigger.webhook.form', ['id' => $display->displayGroupId]),
+                    'url' => $this->urlFor(
+                        $request,
+                        'displayGroup.trigger.webhook.form',
+                        ['id' => $display->displayGroupId]
+                    ),
                     'text' => __('Trigger a web hook'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'displayGroup.action.trigger.webhook', ['id' => $display->displayGroupId])],
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'displayGroup.action.trigger.webhook',
+                                ['id' => $display->displayGroupId]
+                            )
+                        ],
                         ['name' => 'commit-method', 'value' => 'post'],
                         ['name' => 'id', 'value' => 'display_button_trigger_webhook'],
                         ['name' => 'sort-group', 'value' => 3],
@@ -1044,18 +1126,36 @@ class Display extends Base
                 // Permissions
                 $display->buttons[] = [
                     'id' => 'display_button_group_permissions',
-                    'url' => $this->urlFor($request, 'user.permissions.form', ['entity' => 'DisplayGroup', 'id' => $display->displayGroupId]),
+                    'url' => $this->urlFor(
+                        $request,
+                        'user.permissions.form',
+                        ['entity' => 'DisplayGroup', 'id' => $display->displayGroupId]
+                    ),
                     'text' => __('Share'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'user.permissions.multi', ['entity' => 'DisplayGroup', 'id' => $display->displayGroupId])],
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'user.permissions.multi',
+                                ['entity' => 'DisplayGroup', 'id' => $display->displayGroupId]
+                            )
+                        ],
                         ['name' => 'commit-method', 'value' => 'post'],
                         ['name' => 'id', 'value' => 'display_button_group_permissions'],
                         ['name' => 'text', 'value' => __('Share')],
                         ['name' => 'rowtitle', 'value' => $display->display],
                         ['name' => 'sort-group', 'value' => 4],
                         ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request, 'user.permissions.multi.form', ['entity' => 'DisplayGroup'])],
+                        [
+                            'name' => 'custom-handler-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'user.permissions.multi.form',
+                                ['entity' => 'DisplayGroup']
+                            )
+                        ],
                         ['name' => 'content-id-name', 'value' => 'displayGroupId']
                     ]
                 ];
@@ -1075,11 +1175,28 @@ class Display extends Base
                     'text' => __('Wake on LAN')
                 );
 
-                $display->buttons[] = array(
+                $display->buttons[] = [
                     'id' => 'displaygroup_button_command',
                     'url' => $this->urlFor($request, 'displayGroup.command.form', ['id' => $display->displayGroupId]),
-                    'text' => __('Send Command')
-                );
+                    'text' => __('Send Command'),
+                    'multi-select' => true,
+                    'dataAttributes' => [
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'displayGroup.action.command',
+                                ['id' => $display->displayGroupId]
+                            )
+                        ],
+                        ['name' => 'commit-method', 'value' => 'post'],
+                        ['name' => 'id', 'value' => 'displaygroup_button_command'],
+                        ['name' => 'text', 'value' => __('Send Command')],
+                        ['name' => 'sort-group', 'value' => 3],
+                        ['name' => 'rowtitle', 'value' => $display->display],
+                        ['name' => 'form-callback', 'value' => 'sendCommandMultiSelectFormOpen']
+                    ]
+                ];
 
                 $display->buttons[] = ['divider' => true];
 
@@ -1089,7 +1206,14 @@ class Display extends Base
                     'text' => __('Transfer to another CMS'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'display.moveCms', ['id' => $display->displayId])],
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'display.moveCms',
+                                ['id' => $display->displayId]
+                            )
+                        ],
                         ['name' => 'commit-method', 'value' => 'put'],
                         ['name' => 'id', 'value' => 'display_button_move_cms'],
                         ['name' => 'text', 'value' => __('Transfer to another CMS')],
@@ -1104,13 +1228,22 @@ class Display extends Base
                     'multiSelectOnly' => true, // Show button only on multi-select menu
                     'id' => 'display_button_set_bandwidth',
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'display.setBandwidthLimitMultiple')],
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'display.setBandwidthLimitMultiple'
+                            )
+                        ],
                         ['name' => 'commit-method', 'value' => 'post'],
                         ['name' => 'id', 'value' => 'display_button_set_bandwidth'],
                         ['name' => 'text', 'value' => __('Set Bandwidth')],
                         ['name' => 'rowtitle', 'value' => $display->display],
                         ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request, 'display.setBandwidthLimitMultiple.form')],
+                        [
+                            'name' => 'custom-handler-url',
+                            'value' => $this->urlFor($request, 'display.setBandwidthLimitMultiple.form')
+                        ],
                         ['name' => 'content-id-name', 'value' => 'displayId']
                     ]
                 ];
@@ -1715,7 +1848,12 @@ class Display extends Base
 
         // Get the display profile and use that to pull in any overrides
         // start with an empty config
-        $display->overrideConfig = $this->editConfigFields($display->getDisplayProfile(), $sanitizedParams, [], $display);
+        $display->overrideConfig = $this->editConfigFields(
+            $display->getDisplayProfile(),
+            $sanitizedParams,
+            [],
+            $display
+        );
 
         // Tags are stored on the displaygroup, we're just passing through here
         if ($this->getUser()->featureEnabled('tag.tagging')) {
@@ -1754,8 +1892,11 @@ class Display extends Base
         $display->save();
 
         if ($this->isApi($request)) {
-            $display->lastAccessed = Carbon::createFromTimestamp($display->lastAccessed)->format(DateFormatHelper::getSystemFormat());
-            $display->auditingUntil = ($display->auditingUntil == 0) ? 0 : Carbon::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat());
+            $display->lastAccessed = Carbon::createFromTimestamp($display->lastAccessed)
+                ->format(DateFormatHelper::getSystemFormat());
+            $display->auditingUntil = ($display->auditingUntil == 0)
+                    ? 0
+                    : Carbon::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat());
         }
 
         // Return
@@ -2094,7 +2235,9 @@ class Display extends Base
             $nextCollect = __('once it has connected for the first time');
         } else {
             $collectionInterval = $display->getSetting('collectInterval', 300);
-            $nextCollect = Carbon::createFromTimestamp($display->lastAccessed)->addSeconds($collectionInterval)->diffForHumans();
+            $nextCollect = Carbon::createFromTimestamp($display->lastAccessed)
+                ->addSeconds($collectionInterval)
+                ->diffForHumans();
         }
 
         $this->getState()->template = 'display-form-request-screenshot';
@@ -2183,7 +2326,10 @@ class Display extends Base
         }
 
         if ($display->macAddress == '') {
-            throw new InvalidArgumentException(__('This display has no mac address recorded against it yet. Make sure the display is running.'), 'macAddress');
+            throw new InvalidArgumentException(
+                __('This display has no mac address recorded against it yet. Make sure the display is running.'),
+                'macAddress'
+            );
         }
 
         $this->getState()->template = 'display-form-wakeonlan';
@@ -2232,12 +2378,24 @@ class Display extends Base
         }
 
         if ($display->macAddress == '' || $display->broadCastAddress == '') {
-            throw new InvalidArgumentException(__('This display has no mac address recorded against it yet. Make sure the display is running.'));
+            throw new InvalidArgumentException(
+                __('This display has no mac address recorded against it yet. Make sure the display is running.')
+            );
         }
 
-        $this->getLog()->notice('About to send WOL packet to ' . $display->broadCastAddress . ' with Mac Address ' . $display->macAddress);
+        $this->getLog()->notice(
+            'About to send WOL packet to '
+            . $display->broadCastAddress . ' with Mac Address ' . $display->macAddress
+        );
 
-        WakeOnLan::TransmitWakeOnLan($display->macAddress, $display->secureOn, $display->broadCastAddress, $display->cidr, '9', $this->getLog());
+        WakeOnLan::TransmitWakeOnLan(
+            $display->macAddress,
+            $display->secureOn,
+            $display->broadCastAddress,
+            $display->cidr,
+            '9',
+            $this->getLog()
+        );
 
         $display->lastWakeOnLanCommandSent = Carbon::now()->format('U');
         $display->save(['validate' => false]);
@@ -2317,21 +2475,30 @@ class Display extends Base
                             // check if we are on exception day and if so override the start and endtime accordingly
                             if ($exception['day'] == Carbon::now()->format('D')) {
                                 $exceptionsStartTime = explode(':', $exception['start']);
-                                $startTime = Carbon::now()->setTime(intval($exceptionsStartTime[0]), intval($exceptionsStartTime[1]));
+                                $startTime = Carbon::now()->setTime(
+                                    intval($exceptionsStartTime[0]),
+                                    intval($exceptionsStartTime[1])
+                                );
 
                                 $exceptionsEndTime = explode(':', $exception['end']);
-                                $endTime = Carbon::now()->setTime(intval($exceptionsEndTime[0]), intval($exceptionsEndTime[1]));
+                                $endTime = Carbon::now()->setTime(
+                                    intval($exceptionsEndTime[0]),
+                                    intval($exceptionsEndTime[1])
+                                );
                             }
                         }
 
-                        // check if we are inside the operating hours for this display - we use that flag to decide if we need to create a notification and send an email.
+                        // check if we are inside the operating hours for this display -
+                        // we use that flag to decide if we need to create a notification and send an email.
                         if (($now >= $startTime && $now <= $endTime)) {
                             $operatingHours = true;
                         } else {
                             $operatingHours = false;
                         }
                     } catch (NotFoundException $e) {
-                        $this->getLog()->debug('Unknown dayPartId set on Display Profile for displayId ' . $display->displayId);
+                        $this->getLog()->debug(
+                            'Unknown dayPartId set on Display Profile for displayId ' . $display->displayId
+                        );
                     }
                 }
 
@@ -2341,17 +2508,23 @@ class Display extends Base
                     // Display just gone offline, or always alert
                     // Fields for email
 
-                    // for displays without dayPartId set, this is always true, otherwise we check if we are inside the operating hours set for this display
+                    // for displays without dayPartId set, this is always true,
+                    // otherwise we check if we are inside the operating hours set for this display
                     if ($operatingHours) {
                         $subject = sprintf(__('Alert for Display %s'), $display->display);
                         $body = sprintf(
                             __('Display ID %d is offline since %s.'),
                             $display->displayId,
-                            Carbon::createFromTimestamp($display->lastAccessed)->format(DateFormatHelper::getSystemFormat())
+                            Carbon::createFromTimestamp($display->lastAccessed)
+                                ->format(DateFormatHelper::getSystemFormat())
                         );
 
                         // Add to system
-                        $notification = $this->notificationFactory->createSystemNotification($subject, $body, Carbon::now());
+                        $notification = $this->notificationFactory->createSystemNotification(
+                            $subject,
+                            $body,
+                            Carbon::now()
+                        );
 
                         // Add in any displayNotificationGroups, with permissions
                         foreach ($this->userGroupFactory->getDisplayNotificationGroups($display->displayGroupId) as $group) {
