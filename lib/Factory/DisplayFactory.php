@@ -628,7 +628,21 @@ class DisplayFactory extends BaseFactory
             $params['syncGroupId'] = $parsedBody->getInt('syncGroupId');
         }
 
-        $this->viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, 'displaygroup.displayGroupId', null, $filterBy, '`displaygroup`.permissionsFolderId');
+        if ($parsedBody->getInt('xmrRegistered') === 1) {
+            $body .= ' AND `display`.xmrChannel IS NOT NULL ';
+        } else if ($parsedBody->getInt('xmrRegistered') === 0) {
+            $body .= ' AND `display`.xmrChannel IS NULL ';
+        }
+
+        $this->viewPermissionSql(
+            'Xibo\Entity\DisplayGroup',
+            $body,
+            $params,
+            'displaygroup.displayGroupId',
+            null,
+            $filterBy,
+            '`displaygroup`.permissionsFolderId'
+        );
 
         // Sorting?
         $order = '';

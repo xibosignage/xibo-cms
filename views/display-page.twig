@@ -86,6 +86,16 @@
                                     ] %}
                                     {{ inline.dropdown("authorised", "single", title, "", options, "optionid", "option") }}
 
+                                    {% set title %}{% trans "XMR Registered?" %}{% endset %}
+                                    {% set yesOption %}{% trans "Yes" %}{% endset %}
+                                    {% set noOption %}{% trans "No" %}{% endset %}
+                                    {% set options = [
+                                        { optionid: "", option: "" },
+                                        { optionid: 1, option: yesOption},
+                                        { optionid: 0, option: noOption},
+                                    ] %}
+                                    {{ inline.dropdown("xmrRegistered", "single", title, "", options, "optionid", "option") }}
+
                                     {% if currentUser.featureEnabled("tag.tagging") %}
                                         {% set title %}{% trans "Tags" %}{% endset %}
                                         {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}

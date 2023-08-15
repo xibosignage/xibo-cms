@@ -499,7 +499,8 @@ class Display extends Base
             'logicalOperatorName' => $parsedQueryParams->getString('logicalOperatorName'),
             'bounds' => $parsedQueryParams->getString('bounds'),
             'syncGroupId' => $parsedQueryParams->getInt('syncGroupId'),
-            'syncGroupIdMembers' => $parsedQueryParams->getInt('syncGroupIdMembers')
+            'syncGroupIdMembers' => $parsedQueryParams->getInt('syncGroupIdMembers'),
+            'xmrRegistered' => $parsedQueryParams->getInt('xmrRegistered'),
         ];
     }
 
@@ -638,6 +639,13 @@ class Display extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *       name="xmrRegistered",
+     *       in="query",
+     *       description="Filter by whether XMR is registed (1 or 0)",
+     *       type="integer",
+     *       required=false
+     *    ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -656,7 +664,7 @@ class Display extends Base
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    function grid(Request $request, Response $response)
+    public function grid(Request $request, Response $response)
     {
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
         // Embed?
