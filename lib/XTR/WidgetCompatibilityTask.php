@@ -79,6 +79,9 @@ class WidgetCompatibilityTask implements TaskInterface
         foreach ($modules as $module) {
             // Run upgrade - Part 1
             // Upgrade a widget having the same module type
+            $this->getLogger()->debug('run: finding widgets for ' . $module->type
+                . ' with schema version less than ' . $module->schemaVersion);
+
             $statement = $this->executeStatement($module->type, $module->schemaVersion);
             $this->upgradeWidget($statement);
 
@@ -202,6 +205,8 @@ class WidgetCompatibilityTask implements TaskInterface
                             ', message: ' . $e->getMessage());
                         $this->appendRunMessage('Layout rebuild error for widgetId: : '. $widget->widgetId);
                     }
+                } else {
+                    $this->getLogger()->debug('upgradeWidget: no compatibility task available for ' . $widget->type);
                 }
             } catch (GeneralException $e) {
                 $this->log->debug($e->getTraceAsString());

@@ -46,7 +46,7 @@ class NotificationProvider implements WidgetProviderInterface
 
     public function getDataCacheKey(DataProviderInterface $dataProvider): ?string
     {
-        return $dataProvider->getWidgetId() . '_' . $dataProvider->getDisplayId();
+        return null;
     }
 
     public function getDataModifiedDt(DataProviderInterface $dataProvider): ?Carbon

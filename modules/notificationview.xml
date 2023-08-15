@@ -24,35 +24,17 @@
     <author>Core</author>
     <description>Display messages created in the Notification Drawer of the CMS</description>
     <class>\Xibo\Widget\NotificationProvider</class>
+    <compatibilityClass>\Xibo\Widget\Compatibility\NotificationViewCompatibility</compatibilityClass>
     <type>notificationview</type>
-    <dataType></dataType>
-    <dataCacheKey>%dateFormat%_%age%</dataCacheKey>
-    <schemaVersion>1</schemaVersion>
+    <dataType>message</dataType>
+    <dataCacheKey>%age%_%displayId%</dataCacheKey>
+    <schemaVersion>2</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>1</regionSpecific>
     <renderAs>html</renderAs>
     <defaultDuration>10</defaultDuration>
     <settings></settings>
     <properties>
-        <property id="template" type="richText" allowLibraryRefs="true" variant="html">
-            <title>Main Template</title>
-            <helpText>The template for formatting your notifications. Enter [Subject] and [Body] with your desired formatting. Enter text or HTML in the box below.</helpText>
-        </property>
-        <property id="dateFormatSnippets" type="snippet" mode="options" target="template">
-            <title>Snippets</title>
-            <helpText>Choose element to add to template</helpText>
-            <options>
-                <option name="Subject">Subject</option>
-                <option name="Body">Body</option>
-            </options>
-        </property>
-        <property id="embedStyle" type="code" allowLibraryRefs="true" variant="css">
-            <title>Custom Style Sheets</title>
-        </property>
-        <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
-            <title>No data message</title>
-            <helpText>A message to display when there are no notifications to show. Enter text or HTML in the box below.</helpText>
-        </property>
         <property id="age" type="number">
             <title>Age</title>
             <helpText>What is the maximum notification age in minutes, 0 for no restrictions.</helpText>
@@ -73,102 +55,8 @@
                 </test>
             </rule>
         </property>
-        <property id="dateFormat" type="text" variant="dateFormat">
-            <title>Date Format</title>
-            <helpText>The format to apply to all dates returned by the Widget.</helpText>
-            <default>#DATE_FORMAT#</default>
-        </property>
-        <property id="effect" type="effectSelector" variant="all">
-            <title>Effect</title>
-            <helpText>Please select the effect that will be used to transition between items.</helpText>
-            <default>noTransition</default>
-        </property>
-        <property id="speed" type="number">
-            <title>Speed</title>
-            <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).</helpText>
-            <visibility>
-                <test>
-                    <condition field="effect" type="neq">none</condition>
-                </test>
-            </visibility>
-        </property>
     </properties>
     <preview></preview>
-    <stencil>
-        <twig><![CDATA[
-{% if javaScript %}
-<script type="text/javascript">
-    {{javaScript|raw}}
-</script>
-{% endif %}
-
-{% if embedStyle %}
-<style type="text/css">
-    {{embedStyle|raw}}
-</style>
-{% endif %}
-        ]]></twig>
-    </stencil>
-    <onInitialize><![CDATA[
-// id: The id of the widget
-// target: The target element to render
-// properties: The properties for the widget
-// -------------------------------------------
-
-// Make template replacements
-if (properties.template && properties.template.indexOf('[Body]') >= 0) {
-    properties.template = properties.template.replace('[Body]', '[body]');
-}
-if (properties.template && properties.template.indexOf('[Subject]') >= 0) {
-    properties.template = properties.template.replace('[Subject]', '[subject]');
-}
-if (properties.template && properties.template.indexOf('[Date]') >= 0) {
-    properties.template = properties.template.replace('[Date]', '[date]');
-}
-    ]]></onInitialize>
-    <onRender><![CDATA[
-// id: The id of the widget
-// target: The target element to render
-// items: The items to render
-// properties: The properties for the widget
-// -------------------------------------------
-
-// Clear the content container
-$(target).find('#content').empty();
-
-// Add content for each item
-// make replacements
-// and wrap it in a div with the item class
-for (var i = 0; i < items.length; i++) {
-    var item = items[i];
-
-    // Replace the template with the item content
-    // if properties.template is undefined, use an empty string
-    var content = (properties.template)? 
-        properties.template.replace(/\[(.*?)\]/g, function (match, column) {
-            // If it's a data, format it
-            if(column == 'date' && item[column]) {
-                return moment(item[column]).format(properties.dateFormat);
-            }
-            return item[column] ? item[column] : '';
-        }) : '';
-
-    // Add the content to the target
-    $(target).find('#content').append(
-        $('<div>')
-            .addClass('item')
-            .append(content)
-    );
-}
-
-// Scale the layout
-$('body').xiboLayoutScaler(properties);
-
-$(target).xiboTextRender(
-    Object.assign(properties, globalOptions),
-    $(target).find('#content > *'),
-);
-    ]]></onRender>
     <onVisible><![CDATA[
 // Start effects for this widget
 $(target).xiboLayoutAnimate(properties);
