@@ -577,6 +577,13 @@ class Schedule implements \JsonSerializable
             throw new InvalidArgumentException(__('The from date is too far in the past.'), 'fromDt');
         }
 
+        if (!empty($this->name) && strlen($this->name) > 50) {
+            throw new InvalidArgumentException(
+                __('Name cannot be longer than 50 characters.'),
+                'name'
+            );
+        }
+
         if ($this->eventTypeId == Schedule::$LAYOUT_EVENT ||
             $this->eventTypeId == Schedule::$CAMPAIGN_EVENT ||
             $this->eventTypeId == Schedule::$OVERLAY_EVENT ||
