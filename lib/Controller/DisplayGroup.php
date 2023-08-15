@@ -113,8 +113,18 @@ class DisplayGroup extends Base
      * @param CampaignFactory $campaignFactory
      * @param FolderFactory $folderFactory
      */
-    public function __construct($playerAction, $displayFactory, $displayGroupFactory, $layoutFactory, $moduleFactory, $mediaFactory, $commandFactory, $tagFactory, $campaignFactory, $folderFactory)
-    {
+    public function __construct(
+        $playerAction,
+        $displayFactory,
+        $displayGroupFactory,
+        $layoutFactory,
+        $moduleFactory,
+        $mediaFactory,
+        $commandFactory,
+        $tagFactory,
+        $campaignFactory,
+        $folderFactory
+    ) {
         $this->playerAction = $playerAction;
         $this->displayFactory = $displayFactory;
         $this->displayGroupFactory = $displayGroupFactory;

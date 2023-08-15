@@ -1848,7 +1848,12 @@ class Display extends Base
 
         // Get the display profile and use that to pull in any overrides
         // start with an empty config
-        $display->overrideConfig = $this->editConfigFields($display->getDisplayProfile(), $sanitizedParams, [], $display);
+        $display->overrideConfig = $this->editConfigFields(
+            $display->getDisplayProfile(),
+            $sanitizedParams,
+            [],
+            $display
+        );
 
         // Tags are stored on the displaygroup, we're just passing through here
         if ($this->getUser()->featureEnabled('tag.tagging')) {
@@ -1887,8 +1892,11 @@ class Display extends Base
         $display->save();
 
         if ($this->isApi($request)) {
-            $display->lastAccessed = Carbon::createFromTimestamp($display->lastAccessed)->format(DateFormatHelper::getSystemFormat());
-            $display->auditingUntil = ($display->auditingUntil == 0) ? 0 : Carbon::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat());
+            $display->lastAccessed = Carbon::createFromTimestamp($display->lastAccessed)
+                ->format(DateFormatHelper::getSystemFormat());
+            $display->auditingUntil = ($display->auditingUntil == 0)
+                    ? 0
+                    : Carbon::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat());
         }
 
         // Return
@@ -2227,7 +2235,9 @@ class Display extends Base
             $nextCollect = __('once it has connected for the first time');
         } else {
             $collectionInterval = $display->getSetting('collectInterval', 300);
-            $nextCollect = Carbon::createFromTimestamp($display->lastAccessed)->addSeconds($collectionInterval)->diffForHumans();
+            $nextCollect = Carbon::createFromTimestamp($display->lastAccessed)
+                ->addSeconds($collectionInterval)
+                ->diffForHumans();
         }
 
         $this->getState()->template = 'display-form-request-screenshot';
@@ -2316,7 +2326,10 @@ class Display extends Base
         }
 
         if ($display->macAddress == '') {
-            throw new InvalidArgumentException(__('This display has no mac address recorded against it yet. Make sure the display is running.'), 'macAddress');
+            throw new InvalidArgumentException(
+                __('This display has no mac address recorded against it yet. Make sure the display is running.'),
+                'macAddress'
+            );
         }
 
         $this->getState()->template = 'display-form-wakeonlan';
@@ -2365,12 +2378,24 @@ class Display extends Base
         }
 
         if ($display->macAddress == '' || $display->broadCastAddress == '') {
-            throw new InvalidArgumentException(__('This display has no mac address recorded against it yet. Make sure the display is running.'));
+            throw new InvalidArgumentException(
+                __('This display has no mac address recorded against it yet. Make sure the display is running.')
+            );
         }
 
-        $this->getLog()->notice('About to send WOL packet to ' . $display->broadCastAddress . ' with Mac Address ' . $display->macAddress);
+        $this->getLog()->notice(
+            'About to send WOL packet to '
+            . $display->broadCastAddress . ' with Mac Address ' . $display->macAddress
+        );
 
-        WakeOnLan::TransmitWakeOnLan($display->macAddress, $display->secureOn, $display->broadCastAddress, $display->cidr, '9', $this->getLog());
+        WakeOnLan::TransmitWakeOnLan(
+            $display->macAddress,
+            $display->secureOn,
+            $display->broadCastAddress,
+            $display->cidr,
+            '9',
+            $this->getLog()
+        );
 
         $display->lastWakeOnLanCommandSent = Carbon::now()->format('U');
         $display->save(['validate' => false]);
@@ -2450,21 +2475,30 @@ class Display extends Base
                             // check if we are on exception day and if so override the start and endtime accordingly
                             if ($exception['day'] == Carbon::now()->format('D')) {
                                 $exceptionsStartTime = explode(':', $exception['start']);
-                                $startTime = Carbon::now()->setTime(intval($exceptionsStartTime[0]), intval($exceptionsStartTime[1]));
+                                $startTime = Carbon::now()->setTime(
+                                    intval($exceptionsStartTime[0]),
+                                    intval($exceptionsStartTime[1])
+                                );
 
                                 $exceptionsEndTime = explode(':', $exception['end']);
-                                $endTime = Carbon::now()->setTime(intval($exceptionsEndTime[0]), intval($exceptionsEndTime[1]));
+                                $endTime = Carbon::now()->setTime(
+                                    intval($exceptionsEndTime[0]),
+                                    intval($exceptionsEndTime[1])
+                                );
                             }
                         }
 
-                        // check if we are inside the operating hours for this display - we use that flag to decide if we need to create a notification and send an email.
+                        // check if we are inside the operating hours for this display -
+                        // we use that flag to decide if we need to create a notification and send an email.
                         if (($now >= $startTime && $now <= $endTime)) {
                             $operatingHours = true;
                         } else {
                             $operatingHours = false;
                         }
                     } catch (NotFoundException $e) {
-                        $this->getLog()->debug('Unknown dayPartId set on Display Profile for displayId ' . $display->displayId);
+                        $this->getLog()->debug(
+                            'Unknown dayPartId set on Display Profile for displayId ' . $display->displayId
+                        );
                     }
                 }
 
@@ -2474,17 +2508,23 @@ class Display extends Base
                     // Display just gone offline, or always alert
                     // Fields for email
 
-                    // for displays without dayPartId set, this is always true, otherwise we check if we are inside the operating hours set for this display
+                    // for displays without dayPartId set, this is always true,
+                    // otherwise we check if we are inside the operating hours set for this display
                     if ($operatingHours) {
                         $subject = sprintf(__('Alert for Display %s'), $display->display);
                         $body = sprintf(
                             __('Display ID %d is offline since %s.'),
                             $display->displayId,
-                            Carbon::createFromTimestamp($display->lastAccessed)->format(DateFormatHelper::getSystemFormat())
+                            Carbon::createFromTimestamp($display->lastAccessed)
+                                ->format(DateFormatHelper::getSystemFormat())
                         );
 
                         // Add to system
-                        $notification = $this->notificationFactory->createSystemNotification($subject, $body, Carbon::now());
+                        $notification = $this->notificationFactory->createSystemNotification(
+                            $subject,
+                            $body,
+                            Carbon::now()
+                        );
 
                         // Add in any displayNotificationGroups, with permissions
                         foreach ($this->userGroupFactory->getDisplayNotificationGroups($display->displayGroupId) as $group) {
