@@ -68,8 +68,15 @@ class DisplayFactory extends BaseFactory
      * @param DisplayProfileFactory $displayProfileFactory
      * @param FolderFactory $folderFactory
      */
-    public function __construct($user, $userFactory, $displayNotifyService, $config, $displayGroupFactory, $displayProfileFactory, $folderFactory)
-    {
+    public function __construct(
+        $user,
+        $userFactory,
+        $displayNotifyService,
+        $config,
+        $displayGroupFactory,
+        $displayProfileFactory,
+        $folderFactory
+    ) {
         $this->setAclDependencies($user, $userFactory);
 
         $this->displayNotifyService = $displayNotifyService;
@@ -556,7 +563,16 @@ class DisplayFactory extends BaseFactory
                 ';
 
                 $tags = explode(',', $tagFilter);
-                $this->tagFilter($tags, 'lktagdisplaygroup', 'lkTagDisplayGroupId', 'displayGroupId', $logicalOperator, $operator, $body, $params);
+                $this->tagFilter(
+                    $tags,
+                    'lktagdisplaygroup',
+                    'lkTagDisplayGroupId',
+                    'displayGroupId',
+                    $logicalOperator,
+                    $operator,
+                    $body,
+                    $params
+                );
             }
         }
 
