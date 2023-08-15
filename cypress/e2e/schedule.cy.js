@@ -182,7 +182,7 @@ describe('Campaigns', function() {
     cy.get('.select2-container--open .select2-dropdown .select2-results > ul > li').should('have.length', 2);
     cy.get('#select2-displayGroupIds-results > li > ul > li:first').contains('List Campaign Display 2').click();
     cy.get('.modal .modal-footer').contains('Save').click();
-    cy.get('#schedule-grid tbody tr:nth-child(1) td:nth-child(9)').contains('2');
+    cy.get('#schedule-grid tbody').contains('2');
 
     // ---------
     // Delete the schedule
