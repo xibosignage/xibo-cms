@@ -490,7 +490,7 @@ class Display extends Base
             'clientAddress' => $parsedQueryParams->getString('clientAddress'),
             'mediaInventoryStatus' => $parsedQueryParams->getInt('mediaInventoryStatus'),
             'loggedIn' => $parsedQueryParams->getInt('loggedIn'),
-            'lastAccessed' => ($parsedQueryParams->getDate('lastAccessed') != null) ? $parsedQueryParams->getDate('lastAccessed')->format('U') : null,
+            'lastAccessed' => $parsedQueryParams->getDate('lastAccessed')?->format('U'),
             'displayGroupIdMembers' => $parsedQueryParams->getInt('displayGroupIdMembers'),
             'orientation' => $parsedQueryParams->getString('orientation'),
             'commercialLicence' => $parsedQueryParams->getInt('commercialLicence'),
@@ -720,7 +720,8 @@ class Display extends Base
                 continue;
             }
 
-            // use try and catch here to cover scenario when there is no default display profile set for any of the existing display types.
+            // use try and catch here to cover scenario
+            // when there is no default display profile set for any of the existing display types.
             $displayProfileName = '';
             try {
                 $defaultDisplayProfile = $this->displayProfileFactory->getDefaultByType($display->clientType);
@@ -811,21 +812,21 @@ class Display extends Base
                 && $this->getUser()->checkEditable($display)
             ) {
                 // Manage
-                $display->buttons[] = array(
+                $display->buttons[] = [
                     'id' => 'display_button_manage',
                     'url' => $this->urlFor($request, 'display.manage', ['id' => $display->displayId]),
                     'text' => __('Manage'),
                     'external' => true
-                );
+                ];
 
                 $display->buttons[] = ['divider' => true];
 
                 // Edit
-                $display->buttons[] = array(
+                $display->buttons[] = [
                     'id' => 'display_button_edit',
                     'url' => $this->urlFor($request, 'display.edit.form', ['id' => $display->displayId]),
                     'text' => __('Edit')
-                );
+                ];
             }
 
             // Delete
@@ -843,7 +844,14 @@ class Display extends Base
                 if (Environment::isDevMode()) {
                     $deleteButton['multi-select'] = true;
                     $deleteButton['dataAttributes'] = [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'display.delete', ['id' => $display->displayId])],
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'display.delete',
+                                ['id' => $display->displayId]
+                            )
+                        ],
                         ['name' => 'commit-method', 'value' => 'delete'],
                         ['name' => 'id', 'value' => 'display_button_delete'],
                         ['name' => 'sort-group', 'value' => 1],
@@ -865,48 +873,73 @@ class Display extends Base
                 && $this->getUser()->checkEditable($display)
             ) {
                 // Authorise
-                $display->buttons[] = array(
+                $display->buttons[] = [
                     'id' => 'display_button_authorise',
                     'url' => $this->urlFor($request, 'display.authorise.form', ['id' => $display->displayId]),
                     'text' => __('Authorise'),
                     'multi-select' => true,
-                    'dataAttributes' => array(
+                    'dataAttributes' => [
                         ['name' => 'auto-submit', 'value' => true],
-                        array('name' => 'commit-url', 'value' => $this->urlFor($request, 'display.authorise', ['id' => $display->displayId])),
-                        array('name' => 'commit-method', 'value' => 'put'),
-                        array('name' => 'id', 'value' => 'display_button_authorise'),
-                        array('name' => 'sort-group', 'value' => 2),
-                        array('name' => 'text', 'value' => __('Toggle Authorise')),
-                        array('name' => 'rowtitle', 'value' => $display->display)
-                    )
-                );
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'display.authorise',
+                                ['id' => $display->displayId]
+                            )
+                        ],
+                        ['name' => 'commit-method', 'value' => 'put'],
+                        ['name' => 'id', 'value' => 'display_button_authorise'],
+                        ['name' => 'sort-group', 'value' => 2],
+                        ['name' => 'text', 'value' => __('Toggle Authorise')],
+                        ['name' => 'rowtitle', 'value' => $display->display]
+                    ]
+                ];
 
                 // Default Layout
-                $display->buttons[] = array(
+                $display->buttons[] = [
                     'id' => 'display_button_defaultlayout',
                     'url' => $this->urlFor($request, 'display.defaultlayout.form', ['id' => $display->displayId]),
                     'text' => __('Default Layout'),
                     'multi-select' => true,
-                    'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor($request, 'display.defaultlayout', ['id' => $display->displayId])),
-                        array('name' => 'commit-method', 'value' => 'put'),
-                        array('name' => 'id', 'value' => 'display_button_defaultlayout'),
-                        array('name' => 'sort-group', 'value' => 2),
-                        array('name' => 'text', 'value' => __('Set Default Layout')),
-                        array('name' => 'rowtitle', 'value' => $display->display),
+                    'dataAttributes' => [
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'display.defaultlayout',
+                                ['id' => $display->displayId]
+                            )
+                        ],
+                        ['name' => 'commit-method', 'value' => 'put'],
+                        ['name' => 'id', 'value' => 'display_button_defaultlayout'],
+                        ['name' => 'sort-group', 'value' => 2],
+                        ['name' => 'text', 'value' => __('Set Default Layout')],
+                        ['name' => 'rowtitle', 'value' => $display->display],
                         ['name' => 'form-callback', 'value' => 'setDefaultMultiSelectFormOpen']
-                    )
-                );
+                    ]
+                ];
 
                 if ($this->getUser()->featureEnabled('folder.view')) {
                     // Select Folder
                     $display->buttons[] = [
                         'id' => 'displaygroup_button_selectfolder',
-                        'url' => $this->urlFor($request, 'displayGroup.selectfolder.form', ['id' => $display->displayGroupId]),
+                        'url' => $this->urlFor(
+                            $request,
+                            'displayGroup.selectfolder.form',
+                            ['id' => $display->displayGroupId]
+                        ),
                         'text' => __('Select Folder'),
                         'multi-select' => true,
                         'dataAttributes' => [
-                            ['name' => 'commit-url', 'value' => $this->urlFor($request, 'displayGroup.selectfolder', ['id' => $display->displayGroupId])],
+                            [
+                                'name' => 'commit-url',
+                                'value' => $this->urlFor(
+                                    $request,
+                                    'displayGroup.selectfolder',
+                                    ['id' => $display->displayGroupId]
+                                )
+                            ],
                             ['name' => 'commit-method', 'value' => 'put'],
                             ['name' => 'id', 'value' => 'displaygroup_button_selectfolder'],
                             ['name' => 'sort-group', 'value' => 2],
@@ -923,15 +956,22 @@ class Display extends Base
                         'url' => $this->urlFor($request, 'display.licencecheck.form', ['id' => $display->displayId]),
                         'text' => __('Check Licence'),
                         'multi-select' => true,
-                        'dataAttributes' => array(
+                        'dataAttributes' => [
                             ['name' => 'auto-submit', 'value' => true],
-                            array('name' => 'commit-url', 'value' => $this->urlFor($request, 'display.licencecheck', ['id' => $display->displayId])),
-                            array('name' => 'commit-method', 'value' => 'put'),
-                            array('name' => 'id', 'value' => 'display_button_checkLicence'),
-                            array('name' => 'sort-group', 'value' => 2),
-                            array('name' => 'text', 'value' => __('Check Licence')),
-                            array('name' => 'rowtitle', 'value' => $display->display)
-                        )
+                            [
+                                'name' => 'commit-url',
+                                'value' => $this->urlFor(
+                                    $request,
+                                    'display.licencecheck',
+                                    ['id' => $display->displayId]
+                                )
+                            ],
+                            ['name' => 'commit-method', 'value' => 'put'],
+                            ['name' => 'id', 'value' => 'display_button_checkLicence'],
+                            ['name' => 'sort-group', 'value' => 2],
+                            ['name' => 'text', 'value' => __('Check Licence')],
+                            ['name' => 'rowtitle', 'value' => $display->display]
+                        ]
                     );
                 }
 
@@ -945,7 +985,11 @@ class Display extends Base
             ) {
                 $display->buttons[] = array(
                     'id' => 'display_button_schedule',
-                    'url' => $this->urlFor($request, 'schedule.add.form', ['id' => $display->displayGroupId, 'from' => 'DisplayGroup']),
+                    'url' => $this->urlFor(
+                        $request,
+                        'schedule.add.form',
+                        ['id' => $display->displayGroupId, 'from' => 'DisplayGroup']
+                    ),
                     'text' => __('Schedule')
                 );
             }
@@ -958,7 +1002,8 @@ class Display extends Base
                         'id' => 'display_button_layouts_jump',
                         'linkType' => '_self',
                         'external' => true,
-                        'url' => $this->urlFor($request, 'layout.view') . '?activeDisplayGroupId=' . $display->displayGroupId,
+                        'url' => $this->urlFor($request, 'layout.view')
+                            . '?activeDisplayGroupId=' . $display->displayGroupId,
                         'text' => __('Jump to Scheduled Layouts')
                     ];
                 }
@@ -978,47 +1023,76 @@ class Display extends Base
                 );
 
                 // Screen Shot
-                $display->buttons[] = array(
+                $display->buttons[] = [
                     'id' => 'display_button_requestScreenShot',
                     'url' => $this->urlFor($request, 'display.screenshot.form', ['id' => $display->displayId]),
                     'text' => __('Request Screen Shot'),
                     'multi-select' => true,
-                    'dataAttributes' => array(
+                    'dataAttributes' => [
                         ['name' => 'auto-submit', 'value' => true],
-                        array('name' => 'commit-url', 'value' => $this->urlFor($request, 'display.requestscreenshot', ['id' => $display->displayId])),
-                        array('name' => 'commit-method', 'value' => 'put'),
-                        array('name' => 'sort-group', 'value' => 3),
-                        array('name' => 'id', 'value' => 'display_button_requestScreenShot'),
-                        array('name' => 'text', 'value' => __('Request Screen Shot')),
-                        array('name' => 'rowtitle', 'value' => $display->display)
-                    )
-                );
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'display.requestscreenshot',
+                                ['id' => $display->displayId]
+                            )
+                        ],
+                        ['name' => 'commit-method', 'value' => 'put'],
+                        ['name' => 'sort-group', 'value' => 3],
+                        ['name' => 'id', 'value' => 'display_button_requestScreenShot'],
+                        ['name' => 'text', 'value' => __('Request Screen Shot')],
+                        ['name' => 'rowtitle', 'value' => $display->display]
+                    ]
+                ];
 
                 // Collect Now
-                $display->buttons[] = array(
+                $display->buttons[] = [
                     'id' => 'display_button_collectNow',
-                    'url' => $this->urlFor($request, 'displayGroup.collectNow.form', ['id' => $display->displayGroupId]),
+                    'url' => $this->urlFor(
+                        $request,
+                        'displayGroup.collectNow.form',
+                        ['id' => $display->displayGroupId]
+                    ),
                     'text' => __('Collect Now'),
                     'multi-select' => true,
-                    'dataAttributes' => array(
+                    'dataAttributes' => [
                         ['name' => 'auto-submit', 'value' => true],
-                        array('name' => 'commit-url', 'value' => $this->urlFor($request, 'displayGroup.action.collectNow', ['id' => $display->displayGroupId])),
-                        array('name' => 'commit-method', 'value' => 'post'),
-                        array('name' => 'sort-group', 'value' => 3),
-                        array('name' => 'id', 'value' => 'display_button_collectNow'),
-                        array('name' => 'text', 'value' => __('Collect Now')),
-                        array('name' => 'rowtitle', 'value' => $display->display)
-                    )
-                );
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'displayGroup.action.collectNow',
+                                ['id' => $display->displayGroupId]
+                            )
+                        ],
+                        ['name' => 'commit-method', 'value' => 'post'],
+                        ['name' => 'sort-group', 'value' => 3],
+                        ['name' => 'id', 'value' => 'display_button_collectNow'],
+                        ['name' => 'text', 'value' => __('Collect Now')],
+                        ['name' => 'rowtitle', 'value' => $display->display]
+                    ]
+                ];
 
                 // Trigger webhook
                 $display->buttons[] = [
                     'id' => 'display_button_trigger_webhook',
-                    'url' => $this->urlFor($request, 'displayGroup.trigger.webhook.form', ['id' => $display->displayGroupId]),
+                    'url' => $this->urlFor(
+                        $request,
+                        'displayGroup.trigger.webhook.form',
+                        ['id' => $display->displayGroupId]
+                    ),
                     'text' => __('Trigger a web hook'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'displayGroup.action.trigger.webhook', ['id' => $display->displayGroupId])],
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'displayGroup.action.trigger.webhook',
+                                ['id' => $display->displayGroupId]
+                            )
+                        ],
                         ['name' => 'commit-method', 'value' => 'post'],
                         ['name' => 'id', 'value' => 'display_button_trigger_webhook'],
                         ['name' => 'sort-group', 'value' => 3],
@@ -1052,18 +1126,36 @@ class Display extends Base
                 // Permissions
                 $display->buttons[] = [
                     'id' => 'display_button_group_permissions',
-                    'url' => $this->urlFor($request, 'user.permissions.form', ['entity' => 'DisplayGroup', 'id' => $display->displayGroupId]),
+                    'url' => $this->urlFor(
+                        $request,
+                        'user.permissions.form',
+                        ['entity' => 'DisplayGroup', 'id' => $display->displayGroupId]
+                    ),
                     'text' => __('Share'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'user.permissions.multi', ['entity' => 'DisplayGroup', 'id' => $display->displayGroupId])],
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'user.permissions.multi',
+                                ['entity' => 'DisplayGroup', 'id' => $display->displayGroupId]
+                            )
+                        ],
                         ['name' => 'commit-method', 'value' => 'post'],
                         ['name' => 'id', 'value' => 'display_button_group_permissions'],
                         ['name' => 'text', 'value' => __('Share')],
                         ['name' => 'rowtitle', 'value' => $display->display],
                         ['name' => 'sort-group', 'value' => 4],
                         ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request, 'user.permissions.multi.form', ['entity' => 'DisplayGroup'])],
+                        [
+                            'name' => 'custom-handler-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'user.permissions.multi.form',
+                                ['entity' => 'DisplayGroup']
+                            )
+                        ],
                         ['name' => 'content-id-name', 'value' => 'displayGroupId']
                     ]
                 ];
@@ -1083,11 +1175,28 @@ class Display extends Base
                     'text' => __('Wake on LAN')
                 );
 
-                $display->buttons[] = array(
+                $display->buttons[] = [
                     'id' => 'displaygroup_button_command',
                     'url' => $this->urlFor($request, 'displayGroup.command.form', ['id' => $display->displayGroupId]),
-                    'text' => __('Send Command')
-                );
+                    'text' => __('Send Command'),
+                    'multi-select' => true,
+                    'dataAttributes' => [
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'displayGroup.action.command',
+                                ['id' => $display->displayGroupId]
+                            )
+                        ],
+                        ['name' => 'commit-method', 'value' => 'post'],
+                        ['name' => 'id', 'value' => 'displaygroup_button_command'],
+                        ['name' => 'text', 'value' => __('Send Command')],
+                        ['name' => 'sort-group', 'value' => 3],
+                        ['name' => 'rowtitle', 'value' => $display->display],
+                        ['name' => 'form-callback', 'value' => 'sendCommandMultiSelectFormOpen']
+                    ]
+                ];
 
                 $display->buttons[] = ['divider' => true];
 
@@ -1097,7 +1206,14 @@ class Display extends Base
                     'text' => __('Transfer to another CMS'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'display.moveCms', ['id' => $display->displayId])],
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'display.moveCms',
+                                ['id' => $display->displayId]
+                            )
+                        ],
                         ['name' => 'commit-method', 'value' => 'put'],
                         ['name' => 'id', 'value' => 'display_button_move_cms'],
                         ['name' => 'text', 'value' => __('Transfer to another CMS')],
@@ -1112,13 +1228,22 @@ class Display extends Base
                     'multiSelectOnly' => true, // Show button only on multi-select menu
                     'id' => 'display_button_set_bandwidth',
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'display.setBandwidthLimitMultiple')],
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'display.setBandwidthLimitMultiple'
+                            )
+                        ],
                         ['name' => 'commit-method', 'value' => 'post'],
                         ['name' => 'id', 'value' => 'display_button_set_bandwidth'],
                         ['name' => 'text', 'value' => __('Set Bandwidth')],
                         ['name' => 'rowtitle', 'value' => $display->display],
                         ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request, 'display.setBandwidthLimitMultiple.form')],
+                        [
+                            'name' => 'custom-handler-url',
+                            'value' => $this->urlFor($request, 'display.setBandwidthLimitMultiple.form')
+                        ],
                         ['name' => 'content-id-name', 'value' => 'displayId']
                     ]
                 ];

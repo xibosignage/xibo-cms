@@ -271,7 +271,10 @@ class DisplayGroup extends Base
 
         $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
 
-        $displayGroups = $this->displayGroupFactory->query($this->gridRenderSort($parsedQueryParams), $this->gridRenderFilter($filter, $parsedQueryParams));
+        $displayGroups = $this->displayGroupFactory->query(
+            $this->gridRenderSort($parsedQueryParams),
+            $this->gridRenderFilter($filter, $parsedQueryParams)
+        );
 
         foreach ($displayGroups as $group) {
             /* @var \Xibo\Entity\DisplayGroup $group */
@@ -296,37 +299,52 @@ class DisplayGroup extends Base
                 // Show the edit button, members button
                 if ($group->isDynamic == 0) {
                     // Group Members
-                    $group->buttons[] = array(
+                    $group->buttons[] = [
                         'id' => 'displaygroup_button_group_members',
-                        'url' => $this->urlFor($request,'displayGroup.members.form', ['id' => $group->displayGroupId]),
+                        'url' => $this->urlFor(
+                            $request,
+                            'displayGroup.members.form',
+                            ['id' => $group->displayGroupId]
+                        ),
                         'text' => __('Members')
-                    );
+                    ];
 
                     $group->buttons[] = ['divider' => true];
                 }
 
                 // Edit
-                $group->buttons[] = array(
+                $group->buttons[] = [
                     'id' => 'displaygroup_button_edit',
                     'url' => $this->urlFor($request, 'displayGroup.edit.form', ['id' => $group->displayGroupId]),
                     'text' => __('Edit')
-                );
+                ];
 
-                $group->buttons[] = array(
+                $group->buttons[] = [
                     'id' => 'displaygroup_button_copy',
                     'url' => $this->urlFor($request, 'displayGroup.copy.form', ['id' => $group->displayGroupId]),
                     'text' => __('Copy')
-                );
+                ];
 
                 if ($this->getUser()->featureEnabled('folder.view')) {
                     // Select Folder
                     $group->buttons[] = [
                         'id' => 'displaygroup_button_selectfolder',
-                        'url' => $this->urlFor($request, 'displayGroup.selectfolder.form', ['id' => $group->displayGroupId]),
+                        'url' => $this->urlFor(
+                            $request,
+                            'displayGroup.selectfolder.form',
+                            ['id' => $group->displayGroupId]
+                        ),
                         'text' => __('Select Folder'),
                         'multi-select' => true,
                         'dataAttributes' => [
-                            ['name' => 'commit-url', 'value' => $this->urlFor($request, 'displayGroup.selectfolder', ['id' => $group->displayGroupId])],
+                            [
+                                'name' => 'commit-url',
+                                'value' => $this->urlFor(
+                                    $request,
+                                    'displayGroup.selectfolder',
+                                    ['id' => $group->displayGroupId]
+                                )
+                            ],
                             ['name' => 'commit-method', 'value' => 'put'],
                             ['name' => 'id', 'value' => 'displaygroup_button_selectfolder'],
                             ['name' => 'text', 'value' => __('Move to Folder')],
@@ -347,7 +365,14 @@ class DisplayGroup extends Base
                     'text' => __('Delete'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'displayGroup.delete', ['id' => $group->displayGroupId])],
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'displayGroup.delete',
+                                ['id' => $group->displayGroupId]
+                            )
+                        ],
                         ['name' => 'commit-method', 'value' => 'delete'],
                         ['name' => 'id', 'value' => 'displaygroup_button_delete'],
                         ['name' => 'text', 'value' => __('Delete')],
@@ -365,18 +390,18 @@ class DisplayGroup extends Base
                 && $this->getUser()->checkEditable($group)
             ) {
                 // File Associations
-                $group->buttons[] = array(
+                $group->buttons[] = [
                     'id' => 'displaygroup_button_fileassociations',
                     'url' => $this->urlFor($request, 'displayGroup.media.form', ['id' => $group->displayGroupId]),
                     'text' => __('Assign Files')
-                );
+                ];
 
                 // Layout Assignments
-                $group->buttons[] = array(
+                $group->buttons[] = [
                     'id' => 'displaygroup_button_layout_associations',
                     'url' => $this->urlFor($request, 'displayGroup.layout.form', ['id' => $group->displayGroupId]),
                     'text' => __('Assign Layouts')
-                );
+                ];
             }
 
             if ($this->getUser()->featureEnabled('displaygroup.modify')
@@ -385,18 +410,36 @@ class DisplayGroup extends Base
                 // Show the modify permissions button
                 $group->buttons[] = [
                     'id' => 'displaygroup_button_permissions',
-                    'url' => $this->urlFor($request, 'user.permissions.form', ['entity' => 'DisplayGroup', 'id' => $group->displayGroupId]),
+                    'url' => $this->urlFor(
+                        $request,
+                        'user.permissions.form',
+                        ['entity' => 'DisplayGroup', 'id' => $group->displayGroupId]
+                    ),
                     'text' => __('Share'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'user.permissions.multi', ['entity' => 'DisplayGroup', 'id' => $group->displayGroupId])],
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'user.permissions.multi',
+                                ['entity' => 'DisplayGroup', 'id' => $group->displayGroupId]
+                            )
+                        ],
                         ['name' => 'commit-method', 'value' => 'post'],
                         ['name' => 'id', 'value' => 'displaygroup_button_permissions'],
                         ['name' => 'text', 'value' => __('Share')],
                         ['name' => 'rowtitle', 'value' => $group->displayGroup],
                         ['name' => 'sort-group', 'value' => 2],
                         ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request, 'user.permissions.multi.form', ['entity' => 'DisplayGroup'])],
+                        [
+                            'name' => 'custom-handler-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'user.permissions.multi.form',
+                                ['entity' => 'DisplayGroup']
+                            )
+                        ],
                         ['name' => 'content-id-name', 'value' => 'displayGroupId']
                     ]
                 ];
@@ -407,30 +450,65 @@ class DisplayGroup extends Base
             ) {
                 $group->buttons[] = ['divider' => true];
 
-                $group->buttons[] = array(
+                $group->buttons[] = [
                     'id' => 'displaygroup_button_command',
                     'url' => $this->urlFor($request, 'displayGroup.command.form', ['id' => $group->displayGroupId]),
-                    'text' => __('Send Command')
-                );
+                    'text' => __('Send Command'),
+                    'multi-select' => true,
+                    'dataAttributes' => [
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'displayGroup.action.command',
+                                ['id' => $group->displayGroupId]
+                            )
+                        ],
+                        ['name' => 'commit-method', 'value' => 'post'],
+                        ['name' => 'id', 'value' => 'displaygroup_button_command'],
+                        ['name' => 'text', 'value' => __('Send Command')],
+                        ['name' => 'sort-group', 'value' => 3],
+                        ['name' => 'rowtitle', 'value' => $group->displayGroup],
+                        ['name' => 'form-callback', 'value' => 'sendCommandMultiSelectFormOpen']
+                    ]
+                ];
 
-                $group->buttons[] = array(
+                $group->buttons[] = [
                     'id' => 'displaygroup_button_collectNow',
                     'url' => $this->urlFor($request, 'displayGroup.collectNow.form', ['id' => $group->displayGroupId]),
                     'text' => __('Collect Now'),
                     'dataAttributes' => [
                         ['name' => 'auto-submit', 'value' => true],
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'displayGroup.action.collectNow', ['id' => $group->displayGroupId])],
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'displayGroup.action.collectNow',
+                                ['id' => $group->displayGroupId]
+                            )
+                        ],
                     ]
-                );
+                ];
 
                 // Trigger webhook
                 $group->buttons[] = [
                     'id' => 'displaygroup_button_trigger_webhook',
-                    'url' => $this->urlFor($request, 'displayGroup.trigger.webhook.form', ['id' => $group->displayGroupId]),
+                    'url' => $this->urlFor(
+                        $request,
+                        'displayGroup.trigger.webhook.form',
+                        ['id' => $group->displayGroupId]
+                    ),
                     'text' => __('Trigger a web hook'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'displayGroup.action.trigger.webhook', ['id' => $group->displayGroupId])],
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'displayGroup.action.trigger.webhook',
+                                ['id' => $group->displayGroupId]
+                            )
+                        ],
                         ['name' => 'commit-method', 'value' => 'post'],
                         ['name' => 'id', 'value' => 'displaygroup_button_trigger_webhook'],
                         ['name' => 'text', 'value' => __('Trigger a web hook')],

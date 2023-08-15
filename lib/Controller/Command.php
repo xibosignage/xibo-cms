@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -27,7 +27,6 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Event\CommandDeleteEvent;
 use Xibo\Factory\CommandFactory;
-use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
@@ -85,10 +84,17 @@ class Command extends Base
      *  @SWG\Parameter(
      *      name="command",
      *      in="query",
-     *      description="Filter by Command Name",
+     *      description="Filter by Command Name, exact match",
      *      type="string",
      *      required=false
      *   ),
+    @SWG\Parameter(
+     *       name="commandLike",
+     *       in="query",
+     *       description="Filter by Command Name, LIKE match",
+     *       type="string",
+     *       required=false
+     *    ),
      *  @SWG\Parameter(
      *      name="code",
      *      in="query",
@@ -112,23 +118,28 @@ class Command extends Base
      * @throws GeneralException
      * @throws NotFoundException
      */
-    function grid(Request $request, Response $response)
+    public function grid(Request $request, Response $response)
     {
-        $sanitzedParams = $this->getSanitizer($request->getParams());
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         $filter = [
-            'commandId' => $sanitzedParams->getInt('commandId'),
-            'command' => $sanitzedParams->getString('command'),
-            'code' => $sanitzedParams->getString('code')
+            'commandId' => $sanitizedParams->getInt('commandId'),
+            'command' => $sanitizedParams->getString('command'),
+            'code' => $sanitizedParams->getString('code'),
+            'commandLike' => $sanitizedParams->getString('commandLike'),
         ];
 
-        $commands = $this->commandFactory->query($this->gridRenderSort($sanitzedParams), $this->gridRenderFilter($filter, $sanitzedParams));
+        $commands = $this->commandFactory->query(
+            $this->gridRenderSort($sanitizedParams),
+            $this->gridRenderFilter($filter, $sanitizedParams)
+        );
 
         foreach ($commands as $command) {
             /* @var \Xibo\Entity\Command $command */
 
-            if ($this->isApi($request))
+            if ($this->isApi($request)) {
                 continue;
+            }
 
             $command->includeProperty('buttons');
 
@@ -146,11 +157,14 @@ class Command extends Base
                 if ($this->getUser()->checkDeleteable($command)) {
                     $command->buttons[] = [
                         'id' => 'command_button_delete',
-                        'url' => $this->urlFor($request,'command.delete.form', ['id' => $command->commandId]),
+                        'url' => $this->urlFor($request, 'command.delete.form', ['id' => $command->commandId]),
                         'text' => __('Delete'),
                         'multi-select' => true,
                         'dataAttributes' => [
-                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'command.delete', ['id' => $command->commandId])],
+                            [
+                                'name' => 'commit-url',
+                                'value' => $this->urlFor($request, 'command.delete', ['id' => $command->commandId])
+                            ],
                             ['name' => 'commit-method', 'value' => 'delete'],
                             ['name' => 'id', 'value' => 'command_button_delete'],
                             ['name' => 'text', 'value' => __('Delete')],
@@ -165,18 +179,36 @@ class Command extends Base
                     // Permissions button
                     $command->buttons[] = [
                         'id' => 'command_button_permissions',
-                        'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Command', 'id' => $command->commandId]),
+                        'url' => $this->urlFor(
+                            $request,
+                            'user.permissions.form',
+                            ['entity' => 'Command', 'id' => $command->commandId]
+                        ),
                         'text' => __('Share'),
                         'multi-select' => true,
                         'dataAttributes' => [
-                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Command', 'id' => $command->commandId])],
+                            [
+                                'name' => 'commit-url',
+                                'value' => $this->urlFor(
+                                    $request,
+                                    'user.permissions.multi',
+                                    ['entity' => 'Command', 'id' => $command->commandId]
+                                )
+                            ],
                             ['name' => 'commit-method', 'value' => 'post'],
                             ['name' => 'id', 'value' => 'command_button_permissions'],
                             ['name' => 'text', 'value' => __('Share')],
                             ['name' => 'rowtitle', 'value' => $command->command],
                             ['name' => 'sort-group', 'value' => 2],
                             ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                            ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'Command'])],
+                            [
+                                'name' => 'custom-handler-url',
+                                'value' => $this->urlFor(
+                                    $request,
+                                    'user.permissions.multi.form',
+                                    ['entity' => 'Command']
+                                )
+                            ],
                             ['name' => 'content-id-name', 'value' => 'commandId']
                         ]
                     ];
