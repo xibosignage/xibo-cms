@@ -57,6 +57,15 @@
                     </test>
                 </visibility>
             </property>
+            <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
+                <title>No data message</title>
+                <helpText>A message to display when no data is returned from the source</helpText>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
             <property id="showHeadings" type="checkbox">
                 <title>Show the table headings?</title>
                 <helpText>Should the Table headings be shown?</helpText>
@@ -484,6 +493,15 @@ $(target).xiboTextRender(
                     </test>
                 </visibility>
             </property>
+            <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
+                <title>No data message</title>
+                <helpText>A message to display when no data is returned from the source</helpText>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
             <property id="showHeadings" type="checkbox">
                 <title>Show the table headings?</title>
                 <helpText>Should the Table headings be shown?</helpText>
@@ -753,6 +771,15 @@ $datasetTableContainer.dataSetRender(properties);
                     </test>
                 </visibility>
             </property>
+            <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
+                <title>No data message</title>
+                <helpText>A message to display when no data is returned from the source</helpText>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
             <property id="showHeadings" type="checkbox">
                 <title>Show the table headings?</title>
                 <helpText>Should the Table headings be shown?</helpText>
@@ -1012,6 +1039,15 @@ $datasetTableContainer.dataSetRender(properties);
                     </test>
                 </visibility>
             </property>
+            <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
+                <title>No data message</title>
+                <helpText>A message to display when no data is returned from the source</helpText>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
             <property id="showHeadings" type="checkbox">
                 <title>Show the table headings?</title>
                 <helpText>Should the Table headings be shown?</helpText>
@@ -1256,6 +1292,15 @@ $datasetTableContainer.dataSetRender(properties);
                 <dependsOn>dataSetId</dependsOn>
                 <title>Item Template</title>
                 <helpText>Enter text in the box below, used to display each article.</helpText>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
+                <title>No data message</title>
+                <helpText>A message to display when no data is returned from the source</helpText>
                 <visibility>
                     <test>
                         <condition field="dataSetId" type="neq"></condition>
@@ -1510,6 +1555,15 @@ $datasetTableContainer.dataSetRender(properties);
                     </test>
                 </visibility>
             </property>
+            <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
+                <title>No data message</title>
+                <helpText>A message to display when no data is returned from the source</helpText>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
             <property id="showHeadings" type="checkbox">
                 <title>Show the table headings?</title>
                 <helpText>Should the Table headings be shown?</helpText>
@@ -1750,6 +1804,15 @@ $datasetTableContainer.dataSetRender(properties);
                 <dependsOn>dataSetId</dependsOn>
                 <title>Item Template</title>
                 <helpText>Enter text in the box below, used to display each article.</helpText>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
+                <title>No data message</title>
+                <helpText>A message to display when no data is returned from the source</helpText>
                 <visibility>
                     <test>
                         <condition field="dataSetId" type="neq"></condition>
@@ -2000,6 +2063,15 @@ $datasetTableContainer.dataSetRender(properties);
                     </test>
                 </visibility>
             </property>
+            <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
+                <title>No data message</title>
+                <helpText>A message to display when no data is returned from the source</helpText>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
             <property id="showHeadings" type="checkbox">
                 <title>Show the table headings?</title>
                 <helpText>Should the Table headings be shown?</helpText>
@@ -2233,6 +2305,15 @@ $datasetTableContainer.dataSetRender(properties);
                 <dependsOn>dataSetId</dependsOn>
                 <title>Item Template</title>
                 <helpText>Enter text in the box below, used to display each article.</helpText>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
+                <title>No data message</title>
+                <helpText>A message to display when no data is returned from the source</helpText>
                 <visibility>
                     <test>
                         <condition field="dataSetId" type="neq"></condition>
