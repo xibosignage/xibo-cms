@@ -23,6 +23,8 @@
 namespace Xibo\Widget;
 
 use Carbon\Carbon;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
 use Xibo\Widget\DataType\SocialMedia;
 use Xibo\Widget\Provider\DataProviderInterface;
@@ -62,24 +64,35 @@ class MastodonProvider implements WidgetProviderInterface
             }
 
             if (!empty($dataProvider->getProperty('serverUrl', ''))) {
-                $uri = $dataProvider->getProperty('serverUrl', '');
+                $uri = $dataProvider->getProperty('serverUrl');
             }
 
-            // Hashtag: When empty we should do a public search, when filled we should do a hashtag search
+            // Hashtag
             $hashtag = trim($dataProvider->getProperty('hashtag', ''));
-            if (!empty($hashtag)) {
-                $uri = rtrim($uri, '/').'/api/v1/timelines/tag/'. trim($hashtag, '#');
+
+            // when username is provided do not search in public timeline
+            if (!empty($dataProvider->getProperty('userName', ''))) {
+                // username search: get account ID, always returns one record
+                $accountId = $this->getAccountId($uri, $dataProvider);
+                $httpOptions['query']['tagged'] = trim($hashtag, '#');
+                ;
+                $result = $this->getResult($uri, $accountId, $httpOptions);
             } else {
-                $uri = rtrim($uri, '/').'/api/v1/timelines/public';
+                // Hashtag: When empty we should do a public search, when filled we should do a hashtag search
+                if (!empty($hashtag)) {
+                    $uri = rtrim($uri, '/') . '/api/v1/timelines/tag/' . trim($hashtag, '#');
+                } else {
+                    $uri = rtrim($uri, '/') . '/api/v1/timelines/public';
+                }
+
+                $response = $dataProvider
+                    ->getGuzzleClient($httpOptions)
+                    ->get($uri);
+
+                $result = json_decode($response->getBody()->getContents(), true);
             }
 
-            $this->getLog()->debug('Mastodon: uri: ' . $uri . ' httpOptions: '. json_encode($httpOptions));
-
-            $response = $dataProvider
-                ->getGuzzleClient($httpOptions)
-                ->get($uri);
-
-            $result = json_decode($response->getBody()->getContents(), true);
+            $this->getLog()->debug('Mastodon: uri: ' . $uri . ' httpOptions: ' . json_encode($httpOptions));
 
             $this->getLog()->debug('Mastodon: count: ' . count($result));
 
@@ -156,5 +169,46 @@ class MastodonProvider implements WidgetProviderInterface
     public function getDataModifiedDt(DataProviderInterface $dataProvider): ?Carbon
     {
         return null;
+    }
+
+    /**
+     * Get Mastodon Account Id from username
+     * @throws GuzzleException
+     */
+    private function getAccountId(mixed $uri, DataProviderInterface $dataProvider)
+    {
+        $uri = rtrim($uri, '/').'/api/v1/accounts/lookup?';
+
+        $httpOptions = [
+            'timeout' => 20, // wait no more than 20 seconds
+            'query' => [
+                'acct' => $dataProvider->getProperty('userName')
+            ],
+        ];
+        $response = $dataProvider
+            ->getGuzzleClient($httpOptions)
+            ->get($uri);
+
+        $result = json_decode($response->getBody()->getContents(), true);
+
+        $this->getLog()->debug('Mastodon: getAccountId: ID ' . $result['id']);
+
+        return $result['id'];
+    }
+
+    /**
+     * Get Mastodon account public status
+     * @throws GuzzleException
+     */
+    private function getResult(mixed $uri, $accountId, $httpOptions)
+    {
+        $uri = rtrim($uri, '/') . '/api/v1/accounts/' . $accountId . '/statuses?';
+
+        $client = new Client();
+        $response = $client->request('GET', $uri, $httpOptions);
+        $result = json_decode($response->getBody()->getContents(), true);
+
+        $this->getLog()->debug('Mastodon: username search result count ' . count($result));
+        return $result;
     }
 }
