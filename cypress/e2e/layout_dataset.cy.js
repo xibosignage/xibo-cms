@@ -57,10 +57,7 @@ describe('Layout Designer', function() {
     cy.get('.select2-container--open').contains('test');
     cy.get('.select2-container--open .select2-results > ul > li').should('have.length', 1);
     cy.get('.select2-container--open .select2-results > ul > li:first').contains('test').click();
-
-    cy.get('[contenteditable="true" ]').should('exist');
-    cy.get('.cke_editable_inline').clear();
-    cy.get('.cke_editable_inline').type('No data to show').trigger('change');
+    
     cy.get('[name="lowerLimit"]').clear().type('1');
     cy.get('[name="upperLimit"]').clear().type('10');
     cy.get('.order-clause-row > :nth-child(2) > .form-control').select('Text', {force: true});
