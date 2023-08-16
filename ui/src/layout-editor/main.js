@@ -2007,7 +2007,7 @@ lD.addModuleToPlaylist = function(
         playlistId: playlistId,
         displayOrder: addToPosition,
         currentWorkingFolderId: lD.folderId,
-        showWidgetDates: true,
+        showWidgetDates: false,
         folderSelector: true,
       },
       uploadDoneEvent: function(data) {
