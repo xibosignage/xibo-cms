@@ -46,7 +46,7 @@ class MastodonProvider implements WidgetProviderInterface
 
         try {
             $httpOptions = [
-                'timeout' => 20, // wait no more than 20 seconds
+               // 'timeout' => 20, // wait no more than 20 seconds
                 'query' => [
                     'limit' => $dataProvider->getProperty('numItems', 15)
                 ]
@@ -73,10 +73,9 @@ class MastodonProvider implements WidgetProviderInterface
             // when username is provided do not search in public timeline
             if (!empty($dataProvider->getProperty('userName', ''))) {
                 // username search: get account ID, always returns one record
-                $accountId = $this->getAccountId($uri, $dataProvider);
+                $accountId = $this->getAccountId($uri, $dataProvider->getProperty('userName'), $dataProvider);
                 $httpOptions['query']['tagged'] = trim($hashtag, '#');
-                ;
-                $result = $this->getResult($uri, $accountId, $httpOptions);
+                $uri = rtrim($uri, '/') . '/api/v1/accounts/' . $accountId . '/statuses?';
             } else {
                 // Hashtag: When empty we should do a public search, when filled we should do a hashtag search
                 if (!empty($hashtag)) {
@@ -84,13 +83,13 @@ class MastodonProvider implements WidgetProviderInterface
                 } else {
                     $uri = rtrim($uri, '/') . '/api/v1/timelines/public';
                 }
-
-                $response = $dataProvider
-                    ->getGuzzleClient($httpOptions)
-                    ->get($uri);
-
-                $result = json_decode($response->getBody()->getContents(), true);
             }
+
+            $response = $dataProvider
+                ->getGuzzleClient($httpOptions)
+                ->get($uri);
+
+            $result = json_decode($response->getBody()->getContents(), true);
 
             $this->getLog()->debug('Mastodon: uri: ' . $uri . ' httpOptions: ' . json_encode($httpOptions));
 
@@ -175,14 +174,14 @@ class MastodonProvider implements WidgetProviderInterface
      * Get Mastodon Account Id from username
      * @throws GuzzleException
      */
-    private function getAccountId(mixed $uri, DataProviderInterface $dataProvider)
+    private function getAccountId(string $uri, string $username, DataProviderInterface $dataProvider)
     {
         $uri = rtrim($uri, '/').'/api/v1/accounts/lookup?';
 
         $httpOptions = [
             'timeout' => 20, // wait no more than 20 seconds
             'query' => [
-                'acct' => $dataProvider->getProperty('userName')
+                'acct' => $username
             ],
         ];
         $response = $dataProvider
@@ -194,21 +193,5 @@ class MastodonProvider implements WidgetProviderInterface
         $this->getLog()->debug('Mastodon: getAccountId: ID ' . $result['id']);
 
         return $result['id'];
-    }
-
-    /**
-     * Get Mastodon account public status
-     * @throws GuzzleException
-     */
-    private function getResult(mixed $uri, $accountId, $httpOptions)
-    {
-        $uri = rtrim($uri, '/') . '/api/v1/accounts/' . $accountId . '/statuses?';
-
-        $client = new Client();
-        $response = $client->request('GET', $uri, $httpOptions);
-        $result = json_decode($response->getBody()->getContents(), true);
-
-        $this->getLog()->debug('Mastodon: username search result count ' . count($result));
-        return $result;
     }
 }
