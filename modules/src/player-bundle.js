@@ -21,24 +21,7 @@
 
 /* eslint-disable no-unused-vars */
 const globalThis = require('globalthis/polyfill')();
-window.jQuery = window.$ = require('jquery');
-require('babel-polyfill');
-window.moment = require('moment');
-require('moment-timezone');
-window.Handlebars = require('handlebars/dist/handlebars.min.js');
-require('./handlebars-helpers.js');
-require('url-search-params-polyfill');
-
-// Include HLS.js
-window.Hls = require('hls.js');
-
-// Include PDFjs
-window.pdfjsLib = require('pdfjs-dist/legacy/build/pdf.min.js');
-
-// Include common helpers/transformer
-window.transformer = require('../../ui/src/helpers/transformer.js');
-window.ArrayHelper = require('../../ui/src/helpers/array.js');
-
+import 'core-js/stable/url-search-params';
 // Our own imports
 import 'xibo-interactive-control/dist/xibo-interactive-control.min.js';
 import './xibo-calendar-render';
@@ -58,6 +41,23 @@ import './xibo-worldclock-render';
 import './xibo-elements-render';
 import './editor-render';
 import './player';
+
+window.jQuery = window.$ = require('jquery');
+require('babel-polyfill');
+window.moment = require('moment');
+require('moment-timezone');
+window.Handlebars = require('handlebars/dist/handlebars.min.js');
+require('./handlebars-helpers.js');
+
+// Include HLS.js
+window.Hls = require('hls.js');
+
+// Include PDFjs
+window.pdfjsLib = require('pdfjs-dist/es5/build/pdf.js');
+
+// Include common helpers/transformer
+window.transformer = require('../../ui/src/helpers/transformer.js');
+window.ArrayHelper = require('../../ui/src/helpers/array.js');
 
 // Plugins
 require('../vendor/flipclock.min.js');

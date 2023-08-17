@@ -48,7 +48,7 @@
                 <option name="3">Use Date</option>
             </options>
         </property>
-        <property id="countdownDuration" type="text">
+        <property id="countdownDuration" type="number">
             <title>Countdown Duration</title>
             <helpText>The duration in seconds.</helpText>
             <default></default>
@@ -57,6 +57,12 @@
                     <condition field="countdownType" type="eq">2</condition>
                 </test>
             </visibility>
+            <rule>
+                <test type="or" message="Please enter a positive countdown duration">
+                    <condition type="gt">0</condition>
+                    <condition field="countdownType" type="neq">2</condition>
+                </test>
+            </rule>
         </property>
         <property id="countdownDate" type="date" format="DD/MM/YYYY HH:mm:ss" variant="dateTime">
             <title>Countdown Date</title>
@@ -73,7 +79,7 @@
                 </test>
             </rule>
         </property>
-        <property id="countdownWarningDuration" type="text">
+        <property id="countdownWarningDuration" type="number">
             <title>Warning Duration</title>
             <helpText>The countdown will show in a warning mode from the end duration entered.</helpText>
             <default></default>
@@ -84,8 +90,19 @@
                 </test>
             </visibility>
             <rule>
-                <test message="Warning duration needs to be lower than the widget duration.">
-                    <condition field="duration" type="lte"></condition>
+                <test type="or" message="Warning duration needs to be lower than the countdown main duration.">
+                    <condition type="eq"></condition>
+                    <condition field="countdownType" type="neq">2</condition>
+                    <condition field="countdownDuration" type="lt"></condition>
+                </test>
+                <test type="or" message="Warning duration needs to be lower than the widget duration.">
+                    <condition field="countdownType" type="neq">1</condition>
+                    <condition field="duration" type="lt"></condition>
+                    <condition type="eq"></condition>
+                </test>
+                <test type="or" message="Please enter a positive warning duration">
+                    <condition type="gt">0</condition>
+                    <condition type="eq"></condition>
                 </test>
             </rule>
         </property>

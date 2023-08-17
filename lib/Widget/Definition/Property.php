@@ -211,11 +211,11 @@ class Property implements \JsonSerializable
                         $valueToTestAgainst = $condition->value;
                     } else {
                         // If a field and a condition value is provided, test against those, ignoring my own field value
-                        if ($condition->value !== null) {
+                        if (!empty($condition->value)) {
                             $testValue = $condition->value;
                         }
 
-                        $valueToTestAgainst = $properties[$condition->field] ?? $testValue;
+                        $valueToTestAgainst = $properties[$condition->field] ?? null;
                     }
 
                     // Do we have a message

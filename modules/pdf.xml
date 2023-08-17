@@ -199,6 +199,6 @@ window.addEventListener('resize', function(event) {
 }, true);
     ]]></onInitialize>
     <assets>
-        <asset id="pdfWorkerSrc" type="path" mimeType="text/javascript" isAutoInclude="false" path="/modules/assets/pdfjs/pdf.worker.min.js"></asset>
+        <asset id="pdfWorkerSrc" type="path" mimeType="text/javascript" isAutoInclude="false" path="/modules/assets/pdfjs/pdf.worker.js"></asset>
     </assets>
 </module>

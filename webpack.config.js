@@ -183,10 +183,25 @@ const moduleConfig = Object.assign({}, config, {
         use: {
           loader: 'babel-loader',
           options: {
+            sourceType: 'unambiguous',
             presets: [
-              ['@babel/preset-env', {targets: 'defaults'}],
+              [
+                '@babel/preset-env',
+                {
+                  corejs: '3.32',
+                  useBuiltIns: 'usage',
+                  targets: 'defaults',
+                },
+              ],
             ],
             plugins: [
+              [
+                'polyfill-corejs3',
+                {
+                  method: 'usage-global',
+                  version: '3.32',
+                },
+              ],
               '@babel/plugin-transform-nullish-coalescing-operator',
               '@babel/plugin-bugfix-v8-spread-parameters-in-optional-chaining',
               '@babel/plugin-transform-optional-chaining',
@@ -220,8 +235,8 @@ const moduleConfig = Object.assign({}, config, {
       patterns: [
         // Copy directory contents to {output}/
         {
-          from: 'node_modules/pdfjs-dist/legacy/build/pdf.worker.min.js',
-          to: 'assets/pdfjs/pdf.worker.min.js',
+          from: 'node_modules/pdfjs-dist/es5/build/pdf.worker.js',
+          to: 'assets/pdfjs/pdf.worker.js',
         },
       ],
     }),
