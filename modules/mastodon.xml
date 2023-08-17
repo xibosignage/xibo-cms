@@ -26,7 +26,7 @@
     <class>\Xibo\Widget\MastodonProvider</class>
     <type>mastodon</type>
     <dataType>social-media</dataType>
-    <dataCacheKey>%hashtag%_%numItems%_%searchOn%_%onlyMedia%_%serverUrl%</dataCacheKey>
+    <dataCacheKey>%hashtag%_%numItems%_%searchOn%_%onlyMedia%_%serverUrl%_%userName%</dataCacheKey>
     <schemaVersion>1</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>1</regionSpecific>
@@ -68,6 +68,11 @@
         <property id="serverUrl" type="text">
             <title>Server</title>
             <helpText>Leave empty to use the one from settings.</helpText>
+            <default></default>
+        </property>
+        <property id="userName" type="text">
+            <title>Username</title>
+            <helpText>Provide Mastodon username to get public statuses from the account.</helpText>
             <default></default>
         </property>
         <property id="numItems" type="number">

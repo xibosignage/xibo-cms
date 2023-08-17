@@ -23,6 +23,8 @@
 namespace Xibo\Widget;
 
 use Carbon\Carbon;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
 use Xibo\Widget\DataType\SocialMedia;
 use Xibo\Widget\Provider\DataProviderInterface;
@@ -45,41 +47,54 @@ class MastodonProvider implements WidgetProviderInterface
         try {
             $httpOptions = [
                 'timeout' => 20, // wait no more than 20 seconds
-                'query' => [
-                    'limit' => $dataProvider->getProperty('numItems', 15)
-                ]
+            ];
+
+            $queryOptions = [
+                'limit' => $dataProvider->getProperty('numItems', 15)
             ];
 
             if ($dataProvider->getProperty('searchOn', 'all') === 'local') {
-                $httpOptions['query']['local'] = true;
+                $queryOptions['local'] = true;
             } elseif ($dataProvider->getProperty('searchOn', 'all') === 'remote') {
-                $httpOptions['query']['remote'] = true;
+                $queryOptions['remote'] = true;
             }
 
             // Media Only
             if ($dataProvider->getProperty('onlyMedia', 0)) {
-                $httpOptions['query']['only_media'] = true;
+                $queryOptions['only_media'] = true;
             }
 
             if (!empty($dataProvider->getProperty('serverUrl', ''))) {
-                $uri = $dataProvider->getProperty('serverUrl', '');
+                $uri = $dataProvider->getProperty('serverUrl');
             }
 
-            // Hashtag: When empty we should do a public search, when filled we should do a hashtag search
+            // Hashtag
             $hashtag = trim($dataProvider->getProperty('hashtag', ''));
-            if (!empty($hashtag)) {
-                $uri = rtrim($uri, '/').'/api/v1/timelines/tag/'. trim($hashtag, '#');
-            } else {
-                $uri = rtrim($uri, '/').'/api/v1/timelines/public';
-            }
 
-            $this->getLog()->debug('Mastodon: uri: ' . $uri . ' httpOptions: '. json_encode($httpOptions));
+            // when username is provided do not search in public timeline
+            if (!empty($dataProvider->getProperty('userName', ''))) {
+                // username search: get account ID, always returns one record
+                $accountId = $this->getAccountId($uri, $dataProvider->getProperty('userName'), $dataProvider);
+                $queryOptions['tagged'] = trim($hashtag, '#');
+                $uri = rtrim($uri, '/') . '/api/v1/accounts/' . $accountId . '/statuses?';
+            } else {
+                // Hashtag: When empty we should do a public search, when filled we should do a hashtag search
+                if (!empty($hashtag)) {
+                    $uri = rtrim($uri, '/') . '/api/v1/timelines/tag/' . trim($hashtag, '#');
+                } else {
+                    $uri = rtrim($uri, '/') . '/api/v1/timelines/public';
+                }
+            }
 
             $response = $dataProvider
                 ->getGuzzleClient($httpOptions)
-                ->get($uri);
+                ->get($uri, [
+                    'query' => $queryOptions
+                ]);
 
             $result = json_decode($response->getBody()->getContents(), true);
+
+            $this->getLog()->debug('Mastodon: uri: ' . $uri . ' httpOptions: ' . json_encode($httpOptions));
 
             $this->getLog()->debug('Mastodon: count: ' . count($result));
 
@@ -156,5 +171,30 @@ class MastodonProvider implements WidgetProviderInterface
     public function getDataModifiedDt(DataProviderInterface $dataProvider): ?Carbon
     {
         return null;
+    }
+
+    /**
+     * Get Mastodon Account Id from username
+     * @throws GuzzleException
+     */
+    private function getAccountId(string $uri, string $username, DataProviderInterface $dataProvider)
+    {
+        $uri = rtrim($uri, '/').'/api/v1/accounts/lookup?';
+
+        $httpOptions = [
+            'timeout' => 20, // wait no more than 20 seconds
+            'query' => [
+                'acct' => $username
+            ],
+        ];
+        $response = $dataProvider
+            ->getGuzzleClient($httpOptions)
+            ->get($uri);
+
+        $result = json_decode($response->getBody()->getContents(), true);
+
+        $this->getLog()->debug('Mastodon: getAccountId: ID ' . $result['id']);
+
+        return $result['id'];
     }
 }
