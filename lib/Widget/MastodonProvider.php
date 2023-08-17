@@ -46,21 +46,22 @@ class MastodonProvider implements WidgetProviderInterface
 
         try {
             $httpOptions = [
-               // 'timeout' => 20, // wait no more than 20 seconds
-                'query' => [
-                    'limit' => $dataProvider->getProperty('numItems', 15)
-                ]
+                'timeout' => 20, // wait no more than 20 seconds
+            ];
+
+            $queryOptions = [
+                'limit' => $dataProvider->getProperty('numItems', 15)
             ];
 
             if ($dataProvider->getProperty('searchOn', 'all') === 'local') {
-                $httpOptions['query']['local'] = true;
+                $queryOptions['local'] = true;
             } elseif ($dataProvider->getProperty('searchOn', 'all') === 'remote') {
-                $httpOptions['query']['remote'] = true;
+                $queryOptions['remote'] = true;
             }
 
             // Media Only
             if ($dataProvider->getProperty('onlyMedia', 0)) {
-                $httpOptions['query']['only_media'] = true;
+                $queryOptions['only_media'] = true;
             }
 
             if (!empty($dataProvider->getProperty('serverUrl', ''))) {
@@ -74,7 +75,7 @@ class MastodonProvider implements WidgetProviderInterface
             if (!empty($dataProvider->getProperty('userName', ''))) {
                 // username search: get account ID, always returns one record
                 $accountId = $this->getAccountId($uri, $dataProvider->getProperty('userName'), $dataProvider);
-                $httpOptions['query']['tagged'] = trim($hashtag, '#');
+                $queryOptions['tagged'] = trim($hashtag, '#');
                 $uri = rtrim($uri, '/') . '/api/v1/accounts/' . $accountId . '/statuses?';
             } else {
                 // Hashtag: When empty we should do a public search, when filled we should do a hashtag search
@@ -87,7 +88,9 @@ class MastodonProvider implements WidgetProviderInterface
 
             $response = $dataProvider
                 ->getGuzzleClient($httpOptions)
-                ->get($uri);
+                ->get($uri, [
+                    'query' => $queryOptions
+                ]);
 
             $result = json_decode($response->getBody()->getContents(), true);
 
