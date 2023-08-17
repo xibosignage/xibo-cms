@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -37,8 +37,7 @@ describe('Folders', function () {
 
     it('Moving an image from Root Folder to another folder', () => {
         // Create and alias for load folders
-        cy.server();
-        cy.route('/library?*').as('mediaLoad');
+        cy.intercept('/library?*').as('mediaLoad');
 
         // Go to library
         cy.visit('/library/view');
@@ -46,6 +45,7 @@ describe('Folders', function () {
 
         cy.wait('@mediaLoad');
         cy.get('#libraryItems tbody tr').should('have.length', 1);
+        cy.wait('@mediaLoad');
 
         cy.get('#libraryItems tr:first-child .dropdown-toggle').click();
         cy.get('#libraryItems tr:first-child .library_button_selectfolder').click();
@@ -57,13 +57,11 @@ describe('Folders', function () {
     });
 
     it('Sharing', () => {
-        cy.server();
-
         // Create and alias for load folders
-        cy.route('/folders').as('loadFolders');
+        cy.intercept('/folders').as('loadFolders');
 
         // Create and alias for load user permissions for folders
-        cy.route('/user/permissions/Folder/*').as('permissionsFolders');
+        cy.intercept('/user/permissions/Folder/*').as('permissionsFolders');
 
         cy.visit('/folders/view');
 
@@ -82,9 +80,8 @@ describe('Folders', function () {
     });
 
     it('Set Home Folders for a user', () => {
-        cy.server();
         // Create and alias for load users
-        cy.route('/user*').as('loadUsers');
+        cy.intercept('/user*').as('loadUsers');
 
         cy.visit('/user/view');
         cy.get('#userName').type('folder_user');
@@ -110,8 +107,7 @@ describe('Folders', function () {
 
     it('Remove an empty folder', () => {
         // Create and alias for load folders
-        cy.server();
-        cy.route('/folders').as('loadFolders');
+        cy.intercept('/folders').as('loadFolders');
 
         cy.visit('/folders/view');
         cy.contains('EmptyFolder').rightclick();
@@ -124,8 +120,7 @@ describe('Folders', function () {
 
     it('cannot remove a folder with content', () => {
         // Create and alias for load folders
-        cy.server();
-        cy.route('/folders').as('loadFolders');
+        cy.intercept('/folders').as('loadFolders');
 
         cy.visit('/folders/view');
         cy.contains('FolderWithContent').rightclick();
@@ -140,13 +135,16 @@ describe('Folders', function () {
 
     it('search a media in a folder', () => {
         // Create and alias for load folders
-        cy.server();
-        cy.route('/folders').as('loadFolders');
+        cy.intercept('/folders').as('loadFolders');
+        cy.intercept('/library?*').as('mediaLoad');
+        cy.intercept('/user/pref').as('userPref');
 
         // Go to library
         cy.visit('/library/view');
 
         cy.wait('@loadFolders');
+        cy.wait('@mediaLoad');
+        cy.wait('@userPref');
 
         // Click on All folders
         cy.get('#folder-tree-clear-selection-button').click();
@@ -168,10 +166,9 @@ describe('Folders', function () {
 
     it('Move folders and Merge', () => {
         // Move a folder (MoveFromFolder) to another (MoveToFolder) and merge
-        cy.server();
-        cy.route('/library?*').as('mediaLoad');
+        cy.intercept('/library?*').as('mediaLoad');
         // Create and alias for load folders
-        cy.route('/folders').as('loadFolders');
+        cy.intercept('/folders').as('loadFolders');
 
         // Go to folders
         cy.visit('/folders/view');
