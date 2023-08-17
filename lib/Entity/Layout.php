@@ -1928,16 +1928,47 @@ class Layout implements \JsonSerializable
         }
 
         // Add any fonts
-        //  parse the XLF file for any font declarations contains therein
-        //  get those font media files by name and add them to the zip
-        $fonts = null;
-        preg_match_all('/font-family:(.*?);/', $this->toXlf(), $fonts);
+        // Parse cdata/raw Widget Options (raw html, css, js etc)
+        // Get fonts assigned to elements
+        // lookup font files in db by name and add them to the zip
+        $fonts = [];
+        $nonElementsFonts = null;
 
-        if ($fonts != null) {
+        foreach ($this->getAllWidgets() as $widget) {
+            foreach ($widget->widgetOptions as $option) {
+                if ($option->type === 'cdata' || $option->type === 'raw' && $option->option !== 'elements') {
+                    preg_match_all('/font-family:(.*?);/', $option->value, $nonElementsFonts);
+                    if (!empty($nonElementsFonts[1])) {
+                        foreach ($nonElementsFonts[1] as $nonElementsFont) {
+                            if (!in_array(trim($nonElementsFont), $fonts)) {
+                                $fonts[] = trim($nonElementsFont);
+                            }
+                        }
+                    }
+                } else if ($option->option === 'elements') {
+                    $widgetElements = $widget->getOptionValue('elements', null);
+                    // Elements will be JSON
+                    $widgetElements = json_decode($widgetElements, true);
 
+                    // go through the arrays to get properties array inside of elements
+                    // find fontFamily property, add it to fonts array if we do not already have it there
+                    foreach (($widgetElements ?? []) as $widgetElement) {
+                        foreach (($widgetElement['elements'] ?? []) as $element) {
+                            foreach ($element['properties'] as $property) {
+                                if ($property['id'] === 'fontFamily' && !in_array($property['value'], $fonts)) {
+                                    $fonts[] = $property['value'];
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!empty($fonts)) {
             $this->getLog()->debug(sprintf('Matched fonts: %s', json_encode($fonts)));
 
-            foreach ($fonts[1] as $font) {
+            foreach ($fonts as $font) {
                 $matches = $this->fontFactory->getByName($font);
 
                 if (count($matches) <= 0) {
@@ -2007,7 +2038,8 @@ class Layout implements \JsonSerializable
 
                     $playlistDefinitions[$playlist->playlistId] = $playlist;
 
-                    // this is a recursive function, we are adding Playlist definitions, Playlist mappings and DataSets existing on the nested Playlist.
+                    // this is a recursive function, we are adding Playlist definitions,
+                    // Playlist mappings and DataSets existing on the nested Playlist.
                     $playlist->generatePlaylistMapping(
                         $playlist->widgets,
                         $playlist->playlistId,
