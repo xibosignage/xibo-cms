@@ -79,7 +79,7 @@
                 </test>
             </rule>
         </property>
-        <property id="countdownWarningDuration" type="text">
+        <property id="countdownWarningDuration" type="number">
             <title>Warning Duration</title>
             <helpText>The countdown will show in a warning mode from the end duration entered.</helpText>
             <default></default>
