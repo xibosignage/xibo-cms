@@ -98,13 +98,21 @@ trait ModulePropertyTrait
     /**
      * @param bool $decorateForOutput true if we should decorate for output to either the preview or player
      * @param array|null $overrideValues a key/value array of values to use instead the stored property values
+     * @param bool $includeDefaults
      * @return array
      */
-    public function getPropertyValues(bool $decorateForOutput = true, ?array $overrideValues = null): array
-    {
+    public function getPropertyValues(
+        bool $decorateForOutput = true,
+        ?array $overrideValues = null,
+        bool $includeDefaults = false
+    ): array {
         $properties = [];
         foreach ($this->properties as $property) {
             $value = $overrideValues !== null ? ($overrideValues[$property->id] ?? null) : $property->value;
+
+            if ($includeDefaults && $value === null) {
+                $value = $property->default ?? null;
+            }
 
             // TODO: should we cast values to their appropriate field formats.
             if ($decorateForOutput) {
@@ -158,7 +166,7 @@ trait ModulePropertyTrait
         // Go through all of our required properties, and validate that they are as they should be.
         // provide a key/value state of all current properties
         $properties = array_merge(
-            $this->getPropertyValues(false),
+            $this->getPropertyValues(false, null, true),
             $additionalProperties,
         );
 
