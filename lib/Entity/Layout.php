@@ -1884,9 +1884,6 @@ class Layout implements \JsonSerializable
             'layoutDefinitions' => $this
         ]));
 
-        // Add the layout XLF
-        $zip->addFile($this->xlfToDisk(), 'layout.xml');
-
         // Add all media
         $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
         $mappings = [];
