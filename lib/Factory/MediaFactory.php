@@ -741,6 +741,10 @@ class MediaFactory extends BaseFactory
             $params['released'] = $sanitizedFilter->getInt('released');
         }
 
+        if ($sanitizedFilter->getCheckbox('unreleasedOnly') === 1) {
+            $body .= ' AND media.released <> 1 ';
+        }
+
         if ($sanitizedFilter->getInt('retired', ['default'=> -1]) == 1)
             $body .= " AND media.retired = 1 ";
 

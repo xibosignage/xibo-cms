@@ -313,6 +313,18 @@
 
 {% block javaScript %}
     <script type="text/javascript">
+      const stringToColour = function(str) {
+        let hash = 0;
+        str.split('').forEach(char => {
+          hash = char.charCodeAt(0) + ((hash << 5) - hash);
+        });
+        let colour = '#';
+        for (let i = 0; i < 3; i++) {
+          const value = (hash >> (i * 8)) & 0xff
+          colour += value.toString(16).padStart(2, '0');
+        }
+        return colour;
+      }
 
         var displayGroupStatusChart = null;
         var displayGroupContentStatusChart = null;
@@ -350,9 +362,10 @@
         });
 
         var libraryData = {{ libraryWidgetData|raw }};
+        const libraryLabels = {{ libraryWidgetLabels|raw }};
         var colours = new Array();
-        for(var i = 0; i < libraryData.length; i++) {
-            colours.push($c.rand());
+        for (var i = 0; i < libraryData.length; i++) {
+          colours.push(stringToColour(libraryLabels[i]));
         }
         var libraryChart = new Chart($("#libraryChart"), {
             type: 'pie',
