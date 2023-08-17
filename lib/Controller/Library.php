@@ -538,6 +538,8 @@ class Library extends Base
             'orientation' => $parsedQueryParams->getString('orientation', ['defaultOnEmptyString' => true]),
             'logicalOperator' => $parsedQueryParams->getString('logicalOperator'),
             'logicalOperatorName' => $parsedQueryParams->getString('logicalOperatorName'),
+            'unreleasedOnly' => $parsedQueryParams->getCheckbox('unreleasedOnly'),
+            'unusedOnly' => $parsedQueryParams->getCheckbox('unusedOnly'),
         ], $parsedQueryParams));
 
         // Add some additional row content

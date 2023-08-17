@@ -335,6 +335,9 @@ ul.sidebar .sidebar-list a:hover .menu-icon {
 .widget .widget-body {
   padding: 15px;
 }
+.widget .widget-button {
+   cursor: pointer;
+}
 .widget .widget-body table thead * {
   font-size: 14px !important;
 }
