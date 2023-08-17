@@ -747,6 +747,34 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                   )
               )
             UNION
+            SELECT DISTINCT display.displayId,
+                schedule.eventId,
+                schedule.fromDt,
+                schedule.toDt,
+                schedule.recurrence_type AS recurrenceType,
+                schedule.recurrence_detail AS recurrenceDetail,
+                schedule.recurrence_range AS recurrenceRange,
+                schedule.recurrenceRepeatsOn,
+                schedule.lastRecurrenceWatermark,
+                schedule.dayPartId
+            FROM `schedule`
+                     INNER JOIN `lkscheduledisplaygroup`
+                        ON `lkscheduledisplaygroup`.eventId = `schedule`.eventId
+                     INNER JOIN `lkdgdg`
+                        ON `lkdgdg`.parentId = `lkscheduledisplaygroup`.displayGroupId
+                     INNER JOIN `lkdisplaydg`
+                        ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
+                     INNER JOIN `display`
+                        ON lkdisplaydg.DisplayID = display.displayID
+            WHERE schedule.actionLayoutCode = :code 
+              AND (
+                  (`schedule`.FromDT < :toDt AND IFNULL(`schedule`.toDt, `schedule`.fromDt) > :fromDt)
+                  OR `schedule`.recurrence_range >= :fromDt 
+                  OR (
+                    IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\'
+                  )
+              )
+            UNION
             SELECT DISTINCT display.DisplayID,
                 0 AS eventId, 
                 0 AS fromDt, 
