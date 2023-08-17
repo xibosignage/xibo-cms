@@ -155,7 +155,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
         $displayIdsRequiringActions = array_values(array_unique($this->displayIdsRequiringActions, SORT_NUMERIC));
         $qmarks = str_repeat('?,', count($displayIdsRequiringActions) - 1) . '?';
         $displays = $this->store->select(
-            'SELECT displayId, xmrChannel, xmrPubKey FROM `display` WHERE displayId IN (' . $qmarks . ')',
+            'SELECT displayId, xmrChannel, xmrPubKey, display FROM `display` WHERE displayId IN (' . $qmarks . ')',
             $displayIdsRequiringActions
         );
 
@@ -164,6 +164,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
             $stdObj->displayId = $display['displayId'];
             $stdObj->xmrChannel = $display['xmrChannel'];
             $stdObj->xmrPubKey = $display['xmrPubKey'];
+            $stdObj->display = $display['display'];
 
             try {
                 $this->playerActionService->sendAction($stdObj, new CollectNowAction());
