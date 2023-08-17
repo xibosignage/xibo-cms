@@ -27,7 +27,6 @@
     <compatibilityClass>\Xibo\Widget\Compatibility\NotificationViewCompatibility</compatibilityClass>
     <type>notificationview</type>
     <dataType>message</dataType>
-    <dataCacheKey>%age%_%displayId%</dataCacheKey>
     <schemaVersion>2</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>1</regionSpecific>

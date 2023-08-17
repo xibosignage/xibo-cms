@@ -25,7 +25,9 @@ namespace Xibo\Listener;
 use Carbon\Carbon;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\User;
+use Xibo\Event\NotificationCacheKeyRequestEvent;
 use Xibo\Event\NotificationDataRequestEvent;
+use Xibo\Event\NotificationModifiedDtRequestEvent;
 use Xibo\Factory\NotificationFactory;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Widget\Provider\DataProviderInterface;
@@ -62,6 +64,7 @@ class NotificationDataProviderListener
     public function registerWithDispatcher(EventDispatcherInterface $dispatcher): NotificationDataProviderListener
     {
         $dispatcher->addListener(NotificationDataRequestEvent::$NAME, [$this, 'onDataRequest']);
+        $dispatcher->addListener(NotificationModifiedDtRequestEvent::$NAME, [$this, 'onModifiedDtRequest']);
         return $this;
     }
 
@@ -70,7 +73,7 @@ class NotificationDataProviderListener
         $this->getData($event->getDataProvider());
     }
 
-    private function getData(DataProviderInterface $dataProvider)
+    public function getData(DataProviderInterface $dataProvider)
     {
         $age = $dataProvider->getProperty('age', 0);
 
@@ -100,5 +103,28 @@ class NotificationDataProviderListener
         }
 
         $dataProvider->setIsHandled();
+    }
+
+    public function onModifiedDtRequest(NotificationModifiedDtRequestEvent $event)
+    {
+        $this->getLogger()->debug('onModifiedDtRequest');
+
+        // Get the latest notification according to the filter provided.
+        $displayId = $event->getDisplayId();
+
+        // If we're a user, we should always refresh
+        if ($displayId === 0) {
+            $event->setModifiedDt(Carbon::maxValue());
+        }
+
+        $notifications = $this->notificationFactory->query(['releaseDt DESC'], [
+            'onlyReleased' => 1,
+            'displayId' => $displayId,
+            'length' => 1,
+        ]);
+
+        if (count($notifications) > 0) {
+            $event->setModifiedDt(Carbon::createFromTimestamp($notifications[0]->releaseDt));
+        }
     }
 }
