@@ -370,15 +370,59 @@ class PlaylistFactory extends BaseFactory
             } else {
                 $operator = $parsedFilter->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
                 $logicalOperator = $parsedFilter->getString('logicalOperator', ['default' => 'OR']);
-                $body .=  ' AND `playlist`.playlistID IN (
-                SELECT lktagplaylist.playlistId
-                  FROM tag
-                    INNER JOIN lktagplaylist
-                    ON lktagplaylist.tagId = tag.tagId
-                ';
+                $allTags = explode(',', $tagFilter);
+                $notTags = [];
+                $tags = [];
 
-                $tags = explode(',', $tagFilter);
-                $this->tagFilter($tags, 'lktagplaylist', 'lkTagPlaylistId', 'playlistId', $logicalOperator, $operator, $body, $params);
+                foreach ($allTags as $tag) {
+                    if (str_starts_with($tag, '-')) {
+                        $notTags[] = ltrim(($tag), '-');
+                    } else {
+                        $tags[] = $tag;
+                    }
+                }
+
+                if (!empty($notTags)) {
+                    $body .=  ' AND `playlist`.playlistID NOT IN (
+                        SELECT lktagplaylist.playlistId
+                          FROM tag
+                            INNER JOIN lktagplaylist
+                            ON lktagplaylist.tagId = tag.tagId
+                    ';
+
+                    $this->tagFilter(
+                        $notTags,
+                        'lktagplaylist',
+                        'lkTagPlaylistId',
+                        'playlistId',
+                        $logicalOperator,
+                        $operator,
+                        true,
+                        $body,
+                        $params
+                    );
+                }
+
+                if (!empty($tags)) {
+                    $body .=  ' AND `playlist`.playlistID IN (
+                        SELECT lktagplaylist.playlistId
+                          FROM tag
+                            INNER JOIN lktagplaylist
+                            ON lktagplaylist.tagId = tag.tagId
+                    ';
+
+                    $this->tagFilter(
+                        $tags,
+                        'lktagplaylist',
+                        'lkTagPlaylistId',
+                        'playlistId',
+                        $logicalOperator,
+                        $operator,
+                        false,
+                        $body,
+                        $params
+                    );
+                }
             }
         }
 

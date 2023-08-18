@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -290,15 +290,59 @@ class CampaignFactory extends BaseFactory
             } else {
                 $operator = $sanitizedFilter->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
                 $logicalOperator = $sanitizedFilter->getString('logicalOperator', ['default' => 'OR']);
-                $body .= ' AND campaign.campaignID IN (
-                SELECT lktagcampaign.campaignId
-                  FROM tag
-                    INNER JOIN lktagcampaign
-                    ON lktagcampaign.tagId = tag.tagId
-                ';
+                $allTags = explode(',', $tagFilter);
+                $notTags = [];
+                $tags = [];
 
-                $tags = explode(',', $tagFilter);
-                $this->tagFilter($tags, 'lktagcampaign', 'lkTagCampaignId', 'campaignId', $logicalOperator, $operator, $body, $params);
+                foreach ($allTags as $tag) {
+                    if (str_starts_with($tag, '-')) {
+                        $notTags[] = ltrim(($tag), '-');
+                    } else {
+                        $tags[] = $tag;
+                    }
+                }
+
+                if (!empty($notTags)) {
+                    $body .= ' AND campaign.campaignID NOT IN (
+                    SELECT lktagcampaign.campaignId
+                      FROM tag
+                        INNER JOIN lktagcampaign
+                        ON lktagcampaign.tagId = tag.tagId
+                    ';
+
+                    $this->tagFilter(
+                        $notTags,
+                        'lktagcampaign',
+                        'lkTagCampaignId',
+                        'campaignId',
+                        $logicalOperator,
+                        $operator,
+                        true,
+                        $body,
+                        $params
+                    );
+                }
+
+                if (!empty($tags)) {
+                    $body .= ' AND campaign.campaignID IN (
+                    SELECT lktagcampaign.campaignId
+                      FROM tag
+                        INNER JOIN lktagcampaign
+                        ON lktagcampaign.tagId = tag.tagId
+                    ';
+
+                    $this->tagFilter(
+                        $tags,
+                        'lktagcampaign',
+                        'lkTagCampaignId',
+                        'campaignId',
+                        $logicalOperator,
+                        $operator,
+                        false,
+                        $body,
+                        $params
+                    );
+                }
             }
         }
 
