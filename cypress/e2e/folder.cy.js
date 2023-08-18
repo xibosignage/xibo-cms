@@ -35,7 +35,7 @@ describe('Folders', function() {
     cy.contains('Rename').type('Folder123{enter}');
   });
 
-  it.only('Moving an image from Root Folder to another folder', () => {
+  it('Moving an image from Root Folder to another folder', () => {
     // Create an alias for load folders
     cy.intercept('/library?*').as('mediaLoad');
     cy.intercept('/user/pref').as('userPref');
@@ -50,22 +50,21 @@ describe('Folders', function() {
 
     // Wait for the search to complete
     cy.wait('@mediaLoad');
-    cy.wait(20);
 
     cy.get('#libraryItems tbody tr').should('have.length', 1);
     cy.get('#datatable-container').should('contain', 'child_folder_media');
 
-    // // Click the dropdown menu and choose a folder to move the image to
-    // cy.get('#libraryItems tr:first-child .dropdown-toggle').click();
-    // cy.get('#libraryItems tr:first-child .library_button_selectfolder').click();
-    //
-    // // Expand the folder tree and select ChildFolder
-    // cy.get('#container-folder-form-tree>ul>li>i').click();
-    // cy.get('#container-folder-form-tree>ul>li:not(.jstree-loading)>i').click();
-    // cy.contains('ChildFolder').click();
-    //
-    // // Click the save button
-    // cy.get('.save-button').click();
+    // Click the dropdown menu and choose a folder to move the image to
+    cy.get('#libraryItems tr:first-child .dropdown-toggle').click();
+    cy.get('#libraryItems tr:first-child .library_button_selectfolder').click();
+
+    // Expand the folder tree and select ChildFolder
+    cy.get('#container-folder-form-tree>ul>li>i').click();
+    cy.get('#container-folder-form-tree>ul>li:not(.jstree-loading)>i').click();
+    cy.contains('ChildFolder').click();
+
+    // Click the save button
+    cy.get('.save-button').click();
   });
 
   it('Sharing', () => {
