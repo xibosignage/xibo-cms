@@ -1,7 +1,7 @@
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -26,23 +26,36 @@ jQuery.fn.extend({
       previewWidth: 0,
       previewHeight: 0,
       scaleOverride: 0,
+      startAtCurrentTime: 1,
     };
 
     options = $.extend({}, defaults, options);
 
     // Global constants
     const TODAY = moment();
+    const START_DATE = options.startAtCurrentTime || events.length <= 0 ?
+      TODAY.clone() :
+      moment(events[0].startDate);
 
-    const INITIAL_YEAR = moment().year();
+    const START_DATE_DAY_START = START_DATE.clone().startOf('day');
+    const START_DATE_DAY_END = START_DATE.clone().endOf('day');
+    const START_DATE_WEEK_START = START_DATE.clone().startOf('week');
+    const START_DATE_WEEK_END = START_DATE.clone().endOf('week');
+    const START_DATE_MONTH_START = START_DATE.clone().startOf('month');
+    const START_DATE_MONTH_END = START_DATE.clone().endOf('month');
+
+    const INITIAL_YEAR = START_DATE.year();
 
     // NOTE: month format for momentjs is 1-12 and month value is zero indexed
-    const INITIAL_MONTH = moment().month();
-    const INITIAL_DATE = moment().date();
+    const INITIAL_MONTH = START_DATE.month();
+    const INITIAL_DATE = START_DATE.date();
 
     const TIME_FORMAT = options.timeFormat || 'HH:mm';
 
-    const DEFAULT_DAY_START_TIME = moment().startOf('day').format(TIME_FORMAT);
-    const DEFAULT_DAY_END_TIME = moment().endOf('day').format(TIME_FORMAT);
+    const DEFAULT_DAY_START_TIME =
+      START_DATE.startOf('day').format(TIME_FORMAT);
+    const DEFAULT_DAY_END_TIME =
+      START_DATE.endOf('day').format(TIME_FORMAT);
 
     const GRID_STEP = options.gridStep &&
       options.gridStep > 0 ? options.gridStep : 60;
@@ -65,6 +78,35 @@ jQuery.fn.extend({
     if (options.monthNameLength == 'short') {
       monthsNames = moment.monthsShort();
     }
+
+    // Filter events by calendar type.
+    // -------------------------------
+    const filteredEvents = [];
+    $.each(events, function(i, event) {
+      // Per calendar type, check that this event fits inside the view.
+      if (options.calendarType === 2) {
+        // Daily
+        if (moment(event.startDate) <= START_DATE_DAY_END &&
+          moment(event.endDate) >= START_DATE_DAY_START
+        ) {
+          filteredEvents.push(event);
+        }
+      } else if (options.calendarType === 3) {
+        // Weekly
+        if (moment(event.startDate) <= START_DATE_WEEK_END &&
+          moment(event.endDate) >= START_DATE_WEEK_START
+        ) {
+          filteredEvents.push(event);
+        }
+      } else if (options.calendarType === 4) {
+        // Monthly
+        if (moment(event.startDate) <= START_DATE_MONTH_END &&
+          moment(event.endDate) >= START_DATE_MONTH_START
+        ) {
+          filteredEvents.push(event);
+        }
+      }
+    });
 
     // Main functions to be overriden
     let createCalendar = () => {};
@@ -219,7 +261,7 @@ jQuery.fn.extend({
      * Add events to calendar
      */
     function addEventsToCalendarBase() {
-      events.forEach((event) => {
+      filteredEvents.forEach((event) => {
         const startDate = moment(event.startDate).startOf('date');
 
         // Check if event is an all day
@@ -787,7 +829,7 @@ jQuery.fn.extend({
             } else {
               // Get start of day of today
               // but clone it to avoid modifying the original
-              startDate = moment(TODAY).startOf('d');
+              startDate = moment(START_DATE).startOf('d');
             }
 
             // Add event
@@ -855,10 +897,10 @@ jQuery.fn.extend({
         const $weekDay = $('<li>');
         $dayTitle.append($weekDay);
         $weekDay.html('<div class="week-day">' +
-          weekdaysNames[TODAY.weekday()] +
+          weekdaysNames[START_DATE.weekday()] +
           '</div>');
 
-        const today = moment(TODAY);
+        const today = moment(START_DATE);
         const day = {
           date: today.format('YYYY-MM-DD'),
           dayOfMonth: today.date(),
@@ -1387,7 +1429,7 @@ jQuery.fn.extend({
     // Create calendar
     applyStyleOptions(options);
     createCalendar();
-    addEventsToCalendar(events);
+    addEventsToCalendar(filteredEvents);
 
     return true;
   },

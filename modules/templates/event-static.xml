@@ -131,20 +131,28 @@ $(target).xiboTextRender(properties, $(target).find('#content > *'));
         <startWidth>800</startWidth>
         <startHeight>500</startHeight>
         <properties>
+            <property type="message">
+                <title>This is an advanced template which may not work on devices with an older browser.</title>
+            </property>
             <property id="startTime" type="date" variant="time">
-                <title>Start Time</title>
-                <helpText>Current view starting time.</helpText>
+                <title>First hour slot</title>
+                <helpText>This view features a grid running from midnight to midnight. Use the first slot to shorten the time window shown.</helpText>
                 <default></default>
             </property>
             <property id="endTime" type="date" variant="time">
-                <title>End Time</title>
-                <helpText>Current view ending time.</helpText>
+                <title>Last hour slot</title>
+                <helpText>This view features a grid running from midnight to midnight. Use the last slot to shorten the time window shown.</helpText>
                 <default></default>
             </property>
             <property id="timeFormat" type="text">
                 <title>Time Format</title>
                 <helpText>The format to apply to event time (default HH:mm).</helpText>
                 <default>HH:mm</default>
+            </property>
+            <property id="startAtCurrentTime" type="checkbox">
+                <title>Start at the current time?</title>
+                <helpText>Should the calendar start at the current time, or at the time of the first event?</helpText>
+                <default>1</default>
             </property>
             <property id="showNowMarker" type="checkbox">
                 <title>Show now marker?</title>
@@ -581,20 +589,28 @@ $(target).xiboCalendarRender(properties, items);
         <startWidth>800</startWidth>
         <startHeight>500</startHeight>
         <properties>
+            <property type="message">
+                <title>This is an advanced template which may not work on devices with an older browser.</title>
+            </property>
             <property id="startTime" type="date" variant="time">
-                <title>Start Time</title>
-                <helpText>Current view starting time.</helpText>
+                <title>First hour slot</title>
+                <helpText>This view features a grid running from midnight to midnight. Use the first slot to shorten the time window shown.</helpText>
                 <default></default>
             </property>
             <property id="endTime" type="date" variant="time">
-                <title>End Time</title>
-                <helpText>Current view ending time.</helpText>
+                <title>Last hour slot</title>
+                <helpText>This view features a grid running from midnight to midnight. Use the last slot to shorten the time window shown.</helpText>
                 <default></default>
             </property>
             <property id="timeFormat" type="text">
                 <title>Time Format</title>
                 <helpText>The format to apply to event time (default HH:mm).</helpText>
                 <default>HH:mm</default>
+            </property>
+            <property id="startAtCurrentTime" type="checkbox">
+                <title>Start at the current time?</title>
+                <helpText>Should the calendar start at the current time, or at the time of the first event?</helpText>
+                <default>1</default>
             </property>
             <property id="showNowMarker" type="checkbox">
                 <title>Show now marker?</title>
@@ -1034,15 +1050,23 @@ $(target).xiboCalendarRender(properties, items);
         <startWidth>800</startWidth>
         <startHeight>500</startHeight>
         <properties>
+            <property type="message">
+                <title>This is an advanced template which may not work on devices with an older browser.</title>
+            </property>
             <property id="startTime" type="date" variant="time">
-                <title>Start Time</title>
-                <helpText>Current view starting time.</helpText>
+                <title>First hour slot</title>
+                <helpText>This view features a grid running from midnight to midnight. Use the first slot to shorten the time window shown.</helpText>
                 <default></default>
             </property>
             <property id="endTime" type="date" variant="time">
-                <title>End Time</title>
-                <helpText>Current view ending time.</helpText>
+                <title>Last hour slot</title>
+                <helpText>This view features a grid running from midnight to midnight. Use the last slot to shorten the time window shown.</helpText>
                 <default></default>
+            </property>
+            <property id="startAtCurrentTime" type="checkbox">
+                <title>Start at the current time?</title>
+                <helpText>Should the calendar start at the current time, or at the time of the first event?</helpText>
+                <default>1</default>
             </property>
             <property id="excludeWeekendDays" type="checkbox">
                 <title>Exclude weekend days?</title>
@@ -1505,14 +1529,17 @@ $(target).xiboCalendarRender(properties, items);
         <startWidth>800</startWidth>
         <startHeight>500</startHeight>
         <properties>
+            <property type="message">
+                <title>This is an advanced template which may not work on devices with an older browser.</title>
+            </property>
             <property id="startTime" type="date" variant="time">
-                <title>Start Time</title>
-                <helpText>Current view starting time.</helpText>
+                <title>First hour slot</title>
+                <helpText>This view features a grid running from midnight to midnight. Use the first slot to shorten the time window shown.</helpText>
                 <default></default>
             </property>
             <property id="endTime" type="date" variant="time">
-                <title>End Time</title>
-                <helpText>Current view ending time.</helpText>
+                <title>Last hour slot</title>
+                <helpText>This view features a grid running from midnight to midnight. Use the last slot to shorten the time window shown.</helpText>
                 <default></default>
             </property>
             <property id="excludeWeekendDays" type="checkbox">
@@ -1524,6 +1551,11 @@ $(target).xiboCalendarRender(properties, items);
                 <title>Time Format</title>
                 <helpText>The format to apply to event time (default HH:mm).</helpText>
                 <default>HH:mm</default>
+            </property>
+            <property id="startAtCurrentTime" type="checkbox">
+                <title>Start at the current time?</title>
+                <helpText>Should the calendar start at the current time, or at the time of the first event?</helpText>
+                <default>1</default>
             </property>
             <property id="showNowMarker" type="checkbox">
                 <title>Show now marker?</title>
@@ -1979,6 +2011,9 @@ $(target).xiboCalendarRender(properties, items);
         <startWidth>800</startWidth>
         <startHeight>500</startHeight>
         <properties>
+            <property type="message">
+                <title>This is an advanced template which may not work on devices with an older browser.</title>
+            </property>
             <property id="excludeWeekendDays" type="checkbox">
                 <title>Exclude weekend days?</title>
                 <helpText>Saturdays and Sundays wont be shown.</helpText>
@@ -1988,6 +2023,11 @@ $(target).xiboCalendarRender(properties, items);
                 <title>Time Format</title>
                 <helpText>The format to apply to event time (default HH:mm).</helpText>
                 <default>HH:mm</default>
+            </property>
+            <property id="startAtCurrentTime" type="checkbox">
+                <title>Start at the current time?</title>
+                <helpText>Should the calendar start at the current time, or at the time of the first event?</helpText>
+                <default>1</default>
             </property>
             <property id="showHeader" type="checkbox">
                 <title>Show header?</title>
@@ -2375,6 +2415,9 @@ $(target).xiboCalendarRender(properties, items);
         <startWidth>800</startWidth>
         <startHeight>500</startHeight>
         <properties>
+            <property type="message">
+                <title>This is an advanced template which may not work on devices with an older browser.</title>
+            </property>
             <property id="excludeWeekendDays" type="checkbox">
                 <title>Exclude weekend days?</title>
                 <helpText>Saturdays and Sundays wont be shown.</helpText>
@@ -2384,6 +2427,11 @@ $(target).xiboCalendarRender(properties, items);
                 <title>Time Format</title>
                 <helpText>The format to apply to event time (default HH:mm).</helpText>
                 <default>HH:mm</default>
+            </property>
+            <property id="startAtCurrentTime" type="checkbox">
+                <title>Start at the current time?</title>
+                <helpText>Should the calendar start at the current time, or at the time of the first event?</helpText>
+                <default>1</default>
             </property>
             <property id="showHeader" type="checkbox">
                 <title>Show header?</title>
@@ -2774,10 +2822,13 @@ $(target).xiboCalendarRender(properties, items);
         <startWidth>400</startWidth>
         <startHeight>800</startHeight>
         <properties>
+            <property type="message">
+                <title>This is an advanced template which may not work on devices with an older browser.</title>
+            </property>
             <property id="noEventsMessage" type="text">
                 <title>No events message</title>
                 <helpText>Message to be shown if no events are returned.</helpText>
-                <default>"No upcoming events"</default>
+                <default>No upcoming events</default>
             </property>
             <property id="timeFormat" type="text">
                 <title>Time Format</title>
@@ -3083,6 +3134,9 @@ $(target).xiboCalendarRender(properties, items);
         <startWidth>400</startWidth>
         <startHeight>800</startHeight>
         <properties>
+            <property type="message">
+                <title>This is an advanced template which may not work on devices with an older browser.</title>
+            </property>
             <property id="noEventsMessage" type="text">
                 <title>No events message</title>
                 <helpText>Message to be shown if no events are returned.</helpText>

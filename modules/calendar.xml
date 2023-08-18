@@ -28,7 +28,7 @@
     <legacyType>calendaradvanced</legacyType>
     <legacyType>calendar</legacyType>
     <dataType>event</dataType>
-    <dataCacheKey>%uri%_%customInterval%_%rangeStart%_%rangeEnd%_%useEventTimezone%_%useCalendarTimezone%_%windowsFormatCalendar%</dataCacheKey>
+    <dataCacheKey>%uri%_%useDateRange%_%startIntervalFrom%_%customInterval%_%rangeStart%_%rangeEnd%_%useEventTimezone%_%useCalendarTimezone%_%windowsFormatCalendar%</dataCacheKey>
     <schemaVersion>2</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>1</regionSpecific>
@@ -47,19 +47,41 @@
                 </test>
             </rule>
         </property>
+        <property type="header" variant="main">
+            <title>Events to show</title>
+        </property>
+        <property id="useDateRange" type="checkbox">
+            <title>Get events using a preset date range?</title>
+            <helpText>Use the checkbox to return events within defined start and end dates.</helpText>
+            <default>0</default>
+        </property>
+        <property id="startIntervalFrom" type="dropdown" mode="single">
+            <title>Events from the start of the</title>
+            <helpText>When should events be returned from?</helpText>
+            <options>
+                <option name="day">Day</option>
+                <option name="week">Week</option>
+                <option name="month">Month</option>
+            </options>
+            <visibility>
+                <test>
+                    <condition field="useDateRange" type="eq">0</condition>
+                </test>
+            </visibility>
+        </property>
         <property id="customInterval" type="text">
-            <title>Interval</title>
+            <title>for an interval of</title>
             <helpText>Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week.</helpText>
             <rule>
                 <test>
                     <condition type="interval"></condition>
                 </test>
             </rule>
-        </property>
-        <property id="useDateRange" type="checkbox">
-            <title>Select a Date range to return events instead?</title>
-            <helpText>Use the checkbox to return events within defined start and end dates.</helpText>
-            <default>0</default>
+            <visibility>
+                <test>
+                    <condition field="useDateRange" type="eq">0</condition>
+                </test>
+            </visibility>
         </property>
         <property id="rangeStart" type="date" variant="dateTime">
             <title>Start Date</title>
@@ -116,6 +138,11 @@
                     <condition field="durationIsPerItem" type="eq">0</condition>
                 </test>
             </rule>
+        </property>
+        <property id="updateInterval" type="number">
+            <title>Update Interval (mins)</title>
+            <helpText>Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60.</helpText>
+            <default>60</default>
         </property>
         <property type="header" variant="main">
             <title>Web Hook triggers</title>

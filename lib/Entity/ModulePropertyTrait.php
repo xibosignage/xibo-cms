@@ -44,12 +44,14 @@ trait ModulePropertyTrait
                 $property->value = $property->default;
             }
 
-            if ($property->type === 'integer' && $property->value !== null) {
-                $property->value = intval($property->value);
-            } else if (($property->type === 'double' || $property->type === 'number')
-                && $property->value !== null
-            ) {
-                $property->value = doubleval($property->value);
+            if ($property->value !== null) {
+                if ($property->type === 'integer') {
+                    $property->value = intval($property->value);
+                } else if ($property->type === 'double' || $property->type === 'number') {
+                    $property->value = doubleval($property->value);
+                } else if ($property->type === 'checkbox') {
+                    $property->value = intval($property->value);
+                }
             }
 
             $property->reverseFilters();
@@ -79,12 +81,14 @@ trait ModulePropertyTrait
                 $decoratedProperty = $property->default;
             }
 
-            if ($property->type === 'integer' && $decoratedProperty !== null) {
-                $decoratedProperty = intval($decoratedProperty);
-            } else if (($property->type === 'double' || $property->type === 'number')
-                && $decoratedProperty !== null
-            ) {
-                $decoratedProperty = doubleval($decoratedProperty);
+            if ($decoratedProperty !== null) {
+                if ($property->type === 'integer') {
+                    $decoratedProperty = intval($decoratedProperty);
+                } else if ($property->type === 'double' || $property->type === 'number') {
+                    $decoratedProperty = doubleval($decoratedProperty);
+                } else if ($property->type === 'checkbox') {
+                    $decoratedProperty = intval($decoratedProperty);
+                }
             }
 
             $decoratedProperty = $property->reverseFiltersOnValue($decoratedProperty);
