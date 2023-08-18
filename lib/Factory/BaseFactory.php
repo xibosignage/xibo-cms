@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -422,9 +422,20 @@ class BaseFactory
      * @param string $body Current SQL body passed by reference
      * @param array $params Array of parameters passed by reference
      */
-    public function tagFilter($tags, $lkTagTable, $lkTagTableIdColumn, $idColumn, $logicalOperator, $operator, &$body, &$params)
-    {
+    public function tagFilter(
+        $tags,
+        $lkTagTable,
+        $lkTagTableIdColumn,
+        $idColumn,
+        $logicalOperator,
+        $operator,
+        $notTags,
+        &$body,
+        &$params
+    ) {
         $i = 0;
+        $paramName = ($notTags) ? 'notTags' : 'tags';
+        $paramValueName = ($notTags) ? 'notValue' : 'value';
 
         foreach ($tags as $tag) {
             $i++;
@@ -434,51 +445,51 @@ class BaseFactory
             // search tag without value
             if (!isset($tagV[1])) {
                 if ($i == 1) {
-                    $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i;
+                    $body .= ' WHERE `tag` ' . $operator . ' :'. $paramName . $i;
                 } else {
-                    $body .= ' OR ' . ' `tag` ' . $operator . ' :tags' . $i;
+                    $body .= ' OR ' . ' `tag` ' . $operator . ' :' . $paramName . $i;
                 }
 
                 if ($operator === '=') {
-                    $params['tags' . $i] = $tag;
+                    $params[$paramName . $i] = $tag;
                 } else {
-                    $params['tags' . $i] = '%' . $tag . '%';
+                    $params[$paramName . $i] = '%' . $tag . '%';
                 }
                 // search tag only by value
             } elseif ($tagV[0] == '') {
                 if ($i == 1) {
-                    $body .= ' WHERE `value` ' . $operator . ' :value' . $i;
+                    $body .= ' WHERE `value` ' . $operator . ' :' . $paramValueName . $i;
                 } else {
-                    $body .= ' OR ' . ' `value` ' . $operator . ' :value' . $i;
+                    $body .= ' OR ' . ' `value` ' . $operator . ' :' . $paramValueName . $i;
                 }
 
                 if ($operator === '=') {
-                    $params['value' . $i] = $tagV[1];
+                    $params[$paramValueName . $i] = $tagV[1];
                 } else {
-                    $params['value' . $i] = '%' . $tagV[1] . '%';
+                    $params[$paramValueName . $i] = '%' . $tagV[1] . '%';
                 }
                 // search tag by both tag and value
             } else {
                 if ($i == 1) {
-                    $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i .
-                        ' AND value ' . $operator . ' :value' . $i;
+                    $body .= ' WHERE `tag` ' . $operator . ' :' . $paramName . $i .
+                        ' AND value ' . $operator . ' :' . $paramValueName . $i;
                 } else {
-                    $body .= ' OR ' . ' `tag` ' . $operator . ' :tags' . $i .
-                        ' AND value ' . $operator . ' :value' . $i;
+                    $body .= ' OR ' . ' `tag` ' . $operator . ' :' . $paramName . $i .
+                        ' AND value ' . $operator . ' :' . $paramValueName . $i;
                 }
 
                 if ($operator === '=') {
-                    $params['tags' . $i] = $tagV[0];
-                    $params['value' . $i] = $tagV[1];
+                    $params[$paramName . $i] = $tagV[0];
+                    $params[$paramValueName . $i] = $tagV[1];
                 } else {
-                    $params['tags' . $i] = '%' . $tagV[0] . '%';
-                    $params['value' . $i] = '%' . $tagV[1] . '%';
+                    $params[$paramName . $i] = '%' . $tagV[0] . '%';
+                    $params[$paramValueName . $i] = '%' . $tagV[1] . '%';
                 }
             }
         }
 
-        if ($logicalOperator === 'AND' && count($tags) > 1) {
-            $body .= ' GROUP BY ' . $lkTagTable . '.' . $idColumn . ' HAVING count(' . $lkTagTable .'.'. $lkTagTableIdColumn .') = ' . count($tags);
+        if ($logicalOperator === 'AND' && count($tags) > 1 && !$notTags) {
+            $body .= ' GROUP BY ' . $lkTagTable . '.' . $idColumn . ' HAVING count(' . $lkTagTable .'.'. $lkTagTableIdColumn .') = ' . count($tags);//@phpcs:ignore
         }
 
         $body .= ' ) ';

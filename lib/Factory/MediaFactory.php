@@ -832,15 +832,59 @@ class MediaFactory extends BaseFactory
             } else {
                 $operator = $sanitizedFilter->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
                 $logicalOperator = $sanitizedFilter->getString('logicalOperator', ['default' => 'OR']);
-                $body .= ' AND `media`.mediaId IN (
-                SELECT `lktagmedia`.mediaId
-                  FROM tag
-                    INNER JOIN `lktagmedia`
-                    ON `lktagmedia`.tagId = tag.tagId
-                ';
+                $allTags = explode(',', $tagFilter);
+                $notTags = [];
+                $tags = [];
 
-                $tags = explode(',', $tagFilter);
-                $this->tagFilter($tags, 'lktagmedia', 'lkTagMediaId', 'mediaId', $logicalOperator, $operator, $body, $params);
+                foreach ($allTags as $tag) {
+                    if (str_starts_with($tag, '-')) {
+                        $notTags[] = ltrim(($tag), '-');
+                    } else {
+                        $tags[] = $tag;
+                    }
+                }
+
+                if (!empty($notTags)) {
+                    $body .= ' AND `media`.mediaId NOT IN (
+                    SELECT `lktagmedia`.mediaId
+                      FROM tag
+                        INNER JOIN `lktagmedia`
+                        ON `lktagmedia`.tagId = tag.tagId
+                    ';
+
+                    $this->tagFilter(
+                        $notTags,
+                        'lktagmedia',
+                        'lkTagMediaId',
+                        'mediaId',
+                        $logicalOperator,
+                        $operator,
+                        true,
+                        $body,
+                        $params
+                    );
+                }
+
+                if (!empty($tags)) {
+                    $body .= ' AND `media`.mediaId IN (
+                    SELECT `lktagmedia`.mediaId
+                      FROM tag
+                        INNER JOIN `lktagmedia`
+                        ON `lktagmedia`.tagId = tag.tagId
+                    ';
+
+                    $this->tagFilter(
+                        $tags,
+                        'lktagmedia',
+                        'lkTagMediaId',
+                        'mediaId',
+                        $logicalOperator,
+                        $operator,
+                        false,
+                        $body,
+                        $params
+                    );
+                }
             }
         }
 

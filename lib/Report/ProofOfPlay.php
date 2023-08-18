@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -662,65 +662,83 @@ class ProofOfPlay implements ReportInterface
                 $lkTagTable = '';
                 $lkTagTableIdColumn = '';
                 $idColumn = '';
+                $allTags = explode(',', $tags);
+                $excludeTags = [];
+                $includeTags = [];
+
+                foreach ($allTags as $tag) {
+                    if (str_starts_with($tag, '-')) {
+                        $excludeTags[] = ltrim(($tag), '-');
+                    } else {
+                        $includeTags[] = $tag;
+                    }
+                }
 
                 if ($tagsType === 'dg') {
-                    $body .= ' AND `displaygroup`.displaygroupId IN (
-                        SELECT `lktagdisplaygroup`.displaygroupId
-                          FROM tag
-                            INNER JOIN `lktagdisplaygroup`
-                            ON `lktagdisplaygroup`.tagId = tag.tagId
-                ';
                     $lkTagTable = 'lktagdisplaygroup';
                     $lkTagTableIdColumn = 'lkTagDisplayGroupId';
                     $idColumn = 'displayGroupId';
                 }
-                // old layout and latest layout have same tags
-                // old layoutId replaced with latest layoutId in the lktaglayout table and
-                // join with layout history to get campaignId then we can show old layouts that have given tag
-                if ($tagsType === 'layout') {
-                    $body .= ' AND `stat`.campaignId IN (
-                        SELECT 
-                            `layouthistory`.campaignId
-                        FROM
-                        (
-                            SELECT `lktaglayout`.layoutId
-                            FROM tag
-                            INNER JOIN `lktaglayout`
-                            ON `lktaglayout`.tagId = tag.tagId
-                        ';
 
+                if ($tagsType === 'layout') {
                     $lkTagTable = 'lktaglayout';
                     $lkTagTableIdColumn = 'lkTagLayoutId';
                     $idColumn = 'layoutId';
                 }
                 if ($tagsType === 'media') {
-                    $body .= ' AND `media`.mediaId IN (
-                        SELECT `lktagmedia`.mediaId
-                          FROM tag
-                            INNER JOIN `lktagmedia`
-                            ON `lktagmedia`.tagId = tag.tagId
-                ';
                     $lkTagTable = 'lktagmedia';
                     $lkTagTableIdColumn = 'lkTagMediaId';
                     $idColumn = 'mediaId';
                 }
-                $tagsFilter = explode(',', $tags);
-                // pass to BaseFactory tagFilter, it does not matter from which factory we do that.
-                $this->layoutFactory->tagFilter(
-                    $tagsFilter,
-                    $lkTagTable,
-                    $lkTagTableIdColumn,
-                    $idColumn,
-                    $logicalOperator,
-                    $operator,
-                    $body,
-                    $params
-                );
 
-                if ($tagsType === 'layout') {
-                    $body .= ' B
+                if (!empty($excludeTags)) {
+                    $body .= $this->getBodyForTagsType($tagsType, true);
+                    // pass to BaseFactory tagFilter, it does not matter from which factory we do that.
+                    $this->layoutFactory->tagFilter(
+                        $excludeTags,
+                        $lkTagTable,
+                        $lkTagTableIdColumn,
+                        $idColumn,
+                        $logicalOperator,
+                        $operator,
+                        true,
+                        $body,
+                        $params
+                    );
+
+                    // old layout and latest layout have same tags
+                    // old layoutId replaced with latest layoutId in the lktaglayout table and
+                    // join with layout history to get campaignId then we can show old layouts that have given tag
+                    if ($tagsType === 'layout') {
+                        $body .= ' B
                         LEFT OUTER JOIN
                         `layouthistory` ON `layouthistory`.layoutId = B.layoutId ) ';
+                    }
+                }
+
+                if (!empty($includeTags)) {
+                    $body .= $this->getBodyForTagsType($tagsType, false);
+                    // pass to BaseFactory tagFilter, it does not matter from which factory we do that.
+                    $this->layoutFactory->tagFilter(
+                        $includeTags,
+                        $lkTagTable,
+                        $lkTagTableIdColumn,
+                        $idColumn,
+                        $logicalOperator,
+                        $operator,
+                        false,
+                        $body,
+                        $params
+                    );
+
+                    // old layout and latest layout have same tags
+                    // old layoutId replaced with latest layoutId in the lktaglayout table and
+                    // join with layout history to get campaignId then we can show old layouts that have given tag
+                    if ($tagsType === 'layout') {
+                        $body .= ' C
+                        LEFT OUTER JOIN
+                        `layouthistory` ON `layouthistory`.layoutId = C.layoutId ) ';
+                    }
                 }
             }
         }
@@ -823,6 +841,39 @@ class ProofOfPlay implements ReportInterface
             'result' => $rows,
             'count' => count($rows)
         ];
+    }
+
+    private function getBodyForTagsType($tagsType, $exclude) :string
+    {
+        if ($tagsType === 'dg') {
+            return ' AND `displaygroup`.displaygroupId ' . ($exclude ? 'NOT' : '') .  ' IN (
+                        SELECT `lktagdisplaygroup`.displaygroupId
+                          FROM tag
+                            INNER JOIN `lktagdisplaygroup`
+                            ON `lktagdisplaygroup`.tagId = tag.tagId
+                ';
+        } else if ($tagsType === 'media') {
+            return ' AND `media`.mediaId '. ($exclude ? 'NOT' : '') . ' IN (
+                        SELECT `lktagmedia`.mediaId
+                          FROM tag
+                            INNER JOIN `lktagmedia`
+                            ON `lktagmedia`.tagId = tag.tagId
+                ';
+        } else if ($tagsType === 'layout') {
+            return ' AND `stat`.campaignId ' . ($exclude ? 'NOT' : '') . ' IN (
+                        SELECT 
+                            `layouthistory`.campaignId
+                        FROM
+                        (
+                            SELECT `lktaglayout`.layoutId
+                            FROM tag
+                            INNER JOIN `lktaglayout`
+                            ON `lktaglayout`.tagId = tag.tagId
+                        ';
+        } else {
+            $this->getLog()->error(__('Incorrect Tag type selected'));
+            return '';
+        }
     }
 
     /**
