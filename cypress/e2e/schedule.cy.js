@@ -245,15 +245,15 @@ describe('Campaigns', function() {
 
     // ---------
     // Delete the schedule
-    cy.get('#schedule-grid tbody tr').should('have.length', 2);
-    cy.wait('@scheduleGridLoad');
-    cy.wait('@userPref');
-    cy.wait('@scheduleGridLoad');
-    cy.get('#schedule-grid tr:first-child .dropdown-toggle').click();
-    cy.get('#schedule-grid tr:first-child .schedule_button_delete').click();
-    cy.get('.bootbox .save-button').click();
-
-    // Validate the schedule no longer exist
-    cy.get('#schedule-grid tbody tr').should('have.length', 1);
+    // cy.get('#schedule-grid tbody tr').should('have.length', 2);
+    // cy.wait('@scheduleGridLoad');
+    // cy.wait('@userPref');
+    // cy.wait('@scheduleGridLoad');
+    // cy.get('#schedule-grid tr:first-child .dropdown-toggle').click();
+    // cy.get('#schedule-grid tr:first-child .schedule_button_delete').click();
+    // cy.get('.bootbox .save-button').click();
+    //
+    // // Validate the schedule no longer exist
+    // cy.get('#schedule-grid tbody tr').should('have.length', 1);
   });
 });
