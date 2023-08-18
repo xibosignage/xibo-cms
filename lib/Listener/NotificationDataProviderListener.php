@@ -115,6 +115,7 @@ class NotificationDataProviderListener
         // If we're a user, we should always refresh
         if ($displayId === 0) {
             $event->setModifiedDt(Carbon::maxValue());
+            return;
         }
 
         $notifications = $this->notificationFactory->query(['releaseDt DESC'], [
