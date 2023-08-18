@@ -619,7 +619,6 @@ class MediaFactory extends BaseFactory
 
         // Unused only?
         if ($sanitizedFilter->getInt('unusedOnly') === 1) {
-
             $body .= '
                 AND media.mediaId NOT IN (SELECT mediaId FROM `lkwidgetmedia`)
                 AND media.mediaId NOT IN (SELECT mediaId FROM `lkmediadisplaygroup`)
