@@ -52,6 +52,10 @@
                 <helpText>The format to apply to all dates returned by the Widget.</helpText>
                 <default>#DATE_FORMAT#</default>
             </property>
+            <property id="lang" type="languageSelector">
+                <title>Language</title>
+                <helpText>Select the language you would like to use.</helpText>
+            </property>
             <property id="backgroundColor" type="color">
                 <title>Background Colour</title>
                 <helpText>The selected effect works best with a background colour. Optionally add one here.</helpText>
@@ -95,6 +99,8 @@
 // items: The items to render
 // properties: The properties for the widget
 // -------------------------------------------
+moment.locale(properties.lang || globalOptions.locale);
+
 if (items.length > 0) {
     items = $(items).xiboSubstitutesParser(properties.text, properties.dateFormat, ['startDate', 'endDate']);
 }
@@ -148,6 +154,10 @@ $(target).xiboTextRender(properties, $(target).find('#content > *'));
                 <title>Time Format</title>
                 <helpText>The format to apply to event time (default HH:mm).</helpText>
                 <default>HH:mm</default>
+            </property>
+            <property id="lang" type="languageSelector">
+                <title>Language</title>
+                <helpText>Select the language you would like to use.</helpText>
             </property>
             <property id="startAtCurrentTime" type="checkbox">
                 <title>Start at the current time?</title>
@@ -567,6 +577,8 @@ ol, li {
 // target: The target element to render
 // items: The items to render
 // properties: The properties for the widget
+moment.locale(properties.lang || globalOptions.locale);
+
 $(target).find("img").xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
 
@@ -606,6 +618,10 @@ $(target).xiboCalendarRender(properties, items);
                 <title>Time Format</title>
                 <helpText>The format to apply to event time (default HH:mm).</helpText>
                 <default>HH:mm</default>
+            </property>
+            <property id="lang" type="languageSelector">
+                <title>Language</title>
+                <helpText>Select the language you would like to use.</helpText>
             </property>
             <property id="startAtCurrentTime" type="checkbox">
                 <title>Start at the current time?</title>
@@ -1025,6 +1041,8 @@ ol, li {
 // target: The target element to render
 // items: The items to render
 // properties: The properties for the widget
+moment.locale(properties.lang || globalOptions.locale);
+
 $(target).find("img").xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
 
@@ -1077,6 +1095,10 @@ $(target).xiboCalendarRender(properties, items);
                 <title>Time Format</title>
                 <helpText>The format to apply to event time (default HH:mm).</helpText>
                 <default>HH:mm</default>
+            </property>
+            <property id="lang" type="languageSelector">
+                <title>Language</title>
+                <helpText>Select the language you would like to use.</helpText>
             </property>
             <property id="showNowMarker" type="checkbox">
                 <title>Show now marker?</title>
@@ -1506,6 +1528,7 @@ ol, li {
 // target: The target element to render
 // items: The items to render
 // properties: The properties for the widget
+moment.locale(properties.lang || globalOptions.locale);
 
 $(target).find("img").xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
@@ -1551,6 +1574,10 @@ $(target).xiboCalendarRender(properties, items);
                 <title>Time Format</title>
                 <helpText>The format to apply to event time (default HH:mm).</helpText>
                 <default>HH:mm</default>
+            </property>
+            <property id="lang" type="languageSelector">
+                <title>Language</title>
+                <helpText>Select the language you would like to use.</helpText>
             </property>
             <property id="startAtCurrentTime" type="checkbox">
                 <title>Start at the current time?</title>
@@ -1985,6 +2012,7 @@ ol, li {
 // target: The target element to render
 // items: The items to render
 // properties: The properties for the widget
+moment.locale(properties.lang || globalOptions.locale);
 
 $(target).find("img").xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
@@ -2023,6 +2051,10 @@ $(target).xiboCalendarRender(properties, items);
                 <title>Time Format</title>
                 <helpText>The format to apply to event time (default HH:mm).</helpText>
                 <default>HH:mm</default>
+            </property>
+            <property id="lang" type="languageSelector">
+                <title>Language</title>
+                <helpText>Select the language you would like to use.</helpText>
             </property>
             <property id="startAtCurrentTime" type="checkbox">
                 <title>Start at the current time?</title>
@@ -2392,6 +2424,7 @@ li {
 // target: The target element to render
 // items: The items to render
 // properties: The properties for the widget
+moment.locale(properties.lang || globalOptions.locale);
 
 $(target).find("img").xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
@@ -2427,6 +2460,10 @@ $(target).xiboCalendarRender(properties, items);
                 <title>Time Format</title>
                 <helpText>The format to apply to event time (default HH:mm).</helpText>
                 <default>HH:mm</default>
+            </property>
+            <property id="lang" type="languageSelector">
+                <title>Language</title>
+                <helpText>Select the language you would like to use.</helpText>
             </property>
             <property id="startAtCurrentTime" type="checkbox">
                 <title>Start at the current time?</title>
@@ -2796,6 +2833,7 @@ li {
 // target: The target element to render
 // items: The items to render
 // properties: The properties for the widget
+moment.locale(properties.lang || globalOptions.locale);
 
 $(target).find("img").xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
@@ -2834,6 +2872,10 @@ $(target).xiboCalendarRender(properties, items);
                 <title>Time Format</title>
                 <helpText>The format to apply to event time (default HH:mm).</helpText>
                 <default>HH:mm</default>
+            </property>
+            <property id="lang" type="languageSelector">
+                <title>Language</title>
+                <helpText>Select the language you would like to use.</helpText>
             </property>
             <property id="showNowMarker" type="checkbox">
                 <title>Show now marker?</title>
@@ -3111,6 +3153,7 @@ ol, li {
 // target: The target element to render
 // items: The items to render
 // properties: The properties for the widget
+moment.locale(properties.lang || globalOptions.locale);
 
 $(target).find("img").xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
@@ -3146,6 +3189,10 @@ $(target).xiboCalendarRender(properties, items);
                 <title>Time Format</title>
                 <helpText>The format to apply to event time (default HH:mm).</helpText>
                 <default>HH:mm</default>
+            </property>
+            <property id="lang" type="languageSelector">
+                <title>Language</title>
+                <helpText>Select the language you would like to use.</helpText>
             </property>
             <property id="showNowMarker" type="checkbox">
                 <title>Show now marker?</title>
@@ -3423,6 +3470,7 @@ ol, li {
 // target: The target element to render
 // items: The items to render
 // properties: The properties for the widget
+moment.locale(properties.lang || globalOptions.locale);
 
 $(target).find("img").xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);

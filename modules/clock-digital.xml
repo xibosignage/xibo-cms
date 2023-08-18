@@ -54,7 +54,17 @@
             <options>
                 <option name="HH:mm">Time only</option>
                 <option name="DD/MM/YYYY">Day/Month/Year</option>
+                <option name="LT">Localised - Time</option>
+                <option name="LTS">Localised - Time with seconds</option>
+                <option name="L">Localised - Month numeral, day of month, year</option>
+                <option name="LL">Localised - Month name, day of month, year</option>
+                <option name="LLL">Localised - Month name, day of month, year, time</option>
+                <option name="LLLL">Localised - Month name, day of month, day of week, year, time</option>
             </options>
+        </property>
+        <property id="lang" type="languageSelector">
+            <title>Language</title>
+            <helpText>Select the language you would like to use.</helpText>
         </property>
         <property id="offset" type="number">
             <title>Offset</title>
@@ -65,7 +75,7 @@
     <preview></preview>
     <onInitialize><![CDATA[
 // Set moment locale
-moment.locale(globalOptions.locale);
+moment.locale(properties.lang || globalOptions.locale);
 
 // Parse any Clock elements
 // Use regex to out the bit between the [] brackets and use that as the format mask for moment.
