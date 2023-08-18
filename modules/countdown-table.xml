@@ -219,17 +219,17 @@ tr.main-header td {
     </stencil>
     <onRender><![CDATA[
 // Make replacements on render for all templates
-const $countdownContainer = $('.countdown-container', target);
+var $countdownContainer = $('.countdown-container', target);
 
 // Get countdown container html
-let countdownHTML = $countdownContainer.html();
+var countdownHTML = $countdownContainer.html();
 
 // Make replacements
-let text = countdownHTML;
-let regex = /\[.*?\]/g;
+var text = countdownHTML;
+var regex = /\[.*?\]/g;
 countdownHTML = text.replace(regex, function (match) {
-    let replacement = '';
-    let matchParsed = match.replace('[', '').replace(']', '');
+    var replacement = '';
+    var matchParsed = match.replace('[', '').replace(']', '');
 
     // Replace tags
     switch (matchParsed) {
@@ -278,7 +278,7 @@ $countdownContainer.html(countdownHTML);
 $(target).xiboLayoutScaler(properties);
 
 // Render the countdown
-const $contentContainer = $(target).find('#content');
+var $contentContainer = $(target).find('#content');
 $contentContainer.xiboCountdownRender(
     properties,
     $contentContainer.html(),
