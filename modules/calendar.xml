@@ -50,7 +50,6 @@
         <property id="customInterval" type="text">
             <title>Interval</title>
             <helpText>Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week.</helpText>
-            <default></default>
             <rule>
                 <test>
                     <condition type="interval"></condition>

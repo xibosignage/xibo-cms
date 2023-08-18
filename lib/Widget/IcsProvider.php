@@ -48,6 +48,12 @@ class IcsProvider implements WidgetProviderInterface
      */
     public function fetchData(DataProviderInterface $dataProvider): WidgetProviderInterface
     {
+        // Do we have a feed configured?
+        $uri = $dataProvider->getProperty('uri');
+        if (empty($uri)) {
+            throw new InvalidArgumentException('Please enter a the URI to a valid ICS feed.', 'uri');
+        }
+
         // Create an ICal helper and pass it the contents of the file.
         $iCalConfig = [
             'replaceWindowsTimeZoneIds' => ($dataProvider->getProperty('replaceWindowsTimeZoneIds', 0) == 1),
@@ -73,11 +79,11 @@ class IcsProvider implements WidgetProviderInterface
         if ($dataProvider->getProperty('useDateRange')) {
             $rangeStart = Carbon::createFromFormat(
                 DateFormatHelper::getSystemFormat(),
-                $dataProvider->getProperty('rangeStart')
+                $dataProvider->getProperty('rangeStart', Carbon::now()->startOfDay())
             );
             $rangeEnd = Carbon::createFromFormat(
                 DateFormatHelper::getSystemFormat(),
-                $dataProvider->getProperty('rangeEnd')
+                $dataProvider->getProperty('rangeEnd', Carbon::now()->startOfDay()->addWeek())
             );
         } else {
             $rangeStart = $startOfDay->copy();
@@ -95,7 +101,7 @@ class IcsProvider implements WidgetProviderInterface
 
         try {
             $iCal = new ICal(false, $iCalConfig);
-            $iCal->initString($this->downloadIsc($dataProvider));
+            $iCal->initString($this->downloadIsc($uri, $dataProvider));
 
             $this->getLog()->debug('Feed initialised');
 
@@ -163,13 +169,8 @@ class IcsProvider implements WidgetProviderInterface
     /**
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    private function downloadIsc(DataProviderInterface $dataProvider): string
+    private function downloadIsc(string $uri, DataProviderInterface $dataProvider): string
     {
-        $uri = $dataProvider->getProperty('uri');
-        if (empty($uri)) {
-            throw new InvalidArgumentException('Please enter a the URI to a valid ICS feed.', 'uri');
-        }
-
         try {
             // Create a Guzzle Client to get the Feed XML
             $response = $dataProvider
