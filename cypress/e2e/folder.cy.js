@@ -50,7 +50,7 @@ describe('Folders', function() {
 
     // Wait for the search to complete
     cy.wait('@mediaLoad');
-    cy.wait(10);
+    cy.wait(20);
 
     cy.get('#libraryItems tbody tr').should('have.length', 1);
     cy.get('#datatable-container').should('contain', 'child_folder_media');
