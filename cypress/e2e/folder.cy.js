@@ -35,7 +35,7 @@ describe('Folders', function() {
     cy.contains('Rename').type('Folder123{enter}');
   });
 
-  it('Moving an image from Root Folder to another folder', () => {
+  it.only('Moving an image from Root Folder to another folder', () => {
     // Create an alias for load folders
     cy.intercept('/library?*').as('mediaLoad');
     cy.intercept('/user/pref').as('userPref');
@@ -50,6 +50,7 @@ describe('Folders', function() {
 
     // Wait for the search to complete
     cy.wait('@mediaLoad');
+    cy.wait(10);
 
     cy.get('#libraryItems tbody tr').should('have.length', 1);
     cy.get('#datatable-container').should('contain', 'child_folder_media');
