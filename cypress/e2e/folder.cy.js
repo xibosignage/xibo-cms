@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/* eslint-disable max-len */
 describe('Folders', function() {
   beforeEach(function() {
     cy.login();
@@ -35,26 +36,34 @@ describe('Folders', function() {
   });
 
   it('Moving an image from Root Folder to another folder', () => {
-    // Create and alias for load folders
+    // Create an alias for load folders
     cy.intercept('/library?*').as('mediaLoad');
     cy.intercept('/user/pref').as('userPref');
 
     // Go to library
     cy.visit('/library/view');
-    cy.get('#media').type('child_folder_media');
 
-    cy.wait('@mediaLoad');
-    cy.get('#libraryItems tbody tr').should('have.length', 1);
     cy.wait('@mediaLoad');
     cy.wait('@userPref');
+
+    cy.get('#media').type('child_folder_media');
+
+    // Wait for the search to complete
+    cy.wait('@mediaLoad');
+
+    cy.get('#libraryItems tbody tr').should('have.length', 1);
     cy.get('#datatable-container').should('contain', 'child_folder_media');
 
+    // Click the dropdown menu and choose a folder to move the image to
     cy.get('#libraryItems tr:first-child .dropdown-toggle').click();
     cy.get('#libraryItems tr:first-child .library_button_selectfolder').click();
 
+    // Expand the folder tree and select ChildFolder
     cy.get('#container-folder-form-tree>ul>li>i').click();
     cy.get('#container-folder-form-tree>ul>li:not(.jstree-loading)>i').click();
     cy.contains('ChildFolder').click();
+
+    // Click the save button
     cy.get('.save-button').click();
   });
 

@@ -562,7 +562,7 @@ class MediaFactory extends BaseFactory
                `media`.height,
                `user`.UserName AS owner,
             ';
-        $select .= "     (SELECT GROUP_CONCAT(DISTINCT `group`.group)
+        $select .= '     (SELECT GROUP_CONCAT(DISTINCT `group`.group)
                               FROM `permission`
                                 INNER JOIN `permissionentity`
                                 ON `permissionentity`.entityId = permission.entityId
@@ -571,17 +571,17 @@ class MediaFactory extends BaseFactory
                              WHERE entity = :entity
                                 AND objectId = media.mediaId
                                 AND view = 1
-                            ) AS groupsWithPermissions, ";
+                            ) AS groupsWithPermissions, ';
         $params['entity'] = 'Xibo\\Entity\\Media';
 
-        $select .= "   media.originalFileName AS fileName ";
+        $select .= '   media.originalFileName AS fileName ';
 
-        $body = " FROM media ";
-        $body .= "   LEFT OUTER JOIN media parentmedia ";
-        $body .= "   ON parentmedia.editedMediaId = media.mediaId ";
+        $body = ' FROM media ';
+        $body .= '   LEFT OUTER JOIN media parentmedia ';
+        $body .= '   ON parentmedia.editedMediaId = media.mediaId ';
 
         // Media might be linked to the system user (userId 0)
-        $body .= "   LEFT OUTER JOIN `user` ON `user`.userId = `media`.userId ";
+        $body .= '   LEFT OUTER JOIN `user` ON `user`.userId = `media`.userId ';
 
         if ($sanitizedFilter->getInt('displayGroupId') !== null) {
             $body .= '
@@ -593,7 +593,7 @@ class MediaFactory extends BaseFactory
             $params['displayGroupId'] = $sanitizedFilter->getInt('displayGroupId');
         }
 
-        $body .= " WHERE 1 = 1 ";
+        $body .= ' WHERE 1 = 1 ';
 
         if ($sanitizedFilter->getInt('allModules') == 0) {
             $body .= ' AND media.type <> \'module\' ';
@@ -618,8 +618,7 @@ class MediaFactory extends BaseFactory
         }
 
         // Unused only?
-        if ($sanitizedFilter->getInt('unusedOnly') !== null) {
-
+        if ($sanitizedFilter->getInt('unusedOnly') === 1) {
             $body .= '
                 AND media.mediaId NOT IN (SELECT mediaId FROM `lkwidgetmedia`)
                 AND media.mediaId NOT IN (SELECT mediaId FROM `lkmediadisplaygroup`)
@@ -686,7 +685,7 @@ class MediaFactory extends BaseFactory
         }
 
         if ($sanitizedFilter->getInt('mediaId', ['default'=> -1]) != -1) {
-            $body .= " AND media.mediaId = :mediaId ";
+            $body .= ' AND media.mediaId = :mediaId ';
             $params['mediaId'] = $sanitizedFilter->getInt('mediaId');
         } else if ($sanitizedFilter->getInt('parentMediaId') !== null) {
             $body .= ' AND media.editedMediaId = :mediaId ';
@@ -726,7 +725,7 @@ class MediaFactory extends BaseFactory
         }
 
         if ($sanitizedFilter->getInt('ownerId') !== null) {
-            $body .= " AND media.userid = :ownerId ";
+            $body .= ' AND media.userid = :ownerId ';
             $params['ownerId'] = $sanitizedFilter->getInt('ownerId');
         }
 
@@ -737,7 +736,7 @@ class MediaFactory extends BaseFactory
         }
 
         if ($sanitizedFilter->getInt('released') !== null) {
-            $body .= " AND media.released = :released ";
+            $body .= ' AND media.released = :released ';
             $params['released'] = $sanitizedFilter->getInt('released');
         }
 
@@ -746,10 +745,10 @@ class MediaFactory extends BaseFactory
         }
 
         if ($sanitizedFilter->getInt('retired', ['default'=> -1]) == 1)
-            $body .= " AND media.retired = 1 ";
+            $body .= ' AND media.retired = 1 ';
 
         if ($sanitizedFilter->getInt('retired', ['default'=> -1]) == 0)
-            $body .= " AND media.retired = 0 ";
+            $body .= ' AND media.retired = 0 ';
 
         // Expired files?
         if ($sanitizedFilter->getInt('expires') != 0) {
@@ -862,7 +861,7 @@ class MediaFactory extends BaseFactory
         }
 
         if ($sanitizedFilter->getInt('folderId') !== null) {
-            $body .= " AND media.folderId = :folderId ";
+            $body .= ' AND media.folderId = :folderId ';
             $params['folderId'] = $sanitizedFilter->getInt('folderId');
         }
 
