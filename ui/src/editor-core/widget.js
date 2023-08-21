@@ -1019,15 +1019,57 @@ Widget.prototype.getData = function() {
             // Clear cached promise
             self.cachedDataPromise = null;
 
+            const assetURL = urlsForApi.module.assetDownload.url;
+            const assetRegex = /\[\[assetId=[\w&\-]+\]\]/gi;
+
+            const sampleData = modulesList[i].sampleData || [];
+            $.each(sampleData, function(index, item) {
+              $.each(item, function(key, value) {
+                value.match(assetRegex)?.forEach((match) => {
+                  const assetId = match.split('[[assetId=')[1].split(']]')[0];
+                  const assetUrl = assetURL.replace(':assetId', assetId);
+
+                  // Replace asset id with asset url
+                  item[key] = value.replace(match, assetUrl);
+                });
+              });
+            });
+
             // Resolve the promise with the data
             self.cachedData = {
-              data: modulesList[i].sampleData || [],
+              data: sampleData,
               meta: data?.meta || {},
             };
             resolve(self.cachedData);
           }
         }
       } else {
+        // Run onParseData
+        Object.keys(modulesList).forEach(function(item) {
+          if (modulesList[item].type === self.subType &&
+            modulesList[item].onParseData
+          ) {
+            const properties = {};
+            const options = self.getOptions();
+            $.each(modulesList[item].properties, function(i, property) {
+              if (options[property.id]) {
+                properties[property.id] = options[property.id];
+              } else {
+                properties[property.id] = property.default || null;
+              }
+            });
+            const onParseData = new Function(
+              'return function(item, properties) {' +
+              modulesList[item].onParseData + '}',
+            )();
+
+            // Apply to each data item
+            $.each(data.data, function(i, data) {
+              data = onParseData(data, properties);
+            });
+          }
+        });
+
         // Return the item
         self.cachedData = {data: data.data, meta: data?.meta || {}};
       }

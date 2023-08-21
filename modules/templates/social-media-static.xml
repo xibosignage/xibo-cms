@@ -62,6 +62,11 @@
                     <option name="2">Posts with text and image content</option>
                 </options>
             </property>
+            <property id="dateFormat" type="text" variant="dateFormat">
+                <title>Date Format</title>
+                <helpText>The format to apply to all dates returned by the Widget.</helpText>
+                <default>#DATE_FORMAT#</default>
+            </property>
             <property id="itemsPerPage" type="number">
                 <title>Items Per Page</title>
                 <helpText>The number of items to show per page (default = 5).</helpText>
@@ -187,6 +192,11 @@ $(target).xiboTextRender(properties, $(target).find('#content > .social-media-it
         <properties>
             <property id="resultContent" type="hidden">
                 <default>1</default>
+            </property>
+            <property id="dateFormat" type="text" variant="dateFormat">
+                <title>Date Format</title>
+                <helpText>The format to apply to all dates returned by the Widget.</helpText>
+                <default>#DATE_FORMAT#</default>
             </property>
             <property id="itemsPerPage" type="number">
                 <title>Items Per Page</title>
@@ -372,6 +382,11 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <properties>
             <property id="resultContent" type="hidden">
                 <default>2</default>
+            </property>
+            <property id="dateFormat" type="text" variant="dateFormat">
+                <title>Date Format</title>
+                <helpText>The format to apply to all dates returned by the Widget.</helpText>
+                <default>#DATE_FORMAT#</default>
             </property>
             <property id="itemsPerPage" type="number">
                 <title>Items Per Page</title>
@@ -576,6 +591,11 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
             <property id="resultContent" type="hidden">
                 <default>1</default>
             </property>
+            <property id="dateFormat" type="text" variant="dateFormat">
+                <title>Date Format</title>
+                <helpText>The format to apply to all dates returned by the Widget.</helpText>
+                <default>#DATE_FORMAT#</default>
+            </property>
             <property id="itemsPerPage" type="number">
                 <title>Items Per Page</title>
                 <helpText>The number of items to show per page (default = 5).</helpText>
@@ -690,6 +710,11 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <properties>
             <property id="resultContent" type="hidden">
                 <default>1</default>
+            </property>
+            <property id="dateFormat" type="text" variant="dateFormat">
+                <title>Date Format</title>
+                <helpText>The format to apply to all dates returned by the Widget.</helpText>
+                <default>#DATE_FORMAT#</default>
             </property>
             <property id="itemsPerPage" type="number">
                 <title>Items Per Page</title>
@@ -824,6 +849,11 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
             <property id="resultContent" type="hidden">
                 <default>1</default>
             </property>
+            <property id="dateFormat" type="text" variant="dateFormat">
+                <title>Date Format</title>
+                <helpText>The format to apply to all dates returned by the Widget.</helpText>
+                <default>#DATE_FORMAT#</default>
+            </property>
             <property id="itemsPerPage" type="number">
                 <title>Items Per Page</title>
                 <helpText>The number of items to show per page (default = 5).</helpText>
@@ -957,6 +987,11 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <properties>
             <property id="resultContent" type="hidden">
                 <default>1</default>
+            </property>
+            <property id="dateFormat" type="text" variant="dateFormat">
+                <title>Date Format</title>
+                <helpText>The format to apply to all dates returned by the Widget.</helpText>
+                <default>#DATE_FORMAT#</default>
             </property>
             <property id="itemsPerPage" type="number">
                 <title>Items Per Page</title>
@@ -1143,6 +1178,11 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <properties>
             <property id="resultContent" type="hidden">
                 <default>1</default>
+            </property>
+            <property id="dateFormat" type="text" variant="dateFormat">
+                <title>Date Format</title>
+                <helpText>The format to apply to all dates returned by the Widget.</helpText>
+                <default>#DATE_FORMAT#</default>
             </property>
             <property id="itemsPerPage" type="number">
                 <title>Items Per Page</title>
@@ -1339,6 +1379,11 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <properties>
             <property id="resultContent" type="hidden">
                 <default>1</default>
+            </property>
+            <property id="dateFormat" type="text" variant="dateFormat">
+                <title>Date Format</title>
+                <helpText>The format to apply to all dates returned by the Widget.</helpText>
+                <default>#DATE_FORMAT#</default>
             </property>
             <property id="itemsPerPage" type="number">
                 <title>Items Per Page</title>
@@ -1541,6 +1586,11 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
             <property id="resultContent" type="hidden">
                 <default>1</default>
             </property>
+            <property id="dateFormat" type="text" variant="dateFormat">
+                <title>Date Format</title>
+                <helpText>The format to apply to all dates returned by the Widget.</helpText>
+                <default>#DATE_FORMAT#</default>
+            </property>
             <property id="itemsPerPage" type="number">
                 <title>Items Per Page</title>
                 <helpText>The number of items to show per page (default = 5).</helpText>
@@ -1728,6 +1778,11 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <properties>
             <property id="resultContent" type="hidden">
                 <default>2</default>
+            </property>
+            <property id="dateFormat" type="text" variant="dateFormat">
+                <title>Date Format</title>
+                <helpText>The format to apply to all dates returned by the Widget.</helpText>
+                <default>#DATE_FORMAT#</default>
             </property>
             <property id="itemsPerPage" type="number">
                 <title>Items Per Page</title>
@@ -1925,6 +1980,11 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <properties>
             <property id="resultContent" type="hidden">
                 <default>1</default>
+            </property>
+            <property id="dateFormat" type="text" variant="dateFormat">
+                <title>Date Format</title>
+                <helpText>The format to apply to all dates returned by the Widget.</helpText>
+                <default>#DATE_FORMAT#</default>
             </property>
             <property id="itemsPerPage" type="number">
                 <title>Items Per Page</title>
@@ -2129,6 +2189,11 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
             <property id="resultContent" type="hidden">
                 <default>1</default>
             </property>
+            <property id="dateFormat" type="text" variant="dateFormat">
+                <title>Date Format</title>
+                <helpText>The format to apply to all dates returned by the Widget.</helpText>
+                <default>#DATE_FORMAT#</default>
+            </property>
             <property id="itemsPerPage" type="number">
                 <title>Items Per Page</title>
                 <helpText>The number of items to show per page (default = 5).</helpText>
@@ -2332,6 +2397,11 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
             </propertyGroup>
         </propertyGroups>
         <properties>
+            <property id="dateFormat" type="text" variant="dateFormat">
+                <title>Date Format</title>
+                <helpText>The format to apply to all dates returned by the Widget.</helpText>
+                <default>#DATE_FORMAT#</default>
+            </property>
             <property id="colorTemplateId" type="dropdown" mode="single">
                 <title>Colours Template</title>
                 <helpText>Select the template colours you would like to apply values to the colours below.</helpText>

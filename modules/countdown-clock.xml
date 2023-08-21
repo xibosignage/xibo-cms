@@ -111,6 +111,13 @@
                     <condition field="countdownType" type="eq">3</condition>
                 </test>
             </visibility>
+            <rule>
+                <test type="or" message="Warning date needs to be before countdown date.">
+                    <condition field="countdownType" type="neq">3</condition>
+                    <condition field="countdownDate" type="lt"></condition>
+                    <condition type="eq"></condition>
+                </test>
+            </rule>
         </property>
         <property id="alignmentH" type="dropdown" mode="single">
             <title>Horizontal Align</title>
