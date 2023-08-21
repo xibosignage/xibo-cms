@@ -91,11 +91,6 @@
             <helpText>Return only posts which included attached media.</helpText>
             <default>0</default>
         </property>
-        <property id="dateFormat" type="text" variant="dateFormat">
-            <title>Date Format</title>
-            <helpText>The format to apply to all dates returned by the Widget.</helpText>
-            <default>#DATE_FORMAT#</default>
-        </property>
         <property id="durationIsPerItem" type="checkbox">
             <title>Duration is per item</title>
             <helpText>The duration specified is per item otherwise it is per feed.</helpText>
@@ -129,7 +124,7 @@ if(properties.removeHashtags == 1) {
 if(properties.removeUrls == 1) {
     item.text = item.text.replace(/(https?:\/\/)?(www\.)?[-a-zA-Z0-9()@:%_\+.~#?&//=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/g, '');
 }
-if(properties.dateFormat != '') {
+if(properties.dateFormat) {
     item.date = moment(item.date).format(properties.dateFormat);
 }
 // Return the parsed item

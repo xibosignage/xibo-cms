@@ -1605,7 +1605,7 @@ Viewer.prototype.renderElementContent = function(
         if (extendWithDataKey !== null) {
           if (isInData) {
             convertedProperties[extendOverrideKey] =
-              (elData) && elData[extendOverrideKey];
+              (elData) && elData[extendWithDataKey];
           } else if (isInMeta) {
             convertedProperties[extendOverrideKey] = meta[metaKey];
           } else {
