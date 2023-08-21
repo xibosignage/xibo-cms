@@ -101,6 +101,9 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
   // Modules to be used in other option
   const moduleListOtherFiltered = [];
 
+  // Module media types (other than the 3 main types)
+  const moduleListOtherTypes = [];
+
   // Filter module list to create the types for the filter
   modulesList.forEach((el) => {
     // Show/hide modules based on showIn property
@@ -132,7 +135,13 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
         type: el.type,
         name: el.name,
       });
+
+      // Add to types
+      moduleListOtherTypes.push(el.type);
     }
+
+    // Check if it's a data type module
+    el.hasDataType = (el.dataType != '');
 
     // If we have thumbnail, add proper path
     if (el.thumbnail && !el.thumbnailLoaded) {
@@ -144,8 +153,8 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
     // Add card type ( to use group cards )
     el.cardType = 'module';
 
-    // Filter out image/audio/video
-    if (['image', 'audio', 'video'].indexOf(el.type) == -1) {
+    // Filter out non region specific modules
+    if (el.regionSpecific === 1) {
       moduleListFiltered.push(el);
     }
   });
@@ -563,6 +572,7 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
   // Filtered module list
   this.customModuleList = moduleListFiltered;
   this.moduleListOtherFiltered = moduleListOtherFiltered;
+  this.moduleListOtherTypes = moduleListOtherTypes;
   this.moduleGroups = moduleGroups;
 };
 
@@ -912,6 +922,7 @@ Toolbar.prototype.loadContent = function(menu = -1, forceReload = false) {
     // Sort by favourites
     const favouriteModules = [];
     const otherModules = [];
+    const otherDataModules = [];
 
     for (let index = 0; index < this.customModuleList.length; index++) {
       const card = this.customModuleList[index];
@@ -932,6 +943,9 @@ Toolbar.prototype.loadContent = function(menu = -1, forceReload = false) {
       if ($.inArray(card.type, this.menuItems[menu].favouriteModules) > -1) {
         card.favourited = true;
         favouriteModules.push(card);
+      } else if (card.hasDataType) {
+        card.favourited = false;
+        otherDataModules.push(card);
       } else {
         card.favourited = false;
         otherModules.push(card);
@@ -942,7 +956,9 @@ Toolbar.prototype.loadContent = function(menu = -1, forceReload = false) {
     this.menuItems[menu].content = {
       favourites: favouriteModules,
       cards: otherModules,
+      alternativeCards: otherDataModules,
       contentHeader: toolbarTrans.widgets,
+      contentAlternativeHeader: toolbarTrans.dataWidgets,
       noCardsToShow: toolbarTrans.noWidgetsToShow,
     };
   } else if (this.menuItems[menu].name === 'actions') {
@@ -1428,14 +1444,28 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
     }).done(function(res) {
       // Add upload card
       const showUploadCard = function() {
-        if ($mediaContent.find('.upload-card').length == 0) {
-          // Find specific module
-          const module = app.common.getModuleByType(filter.type);
+        // Add card to content
+        const addUploadCard = function(module) {
           if (module) {
             module.trans = toolbarTrans;
 
+            module.trans.upload =
+              module.trans.uploadType.replace('%obj%', module.name);
+
             const $uploadCard = $(ToolbarCardMediaUploadTemplate(module));
             $mediaContent.append($uploadCard).masonry('appended', $uploadCard);
+          }
+        };
+
+        if ($mediaContent.find('.upload-card').length == 0) {
+          // If we have a specific module type
+          if (filter.type != '') {
+            addUploadCard(app.common.getModuleByType(filter.type));
+          } else {
+            // Show one upload card for each media type
+            self.moduleListOtherTypes.forEach((moduleType) => {
+              addUploadCard(app.common.getModuleByType(moduleType));
+            });
           }
         }
       };

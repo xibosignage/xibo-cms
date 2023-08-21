@@ -44,16 +44,21 @@
 }
 
 .editor-toolbar .container-toolbar {
+    .left-area {
+        position: fixed;
+        display: flex;
+        align-items: center;
+        height: $toolbar-header-height;
+        gap: 8px;
+        top: 0;
+        left: 6px;
+    }
+
     .navbar-text.layout-info,
     .navbar-text.playlist-info {
         color: $xibo-color-secondary;
         line-height: 24px;
         display: inline-block;
-        // Fix position for now
-        position: fixed;
-        top: 6px;
-        left: 122px;
-        // Fix position for now
 
         & > span {
             margin-right: 10px;
