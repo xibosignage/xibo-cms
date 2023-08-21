@@ -466,7 +466,7 @@ body {
                 bottom: 0;
                 z-index: 2;
                 @include set-transparent-color(background, $xibo-color-neutral-900, 0.5);
-                opacity: 0.2;
+                opacity: 1;
                 padding: 0 4px;
                 white-space: nowrap;
                 left: 50%;
