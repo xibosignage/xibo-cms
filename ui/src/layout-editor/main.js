@@ -199,16 +199,6 @@ $(() => {
         // Custom dropdown options
         [
           {
-            id: 'newLayout',
-            title: layoutEditorTrans.newTitle,
-            logo: 'fa-file',
-            action: lD.addLayout,
-            inactiveCheck: function() {
-              return false;
-            },
-            inactiveCheckClass: 'd-none',
-          },
-          {
             id: 'publishLayout',
             title: layoutEditorTrans.publishTitle,
             logo: 'fa-check-square-o',
@@ -240,10 +230,22 @@ $(() => {
             inactiveCheckClass: 'd-none',
           },
           {
+            isDivider: true,
+          },
+          {
+            id: 'newLayout',
+            title: layoutEditorTrans.newTitle,
+            logo: 'fa-file',
+            action: lD.addLayout,
+            inactiveCheck: function() {
+              return lD.templateEditMode;
+            },
+            inactiveCheckClass: 'd-none',
+          },
+          {
             id: 'deleteLayout',
             title: layoutEditorTrans.deleteTitle,
             logo: 'fa-times-circle-o',
-            class: 'btn-danger',
             action: lD.showDeleteScreen,
             inactiveCheck: function() {
               return (
@@ -254,25 +256,13 @@ $(() => {
             inactiveCheckClass: 'd-none',
           },
           {
-            id: 'scheduleLayout',
-            title: layoutEditorTrans.scheduleTitle,
-            logo: 'fa-clock-o',
-            action: lD.showScheduleScreen,
-            inactiveCheck: function() {
-              return (
-                lD.layout.editable == true ||
-                lD.layout.scheduleNowPermission == false
-              );
-            },
-            inactiveCheckClass: 'd-none',
-          },
-          {
             id: 'saveTemplate',
             title: layoutEditorTrans.saveTemplateTitle,
             logo: 'fa-floppy-o',
             action: lD.showSaveTemplateScreen,
             inactiveCheck: function() {
-              return (lD.layout.editable == true);
+              return lD.templateEditMode ||
+                lD.layout.editable;
             },
             inactiveCheckClass: 'd-none',
           },
@@ -282,6 +272,18 @@ $(() => {
             logo: 'fa-unlock',
             class: 'btn-info show-on-lock',
             action: lD.showUnlockScreen,
+          },
+          {
+            id: 'scheduleLayout',
+            title: layoutEditorTrans.scheduleTitle,
+            logo: 'fa-clock-o',
+            action: lD.showScheduleScreen,
+            inactiveCheck: function() {
+              return lD.templateEditMode ||
+                (lD.layout.editable ||
+                 !lD.layout.scheduleNowPermission);
+            },
+            inactiveCheckClass: 'd-none',
           },
         ],
         // Custom actions

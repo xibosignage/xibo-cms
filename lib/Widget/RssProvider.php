@@ -195,6 +195,8 @@ class RssProvider implements WidgetProviderInterface
                 // Add the article.
                 $dataProvider->addItem($article);
             }
+            
+            $dataProvider->setCacheTtl($dataProvider->getProperty('updateInterval', 60) * 60);
             $dataProvider->setIsHandled();
         } catch (RequestException $requestException) {
             // Log and return empty?
