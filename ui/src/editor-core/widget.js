@@ -1019,9 +1019,25 @@ Widget.prototype.getData = function() {
             // Clear cached promise
             self.cachedDataPromise = null;
 
+            const assetURL = urlsForApi.module.assetDownload.url;
+            const assetRegex = /\[\[assetId=[\w&\-]+\]\]/gi;
+
+            const sampleData = modulesList[i].sampleData || [];
+            $.each(sampleData, function(index, item) {
+              $.each(item, function(key, value) {
+                value.match(assetRegex)?.forEach((match) => {
+                  const assetId = match.split('[[assetId=')[1].split(']]')[0];
+                  const assetUrl = assetURL.replace(':assetId', assetId);
+
+                  // Replace asset id with asset url
+                  item[key] = value.replace(match, assetUrl);
+                });
+              });
+            });
+
             // Resolve the promise with the data
             self.cachedData = {
-              data: modulesList[i].sampleData || [],
+              data: sampleData,
               meta: data?.meta || {},
             };
             resolve(self.cachedData);
