@@ -86,6 +86,10 @@ Topbar.prototype.render = function() {
   this.DOMObject.html(html);
 
   const setButtonActionAndState = function(button) {
+    if (button.isDivider) {
+      return;
+    }
+
     let buttonInactive = false;
 
     // Bind action to button
