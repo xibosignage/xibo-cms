@@ -27,6 +27,7 @@
     <dataCacheKey>%menuId%_%categoryId%</dataCacheKey>
     <type>menuboard-category</type>
     <dataType>product-category</dataType>
+    <showIn>layout</showIn>
     <schemaVersion>1</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>1</regionSpecific>
