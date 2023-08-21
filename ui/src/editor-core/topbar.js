@@ -71,7 +71,7 @@ Topbar.prototype.render = function() {
   mainObject.duration = Math.round(Number(mainObject.duration) * 100) / 100;
 
   // Get topbar trans
-  const newTopbarTrans = $.extend(toolbarTrans, topbarTrans, editorsTrans);
+  const newTopbarTrans = $.extend({}, toolbarTrans, topbarTrans, editorsTrans);
 
   // Compile layout template with data
   const html = topbarTemplate({
