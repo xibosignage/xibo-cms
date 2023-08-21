@@ -274,16 +274,18 @@ body {
         @include box-shadow(inset 0 0 5px $xibo-color-neutral-700);
     }
 
-    .back-button {
+    .back-button-playlist {
         position: fixed;
-        text-transform: uppercase;
         left: 6px;
         top: 4px;
+    }
+
+    .back-button {
+        text-transform: uppercase;
         z-index: $header-z-index;
 
         a {
-            width: 100px;
-            padding: 0.5rem;
+            padding: 0.5rem 1rem;
             color: $xibo-color-secondary;
 
             &:hover {
