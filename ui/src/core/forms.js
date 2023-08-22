@@ -743,14 +743,23 @@ window.forms = {
       const datasetId = $el.data('depends-on-value');
       const getFieldItems = function(fields, search) {
         return fields.reduce(function(cols, col) {
-          if (String(col.dataTypeId) === String(search)) {
+          const searchValue = String(search);
+          let searchValues = [];
+
+          if (searchValue.indexOf(',') !== -1) {
+            searchValues = searchValue.split(',');
+          } else {
+            searchValues = [searchValue];
+          }
+
+          if (searchValues.indexOf(String(col.dataTypeId)) !== -1) {
             return [...cols, col];
           }
           return cols;
         }, []);
       };
 
-      // Initialise the dataset filter clause
+      // Initialise the dataset fields
       // if the dataset id is not empty
       if (datasetId) {
         $el.show();
@@ -1844,6 +1853,7 @@ window.forms = {
 
       // Effects
       const effects = [
+        {effect: 'none', group: 'showAll'},
         {effect: 'marqueeLeft', group: 'showAll'},
         {effect: 'marqueeRight', group: 'showAll'},
         {effect: 'marqueeUp', group: 'showAll'},
@@ -1860,36 +1870,19 @@ window.forms = {
         {effect: 'tileBlind', group: 'showPaged'},
       ];
 
-      // Add option groups
-      if (effectsType === 'showAll' || effectsType === 'all') {
-        effects.unshift({effect: 'none', group: 'all'});
-        $el.append(
-          $('<optgroup label="' + effectsTranslations.showAll + '">'),
-        );
-      }
-
-      // Add the options to the respective groups
+      // Add the options
       $.each(effects, function(_index, element) {
-        if (element.group === 'all') {
-          // Add before the optgroups
-          $el.prepend(
-            $('<option value="' +
-              element.effect +
-              '">' +
-              effectsTranslations[element.effect] +
-              '</option>'));
-        } else {
-          if (element.group === effectsType) {
-            $el.append(
-              $('<option value="' +
-                  element.effect +
-                  '" data-optgroup="' +
-                  element.group +
-                  '">' +
-                  effectsTranslations[element.effect] +
-                  '</option>'));
-          }
+        if (effectsType !== 'all' && element.group !== effectsType) {
+          return;
         }
+        $el.append(
+          $('<option value="' +
+            element.effect +
+            '" data-optgroup="' +
+            element.group +
+            '">' +
+            effectsTranslations[element.effect] +
+            '</option>'));
       });
 
 

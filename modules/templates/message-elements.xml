@@ -1,0 +1,63 @@
+<!--
+  ~ Copyright (C) 2023 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - https://xibosignage.com
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+
+<templates>
+    <template>
+        <id>message_subject</id>
+        <extends override="text" with="data.subject">text</extends>
+        <title>Subject</title>
+        <type>element</type>
+        <dataType>message</dataType>
+        <canRotate>true</canRotate>
+        <startWidth>500</startWidth>
+        <startHeight>100</startHeight>
+    </template>
+    <template>
+        <id>message_body</id>
+        <extends override="text" with="data.body">text</extends>
+        <title>Body</title>
+        <type>element</type>
+        <dataType>message</dataType>
+        <canRotate>true</canRotate>
+        <startWidth>500</startWidth>
+        <startHeight>100</startHeight>
+    </template>
+    <template>
+        <id>message_date</id>
+        <extends override="date" with="data.date">date</extends>
+        <title>Date</title>
+        <type>element</type>
+        <dataType>message</dataType>
+        <canRotate>true</canRotate>
+        <startWidth>500</startWidth>
+        <startHeight>100</startHeight>
+    </template>
+    <template>
+        <id>message_created_date</id>
+        <extends override="date" with="data.createdAt">date</extends>
+        <title>Created Date</title>
+        <type>element</type>
+        <dataType>message</dataType>
+        <canRotate>true</canRotate>
+        <startWidth>500</startWidth>
+        <startHeight>100</startHeight>
+    </template>
+</templates>

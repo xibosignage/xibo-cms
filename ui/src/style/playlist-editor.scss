@@ -50,7 +50,7 @@ $timeline-step-height: 22px;
         width: 60px;
 
         a {
-            width: 48px;
+            width: calc(100% - 1rem);
             padding: 0.5rem;
             color: $xibo-color-secondary;
             margin-top: 4px;

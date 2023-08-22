@@ -48,6 +48,12 @@ class IcsProvider implements WidgetProviderInterface
      */
     public function fetchData(DataProviderInterface $dataProvider): WidgetProviderInterface
     {
+        // Do we have a feed configured?
+        $uri = $dataProvider->getProperty('uri');
+        if (empty($uri)) {
+            throw new InvalidArgumentException('Please enter a the URI to a valid ICS feed.', 'uri');
+        }
+
         // Create an ICal helper and pass it the contents of the file.
         $iCalConfig = [
             'replaceWindowsTimeZoneIds' => ($dataProvider->getProperty('replaceWindowsTimeZoneIds', 0) == 1),
@@ -60,31 +66,36 @@ class IcsProvider implements WidgetProviderInterface
         // $iCal->eventsFromInterval only works for future events
         $excludeAllDay = $dataProvider->getProperty('excludeAllDay', 0) == 1;
 
-        $startOfDay = Carbon::now()->startOfDay();
-        $endOfDay = $startOfDay->copy()->addDay()->startOfDay();
-
-        $this->getLog()->debug('Start of day is ' . $startOfDay->toDateTimeString());
-        $this->getLog()->debug('End of day is ' . $endOfDay->toDateTimeString());
+        $startOfDay = match ($dataProvider->getProperty('startIntervalFrom')) {
+            'month' => Carbon::now()->startOfMonth(),
+            'week' => Carbon::now()->startOfWeek(),
+            default => Carbon::now()->startOfDay(),
+        };
 
         // Force timezone of each event?
         $useEventTimezone = $dataProvider->getProperty('useEventTimezone', 1);
 
         // do we use interval or provided date range?
         if ($dataProvider->getProperty('useDateRange')) {
-            $rangeStart = Carbon::createFromFormat(
-                DateFormatHelper::getSystemFormat(),
-                $dataProvider->getProperty('rangeStart')
-            );
-            $rangeEnd = Carbon::createFromFormat(
-                DateFormatHelper::getSystemFormat(),
-                $dataProvider->getProperty('rangeEnd')
-            );
+            $rangeStart = $dataProvider->getProperty('rangeStart');
+            $rangeStart = empty($rangeStart)
+                ? Carbon::now()->startOfMonth()
+                : Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $rangeStart);
+
+            $rangeEnd = $dataProvider->getProperty('rangeEnd');
+            $rangeEnd = empty($rangeEnd)
+                ? Carbon::now()->endOfMonth()
+                : Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $rangeEnd);
         } else {
+            $interval = $dataProvider->getProperty('customInterval');
             $rangeStart = $startOfDay->copy();
             $rangeEnd = $rangeStart->copy()->add(
-                \DateInterval::createFromDateString($dataProvider->getProperty('customInterval', '1 week'))
+                \DateInterval::createFromDateString(empty($interval) ? '1 week' : $interval)
             );
         }
+
+        $this->getLog()->debug('fetchData: final range, start=' . $rangeStart->toAtomString()
+            . ', end=' . $rangeEnd->toAtomString());
 
         // Get the difference between now and the end range.
         $iCalConfig['filterDaysAfter'] = $startOfDay->diffInDays($rangeEnd) + 2;
@@ -95,7 +106,7 @@ class IcsProvider implements WidgetProviderInterface
 
         try {
             $iCal = new ICal(false, $iCalConfig);
-            $iCal->initString($this->downloadIsc($dataProvider));
+            $iCal->initString($this->downloadIsc($uri, $dataProvider));
 
             $this->getLog()->debug('Feed initialised');
 
@@ -142,7 +153,8 @@ class IcsProvider implements WidgetProviderInterface
                     $this->getLog()->error('Unable to parse event. ' . var_export($event, true));
                 }
             }
-            
+
+            $dataProvider->setCacheTtl($dataProvider->getProperty('updateInterval', 60) * 60);
             $dataProvider->setIsHandled();
         } catch (\Exception $exception) {
             $this->getLog()->error($exception->getMessage());
@@ -150,7 +162,6 @@ class IcsProvider implements WidgetProviderInterface
 
             $dataProvider->addError(__('The iCal provided is not valid, please choose a valid feed'));
         }
-
         return $this;
     }
 
@@ -163,13 +174,8 @@ class IcsProvider implements WidgetProviderInterface
     /**
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    private function downloadIsc(DataProviderInterface $dataProvider): string
+    private function downloadIsc(string $uri, DataProviderInterface $dataProvider): string
     {
-        $uri = $dataProvider->getProperty('uri');
-        if (empty($uri)) {
-            throw new InvalidArgumentException('Please enter a the URI to a valid ICS feed.', 'uri');
-        }
-
         try {
             // Create a Guzzle Client to get the Feed XML
             $response = $dataProvider

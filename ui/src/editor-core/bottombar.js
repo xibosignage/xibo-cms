@@ -20,7 +20,7 @@ Bottombar.prototype.render = function(object) {
   const readOnlyModeOn = (app?.readOnlyMode === true);
 
   // Get topbar trans
-  const newBottomBarTrans = $.extend(toolbarTrans, topbarTrans);
+  const newBottomBarTrans = $.extend({}, toolbarTrans, topbarTrans);
 
   const checkHistory = app.checkHistory();
   newBottomBarTrans.undoActiveTitle =

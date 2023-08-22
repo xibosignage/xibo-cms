@@ -203,6 +203,10 @@
                 <title>Date Format</title>
                 <default>d/m/Y H:i:s</default>
             </property>
+            <property id="lang" type="languageSelector">
+                <title>Language</title>
+                <helpText>Select the language you would like to use.</helpText>
+            </property>
             <property id="fontFamily" type="fontSelector">
                 <title>Font Family</title>
                 <helpText>Select a custom font - leave empty to use the default font.</helpText>
@@ -327,6 +331,10 @@
             ]]></hbs>
         </stencil>
         <onTemplateRender><![CDATA[
+if (properties.lang) {
+  moment.locale(properties.lang);
+}
+
 // Match all affected elements and get date div value
 $(target).find('.date').each(function(_idx, dateEl){
     var dateValue = $(dateEl).data('date');

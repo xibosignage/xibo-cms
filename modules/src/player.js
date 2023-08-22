@@ -441,11 +441,11 @@ $(function() {
     });
   });
 
+  // TODO: this can't be separate from the main player initialisation.
   if (typeof elements !== 'undefined') {
     // Parse out the template with elements.
     $.each(elements, function(_key, widgetElements) {
       if (widgetElements?.length > 0) {
-        const $target = $('body');
         const $content = $('#content');
 
         $.each(widgetElements, function(_widgetElemKey, widgetElement) {
@@ -621,6 +621,20 @@ $(function() {
                   const {
                     dataItems,
                   } = composeFinalData(widgetDataInfo, data);
+
+                  // Parse the data if there is a parser function
+                  if (typeof window['onParseData_' +
+                    widgetDataInfo.widgetId] === 'function'
+                  ) {
+                    $.each(dataItems, function(_key, item) {
+                      item = window['onParseData_' + widgetDataInfo.widgetId](
+                        item,
+                        widgetDataInfo.properties,
+                        widgetDataInfo.meta,
+                      );
+                    });
+                  }
+
                   const getMaxSlot = (objectsArray, itemsKey, minValue) => {
                     const groupItems = objectsArray?.length > 0 ?
                       objectsArray.reduce(
@@ -756,9 +770,7 @@ $(function() {
                     groupId,
                     $groupContent,
                   ) {
-                    // For each data item, parse it and add it to the content;
-                    let templateAlreadyAdded = false;
-
+                    // For each data item, parse it and add it to the content
                     $.each(data, function(_dataKey, dataItem) {
                       if (item.hasOwnProperty('hbs') &&
                         typeof item.hbs === 'function'
@@ -851,31 +863,28 @@ $(function() {
                                     dataItem : {data: dataItem},
                                 )),
                             );
+
+                            // Handle the rendering of the template
+                            if (item.dataOverride &&
+                              typeof window[
+                                `onTemplateRender_${item.dataOverride}`
+                              ] === 'function'
+                            ) {
+                              const onTemplateRender = window[
+                                `onTemplateRender_${item.dataOverride}`];
+
+                              onTemplateRender && onTemplateRender(
+                                item.elementId,
+                                $itemContainer,
+                                $content.find(`.${item.uniqueID}--item`),
+                                {item, ...item.templateData},
+                                widgetDataInfo?.meta,
+                              );
+                            }
                           }
                         }
-                        templateAlreadyAdded = true;
                       }
                     });
-
-                    if (templateAlreadyAdded) {
-                      // Handle the rendering of the template
-                      if (item.dataOverride &&
-                        typeof window[
-                          `onTemplateRender_${item.dataOverride}`
-                        ] === 'function'
-                      ) {
-                        const onTemplateRender = window[
-                          `onTemplateRender_${item.dataOverride}`];
-
-                        onTemplateRender && onTemplateRender(
-                          item.elementId,
-                          $target,
-                          $content.find(`.${item.uniqueID}--item`),
-                          {item, ...item.templateData},
-                          widgetDataInfo?.meta,
-                        );
-                      }
-                    }
                   };
                   let mappedSlotsGroupData = {};
                   let mappedSlotGroup = {};

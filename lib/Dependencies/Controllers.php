@@ -296,10 +296,9 @@ class Controllers
             },
             '\Xibo\Controller\MediaManager' => function (ContainerInterface $c) {
                 $controller = new \Xibo\Controller\MediaManager(
+                    $c->get('store'),
                     $c->get('moduleFactory'),
-                    $c->get('layoutFactory'),
-                    $c->get('regionFactory'),
-                    $c->get('widgetFactory')
+                    $c->get('mediaFactory'),
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
@@ -487,7 +486,9 @@ class Controllers
                     $c->get('campaignFactory'),
                     $c->get('displayFactory'),
                     $c->get('layoutFactory'),
-                    $c->get('dayPartFactory')
+                    $c->get('dayPartFactory'),
+                    $c->get('folderFactory'),
+                    $c->get('commandFactory')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;

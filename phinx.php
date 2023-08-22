@@ -64,7 +64,7 @@ return [
         'migrations' => '%%PHINX_CONFIG_DIR%%/db/migrations'
     ],
     'environments' => [
-        'default_database' => 'production',
+        'default_environment' => 'production',
         'production' => $db
     ],
     'feature_flags' => [

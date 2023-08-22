@@ -1302,8 +1302,8 @@ class LayoutFactory extends BaseFactory
         $nestedPlaylistDetails = $zip->getFromName('nestedPlaylist.json');
         $folder = $this->folderFactory->getById($folderId);
 
-        // for old imports it may not exist and would error out without this check.
-        $importedFromXlf = false;
+        // it is no longer possible to re-create a Layout just from xlf
+        // as such if layoutDefinitions are missing, we need to throw an error here.
         if (array_key_exists('layoutDefinitions', $layoutDetails)) {
             // Construct the Layout
             if ($playlistDetails !== false) {
@@ -1341,8 +1341,9 @@ class LayoutFactory extends BaseFactory
                 }
             }
         } else {
-            $importedFromXlf = true;
-            $layout = $this->loadByXlf($zip->getFromName('layout.xml'));
+            throw new InvalidArgumentException(
+                __('Unsupported format. Missing Layout definitions from layout.json file in the archive.')
+            );
         }
 
         $this->getLog()->debug('Layout Loaded: ' . $layout);
@@ -1914,7 +1915,7 @@ class LayoutFactory extends BaseFactory
         foreach ($layout->getAllWidgets() as $widget) {
             // By now we should not have any modules which don't exist.
             $module = $this->moduleFactory->getByType($widget->type);
-            $widget->calculateDuration($module, $importedFromXlf);
+            $widget->calculateDuration($module);
 
             // Get global stat setting of widget to set to on/off/inherit
             $widget->setOptionValue('enableStat', 'attrib', $this->config->getSetting('WIDGET_STATS_ENABLED_DEFAULT'));
@@ -2384,15 +2385,59 @@ class LayoutFactory extends BaseFactory
             } else {
                 $operator = $parsedFilter->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
                 $logicalOperator = $parsedFilter->getString('logicalOperator', ['default' => 'OR']);
-                $body .= ' AND layout.layoutID IN (
-                SELECT lktaglayout.layoutId
-                  FROM tag
-                    INNER JOIN lktaglayout
-                    ON lktaglayout.tagId = tag.tagId
-                ';
+                $allTags = explode(',', $tagFilter);
+                $notTags = [];
+                $tags = [];
 
-                $tags = explode(',', $tagFilter);
-                $this->tagFilter($tags, 'lktaglayout', 'lkTagLayoutId', 'layoutId', $logicalOperator, $operator, $body, $params);
+                foreach ($allTags as $tag) {
+                    if (str_starts_with($tag, '-')) {
+                        $notTags[] = ltrim(($tag), '-');
+                    } else {
+                        $tags[] = $tag;
+                    }
+                }
+
+                if (!empty($notTags)) {
+                    $body .= ' AND layout.layoutID NOT IN (
+                            SELECT lktaglayout.layoutId
+                              FROM tag
+                                INNER JOIN lktaglayout
+                                ON lktaglayout.tagId = tag.tagId
+                    ';
+
+                    $this->tagFilter(
+                        $notTags,
+                        'lktaglayout',
+                        'lkTagLayoutId',
+                        'layoutId',
+                        $logicalOperator,
+                        $operator,
+                        true,
+                        $body,
+                        $params
+                    );
+                }
+
+                if (!empty($tags)) {
+                    $body .= ' AND layout.layoutID IN (
+                            SELECT lktaglayout.layoutId
+                              FROM tag
+                                INNER JOIN lktaglayout
+                                ON lktaglayout.tagId = tag.tagId
+                    ';
+
+                    $this->tagFilter(
+                        $tags,
+                        'lktaglayout',
+                        'lkTagLayoutId',
+                        'layoutId',
+                        $logicalOperator,
+                        $operator,
+                        false,
+                        $body,
+                        $params
+                    );
+                }
             }
         }
 

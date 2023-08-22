@@ -49,7 +49,7 @@
                 <option name="3">Use Date</option>
             </options>
         </property>
-        <property id="countdownDuration" type="text">
+        <property id="countdownDuration" type="number">
             <title>Countdown Duration</title>
             <helpText>The duration in seconds.</helpText>
             <default></default>
@@ -59,8 +59,9 @@
                 </test>
             </visibility>
             <rule>
-                <test message="Please enter a positive countdown duration">
+                <test type="or" message="Please enter a positive countdown duration">
                     <condition type="gt">0</condition>
+                    <condition field="countdownType" type="neq">2</condition>
                 </test>
             </rule>
         </property>
@@ -74,7 +75,7 @@
                 </test>
             </visibility>
         </property>
-        <property id="countdownWarningDuration" type="text">
+        <property id="countdownWarningDuration" type="number">
             <title>Warning Duration</title>
             <helpText>The countdown will show in a warning mode from the end duration entered.</helpText>
             <default></default>
@@ -85,11 +86,19 @@
                 </test>
             </visibility>
             <rule>
-                <test message="Warning duration needs to be lower than the countdown main duration.">
+                <test type="or" message="Warning duration needs to be lower than the countdown main duration.">
+                    <condition type="eq"></condition>
+                    <condition field="countdownType" type="neq">2</condition>
                     <condition field="countdownDuration" type="lt"></condition>
                 </test>
-                <test message="Please enter a positive countdown duration">
+                <test type="or" message="Warning duration needs to be lower than the widget duration.">
+                    <condition field="countdownType" type="neq">1</condition>
+                    <condition field="duration" type="lt"></condition>
+                    <condition type="eq"></condition>
+                </test>
+                <test type="or" message="Please enter a positive warning duration">
                     <condition type="gt">0</condition>
+                    <condition type="eq"></condition>
                 </test>
             </rule>
         </property>
@@ -102,6 +111,13 @@
                     <condition field="countdownType" type="eq">3</condition>
                 </test>
             </visibility>
+            <rule>
+                <test type="or" message="Warning date needs to be before countdown date.">
+                    <condition field="countdownType" type="neq">3</condition>
+                    <condition field="countdownDate" type="lt"></condition>
+                    <condition type="eq"></condition>
+                </test>
+            </rule>
         </property>
         <property id="alignmentH" type="dropdown" mode="single">
             <title>Horizontal Align</title>
@@ -194,17 +210,17 @@ body {
     </stencil>
     <onRender><![CDATA[
 // Make replacements on render for all templates
-const $countdownContainer = $('.countdown-container', target);
+var $countdownContainer = $('.countdown-container', target);
 
 // Get countdown container html
-let countdownHTML = $countdownContainer.html();
+var countdownHTML = $countdownContainer.html();
 
 // Make replacements
-let text = countdownHTML;
-let regex = /\[.*?\]/g;
+var text = countdownHTML;
+var regex = /\[.*?\]/g;
 countdownHTML = text.replace(regex, function (match) {
-    let replacement = '';
-    let matchParsed = match.replace('[', '').replace(']', '');
+    var replacement = '';
+    var matchParsed = match.replace('[', '').replace(']', '');
 
     // Replace tags
     switch (matchParsed) {
@@ -253,7 +269,7 @@ $countdownContainer.html(countdownHTML);
 $(target).xiboLayoutScaler(properties);
 
 // Render the countdown
-const $contentContainer = $(target).find('#content');
+var $contentContainer = $(target).find('#content');
 $contentContainer.xiboCountdownRender(
     properties,
     $contentContainer.html(),

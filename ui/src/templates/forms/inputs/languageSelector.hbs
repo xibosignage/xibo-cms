@@ -2,7 +2,8 @@
     value=value
     selectType="localSelect"
     optionsTitle="title" optionsValue="name"
-    options=(arr 
+    options=(arr
+        (obj name=null title='')
         (obj name='af' title='Afrikaans')
         (obj name='ar' title='Arabic')
         (obj name='az' title='Azerbaijani')
@@ -45,6 +46,11 @@
         (obj name='tr' title='Turkish')
         (obj name='x-pig-latin' title='Igpay Atinlay')
         (obj name='zh' title='Chinese Traditional')
+    )
+    customData=(arr
+        (obj name='allow-clear' value='true')
+        (obj name='placeholder--id' value=null)
+        (obj name='placeholder--value' value='')
     )
     helpText=helpText
 }}

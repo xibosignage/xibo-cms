@@ -27,6 +27,7 @@
     <dataCacheKey>%menuId%_%categoryId%_%showUnavailable%_%sortField%_%sortDescending%_%lowerLimit%_%upperLimit%_%showUnavailable%</dataCacheKey>
     <type>menuboard-product</type>
     <dataType>product</dataType>
+    <showIn>layout</showIn>
     <schemaVersion>1</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>1</regionSpecific>

@@ -1,7 +1,7 @@
 <!--
-  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~ Copyright (C) 2023 Xibo Signage Ltd
   ~
-  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~ Xibo - Digital Signage - https://xibosignage.com
   ~
   ~ This file is part of Xibo.
   ~
@@ -44,6 +44,20 @@
         <startHeight>250</startHeight>
         <assets>
             <asset id="social-media-description" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/elements/social-media-description.png" />
+        </assets>
+    </template>
+    <template>
+        <id>social_media_screen_name</id>
+        <extends override="text" with="data.screenName">text</extends>
+        <title>Screen name</title>
+        <type>element</type>
+        <dataType>social-media</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>social-media-username</thumbnail>
+        <startWidth>650</startWidth>
+        <startHeight>250</startHeight>
+        <assets>
+            <asset id="social-media-username" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/elements/social-media-username.png" />
         </assets>
     </template>
     <template>

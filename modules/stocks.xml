@@ -48,11 +48,6 @@
                 </test>
             </rule>
         </property>
-        <property id="reverseConversion" type="checkbox">
-            <title>Reverse conversion?</title>
-            <helpText>Tick if you would like your base currency to be used as the comparison currency for each currency you've entered. For example base/compare becomes compare/base - USD/GBP becomes GBP/USD.</helpText>
-            <default>0</default>
-        </property>
         <property id="dateFormat" type="text" variant="dateFormat">
             <title>Date Format</title>
             <helpText>The format to apply to all dates returned by the Widget.</helpText>

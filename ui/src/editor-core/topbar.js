@@ -71,7 +71,7 @@ Topbar.prototype.render = function() {
   mainObject.duration = Math.round(Number(mainObject.duration) * 100) / 100;
 
   // Get topbar trans
-  const newTopbarTrans = $.extend(toolbarTrans, topbarTrans);
+  const newTopbarTrans = $.extend({}, toolbarTrans, topbarTrans, editorsTrans);
 
   // Compile layout template with data
   const html = topbarTemplate({
@@ -80,12 +80,17 @@ Topbar.prototype.render = function() {
     trans: newTopbarTrans,
     mainObject: mainObject,
     showOptions: self.showOptions,
+    exitURL: (lD != 'undefined') && lD.exitURL,
   });
 
   // Append layout html to the main div
   this.DOMObject.html(html);
 
   const setButtonActionAndState = function(button) {
+    if (button.isDivider) {
+      return;
+    }
+
     let buttonInactive = false;
 
     // Bind action to button
@@ -205,7 +210,7 @@ Topbar.prototype.setupJumpList = function(jumpListContainer) {
         const query = {
           layout: params.term,
           onlyMyLayouts: $('#onlyMyLayouts').is(':checked'),
-          retired : 0,
+          retired: 0,
           start: 0,
           length: 10,
         };
@@ -244,8 +249,8 @@ Topbar.prototype.setupJumpList = function(jumpListContainer) {
 
         $.each(data.data, function(index, element) {
           results.push({
-            'id': element.layoutId,
-            'text': element.layout,
+            id: element.layoutId,
+            text: element.layout,
           });
         });
 
@@ -329,16 +334,16 @@ Topbar.prototype.updateLayoutStatus = function() {
   let content = '';
 
   const labelCodes = {
-    '1': 'success',
-    '2': 'warning',
-    '3': 'info',
+    1: 'success',
+    2: 'warning',
+    3: 'info',
     '': 'danger',
   };
 
   const iconCodes = {
-    '1': 'check',
-    '2': 'exclamation',
-    '3': 'cogs',
+    1: 'check',
+    2: 'exclamation',
+    3: 'cogs',
     '': 'times',
   };
 

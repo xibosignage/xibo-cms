@@ -178,7 +178,7 @@
                                 {% set title %}{% trans "Tags" %}{% endset %}
                                 {% set exactMatchTitle %}{% trans "Should Tags filter by exact match?" %}{% endset %}
                                 {% set logicalOperatorTitle %}{% trans "When filtering by multiple Tags, which logical operator should be used?" %}{% endset %}
-                                {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
+                                {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a tag|tag value to filter tags with values. Enter --no-tag to filter all items without tags. Enter - before a tag or tag value to exclude from results." %}{% endset %}
                                 {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactMatchTitle, logicalOperatorTitle) }}
                             {% endif %}
 

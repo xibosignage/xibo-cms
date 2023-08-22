@@ -24,6 +24,7 @@ namespace Xibo\Widget;
 
 use Carbon\Carbon;
 use Xibo\Event\NotificationDataRequestEvent;
+use Xibo\Event\NotificationModifiedDtRequestEvent;
 use Xibo\Widget\Provider\DataProviderInterface;
 use Xibo\Widget\Provider\DurationProviderNumItemsTrait;
 use Xibo\Widget\Provider\WidgetProviderInterface;
@@ -46,11 +47,13 @@ class NotificationProvider implements WidgetProviderInterface
 
     public function getDataCacheKey(DataProviderInterface $dataProvider): ?string
     {
-        return $dataProvider->getWidgetId() . '_' . $dataProvider->getDisplayId();
+        return null;
     }
 
     public function getDataModifiedDt(DataProviderInterface $dataProvider): ?Carbon
     {
-        return null;
+        $event = new NotificationModifiedDtRequestEvent($dataProvider->getDisplayId());
+        $this->getDispatcher()->dispatch($event, NotificationModifiedDtRequestEvent::$NAME);
+        return $event->getModifiedDt();
     }
 }

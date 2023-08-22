@@ -159,18 +159,18 @@
         </assets>
     </template>
     <template>
-        <id>dataset_data_extImg</id>
+        <id>dataset_data_img</id>
         <extends override="url">global-image</extends>
-        <title>External Image</title>
+        <title>Image</title>
         <type>element</type>
         <dataType>dataset</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>dataset-data-extImg</thumbnail>
+        <thumbnail>dataset-data-img</thumbnail>
         <startWidth>150</startWidth>
         <startHeight>150</startHeight>
         <properties>
             <property id="dataTypeId" type="hidden">
-                <default>4</default>
+                <default>4,5</default>
             </property>
             <property type="message">
                 <title>Please choose a Dataset from the Configure tab to be able to customise this element.</title>
@@ -201,53 +201,7 @@
             </property>
         </properties>
         <assets>
-            <asset id="dataset-data-extImg" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/image.png" />
-        </assets>
-    </template>
-    <template>
-        <id>dataset_data_libImg</id>
-        <extends override="url">global-image</extends>
-        <title>Library Image</title>
-        <type>element</type>
-        <dataType>dataset</dataType>
-        <canRotate>true</canRotate>
-        <thumbnail>dataset-data-libImg</thumbnail>
-        <startWidth>150</startWidth>
-        <startHeight>150</startHeight>
-        <properties>
-            <property id="dataTypeId" type="hidden">
-                <default>5</default>
-            </property>
-            <property type="message">
-                <title>Please choose a Dataset from the Configure tab to be able to customise this element.</title>
-                <visibility>
-                    <test>
-                        <condition field="dataSetId" type="eq"></condition>
-                    </test>
-                </visibility>
-            </property>
-            <property type="message">
-                <title>No field is available for that type of DataSet element.</title>
-                <visibility>
-                    <test>
-                        <condition field="dataSetId" type="neq"></condition>
-                        <condition field="datasetField" type="eq"></condition>
-                    </test>
-                </visibility>
-            </property>
-            <property id="datasetField" type="datasetField">
-                <dependsOn>dataSetId</dependsOn>
-                <title>Select DataSet Field</title>
-                <helpText>Please choose a DataSet field for this element.</helpText>
-                <visibility>
-                    <test>
-                        <condition field="dataSetId" type="neq"></condition>
-                    </test>
-                </visibility>
-            </property>
-        </properties>
-        <assets>
-            <asset id="dataset-data-libImg" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/image.png" />
+            <asset id="dataset-data-img" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/image.png" />
         </assets>
     </template>
     <template>

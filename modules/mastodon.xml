@@ -26,7 +26,7 @@
     <class>\Xibo\Widget\MastodonProvider</class>
     <type>mastodon</type>
     <dataType>social-media</dataType>
-    <dataCacheKey>%hashtag%_%numItems%_%searchOn%_%onlyMedia%_%serverUrl%</dataCacheKey>
+    <dataCacheKey>%hashtag%_%numItems%_%searchOn%_%onlyMedia%_%serverUrl%_%userName%</dataCacheKey>
     <schemaVersion>1</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>1</regionSpecific>
@@ -70,6 +70,11 @@
             <helpText>Leave empty to use the one from settings.</helpText>
             <default></default>
         </property>
+        <property id="userName" type="text">
+            <title>Username</title>
+            <helpText>Provide Mastodon username to get public statuses from the account.</helpText>
+            <default></default>
+        </property>
         <property id="numItems" type="number">
             <title>Count</title>
             <helpText>The number of posts to return (default = 15).</helpText>
@@ -85,11 +90,6 @@
             <title>Only posts with attached media?</title>
             <helpText>Return only posts which included attached media.</helpText>
             <default>0</default>
-        </property>
-        <property id="dateFormat" type="text" variant="dateFormat">
-            <title>Date Format</title>
-            <helpText>The format to apply to all dates returned by the Widget.</helpText>
-            <default>#DATE_FORMAT#</default>
         </property>
         <property id="durationIsPerItem" type="checkbox">
             <title>Duration is per item</title>
@@ -124,7 +124,7 @@ if(properties.removeHashtags == 1) {
 if(properties.removeUrls == 1) {
     item.text = item.text.replace(/(https?:\/\/)?(www\.)?[-a-zA-Z0-9()@:%_\+.~#?&//=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/g, '');
 }
-if(properties.dateFormat != '') {
+if(properties.dateFormat) {
     item.date = moment(item.date).format(properties.dateFormat);
 }
 // Return the parsed item
@@ -136,56 +136,56 @@ $(target).xiboLayoutAnimate(properties);
     ]]></onVisible>
     <sampleData><![CDATA[
 [{
-    "date": "Sun Jan 01 10:10:00 +0000 1001",
+    "date": "2000-01-01T01:00:30+00:00",
     "text": "This is a sample mastodon text",
     "location": "Mastodon location",
     "photo": "[[assetId=mastodonContentPhoto]]",
-    "user": "Mastodon user",
-    "screenName": "@mastodon_user",
+    "user": "@mastodon_user",
+    "screenName": "Mastodon user",
     "userProfileImage": "[[assetId=mastodonProfilePhoto]]",
     "userProfileImageMini": "[[assetId=mastodonProfilePhotoMini]]",
     "userProfileImageBigger": "[[assetId=mastodonProfilePhotoBigger]]"
 },
 {
-    "date": "Sun Jan 01 10:10:00 +0000 1001",
+    "date": "2000-01-01T01:00:30+00:00",
     "text": "This is a sample mastodon text",
     "location": "Mastodon location",
     "photo": "[[assetId=mastodonContentPhoto]]",
-    "user": "Mastodon user",
-    "screenName": "@mastodon_user",
+    "user": "@mastodon_user",
+    "screenName": "Mastodon user",
     "userProfileImage": "[[assetId=mastodonProfilePhoto]]",
     "userProfileImageMini": "[[assetId=mastodonProfilePhotoMini]]",
     "userProfileImageBigger": "[[assetId=mastodonProfilePhotoBigger]]"
 },
 {
-    "date": "Sun Jan 01 10:10:00 +0000 1001",
+    "date": "2000-01-01T01:00:30+00:00",
     "text": "This is a sample mastodon text",
     "location": "Mastodon location",
     "photo": "[[assetId=mastodonContentPhoto]]",
-    "user": "Mastodon user",
-    "screenName": "@mastodon_user",
+    "user": "@mastodon_user",
+    "screenName": "Mastodon user",
     "userProfileImage": "[[assetId=mastodonProfilePhoto]]",
     "userProfileImageMini": "[[assetId=mastodonProfilePhotoMini]]",
     "userProfileImageBigger": "[[assetId=mastodonProfilePhotoBigger]]"
 },
 {
-    "date": "Sun Jan 01 10:10:00 +0000 1001",
+    "date": "2000-01-01T01:00:30+00:00",
     "text": "This is a sample mastodon text",
     "location": "Mastodon location",
     "photo": "[[assetId=mastodonContentPhoto]]",
-    "user": "Mastodon user",
-    "screenName": "@mastodon_user",
+    "user": "@mastodon_user",
+    "screenName": "Mastodon user",
     "userProfileImage": "[[assetId=mastodonProfilePhoto]]",
     "userProfileImageMini": "[[assetId=mastodonProfilePhotoMini]]",
     "userProfileImageBigger": "[[assetId=mastodonProfilePhotoBigger]]"
 },
 {
-    "date": "Sun Jan 01 10:10:00 +0000 1001",
+    "date": "2000-01-01T01:00:30+00:00",
     "text": "This is a sample mastodon text",
     "location": "Mastodon location",
     "photo": "[[assetId=mastodonContentPhoto]]",
-    "user": "Mastodon user",
-    "screenName": "@mastodon_user",
+    "user": "@mastodon_user",
+    "screenName": "Mastodon user",
     "userProfileImage": "[[assetId=mastodonProfilePhoto]]",
     "userProfileImageMini": "[[assetId=mastodonProfilePhotoMini]]",
     "userProfileImageBigger": "[[assetId=mastodonProfilePhotoBigger]]"

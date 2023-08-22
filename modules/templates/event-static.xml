@@ -27,30 +27,15 @@
         <showIn>none</showIn>
         <title>Events shown with custom HTML</title>
         <properties>
-          <property id="customInterval" type="text">
-              <title>Interval</title>
-              <helpText>Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week.</helpText>
-              <default></default>
-              <rule>
-                  <test>
-                      <condition type="interval"></condition>
-                  </test>
-              </rule>
-          </property>
-          <property id="effect" type="effectSelector" variant="all">
-              <title>Effect</title>
-              <helpText>Please select the effect that will be used to transition between items.</helpText>
-              <default>noTransition</default>
-          </property>
+            <property id="effect" type="effectSelector" variant="all">
+                <title>Effect</title>
+                <helpText>Please select the effect that will be used to transition between items.</helpText>
+                <default>noTransition</default>
+            </property>
             <property id="speed" type="number">
                 <title>Speed</title>
                 <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)</helpText>
                 <default>1000</default>
-            </property>
-            <property id="numItems" type="number">
-                <title>Number of Items</title>
-                <helpText>The Number of items you want to display</helpText>
-                <default></default>
             </property>
             <property id="itemsSideBySide" type="checkbox">
                 <title>Show items side by side?</title>
@@ -59,13 +44,17 @@
             </property>
             <property id="itemsPerPage" type="number">
                 <title>Items per page</title>
-                <helpText>If an effect has been selected from the General tab, how many pages should we split the items across? If you don't enter anything here 1 item will be put on each page.</helpText>
+                <helpText>If an effect has been selected, how many pages should we split the items across? If you don't enter anything here 1 item will be put on each page.</helpText>
                 <default>1</default>
             </property>
             <property id="dateFormat" type="text" variant="dateFormat">
                 <title>Date Format</title>
                 <helpText>The format to apply to all dates returned by the Widget.</helpText>
                 <default>#DATE_FORMAT#</default>
+            </property>
+            <property id="lang" type="languageSelector">
+                <title>Language</title>
+                <helpText>Select the language you would like to use.</helpText>
             </property>
             <property id="backgroundColor" type="color">
                 <title>Background Colour</title>
@@ -110,6 +99,8 @@
 // items: The items to render
 // properties: The properties for the widget
 // -------------------------------------------
+moment.locale(properties.lang || globalOptions.locale);
+
 if (items.length > 0) {
     items = $(items).xiboSubstitutesParser(properties.text, properties.dateFormat, ['startDate', 'endDate']);
 }
@@ -146,20 +137,32 @@ $(target).xiboTextRender(properties, $(target).find('#content > *'));
         <startWidth>800</startWidth>
         <startHeight>500</startHeight>
         <properties>
+            <property type="message">
+                <title>This is an advanced template which may not work on devices with an older browser.</title>
+            </property>
             <property id="startTime" type="date" variant="time">
-                <title>Start Time</title>
-                <helpText>Current view starting time.</helpText>
+                <title>First hour slot</title>
+                <helpText>This view features a grid running from midnight to midnight. Use the first slot to shorten the time window shown.</helpText>
                 <default></default>
             </property>
             <property id="endTime" type="date" variant="time">
-                <title>End Time</title>
-                <helpText>Current view ending time.</helpText>
+                <title>Last hour slot</title>
+                <helpText>This view features a grid running from midnight to midnight. Use the last slot to shorten the time window shown.</helpText>
                 <default></default>
             </property>
             <property id="timeFormat" type="text">
                 <title>Time Format</title>
                 <helpText>The format to apply to event time (default HH:mm).</helpText>
                 <default>HH:mm</default>
+            </property>
+            <property id="lang" type="languageSelector">
+                <title>Language</title>
+                <helpText>Select the language you would like to use.</helpText>
+            </property>
+            <property id="startAtCurrentTime" type="checkbox">
+                <title>Start at the current time?</title>
+                <helpText>Should the calendar start at the current time, or at the time of the first event?</helpText>
+                <default>1</default>
             </property>
             <property id="showNowMarker" type="checkbox">
                 <title>Show now marker?</title>
@@ -574,6 +577,8 @@ ol, li {
 // target: The target element to render
 // items: The items to render
 // properties: The properties for the widget
+moment.locale(properties.lang || globalOptions.locale);
+
 $(target).find("img").xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
 
@@ -596,20 +601,32 @@ $(target).xiboCalendarRender(properties, items);
         <startWidth>800</startWidth>
         <startHeight>500</startHeight>
         <properties>
+            <property type="message">
+                <title>This is an advanced template which may not work on devices with an older browser.</title>
+            </property>
             <property id="startTime" type="date" variant="time">
-                <title>Start Time</title>
-                <helpText>Current view starting time.</helpText>
+                <title>First hour slot</title>
+                <helpText>This view features a grid running from midnight to midnight. Use the first slot to shorten the time window shown.</helpText>
                 <default></default>
             </property>
             <property id="endTime" type="date" variant="time">
-                <title>End Time</title>
-                <helpText>Current view ending time.</helpText>
+                <title>Last hour slot</title>
+                <helpText>This view features a grid running from midnight to midnight. Use the last slot to shorten the time window shown.</helpText>
                 <default></default>
             </property>
             <property id="timeFormat" type="text">
                 <title>Time Format</title>
                 <helpText>The format to apply to event time (default HH:mm).</helpText>
                 <default>HH:mm</default>
+            </property>
+            <property id="lang" type="languageSelector">
+                <title>Language</title>
+                <helpText>Select the language you would like to use.</helpText>
+            </property>
+            <property id="startAtCurrentTime" type="checkbox">
+                <title>Start at the current time?</title>
+                <helpText>Should the calendar start at the current time, or at the time of the first event?</helpText>
+                <default>1</default>
             </property>
             <property id="showNowMarker" type="checkbox">
                 <title>Show now marker?</title>
@@ -1024,6 +1041,8 @@ ol, li {
 // target: The target element to render
 // items: The items to render
 // properties: The properties for the widget
+moment.locale(properties.lang || globalOptions.locale);
+
 $(target).find("img").xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
 
@@ -1049,15 +1068,23 @@ $(target).xiboCalendarRender(properties, items);
         <startWidth>800</startWidth>
         <startHeight>500</startHeight>
         <properties>
+            <property type="message">
+                <title>This is an advanced template which may not work on devices with an older browser.</title>
+            </property>
             <property id="startTime" type="date" variant="time">
-                <title>Start Time</title>
-                <helpText>Current view starting time.</helpText>
+                <title>First hour slot</title>
+                <helpText>This view features a grid running from midnight to midnight. Use the first slot to shorten the time window shown.</helpText>
                 <default></default>
             </property>
             <property id="endTime" type="date" variant="time">
-                <title>End Time</title>
-                <helpText>Current view ending time.</helpText>
+                <title>Last hour slot</title>
+                <helpText>This view features a grid running from midnight to midnight. Use the last slot to shorten the time window shown.</helpText>
                 <default></default>
+            </property>
+            <property id="startAtCurrentTime" type="checkbox">
+                <title>Start at the current time?</title>
+                <helpText>Should the calendar start at the current time, or at the time of the first event?</helpText>
+                <default>1</default>
             </property>
             <property id="excludeWeekendDays" type="checkbox">
                 <title>Exclude weekend days?</title>
@@ -1068,6 +1095,10 @@ $(target).xiboCalendarRender(properties, items);
                 <title>Time Format</title>
                 <helpText>The format to apply to event time (default HH:mm).</helpText>
                 <default>HH:mm</default>
+            </property>
+            <property id="lang" type="languageSelector">
+                <title>Language</title>
+                <helpText>Select the language you would like to use.</helpText>
             </property>
             <property id="showNowMarker" type="checkbox">
                 <title>Show now marker?</title>
@@ -1497,6 +1528,7 @@ ol, li {
 // target: The target element to render
 // items: The items to render
 // properties: The properties for the widget
+moment.locale(properties.lang || globalOptions.locale);
 
 $(target).find("img").xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
@@ -1520,14 +1552,17 @@ $(target).xiboCalendarRender(properties, items);
         <startWidth>800</startWidth>
         <startHeight>500</startHeight>
         <properties>
+            <property type="message">
+                <title>This is an advanced template which may not work on devices with an older browser.</title>
+            </property>
             <property id="startTime" type="date" variant="time">
-                <title>Start Time</title>
-                <helpText>Current view starting time.</helpText>
+                <title>First hour slot</title>
+                <helpText>This view features a grid running from midnight to midnight. Use the first slot to shorten the time window shown.</helpText>
                 <default></default>
             </property>
             <property id="endTime" type="date" variant="time">
-                <title>End Time</title>
-                <helpText>Current view ending time.</helpText>
+                <title>Last hour slot</title>
+                <helpText>This view features a grid running from midnight to midnight. Use the last slot to shorten the time window shown.</helpText>
                 <default></default>
             </property>
             <property id="excludeWeekendDays" type="checkbox">
@@ -1539,6 +1574,15 @@ $(target).xiboCalendarRender(properties, items);
                 <title>Time Format</title>
                 <helpText>The format to apply to event time (default HH:mm).</helpText>
                 <default>HH:mm</default>
+            </property>
+            <property id="lang" type="languageSelector">
+                <title>Language</title>
+                <helpText>Select the language you would like to use.</helpText>
+            </property>
+            <property id="startAtCurrentTime" type="checkbox">
+                <title>Start at the current time?</title>
+                <helpText>Should the calendar start at the current time, or at the time of the first event?</helpText>
+                <default>1</default>
             </property>
             <property id="showNowMarker" type="checkbox">
                 <title>Show now marker?</title>
@@ -1968,6 +2012,7 @@ ol, li {
 // target: The target element to render
 // items: The items to render
 // properties: The properties for the widget
+moment.locale(properties.lang || globalOptions.locale);
 
 $(target).find("img").xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
@@ -1994,6 +2039,9 @@ $(target).xiboCalendarRender(properties, items);
         <startWidth>800</startWidth>
         <startHeight>500</startHeight>
         <properties>
+            <property type="message">
+                <title>This is an advanced template which may not work on devices with an older browser.</title>
+            </property>
             <property id="excludeWeekendDays" type="checkbox">
                 <title>Exclude weekend days?</title>
                 <helpText>Saturdays and Sundays wont be shown.</helpText>
@@ -2003,6 +2051,15 @@ $(target).xiboCalendarRender(properties, items);
                 <title>Time Format</title>
                 <helpText>The format to apply to event time (default HH:mm).</helpText>
                 <default>HH:mm</default>
+            </property>
+            <property id="lang" type="languageSelector">
+                <title>Language</title>
+                <helpText>Select the language you would like to use.</helpText>
+            </property>
+            <property id="startAtCurrentTime" type="checkbox">
+                <title>Start at the current time?</title>
+                <helpText>Should the calendar start at the current time, or at the time of the first event?</helpText>
+                <default>1</default>
             </property>
             <property id="showHeader" type="checkbox">
                 <title>Show header?</title>
@@ -2367,6 +2424,7 @@ li {
 // target: The target element to render
 // items: The items to render
 // properties: The properties for the widget
+moment.locale(properties.lang || globalOptions.locale);
 
 $(target).find("img").xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
@@ -2390,6 +2448,9 @@ $(target).xiboCalendarRender(properties, items);
         <startWidth>800</startWidth>
         <startHeight>500</startHeight>
         <properties>
+            <property type="message">
+                <title>This is an advanced template which may not work on devices with an older browser.</title>
+            </property>
             <property id="excludeWeekendDays" type="checkbox">
                 <title>Exclude weekend days?</title>
                 <helpText>Saturdays and Sundays wont be shown.</helpText>
@@ -2399,6 +2460,15 @@ $(target).xiboCalendarRender(properties, items);
                 <title>Time Format</title>
                 <helpText>The format to apply to event time (default HH:mm).</helpText>
                 <default>HH:mm</default>
+            </property>
+            <property id="lang" type="languageSelector">
+                <title>Language</title>
+                <helpText>Select the language you would like to use.</helpText>
+            </property>
+            <property id="startAtCurrentTime" type="checkbox">
+                <title>Start at the current time?</title>
+                <helpText>Should the calendar start at the current time, or at the time of the first event?</helpText>
+                <default>1</default>
             </property>
             <property id="showHeader" type="checkbox">
                 <title>Show header?</title>
@@ -2763,6 +2833,7 @@ li {
 // target: The target element to render
 // items: The items to render
 // properties: The properties for the widget
+moment.locale(properties.lang || globalOptions.locale);
 
 $(target).find("img").xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
@@ -2789,46 +2860,22 @@ $(target).xiboCalendarRender(properties, items);
         <startWidth>400</startWidth>
         <startHeight>800</startHeight>
         <properties>
+            <property type="message">
+                <title>This is an advanced template which may not work on devices with an older browser.</title>
+            </property>
             <property id="noEventsMessage" type="text">
                 <title>No events message</title>
                 <helpText>Message to be shown if no events are returned.</helpText>
-                <default>"No upcoming events"</default>
-            </property>
-            <property id="customInterval" type="text">
-                <title>Interval</title>
-                <helpText>Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week.</helpText>
-                <default></default>
-                <rule>
-                    <test>
-                        <condition type="interval"></condition>
-                    </test>
-                </rule>
-            </property>
-            <property id="useDateRange" type="checkbox">
-                <title>Select a Date range to return events instead?</title>
-                <helpText>Use the checkbox to return events within defined start and end dates.</helpText>
-                <default>0</default>
-            </property>
-            <property id="rangeStart" type="date" variant="dateTime">
-                <title>Start Date</title>
-                <visibility>
-                    <test>
-                        <condition field="useDateRange" type="eq">1</condition>
-                    </test>
-                </visibility>
-            </property>
-            <property id="rangeEnd" type="date" variant="dateTime">
-                <title>End Date</title>
-                <visibility>
-                    <test>
-                        <condition field="useDateRange" type="eq">1</condition>
-                    </test>
-                </visibility>
+                <default>No upcoming events</default>
             </property>
             <property id="timeFormat" type="text">
                 <title>Time Format</title>
                 <helpText>The format to apply to event time (default HH:mm).</helpText>
                 <default>HH:mm</default>
+            </property>
+            <property id="lang" type="languageSelector">
+                <title>Language</title>
+                <helpText>Select the language you would like to use.</helpText>
             </property>
             <property id="showNowMarker" type="checkbox">
                 <title>Show now marker?</title>
@@ -3106,6 +3153,7 @@ ol, li {
 // target: The target element to render
 // items: The items to render
 // properties: The properties for the widget
+moment.locale(properties.lang || globalOptions.locale);
 
 $(target).find("img").xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
@@ -3129,46 +3177,22 @@ $(target).xiboCalendarRender(properties, items);
         <startWidth>400</startWidth>
         <startHeight>800</startHeight>
         <properties>
+            <property type="message">
+                <title>This is an advanced template which may not work on devices with an older browser.</title>
+            </property>
             <property id="noEventsMessage" type="text">
                 <title>No events message</title>
                 <helpText>Message to be shown if no events are returned.</helpText>
                 <default>"No upcoming events"</default>
             </property>
-            <property id="customInterval" type="text">
-                <title>Interval</title>
-                <helpText>Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week.</helpText>
-                <default></default>
-                <rule>
-                    <test>
-                        <condition type="interval"></condition>
-                    </test>
-                </rule>
-            </property>
-            <property id="useDateRange" type="checkbox">
-                <title>Select a Date range to return events instead?</title>
-                <helpText>Use the checkbox to return events within defined start and end dates.</helpText>
-                <default>0</default>
-            </property>
-            <property id="rangeStart" type="date" variant="dateTime">
-                <title>Start Date</title>
-                <visibility>
-                    <test>
-                        <condition field="useDateRange" type="eq">1</condition>
-                    </test>
-                </visibility>
-            </property>
-            <property id="rangeEnd" type="date" variant="dateTime">
-                <title>End Date</title>
-                <visibility>
-                    <test>
-                        <condition field="useDateRange" type="eq">1</condition>
-                    </test>
-                </visibility>
-            </property>
             <property id="timeFormat" type="text">
                 <title>Time Format</title>
                 <helpText>The format to apply to event time (default HH:mm).</helpText>
                 <default>HH:mm</default>
+            </property>
+            <property id="lang" type="languageSelector">
+                <title>Language</title>
+                <helpText>Select the language you would like to use.</helpText>
             </property>
             <property id="showNowMarker" type="checkbox">
                 <title>Show now marker?</title>
@@ -3446,6 +3470,7 @@ ol, li {
 // target: The target element to render
 // items: The items to render
 // properties: The properties for the widget
+moment.locale(properties.lang || globalOptions.locale);
 
 $(target).find("img").xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);

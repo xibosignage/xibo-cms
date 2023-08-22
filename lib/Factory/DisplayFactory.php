@@ -555,24 +555,59 @@ class DisplayFactory extends BaseFactory
             } else {
                 $operator = $parsedBody->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
                 $logicalOperator = $parsedBody->getString('logicalOperator', ['default' => 'OR']);
-                $body .= ' AND `displaygroup`.displaygroupId IN (
-                SELECT `lktagdisplaygroup`.displaygroupId
-                  FROM tag
-                    INNER JOIN `lktagdisplaygroup`
-                    ON `lktagdisplaygroup`.tagId = tag.tagId
-                ';
+                $allTags = explode(',', $tagFilter);
+                $notTags = [];
+                $tags = [];
 
-                $tags = explode(',', $tagFilter);
-                $this->tagFilter(
-                    $tags,
-                    'lktagdisplaygroup',
-                    'lkTagDisplayGroupId',
-                    'displayGroupId',
-                    $logicalOperator,
-                    $operator,
-                    $body,
-                    $params
-                );
+                foreach ($allTags as $tag) {
+                    if (str_starts_with($tag, '-')) {
+                        $notTags[] = ltrim(($tag), '-');
+                    } else {
+                        $tags[] = $tag;
+                    }
+                }
+
+                if (!empty($notTags)) {
+                    $body .= ' AND `displaygroup`.displaygroupId NOT IN (
+                    SELECT `lktagdisplaygroup`.displaygroupId
+                      FROM tag
+                        INNER JOIN `lktagdisplaygroup`
+                        ON `lktagdisplaygroup`.tagId = tag.tagId
+                    ';
+
+                    $this->tagFilter(
+                        $notTags,
+                        'lktagdisplaygroup',
+                        'lkTagDisplayGroupId',
+                        'displayGroupId',
+                        $logicalOperator,
+                        $operator,
+                        true,
+                        $body,
+                        $params
+                    );
+                }
+
+                if (!empty($tags)) {
+                    $body .= ' AND `displaygroup`.displaygroupId IN (
+                                SELECT `lktagdisplaygroup`.displaygroupId
+                                  FROM tag
+                                    INNER JOIN `lktagdisplaygroup`
+                                    ON `lktagdisplaygroup`.tagId = tag.tagId
+                                ';
+
+                    $this->tagFilter(
+                        $tags,
+                        'lktagdisplaygroup',
+                        'lkTagDisplayGroupId',
+                        'displayGroupId',
+                        $logicalOperator,
+                        $operator,
+                        false,
+                        $body,
+                        $params
+                    );
+                }
             }
         }
 

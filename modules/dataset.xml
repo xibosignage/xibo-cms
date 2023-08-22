@@ -41,15 +41,6 @@
             <title>DataSet</title>
             <helpText>Please select the DataSet to use as a source of data for this template.</helpText>
         </property>
-        <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
-            <title>No data message</title>
-            <helpText>A message to display when no data is returned from the source</helpText>
-            <visibility>
-                <test>
-                    <condition field="dataSetId" type="neq"></condition>
-                </test>
-            </visibility>
-        </property>
         <property type="header" variant="main">
             <title>Configuration</title>
             <visibility>

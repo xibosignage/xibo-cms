@@ -107,8 +107,7 @@ class PlayerActionService implements PlayerActionServiceInterface
             if ($display->xmrChannel == '' || $display->xmrPubKey == '') {
                 throw new InvalidArgumentException(
                     sprintf(
-                        __('%s is not configured or ready to receive push commands over XMR.
-                         Please contact your administrator.'),
+                        __('%s is not configured or ready to receive push commands over XMR. Please contact your administrator.'),//phpcs:ignore
                         $display->display
                     ),
                     'xmrRegistered'
