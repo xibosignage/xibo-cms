@@ -198,6 +198,9 @@ RUN mkdir /var/www/cms/openooh \
 # Help Links
 RUN curl -o help_links.yaml https://raw.githubusercontent.com/xibosignage/xibo-manual/develop/help_links.yaml || true
 
+# Git commit fallback
+RUN echo $GIT_COMMIT > /var/www/cms/commit.sha
+
 # Tidy up
 RUN rm /var/www/cms/composer.* && \
     rm -r /var/www/cms/docker && \
