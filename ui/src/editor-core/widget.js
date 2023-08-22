@@ -633,6 +633,7 @@ Widget.prototype.saveElements = function(
         width: element.group.width,
         height: element.group.height,
         effect: element.group.effect,
+        pinSlot: element.group.pinSlot,
       };
 
       // Save group scale type if exists
