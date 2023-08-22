@@ -2096,7 +2096,7 @@ window.forms = {
 
         // Handle replacements for visibilty rules
         visibility = JSON.parse(
-          JSON.stringify(visibility).replace(/\%(.*?)\%/g, function(_m, group) {
+          JSON.stringify(visibility).replace(/\$(.*?)\$/g, function(_m, group) {
             // Replace match with the value of the base object
             return group.split('.').reduce((a, b) => a[b], baseObject);
           }),

@@ -86,13 +86,17 @@ class Environment
             if (isset($_SERVER['GIT_COMMIT']) && $_SERVER['GIT_COMMIT'] === 'dev') {
                 $out = [];
                 exec('cat /var/www/cms/.git/$(cat /var/www/cms/.git/HEAD | cut -d\' \' -f2)', $out);
-                self::$gitCommit = $out[0] ?? 'unavailable';
+                self::$gitCommit = $out[0] ?? null;
             } else {
-                self::$gitCommit = $_SERVER['GIT_COMMIT'] ?? 'unavailable';
+                self::$gitCommit = $_SERVER['GIT_COMMIT'] ?? null;
+            }
+
+            if (self::$gitCommit === null && file_exists(PROJECT_ROOT . '/commit.sha')) {
+                self::$gitCommit = trim(file_get_contents(PROJECT_ROOT . '/commit.sha'));
             }
         }
 
-        return self::$gitCommit;
+        return self::$gitCommit ?? 'unknown';
     }
 
     /**
