@@ -1207,35 +1207,6 @@ class Playlist extends Base
     //</editor-fold>
 
     /**
-     * Timeline Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function timelineForm(Request $request, Response $response, $id)
-    {
-        // Get a complex object of playlists and widgets
-        $playlist = $this->playlistFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($playlist)) {
-            throw new AccessDeniedException();
-        }
-
-        // Pass to view
-        $this->getState()->template = 'region-form-timeline';
-        $this->getState()->setData([
-            'playlist' => $playlist,
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
      * Add Library items to a Playlist
      * @param Request $request
      * @param Response $response

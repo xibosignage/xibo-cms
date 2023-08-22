@@ -18,7 +18,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-var timelineForm;
 var lastForm;
 var gridTimeouts = [];
 var buttonsTemplate;
@@ -1947,14 +1946,6 @@ function XiboFormRender(sourceObj, data = null) {
     // Currently only support one of these at once.
     bootbox.hideAll();
 
-    // Store the last form?
-    if (formUrl.indexOf("region/form/timeline") > -1 || formUrl.indexOf("playlist/form/timeline") > -1) {
-        timelineForm = {
-            url: formUrl,
-            data: data
-        };
-    }
-
     lastForm = formUrl;
 
     // Call with AJAX
@@ -2070,13 +2061,7 @@ function XiboFormRender(sourceObj, data = null) {
                                     }
                                 }
 
-                                if (value.indexOf("DialogClose") > -1 && (lastForm.indexOf("playlist/widget/form") > -1 || lastForm.indexOf("playlist/form/library/assign") > -1) && timelineForm != null) {
-                                    // Close button
-                                    // We might want to go back to the prior form
-                                    XiboFormRender(timelineForm.url, timelineForm.value);
-                                }
-                                else
-                                    eval(value);
+                                eval(value);
 
                                 return false;
                             });
@@ -2907,12 +2892,6 @@ function XiboSubmitResponse(response, form) {
                     : response.data[$(form).data("nextFormIdProperty")];
                 XiboFormRender($(form).data().nextFormUrl.replace(":id", responseId));
             }
-            // Back to the timeline form
-            else if ((lastForm != undefined && (lastForm.indexOf("playlist/widget/form") > -1 || lastForm.indexOf("playlist/form/library/assign") > -1)) && timelineForm != null) {
-                // Close button
-                // We might want to go back to the prior form
-                XiboFormRender(timelineForm.url, timelineForm.value);
-            }
         }
     }
     else {
@@ -3118,13 +3097,7 @@ function SystemMessage(messageText, success) {
                 label: 'Close',
                 className: 'btn-bb-close',
                 callback: function() {
-                    if (lastForm != null && lastForm.indexOf("playlist/widget/form") > -1 && timelineForm != null) {
-                        // Close button
-                        // We might want to go back to the prior form
-                        XiboFormRender(timelineForm.url, timelineForm.value);
-                    }
-                    else
-                        dialog.modal('hide');
+                    dialog.modal('hide');
                 }
             }],
             animate: false
