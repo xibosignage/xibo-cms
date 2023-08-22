@@ -1227,7 +1227,7 @@ class Playlist extends Base
         }
 
         // Pass to view
-        $this->getState()->template = 'region-form-timeline';
+        $this->getState()->template = 'playlist-form-timeline';
         $this->getState()->setData([
             'playlist' => $playlist,
         ]);
