@@ -320,8 +320,13 @@ class RequiredFileFactory extends BaseFactory
         bool $isUseRealId = true
     ): RequiredFile {
         try {
-            $requiredFile = $this->getByDisplayAndDependency($displayId, $fileType, $id, $isUseRealId);
-        } catch (NotFoundException $e) {
+            $requiredFile = $this->getByDisplayAndDependency(
+                $displayId,
+                $fileType,
+                $isUseRealId ? $realId : $id,
+                $isUseRealId,
+            );
+        } catch (NotFoundException) {
             $requiredFile = $this->createEmpty();
         }
 

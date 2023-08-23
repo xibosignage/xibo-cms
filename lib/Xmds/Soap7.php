@@ -147,63 +147,71 @@ class Soap7 extends Soap6
                     }
 
                     // Get media references
-                    $mediaIds = $widgetDataProviderCache->getCachedMediaIds();
                     $media = [];
                     $requiredFiles = [];
-                    $sql = '
-                        SELECT `media`.`mediaId`,
-                               `media`.`storedAs`,
-                               `media`.storedAs,
-                               `media`.fileSize,
-                               `media`.released,
-                               `media`.md5
-                          FROM `media`
-                            INNER JOIN `display_media`
-                            ON `display_media`.mediaid = `media`.mediaId
-                         WHERE `display_media`.displayId = :displayId
-                    ';
+                    $mediaIds = $widgetDataProviderCache->getCachedMediaIds();
 
-                    // There isn't any point using a prepared statement because the widgetIds are substituted at runtime
-                    foreach ($this->getStore()->select($sql, [
-                        'displayId' => $this->display->displayId
-                    ]) as $row) {
-                        // Only media we're interested in.
-                        if (!in_array($row['mediaId'], $mediaIds)) {
-                            continue;
+                    if (count($mediaIds) > 0) {
+                        // Process media links.
+                        $sql = '
+                            SELECT `media`.`mediaId`,
+                                   `media`.`storedAs`,
+                                   `media`.storedAs,
+                                   `media`.fileSize,
+                                   `media`.released,
+                                   `media`.md5,
+                                   `display_media`.id AS displayMediaId
+                              FROM `media`
+                                LEFT OUTER JOIN `display_media`
+                                ON `display_media`.mediaid = `media`.mediaId
+                                    AND `display_media`.displayId = :displayId
+                             WHERE `media`.`mediaId` IN ( ' . implode(',', $mediaIds) . ')
+                        ';
+
+                        // There isn't any point using a prepared statement because the widgetIds are substituted
+                        // at runtime
+                        foreach ($this->getStore()->select($sql, [
+                            'displayId' => $this->display->displayId
+                        ]) as $row) {
+                            // Media to use for decorating the JSON file.
+                            $media[$row['mediaId']] = $row['storedAs'];
+
+                            // Only media we're interested in.
+                            if (!in_array($row['displayMediaId'], $mediaIds)) {
+                                continue;
+                            }
+
+                            // Output required file nodes for any media used in get data.
+                            // these will appear in required files as well, and may already be downloaded.
+                            $released = intval($row['released']);
+                            $this->requiredFileFactory
+                                ->createForMedia(
+                                    $this->display->displayId,
+                                    $row['mediaId'],
+                                    $row['fileSize'],
+                                    $row['storedAs'],
+                                    $released
+                                )
+                                ->save();
+
+                            // skip media which has released == 0 or 2
+                            if ($released == 0 || $released == 2) {
+                                continue;
+                            }
+
+                            // Add the file node
+                            $requiredFiles[] = [
+                                'id' => intval($row['mediaId']),
+                                'size' => intval($row['fileSize']),
+                                'md5' => $row['md5'],
+                                'saveAs' => $row['storedAs'],
+                                'path' => $this->generateRequiredFileDownloadPath(
+                                    'M',
+                                    intval($row['mediaId']),
+                                    $row['storedAs'],
+                                ),
+                            ];
                         }
-
-                        $media[$row['mediaId']] = $row['storedAs'];
-
-                        // Output required file nodes for any media used in get data.
-                        // these will appear in required files as well, and may already be downloaded.
-                        $released = intval($row['released']);
-                        $this->requiredFileFactory
-                            ->createForMedia(
-                                $this->display->displayId,
-                                $row['mediaId'],
-                                $row['fileSize'],
-                                $row['storedAs'],
-                                $released
-                            )
-                            ->save();
-
-                        // skip media which has released == 0 or 2
-                        if ($released == 0 || $released == 2) {
-                            continue;
-                        }
-
-                        // Add the file node
-                        $requiredFiles[] = [
-                            'id' => intval($row['mediaId']),
-                            'size' => intval($row['fileSize']),
-                            'md5' => $row['md5'],
-                            'saveAs' => $row['storedAs'],
-                            'path' => $this->generateRequiredFileDownloadPath(
-                                'M',
-                                intval($row['mediaId']),
-                                $row['storedAs'],
-                            ),
-                        ];
                     }
 
                     $resource = json_encode([

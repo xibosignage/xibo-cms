@@ -72,23 +72,19 @@ class WidgetSyncTask implements TaskInterface
         $timeCaching = 0.0;
         $countWidgets = 0;
 
-        // Update for widgets which are active on displays
-        // TODO: decide if this is soon enough to do this work (none of these widgets will have any data until
-        //  this runs).
+        // Update for widgets which are active on displays, or for displays which have been active recently.
         $sql = '
           SELECT DISTINCT `requiredfile`.itemId, `requiredfile`.complete 
             FROM `requiredfile` 
-              INNER JOIN `widget`
-              ON `widget`.widgetId = `requiredfile`.itemId
               INNER JOIN `display`
               ON `display`.displayId = `requiredfile`.displayId
-           WHERE `requiredfile`.type = \'W\' 
-              AND `display`.loggedIn = 1
+           WHERE `requiredfile`.type = \'D\' 
+              AND (`display`.loggedIn = 1 OR `display`.lastAccessed > :lastAccessed)
           ORDER BY `requiredfile`.complete DESC, `requiredfile`.itemId
         ';
 
         $smt = $this->store->getConnection()->prepare($sql);
-        $smt->execute();
+        $smt->execute(['lastAccessed' => Carbon::now()->subHours(2)]);
 
         $row = true;
         while ($row) {
@@ -97,11 +93,12 @@ class WidgetSyncTask implements TaskInterface
                 if ($row !== false) {
                     $widgetId = (int)$row['itemId'];
 
-                    $this->getLogger()->debug('widgetSyncTask: processing widgetId ' . $widgetId);
+                    $this->getLogger()->debug('widgetSyncTask: processing itemId ' . $widgetId);
 
-                    $widget = $this->widgetFactory->getById($widgetId);
-                    $widget->load();
+                    // What type of widget do we have here.
+                    $widget = $this->widgetFactory->getById($widgetId)->load();
 
+                    // Get the module
                     $module = $this->moduleFactory->getByType($widget->type);
 
                     // If this widget's module expects data to be provided (i.e. has a datatype) then make sure that
@@ -162,7 +159,6 @@ class WidgetSyncTask implements TaskInterface
                     }
                 }
             } catch (GeneralException $xiboException) {
-                // Log and skip to the next layout
                 $this->log->debug($xiboException->getTraceAsString());
                 $this->log->error('widgetSyncTask: Cannot process widget ' . $widgetId
                     . ', E = ' . $xiboException->getMessage());

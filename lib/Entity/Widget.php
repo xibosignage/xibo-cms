@@ -810,11 +810,12 @@ class Widget implements \JsonSerializable
     /**
      * Load the Widget
      * @param bool $loadActions
+     * @return Widget
      */
-    public function load(bool $loadActions = true)
+    public function load(bool $loadActions = true): Widget
     {
         if ($this->loaded || $this->widgetId == null || $this->widgetId == 0) {
-            return;
+            return $this;
         }
 
         // Load permissions
@@ -842,6 +843,7 @@ class Widget implements \JsonSerializable
         $this->hash = $this->hash();
         $this->mediaHash = $this->mediaHash();
         $this->loaded = true;
+        return $this;
     }
 
     /**

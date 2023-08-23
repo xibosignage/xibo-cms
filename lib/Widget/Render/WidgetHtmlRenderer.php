@@ -296,6 +296,13 @@ class WidgetHtmlRenderer
                     $urlFor('module.asset.download', ['assetId' => $value[1]]) . '?preview=1',
                     $output
                 );
+            } else if (Str::startsWith($match, 'assetAlias')) {
+                $value = explode('=', $match);
+                $output = str_replace(
+                    '[[' . $match . ']]',
+                    $urlFor('module.asset.download', ['assetId' => $value[1]]) . '?preview=1&isAlias=1',
+                    $output
+                );
             }
         }
         return $output;
@@ -350,6 +357,15 @@ class WidgetHtmlRenderer
                 } else {
                     $output = str_replace('[[' . $match . ']]', '', $output);
                 }
+            } else if (Str::startsWith($match, 'assetAlias')) {
+                $value = explode('=', $match);
+                foreach ($assets as $asset) {
+                    if ($asset->alias === $value[1]) {
+                        $output = str_replace('[[' . $match . ']]', $asset->getFilename(), $output);
+                        continue 2;
+                    }
+                }
+                $output = str_replace('[[' . $match . ']]', '', $output);
             }
         }
         return $output;

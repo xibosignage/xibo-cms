@@ -293,7 +293,11 @@ class Module extends Base
         }
 
         // Get this asset from somewhere
-        $asset = $this->moduleFactory->getAssetsFromAnywhereById($assetId, $this->moduleTemplateFactory);
+        $asset = $this->moduleFactory->getAssetsFromAnywhereById(
+            $assetId,
+            $this->moduleTemplateFactory,
+            $this->getSanitizer($request->getParams())->getCheckbox('isAlias')
+        );
         $asset->updateAssetCache($this->getConfig()->getSetting('LIBRARY_LOCATION'));
 
         $this->getLog()->debug('assetDownload: found appropriate asset for assetId ' . $assetId);

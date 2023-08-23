@@ -374,6 +374,7 @@ class DataProvider implements DataProviderInterface
      */
     public function clearData(): DataProviderInterface
     {
+        $this->media = [];
         $this->data = [];
         return $this;
     }

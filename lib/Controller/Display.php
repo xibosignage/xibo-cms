@@ -304,8 +304,11 @@ class Display extends Base
         ';
 
         foreach ($this->store->select($sql, ['displayId' => $id, 'type' => 'P']) as $row) {
+            $totalSize = $totalSize + $row['size'];
             $totalCount++;
+            
             if (intval($row['complete']) === 1) {
+                $completeSize = $completeSize + $row['size'];
                 $completeCount = $completeCount + 1;
             }
 

@@ -884,16 +884,20 @@ class Soap
                             }
 
                             // Does this also have an associated data file?
-                            if ($isSupportsDataUrl && $modules[$widget->type]->isDataProviderExpected()) {
+                            // we add this for < XMDS v7 as well, because the record is used by the widget sync task
+                            // the player shouldn't receive it.
+                            if ($modules[$widget->type]->isDataProviderExpected()) {
                                 // A node specifically for the widget data.
-                                $dataFile = $requiredFilesXml->createElement('file');
-                                $dataFile->setAttribute('type', 'widget');
-                                $dataFile->setAttribute('id', $widget->widgetId);
-                                $dataFile->setAttribute(
-                                    'updateInterval',
-                                    $widget->getOptionValue('updateInterval', 120)
-                                );
-                                $fileElements->appendChild($dataFile);
+                                if ($isSupportsDataUrl) {
+                                    $dataFile = $requiredFilesXml->createElement('file');
+                                    $dataFile->setAttribute('type', 'widget');
+                                    $dataFile->setAttribute('id', $widget->widgetId);
+                                    $dataFile->setAttribute(
+                                        'updateInterval',
+                                        $widget->getOptionValue('updateInterval', 120)
+                                    );
+                                    $fileElements->appendChild($dataFile);
+                                }
 
                                 $getDataRf = $this->requiredFileFactory
                                     ->createForGetData($this->display->displayId, $widget->widgetId)
