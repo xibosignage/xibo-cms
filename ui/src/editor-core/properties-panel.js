@@ -1458,7 +1458,7 @@ PropertiesPanel.prototype.initFields = function(
             );
           }
         },
-        focus: function(_ev) {
+        'focus editorFocus': function() {
           self.toSave = true;
         },
       },

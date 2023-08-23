@@ -23,6 +23,10 @@ const templates = {
     require('../templates/form-helpers-menuboard-product.hbs'),
 };
 
+const CKEDITOR_MIN_HEIGHT = 80;
+const CKEDITOR_MAX_HEIGHT = 200;
+const CKEDITOR_OVERLAY_WIDTH = 2;
+
 const formHelpers = function() {
   // Default params ( might change )
   this.defaultBackgroundColor = '#eee';
@@ -746,7 +750,18 @@ const formHelpers = function() {
 
       // Element side plus margin
       const elementWidth = regionDimensions.width;
-      const scale = width / elementWidth;
+      const elementHeight = regionDimensions.height;
+
+      let scale = width / elementWidth;
+
+      // Scale within limit values for inline
+      if (inline) {
+        if (elementHeight * scale < CKEDITOR_MIN_HEIGHT) {
+          scale = CKEDITOR_MIN_HEIGHT / elementHeight;
+        } else if (elementHeight * scale > CKEDITOR_MAX_HEIGHT) {
+          scale = CKEDITOR_MAX_HEIGHT / elementHeight;
+        }
+      }
 
       return scale;
     };
@@ -867,32 +882,14 @@ const formHelpers = function() {
           $('.cke_textarea_inline').css('background', backgroundColor);
         }
 
-        // Calculate inner shadow ( based on scale )
-        const innerShadowWidth = (iframeBorderWidth / scale) + 'px';
-
         $('.cke_textarea_inline').css('transform', 'scale(' + scale + ')');
+        $('.cke_textarea_inline').data('originaScale', scale);
         $('.cke_textarea_inline').css('transform-origin', '0 0');
         $('.cke_textarea_inline').css('word-wrap', 'inherit');
         $('.cke_textarea_inline').css('overflow', 'hidden');
         $('.cke_textarea_inline').css('line-height', 'normal');
         $('.cke_textarea_inline')
-          .css(
-            '-moz-box-shadow', 'inset 0 0 ' +
-            innerShadowWidth + ' ' +
-            innerShadowWidth + ' red',
-          );
-        $('.cke_textarea_inline')
-          .css(
-            '-webkit-box-shadow', 'inset 0 0 ' +
-            innerShadowWidth + ' ' +
-            innerShadowWidth + ' red',
-          );
-        $('.cke_textarea_inline')
-          .css(
-            'box-shadow', 'inset 0 0 ' +
-            innerShadowWidth + ' ' +
-            innerShadowWidth + ' red',
-          );
+          .css('outline-width', (CKEDITOR_OVERLAY_WIDTH / scale));
 
         // Save new dimensions to data
         $('.cke_textarea_inline').data({
@@ -929,6 +926,7 @@ const formHelpers = function() {
       if (containerData !== undefined) {
         // If buttonHeight is 0, but we have the button container
         // set it to default size
+        const bottomMargin = 18;
         if (
           buttonHeight === 0 &&
           $container.siblings('.text-area-buttons').length > 0
@@ -937,14 +935,14 @@ const formHelpers = function() {
         }
         // Set width and height to container
         $container.parents('.rich-text-container')
-          .css('height', containerData.height + buttonHeight)
-          .css('width', containerData.width);
+          .css('height', containerData.height + buttonHeight + bottomMargin);
       }
 
       // If the field with changed width, apply the new scale
       if (
         regionDimensions.width * scale != $inputContainer.width() &&
-        visibleOnLoad === true
+        visibleOnLoad === true &&
+        !inline
       ) {
         scale = scaleToContainer(
           regionDimensions,
@@ -975,11 +973,17 @@ const formHelpers = function() {
 
       // Bind to instance ready so that we
       // can adjust some things about the editor.
-      CKEDITOR.instances[textAreaId].on('instanceReady', function() {
+      CKEDITOR.instances[textAreaId].on('instanceReady', function(ev) {
         // If not defined, cancel instance setup
         if (CKEDITOR.instances[textAreaId] === undefined) {
           return;
         }
+
+        // Trigger focus on textarea on editor focus
+        ev.editor.on('focus', function(evt) {
+          // Trigger focus event on text area
+          $(evt.editor.element.$).trigger('editorFocus');
+        });
 
         // Apply scaling to this editor instance
         applyContentsToIframe(textAreaId);
@@ -1900,9 +1904,36 @@ const formHelpers = function() {
         click: function() {
           const $input = $(el);
           const $container = $input.closest('.form-group');
-          const $editor = $container.find('.rich-text-container');
+          const $editorContainer = $container.find('.rich-text-container');
+          const $editor = $editorContainer.find('.cke_textarea_inline');
           const $detachButton = $container.find('.detachEditorButton');
           const $attachButton = $container.find('.attachEditorButton');
+          const $propertiesPanelContainer =
+            $container.parents('.properties-panel-container');
+
+          // Save properties panel original Z-index to data
+          if ($propertiesPanelContainer.length > 0) {
+            $propertiesPanelContainer.data(
+              'originalZindex',
+              $propertiesPanelContainer.css('z-index'),
+            );
+
+            // Set properties panel z-index to auto
+            $propertiesPanelContainer.css('z-index', 'auto');
+          }
+
+          // Increase editor scale
+          if ($editor.length > 0) {
+            const originalScale = $editor.data('originaScale');
+            $editor.css('transform', 'scale(' + (originalScale * 4) + ')');
+
+            // Adjust overlay
+            $('.cke_textarea_inline')
+              .css(
+                'outline-width',
+                (CKEDITOR_OVERLAY_WIDTH / (originalScale * 4)),
+              );
+          }
 
           // Create overlay
           const $customOverlay = $('.custom-overlay').clone();
@@ -1917,10 +1948,10 @@ const formHelpers = function() {
 
           // Create temporary container with editor dimensions
           $('<div/>', {
-            class: 'temp-container',
+            class: 'rich-text-temp-container',
             css: {
-              width: $editor.width(),
-              height: $editor.height(),
+              width: $editorContainer.width(),
+              height: $editorContainer.height(),
             },
           }).appendTo($container);
 
@@ -1930,7 +1961,7 @@ const formHelpers = function() {
           });
 
           // Detach editor
-          $editor.addClass('detached');
+          $editorContainer.addClass('detached');
           $detachButton.addClass('d-none');
           $attachButton.removeClass('d-none');
         },
@@ -1946,18 +1977,43 @@ const formHelpers = function() {
         click: function() {
           const $input = $(el);
           const $container = $input.closest('.form-group');
-          const $editor = $container.find('.rich-text-container');
+          const $editorContainer = $container.find('.rich-text-container');
+          const $editor = $editorContainer.find('.cke_textarea_inline');
           const $detachButton = $container.find('.detachEditorButton');
           const $attachButton = $container.find('.attachEditorButton');
+          const $propertiesPanelContainer =
+            $container.parents('.properties-panel-container');
+
+          // Restore properties panel original Z-index from data
+          if ($propertiesPanelContainer.length > 0) {
+            const originalZindex =
+              $propertiesPanelContainer.data('originalZindex');
+
+            // Set properties panel z-index to auto
+            $propertiesPanelContainer.css('z-index', originalZindex);
+          }
+
+          // Return to original scale
+          if ($editor.length > 0) {
+            const originalScale = $editor.data('originaScale');
+            $editor.css('transform', 'scale(' + originalScale + ')');
+
+            // Adjust overlay
+            $('.cke_textarea_inline')
+              .css(
+                'outline-width',
+                (CKEDITOR_OVERLAY_WIDTH / originalScale),
+              );
+          }
 
           // Remove temporary container
-          $container.find('.temp-container').remove();
+          $container.find('.rich-text-temp-container').remove();
 
           // Remove overlay
           $('#richTextDetachedOverlay').remove();
 
           // Attach editor
-          $editor.removeClass('detached');
+          $editorContainer.removeClass('detached');
           $detachButton.removeClass('d-none');
           $attachButton.addClass('d-none');
         },
