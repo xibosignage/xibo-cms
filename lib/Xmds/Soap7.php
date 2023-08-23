@@ -156,23 +156,26 @@ class Soap7 extends Soap6
                                `media`.storedAs,
                                `media`.fileSize,
                                `media`.released,
-                               `media`.md5
+                               `media`.md5,
+                               `display_media`.id AS displayMediaId
                           FROM `media`
-                            INNER JOIN `display_media`
+                            LEFT OUTER JOIN `display_media`
                             ON `display_media`.mediaid = `media`.mediaId
-                         WHERE `display_media`.displayId = :displayId
+                                AND `display_media`.displayId = :displayId
+                         WHERE `media`.`mediaId` IN ( ' . implode(',', $mediaIds) . ')
                     ';
 
                     // There isn't any point using a prepared statement because the widgetIds are substituted at runtime
                     foreach ($this->getStore()->select($sql, [
                         'displayId' => $this->display->displayId
                     ]) as $row) {
+                        // Media to use for decorating the JSON file.
+                        $media[$row['mediaId']] = $row['storedAs'];
+
                         // Only media we're interested in.
-                        if (!in_array($row['mediaId'], $mediaIds)) {
+                        if (!in_array($row['displayMediaId'], $mediaIds)) {
                             continue;
                         }
-
-                        $media[$row['mediaId']] = $row['storedAs'];
 
                         // Output required file nodes for any media used in get data.
                         // these will appear in required files as well, and may already be downloaded.

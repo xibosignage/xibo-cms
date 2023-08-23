@@ -186,9 +186,14 @@ class WidgetFactory extends BaseFactory
      * @return Widget
      * @throws NotFoundException
      */
-    public function getById($widgetId)
+    public function getById($widgetId): Widget
     {
         $widgets = $this->query(null, array('disableUserCheck' => 1, 'widgetId' => $widgetId));
+
+        if (count($widgets) <= 0) {
+            throw new NotFoundException(__('Widget not found'));
+        }
+
         return $widgets[0];
     }
 
@@ -198,12 +203,13 @@ class WidgetFactory extends BaseFactory
      * @return Widget
      * @throws NotFoundException
      */
-    public function loadByWidgetId($widgetId)
+    public function loadByWidgetId($widgetId): Widget
     {
         $widgets = $this->query(null, array('disableUserCheck' => 1, 'widgetId' => $widgetId));
 
-        if (count($widgets) <= 0)
+        if (count($widgets) <= 0) {
             throw new NotFoundException(__('Widget not found'));
+        }
 
         $widget = $widgets[0];
         /* @var Widget $widget */
@@ -362,6 +368,19 @@ class WidgetFactory extends BaseFactory
                  WHERE layout.layout LIKE :layout
             )';
             $params['layout'] = '%' . $sanitizedFilter->getString('layout') . '%';
+        }
+
+        if ($sanitizedFilter->getString('region') !== null) {
+            $body .= ' AND widget.widgetId IN (
+                SELECT widgetId
+                  FROM `widget`
+                    INNER JOIN `playlist`
+                    ON `widget`.playlistId = `playlist`.playlistId
+                    INNER JOIN `region`
+                    ON `region`.regionId = `playlist`.regionId
+                 WHERE region.name LIKE :region
+            )';
+            $params['region'] = '%' . $sanitizedFilter->getString('region') . '%';
         }
 
         if ($sanitizedFilter->getString('region') !== null) {
