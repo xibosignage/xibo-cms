@@ -282,7 +282,7 @@ class WidgetSyncTask implements TaskInterface
             SELECT DISTINCT displayId
               FROM `requiredfile`
              WHERE itemId = :widgetId
-                AND type = \'W\'
+                AND type = \'D\'
         ';
 
         return $this->store->select($sql, ['widgetId' => $widget->widgetId]);
@@ -304,22 +304,34 @@ class WidgetSyncTask implements TaskInterface
             ON DUPLICATE KEY UPDATE `modifiedAt` = CURRENT_TIMESTAMP
         ';
 
-        // TODO: there will be a much more efficient way to do this!
+        // Run invididual updates so that we can see if we've made a change.
+        // With ON DUPLICATE KEY UPDATE, the affected-rows value per row is
+        // 1 if the row is inserted as a new row,
+        // 2 if an existing row is updated and
+        // 0 if the existing row is set to its current values.
         foreach ($displays as $display) {
             $displayId = intval($display['displayId']);
-            $this->displayFactory->getDisplayNotifyService()->collectLater()->notifyByDisplayId($displayId);
 
+            $shouldNotify = false;
             foreach ($mediaIds as $mediaId) {
                 try {
-                    $this->store->update($sql, [
+                    $affected = $this->store->update($sql, [
                         'displayId' => $displayId,
                         'mediaId' => $mediaId
                     ]);
-                } catch (\PDOException $e) {
+
+                    if ($affected == 1) {
+                        $shouldNotify = true;
+                    }
+                } catch (\PDOException) {
                     // We link what we can, and log any failures.
                     $this->getLogger()->error('linkDisplays: unable to link displayId: ' . $displayId
                         . ' to mediaId: ' . $mediaId . ', most likely the media has since gone');
                 }
+            }
+
+            if ($shouldNotify) {
+                $this->displayFactory->getDisplayNotifyService()->collectLater()->notifyByDisplayId($displayId);
             }
         }
     }
