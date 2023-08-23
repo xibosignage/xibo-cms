@@ -114,7 +114,7 @@
 
                     {% if available.isWidgetSupported %}
                         {% set title %}{% trans "Use the SSP widget to schedule ad requests manually?" %}{% endset %}
-                        {% set helpText %}{% trans "When using the SSP widget you do not need to congigure a share of voice, duration or min/max duration." %}{% endset %}
+                        {% set helpText %}{% trans "When using the SSP widget you do not need to configure a share of voice, duration or min/max duration." %}{% endset %}
                         {{ forms.checkbox(partnerKey ~ "_isUseWidget", title, interface.getPartnerSetting(partnerKey, "isUseWidget"), helpText) }}
                     {% endif %}
 
