@@ -1442,6 +1442,15 @@ PropertiesPanel.prototype.initFields = function(
     $(self.DOMObject).find('form').off()
       .on({
         'change inputChange': function(_ev, options) {
+          // If field is code input
+          // only save when the event is a change/onfocus
+          if (
+            $(_ev.currentTarget).hasClass('code-input') &&
+            _ev.type === 'inputChange'
+          ) {
+            return;
+          }
+
           // Debounce save based on the object being saved
           if (!options?.skipSave) {
             saveDebounced(
