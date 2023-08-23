@@ -383,19 +383,6 @@ class WidgetFactory extends BaseFactory
             $params['region'] = '%' . $sanitizedFilter->getString('region') . '%';
         }
 
-        if ($sanitizedFilter->getString('region') !== null) {
-            $body .= ' AND widget.widgetId IN (
-                SELECT widgetId
-                  FROM `widget`
-                    INNER JOIN `playlist`
-                    ON `widget`.playlistId = `playlist`.playlistId
-                    INNER JOIN `region`
-                    ON `region`.regionId = `playlist`.regionId
-                 WHERE region.name LIKE :region
-            )';
-            $params['region'] = '%' . $sanitizedFilter->getString('region') . '%';
-        }
-
         if ($sanitizedFilter->getString('media') !== null) {
             $body .= ' AND widget.widgetId IN (
                 SELECT widgetId
