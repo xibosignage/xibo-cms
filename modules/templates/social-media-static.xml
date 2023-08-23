@@ -130,8 +130,8 @@
 {{template|raw}}
 </div>
 
-<div class="twitter-white-logo" data-url="[[assetId=providerLogoWhite]]" style="display: none;">
-<div class="twitter-blue-logo" data-url="[[assetId=providerLogo]]" style="display: none;">
+<div class="twitter-white-logo" data-url="[[assetAlias=providerLogoWhite]]" style="display: none;">
+<div class="twitter-blue-logo" data-url="[[assetAlias=providerLogo]]" style="display: none;">
 
 <style>
 /* Legacy properties from bootstrap */
@@ -1660,7 +1660,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         </div>
         <div class="footer">
             <div class="social-col col-2 img-container">
-                <img class="center-block img-responsive" src="[[assetId=providerLogoWhite]]" />
+                <img class="center-block img-responsive" src="[[assetAlias=providerLogoWhite]]" />
             </div>
             <div class="social-col col-10 user">{{screenName}}</div>
         </div>
@@ -1852,7 +1852,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <div class="main-text">{{text}}</div>
         <div class="footer">
             <div class="social-col col-2 center-block">
-                <img class="center-block img-responsive" src="[[assetId=providerLogoWhite]]" />
+                <img class="center-block img-responsive" src="[[assetAlias=providerLogoWhite]]" />
             </div>
             <div class="social-col col-10 user">{{screenName}}</div>
         </div>
@@ -2051,7 +2051,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <div class="header">
             <div class="social-col user">{{user}}</div>
             <div class="social-col pull-right icon">
-                <img class="img-responsive" src="[[assetId=providerLogoWhite]]" />
+                <img class="img-responsive" src="[[assetAlias=providerLogoWhite]]" />
             </div>
         </div>
         <div class="arrow_box">&nbsp;</div>
@@ -2264,7 +2264,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
         <div class="body">
             <div class="main-text">{{text}}</div>
             <div class="social-col date">{{date}}</div>
-            <div class="social-col logo"><img class="img-responsive" src="[[assetId=providerLogo]]" /></div>
+            <div class="social-col logo"><img class="img-responsive" src="[[assetAlias=providerLogo]]" /></div>
         </div>
     </div>
 </div>

@@ -121,6 +121,24 @@ class ModuleTemplateFactory extends BaseFactory
     }
 
     /**
+     * @param string $alias
+     * @return \Xibo\Widget\Definition\Asset
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function getAssetByAlias(string $alias): Asset
+    {
+        foreach ($this->load() as $template) {
+            foreach ($template->getAssets() as $asset) {
+                if ($asset->alias === $alias) {
+                    return $asset;
+                }
+            }
+        }
+
+        throw new NotFoundException(__('Asset not found'));
+    }
+
+    /**
      * Get an array of all modules
      * @return \Xibo\Entity\ModuleTemplate[]
      */

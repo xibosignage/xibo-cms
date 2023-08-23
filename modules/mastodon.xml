@@ -193,8 +193,8 @@ $(target).xiboLayoutAnimate(properties);
     ]]></sampleData>
     <preview></preview>
     <assets>
-        <asset id="providerLogo" type="path" mimeType="image/png" path="/modules/assets/mastodon_blue.png"></asset>
-        <asset id="providerLogoWhite" type="path" mimeType="image/png" path="/modules/assets/mastodon_white.png"></asset>
+        <asset id="mastodonLogo" alias="providerLogo" type="path" mimeType="image/png" path="/modules/assets/mastodon_blue.png"></asset>
+        <asset id="mastodonLogoWhite" alias="providerLogoWhite" type="path" mimeType="image/png" path="/modules/assets/mastodon_white.png"></asset>
         <asset id="mastodonContentPhoto" type="path" mimeType="image/png" path="/modules/assets/mastodon_content_photo.jpg" cmsOnly="true"></asset>
         <asset id="mastodonProfilePhoto" type="path" mimeType="image/png" path="/modules/assets/mastodon_profile_photo.jpg" cmsOnly="true"></asset>
         <asset id="mastodonProfilePhotoMini" type="path" mimeType="image/png" path="/modules/assets/mastodon_profile_photo_mini.jpg" cmsOnly="true"></asset>

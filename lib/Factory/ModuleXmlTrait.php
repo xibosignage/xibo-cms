@@ -389,6 +389,7 @@ trait ModuleXmlTrait
                 if (!array_key_exists($assetId, $this->assetCache)) {
                     $asset = new Asset();
                     $asset->id = $assetId;
+                    $asset->alias = $node->getAttribute('alias');
                     $asset->path = $node->getAttribute('path');
                     $asset->mimeType = $node->getAttribute('mimeType');
                     $asset->type = $node->getAttribute('type');

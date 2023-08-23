@@ -421,9 +421,29 @@ class ModuleFactory extends BaseFactory
      */
     public function getAssetById(string $assetId): Asset
     {
+        $this->getLog()->debug('getAssetById: ' . $assetId);
         foreach ($this->getEnabled() as $module) {
             foreach ($module->getAssets() as $asset) {
                 if ($asset->id === $assetId) {
+                    return $asset;
+                }
+            }
+        }
+
+        throw new NotFoundException(__('Asset not found'));
+    }
+
+    /**
+     * @param string $alias
+     * @return \Xibo\Widget\Definition\Asset
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function getAssetByAlias(string $alias): Asset
+    {
+        $this->getLog()->debug('getAssetByAlias: ' . $alias);
+        foreach ($this->getEnabled() as $module) {
+            foreach ($module->getAssets() as $asset) {
+                if ($asset->alias === $alias) {
                     return $asset;
                 }
             }
@@ -472,23 +492,31 @@ class ModuleFactory extends BaseFactory
     /**
      * Get an asset from anywhere by its ID
      * @param string $assetId
-     * @param \Xibo\Factory\ModuleTemplateFactory $moduleTemplateFactory
-     * @return \Xibo\Widget\Definition\Asset
-     * @throws \Xibo\Support\Exception\NotFoundException
+     * @param ModuleTemplateFactory $moduleTemplateFactory
+     * @param bool $isAlias
+     * @return Asset
+     * @throws NotFoundException
      */
-    public function getAssetsFromAnywhereById(string $assetId, ModuleTemplateFactory $moduleTemplateFactory): Asset
-    {
+    public function getAssetsFromAnywhereById(
+        string $assetId,
+        ModuleTemplateFactory $moduleTemplateFactory,
+        bool $isAlias = false,
+    ): Asset {
         $asset = null;
         try {
-            $asset = $this->getAssetById($assetId);
-        } catch (NotFoundException $notFoundException) {
+            $asset = $isAlias
+                ? $this->getAssetByAlias($assetId)
+                : $this->getAssetById($assetId);
+        } catch (NotFoundException) {
             // Not a module asset.
         }
 
         // Try a template instead
         try {
-            $asset = $moduleTemplateFactory->getAssetById($assetId);
-        } catch (NotFoundException $notFoundException) {
+            $asset = $isAlias
+                ? $moduleTemplateFactory->getAssetByAlias($assetId)
+                : $moduleTemplateFactory->getAssetById($assetId);
+        } catch (NotFoundException) {
             // Not a module template asset.
         }
 

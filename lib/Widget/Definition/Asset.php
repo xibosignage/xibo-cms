@@ -39,6 +39,7 @@ class Asset implements \JsonSerializable
 {
     public $id;
     public $type;
+    public $alias;
     public $path;
     public $mimeType;
 
@@ -58,6 +59,7 @@ class Asset implements \JsonSerializable
     {
         return [
             'id' => $this->id,
+            'alias' => $this->alias,
             'type' => $this->type,
             'path' => $this->path,
             'mimeType' => $this->mimeType,
