@@ -105,6 +105,8 @@ jQuery.fn.extend({
         ) {
           filteredEvents.push(event);
         }
+      } else {
+        filteredEvents.push(event);
       }
     });
 
