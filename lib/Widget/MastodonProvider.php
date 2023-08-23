@@ -76,6 +76,8 @@ class MastodonProvider implements WidgetProviderInterface
                 // username search: get account ID, always returns one record
                 $accountId = $this->getAccountId($uri, $dataProvider->getProperty('userName'), $dataProvider);
                 $queryOptions['tagged'] = trim($hashtag, '#');
+                $queryOptions['exclude_replies'] = true; // exclude replies to other users
+                $queryOptions['exclude_reblogs'] = true; // exclude reposts/boosts
                 $uri = rtrim($uri, '/') . '/api/v1/accounts/' . $accountId . '/statuses?';
             } else {
                 // Hashtag: When empty we should do a public search, when filled we should do a hashtag search
