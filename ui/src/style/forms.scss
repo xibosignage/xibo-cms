@@ -96,24 +96,45 @@
 }
 
 /* Rich text input */
+.rich-text-temp-container {
+    background-color: $xibo-color-neutral-1000;
+}
 .rich-text-container {
+    height: fit-content;
+    width: 100%;
     transition: transform 200ms;
     transform-origin: top right;
+    box-shadow: none !important;
+    outline: 2px solid $xibo-color-neutral-700;
+    overflow: auto hidden;
+
+    .text-area-buttons {
+        width: 100%;
+        position: sticky;
+        left: 0;
+        top: 0;
+        z-index: 1;
+    }
 
     .cke_textarea_inline {
-        box-shadow: none !important;
-        outline: 2px solid $xibo-color-neutral-700;
+        outline-color: $xibo-color-accent;
+        outline-style: solid;
     }
 
     &.detached {
-        transform: scale(2);
+        background-color: $xibo-color-neutral-0;
         z-index: $properties-panel-rich-text-container-z-index;
         position: absolute;
+        top: 16px;
+        right: 16px;
+        outline-width: 1px;
+        width: calc(100vw - 380px) !important;
+        height: calc(100vh - 160px) !important;
+        overflow: auto;
 
         .text-area-buttons {
-            transform: scale(calc(1/2));
-            transform-origin: bottom right;
-            @include set-transparent-color(background-color, $xibo-color-neutral-1000, 0.1);
+            border-radius: 0;
+            @include set-transparent-color(background-color, $xibo-color-neutral-900, 0.9);
 
             button {
                 color: $xibo-color-neutral-0;
@@ -246,7 +267,7 @@
 
 // Snippets
 .snippet-selector {
-    margin-top: -10px;
+    margin-top: -12px;
 
     .select2-selection {
         background-color: $xibo-color-primary-l10 !important;
