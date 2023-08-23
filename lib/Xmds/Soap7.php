@@ -147,11 +147,12 @@ class Soap7 extends Soap6
                     }
 
                     // Get media references
+                    $media = [];
+                    $requiredFiles = [];
                     $mediaIds = $widgetDataProviderCache->getCachedMediaIds();
+
                     if (count($mediaIds) > 0) {
                         // Process media links.
-                        $media = [];
-                        $requiredFiles = [];
                         $sql = '
                             SELECT `media`.`mediaId`,
                                    `media`.`storedAs`,
@@ -211,13 +212,13 @@ class Soap7 extends Soap6
                                 ),
                             ];
                         }
-
-                        $resource = json_encode([
-                            'data' => $widgetDataProviderCache->decorateForPlayer($dataProvider->getData(), $media),
-                            'meta' => $dataProvider->getMeta(),
-                            'files' => $requiredFiles,
-                        ]);
                     }
+
+                    $resource = json_encode([
+                        'data' => $widgetDataProviderCache->decorateForPlayer($dataProvider->getData(), $media),
+                        'meta' => $dataProvider->getMeta(),
+                        'files' => $requiredFiles,
+                    ]);
                 } catch (GeneralException $exception) {
                     $this->getLog()->debug('Failed to get data cache for widgetId ' . $widget->widgetId
                         . ', e = ' . $exception->getMessage());
