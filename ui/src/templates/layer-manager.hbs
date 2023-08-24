@@ -1,0 +1,54 @@
+<div class="layer-manager-header">
+    <div class="title">
+        {{trans.title}}
+    </div>
+    <i class="fa fa-close close-layer-manager"></i>
+</div>
+
+<div class="layer-manager-body">
+    {{#each layerStructure}}
+        <div class="layer-manager-layer">
+            <div class="layer-manager-layer-header" title="{{../trans.layer}}">{{../trans.layer}} {{@index}}</div>
+
+            {{#each this}}
+                {{#eq type 'canvas'}}
+                    <div class="layer-manager-canvas-layers">
+                        {{#each layers}}
+                            <div class="layer-manager-canvas-layer-header" title="{{../../../trans.canvasLayer}}"><i class="fa-caret-right fas mr-1"></i> {{../../../trans.canvasLayer}} {{@index}}</div>
+                            {{#each this}}
+                                <div class="layer-manager-layer-item selectable {{#if selected}}selected{{/if}}" data-item-id="{{id}}">
+                                    {{#eq type 'element'}}
+                                        <i class="fas {{#if hasGroup}}fa-object-group{{else}}fa-atom{{/if}}"
+                                            {{#if hasGroup}}title="{{groupId}}"{{/if}}></i>
+                                    {{/eq}}
+                                    <span class="name" title="{{../../../../trans.name}}">{{name}}</span>
+                                    {{#if duration}}
+                                        <span class="duration" title="{{../../../../trans.duration}}">{{duration}}</span>
+                                    {{/if}}
+                                </div>
+                            {{/each}}
+                        {{/each}}
+                    </div>
+                {{else}}
+                    <div class="layer-manager-layer-item {{#if selected}}selected{{/if}} selectable" data-item-id="{{id}}">
+                        {{#eq type 'playlist'}}
+                            <i class="fa fa-list-ol"></i>
+                        {{/eq}}
+                        {{#eq type 'staticWidget'}}
+                            <i class="module-icon-{{subType}}"></i>
+                        {{/eq}}
+
+                        <span class="name" title="{{../../trans.name}}">{{name}}</span>
+                        {{#if duration}}
+                            <span class="duration" title="{{../../trans.duration}}">{{duration}}</span>
+                        {{/if}}
+                    </div>
+                {{/eq}}
+            {{/each}}
+        </div>
+    {{else}}
+        <div class="empty-layout-message">
+            {{trans.emptyLayout}}
+        </div>
+    {{/each}}
+</div>

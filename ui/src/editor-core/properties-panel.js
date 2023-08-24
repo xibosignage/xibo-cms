@@ -1076,6 +1076,9 @@ PropertiesPanel.prototype.render = function(
             app.viewer.DOMObject.find('.designer-region-canvas')
               .css('zIndex', canvasZIndexVal);
 
+            // Update layer manager
+            app.viewer.layerManager.render();
+
             // Don't save the rest of the form
             return;
           }
