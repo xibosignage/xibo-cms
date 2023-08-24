@@ -660,8 +660,6 @@ $(function() {
                     $groupContent,
                   ) {
                     // For each data item, parse it and add it to the content;
-                    let templateAlreadyAdded = false;
-
                     if (item.hasOwnProperty('hbs') &&
                       typeof item.hbs === 'function'
                     ) {
@@ -737,10 +735,7 @@ $(function() {
                               dataItem : {data: dataItem},
                           )),
                       );
-                      templateAlreadyAdded = true;
-                    }
 
-                    if (templateAlreadyAdded) {
                       // Handle the rendering of the template
                       if (item.dataOverride &&
                         typeof window[
@@ -752,7 +747,7 @@ $(function() {
 
                         onTemplateRender && onTemplateRender(
                           item.elementId,
-                          $target,
+                          $itemContainer,
                           $content.find(`.${item.uniqueID}--item`),
                           {item, ...item.templateData},
                           widgetDataInfo?.meta,
@@ -888,14 +883,23 @@ $(function() {
                   };
                   let mappedSlotsGroupData = {};
                   let mappedSlotGroup = {};
-                  const getGroupData = function(groupsData, slotItemsKey) {
+                  const mappedSlotsStandaloneData = {};
+                  const getGroupData = function(
+                    groupsData,
+                    slotItemsKey,
+                    isStandalone,
+                  ) {
                     const groupValues = Object.values(groupsData);
                     const maxSlot = getMaxSlot(groupValues, slotItemsKey, 1);
-                    const pinnedSlot = groupValues.reduce(
-                      function(a, b) {
-                        if (b.pinSlot) return b.slot + 1;
-                        return a;
-                      }, null);
+                    let pinnedSlot = null;
+
+                    if (!isStandalone) {
+                      pinnedSlot = groupValues.reduce(
+                        function(a, b) {
+                          if (b.pinSlot) return b.slot + 1;
+                          return a;
+                        }, null);
+                    }
 
                     return {
                       groupValues,
@@ -903,6 +907,7 @@ $(function() {
                       pinnedSlot,
                     };
                   };
+
                   if (Object.keys(elementGroups.groups).length > 0) {
                     mappedSlotGroup =
                       mapSlot(Object.values(elementGroups.groups), 'id');
@@ -912,11 +917,32 @@ $(function() {
                         return {...a};
                       }, {});
                   }
+                  if (Object.keys(elementGroups.standalone).length > 0) {
+                    $.each(Object.keys(elementGroups.standalone),
+                      function(indx, itemKey) {
+                        if (elementGroups.standalone.hasOwnProperty(itemKey)) {
+                          const itemObj = elementGroups.standalone[itemKey];
+
+                          if (!mappedSlotsStandaloneData
+                            .hasOwnProperty(itemKey)) {
+                            mappedSlotsStandaloneData[itemKey] = [];
+                          }
+
+                          if (itemObj.length > 0) {
+                            mappedSlotsStandaloneData[itemKey] =
+                              itemObj.reduce(function(a, b, slotKey) {
+                                a[slotKey + 1] = [];
+                                return {...a};
+                              }, {});
+                          }
+                        }
+                      });
+                  }
 
                   let lastGroupSlotFilled = null;
-                  let lastSingleSlotFilled = null;
                   $.each(dataItems, function(dataItemKey, dataItem) {
                     let hasGroupSlotFilled = false;
+                    const currentKey = dataItemKey + 1;
                     // Parse group of elements
                     $.each(Object.keys(elementGroups.groups),
                       function(groupIndex, groupId) {
@@ -927,7 +953,6 @@ $(function() {
                             pinnedSlot,
                           } = getGroupData(elementGroups.groups, 'items');
                           const isPinnedSlot = elemGroup.pinSlot;
-                          const currentKey = dataItemKey + 1;
                           const currentSlot = elemGroup.slot + 1;
 
                           if (!isPinnedSlot && currentKey !== pinnedSlot) {
@@ -949,6 +974,14 @@ $(function() {
                             mappedSlotsGroupData[pinnedSlot] = [pinnedSlot];
                             hasGroupSlotFilled = true;
                             lastGroupSlotFilled = currentSlot;
+                          } else if (isPinnedSlot && pinnedSlot === maxSlot &&
+                            currentSlot !== currentKey) {
+                            mappedSlotsGroupData[1] = [
+                              ...mappedSlotsGroupData[1],
+                              currentKey,
+                            ];
+                            hasGroupSlotFilled = true;
+                            lastGroupSlotFilled = 1;
                           }
 
                           if (hasGroupSlotFilled) {
@@ -961,6 +994,86 @@ $(function() {
                         }
                       });
                   });
+
+                  // Parse standalone elements
+                  $.each(Object.keys(elementGroups.standalone),
+                    function(itemIndex, itemId) {
+                      if (elementGroups.standalone.hasOwnProperty(itemId)) {
+                        const itemsObj = elementGroups.standalone[itemId];
+                        const {maxSlot} =
+                          getGroupData([elementGroups.standalone], itemId);
+                        const pinnedSlot = itemsObj.reduce(function(a, b) {
+                          if (b.pinSlot) return b.slot + 1;
+                          return a;
+                        }, null);
+                        let lastSingleSlotFilled = null;
+
+                        $.each(dataItems, function(dataItemKey, dataItem) {
+                          let hasStandaloneSlotFilled = false;
+                          const currentKey = dataItemKey + 1;
+
+                          if (itemsObj.length > 0) {
+                            // If pinnedSlot === maxSlot === items length
+                            // Then, move to next item
+                            if (lastSingleSlotFilled !== null &&
+                              itemsObj.length === maxSlot &&
+                              pinnedSlot === maxSlot) {
+                              lastSingleSlotFilled = null;
+                              hasStandaloneSlotFilled = false;
+                              return false;
+                            }
+
+                            $.each(itemsObj, function(itemKey, itemObj) {
+                              const isPinnedSlot = itemObj.pinSlot;
+                              const currentSlot = itemObj.slot + 1;
+
+                              if (!isPinnedSlot && currentKey !== pinnedSlot) {
+                                // If lastSingleSlot is filled
+                                // and is <= to currentSlot
+                                // Then, move to next slot
+                                if (lastSingleSlotFilled !== null &&
+                                    currentSlot <= lastSingleSlotFilled) {
+                                  return true;
+                                }
+
+                                mappedSlotsStandaloneData[itemId][currentSlot] =
+                                    [
+                                      // eslint-disable-next-line max-len
+                                      ...mappedSlotsStandaloneData[itemId][currentSlot],
+                                      currentKey,
+                                    ];
+                                hasStandaloneSlotFilled = true;
+                                lastSingleSlotFilled = currentSlot;
+                              } else if (isPinnedSlot &&
+                                  currentSlot === currentKey) {
+                                mappedSlotsStandaloneData[itemId][pinnedSlot] =
+                                    [pinnedSlot];
+                                hasStandaloneSlotFilled = true;
+                                lastSingleSlotFilled = currentSlot;
+                              } else if (isPinnedSlot &&
+                                  pinnedSlot === maxSlot &&
+                                  currentSlot !== currentKey) {
+                                mappedSlotsStandaloneData[itemId][1] = [
+                                  ...mappedSlotsStandaloneData[itemId][1],
+                                  currentKey,
+                                ];
+                                hasStandaloneSlotFilled = true;
+                                lastSingleSlotFilled = 1;
+                              }
+
+                              if (hasStandaloneSlotFilled) {
+                                hasStandaloneSlotFilled = false;
+                                if (lastSingleSlotFilled % maxSlot === 0 &&
+                                  itemsObj.length > 1) {
+                                  lastSingleSlotFilled = null;
+                                }
+                                return false;
+                              }
+                            });
+                          }
+                        });
+                      }
+                    });
 
                   if (Object.keys(mappedSlotsGroupData).length > 0 &&
                     Object.values(mappedSlotsGroupData).length > 0) {
@@ -1010,49 +1123,66 @@ $(function() {
                       });
                   }
 
-                  // Parse standalone elements
-                  $.each(Object.keys(elementGroups.standalone),
-                    function(itemIndex, itemId) {
-                      if (elementGroups.standalone.hasOwnProperty(itemId)) {
-                        const itemsObj = elementGroups.standalone[itemId];
-                        const {
-                          maxSlot,
-                          pinnedSlot,
-                        } = getGroupData([elementGroups.standalone], itemId);
+                  if (Object.keys(mappedSlotsStandaloneData).length > 0 &&
+                    Object.values(mappedSlotsStandaloneData).length > 0) {
+                    const standaloneData = mappedSlotsStandaloneData;
+                    $.each(Object.keys(standaloneData),
+                      function(keyIndx, keyValue) {
+                        if (standaloneData
+                          .hasOwnProperty(keyValue) &&
+                          Object.keys(standaloneData[keyValue]).length > 0) {
+                          const {maxSlot} =
+                            getGroupData([elementGroups.standalone], keyValue);
+                          const itemsGroup = elementGroups.standalone[keyValue];
+                          const pinnedSlot = itemsGroup.reduce(function(a, b) {
+                            if (b.pinSlot) return b.slot + 1;
+                            return a;
+                          }, null);
 
-                        if (itemsObj.length > 0) {
-                          const itemGroupProps = itemsObj.slice(0, 1)[0];
-                          $.each(itemsObj, function(itemKey, itemObj) {
-                            const grpCln = `${itemId}_page-${itemObj.slot}`;
-                            const $grpItem = $(`<div class="${grpCln}"></div>`);
+                          const itemGroupProps = itemsGroup.slice(0, 1)[0];
+                          $.each(Object.keys(standaloneData[keyValue]),
+                            function(slotIndex, slotKey) {
+                              const slotObj =
+                                elementGroups.standalone[keyValue][slotKey - 1];
+                              const dataKeys =
+                                standaloneData[keyValue][slotKey];
+                              const grpCln = `${keyValue}_page-${slotKey}`;
+                              const $grpItem =
+                                $(`<div class="${grpCln}"></div>`);
 
-                            renderDataItems(
-                              dataItems,
-                              itemObj,
-                              itemObj.slot + 1,
-                              maxSlot,
-                              itemObj.pinSlot,
-                              pinnedSlot,
-                              grpCln,
-                              $grpItem,
-                            );
+                              if (dataKeys.length > 0) {
+                                $.each(dataKeys,
+                                  function(dataKeyIndx, dataKey) {
+                                    renderDataItem(
+                                      dataKey,
+                                      dataItems[dataKey - 1],
+                                      slotObj,
+                                      slotKey,
+                                      maxSlot,
+                                      slotObj.pinSlot,
+                                      pinnedSlot,
+                                      grpCln,
+                                      $grpItem,
+                                    );
+                                  });
 
-                            $content.append($grpItem.prop('outerHTML'));
+                                $content.append($grpItem.prop('outerHTML'));
 
-                            $grpItem.xiboElementsRender(
-                              {
-                                ...itemGroupProps,
-                                parentId: grpCln,
-                                itemsPerPage: maxSlot,
-                                numItems: dataItems.length,
-                                id: grpCln,
-                              },
-                              $grpItem.find(`.${grpCln}--item`),
-                            );
-                          });
+                                $grpItem.xiboElementsRender(
+                                  {
+                                    ...itemGroupProps,
+                                    parentId: grpCln,
+                                    itemsPerPage: maxSlot,
+                                    numItems: dataItems.length,
+                                    id: grpCln,
+                                  },
+                                  $grpItem.find(`.${grpCln}--item`),
+                                );
+                              }
+                            });
                         }
-                      }
-                    });
+                      });
+                  }
                 });
             }
           }

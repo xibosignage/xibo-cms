@@ -1026,7 +1026,7 @@ Widget.prototype.getData = function() {
             const sampleData = modulesList[i].sampleData || [];
             $.each(sampleData, function(index, item) {
               $.each(item, function(key, value) {
-                value.match(assetRegex)?.forEach((match) => {
+                value && value.match(assetRegex)?.forEach((match) => {
                   const assetId = match.split('[[assetId=')[1].split(']]')[0];
                   const assetUrl = assetURL.replace(':assetId', assetId);
 
