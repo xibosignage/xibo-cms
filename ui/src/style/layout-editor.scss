@@ -215,6 +215,26 @@ body {
         }
     }
 
+    #layerManagerBtn {
+        position: absolute;
+        bottom: 6px;
+        left: 6px;
+        opacity: 0.9;
+        font-size: 1rem;
+        background-color: $xibo-color-neutral-0;
+        color: $xibo-color-primary;
+        z-index: $viewer-button-z-index;
+
+        &.active {
+            background-color: $xibo-color-primary;
+            color: $xibo-color-neutral-0;
+        }
+
+        &:hover {
+            opacity: 1;
+        }
+    }
+
     .snap-controls {
         position: absolute;
         display: flex;
@@ -1356,6 +1376,11 @@ body {
 
         /* Layout viewer theme */
         .viewer-object {
+            .selected-from-layer-manager {
+                opacity: 0.95;
+                z-index: $viewer-moveable-z-index !important;
+            }
+
             &.theme-light {
                 .designer-region::before, .designer-widget.selected {
                     @include set-transparent-color(outline-color, $xibo-color-neutral-0, 0.5);
@@ -1534,11 +1559,110 @@ div#bg_media_name {
     word-break: break-all;
 }
 
+#layerManager {
+    width: 240px;
+    min-height: 60px;
+    border-radius: 4px;
+    background-color: $xibo-color-neutral-0;
+    color: $xibo-color-primary;
+    outline: 1px solid $xibo-color-primary;
+    z-index: $viewer-button-z-index;
+
+    .empty-layout-message {
+        height: 32px;
+        font-weight: bold;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .layer-manager-header {
+        background-color: $xibo-color-primary-d60;
+        color: $xibo-color-neutral-0;
+        font-weight: bold;
+        font-size: 1.2rem;
+        padding: 0 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: grab;
+
+        i {
+            font-size: 1rem;
+            padding: 3px 5px;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-right: -4px;
+
+            &:hover {
+                background-color: lighten($xibo-color-primary-d60, 30%);
+            }
+        }
+    }
+
+    .layer-manager-layer-header, .layer-manager-canvas-layer-header {
+        width: 100%;
+        background-color: $xibo-color-primary-l20;
+        color: $xibo-color-neutral-900;
+        font-weight: bold;
+        padding-left: 4px;
+        height: 34px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .layer-manager-layer-item {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 6px;
+        padding: 4px;
+        height: 34px;
+
+        .name {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+        }
+
+        &.selected {
+            color: $xibo-color-neutral-0;
+            background-color: $xibo-color-accent !important;
+        }
+
+        &.selectable {
+            cursor: pointer;
+
+            &:hover {
+                color: $xibo-color-secondary;
+                @include set-transparent-color(background, $xibo-color-accent, 0.4);
+            }
+        }
+    }
+
+    .layer-manager-canvas-layer-header {
+        padding-left: 8px;
+        background-color: $xibo-color-primary;
+        color: $xibo-color-neutral-0;
+    }
+
+    .layer-manager-canvas-layers {
+        .layer-manager-layer-item {
+            padding-left: 16px;
+            background-color: lighten($xibo-color-primary, 10%);
+            color: $xibo-color-neutral-0;
+        }
+    }
+}
+
 #actionsTab {
     .header {
         margin-left: 0;
         font-size: 16px;
-        color: #121A5E;
+        color: $xibo-color-secondary;
     }
 
     .no-actions {
