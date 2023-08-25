@@ -26,12 +26,9 @@
         <type>element</type>
         <dataType>currency</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>currency-name</thumbnail>
+        <icon>fa fa-font</icon>
         <startWidth>360</startWidth>
         <startHeight>100</startHeight>
-        <assets>
-            <asset id="currency-name" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/elements/currency-name.png" />
-        </assets>
     </template>
     <template>
         <id>currency_rawLastTradePriceOnly</id>
@@ -40,12 +37,9 @@
         <type>element</type>
         <dataType>currency</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>currency-last-trade-price</thumbnail>
+        <icon>fas fa-money-bill-alt</icon>
         <startWidth>250</startWidth>
         <startHeight>100</startHeight>
-        <assets>
-            <asset id="currency-last-trade-price" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/elements/currency-last-trade-price.png" />
-        </assets>
     </template>
     <template>
         <id>currency_changePercentage</id>
@@ -54,7 +48,7 @@
         <type>element</type>
         <dataType>currency</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>currency-change-percentage</thumbnail>
+        <icon>fas fa-percentage</icon>
         <startWidth>200</startWidth>
         <startHeight>100</startHeight>
         <onElementParseData><![CDATA[
@@ -86,9 +80,6 @@ if (elementData !== null && elementData.hasOwnProperty('ChangeStyle')) {
     }
 }
         ]]></onTemplateRender>
-        <assets>
-            <asset id="currency-change-percentage" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/elements/currency-change-percentage.png" />
-        </assets>
     </template>
     <template>
         <id>currency_changeIcon</id>
@@ -96,7 +87,7 @@ if (elementData !== null && elementData.hasOwnProperty('ChangeStyle')) {
         <type>element</type>
         <dataType>currency</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>currency-change-icon</thumbnail>
+        <icon>fas fa-arrows-alt-v</icon>
         <startWidth>80</startWidth>
         <startHeight>60</startHeight>
         <properties>
@@ -141,7 +132,6 @@ if (elementData !== null && elementData.hasOwnProperty('ChangeStyle')) {
             ]]></style>
         </stencil>
         <assets>
-            <asset id="currency-change-icon" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/elements/currency-change-icon.png" />
             <asset id="font-awesome" type="path" mimeType="text/css" path="/modules/assets/common/font-awesome.min.css" />
             <asset id="fontawesome-webfont.ttf" type="path" mimeType="application/x-font-ttf" path="/modules/assets/common/fontawesome-webfont.ttf"></asset>
             <asset id="fontawesome-webfont.woff" type="path" mimeType="application/font-woff" path="/modules/assets/common/fontawesome-webfont.woff"></asset>
@@ -155,7 +145,7 @@ if (elementData !== null && elementData.hasOwnProperty('ChangeStyle')) {
         <type>element</type>
         <dataType>currency</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>currency-logo</thumbnail>
+        <icon>fas fa-flag</icon>
         <startWidth>100</startWidth>
         <startHeight>100</startHeight>
         <stencil>
@@ -205,7 +195,6 @@ if (width > height) {
 }
         ]]></onTemplateRender>
         <assets>
-            <asset id="currency-logo" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/elements/currency-logo.png" />
             <asset id="flags" type="path" mimeType="image/webp" path="/modules/assets/currency/flags.webp" />
             <asset id="flagsCSS" type="path" mimeType="text/css" path="/modules/assets/currency/flags.css" />
         </assets>

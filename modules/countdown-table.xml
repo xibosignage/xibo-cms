@@ -23,10 +23,11 @@
     <name>Countdown - Table</name>
     <author>Core</author>
     <description>A module for displaying a Countdown timer in a table</description>
+    <icon>fa fa-hourglass-o</icon>
     <class></class>
     <compatibilityClass>\Xibo\Widget\Compatibility\CountDownWidgetCompatibility</compatibilityClass>
     <type>countdown-table</type>
-    <group id="countdown" icon="countdown">Countdown</group>
+    <group id="countdown" icon="fa fa-hourglass-o">Countdown</group>
     <legacyType condition="templateId==countdown3">countdown</legacyType>
     <dataType></dataType>
     <schemaVersion>2</schemaVersion>

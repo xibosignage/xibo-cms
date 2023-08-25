@@ -160,7 +160,8 @@ class WidgetHtmlRenderer
         // Render an icon.
         return $this->twig->fetch('module-icon-preview.twig', [
             'moduleName' => $module->name,
-            'moduleType' => $module->type
+            'moduleType' => $module->type,
+            'moduleIcon' => $module->icon,
         ]);
     }
 

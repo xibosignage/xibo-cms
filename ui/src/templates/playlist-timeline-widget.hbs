@@ -2,7 +2,7 @@
     data-type="widget"
     data-widget-id="{{ widgetId }}"
     data-widget-type="{{ subType }}"
-    data-duration="{{ calculatedDuration }}""
+    data-duration="{{ calculatedDuration }}"
     class="playlist-widget tooltip-always-on selectable 
         {{#eq isValid 0}}invalid-widget{{/eq}} 
         {{#if selected}}selected{{/if}} 
@@ -14,7 +14,7 @@
     <div
         class="widgetLabel timelineMediaItemColouringDefault timelineMediaItemColouring_{{ subType }} {{ widgetColouring }}">
         <div class="widgetSubType">
-            <i class="module-icon-{{subType}} tooltip-always-on" data-toggle="tooltip"
+            <i class="{{icon}} tooltip-always-on" data-toggle="tooltip"
                 data-container="#playlist-timeline" data-title="{{moduleName}}"></i>
         </div>
         <div class="widgetDuration">

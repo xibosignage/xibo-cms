@@ -23,6 +23,7 @@
     <name>SSP</name>
     <author>Core</author>
     <description>Manually schedule SSP content from the SSP connector via select partners.</description>
+    <icon>fa fa-tv</icon>
     <type>ssp</type>
     <dataType></dataType>
     <schemaVersion>1</schemaVersion>

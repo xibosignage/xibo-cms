@@ -26,12 +26,9 @@
         <type>element</type>
         <dataType>stock</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>stock-name</thumbnail>
+        <icon>fas fa-font</icon>
         <startWidth>420</startWidth>
         <startHeight>100</startHeight>
-        <assets>
-            <asset id="stock-name" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/stocks/elements/stock-name.png" />
-        </assets>
     </template>
     <template>
         <id>stock_symbol</id>
@@ -40,12 +37,9 @@
         <type>element</type>
         <dataType>stock</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>stock-symbol</thumbnail>
+        <icon>fas fa-font</icon>
         <startWidth>420</startWidth>
         <startHeight>100</startHeight>
-        <assets>
-            <asset id="stock-symbol" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/stocks/elements/stock-symbol.png" />
-        </assets>
     </template>
     <template>
         <id>stock_lastTradePrice</id>
@@ -53,13 +47,10 @@
         <title>Last Trade Price</title>
         <type>element</type>
         <dataType>stock</dataType>
-        <canRotate>true</canRotate>
-        <thumbnail>stock-last-trade-price</thumbnail>
+        <icon>fas fa-money-bill-alt</icon>
+        <canRotate>true</canRotate>date
         <startWidth>200</startWidth>
         <startHeight>100</startHeight>
-        <assets>
-            <asset id="stock-last-trade-price" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/stocks/elements/stock-last-trade-price.png" />
-        </assets>
     </template>
     <template>
         <id>stock_changePercentage</id>
@@ -68,7 +59,7 @@
         <type>element</type>
         <dataType>stock</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>stock-change-percentage</thumbnail>
+        <icon>fas fa-percentage</icon>
         <startWidth>200</startWidth>
         <startHeight>100</startHeight>
         <onElementParseData><![CDATA[
@@ -100,9 +91,6 @@ if (elementData !== null && elementData.hasOwnProperty('ChangeStyle')) {
     }
 }
         ]]></onTemplateRender>
-        <assets>
-            <asset id="stock-change-percentage" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/stocks/elements/stock-change-percentage.png" />
-        </assets>
     </template>
     <template>
         <id>stock_changeIcon</id>
@@ -110,7 +98,7 @@ if (elementData !== null && elementData.hasOwnProperty('ChangeStyle')) {
         <type>element</type>
         <dataType>stock</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>stock-change-icon</thumbnail>
+        <icon>fas fa-arrows-alt-v</icon>
         <startWidth>80</startWidth>
         <startHeight>60</startHeight>
         <stencil>
@@ -143,7 +131,6 @@ if ($targetContainer.find('.sampleCSS').length == 0) {
 }
         ]]></onTemplateRender>
         <assets>
-            <asset id="stock-change-icon" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/stocks/elements/stock-change-icon.png" />
             <asset id="font-awesome" type="path" mimeType="text/css" path="/modules/assets/common/font-awesome.min.css" />
             <asset id="fontawesome-webfont.ttf" type="path" mimeType="application/x-font-ttf" path="/modules/assets/common/fontawesome-webfont.ttf"></asset>
             <asset id="fontawesome-webfont.woff" type="path" mimeType="application/font-woff" path="/modules/assets/common/fontawesome-webfont.woff"></asset>

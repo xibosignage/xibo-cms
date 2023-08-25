@@ -23,6 +23,7 @@
     <name>Mastodon</name>
     <author>Core</author>
     <description>Mastodon</description>
+    <icon>fab fa-mastodon</icon>
     <class>\Xibo\Widget\MastodonProvider</class>
     <type>mastodon</type>
     <dataType>social-media</dataType>

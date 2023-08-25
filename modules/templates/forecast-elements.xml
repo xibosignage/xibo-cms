@@ -26,12 +26,9 @@
         <type>element</type>
         <dataType>forecast</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>weather-summary</thumbnail>
+        <icon>fa fa-font</icon>
         <startWidth>360</startWidth>
         <startHeight>100</startHeight>
-        <assets>
-            <asset id="weather-summary" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/weather-summary.png" />
-        </assets>
     </template>
     <template>
         <id>weather_temperature</id>
@@ -40,7 +37,7 @@
         <type>element</type>
         <dataType>forecast</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>weather-temperature</thumbnail>
+        <icon>fas fa-thermometer-half</icon>
         <startWidth>150</startWidth>
         <startHeight>150</startHeight>
         <onElementParseData><![CDATA[
@@ -55,9 +52,6 @@ if (String(value).includes('°C')) {
 
 return value + '<sup>°C</sup>';
         ]]></onElementParseData>
-        <assets>
-            <asset id="weather-temperature" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/weather-temperature.png" />
-        </assets>
     </template>
     <template>
         <id>weather_min_temperature</id>
@@ -66,7 +60,7 @@ return value + '<sup>°C</sup>';
         <type>element</type>
         <dataType>forecast</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>weather-min-temperature</thumbnail>
+        <icon>fas fa-thermometer-empty</icon>
         <startWidth>150</startWidth>
         <startHeight>150</startHeight>
         <onElementParseData><![CDATA[
@@ -81,9 +75,6 @@ if (String(value).includes('°C')) {
 
 return value + '<sup>°C</sup>';
         ]]></onElementParseData>
-        <assets>
-            <asset id="weather-min-temperature" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/weather-temperature.png" />
-        </assets>
     </template>
     <template>
         <id>weather_max_temperature</id>
@@ -92,7 +83,7 @@ return value + '<sup>°C</sup>';
         <type>element</type>
         <dataType>forecast</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>weather-max-temperature</thumbnail>
+        <icon>fas fa-thermometer-full</icon>
         <startWidth>150</startWidth>
         <startHeight>150</startHeight>
         <onElementParseData><![CDATA[
@@ -107,9 +98,6 @@ if (String(value).includes('°C')) {
 
 return value + '<sup>°C</sup>';
         ]]></onElementParseData>
-        <assets>
-            <asset id="weather-max-temperature" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/weather-max-temperature.png" />
-        </assets>
     </template>
     <template>
         <id>weather_humidity_percent</id>
@@ -118,7 +106,7 @@ return value + '<sup>°C</sup>';
         <type>element</type>
         <dataType>forecast</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>weather-humidity-percent</thumbnail>
+        <icon>fas fa-percentage</icon>
         <startWidth>150</startWidth>
         <startHeight>150</startHeight>
         <onElementParseData><![CDATA[
@@ -143,7 +131,7 @@ return value + '%';
         <type>element</type>
         <dataType>forecast</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>weather-icon</thumbnail>
+        <icon>fas fa-sun</icon>
         <startWidth>100</startWidth>
         <startHeight>100</startHeight>
         <properties>
@@ -170,7 +158,6 @@ return value + '%';
         ]]></hbs>
         </stencil>
         <assets>
-            <asset id="weather-icon" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/weather-icon.png" />
             <asset id="weather-icons" type="path" mimeType="text/css" path="/modules/assets/forecastio/weather-icons.min.css"></asset>
             <asset id="weathericons-regular-webfont.eot" type="path" mimeType="application/vnd.ms-fontobject" path="/modules/assets/forecastio/weathericons-regular-webfont.eot"></asset>
             <asset id="weathericons-regular-webfont.svg" type="path" mimeType="image/svg+xml" path="/modules/assets/forecastio/weathericons-regular-webfont.svg"></asset>
@@ -197,12 +184,9 @@ return value + '%';
         <type>element</type>
         <dataType>forecast</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>weather-wind-direction</thumbnail>
+        <icon>fas fa-location-arrow</icon>
         <startWidth>100</startWidth>
         <startHeight>100</startHeight>
-        <assets>
-            <asset id="weather-wind-direction" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/weather-wind-direction.png" />
-        </assets>
     </template>
     <template>
         <id>weather_wind_speed</id>
@@ -211,12 +195,9 @@ return value + '%';
         <type>element</type>
         <dataType>forecast</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>weather-wind-speed</thumbnail>
+        <icon>fas fa-tachometer-alt</icon>
         <startWidth>100</startWidth>
         <startHeight>100</startHeight>
-        <assets>
-            <asset id="weather-wind-speed" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/weather-wind-speed.png" />
-        </assets>
     </template>
     <template>
         <id>weather_wind_speed_unit</id>
@@ -225,12 +206,9 @@ return value + '%';
         <type>element</type>
         <dataType>forecast</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>weather-wind-speed-unit</thumbnail>
+        <icon>fas fa-wind</icon>
         <startWidth>100</startWidth>
         <startHeight>100</startHeight>
-        <assets>
-            <asset id="weather-wind-speed-unit" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/weather-wind-speed-unit.png" />
-        </assets>
     </template>
     <template>
         <id>weather_attribution</id>
@@ -239,7 +217,7 @@ return value + '%';
         <type>element</type>
         <dataType>forecast</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>weather-attribution</thumbnail>
+        <icon>fa fa-font</icon>
         <startWidth>360</startWidth>
         <startHeight>100</startHeight>
         <onTemplateRender><![CDATA[
@@ -247,9 +225,6 @@ if (meta && meta.hasOwnProperty('Attribution')) {
     $(target).find('.global-elements-text > div:first-child').html(meta.Attribution);
 }
         ]]></onTemplateRender>
-        <assets>
-            <asset id="weather-attribution" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/weather-attribution.png" />
-        </assets>
     </template>
     <template>
         <id>weather_condition_background_image</id>
@@ -257,7 +232,7 @@ if (meta && meta.hasOwnProperty('Attribution')) {
         <type>element</type>
         <dataType>forecast</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>weather-condition-bg-image</thumbnail>
+        <icon>fa fa-image</icon>
         <startWidth>480</startWidth>
         <startHeight>600</startHeight>
         <properties>
@@ -303,7 +278,6 @@ if (meta && meta.hasOwnProperty('Attribution')) {
             ]]></style>
         </stencil>
         <assets>
-            <asset id="weather-condition-bg-image" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/weather-condition-bg-image.png" />
             <asset id="bg-cloudy" type="path" mimeType="image/jpeg" path="/modules/assets/forecastio/wi-cloudy.jpg"></asset>
             <asset id="bg-partly-cloudy-day" type="path" mimeType="image/jpeg" path="/modules/assets/forecastio/wi-day-cloudy.jpg"></asset>
             <asset id="bg-clear-day" type="path" mimeType="image/jpeg" path="/modules/assets/forecastio/wi-day-sunny.jpg"></asset>
@@ -323,7 +297,7 @@ if (meta && meta.hasOwnProperty('Attribution')) {
         <type>element</type>
         <dataType>forecast</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>weather-date</thumbnail>
+        <icon>fas fa-calendar-week</icon>
         <startWidth>420</startWidth>
         <startHeight>100</startHeight>
         <properties>
@@ -344,8 +318,5 @@ $(target).find('.date').each(function(_idx, dateEl){
     $(dateEl).html(formattedDate);
 });
         ]]></onTemplateRender>
-        <assets>
-            <asset id="weather-date" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/weather-date.png" />
-        </assets>
     </template>
 </templates>

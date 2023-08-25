@@ -69,6 +69,12 @@ class Module implements \JsonSerializable
     public $description;
 
     /**
+     * @SWG\Property(description="An icon to use in the toolbar")
+     * @var string
+     */
+    public $icon;
+
+    /**
      * @SWG\Property(description="The type code for this module")
      * @var string
      */

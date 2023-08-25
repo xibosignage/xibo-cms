@@ -23,6 +23,7 @@
     <name>Currencies</name>
     <author>Core</author>
     <description>A module for showing Currency pairs and exchange rates</description>
+    <icon>fa fa-line-chart</icon>
     <class></class>
     <compatibilityClass>\Xibo\Widget\Compatibility\CurrenciesWidgetCompatibility</compatibilityClass>
     <type>currencies</type>

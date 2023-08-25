@@ -201,6 +201,7 @@ class PlaylistDashboard extends Base
                 $module = $this->moduleFactory->getByType($widget->type);
                 $widget->setUnmatchedProperty('name', $widget->getOptionValue('name', $module->name));
                 $widget->setUnmatchedProperty('regionSpecific', $module->regionSpecific);
+                $widget->setUnmatchedProperty('moduleIcon', $module->icon);
 
                 // Check my permissions
                 if ($module->regionSpecific == 0) {

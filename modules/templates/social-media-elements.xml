@@ -25,12 +25,9 @@
         <type>element</type>
         <dataType>social-media</dataType>
         <title>Profile Photo</title>
-        <thumbnail>social-media-profile-photo</thumbnail>
+        <icon>fas fa-user</icon>
         <startWidth>100</startWidth>
         <startHeight>100</startHeight>
-        <assets>
-            <asset id="social-media-profile-photo" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/elements/social-media-profile-photo.png" />
-        </assets>
     </template>
     <template>
         <id>social_media_description</id>
@@ -39,12 +36,9 @@
         <type>element</type>
         <dataType>social-media</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>social-media-description</thumbnail>
+        <icon>fas fa-font</icon>
         <startWidth>650</startWidth>
         <startHeight>250</startHeight>
-        <assets>
-            <asset id="social-media-description" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/elements/social-media-description.png" />
-        </assets>
     </template>
     <template>
         <id>social_media_screen_name</id>
@@ -53,12 +47,9 @@
         <type>element</type>
         <dataType>social-media</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>social-media-username</thumbnail>
+        <icon>fas fa-id-card</icon>
         <startWidth>650</startWidth>
         <startHeight>250</startHeight>
-        <assets>
-            <asset id="social-media-username" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/elements/social-media-username.png" />
-        </assets>
     </template>
     <template>
         <id>social_media_username</id>
@@ -67,12 +58,9 @@
         <type>element</type>
         <dataType>social-media</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>social-media-username</thumbnail>
+        <icon>fas fa-at</icon>
         <startWidth>650</startWidth>
         <startHeight>250</startHeight>
-        <assets>
-            <asset id="social-media-username" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/social-media/elements/social-media-username.png" />
-        </assets>
     </template>
     <template>
         <id>social_media_date</id>
@@ -81,12 +69,9 @@
         <type>element</type>
         <dataType>social-media</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>date-thumb</thumbnail>
+        <icon>fas fa-calendar-week</icon>
         <startWidth>450</startWidth>
         <startHeight>80</startHeight>
-        <assets>
-            <asset id="date-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/date.png" />
-        </assets>
     </template>
     <template>
         <id>post_photo</id>
@@ -94,12 +79,9 @@
         <type>element</type>
         <dataType>social-media</dataType>
         <title>Post Photo</title>
-        <thumbnail>social-media-post-photo</thumbnail>
+        <icon>fas fa-image</icon>
         <startWidth>100</startWidth>
         <startHeight>100</startHeight>
-        <assets>
-            <asset id="social-media-post-photo" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/elements/social-media-post-photo.png" />
-        </assets>
     </template>
     <template>
         <id>post_horizontal</id>

@@ -26,7 +26,7 @@
         <type>element</type>
         <dataType>dataset</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>dataset-data-string</thumbnail>
+        <icon>fa fa-font</icon>
         <startWidth>360</startWidth>
         <startHeight>100</startHeight>
         <properties>
@@ -62,9 +62,6 @@
                 </visibility>
             </property>
         </properties>
-        <assets>
-            <asset id="dataset-data-string" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/dataset/elements/dataset-string.png" />
-        </assets>
     </template>
     <template>
         <id>dataset_data_number</id>
@@ -73,7 +70,7 @@
         <type>element</type>
         <dataType>dataset</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>dataset-data-number</thumbnail>
+        <icon>fas fa-sort-numeric-up</icon>
         <startWidth>360</startWidth>
         <startHeight>100</startHeight>
         <properties>
@@ -108,9 +105,6 @@
                 </visibility>
             </property>
         </properties>
-        <assets>
-            <asset id="dataset-data-number" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/dataset/elements/dataset-number.png" />
-        </assets>
     </template>
     <template>
         <id>dataset_data_date</id>
@@ -119,7 +113,7 @@
         <type>element</type>
         <dataType>dataset</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>dataset-data-date</thumbnail>
+        <icon>fas fa-calendar-week</icon>
         <startWidth>360</startWidth>
         <startHeight>100</startHeight>
         <properties>
@@ -154,9 +148,6 @@
                 </visibility>
             </property>
         </properties>
-        <assets>
-            <asset id="dataset-data-date" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/date.png" />
-        </assets>
     </template>
     <template>
         <id>dataset_data_img</id>
@@ -165,7 +156,7 @@
         <type>element</type>
         <dataType>dataset</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>dataset-data-img</thumbnail>
+        <icon>fas fa-image</icon>
         <startWidth>150</startWidth>
         <startHeight>150</startHeight>
         <properties>
@@ -200,9 +191,6 @@
                 </visibility>
             </property>
         </properties>
-        <assets>
-            <asset id="dataset-data-img" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/image.png" />
-        </assets>
     </template>
     <template>
         <id>dataset_data_html</id>
@@ -211,7 +199,7 @@
         <type>element</type>
         <dataType>dataset</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>dataset-data-html</thumbnail>
+        <icon>fas fa-file-code</icon>
         <startWidth>360</startWidth>
         <startHeight>100</startHeight>
         <properties>
@@ -246,8 +234,5 @@
                 </visibility>
             </property>
         </properties>
-        <assets>
-            <asset id="dataset-data-html" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/dataset/elements/dataset-html.png" />
-        </assets>
     </template>
 </templates>

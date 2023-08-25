@@ -23,6 +23,7 @@
     <name>Playlist</name>
     <author>Core</author>
     <description>Display widgets from one or more Playlists</description>
+    <icon>fa fa-list-ol</icon>
     <class></class>
     <compatibilityClass>\Xibo\Widget\Compatibility\SubPlaylistWidgetCompatibility</compatibilityClass>
     <showIn>playlist</showIn>
@@ -104,7 +105,7 @@
     <preview>
         <twig><![CDATA[
 <div style="text-align:center;">
-    <i alt="{{ "Sub-Playlist"|trans }} thumbnail" class="module-preview-icon module-icon-subplaylist"></i>
+    <i alt="{{ "Sub-Playlist"|trans }} thumbnail" class="module-preview-icon fa fa-list-ol"></i>
     <br/>
     {% trans %}{{ countSubPlaylistWidgets }} Widgets / {{ calculatedDuration }} seconds{% endtrans %}
 </div>

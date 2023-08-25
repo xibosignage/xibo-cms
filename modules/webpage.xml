@@ -23,6 +23,7 @@
     <name>Webpage</name>
     <author>Core</author>
     <description>Embed a Webpage</description>
+    <icon>fa fa-sitemap</icon>
     <class></class>
     <type>webpage</type>
     <dataType></dataType>

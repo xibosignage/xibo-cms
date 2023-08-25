@@ -25,6 +25,7 @@
         <title>Name</title>
         <type>element</type>
         <dataType>product-category</dataType>
+        <icon>fas fa-font</icon>
         <canRotate>true</canRotate>
         <startWidth>500</startWidth>
         <startHeight>100</startHeight>
@@ -35,6 +36,7 @@
         <title>Description</title>
         <type>element</type>
         <dataType>product-category</dataType>
+        <icon>fas fa-font</icon>
         <canRotate>true</canRotate>
         <startWidth>500</startWidth>
         <startHeight>100</startHeight>
@@ -44,6 +46,7 @@
         <extends override="url" with="data.image">global-image</extends>
         <type>element</type>
         <dataType>product-category</dataType>
+        <icon>fas fa-image</icon>
         <title>Category Photo</title>
         <startWidth>100</startWidth>
         <startHeight>100</startHeight>

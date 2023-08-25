@@ -23,11 +23,12 @@
     <name>World Clock - Custom</name>
     <author>Core</author>
     <description>Custom World Clock</description>
+    <icon>fa fa-globe</icon>
     <class></class>
     <compatibilityClass>\Xibo\Widget\Compatibility\WorldClockWidgetCompatibility</compatibilityClass>
     <showIn>none</showIn>
     <type>worldclock-digital-custom</type>
-    <group id="worldclock" icon="world">World Clock</group>
+    <group id="worldclock" icon="fa fa-globe">World Clock</group>
     <legacyType>worldclock</legacyType>
     <dataType></dataType>
     <schemaVersion>2</schemaVersion>

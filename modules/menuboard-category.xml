@@ -23,6 +23,7 @@
     <name>Menu Board: Category</name>
     <author>Core</author>
     <description>Display categories from a Menu Board</description>
+    <icon>fa fa-list-alt</icon>
     <class>\Xibo\Widget\MenuBoardCategoryProvider</class>
     <dataCacheKey>%menuId%_%categoryId%</dataCacheKey>
     <type>menuboard-category</type>

@@ -23,6 +23,7 @@
     <name>PDF</name>
     <author>Core</author>
     <description>Upload PDF files to assign to Layouts</description>
+    <icon>fa fa-file-pdf-o</icon>
     <class>\Xibo\Widget\PdfProvider</class>
     <type>pdf</type>
     <dataType></dataType>

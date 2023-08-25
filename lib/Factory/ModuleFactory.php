@@ -646,6 +646,7 @@ class ModuleFactory extends BaseFactory
         $module->name = __($this->getFirstValueOrDefaultFromXmlNode($xml, 'name'));
         $module->author = $this->getFirstValueOrDefaultFromXmlNode($xml, 'author');
         $module->description = __($this->getFirstValueOrDefaultFromXmlNode($xml, 'description'));
+        $module->icon = $this->getFirstValueOrDefaultFromXmlNode($xml, 'icon');
         $module->class = $this->getFirstValueOrDefaultFromXmlNode($xml, 'class');
         $module->type = $this->getFirstValueOrDefaultFromXmlNode($xml, 'type');
         $module->thumbnail = $this->getFirstValueOrDefaultFromXmlNode($xml, 'thumbnail');

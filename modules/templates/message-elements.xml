@@ -26,6 +26,7 @@
         <title>Subject</title>
         <type>element</type>
         <dataType>message</dataType>
+        <icon>fas fa-font</icon>
         <canRotate>true</canRotate>
         <startWidth>500</startWidth>
         <startHeight>100</startHeight>
@@ -36,6 +37,7 @@
         <title>Body</title>
         <type>element</type>
         <dataType>message</dataType>
+        <icon>fas fa-envelope</icon>
         <canRotate>true</canRotate>
         <startWidth>500</startWidth>
         <startHeight>100</startHeight>
@@ -46,6 +48,7 @@
         <title>Date</title>
         <type>element</type>
         <dataType>message</dataType>
+        <icon>fas fa-calendar-week</icon>
         <canRotate>true</canRotate>
         <startWidth>500</startWidth>
         <startHeight>100</startHeight>
@@ -56,6 +59,7 @@
         <title>Created Date</title>
         <type>element</type>
         <dataType>message</dataType>
+        <icon>fas fa-calendar-week</icon>
         <canRotate>true</canRotate>
         <startWidth>500</startWidth>
         <startHeight>100</startHeight>

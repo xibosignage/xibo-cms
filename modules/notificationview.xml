@@ -23,6 +23,7 @@
     <name>Notification</name>
     <author>Core</author>
     <description>Display messages created in the Notification Drawer of the CMS</description>
+    <icon>fa fa-bell-o</icon>
     <class>\Xibo\Widget\NotificationProvider</class>
     <compatibilityClass>\Xibo\Widget\Compatibility\NotificationViewCompatibility</compatibilityClass>
     <type>notificationview</type>

@@ -26,12 +26,9 @@
         <type>element</type>
         <dataType>event</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>event-summary</thumbnail>
+        <icon>fa fa-font</icon>
         <startWidth>300</startWidth>
         <startHeight>80</startHeight>
-        <assets>
-            <asset id="event-summary" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/event/elements/event-summary.png" />
-        </assets>
     </template>
     <template>
         <id>event_description</id>
@@ -40,12 +37,9 @@
         <type>element</type>
         <dataType>event</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>event-description</thumbnail>
+        <icon>fa fa-font</icon>
         <startWidth>650</startWidth>
         <startHeight>250</startHeight>
-        <assets>
-            <asset id="event-description" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/event/elements/event-description.png" />
-        </assets>
     </template>
     <template>
         <id>event_startDate</id>
@@ -54,12 +48,9 @@
         <type>element</type>
         <dataType>event</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>date-thumb</thumbnail>
+        <icon>fas fa-calendar-week</icon>
         <startWidth>450</startWidth>
         <startHeight>80</startHeight>
-        <assets>
-            <asset id="date-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/date.png" />
-        </assets>
     </template>
     <template>
         <id>event_endDate</id>
@@ -68,12 +59,9 @@
         <type>element</type>
         <dataType>event</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>date-thumb</thumbnail>
+        <icon>fas fa-calendar-week</icon>
         <startWidth>450</startWidth>
         <startHeight>80</startHeight>
-        <assets>
-            <asset id="date-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/date.png" />
-        </assets>
     </template>
     <template>
         <id>event_location</id>
@@ -82,12 +70,9 @@
         <type>element</type>
         <dataType>event</dataType>
         <canRotate>true</canRotate>
-        <thumbnail>event-location</thumbnail>
+        <icon>fas fa-map-marker-alt</icon>
         <startWidth>650</startWidth>
         <startHeight>250</startHeight>
-        <assets>
-            <asset id="event-location" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/event/elements/event-location.png" />
-        </assets>
     </template>
     <template>
         <id>calendar_event_detailed</id>
