@@ -2085,6 +2085,9 @@ Viewer.prototype.saveRegionProperties = function(
     // Update position form values
     lD.propertiesPanel.updatePositionForm(transform);
 
+    // Update rich text editors
+    forms.reloadRichTextFields(lD.propertiesPanel.DOMObject);
+
     // Save region but just the position properties
     lD.propertiesPanel.saveRegion(true);
     (updateRegion) &&

@@ -4,12 +4,15 @@
 >
     <label for="input_{{id}}" class="control-label"><strong>{{title}}</strong></label>
     <div class="input-info-container"></div>
-    <div class="rich-text-container">
-        <textarea type="text" class="form-control rich-text" id="input_{{id}}" name="{{#if name}}{{name}}{{else}}{{id}}{{/if}}"
-            {{#each customData}}
-                data-{{this.name}}="{{this.value}}"
-            {{/each}}
-        />{{value}}</textarea>
+    <div class="rich-text-main-container">
+        <div class="text-area-buttons"></div>
+        <div class="rich-text-container">
+            <textarea type="text" class="form-control rich-text" id="input_{{id}}" name="{{#if name}}{{name}}{{else}}{{id}}{{/if}}"
+                {{#each customData}}
+                    data-{{this.name}}="{{this.value}}"
+                {{/each}}
+            />{{value}}</textarea>
+        </div>
     </div>
     {{#if richTextControls}}
         <div>Rich Text Controls</div>
