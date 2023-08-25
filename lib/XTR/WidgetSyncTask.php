@@ -71,6 +71,7 @@ class WidgetSyncTask implements TaskInterface
         // Track the total time we've spent caching
         $timeCaching = 0.0;
         $countWidgets = 0;
+        $cutOff = Carbon::now()->subHours(2);
 
         // Update for widgets which are active on displays, or for displays which have been active recently.
         $sql = '
@@ -84,7 +85,7 @@ class WidgetSyncTask implements TaskInterface
         ';
 
         $smt = $this->store->getConnection()->prepare($sql);
-        $smt->execute(['lastAccessed' => Carbon::now()->subHours(2)]);
+        $smt->execute(['lastAccessed' => $cutOff->unix()]);
 
         $row = true;
         while ($row) {
@@ -166,7 +167,7 @@ class WidgetSyncTask implements TaskInterface
         }
 
         // Remove display_media records which have not been touched for a defined period of time.
-        $this->removeOldDisplayLinks();
+        $this->removeOldDisplayLinks($cutOff);
 
         $this->log->info('Total time spent caching is ' . $timeCaching . ', synced ' . $countWidgets . ' widgets');
 
@@ -337,15 +338,27 @@ class WidgetSyncTask implements TaskInterface
     }
 
     /**
-     * Remove any display/media links which are older than $days days
-     * @param int $days
+     * Remove any display/media links which have expired.
+     * @param Carbon $cutOff
      * @return void
      */
-    private function removeOldDisplayLinks(int $days = 5): void
+    private function removeOldDisplayLinks(Carbon $cutOff): void
     {
-        $sql = 'DELETE FROM `display_media` WHERE `modifiedAt` < :modifiedAt';
+        $sql = '
+            DELETE 
+                FROM `display_media`
+             WHERE `modifiedAt` < :modifiedAt
+                AND `display_media`.`displayId` IN (
+                    SELECT `displayId` 
+                      FROM `display`
+                     WHERE `display`.`loggedIn` = 1
+                        OR `display`.`lastAccessed` > :lastAccessed
+                )
+        ';
+        
         $this->store->update($sql, [
-            'modifiedAt' => Carbon::now()->subDays($days)->format(DateFormatHelper::getSystemFormat()),
+            'modifiedAt' => Carbon::now()->subDay()->format(DateFormatHelper::getSystemFormat()),
+            'lastAccessed' => $cutOff->unix(),
         ]);
     }
 }
