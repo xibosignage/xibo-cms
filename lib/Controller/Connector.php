@@ -73,11 +73,13 @@ class Connector extends Base
             // Instantiate and decorate the entity
             try {
                 $connector->decorate($this->connectorFactory->create($connector));
-            } catch (NotFoundException $ignored) {
+            } catch (NotFoundException) {
                 $this->getLog()->info('Connector installed which is not found in this CMS. ' . $connector->className);
+                $connector->setUnmatchedProperty('isHidden', 1);
             } catch (\Exception $e) {
                 $this->getLog()->error('Incorrectly configured connector '
                     . $connector->className . '. e=' . $e->getMessage());
+                $connector->setUnmatchedProperty('isHidden', 1);
             }
         }
 
