@@ -44,7 +44,7 @@
             </property>
         </properties>
         <onTemplateRender><![CDATA[
-if (properties.dimWhenUnavailable && properties.data.availability === 0) {
+if (properties.dimWhenUnavailable && properties.data && properties.data.availability === 0) {
     $(target).find('div:first').css('color', properties.dimColor);
 }
         ]]></onTemplateRender>

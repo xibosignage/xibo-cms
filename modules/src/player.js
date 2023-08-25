@@ -702,7 +702,7 @@ $(function() {
                         if (onElementParseData) {
                           dataItem[item.dataOverride] = onElementParseData(
                             dataItem[extendDataWith],
-                            item.templateData,
+                            {...item.templateData, data: dataItem},
                           );
                         }
                       }
@@ -737,19 +737,17 @@ $(function() {
                       );
 
                       // Handle the rendering of the template
-                      if (item.dataOverride &&
-                        typeof window[
-                          `onTemplateRender_${item.dataOverride}`
-                        ] === 'function'
-                      ) {
+                      if (typeof window[
+                        `onTemplateRender_${item.templateData.id}`
+                      ] === 'function') {
                         const onTemplateRender = window[
-                          `onTemplateRender_${item.dataOverride}`];
+                          `onTemplateRender_${item.templateData.id}`];
 
                         onTemplateRender && onTemplateRender(
                           item.elementId,
                           $itemContainer,
                           $content.find(`.${item.uniqueID}--item`),
-                          {item, ...item.templateData},
+                          {item, ...item.templateData, data: dataItem},
                           widgetDataInfo?.meta,
                         );
                       }

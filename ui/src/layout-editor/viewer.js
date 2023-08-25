@@ -1648,7 +1648,7 @@ Viewer.prototype.renderElementContent = function(
         }
 
         if (extendWithDataKey !== null || metaKey !== null) {
-          if (template.onElementParseData && hasElementParseDataFn) {
+          if (template.onElementParseData && hasElementParseDataFn && elData) {
             convertedProperties[extendOverrideKey] = elementParseDataFn(
               isInData ?
                 elData[extendOverrideKey] :
