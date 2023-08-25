@@ -240,7 +240,7 @@ class Region extends Base
         $region = $this->regionFactory->create(
             $sanitizedParams->getString('type', ['default' => 'frame']),
             $this->getUser()->userId,
-            $layout->layout . '-' . (count($layout->regions) + 1),
+            '',
             $sanitizedParams->getInt('width', ['default' => 250]),
             $sanitizedParams->getInt('height', ['default' => 250]),
             $sanitizedParams->getInt('top', ['default' => 50]),
