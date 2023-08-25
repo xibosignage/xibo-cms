@@ -23,6 +23,7 @@
     <name>Rich Text</name>
     <author>Core</author>
     <description>Add Text directly to a Layout</description>
+    <icon>fa fa-font</icon>
     <class></class>
     <showIn>playlist</showIn>
     <type>text</type>

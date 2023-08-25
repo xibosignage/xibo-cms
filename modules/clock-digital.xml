@@ -23,10 +23,11 @@
     <name>Clock - Digital</name>
     <author>Core</author>
     <description>Digital Clock</description>
+    <icon>fa fa-clock-o</icon>
     <class></class>
     <compatibilityClass>\Xibo\Widget\Compatibility\ClockWidgetCompatibility</compatibilityClass>
     <type>clock-digital</type>
-    <group id="clock" icon="clock">Clock</group>
+    <group id="clock" icon="fa fa-clock">Clock</group>
     <legacyType condition="clockTypeId==2">clock</legacyType>
     <dataType></dataType>
     <schemaVersion>2</schemaVersion>

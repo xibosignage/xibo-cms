@@ -23,6 +23,7 @@
     <name>Weather</name>
     <author>Core</author>
     <description>A module for displaying weather information. Uses the Forecast API</description>
+    <icon>fa fa-cloud</icon>
     <class></class>
     <compatibilityClass>\Xibo\Widget\Compatibility\WeatherWidgetCompatibility</compatibilityClass>
     <validatorClass>\Xibo\Widget\Validator\DisplayOrGeoValidator</validatorClass>

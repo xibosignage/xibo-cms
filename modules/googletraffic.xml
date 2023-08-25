@@ -23,6 +23,7 @@
     <name>Google Traffic</name>
     <author>Core</author>
     <description>A module for displaying traffic information using Google Maps</description>
+    <icon>fa fa-car</icon>
     <class></class>
     <type>googletraffic</type>
     <dataType></dataType>

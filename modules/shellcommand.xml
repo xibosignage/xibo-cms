@@ -23,6 +23,7 @@
     <name>Shell Command</name>
     <author>Core</author>
     <description>Instruct a Display to execute a command using the operating system shell</description>
+    <icon>fa fa-terminal</icon>
     <class></class>
     <validatorClass>\Xibo\Widget\Validator\ShellCommandValidator</validatorClass>
     <type>shellcommand</type>

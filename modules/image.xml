@@ -23,6 +23,7 @@
     <name>Image</name>
     <author>Core</author>
     <description>Upload Image files to assign to Layouts</description>
+    <icon>fa fa-file-image-o</icon>
     <class></class>
     <type>image</type>
     <dataType></dataType>

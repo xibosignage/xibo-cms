@@ -23,6 +23,7 @@
     <name>Dashboards</name>
     <author>Core</author>
     <description>Securely connect to services like Microsoft PowerBI and display dashboards</description>
+    <icon>fa fa-file-image</icon>
     <class>\Xibo\Widget\DashboardProvider</class>
     <dataCacheKey>%widgetId%_%displayId%</dataCacheKey>
     <type>dashboard</type>

@@ -23,6 +23,7 @@
     <name>Menu Board: Products</name>
     <author>Core</author>
     <description>Display products from a Menu Board</description>
+    <icon>fas fa-hamburger</icon>
     <class>\Xibo\Widget\MenuBoardProductProvider</class>
     <dataCacheKey>%menuId%_%categoryId%_%showUnavailable%_%sortField%_%sortDescending%_%lowerLimit%_%upperLimit%_%showUnavailable%</dataCacheKey>
     <type>menuboard-product</type>

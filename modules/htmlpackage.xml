@@ -23,6 +23,7 @@
     <name>HTML Package</name>
     <author>Core</author>
     <description>Upload a complete package to distribute to Players</description>
+    <icon>fa fa-file-code-o</icon>
     <class></class>
     <type>htmlpackage</type>
     <dataType></dataType>

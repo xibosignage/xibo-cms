@@ -23,6 +23,7 @@
     <name>Dataset</name>
     <author>Core</author>
     <description>Display DataSet content</description>
+    <icon>fa fa-table</icon>
     <class>\Xibo\Widget\DataSetProvider</class>
     <compatibilityClass>\Xibo\Widget\Compatibility\DatasetWidgetCompatibility</compatibilityClass>
     <dataCacheKey>%dataSetId%_%lowerLimit%_%lowerLimit%_%numItems%_%orderClauses%_%useOrderingClause%_%ordering%_%filterClauses%_%useFilteringClause%_%filter%</dataCacheKey>

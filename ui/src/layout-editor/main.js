@@ -1984,13 +1984,6 @@ lD.addModuleToPlaylist = function(
       animateDialog: false,
       initialisedBy: 'layout-designer-upload',
       buttons: {
-        viewLibrary: {
-          label: uploadTrans.viewLibrary,
-          className: 'btn-white btn-bb-viewlibrary',
-          callback: function() {
-            lD.toolbar.openNewTabAndSearch(moduleType);
-          },
-        },
         main: {
           label: translations.done,
           className: 'btn-primary btn-bb-main',

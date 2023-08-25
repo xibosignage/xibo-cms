@@ -23,6 +23,7 @@
     <name>Local Video</name>
     <author>Core</author>
     <description>Display Video that only exists on the Display by providing a local file path or URL</description>
+    <icon>fa fa-file-video-o</icon>
     <validatorClass>\Xibo\Widget\Validator\RemoteUrlsZeroDurationValidator</validatorClass>
     <type>localvideo</type>
     <dataType></dataType>

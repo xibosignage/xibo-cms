@@ -140,6 +140,9 @@
             dataType:"json",
             success: function(xhr, textStatus, error) {
               $.each(xhr.data, function(index, element) {
+                if (element.isHidden) {
+                  return;
+                }
                 element.configureUrl = '{{ url_for("connector.edit.form", {id: ":id"}) }}'.replace(':id', element.connectorId);
                 element.proxyUrl = '{{ url_for("connector.edit.form.proxy", {id: ":id", method: ":method"}) }}'.replace(':id', element.connectorId);
                 element.thumbnail = element.thumbnail || 'theme/default/img/thumbs/placeholder.png';

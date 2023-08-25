@@ -23,6 +23,7 @@
     <name>HLS</name>
     <author>Core</author>
     <description>A module for displaying HLS video streams</description>
+    <icon>fa fa-video-camera</icon>
     <class></class>
     <type>hls</type>
     <dataType></dataType>

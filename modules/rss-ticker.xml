@@ -23,6 +23,7 @@
     <name>RSS Ticker</name>
     <author>Core</author>
     <description>Display articles from an RSS feed</description>
+    <icon>fa fa-rss</icon>
     <class>\Xibo\Widget\RssProvider</class>
     <compatibilityClass>\Xibo\Widget\Compatibility\RssWidgetCompatibility</compatibilityClass>
     <type>rss-ticker</type>

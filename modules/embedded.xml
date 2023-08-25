@@ -23,6 +23,7 @@
     <name>Embedded</name>
     <author>Core</author>
     <description>Embed HTML and JavaScript</description>
+    <icon>fa fa-code</icon>
     <class></class>
     <type>embedded</type>
     <dataType></dataType>

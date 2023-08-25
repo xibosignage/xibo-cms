@@ -23,6 +23,7 @@
     <name>Calendar</name>
     <author>Core</author>
     <description>A module for displaying a calendar based on an iCal feed</description>
+    <icon>fa fa-calendar-alt</icon>
     <class>Xibo\Widget\IcsProvider</class>
     <type>ics-calendar</type>
     <legacyType>calendaradvanced</legacyType>

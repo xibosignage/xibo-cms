@@ -22,7 +22,7 @@
                 {{#each content.favourites}}
                     {{#unless hideCard}}
                         {{!-- Load cards according to type searchItem/Widget --}}
-                        {{> toolbar-card contentType=../name trans=../trans icon=../iconType}}
+                        {{> toolbar-card contentType=../name trans=../trans iconType=../iconType}}
                     {{/unless}}
                 {{/each}}
 
@@ -32,7 +32,7 @@
                 {{#each content.cards}}
                     {{#unless hideCard}}
                         {{!-- Load cards according to type searchItem/Widget --}}
-                        {{> toolbar-card contentType=../name trans=../trans icon=../iconType}}
+                        {{> toolbar-card contentType=../name trans=../trans iconType=../iconType}}
                     {{/unless}}
                 {{/each}}
 
@@ -42,7 +42,7 @@
                 {{#each content.alternativeCards}}
                     {{#unless hideCard}}
                         {{!-- Load cards according to type searchItem/Widget --}}
-                        {{> toolbar-card contentType=../name trans=../trans icon=../iconType}}
+                        {{> toolbar-card contentType=../name trans=../trans iconType=../iconType}}
                     {{/unless}}
                 {{/each}}
 

@@ -23,6 +23,7 @@
     <name>Video</name>
     <author>Core</author>
     <description>Upload Video files to assign to Layouts</description>
+    <icon>fa fa-file-video-o</icon>
     <class>\Xibo\Widget\VideoProvider</class>
     <validatorClass>\Xibo\Widget\Validator\ZeroDurationValidator</validatorClass>
     <type>video</type>
@@ -98,7 +99,7 @@
     {% set proportional = 1 %}
 {% endif %}
 <div class="img-container" style="display:table; width:100%; height: {{ height }}px">
-    <i class="module-preview-icon module-icon-video" style="position:absolute; color:#ececec;text-shadow: 0 0 2px black;z-index: 1;left:50%;top:50%;transform:translate(-50%,-50%);font-size: 3rem;"></i>
+    <i class="module-preview-icon fa fa-file-video-o" style="position:absolute; color:#ececec;text-shadow: 0 0 2px black;z-index: 1;left:50%;top:50%;transform:translate(-50%,-50%);font-size: 3rem;"></i>
     <div style="display: table-cell;vertical-align: middle;text-align: center;">
         <img src="{{ downloadUrl }}&width={{ width }}&height={{ height }}&proportional={{ proportional }}&fit=0"/>
     </div>

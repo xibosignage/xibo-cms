@@ -23,6 +23,7 @@
     <name>Spacer</name>
     <author>Core</author>
     <description>A module for making region empty for the duration</description>
+    <icon>fa fa-hourglass-o</icon>
     <class></class>
     <showIn>playlist</showIn>
     <type>spacer</type>

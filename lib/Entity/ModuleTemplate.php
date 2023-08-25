@@ -52,6 +52,12 @@ class ModuleTemplate implements \JsonSerializable
     public $title;
 
     /**
+     * Icon
+     * @var string
+     */
+    public $icon;
+
+    /**
      * Thumbnail
      * this is the location to a module template's thumbnail, which should be added to the installation
      * relative to the module class file.
