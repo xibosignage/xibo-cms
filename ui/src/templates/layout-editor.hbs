@@ -25,11 +25,21 @@
                             <!--VIEWER-->
                         </div>
 
+                        <div id="layerManager" class="layer-manager">
+                            <!--LAYER MANAGER-->
+                        </div>
+
                         {{!-- Full screen button --}}
                         <button type="button" id="fullscreenBtn" class="btn btn-sm btn-light" data-toggle="tooltip" data-placement="bottom"
                             data-title="{{ trans.toggleFullscreen }}">
                             <i class="fas fa-arrows-alt hide-on-fs"></i>
                             <i class="fas fa-compress-arrows-alt show-on-fs"></i>
+                        </button>
+
+                        {{!-- Layer manager button --}}
+                        <button type="button" id="layerManagerBtn" class="btn btn-sm btn-light" data-toggle="tooltip" data-placement="top"
+                            data-title="{{ trans.layerManager }}">
+                            <i class="fas fa-layer-group"></i>
                         </button>
 
                         {{!-- Snap controls --}}

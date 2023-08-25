@@ -3571,6 +3571,12 @@ lD.loadPrefs = function() {
         // Update moveable UI
         self.viewer.updateMoveableUI();
       }
+
+      if (loadedData.layerManagerOptions) {
+        // Render layer manager
+        self.viewer.layerManager
+          .setVisible(loadedData.layerManagerOptions.visible);
+      }
     } else {
       // Login Form needed?
       if (res.login) {
@@ -3608,6 +3614,9 @@ lD.savePrefs = function(clearPrefs = false) {
         option: 'editor',
         value: JSON.stringify({
           snapOptions: this.viewer.moveableOptions,
+          layerManagerOptions: {
+            visible: this.viewer.layerManager.visible,
+          },
         }),
       },
     ],

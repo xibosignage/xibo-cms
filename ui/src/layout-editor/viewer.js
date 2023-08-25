@@ -23,6 +23,7 @@
 // VIEWER Module
 
 // Load templates
+const LayerManager = require('../editor-core/layer-manager.js');
 const viewerTemplate = require('../templates/viewer.hbs');
 const viewerWidgetTemplate = require('../templates/viewer-widget.hbs');
 const viewerLayoutPreview = require('../templates/viewer-layout-preview.hbs');
@@ -83,6 +84,13 @@ const Viewer = function(parent, container) {
 
   // Fullscreen mode flag
   this.fullscreenMode = false;
+
+  // Initialize layer manager
+  this.layerManager = new LayerManager(
+    lD,
+    this.parent.editorContainer.find('#layerManager'),
+    this.DOMObject,
+  );
 };
 
 /**
@@ -315,6 +323,9 @@ Viewer.prototype.render = function(forceReload = false) {
   this.parent.common.reloadTooltips(
     this.DOMObject.parent(),
   );
+
+  // Update layer manager
+  this.layerManager.render();
 };
 
 /**
@@ -777,13 +788,18 @@ Viewer.prototype.handleInteractions = function() {
     });
 
   // Handle fullscreen button
-  $viewerContainer.parent().find('#fullscreenBtn').off().click(function() {
+  $viewerContainer.siblings('#fullscreenBtn').off().click(function() {
     this.reload = true;
     this.toggleFullscreen();
   }.bind(this));
 
+  // Handle layer manager button
+  $viewerContainer.siblings('#layerManagerBtn').off().click(function(ev) {
+    this.layerManager.setVisible();
+  }.bind(this));
+
   // Handle snap buttons
-  $viewerContainer.parent().find('#snapToGrid').off().click(function(ev) {
+  $viewerContainer.siblings('#snapToGrid').off().click(function(ev) {
     this.moveableOptions.snapToGrid = !this.moveableOptions.snapToGrid;
 
     // Turn off snap to element if grid is on
@@ -1140,6 +1156,9 @@ Viewer.prototype.updateElement = _.throttle(function(
   lD.viewer.renderElementContent(
     element,
   );
+
+  // Update layer manager
+  lD.viewer.layerManager.render();
 }, drawThrottle);
 
 /**
@@ -1174,6 +1193,9 @@ Viewer.prototype.updateElementGroup = _.throttle(function(
     lD.viewer.renderElementContent(
       element,
     );
+
+    // Update layer manager
+    lD.viewer.layerManager.render();
   });
 }, drawThrottle);
 
@@ -1226,6 +1248,9 @@ Viewer.prototype.updateRegion = _.throttle(function(
   } else {
     lD.viewer.updateRegionContent(region, changed);
   }
+
+  // Update layer manager
+  lD.viewer.layerManager.render();
 }, drawThrottle);
 
 
@@ -1623,7 +1648,7 @@ Viewer.prototype.renderElementContent = function(
         }
 
         if (extendWithDataKey !== null || metaKey !== null) {
-          if (template.onElementParseData && hasElementParseDataFn) {
+          if (template.onElementParseData && hasElementParseDataFn && elData) {
             convertedProperties[extendOverrideKey] = elementParseDataFn(
               isInData ?
                 elData[extendOverrideKey] :
@@ -2338,8 +2363,10 @@ Viewer.prototype.selectElement = function(
   const self = this;
 
   // Deselect all elements
-  (!multiSelect) &&
-    this.DOMObject.find('.selected').removeClass('selected');
+  if (!multiSelect) {
+    this.DOMObject.find('.selected, .selected-from-layer-manager')
+      .removeClass('selected selected-from-layer-manager');
+  }
 
   // Remove all editing from groups
   // if we're not selecting an element from that group
@@ -2381,6 +2408,9 @@ Viewer.prototype.selectElement = function(
         },
       );
   }
+
+  // Update layer manager
+  this.layerManager.render();
 };
 
 /**
