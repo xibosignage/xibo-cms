@@ -65,22 +65,26 @@ class HelpService implements HelpServiceInterface
             if (file_exists(PROJECT_ROOT . '/custom/help-links.yaml')) {
                 $links = (array)Yaml::parseFile(PROJECT_ROOT . '/custom/help-links.yaml');
             } else if (file_exists(PROJECT_ROOT . '/help-links.yaml')) {
-                // TODO: pull these in from the manual on build.
                 $links = (array)Yaml::parseFile(PROJECT_ROOT . '/help-links.yaml');
             } else {
                 $this->links = [];
                 return;
             }
-        } catch (\Exception) {
+        } catch (\Exception $e) {
             return;
         }
 
         // Parse links.
+        $this->links = [];
+
         foreach ($links as $pageName => $page) {
+            // New page
+            $this->links[$pageName] = [];
+
             foreach ($page as $link) {
                 $helpLink = new HelpLink($link);
                 if (!Str::startsWith($helpLink->url, ['http://', 'https://'])) {
-                    $helpLink->url = $this->helpBase .= $helpLink->url;
+                    $helpLink->url = $this->helpBase . $helpLink->url;
                 }
                 if (!empty($helpLink->summary)) {
                     $helpLink->summary = \Parsedown::instance()->line($helpLink->summary);
