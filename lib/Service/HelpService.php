@@ -70,7 +70,7 @@ class HelpService implements HelpServiceInterface
                 $this->links = [];
                 return;
             }
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             return;
         }
 
