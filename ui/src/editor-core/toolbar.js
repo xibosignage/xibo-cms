@@ -669,7 +669,9 @@ Toolbar.prototype.loadPrefs = function() {
       app.common.reloadTooltips(app.editorContainer);
 
       // Render toolbar and topbar if exists
-      self.render();
+      self.render({
+        savePrefs: false,
+      });
       if (app.topbar) {
         app.topbar.render();
       }
@@ -804,8 +806,9 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
 
 /**
  * Render toolbar
+ * @param {bool=} savePrefs - Save preferences
  */
-Toolbar.prototype.render = function() {
+Toolbar.prototype.render = function({savePrefs = true} = {}) {
   // Load preferences when the toolbar is rendered for the first time
   if (this.firstRun) {
     this.firstRun = false;
@@ -904,7 +907,7 @@ Toolbar.prototype.render = function() {
         (this.openedSubMenu && this.openedSubMenu != -1) &&
         this.openedSubMenu.parent == this.openedMenu;
 
-      this.openMenu(this.openedMenu, true, openedSubMenu);
+      this.openMenu(this.openedMenu, true, openedSubMenu, savePrefs);
     }
   }
 };
@@ -913,8 +916,13 @@ Toolbar.prototype.render = function() {
  * Load content
  * @param {number} menu - menu to load content for
  * @param {boolean} forceReload - force content to be reloaded even if exists
+ * @param {bool=} savePrefs - Save preferences
  */
-Toolbar.prototype.loadContent = function(menu = -1, forceReload = false) {
+Toolbar.prototype.loadContent = function(
+  menu = -1,
+  forceReload = false,
+  savePrefs = true,
+) {
   // Make menu state to be active
   this.menuItems[menu].state = 'active';
 
@@ -995,15 +1003,20 @@ Toolbar.prototype.loadContent = function(menu = -1, forceReload = false) {
   this.createContent(menu, forceReload);
 
   // Save user preferences
-  this.savePrefs();
+  (savePrefs) && this.savePrefs();
 };
 
 /**
  * Create content
  * @param {number} menu - menu to load content for
  * @param {boolean} forceReload - force content to be reloaded even if exists
+ * @param {bool=} savePrefs - Save preferences
  */
-Toolbar.prototype.createContent = function(menu = -1, forceReload = false) {
+Toolbar.prototype.createContent = function(
+  menu = -1,
+  forceReload = false,
+  savePrefs = true,
+) {
   const content = $.extend(
     {},
     this.menuItems[menu],
@@ -1046,7 +1059,7 @@ Toolbar.prototype.createContent = function(menu = -1, forceReload = false) {
   if (content.contentType == 'media') {
     this.mediaContentCreateWindow(menu);
   } else if (content.contentType == 'elements') {
-    this.elementsContentCreateWindow(menu);
+    this.elementsContentCreateWindow(menu, savePrefs);
   } else if (content.contentType === 'layout_templates') {
     this.layoutTemplatesContentCreateWindow(menu);
   } else {
@@ -1059,7 +1072,7 @@ Toolbar.prototype.createContent = function(menu = -1, forceReload = false) {
         self.menuItems[menu].filters.name.value = $(this).val();
         self.menuItems[menu].focus = e.target.selectionStart;
         app.common.clearTooltips();
-        self.loadContent(menu);
+        self.loadContent(menu, false);
       }, 500));
 
     // Focus with cursor position
@@ -1082,11 +1095,13 @@ Toolbar.prototype.createContent = function(menu = -1, forceReload = false) {
  * @param {number} menu - menu to open index, -1 by default and to toggle
  * @param {bool} forceOpen - force tab open ( even if opened before )
  * @param {bool} openSubMenu - open sub menu
+ * @param {bool=} savePrefs - Save preferences
  */
 Toolbar.prototype.openMenu = function(
   menu = -1,
   forceOpen = false,
   openSubMenu = false,
+  savePrefs = true,
 ) {
   let active = false;
   const oldStatusOpened = this.opened;
@@ -1114,7 +1129,7 @@ Toolbar.prototype.openMenu = function(
 
       // If menu is the default/widget/tools, load content
       if (menu > -1) {
-        this.loadContent(menu);
+        this.loadContent(menu, false, savePrefs);
       }
 
       this.opened = true;
@@ -1141,15 +1156,15 @@ Toolbar.prototype.openMenu = function(
   // if menu was closed, save preferences and clean content
   if (!this.opened) {
     // Save user preferences
-    this.savePrefs();
+    (savePrefs) && this.savePrefs();
   }
 
   // If we have a sub menu, open it
   if (openSubMenu) {
     if (this.openedSubMenu.type == 'groupMenu') {
-      this.openGroupMenu(null, this.openedSubMenu.data, menu);
+      this.openGroupMenu(null, this.openedSubMenu.data, menu, savePrefs);
     } else if (this.openedSubMenu.type == 'subMenu') {
-      this.openSubMenu(null, this.openedSubMenu.data, menu);
+      this.openSubMenu(null, this.openedSubMenu.data, menu, savePrefs);
     }
   } else {
     this.openedSubMenu = null;
@@ -1738,8 +1753,13 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
 /**
  * Create elements content
  * @param {number} menu - menu index
+ * @param {bool=} savePrefs - Save preferences
+
  */
-Toolbar.prototype.elementsContentCreateWindow = function(menu) {
+Toolbar.prototype.elementsContentCreateWindow = function(
+  menu,
+  savePrefs = true,
+) {
   const self = this;
   const $elementsContainer =
     self.DOMObject.find('#elements-container-' + menu);
@@ -1758,6 +1778,8 @@ Toolbar.prototype.elementsContentCreateWindow = function(menu) {
   self.loadTemplates(
     $elementsContainer.parent(),
     'global',
+    null,
+    savePrefs,
   );
 };
 
@@ -2368,10 +2390,12 @@ Toolbar.prototype.openNewTabAndSearch = function(type) {
  * @param  {string} $card - Module card
  * @param  {object} data  - Module data
  * @param {number} parentMenu - Parent menu
+ * @param {bool=} savePrefs - Save preferences
  */
 Toolbar.prototype.openSubMenu = function(
   $card, data = null,
   parentMenu = null,
+  savePrefs = true,
 ) {
   const self = this;
   const openedMenu = self.openedMenu;
@@ -2414,17 +2438,22 @@ Toolbar.prototype.openSubMenu = function(
     self.openMenu(openedMenu, true);
 
     // Save user preferences
-    self.savePrefs();
+    (savePrefs) && self.savePrefs();
   });
 
   // Clear tooltips
   this.parent.common.clearTooltips();
 
   // Load content
-  self.loadTemplates($submenuContainer, cardData.dataType, cardData.subType);
+  self.loadTemplates(
+    $submenuContainer,
+    cardData.dataType,
+    cardData.subType,
+    savePrefs,
+  );
 
   // Save user preferences
-  self.savePrefs();
+  (savePrefs) && self.savePrefs();
 };
 
 /**
@@ -2432,11 +2461,13 @@ Toolbar.prototype.openSubMenu = function(
  * @param {string} $card - Module card
  * @param {object} data  - Module data
  * @param {number} parentMenu - Parent menu
+ * @param {bool=} savePrefs - Save preferences
  */
 Toolbar.prototype.openGroupMenu = function(
   $card,
   data = null,
   parentMenu = null,
+  savePrefs = true,
 ) {
   const self = this;
   const openedMenu = self.openedMenu;
@@ -2490,7 +2521,7 @@ Toolbar.prototype.openGroupMenu = function(
   this.parent.common.clearTooltips();
 
   // Save user preferences
-  self.savePrefs();
+  (savePrefs) && self.savePrefs();
 };
 
 /**
@@ -2498,11 +2529,13 @@ Toolbar.prototype.openGroupMenu = function(
  * @param {object} $container - Templates container
  * @param  {object} contentType - Content type
  * @param  {object} moduleType - Module type
+ * @param {bool=} savePrefs - Save preferences
  */
 Toolbar.prototype.loadTemplates = function(
   $container,
   contentType,
   moduleType,
+  savePrefs = false,
 ) {
   const self = this;
   const app = this.parent;
@@ -2598,7 +2631,7 @@ Toolbar.prototype.loadTemplates = function(
         self.handleCardsBehaviour();
 
         // Save user preferences
-        self.savePrefs();
+        (savePrefs) && self.savePrefs();
       };
 
       // Handle name filter change

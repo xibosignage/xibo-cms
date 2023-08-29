@@ -1566,7 +1566,7 @@ div#bg_media_name {
     background-color: $xibo-color-neutral-0;
     color: $xibo-color-primary;
     outline: 1px solid $xibo-color-primary;
-    z-index: $viewer-button-z-index;
+    z-index: $viewer-layer-editor-z-index;
 
     .empty-layout-message {
         height: 32px;
@@ -1577,7 +1577,7 @@ div#bg_media_name {
     }
 
     .layer-manager-header {
-        background-color: $xibo-color-primary-d60;
+        background-color: $xibo-color-primary;
         color: $xibo-color-neutral-0;
         font-weight: bold;
         font-size: 1.2rem;
@@ -1600,26 +1600,30 @@ div#bg_media_name {
         }
     }
 
-    .layer-manager-layer-header, .layer-manager-canvas-layer-header {
-        width: 100%;
-        background-color: $xibo-color-primary-l20;
-        color: $xibo-color-neutral-900;
-        font-weight: bold;
-        padding-left: 4px;
-        height: 34px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
+    .layer-manager-body {
+        max-height: 500px;
+        overflow: auto;
     }
 
-    .layer-manager-layer-item {
+    .layer-manager-layer-item, .layer-manager-layer-canvas {
         display: flex;
         flex-wrap: wrap;
         justify-content: space-between;
         align-items: center;
         gap: 6px;
-        padding: 4px;
+        padding: 0 4px;
         height: 34px;
+
+        .layer {
+            flex-basis: 30px;
+            font-weight: bold;
+            text-align: center;
+            background-color: $xibo-color-primary-l20;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
 
         .name {
             white-space: nowrap;
@@ -1628,9 +1632,18 @@ div#bg_media_name {
             flex: 1;
         }
 
+        .duration {
+            flex-basis: 24px;
+            text-align: center;
+        }
+
         &.selected {
             color: $xibo-color-neutral-0;
             background-color: $xibo-color-accent !important;
+            
+            .layer {
+                background-color: darken($xibo-color-accent, 5%) !important;
+            }
         }
 
         &.selectable {
@@ -1638,22 +1651,24 @@ div#bg_media_name {
 
             &:hover {
                 color: $xibo-color-secondary;
-                @include set-transparent-color(background, $xibo-color-accent, 0.4);
+                background-color: lighten($xibo-color-accent, 15%);
+
+                .layer {
+                    background-color: lighten($xibo-color-accent, 12%);
+                }
             }
         }
-    }
-
-    .layer-manager-canvas-layer-header {
-        padding-left: 8px;
-        background-color: $xibo-color-primary;
-        color: $xibo-color-neutral-0;
     }
 
     .layer-manager-canvas-layers {
         .layer-manager-layer-item {
             padding-left: 16px;
-            background-color: lighten($xibo-color-primary, 10%);
+            background-color: darken($xibo-color-primary-l60, 10%);
             color: $xibo-color-neutral-0;
+
+            .layer {
+                background-color: $xibo-color-primary-l60;
+            }
         }
     }
 }

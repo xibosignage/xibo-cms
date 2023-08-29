@@ -119,9 +119,10 @@ LayerManager.prototype.createStructure = function() {
       Object.values(region.widgets).forEach((widget) => {
         addToLayerStructure(region.zIndex, {
           type: 'staticWidget',
-          name: widget.widgetName,
+          name: (widget.widgetName != '') ?
+            widget.widgetName : `[${widget.moduleName}]`,
           duration: region.duration,
-          subType: widget.subType,
+          icon: widget.getIcon(),
           id: widget.id,
           selected: widget.selected,
         });
@@ -133,8 +134,9 @@ LayerManager.prototype.createStructure = function() {
 /**
  * Set visibility
  * @param {boolean=} force Force visible to on/off
+ * @param {boolean=} savePrefs Save preferences?
  */
-LayerManager.prototype.setVisible = function(force) {
+LayerManager.prototype.setVisible = function(force, savePrefs = true) {
   // Change manager flag
   this.visible = (force != undefined) ? force : !this.visible;
 
@@ -146,7 +148,7 @@ LayerManager.prototype.setVisible = function(force) {
   this.render(true);
 
   // Save editor preferences
-  lD.savePrefs();
+  (savePrefs) && lD.savePrefs();
 };
 
 /**
