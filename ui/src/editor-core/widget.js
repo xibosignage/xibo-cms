@@ -330,6 +330,22 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
   };
 
   /**
+   * Get icon from module
+   * @return {string}
+   */
+  this.getIcon = function() {
+    const self = this;
+    let moduleIcon = '';
+    Object.keys(modulesList).forEach(function(item) {
+      if (modulesList[item].type == self.subType) {
+        moduleIcon = modulesList[item].icon;
+      }
+    });
+
+    return moduleIcon;
+  };
+
+  /**
      * Check if the current module is enabled
      */
   this.checkIfEnabled = function() {
