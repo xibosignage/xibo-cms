@@ -97,6 +97,16 @@
                 </test>
             </visibility>
         </property>
+        <property id="numItems" type="number">
+            <title>Number of Items</title>
+            <helpText>The Number of items you want to display</helpText>
+            <default>0</default>
+            <visibility>
+                <test>
+                    <condition field="dataSetId" type="neq"></condition>
+                </test>
+            </visibility>
+        </property>
         <property id="durationIsPerItem" type="checkbox">
             <title>Duration is per item</title>
             <helpText>The duration specified is per item otherwise it is per feed.</helpText>
@@ -242,6 +252,68 @@
         </property>
     </properties>
     <preview></preview>
+    <onDataLoad><![CDATA[
+// items: The items to render
+// meta: Metadata
+// properties: The properties for the widget
+
+// Filter the items array we have been given
+if (parseInt(properties.randomiseItems) === 1) {
+    // Sort the items in a random order (considering the entire list)
+    // Durstenfeld shuffle
+    // https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle#The_modern_algorithm
+    // https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
+    for (let i = items.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        const temp = items[i];
+        items[i] = items[j];
+        items[j] = temp;
+    }
+}
+
+if (properties.takeItemsFrom === 'end') {
+    // If it's an array, reverse it
+    if (Array.isArray(items)) {
+      items.reverse();
+    } else {
+      // If it's an object, reverse the keys
+      const newItems = {};
+      Object.keys(items).reverse().forEach(function(key) {
+        newItems[key] = items[key];
+      });
+      items = $(newItems);
+    }
+}
+
+// Make sure the num items is not greater than the actual number of items
+if (properties.numItems > items.length || properties.numItems === 0) {
+    properties.numItems = items.length;
+}
+
+// Get a new array with only the first N elements
+if (properties.numItems && properties.numItems > 0) {
+    items = items.slice(0, properties.numItems);
+}
+
+// Reverse the items again (so they are in the correct order)
+if ((properties.takeItemsFrom === 'end' && properties.reverseOrder === 0) ||
+        (properties.takeItemsFrom === 'start' && properties.reverseOrder === 1)
+    ) {
+    // console.log("[Xibo] Reversing items");
+    // If it's an array, reverse it
+    if (Array.isArray(items)) {
+        items.reverse();
+    } else {
+        // If it's an object, reverse the keys
+        const newItems = {};
+        Object.keys(items).reverse().forEach(function(key) {
+            newItems[key] = items[key];
+        });
+        items = $(newItems);
+    }
+}
+return items;
+        ]]></onDataLoad>
     <onVisible><![CDATA[
 // Start effects for this widget
 $(target).xiboLayoutAnimate(properties);

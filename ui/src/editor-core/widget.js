@@ -1045,10 +1045,9 @@ Widget.prototype.getData = function() {
           }
         }
       } else {
-        // Run onParseData
+        // Run onDataLoad/onParseData
         Object.keys(modulesList).forEach(function(item) {
-          if (modulesList[item].type === self.subType &&
-            modulesList[item].onParseData
+          if (modulesList[item].type === self.subType
           ) {
             const properties = {};
             const options = self.getOptions();
@@ -1059,15 +1058,27 @@ Widget.prototype.getData = function() {
                 properties[property.id] = property.default || null;
               }
             });
-            const onParseData = new Function(
-              'return function(item, properties) {' +
-              modulesList[item].onParseData + '}',
-            )();
 
-            // Apply to each data item
-            $.each(data.data, function(i, data) {
-              data = onParseData(data, properties);
-            });
+            if (modulesList[item].onDataLoad) {
+              const onDataLoad = new Function(
+                'return function(item, meta, properties) {' +
+                modulesList[item].onDataLoad + '}',
+              )();
+
+              data.data = onDataLoad(data.data, data.meta, properties);
+            }
+
+            if (modulesList[item].onParseData) {
+              const onParseData = new Function(
+                'return function(item, properties) {' +
+                modulesList[item].onParseData + '}',
+              )();
+
+              // Apply to each data item
+              $.each(data.data, function(i, data) {
+                data = onParseData(data, properties);
+              });
+            }
           }
         });
 

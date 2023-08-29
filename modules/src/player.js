@@ -217,7 +217,7 @@ $(function() {
   ) {
     widget.items = [];
     const $target = $('body');
-    const {
+    let {
       dataItems,
       showError,
     } = composeFinalData(widget, data);
@@ -248,25 +248,37 @@ $(function() {
       );
     }
 
+    // Run the onDataLoad function if it exists
+    if (typeof window['onDataLoad_' + widget.widgetId] === 'function') {
+      dataItems = window['onDataLoad_' + widget.widgetId](
+        dataItems,
+        widget.meta,
+        widget.properties,
+      );
+    }
+
     // For each data item, parse it and add it to the content
     let templateAlreadyAdded = false;
     $.each(dataItems, function(_key, item) {
       // Parse the data if there is a parser function
       if (typeof window['onParseData_' + widget.widgetId] === 'function') {
-        item = window[
+        item[_key] = window[
           'onParseData_' + widget.widgetId
         ](item, widget.properties, widget.meta);
       }
 
       // Add the item to the content
-      (hbs) && $content.append(hbs(item));
+      (hbs) && $content.append(hbs(item[_key]));
 
       // Add items to the widget object
-      (item) && widget.items.push(item);
+      (item[_key]) && widget.items.push(item[_key]);
 
       // IF we added item template
       templateAlreadyAdded = true;
     });
+
+    // Assert our data
+    widget.items = dataItems;
 
     // If we don't have dataType, or we have a module template
     // add it to the content with widget properties and global options

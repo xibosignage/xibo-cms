@@ -682,6 +682,11 @@ class ModuleFactory extends BaseFactory
             $module->onParseData = trim($module->onParseData);
         }
 
+        $module->onDataLoad = $this->getFirstValueOrDefaultFromXmlNode($xml, 'onDataLoad');
+        if (!empty($module->onDataLoad)) {
+            $module->onDataLoad = trim($module->onDataLoad);
+        }
+
         $module->onDataError = $this->getFirstValueOrDefaultFromXmlNode($xml, 'onDataError');
         if (!empty($module->onDataError)) {
             $module->onDataError = trim($module->onDataError);

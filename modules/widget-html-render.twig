@@ -108,6 +108,13 @@
       }
     </script>
 {% endfor %}
+{% for widgetId, parser in onDataLoad %}
+    <script type="text/javascript" id="onDataLoad-{{ widgetId }}">
+      function onDataLoad_{{ widgetId }}(items, meta, properties) {
+        {{ parser|raw }}
+      }
+    </script>
+{% endfor %}
 {% for widgetId, parser in onDataError %}
     <script type="text/javascript" id="onDataError-{{ widgetId }}">
       function onDataError_{{ widgetId }}(httpStatus, response) {

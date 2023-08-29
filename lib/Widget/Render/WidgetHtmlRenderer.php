@@ -394,6 +394,7 @@ class WidgetHtmlRenderer
         $twig['assets'] = [];
         $twig['onRender'] = [];
         $twig['onParseData'] = [];
+        $twig['onDataLoad'] = [];
         $twig['onDataError'] = [];
         $twig['onElementParseData'] = [];
         $twig['onTemplateRender'] = [];
@@ -496,6 +497,9 @@ class WidgetHtmlRenderer
             }
             if (!empty($module->onParseData)) {
                 $twig['onParseData'][$widget->widgetId] = $module->onParseData;
+            }
+            if (!empty($module->onDataLoad)) {
+                $twig['onDataLoad'][$widget->widgetId] = $module->onDataLoad;
             }
             if (!empty($module->onDataError)) {
                 $twig['onDataError'][$widget->widgetId] = $module->onDataError;
