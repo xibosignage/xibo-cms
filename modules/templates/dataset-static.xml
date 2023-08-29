@@ -2571,4 +2571,117 @@ $datasetTableContainer.dataSetRender(properties);
             <asset id="pill-colored" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/dataset/7-pill-colored.png" />
         </assets>
     </template>
+    <template>
+        <id>dataset_slideshow</id>
+        <type>static</type>
+        <dataType>dataset</dataType>
+        <title>Dataset Image Slideshow</title>
+        <thumbnail>dataset-slideshow</thumbnail>
+        <properties>
+            <property id="dataTypeId" type="hidden">
+                <default>4,5</default>
+            </property>
+            <property type="message">
+                <title>Select a dataset to display appearance options.</title>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="eq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="datasetField" type="datasetField">
+                <dependsOn>dataSetId</dependsOn>
+                <title>Select DataSet Field</title>
+                <helpText>Please choose a DataSet field for this element.</helpText>
+                <default></default>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="effect" type="effectSelector" variant="showPaged">
+                <title>Effect</title>
+                <helpText>Please select the effect that will be used to transition between items.</helpText>
+                <default>tileBlind</default>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="speed" type="number">
+                <title>Speed</title>
+                <helpText>The transition speed of the selected effect in milliseconds (normal = 1000)</helpText>
+                <default>1000</default>
+                <visibility>
+                    <test type="and">
+                        <condition field="effect" type="neq">noTransition</condition>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <preview></preview>
+        <stencil>
+            <style><![CDATA[
+img {
+  height: 100%;
+  width: 100%;
+  object-fit: contain;
+}
+            ]]></style>
+        </stencil>
+        <onTemplateRender><![CDATA[
+// Module renderer options
+// id: The id of the widget
+// target: The target element to render
+// items: The items to render
+// properties: The properties for the widget
+
+// Clear the content container
+$(target).find('#content').empty();
+
+// If we don't have metadata, we can't render anything
+if (!meta || !meta.mapping) {
+    return;
+}
+
+// Get dataset columns from meta.mapping
+var columnTypes = {};
+for (var i = 0; i < meta.mapping.length; i++) {
+    var column = meta.mapping[i];
+    columnTypes[column.dataSetColumnId] = {
+        type: column.dataTypeId
+    };
+}
+
+// Add content for each item
+// make replacements
+// and wrap it in a div with the item class
+for (var i = 0; i < items.length; i++) {
+    var item = items[i];
+    var itemValue = item[properties.datasetField];
+    var content = '<img src="' + itemValue  + '" />';
+
+    // Add the content to the target
+    $(target).find('#content').append(
+        $('<div>')
+            .addClass('item')
+            .append(content)
+    );
+}
+
+// Scale the layout
+$('body').xiboLayoutScaler(properties);
+
+$(target).xiboTextRender(
+    Object.assign(properties, globalOptions),
+    $(target).find('#content > *'),
+);
+        ]]></onTemplateRender>
+        <assets>
+            <asset id="dataset-slideshow" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/dataset/dataset-slideshow.png" />
+        </assets>
+    </template>
 </templates>
