@@ -3559,7 +3559,9 @@ lD.loadPrefs = function() {
         self.viewer.moveableOptions = loadedData.snapOptions;
 
         // Update moveable options
-        self.viewer.updateMoveableOptions();
+        self.viewer.updateMoveableOptions({
+          savePreferences: false,
+        });
 
         // Update moveable UI
         self.viewer.updateMoveableUI();
@@ -3568,7 +3570,7 @@ lD.loadPrefs = function() {
       if (loadedData.layerManagerOptions) {
         // Render layer manager
         self.viewer.layerManager
-          .setVisible(loadedData.layerManagerOptions.visible);
+          .setVisible(loadedData.layerManagerOptions.visible, false);
       }
     } else {
       // Login Form needed?

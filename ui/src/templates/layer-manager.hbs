@@ -6,17 +6,17 @@
 </div>
 
 <div class="layer-manager-body">
-    {{#each layerStructure}}
+    {{#each layerStructure as |layer layerIdx|}}
         <div class="layer-manager-layer">
-            <div class="layer-manager-layer-header" title="{{../trans.layer}}">{{../trans.layer}} {{@index}}</div>
-
             {{#each this}}
                 {{#eq type 'canvas'}}
                     <div class="layer-manager-canvas-layers">
-                        {{#each layers}}
-                            <div class="layer-manager-canvas-layer-header" title="{{../../../trans.canvasLayer}}"><i class="fa-caret-right fas mr-1"></i> {{../../../trans.canvasLayer}} {{@index}}</div>
+
+                        <div class="layer-manager-layer-canvas" title="{{../trans.layer}}"><div class="layer">{{layerIdx}}</div><span class="name" title="{{../../trans.canvas}}">{{../../trans.canvas}}</span></div>
+                        {{#each layers as |canvasLayer canvasLayerIdx|}}
                             {{#each this}}
                                 <div class="layer-manager-layer-item selectable {{#if selected}}selected{{/if}}" data-item-id="{{id}}">
+                                    <div class="layer">{{canvasLayerIdx}}</div>
                                     {{#eq type 'element'}}
                                         <i class="fas {{#if hasGroup}}fa-object-group{{else}}fa-atom{{/if}}"
                                             {{#if hasGroup}}title="{{groupId}}"{{/if}}></i>
@@ -31,6 +31,8 @@
                     </div>
                 {{else}}
                     <div class="layer-manager-layer-item {{#if selected}}selected{{/if}} selectable" data-item-id="{{id}}">
+                        <div class="layer">{{layerIdx}}</div>
+
                         {{#eq type 'playlist'}}
                             <i class="fa fa-list-ol"></i>
                         {{/eq}}
