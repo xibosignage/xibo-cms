@@ -2249,4 +2249,34 @@ window.forms = {
     // Hide bootstrap switch
     $formContainer.find('.bootstrap-switch').hide();
   },
+
+  /**
+   * Reload Rich text fields
+   * @param {object} $formContainer - The form container
+   */
+  reloadRichTextFields: function($formContainer) {
+    $formContainer.find('.rich-text').each(function(_k, el) {
+      const elId = $(el).attr('id');
+      const $parent = $(el).parent();
+
+      // Hide elements in editor to avoid glitch
+      $parent.addClass('loading');
+
+      // Destroy CKEditor
+      CKEDITOR.instances[elId].destroy();
+
+      // Reload
+      formHelpers.setupCKEditor(
+        $formContainer,
+        {},
+        elId,
+        true,
+        null,
+        false,
+        true);
+
+      // Hide text area to prevent flicker
+      $parent.removeClass('loading');
+    });
+  },
 };

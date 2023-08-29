@@ -738,7 +738,7 @@ const formHelpers = function() {
       } else {
         if (inline) {
           // Outer width for the inline element
-          width = $scaleTo.outerWidth();
+          width = $scaleTo.outerWidth() - 4;
         } else {
           // Inner width and a padding for the scrollbar
           width =
@@ -884,9 +884,9 @@ const formHelpers = function() {
 
         $('.cke_textarea_inline').css('transform', 'scale(' + scale + ')');
         $('.cke_textarea_inline').data('originaScale', scale);
+        $('.cke_textarea_inline').data('currentScale', scale);
         $('.cke_textarea_inline').css('transform-origin', '0 0');
         $('.cke_textarea_inline').css('word-wrap', 'inherit');
-        $('.cke_textarea_inline').css('overflow', 'hidden');
         $('.cke_textarea_inline').css('line-height', 'normal');
         $('.cke_textarea_inline')
           .css('outline-width', (CKEDITOR_OVERLAY_WIDTH / scale));
@@ -921,21 +921,11 @@ const formHelpers = function() {
 
       // Set parent container height if data exists
       const containerData = $container.data();
-      let buttonHeight =
-        $container.siblings('.text-area-buttons').outerHeight();
       if (containerData !== undefined) {
-        // If buttonHeight is 0, but we have the button container
-        // set it to default size
-        const bottomMargin = 18;
-        if (
-          buttonHeight === 0 &&
-          $container.siblings('.text-area-buttons').length > 0
-        ) {
-          buttonHeight = 28;
-        }
+        const bottomMargin = 12;
         // Set width and height to container
         $container.parents('.rich-text-container')
-          .css('height', containerData.height + buttonHeight + bottomMargin);
+          .css('height', containerData.height + bottomMargin);
       }
 
       // If the field with changed width, apply the new scale
@@ -952,6 +942,9 @@ const formHelpers = function() {
         applyContentsToIframe(field);
       }
     };
+
+    // Hide element to avoid glitch
+    $(dialog).find('#' + textAreaId).css('opacity', 0);
 
     // CKEditor default config and init after config is loaded
     this.getCKEditorConfig().then(function(config) {
@@ -1201,6 +1194,9 @@ const formHelpers = function() {
       } else {
         CKEDITOR.instances[instance].setData(data);
       }
+    } else {
+      // Still call callback
+      (typeof callback === 'function') && callback();
     }
   };
 
@@ -1796,17 +1792,7 @@ const formHelpers = function() {
    * @param {object} widgetType - Widget/module type
    */
   this.widgetFormEditAfterOpen = function(container, widgetType) {
-    // Create button container if it doesn't exist
-    const createButtonContainer = ($target) => {
-      const $buttonContainer = $target.parent().find('.text-area-buttons');
-      if ($buttonContainer.length === 0) {
-        return $('<div/>', {
-          class: 'text-area-buttons',
-        }).insertBefore($target);
-      } else {
-        return $buttonContainer;
-      }
-    };
+    const self = this;
 
     // Check if form edit open function exists
     if (typeof window[widgetType + '_form_edit_open'] === 'function') {
@@ -1835,10 +1821,11 @@ const formHelpers = function() {
 
           // Select the input to copy
           let hasNoneClass = false;
+          const wasHidden = !$input.is(':visible');
           if ($input.hasClass('d-none')) {
             $input.removeClass('d-none');
             hasNoneClass = true;
-          } else {
+          } else if (wasHidden) {
             $input.show();
           }
           $input.trigger('focus');
@@ -1861,7 +1848,7 @@ const formHelpers = function() {
           $input.trigger('blur');
           if (hasNoneClass) {
             $input.addClass('d-none');
-          } else {
+          } else if (wasHidden) {
             $input.hide();
           }
 
@@ -1885,8 +1872,9 @@ const formHelpers = function() {
         }, 1000);
       });
 
-      // Create or get button container
-      $buttonContainer = createButtonContainer($(el));
+      // Get button container
+      $buttonContainer =
+        $(el).parents('.xibo-form-input').find('.text-area-buttons');
 
       // Add button to the button container for the text area
       $buttonContainer.append($newButton);
@@ -1894,6 +1882,13 @@ const formHelpers = function() {
 
     // Create buttons for rich text areas
     container.find('textarea.rich-text').each((key, el) => {
+      const $input = $(el);
+      const $container = $input.closest('.form-group');
+      const $editorMainContainer = $(el).parents('.rich-text-main-container');
+      const $editorContainer = $(el).parents('.rich-text-container');
+      const $propertiesPanelContainer =
+        $container.parents('.properties-panel-container');
+
       // Button to detach editor
       const $detachButton = $('<button/>', {
         html: '<i class="fas fa-window-restore"></i>',
@@ -1902,14 +1897,9 @@ const formHelpers = function() {
         'data-container': '.properties-panel',
         class: 'btn btn-sm detachEditorButton',
         click: function() {
-          const $input = $(el);
-          const $container = $input.closest('.form-group');
-          const $editorContainer = $container.find('.rich-text-container');
-          const $editor = $editorContainer.find('.cke_textarea_inline');
           const $detachButton = $container.find('.detachEditorButton');
           const $attachButton = $container.find('.attachEditorButton');
-          const $propertiesPanelContainer =
-            $container.parents('.properties-panel-container');
+          const $editor = $editorMainContainer.find('.cke_textarea_inline');
 
           // Save properties panel original Z-index to data
           if ($propertiesPanelContainer.length > 0) {
@@ -1925,13 +1915,15 @@ const formHelpers = function() {
           // Increase editor scale
           if ($editor.length > 0) {
             const originalScale = $editor.data('originaScale');
-            $editor.css('transform', 'scale(' + (originalScale * 4) + ')');
+            const newScale = (originalScale * 4);
+            $editor.css('transform', 'scale(' + newScale + ')');
+            $editor.data('currentScale', newScale);
 
             // Adjust overlay
             $('.cke_textarea_inline')
               .css(
                 'outline-width',
-                (CKEDITOR_OVERLAY_WIDTH / (originalScale * 4)),
+                (CKEDITOR_OVERLAY_WIDTH / newScale),
               );
           }
 
@@ -1941,17 +1933,14 @@ const formHelpers = function() {
             .attr('id', 'richTextDetachedOverlay')
             .appendTo('body');
           $customOverlay
-            .show()
-            .css({
-              'z-index': 3000,
-            });
+            .show();
 
           // Create temporary container with editor dimensions
           $('<div/>', {
             class: 'rich-text-temp-container',
             css: {
-              width: $editorContainer.width(),
-              height: $editorContainer.height(),
+              width: $editorMainContainer.width(),
+              height: $editorMainContainer.height(),
             },
           }).appendTo($container);
 
@@ -1961,7 +1950,7 @@ const formHelpers = function() {
           });
 
           // Detach editor
-          $editorContainer.addClass('detached');
+          $editorMainContainer.addClass('detached');
           $detachButton.addClass('d-none');
           $attachButton.removeClass('d-none');
         },
@@ -1975,14 +1964,9 @@ const formHelpers = function() {
         'data-container': '.properties-panel',
         class: 'btn btn-sm attachEditorButton d-none',
         click: function() {
-          const $input = $(el);
-          const $container = $input.closest('.form-group');
-          const $editorContainer = $container.find('.rich-text-container');
-          const $editor = $editorContainer.find('.cke_textarea_inline');
           const $detachButton = $container.find('.detachEditorButton');
           const $attachButton = $container.find('.attachEditorButton');
-          const $propertiesPanelContainer =
-            $container.parents('.properties-panel-container');
+          const $editor = $editorMainContainer.find('.cke_textarea_inline');
 
           // Restore properties panel original Z-index from data
           if ($propertiesPanelContainer.length > 0) {
@@ -1997,6 +1981,7 @@ const formHelpers = function() {
           if ($editor.length > 0) {
             const originalScale = $editor.data('originaScale');
             $editor.css('transform', 'scale(' + originalScale + ')');
+            $editor.data('currentScale', originalScale);
 
             // Adjust overlay
             $('.cke_textarea_inline')
@@ -2013,14 +1998,61 @@ const formHelpers = function() {
           $('#richTextDetachedOverlay').remove();
 
           // Attach editor
-          $editorContainer.removeClass('detached');
+          $editorMainContainer.removeClass('detached');
           $detachButton.removeClass('d-none');
           $attachButton.addClass('d-none');
         },
       }).tooltip();
 
-      // Create or get button container
-      $buttonContainer = createButtonContainer($(el));
+      // Zoom buttons
+      const $zoomInButton = $('<button/>', {
+        html: '<i class="fa fa-search-plus"></i>',
+        type: 'button',
+        title: editorsTrans.zoomInEditor,
+        'data-container': '.properties-panel',
+        class: 'btn btn-sm zoomInEditorButton',
+        click: function() {
+          const $editor = $editorMainContainer.find('.cke_textarea_inline');
+          const editorScale = Number($editor.data('currentScale'));
+          const newScale = (editorScale * 1.2);
+          $editor.css('transform', 'scale(' + newScale + ')');
+          $editor.data('currentScale', newScale);
+        },
+      }).tooltip();
+
+      const $zoomOutButton = $('<button/>', {
+        html: '<i class="fa fa-search-minus"></i>',
+        type: 'button',
+        title: editorsTrans.zoomOutEditor,
+        'data-container': '.properties-panel',
+        class: 'btn btn-sm zoomOutEditorButton',
+        click: function() {
+          const $editor = $editorMainContainer.find('.cke_textarea_inline');
+          const editorScale = Number($editor.data('currentScale'));
+          const newScale = (editorScale / 1.2);
+          $editor.css('transform', 'scale(' + newScale + ')');
+          $editor.data('currentScale', newScale);
+        },
+      }).tooltip();
+
+      // Add same background colour to editor container as the layout's
+      const backgroundColor =
+      (
+        self.mainObject != undefined &&
+        typeof self.mainObject.backgroundColor != 'undefined' &&
+        self.mainObject.backgroundColor != null
+      ) ?
+        self.mainObject.backgroundColor :
+        self.defaultBackgroundColor;
+      $editorContainer.css('background-color', backgroundColor);
+
+      // Get button container
+      $buttonContainer =
+        $(el).parents('.xibo-form-input').find('.text-area-buttons');
+
+      // Add zoom buttons
+      $buttonContainer.append($zoomInButton);
+      $buttonContainer.append($zoomOutButton);
 
       // Add detach and attach buttons to container for the text area
       $buttonContainer.append($detachButton);
