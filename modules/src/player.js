@@ -261,23 +261,22 @@ $(function() {
     $.each(dataItems, function(_key, item) {
       // Parse the data if there is a parser function
       if (typeof window['onParseData_' + widget.widgetId] === 'function') {
-        item[_key] = window[
+        item = window[
           'onParseData_' + widget.widgetId
         ](item, widget.properties, widget.meta);
       }
 
       // Add the item to the content
-      (hbs) && $content.append(hbs(item[_key]));
+      if (hbs) {
+        $content.append(hbs(item));
 
-      // Add items to the widget object
-      (item[_key]) && widget.items.push(item[_key]);
+        // IF we added item template
+        templateAlreadyAdded = true;
+      };
 
-      // IF we added item template
-      templateAlreadyAdded = true;
+      // Add item to the widget object
+      (item) && widget.items.push(item);
     });
-
-    // Assert our data
-    widget.items = dataItems;
 
     // If we don't have dataType, or we have a module template
     // add it to the content with widget properties and global options

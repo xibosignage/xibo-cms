@@ -1077,7 +1077,7 @@ Widget.prototype.getData = function() {
 
             if (modulesList[item].onDataLoad) {
               const onDataLoad = new Function(
-                'return function(item, meta, properties) {' +
+                'return function(items, meta, properties) {' +
                 modulesList[item].onDataLoad + '}',
               )();
 
