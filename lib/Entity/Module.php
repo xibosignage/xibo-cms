@@ -346,7 +346,7 @@ class Module implements \JsonSerializable
      * Does this module have required elements?
      * @return bool
      */
-    public function hasRequriedElements(): bool
+    public function hasRequiredElements(): bool
     {
         return count($this->requiredElements) > 0;
     }

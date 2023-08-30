@@ -1766,7 +1766,7 @@ class Layout implements \JsonSerializable
                 $template
                     ->decorateProperties($widget)
                     ->validateProperties('status');
-            } else if ($templateId === 'elements' && $module->hasRequriedElements()) {
+            } else if ($templateId === 'elements' && $module->hasRequiredElements()) {
                 // Make sure our required element is present.
                 $providedElements = [];
 
