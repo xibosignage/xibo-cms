@@ -70,6 +70,9 @@ PropertiesPanel.prototype.save = function(
     target = app.selectedObject;
   }
 
+  // Save original target
+  const originalTarget = target;
+
   // If main container has inline editing class, remove it
   app.editorContainer.removeClass('inline-edit-mode');
 
@@ -84,11 +87,9 @@ PropertiesPanel.prototype.save = function(
     target.type === 'element' ||
     target.type === 'element-group'
   ) {
-    const oldTarget = target;
-
     target = app.getObjectByTypeAndId(
       'widget',
-      'widget_' + oldTarget.regionId + '_' + oldTarget.widgetId,
+      'widget_' + originalTarget.regionId + '_' + originalTarget.widgetId,
       'canvas',
     );
 
@@ -97,12 +98,7 @@ PropertiesPanel.prototype.save = function(
     target.cachedData = {};
 
     // Save element properties
-    if (oldTarget.type === 'element') {
-      this.saveElement(
-        oldTarget,
-        form.find('[name].element-property'),
-      );
-
+    if (originalTarget.type === 'element') {
       savingElement = true;
     } else {
       savingElementGroup = true;
@@ -227,6 +223,15 @@ PropertiesPanel.prototype.save = function(
           );
         }
       };
+
+      // Save element
+      if (savingElement) {
+        // Only save after having saved the widget
+        this.saveElement(
+          originalTarget,
+          form.find('[name].element-property'),
+        );
+      }
 
       // Save elements or element groups
       if (
