@@ -594,12 +594,14 @@ lD.selectObject =
  * @param {boolean} [reloadToolbar=false] - Update toolbar
  * @param {boolean} [reloadViewer=false] - Reload viewer
  * @param {boolean} [reloadPropertiesPanel=false] - Reload properties panel
+ * @param {boolean} [reloadLayerManager=true] - Reload layer manager
  */
 lD.refreshEditor = function(
   {
     reloadToolbar = false,
     reloadViewer = false,
     reloadPropertiesPanel = false,
+    reloadLayerManager = true,
   } = {},
 ) {
   // Remove temporary data only when reloading properties panel
@@ -616,6 +618,7 @@ lD.refreshEditor = function(
   // Properties panel and viewer
   (reloadPropertiesPanel) && this.propertiesPanel.render(this.selectedObject);
   (reloadViewer) && this.viewer.render(reloadViewer);
+  (reloadLayerManager) && this.viewer.layerManager.render();
 };
 
 /**
@@ -658,7 +661,10 @@ lD.reloadData = function(
       lD.folderId = lD.layout.folderId;
 
       // Select the same object ( that will refresh the layout too )
-      const selectObjectId = lD.selectedObject.id;
+      const selectObjectId = (lD.selectedObject.type === 'element') ?
+        lD.selectedObject.elementId :
+        lD.selectedObject.id;
+
       lD.selectObject({
         target: $('#' + selectObjectId),
         forceSelect: true,
@@ -681,6 +687,9 @@ lD.reloadData = function(
         reloadViewer: reloadViewer,
         reloadPropertiesPanel: reloadPropertiesPanel,
       });
+
+      // We always reload the layer manager after reloading data
+      lD.viewer.layerManager.render();
 
       // Call callback function
       callBack && callBack();

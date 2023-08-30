@@ -323,9 +323,6 @@ Viewer.prototype.render = function(forceReload = false) {
   this.parent.common.reloadTooltips(
     this.DOMObject.parent(),
   );
-
-  // Update layer manager
-  this.layerManager.render();
 };
 
 /**
@@ -1156,9 +1153,6 @@ Viewer.prototype.updateElement = _.throttle(function(
   lD.viewer.renderElementContent(
     element,
   );
-
-  // Update layer manager
-  lD.viewer.layerManager.render();
 }, drawThrottle);
 
 /**
@@ -1193,9 +1187,6 @@ Viewer.prototype.updateElementGroup = _.throttle(function(
     lD.viewer.renderElementContent(
       element,
     );
-
-    // Update layer manager
-    lD.viewer.layerManager.render();
   });
 }, drawThrottle);
 
@@ -1248,9 +1239,6 @@ Viewer.prototype.updateRegion = _.throttle(function(
   } else {
     lD.viewer.updateRegionContent(region, changed);
   }
-
-  // Update layer manager
-  lD.viewer.layerManager.render();
 }, drawThrottle);
 
 
@@ -2411,9 +2399,6 @@ Viewer.prototype.selectElement = function(
         },
       );
   }
-
-  // Update layer manager
-  this.layerManager.render();
 };
 
 /**
