@@ -9,5 +9,9 @@
         {{/each}}
     />
     <label for="input_{{id}}" class="form-check-label"><strong>{{title}}</strong></label>
-    <div class="input-info-container"></div>
+    <div class="input-info-container pt-0">
+        {{#if helpText}}
+            {{>add-ons/helpText helpText=helpText}}
+        {{/if}}
+    </div>
 </div>

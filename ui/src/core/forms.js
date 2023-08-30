@@ -273,11 +273,17 @@ window.forms = {
 
           // Handle help text
           if (property.helpText) {
-            $newField.find('.input-info-container').append(
-              $(templates.forms.addOns.helpText({
-                helpText: property.helpText,
-              })),
-            );
+            // Only add if not added yet
+            if (
+              $newField.find('.input-info-container .xibo-help-text')
+                .length === 0
+            ) {
+              $newField.find('.input-info-container').append(
+                $(templates.forms.addOns.helpText({
+                  helpText: property.helpText,
+                })),
+              );
+            }
           }
 
           // Handle custom popover

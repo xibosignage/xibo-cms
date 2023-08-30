@@ -7,7 +7,11 @@
     {{#if title}}
         <label for="input_{{id}}" class="control-label"><strong>{{title}}</strong></label>
     {{/if}}
-    <div class="input-info-container"></div>
+    <div class="input-info-container">
+        {{#if helpText}}
+            {{>add-ons/helpText helpText=helpText}}
+        {{/if}}
+    </div>
     <div class="input-group">
         <div class="input-group-prepend">
             <i class="input-group-text input-group-addon" id="{{id}}_label"></i>
