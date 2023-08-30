@@ -203,15 +203,22 @@ return value;
             ]]></hbs>
         </stencil>
         <onTemplateRender><![CDATA[
-const $productContainer = $(target).find('.product-elements-options-name');
 const optionSlot = Number(properties.optionSlot) - 1;
+let $productContainer = null;
+
+if ($(target).is('.element-content')) {
+    $productContainer = $(target).find('.product-elements-options-name');
+} else {
+    $productContainer = $(target);
+}
 
 if (
-    items.productOptions &&
-    items.productOptions.length > 0 &&
-    items.productOptions[optionSlot]
+    properties.data &&
+    properties.data.productOptions &&
+    properties.data.productOptions.length > 0 &&
+    properties.data.productOptions[optionSlot]
 ) {
-    const option = items.productOptions[optionSlot];
+    const option = properties.data.productOptions[optionSlot];
     let name = option.name;
 
     if (properties.prefix && properties.prefix !== '') {
@@ -296,15 +303,22 @@ if (
             ]]></hbs>
         </stencil>
         <onTemplateRender><![CDATA[
-const $productContainer = $(target).find('.product-elements-options-value');
 const optionSlot = Number(properties.optionSlot) - 1;
+let $productContainer = null;
+
+if ($(target).is('.element-content')) {
+    $productContainer = $(target).find('.product-elements-options-value');
+} else {
+    $productContainer = $(target);
+}
 
 if (
-    items.productOptions &&
-    items.productOptions.length > 0 &&
-    items.productOptions[optionSlot]
+    properties.data &&
+    properties.data.productOptions &&
+    properties.data.productOptions.length > 0 &&
+    properties.data.productOptions[optionSlot]
 ) {
-    const option = items.productOptions[optionSlot];
+    const option = properties.data.productOptions[optionSlot];
     let value = option.value;
 
     if (properties.prefix && properties.prefix !== '') {
