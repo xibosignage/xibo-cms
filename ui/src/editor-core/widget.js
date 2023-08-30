@@ -600,7 +600,6 @@ Widget.prototype.getNextWidget = function(reverse = false) {
   return false;
 };
 
-
 /**
  * Save elements to widget
  * @param {object} elements - elements to save
@@ -609,6 +608,7 @@ Widget.prototype.getNextWidget = function(reverse = false) {
 Widget.prototype.saveElements = function(
   elements,
 ) {
+  const self = this;
   const widgetId = this.widgetId;
   const linkToAPI = urlsForApi.widget.saveElements;
   const requestPath = linkToAPI.url.replace(':id', widgetId);
@@ -691,7 +691,12 @@ Widget.prototype.saveElements = function(
 
   lD.common.showLoadingScreen();
 
-  return $.ajax({
+  // If there was still a render request, abort it
+  if (self.saveElementsRequest != undefined) {
+    self.saveElementsRequest.abort('requestAborted');
+  }
+
+  return self.saveElementsRequest = $.ajax({
     url: requestPath,
     type: linkToAPI.type,
     dataType: 'json',
@@ -702,19 +707,29 @@ Widget.prototype.saveElements = function(
       },
     ]),
   }).fail(function(jqXHR, textStatus, errorThrown) {
-    console.error('saveElementsToWidget', jqXHR, textStatus, errorThrown);
+    // Clear request var after response
+    self.saveElementsRequest = undefined;
+
+    if (textStatus != 'requestAborted') {
+      console.error('saveElementsToWidget', jqXHR, textStatus, errorThrown);
+    }
   }).always(function(res) {
+    // Clear request var after response
+    self.saveElementsRequest = undefined;
+
     if (!res.success) {
       // Login Form needed?
       if (res.login) {
         window.location.href = window.location.href;
         location.reload();
       } else {
-        // Just an error we dont know about
-        if (res.message == undefined) {
-          console.error(res);
-        } else {
-          console.error(res.message);
+        if (res.statusText != 'requestAborted') {
+          // Just an error we dont know about
+          if (res.message == undefined) {
+            console.error(res);
+          } else {
+            console.error(res.message);
+          }
         }
       }
     }

@@ -930,11 +930,13 @@ PropertiesPanel.prototype.render = function(
           self.DOMObject.find(
             '[name].element-property',
           ).on({
-            change: function(_ev) {
+            change: function(_ev, options) {
+              if (!options?.skipSave) {
               // Debounce save based on the object being saved
               saveDebounced(
                 _ev.currentTarget,
               );
+              }
             },
             focus: function(_ev) {
               self.toSave = true;
