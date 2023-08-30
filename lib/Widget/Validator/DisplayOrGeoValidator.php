@@ -49,11 +49,14 @@ class DisplayOrGeoValidator implements WidgetValidatorInterface
         }
         if ($useDisplayLocation === 0) {
             // Validate lat/long
-            if (!v::latitude()->validate($widget->getOptionValue('latitude', null))) {
+            // only if they have been provided (our default is the CMS lat/long).
+            $lat = $widget->getOptionValue('latitude', null);
+            if (!empty($lat) && !v::latitude()->validate($lat)) {
                 throw new InvalidArgumentException(__('The latitude entered is not valid.'), 'latitude');
             }
 
-            if (!v::longitude()->validate($widget->getOptionValue('longitude', null))) {
+            $lng = $widget->getOptionValue('longitude', null);
+            if (!empty($lng) && !v::longitude()->validate($lng)) {
                 throw new InvalidArgumentException(__('The longitude entered is not valid.'), 'longitude');
             }
         }

@@ -394,7 +394,7 @@ trait ModuleXmlTrait
                     $asset->mimeType = $node->getAttribute('mimeType');
                     $asset->type = $node->getAttribute('type');
                     $asset->cmsOnly = $node->getAttribute('cmsOnly') === 'true';
-                    $asset->autoInclude = $node->getAttribute('autoInclude') !== 'true';
+                    $asset->autoInclude = $node->getAttribute('autoInclude') !== 'false';
                     $asset->assetNo = count($this->assetCache) + 1;
                     $this->assetCache[$assetId] = $asset;
                 }

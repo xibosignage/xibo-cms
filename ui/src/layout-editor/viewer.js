@@ -1485,7 +1485,7 @@ Viewer.prototype.renderElementContent = function(
     template.assets.forEach((asset) => {
       const assetURL = urlsForApi.module.assetDownload.url;
       if (
-        asset.isAutoInclude &&
+        asset.autoInclude &&
         asset.mimeType === 'text/css' &&
         $assetContainer.find('[data-asset-id=' + asset.id + ']').length === 0
       ) {
@@ -1496,7 +1496,7 @@ Viewer.prototype.renderElementContent = function(
       }
 
       if (
-        asset.isAutoInclude &&
+        asset.autoInclude &&
         asset.mimeType === 'text/javascript' &&
         $assetContainer.find('[data-asset-id=' + asset.id + ']').length === 0
       ) {

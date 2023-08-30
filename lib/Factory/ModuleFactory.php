@@ -787,7 +787,14 @@ class ModuleFactory extends BaseFactory
             $module->propertyGroups = $this->parsePropertyGroups($xml->getElementsByTagName('propertyGroups'));
         } catch (\Exception $e) {
             $module->errors[] = __('Invalid property groups');
-            $this->getLog()->error('Module ' . $module->moduleId . ' has invalid property groups. e: ' .  $e->getMessage());
+            $this->getLog()->error('Module ' . $module->moduleId . ' has invalid property groups. e: '
+                .  $e->getMessage());
+        }
+
+        // Parse required elements.
+        $requiredElements = $this->getFirstValueOrDefaultFromXmlNode($xml, 'requiredElements');
+        if (!empty($requiredElements)) {
+            $module->requiredElements = explode(',', $requiredElements);
         }
 
         // Parse stencils

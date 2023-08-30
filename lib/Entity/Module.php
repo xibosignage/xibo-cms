@@ -266,6 +266,16 @@ class Module implements \JsonSerializable
      */
     public $propertyGroups = [];
 
+    /**
+     * @SWG\Property(
+     *     description="An array of required elements",
+     *     type="array",
+     *     @SWG\Items(type="string")
+     * )
+     * @var string[]
+     */
+    public $requiredElements = [];
+
     /** @var bool $isInstalled Is this module installed? */
     public $isInstalled;
 
@@ -330,6 +340,15 @@ class Module implements \JsonSerializable
     public function isDataProviderExpected(): bool
     {
         return (!empty($this->dataType));
+    }
+
+    /**
+     * Does this module have required elements?
+     * @return bool
+     */
+    public function hasRequiredElements(): bool
+    {
+        return count($this->requiredElements) > 0;
     }
 
     /**

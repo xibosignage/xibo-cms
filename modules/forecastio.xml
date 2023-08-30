@@ -36,6 +36,7 @@
     <renderAs>html</renderAs>
     <defaultDuration>60</defaultDuration>
     <settings></settings>
+    <requiredElements>weather_attribution</requiredElements>
     <properties>
         <property id="useDisplayLocation" type="checkbox">
             <title>Use the Display Location</title>
@@ -45,7 +46,7 @@
         <property id="latitude" type="number">
             <title>Latitude</title>
             <helpText>The Latitude for this widget</helpText>
-            <default></default>
+            <default>#DEFAULT_LAT#</default>
             <visibility>
                 <test>
                     <condition field="useDisplayLocation" type="eq">0</condition>
@@ -55,7 +56,7 @@
         <property id="longitude" type="number">
             <title>Longitude</title>
             <helpText>The Longitude for this widget</helpText>
-            <default></default>
+            <default>#DEFAULT_LONG#</default>
             <visibility>
                 <test>
                     <condition field="useDisplayLocation" type="eq">0</condition>
