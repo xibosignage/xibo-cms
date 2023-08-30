@@ -579,7 +579,7 @@ $(function() {
 
               // Parse the data if there is a parser function
               if (typeof window['onParseData_' +
-              widget.widgetId] === 'function'
+                widget.widgetId] === 'function'
               ) {
                 $.each(dataItems, function(_key, item) {
                   item = window['onParseData_' + widget.widgetId](
@@ -697,11 +697,12 @@ $(function() {
                   ] === 'function') {
                     const onTemplateRender = window[
                       `onTemplateRender_${item.templateData.id}`];
+                    const itemID = item.uniqueID || item.templateData?.uniqueID;
 
                     onTemplateRender && onTemplateRender(
                       item.elementId,
-                      $itemContainer,
-                      $content.find(`.${item.uniqueID}--item`),
+                      $itemContainer.find(`.${itemID}--item`),
+                      $content.find(`.${itemID}--item`),
                       {item, ...item.templateData, data: dataItem},
                       widget?.meta,
                     );
@@ -1020,12 +1021,6 @@ $(function() {
 
   // Call the data url and parse out the template.
   $.each(widgetData, function(_key, widget) {
-    // Check if template is empty
-    // Then skip to next widget
-    if (widget.templateId === null) {
-      return true;
-    }
-
     // Check if we have template from templateId or module
     // and set it as the template
     let $template = null;
