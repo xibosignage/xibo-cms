@@ -78,12 +78,12 @@ class Asset implements \JsonSerializable
     }
 
     /**
-     * Should this asset be sent to the player?
+     * Should this asset be auto included in the HTML sent to the player
      * @return bool
      */
     public function isAutoInclude(): bool
     {
-        return !($this->autoInclude ?? false);
+        return $this->autoInclude && $this->isSendToPlayer();
     }
 
     /**
