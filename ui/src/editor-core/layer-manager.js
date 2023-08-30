@@ -62,6 +62,12 @@ LayerManager.prototype.createStructure = function() {
     arrayToAdd[layer].push(object);
   };
 
+  const parseDuration = function(duration) {
+    return (duration == null) ? '' : lD.common.timeFormat(
+      duration,
+    );
+  };
+
   // Get canvas
   const canvasObject = {};
 
@@ -72,7 +78,7 @@ LayerManager.prototype.createStructure = function() {
     canvasObject.layer = canvas.zIndex;
     canvasObject.type = 'canvas';
     canvasObject.name = 'Canvas';
-    canvasObject.duration = canvas.duration;
+    canvasObject.duration = parseDuration(canvas.duration);
     canvasObject.subLayers = [];
 
     // Get elements
@@ -83,7 +89,8 @@ LayerManager.prototype.createStructure = function() {
           addToLayerStructure(element.layer, {
             type: 'element',
             name: element.id,
-            duration: widget.duration, // Element has parent widget duration
+            // Element has parent widget duration
+            duration: parseDuration(widget.getDuration()),
             id: element.elementId,
             hasGroup: (element.groupId != undefined),
             groupId: layerManagerTrans.inGroup
@@ -100,7 +107,7 @@ LayerManager.prototype.createStructure = function() {
     addToLayerStructure(canvas.zIndex, {
       type: 'canvas',
       name: 'Canvas',
-      duration: canvas.duration,
+      duration: parseDuration(canvas.duration),
       layers: canvasObject.subLayers,
     });
   }
@@ -111,7 +118,7 @@ LayerManager.prototype.createStructure = function() {
       addToLayerStructure(region.zIndex, {
         type: 'playlist',
         name: region.name,
-        duration: region.duration,
+        duration: parseDuration(region.duration),
         id: region.id,
         selected: region.selected,
       });
@@ -121,7 +128,7 @@ LayerManager.prototype.createStructure = function() {
           type: 'staticWidget',
           name: (widget.widgetName != '') ?
             widget.widgetName : `[${widget.moduleName}]`,
-          duration: region.duration,
+          duration: parseDuration(region.duration),
           icon: widget.getIcon(),
           id: widget.id,
           selected: widget.selected,

@@ -12,7 +12,13 @@
                 {{#eq type 'canvas'}}
                     <div class="layer-manager-canvas-layers">
 
-                        <div class="layer-manager-layer-canvas" title="{{../trans.layer}}"><div class="layer">{{layerIdx}}</div><span class="name" title="{{../../trans.canvas}}">{{../../trans.canvas}}</span></div>
+                        <div class="layer-manager-layer-canvas" title="{{../trans.layer}}">
+                            <div class="layer">{{layerIdx}}</div>
+                            <span class="name" title="{{../../trans.canvas}}">{{../../trans.canvas}}</span>
+                            {{#if duration}}
+                                <span class="duration" title="{{../../trans.duration}}">{{duration}}</span>
+                            {{/if}}
+                        </div>
                         {{#each layers as |canvasLayer canvasLayerIdx|}}
                             {{#each this}}
                                 <div class="layer-manager-layer-item selectable {{#if selected}}selected{{/if}}" data-item-id="{{id}}">

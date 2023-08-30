@@ -181,6 +181,7 @@ PropertiesPanel.prototype.save = function(
 
         // If we're saving a widget, reload region on the viewer
         if (
+          !savingElement &&
           target.type === 'widget' &&
           app.viewer
         ) {
@@ -245,8 +246,10 @@ PropertiesPanel.prototype.save = function(
             app.viewer.renderElementContent(target.elements[element]);
           }
         }
-      } else if (reloadAfterSave) {
-        // Reload data if we're not saving an element
+      }
+
+      // Reload data
+      if (reloadAfterSave) {
         reloadData();
       }
 
@@ -932,10 +935,10 @@ PropertiesPanel.prototype.render = function(
           ).on({
             change: function(_ev, options) {
               if (!options?.skipSave) {
-              // Debounce save based on the object being saved
-              saveDebounced(
-                _ev.currentTarget,
-              );
+                // Debounce save based on the object being saved
+                saveDebounced(
+                  _ev.currentTarget,
+                );
               }
             },
             focus: function(_ev) {
@@ -1188,6 +1191,9 @@ PropertiesPanel.prototype.render = function(
             // Update moveable
             lD.viewer.updateMoveable();
           }
+
+          // Update layer manager
+          app.viewer.layerManager.render();
         }, 200));
 
       // Handle set fullscreen button
