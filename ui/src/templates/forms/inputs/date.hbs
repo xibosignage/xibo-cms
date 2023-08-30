@@ -3,7 +3,11 @@
     {{#if dependsOn}}data-depends-on="{{dependsOn}}"{{/if}}
 >
     <label for="input_{{id}}" class="control-label"><strong>{{title}}</strong></label>
-    <div class="input-info-container"></div>
+    <div class="input-info-container">
+        {{#if helpText}}
+            {{>add-ons/helpText helpText=helpText}}
+        {{/if}}
+    </div>
     <div class="input-group">
         <input type="text" class="form-control dateControl {{variant}}" id="input_{{id}}" name="{{#if name}}{{name}}{{else}}{{id}}{{/if}}" value="{{value}}" {{#if format }}data-custom-format="{{ format }}"{{/if}}
             {{#each customData}}

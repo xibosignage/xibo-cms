@@ -3,7 +3,11 @@
     {{#if dependsOn}}data-depends-on="{{dependsOn}}"{{/if}}
 >
     <label for="input_{{id}}" class="control-label"><strong>{{title}}</strong></label>
-    <div class="input-info-container"></div>
+    <div class="input-info-container">
+        {{#if helpText}}
+            {{>add-ons/helpText helpText=helpText}}
+        {{/if}}
+    </div>
     <textarea class="form-control code-input d-none" id="input_{{id}}" name="{{#if name}}{{name}}{{else}}{{id}}{{/if}}" rows="{{rows}}" data-code-type="{{variant}}"
         {{#each customData}}
             data-{{this.name}}="{{this.value}}"

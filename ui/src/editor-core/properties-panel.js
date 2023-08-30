@@ -1289,6 +1289,14 @@ PropertiesPanel.prototype.initFields = function(
     (typeof(lD) != 'undefined' && lD?.readOnlyMode === true) ||
     (app?.readOnlyMode === true);
 
+  // If layout ( or playlist ) isn't added to data
+  // add it for the translation replacements
+  if (data.layout === undefined && app.mainObjectType === 'layout') {
+    data.layout = app.layout;
+  } else if (data.playlist === undefined && app.mainObjectType === 'playlist') {
+    data.playlist = app.playlist;
+  }
+
   // Set condition and handle replacements
   forms.handleFormReplacements(self.DOMObject.find('form'), data);
   forms.setConditions(
