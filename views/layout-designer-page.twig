@@ -378,7 +378,10 @@
             }
 
             function layoutEditFormSaved() {
-              lD.reloadData(lD.layout.layoutId, true);
+              lD.reloadData(lD.layout,
+                {
+                  refreshEditor: true,
+                });
             }
         </script>
 
