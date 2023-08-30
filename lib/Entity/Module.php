@@ -195,6 +195,12 @@ class Module implements \JsonSerializable
     public $onParseData;
 
     /**
+     * @SWG\Property(description="A load function to run when the widget first fetches data")
+     * @var string
+     */
+    public $onDataLoad;
+
+    /**
      * @SWG\Property(description="An error function to run when the widget is unable to fetch data")
      * @var string
      */

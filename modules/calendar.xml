@@ -25,6 +25,7 @@
     <description>A module for displaying a calendar based on an iCal feed</description>
     <icon>fa fa-calendar-alt</icon>
     <class>Xibo\Widget\IcsProvider</class>
+    <compatibilityClass>\Xibo\Widget\Compatibility\CalendarWidgetCompatibility</compatibilityClass>
     <type>ics-calendar</type>
     <legacyType>calendaradvanced</legacyType>
     <legacyType>calendar</legacyType>

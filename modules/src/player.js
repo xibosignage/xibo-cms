@@ -247,6 +247,15 @@ $(function() {
       );
     }
 
+    // Run the onDataLoad function if it exists
+    if (typeof window['onDataLoad_' + widget.widgetId] === 'function') {
+      dataItems = window['onDataLoad_' + widget.widgetId](
+        dataItems,
+        widget.meta,
+        widget.properties,
+      );
+    }
+
     // For each data item, parse it and add it to the content
     let templateAlreadyAdded = false;
     $.each(dataItems, function(_key, item) {
@@ -258,13 +267,15 @@ $(function() {
       }
 
       // Add the item to the content
-      (hbs) && $content.append(hbs(item));
+      if (hbs) {
+        $content.append(hbs(item));
 
-      // Add items to the widget object
+        // IF we added item template
+        templateAlreadyAdded = true;
+      };
+
+      // Add item to the widget object
       (item) && widget.items.push(item);
-
-      // IF we added item template
-      templateAlreadyAdded = true;
     });
 
     // If we don't have dataType, or we have a module template

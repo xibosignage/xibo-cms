@@ -251,10 +251,11 @@ $datasetTableContainer.dataSetRender(properties);
         </assets>
     </template>
     <template>
-        <id>dataset_ticker</id>
+        <id>dataset_custom_html</id>
         <type>static</type>
         <dataType>dataset</dataType>
-        <title>Dataset Ticker</title>
+        <showIn>none</showIn>
+        <title>Dataset Custom HTML</title>
         <properties>
             <property type="message">
                 <title>Select a dataset to display appearance options.</title>
@@ -283,8 +284,16 @@ $datasetTableContainer.dataSetRender(properties);
                     </test>
                 </visibility>
             </property>
-            <property id="ta_css" type="code" allowLibraryRefs="true" variant="css">
+            <property id="styleSheet" type="code" allowLibraryRefs="true" variant="css">
                 <title>Optional Stylesheet Template</title>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="javaScript" type="code" allowLibraryRefs="true" variant="javascript">
+                <title>Optional JavaScript</title>
                 <visibility>
                     <test>
                         <condition field="dataSetId" type="neq"></condition>
@@ -294,16 +303,6 @@ $datasetTableContainer.dataSetRender(properties);
             <property id="itemsSideBySide" type="checkbox">
                 <title>Show items side by side?</title>
                 <helpText>Should items be shown side by side?</helpText>
-                <default>0</default>
-                <visibility>
-                    <test>
-                        <condition field="dataSetId" type="neq"></condition>
-                    </test>
-                </visibility>
-            </property>
-            <property id="numItems" type="number">
-                <title>Number of Items</title>
-                <helpText>The Number of items you want to display</helpText>
                 <default>0</default>
                 <visibility>
                     <test>
@@ -358,6 +357,15 @@ $datasetTableContainer.dataSetRender(properties);
                     </test>
                 </visibility>
             </property>
+            <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
+                <title>No data message</title>
+                <helpText>A message to display when no data is returned from the source</helpText>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
         </properties>
         <preview></preview>
         <stencil>
@@ -382,9 +390,9 @@ body {
 {% endif %}
 </style>
 
-{% if ta_css %}
+{% if styleSheet %}
 <style>
-    {{ta_css|raw}}
+    {{styleSheet|raw}}
 </style>
 {% endif %}
         ]]></twig>
@@ -396,19 +404,17 @@ body {
 // items: The items to render
 // properties: The properties for the widget
 
+// No data message
+if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !== '') {
+    items.push(properties.noDataMessage);
+}
+
 // Clear the content container
 $(target).find('#content').empty();
 
-// If we don't have meta data, we can't render anything
+// If we don't have metadata, we can't render anything
 if (!meta || !meta.mapping) {
     return;
-}
-
-// Randomise the order of the items
-if (properties.randomiseItems) {
-    items = items.sort(function () {
-        return 0.5 - Math.random();
-    });
 }
 
 // Get dataset columns from meta.mapping
@@ -2566,134 +2572,116 @@ $datasetTableContainer.dataSetRender(properties);
         </assets>
     </template>
     <template>
-        <id>dataset_custom_html</id>
+        <id>dataset_slideshow</id>
         <type>static</type>
         <dataType>dataset</dataType>
-        <showIn>none</showIn>
+        <title>Dataset Image Slideshow</title>
+        <thumbnail>dataset-slideshow</thumbnail>
         <properties>
-            <property id="template" type="code" allowLibraryRefs="true" variant="html">
-                <title>Main Template</title>
+            <property id="dataTypeId" type="hidden">
+                <default>4,5</default>
             </property>
-            <property id="styleSheet" type="code" allowLibraryRefs="true" variant="css">
-                <title>Optional Stylesheet Template</title>
+            <property type="message">
+                <title>Select a dataset to display appearance options.</title>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="eq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="datasetField" type="datasetField">
+                <dependsOn>dataSetId</dependsOn>
+                <title>Select DataSet Field</title>
+                <helpText>Please choose a DataSet field for this element.</helpText>
+                <default></default>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="effect" type="effectSelector" variant="showPaged">
+                <title>Effect</title>
+                <helpText>Please select the effect that will be used to transition between items.</helpText>
+                <default>tileBlind</default>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="speed" type="number">
+                <title>Speed</title>
+                <helpText>The transition speed of the selected effect in milliseconds (normal = 1000)</helpText>
+                <default>1000</default>
+                <visibility>
+                    <test type="and">
+                        <condition field="effect" type="neq">noTransition</condition>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
             </property>
         </properties>
+        <preview></preview>
         <stencil>
-        <twig><![CDATA[
-<div class="DataSetTableContainer"></div>
-<style>
-{{styleSheet|raw}}
-
-/* Table display CSS fix */
-table.DataSetTable.cycle-slide {
-    display: table !important;
+            <style><![CDATA[
+img {
+  height: 100%;
+  width: 100%;
+  object-fit: contain;
 }
-
-/* If we are going to cycle between pages, make sure we hide all of the tables initially */
-{% if rowsPerPage > 0 %}
-table.DataSetTable {visibility:hidden;}
-{% endif %}
-</style>
-        ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
-// Columns to be shown in the table
-var columnIndex = JSON.parse(properties.columns);
-var columns = (meta && meta.mapping) ? meta.mapping.filter(function (column) {
-    return column.dataSetColumnId !== '' && columnIndex.indexOf(column.dataSetColumnId) !== -1;
-}) : [];
+// Module renderer options
+// id: The id of the widget
+// target: The target element to render
+// items: The items to render
+// properties: The properties for the widget
 
-// Get table element
-var $datasetTableContainer = $(target).find('.DataSetTableContainer');
+// Clear the content container
+$(target).find('#content').empty();
 
-// Clear the table container
-$datasetTableContainer.empty();
-
-// Calculate number of pages
-var totalPages = (properties.rowsPerPage > 0) ? Math.ceil(items.length / properties.rowsPerPage) : 1;
-
-// Set the number of pages to the table
-$datasetTableContainer.data('totalPages', totalPages);
-
-// Create a table for each page
-for (var i = 0; i < totalPages; i++) {
-    // Create a new table
-    var $newTable = properties.rowsPerPage > 0 ?
-        $('<table class="DataSetTable" data-page="' + i + '">') :
-        $('<table class="DataSetTable">');
-
-    // Show the table headings if required
-    if (properties.showHeadings === 1) {
-        // Build the headings
-        var headings = columns.map(function (column, colIdx) {
-            return '<th class="DataSetColumnHeaderCell">' + column.heading + '</th>';
-        });
-
-        // Add the headings to the table
-        $newTable.append(
-            $('<thead>')
-                .append(
-                    $('<tr class="HeaderRow">')
-                        .append(headings)
-                )
-        );
-    }
-
-    // Append table body
-    $newTable.append(
-        $('<tbody>')
-    );
-
-    // Add the table to the container
-    $datasetTableContainer.append($newTable);
+// If we don't have metadata, we can't render anything
+if (!meta || !meta.mapping) {
+    return;
 }
 
-// Add rows to the tables per page
+// Get dataset columns from meta.mapping
+var columnTypes = {};
+for (var i = 0; i < meta.mapping.length; i++) {
+    var column = meta.mapping[i];
+    columnTypes[column.dataSetColumnId] = {
+        type: column.dataTypeId
+    };
+}
+
+// Add content for each item
+// make replacements
+// and wrap it in a div with the item class
 for (var i = 0; i < items.length; i++) {
-    // Get the table for this row
-    var $table = (properties.rowsPerPage > 0) ?
-        $datasetTableContainer.find('.DataSetTable[data-page="' + Math.floor(i / properties.rowsPerPage) + '"]') :
-        $datasetTableContainer.find('.DataSetTable');
+    var item = items[i];
+    var itemValue = item[properties.datasetField];
+    var content = '<img src="' + itemValue  + '" />';
 
-    // Build the row content based on the columns
-    var rowContent = columns.map(function (column, colIdx) {
-        var value = items[i][column.heading];
-
-        // If this is an image column, wrap it in an image tag
-        if (column.dataTypeId === 4 || column.dataTypeId === 5) {
-            value = value ? '<img src="' + value + '" />' : '';
-        }
-
-        // Empty string if value is null
-        if (value === null) {
-            value = '';
-        }
-
-        return '<td class="DataSetColumn DataSetColumn_' + colIdx + '" id="column_' + (colIdx + 1) + '"><span class="DataSetCellSpan DataSetCellSpan_' + i + '_' + colIdx + '" id="span_' + i + '_' + (colIdx + 1) + '">' + value + '</span></td>';
-    }).join('');
-
-    // Add the row to the table's body
-    $table.find('tbody').append(
-        '<tr class="DataSetRow DataSetRow' + ((i % 2) ? 'Odd' : 'Even') + '" id="row_' + i + '">' +
-        rowContent +
-        '</tr>'
+    // Add the content to the target
+    $(target).find('#content').append(
+        $('<div>')
+            .addClass('item')
+            .append(content)
     );
 }
-
-// Move table container into content
-$datasetTableContainer.appendTo($(target).find('#content'));
 
 // Scale the layout
-$(target).xiboLayoutScaler(properties);
+$('body').xiboLayoutScaler(properties);
 
-// Image render
-$datasetTableContainer.find('img').xiboImageRender(properties);
-
-// Call render
-$datasetTableContainer.dataSetRender(properties);
+$(target).xiboTextRender(
+    Object.assign(properties, globalOptions),
+    $(target).find('#content > *'),
+);
         ]]></onTemplateRender>
         <assets>
-            <asset id="pill-colored" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/dataset/7-pill-colored.png" />
+            <asset id="dataset-slideshow" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/dataset/dataset-slideshow.png" />
         </assets>
     </template>
 </templates>

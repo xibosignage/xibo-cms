@@ -394,6 +394,7 @@ class WidgetHtmlRenderer
         $twig['assets'] = [];
         $twig['onRender'] = [];
         $twig['onParseData'] = [];
+        $twig['onDataLoad'] = [];
         $twig['onDataError'] = [];
         $twig['onElementParseData'] = [];
         $twig['onTemplateRender'] = [];
@@ -496,6 +497,9 @@ class WidgetHtmlRenderer
             }
             if (!empty($module->onParseData)) {
                 $twig['onParseData'][$widget->widgetId] = $module->onParseData;
+            }
+            if (!empty($module->onDataLoad)) {
+                $twig['onDataLoad'][$widget->widgetId] = $module->onDataLoad;
             }
             if (!empty($module->onDataError)) {
                 $twig['onDataError'][$widget->widgetId] = $module->onDataError;
@@ -610,11 +614,12 @@ class WidgetHtmlRenderer
         foreach ($moduleTemplates as $moduleTemplate) {
             // Handle extends.
             $extension = $moduleTemplate->getUnmatchedProperty('extends');
+            $isExtensionHasStyle = false;
 
             // Render out any hbs
             if ($moduleTemplate->stencil !== null && $moduleTemplate->stencil->hbs !== null) {
                 // If we have an extension then look for %parent% and insert it.
-                if ($extension !== null && Str::contains('%parent%', $module->stencil->hbs)) {
+                if ($extension !== null && Str::contains('%parent%', $moduleTemplate->stencil->hbs)) {
                     $moduleTemplate->stencil->hbs = str_replace(
                         '%parent%',
                         $extension->stencil->hbs,
@@ -633,10 +638,6 @@ class WidgetHtmlRenderer
                         'with' => $moduleTemplate->extends?->with,
                     ],
                 ];
-
-                if ($moduleTemplate->stencil->style !== null) {
-                    $twig['style'][] = $moduleTemplate->stencil->style;
-                }
             } else if ($extension !== null) {
                 // Output the extension HBS instead
                 $twig['hbs'][$moduleTemplate->templateId] = [
@@ -652,7 +653,16 @@ class WidgetHtmlRenderer
 
                 if ($extension->stencil->style !== null) {
                     $twig['style'][] = $extension->stencil->style;
+                    $isExtensionHasStyle = true;
                 }
+            }
+
+            // Render the module template's style, if present and not already output by the extension
+            if ($moduleTemplate->stencil !== null
+                && $moduleTemplate->stencil->style !== null
+                && !$isExtensionHasStyle
+            ) {
+                $twig['style'][] = $moduleTemplate->stencil->style;
             }
 
             if ($moduleTemplate->onTemplateRender !== null) {

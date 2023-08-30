@@ -77,7 +77,7 @@ trait ModuleXmlTrait
                 }
             }
 
-            if ($stencil->twig !== null || $stencil->hbs !== null) {
+            if ($stencil->twig !== null || $stencil->hbs !== null || $stencil->style !== null) {
                 $stencils[] = $stencil;
             }
         }

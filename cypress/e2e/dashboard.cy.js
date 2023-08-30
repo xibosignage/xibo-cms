@@ -1,44 +1,39 @@
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 describe('Dashboard', function() {
+  beforeEach(function() {
+    cy.login();
+  });
 
-    beforeEach(function() {
-        cy.login();
-    });
-
-    it('should be at the dashboard page', function() {
-
-        cy.visit('/statusdashboard');
+  it('should be at the dashboard page', function() {
+    cy.visit('/statusdashboard');
 
 
-        cy.url().should('include', 'dashboard');
+    cy.url().should('include', 'dashboard');
 
-        // Check for the dashboard elements
-        cy.contains('Bandwidth Usage');
-        cy.contains('Library Usage');
-        cy.contains('Display Activity');
-        cy.contains('Latest News');
-    });
-
-    it('should go to the welcome page, show a tutorial, and then disable it', function() {
-        cy.server();
-
-        cy.visit('/statusdashboard');
-
-        // Open user dropdown menu
-        cy.get('#navbarUserMenu img.nav-avatar').click();
-
-        // Click Reshow welcome
-        cy.get('#reshowWelcomeMenuItem').click();
-
-        cy.url().should('include', 'welcome');
-
-        cy.get('div[data-tour-name="mainTour').click();
-
-        cy.get('.popover.tour').should('to.be.visible');
-
-        // Click to disable welcome tour
-        cy.get('button[data-role="end"]').click();
-
-        cy.wait(500);
-        cy.get('.popover.tour').should('not.exist');
-    });
+    // Check for the dashboard elements
+    cy.contains('Bandwidth Usage');
+    cy.contains('Library Usage');
+    cy.contains('Display Activity');
+    cy.contains('Latest News');
+  });
 });
