@@ -263,9 +263,9 @@ if (parseInt(properties.randomiseItems) === 1) {
     // Durstenfeld shuffle
     // https://en.wikipedia.org/wiki/Fisher%E2%80%93Yates_shuffle#The_modern_algorithm
     // https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
-    for (let i = items.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        const temp = items[i];
+    for (var i = items.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = items[i];
         items[i] = items[j];
         items[j] = temp;
     }
@@ -277,7 +277,7 @@ if (properties.takeItemsFrom === 'end') {
       items.reverse();
     } else {
       // If it's an object, reverse the keys
-      const newItems = {};
+      var newItems = {};
       Object.keys(items).reverse().forEach(function(key) {
         newItems[key] = items[key];
       });
@@ -305,7 +305,7 @@ if ((properties.takeItemsFrom === 'end' && properties.reverseOrder === 0) ||
         items.reverse();
     } else {
         // If it's an object, reverse the keys
-        const newItems = {};
+        var newItems = {};
         Object.keys(items).reverse().forEach(function(key) {
             newItems[key] = items[key];
         });
