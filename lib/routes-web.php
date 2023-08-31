@@ -706,13 +706,6 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/tag/form/usage/{id}', ['\Xibo\Controller\Tag', 'usageForm'])->setName('tag.usage.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['tag.view']));
 
-// Actions
-$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/action/form/add/{source}/{id}', ['\Xibo\Controller\Action', 'addForm'])->setName('action.add.form');
-    $group->get('/action/form/edit/{id}', ['\Xibo\Controller\Action', 'editForm'])->setName('action.edit.form');
-    $group->get('/action/form/delete/{id}', ['\Xibo\Controller\Action', 'deleteForm'])->setName('action.delete.form');
-})->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify', 'playlist.modify']));
-
 // Menu Boards
 $app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/menuboard/view', ['\Xibo\Controller\MenuBoard','displayPage'])->setName('menuBoard.view');
