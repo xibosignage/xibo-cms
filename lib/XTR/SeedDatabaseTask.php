@@ -80,7 +80,7 @@ class SeedDatabaseTask implements TaskInterface
     private array $displayGroups;
     private array $displays;
     private array $layouts;
-    private array $parentCampaigns;
+    private array $parentCampaigns = [];
     private array $syncGroups;
 
     /** @inheritdoc */
@@ -166,13 +166,22 @@ class SeedDatabaseTask implements TaskInterface
 
         foreach ($displayGroups as $displayGroupName) {
             try {
-                $displayGroup = $this->displayGroupFactory->createEmpty();
-                $displayGroup->displayGroup = $displayGroupName;
-                $displayGroup->userId = $this->userFactory->getSystemUser()->getId();
-                $displayGroup->save();
-                $this->store->commitIfNecessary();
-                // Cache
-                $this->displayGroups[$displayGroup->displayGroup] = $displayGroup->getId();
+                // Don't create if the display group exists
+                $groups = $this->displayGroupFactory->query(null, ['displayGroup' => $displayGroupName]);
+                if (count($groups) > 0) {
+                    foreach ($groups as $displayGroup) {
+                        $this->displayGroups[$displayGroup->displayGroup] = $displayGroup->getId();
+                    }
+                } else {
+                    $displayGroup = $this->displayGroupFactory->createEmpty();
+                    $displayGroup->displayGroup = $displayGroupName;
+                    $displayGroup->userId = $this->userFactory->getSystemUser()->getId();
+                    $displayGroup->save();
+                    $this->store->commitIfNecessary();
+                    // Cache
+                    $this->displayGroups[$displayGroup->displayGroup] = $displayGroup->getId();
+                }
+
             } catch (GeneralException $e) {
                 $this->log->error('Error creating display group: '. $e->getMessage());
             }
@@ -206,29 +215,39 @@ class SeedDatabaseTask implements TaskInterface
 
         foreach ($displays as $displayName => $displayData) {
             try {
-                $display = $this->displayFactory->createEmpty();
-                $display->display = $displayName;
-                $display->auditingUntil = 0;
-                $display->defaultLayoutId = $this->getConfig()->getSetting('DEFAULT_LAYOUT');
-                $display->license = $displayData['license'];
-                $display->licensed = $displayData['licensed'] ? 1 : 0; // Authorised?
-                $display->clientType = $displayData['clientType'];
-                $display->clientCode = $displayData['clientCode'];
-                $display->clientVersion = $displayData['clientVersion'];
+                // Don't create if the display exists
+                $disps = $this->displayFactory->query(null, ['display' => $displayName]);
+                if (count($disps) > 0) {
+                    foreach ($disps as $display) {
+                        // Cache
+                        $this->displays[$display->display] = $display->displayId;
+                    }
+                } else {
+                    $display = $this->displayFactory->createEmpty();
+                    $display->display = $displayName;
+                    $display->auditingUntil = 0;
+                    $display->defaultLayoutId = $this->getConfig()->getSetting('DEFAULT_LAYOUT');
+                    $display->license = $displayData['license'];
+                    $display->licensed = $displayData['licensed'] ? 1 : 0; // Authorised?
+                    $display->clientType = $displayData['clientType'];
+                    $display->clientCode = $displayData['clientCode'];
+                    $display->clientVersion = $displayData['clientVersion'];
 
-                $display->incSchedule = 0;
-                $display->clientAddress = '';
+                    $display->incSchedule = 0;
+                    $display->clientAddress = '';
 
-                if (!$display->isDisplaySlotAvailable()) {
-                    $display->licensed = 0;
+                    if (!$display->isDisplaySlotAvailable()) {
+                        $display->licensed = 0;
+                    }
+                    $display->lastAccessed = Carbon::now()->format('U');
+                    $display->loggedIn = 1;
+
+                    $display->save(Display::$saveOptionsMinimum);
+                    $this->store->commitIfNecessary();
+                    // Cache
+                    $this->displays[$display->display] = $display->displayId;
                 }
-                $display->lastAccessed = Carbon::now()->format('U');
-                $display->loggedIn = 1;
 
-                $display->save(Display::$saveOptionsMinimum);
-                $this->store->commitIfNecessary();
-                // Cache
-                $this->displays[$display->display] = $display->displayId;
             } catch (GeneralException $e) {
                 $this->log->error('Error creating display: ' . $e->getMessage());
             }
@@ -266,42 +285,67 @@ class SeedDatabaseTask implements TaskInterface
         // Make sure the library exists
         $this->mediaService->initLibrary();
 
+        // all layouts name and file name
+        $layoutNames = [
+            'dataset test ' => 'export-dataset-test.zip',
+            'Image test' => 'export-image-test.zip',
+            'Layout for Schedule 1' => 'export-layout-for-schedule-1.zip',
+            'List Campaign Layout 1' => 'export-list-campaign-layout-1.zip',
+            'List Campaign Layout 2' => 'export-list-campaign-layout-2.zip',
+            'POP Layout 1' => 'export-pop-layout-1.zip',
+        ];
+
+        // Get all layouts
+        $importedLayouts = [];
+        foreach ($this->layoutFactory->query() as $layout) {
+            // cache
+            if (array_key_exists($layout->layout, $layoutNames)) {
+                $importedLayouts[] = $layoutNames[$layout->layout];
+            }
+
+            // Cache
+            $this->layouts[trim($layout->layout)] = $layout->layoutId;
+        }
+
         // Import a layout
         $folder = PROJECT_ROOT . '/tests/resources/seeds/layouts/';
 
         foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
-            if (stripos($file, '.zip')) {
-                try {
-                    $layout = $this->layoutFactory->createFromZip(
-                        $folder . '/' . $file,
-                        null,
-                        $this->userFactory->getSystemUser()->getId(),
-                        false,
-                        false,
-                        true,
-                        false,
-                        true,
-                        $this->dataSetFactory,
-                        null,
-                        $this->mediaService,
-                        1
-                    );
+            // Check if the layout file has already been imported
+            if (!in_array($file, $importedLayouts)) {
+                if (stripos($file, '.zip')) {
+                    try {
+                        $layout = $this->layoutFactory->createFromZip(
+                            $folder . '/' . $file,
+                            null,
+                            $this->userFactory->getSystemUser()->getId(),
+                            false,
+                            false,
+                            true,
+                            false,
+                            true,
+                            $this->dataSetFactory,
+                            null,
+                            $this->mediaService,
+                            1
+                        );
 
-                    $layout->save([
-                        'audit' => false,
-                        'import' => true
-                    ]);
+                        $layout->save([
+                            'audit' => false,
+                            'import' => true
+                        ]);
 
-                    if (!empty($layout->getUnmatchedProperty('thumbnail'))) {
-                        rename($layout->getUnmatchedProperty('thumbnail'), $layout->getThumbnailUri());
+                        if (!empty($layout->getUnmatchedProperty('thumbnail'))) {
+                            rename($layout->getUnmatchedProperty('thumbnail'), $layout->getThumbnailUri());
+                        }
+
+                        $this->store->commitIfNecessary();
+                        // Update Cache
+                        $this->layouts[trim($layout->layout)] = $layout->layoutId;
+                    } catch (Exception $exception) {
+                        $this->log->error('Seed Database: Unable to import layout: ' . $file . '. E = ' . $exception->getMessage());
+                        $this->log->debug($exception->getTraceAsString());
                     }
-
-                    $this->store->commitIfNecessary();
-                    // Cache
-                    $this->layouts[trim($layout->layout)] = $layout->layoutId;
-                } catch (Exception $exception) {
-                    $this->log->error('Seed Database: Unable to import layout: ' . $file . '. E = ' . $exception->getMessage());
-                    $this->log->debug($exception->getTraceAsString());
                 }
             }
         }
@@ -315,26 +359,35 @@ class SeedDatabaseTask implements TaskInterface
     private function createAdCampaigns(): void
     {
         $layoutId = $this->layouts['POP Layout 1'];
-        $campaign = $this->campaignFactory->create(
-            'ad',
-            'POP Ad Campaign 1',
-            $this->userFactory->getSystemUser()->getId(),
-            1
-        );
 
-        $campaign->targetType = 'plays';
-        $campaign->target = 100;
-        $campaign->listPlayOrder = 'round';
-
-        try {
-            // Assign the layout
-            $campaign->assignLayout($layoutId);
-            $campaign->save(['validate' => false, 'saveTags' => false]);
-            $this->store->commitIfNecessary();
-            // Cache
+        // Get All Ad Campaigns
+        $campaigns = $this->campaignFactory->query(null, ['type' => 'ad']);
+        foreach ($campaigns as $campaign) {
             $this->parentCampaigns[$campaign->campaign] = $campaign->getId();
-        } catch (GeneralException $e) {
-            $this->getLogger()->error('Save: ' . $e->getMessage());
+        }
+
+        if (!array_key_exists('POP Ad Campaign 1', $this->parentCampaigns)) {
+            $campaign = $this->campaignFactory->create(
+                'ad',
+                'POP Ad Campaign 1',
+                $this->userFactory->getSystemUser()->getId(),
+                1
+            );
+
+            $campaign->targetType = 'plays';
+            $campaign->target = 100;
+            $campaign->listPlayOrder = 'round';
+
+            try {
+                // Assign the layout
+                $campaign->assignLayout($layoutId);
+                $campaign->save(['validate' => false, 'saveTags' => false]);
+                $this->store->commitIfNecessary();
+                // Cache
+                $this->parentCampaigns[$campaign->campaign] = $campaign->getId();
+            } catch (GeneralException $e) {
+                $this->getLogger()->error('Save: ' . $e->getMessage());
+            }
         }
     }
 
@@ -343,6 +396,11 @@ class SeedDatabaseTask implements TaskInterface
      */
     private function createStats(): void
     {
+        // Delete Stats
+        $this->store->update('DELETE FROM stat WHERE displayId = :displayId', [
+            'displayId' => $this->displays['POP Display 1']
+        ]);
+
         // Get layout campaign Id
         $campaignId = $this->layoutFactory->getById($this->layouts['POP Layout 1'])->campaignId;
         $columns = 'type, statDate, scheduleId, displayId, campaignId, parentCampaignId, layoutId, mediaId, widgetId, `start`, `end`, tag, duration, `count`';
@@ -514,140 +572,176 @@ class SeedDatabaseTask implements TaskInterface
             ];
             $this->store->insert('INSERT INTO `stat` (' . $columns . ') VALUES (' . $values . ')', $params);
 
-            $this->store->commitIfNecessary();
         } catch (GeneralException $e) {
             $this->getLogger()->error('Error inserting stats: '. $e->getMessage());
         }
+        $this->store->commitIfNecessary();
     }
 
     private function createSchedules(): void
     {
-        try {
-            $schedule = $this->scheduleFactory->createEmpty();
-            $schedule->userId = $this->userFactory->getSystemUser()->getId();
-            $schedule->eventTypeId = Schedule::$LAYOUT_EVENT;
-            $schedule->dayPartId = 2;
-            $schedule->displayOrder = 0;
-            $schedule->isPriority = 0;
-            // Campaign Id
-            $schedule->campaignId = $this->layouts['dataset test'];
-            $schedule->syncTimezone = 0;
-            $schedule->syncEvent = 0;
-            $schedule->isGeoAware = 0;
-            $schedule->maxPlaysPerHour = 0;
+        // Don't create if the schedule exists
+        $schedules = $this->scheduleFactory->query(null, [
+            'eventTypeId' => Schedule::$LAYOUT_EVENT,
+            'campaignId' => $this->layouts['dataset test']
+        ]);
 
-            $displays = $this->displayFactory->query(null, ['display' => 'phpunitv']);
-            foreach ($displays as $display) {
-                $displayGroupId = $display->displayGroupId;
-                $schedule->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
+        if (count($schedules) <= 0) {
+            try {
+                $schedule = $this->scheduleFactory->createEmpty();
+                $schedule->userId = $this->userFactory->getSystemUser()->getId();
+                $schedule->eventTypeId = Schedule::$LAYOUT_EVENT;
+                $schedule->dayPartId = 2;
+                $schedule->displayOrder = 0;
+                $schedule->isPriority = 0;
+                // Campaign Id
+                $schedule->campaignId = $this->layouts['dataset test'];
+                $schedule->syncTimezone = 0;
+                $schedule->syncEvent = 0;
+                $schedule->isGeoAware = 0;
+                $schedule->maxPlaysPerHour = 0;
+
+                $displays = $this->displayFactory->query(null, ['display' => 'phpunitv']);
+                foreach ($displays as $display) {
+                    $displayGroupId = $display->displayGroupId;
+                    $schedule->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
+                }
+                $schedule->save(['notify' => false]);
+
+                $this->store->commitIfNecessary();
+            } catch (GeneralException $e) {
+                $this->log->error('Error creating schedule : '. $e->getMessage());
             }
-            $schedule->save(['notify' => false]);
-
-            $this->store->commitIfNecessary();
-        } catch (GeneralException $e) {
-            $this->log->error('Error creating schedule : '. $e->getMessage());
         }
     }
 
     private function createSyncGroups(): void
     {
-        // Create a SyncGroup - SyncGroup name `Simple Sync Group`
-        try {
-            $syncGroup = $this->syncGroupFactory->createEmpty();
-            $syncGroup->name ='Simple Sync Group';
-            $syncGroup->ownerId = $this->userFactory->getSystemUser()->getId();
-            $syncGroup->syncPublisherPort = 9590;
-            $syncGroup->folderId = 1;
-            $syncGroup->permissionsFolderId = 1;
-            $syncGroup->save();
-            $this->store->update('UPDATE `display` SET `display`.syncGroupId = :syncGroupId WHERE `display`.displayId = :displayId', [
-                'syncGroupId' => $syncGroup->syncGroupId,
-                'displayId' => $this->displays['phpunitv6']
-            ]);
+        // Don't create if the sync group exists
+        $syncGroups = $this->syncGroupFactory->query(null, [
+            'eventTypeId' => Schedule::$LAYOUT_EVENT,
+            'campaignId' => $this->layouts['dataset test']
+        ]);
 
-            $this->store->update('UPDATE `display` SET `display`.syncGroupId = :syncGroupId WHERE `display`.displayId = :displayId', [
-                'syncGroupId' => $syncGroup->syncGroupId,
-                'displayId' => $this->displays['phpunitv7']
-            ]);
+        if (count($syncGroups) > 0) {
+            foreach ($syncGroups as $syncGroup) {
+                // Cache
+                $this->syncGroups[$syncGroup->name] = $syncGroup->getId();
+            }
+        } else {
+            // Create a SyncGroup - SyncGroup name `Simple Sync Group`
+            try {
+                $syncGroup = $this->syncGroupFactory->createEmpty();
+                $syncGroup->name = 'Simple Sync Group';
+                $syncGroup->ownerId = $this->userFactory->getSystemUser()->getId();
+                $syncGroup->syncPublisherPort = 9590;
+                $syncGroup->folderId = 1;
+                $syncGroup->permissionsFolderId = 1;
+                $syncGroup->save();
+                $this->store->update('UPDATE `display` SET `display`.syncGroupId = :syncGroupId WHERE `display`.displayId = :displayId', [
+                    'syncGroupId' => $syncGroup->syncGroupId,
+                    'displayId' => $this->displays['phpunitv6']
+                ]);
 
-            $syncGroup->leadDisplayId = $this->displays['phpunitv7'];
-            $syncGroup->save();
-            $this->store->commitIfNecessary();
-            // Cache
-            $this->syncGroups[$syncGroup->name] = $syncGroup->getId();
-        } catch (GeneralException $e) {
-            $this->log->error('Error creating sync group: '. $e->getMessage());
+                $this->store->update('UPDATE `display` SET `display`.syncGroupId = :syncGroupId WHERE `display`.displayId = :displayId', [
+                    'syncGroupId' => $syncGroup->syncGroupId,
+                    'displayId' => $this->displays['phpunitv7']
+                ]);
+
+                $syncGroup->leadDisplayId = $this->displays['phpunitv7'];
+                $syncGroup->save();
+                $this->store->commitIfNecessary();
+                // Cache
+                $this->syncGroups[$syncGroup->name] = $syncGroup->getId();
+            } catch (GeneralException $e) {
+                $this->log->error('Error creating sync group: '. $e->getMessage());
+            }
         }
     }
 
     private function createSynchronizedSchedules(): void
     {
-        try {
-            $schedule = $this->scheduleFactory->createEmpty();
-            $schedule->userId = $this->userFactory->getSystemUser()->getId();
-            $schedule->eventTypeId = Schedule::$SYNC_EVENT;
-            $schedule->dayPartId = 2;
+        // Don't create if the schedule exists
+        $schedules = $this->scheduleFactory->query(null, [
+            'eventTypeId' => Schedule::$SYNC_EVENT,
+            'syncGroupId' => $this->syncGroups['Simple Sync Group']
+        ]);
 
-            $schedule->displayOrder = 0;
-            $schedule->isPriority = 0;
+        if (count($schedules) <= 0) {
+            try {
+                $schedule = $this->scheduleFactory->createEmpty();
+                $schedule->userId = $this->userFactory->getSystemUser()->getId();
+                $schedule->eventTypeId = Schedule::$SYNC_EVENT;
+                $schedule->dayPartId = 2;
 
-            // Campaign Id
-            $schedule->campaignId = null;
-            $schedule->syncTimezone = 0;
-            $schedule->syncEvent = 1;
-            $schedule->isGeoAware = 0;
-            $schedule->maxPlaysPerHour = 0;
-            $schedule->syncGroupId = $this->syncGroups['Simple Sync Group'];
+                $schedule->displayOrder = 0;
+                $schedule->isPriority = 0;
 
-            $displayV7 = $this->displayFactory->getById($this->displays['phpunitv7']);
-            $schedule->assignDisplayGroup($this->displayGroupFactory->getById($displayV7->displayGroupId));
-            $displayV6 = $this->displayFactory->getById($this->displays['phpunitv6']);
-            $schedule->assignDisplayGroup($this->displayGroupFactory->getById($displayV6->displayGroupId));
+                // Campaign Id
+                $schedule->campaignId = null;
+                $schedule->syncTimezone = 0;
+                $schedule->syncEvent = 1;
+                $schedule->isGeoAware = 0;
+                $schedule->maxPlaysPerHour = 0;
+                $schedule->syncGroupId = $this->syncGroups['Simple Sync Group'];
 
-            $schedule->save(['notify' => false]);
-            $this->store->commitIfNecessary();
-            // Update Sync Links
-            $this->store->insert('INSERT INTO `schedule_sync` (`eventId`, `displayId`, `layoutId`)
+                $displayV7 = $this->displayFactory->getById($this->displays['phpunitv7']);
+                $schedule->assignDisplayGroup($this->displayGroupFactory->getById($displayV7->displayGroupId));
+                $displayV6 = $this->displayFactory->getById($this->displays['phpunitv6']);
+                $schedule->assignDisplayGroup($this->displayGroupFactory->getById($displayV6->displayGroupId));
+
+                $schedule->save(['notify' => false]);
+                $this->store->commitIfNecessary();
+                // Update Sync Links
+                $this->store->insert('INSERT INTO `schedule_sync` (`eventId`, `displayId`, `layoutId`)
             VALUES(:eventId, :displayId, :layoutId) ON DUPLICATE KEY UPDATE layoutId = :layoutId', [
-                'eventId' => $schedule->eventId,
-                'displayId' => $this->displays['phpunitv7'],
-                'layoutId' => $this->layouts['Image test']
-            ]);
+                    'eventId' => $schedule->eventId,
+                    'displayId' => $this->displays['phpunitv7'],
+                    'layoutId' => $this->layouts['Image test']
+                ]);
 
-            $this->store->insert('INSERT INTO `schedule_sync` (`eventId`, `displayId`, `layoutId`)
+                $this->store->insert('INSERT INTO `schedule_sync` (`eventId`, `displayId`, `layoutId`)
             VALUES(:eventId, :displayId, :layoutId) ON DUPLICATE KEY UPDATE layoutId = :layoutId', [
-                'eventId' => $schedule->eventId,
-                'displayId' => $this->displays['phpunitv6'],
-                'layoutId' => $this->layouts['Image test']
-            ]);
-            $this->store->commitIfNecessary();
-        } catch (GeneralException $e) {
-            $this->log->error('Error creating sync schedule: '. $e->getMessage());
+                    'eventId' => $schedule->eventId,
+                    'displayId' => $this->displays['phpunitv6'],
+                    'layoutId' => $this->layouts['Image test']
+                ]);
+                $this->store->commitIfNecessary();
+            } catch (GeneralException $e) {
+                $this->log->error('Error creating sync schedule: '. $e->getMessage());
+            }
         }
     }
 
     private function createUsers(): void
     {
-        // Create a user - user name `Simple User`
-        try {
-            $user = $this->userFactory->create();
-            $user->setChildAclDependencies($this->userGroupFactory);
-            $user->userName ='folder_user';
-            $user->email = '';
-            $user->homePageId = 'icondashboard.view';
-            $user->libraryQuota = 20;
-            $user->setNewPassword('password');
-            $user->homeFolderId = 1;
-            $user->userTypeId = 3;
-            $user->isSystemNotification = 0;
-            $user->isDisplayNotification = 0;
-            $user->isPasswordChangeRequired = 0;
-            $user->firstName = 'test';
-            $user->lastName = 'user';
-            $user->save();
-            $this->store->commitIfNecessary();
-        } catch (GeneralException $e) {
-            $this->log->error('Error creating user: '. $e->getMessage());
+        // Don't create if the schedule exists
+        $users = $this->userFactory->query(null, [
+            'exactUserName' => 'folder_user'
+        ]);
+
+        if (count($users) <= 0) {
+            // Create a user - user name `Simple User`
+            try {
+                $user = $this->userFactory->create();
+                $user->setChildAclDependencies($this->userGroupFactory);
+                $user->userName = 'folder_user';
+                $user->email = '';
+                $user->homePageId = 'icondashboard.view';
+                $user->libraryQuota = 20;
+                $user->setNewPassword('password');
+                $user->homeFolderId = 1;
+                $user->userTypeId = 3;
+                $user->isSystemNotification = 0;
+                $user->isDisplayNotification = 0;
+                $user->isPasswordChangeRequired = 0;
+                $user->firstName = 'test';
+                $user->lastName = 'user';
+                $user->save();
+                $this->store->commitIfNecessary();
+            } catch (GeneralException $e) {
+                $this->log->error('Error creating user: '. $e->getMessage());
+            }
         }
     }
 
@@ -659,13 +753,17 @@ class SeedDatabaseTask implements TaskInterface
 
         foreach ($folders as $folderName) {
             try {
-                $folder = $this->folderFactory->createEmpty();
-                $folder->text = $folderName;
-                $folder->parentId = 1;
-                $folder->children = '';
+                // Don't create if the folder exists
+                $folds = $this->folderFactory->query(null, ['folderName' => $folderName]);
+                if (count($folds) <= 0) {
+                    $folder = $this->folderFactory->createEmpty();
+                    $folder->text = $folderName;
+                    $folder->parentId = 1;
+                    $folder->children = '';
 
-                $folder->save();
-                $this->store->commitIfNecessary();
+                    $folder->save();
+                    $this->store->commitIfNecessary();
+                }
             } catch (GeneralException $e) {
                 $this->log->error('Error creating folder: '. $e->getMessage());
             }
@@ -696,23 +794,39 @@ class SeedDatabaseTask implements TaskInterface
 
     private function createBandwidthReportData(): void
     {
-        $this->store->insert('INSERT INTO `bandwidth` (Month, Type, DisplayID, Size) VALUES (:month, :type, :displayId, :size)', [
-            'month' => Carbon::now()->startOfDay()->hour(12)->format('U'),
-            'type' => 8,
+        // Check if the record exists
+        $monthU = Carbon::now()->startOfDay()->hour(12)->format('U');
+        $record = $this->store->select('SELECT * FROM bandwidth WHERE type = 8 AND displayId = :displayId AND month = :month', [
             'displayId' => $this->displays['POP Display 1'],
-            'size' => 200
+            'month' => $monthU
         ]);
-        $this->store->commitIfNecessary();
+
+        if (count($record) <= 0) {
+            $this->store->insert('INSERT INTO `bandwidth` (Month, Type, DisplayID, Size) VALUES (:month, :type, :displayId, :size)', [
+                'month' => $monthU,
+                'type' => 8,
+                'displayId' => $this->displays['POP Display 1'],
+                'size' => 200
+            ]);
+            $this->store->commitIfNecessary();
+        }
     }
 
     private function createDisconnectedDisplayEvent(): void
     {
+        // Delete if the record exists
+        $date = Carbon::now()->subDay()->format('U');
+        $this->store->update('DELETE FROM displayevent WHERE displayId = :displayId', [
+            'displayId' => $this->displays['POP Display 1']
+        ]);
+
         $this->store->insert('INSERT INTO `displayevent` (eventDate, start, end, displayID) VALUES (:eventDate, :start, :end, :displayId)', [
-            'eventDate' => Carbon::now()->subDay()->format('U'),
-            'start' => Carbon::now()->subDay()->format('U'),
+            'eventDate' => $date,
+            'start' => $date,
             'end' => Carbon::now()->subDay()->addSeconds(600)->format('U'),
             'displayId' => $this->displays['POP Display 1']
         ]);
         $this->store->commitIfNecessary();
+
     }
 }
