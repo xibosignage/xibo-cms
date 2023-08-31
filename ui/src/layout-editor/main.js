@@ -3944,8 +3944,9 @@ lD.populateDropdownWithLayoutElements = function(
     let typeInputValue = $dropdown.find(':selected').data('type');
 
     // Update targetId and target
+    // Input fields are prepended with input_
     if (
-      $typeInput.attr('id') === 'target'
+      $typeInput.attr('id') === 'input_target'
     ) {
       // Update targetId and target
       actionData.targetId = $dropdown.val();
@@ -3954,7 +3955,7 @@ lD.populateDropdownWithLayoutElements = function(
 
     // Update sourceId and source
     if (
-      $typeInput.attr('id') === 'source'
+      $typeInput.attr('id') === 'input_source'
     ) {
       // Update sourceId and source
       actionData.sourceId = $dropdown.val();
@@ -3971,7 +3972,9 @@ lD.populateDropdownWithLayoutElements = function(
     }
 
     // For target, if target is layout, change it to screen
-    if ($typeInput.attr('id') === 'target' && typeInputValue === 'layout') {
+    if ($typeInput.attr('id') === 'input_target' &&
+      typeInputValue === 'layout'
+    ) {
       typeInputValue = 'screen';
     }
 

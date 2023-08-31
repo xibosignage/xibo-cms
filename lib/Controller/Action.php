@@ -24,7 +24,6 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Entity\Widget;
 use Xibo\Factory\ActionFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\ModuleFactory;
@@ -219,88 +218,11 @@ class Action  extends Base
                 // dynamic field to display in the grid instead of regionId
                 $action->setUnmatchedProperty('regionName', $region->name);
             }
-
-            if ($this->isApi($request)) {
-                continue;
-            }
-
-            $action->includeProperty('buttons');
-            $action->buttons = [];
-
-            $action->buttons[] = [
-                'id' => 'action_edit_button',
-                'url' => $this->urlFor($request, 'action.edit.form', ['id' => $action->actionId]),
-                'text' => __('Edit')
-            ];
-
-            $action->buttons[] = [
-                'id' => 'action_delete_button',
-                'url' => $this->urlFor($request, 'action.delete.form', ['id' => $action->actionId]),
-                'text' => __('Delete')
-            ];
         }
 
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->actionFactory->countLast();
         $this->getState()->setData($actions);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Action Add Form
-     * @param Request $request
-     * @param Response $response
-     * @param string $source
-     * @param int $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     */
-    public function addForm(Request $request, Response $response, string $source, int $id) : Response
-    {
-        $sourceObject = $this->checkIfSourceExists($source, $id);
-
-        if ($source === 'layout') {
-            /** @var \Xibo\Entity\Layout $layout */
-            $layout = $sourceObject;
-        } elseif ($source === 'region') {
-            /** @var \Xibo\Entity\Region $region */
-            $region = $sourceObject;
-            $layout = $this->layoutFactory->getById($region->layoutId);
-        } else {
-            /** @var Widget $widget */
-            $widget = $sourceObject;
-            $region = $this->regionFactory->getByPlaylistId($widget->playlistId)[0];
-            $layout = $this->layoutFactory->getById($region->layoutId);
-        }
-
-        // Make sure the Layout is checked out to begin with
-        if (!$layout->isEditable()) {
-            throw new InvalidArgumentException(__('Layout is not checked out'), 'publishedStatusId');
-        }
-
-        $layout->load();
-
-        // all widgets
-        $widgets = $layout->getDrawerWidgets();
-
-        foreach ($widgets as $widget) {
-            $module = $this->moduleFactory->getByType($widget->type);
-            // if we don't have a name set in the Widget
-            $widget->setUnmatchedProperty(
-                'name',
-                sprintf('%s [%s]', $widget->getOptionValue('name', $module->name), $module->type)
-            );
-        }
-
-        $this->getState()->template = 'action-form-add';
-        $this->getState()->setData([
-            'sourceObject' => $sourceObject,
-            'source' => $source,
-            'id' => $id,
-            'regions' => $layout->regions,
-            'widgets' => $widgets,
-        ]);
 
         return $this->render($request, $response);
     }
@@ -461,52 +383,6 @@ class Action  extends Base
     }
 
     /**
-     * Action Edit Form
-     * @param Request $request
-     * @param Response $response
-     * @param int $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     */
-    public function editForm(Request $request, Response $response, int $id) : Response
-    {
-        $action = $this->actionFactory->getById($id);
-        $layout = $this->layoutFactory->getById($action->layoutId);
-
-        $layout->load();
-
-        // all widgets, assigned to this layout or drawer
-        $widgets = $layout->getDrawerWidgets();
-
-        foreach ($widgets as $widget) {
-            $module = $this->moduleFactory->getByType($widget->type);
-            $widget->name = $widget->getOptionValue('name', $module->name);
-        }
-
-        // Make sure the Layout is checked out to begin with
-        if (!$layout->isEditable()) {
-            throw new InvalidArgumentException(__('Layout is not checked out'), 'statusId');
-        }
-
-        try {
-            $code = (($action->layoutCode != null) ? [$this->layoutFactory->getByCode($action->layoutCode)] : []);
-        } catch (NotFoundException $notFoundException) {
-            $code = [];
-        }
-
-        $this->getState()->template = 'action-form-edit';
-        $this->getState()->setData([
-            'action' => $action,
-            'source' => $action->source,
-            'regions' => $layout->regions,
-            'widgets' => $widgets,
-            'layout' => $code
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
      * Edit Action
      *
      * @SWG\PUT(
@@ -644,33 +520,6 @@ class Action  extends Base
             'message' => __('Edited Action'),
             'id' => $action->actionId,
             'data' => $action
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Shows the Delete Group Form
-     * @param Request $request
-     * @param Response $response
-     * @param int $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     */
-    function deleteForm(Request $request, Response $response, int $id) : Response
-    {
-        $action = $this->actionFactory->getById($id);
-        $layout = $this->layoutFactory->getById($action->layoutId);
-
-        // Make sure the Layout is checked out to begin with
-        if (!$layout->isEditable()) {
-            throw new InvalidArgumentException(__('Layout is not checked out'), 'publishedStatusId');
-        }
-
-        $this->getState()->template = 'action-form-delete';
-        $this->getState()->setData([
-            'action' => $action,
-            'source' => $action->source,
         ]);
 
         return $this->render($request, $response);

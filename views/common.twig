@@ -127,10 +127,6 @@
                     url: "{{ url_for("layout.delete.form", {id: ':id'}) }}",
                     type: 'GET'
                 },
-                addActionForm: {
-                    url: "{{ url_for("action.add.form", {source: 'layout', id:':id'}) }}",
-                    type: 'GET'
-                },
                 addDrawer: {
                     url: "{{ url_for("region.add.drawer", {id: ':id'}) }}",
                     type: 'POST'
@@ -183,10 +179,6 @@
                 getPermissions:  {
                     url: "{{ url_for("user.permissions.form", {entity: 'Region', id: ':id'}) }}",
                     type: 'GET'
-                },
-                addActionForm: {
-                    url: "{{ url_for("action.add.form", {source: 'region', id:':id'}) }}",
-                    type: 'GET'
                 }
             },
             widget: {
@@ -232,10 +224,6 @@
                 },
                 getPermissions:  {
                     url: "{{ url_for("user.permissions.form", {entity: 'Widget', id: ':id'}) }}",
-                    type: 'GET'
-                },
-                addActionForm: {
-                    url: "{{ url_for("action.add.form", {source: 'widget', id:':id'}) }}",
                     type: 'GET'
                 },
                 setRegion: {
@@ -679,7 +667,7 @@
                     size: "{{ "Size" |trans }}",
                 },
                 playlist: "{{ "Playlist"|trans }}",
-                zone: "{{ "Zone"|trans }}", 
+                zone: "{{ "Zone"|trans }}",
                 element: "{{ "Element"|trans }}",
                 elementGroup: "{{ "Element Group"|trans }}",
                 layout: "{{ "Layout"|trans }}",
