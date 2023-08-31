@@ -21,11 +21,13 @@
                         </div>
                         {{#each layers as |canvasLayer canvasLayerIdx|}}
                             {{#each this}}
-                                <div class="layer-manager-layer-item selectable {{#if selected}}selected{{/if}}" data-item-id="{{id}}">
+                                <div class="layer-manager-layer-item selectable {{#if hasGroup}}has-group{{/if}} {{#if selected}}selected{{/if}}" data-item-id="{{id}}">
                                     <div class="layer">{{canvasLayerIdx}}</div>
                                     {{#eq type 'element'}}
-                                        <i class="fas {{#if hasGroup}}fa-object-group{{else}}fa-atom{{/if}}"
-                                            {{#if hasGroup}}title="{{groupId}}"{{/if}}></i>
+                                        {{#if moduleIcon}}
+                                            <i class="module-icon {{#if moduleIcon}}{{moduleIcon}}{{else}}fas fa-object-group{{/if}}" {{#if hasGroup}}title="{{groupId}}"{{/if}}></i>
+                                        {{/if}}
+                                        <i class="element-icon {{#if icon}}{{icon}}{{else}}fas fa-atom{{/if}}"></i>
                                     {{/eq}}
                                     <span class="name" title="{{../../../../trans.name}}">{{name}}</span>
                                     {{#if duration}}

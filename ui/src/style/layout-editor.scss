@@ -1647,6 +1647,13 @@ div#bg_media_name {
             text-align: center;
         }
 
+        &.has-group {
+            .module-icon {
+                padding: 2px;
+                border: 2px solid $xibo-color-neutral-0;
+            }
+        }
+
         &.selected {
             color: $xibo-color-neutral-0;
             background-color: $xibo-color-accent !important;
