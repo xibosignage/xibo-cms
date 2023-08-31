@@ -214,6 +214,12 @@ class Widget implements \JsonSerializable
     public $isValid = false;
 
     /**
+     * Flag to indicate whether the widget data has to be repeated in the player
+     * @var bool
+     */
+    public $isRepeatData = true;
+
+    /**
      * Flag to indicate whether the widget is newly added
      * @var bool
      */

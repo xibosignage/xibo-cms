@@ -83,15 +83,12 @@ jQuery.fn.extend({
       // Make sure the speed is something sensible
       options.speed = (options.speed <= 200) ? 1000 : options.speed;
 
-      let numberOfSlides = 1;
-      if (options.numItems > 1) {
-        numberOfSlides = Math.ceil(options.numItems / options.itemsPerPage);
-      }
+      const numberOfSlides = items?.length || 1;
 
       const duration = (options.durationIsPerItem) ?
         options.duration :
         options.duration / numberOfSlides;
-      let timeout = duration * 1000;
+      const timeout = duration * 1000;
       const noTransitionSpeed = 200;
 
       $(cycleElement).addClass('cycle-slideshow').cycle({

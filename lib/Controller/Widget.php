@@ -349,7 +349,7 @@ class Widget extends Base
             'commonProperties' => [
                 'name' => $widget->getOptionValue('name', null),
                 'enableStat' => $widget->getOptionValue('enableStat', null),
-                'isRepeatData' => $widget->getOptionValue('isRepeatData', null),
+                'isRepeatData' => $widget->getOptionValue('isRepeatData', true),
                 'duration' => $widget->duration,
                 'useDuration' => $widget->useDuration
             ],

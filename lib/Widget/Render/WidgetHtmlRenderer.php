@@ -458,6 +458,9 @@ class WidgetHtmlRenderer
             // templateId or "elements"
             $templateId = $widget->getOptionValue('templateId', null);
 
+            // isRepeatData
+            $isRepeatData = $widget->getOptionValue('isRepeatData', true);
+
             // Validate this modules properties.
             try {
                 $module->validateProperties('status');
@@ -473,6 +476,7 @@ class WidgetHtmlRenderer
                 'sample' => $module->sampleData,
                 'properties' => $module->getPropertyValues(),
                 'isValid' => $widget->isValid === 1,
+                'isRepeatData' => $isRepeatData == 1 ?? false,
                 'duration' => $widget->duration,
                 'calculatedDuration' => $widget->calculatedDuration,
             ];
