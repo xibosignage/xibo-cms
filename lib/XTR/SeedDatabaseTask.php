@@ -27,6 +27,7 @@ use Exception;
 use Xibo\Entity\Display;
 use Xibo\Entity\Schedule;
 use Xibo\Factory\CampaignFactory;
+use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
@@ -75,6 +76,7 @@ class SeedDatabaseTask implements TaskInterface
     /** @var array The cache for layout */
     private array $layoutCache = [];
     private FolderFactory $folderFactory;
+    private CommandFactory $commandFactory;
     private DisplayGroupFactory $displayGroupFactory;
     private MediaFactory $mediaFactory;
     private array $displayGroups;
@@ -102,6 +104,7 @@ class SeedDatabaseTask implements TaskInterface
         $this->syncGroupFactory = $container->get('syncGroupFactory');
         $this->scheduleFactory = $container->get('scheduleFactory');
         $this->folderFactory = $container->get('folderFactory');
+        $this->commandFactory = $container->get('commandFactory');
         $this->mediaFactory = $container->get('mediaFactory');
 
         return $this;
@@ -129,6 +132,7 @@ class SeedDatabaseTask implements TaskInterface
 
         // Create campaign
         $this->createAdCampaigns();
+        $this->createListCampaigns();
 
         // Create stats
         $this->createStats();
@@ -145,6 +149,7 @@ class SeedDatabaseTask implements TaskInterface
 
         // Create Folders
         $this->createFolders();
+        $this->createCommands();
 
         // Create bandwidth data display 1
         $this->createBandwidthReportData();
@@ -381,6 +386,42 @@ class SeedDatabaseTask implements TaskInterface
             try {
                 // Assign the layout
                 $campaign->assignLayout($layoutId);
+                $campaign->save(['validate' => false, 'saveTags' => false]);
+                $this->store->commitIfNecessary();
+                // Cache
+                $this->parentCampaigns[$campaign->campaign] = $campaign->getId();
+            } catch (GeneralException $e) {
+                $this->getLogger()->error('Save: ' . $e->getMessage());
+            }
+        }
+    }
+
+    /**
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws DuplicateEntityException
+     */
+    private function createListCampaigns(): void
+    {
+        $campaignName = 'Campaign for Schedule 1';
+
+        // Get All List Campaigns
+        $campaigns = $this->campaignFactory->query(null, ['type' => 'list']);
+        foreach ($campaigns as $campaign) {
+            $this->parentCampaigns[$campaign->campaign] = $campaign->getId();
+        }
+
+        if (!array_key_exists($campaignName, $this->parentCampaigns)) {
+            $campaign = $this->campaignFactory->create(
+                'list',
+                $campaignName,
+                $this->userFactory->getSystemUser()->getId(),
+                1
+            );
+            $campaign->listPlayOrder = 'round';
+
+            try {
+                // Assign the layout
                 $campaign->save(['validate' => false, 'saveTags' => false]);
                 $this->store->commitIfNecessary();
                 // Cache
@@ -715,7 +756,7 @@ class SeedDatabaseTask implements TaskInterface
 
     private function createUsers(): void
     {
-        // Don't create if the schedule exists
+        // Don't create if exists
         $users = $this->userFactory->query(null, [
             'exactUserName' => 'folder_user'
         ]);
@@ -828,5 +869,31 @@ class SeedDatabaseTask implements TaskInterface
         ]);
         $this->store->commitIfNecessary();
 
+    }
+
+    private function createCommands()
+    {
+        $commandName = 'Set Timezone';
+
+        // Don't create if exists
+        $commands = $this->commandFactory->query(null, [
+            'command' => $commandName
+        ]);
+
+        if (count($commands) <= 0) {
+            // Create a user - user name `Simple User`
+            try {
+                $command = $this->commandFactory->create();
+                $command->command = $commandName;
+                $command->description = 'a command to test schedule';
+                $command->code = 'TIMEZONE';
+                $command->userId = $this->userFactory->getSystemUser()->getId();
+
+                $command->save();
+                $this->store->commitIfNecessary();
+            } catch (GeneralException $e) {
+                $this->log->error('Error creating command: '. $e->getMessage());
+            }
+        }
     }
 }

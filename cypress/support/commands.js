@@ -420,6 +420,27 @@ Cypress.Commands.add('goToLayoutAndLoadPrefs', function(layoutId) {
   cy.wait('@userPrefsLoad');
 });
 
+Cypress.Commands.add('removeAllSelectedOptions', (select2) => {
+  cy.get(select2)
+    .as('select2Container');
+
+  cy.get('@select2Container')
+    .then(($select2Container) => {
+      if ($select2Container.find('.select2-selection__choice').length > 0) {
+        cy.wrap($select2Container)
+          .find('.select2-selection__choice')
+          .each(($selectedOption) => {
+            cy.wrap($selectedOption)
+              .find('.select2-selection__choice__remove')
+              .click(); // Click on the remove button for each selected option
+          });
+      } else {
+        // No options are selected
+        cy.log('No options are selected');
+      }
+    });
+});
+
 // Schedule a layout
 Cypress.Commands.add('scheduleCampaign', function(campaignId, displayName) {
   cy.request({
@@ -435,42 +456,6 @@ Cypress.Commands.add('scheduleCampaign', function(campaignId, displayName) {
     },
   }).then((res) => {
     return res.body.eventId;
-  });
-});
-
-// Create a campaign
-Cypress.Commands.add('createCampaign', function(campaignName) {
-  cy.request({
-    method: 'POST',
-    url: '/api/createCampaign',
-    form: true,
-    headers: {
-      Authorization: 'Bearer ' + Cypress.env('accessToken'),
-    },
-    body: {
-      name: campaignName,
-    },
-  }).then((res) => {
-    return res.body.campaignId;
-  });
-});
-
-// Create a command
-Cypress.Commands.add('createCommand', function(name, description, code) {
-  cy.request({
-    method: 'POST',
-    url: '/api/createCommand',
-    form: true,
-    headers: {
-      Authorization: 'Bearer ' + Cypress.env('accessToken'),
-    },
-    body: {
-      command: name,
-      description: description,
-      code: code,
-    },
-  }).then((res) => {
-    return res.body.commandId;
   });
 });
 

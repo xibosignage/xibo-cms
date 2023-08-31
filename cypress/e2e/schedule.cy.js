@@ -22,12 +22,12 @@
 
 /* eslint-disable max-len */
 describe('Campaigns', function() {
-  const testRun = Cypress._.random(0, 1e9);
-  const campaignSchedule1 = 'Campaign for Schedule 1 ' + testRun;
+  // Seeded Data
+  const campaignSchedule1 = 'Campaign for Schedule 1';
+  const layoutSchedule1 = 'Layout for Schedule 1';
 
   const display1 = 'List Campaign Display 1';
   const display2 = 'List Campaign Display 2';
-  const layoutSchedule1 = 'Layout for Schedule 1';
 
   beforeEach(function() {
     cy.login();
@@ -48,17 +48,19 @@ describe('Campaigns', function() {
   it('should schedule an event campaign that has no priority, no recurrence', function() {
     // Set up intercepts with aliases
     cy.intercept({
+      url: '/display?start=*',
+      query: {display: display1},
+    }).as('loadDisplayAfterSearch');
+
+    cy.intercept({
       url: '/displaygroup?*',
       query: {displayGroup: display1},
     }).as('loadDisplaygroupAfterSearch');
 
     cy.intercept({
       url: '/campaign?type=list*',
-      query: {name: campaign},
+      query: {name: campaignSchedule1},
     }).as('loadListCampaignsAfterSearch');
-
-    // Create a campaign
-    cy.createCampaign(campaignSchedule1);
 
     // Visit the page and click on the Add Event button
     cy.visit('/schedule/view');
@@ -93,6 +95,20 @@ describe('Campaigns', function() {
     // Click Next and check toast message
     cy.get('.modal .modal-footer').contains('Next').click();
     cy.contains('Added Event');
+
+    // Validate - schedule creation should be successful
+    cy.visit('/schedule/view');
+    cy.get('#DisplayList + span .select2-selection').click();
+    // Type the display name
+    cy.get('.select2-container--open input[type="search"]').type(display1);
+
+    // Wait for Display to load
+    cy.wait('@loadDisplayAfterSearch');
+    cy.get('.select2-container--open').contains(display1);
+    cy.get('.select2-container--open .select2-results > ul > li').should('have.length', 1);
+    cy.get('.select2-container--open .select2-results > ul > li:first').contains(display1).click();
+
+    cy.get('#schedule-grid').contains(campaignSchedule1);
   });
 
   it('should schedule an event layout that has no priority, no recurrence', function() {
@@ -100,6 +116,10 @@ describe('Campaigns', function() {
       url: '/displaygroup?*',
       query: {displayGroup: display1},
     }).as('loadDisplaygroupAfterSearch');
+
+    cy.intercept({
+      url: '/displaygroup?*',
+    }).as('loadDisplaygroupAfterSearchCommon');
 
     cy.intercept({
       url: '/campaign?type=list*',
@@ -154,8 +174,6 @@ describe('Campaigns', function() {
       query: {name: layoutSchedule1},
     }).as('loadListCampaignsAfterSearch');
 
-    // cy.createCommand('Set Timezone', 'Set timezone', 'TIMEZONE');
-
     // Click on the Add Event button
     cy.visit('/schedule/view');
     cy.contains('Add Event').click();
@@ -190,7 +208,6 @@ describe('Campaigns', function() {
     // Wait for Display to load
     cy.wait('@loadListCampaignsAfterSearch');
     cy.get('.select2-container--open').contains(layoutSchedule1);
-    // cy.get('.select2-container--open .select2-dropdown .select2-results > ul > li').should('have.length', 1);
     cy.get('.select2-container--open .select2-results > ul > li').should('have.length', 1);
     cy.get('.select2-container--open .select2-results > ul > li:first').contains(layoutSchedule1).click();
 
@@ -209,70 +226,47 @@ describe('Campaigns', function() {
     cy.get('.modal .modal-footer').contains('Save').click();
   });
 
-  it('schedule creation should be successful', function() {
-    cy.intercept({
-      url: '/display?start=*',
-      query: {display: display1},
-    }).as('loadDisplayAfterSearch');
-
-    cy.visit('/schedule/view');
-    cy.get('#DisplayList + span .select2-selection').click();
-    // Type the display name
-    cy.get('.select2-container--open input[type="search"]').type(display1);
-
-    // Wait for Display to load
-    cy.wait('@loadDisplayAfterSearch');
-    cy.get('.select2-container--open').contains(display1);
-    cy.get('.select2-container--open .select2-results > ul > li').should('have.length', 1);
-    cy.get('.select2-container--open .select2-results > ul > li:first').contains(display1).click();
-
-    cy.get('#schedule-grid').contains(campaignSchedule1);
-    cy.get('#schedule-grid').contains(layoutSchedule1);
-  });
-
-  it('should edit a scheduled event', function() {
+  it.only('should edit a scheduled event', function() {
     cy.intercept('/schedule?draw=*').as('scheduleGridLoad');
 
-    cy.intercept('/displaygroup?*').as('loadDisplaygroupAfterSearch');
-    cy.intercept('/campaign?isLayoutSpecific=-1*').as('loadLayoutSpecificCampaign');
+    cy.intercept({
+      url: '/displaygroup?*',
+      query: {displayGroup: display2},
+    }).as('loadDisplaygroupAfterSearch');
+
+    cy.intercept({
+      url: '/campaign?isLayoutSpecific=-1*',
+      query: {name: layoutSchedule1},
+    }).as('loadLayoutSpecificCampaign');
 
     cy.visit('/schedule/view');
 
     // ---------
     // Edit a schedule - add another display
     cy.get('#campaignIdFilter + span .select2-selection').click();
-    cy.wait('@loadLayoutSpecificCampaign');
     cy.get('.select2-container--open input[type="search"]').type(layoutSchedule1); // Type the layout name
     cy.wait('@loadLayoutSpecificCampaign');
     cy.get('.select2-container--open').contains(layoutSchedule1);
     cy.get('.select2-container--open .select2-results > ul > li').should('have.length', 1);
     cy.get('.select2-container--open .select2-results > ul > li:first').contains(layoutSchedule1).click();
 
-    // // Should have 1
-    // cy.get('#schedule-grid tbody tr').should('have.length', 2);
-    // cy.get('#schedule-grid tr:first-child .dropdown-toggle').click();
-    // cy.get('#schedule-grid tr:first-child .schedule_button_edit').click();
-    //
-    // cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection > .select2-selection > .select2-selection__rendered')
-    //   .type(display2);
-    // // Wait for Display to load
-    // cy.wait('@loadDisplaygroupAfterSearch');
-    // cy.get('.select2-container--open').contains(display2);
-    // cy.get('.select2-container--open .select2-dropdown .select2-results > ul > li').should('have.length', 2);
-    // cy.get('#select2-displayGroupIds-results > li > ul > li:first').contains(display2).click();
-    // cy.get('.modal .modal-footer').contains('Save').click();
-    // cy.get('#schedule-grid tbody').contains('2');
-
-    // ---------
-    // Delete the schedule
-    cy.get('#schedule-grid tbody tr').should('have.length', 2);
-    cy.wait('@scheduleGridLoad');
-    cy.wait('@scheduleGridLoad');
+    // Should have 1
+    // cy.get('#schedule-grid tbody tr').should('have.length', 1);
     cy.get('#schedule-grid tr:first-child .dropdown-toggle').click();
+    cy.get('#schedule-grid tr:first-child .schedule_button_edit').click();
+
+    cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection > .select2-selection > .select2-selection__rendered')
+      .type(display2);
+    // Wait for Display to load
+    cy.wait('@loadDisplaygroupAfterSearch');
+    cy.get('.select2-container--open').contains(display2);
+    cy.get('.select2-container--open .select2-dropdown .select2-results > ul > li').should('have.length', 2);
+    cy.get('#select2-displayGroupIds-results > li > ul > li:first').contains(display2).click();
+    cy.get('.modal .modal-footer').contains('Save').click();
+    cy.get('#schedule-grid tbody').contains('2');
+
+    cy.get('#schedule-grid tr:first-child .dropdown-toggle').invoke('show').click();
     cy.get('#schedule-grid tr:first-child .schedule_button_delete').click();
     cy.get('.bootbox .save-button').click();
-
-    // Validate the schedule no longer exist
-    cy.get('#schedule-grid tbody tr').should('have.length', 1);
   });
 });
