@@ -1257,7 +1257,7 @@ PropertiesPanel.prototype.render = function(
               left: 0,
             }, true);
 
-            lD.viewer.updateRegion(lD.layout.regions[regionId]);
+            lD.viewer.updateRegion(lD.layout.regions[regionId], true);
           } else if (targetAux?.type == 'element') {
             // Element
             const $targetElement = $('#' + targetAux.elementId);
