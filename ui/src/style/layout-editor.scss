@@ -1094,7 +1094,7 @@ body {
             }
         }
 
-        .slot {
+        .slot, .invalid-parent {
             position: absolute;
             left: 2px;
             top: 2px;
@@ -1107,7 +1107,17 @@ body {
             opacity: 0.3;
         }
 
-        &:hover .slot {
+        .invalid-parent {
+            left: auto;
+            top: auto;
+            right: 2px;
+            bottom: 2px;
+            background-color: $xibo-color-semantic-error;
+            color: $xibo-color-neutral-0;
+            opacity: 0.6;
+        }
+
+        &:hover .slot, &:hover .invalid-parent {
             opacity: 0.8;
         }
 

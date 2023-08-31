@@ -150,6 +150,43 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
   // Cached data
   this.cachedData = {};
 
+  this.validateRequiredElements = function() {
+    const moduleType = this.subType;
+    // Check if element is required
+    const elementModule = lD.common.getModuleByType(moduleType);
+
+    // Check if there are required elements for this widget
+    const originalRequiredElements = (
+      elementModule &&
+      Array.isArray(elementModule.requiredElements)
+    ) ? elementModule.requiredElements : [];
+    const requiredElementsAux = originalRequiredElements.slice();
+
+    // If array is empty, we don't need to validate elements
+    let requiredElementsValid = (requiredElementsAux.length === 0);
+
+    // Loop through elements
+    Object.values(this.elements)
+      .forEach((element) => {
+        const find = requiredElementsAux.indexOf(element.id);
+        if (find != -1) {
+          // Remove elements from aux array
+          requiredElementsAux.splice(find, 1);
+
+          // Check if valid now
+          requiredElementsValid = (requiredElementsAux.length === 0);
+        }
+      });
+
+    // Save and return required structure
+    this.requiredElements = {
+      required: originalRequiredElements,
+      missing: requiredElementsAux,
+      valid: requiredElementsValid,
+    };
+    return this.requiredElements;
+  };
+
   /**
    * Get transitions from options
    * @return {object} transitions
@@ -946,17 +983,26 @@ Widget.prototype.removeElement = function(
       app.layout.deleteObject('widget', this.widgetId).then(reloadLayout);
     }
   } else {
+    // Recalculate required elements
+    this.validateRequiredElements();
+
     // Only save if we're not removing the widget
     // Save changes to widget
     (save && !savedAlready) && this.saveElements();
 
     // If object is selected, remove it from selection
-    if (this.editorObject.selectedObject.elementId == elementId) {
-      this.editorObject.selectObject({
+    if (lD.selectedObject.elementId == elementId) {
+      lD.selectObject({
         reloadViewer: false,
       });
       lD.viewer.selectElement(null, false, false);
+    } else if (lD.selectedObject.type != 'layout') {
+      // If we have a selected object other than layout, reload properties panel
+      lD.propertiesPanel.render(lD.selectedObject);
     }
+
+    // Reload viewer to update widget valid status
+    lD.viewer.render();
 
     // If we're not removing widget, we need ot update element map
     this.updateElementMap();

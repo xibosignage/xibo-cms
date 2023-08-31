@@ -535,6 +535,23 @@ PropertiesPanel.prototype.render = function(
 
       // Check if we can use is repeat data
       dataToRender.repeatDataActive = hasData;
+
+      // Check if we need to show the required elements error message
+      if (target.requiredElements && target.requiredElements.valid == false) {
+        const dataType = lD.common.getModuleByType(target.subType).dataType;
+
+        // Get element names for the missing elements
+        const requiredMissingElements =
+          target.requiredElements.missing.map((el) => {
+            const elTitle = lD.templateManager.templates[dataType][el].title;
+            return (elTitle != undefined) ? elTitle : el;
+          });
+
+        dataToRender.showErrorMessage = true;
+        dataToRender.errorMessage =
+          propertiesPanelTrans.requiredElementsMessage
+            .replace('%elements%', requiredMissingElements.join(', '));
+      }
     }
 
     // If the form is a layout

@@ -1,4 +1,4 @@
-<div class="toolbar-card toolbar-card-item {{#if thumbnail}}has-thumb{{/if}}" 
+<div class="toolbar-card toolbar-card-item {{#if thumbnail}}has-thumb{{/if}} {{#if isRequired}}required-element{{/if}}" 
     data-toggle="tooltip" 
     data-type="{{type}}" 
     data-sub-type="{{#if subType}}{{subType}}{{else}}{{dataType}}{{/if}}"
@@ -22,7 +22,11 @@
     <i class="element-icon {{icon}} card-icon"></i>
 {{/if}}
 
-    
+{{#if isRequired}}
+    <i class="toolbar-card-is-required fa fa-warning tooltip-always-on"
+        data-toggle="tooltip" data-title="{{trans.isRequired}}"></i>
+{{/if}}
+
     <div class="toolbar-content tooltip-always-on" data-toggle="tooltip" data-title="{{title}}">
         <span class="card-title">{{title}}</span>
     </div>

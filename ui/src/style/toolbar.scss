@@ -225,6 +225,18 @@
                     }
                 }
 
+                .toolbar-card-is-required {
+                    color: $xibo-color-accent;
+                    position: absolute;
+                    width: 18px;
+                    height: 18px;
+                    bottom: 2px;
+                    right: 2px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                }
+
                 &:not(.has-thumb) {
                     border: 1px solid $xibo-color-primary-l30;
 
@@ -282,6 +294,10 @@
                     &:hover .toolbar-card-thumb {
                         background: lighten($xibo-color-primary-l60, 10%);
                     }
+                }
+
+                &.required-element {
+                    border: 2px solid $xibo-color-accent;
                 }
 
                 .select-button, .preview-button {
