@@ -98,7 +98,7 @@ if (elementData !== null && elementData.hasOwnProperty('ChangeStyle')) {
         </properties>
         <stencil>
             <hbs><![CDATA[
-<div class="arrow currency-elements-change-icon">
+<div class="arrow currency-elements-change-icon" data-css-url="[[assetId=font-awesome]]">
     <div class="fa {{data.ChangeIcon}}
     {{#eq data.ChangeIcon "up-arrow"}}fa-caret-up{{/eq}}
     {{#eq data.ChangeIcon "down-arrow"}}fa-caret-down{{/eq}}
@@ -131,6 +131,18 @@ if (elementData !== null && elementData.hasOwnProperty('ChangeStyle')) {
 }
             ]]></style>
         </stencil>
+        <onTemplateRender><![CDATA[
+let $iconContainer = $(target).find('.currency-elements-change-icon');
+
+if ($iconContainer.length === 0 && $(target).is('.currency-elements-change-icon')) {
+    $iconContainer = $(target);
+}
+
+// Inject CSS into target container if it's not added yet
+if ($(target).find('.fontawesomeCSS').length == 0) {
+    $iconContainer.prepend(`<link rel="stylesheet" href="${$iconContainer.data('cssUrl')}" class="fontawesomeCSS" media="screen"/>`);
+}
+]]></onTemplateRender>
         <assets>
             <asset id="font-awesome" type="path" mimeType="text/css" path="/modules/assets/common/font-awesome.min.css" />
             <asset id="fontawesome-webfont.ttf" type="path" mimeType="application/x-font-ttf" path="/modules/assets/common/fontawesome-webfont.ttf"></asset>
@@ -178,6 +190,17 @@ if (elementData !== null && elementData.hasOwnProperty('ChangeStyle')) {
             ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
+let $flagContainer = $(target).find('.currency-elements-logo');
+
+if ($flagContainer.length === 0 && $(target).is('.currency-elements-logo')) {
+    $flagContainer = $(target);
+}
+
+// Inject CSS into target container if it's not added yet
+if ($(target).find('.sampleCSS').length == 0) {
+    $flagContainer.prepend(`<link rel="stylesheet" href="${$flagContainer.data('cssUrl')}" class="sampleCSS" media="screen"/>`);
+}
+
 // Width and Height of the element
 const width = $(target).width();
 const height = $(target).height();
