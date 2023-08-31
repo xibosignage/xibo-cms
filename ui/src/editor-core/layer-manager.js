@@ -41,12 +41,13 @@ const LayerManager = function(parent, container, viewerContainer) {
   this.visible = false;
 };
 
-
 /**
  * Create structure
+ * @return {Promise} - Result of create structure
  */
 LayerManager.prototype.createStructure = function() {
   const self = this;
+  const promiseArray = [];
 
   // Reset structure
   self.layerStructure = [];
@@ -82,16 +83,25 @@ LayerManager.prototype.createStructure = function() {
     canvasObject.subLayers = [];
 
     // Get elements
-    if ((canvas.widgets)) {
+    if (canvas.widgets) {
       Object.values(canvas.widgets).forEach((widget) => {
+        const moduleIcon = lD.common.getModuleByType(widget.subType).icon;
         const elements = Object.values(widget.elements);
+
         elements.forEach((element) => {
+          // If we don't have template yet, push the method to the promise array
+          ($.isEmptyObject(element.template)) &&
+            promiseArray.push(element.getTemplate());
+
           addToLayerStructure(element.layer, {
             type: 'element',
-            name: element.id,
+            name: (element.template.title) ?
+              element.template.title : element.id,
             // Element has parent widget duration
             duration: parseDuration(widget.getDuration()),
             id: element.elementId,
+            icon: element.template.icon,
+            moduleIcon: moduleIcon,
             hasGroup: (element.groupId != undefined),
             groupId: layerManagerTrans.inGroup
               .replace('%groupId%', element.groupId),
@@ -136,6 +146,10 @@ LayerManager.prototype.createStructure = function() {
       });
     }
   });
+
+  // Return the promiseArray or true if we don't need to fulfill promises
+  return (promiseArray.length === 0) ? Promise.resolve(true) :
+    Promise.resolve(promiseArray);
 };
 
 /**
@@ -168,91 +182,100 @@ LayerManager.prototype.setVisible = function(force, savePrefs = true) {
 LayerManager.prototype.render = function(reset) {
   const self = this;
 
-  // Only render if it's visible
-  if (this.visible != false) {
-    // Create layers data structure
-    this.createStructure();
+  // Create layers data structure
+  this.createStructure().then((res) => {
+    if (Array.isArray(res)) {
+      Promise.all(res).then(() => {
+        // Render again after all templates are loaded
+        self.render(true);
+      });
+    } else {
+      // Only render if it's visible
+      if (this.visible != false) {
+        // Compile layout template with data
+        const html = managerTemplate({
+          trans: layerManagerTrans,
+          layerStructure: this.layerStructure,
+        });
 
-    // Compile layout template with data
-    const html = managerTemplate({
-      trans: layerManagerTrans,
-      layerStructure: this.layerStructure,
-    });
+        // Append layout html to the main div
+        this.DOMObject.html(html);
 
-    // Append layout html to the main div
-    this.DOMObject.html(html);
+        // Make the layer div draggable
+        this.DOMObject.draggable({
+          handle: '.layer-manager-header',
+          cursor: 'dragging',
+          drag: function() {
+            self.wasDragged = true;
+          },
+        });
 
-    // Make the layer div draggable
-    this.DOMObject.draggable({
-      handle: '.layer-manager-header',
-      cursor: 'dragging',
-      drag: function() {
-        self.wasDragged = true;
-      },
-    });
+        // Select items
+        this.DOMObject.find('.layer-manager-layer-item.selectable')
+          .off().on('click', function(ev) {
+            const elementId = $(ev.currentTarget).data('item-id');
+            const $viewerObject = self.viewerContainer.find('#' + elementId);
 
-    // Select items
-    this.DOMObject.find('.layer-manager-layer-item.selectable')
-      .off().on('click', function(ev) {
-        const elementId = $(ev.currentTarget).data('item-id');
-        const $viewerObject = self.viewerContainer.find('#' + elementId);
+            if ($viewerObject.length) {
+              // Select in editor
+              lD.selectObject({
+                target: $viewerObject,
+                forceSelect: true,
+              });
 
-        if ($viewerObject.length) {
-          // Select in editor
-          lD.selectObject({
-            target: $viewerObject,
-            forceSelect: true,
+              // If it's a static widget, we need
+              // to give the class to its region
+              const $auxTarget = ($viewerObject.hasClass('designer-widget')) ?
+                $viewerObject.parents('.designer-region') :
+                $viewerObject;
+
+              // Select in viewer
+              lD.viewer.selectElement($auxTarget);
+
+              // Mark object with selected from manager class
+              $auxTarget.addClass('selected-from-layer-manager');
+            }
           });
 
-          // If it's a static widget, we need to give the class to its region
-          const $auxTarget = ($viewerObject.hasClass('designer-widget')) ?
-            $viewerObject.parents('.designer-region') :
-            $viewerObject;
+        // Handle close button
+        this.DOMObject.find('.close-layer-manager')
+          .off().on('click', function(ev) {
+            self.setVisible(false);
+          });
 
-          // Select in viewer
-          lD.viewer.selectElement($auxTarget);
+        // Show
+        this.DOMObject.show();
+      } else {
+        // Empty container
+        this.DOMObject.empty();
 
-          // Mark object with selected from manager class
-          $auxTarget.addClass('selected-from-layer-manager');
-        }
-      });
+        // Hide container
+        this.DOMObject.hide();
+      }
 
-    // Handle close button
-    this.DOMObject.find('.close-layer-manager')
-      .off().on('click', function(ev) {
-        self.setVisible(false);
-      });
+      // If it's a reset or first run, show next to the button
+      if (reset || this.firstRender || !self.wasDragged) {
+        this.wasDragged = false;
 
-    // Show
-    this.DOMObject.show();
-  } else {
-    // Empty container
-    this.DOMObject.empty();
+        self.DOMObject.css('top', 'auto');
+        self.DOMObject.css('left', 6);
 
-    // Hide container
-    this.DOMObject.hide();
-  }
+        // Button height plus offset from bottom and top of the button: 6*2
+        const viewerOffsetBottom =
+          lD.viewer.DOMObject.siblings('#layerManagerBtn')
+            .outerHeight() + (6 * 2);
 
-  // If it's a reset or first run, show next to the button
-  if (reset || this.firstRender || !self.wasDragged) {
-    this.wasDragged = false;
+        // Bottom is calculated by using the element height
+        // and the offset from the bottom of the viewer
+        self.DOMObject.css(
+          'bottom',
+          self.DOMObject.outerHeight() + viewerOffsetBottom,
+        );
+      }
 
-    self.DOMObject.css('top', 'auto');
-    self.DOMObject.css('left', 6);
-
-    // Button height plus offset from bottom and top of the button: 6*2
-    const viewerOffsetBottom =
-      lD.viewer.DOMObject.siblings('#layerManagerBtn').outerHeight() + (6 * 2);
-
-    // Bottom is calculated by using the element height
-    // and the offset from the bottom of the viewer
-    self.DOMObject.css(
-      'bottom',
-      self.DOMObject.outerHeight() + viewerOffsetBottom,
-    );
-  }
-
-  this.firstRender = false;
+      this.firstRender = false;
+    }
+  });
 };
 
 module.exports = LayerManager;
