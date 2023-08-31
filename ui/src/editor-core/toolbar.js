@@ -165,6 +165,7 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
       moduleId: 'playlist',
       name: toolbarTrans.playlist,
       type: 'playlist',
+      icon: 'fa fa-list-ol',
       dataType: '',
       regionSpecific: 1,
       group: [],
@@ -181,6 +182,7 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
       moduleId: 'zone',
       name: toolbarTrans.zone,
       type: 'zone',
+      icon: 'fas fa-border-none',
       dataType: '',
       target: 'layout',
     });
@@ -233,43 +235,43 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
   this.interactiveList = [
     {
       name: toolbarTrans.interactive.actions.navWidget,
-      icon: 'fa fa-arrows-alt',
+      icon: 'fa fa-square-o',
       type: 'navWidget',
       target: '["frame"]',
       dataType: '',
     },
     {
       name: toolbarTrans.interactive.actions.navLayout,
-      icon: 'fa fa-arrows-alt',
+      icon: 'fa fa-desktop',
       type: 'navLayout',
       target: '["layout"]',
       dataType: '',
     },
     {
-      name: toolbarTrans.interactive.actions.nextWidget,
-      icon: 'fa-arrow-right-alt',
-      type: 'nextWidget',
-      target: '["playlist"]',
-      dataType: '',
-    },
-    {
       name: toolbarTrans.interactive.actions.previousWidget,
-      icon: 'fa-arrow-left-alt',
+      icon: 'fa fa-caret-square-o-left',
       type: 'previousWidget',
       target: '["playlist"]',
       dataType: '',
     },
     {
-      name: toolbarTrans.interactive.actions.nextLayout,
-      icon: 'fa-arrow-right',
-      type: 'nextLayout',
-      target: '["layout"]',
+      name: toolbarTrans.interactive.actions.nextWidget,
+      icon: 'fa fa-caret-square-o-right',
+      type: 'nextWidget',
+      target: '["playlist"]',
       dataType: '',
     },
     {
       name: toolbarTrans.interactive.actions.previousLayout,
-      icon: 'fa-arrow-left',
+      icon: 'fa fa-arrow-circle-left',
       type: 'previousLayout',
+      target: '["layout"]',
+      dataType: '',
+    },
+    {
+      name: toolbarTrans.interactive.actions.nextLayout,
+      icon: 'fa fa-arrow-circle-right',
+      type: 'nextLayout',
       target: '["layout"]',
       dataType: '',
     },
@@ -1539,6 +1541,10 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
           if (element.type == 'video' && element.provider) {
             element.videoThumbnail = element.thumbnail;
           }
+
+          // Resolve the icon
+          element.icon = modulesList.filter((el) =>
+            el.type === element.type)[0]?.icon || null;
 
           // Use template
           const $card = $(ToolbarCardMediaTemplate(element));

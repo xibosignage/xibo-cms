@@ -271,31 +271,6 @@ $fa-font-path: "~font-awesome/fonts";
     @extend .fa, .fa-user-secret;
 }
 
-/* Actions icons */
-.actions-icon-navLayout {
-    @extend .fa, .fa-desktop;
-}
-
-.actions-icon-navWidget {
-    @extend .fa, .fa-square-o;
-}
-
-.actions-icon-nextWidget {
-    @extend .fa, .fa-caret-square-o-right;
-}
-
-.actions-icon-previousWidget {
-    @extend .fa, .fa-caret-square-o-left;
-}
-
-.actions-icon-nextLayout {
-    @extend .fa, .fa-arrow-circle-right;
-}
-
-.actions-icon-previousLayout {
-    @extend .fa, .fa-arrow-circle-left;
-}
-
 /* Form icons */
 .bg_not_found_icon {
     @extend .fa, .fa-exclamation-triangle;
