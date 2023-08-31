@@ -1528,6 +1528,17 @@ Viewer.prototype.renderElementContent = function(
       self.moveable.rotatable = element.canRotate;
     }
 
+    // Check if parent widget is not valid
+    const parentWidget = lD.getObjectByTypeAndId(
+      'widget',
+      'widget_' + element.regionId + '_' + element.widgetId,
+      'canvas',
+    );
+
+    const isValid =
+      parentWidget.isValid &&
+      parentWidget.requiredElements.valid;
+
     // Render element with template
     $elementContainer.html($(viewerElementContentTemplate({
       element: element,
@@ -1536,6 +1547,7 @@ Viewer.prototype.renderElementContent = function(
       originalWidth: element.width,
       originalHeight: element.height,
       trans: propertiesPanelTrans,
+      invalidParent: !isValid,
     })));
 
     // Get element properties
@@ -3033,6 +3045,11 @@ Viewer.prototype.removeActionEditArea = function() {
 Viewer.prototype.saveTemporaryObject = function(objectId, objectType, data) {
   lD.selectedObject.id = objectId;
   lD.selectedObject.type = objectType;
+
+  // If it's an element, save also as elementId
+  if (lD.selectedObject.type === 'element') {
+    lD.selectedObject.elementId = objectId;
+  }
 
   // Append temporary object to the viewer
   $('<div>', {

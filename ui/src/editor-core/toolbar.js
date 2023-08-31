@@ -2600,6 +2600,17 @@ Toolbar.prototype.loadTemplates = function(
             continue;
           } else {
             if (el.type === 'element') {
+              // Check if element is required
+              const elementModule = lD.common.getModuleByType(el.subType);
+
+              if (
+                elementModule &&
+                Array.isArray(elementModule.requiredElements) &&
+                elementModule.requiredElements.indexOf(el.templateId) != -1
+              ) {
+                el.isRequired = true;
+              }
+
               elements.push(el);
             } else if (el.type === 'element-group') {
               stencils.push(el);

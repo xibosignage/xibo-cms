@@ -7,6 +7,10 @@
     <div class="form-content">
         <form id="widgetFormEdit" class="XiboForm">
             <div class="tab-content">
+                {{#if showErrorMessage}}
+                    {{> inputs/message variant="danger" customClass="mt-2 mb-2" title=errorMessage}}
+                {{/if}}
+
                 <div class="tab-pane active" id="configureTab"></div>
 
                 <div class="tab-pane" id="appearanceTab"></div>

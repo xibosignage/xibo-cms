@@ -235,6 +235,9 @@ Layout.prototype.createDataStructure = function(data) {
                 );
               }
             }
+
+            // Check required elements
+            newWidget.validateRequiredElements();
           }
 
           // Add newWidget to the Region widget object
