@@ -152,6 +152,9 @@ Bottombar.prototype.render = function(object) {
       buttonData['propertyType'],
     );
   });
+
+  // Reload tooltips
+  app.common.reloadTooltips(this.DOMObject);
 };
 
 /**

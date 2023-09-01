@@ -668,7 +668,7 @@ Toolbar.prototype.loadPrefs = function() {
           loadedData.displayTooltips == undefined);
 
       // Reload tooltips
-      app.common.reloadTooltips(app.editorContainer);
+      app.common.reloadTooltips(self.DOMObject);
 
       // Render toolbar and topbar if exists
       self.render({
@@ -1096,6 +1096,9 @@ Toolbar.prototype.createContent = function(
   this.DOMObject.find('.close-content').on('click', function() {
     self.openMenu(self.openedMenu);
   });
+
+  // Reload tooltips
+  app.common.reloadTooltips(self.DOMObject);
 };
 
 /**
@@ -1202,7 +1205,7 @@ Toolbar.prototype.selectCard = function(card) {
     this.selectedCard = card;
 
     // Show designer overlay
-    $('.custom-overlay').show().off().on('click', () => {
+    $('.custom-overlay').show().off('click').on('click', () => {
       this.deselectCardsAndDropZones();
     });
 
@@ -2144,7 +2147,7 @@ Toolbar.prototype.handleCardsBehaviour = function() {
             $(this).parents('nav.navbar').addClass('card-selected');
 
             // Reload tooltips to avoid floating detached elements
-            app.common.reloadTooltips(app.editorContainer);
+            app.common.reloadTooltips(self.DOMObject);
           },
           stop: function() {
           // Hide overlay
@@ -2158,7 +2161,7 @@ Toolbar.prototype.handleCardsBehaviour = function() {
             $(this).parents('nav.navbar').removeClass('card-selected');
 
             // Reload tooltips to avoid floating detached elements
-            app.common.reloadTooltips(app.editorContainer);
+            app.common.reloadTooltips(self.DOMObject);
           },
         });
       });
@@ -2323,14 +2326,14 @@ Toolbar.prototype.createMediaPreview = function(media) {
     trans: toolbarTrans,
   }));
 
-  $mediaPreview.find('#closeBtn').off().on('click', function() {
+  $mediaPreview.find('#closeBtn').off('click').on('click', function() {
     // Close preview and empty content
     $mediaPreview.find('#content').html('');
     $mediaPreview.removeClass('show');
     $mediaPreview.remove();
   });
 
-  $mediaPreview.find('#sizeBtn').off().on('click', function(e) {
+  $mediaPreview.find('#sizeBtn').off('click').on('click', function(e) {
     // Toggle size class
     $mediaPreview.toggleClass('large');
 
@@ -2345,7 +2348,7 @@ Toolbar.prototype.createMediaPreview = function(media) {
     );
   });
 
-  $mediaPreview.find('#selectBtn').off().on('click', function() {
+  $mediaPreview.find('#selectBtn').off('click').on('click', function() {
     // Select Media on toolbar
     const $card = self.DOMObject.find(
       '.toolbar-menu-content #content-' +
@@ -2440,7 +2443,7 @@ Toolbar.prototype.openSubMenu = function(
   );
 
   // Handle back button
-  $submenuContainer.find('.close-submenu').off().on('click', function() {
+  $submenuContainer.find('.close-submenu').off('click').on('click', function() {
     $submenuContainer.removeClass('toolbar-cards-pane');
 
     // Clear submenu
@@ -2513,7 +2516,7 @@ Toolbar.prototype.openGroupMenu = function(
   );
 
   // Handle back button
-  $submenuContainer.find('.close-submenu').off().on('click', function() {
+  $submenuContainer.find('.close-submenu').off('click').on('click', function() {
     $submenuContainer.removeClass('toolbar-group-pane');
 
     // Clear submenu
@@ -2646,9 +2649,7 @@ Toolbar.prototype.loadTemplates = function(
         );
 
         // Initialise tooltips
-        self.parent.common.reloadTooltips(
-          $container,
-        );
+        app.common.reloadTooltips(self.DOMObject);
 
         // Handle cards behaviour
         self.handleCardsBehaviour();

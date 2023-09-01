@@ -320,9 +320,7 @@ Viewer.prototype.render = function(forceReload = false) {
   this.updateMoveableUI();
 
   // Initialise tooltips
-  this.parent.common.reloadTooltips(
-    this.DOMObject.parent(),
-  );
+  this.parent.common.reloadTooltips(this.DOMObject);
 };
 
 /**
@@ -786,18 +784,19 @@ Viewer.prototype.handleInteractions = function() {
     });
 
   // Handle fullscreen button
-  $viewerContainer.siblings('#fullscreenBtn').off().click(function() {
+  $viewerContainer.siblings('#fullscreenBtn').off('click').click(function() {
     this.reload = true;
     this.toggleFullscreen();
   }.bind(this));
 
   // Handle layer manager button
-  $viewerContainer.siblings('#layerManagerBtn').off().click(function(ev) {
-    this.layerManager.setVisible();
-  }.bind(this));
+  $viewerContainer.siblings('#layerManagerBtn')
+    .off('click').click(function() {
+      this.layerManager.setVisible();
+    }.bind(this));
 
   // Handle snap buttons
-  $viewerContainer.siblings('#snapToGrid').off().click(function(ev) {
+  $viewerContainer.siblings('#snapToGrid').off('click').click(function() {
     this.moveableOptions.snapToGrid = !this.moveableOptions.snapToGrid;
 
     // Turn off snap to element if grid is on
@@ -812,30 +811,33 @@ Viewer.prototype.handleInteractions = function() {
     this.updateMoveableUI();
   }.bind(this));
 
-  $viewerContainer.parent().find('#snapToBorders').off().click(function() {
-    this.moveableOptions.snapToBorders = !this.moveableOptions.snapToBorders;
+  $viewerContainer.parent().find('#snapToBorders')
+    .off('click').click(function() {
+      this.moveableOptions.snapToBorders = !this.moveableOptions.snapToBorders;
 
-    // Update moveable options
-    this.updateMoveableOptions();
+      // Update moveable options
+      this.updateMoveableOptions();
 
-    // Update moveable UI
-    this.updateMoveableUI();
-  }.bind(this));
+      // Update moveable UI
+      this.updateMoveableUI();
+    }.bind(this));
 
-  $viewerContainer.parent().find('#snapToElements').off().click(function() {
-    this.moveableOptions.snapToElements = !this.moveableOptions.snapToElements;
+  $viewerContainer.parent().find('#snapToElements')
+    .off('click').click(function() {
+      this.moveableOptions.snapToElements =
+        !this.moveableOptions.snapToElements;
 
-    // Turn off snap to grid if element is on
-    if (this.moveableOptions.snapToElements) {
-      this.moveableOptions.snapToGrid = false;
-    }
+      // Turn off snap to grid if element is on
+      if (this.moveableOptions.snapToElements) {
+        this.moveableOptions.snapToGrid = false;
+      }
 
-    // Update moveable options
-    this.updateMoveableOptions();
+      // Update moveable options
+      this.updateMoveableOptions();
 
-    // Update moveable UI
-    this.updateMoveableUI();
-  }.bind(this));
+      // Update moveable UI
+      this.updateMoveableUI();
+    }.bind(this));
 
   const updateMoveableWithDebounce = _.debounce(function() {
     self.updateMoveableOptions();
@@ -2505,9 +2507,7 @@ Viewer.prototype.updateMoveable = function(
         this.DOMObject.parent().find('.snap-controls').show();
 
         // Initialise tooltips
-        this.parent.common.reloadTooltips(
-          this.DOMObject.parent().find('.snap-controls'),
-        );
+        this.parent.common.reloadTooltips(this.DOMObject);
       }
     }
 
@@ -3089,7 +3089,7 @@ Viewer.prototype.editGroup = function(
 
     // Add overlay and click to close
     self.DOMObject.find('.viewer-overlay').show()
-      .off().on('click', () => {
+      .off('click').on('click', () => {
         self.editGroup(groupDOMObject);
       });
 

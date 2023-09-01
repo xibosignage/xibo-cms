@@ -1137,10 +1137,11 @@ pE.toggleMultiselectMode = function(forceSelect = null) {
 
   if (multiSelectFlag) {
     // Show overlay
-    $editorContainer.find('.custom-overlay').show().off().on('click', () => {
-      // Close multi select mode
-      closeMultiselectMode();
-    });
+    $editorContainer.find('.custom-overlay').show().off('click')
+      .on('click', () => {
+        // Close multi select mode
+        closeMultiselectMode();
+      });
 
     // Disable timeline sort
     timeline.DOMObject.find('#timeline-container').sortable('disable');
@@ -1150,7 +1151,7 @@ pE.toggleMultiselectMode = function(forceSelect = null) {
 
     // Enable select for each widget
     timeline.DOMObject.find('.playlist-widget.deletable')
-      .removeClass('selected').off().on('click', function(e) {
+      .removeClass('selected').off('click').on('click', function(e) {
         e.stopPropagation();
         $(e.currentTarget).toggleClass('multi-selected');
 
