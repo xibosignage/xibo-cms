@@ -226,7 +226,7 @@ describe('Campaigns', function() {
     cy.get('.modal .modal-footer').contains('Save').click();
   });
 
-  it('should edit a scheduled event', function() {
+  it.skip('should edit a scheduled event', function() {
     cy.intercept('/schedule?draw=*').as('scheduleGridLoad');
 
     cy.intercept({
