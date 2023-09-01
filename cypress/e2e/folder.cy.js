@@ -36,20 +36,18 @@ describe('Folders', function() {
   });
 
   it('Moving an image from Root Folder to another folder', () => {
-    // Create an alias for load folders
-    cy.intercept('/library?*').as('mediaLoad');
-    cy.intercept('/user/pref').as('userPref');
+    cy.intercept({
+      url: '/library?*',
+      query: {media: 'child_folder_media'},
+    }).as('mediaGridLoadAfterSearch');
 
     // Go to library
     cy.visit('/library/view');
 
-    cy.wait('@mediaLoad');
-    cy.wait('@userPref');
-
     cy.get('#media').type('child_folder_media');
 
     // Wait for the search to complete
-    cy.wait('@mediaLoad');
+    cy.wait('@mediaGridLoadAfterSearch');
 
     cy.get('#libraryItems tbody tr').should('have.length', 1);
     cy.get('#datatable-container').should('contain', 'child_folder_media');
@@ -68,21 +66,19 @@ describe('Folders', function() {
   });
 
   it('Sharing', () => {
-    // Create and alias for load folders
-    cy.intercept('/folders').as('loadFolders');
-
     // Create and alias for load user permissions for folders
-    cy.intercept('/user/permissions/Folder/*').as('permissionsFolders');
+    cy.intercept({
+      url: '/user/permissions/Folder/*',
+      query: {name: 'folder_user'},
+    }).as('permissionsFoldersAfterSearch');
 
     cy.visit('/folders/view');
 
-    cy.wait('@loadFolders');
-
-    cy.contains('ShareFolder').rightclick();
+    cy.contains('ShareFolder').should('be.visible').rightclick();
     cy.get('ul.jstree-contextmenu >li:nth-child(6) > a').click(); // Click on Share Link
     cy.get('#name').type('folder_user');
 
-    cy.wait('@permissionsFolders');
+    cy.wait('@permissionsFoldersAfterSearch');
 
     cy.get('#permissionsTable tbody tr').should('have.length', 1);
     cy.get('#permissionsTable tbody tr:nth-child(1) td:nth-child(1)').contains('folder_user');
@@ -92,78 +88,74 @@ describe('Folders', function() {
 
   it('Set Home Folders for a user', () => {
     // Create and alias for load users
-    cy.intercept('/user*').as('loadUsers');
+    cy.intercept({
+      url: '/user*',
+      query: {userName: 'folder_user'},
+    }).as('userGridLoadAfterSearch');
 
     cy.visit('/user/view');
     cy.get('#userName').type('folder_user');
 
-    cy.wait('@loadUsers');
+    cy.wait('@userGridLoadAfterSearch');
     cy.get('#users tbody tr').should('have.length', 1);
     cy.get('#users tr:first-child .dropdown-toggle').click();
     cy.get('#users tr:first-child .user_button_set_home').click();
     cy.get('#home-folder').should('be.visible');
-    cy.contains('FolderHome').click({force: true} );
+    cy.get('.jstree-anchor:contains(\'FolderHome\')').should('be.visible').click();
     cy.get('.save-button').click();
 
     // Check
     cy.visit('/user/view');
     cy.get('#userName').clear();
     cy.get('#userName').type('folder_user');
+    cy.wait('@userGridLoadAfterSearch');
 
-    cy.wait('@loadUsers');
     cy.get('#users tbody tr').should('have.length', 1);
     cy.get('#users tbody tr:nth-child(1) td:nth-child(1)').contains('folder_user');
     cy.get('#users tbody tr:nth-child(1) td:nth-child(3)').contains('FolderHome');
   });
 
   it('Remove an empty folder', () => {
-    // Create and alias for load folders
-    cy.intercept('/folders').as('loadFolders');
-
     cy.visit('/folders/view');
-    cy.contains('EmptyFolder').rightclick();
+    // Find the EmptyFolder element and right-click on it
+    cy.get('.jstree-anchor:contains(\'EmptyFolder\')')
+      .rightclick()
+      .should('have.class', 'jstree-hovered'); // Ensure the right-click effect
+
+    // Find the context menu item with "Remove" text and click on it
     cy.contains('Remove').click();
 
+    // Validate
     cy.visit('/folders/view');
-    cy.wait('@loadFolders');
-    cy.contains('EmptyFolder').should('not.exist');
+    cy.get('.jstree-anchor:contains(\'EmptyFolder\')').should('not.exist');
   });
 
   it('cannot remove a folder with content', () => {
-    // Create and alias for load folders
-    cy.intercept('/folders').as('loadFolders');
-
     cy.visit('/folders/view');
-    cy.contains('FolderWithContent').rightclick();
+    cy.get('.jstree-anchor:contains(\'FolderWithContent\')')
+      .rightclick();
+
+    // Find the context menu item with "Remove" text and click on it
     cy.contains('Remove').click();
 
     // Check folder still exists
     cy.visit('/folders/view');
-
-    cy.wait('@loadFolders');
-    cy.contains('FolderWithContent').should('exist');
+    cy.get('.jstree-anchor:contains(\'FolderWithContent\')').should('exist');
   });
 
   it('search a media in a folder', () => {
-    // Create and alias for load folders
-    cy.intercept('/folders').as('loadFolders');
-    cy.intercept('/library?*').as('mediaLoad');
-    cy.intercept('/user/pref').as('userPref');
-
     // Go to library
     cy.visit('/library/view');
+    cy.get('.jstree-anchor:contains(\'Root Folder\')')
+      .should('be.visible') // Ensure the element is visible
+      .parent()
+      .find('.jstree-icon.jstree-ocl')
+      .click();
 
-    cy.wait('@loadFolders');
-    cy.wait('@mediaLoad');
-    cy.wait('@userPref');
-
-    // Click on All folders
-    cy.get('#folder-tree-clear-selection-button').click();
-    cy.get('.jstree-ocl').click();
-    cy.contains('FolderWithImage').click();
-
+    cy.get('.jstree-anchor:contains(\'FolderWithImage\')').click();
     cy.get('#libraryItems tbody tr').should('have.length', 1);
-    cy.get('#libraryItems tbody').contains('media_for_search_in_folder');
+    cy.get('#libraryItems tbody').contains('media_for_search_in_folder')
+      .should('be.visible');
   });
 
   it('Hide Folder tree', () => {
@@ -176,40 +168,31 @@ describe('Folders', function() {
   });
 
   it('Move folders and Merge', () => {
-    // Move a folder (MoveFromFolder) to another (MoveToFolder) and merge
-    cy.intercept('/library?*').as('mediaLoad');
-    // Create and alias for load folders
-    cy.intercept('/folders').as('loadFolders');
-
     // Go to folders
     cy.visit('/folders/view');
-    cy.contains('MoveFromFolder').rightclick();
+    cy.get('.jstree-anchor:contains(\'MoveFromFolder\')').rightclick();
     cy.contains('Move Folder').click();
-
-    cy.get('#container-folder-form-tree>ul>li>i').click();
-    cy.get('#container-folder-form-tree>ul>li:not(.jstree-loading)>i').click();
-    cy.contains('MoveToFolder').click({force: true});
-    cy.get('.form-check input').click();
+    cy.get('#container-folder-form-tree').within(() => {
+      // Find the "MoveToFolder" link and click it
+      cy.contains('MoveToFolder').click();
+    });
+    cy.get('#merge').should('be.visible').check();
     cy.get('.save-button').click();
 
     // Validate test34 image exist in MoveToFolder
     cy.visit('/folders/view');
-
-    cy.wait('@loadFolders');
-    cy.contains('MoveFromFolder').should('not.exist');
+    cy.get('.jstree-anchor:contains(\'MoveFromFolder\')').should('not.exist');
 
     // Validate test34 image exist in MoveToFolder
     // Go to library
     cy.visit('/library/view');
-    cy.wait('@mediaLoad');
-    cy.wait('@loadFolders');
 
-    // Click on All folders from Folder Tree
-    cy.get('#folder-tree-clear-selection-button').click();
-    cy.get('.jstree-ocl').click();
-    cy.contains('MoveToFolder').click();
-
-    cy.wait('@mediaLoad');
+    cy.get('.jstree-anchor:contains(\'Root Folder\')')
+      .should('be.visible') // Ensure the element is visible
+      .parent()
+      .find('.jstree-icon.jstree-ocl')
+      .click();
+    cy.get('.jstree-anchor:contains(\'MoveToFolder\')').click();
     cy.get('#libraryItems tbody').contains('test34');
   });
 });

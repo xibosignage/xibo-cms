@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -19,17 +19,17 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-describe('Library Usage', function () {
+/* eslint-disable max-len */
+describe('Library Usage', function() {
+  beforeEach(function() {
+    cy.login();
+  });
 
-    beforeEach(function () {
-        cy.login();
-    });
+  it('should load tabular data and charts', () => {
+    cy.visit('/report/form/libraryusage');
 
-    it('should load tabular data and charts', () => {
-        cy.visit('/report/form/libraryusage');
-
-        cy.get('#libraryUsage_wrapper').should('be.visible');
-        cy.get('#libraryChart').should('be.visible');
-        cy.get('#userChart').should('be.visible');
-    });
+    cy.get('#libraryUsage_wrapper').should('be.visible');
+    cy.get('#libraryChart').should('be.visible');
+    cy.get('#userChart').should('be.visible');
+  });
 });
