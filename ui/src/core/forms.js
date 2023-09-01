@@ -2023,7 +2023,7 @@ window.forms = {
           } else {
             // For the remaining cases, set the
             // value of the dependency to the target data attribute
-            $target.attr('data-depends-on-value', valueToSet);
+            $target.data('dependsOnValue', valueToSet);
 
             // Reset the target form field
             forms.initFields(container, $target, targetId, readOnlyMode);
