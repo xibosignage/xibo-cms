@@ -681,6 +681,7 @@ Viewer.prototype.handleInteractions = function() {
                 // Select widget if exists
                 lD.selectObject({
                   target: $(e.target).find('.designer-widget'),
+                  clickPosition: clickPosition,
                 });
               }
               self.selectElement($(e.target), shiftIsPressed);

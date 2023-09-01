@@ -749,7 +749,7 @@ PropertiesPanel.prototype.render = function(
           });
         }
 
-        showAppearanceTab(true);
+        showAppearanceTab();
       }
 
       // If we have a template for the widget, create the fields
@@ -903,7 +903,12 @@ PropertiesPanel.prototype.render = function(
           );
 
           // Show the appearance tab
-          showAppearanceTab(true);
+          // and select it if element isn't the only one on the widget
+          // or it's a global element
+          showAppearanceTab(
+            Object.values(target.elements).length > 1 ||
+            target.subType === 'global',
+          );
 
           // Also Init fields for the element
           self.initFields(targetAux, res.data, actionEditMode, true);
@@ -1252,7 +1257,7 @@ PropertiesPanel.prototype.render = function(
               left: 0,
             }, true);
 
-            lD.viewer.updateRegion(lD.layout.regions[regionId]);
+            lD.viewer.updateRegion(lD.layout.regions[regionId], true);
           } else if (targetAux?.type == 'element') {
             // Element
             const $targetElement = $('#' + targetAux.elementId);

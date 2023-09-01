@@ -681,6 +681,18 @@ lD.reloadData = function(
       // Add thumbnail
       captureThumbnail && lD.uploadThumbnail();
 
+      // Update topbar jumplist if changed
+      if (
+        lD.topbar.jumpList.layoutId != lD.layout.layoutId ||
+        lD.topbar.jumpList.layoutName != lD.layout.name
+      ) {
+        lD.topbar.jumpList.layoutId = lD.layout.layoutId;
+        lD.topbar.jumpList.layoutName = lD.layout.name;
+
+        // Update jumplist
+        lD.topbar.setupJumpList($('#layoutJumpListContainer'));
+      }
+
       // Refresh designer
       refreshEditor && lD.refreshEditor({
         reloadToolbar: reloadToolbar,
