@@ -20,7 +20,8 @@ Bottombar.prototype.render = function(object) {
   const readOnlyModeOn = (app?.readOnlyMode === true);
 
   // Get topbar trans
-  const newBottomBarTrans = $.extend({}, toolbarTrans, topbarTrans);
+  const newBottomBarTrans =
+    $.extend({}, toolbarTrans, topbarTrans, bottombarTrans);
 
   const checkHistory = app.checkHistory();
   newBottomBarTrans.undoActiveTitle =
@@ -49,7 +50,7 @@ Bottombar.prototype.render = function(object) {
         regionName: (parentRegion) ? parentRegion.name : '',
         trans: newBottomBarTrans,
         readOnlyModeOn: readOnlyModeOn,
-        object: object,
+        object: parentRegion,
         undoActive: checkHistory.undoActive,
         trashActive: trashBinActive,
       },
@@ -151,6 +152,9 @@ Bottombar.prototype.render = function(object) {
       buttonData['propertyType'],
     );
   });
+
+  // Reload tooltips
+  app.common.reloadTooltips(this.DOMObject);
 };
 
 /**

@@ -332,6 +332,9 @@ $(() => {
         reloadPropertiesPanel: true,
       });
 
+      // Initialise tooltips on main container
+      lD.common.reloadTooltips(lD.editorContainer);
+
       // Load preferences
       lD.loadPrefs();
     } else {
@@ -2499,7 +2502,7 @@ lD.openPlaylistEditor = function(playlistId, region) {
 
   // On close, remove container and refresh designer
   lD.editorContainer.find('.back-button #backToLayoutEditorBtn')
-    .off().on('click', function() {
+    .off('click').on('click', function() {
       // Close playlist editor
       pE.close();
 

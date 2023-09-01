@@ -114,7 +114,7 @@ Topbar.prototype.render = function() {
   };
 
   // Setup layout edit form.
-  this.DOMObject.find('#layoutInfo').off().on('click', function() {
+  this.DOMObject.find('#layoutInfo').off('click').on('click', function() {
     // Pop open the layout edit form.
     // eslint-disable-next-line new-cap
     XiboFormRender(urlsForApi.layout.editForm.url.replace(
@@ -178,6 +178,9 @@ Topbar.prototype.render = function() {
 
   // Update layout status
   this.updateLayoutStatus();
+
+  // Reload tooltips
+  app.common.reloadTooltips(self.DOMObject);
 };
 
 /**

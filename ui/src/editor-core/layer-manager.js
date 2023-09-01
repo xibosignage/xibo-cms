@@ -212,7 +212,7 @@ LayerManager.prototype.render = function(reset) {
 
         // Select items
         this.DOMObject.find('.layer-manager-layer-item.selectable')
-          .off().on('click', function(ev) {
+          .off('click').on('click', function(ev) {
             const elementId = $(ev.currentTarget).data('item-id');
             const $viewerObject = self.viewerContainer.find('#' + elementId);
 
@@ -239,7 +239,7 @@ LayerManager.prototype.render = function(reset) {
 
         // Handle close button
         this.DOMObject.find('.close-layer-manager')
-          .off().on('click', function(ev) {
+          .off('click').on('click', function(ev) {
             self.setVisible(false);
           });
 
