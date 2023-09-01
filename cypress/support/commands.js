@@ -44,6 +44,7 @@
 //
 // -- This is will overwrite an existing command --
 // Cypress.Commands.overwrite("visit", (originalFn, url, options) => { ... })
+/* eslint-disable max-len */
 Cypress.Commands.add('login', function(callbackRoute = '/login') {
   cy.session('saveSession', () => {
     cy.visit(callbackRoute);
@@ -439,6 +440,13 @@ Cypress.Commands.add('removeAllSelectedOptions', (select2) => {
         cy.log('No options are selected');
       }
     });
+});
+
+// Select an option from the select2
+Cypress.Commands.add('selectOption', (content) => {
+  cy.get('.select2-container--open').contains(content);
+  cy.get('.select2-container--open .select2-results > ul > li').should('have.length', 1);
+  cy.get('.select2-container--open .select2-results > ul > li:first').contains(content).click();
 });
 
 // Schedule a layout

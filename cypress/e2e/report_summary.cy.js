@@ -19,122 +19,113 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-describe('Summary by Layout, Media or Event', function () {
+/* eslint-disable max-len */
+describe('Summary by Layout, Media or Event', function() {
+  const display1 = 'POP Display 1';
+  const layout1 = 'POP Layout 1';
+  beforeEach(function() {
+    cy.login();
+  });
 
-    beforeEach(function () {
-        cy.login();
-    });
+  it('Range: Today, Checks duration and count of a layout stat', () => {
+    // Create and alias for load layout
+    cy.intercept({
+      url: '/display?start=*',
+      query: {display: display1},
+    }).as('loadDisplayAfterSearch');
 
-    it('Range: Today, Checks duration and count of a layout stat', () => {
-        // Create and alias for load layout
-        cy.intercept('/display?start=*').as('loadDisplays');
-        cy.intercept('/layout?start=*').as('loadLayout');
+    cy.intercept({
+      url: '/layout?start=*',
+      query: {layout: layout1},
+    }).as('loadLayoutAfterSearch');
 
-        cy.visit('/report/form/summaryReport');
+    cy.intercept('/report/data/summaryReport?*').as('reportData');
 
-        // Click on the select2 selection
-        cy.get('#displayId + span .select2-selection').click();
+    cy.visit('/report/form/summaryReport');
 
-        // Wait for displays to load
-        cy.wait('@loadDisplays');
+    // Click on the select2 selection
+    cy.get('#displayId + span .select2-selection').click();
+    cy.get('.select2-container--open input[type="search"]').type(display1);
+    cy.wait('@loadDisplayAfterSearch');
+    cy.selectOption(display1);
 
-        // Type the display name
-        cy.get('.select2-container--open input[type="search"]').type('POP Display 1');
+    // Click on the select2 selection
+    cy.get('#layoutId + span .select2-selection').click();
+    cy.get('.select2-container--open input[type="search"]').type(layout1);
+    cy.wait('@loadLayoutAfterSearch');
+    cy.selectOption(layout1);
 
-        // Wait for displays to load
-        cy.wait('@loadDisplays');
-        cy.get('.select2-container--open').contains('POP Display 1');
-        cy.get('.select2-container--open .select2-results > ul > li').should('have.length', 1);
-        cy.get('.select2-container--open .select2-results > ul > li:first').contains('POP Display 1').click();
+    // Click on the Apply button
+    cy.contains('Apply').should('be.visible').click();
 
-        // Click on the select2 selection
-        cy.get('#layoutId + span .select2-selection').click();
+    cy.get('.chart-container').should('be.visible');
 
-        // Wait for layout to load
-        cy.wait('@loadLayout');
+    // Click on Tabular
+    cy.contains('Tabular').should('be.visible').click();
+    cy.contains('Next').should('be.visible').click();
+    cy.wait('@reportData');
 
-        // Type the layout name
-        cy.get('.select2-container--open input[type="search"]').type('POP Layout 1');
+    // Should have media stats
+    cy.get('#summaryTbl tbody tr:nth-child(3) td:nth-child(1)').contains('12:00 PM'); // Period
+    cy.get('#summaryTbl tbody tr:nth-child(3) td:nth-child(2)').contains(60); // Duration
+    cy.get('#summaryTbl tbody tr:nth-child(3) td:nth-child(3)').contains(1); // Count
+  });
 
-        // Wait for layout to load
-        cy.wait('@loadLayout');
-        cy.get('.select2-container--open').contains('POP Layout 1');
-        cy.get('.select2-container--open .select2-results > ul > li').should('have.length', 1);
-        cy.get('.select2-container--open .select2-results > ul > li:first').contains('POP Layout 1').click();
+  it('Create/Delete a Daily Summary Report Schedule', () => {
+    const reportschedule = 'Daily Summary by Layout 1 and Display 1';
 
-        // Click on the Apply button
-        cy.contains('Apply').should('be.visible').click();
+    // Create and alias for load layout
+    cy.intercept({
+      url: '/display?start=*',
+      query: {display: display1},
+    }).as('loadDisplayAfterSearch');
 
-        cy.get('.chart-container').should('be.visible');
+    cy.intercept({
+      url: '/layout?start=*',
+      query: {layout: layout1},
+    }).as('loadLayoutAfterSearch');
 
-        // Click on Tabular
-        cy.contains('Tabular').should('be.visible').click();
-        cy.contains('Next').should('be.visible').click();
+    cy.intercept({
+      url: '/report/reportschedule?*',
+      query: {name: reportschedule},
+    }).as('loadReportScheduleAfterSearch');
 
-        // Should have media stats
-        cy.get('#summaryTbl tbody tr:nth-child(3) td:nth-child(1)').contains('12:00 PM'); // Period
-        cy.get('#summaryTbl tbody tr:nth-child(3) td:nth-child(2)').contains(60); // Duration
-        cy.get('#summaryTbl tbody tr:nth-child(3) td:nth-child(3)').contains(1); // Count
-    });
+    cy.visit('/report/form/summaryReport');
 
-    it('Create/Delete a Daily Summary Report Schedule', () => {
-        // Create and alias for load layout
-        cy.intercept('/display?start=*').as('loadDisplays');
-        cy.intercept('/layout?start=*').as('loadLayout');
+    // Click on the select2 selection
+    cy.get('#layoutId + span .select2-selection').click();
+    cy.get('.select2-container--open input[type="search"]').type(layout1);
+    cy.wait('@loadLayoutAfterSearch');
+    cy.selectOption(layout1);
 
-        cy.visit('/report/form/summaryReport');
+    // ------
+    // ------
+    // Create a Daily Summary Report Schedule
+    cy.get('#reportAddBtn').click();
+    cy.get('#reportScheduleAddForm #name ').type(reportschedule);
 
-        // Click on the select2 selection
-        cy.get('#layoutId + span .select2-selection').click();
+    // Click on the select2 selection
+    cy.get('#reportScheduleAddForm #displayId + span .select2-selection').click();
+    cy.get('.select2-container--open input[type="search"]').type(display1);
+    cy.wait('@loadDisplayAfterSearch');
+    cy.selectOption(display1);
 
-        // Wait for layout to load
-        cy.wait('@loadLayout');
 
-        // Type the layout name
-        cy.get('.select2-container--open input[type="search"]').type('POP Layout 1');
+    cy.get('#dialog_btn_2').should('be.visible').click();
 
-        // Wait for layout to load
-        cy.wait('@loadLayout');
-        cy.get('.select2-container--open').contains('POP Layout 1');
-        cy.get('.select2-container--open .select2-results > ul > li').should('have.length', 1);
-        cy.get('.select2-container--open .select2-results > ul > li:first').contains('POP Layout 1').click();
+    cy.visit('/report/reportschedule/view');
+    cy.get('#name').type(reportschedule);
+    cy.wait('@loadReportScheduleAfterSearch');
 
-        // ------
-        // ------
-        // Create a Daily Summary Report Schedule
-        let reportschedule = 'Daily Summary by Layout 1 and Display 1';
-        cy.get('#reportAddBtn').click();
-        cy.get('#reportScheduleAddForm #name ').type(reportschedule);
+    // Click on the first row element to open the designer
+    cy.get('#reportschedules_wrapper tr:first-child .dropdown-toggle').click();
 
-        // Click on the select2 selection
-        cy.get('#reportScheduleAddForm #displayId + span .select2-selection').click();
+    cy.get('#reportschedules_wrapper tr:first-child .reportschedule_button_delete').click();
 
-        // Wait for display to load
-        cy.wait('@loadDisplays');
+    // Delete test campaign
+    cy.get('.bootbox .save-button').click();
 
-        // Type the display name
-        cy.get('.select2-container--open input[type="search"]').type('POP Display 1');
-
-        // Wait for display to load
-        cy.wait('@loadDisplays');
-        cy.get('.select2-container--open').contains('POP Display 1');
-        cy.get('.select2-container--open .select2-results > ul > li').should('have.length', 1);
-        cy.get('.select2-container--open .select2-results > ul > li:first').contains('POP Display 1').click();
-
-        cy.get('#dialog_btn_2').should('be.visible').click();
-
-        cy.visit('/report/reportschedule/view');
-        cy.get('#name').type(reportschedule);
-
-        // Click on the first row element to open the designer
-        cy.get('#reportschedules_wrapper tr:first-child .dropdown-toggle').click();
-
-        cy.get('#reportschedules_wrapper tr:first-child .reportschedule_button_delete').click();
-
-        // Delete test campaign
-        cy.get('.bootbox .save-button').click();
-
-        // Check if layout is deleted in toast message
-        cy.get('.toast').contains('Deleted ' + reportschedule);
-    });
+    // Check if layout is deleted in toast message
+    cy.get('.toast').contains('Deleted ' + reportschedule);
+  });
 });
