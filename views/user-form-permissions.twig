@@ -33,6 +33,10 @@
         {% set objectName = "Layout"|trans %}
     {% elseif object.isDisplaySpecific == 1 %}
         {% set objectName = "Display"|trans %}
+    {% elseif (object.type == "playlist") or (object.type == "subplaylist") %}
+        {% set objectName = "Playlist"|trans %}
+    {% elseif object.type == "frame" %}
+        {% set objectName = "Widget"|trans %}
     {% else %}
         {% set objectName = entity|trans %}
     {% endif %}
@@ -51,6 +55,7 @@
     <div class="permissions-form">
         <div class="row">
             <div class="col-md-12">
+            <p>{{object.type}}</p>
                 <div class="XiboGrid permissionsGrid" id="{{ randomId }}"
                      data-url="{{ url_for("user.permissions", {entity: entity, id: objectId}) }}"
                      data-permissions="{{ permissions|json_encode }}">

@@ -714,6 +714,12 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
   let openedSubMenu =
   (this.openedSubMenu != -1) ?
     Object.assign({}, this.openedSubMenu) : -1;
+
+  // Remove tooltip data from submenu if exists
+  if (openedSubMenu.data && openedSubMenu.data['bs.tooltip'] != undefined) {
+    delete openedSubMenu.data['bs.tooltip'];
+  }
+
   let displayTooltips = (app.common.displayTooltips) ? 1 : 0;
   let favouriteModules = [];
   const filters = {};
