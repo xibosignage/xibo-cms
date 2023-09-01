@@ -473,6 +473,7 @@ class WidgetHtmlRenderer
                 'sample' => $module->sampleData,
                 'properties' => $module->getPropertyValues(),
                 'isValid' => $widget->isValid === 1,
+                'isRepeatData' => $widget->getOptionValue('isRepeatData', 1) === 1,
                 'duration' => $widget->duration,
                 'calculatedDuration' => $widget->calculatedDuration,
             ];
