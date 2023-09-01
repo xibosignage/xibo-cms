@@ -2662,14 +2662,18 @@ for (var i = 0; i < meta.mapping.length; i++) {
 for (var i = 0; i < items.length; i++) {
     var item = items[i];
     var itemValue = item[properties.datasetField];
-    var content = '<img src="' + itemValue  + '" />';
 
-    // Add the content to the target
-    $(target).find('#content').append(
-        $('<div>')
-            .addClass('item')
-            .append(content)
-    );
+    // Only add item if we have a value for it
+    if(itemValue) {
+        var content = '<img src="' + itemValue  + '" />';
+
+        // Add the content to the target
+        $(target).find('#content').append(
+            $('<div>')
+                .addClass('item')
+                .append(content)
+        );
+    }
 }
 
 // Scale the layout
