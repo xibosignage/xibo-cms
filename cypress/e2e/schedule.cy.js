@@ -66,17 +66,12 @@ describe('Campaigns', function() {
     cy.visit('/schedule/view');
     cy.contains('Add Event').click();
 
-    // Fill event details
     cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection > .select2-selection > .select2-selection__rendered')
       .type(display1);
-
-    // Wait for Display to load
     cy.wait('@loadDisplaygroupAfterSearch');
-    cy.get('.select2-container--open .select2-dropdown .select2-results > ul > li')
-      .should('have.length', 2)
-      .last()
-      .contains(display1)
-      .click();
+    cy.get('.select2-container--open').contains(display1);
+    cy.get('.select2-container--open .select2-dropdown .select2-results > ul > li').should('have.length', 2);
+    cy.get('#select2-displayGroupIds-results > li > ul > li:first').contains(display1).click();
 
     // Select day part and campaign
     cy.get('.modal-content [name="dayPartId"]').select('Always');
@@ -133,14 +128,10 @@ describe('Campaigns', function() {
     // display
     cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection > .select2-selection > .select2-selection__rendered')
       .type(display1);
-
-    // Wait for Display to load and select the display
     cy.wait('@loadDisplaygroupAfterSearch');
-    cy.get('.select2-container--open .select2-dropdown .select2-results > ul > li')
-      .should('have.length', 2)
-      .last()
-      .contains(display1)
-      .click();
+    cy.get('.select2-container--open').contains(display1);
+    cy.get('.select2-container--open .select2-dropdown .select2-results > ul > li').should('have.length', 2);
+    cy.get('#select2-displayGroupIds-results > li > ul > li:first').contains(display1).click();
 
     // Select day part
     cy.get('.modal-content [name="dayPartId"]').select('Always');
@@ -181,14 +172,10 @@ describe('Campaigns', function() {
     // display
     cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection > .select2-selection > .select2-selection__rendered')
       .type(display1);
-
-    // Wait for Display to load and select the display
     cy.wait('@loadDisplaygroupAfterSearch');
-    cy.get('.select2-container--open .select2-dropdown .select2-results > ul > li')
-      .should('have.length', 2)
-      .last()
-      .contains(display1)
-      .click();
+    cy.get('.select2-container--open').contains(display1);
+    cy.get('.select2-container--open .select2-dropdown .select2-results > ul > li').should('have.length', 2);
+    cy.get('#select2-displayGroupIds-results > li > ul > li:first').contains(display1).click();
 
     cy.get('.modal-content #eventTypeId').select('Command');
     cy.get('.modal-content [name="commandId"]').select('Set Timezone');
@@ -213,22 +200,16 @@ describe('Campaigns', function() {
 
     // display
     cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection > .select2-selection > .select2-selection__rendered')
-      .type(display1);
-
-    // Wait for Display to load and select the display
+        .type(display1);
     cy.wait('@loadDisplaygroupAfterSearch');
-    cy.get('.select2-container--open .select2-dropdown .select2-results > ul > li')
-      .should('have.length', 2)
-      .last()
-      .contains(display1)
-      .click();
+    cy.get('.select2-container--open').contains(display1);
+    cy.get('.select2-container--open .select2-dropdown .select2-results > ul > li').should('have.length', 2);
+    cy.get('#select2-displayGroupIds-results > li > ul > li:first').contains(display1).click();
 
     cy.get('.modal .modal-footer').contains('Save').click();
   });
 
   it.skip('should edit a scheduled event', function() {
-    cy.intercept('/schedule?draw=*').as('scheduleGridLoad');
-
     cy.intercept({
       url: '/displaygroup?*',
       query: {displayGroup: display2},
@@ -246,22 +227,23 @@ describe('Campaigns', function() {
     cy.get('#campaignIdFilter + span .select2-selection').click();
     cy.get('.select2-container--open input[type="search"]').type(layoutSchedule1); // Type the layout name
     cy.wait('@loadLayoutSpecificCampaign');
-    cy.get('.select2-container--open').contains(layoutSchedule1);
-    cy.get('.select2-container--open .select2-results > ul > li').should('have.length', 1);
-    cy.get('.select2-container--open .select2-results > ul > li:first').contains(layoutSchedule1).click();
+    cy.selectOption(layoutSchedule1);
 
     // Should have 1
     cy.get('#schedule-grid tbody tr').should('have.length', 2);
     cy.get('#schedule-grid tr:first-child .dropdown-toggle').click();
     cy.get('#schedule-grid tr:first-child .schedule_button_edit').click();
 
+    // display
     cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection > .select2-selection > .select2-selection__rendered')
       .type(display2);
-    // Wait for Display to load
     cy.wait('@loadDisplaygroupAfterSearch');
-    cy.get('.select2-container--open').contains(display2);
-    cy.get('.select2-container--open .select2-dropdown .select2-results > ul > li').should('have.length', 2);
-    cy.get('#select2-displayGroupIds-results > li > ul > li:first').contains(display2).click();
+    cy.get('.select2-container--open .select2-results > ul > li')
+      .should('have.length', 2)
+      .last()
+      .contains(display2)
+      .click();
+
     cy.get('.modal .modal-footer').contains('Save').click();
     cy.get('#schedule-grid tbody').contains('2');
 
