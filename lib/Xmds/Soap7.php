@@ -220,8 +220,8 @@ class Soap7 extends Soap6
                         'files' => $requiredFiles,
                     ]);
                 } catch (GeneralException $exception) {
-                    $this->getLog()->debug('Failed to get data cache for widgetId ' . $widget->widgetId
-                        . ', e = ' . $exception->getMessage());
+                    $this->getLog()->error('getData: Failed to get data cache for widgetId '
+                        . $widget->widgetId . ', e = ' . $exception->getMessage());
                     throw new \SoapFault('Receiver', 'Cache not ready');
                 }
             } else {
@@ -232,19 +232,16 @@ class Soap7 extends Soap6
             // Log bandwidth
             $requiredFile->bytesRequested = $requiredFile->bytesRequested + strlen($resource);
             $requiredFile->save();
-        } catch (NotFoundException $notEx) {
-            $this->getLog()->error('Unknown error during getResource. E = ' . $notEx->getMessage());
-            $this->getLog()->debug($notEx->getTraceAsString());
+        } catch (NotFoundException) {
             throw new \SoapFault('Receiver', 'Requested an invalid file.');
         } catch (\Exception $e) {
-            $this->getLog()->error('Unknown error during getData. E = ' . $e->getMessage());
-            $this->getLog()->debug($e->getTraceAsString());
-
             if ($e instanceof \SoapFault) {
                 return $e;
-            } else {
-                throw new \SoapFault('Receiver', 'Unable to get the media resource');
             }
+
+            $this->getLog()->error('Unknown error during getData. E = ' . $e->getMessage());
+            $this->getLog()->debug($e->getTraceAsString());
+            throw new \SoapFault('Receiver', 'Unable to get the media resource');
         }
 
         // Log Bandwidth
