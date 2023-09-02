@@ -44,6 +44,9 @@ class CalendarWidgetCompatibility implements WidgetCompatibilityInterface
         // Did we originally come from an agenda (the old calendar widget)
         if ($widget->getOriginalValue('type') === 'calendar') {
             $newTemplateId = 'event_custom_html';
+
+            // New options names.
+            $widget->changeOption('template', 'text');
         } else {
             // We are a calendaradvanced
             // Calendar type is either 1=schedule, 2=daily, 3=weekly or 4=monthly.
