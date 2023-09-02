@@ -528,7 +528,7 @@ class Display implements \JsonSerializable
      */
     private $commands = null;
 
-    public static $saveOptionsMinimum = ['validate' => false, 'audit' => false];
+    public static $saveOptionsMinimum = ['validate' => false, 'audit' => false, 'setModifiedDt' => false];
 
     /**
      * @var ConfigServiceInterface
@@ -803,7 +803,8 @@ class Display implements \JsonSerializable
         $options = array_merge([
             'validate' => true,
             'audit' => true,
-            'checkDisplaySlotAvailability' => true
+            'checkDisplaySlotAvailability' => true,
+            'setModifiedDt' => true,
         ], $options);
 
         if ($options['validate']) {
@@ -825,7 +826,7 @@ class Display implements \JsonSerializable
         if ($this->displayId == null || $this->displayId == 0) {
             $this->add();
         } else {
-            $this->edit();
+            $this->edit($options);
         }
 
         if ($options['audit'] && $this->getChangedProperties() != []) {
@@ -943,7 +944,7 @@ class Display implements \JsonSerializable
      * @throws GeneralException
      * @throws NotFoundException
      */
-    private function edit()
+    private function edit($options = [])
     {
         $this->getStore()->update('
             UPDATE display
@@ -1110,10 +1111,16 @@ class Display implements \JsonSerializable
                 'manageDisplayLinks' => false,
                 'manageDynamicDisplayLinks' => false,
                 'allowNotify' => true,
-                'saveTags' => $saveTags
+                'saveTags' => $saveTags,
+                'setModifiedDt' => $options['setModifiedDt'],
             ]);
-        } else {
-            $this->store->update('UPDATE displaygroup SET `modifiedDt` = :modifiedDt WHERE displayGroupId = :displayGroupId', [
+        } else if ($options['setModifiedDt']) {
+            // Bump the modified date.
+            $this->store->update('
+                UPDATE displaygroup 
+                    SET `modifiedDt` = :modifiedDt
+                 WHERE displayGroupId = :displayGroupId
+            ', [
                 'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
                 'displayGroupId' => $this->displayGroupId
             ]);
