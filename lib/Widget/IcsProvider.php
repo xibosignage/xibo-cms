@@ -157,7 +157,7 @@ class IcsProvider implements WidgetProviderInterface
             $dataProvider->setCacheTtl($dataProvider->getProperty('updateInterval', 60) * 60);
             $dataProvider->setIsHandled();
         } catch (\Exception $exception) {
-            $this->getLog()->error($exception->getMessage());
+            $this->getLog()->error('iscProvider: fetchData: ' . $exception->getMessage());
             $this->getLog()->debug($exception->getTraceAsString());
 
             $dataProvider->addError(__('The iCal provided is not valid, please choose a valid feed'));
@@ -187,7 +187,7 @@ class IcsProvider implements WidgetProviderInterface
             return $response->getBody()->getContents();
         } catch (RequestException $requestException) {
             // Log and return empty?
-            $this->getLog()->error('Unable to get feed: ' . $requestException->getMessage());
+            $this->getLog()->error('downloadIsc: Unable to get feed: ' . $requestException->getMessage());
             $this->getLog()->debug($requestException->getTraceAsString());
 
             throw new ConfigurationException(__('Unable to download feed'));
