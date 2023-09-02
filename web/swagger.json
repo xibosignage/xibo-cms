@@ -6702,7 +6702,7 @@
                         "in": "formData",
                         "description": "Menu Board Product price",
                         "required": false,
-                        "type": "decimal"
+                        "type": "number"
                     },
                     {
                         "name": "allergyInfo",
@@ -6818,7 +6818,7 @@
                         "in": "formData",
                         "description": "Menu Board Product price",
                         "required": false,
-                        "type": "decimal"
+                        "type": "number"
                     },
                     {
                         "name": "allergyInfo",
@@ -12798,6 +12798,10 @@
                     "description": "Description of the Module",
                     "type": "string"
                 },
+                "icon": {
+                    "description": "An icon to use in the toolbar",
+                    "type": "string"
+                },
                 "type": {
                     "description": "The type code for this module",
                     "type": "string"
@@ -12873,6 +12877,10 @@
                     "description": "Data Parser run against each data item applicable when a dataType is present",
                     "type": "string"
                 },
+                "onDataLoad": {
+                    "description": "A load function to run when the widget first fetches data",
+                    "type": "string"
+                },
                 "onDataError": {
                     "description": "An error function to run when the widget is unable to fetch data",
                     "type": "string"
@@ -12910,6 +12918,13 @@
                 },
                 "propertyGroups": {
                     "description": "An array of additional module specific group properties",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "requiredElements": {
+                    "description": "An array of required elements",
                     "type": "array",
                     "items": {
                         "type": "string"
