@@ -885,6 +885,7 @@ class Layout implements \JsonSerializable
             'audit' => true,
             'import' => false,
             'appendCountOnDuplicate' => false,
+            'setModifiedDt' => true,
         ], $options);
 
         if ($options['validate']) {
@@ -2235,7 +2236,8 @@ class Layout implements \JsonSerializable
                 'audit' => false,
                 'validate' => false,
                 'notify' => $options['notify'],
-                'collectNow' => $options['collectNow']
+                'collectNow' => $options['collectNow'],
+                'setModifiedDt' => false,
             ]);
 
             $this->hasBuilt = true;
@@ -2526,7 +2528,7 @@ class Layout implements \JsonSerializable
     {
         $options = array_merge([
             'notify' => true,
-            'collectNow' => true
+            'collectNow' => true,
         ], $options);
 
         $this->getLog()->debug('Editing Layout ' . $this->layout . '. Id = ' . $this->layoutId);
@@ -2554,7 +2556,10 @@ class Layout implements \JsonSerializable
          WHERE layoutID = :layoutid
         ';
 
-        $time = Carbon::now()->format(DateFormatHelper::getSystemFormat());
+        // Only set the modified date if requested.
+        $time = ($options['setModifiedDt'])
+            ? Carbon::now()->format(DateFormatHelper::getSystemFormat())
+            : $this->modifiedDt;
 
         $this->getStore()->update($sql, array(
             'layoutid' => $this->layoutId,
