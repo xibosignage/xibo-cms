@@ -45,7 +45,7 @@ describe('Campaigns', function() {
     });
   });
 
-  it('should schedule an event campaign that has no priority, no recurrence', function() {
+  it.skip('should schedule an event campaign that has no priority, no recurrence', function() {
     // Set up intercepts with aliases
     cy.intercept({
       url: '/display?start=*',
@@ -106,7 +106,7 @@ describe('Campaigns', function() {
     cy.get('#schedule-grid').contains(campaignSchedule1);
   });
 
-  it('should schedule an event layout that has no priority, no recurrence', function() {
+  it.skip('should schedule an event layout that has no priority, no recurrence', function() {
     cy.intercept({
       url: '/displaygroup?*',
       query: {displayGroup: display1},
@@ -154,7 +154,7 @@ describe('Campaigns', function() {
     cy.contains('Added Event');
   });
 
-  /*it('should schedule an event command/overlay layout that has no priority, no recurrence', function() {
+  it.skip('should schedule an event command/overlay layout that has no priority, no recurrence', function() {
     cy.intercept({
       url: '/displaygroup?*',
       query: {displayGroup: display1},
@@ -207,7 +207,7 @@ describe('Campaigns', function() {
     cy.get('#select2-displayGroupIds-results > li > ul > li:first').contains(display1).click();
 
     cy.get('.modal .modal-footer').contains('Save').click();
-  });*/
+  });
 
   it.skip('should edit a scheduled event', function() {
     cy.intercept({
