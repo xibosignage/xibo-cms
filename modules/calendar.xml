@@ -36,7 +36,13 @@
     <regionSpecific>1</regionSpecific>
     <renderAs>html</renderAs>
     <defaultDuration>60</defaultDuration>
-    <settings></settings>
+    <settings>
+        <property id="cachePeriod" type="number">
+            <title>Cache Period (mins)</title>
+            <helpText>Please enter the number of minutes you would like to cache ICS feeds.</helpText>
+            <default>1440</default>
+        </property>
+    </settings>
     <properties>
         <property id="uri" type="text" variant="uri">
             <title>Feed URL</title>

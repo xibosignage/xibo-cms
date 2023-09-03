@@ -47,6 +47,11 @@
                 </test>
             </rule>
         </property>
+        <property id="cachePeriod" type="number">
+            <title>Cache Period (mins)</title>
+            <helpText>Please enter the number of minutes you would like to cache RSS feeds.</helpText>
+            <default>1440</default>
+        </property>
     </settings>
     <properties>
         <property id="uri" type="text" variant="uri">

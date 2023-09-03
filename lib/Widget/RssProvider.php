@@ -23,6 +23,7 @@
 namespace Xibo\Widget;
 
 use Carbon\Carbon;
+use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
 use PicoFeed\Config\Config;
 use PicoFeed\Logging\Logger;
@@ -61,24 +62,11 @@ class RssProvider implements WidgetProviderInterface
             ->format('U');
 
         try {
-            $httpOptions = [
-                'headers' => [
-                    'Accept' => 'application/rss+xml, application/rdf+xml;q=0.8, application/atom+xml;q=0.6,'
-                        . 'application/xml;q=0.4, text/xml;q=0.4, text/html;q=0.2, text/*;q=0.1'
-                ],
-                'timeout' => 20, // wait no more than 20 seconds
-            ];
-
-            if (!empty($dataProvider->getProperty('userAgent'))) {
-                $httpOptions['headers']['User-Agent'] = trim($dataProvider->getProperty('userAgent'));
-            }
-
-            $response = $dataProvider
-                ->getGuzzleClient($httpOptions)
-                ->get($uri);
+            // Get the feed
+            $response = $this->getFeed($dataProvider, $uri);
 
             // Pull out the content type
-            $contentType = $response->getHeaderLine('Content-Type');
+            $contentType = $response['contentType'];
 
             $this->getLog()->debug('Feed returned content-type ' . $contentType);
 
@@ -96,7 +84,7 @@ class RssProvider implements WidgetProviderInterface
             // Get the body, etc
             $result = explode('charset=', $contentType);
             $document['encoding'] = $result[1] ?? '';
-            $document['xml'] = $response->getBody()->getContents();
+            $document['xml'] = $response['body'];
 
             $this->getLog()->debug('Feed downloaded.');
 
@@ -237,5 +225,52 @@ class RssProvider implements WidgetProviderInterface
     public function getDataModifiedDt(DataProviderInterface $dataProvider): ?Carbon
     {
         return null;
+    }
+
+    /**
+     * @param DataProviderInterface $dataProvider
+     * @param string $uri
+     * @return array body, contentType
+     * @throws GuzzleException
+     */
+    private function getFeed(DataProviderInterface $dataProvider, string $uri): array
+    {
+        // See if we have this feed cached already.
+        $cache = $dataProvider->getPool()->getItem('/widget/' . $dataProvider->getDataType() . '/' . md5($uri));
+        $body = $cache->get();
+
+        if ($cache->isMiss() || $body === null || !is_array($body)) {
+            // Make a new request.
+            $this->getLog()->debug('getFeed: cache miss');
+            $body = [];
+
+            $httpOptions = [
+                'headers' => [
+                    'Accept' => 'application/rss+xml, application/rdf+xml;q=0.8, application/atom+xml;q=0.6,'
+                        . 'application/xml;q=0.4, text/xml;q=0.4, text/html;q=0.2, text/*;q=0.1'
+                ],
+                'timeout' => 20, // wait no more than 20 seconds
+            ];
+
+            if (!empty($dataProvider->getProperty('userAgent'))) {
+                $httpOptions['headers']['User-Agent'] = trim($dataProvider->getProperty('userAgent'));
+            }
+
+            $response = $dataProvider
+                ->getGuzzleClient($httpOptions)
+                ->get($uri);
+
+            $body['body'] = $response->getBody()->getContents();
+            $body['contentType'] = $response->getHeaderLine('Content-Type');
+
+            // Save the resonse to cache
+            $cache->set($body);
+            $cache->expiresAfter($dataProvider->getSetting('cachePeriod', 1440) * 60);
+            $dataProvider->getPool()->saveDeferred($cache);
+        } else {
+            $this->getLog()->debug('getFeed: cache hit');
+        }
+
+        return $body;
     }
 }
