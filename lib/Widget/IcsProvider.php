@@ -106,7 +106,7 @@ class IcsProvider implements WidgetProviderInterface
 
         try {
             $iCal = new ICal(false, $iCalConfig);
-            $iCal->initString($this->downloadIsc($uri, $dataProvider));
+            $iCal->initString($this->downloadIcs($uri, $dataProvider));
 
             $this->getLog()->debug('Feed initialised');
 
@@ -174,24 +174,42 @@ class IcsProvider implements WidgetProviderInterface
     /**
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    private function downloadIsc(string $uri, DataProviderInterface $dataProvider): string
+    private function downloadIcs(string $uri, DataProviderInterface $dataProvider): string
     {
-        try {
-            // Create a Guzzle Client to get the Feed XML
-            $response = $dataProvider
-                ->getGuzzleClient([
-                    'timeout' => 20, // wait no more than 20 seconds
-                ])
-                ->get($uri);
+        // See if we have this ICS cached already.
+        $cache = $dataProvider->getPool()->getItem('/widget/' . $dataProvider->getDataType() . '/' . md5($uri));
+        $ics = $cache->get();
 
-            return $response->getBody()->getContents();
-        } catch (RequestException $requestException) {
-            // Log and return empty?
-            $this->getLog()->error('downloadIsc: Unable to get feed: ' . $requestException->getMessage());
-            $this->getLog()->debug($requestException->getTraceAsString());
+        if ($cache->isMiss() || $ics === null) {
+            // Make a new request.
+            $this->getLog()->debug('downloadIcs: cache miss');
 
-            throw new ConfigurationException(__('Unable to download feed'));
+            try {
+                // Create a Guzzle Client to get the Feed XML
+                $response = $dataProvider
+                    ->getGuzzleClient([
+                        'timeout' => 20, // wait no more than 20 seconds
+                    ])
+                    ->get($uri);
+
+                $ics = $response->getBody()->getContents();
+
+                // Save the resonse to cache
+                $cache->set($ics);
+                $cache->expiresAfter($dataProvider->getSetting('cachePeriod', 1440) * 60);
+                $dataProvider->getPool()->saveDeferred($cache);
+            } catch (RequestException $requestException) {
+                // Log and return empty?
+                $this->getLog()->error('downloadIcs: Unable to get feed: ' . $requestException->getMessage());
+                $this->getLog()->debug($requestException->getTraceAsString());
+
+                throw new ConfigurationException(__('Unable to download feed'));
+            }
+        } else {
+            $this->getLog()->debug('downloadIcs: cache hit');
         }
+
+        return $ics;
     }
 
     public function getDataModifiedDt(DataProviderInterface $dataProvider): ?Carbon
