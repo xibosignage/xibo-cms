@@ -24,6 +24,7 @@ namespace Xibo\Widget\Provider;
 
 use Carbon\Carbon;
 use GuzzleHttp\Client;
+use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Module;
 use Xibo\Entity\Widget;
 use Xibo\Factory\MediaFactory;
@@ -35,12 +36,6 @@ use Xibo\Support\Sanitizer\SanitizerInterface;
  */
 class DataProvider implements DataProviderInterface
 {
-    /** @var \Xibo\Entity\Module */
-    private $module;
-
-    /** @var \Xibo\Entity\Widget */
-    private $widget;
-
     /** @var \Xibo\Factory\MediaFactory */
     private $mediaFactory;
 
@@ -77,12 +72,6 @@ class DataProvider implements DataProviderInterface
     /** @var \GuzzleHttp\Client */
     private $client;
 
-    /** @var array Guzzle proxy configuration */
-    private $guzzleProxy;
-
-    /** @var SanitizerService */
-    private $sanitizer;
-
     /** @var null cached property values. */
     private $properties = null;
 
@@ -91,16 +80,19 @@ class DataProvider implements DataProviderInterface
 
     /**
      * Constructor
-     * @param \Xibo\Entity\Module $module
-     * @param \Xibo\Entity\Widget $widget
+     * @param Module $module
+     * @param Widget $widget
      * @param array $guzzleProxy
+     * @param SanitizerService $sanitizer
+     * @param PoolInterface $pool
      */
-    public function __construct(Module $module, Widget $widget, array $guzzleProxy, SanitizerService $sanitizer)
-    {
-        $this->module = $module;
-        $this->widget = $widget;
-        $this->guzzleProxy = $guzzleProxy;
-        $this->sanitizer = $sanitizer;
+    public function __construct(
+        private readonly Module $module,
+        private readonly Widget $widget,
+        private readonly array $guzzleProxy,
+        private readonly SanitizerService $sanitizer,
+        private readonly PoolInterface $pool
+    ) {
     }
 
     /**
@@ -423,6 +415,14 @@ class DataProvider implements DataProviderInterface
         }
 
         return $this->client;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getPool(): PoolInterface
+    {
+        return $this->pool;
     }
 
     /**
