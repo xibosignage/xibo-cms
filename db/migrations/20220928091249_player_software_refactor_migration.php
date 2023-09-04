@@ -67,6 +67,9 @@ class PlayerSoftwareRefactorMigration extends AbstractMigration
                 // move the stored files with new id to fonts folder
                 rename($libraryLocation . $playersoftwareMedia['storedAs'], $libraryLocation . 'playersoftware/' . $playersoftwareMedia['originalFileName']);
 
+                // remove any potential widget links (there shouldn't be any)
+                $this->execute('DELETE FROM `lkwidgetmedia` WHERE `lkwidgetmedia`.`mediaId` = ' . $playersoftwareMedia['mediaId']);
+                
                 // remove any potential tagLinks from playersoftware media files
                 // unlikely that there will be any, but just in case.
                 $this->execute('DELETE FROM `lktagmedia` WHERE `lktagmedia`.mediaId = ' . $playersoftwareMedia['mediaId']);

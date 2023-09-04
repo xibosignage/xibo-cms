@@ -91,7 +91,7 @@ class AddFontsTableMigration extends AbstractMigration
                 );
 
                 // remove any potential widget links (there shouldn't be any)
-                $this->execute('DELETE FROM `lktagmedia` WHERE `lktagmedia`.`mediaId` = ' . $fontMedia['mediaId']);
+                $this->execute('DELETE FROM `lkwidgetmedia` WHERE `lkwidgetmedia`.`mediaId` = ' . $fontMedia['mediaId']);
 
                 // remove any potential tagLinks from font media files
                 // otherwise we risk failing the migration on the next step when we remove records from media table.
