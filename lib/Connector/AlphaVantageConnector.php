@@ -296,7 +296,7 @@ class AlphaVantageConnector implements ConnectorInterface
     protected function getStockQuote(string $symbol, ?int $isPaidPlan): array
     {
         try {
-            $cache = $this->getPool()->getItem('/widget/Stocks/'.md5($symbol));
+            $cache = $this->getPool()->getItem('/widget/stock/'.md5($symbol));
             $cache->setInvalidationMethod(Invalidation::SLEEP, 5000, 15);
 
             $data = $cache->get();
@@ -497,7 +497,7 @@ class AlphaVantageConnector implements ConnectorInterface
     private function getCurrencyExchangeRate(string $fromCurrency, string $toCurrency, bool $isPaidPlan)
     {
         try {
-            $cache = $this->getPool()->getItem('/widget/Currency/' . md5($fromCurrency . $toCurrency . $isPaidPlan));
+            $cache = $this->getPool()->getItem('/widget/currency/' . md5($fromCurrency . $toCurrency . $isPaidPlan));
             $cache->setInvalidationMethod(Invalidation::SLEEP, 5000, 15);
 
             $data = $cache->get();

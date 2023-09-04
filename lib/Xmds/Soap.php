@@ -2327,8 +2327,8 @@ class Soap
                             $data = $widgetDataProviderCache->decorateForPlayer($dataProvider->getData(), $media);
                         } catch (GeneralException $exception) {
                             // No data cached yet, exception
-                            $this->getLog()->debug('Failed to get data cache for widgetId ' . $widget->widgetId
-                                . ', e: ' . $exception->getMessage());
+                            $this->getLog()->error('getResource: Failed to get data cache for widgetId '
+                                . $widget->widgetId . ', e: ' . $exception->getMessage());
                             throw new \SoapFault('Receiver', 'Cache not ready');
                         }
 
@@ -2356,9 +2356,14 @@ class Soap
             // Log bandwidth
             $requiredFile->bytesRequested = $requiredFile->bytesRequested + strlen($resource);
             $requiredFile->save();
-        } catch (NotFoundException $notEx) {
+        } catch (NotFoundException) {
             throw new \SoapFault('Receiver', 'Requested an invalid file.');
         } catch (\Exception $e) {
+            // Pass soap faults straight through.
+            if ($e instanceof \SoapFault) {
+                throw $e;
+            }
+
             $this->getLog()->error('Unknown error during getResource. E = ' . $e->getMessage());
             $this->getLog()->debug($e->getTraceAsString());
             throw new \SoapFault('Receiver', 'Unable to get the media resource');

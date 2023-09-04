@@ -32,6 +32,9 @@ use Xibo\Tests\XmdsTestCase;
  */
 class GetDataTest extends XmdsTestCase
 {
+    // The widgetId of our expected widget (if we change the default layout this ID will change).
+    const WIDGET_ID = 4;
+
     use XmdsHelperTrait;
     public function setUp(): void
     {
@@ -57,7 +60,7 @@ class GetDataTest extends XmdsTestCase
         exec('cd /var/www/cms; php bin/run.php 9');
 
         // XMDS GetData with our dataSet Widget
-        $response = $this->sendRequest('POST', $this->getWidgetData(7, 6));
+        $response = $this->sendRequest('POST', $this->getWidgetData(7, self::WIDGET_ID));
         $content = $response->getBody()->getContents();
 
         // expect GetDataResponse

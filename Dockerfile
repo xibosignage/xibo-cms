@@ -196,7 +196,7 @@ RUN mkdir /var/www/cms/openooh \
     && curl -o /var/www/cms/openooh/specification.json https://raw.githubusercontent.com/openooh/venue-taxonomy/main/specification.json
 
 # Help Links
-RUN curl -o /var/www/cms/help-links.yaml https://raw.githubusercontent.com/xibosignage/xibo-manual/develop/help-links.yaml || true
+RUN curl -o /var/www/cms/help-links.yaml https://raw.githubusercontent.com/xibosignage/xibo-manual/master/help-links.yaml || true
 
 # Git commit fallback
 RUN echo $GIT_COMMIT > /var/www/cms/commit.sha

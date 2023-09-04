@@ -304,7 +304,7 @@ class MenuBoardProduct extends Base
      *      name="price",
      *      in="formData",
      *      description="Menu Board Product price",
-     *      type="decimal",
+     *      type="number",
      *      required=false
      *   ),
      *  @SWG\Parameter(
@@ -512,7 +512,7 @@ class MenuBoardProduct extends Base
      *      name="price",
      *      in="formData",
      *      description="Menu Board Product price",
-     *      type="decimal",
+     *      type="number",
      *      required=false
      *   ),
      *  @SWG\Parameter(

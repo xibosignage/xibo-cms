@@ -620,21 +620,22 @@ class DisplayGroup implements \JsonSerializable
             'manageDisplayLinks' => true,
             'manageDynamicDisplayLinks' => true,
             'allowNotify' => true,
-            'saveTags' => true
+            'saveTags' => true,
+            'setModifiedDt' => true,
         ], $options);
 
         // Should we allow notification or not?
         $this->allowNotify = $options['allowNotify'];
 
-        if ($options['validate'])
+        if ($options['validate']) {
             $this->validate();
+        }
 
         if ($this->displayGroupId == null || $this->displayGroupId == 0) {
             $this->add();
             $this->loaded = true;
-        }
-        else if ($options['saveGroup']) {
-            $this->edit();
+        } else if ($options['saveGroup']) {
+            $this->edit($options);
         }
 
         if ($options['saveTags']) {
@@ -783,7 +784,7 @@ class DisplayGroup implements \JsonSerializable
         ]);
     }
 
-    private function edit()
+    private function edit($options = [])
     {
         $this->getLog()->debug(sprintf('Updating Display Group. %s, %d', $this->displayGroup, $this->displayGroupId));
 
@@ -820,7 +821,9 @@ class DisplayGroup implements \JsonSerializable
             'dynamicCriteriaTagsLogicalOperator' => $this->dynamicCriteriaTagsLogicalOperator ?? 'OR',
             'bandwidthLimit' => $this->bandwidthLimit,
             'userId' => $this->userId,
-            'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
+            'modifiedDt' => $options['setModifiedDt']
+                ? Carbon::now()->format(DateFormatHelper::getSystemFormat())
+                : $this->modifiedDt,
             'folderId' => $this->folderId,
             'permissionsFolderId' => $this->permissionsFolderId,
             'ref1' => $this->ref1,

@@ -23,6 +23,8 @@
 namespace Xibo\Widget\Provider;
 
 use Carbon\Carbon;
+use GuzzleHttp\Client;
+use Stash\Interfaces\PoolInterface;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
@@ -85,9 +87,16 @@ interface DataProviderInterface
      * Get a configured Guzzle client
      *  this will have its proxy configuration set and be ready to use.
      * @param array $requestOptions An optional array of additional request options.
-     * @return \GuzzleHttp\Client
+     * @return Client
      */
-    public function getGuzzleClient(array $requestOptions = []): \GuzzleHttp\Client;
+    public function getGuzzleClient(array $requestOptions = []): Client;
+
+    /**
+     * Get a cache pool interface
+     *  this will be a cache pool configured using the CMS settings.
+     * @return PoolInterface
+     */
+    public function getPool(): PoolInterface;
 
     /**
      * Get property
@@ -115,18 +124,6 @@ interface DataProviderInterface
      * @return SanitizerInterface
      */
     public function getSanitizer(array $params): SanitizerInterface;
-
-    /**
-     * Get data already added to this provider
-     * @return array
-     */
-    public function getData(): array;
-
-    /**
-     * Get metadata already added to this provider
-     * @return array
-     */
-    public function getMeta(): array;
 
     /**
      * Get the widget modifiedDt
@@ -194,27 +191,9 @@ interface DataProviderInterface
     public function addLibraryFile(int $mediaId): string;
 
     /**
-     * Clear any data already added to this provider
-     * @return \Xibo\Widget\Provider\DataProviderInterface
-     */
-    public function clearData(): DataProviderInterface;
-
-    /**
-     * Clear any metadata already added to this provider
-     * @return \Xibo\Widget\Provider\DataProviderInterface
-     */
-    public function clearMeta(): DataProviderInterface;
-
-    /**
      * Set the cache TTL
      * @param int $ttlSeconds The time to live in seconds
      * @return \Xibo\Widget\Provider\DataProviderInterface
      */
     public function setCacheTtl(int $ttlSeconds): DataProviderInterface;
-
-    /**
-     * Get the cache TTL
-     * @return int the cache time to live in seconds
-     */
-    public function getCacheTtl(): int;
 }

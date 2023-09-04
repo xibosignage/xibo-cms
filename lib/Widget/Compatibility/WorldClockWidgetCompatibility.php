@@ -77,12 +77,13 @@ class WorldClockWidgetCompatibility implements WidgetCompatibilityInterface
             }
         }
 
-        // If overriden, we need to tranlate the legacy options to the new values
+        // We need to tranlate the legacy options to the new values
+        $widget->changeOption('clockCols', 'numCols');
+        $widget->changeOption('clockRows', 'numRows');
+
         if ($overrideTemplate == 1) {
             $widget->setOptionValue('template_html', 'cdata', $widget->getOptionValue('mainTemplate', ''));
             $widget->setOptionValue('template_style', 'cdata', $widget->getOptionValue('styleSheet', ''));
-            $widget->setOptionValue('numCols', 'attrib', $widget->getOptionValue('clockCols', 1));
-            $widget->setOptionValue('numRows', 'attrib', $widget->getOptionValue('clockRows', 1));
             $widget->setOptionValue('widgetDesignWidth', 'attrib', $widget->getOptionValue('widgetOriginalWidth', '250'));
             $widget->setOptionValue('widgetDesignHeight', 'attrib', $widget->getOptionValue('widgetOriginalHeight', '250'));
         }
