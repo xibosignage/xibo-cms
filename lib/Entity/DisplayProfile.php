@@ -363,14 +363,15 @@ class DisplayProfile implements \JsonSerializable
         $this->configCombined = [];
 
         if ($options['loadConfig']) {
+            if (!is_array($this->config) && !empty($this->config)) {
+                $this->config = json_decode($this->config, true);
+            }
+
             // handle cases when config is empty
             if (empty($this->config)) {
                 $this->config = [];
             }
-            // Decode the config string (unless its already an array)
-            if (!is_array($this->config)) {
-                $this->config = json_decode($this->config, true);
-            }
+
             $this->getLog()->debug('Config loaded: ' . json_encode($this->config, JSON_PRETTY_PRINT));
 
             // Populate our combined config accordingly
