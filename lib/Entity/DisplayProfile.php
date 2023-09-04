@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -363,6 +363,10 @@ class DisplayProfile implements \JsonSerializable
         $this->configCombined = [];
 
         if ($options['loadConfig']) {
+            // handle cases when config is empty
+            if (empty($this->config)) {
+                $this->config = [];
+            }
             // Decode the config string (unless its already an array)
             if (!is_array($this->config)) {
                 $this->config = json_decode($this->config, true);
