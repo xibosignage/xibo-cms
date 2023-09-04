@@ -481,7 +481,7 @@ class Region implements \JsonSerializable
                 $this->regionPlaylist->permissionsFolderId = $campaign->permissionsFolderId;
             }
 
-            $this->regionPlaylist->save();
+            $this->regionPlaylist->save($options);
 
             // Audit
             if ($options['audit']) {
@@ -517,7 +517,7 @@ class Region implements \JsonSerializable
                 $this->regionPlaylist->permissionsFolderId = $campaign->permissionsFolderId;
             }
 
-            $this->regionPlaylist->save();
+            $this->regionPlaylist->save($options);
 
             if ($options['audit'] && count($this->getChangedProperties()) > 0) {
                 $change = $this->getChangedProperties();

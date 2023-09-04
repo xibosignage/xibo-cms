@@ -922,7 +922,8 @@ class Widget implements \JsonSerializable
             'notifyPlaylists' => true,
             'notifyDisplays' => false,
             'audit' => true,
-            'alwaysUpdate' => false
+            'alwaysUpdate' => false,
+            'import' => false,
         ], $options);
 
         $this->getLog()->debug('Saving widgetId ' . $this->getId() . ' with options. '
@@ -972,6 +973,18 @@ class Widget implements \JsonSerializable
             foreach ($this->widgetOptions as $widgetOption) {
                 // Assert the widgetId
                 $widgetOption->widgetId = $this->widgetId;
+
+                // Handle widgetId inside of the option value
+                if ($options['import'] && $widgetOption->option === 'elements') {
+                    $widgetElements = $this->getOptionValue('elements', null);
+                    $widgetElements = json_decode($widgetElements, true);
+                    foreach ($widgetElements as $widgetIndex => $widgetElement) {
+                        $widgetElements[$widgetIndex]['widgetId'] = $this->widgetId;
+                    }
+
+                    $this->setOptionValue('elements', 'raw', json_encode($widgetElements));
+                }
+
                 $widgetOption->save();
             }
         }
