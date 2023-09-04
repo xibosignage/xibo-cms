@@ -85,6 +85,7 @@ class PlayerSoftwareRefactorMigration extends AbstractMigration
                     'mediaId' => $playersoftwareMedia['mediaId'],
                     'createdAt' => $playersoftwareMedia['createdDt'] ?: null,
                     'modifiedAt' => $playersoftwareMedia['modifiedDt'] ?: null,
+                    'fileName' => $playersoftwareMedia['originalFileName'],
                     'size' => $playersoftwareMedia['fileSize'],
                     'md5' => $playersoftwareMedia['md5']
                 ]);
