@@ -89,7 +89,7 @@ class LayoutUploadHandler extends BlueImpUploadHandler
             // set folderId, permissionFolderId is handled on Layout specific Campaign record.
             $layout->folderId = $this->options['folderId'];
 
-            $layout->save(['saveActions' => false, 'import' => $importTags]);
+            $layout->save(['saveActions' => false, 'import' => true]);
 
             if (!empty($layout->getUnmatchedProperty('thumbnail'))) {
                 rename($layout->getUnmatchedProperty('thumbnail'), $layout->getThumbnailUri());
