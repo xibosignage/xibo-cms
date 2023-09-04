@@ -70,8 +70,8 @@ class AddFontsTableMigration extends AbstractMigration
             foreach ($this->fetchAll('SELECT mediaId, name, type, createdDt, modifiedDt, storedAs, md5, fileSize, originalFileName FROM `media` WHERE media.type = \'font\'') as $fontMedia) {//phpcs:ignore
                 $table
                     ->insert([
-                        'createdAt' => $fontMedia['createdDt'],
-                        'modifiedAt' => $fontMedia['modifiedDt'],
+                        'createdAt' => $fontMedia['createdDt'] ?: null,
+                        'modifiedAt' => $fontMedia['modifiedDt'] ?: null,
                         'name' => $fontMedia['name'],
                         'fileName' => $fontMedia['originalFileName'],
                         'familyName' => strtolower(preg_replace(

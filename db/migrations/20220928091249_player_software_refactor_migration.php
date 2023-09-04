@@ -56,23 +56,53 @@ class PlayerSoftwareRefactorMigration extends AbstractMigration
             }
 
             // get all existing playersoftware records in media table and convert them
-            foreach ($this->fetchAll('SELECT mediaId, name, type, createdDt, modifiedDt, storedAs, md5, fileSize, originalFileName FROM `media` WHERE media.type = \'playersoftware\'') as $playersoftwareMedia) {
-                $this->execute('UPDATE `player_software` SET createdAt = \'' . $playersoftwareMedia['createdDt'] . '\',
-                                    modifiedAt = \'' . $playersoftwareMedia['modifiedDt'] . '\',
-                                    fileName = \'' . $playersoftwareMedia['originalFileName'] . '\',
-                                    size = ' . $playersoftwareMedia['fileSize'] . ',
-                                    md5 = \'' . $playersoftwareMedia['md5'] . '\'
-                                WHERE `player_software`.mediaId = ' . $playersoftwareMedia['mediaId']);
+            $sql = '
+                SELECT `mediaId`,
+                       `name`,
+                       `type`,
+                       `createdDt`,
+                       `modifiedDt`,
+                       `storedAs`,
+                       `md5`,
+                       `fileSize`,
+                       `originalFileName`
+                  FROM `media`
+                 WHERE `media`.`type` = \'playersoftware\'
+            ';
+
+            $updateSql = '
+                UPDATE `player_software`
+                    SET `createdAt` = :createdAt,
+                        `modifiedAt` = :modifiedAt,
+                        `fileName` = :fileName,
+                        `size` = :size,
+                        `md5` = :md5
+                 WHERE `mediaId` = :mediaId
+            ';
+
+            foreach ($this->fetchAll($sql) as $playersoftwareMedia) {
+                $this->execute($updateSql, [
+                    'mediaId' => $playersoftwareMedia['mediaId'],
+                    'createdAt' => $playersoftwareMedia['createdDt'] ?: null,
+                    'modifiedAt' => $playersoftwareMedia['modifiedDt'] ?: null,
+                    'size' => $playersoftwareMedia['fileSize'],
+                    'md5' => $playersoftwareMedia['md5']
+                ]);
 
                 // move the stored files with new id to fonts folder
-                rename($libraryLocation . $playersoftwareMedia['storedAs'], $libraryLocation . 'playersoftware/' . $playersoftwareMedia['originalFileName']);
+                rename(
+                    $libraryLocation . $playersoftwareMedia['storedAs'],
+                    $libraryLocation . 'playersoftware/' . $playersoftwareMedia['originalFileName']
+                );
 
                 // remove any potential widget links (there shouldn't be any)
-                $this->execute('DELETE FROM `lkwidgetmedia` WHERE `lkwidgetmedia`.`mediaId` = ' . $playersoftwareMedia['mediaId']);
+                $this->execute('DELETE FROM `lkwidgetmedia` WHERE `lkwidgetmedia`.`mediaId` = '
+                    . $playersoftwareMedia['mediaId']);
                 
                 // remove any potential tagLinks from playersoftware media files
                 // unlikely that there will be any, but just in case.
-                $this->execute('DELETE FROM `lktagmedia` WHERE `lktagmedia`.mediaId = ' . $playersoftwareMedia['mediaId']);
+                $this->execute('DELETE FROM `lktagmedia` WHERE `lktagmedia`.mediaId = '
+                    . $playersoftwareMedia['mediaId']);
             }
 
             // update versionMediaId in displayProfiles config
