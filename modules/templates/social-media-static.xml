@@ -2683,7 +2683,7 @@ small {
         </stencil>
         <onTemplateRender><![CDATA[
 // Set widget design width and height based on the window orientation
-let orientation = 'landscape';
+var orientation = 'landscape';
 if($(window).width() >= $(window).height()) {
     properties.widgetDesignWidth = 1920;
     properties.widgetDesignHeight = 1080;
@@ -2697,21 +2697,21 @@ if($(window).width() >= $(window).height()) {
 $(target).xiboLayoutScaler(properties);
 
 // Get an array of items from the templates generated
-const itemsHTML = $(target).find('.metro-cell-template').map(function(_k, el) {
+var itemsHTML = $(target).find('.metro-cell-template').map(function(_k, el) {
     return $(el).html();
 });
 
 // Get metro render container
-const $metroRenderContainer = $(target).find('.metro-render-container');
+var $metroRenderContainer = $(target).find('.metro-render-container');
 
 // Mark container as landscape or portrait
 $metroRenderContainer.removeClass('orientation-landscape orientation-portrait').
     addClass('orientation-' + orientation);
 
 // Get colours array
-const colors = [];
+var colors = [];
 
-for (let i = 1; i <= 8; i++) {
+for (var i = 1; i <= 8; i++) {
     if (properties['color' + i] !== '') {
         colors.push(properties['color' + i]);
     }

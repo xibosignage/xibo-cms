@@ -80,8 +80,8 @@ moment.locale(properties.lang || globalOptions.locale);
 
 // Parse any Clock elements
 // Use regex to out the bit between the [] brackets and use that as the format mask for moment.
-let text = properties.format;
-let regex = /\[.*?\]/g;
+var text = properties.format;
+var regex = /\[.*?\]/g;
 
 properties.format = text.replace(regex, function (match) {
     return '<span class="clock" format="' + match.replace('[', '').replace(']', '') + '"></span>';
@@ -104,7 +104,7 @@ xiboIC.set(
 );
     ]]></onInitialize>
     <onVisible><![CDATA[
-const updateClock = xiboIC.get(id, 'updateClock');
+var updateClock = xiboIC.get(id, 'updateClock');
 // Run update clock if it's defined in the template
 if (typeof updateClock === 'function') {
     // Start the first time

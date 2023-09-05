@@ -197,7 +197,7 @@ var theme = (properties.themeId == 1) ? "light" : "dark";
 $(target).addClass(theme);
     ]]></onInitialize>
     <onVisible><![CDATA[
-const updateClock = xiboIC.get(id, 'updateClock');
+var updateClock = xiboIC.get(id, 'updateClock');
 // Run update clock if it's defined in the template 
 if (typeof updateClock === 'function') {
     // Start the first time
