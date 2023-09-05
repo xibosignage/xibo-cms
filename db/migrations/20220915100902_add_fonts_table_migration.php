@@ -99,7 +99,7 @@ class AddFontsTableMigration extends AbstractMigration
                 $this->execute('DELETE FROM `lktagmedia` WHERE `lktagmedia`.`mediaId` = '
                     . $fontMedia['mediaId']);
 
-                // player software files assigned directly to the Display.
+                // font files assigned directly to the Display.
                 $this->execute('DELETE FROM `lkmediadisplaygroup` WHERE `lkmediadisplaygroup`.mediaId = '
                     . $fontMedia['mediaId']);
             }
