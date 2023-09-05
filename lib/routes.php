@@ -629,6 +629,12 @@ $app->get('/module/asset/{assetId}', [
     'assetDownload',
 ])->setName('module.asset.download');
 
+// Properties
+$app->get('/module/properties/{id}', ['\Xibo\Controller\Module','getProperties'])
+    ->setName('module.get.properties');
+$app->get('/module/template/{dataType}/properties/{id}', ['\Xibo\Controller\Module','getTemplateProperties'])
+    ->setName('module.template.get.properties');
+
 $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/module/settings/{id}', ['\Xibo\Controller\Module','settings'])->setName('module.settings');
     $group->put('/module/clear-cache/{id}', ['\Xibo\Controller\Module','clearCache'])->setName('module.clear.cache');

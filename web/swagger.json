@@ -10779,6 +10779,13 @@
                         "description": "Optional integer to say which position this assignment should occupy in the list. If more than one media item is being added, this will be the position of the first one.",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "templateId",
+                        "in": "formData",
+                        "description": "If the module type provided has a dataType then provide the templateId to use.",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -10790,6 +10797,72 @@
                                 "type": "string"
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/playlist/widget/{id}": {
+            "put": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Edit a Widget",
+                "description": "Edit a widget providing new properties to set on it",
+                "operationId": "editWidget",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "The ID of the Widget",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "useDuration",
+                        "in": "formData",
+                        "description": "Set a duration on this widget, if unchecked the default or library duration will be used.",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "Duration to use on this widget",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "An optional name for this widget",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "Should stats be enabled? On|Off|Inherit ",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "isRepeatData",
+                        "in": "formData",
+                        "description": "If this widget requires data, should that data be repeated to meet the number of items requested?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "properties",
+                        "in": "formData",
+                        "description": "Add an additional parameter for each of the properties required this module and its template. Use the moduleProperties and moduleTemplateProperties calls to get a list of properties needed",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
                     }
                 }
             }

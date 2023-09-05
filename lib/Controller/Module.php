@@ -134,6 +134,53 @@ class Module extends Base
         return $this->render($request, $response);
     }
 
+    // phpcs:disable
+    /**
+     * @SWG\Get(
+     *  path="/module/properties/{id}",
+     *  operationId="getModuleProperties",
+     *  tags={"module"},
+     *  summary="Get Module Properties",
+     *  description="Get a module properties which are needed to for the editWidget call",
+     *  @SWG\Parameter(
+     *      name="id",
+     *      in="path",
+     *      description="The ModuleId",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Module")
+     *  )
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    // phpcs:enable
+    public function getProperties(Request $request, Response $response, $id)
+    {
+        // Get properties, but return a key->value object for easy parsing.
+        $props = [];
+        foreach ($this->moduleFactory->getById($id)->properties as $property) {
+            $props[$property->id] = [
+                'type' => $property->type,
+                'title' => $property->title,
+                'helpText' => $property->helpText,
+                'options' => $property->options,
+            ];
+        }
+
+        $this->getState()->setData($props);
+        return $this->render($request, $response);
+    }
+
     /**
      * Settings Form
      * @param Request $request
@@ -273,6 +320,64 @@ class Module extends Base
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = 0;
         $this->getState()->setData($this->moduleTemplateFactory->getByDataType($dataType));
+        return $this->render($request, $response);
+    }
+
+    // phpcs:disable
+    /**
+     * @SWG\Get(
+     *  path="/module/template/{dataType}/properties/{id}",
+     *  operationId="getModuleProperties",
+     *  tags={"module"},
+     *  summary="Get Module Template Properties",
+     *  description="Get a module template properties which are needed to for the editWidget call",
+     *  @SWG\Parameter(
+     *      name="dataType",
+     *      in="path",
+     *      description="The Template DataType",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="id",
+     *      in="path",
+     *      description="The Template Id",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="object",
+     *          additionalProperties={"id":"string", "type":"string", "title":"string", "helpText":"string", "options":"array"}
+     *      )
+     *  )
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    // phpcs:enable
+    public function getTemplateProperties(Request $request, Response $response, string $dataType, string $id)
+    {
+        // Get properties, but return a key->value object for easy parsing.
+        $props = [];
+        foreach ($this->moduleTemplateFactory->getByDataTypeAndId($dataType, $id)->properties as $property) {
+            $props[$property->id] = [
+                'id' => $property->id,
+                'type' => $property->type,
+                'title' => $property->title,
+                'helpText' => $property->helpText,
+                'options' => $property->options,
+            ];
+        }
+
+        $this->getState()->setData($props);
         return $this->render($request, $response);
     }
 
