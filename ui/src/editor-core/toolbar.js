@@ -701,19 +701,20 @@ Toolbar.prototype.loadPrefs = function() {
  * Save user preferences
  * @param {bool=} [clearPrefs = false] - Force reseting user prefs
  */
-Toolbar.prototype.savePrefs = function(clearPrefs = false) {
-  const app = this.parent;
+Toolbar.prototype.savePrefs = _.debounce(function(clearPrefs = false) {
+  // eslint-disable-next-line no-invalid-this
   const self = this;
+  const app = self.parent;
 
   // Get opened menu name to save
   let openedMenu =
-    (this.openedMenu != -1) ?
-      this.menuItems[this.openedMenu].name : -1;
+    (self.openedMenu != -1) ?
+      self.menuItems[self.openedMenu].name : -1;
 
   // Make a copy of the opened submenu object
   let openedSubMenu =
-  (this.openedSubMenu != -1) ?
-    Object.assign({}, this.openedSubMenu) : -1;
+  (self.openedSubMenu != -1) ?
+    Object.assign({}, self.openedSubMenu) : -1;
 
   // Remove tooltip data from submenu if exists
   if (openedSubMenu.data && openedSubMenu.data['bs.tooltip'] != undefined) {
@@ -731,7 +732,7 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
     openedSubMenu.parent != undefined &&
     openedSubMenu.parent != -1
   ) {
-    openedSubMenu.parent = this.menuItems[openedSubMenu.parent].name;
+    openedSubMenu.parent = self.menuItems[openedSubMenu.parent].name;
   }
 
   if (clearPrefs) {
@@ -746,12 +747,12 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
     favouriteModules = widgetMenu.favouriteModules;
 
     // Save filters and sort
-    this.menuItems.forEach((menu) => {
+    self.menuItems.forEach((menu) => {
       filters[menu.name] = {};
 
       for (const filter in menu.filters) {
         if (
-          this.defaultFilters[filter].value != menu.filters[filter].value &&
+          self.defaultFilters[filter].value != menu.filters[filter].value &&
           menu.filters[filter].locked != true
         ) {
           filters[menu.name][filter] = menu.filters[filter].value;
@@ -810,7 +811,7 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
     console.error(jqXHR, textStatus, errorThrown);
     toastr.error(errorMessagesTrans.userSavePreferencesFailed);
   });
-};
+}, 200);
 
 /**
  * Render toolbar

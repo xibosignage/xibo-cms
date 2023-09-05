@@ -3623,7 +3623,7 @@ lD.loadPrefs = function() {
  * Save user preferences
  * @param {bool=} [clearPrefs = false] - Force reseting user prefs
  */
-lD.savePrefs = function(clearPrefs = false) {
+lD.savePrefs = _.debounce(function(clearPrefs = false) {
   // Clear values to defaults
   if (clearPrefs) {
     console.log('Clearing user preferences');
@@ -3635,9 +3635,9 @@ lD.savePrefs = function(clearPrefs = false) {
       {
         option: 'editor',
         value: JSON.stringify({
-          snapOptions: this.viewer.moveableOptions,
+          snapOptions: lD.viewer.moveableOptions,
           layerManagerOptions: {
-            visible: this.viewer.layerManager.visible,
+            visible: lD.viewer.layerManager.visible,
           },
         }),
       },
@@ -3673,7 +3673,7 @@ lD.savePrefs = function(clearPrefs = false) {
     console.error(jqXHR, textStatus, errorThrown);
     toastr.error(errorMessagesTrans.userSavePreferencesFailed);
   });
-};
+}, 200);
 
 /**
  * Create the drawer in the layout object
