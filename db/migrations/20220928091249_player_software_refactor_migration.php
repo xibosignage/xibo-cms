@@ -39,15 +39,19 @@ class PlayerSoftwareRefactorMigration extends AbstractMigration
             ->addColumn('modifiedAt', 'datetime', ['null' => true, 'default' => null])
             ->addColumn('modifiedBy', 'string', ['null' => true, 'default' => null])
             ->addColumn('fileName', 'string')
-            ->addColumn('size', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_BIG, 'default' => null, 'null' => true])
+            ->addColumn(
+                'size',
+                'integer',
+                ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_BIG, 'default' => null, 'null' => true]
+            )
             ->addColumn('md5', 'string', ['limit' => 32, 'default' => null, 'null' => true])
             ->save();
 
         // create playersoftware sub-folder in the library location
         $libraryLocation = $this->fetchRow('
-            SELECT `setting`.value
+            SELECT `setting`.`value`
               FROM `setting`
-             WHERE `setting`.setting = \'LIBRARY_LOCATION\'')[0] ?? null;
+             WHERE `setting`.`setting` = \'LIBRARY_LOCATION\'')[0] ?? null;
 
         // New installs won't have a library location yet (if they are non-docker).
         if (!empty($libraryLocation)) {
@@ -56,23 +60,58 @@ class PlayerSoftwareRefactorMigration extends AbstractMigration
             }
 
             // get all existing playersoftware records in media table and convert them
-            foreach ($this->fetchAll('SELECT mediaId, name, type, createdDt, modifiedDt, storedAs, md5, fileSize, originalFileName FROM `media` WHERE media.type = \'playersoftware\'') as $playersoftwareMedia) {
-                $this->execute('UPDATE `player_software` SET createdAt = \'' . $playersoftwareMedia['createdDt'] . '\',
-                                    modifiedAt = \'' . $playersoftwareMedia['modifiedDt'] . '\',
-                                    fileName = \'' . $playersoftwareMedia['originalFileName'] . '\',
-                                    size = ' . $playersoftwareMedia['fileSize'] . ',
-                                    md5 = \'' . $playersoftwareMedia['md5'] . '\'
-                                WHERE `player_software`.mediaId = ' . $playersoftwareMedia['mediaId']);
+            $sql = '
+                SELECT `mediaId`,
+                       `name`,
+                       `type`,
+                       `createdDt`,
+                       `modifiedDt`,
+                       `storedAs`,
+                       `md5`,
+                       `fileSize`,
+                       `originalFileName`
+                  FROM `media`
+                 WHERE `media`.`type` = \'playersoftware\'
+            ';
+
+            $updateSql = '
+                UPDATE `player_software`
+                    SET `createdAt` = :createdAt,
+                        `modifiedAt` = :modifiedAt,
+                        `fileName` = :fileName,
+                        `size` = :size,
+                        `md5` = :md5
+                 WHERE `mediaId` = :mediaId
+            ';
+
+            foreach ($this->fetchAll($sql) as $playersoftwareMedia) {
+                $this->execute($updateSql, [
+                    'mediaId' => $playersoftwareMedia['mediaId'],
+                    'createdAt' => $playersoftwareMedia['createdDt'] ?: null,
+                    'modifiedAt' => $playersoftwareMedia['modifiedDt'] ?: null,
+                    'fileName' => $playersoftwareMedia['originalFileName'],
+                    'size' => $playersoftwareMedia['fileSize'],
+                    'md5' => $playersoftwareMedia['md5']
+                ]);
 
                 // move the stored files with new id to fonts folder
-                rename($libraryLocation . $playersoftwareMedia['storedAs'], $libraryLocation . 'playersoftware/' . $playersoftwareMedia['originalFileName']);
+                rename(
+                    $libraryLocation . $playersoftwareMedia['storedAs'],
+                    $libraryLocation . 'playersoftware/' . $playersoftwareMedia['originalFileName']
+                );
 
                 // remove any potential widget links (there shouldn't be any)
-                $this->execute('DELETE FROM `lkwidgetmedia` WHERE `lkwidgetmedia`.`mediaId` = ' . $playersoftwareMedia['mediaId']);
+                $this->execute('DELETE FROM `lkwidgetmedia` WHERE `lkwidgetmedia`.`mediaId` = '
+                    . $playersoftwareMedia['mediaId']);
                 
                 // remove any potential tagLinks from playersoftware media files
                 // unlikely that there will be any, but just in case.
-                $this->execute('DELETE FROM `lktagmedia` WHERE `lktagmedia`.mediaId = ' . $playersoftwareMedia['mediaId']);
+                $this->execute('DELETE FROM `lktagmedia` WHERE `lktagmedia`.mediaId = '
+                    . $playersoftwareMedia['mediaId']);
+
+                // player software files assigned directly to the Display.
+                $this->execute('DELETE FROM `lkmediadisplaygroup` WHERE `lkmediadisplaygroup`.mediaId = '
+                    . $playersoftwareMedia['mediaId']);
             }
 
             // update versionMediaId in displayProfiles config
@@ -81,10 +120,20 @@ class PlayerSoftwareRefactorMigration extends AbstractMigration
                 if (!empty($displayProfile['config']) && $displayProfile['config'] !== '[]') {
                     $config = json_decode($displayProfile['config'], true);
                     for ($i = 0; $i < count($config); $i++) {
-                        if ($config[$i]['name'] === 'versionMediaId') {
-                            $row = $this->fetchRow('SELECT mediaId, versionId FROM `player_software` WHERE `player_software`.mediaId =' . $config[$i]['value']);
+                        $configValue = $config[$i]['value'] ?? 0;
+
+                        if (!empty($configValue) && $config[$i]['name'] === 'versionMediaId') {
+                            $row = $this->fetchRow(
+                                'SELECT mediaId, versionId
+                                        FROM `player_software`
+                                     WHERE `player_software`.mediaId =' . $configValue
+                            );
                             $config[$i]['value'] = $row['versionId'];
-                            $this->execute('UPDATE `displayprofile` SET config = \'' . json_encode($config) . '\' WHERE `displayprofile`.displayProfileId =' . $displayProfile['displayProfileId']);
+                            $this->execute(
+                                'UPDATE `displayprofile`
+                                        SET config = \'' . json_encode($config) . '\' 
+                                     WHERE `displayprofile`.displayProfileId =' . $displayProfile['displayProfileId']
+                            );
                         }
                     }
                 }
@@ -96,10 +145,19 @@ class PlayerSoftwareRefactorMigration extends AbstractMigration
                 if (!empty($display['overrideConfig']) && $display['overrideConfig'] !== '[]') {
                     $overrideConfig = json_decode($display['overrideConfig'], true);
                     for ($i = 0; $i < count($overrideConfig); $i++) {
-                        if ($overrideConfig[$i]['name'] === 'versionMediaId') {
-                            $row = $this->fetchRow('SELECT mediaId, versionId FROM `player_software` WHERE `player_software`.mediaId =' . $overrideConfig[$i]['value']);
+                        $overrideConfigValue = $overrideConfig[$i]['value'] ?? 0;
+                        if (!empty($overrideConfigValue) && $overrideConfig[$i]['name'] === 'versionMediaId') {
+                            $row = $this->fetchRow(
+                                'SELECT mediaId, versionId
+                                        FROM `player_software` 
+                                     WHERE `player_software`.mediaId =' . $overrideConfigValue
+                            );
                             $overrideConfig[$i]['value'] = $row['versionId'];
-                            $this->execute('UPDATE `display` SET overrideConfig = \'' . json_encode($overrideConfig) . '\' WHERE `display`.displayId =' . $display['displayId']);
+                            $this->execute(
+                                'UPDATE `display`
+                                        SET overrideConfig = \'' . json_encode($overrideConfig) . '\' 
+                                     WHERE `display`.displayId =' . $display['displayId']
+                            );
                         }
                     }
                 }

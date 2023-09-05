@@ -70,8 +70,8 @@ class AddFontsTableMigration extends AbstractMigration
             foreach ($this->fetchAll('SELECT mediaId, name, type, createdDt, modifiedDt, storedAs, md5, fileSize, originalFileName FROM `media` WHERE media.type = \'font\'') as $fontMedia) {//phpcs:ignore
                 $table
                     ->insert([
-                        'createdAt' => $fontMedia['createdDt'],
-                        'modifiedAt' => $fontMedia['modifiedDt'],
+                        'createdAt' => $fontMedia['createdDt'] ?: null,
+                        'modifiedAt' => $fontMedia['modifiedDt'] ?: null,
                         'name' => $fontMedia['name'],
                         'fileName' => $fontMedia['originalFileName'],
                         'familyName' => strtolower(preg_replace(
@@ -91,11 +91,17 @@ class AddFontsTableMigration extends AbstractMigration
                 );
 
                 // remove any potential widget links (there shouldn't be any)
-                $this->execute('DELETE FROM `lkwidgetmedia` WHERE `lkwidgetmedia`.`mediaId` = ' . $fontMedia['mediaId']);
+                $this->execute('DELETE FROM `lkwidgetmedia` WHERE `lkwidgetmedia`.`mediaId` = '
+                    . $fontMedia['mediaId']);
 
                 // remove any potential tagLinks from font media files
                 // otherwise we risk failing the migration on the next step when we remove records from media table.
-                $this->execute('DELETE FROM `lktagmedia` WHERE `lktagmedia`.`mediaId` = ' . $fontMedia['mediaId']);
+                $this->execute('DELETE FROM `lktagmedia` WHERE `lktagmedia`.`mediaId` = '
+                    . $fontMedia['mediaId']);
+
+                // font files assigned directly to the Display.
+                $this->execute('DELETE FROM `lkmediadisplaygroup` WHERE `lkmediadisplaygroup`.mediaId = '
+                    . $fontMedia['mediaId']);
             }
 
             // delete font records from media table
