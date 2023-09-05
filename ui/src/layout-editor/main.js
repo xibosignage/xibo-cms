@@ -4200,6 +4200,9 @@ lD.addElementsToWidget = function(
   // Calculate next available global top layer
   let topLayer = lD.calculateLayers().availableTop;
 
+  // Add element promise array
+  const addElementPromise = [];
+
   // Loop through elements
   elements.forEach((element) => {
     // Check if first element has a group
@@ -4234,8 +4237,8 @@ lD.addElementsToWidget = function(
         (element.layer + topLayer) :
         topLayer;
 
-      // Add element to the widget
-      widget.addElement(element, false);
+      // Add element to the widget and push to array
+      addElementPromise.push(widget.addElement(element, false));
     }
   });
 
@@ -4250,42 +4253,45 @@ lD.addElementsToWidget = function(
   }
 
   // Save JSON with new element into the widget
-  widget.saveElements().then((_res) => {
-    const firstElement = elements[0];
+  // after all the promises are completed
+  Promise.all(addElementPromise).then(() => {
+    widget.saveElements().then((_res) => {
+      const firstElement = elements[0];
 
-    // If it's group with more than one element being added
-    // select group
-    if (isGroup && elements.length > 1) {
-      lD.viewer.saveTemporaryObject(
-        firstElement.groupId,
-        'element-group',
-        {
-          type: 'element-group',
-          parentType: 'widget',
-          widgetId: widget.widgetId,
-          regionId: widget.regionId.split('_')[1],
-        },
-      );
-    } else {
-      // Save the first element as a temporary object
-      lD.viewer.saveTemporaryObject(
-        firstElement.elementId,
-        'element',
-        {
-          type: 'element',
-          parentType: 'widget',
-          selectInGroupEdit: isGroup,
-          widgetId: widget.widgetId,
-          regionId: widget.regionId.split('_')[1],
-        },
-      );
-    }
+      // If it's group with more than one element being added
+      // select group
+      if (isGroup && elements.length > 1) {
+        lD.viewer.saveTemporaryObject(
+          firstElement.groupId,
+          'element-group',
+          {
+            type: 'element-group',
+            parentType: 'widget',
+            widgetId: widget.widgetId,
+            regionId: widget.regionId.split('_')[1],
+          },
+        );
+      } else {
+        // Save the first element as a temporary object
+        lD.viewer.saveTemporaryObject(
+          firstElement.elementId,
+          'element',
+          {
+            type: 'element',
+            parentType: 'widget',
+            selectInGroupEdit: isGroup,
+            widgetId: widget.widgetId,
+            regionId: widget.regionId.split('_')[1],
+          },
+        );
+      }
 
-    // Reload data and select element when data reloads
-    lD.reloadData(lD.layout,
-      {
-        refreshEditor: true,
-      });
+      // Reload data and select element when data reloads
+      lD.reloadData(lD.layout,
+        {
+          refreshEditor: true,
+        });
+    });
   });
 };
 
