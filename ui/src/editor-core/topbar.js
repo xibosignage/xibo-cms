@@ -156,12 +156,6 @@ Topbar.prototype.render = function() {
     self.DOMObject.find('#displayTooltips').off().click(function() {
       app.common.displayTooltips = $('#displayTooltips').prop('checked');
 
-      if (app.common.displayTooltips) {
-        toastr.success(editorsTrans.tooltipsEnabled);
-      } else {
-        toastr.error(editorsTrans.tooltipsDisabled);
-      }
-
       app.toolbar.savePrefs();
 
       app.common.reloadTooltips(app.editorContainer);

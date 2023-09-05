@@ -118,7 +118,7 @@ $(() => {
   lD.editorContainer.html(loadingTemplate());
 
   // Change toastr positioning
-  toastr.options.positionClass = 'toast-top-center';
+  toastr.options.positionClass = 'toast-bottom-right';
 
   // Load layout through an ajax request
   $.get(
