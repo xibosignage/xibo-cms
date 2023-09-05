@@ -231,6 +231,11 @@ class XiboDashboardConnector implements ConnectorInterface
         return $this->settings['credentials'] ?? [];
     }
 
+    /**
+     * Used by the Twig template
+     * @param string $type
+     * @return bool
+     */
     public function isCredentialInErrorState(string $type): bool
     {
         if ($this->cachedErrorTypes === null) {
@@ -386,7 +391,7 @@ class XiboDashboardConnector implements ConnectorInterface
                 $event->getTtl()
             );
 
-            $event->setToken($token);
+            $event->setToken($token->toString());
         } else {
             // Validate the token we've been given
             try {
@@ -483,7 +488,6 @@ class XiboDashboardConnector implements ConnectorInterface
         if ($widget->type === 'dashboard' && $event->getPropertyId() === 'type') {
             // get available services
             $services = $this->getAvailableServices(true, $this->getSetting('apiKey'));
-            $services = $services['serviceType'] ?? [];
 
             foreach ($services as $option) {
                 // Filter the list of options by the property value provided (if there is one).
