@@ -77,6 +77,27 @@ Content-Type: application/xml
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xmlns:xsd="http://www.w3.org/2001/XMLSchema">
   <soap:Body soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+    <tns:GetResource>
+      <serverKey xsi:type="xsd:string">{{serverKey}}</serverKey>
+      <hardwareKey xsi:type="xsd:string">{{hardwareKey}}</hardwareKey>
+      <layoutId xsi:type="xsd:string">12</layoutId>
+      <regionId xsi:type="xsd:string">33</regionId>
+      <mediaId xsi:type="xsd:string">{{testWidgetId}}</mediaId>
+    </tns:GetResource>
+  </soap:Body>
+</soap:Envelope>
+
+###
+
+POST {{url}}/xmds.php?v=7
+Content-Type: application/xml
+
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
+    xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/"
+    xmlns:tns="urn:xmds" xmlns:types="urn:xmds/encodedTypes"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <soap:Body soap:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
     <tns:GetDependency>
       <serverKey xsi:type="xsd:string">{{serverKey}}</serverKey>
       <hardwareKey xsi:type="xsd:string">{{hardwareKey}}</hardwareKey>
