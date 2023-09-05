@@ -45,9 +45,9 @@ class PlayerSoftwareRefactorMigration extends AbstractMigration
 
         // create playersoftware sub-folder in the library location
         $libraryLocation = $this->fetchRow('
-            SELECT `setting`.value
+            SELECT `setting`.`value`
               FROM `setting`
-             WHERE `setting`.setting = \'LIBRARY_LOCATION\'')[0] ?? null;
+             WHERE `setting`.`setting` = \'LIBRARY_LOCATION\'')[0] ?? null;
 
         // New installs won't have a library location yet (if they are non-docker).
         if (!empty($libraryLocation)) {
@@ -104,6 +104,10 @@ class PlayerSoftwareRefactorMigration extends AbstractMigration
                 // unlikely that there will be any, but just in case.
                 $this->execute('DELETE FROM `lktagmedia` WHERE `lktagmedia`.mediaId = '
                     . $playersoftwareMedia['mediaId']);
+
+                // player software files assigned directly to the Display.
+                $this->execute('DELETE FROM `lkmediadisplaygroup` WHERE `lkmediadisplaygroup`.mediaId = '
+                    . $playersoftwareMedia['mediaId']);
             }
 
             // update versionMediaId in displayProfiles config
@@ -112,8 +116,10 @@ class PlayerSoftwareRefactorMigration extends AbstractMigration
                 if (!empty($displayProfile['config']) && $displayProfile['config'] !== '[]') {
                     $config = json_decode($displayProfile['config'], true);
                     for ($i = 0; $i < count($config); $i++) {
-                        if ($config[$i]['name'] === 'versionMediaId') {
-                            $row = $this->fetchRow('SELECT mediaId, versionId FROM `player_software` WHERE `player_software`.mediaId =' . $config[$i]['value']);
+                        $configValue = $config[$i]['value'] ?? 0;
+
+                        if (!empty($configValue) && $config[$i]['name'] === 'versionMediaId') {
+                            $row = $this->fetchRow('SELECT mediaId, versionId FROM `player_software` WHERE `player_software`.mediaId =' . $configValue);
                             $config[$i]['value'] = $row['versionId'];
                             $this->execute('UPDATE `displayprofile` SET config = \'' . json_encode($config) . '\' WHERE `displayprofile`.displayProfileId =' . $displayProfile['displayProfileId']);
                         }
@@ -127,8 +133,9 @@ class PlayerSoftwareRefactorMigration extends AbstractMigration
                 if (!empty($display['overrideConfig']) && $display['overrideConfig'] !== '[]') {
                     $overrideConfig = json_decode($display['overrideConfig'], true);
                     for ($i = 0; $i < count($overrideConfig); $i++) {
-                        if ($overrideConfig[$i]['name'] === 'versionMediaId') {
-                            $row = $this->fetchRow('SELECT mediaId, versionId FROM `player_software` WHERE `player_software`.mediaId =' . $overrideConfig[$i]['value']);
+                        $overrideConfigValue = $overrideConfig[$i]['value'] ?? 0;
+                        if (!empty($overrideConfigValue) && $overrideConfig[$i]['name'] === 'versionMediaId') {
+                            $row = $this->fetchRow('SELECT mediaId, versionId FROM `player_software` WHERE `player_software`.mediaId =' . $overrideConfigValue);
                             $overrideConfig[$i]['value'] = $row['versionId'];
                             $this->execute('UPDATE `display` SET overrideConfig = \'' . json_encode($overrideConfig) . '\' WHERE `display`.displayId =' . $display['displayId']);
                         }
