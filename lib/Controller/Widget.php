@@ -398,7 +398,7 @@ class Widget extends Base
 
         // Validate common parameters if we don't have a validator present.
         $widgetValidators = $module->getWidgetValidators();
-        if (count($widgetValidators) <= 0 && $widget->duration < 0) {
+        if (count($widgetValidators) <= 0 && $widget->duration <= 0) {
             throw new InvalidArgumentException(__('Duration needs to be a positive value'), 'duration');
         }
 
