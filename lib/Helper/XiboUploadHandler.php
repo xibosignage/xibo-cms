@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022-2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -418,6 +418,10 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // Get the Playlist
                 $playlist = $controller->getPlaylistFactory()->getById($this->options['playlistId']);
+
+                if (!$playlist->isEditable()) {
+                    throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+                }
 
                 // Create a Widget and add it to our region
                 $widget = $controller->getWidgetFactory()->create(
