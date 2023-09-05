@@ -347,7 +347,7 @@ class WidgetHtmlRenderer
             } else if (Str::startsWith($match, 'mediaId') || Str::startsWith($match, 'libraryId')) {
                 $value = explode('=', $match);
                 if (array_key_exists($value[1], $storedAs)) {
-                    $output = str_replace('[[' . $match . ']]', $storedAs[$value[1]]['storedAs'], $output);
+                    $output = str_replace('[[' . $match . ']]', $storedAs[$value[1]], $output);
                 } else {
                     $output = str_replace('[[' . $match . ']]', '', $output);
                 }
