@@ -39,7 +39,11 @@ class PlayerSoftwareRefactorMigration extends AbstractMigration
             ->addColumn('modifiedAt', 'datetime', ['null' => true, 'default' => null])
             ->addColumn('modifiedBy', 'string', ['null' => true, 'default' => null])
             ->addColumn('fileName', 'string')
-            ->addColumn('size', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_BIG, 'default' => null, 'null' => true])
+            ->addColumn(
+                'size',
+                'integer',
+                ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_BIG, 'default' => null, 'null' => true]
+            )
             ->addColumn('md5', 'string', ['limit' => 32, 'default' => null, 'null' => true])
             ->save();
 
@@ -119,9 +123,17 @@ class PlayerSoftwareRefactorMigration extends AbstractMigration
                         $configValue = $config[$i]['value'] ?? 0;
 
                         if (!empty($configValue) && $config[$i]['name'] === 'versionMediaId') {
-                            $row = $this->fetchRow('SELECT mediaId, versionId FROM `player_software` WHERE `player_software`.mediaId =' . $configValue);
+                            $row = $this->fetchRow(
+                                'SELECT mediaId, versionId
+                                        FROM `player_software`
+                                     WHERE `player_software`.mediaId =' . $configValue
+                            );
                             $config[$i]['value'] = $row['versionId'];
-                            $this->execute('UPDATE `displayprofile` SET config = \'' . json_encode($config) . '\' WHERE `displayprofile`.displayProfileId =' . $displayProfile['displayProfileId']);
+                            $this->execute(
+                                'UPDATE `displayprofile`
+                                        SET config = \'' . json_encode($config) . '\' 
+                                     WHERE `displayprofile`.displayProfileId =' . $displayProfile['displayProfileId']
+                            );
                         }
                     }
                 }
@@ -135,9 +147,17 @@ class PlayerSoftwareRefactorMigration extends AbstractMigration
                     for ($i = 0; $i < count($overrideConfig); $i++) {
                         $overrideConfigValue = $overrideConfig[$i]['value'] ?? 0;
                         if (!empty($overrideConfigValue) && $overrideConfig[$i]['name'] === 'versionMediaId') {
-                            $row = $this->fetchRow('SELECT mediaId, versionId FROM `player_software` WHERE `player_software`.mediaId =' . $overrideConfigValue);
+                            $row = $this->fetchRow(
+                                'SELECT mediaId, versionId
+                                        FROM `player_software` 
+                                     WHERE `player_software`.mediaId =' . $overrideConfigValue
+                            );
                             $overrideConfig[$i]['value'] = $row['versionId'];
-                            $this->execute('UPDATE `display` SET overrideConfig = \'' . json_encode($overrideConfig) . '\' WHERE `display`.displayId =' . $display['displayId']);
+                            $this->execute(
+                                'UPDATE `display`
+                                        SET overrideConfig = \'' . json_encode($overrideConfig) . '\' 
+                                     WHERE `display`.displayId =' . $display['displayId']
+                            );
                         }
                     }
                 }
