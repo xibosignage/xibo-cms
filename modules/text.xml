@@ -151,10 +151,7 @@ $(target).find('img').xiboImageRender(properties);
 // Scale the layout
 $('body').xiboLayoutScaler(properties);
 
-$(target).xiboTextRender(
-    Object.assign(properties, globalOptions),
-    $(target).find('#content > *'),
-);
+$(target).xiboTextRender(Object.assign(properties, globalOptions), $(target).find('#content > *'));
     ]]></onRender>
     <onVisible><![CDATA[
 // If we have a clock, create method and start it
