@@ -2728,6 +2728,9 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
             zIndex: newLayer,
           });
         }
+
+        // Update layer manager
+        lD.viewer.layerManager.render();
       }
     } else if (target.data('action') == 'Copy') {
       // For now, use an offset value to position the new element
