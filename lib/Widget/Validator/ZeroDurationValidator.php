@@ -41,9 +41,12 @@ class ZeroDurationValidator implements WidgetValidatorInterface
      */
     public function validate(Module $module, Widget $widget, string $stage): void
     {
-        // Videos can have 0 durations
-        if ($widget->duration <= 0) {
-            throw new InvalidArgumentException(__('Duration needs to be 0 or above'), 'duration');
+        // Videos can have 0 durations (but not if useDuration is selected)
+        if ($widget->useDuration === 1 && $widget->duration <= 0) {
+            throw new InvalidArgumentException(
+                sprintf(__('Duration needs to be above 0 for %s'), $module->name),
+                'duration'
+            );
         }
     }
 }
