@@ -31,6 +31,7 @@ use Lcobucci\JWT\Signer\Key;
 use Lcobucci\JWT\Signer\Key\InMemory;
 use Lcobucci\JWT\Signer\Rsa\Sha256;
 use Lcobucci\JWT\Token;
+use Lcobucci\JWT\Token\Builder;
 use Lcobucci\JWT\Validation\Constraint\LooseValidAt;
 use Lcobucci\JWT\Validation\Constraint\SignedWith;
 use Lcobucci\JWT\Validation\Constraint\ValidAt;
@@ -82,10 +83,11 @@ class JwtService implements JwtServiceInterface
     /** @inheritDoc */
     public function generateJwt($issuedBy, $permittedFor, $identifiedBy, $relatedTo, $ttl): Token
     {
-        $this->getLogger()->debug('Private key path is: ' . $this->getPrivateKeyPath());
-        $tokenBuilder = (new \Lcobucci\JWT\Token\Builder(new JoseEncoder(), ChainedFormatter::default()));
-        $signingKey = Key\InMemory::file($this->getPrivateKeyPath());
+        $this->getLogger()->debug('generateJwt: Private key path is: ' . $this->getPrivateKeyPath()
+            . ', identifiedBy: ' . $identifiedBy . ', relatedTo: ' . $relatedTo);
 
+        $tokenBuilder = (new Builder(new JoseEncoder(), ChainedFormatter::default()));
+        $signingKey = Key\InMemory::file($this->getPrivateKeyPath());
         return $tokenBuilder
             ->issuedBy($issuedBy)
             ->permittedFor($permittedFor)
@@ -100,7 +102,10 @@ class JwtService implements JwtServiceInterface
     /** @inheritDoc */
     public function validateJwt($jwt): ?Token
     {
-        $configuration = Configuration::forSymmetricSigner(new Sha256(), InMemory::plainText(''));
+        $this->getLogger()->debug('validateJwt: ' . $jwt);
+
+        $signingKey = Key\InMemory::file($this->getPrivateKeyPath());
+        $configuration = Configuration::forSymmetricSigner(new Sha256(), $signingKey);
 
         $configuration->setValidationConstraints(
             new LooseValidAt(new SystemClock(new \DateTimeZone(\date_default_timezone_get()))),
@@ -110,9 +115,13 @@ class JwtService implements JwtServiceInterface
         // Parse the token
         $token = $configuration->parser()->parse($jwt);
 
+        $this->getLogger()->debug('validateJwt: token parsed');
+
         // Test against constraints.
         $constraints = $configuration->validationConstraints();
         $configuration->validator()->assert($token, ...$constraints);
+
+        $this->getLogger()->debug('validateJwt: constraints valid');
         return $token;
     }
 

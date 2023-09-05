@@ -246,6 +246,7 @@ class ContainerFactory
             },
             'jwtService' => function (ContainerInterface $c) {
                 return (new JwtService())
+                    ->useLogger($c->get('logService')->getLoggerInterface())
                     ->useKeys($c->get('configService')->getApiKeyDetails());
             }
         ]);

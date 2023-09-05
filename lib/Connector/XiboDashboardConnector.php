@@ -382,6 +382,8 @@ class XiboDashboardConnector implements ConnectorInterface
 
         // We are either generating a new token, or verifying an old one.
         if (empty($event->getToken())) {
+            $this->getLogger()->debug('onXmdsToken: empty token, generate a new one');
+
             // Generate a new token
             $token = $this->getJwtService()->generateJwt(
                 $this->getTitle(),
@@ -393,7 +395,8 @@ class XiboDashboardConnector implements ConnectorInterface
 
             $event->setToken($token->toString());
         } else {
-            // Validate the token we've been given
+            $this->getLogger()->debug('onXmdsToken: Validate the token weve been given');
+
             try {
                 $token = $this->getJwtService()->validateJwt($event->getToken());
                 if ($token === null) {
@@ -401,7 +404,7 @@ class XiboDashboardConnector implements ConnectorInterface
                 }
 
                 if ($this->getSourceName() === $token->claims()->get('aud')) {
-                    $this->getLogger()->debug('Token not for this connector');
+                    $this->getLogger()->debug('onXmdsToken: Token not for this connector');
                     return;
                 }
 
@@ -410,7 +413,7 @@ class XiboDashboardConnector implements ConnectorInterface
                 $widgetId = intval($token->claims()->get('jti'));
                 $event->setTargets($displayId, $widgetId);
 
-                $this->getLogger()->debug('Configured event with displayId: ' . $displayId
+                $this->getLogger()->debug('onXmdsToken: Configured event with displayId: ' . $displayId
                     . ', widgetId: ' . $widgetId);
             } catch (\Exception $exception) {
                 $this->getLogger()->error('onXmdsToken: Invalid token, e = ' . $exception->getMessage());
