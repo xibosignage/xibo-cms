@@ -77,12 +77,16 @@ class DynamicPlaylistSyncTask implements TaskInterface
         // If we're in the error state, then always run, otherwise check the dates we modified various triggers
         if ($this->getTask()->lastRunStatus !== Task::$STATUS_ERROR) {
             // Run a little query to get the last modified date from the media table
-            $lastMediaUpdate = $this->store->select('SELECT MAX(modifiedDt) AS modifiedDt FROM `media` WHERE 
-                `type` <> \'module\'
-                AND `type` <> \'genericfile\'
-                AND `type` <> \'playersoftware\'
-                AND `type` <> \'font\';', [])[0]['modifiedDt'];
-            $lastPlaylistUpdate = $this->store->select('SELECT MAX(modifiedDt) AS modifiedDt FROM `playlist`;', [])[0]['modifiedDt'];
+            $lastMediaUpdate = $this->store->select('
+                SELECT MAX(modifiedDt) AS modifiedDt
+                  FROM `media`
+                 WHERE `type` <> \'module\' AND `type` <> \'genericfile\'
+            ', [])[0]['modifiedDt'];
+
+            $lastPlaylistUpdate = $this->store->select('
+                SELECT MAX(modifiedDt) AS modifiedDt
+                  FROM `playlist`
+            ', [])[0]['modifiedDt'];
 
             if (empty($lastMediaUpdate) || empty($lastPlaylistUpdate)) {
                 $this->appendRunMessage('No library media or Playlists to assess');
@@ -96,7 +100,9 @@ class DynamicPlaylistSyncTask implements TaskInterface
             $lastPlaylistUpdate = Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $lastPlaylistUpdate);
             $lastTaskRun = Carbon::createFromTimestamp($this->getTask()->lastRunDt);
 
-            if ($lastMediaUpdate->lessThanOrEqualTo($lastTaskRun) && $lastPlaylistUpdate->lessThanOrEqualTo($lastTaskRun)) {
+            if ($lastMediaUpdate->lessThanOrEqualTo($lastTaskRun)
+                && $lastPlaylistUpdate->lessThanOrEqualTo($lastTaskRun))
+            {
                 $this->appendRunMessage('No library media/playlist updates since we last ran');
                 return;
             }
@@ -121,7 +127,10 @@ class DynamicPlaylistSyncTask implements TaskInterface
                             $playlist->deleteWidget($widget);
                         }
                     }
-                    $this->log->debug(sprintf('Dynamic Playlist ID %d , with no filters set, skipping.', $playlist->playlistId));
+                    $this->log->debug(sprintf(
+                        'Dynamic Playlist ID %d , with no filters set, skipping.',
+                        $playlist->playlistId
+                    ));
                     continue;
                 }
 
@@ -146,8 +155,10 @@ class DynamicPlaylistSyncTask implements TaskInterface
                 // This is only the first loose check
                 $different = (count($playlist->widgets) !== count($media));
 
-                $this->log->debug('There are ' . count($media) . ' that should be assigned and ' . count($playlist->widgets)
-                    . ' currently assigned with max number of items set to ' . $playlist->maxNumberOfItems . ' First check difference is ' . var_export($different, true));
+                $this->log->debug('There are ' . count($media) . ' that should be assigned and '
+                    . count($playlist->widgets) . ' currently assigned with max number of items set to '
+                    . $playlist->maxNumberOfItems . ' First check difference is '
+                    . var_export($different, true));
 
                 if (!$different) {
                     // Try a more complete check, using mediaIds
@@ -157,12 +168,15 @@ class DynamicPlaylistSyncTask implements TaskInterface
                     foreach ($playlist->widgets as $widget) {
                         try {
                             $widgetMediaId = $widget->getPrimaryMediaId();
-                            if ($widgetMediaId !== $compareMediaIds[0] || $widget->duration !== $media[$widgetMediaId]->duration) {
+                            if ($widgetMediaId !== $compareMediaIds[0]
+                                || $widget->duration !== $media[$widgetMediaId]->duration
+                            ) {
                                 $different = true;
                                 break;
                             }
                         } catch (NotFoundException $notFoundException) {
-                            $this->log->error('Playlist ' . $playlist->getId() . ' has a Widget without any associated media. widgetId = ' . $widget->getId());
+                            $this->log->error('Playlist ' . $playlist->getId()
+                                . ' has a Widget without any associated media. widgetId = ' . $widget->getId());
 
                             // We ought to recalculate
                             $different = true;
@@ -215,7 +229,7 @@ class DynamicPlaylistSyncTask implements TaskInterface
                                 // We do want to save the Playlist here.
                                 $assignmentMade = true;
                             }
-                        } catch (NotFoundException $exception) {
+                        } catch (NotFoundException) {
                             // Delete it
                             $playlist->deleteWidget($widget);
                         }
@@ -226,7 +240,13 @@ class DynamicPlaylistSyncTask implements TaskInterface
                     foreach ($media as $item) {
                         if (in_array($item->mediaId, $mediaIds)) {
                             if (count($playlist->widgets) >= $playlist->maxNumberOfItems) {
-                                $this->log->debug(sprintf('Dynamic Playlist ID %d, has reached the maximum number of items %d, finishing assignments', $playlist->playlistId, $playlist->maxNumberOfItems));
+                                $this->log->debug(
+                                    sprintf(
+                                        'Dynamic Playlist ID %d, has reached the maximum number of items %d, finishing assignments',//phpcs:ignore
+                                        $playlist->playlistId,
+                                        $playlist->maxNumberOfItems
+                                    )
+                                );
                                 break;
                             }
                             $assignmentMade = true;
@@ -247,7 +267,8 @@ class DynamicPlaylistSyncTask implements TaskInterface
                 }
             } catch (GeneralException $exception) {
                 $this->log->debug($exception->getTraceAsString());
-                $this->log->error('Problem with PlaylistId: ' . $playlist->getId() . ', e = ' . $exception->getMessage());
+                $this->log->error('Problem with PlaylistId: ' . $playlist->getId()
+                    . ', e = ' . $exception->getMessage());
                 $this->appendRunMessage('Error with Playlist: ' . $playlist->name);
             }
         }
@@ -261,43 +282,43 @@ class DynamicPlaylistSyncTask implements TaskInterface
      * @param int $displayOrder
      * @throws NotFoundException
      */
-    private function createAndAssign($playlist, $media, $displayOrder)
+    private function createAndAssign(Playlist $playlist, Media $media, int $displayOrder): void
     {
         $this->log->debug('Media Item needs to be assigned ' . $media->name . ' in sequence ' . $displayOrder);
 
         // Create a module
-        $module = $this->moduleFactory->create($media->mediaType);
-
-        if ($module->getModule()->assignable == 1) {
-
-            // Determine the duration
-            $mediaDuration = ($media->duration == 0) ? $module->determineDuration() : $media->duration;
-
-            // Create a widget
-            $widget = $this->widgetFactory->create(
-                $playlist->getOwnerId(),
-                $playlist->playlistId,
-                $media->mediaType,
-                $mediaDuration,
-                $module->schemaVersion
-            );
-
-            $widget->assignMedia($media->mediaId);
-            $widget->displayOrder = $displayOrder;
-
-            // Assign the widget to the module
-            $module->setWidget($widget);
-
-            // Set default options (this sets options on the widget)
-            $module->setDefaultWidgetOptions();
-
-            // Set the duration to be equal to the Library duration of this media
-            $module->widget->useDuration = 1;
-            $module->widget->duration = $mediaDuration;
-            $module->widget->calculatedDuration = $mediaDuration;
-
-            // Assign the widget to the playlist
-            $playlist->assignWidget($widget);
+        try {
+            $module = $this->moduleFactory->getByType($media->mediaType);
+        } catch (NotFoundException) {
+            $this->log->error('createAndAssign: dynamic playlist matched missing module: ' . $media->mediaType);
+            return;
         }
+
+        if ($module->assignable == 0) {
+            $this->log->error('createAndAssign: dynamic playlist matched unassignable media: ' . $media->mediaId);
+            return;
+        }
+
+        // Determine the duration
+        $mediaDuration = $media->duration;
+        if ($mediaDuration <= 0) {
+            $mediaDuration = $module->defaultDuration;
+        }
+
+        // Create a widget
+        $widget = $this->widgetFactory->create(
+            $playlist->getOwnerId(),
+            $playlist->playlistId,
+            $media->mediaType,
+            $mediaDuration,
+            $module->schemaVersion
+        );
+        $widget->useDuration = 1;
+        $widget->displayOrder = $displayOrder;
+        $widget->calculateDuration($module);
+        $widget->assignMedia($media->mediaId);
+
+        // Assign the widget to the playlist
+        $playlist->assignWidget($widget);
     }
 }
