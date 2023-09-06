@@ -279,7 +279,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                ) campaigns
                ON campaigns.campaignId = `schedule`.campaignId
              WHERE (
-                  (`schedule`.FromDT < :toDt AND IFNULL(`schedule`.toDt, `schedule`.fromDt) > :fromDt) 
+                  (`schedule`.FromDT < :toDt AND IFNULL(`schedule`.toDt, UNIX_TIMESTAMP()) > :fromDt) 
                   OR `schedule`.recurrence_range >= :fromDt 
                   OR (
                     IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\' 
@@ -436,7 +436,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                     AND `widgetoption`.option = \'dataSetId\'
                     AND `widgetoption`.value = :activeDataSetId
             WHERE (
-               (schedule.FromDT < :toDt AND IFNULL(`schedule`.toDt, `schedule`.fromDt) > :fromDt) 
+               (schedule.FromDT < :toDt AND IFNULL(`schedule`.toDt, UNIX_TIMESTAMP()) > :fromDt) 
                   OR `schedule`.recurrence_range >= :fromDt 
                   OR (
                     IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\' 
@@ -588,7 +588,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                ON `playlist`.regionId = `region`.regionId
              WHERE `playlist`.playlistId = :playlistId
               AND (
-                  (schedule.FromDT < :toDt AND IFNULL(`schedule`.toDt, `schedule`.fromDt) > :fromDt) 
+                  (schedule.FromDT < :toDt AND IFNULL(`schedule`.toDt, UNIX_TIMESTAMP()) > :fromDt) 
                   OR `schedule`.recurrence_range >= :fromDt 
                   OR (
                     IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\' 
@@ -741,7 +741,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                ) campaigns
                ON campaigns.campaignId = `schedule`.campaignId
              WHERE (
-                  (`schedule`.FromDT < :toDt AND IFNULL(`schedule`.toDt, `schedule`.fromDt) > :fromDt) 
+                  (`schedule`.FromDT < :toDt AND IFNULL(`schedule`.toDt, UNIX_TIMESTAMP()) > :fromDt) 
                   OR `schedule`.recurrence_range >= :fromDt 
                   OR (
                     IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\' 
@@ -769,7 +769,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                         ON lkdisplaydg.DisplayID = display.displayID
             WHERE schedule.actionLayoutCode = :code 
               AND (
-                  (`schedule`.FromDT < :toDt AND IFNULL(`schedule`.toDt, `schedule`.fromDt) > :fromDt)
+                  (`schedule`.FromDT < :toDt AND IFNULL(`schedule`.toDt, UNIX_TIMESTAMP()) > :fromDt)
                   OR `schedule`.recurrence_range >= :fromDt 
                   OR (
                     IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\'
