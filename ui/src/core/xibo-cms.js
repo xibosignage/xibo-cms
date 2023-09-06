@@ -3748,11 +3748,14 @@ function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected =
                             $('#container-folder-tree').jstree(true).refresh();
                         }
                     } else {
-                        toastr.error(translations.folderWithContent);
-                        console.log(data.message);
+                        if (data.message !== undefined) {
+                            toastr.error(data.message)
+                        } else {
+                            toastr.error(translations.folderWithContent);
+                        }
+
                         $(container).jstree(true).refresh();
                     }
-
                 }
             });
         }).bind("changed.jstree", function (e, data) {
