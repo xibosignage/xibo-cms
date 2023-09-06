@@ -37,15 +37,30 @@ class RssWidgetCompatibility implements WidgetCompatibilityInterface
      */
     public function upgradeWidget(Widget $widget, int $fromSchema, int $toSchema): bool
     {
-        $this->getLog()->debug('upgradeWidget: '. $widget->getId(). ' from: '. $fromSchema.' to: '.$toSchema);
+        $this->getLog()->debug('upgradeWidget: ' . $widget->getId() . ' from: ' . $fromSchema . ' to: ' . $toSchema);
 
-        $upgraded = false;
-        $newTemplateId = null;
+        // Decode URL (always make sure we save URLs decoded)
+        $widget->setOptionValue('uri', 'attrib', urldecode($widget->getOptionValue('uri', '')));
+
+        // Swap to new template names.
         $overrideTemplate = $widget->getOptionValue('overrideTemplate', 0);
 
+        if ($overrideTemplate) {
+            $newTemplateId = 'article_custom_html';
+        } else {
+            $newTemplateId = match ($widget->getOptionValue('templateId', '')) {
+                'media-rss-image-only' => 'article_image_only',
+                'media-rss-with-left-hand-text' => 'article_with_left_hand_text',
+                'media-rss-with-title' => 'article_with_title',
+                'prominent-title-with-desc-and-name-separator' => 'article_with_desc_and_name_separator',
+                default => 'article_title_only',
+            };
+        }
+        $widget->setOptionValue('templateId', 'attrib', $newTemplateId);
+
+        // Change some other options if they have been set.
         foreach ($widget->widgetOptions as $option) {
             $widgetChangeOption = null;
-
             switch ($option->option) {
                 case 'background-color':
                     $widgetChangeOption = 'itemBackgroundColor';
@@ -70,42 +85,6 @@ class RssWidgetCompatibility implements WidgetCompatibilityInterface
                 case 'image-fit':
                     $widgetChangeOption = 'itemImageFit';
                     break;
-                case 'templateId':
-                    if ($overrideTemplate == 0) {
-                        $templateId = $widget->getOptionValue('templateId', '');
-                        switch ($templateId) {
-                            case 'media-rss-image-only':
-                                $newTemplateId = 'article_image_only';
-                                break;
-
-                            case 'media-rss-with-left-hand-text':
-                                $newTemplateId = 'article_with_left_hand_text';
-                                break;
-
-                            case 'media-rss-with-title':
-                                $newTemplateId = 'article_with_title';
-                                break;
-
-                            case 'prominent-title-with-desc-and-name-separator':
-                                $newTemplateId = 'article_with_desc_and_name_separator';
-                                break;
-
-                            case 'title-only':
-                                $newTemplateId = 'article_title_only';
-                                break;
-
-                            default:
-                                break;
-                        }
-                    } else {
-                        $newTemplateId = 'article_custom_html';
-                    }
-
-                    if (!empty($newTemplateId)) {
-                        $widget->setOptionValue('templateId', 'attrib', $newTemplateId);
-                        $upgraded = true;
-                    }
-                    break;
 
                 default:
                     break;
@@ -113,16 +92,10 @@ class RssWidgetCompatibility implements WidgetCompatibilityInterface
 
             if (!empty($widgetChangeOption)) {
                 $widget->changeOption($option->option, $widgetChangeOption);
-                $upgraded = true;
             }
         }
 
-        if ($overrideTemplate == 1) {
-            // Decode URL
-            $widget->setOptionValue('uri', 'attrib', urldecode($widget->getOptionValue('uri', '')));
-        }
-
-        return $upgraded;
+        return true;
     }
 
     public function saveTemplate(string $template, string $fileName): bool

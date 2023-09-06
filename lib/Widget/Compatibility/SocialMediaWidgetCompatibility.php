@@ -37,87 +37,37 @@ class SocialMediaWidgetCompatibility implements WidgetCompatibilityInterface
      */
     public function upgradeWidget(Widget $widget, int $fromSchema, int $toSchema): bool
     {
-        $this->getLog()->debug('upgradeWidget: '. $widget->getId(). ' from: '. $fromSchema.' to: '.$toSchema);
+        $this->getLog()->debug('upgradeWidget: ' . $widget->getId() . ' from: ' . $fromSchema . ' to: ' . $toSchema);
 
-        $upgraded = false;
-        $newTemplateId = null;
-        $templateId = $widget->getOptionValue('templateId', '');
         $overrideTemplate = $widget->getOptionValue('overrideTemplate', 0);
-
-        foreach ($widget->widgetOptions as $option) {
-            if ($option->option === 'templateId') {
-                if ($overrideTemplate == 0) {
-                    switch ($templateId) {
-                        case 'full-timeline-np':
-                            $newTemplateId = 'social_media_static_1';
-                            break;
-
-                        case 'full-timeline':
-                            $newTemplateId = 'social_media_static_2';
-                            break;
-
-                        case 'tweet-only':
-                            $newTemplateId = 'social_media_static_3';
-                            break;
-
-                        case 'tweet-with-profileimage-left':
-                            $newTemplateId = 'social_media_static_4';
-                            break;
-
-                        case 'tweet-with-profileimage-right':
-                            $newTemplateId = 'social_media_static_5';
-                            break;
-
-                        case 'tweet-1':
-                            $newTemplateId = 'social_media_static_6';
-                            break;
-
-                        case 'tweet-2':
-                            $newTemplateId = 'social_media_static_7';
-                            break;
-
-                        case 'tweet-4':
-                            $newTemplateId = 'social_media_static_8';
-                            break;
-
-                        case 'tweet-6NP':
-                            $newTemplateId = 'social_media_static_9';
-                            break;
-
-                        case 'tweet-6PL':
-                            $newTemplateId = 'social_media_static_10';
-                            break;
-
-                        case 'tweet-7':
-                            $newTemplateId = 'social_media_static_11';
-                            break;
-
-                        case 'tweet-8':
-                            $newTemplateId = 'social_media_static_12';
-                            break;
-
-                        default:
-                            break;
-                    }
-                } else {
-                    $newTemplateId = 'social_media_custom_html';
-                }
-
-                if (!empty($newTemplateId)) {
-                    $widget->setOptionValue('templateId', 'attrib', $newTemplateId);
-                    $upgraded = true;
-                }
-            }
+        if ($overrideTemplate == 1) {
+            $newTemplateId = 'social_media_custom_html';
+        } else {
+            $newTemplateId = match ($widget->getOptionValue('templateId', '')) {
+                'full-timeline-np' => 'social_media_static_1',
+                'full-timeline' => 'social_media_static_2',
+                'tweet-with-profileimage-left' => 'social_media_static_4',
+                'tweet-with-profileimage-right' => 'social_media_static_5',
+                'tweet-1' => 'social_media_static_6',
+                'tweet-2' => 'social_media_static_7',
+                'tweet-4' => 'social_media_static_8',
+                'tweet-6NP' => 'social_media_static_9',
+                'tweet-6PL' => 'social_media_static_10',
+                'tweet-7' => 'social_media_static_11',
+                'tweet-8' => 'social_media_static_12',
+                default => 'social_media_static_3',
+            };
         }
+        $widget->setOptionValue('templateId', 'attrib', $newTemplateId);
 
         // If overriden, we need to tranlate the legacy options to the new values
         if ($overrideTemplate == 1) {
-            $widget->setOptionValue('widgetDesignWidth', 'attrib', $widget->getOptionValue('widgetOriginalWidth', '250'));
-            $widget->setOptionValue('widgetDesignHeight', 'attrib', $widget->getOptionValue('widgetOriginalHeight', '250'));
-            $widget->setOptionValue('widgetDesignGap', 'attrib', $widget->getOptionValue('widgetOriginalPadding', '0'));
+            $widget->changeOption('widgetOriginalWidth', 'widgetDesignWidth');
+            $widget->changeOption('widgetOriginalHeight', 'widgetDesignHeight');
+            $widget->changeOption('widgetOriginalPadding', 'widgetDesignGap');
         }
 
-        return $upgraded;
+        return true;
     }
 
     public function saveTemplate(string $template, string $fileName): bool
