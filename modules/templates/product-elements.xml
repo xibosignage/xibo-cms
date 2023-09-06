@@ -203,8 +203,8 @@ return value;
             ]]></hbs>
         </stencil>
         <onTemplateRender><![CDATA[
-const optionSlot = Number(properties.optionSlot) - 1;
-let $productContainer = null;
+var optionSlot = Number(properties.optionSlot) - 1;
+var $productContainer = null;
 
 if ($(target).is('.element-content')) {
     $productContainer = $(target).find('.product-elements-options-name');
@@ -218,8 +218,8 @@ if (
     properties.data.productOptions.length > 0 &&
     properties.data.productOptions[optionSlot]
 ) {
-    const option = properties.data.productOptions[optionSlot];
-    let name = option.name;
+    var option = properties.data.productOptions[optionSlot];
+    var name = option.name;
 
     if (properties.prefix && properties.prefix !== '') {
         name = properties.prefix + '' + name;
@@ -303,8 +303,8 @@ if (
             ]]></hbs>
         </stencil>
         <onTemplateRender><![CDATA[
-const optionSlot = Number(properties.optionSlot) - 1;
-let $productContainer = null;
+var optionSlot = Number(properties.optionSlot) - 1;
+var $productContainer = null;
 
 if ($(target).is('.element-content')) {
     $productContainer = $(target).find('.product-elements-options-value');
@@ -318,8 +318,8 @@ if (
     properties.data.productOptions.length > 0 &&
     properties.data.productOptions[optionSlot]
 ) {
-    const option = properties.data.productOptions[optionSlot];
-    let value = option.value;
+    var option = properties.data.productOptions[optionSlot];
+    var value = option.value;
 
     if (properties.prefix && properties.prefix !== '') {
         value = properties.prefix + '' + value;

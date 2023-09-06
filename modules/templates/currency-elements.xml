@@ -179,11 +179,11 @@ if (elementData !== null && elementData.hasOwnProperty('ChangeStyle')) {
         </stencil>
         <onTemplateRender><![CDATA[
 // Width and Height of the element
-const width = $(target).width();
-const height = $(target).height();
+var width = $(target).width();
+var height = $(target).height();
 
-const $logoContainer = $(target).find('.currency-elements-logo');
-const $imageContainer = $(target).find('.img-circle');
+var $logoContainer = $(target).find('.currency-elements-logo');
+var $imageContainer = $(target).find('.img-circle');
 
 // Scale image to the container
 if (width > height) {
