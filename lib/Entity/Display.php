@@ -1389,4 +1389,18 @@ class Display implements \JsonSerializable
 
         return $this;
     }
+
+    /**
+     * Check if this Display is set as Lead Display on any Sync Group
+     * @return bool
+     */
+    public function isLead(): bool
+    {
+        $syncGroups = $this->getStore()->select(
+            'SELECT syncGroupId FROM `syncgroup` WHERE `syncgroup`.leadDisplayId = :displayId',
+            ['displayId' => $this->displayId]
+        );
+
+        return count($syncGroups) > 0;
+    }
 }

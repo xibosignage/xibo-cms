@@ -455,4 +455,17 @@ class Folder
 
         return $found;
     }
+
+    /**
+     * Check if this folder is used as Home Folder for any existing Users
+     * @return bool
+     */
+    public function isHome(): bool
+    {
+        $userIds = $this->getStore()->select('SELECT userId FROM `user` WHERE `user`.homeFolderId = :folderId', [
+            'folderId' => $this->id
+        ]);
+
+        return count($userIds) > 0;
+    }
 }

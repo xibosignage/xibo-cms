@@ -134,6 +134,7 @@ class SyncGroup extends Base
             'name' => $parsedQueryParams->getString('name'),
             'folderId' => $parsedQueryParams->getInt('folderId'),
             'ownerId' => $parsedQueryParams->getInt('ownerId'),
+            'leadDisplayId' => $parsedQueryParams->getInt('leadDisplayId')
         ];
 
         $syncGroups = $this->syncGroupFactory->query(

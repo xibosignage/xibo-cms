@@ -50,7 +50,7 @@ if (file_exists(PROJECT_ROOT . '/lib/routes-cypress.php')) {
  *  description="Xibo CMS API.
        Using HTTP formData requests.
        All PUT requests require Content-Type:application/x-www-form-urlencoded header.",
- *  version="3.3",
+ *  version="4.0",
  *  termsOfService="https://xibosignage.com/legal",
  *  @SWG\License(
  *      name="AGPLv3 or later",
