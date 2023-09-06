@@ -122,8 +122,8 @@ if (elementData !== null && elementData.hasOwnProperty('ChangeStyle')) {
 ]]></hbs>
         </stencil>
         <onTemplateRender><![CDATA[
-const $arrowContainer = $(target).find('.stock-elements-icon');
-const $targetContainer = $(target).is('body') ? $('body') : $(target).parent().parent();
+var $arrowContainer = $(target).find('.stock-elements-icon');
+var $targetContainer = $(target).is('body') ? $('body') : $(target).parent().parent();
 
 // Inject CSS into target container if it's not added yet
 if ($targetContainer.find('.sampleCSS').length == 0) {
