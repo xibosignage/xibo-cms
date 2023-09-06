@@ -193,6 +193,11 @@ class SyncGroupFactory extends BaseFactory
             $params['folderId'] = $parsedBody->getInt('folderId');
         }
 
+        if ($parsedBody->getInt('leadDisplayId') !== null) {
+            $body .= ' AND `syncgroup`.leadDisplayId = :leadDisplayId ';
+            $params['leadDisplayId'] = $parsedBody->getInt('leadDisplayId');
+        }
+
         // View Permissions
         $this->viewPermissionSql(
             'Xibo\Entity\SyncGroup',

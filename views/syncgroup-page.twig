@@ -48,6 +48,9 @@
                             {% set title %}{% trans "Name" %}{% endset %}
                             {{ inline.inputNameGrid('name', title) }}
 
+                            {% set title %}{% trans "Lead Display ID" %}{% endset %}
+                            {{ inline.input("leadDisplayId", title) }}
+
                             {{ inline.hidden("folderId") }}
                         </form>
                     </div>
