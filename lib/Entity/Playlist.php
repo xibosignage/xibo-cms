@@ -914,6 +914,7 @@ class Playlist implements \JsonSerializable
                     $event = new SubPlaylistWidgetsEvent($widget, $widget->tempId);
                     $this->getDispatcher()->dispatch($event, SubPlaylistWidgetsEvent::$NAME);
                     $subPlaylistWidgets = $event->getWidgets();
+                    $countSubPlaylistWidgets = count($subPlaylistWidgets);
 
                     // Are we the top level sub-playlist, and do we have cycle playback enabled?
                     if ($parentWidgetId === 0 && $widget->getOptionValue('cyclePlaybackEnabled', 0) === 1) {
@@ -933,8 +934,12 @@ class Playlist implements \JsonSerializable
                         // averageDuration = 50 / 5 = 10
                         // cycleDuration = 10 / 5 = 2
                         // When our 5 items are added up to make region duration, it will be 2+2+2+2+2=10
-                        $averageDuration = $totalDuration / count($subPlaylistWidgets);
-                        $cycleDuration = $averageDuration / count($subPlaylistWidgets);
+                        $averageDuration = $countSubPlaylistWidgets <= 0
+                            ? 0
+                            : $totalDuration / $countSubPlaylistWidgets;
+                        $cycleDuration = $countSubPlaylistWidgets <= 0
+                            ? 0
+                            : $averageDuration / $countSubPlaylistWidgets;
 
                         $this->getLog()->debug('expandWidgets: cycleDuration is ' . $cycleDuration
                             . ', averageDuration is ' . $averageDuration
