@@ -105,6 +105,9 @@ window.lD = {
 
   // Save all element layer in a map
   layerMap: [],
+
+  // Is the playlist editor opened
+  playlistEditorOpened: false,
 };
 
 // Load Layout and build app structure
@@ -356,14 +359,7 @@ $(() => {
   },
   );
 
-  // Handle keyboard keys
-  $('body').off('keydown').keydown(function(handler) {
-    if ($(handler.target).is($('body'))) {
-      if (handler.key == 'Delete' && lD.readOnlyMode == false) {
-        lD.deleteSelectedObject();
-      }
-    }
-  });
+  lD.handleInputs();
 
   if (window.addEventListener) {
     window.addEventListener('message', lD.handleMessage);
@@ -1341,7 +1337,9 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
     }
   } else if (draggableType == 'actions') {
     // Get target type
-    const targetType = ($(droppable).hasClass('layout')) ?
+    const targetType = (
+      $(droppable).hasClass('layout') || droppable === null
+    ) ?
       'screen' :
       $(droppable).data('type');
 
@@ -2500,6 +2498,9 @@ lD.openPlaylistEditor = function(playlistId, region) {
   // Load playlist editor
   pE.loadEditor(true);
 
+  // Mark as opened
+  lD.playlistEditorOpened = true;
+
   // On close, remove container and refresh designer
   lD.editorContainer.find('.back-button #backToLayoutEditorBtn')
     .off('click').on('click', function() {
@@ -2523,8 +2524,14 @@ lD.openPlaylistEditor = function(playlistId, region) {
       lD.editorContainer.find('.back-button #backToLayoutEditorBtn')
         .addClass('hidden');
 
+      // Mark as closed
+      lD.playlistEditorOpened = false;
+
       // Reopen properties panel
       lD.editorContainer.find('.properties-panel-container').addClass('opened');
+
+      // Re-run handle inputs
+      lD.handleInputs();
 
       // Reload data
       lD.reloadData(
@@ -4474,4 +4481,23 @@ lD.calculateLayers = function(baseLayer, groupElements) {
 
   // Return calculated layers
   return calculatedLayers;
+};
+
+/**
+ * Handle inputs
+ */
+lD.handleInputs = function() {
+  // Handle keyboard keys
+  $('body').off('keydown.editor')
+    .on('keydown.editor', function(handler) {
+      if ($(handler.target).is($('body'))) {
+        if (
+          handler.key == 'Delete' &&
+          lD.readOnlyMode == false &&
+          lD.playlistEditorOpened === false
+        ) {
+          lD.deleteSelectedObject();
+        }
+      }
+    });
 };
