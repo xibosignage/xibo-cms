@@ -37,111 +37,42 @@ class WeatherWidgetCompatibility implements WidgetCompatibilityInterface
      */
     public function upgradeWidget(Widget $widget, int $fromSchema, int $toSchema): bool
     {
-        $this->getLog()->debug('upgradeWidget: '. $widget->getId(). ' from: '. $fromSchema.' to: '.$toSchema);
+        $this->getLog()->debug('upgradeWidget: ' . $widget->getId() . ' from: ' . $fromSchema . ' to: ' . $toSchema);
 
-        $upgraded = false;
-        $newTemplateId = null;
-        $templateId = $widget->getOptionValue('templateId', '');
         $overrideTemplate = $widget->getOptionValue('overrideTemplate', 0);
-
-        foreach ($widget->widgetOptions as $option) {
-            if ($option->option === 'templateId') {
-                if ($overrideTemplate == 0) {
-                    switch ($templateId) {
-                        case 'weather-module0-5day':
-                            $newTemplateId = 'weather_1';
-                            break;
-    
-                        case 'weather-module0-singleday':
-                            $newTemplateId = 'weather_2';
-                            break;
-    
-                        case 'weather-module0-singleday2':
-                            $newTemplateId = 'weather_3';
-                            break;
-    
-                        case 'weather-module1l':
-                            $newTemplateId = 'weather_4';
-                            break;
-    
-                        case 'weather-module1p':
-                            $newTemplateId = 'weather_5';
-                            break;
-    
-                        case 'weather-module2l':
-                            $newTemplateId = 'weather_6';
-                            break;
-    
-                        case 'weather-module2p':
-                            $newTemplateId = 'weather_7';
-                            break;
-    
-                        case 'weather-module3l':
-                            $newTemplateId = 'weather_8';
-                            break;
-    
-                        case 'weather-module3p':
-                            $newTemplateId = 'weather_9';
-                            break;
-    
-                        case 'weather-module4l':
-                            $newTemplateId = 'weather_10';
-                            break;
-    
-                        case 'weather-module4p':
-                            $newTemplateId = 'weather_11';
-                            break;
-    
-                        case 'weather-module5l':
-                            $newTemplateId = 'weather_12';
-                            break;
-    
-                        case 'weather-module6h':
-                            $newTemplateId = 'weather_13';
-                            break;
-    
-                        case 'weather-module6v':
-                            $newTemplateId = 'weather_14';
-                            break;
-    
-                        case 'weather-module-7s':
-                            $newTemplateId = 'weather_15';
-                            break;
-    
-                        case 'weather-module-8s':
-                            $newTemplateId = 'weather_16';
-                            break;
-    
-                        case 'weather-module-9':
-                            $newTemplateId = 'weather_17';
-                            break;
-    
-                        case 'weather-module-10l':
-                            $newTemplateId = 'weather_18';
-                            break;
-    
-                        default:
-                            break;
-                    }
-                } else {
-                    $newTemplateId = 'weather_custom_html';
-                }
-                
-
-                if (!empty($newTemplateId)) {
-                    $widget->setOptionValue('templateId', 'attrib', $newTemplateId);
-                    $upgraded = true;
-                }
-            }
+        if ($overrideTemplate == 1) {
+            $newTemplateId = 'weather_custom_html';
+        } else {
+            $newTemplateId = match ($widget->getOptionValue('templateId', '')) {
+                'weather-module0-singleday' => 'weather_2',
+                'weather-module0-singleday2' => 'weather_3',
+                'weather-module1l' => 'weather_4',
+                'weather-module1p' => 'weather_5',
+                'weather-module2l' => 'weather_6',
+                'weather-module2p' => 'weather_7',
+                'weather-module3l' => 'weather_8',
+                'weather-module3p' => 'weather_9',
+                'weather-module4l' => 'weather_10',
+                'weather-module4p' => 'weather_11',
+                'weather-module5l' => 'weather_12',
+                'weather-module6h' => 'weather_13',
+                'weather-module6v' => 'weather_14',
+                'weather-module-7s' => 'weather_15',
+                'weather-module-8s' => 'weather_16',
+                'weather-module-9' => 'weather_17',
+                'weather-module-10l' => 'weather_18',
+                default => 'weather_1',
+            };
         }
+        $widget->setOptionValue('templateId', 'attrib', $newTemplateId);
 
         // If overriden, we need to tranlate the legacy options to the new values
         if ($overrideTemplate == 1) {
-            $widget->setOptionValue('widgetDesignWidth', 'attrib', $widget->getOptionValue('widgetOriginalWidth', '250'));
-            $widget->setOptionValue('widgetDesignHeight', 'attrib', $widget->getOptionValue('widgetOriginalHeight', '250'));
+            $widget->changeOption('widgetOriginalWidth', 'widgetDesignWidth');
+            $widget->changeOption('widgetOriginalHeight', 'widgetDesignHeight');
         }
 
-        return $upgraded;
+        return true;
     }
 
     public function saveTemplate(string $template, string $fileName): bool

@@ -35,7 +35,7 @@ class MenuboardAdditionalFieldsMigration extends AbstractMigration
             if (!empty($row['price']) && !is_numeric($row['price'])) {
                 $this->execute('UPDATE `menu_product` SET `price` = :price WHERE menuProductId = :id', [
                     'id' => $row['menuProductId'],
-                    'price' => preg_replace('/[^A-Za-z0-9\.]/', '', $row['price']),
+                    'price' => preg_replace('/[^0-9.]/', '', $row['price']),
                 ]);
             }
         }

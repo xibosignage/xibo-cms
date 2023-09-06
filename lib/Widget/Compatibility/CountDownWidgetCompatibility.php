@@ -37,55 +37,31 @@ class CountDownWidgetCompatibility implements WidgetCompatibilityInterface
      */
     public function upgradeWidget(Widget $widget, int $fromSchema, int $toSchema): bool
     {
-        $this->getLog()->debug('upgradeWidget: '. $widget->getId(). ' from: '. $fromSchema.' to: '.$toSchema);
+        $this->getLog()->debug('upgradeWidget: ' . $widget->getId() . ' from: ' . $fromSchema . ' to: ' . $toSchema);
 
-        $upgraded = false;
-        $widgetType = null;
         $countdownType = $widget->getOptionValue('countdownType', 1);
         $overrideTemplate = $widget->getOptionValue('overrideTemplate', 0);
 
-        foreach ($widget->widgetOptions as $option) {
-            if ($option->option === 'countdownType') {
-                if( $overrideTemplate == 0) {
-                    switch ($countdownType) {
-                        case 1:
-                            $widgetType = 'countdown-text';
-                            break;
-
-                        case 2:
-                            $widgetType = 'countdown-clock';
-                            break;
-
-                        case 3:
-                            $widgetType = 'countdown-table';
-                            break;
-
-                        case 4:
-                            $widgetType = 'countdown-days';
-                            break;
-
-                        default:
-                            break;
-                    }
-                } else {
-                    $widgetType = 'countdown-custom';
-                }
-
-                if (!empty($widgetType)) {
-                    $widget->type = $widgetType;
-                    $upgraded = true;
-                }
-            }
+        // Old countdown had countdownType.
+        if ($overrideTemplate == 1) {
+            $widget->type = 'countdown-custom';
+        } else {
+            $widget->type = match ($countdownType) {
+                2 => 'countdown-clock',
+                3 => 'countdown-table',
+                4 => 'countdown-days',
+                default => 'countdown-text',
+            };
         }
 
         // If overriden, we need to tranlate the legacy options to the new values
         if ($overrideTemplate == 1) {
-            $widget->setOptionValue('widgetDesignWidth', 'attrib', $widget->getOptionValue('widgetOriginalWidth', '250'));
-            $widget->setOptionValue('widgetDesignHeight', 'attrib', $widget->getOptionValue('widgetOriginalHeight', '250'));
+            $widget->changeOption('widgetOriginalWidth', 'widgetDesignWidth');
+            $widget->changeOption('widgetOriginalHeight', 'widgetDesignHeight');
             $widget->removeOption('templateId');
         }
 
-        return $upgraded;
+        return true;
     }
 
     public function saveTemplate(string $template, string $fileName): bool
