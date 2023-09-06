@@ -835,8 +835,8 @@ $app->group('', function (RouteCollectorProxy $group) {
 })
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['menuBoard.modify']));
 
+$app->get('/fonts', ['\Xibo\Controller\Font', 'grid'])->setName('font.search');
 $app->group('', function (RouteCollectorProxy $group) {
-    $group->get('/fonts', ['\Xibo\Controller\Font', 'grid'])->setName('font.search');
     $group->get('/fonts/details/{id}', ['\Xibo\Controller\Font', 'getFontLibDetails'])->setName('font.details');
     $group->get('/fonts/download/{id}', ['\Xibo\Controller\Font', 'download'])->setName('font.download');
     $group->post('/fonts', ['\Xibo\Controller\Font','add'])->setName('font.add');
