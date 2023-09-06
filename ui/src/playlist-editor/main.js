@@ -998,13 +998,14 @@ pE.handleInputs = function() {
   }).attr('data-type', 'playlist');
 
   // Handle keyboard keys
-  $('body').off('keydown').on('keydown', function(handler) {
-    if (!$(handler.target).is($('input'))) {
-      if (handler.key == 'Delete') {
-        pE.deleteSelectedObject();
+  $('body').off('keydown.editor')
+    .on('keydown.editor', function(handler) {
+      if ($(handler.target).is($('body'))) {
+        if (handler.key == 'Delete') {
+          pE.deleteSelectedObject();
+        }
       }
-    }
-  });
+    });
 
   // Editor container select ( faking drag and drop )
   // to add a object to the playlist
