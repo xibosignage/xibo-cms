@@ -46,7 +46,10 @@ class ClockWidgetCompatibility implements WidgetCompatibilityInterface
             3 => 'clock-flip',
             default => 'clock-analogue',
         };
-        
+
+        // We don't need the old option anymore
+        $widget->removeOption('clockTypeId');
+
         return true;
     }
 
