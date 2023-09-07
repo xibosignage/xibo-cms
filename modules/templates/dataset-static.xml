@@ -458,10 +458,7 @@ for (var i = 0; i < items.length; i++) {
 // Scale the layout
 $('body').xiboLayoutScaler(properties);
 
-$(target).xiboTextRender(
-    Object.assign(properties, globalOptions),
-    $(target).find('#content > *'),
-);
+$(target).xiboTextRender(Object.assign(properties, globalOptions), $(target).find('#content > *'));
         ]]></onTemplateRender>
     </template>
     <template>
@@ -2679,10 +2676,7 @@ for (var i = 0; i < items.length; i++) {
 // Scale the layout
 $('body').xiboLayoutScaler(properties);
 
-$(target).xiboTextRender(
-    Object.assign(properties, globalOptions),
-    $(target).find('#content > *'),
-);
+$(target).xiboTextRender(Object.assign(properties, globalOptions), $(target).find('#content > *'));
         ]]></onTemplateRender>
         <assets>
             <asset id="dataset-slideshow" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/dataset/dataset-slideshow.png" />

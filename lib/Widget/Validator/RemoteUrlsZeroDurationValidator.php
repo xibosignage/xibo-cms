@@ -43,7 +43,7 @@ class RemoteUrlsZeroDurationValidator implements WidgetValidatorInterface
     public function validate(Module $module, Widget $widget, string $stage): void
     {
         $url = urldecode($widget->getOptionValue('uri', ''));
-        if ($widget->useDuration == 1
+        if ($widget->useDuration === 1
             && $widget->duration <= 0
             && !Str::startsWith($url, 'file://')
             && Str::contains($url, '://')
@@ -53,9 +53,12 @@ class RemoteUrlsZeroDurationValidator implements WidgetValidatorInterface
                 __('The duration needs to be greater than 0 for remote URLs'),
                 'duration'
             );
-        } else if ($widget->duration < 0) {
+        } else if ($widget->useDuration === 1 && $widget->duration <= 0) {
             // Locally stored file, still needs a positive duration.
-            throw new InvalidArgumentException(__('Duration needs to be 0 or above'), 'duration');
+            throw new InvalidArgumentException(
+                __('The duration needs to be above 0 for a locally stored file '),
+                'duration'
+            );
         }
     }
 }

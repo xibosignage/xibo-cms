@@ -408,6 +408,13 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 // Get the Playlist
                 $playlist = $controller->getPlaylistFactory()->getById($this->options['playlistId']);
 
+                if (!$playlist->isEditable()) {
+                    throw new InvalidArgumentException(
+                        __('This Layout is not a Draft, please checkout.'),
+                        'layoutId'
+                    );
+                }
+
                 // Create a Widget and add it to our region
                 $widget = $controller->getWidgetFactory()->create(
                     $this->options['userId'],

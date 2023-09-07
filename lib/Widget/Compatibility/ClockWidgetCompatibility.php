@@ -37,39 +37,20 @@ class ClockWidgetCompatibility implements WidgetCompatibilityInterface
      */
     public function upgradeWidget(Widget $widget, int $fromSchema, int $toSchema): bool
     {
-        $this->getLog()->debug('upgradeWidget: '. $widget->getId(). ' from: '. $fromSchema.' to: '.$toSchema);
+        $this->getLog()->debug('upgradeWidget: ' . $widget->getId() . ' from: ' . $fromSchema . ' to: ' . $toSchema);
 
-        $upgraded = false;
-        $widgetType = null;
-        foreach ($widget->widgetOptions as $option) {
-            $clockTypeId = $widget->getOptionValue('clockTypeId', 1);
+        // The old clock widget had a `clockTypeId` option which determines the template
+        // we must make a choice here.
+        $widget->type = match ($widget->getOptionValue('clockTypeId', 1)) {
+            2 => 'clock-digital',
+            3 => 'clock-flip',
+            default => 'clock-analogue',
+        };
 
-            if ($option->option === 'clockTypeId') {
-                switch ($clockTypeId) {
-                    case 1:
-                        $widgetType = 'clock-analogue';
-                        break;
+        // We don't need the old option anymore
+        $widget->removeOption('clockTypeId');
 
-                    case 2:
-                        $widgetType = 'clock-digital';
-                        break;
-
-                    case 3:
-                        $widgetType = 'clock-flip';
-                        break;
-
-                    default:
-                        break;
-                }
-
-                if (!empty($widgetType)) {
-                    $widget->type = $widgetType;
-                    $upgraded = true;
-                }
-            }
-        }
-
-        return $upgraded;
+        return true;
     }
 
     public function saveTemplate(string $template, string $fileName): bool

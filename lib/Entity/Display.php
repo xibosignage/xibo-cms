@@ -1237,29 +1237,35 @@ class Display implements \JsonSerializable
      * @param $override
      * @return array
      */
-    private function mergeConfigs($default, $override)
+    private function mergeConfigs($default, $override): array
     {
+        // No overrides, then nothing to do.
+        if (empty($override) || !is_array($override)) {
+            return $default;
+        }
 
+        // Merge the settings together
         foreach ($default as &$defaultItem) {
             for ($i = 0; $i < count($override); $i++) {
                 if ($defaultItem['name'] == $override[$i]['name']) {
-
                     // For special json fields, we need to decode, merge, encode and save instead
-                    if(in_array($defaultItem['name'], ['timers', 'pictureOptions', 'lockOptions']) && isset($defaultItem['value']) && isset($override[$i]['value'])) {
-
+                    if (in_array($defaultItem['name'], ['timers', 'pictureOptions', 'lockOptions'])
+                        && isset($defaultItem['value']) && isset($override[$i]['value'])
+                    ) {
                         // Decode values
                         $defaultItemValueDecoded = json_decode($defaultItem['value'], true);
                         $overrideValueDecoded = json_decode($override[$i]['value'], true);
 
                         // Merge values, encode and save
-                        $defaultItem['value'] = json_encode(array_merge($defaultItemValueDecoded, $overrideValueDecoded));
-                        break;
+                        $defaultItem['value'] = json_encode(array_merge(
+                            $defaultItemValueDecoded,
+                            $overrideValueDecoded
+                        ));
                     } else {
                         // merge
                         $defaultItem = array_merge($defaultItem, $override[$i]);
-                        break;
                     }
-
+                    break;
                 }
             }
         }
@@ -1382,5 +1388,19 @@ class Display implements \JsonSerializable
         $pool->saveDeferred($item);
 
         return $this;
+    }
+
+    /**
+     * Check if this Display is set as Lead Display on any Sync Group
+     * @return bool
+     */
+    public function isLead(): bool
+    {
+        $syncGroups = $this->getStore()->select(
+            'SELECT syncGroupId FROM `syncgroup` WHERE `syncgroup`.leadDisplayId = :displayId',
+            ['displayId' => $this->displayId]
+        );
+
+        return count($syncGroups) > 0;
     }
 }

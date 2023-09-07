@@ -105,6 +105,9 @@ window.lD = {
 
   // Save all element layer in a map
   layerMap: [],
+
+  // Is the playlist editor opened
+  playlistEditorOpened: false,
 };
 
 // Load Layout and build app structure
@@ -118,7 +121,7 @@ $(() => {
   lD.editorContainer.html(loadingTemplate());
 
   // Change toastr positioning
-  toastr.options.positionClass = 'toast-top-center';
+  toastr.options.positionClass = 'toast-bottom-right';
 
   // Load layout through an ajax request
   $.get(
@@ -356,14 +359,7 @@ $(() => {
   },
   );
 
-  // Handle keyboard keys
-  $('body').off('keydown').keydown(function(handler) {
-    if ($(handler.target).is($('body'))) {
-      if (handler.key == 'Delete' && lD.readOnlyMode == false) {
-        lD.deleteSelectedObject();
-      }
-    }
-  });
+  lD.handleInputs();
 
   if (window.addEventListener) {
     window.addEventListener('message', lD.handleMessage);
@@ -1341,7 +1337,9 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
     }
   } else if (draggableType == 'actions') {
     // Get target type
-    const targetType = ($(droppable).hasClass('layout')) ?
+    const targetType = (
+      $(droppable).hasClass('layout') || droppable === null
+    ) ?
       'screen' :
       $(droppable).data('type');
 
@@ -2500,6 +2498,9 @@ lD.openPlaylistEditor = function(playlistId, region) {
   // Load playlist editor
   pE.loadEditor(true);
 
+  // Mark as opened
+  lD.playlistEditorOpened = true;
+
   // On close, remove container and refresh designer
   lD.editorContainer.find('.back-button #backToLayoutEditorBtn')
     .off('click').on('click', function() {
@@ -2523,8 +2524,14 @@ lD.openPlaylistEditor = function(playlistId, region) {
       lD.editorContainer.find('.back-button #backToLayoutEditorBtn')
         .addClass('hidden');
 
+      // Mark as closed
+      lD.playlistEditorOpened = false;
+
       // Reopen properties panel
       lD.editorContainer.find('.properties-panel-container').addClass('opened');
+
+      // Re-run handle inputs
+      lD.handleInputs();
 
       // Reload data
       lD.reloadData(
@@ -2728,6 +2735,9 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
             zIndex: newLayer,
           });
         }
+
+        // Update layer manager
+        lD.viewer.layerManager.render();
       }
     } else if (target.data('action') == 'Copy') {
       // For now, use an offset value to position the new element
@@ -3201,20 +3211,6 @@ lD.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
 };
 
 /**
- * Reset tour
- */
-lD.resetTour = function() {
-  if (localStorage.tour_playing == undefined) {
-    if (cmsTours.layoutEditorTour.ended()) {
-      cmsTours.layoutEditorTour.restart();
-    } else {
-      cmsTours.layoutEditorTour.start();
-    }
-  }
-  toastr.info(editorsTrans.resetTourNotification);
-};
-
-/**
  * Locked mode
  * @param {boolean} enable - True to lock, false to unlock
  * @param {string} expiryDate - Expiration date
@@ -3620,7 +3616,7 @@ lD.loadPrefs = function() {
  * Save user preferences
  * @param {bool=} [clearPrefs = false] - Force reseting user prefs
  */
-lD.savePrefs = function(clearPrefs = false) {
+lD.savePrefs = _.debounce(function(clearPrefs = false) {
   // Clear values to defaults
   if (clearPrefs) {
     console.log('Clearing user preferences');
@@ -3632,9 +3628,9 @@ lD.savePrefs = function(clearPrefs = false) {
       {
         option: 'editor',
         value: JSON.stringify({
-          snapOptions: this.viewer.moveableOptions,
+          snapOptions: lD.viewer.moveableOptions,
           layerManagerOptions: {
-            visible: this.viewer.layerManager.visible,
+            visible: lD.viewer.layerManager.visible,
           },
         }),
       },
@@ -3670,7 +3666,7 @@ lD.savePrefs = function(clearPrefs = false) {
     console.error(jqXHR, textStatus, errorThrown);
     toastr.error(errorMessagesTrans.userSavePreferencesFailed);
   });
-};
+}, 200);
 
 /**
  * Create the drawer in the layout object
@@ -4197,6 +4193,9 @@ lD.addElementsToWidget = function(
   // Calculate next available global top layer
   let topLayer = lD.calculateLayers().availableTop;
 
+  // Add element promise array
+  const addElementPromise = [];
+
   // Loop through elements
   elements.forEach((element) => {
     // Check if first element has a group
@@ -4231,8 +4230,8 @@ lD.addElementsToWidget = function(
         (element.layer + topLayer) :
         topLayer;
 
-      // Add element to the widget
-      widget.addElement(element, false);
+      // Add element to the widget and push to array
+      addElementPromise.push(widget.addElement(element, false));
     }
   });
 
@@ -4247,42 +4246,45 @@ lD.addElementsToWidget = function(
   }
 
   // Save JSON with new element into the widget
-  widget.saveElements().then((_res) => {
-    const firstElement = elements[0];
+  // after all the promises are completed
+  Promise.all(addElementPromise).then(() => {
+    widget.saveElements().then((_res) => {
+      const firstElement = elements[0];
 
-    // If it's group with more than one element being added
-    // select group
-    if (isGroup && elements.length > 1) {
-      lD.viewer.saveTemporaryObject(
-        firstElement.groupId,
-        'element-group',
-        {
-          type: 'element-group',
-          parentType: 'widget',
-          widgetId: widget.widgetId,
-          regionId: widget.regionId.split('_')[1],
-        },
-      );
-    } else {
-      // Save the first element as a temporary object
-      lD.viewer.saveTemporaryObject(
-        firstElement.elementId,
-        'element',
-        {
-          type: 'element',
-          parentType: 'widget',
-          selectInGroupEdit: isGroup,
-          widgetId: widget.widgetId,
-          regionId: widget.regionId.split('_')[1],
-        },
-      );
-    }
+      // If it's group with more than one element being added
+      // select group
+      if (isGroup && elements.length > 1) {
+        lD.viewer.saveTemporaryObject(
+          firstElement.groupId,
+          'element-group',
+          {
+            type: 'element-group',
+            parentType: 'widget',
+            widgetId: widget.widgetId,
+            regionId: widget.regionId.split('_')[1],
+          },
+        );
+      } else {
+        // Save the first element as a temporary object
+        lD.viewer.saveTemporaryObject(
+          firstElement.elementId,
+          'element',
+          {
+            type: 'element',
+            parentType: 'widget',
+            selectInGroupEdit: isGroup,
+            widgetId: widget.widgetId,
+            regionId: widget.regionId.split('_')[1],
+          },
+        );
+      }
 
-    // Reload data and select element when data reloads
-    lD.reloadData(lD.layout,
-      {
-        refreshEditor: true,
-      });
+      // Reload data and select element when data reloads
+      lD.reloadData(lD.layout,
+        {
+          refreshEditor: true,
+        });
+    });
   });
 };
 
@@ -4465,4 +4467,23 @@ lD.calculateLayers = function(baseLayer, groupElements) {
 
   // Return calculated layers
   return calculatedLayers;
+};
+
+/**
+ * Handle inputs
+ */
+lD.handleInputs = function() {
+  // Handle keyboard keys
+  $('body').off('keydown.editor')
+    .on('keydown.editor', function(handler) {
+      if ($(handler.target).is($('body'))) {
+        if (
+          handler.key == 'Delete' &&
+          lD.readOnlyMode == false &&
+          lD.playlistEditorOpened === false
+        ) {
+          lD.deleteSelectedObject();
+        }
+      }
+    });
 };

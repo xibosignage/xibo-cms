@@ -123,7 +123,7 @@ if (items.length === 0) {
 moment.locale(globalOptions.locale);
 
 // Make replacements [] with target data
-const makeReplacement = (html, item) => {
+var makeReplacement = (html, item) => {
     // Make replacements [] with item data
     return html.replace(/\[([^\]]+)\]/g, (match, key) => {
         // If its [time] or [time|format] then return the time

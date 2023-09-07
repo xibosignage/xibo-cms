@@ -37,79 +37,38 @@ class DatasetWidgetCompatibility implements WidgetCompatibilityInterface
      */
     public function upgradeWidget(Widget $widget, int $fromSchema, int $toSchema): bool
     {
-        $this->getLog()->debug('upgradeWidget: '. $widget->getId(). ' from: '. $fromSchema.' to: '.$toSchema);
+        $this->getLog()->debug('upgradeWidget: ' . $widget->getId() . ' from: ' . $fromSchema . ' to: ' . $toSchema);
 
-        // Track if we've been upgraded.
-        $upgraded = false;
-
-        // Did we originally come from a data set ticker?
+        // Did we originally come from a dataset ticker?
         if ($widget->getOriginalValue('type') === 'datasetticker') {
             $newTemplateId = 'dataset_custom_html';
             $widget->changeOption('css', 'styleSheet');
         } else {
-            $newTemplateId = null;
-            $overrideTemplate = $widget->getOptionValue('overrideTemplate', 0);
-            $templateId = $widget->getOptionValue('templateId', '');
-
-            foreach ($widget->widgetOptions as $option) {
-                if ($option->option === 'templateId') {
-                    if ($overrideTemplate == 0) {
-                        switch ($templateId) {
-                            case 'empty':
-                                $newTemplateId = 'dataset_table_1';
-                                break;
-
-                            case 'light-green':
-                                $newTemplateId = 'dataset_table_2';
-                                break;
-
-                            case 'simple-round':
-                                $newTemplateId = 'dataset_table_3';
-                                break;
-
-                            case 'transparent-blue':
-                                $newTemplateId = 'dataset_table_4';
-                                break;
-
-                            case 'orange-grey-striped':
-                                $newTemplateId = 'dataset_table_5';
-                                break;
-
-                            case 'split-rows':
-                                $newTemplateId = 'dataset_table_6';
-                                break;
-
-                            case 'dark-round':
-                                $newTemplateId = 'dataset_table_7';
-                                break;
-
-                            case 'pill-colored':
-                                $newTemplateId = 'dataset_table_8';
-                                break;
-
-                            default:
-                                break;
-                        }
-                    } else {
-                        $newTemplateId = 'dataset_table_custom_html';
-                    }
-                }
+            if ($widget->getOptionValue('overrideTemplate', 0) == 0) {
+                $newTemplateId = match ($widget->getOptionValue('templateId', '')) {
+                    'light-green' => 'dataset_table_2',
+                    'simple-round' => 'dataset_table_3',
+                    'transparent-blue' => 'dataset_table_4',
+                    'orange-grey-striped' => 'dataset_table_5',
+                    'split-rows' => 'dataset_table_6',
+                    'dark-round' => 'dataset_table_7',
+                    'pill-colored' => 'dataset_table_8',
+                    default => 'dataset_table_1',
+                };
+            } else {
+                $newTemplateId = 'dataset_table_custom_html';
             }
 
             // We have changed the format of columns to be an array in v4.
             $columns = $widget->getOptionValue('columns', '');
             if (!empty($columns)) {
                 $widget->setOptionValue('columns', 'attrib', '[' . $columns . ']');
-                $upgraded = true;
             }
         }
 
-        if (!empty($newTemplateId)) {
-            $widget->setOptionValue('templateId', 'attrib', $newTemplateId);
-            $upgraded = true;
-        }
+        $widget->setOptionValue('templateId', 'attrib', $newTemplateId);
 
-        return $upgraded;
+        return true;
     }
 
     public function saveTemplate(string $template, string $fileName): bool

@@ -334,11 +334,23 @@ class Folder extends Base
             throw new AccessDeniedException();
         }
 
+        if ($folder->isHome()) {
+            throw new InvalidArgumentException(
+                __('Cannot remove Folder set as home Folder for a user'),
+                'folderId',
+                __('Change home Folder for Users using this Folder before deleting')
+            );
+        }
+
         try {
             $folder->delete();
         } catch (\Exception $exception) {
             $this->getLog()->debug('Folder delete failed with message: ' . $exception->getMessage());
-            throw new InvalidArgumentException(__('Cannot remove Folder with content'), 'folderId', __('Reassign objects from this Folder before deleting.'));
+            throw new InvalidArgumentException(
+                __('Cannot remove Folder with content'),
+                'folderId',
+                __('Reassign objects from this Folder before deleting.')
+            );
         }
 
         // Return

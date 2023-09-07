@@ -50,7 +50,7 @@ if (file_exists(PROJECT_ROOT . '/lib/routes-cypress.php')) {
  *  description="Xibo CMS API.
        Using HTTP formData requests.
        All PUT requests require Content-Type:application/x-www-form-urlencoded header.",
- *  version="3.3",
+ *  version="4.0",
  *  termsOfService="https://xibosignage.com/legal",
  *  @SWG\License(
  *      name="AGPLv3 or later",
@@ -835,17 +835,18 @@ $app->group('', function (RouteCollectorProxy $group) {
 })
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['menuBoard.modify']));
 
+$app->get('/fonts', ['\Xibo\Controller\Font', 'grid'])->setName('font.search');
 $app->group('', function (RouteCollectorProxy $group) {
-    $group->get('/fonts', ['\Xibo\Controller\Font', 'grid'])->setName('font.search');
     $group->get('/fonts/details/{id}', ['\Xibo\Controller\Font', 'getFontLibDetails'])->setName('font.details');
     $group->get('/fonts/download/{id}', ['\Xibo\Controller\Font', 'download'])->setName('font.download');
     $group->post('/fonts', ['\Xibo\Controller\Font','add'])->setName('font.add');
     $group->delete('/fonts/{id}/delete', ['\Xibo\Controller\Font','delete'])->setName('font.delete');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['font.view']));
 
+$app->get('/syncgroups', ['\Xibo\Controller\SyncGroup', 'grid'])->setName('syncgroup.search');
 $app->group('', function (RouteCollectorProxy $group) {
-    $group->get('/syncgroups', ['\Xibo\Controller\SyncGroup', 'grid'])->setName('syncgroup.search');
-    $group->get('/syncgroup/{id}/displays', ['\Xibo\Controller\SyncGroup', 'fetchDisplays'])->setName('syncgroup.fetch.displays');
+    $group->get('/syncgroup/{id}/displays', ['\Xibo\Controller\SyncGroup', 'fetchDisplays'])
+        ->setName('syncgroup.fetch.displays');
     $group->post('/syncgroup/add', ['\Xibo\Controller\SyncGroup', 'add'])->setName('syncgroup.add');
     $group->post('/syncgroup/{id}/members', ['\Xibo\Controller\SyncGroup', 'members'])->setName('syncgroup.members');
     $group->put('/syncgroup/{id}/edit', ['\Xibo\Controller\SyncGroup', 'edit'])->setName('syncgroup.edit');

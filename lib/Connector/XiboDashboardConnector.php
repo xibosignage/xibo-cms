@@ -231,6 +231,11 @@ class XiboDashboardConnector implements ConnectorInterface
         return $this->settings['credentials'] ?? [];
     }
 
+    /**
+     * Used by the Twig template
+     * @param string $type
+     * @return bool
+     */
     public function isCredentialInErrorState(string $type): bool
     {
         if ($this->cachedErrorTypes === null) {
@@ -377,6 +382,8 @@ class XiboDashboardConnector implements ConnectorInterface
 
         // We are either generating a new token, or verifying an old one.
         if (empty($event->getToken())) {
+            $this->getLogger()->debug('onXmdsToken: empty token, generate a new one');
+
             // Generate a new token
             $token = $this->getJwtService()->generateJwt(
                 $this->getTitle(),
@@ -386,9 +393,10 @@ class XiboDashboardConnector implements ConnectorInterface
                 $event->getTtl()
             );
 
-            $event->setToken($token);
+            $event->setToken($token->toString());
         } else {
-            // Validate the token we've been given
+            $this->getLogger()->debug('onXmdsToken: Validate the token weve been given');
+
             try {
                 $token = $this->getJwtService()->validateJwt($event->getToken());
                 if ($token === null) {
@@ -396,7 +404,7 @@ class XiboDashboardConnector implements ConnectorInterface
                 }
 
                 if ($this->getSourceName() === $token->claims()->get('aud')) {
-                    $this->getLogger()->debug('Token not for this connector');
+                    $this->getLogger()->debug('onXmdsToken: Token not for this connector');
                     return;
                 }
 
@@ -405,7 +413,7 @@ class XiboDashboardConnector implements ConnectorInterface
                 $widgetId = intval($token->claims()->get('jti'));
                 $event->setTargets($displayId, $widgetId);
 
-                $this->getLogger()->debug('Configured event with displayId: ' . $displayId
+                $this->getLogger()->debug('onXmdsToken: Configured event with displayId: ' . $displayId
                     . ', widgetId: ' . $widgetId);
             } catch (\Exception $exception) {
                 $this->getLogger()->error('onXmdsToken: Invalid token, e = ' . $exception->getMessage());
@@ -483,7 +491,6 @@ class XiboDashboardConnector implements ConnectorInterface
         if ($widget->type === 'dashboard' && $event->getPropertyId() === 'type') {
             // get available services
             $services = $this->getAvailableServices(true, $this->getSetting('apiKey'));
-            $services = $services['serviceType'] ?? [];
 
             foreach ($services as $option) {
                 // Filter the list of options by the property value provided (if there is one).

@@ -252,7 +252,7 @@ PropertiesPanel.prototype.save = function(
         this.saveElement(
           originalTarget,
           form.find('[name].element-property'),
-        );
+        ).then(reloadData);
       }
 
       // Save elements or element groups
@@ -267,10 +267,8 @@ PropertiesPanel.prototype.save = function(
             app.viewer.renderElementContent(target.elements[element]);
           }
         }
-      }
-
-      // Reload data
-      if (reloadAfterSave) {
+      } else if (reloadAfterSave) {
+        // Reload data
         reloadData();
       }
 
@@ -319,6 +317,7 @@ PropertiesPanel.prototype.save = function(
  * @param {*} target - the element that the form relates to
  * @param {*} properties - the properties to save
  * @param {boolean} positionChanged - if the position of the element has changed
+ * @return {Promise} - Promise
  */
 PropertiesPanel.prototype.saveElement = function(
   target,
@@ -358,7 +357,7 @@ PropertiesPanel.prototype.saveElement = function(
   }
 
   // Save elements to the widget
-  parentWidget.saveElements().then((_res) => {
+  return parentWidget.saveElements().then((_res) => {
     // Update element position
     if (positionChanged) {
       app.viewer.updateElement(target);

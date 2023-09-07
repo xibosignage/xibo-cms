@@ -36,7 +36,7 @@ class CalendarWidgetCompatibility implements WidgetCompatibilityInterface
     /** @inheritDoc */
     public function upgradeWidget(Widget $widget, int $fromSchema, int $toSchema): bool
     {
-        $this->getLog()->debug('upgradeWidget: '. $widget->getId(). ' from: '. $fromSchema.' to: '.$toSchema);
+        $this->getLog()->debug('upgradeWidget: ' . $widget->getId() . ' from: ' . $fromSchema . ' to: ' . $toSchema);
 
         // Track if we've been upgraded.
         $upgraded = false;

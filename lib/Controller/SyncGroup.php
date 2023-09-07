@@ -123,10 +123,6 @@ class SyncGroup extends Base
      */
     public function grid(Request $request, Response $response): Response|\Psr\Http\Message\ResponseInterface
     {
-        if (!$this->getUser()->featureEnabled('display.syncView')) {
-            throw new AccessDeniedException();
-        }
-
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
 
         $filter = [
@@ -134,6 +130,7 @@ class SyncGroup extends Base
             'name' => $parsedQueryParams->getString('name'),
             'folderId' => $parsedQueryParams->getInt('folderId'),
             'ownerId' => $parsedQueryParams->getInt('ownerId'),
+            'leadDisplayId' => $parsedQueryParams->getInt('leadDisplayId')
         ];
 
         $syncGroups = $this->syncGroupFactory->query(

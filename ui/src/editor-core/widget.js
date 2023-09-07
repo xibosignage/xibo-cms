@@ -778,6 +778,7 @@ Widget.prototype.saveElements = function(
  * Add element to widget
  * @param {object} element - element to add
  * @param {boolean} save - if true, save changes to widget
+ * @return {Promise} - Promise
  */
 Widget.prototype.addElement = function(
   element,
@@ -827,8 +828,15 @@ Widget.prototype.addElement = function(
     );
   }
 
-  // Save changes to widget
-  (save) && this.saveElements();
+  // Get element properties
+  return newElement.getProperties().then(() => {
+    // Save changes to widget and return promise
+    if (save) {
+      return this.saveElements();
+    } else {
+      return Promise.resolve();
+    }
+  });
 };
 
 /**

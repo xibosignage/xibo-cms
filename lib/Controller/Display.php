@@ -1949,6 +1949,12 @@ class Display extends Base
             throw new AccessDeniedException();
         }
 
+        if ($display->isLead()) {
+            throw new InvalidArgumentException(
+                __('Cannot delete a Lead Display of a Sync Group'),
+            );
+        }
+
         $display->delete();
 
         // Return

@@ -60,11 +60,11 @@
 
             {{!-- Options menu --}}
             {{#if showOptions}}
-                <li class="nav-item dropdown navbar-submenu navbar-submenu-options hide-on-lock" data-toggle="tooltip" data-container=".editor-top-bar" data-placement="top"
-                    data-title="{{trans.options}}">
+                <li class="nav-item dropdown navbar-submenu navbar-submenu-options hide-on-lock">
                     <a id="optionsContainerTop" class="nav-link dropdown-toggle option-container" data-toggle="dropdown" role="button"
                         aria-haspopup="true" aria-expanded="false">
-                        <i class="fa fa-bars"></i>
+                        <i class="fa fa-bars" data-toggle="tooltip" data-container=".editor-top-bar" data-placement="top"
+                            data-title="{{trans.options}}"></i>
                     </a>
                 
                     <div class="dropdown-menu dropdown-menu-right navbar-submenu-container navbar-submenu-options-container" aria-labelledby="optionsContainerTop">
@@ -95,13 +95,6 @@
                                     {{#if displayTooltips}}checked{{/if}}>
                                 <span>{{trans.displayTooltipsName}}</span>
                             </label>
-                        </a>
-                        <a class="dropdown-item">
-                            <div id="resetTour" class="navbar-submenu-item navbar-submenu-item-options tooltip-always-on d-none"
-                                data-toggle="tooltip" data-container=".editor-top-bar" data-placement="bottom" data-title="{{trans.resetTourTitle}}" href="#">
-                                <i class="fa fa-repeat"></i>
-                                <span>{{trans.resetTour}}</span>
-                            </div>
                         </a>
                     </div>
                 </li>

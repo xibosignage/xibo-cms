@@ -2193,20 +2193,50 @@ class Schedule extends Base
     {
         $params = $this->getSanitizer($request->getParams());
 
+        $displayGroupIds = $params->getIntArray('displayGroupIds', ['default' => []]);
+        $originalDisplayGroupIds = $displayGroupIds;
+
+        if (!$this->getUser()->isSuperAdmin()) {
+            $userDisplayGroupIds = array_map(function ($element) {
+                /** @var \Xibo\Entity\DisplayGroup $element */
+                return $element->displayGroupId;
+            }, $this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]));
+
+            // Reset the list to only those display groups that intersect and if 0 have been provided, only those from
+            // the user list
+            $displayGroupIds = (count($displayGroupIds) > 0)
+                    ? array_intersect($displayGroupIds, $userDisplayGroupIds)
+                    : $userDisplayGroupIds;
+
+            $this->getLog()->debug('Resolved list of display groups ['
+                . json_encode($displayGroupIds) . '] from provided list ['
+                . json_encode($originalDisplayGroupIds) . '] and user list ['
+                . json_encode($userDisplayGroupIds) . ']');
+
+            // If we have none, then we do not return any events.
+            if (count($displayGroupIds) <= 0) {
+                $this->getState()->template = 'grid';
+                $this->getState()->recordsTotal = $this->scheduleFactory->countLast();
+                $this->getState()->setData([]);
+
+                return $this->render($request, $response);
+            }
+        }
+
         $events = $this->scheduleFactory->query(
             $this->gridRenderSort($params),
             $this->gridRenderFilter([
                 'eventTypeId' => $params->getInt('eventTypeId'),
-                'toDt' => $params->getDate('toDt')?->format('U'),
-                'fromDt' => $params->getDate('fromDt')?->format('U'),
+                'futureSchedulesFrom' =>  $params->getDate('fromDt')?->format('U'),
+                'futureSchedulesTo' => $params->getDate('toDt')?->format('U'),
                 'geoAware' => $params->getInt('geoAware'),
                 'recurring' => $params->getInt('recurring'),
                 'campaignId' => $params->getInt('campaignId'),
-                'displayGroupIds' => $params->getIntArray('displayGroupIds'),
+                'displayGroupIds' => $displayGroupIds,
                 'name' => $params->getString('name'),
                 'useRegexForName' => $params->getCheckbox('useRegexForName'),
                 'logicalOperatorName' => $params->getString('logicalOperatorName'),
-                'gridFilter' => 1
+                'gridFilter' => 1,
             ], $params)
         );
 

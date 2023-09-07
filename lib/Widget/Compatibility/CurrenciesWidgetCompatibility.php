@@ -37,7 +37,7 @@ class CurrenciesWidgetCompatibility implements WidgetCompatibilityInterface
      */
     public function upgradeWidget(Widget $widget, int $fromSchema, int $toSchema): bool
     {
-        $this->getLog()->debug('upgradeWidget: '. $widget->getId(). ' from: '. $fromSchema.' to: '.$toSchema);
+        $this->getLog()->debug('upgradeWidget: ' . $widget->getId() . ' from: ' . $fromSchema . ' to: ' . $toSchema);
 
         $upgraded = false;
         $overrideTemplate = $widget->getOptionValue('overrideTemplate', 0);
@@ -48,8 +48,8 @@ class CurrenciesWidgetCompatibility implements WidgetCompatibilityInterface
             $upgraded = true;
 
             // We need to tranlate the legacy options to the new values
-            $widget->setOptionValue('widgetDesignWidth', 'attrib', $widget->getOptionValue('widgetOriginalWidth', '250'));
-            $widget->setOptionValue('widgetDesignHeight', 'attrib', $widget->getOptionValue('widgetOriginalHeight', '250'));
+            $widget->changeOption('widgetOriginalWidth', 'widgetDesignWidth');
+            $widget->changeOption('widgetOriginalHeight', 'widgetDesignHeight');
         }
 
         return $upgraded;

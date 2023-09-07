@@ -114,7 +114,7 @@ if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !=
 $(target).find('#content').empty();
 
 // Add items to container
-for (let index = 0; index < items.length; index++) {
+for (var index = 0; index < items.length; index++) {
   $(items[index]).appendTo($(target).find('#content'));
 }
 

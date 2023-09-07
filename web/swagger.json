@@ -11,7 +11,7 @@
             "name": "AGPLv3 or later",
             "url": "http://www.gnu.org/licenses/"
         },
-        "version": "3.3"
+        "version": "4.0"
     },
     "basePath": "/api",
     "schemes": [

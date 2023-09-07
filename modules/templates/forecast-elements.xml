@@ -47,7 +47,7 @@ if (String(value).length === 0) {
 }
 
 if (properties.data && properties.data.temperatureUnit) {
-    const temperatureUnit = properties.data.temperatureUnit;
+    var temperatureUnit = properties.data.temperatureUnit;
 
     if (String(value).includes('°' + temperatureUnit)) {
         return value;

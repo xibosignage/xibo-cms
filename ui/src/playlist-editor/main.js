@@ -251,14 +251,12 @@ pE.loadEditor = function(inline = false) {
 
 /**
  * Select a playlist object (playlist/widget)
- * @param {object=} obj - Object to be selected
- * @param {bool=} forceUnselect - Clean selected object
+ * @param {object=} target - Object to be selected
  * @param {number=} [positionToAdd = null] - Order position for widget
  * @param {bool=} reloadPropertiesPanel - Force properties panel reload
  */
 pE.selectObject = function({
   target = null,
-  forceUnselect = false,
   positionToAdd = null,
   reloadPropertiesPanel = true,
 } = {}) {
@@ -270,8 +268,6 @@ pE.selectObject = function({
   if (!$.isEmptyObject(this.toolbar.selectedCard)) {
     if (
       target.data('type') == 'playlist'
-      // TODO: merge conflict: if([obj.data('type'), 'all']
-      // .indexOf($(this.toolbar.selectedCard).attr('drop-to')) !== -1) {
     ) {
       // Get card object
       const card = this.toolbar.selectedCard[0];
@@ -297,49 +293,85 @@ pE.selectObject = function({
     // Deselect cards and drop zones
     this.toolbar.deselectCardsAndDropZones();
   } else {
-    let newSelectedId = {};
-    let newSelectedType = {};
+    // Get object properties from the DOM ( or set to layout if not defined )
+    const noTarget =
+      (target == null || typeof target.data('type') == 'undefined');
+    const newSelectedId = (noTarget) ? null : target.attr('id');
+    const newSelectedType = (noTarget) ? null : target.data('type');
+    const oldSelectedId = this.selectedObject.id;
+    const oldSelectedType = this.selectedObject.type;
 
-    // Unselect the previous selectedObject object if still selected
-    if (this.selectedObject.selected) {
-      if (this.selectedObject.type == 'widget') {
-        if (this.playlist.widgets[this.selectedObject.id]) {
-          this.playlist.widgets[this.selectedObject.id].selected = false;
-        }
-      }
+    // If the selected object was different from the previous
+    // and we are focused on a properties panel field, save before continuing
+    if (
+      (
+        oldSelectedId != newSelectedId ||
+        oldSelectedType != newSelectedType
+      ) && this.propertiesPanel.toSave
+    ) {
+      // Set flag back to false
+      this.propertiesPanel.toSave = false;
+
+      // Save previous element
+      this.propertiesPanel.save({
+        target: this.selectedObject, // Save previous object
+        callbackNoWait: function() {
+          // Select object again, with the same params
+          pE.selectObject({
+            target: target,
+            positionToAdd: positionToAdd,
+            reloadPropertiesPanel: reloadPropertiesPanel,
+          });
+        },
+      });
+
+      // Prevent current select to continue
+      return;
     }
 
-    // If there's no selected object, select a default one
-    // ( or nothing if widgets are empty)
-    if (target == null || typeof target.data('type') == 'undefined') {
-      if ($.isEmptyObject(pE.playlist.widgets) || forceUnselect) {
+    // If the selected object was different from the previous
+    // or we force select
+    // select a new one
+    if (
+      oldSelectedId != newSelectedId ||
+      oldSelectedType != newSelectedType ||
+      noTarget
+    ) {
+      // Unselect the previous selectedObject object if still selected
+      if (this.selectedObject.selected) {
+        if (this.selectedObject.type == 'widget') {
+          if (this.playlist.widgets[this.selectedObject.id]) {
+            this.playlist.widgets[this.selectedObject.id].selected = false;
+          }
+        }
+      }
+
+      // If there are no objects to select
+      if ($.isEmptyObject(pE.playlist.widgets)) {
         this.selectedObject = {};
-      } else {
+      } else if (noTarget) {
+        // If we don't have a target, select the first object in the playlist
         // Select first widget
         const newId = Object.keys(this.playlist.widgets)[0];
 
         this.playlist.widgets[newId].selected = true;
         this.selectedObject.type = 'widget';
         this.selectedObject = this.playlist.widgets[newId];
-      }
-    } else {
-      // Get object properties from the DOM ( or set to layout if not defined )
-      newSelectedId = target.attr('id');
-      newSelectedType = target.data('type');
+      } else {
+        // Select new object
+        if (newSelectedType === 'widget') {
+          this.playlist.widgets[newSelectedId].selected = true;
+          this.selectedObject = this.playlist.widgets[newSelectedId];
+        }
 
-      // Select new object
-      if (newSelectedType === 'widget') {
-        this.playlist.widgets[newSelectedId].selected = true;
-        this.selectedObject = this.playlist.widgets[newSelectedId];
+        this.selectedObject.type = newSelectedType;
       }
 
-      this.selectedObject.type = newSelectedType;
+      // Refresh the designer containers
+      pE.refreshEditor({
+        reloadPropertiesPanel: reloadPropertiesPanel,
+      });
     }
-
-    // Refresh the designer containers
-    pE.refreshEditor({
-      reloadPropertiesPanel: reloadPropertiesPanel,
-    });
   }
 };
 
@@ -998,13 +1030,14 @@ pE.handleInputs = function() {
   }).attr('data-type', 'playlist');
 
   // Handle keyboard keys
-  $('body').off('keydown').on('keydown', function(handler) {
-    if (!$(handler.target).is($('input'))) {
-      if (handler.key == 'Delete') {
-        pE.deleteSelectedObject();
+  $('body').off('keydown.editor')
+    .on('keydown.editor', function(handler) {
+      if ($(handler.target).is($('body'))) {
+        if (handler.key == 'Delete') {
+          pE.deleteSelectedObject();
+        }
       }
-    }
-  });
+    });
 
   // Editor container select ( faking drag and drop )
   // to add a object to the playlist
