@@ -160,14 +160,6 @@ Topbar.prototype.render = function() {
 
       app.common.reloadTooltips(app.editorContainer);
     });
-
-    // Reset tour
-    if (typeof app.resetTour === 'function') {
-      self.DOMObject.find('#resetTour').removeClass('d-none').off()
-        .click(function() {
-          app.resetTour();
-        });
-    }
   }
 
   // Update layout status
