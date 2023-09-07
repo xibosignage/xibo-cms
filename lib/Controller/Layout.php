@@ -366,7 +366,7 @@ class Layout extends Base
         $name = $sanitizedParams->getString('name');
         $description = $sanitizedParams->getString('description');
         $enableStat = $sanitizedParams->getCheckbox('enableStat');
-        $autoApplyTransitions = $sanitizedParams->getCheckbox('autoApplyTransitions');
+        $autoApplyTransitions = $this->getConfig()->getSetting('DEFAULT_TRANSITION_AUTO_APPLY');
         $code = $sanitizedParams->getString('code', ['defaultOnEmptyString' => true]);
 
         // Folders
