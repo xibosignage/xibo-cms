@@ -3211,20 +3211,6 @@ lD.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
 };
 
 /**
- * Reset tour
- */
-lD.resetTour = function() {
-  if (localStorage.tour_playing == undefined) {
-    if (cmsTours.layoutEditorTour.ended()) {
-      cmsTours.layoutEditorTour.restart();
-    } else {
-      cmsTours.layoutEditorTour.start();
-    }
-  }
-  toastr.info(editorsTrans.resetTourNotification);
-};
-
-/**
  * Locked mode
  * @param {boolean} enable - True to lock, false to unlock
  * @param {string} expiryDate - Expiration date
