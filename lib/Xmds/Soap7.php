@@ -146,13 +146,16 @@ class Soap7 extends Soap6
                         throw new NotFoundException('Cache not ready');
                     }
 
+                    $this->getLog()->debug('Cache ready and populated');
+
                     // Get media references
                     $media = [];
                     $requiredFiles = [];
                     $mediaIds = $widgetDataProviderCache->getCachedMediaIds();
 
                     if (count($mediaIds) > 0) {
-                        // Process media links.
+                        $this->getLog()->debug('Processing media links');
+
                         $sql = '
                             SELECT `media`.`mediaId`,
                                    `media`.`storedAs`,
@@ -212,6 +215,8 @@ class Soap7 extends Soap6
                                 ),
                             ];
                         }
+                    } else {
+                        $this->getLog()->debug('No media links');
                     }
 
                     $resource = json_encode([

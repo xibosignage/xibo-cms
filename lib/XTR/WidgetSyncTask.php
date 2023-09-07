@@ -184,6 +184,8 @@ class WidgetSyncTask implements TaskInterface
         ?WidgetProviderInterface $widgetInterface,
         ?int $displayId
     ): array {
+        $this->getLogger()->debug('cache: ' . $widget->widgetId . ' for display: ' . ($displayId ?? 0));
+
         $mediaIds = [];
 
         // Each time we call this we use a new provider

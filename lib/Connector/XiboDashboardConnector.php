@@ -33,7 +33,6 @@ use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
-use Xibo\Xmds\Wsdl;
 
 /**
  * Xibo Dashboard Service connector.
@@ -532,16 +531,9 @@ class XiboDashboardConnector implements ConnectorInterface
             return;
         }
 
-        if ($event->getDataProvider()->isPreview()) {
-            $url = $this->getLayoutPreviewUrl($token);
-        } else {
-            // This is fallback HTML for the player.
-            // so output a link to the XMDS file request.
-            $url = Wsdl::getRoot() . '?connector=true&token=' . $token;
-        }
-
+        // We return a single data item which contains our URL, token and whether we're a preview
         $item = [];
-        $item['url'] = $url;
+        $item['url'] = $this->getTokenUrl($token);
         $item['token'] = $token;
         $item['isPreview'] = $event->getDataProvider()->isPreview();
 

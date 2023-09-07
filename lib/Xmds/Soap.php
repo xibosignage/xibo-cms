@@ -886,7 +886,9 @@ class Soap
                             // Does this also have an associated data file?
                             // we add this for < XMDS v7 as well, because the record is used by the widget sync task
                             // the player shouldn't receive it.
-                            if ($modules[$widget->type]->isDataProviderExpected()) {
+                            if ($modules[$widget->type]->isDataProviderExpected()
+                                || $modules[$widget->type]->isWidgetProviderAvailable()
+                            ) {
                                 // A node specifically for the widget data.
                                 if ($isSupportsDataUrl) {
                                     $dataFile = $requiredFilesXml->createElement('file');
