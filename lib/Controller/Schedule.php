@@ -2227,8 +2227,8 @@ class Schedule extends Base
             $this->gridRenderSort($params),
             $this->gridRenderFilter([
                 'eventTypeId' => $params->getInt('eventTypeId'),
-                'toDt' => $params->getDate('toDt')?->format('U'),
-                'fromDt' => $params->getDate('fromDt')?->format('U'),
+                'futureSchedulesFrom' =>  $params->getDate('fromDt')?->format('U'),
+                'futureSchedulesTo' => $params->getDate('toDt')?->format('U'),
                 'geoAware' => $params->getInt('geoAware'),
                 'recurring' => $params->getInt('recurring'),
                 'campaignId' => $params->getInt('campaignId'),
@@ -2236,7 +2236,7 @@ class Schedule extends Base
                 'name' => $params->getString('name'),
                 'useRegexForName' => $params->getCheckbox('useRegexForName'),
                 'logicalOperatorName' => $params->getString('logicalOperatorName'),
-                'gridFilter' => 1
+                'gridFilter' => 1,
             ], $params)
         );
 
