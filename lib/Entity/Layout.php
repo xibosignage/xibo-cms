@@ -1853,6 +1853,9 @@ class Layout implements \JsonSerializable
                 }
             }
         } catch (GeneralException $xiboException) {
+            $this->getLog()->debug('assessWidgetStatus: ' . $module->moduleId . ' invalid, e: '
+                . $xiboException->getMessage());
+
             $moduleStatus = Status::$STATUS_INVALID;
 
             // Include the exception on
