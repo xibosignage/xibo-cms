@@ -692,30 +692,49 @@ class Display implements \JsonSerializable
      */
     public function validate()
     {
-        if (!v::stringType()->notEmpty()->validate($this->display))
+        if (!v::stringType()->notEmpty()->validate($this->display)) {
             throw new InvalidArgumentException(__('Can not have a display without a name'), 'name');
+        }
 
-        if (!v::stringType()->notEmpty()->validate($this->license))
+        if (!v::stringType()->notEmpty()->validate($this->license)) {
             throw new InvalidArgumentException(__('Can not have a display without a hardware key'), 'license');
+        }
 
-        if ($this->wakeOnLanEnabled == 1 && $this->wakeOnLanTime == '')
-            throw new InvalidArgumentException(__('Wake on Lan is enabled, but you have not specified a time to wake the display'), 'wakeonlan');
-
+        if ($this->wakeOnLanEnabled == 1 && $this->wakeOnLanTime == '') {
+            throw new InvalidArgumentException(
+                __('Wake on Lan is enabled, but you have not specified a time to wake the display'),
+                'wakeonlan'
+            );
+        }
         // Broadcast Address
-        if ($this->broadCastAddress != '' && !v::ip()->validate($this->broadCastAddress))
-            throw new InvalidArgumentException(__('BroadCast Address is not a valid IP Address'), 'broadCastAddress');
+        if ($this->broadCastAddress != '' && !v::ip()->validate($this->broadCastAddress)) {
+            throw new InvalidArgumentException(
+                __('BroadCast Address is not a valid IP Address'),
+                'broadCastAddress'
+            );
+        }
 
         // CIDR
-        if (!empty($this->cidr) && !v::numeric()->between(0, 32)->validate($this->cidr))
-            throw new InvalidArgumentException(__('CIDR subnet mask is not a number within the range of 0 to 32.'), 'cidr');
+        if (!empty($this->cidr) && !v::numeric()->between(0, 32)->validate($this->cidr)) {
+            throw new InvalidArgumentException(
+                __('CIDR subnet mask is not a number within the range of 0 to 32.'),
+                'cidr'
+            );
+        }
 
         // secureOn
         if ($this->secureOn != '') {
             $this->secureOn = strtoupper($this->secureOn);
-            $this->secureOn = str_replace(":", "-", $this->secureOn);
+            $this->secureOn = str_replace(':', '-', $this->secureOn);
 
-            if ((!preg_match("/([A-F0-9]{2}[-]){5}([0-9A-F]){2}/", $this->secureOn)) || (strlen($this->secureOn) != 17))
-                throw new InvalidArgumentException(__('Pattern of secureOn-password is not "xx-xx-xx-xx-xx-xx" (x = digit or CAPITAL letter)'), 'secureOn');
+            if ((!preg_match('/([A-F0-9]{2}[-]){5}([0-9A-F]){2}/', $this->secureOn))
+                || (strlen($this->secureOn) != 17)
+            ) {
+                throw new InvalidArgumentException(
+                    __('Pattern of secureOn-password is not "xx-xx-xx-xx-xx-xx" (x = digit or CAPITAL letter)'),
+                    'secureOn'
+                );
+            }
         }
 
         // Mac Address Changes
@@ -726,14 +745,43 @@ class Display implements \JsonSerializable
         }
 
         // Lat/Long
-        if (!empty($this->longitude) && !v::longitude()->validate($this->longitude))
+        if (!empty($this->longitude) && !v::longitude()->validate($this->longitude)) {
             throw new InvalidArgumentException(__('The longitude entered is not valid.'), 'longitude');
+        }
 
-        if (!empty($this->latitude) && !v::latitude()->validate($this->latitude))
+        if (!empty($this->latitude) && !v::latitude()->validate($this->latitude)) {
             throw new InvalidArgumentException(__('The latitude entered is not valid.'), 'latitude');
+        }
 
         if ($this->bandwidthLimit !== null && !v::intType()->min(0)->validate($this->bandwidthLimit)) {
-            throw new InvalidArgumentException(__('Bandwidth limit must be a whole number greater than 0.'), 'bandwidthLimit');
+            throw new InvalidArgumentException(
+                __('Bandwidth limit must be a whole number greater than 0.'),
+                'bandwidthLimit'
+            );
+        }
+
+        // do we have default Layout set?
+        if (empty($this->defaultLayoutId)) {
+            // do we have global default Layout ?
+            $globalDefaultLayoutId = $this->config->getSetting('DEFAULT_LAYOUT');
+            if (!empty($globalDefaultLayoutId)) {
+                $this->getLog()->debug(
+                    'No default Layout set on Display ID '
+                    . $this->displayId
+                    . ' falling back to global default Layout.'
+                );
+                $this->defaultLayoutId = $globalDefaultLayoutId;
+                $this->notify();
+            } else {
+                // we have no Default Layout and no global Default Layout
+                $this->getLog()->error(
+                    'No global default Layout set and no default Layout set for Display ID ' . $this->displayId
+                );
+                throw new InvalidArgumentException(
+                    __('Please set a Default Layout directly on this Display or in CMS Administrator Settings'),
+                    'defaultLayoutId'
+                );
+            }
         }
     }
 
