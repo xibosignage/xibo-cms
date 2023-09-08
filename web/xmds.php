@@ -162,8 +162,16 @@ if (isset($_GET['file'])) {
             throw new \Xibo\Support\Exception\InstanceSuspendedException('Bandwidth Exceeded');
         }
 
-        // Check the display specific limit next.
+        // Get the display
+        /** @var \Xibo\Entity\Display $display */
         $display = $container->get('displayFactory')->getById($displayId);
+
+        // Check it is still authorised.
+        if ($display->licensed == 0) {
+            throw new NotFoundException(__('Display unauthorised'));
+        }
+
+        // Check the display specific limit next.
         $usage = 0;
         if ($container->get('bandwidthFactory')->isBandwidthExceeded(
             $display->bandwidthLimit,
@@ -281,6 +289,15 @@ if (isset($_GET['connector'])) {
         if (empty($tokenEvent->getWidgetId())) {
             header('HTTP/1.0 403 Forbidden');
             exit;
+        }
+
+        // Get the display
+        /** @var \Xibo\Entity\Display $display */
+        $display = $container->get('displayFactory')->getById($tokenEvent->getDisplayId());
+
+        // Check it is still authorised.
+        if ($display->licensed == 0) {
+            throw new NotFoundException(__('Display unauthorised'));
         }
 
         // Check the widgetId is permissible, and in required files for the display.

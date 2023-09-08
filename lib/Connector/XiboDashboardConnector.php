@@ -42,6 +42,9 @@ class XiboDashboardConnector implements ConnectorInterface
 {
     use ConnectorTrait;
 
+    /** @var float|int The token TTL */
+    const TOKEN_TTL_SECONDS = 3600 * 24 * 2;
+
     /** @var string Used when rendering the form */
     private $errorMessage;
 
@@ -517,7 +520,7 @@ class XiboDashboardConnector implements ConnectorInterface
         try {
             $tokenEvent = new XmdsConnectorTokenEvent();
             $tokenEvent->setTargets($event->getDataProvider()->getDisplayId(), $event->getDataProvider()->getWidgetId());
-            $tokenEvent->setTtl(3600 * 24 * 2);
+            $tokenEvent->setTtl(self::TOKEN_TTL_SECONDS);
             $dispatcher->dispatch($tokenEvent, XmdsConnectorTokenEvent::$NAME);
             $token = $tokenEvent->getToken();
 
@@ -537,6 +540,11 @@ class XiboDashboardConnector implements ConnectorInterface
         $item['token'] = $token;
         $item['isPreview'] = $event->getDataProvider()->isPreview();
 
+        // We make sure our data cache expires shortly before the token itself expires (so that we have a new token
+        // generated for it).
+        $event->getDataProvider()->setCacheTtl(self::TOKEN_TTL_SECONDS - 3600);
+
+        // Add our item and set handled
         $event->getDataProvider()->addItem($item);
         $event->getDataProvider()->setIsHandled();
     }
