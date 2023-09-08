@@ -235,6 +235,7 @@ if (
     </template>
     <template>
         <id>product_options_value</id>
+        <extends override="text" with="data.price">text</extends>
         <title>Options: Value</title>
         <type>element</type>
         <dataType>product</dataType>
@@ -254,6 +255,11 @@ if (
             <property id="fontColor" type="color">
                 <title>Font Color</title>
                 <default>%THEME_COLOR%</default>
+            </property>
+            <property id="currencyCode" type="text">
+                <title>Currency Code</title>
+                <helpText>The 3 digit currency code to apply to the price, e.g. USD/GBP/EUR</helpText>
+                <default></default>
             </property>
             <property id="prefix" type="text">
                 <title>Prefix</title>
@@ -320,6 +326,14 @@ if (
 ) {
     var option = properties.data.productOptions[optionSlot];
     var value = option.value;
+
+    var options = {};
+    if (properties.currencyCode && properties.currencyCode !== '') {
+        options.style = 'currency';
+        options.currency = properties.currencyCode;
+    }
+
+    value = new Intl.NumberFormat(undefined, options).format(value);
 
     if (properties.prefix && properties.prefix !== '') {
         value = properties.prefix + '' + value;
