@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -278,7 +278,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                ) campaigns
                ON campaigns.campaignId = `schedule`.campaignId
              WHERE (
-                  (`schedule`.FromDT < :toDt AND IFNULL(`schedule`.toDt, `schedule`.fromDt) > :fromDt) 
+                  (`schedule`.FromDT < :toDt AND IFNULL(`schedule`.toDt, UNIX_TIMESTAMP()) > :fromDt) 
                   OR `schedule`.recurrence_range >= :fromDt 
                   OR (
                     IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\' 
@@ -411,7 +411,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                     AND `widgetoption`.option = \'dataSetId\'
                     AND `widgetoption`.value = :activeDataSetId
             WHERE (
-               (schedule.FromDT < :toDt AND IFNULL(`schedule`.toDt, `schedule`.fromDt) > :fromDt) 
+               (schedule.FromDT < :toDt AND IFNULL(`schedule`.toDt, UNIX_TIMESTAMP()) > :fromDt) 
                   OR `schedule`.recurrence_range >= :fromDt 
                   OR (
                     IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\' 
@@ -563,7 +563,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                ON `playlist`.regionId = `region`.regionId
              WHERE `playlist`.playlistId = :playlistId
               AND (
-                  (schedule.FromDT < :toDt AND IFNULL(`schedule`.toDt, `schedule`.fromDt) > :fromDt) 
+                  (schedule.FromDT < :toDt AND IFNULL(`schedule`.toDt, UNIX_TIMESTAMP()) > :fromDt) 
                   OR `schedule`.recurrence_range >= :fromDt 
                   OR (
                     IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\' 
@@ -716,12 +716,40 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
                ) campaigns
                ON campaigns.campaignId = `schedule`.campaignId
              WHERE (
-                  (`schedule`.FromDT < :toDt AND IFNULL(`schedule`.toDt, `schedule`.fromDt) > :fromDt) 
+                  (`schedule`.FromDT < :toDt AND IFNULL(`schedule`.toDt, UNIX_TIMESTAMP()) > :fromDt) 
                   OR `schedule`.recurrence_range >= :fromDt 
                   OR (
                     IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\' 
                   )
               )
+            UNION
+            SELECT DISTINCT display.displayId,
+                schedule.eventId,
+                schedule.fromDt,
+                schedule.toDt,
+                schedule.recurrence_type AS recurrenceType,
+                schedule.recurrence_detail AS recurrenceDetail,
+                schedule.recurrence_range AS recurrenceRange,
+                schedule.recurrenceRepeatsOn,
+                schedule.lastRecurrenceWatermark,
+                schedule.dayPartId
+            FROM `schedule`
+                     INNER JOIN `lkscheduledisplaygroup`
+                        ON `lkscheduledisplaygroup`.eventId = `schedule`.eventId
+                     INNER JOIN `lkdgdg`
+                        ON `lkdgdg`.parentId = `lkscheduledisplaygroup`.displayGroupId
+                     INNER JOIN `lkdisplaydg`
+                        ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
+                     INNER JOIN `display`
+                        ON lkdisplaydg.DisplayID = display.displayID
+            WHERE schedule.actionLayoutCode = :code 
+              AND (
+                  (`schedule`.FromDT < :toDt AND IFNULL(`schedule`.toDt, UNIX_TIMESTAMP()) > :fromDt)
+                  OR `schedule`.recurrence_range >= :fromDt 
+                  OR (
+                    IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\'
+                  )
+              )  
             UNION
             SELECT DISTINCT display.DisplayID,
                 0 AS eventId, 

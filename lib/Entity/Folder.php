@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -450,5 +450,18 @@ class Folder
         }
 
         return $found;
+    }
+
+    /**
+     * Check if this folder is used as Home Folder for any existing Users
+     * @return bool
+     */
+    public function isHome(): bool
+    {
+        $userIds = $this->getStore()->select('SELECT userId FROM `user` WHERE `user`.homeFolderId = :folderId', [
+            'folderId' => $this->id
+        ]);
+
+        return count($userIds) > 0;
     }
 }
