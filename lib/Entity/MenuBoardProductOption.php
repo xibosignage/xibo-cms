@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -77,11 +77,15 @@ class MenuBoardProductOption implements \JsonSerializable
      */
     public function validate()
     {
-        if (!v::stringType()->notEmpty()->validate($this->option) && v::stringType()->notEmpty()->validate($this->value)) {
+        if (!v::stringType()->notEmpty()->validate($this->option)
+            && v::floatType()->notEmpty()->validate($this->value)
+        ) {
             throw new InvalidArgumentException(__('Each value needs a corresponding option'), 'option');
         }
 
-        if (!v::stringType()->notEmpty()->validate($this->value) && v::stringType()->notEmpty()->validate($this->option)) {
+        if (!v::floatType()->notEmpty()->validate($this->value)
+            && v::stringType()->notEmpty()->validate($this->option)
+        ) {
             throw new InvalidArgumentException(__('Each option needs a corresponding value'), 'value');
         }
     }

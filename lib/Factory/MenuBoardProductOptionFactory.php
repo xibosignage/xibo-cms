@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -78,7 +78,7 @@ class MenuBoardProductOptionFactory extends BaseFactory
         foreach ($this->getStore()->select($sql, [
             'menuProductId' => $sanitizedFilter->getInt('menuProductId')
         ]) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row);
+            $entries[] = $this->createEmpty()->hydrate($row, ['doubleProperties' => ['value']]);
         }
 
         return $entries;
