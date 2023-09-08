@@ -29,7 +29,7 @@
     <type>rss-ticker</type>
     <legacyType>ticker</legacyType>
     <dataType>article</dataType>
-    <dataCacheKey>%uri%_%numItems%_%stripTags%</dataCacheKey>
+    <dataCacheKey>%uri%_%numItems%_%stripTags%_%imageSource%_%imageSourceTag%</dataCacheKey>
     <schemaVersion>2</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>1</regionSpecific>
@@ -98,6 +98,37 @@
             <title>Randomise</title>
             <helpText>Should the order of the feed be randomised? When enabled each time the Widget is shown the items will be randomly shuffled and displayed in a random order.</helpText>
             <default>0</default>
+        </property>
+        <property id="imageSource" type="dropdown" mode="single">
+            <title>Image Tag</title>
+            <helpText>Choose the tag in the feed to get an image URL</helpText>
+            <default>enclosure</default>
+            <options>
+                <option name="enclosure">Enclosure</option>
+                <option name="mediaContent">Media Content</option>
+                <option name="image">Image</option>
+                <option name="custom">Custom</option>
+            </options>
+        </property>
+        <property id="imageSourceTag" type="text">
+            <title>Custom Tag</title>
+            <helpText>A valid tag name which appears in this feed and will be used to get an image URL.</helpText>
+            <default></default>
+            <visibility>
+                <test>
+                    <condition field="imageSource" type="eq">custom</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="imageSourceAttribute" type="text">
+            <title>Custom Tag Attribute</title>
+            <helpText>If the image URL is on an attribute of the custom tag, provide the attribute name.</helpText>
+            <default></default>
+            <visibility>
+                <test>
+                    <condition field="imageSource" type="eq">custom</condition>
+                </test>
+            </visibility>
         </property>
         <property id="allowedAttributes" type="text">
             <title>Allowable Attributes</title>

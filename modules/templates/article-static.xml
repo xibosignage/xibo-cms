@@ -192,7 +192,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > *'));
         <stencil>
             <hbs><![CDATA[
 <div class="image">
-    <img src="{{image}}"/>
+    {{#if image}}<img src="{{image}}"/>{{/if}}
 </div>
             ]]></hbs>
             <twig><![CDATA[
@@ -321,7 +321,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .image, #content
         <stencil>
             <hbs><![CDATA[
 <div class="image">
-  <img src="{{image}}"/>
+  {{#if image}}<img src="{{image}}"/>{{/if}}
   <div class="cycle-overlay background">
     <div class="title">{{title}}</div>
     <div class="description">{{{content}}}</div>
@@ -516,7 +516,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .image, #content
         <stencil>
             <hbs><![CDATA[
 <div class="image">
-  <img src="{{image}}"/>
+  {{#if image}}<img src="{{image}}"/>{{/if}}
   <div class="cycle-overlay background">
     <div class="title">{{title}}</div>
   </div>

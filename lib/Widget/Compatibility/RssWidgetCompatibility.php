@@ -58,6 +58,45 @@ class RssWidgetCompatibility implements WidgetCompatibilityInterface
         }
         $widget->setOptionValue('templateId', 'attrib', $newTemplateId);
 
+        // If the new templateId is custom, we need to parse the old template for image enclosures
+        if ($newTemplateId === 'article_custom_html') {
+            $template = $widget->getOptionValue('template', null);
+            if (!empty($template)) {
+                $modified = false;
+                $matches = [];
+                preg_match_all('/\[(.*?)\]/', $template, $matches);
+
+                for ($i = 0; $i < count($matches[1]); $i++) {
+                    // We have a [Link] or a [xxx|image] tag
+                    $match = $matches[1][$i];
+                    if ($match === 'Link' || $match === 'Link|image') {
+                        // This is a straight-up enclosure (which is the default).
+                        $template = str_replace($matches[0][$i], '<img src="[image]" alt="Image" />', $template);
+                        $modified = true;
+                    } else if (str_contains($match, '|image')) {
+                        // [tag|image|attribute]
+                        // Set the necessary options depending on how our tag is made up
+                        $parts = explode('|', $match);
+                        $tag = $parts[0];
+                        $attribute = $parts[2] ?? null;
+
+                        $widget->setOptionValue('imageSource', 'attrib', 'custom');
+                        $widget->setOptionValue('imageSourceTag', 'attrib', $tag);
+                        if (!empty($attribute)) {
+                            $widget->setOptionValue('imageSourceAttribute', 'attrib', $attribute);
+                        }
+
+                        $template = str_replace($matches[0][$i], '<img src="[image]" alt="Image"/>', $template);
+                        $modified = true;
+                    }
+                }
+
+                if ($modified) {
+                    $widget->setOptionValue('template', 'attrib', $template);
+                }
+            }
+        }
+
         // Change some other options if they have been set.
         foreach ($widget->widgetOptions as $option) {
             $widgetChangeOption = null;
