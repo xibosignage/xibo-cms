@@ -69,6 +69,9 @@ class DataProvider implements DataProviderInterface
     /** @var float the display longitude */
     private $longitude;
 
+    /** @var bool Is this data provider in preview mode? */
+    private $isPreview = false;
+
     /** @var \GuzzleHttp\Client */
     private $client;
 
@@ -122,6 +125,17 @@ class DataProvider implements DataProviderInterface
     }
 
     /**
+     * Set whether this data provider is in preview mode
+     * @param bool $isPreview
+     * @return DataProviderInterface
+     */
+    public function setIsPreview(bool $isPreview): DataProviderInterface
+    {
+        $this->isPreview = $isPreview;
+        return $this;
+    }
+
+    /**
      * @inheritDoc
      */
     public function getDataSource(): string
@@ -166,7 +180,7 @@ class DataProvider implements DataProviderInterface
      */
     public function isPreview(): bool
     {
-        return empty($this->displayId);
+        return $this->isPreview;
     }
 
     /**

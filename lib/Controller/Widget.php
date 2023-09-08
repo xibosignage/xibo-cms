@@ -1061,6 +1061,7 @@ class Widget extends Base
             $this->getConfig()->getSetting('DEFAULT_LAT'),
             $this->getConfig()->getSetting('DEFAULT_LONG')
         );
+        $dataProvider->setIsPreview(true);
 
         $widgetInterface = $module->getWidgetProviderOrNull();
         $widgetDataProviderCache = $this->moduleFactory->createWidgetDataProviderCache();

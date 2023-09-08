@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -174,7 +174,13 @@ trait ConnectorTrait
         return new Client($this->httpOptions);
     }
 
-    public function getLayoutPreviewUrl($token)
+    /**
+     * Return a layout preview URL for the provided connector token
+     *  this can be used in a data request and is decorated by the previewing function.
+     * @param string $token
+     * @return string
+     */
+    public function getTokenUrl(string $token): string
     {
         return '[[connector='.$token.']]';
     }

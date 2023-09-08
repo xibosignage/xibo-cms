@@ -153,10 +153,12 @@ class ModuleFactory extends BaseFactory
             // Determinthe cache key from the setting in XML.
             if (empty($module->dataCacheKey)) {
                 // Best we can do here is a cache per widget, but we should log this as an error.
-                $this->getLog()->debug('getData: module without dataCacheKey: ' . $module->moduleId);
+                $this->getLog()->debug('determineCacheKey: module without dataCacheKey: ' . $module->moduleId);
                 $cacheKey = $widget->widgetId;
             } else {
                 // Start with the one provided
+                $this->getLog()->debug('determineCacheKey: module dataCacheKey: ' . $module->dataCacheKey);
+
                 $cacheKey = $module->dataCacheKey;
 
                 // Properties
@@ -182,6 +184,8 @@ class ModuleFactory extends BaseFactory
                 }
             }
         }
+
+        $this->getLog()->debug('determineCacheKey: cache key is : ' . $cacheKey);
 
         return $cacheKey;
     }
