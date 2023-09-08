@@ -235,7 +235,6 @@ if (
     </template>
     <template>
         <id>product_options_value</id>
-        <extends override="text" with="data.price">text</extends>
         <title>Options: Value</title>
         <type>element</type>
         <dataType>product</dataType>
