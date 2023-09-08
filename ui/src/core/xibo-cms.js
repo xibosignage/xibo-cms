@@ -546,6 +546,15 @@ function XiboInitialise(scope) {
             // Normal tags input
             $(self).tagsinput();
         }
+
+        // When tagsinput loses focus, add the tag,
+        // do not rely solely on comma or selection from suggestions
+        $('.bootstrap-tagsinput input').blur(function() {
+            if ($(this).val() !== '') {
+                $(self).tagsinput('add', $(this).val());
+                $(this).val('');
+            }
+        });
     });
 
     // Initialize tag with values function from xibo-forms.js
