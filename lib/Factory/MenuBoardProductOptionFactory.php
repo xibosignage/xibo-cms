@@ -1,8 +1,9 @@
 <?php
+
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -18,9 +19,7 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- */
-
-namespace Xibo\Factory;
+ */espace Xibo\Factory;
 
 use Xibo\Entity\MenuBoardProductOption;
 
@@ -78,7 +77,7 @@ class MenuBoardProductOptionFactory extends BaseFactory
         foreach ($this->getStore()->select($sql, [
             'menuProductId' => $sanitizedFilter->getInt('menuProductId')
         ]) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row);
+            $entries[] = $this->createEmpty()->hydrate($row, ['doubleProperties' => ['value']]);
         }
 
         return $entries;

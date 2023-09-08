@@ -427,13 +427,14 @@ class MenuBoardProduct extends Base
         $menuBoardProduct->save();
 
         if (!empty(array_filter($productOptions)) && !empty(array_filter($productValues))) {
-            $productDetails = array_combine($productOptions, $productValues);
+            $productDetails = array_filter(array_combine($productOptions, $productValues));
+            $parsedDetails = $this->getSanitizer($productDetails);
 
             foreach ($productDetails as $option => $value) {
                 $productOption = $this->menuBoardProductOptionFactory->create(
                     $menuBoardProduct->menuProductId,
                     $option,
-                    $value
+                    $parsedDetails->getDouble($option)
                 );
                 $productOption->save();
             }
@@ -603,7 +604,7 @@ class MenuBoardProduct extends Base
         $menuBoardProduct->description = $sanitizedParams->getString('description');
         $menuBoardProduct->price = $sanitizedParams->getDouble('price');
         $menuBoardProduct->allergyInfo = $sanitizedParams->getString('allergyInfo');
-        $menuBoardProduct->calories = $sanitizedParams->getString('calories');
+        $menuBoardProduct->calories = $sanitizedParams->getInt('calories');
         $menuBoardProduct->displayOrder = $sanitizedParams->getInt('displayOrder');
         $menuBoardProduct->availability = $sanitizedParams->getCheckbox('availability');
         $menuBoardProduct->mediaId = $sanitizedParams->getInt('mediaId');
@@ -612,8 +613,8 @@ class MenuBoardProduct extends Base
         $productValues = $sanitizedParams->getArray('productValues', ['default' => []]);
 
         if (!empty(array_filter($productOptions)) && !empty(array_filter($productValues))) {
-            $productDetails = array_combine($productOptions, $productValues);
-
+            $productDetails = array_filter(array_combine($productOptions, $productValues));
+            $parsedDetails = $this->getSanitizer($productDetails);
             if (count($menuBoardProduct->getOptions()) > count($productDetails)) {
                 $menuBoardProduct->removeOptions();
             }
@@ -622,7 +623,7 @@ class MenuBoardProduct extends Base
                 $productOption = $this->menuBoardProductOptionFactory->create(
                     $menuBoardProduct->menuProductId,
                     $option,
-                    $value
+                    $parsedDetails->getDouble($option)
                 );
                 $productOption->save();
             }
