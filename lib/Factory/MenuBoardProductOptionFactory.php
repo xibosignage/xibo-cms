@@ -1,5 +1,4 @@
 <?php
-
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
@@ -19,7 +18,9 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- */espace Xibo\Factory;
+ */
+
+namespace Xibo\Factory;
 
 use Xibo\Entity\MenuBoardProductOption;
 
