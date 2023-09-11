@@ -20,22 +20,11 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use Slim\Routing\RouteCollectorProxy;
-use Xibo\Middleware\FeatureAuth;
-use Xibo\Middleware\LayoutLock;
-use Xibo\Middleware\SuperAdminAuth;
-
 defined('XIBO') or die('Sorry, you are not allowed to directly access this page.');
 
 
-/**
- * Cypress endpoints
- * @SWG\Tag(
- *  name="cypress",
- *  description="Cypress endpoints for tests"
- * )
- */
-
+// Cypress endpoints
+// these are removed during the docker build process and are not in the final release files.
 $app->post('/createCommand', ['\Xibo\Controller\CypressTest','createCommand']);
 $app->post('/createCampaign', ['\Xibo\Controller\CypressTest','createCampaign']);
 $app->post('/scheduleCampaign', ['\Xibo\Controller\CypressTest','scheduleCampaign']);
