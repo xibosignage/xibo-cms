@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-07-31 17:51+0100\n"
+"POT-Creation-Date: 2023-09-11 10:18+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -15299,7 +15299,7 @@ msgid "Cannot modify root folder."
 msgstr ""
 
 #: cache/e1/e12568f445a23579c43fcfebd85ce8eee11d450b2050aad01f770f474b1d3218.php:430
-#: lib/Controller/Folder.php:338
+#: lib/Controller/Folder.php:347
 msgid "Cannot remove Folder with content"
 msgstr ""
 
@@ -18753,7 +18753,7 @@ msgstr ""
 #: lib/Controller/DataSet.php:1008 lib/Controller/ScheduleReport.php:467
 #: lib/Controller/Notification.php:764 lib/Controller/Campaign.php:991
 #: lib/Controller/SavedReport.php:290 lib/Controller/MenuBoard.php:542
-#: lib/Controller/Module.php:983 lib/Controller/Folder.php:343
+#: lib/Controller/Module.php:983 lib/Controller/Folder.php:355
 #: lib/Controller/Playlist.php:973 lib/Controller/Library.php:961
 #: lib/Controller/DataSetColumn.php:684 lib/Controller/Tag.php:632
 #: lib/Controller/Layout.php:967 lib/Controller/MenuBoardCategory.php:498
@@ -19314,7 +19314,7 @@ msgstr ""
 #: lib/Controller/Layout.php:818 lib/Controller/Region.php:223
 #: lib/Controller/Region.php:364 lib/Controller/Region.php:448
 #: lib/Controller/Region.php:513 lib/Controller/Region.php:733
-#: lib/Controller/Region.php:829
+#: lib/Controller/Region.php:829 lib/Helper/XiboUploadHandler.php:423
 msgid "This Layout is not a Draft, please checkout."
 msgstr ""
 
@@ -19452,21 +19452,29 @@ msgstr ""
 msgid "Cannot remove root Folder"
 msgstr ""
 
+#: lib/Controller/Folder.php:336
+msgid "Cannot remove Folder set as home Folder for a user"
+msgstr ""
+
 #: lib/Controller/Folder.php:338
+msgid "Change home Folder for Users using this Folder before deleting"
+msgstr ""
+
+#: lib/Controller/Folder.php:349
 msgid "Reassign objects from this Folder before deleting."
 msgstr ""
 
-#: lib/Controller/Folder.php:434
+#: lib/Controller/Folder.php:446
 msgid "Please select different folder, cannot move Folder to the same Folder"
 msgstr ""
 
-#: lib/Controller/Folder.php:440
+#: lib/Controller/Folder.php:452
 msgid ""
 "Please select different folder, cannot move Folder inside of one of its sub-"
 "folders"
 msgstr ""
 
-#: lib/Controller/Folder.php:445
+#: lib/Controller/Folder.php:457
 msgid ""
 "This Folder is already a sub-folder of the selected Folder, if you wish to "
 "move its content to the parent Folder, please check the merge checkbox."

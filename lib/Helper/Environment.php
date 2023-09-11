@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -30,7 +30,7 @@ use Phinx\Wrapper\TextWrapper;
  */
 class Environment
 {
-    public static $WEBSITE_VERSION_NAME = '3.3.7';
+    public static $WEBSITE_VERSION_NAME = '3.3.8';
     public static $XMDS_VERSION = '6';
     public static $XLF_VERSION = 3;
     public static $VERSION_REQUIRED = '7.2.9';
