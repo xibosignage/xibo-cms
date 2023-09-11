@@ -1730,11 +1730,18 @@ div#bg_media_name {
             & > div:not(.element-header) {
                 padding: 6px;
                 border-radius: 2px;
+                margin-bottom: 3px;
+                min-height: 30px;
             }
         }
 
         .element-header {
             font-size: 16px;
+        }
+
+        .label {
+            font-weight: bold;
+            margin-right: 2px;
         }
 
         .type {
@@ -1765,8 +1772,18 @@ div#bg_media_name {
         }
 
         .highlight {
-            .element-header, .target {
+            .element-header {
                 font-weight: bold;
+            } 
+            
+            .target > *:first-of-type:before {
+                content: "";
+                background-color: $xibo-color-neutral-700;
+                width: 8px;
+                height: 8px;
+                margin-right: 3px;
+                border-radius: 2px;
+                display: inline-block;
             }
         }
 
