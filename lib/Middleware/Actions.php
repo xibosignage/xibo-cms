@@ -180,7 +180,9 @@ class Actions implements Middleware
         }
 
         if (!$this->isAjax($request) && $user->isPasswordChangeRequired == 1 && $resource != '/user/page/password') {
-            return $handler->handle($request)->withHeader('Location', $routeParser->urlFor('user.force.change.password.page'));
+            return $handler->handle($request)
+                ->withStatus(302)
+                ->withHeader('Location', $routeParser->urlFor('user.force.change.password.page'));
         }
 
         return $handler->handle($request);

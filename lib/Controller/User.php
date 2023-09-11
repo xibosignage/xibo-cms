@@ -1540,6 +1540,14 @@ class User extends Base
         if ($newPassword != $retypeNewPassword)
             throw new InvalidArgumentException(__('Passwords do not match'), 'password');
 
+        // Make sure that the new password doesn't verify against the existing hash
+        try {
+            $user->checkPassword($newPassword);
+            throw new InvalidArgumentException(__('Please choose a new password'), 'password');
+        } catch (AccessDeniedException) {
+            // This is good, they don't match.
+        }
+
         $user->setNewPassword($newPassword);
         $user->save([
             'passwordUpdate' => true
