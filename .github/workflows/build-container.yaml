@@ -6,7 +6,7 @@ on:
       - master
       - develop
       - release23
-      - release32
+      - release33
 
 jobs:
   build:
