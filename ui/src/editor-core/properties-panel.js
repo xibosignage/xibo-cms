@@ -393,12 +393,14 @@ PropertiesPanel.prototype.delete = function(element) {
  * @param {Object} target - the element object to be rendered
  * @param {number} step - the step to render
  * @param {boolean} actionEditMode - render while editing an action
+ * @param {boolean} openActionTab - open action tab after rendering
  * @return {boolean} - result status
  */
 PropertiesPanel.prototype.render = function(
   target,
   step,
   actionEditMode = false,
+  openActionTab = false,
 ) {
   const self = this;
   const app = this.parent;
@@ -910,7 +912,13 @@ PropertiesPanel.prototype.render = function(
           );
 
           // Also Init fields for the element
-          self.initFields(targetAux, res.data, actionEditMode, true);
+          self.initFields(
+            targetAux,
+            res.data,
+            actionEditMode,
+            true,
+            openActionTab,
+          );
 
           // Save element
           const saveElement = function(target) {
@@ -1313,7 +1321,7 @@ PropertiesPanel.prototype.render = function(
     }
 
     // Init fields
-    self.initFields(target, res.data, actionEditMode);
+    self.initFields(target, res.data, actionEditMode, false, openActionTab);
   }).fail(function(data) {
     // Clear request var after response
     self.renderRequest = undefined;
@@ -1330,12 +1338,14 @@ PropertiesPanel.prototype.render = function(
  * @param {*} data The data to be used
  * @param {boolean} actionEditMode - render while editing an action
  * @param {boolean} elementProperties - render element properties
+ * @param {boolean} selectActionTab - select tab for actions
  */
 PropertiesPanel.prototype.initFields = function(
   target,
   data,
   actionEditMode = false,
   elementProperties = false,
+  selectActionTab = false,
 ) {
   const self = this;
   const app = this.parent;
@@ -1426,7 +1436,8 @@ PropertiesPanel.prototype.initFields = function(
       !targetIsElement
     ) {
       self.renderActionTab(target, {
-        reattach: actionEditMode,
+        reattach: actionEditMode || selectActionTab,
+        selectAfterRender: selectActionTab,
       });
     }
   }
@@ -1722,6 +1733,13 @@ PropertiesPanel.prototype.renderActionTab = function(
         errorMessagesTrans.error,
       );
     });
+  } else {
+    // Select tab after render
+    if (selectAfterRender) {
+      self.DOMObject.find('.nav-link, .tab-pane').removeClass('active');
+      self.DOMObject.find('.actions-tab .nav-link, #actionsTab')
+        .addClass('active');
+    }
   }
 };
 
@@ -1745,10 +1763,33 @@ PropertiesPanel.prototype.addActionToContainer = function(
   const selectedType = selectedObject.type;
   const selectedId = selectedObject[selectedType + 'Id'];
 
+  const getObjectName = (objType, objId) => {
+    let auxObjId = '';
+    let nameIndex = 'name';
+
+    // If it's a widget, we need to pass a flag for search the region
+    if (objType === 'widget') {
+      auxObjId = 'search';
+      nameIndex = 'widgetName';
+    }
+
+    // If it's screen, return layout
+    if (objType === 'screen') {
+      objType = 'layout';
+    }
+
+    return app.getObjectByTypeAndId(objType, objId, auxObjId)[nameIndex];
+  };
+
   // Check if current element is trigger or target for this action
   action.isTrigger =
     action.source == selectedType &&
     action.sourceId == selectedId;
+
+  // If action target is layout/screen, add the id to the targetId
+  if (action.target == 'screen') {
+    action.targetId = app.mainObjectId;
+  }
 
   // For layout, compare with "screen"
   const objectType =
@@ -1757,13 +1798,11 @@ PropertiesPanel.prototype.addActionToContainer = function(
     action.target == objectType &&
     action.targetId == selectedId;
 
-  // If action target is layout/screen, add the id to the targetId
-  if (action.target == 'screen') {
-    action.targetId = app.mainObjectId;
-  }
-
   // Create action title
   action.actionTitle = action.actionType;
+  if (action.actionType == 'next' || action.actionType == 'previous') {
+    action.actionTitle += (action.target == 'screen') ? 'Layout' : 'Widget';
+  }
 
   // Group actions into element actions and other actions
   let $targetContainer;
@@ -1772,6 +1811,17 @@ PropertiesPanel.prototype.addActionToContainer = function(
   } else {
     $targetContainer = $containerOther;
   }
+
+  // Get name for target and source
+  action.targetName = (action.target) ?
+    getObjectName(action.target, action.targetId) : '';
+  action.sourceName = (action.source) ?
+    getObjectName(action.source, action.sourceId) : '';
+  action.targetType = (
+    action.target === 'region' &&
+    action.source === 'widget' &&
+    ['next', 'previous'].indexOf(action.actionType) != -1
+  ) ? 'playlist' : action.target;
 
   // Create action and add to container
   const newAction = actionFormObjectTemplate($.extend({}, action, {
@@ -1869,12 +1919,21 @@ PropertiesPanel.prototype.openEditAction = function(action) {
     actionData,
   );
 
+  // Only show playlists?
+  let targetFilters = ['layout', 'regions'];
+  if (
+    ['next', 'previous'].indexOf(actionData.actionType) != -1 &&
+    actionData.target === 'region'
+  ) {
+    targetFilters = ['playlist'];
+  }
+
   app.populateDropdownWithLayoutElements(
     $newActionContainer.find('[name="targetId"]'),
     {
       $typeInput: $newActionContainer.find('[name="target"]'),
       value: actionData.targetId,
-      filters: ['layout', 'regions'],
+      filters: targetFilters,
     },
     actionData,
   );

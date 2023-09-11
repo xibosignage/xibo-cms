@@ -85,6 +85,9 @@ const Viewer = function(parent, container) {
   // Fullscreen mode flag
   this.fullscreenMode = false;
 
+  // Action drop mode
+  this.actionDropMode = false;
+
   // Initialize layer manager
   this.layerManager = new LayerManager(
     lD,
@@ -435,8 +438,9 @@ Viewer.prototype.handleInteractions = function() {
     greedy: true,
     tolerance: 'pointer',
     accept: (draggable) => {
-      // Check target
-      return lD.common.hasTarget(draggable, 'playlist');
+      // Check target ( not on action drop mode )
+      return (!lD.viewer?.actionDropMode) &&
+        lD.common.hasTarget(draggable, 'playlist');
     },
     drop: _.debounce(function(event, ui) {
       lD.dropItemAdd(event.target, ui.draggable[0]);
@@ -2915,6 +2919,8 @@ Viewer.prototype.addActionEditArea = function(
   const self = this;
   const $layoutContainer = this.DOMObject.find('.viewer-object.layout');
   const createOverlayArea = function(type) {
+    self.actionDropMode = true;
+
     // If target is "screen", use "layout" to highlight
     const targetType =
       (actionData.target === 'screen') ? 'layout' : actionData.target;
@@ -2999,6 +3005,12 @@ Viewer.prototype.addActionEditArea = function(
         lD.dropItemAdd(event.target, ui.draggable[0]);
       }, 200),
     });
+
+    // Refresh edit form
+    lD.editDrawerWidget(
+      {},
+      false,
+    );
   } else if (createOrEdit === 'edit') {
     // Create action edit area
     const $actionArea = createOverlayArea('edit');
@@ -3017,6 +3029,9 @@ Viewer.prototype.addActionEditArea = function(
       (actionData.target === 'layout'),
     );
 
+    // Clear action edit mode on properties panel
+    lD.propertiesPanel.DOMObject.removeClass('action-edit-mode');
+
     // Edit on click
     $actionArea.on('click', () => {
       // Open widget edit form
@@ -3034,6 +3049,7 @@ Viewer.prototype.addActionEditArea = function(
  * Remove new widget action element
  */
 Viewer.prototype.removeActionEditArea = function() {
+  this.actionDropMode = false;
   this.DOMObject.find('.designer-region-drawer').remove();
 };
 
