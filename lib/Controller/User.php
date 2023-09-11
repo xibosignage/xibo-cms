@@ -1544,7 +1544,7 @@ class User extends Base
         try {
             $user->checkPassword($newPassword);
             throw new InvalidArgumentException(__('Please choose a new password'), 'password');
-        } catch (AccessDeniedException) {
+        } catch (AccessDeniedException $ignored) {
             // This is good, they don't match.
         }
 
