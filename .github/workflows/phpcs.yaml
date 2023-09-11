@@ -5,6 +5,8 @@ on:
     paths:
       - "**.php"
       - ".github/workflows/phpcs.yml"
+    branches-ignore:
+      - master
 
 jobs:
   phpcs:
