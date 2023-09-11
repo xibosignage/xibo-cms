@@ -195,7 +195,7 @@
 
                                 var percent= '';
                                 if (displayData.percent > 0) {
-                                    percent = displayData.percent + "%";
+                                    percent = Math.round((displayData.percent + Number.EPSILON) * 100) / 100 + "%";
                                 }
 
                                 var $label = $('<td class="display-label" style="width:300px">').text(displayData.label);
