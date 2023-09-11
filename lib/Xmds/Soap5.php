@@ -447,6 +447,11 @@ class Soap5 extends Soap4
             $value = $return->createTextNode($syncNodeValue ?? '');
             $syncNode->appendChild($value);
             $displayElement->appendChild($syncNode);
+
+            $syncPublisherPortNode = $return->createElement('syncPublisherPort');
+            $value = $return->createTextNode($syncGroup->syncPublisherPort ?? 9590);
+            $syncPublisherPortNode->appendChild($value);
+            $displayElement->appendChild($syncPublisherPortNode);
         }
 
         $display->save(Display::$saveOptionsMinimum);
