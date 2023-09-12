@@ -1878,6 +1878,9 @@ window.forms = {
 
       // Add the options
       $.each(effects, function(_index, element) {
+        if (effectsType !== 'all' && element.group !== effectsType) {
+          return;
+        }
         $el.append(
           $('<option value="' +
             element.effect +
