@@ -7203,12 +7203,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/xibosignage/support.git",
-                "reference": "7b01c32892a6f24c2de79f364e3166060ea57aef"
+                "reference": "6df31654a59aa5b31afb3dcde60929c89e450fc0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/xibosignage/support/zipball/7b01c32892a6f24c2de79f364e3166060ea57aef",
-                "reference": "7b01c32892a6f24c2de79f364e3166060ea57aef",
+                "url": "https://api.github.com/repos/xibosignage/support/zipball/6df31654a59aa5b31afb3dcde60929c89e450fc0",
+                "reference": "6df31654a59aa5b31afb3dcde60929c89e450fc0",
                 "shasum": ""
             },
             "require": {
@@ -7249,7 +7249,7 @@
                 "source": "https://github.com/xibosignage/support/tree/php8",
                 "issues": "https://github.com/xibosignage/support/issues"
             },
-            "time": "2023-08-11T12:43:59+00:00"
+            "time": "2023-09-12T11:54:18+00:00"
         },
         {
             "name": "xibosignage/xibo-xmr",
