@@ -92,7 +92,7 @@ class RssWidgetCompatibility implements WidgetCompatibilityInterface
                 }
 
                 if ($modified) {
-                    $widget->setOptionValue('template', 'attrib', $template);
+                    $widget->setOptionValue('template', 'cdata', $template);
                 }
             }
         }
