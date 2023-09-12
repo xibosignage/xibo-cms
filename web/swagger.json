@@ -14435,10 +14435,6 @@
     ],
     "tags": [
         {
-            "name": "cypress",
-            "description": "Cypress endpoints for tests"
-        },
-        {
             "name": "misc",
             "description": "Miscellaneous"
         },
