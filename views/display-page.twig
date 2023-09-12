@@ -719,7 +719,12 @@
             // Map resizing when folder is toggled
             window.refreshDisplayMap = function () {
                 if (map) {
-                    map.invalidateSize();
+                    // is display map visible??
+                    if ($("#display-map").is(":visible")) {
+                        map.invalidateSize();
+                    } else {
+                        map.setView(map.getCenter(), map.getZoom());
+                    }
                 }
             }
 
@@ -799,7 +804,9 @@
 
                 map.on("moveend", _.debounce(function() {
                     bounds = map.getBounds().toBBoxString();
-                    addMarkersToMap(false);
+                    // is display map visible??
+                    const isDisplayMapVisible = $displayMap.is(":visible");
+                    addMarkersToMap(!isDisplayMapVisible);
                 }, 500));
 
                 map.on("resize", function() {
