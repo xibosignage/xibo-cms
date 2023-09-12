@@ -146,6 +146,30 @@ function XiboInitialise(scope, options) {
             $(this).closest(".XiboGrid").find("table.dataTable").first().DataTable().ajax.reload();
         }, 500);
 
+        // Add clear filter button and handle behaviour
+        // Create template for the inputs
+        var buttonTemplate = Handlebars.compile(
+            $('#xibo-filter-clear-button').html()
+        );
+
+        // Append button
+        $(this).find(".XiboFilter .nav-tabs").append(buttonTemplate);
+
+        // Prevent enter key to submit form
+        $(this).find(".XiboFilter .clear-filter-btn").on('click', function(event) {
+            console.log('Clear Fields');
+            form[0].reset();
+
+            // Trigger change on select2
+            form.find('.select2-hidden-accessible').trigger('change');
+
+            // Clear tags input
+            form.find('.bootstrap-tagsinput').tagsinput('clear');
+
+            // Refresh filter
+            filterRefresh.call(this);
+        });
+
         // Prevent enter key to submit form
         $(this).find(".XiboFilter form").on('keydown', function(event) {
             if(event.keyCode == 13) {
@@ -155,6 +179,7 @@ function XiboInitialise(scope, options) {
         });
         // Bind the filter form
         $(this).find('.XiboFilter form input').on('keyup', filterRefresh);
+        $(this).find('.XiboFilter form input[type="number"]').on('change', filterRefresh);
         $(this).find('.XiboFilter form input[type="checkbox"]').on('change', filterRefresh);
         $(this).find('.XiboFilter form select').on('change', filterRefresh);
         $(this).find('.XiboFilter form input.dateControl').on('change', filterRefresh);
