@@ -173,6 +173,9 @@ PlaylistTimeline.prototype.render = function() {
       saveOrderFunc();
     },
   });
+
+  // Reload tooltips
+  pE.common.reloadTooltips(pE.timeline.DOMObject);
 };
 
 /**
