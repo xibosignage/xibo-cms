@@ -112,10 +112,11 @@ class Widget extends Base
         $this->widgetAudioFactory = $widgetAudioFactory;
     }
 
+    // phpcs:disable
     /**
      * Add Widget
      *
-     * * @SWG\Post(
+     * @SWG\Post(
      *  path="/playlist/widget/{type}/{playlistId}",
      *  operationId="addWidget",
      *  tags={"widget"},
@@ -142,6 +143,13 @@ class Widget extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="templateId",
+     *      in="formData",
+     *      description="If the module type provided has a dataType then provide the templateId to use.",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -161,6 +169,7 @@ class Widget extends Base
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws \Xibo\Support\Exception\GeneralException
      */
+    // phpcs:enable
     public function addWidget(Request $request, Response $response, $type, $id)
     {
         $params = $this->getSanitizer($request->getParams());
@@ -358,14 +367,78 @@ class Widget extends Base
         return $this->render($request, $response);
     }
 
+    // phpcs:disable
     /**
-     * Edit a Widget
+     * Edit Widget
+     *
+     * @SWG\Put(
+     *  path="/playlist/widget/{id}",
+     *  operationId="editWidget",
+     *  tags={"widget"},
+     *  summary="Edit a Widget",
+     *  description="Edit a widget providing new properties to set on it",
+     *  @SWG\Parameter(
+     *      name="id",
+     *      in="path",
+     *      description="The ID of the Widget",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="useDuration",
+     *      in="formData",
+     *      description="Set a duration on this widget, if unchecked the default or library duration will be used.",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="duration",
+     *      in="formData",
+     *      description="Duration to use on this widget",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="An optional name for this widget",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="enableStat",
+     *      in="formData",
+     *      description="Should stats be enabled? On|Off|Inherit ",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="isRepeatData",
+     *      in="formData",
+     *      description="If this widget requires data, should that data be repeated to meet the number of items requested?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="properties",
+     *      in="formData",
+     *      description="Add an additional parameter for each of the properties required this module and its template. Use the moduleProperties and moduleTemplateProperties calls to get a list of properties needed",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     *
      * @param Request $request
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws \Xibo\Support\Exception\GeneralException
      */
+    // phpcs:enable
     public function editWidget(Request $request, Response $response, $id)
     {
         $params = $this->getSanitizer($request->getParams());
@@ -1061,6 +1134,7 @@ class Widget extends Base
             $this->getConfig()->getSetting('DEFAULT_LAT'),
             $this->getConfig()->getSetting('DEFAULT_LONG')
         );
+        $dataProvider->setIsPreview(true);
 
         $widgetInterface = $module->getWidgetProviderOrNull();
         $widgetDataProviderCache = $this->moduleFactory->createWidgetDataProviderCache();

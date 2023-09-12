@@ -120,7 +120,7 @@
                         {{ forms.dropdown("licensed", "single", title, display.licensed, options, "licensedid", "licensed", helpText) }}
 
                         {% set title %}{% trans "Default Layout" %}{% endset %}
-                        {% set helpText %}{% trans "The Default Layout to display where there is no other content scheduled. If left empty with no other content scheduled the splash screen will be displayed" %}{% endset %}
+                        {% set helpText %}{% trans "Set the Default Layout to use when no other content is scheduled to this Display. This will override the global Default Layout as set in CMS Administrator Settings. If left blank a global Default Layout will be automatically set for this Display." %}{% endset %}
                         {% set attributes = [
                             { name: "data-search-url", value: url_for("layout.search") },
                             { name: "data-search-term", value: "layout" },

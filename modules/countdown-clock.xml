@@ -86,7 +86,7 @@
                     <condition field="countdownType" type="eq">2</condition>
                 </test>
             </visibility>
-            <rule>
+            <rule onStatus="false">
                 <test type="or" message="Warning duration needs to be lower than the countdown main duration.">
                     <condition type="eq"></condition>
                     <condition field="countdownType" type="neq">2</condition>

@@ -115,14 +115,15 @@ $(target).find('#content').empty();
 
 // Add items to container
 for (var index = 0; index < items.length; index++) {
-  $(items[index]).appendTo($(target).find('#content'));
+  var $newItem = $('<div>').addClass('event').html(items[index]).appendTo('body');
+  $(target).find('#content').append($newItem);
 }
 
 // Render
 $(target).find('img').xiboImageRender(properties);
 
 $(target).xiboLayoutScaler(properties);
-$(target).xiboTextRender(properties, $(target).find('#content > *'));
+$(target).xiboTextRender(properties, $(target).find('#content > .event'));
         ]]></onTemplateRender>
     </template>
     <!-- End of Custom Calendar -->

@@ -34,6 +34,7 @@ use Xibo\Helper\ObjectVars;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Widget\Provider\DataProvider;
 use Xibo\Widget\Provider\DataProviderInterface;
+use Xibo\Xmds\Wsdl;
 
 /**
  * Acts as a cache for the Widget data cache.
@@ -288,6 +289,8 @@ class WidgetDataProviderCache
         array $data,
         array $storedAs
     ): array {
+        $this->getLog()->debug('decorateForPlayer');
+
         foreach ($data as $row => $item) {
             // Each data item can be an array or an object
             if (is_array($item)) {
@@ -329,6 +332,14 @@ class WidgetDataProviderCache
                 } else {
                     $data = str_replace('[[' . $match . ']]', '', $data);
                 }
+            } else if (Str::startsWith($match, 'connector')) {
+                // We have WSDL here because this is only called from XMDS.
+                $value = explode('=', $match);
+                $data = str_replace(
+                    '[[' . $match . ']]',
+                    Wsdl::getRoot() . '?connector=true&token=' . $value[1],
+                    $data
+                );
             }
         }
         return $data;

@@ -150,6 +150,13 @@ class MenuBoardProduct implements \JsonSerializable
         if (!v::stringType()->notEmpty()->validate($this->name)) {
             throw new InvalidArgumentException(__('Name cannot be empty'), 'name');
         }
+
+        if (!empty($this->calories) && !v::intType()->min(0)->max(32767)->validate($this->calories)) {
+            throw new InvalidArgumentException(
+                __('Calories must be a whole number between 0 and 32767'),
+                'calories'
+            );
+        }
     }
 
     /**

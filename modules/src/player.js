@@ -143,19 +143,24 @@ $(function() {
    * @param {Object} response - Response body|json
    */
   function onDataErrorCallback(widget, httpStatus, response) {
-    if (
-      typeof window[`onDataError_${widget.widgetId}`] === 'function'
-    ) {
-      const onDataError = window[
-        `onDataError_${widget.widgetId}`
-      ](httpStatus, response);
+    const onDataError = window[
+      `onDataError_${widget.widgetId}`
+    ];
 
-      if (typeof onDataError === 'undefined' || onDataError == false) {
+    if (typeof onDataError === 'function') {
+      if (onDataError(httpStatus, response) == false) {
         xiboIC.reportFault({
           code: '5001',
           reason: 'No Data',
         });
       }
+
+      onDataError(httpStatus, response);
+    } else {
+      xiboIC.reportFault({
+        code: '5001',
+        reason: 'No Data',
+      });
     }
   }
 
@@ -473,12 +478,18 @@ $(function() {
    * @param {object} elements
    * @param {object} widget
    * @param {Array} dataItems
+   * @param {boolean} showError
    */
   function initPlayerElements(
     elements,
     widget,
     dataItems,
+    showError,
   ) {
+    if (dataItems.length === 0 && showError) {
+      xiboIC.expireNow({targetId: widget.widgetId});
+    }
+
     // Parse out the template with elements.
     if (elements?.length > 0) {
       const $content = $('#content');
@@ -990,8 +1001,7 @@ $(function() {
 
                     if (hasStandaloneSlotFilled) {
                       hasStandaloneSlotFilled = false;
-                      if (lastSingleSlotFilled % maxSlot === 0 &&
-                          itemsObj.length > 1) {
+                      if (lastSingleSlotFilled % maxSlot === 0) {
                         lastSingleSlotFilled = null;
                       }
                       return false;
@@ -1192,6 +1202,7 @@ $(function() {
           widgetElements,
           widget,
           dataItems,
+          showError,
         );
       }
     });

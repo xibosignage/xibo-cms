@@ -1262,11 +1262,6 @@ Toolbar.prototype.handleDroppables = function(draggable, customClasses = '') {
       selectorBuild.push('.designer-region[data-sub-type="frame"].droppable');
     }
 
-    if (app.common.hasTarget(draggable, 'frame')) {
-      // Drop to frame region
-      selectorBuild.push('.designer-region[data-sub-type="frame"].droppable');
-    }
-
     if (app.common.hasTarget(draggable, 'zone')) {
       // Drop to frame region
       selectorBuild.push('.designer-region[data-sub-type="zone"].droppable');
@@ -1304,6 +1299,13 @@ Toolbar.prototype.handleDroppables = function(draggable, customClasses = '') {
 
       // Drop to playlist timeline
       selectorBuild.push('#playlist-timeline.ui-droppable');
+    }
+
+    // If we are in action edit mode, we need
+    // to only target the action edit overlay
+    if (app.viewer?.actionDropMode) {
+      selectorBuild =
+        ['.designer-region-drawer[data-action-edit-type="create"]'];
     }
 
     // Add droppable class to all selectors

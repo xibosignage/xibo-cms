@@ -1594,6 +1594,10 @@ class Layout implements \JsonSerializable
                     }
                 }
 
+                // Set enable stat collection flag
+                $mediaNode->setAttribute('enableStat', $enableStat);
+                // </editor-fold>
+
                 // automatically set the transitions on the layout xml, we are not saving widgets here to avoid
                 // deadlock issues.
                 if ($this->autoApplyTransitions == 1) {
@@ -1619,10 +1623,6 @@ class Layout implements \JsonSerializable
                     $widget->setOptionValue('transOut', 'attrib', $widgetTransOut);
                     $widget->setOptionValue('transOutDuration', 'attrib', $widgetTransOutDuration);
                 }
-
-                // Set enable stat collection flag
-                $mediaNode->setAttribute('enableStat', $enableStat);
-                // </editor-fold>
 
                 // Create options nodes
                 $optionsNode = $document->createElement('options');
@@ -1670,6 +1670,33 @@ class Layout implements \JsonSerializable
                     if ($property->id === 'updateInterval') {
                         $hasUpdatedInterval = true;
                     }
+                }
+
+                // Handle common properties which are stored as options.
+                $this->getLog()->debug('toXlf: adding transtions to option nodes, widgetId: ' . $widget->widgetId);
+
+                $transIn = $widget->getOptionValue('transIn', null);
+                if (!empty($transIn)) {
+                    $optionsNode->appendChild($document->createElement('transIn', $transIn));
+                    $optionsNode->appendChild($document->createElement(
+                        'transInDuration',
+                        $widget->getOptionValue(
+                            'transInDuration',
+                            $this->config->getSetting('DEFAULT_TRANSITION_DURATION')
+                        )
+                    ));
+                }
+
+                $transOut = $widget->getOptionValue('transOut', null);
+                if (!empty($transOut)) {
+                    $optionsNode->appendChild($document->createElement('transOut', $transOut));
+                    $optionsNode->appendChild($document->createElement(
+                        'transOutDuration',
+                        $widget->getOptionValue(
+                            'transOutDuration',
+                            $this->config->getSetting('DEFAULT_TRANSITION_DURATION')
+                        )
+                    ));
                 }
 
                 // If we do not have an update interval, should we set a default one?
@@ -1826,6 +1853,9 @@ class Layout implements \JsonSerializable
                 }
             }
         } catch (GeneralException $xiboException) {
+            $this->getLog()->debug('assessWidgetStatus: ' . $module->moduleId . ' invalid, e: '
+                . $xiboException->getMessage());
+
             $moduleStatus = Status::$STATUS_INVALID;
 
             // Include the exception on

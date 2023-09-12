@@ -137,7 +137,8 @@ $(target).find('#content').empty();
 
 // Add items to container
 for (var index = 0; index < items.length; index++) {
-  $(items[index]).appendTo($(target).find('#content'));
+  var $newItem = $('<div>').addClass('item').html(items[index]);
+  $(target).find('#content').append($newItem);
 }
 
 // Render
@@ -192,7 +193,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > *'));
         <stencil>
             <hbs><![CDATA[
 <div class="image">
-    <img src="{{image}}"/>
+    {{#if image}}<img src="{{image}}"/>{{/if}}
 </div>
             ]]></hbs>
             <twig><![CDATA[
@@ -321,7 +322,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .image, #content
         <stencil>
             <hbs><![CDATA[
 <div class="image">
-  <img src="{{image}}"/>
+  {{#if image}}<img src="{{image}}"/>{{/if}}
   <div class="cycle-overlay background">
     <div class="title">{{title}}</div>
     <div class="description">{{{content}}}</div>
@@ -516,7 +517,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .image, #content
         <stencil>
             <hbs><![CDATA[
 <div class="image">
-  <img src="{{image}}"/>
+  {{#if image}}<img src="{{image}}"/>{{/if}}
   <div class="cycle-overlay background">
     <div class="title">{{title}}</div>
   </div>

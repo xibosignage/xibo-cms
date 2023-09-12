@@ -65,7 +65,7 @@
 
                         {% set title %}{% trans "Calories" %}{% endset %}
                         {% set helpText %}{% trans "How many calories are in this product?" %}{% endset %}
-                        {{ forms.input("calories", title, menuBoardProduct.calories, helpText) }}
+                        {{ forms.number("calories", title, menuBoardProduct.calories, helpText) }}
 
                         {% set title %}{% trans "Display Order" %}{% endset %}
                         {% set helpText %}{% trans "Set a display order for this item to appear" %}{% endset %}

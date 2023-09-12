@@ -137,6 +137,21 @@ class RssProvider implements WidgetProviderInterface
                 }
             }
 
+            // Where should we get images?
+            $imageSource = $dataProvider->getProperty('imageSource', 'enclosure');
+            $imageTag = match ($imageSource) {
+                'mediaContent' => 'media:content',
+                'image' => 'image',
+                'custom' => $dataProvider->getProperty('imageSourceTag', 'image'),
+                default => 'enclosure'
+            };
+            $imageSourceAttribute = null;
+            if ($imageSource === 'mediaContent') {
+                $imageSourceAttribute = 'url';
+            } else if ($imageSource === 'custom') {
+                $imageSourceAttribute = $dataProvider->getProperty('imageSourceAttribute', null);
+            }
+
             $countItems = 0;
             // Parse each item into an article
             foreach ($feedItems as $item) {
@@ -159,14 +174,19 @@ class RssProvider implements WidgetProviderInterface
                 $article->summary = trim($descriptionTag ? strip_tags($descriptionTag[0]) : $article->content);
 
                 // Do we have an image included?
-                if (stripos($item->getEnclosureType(), 'image') > -1) {
-                    $link = $item->getEnclosureUrl();
-
-                    if (!(empty($link))) {
-                        $article->image = $dataProvider->addImage('ticker_' . md5($link), $link, $expiresImage);
-                    } else {
-                        $this->getLog()->debug('No image found for image tag using getEnclosureUrl');
+                $link = null;
+                if ($imageTag === 'enclosure') {
+                    if (stripos($item->getEnclosureType(), 'image') > -1) {
+                        $link = $item->getEnclosureUrl();
                     }
+                } else {
+                    $link = $item->getTag($imageTag, $imageSourceAttribute)[0] ?? null;
+                }
+
+                if (!(empty($link))) {
+                    $article->image = $dataProvider->addImage('ticker_' . md5($link), $link, $expiresImage);
+                } else {
+                    $this->getLog()->debug('fetchData: no image found for image tag using ' . $imageTag);
                 }
 
                 if ($dataProvider->getProperty('decodeHtml') == 1) {
