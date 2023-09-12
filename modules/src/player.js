@@ -1012,7 +1012,7 @@ $(function() {
                     if (hasStandaloneSlotFilled) {
                       hasStandaloneSlotFilled = false;
                       if (lastSingleSlotFilled % maxSlot === 0 &&
-                          itemsObj.length > 1) {
+                        itemsObj.length > 1) {
                         lastSingleSlotFilled = null;
                       }
                       return false;

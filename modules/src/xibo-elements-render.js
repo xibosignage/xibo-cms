@@ -155,7 +155,8 @@ jQuery.fn.extend({
       options.direction = ((options.effect === 'marqueeUp') ? 'up' : 'down');
 
       // Make sure the speed is something sensible
-      options.speed = (options.speed === 0) ? 1 : options.speed;
+      options.speed = (options.speed === 0) ?
+        1 : options.speed * (options.height / 25);
     }
 
     if (marquee) {
@@ -177,8 +178,8 @@ jQuery.fn.extend({
           scrollamount: options.speed,
           behaviour: 'scroll',
           direction: options.direction,
-          height: height,
-          // width: width,
+          height: options.height,
+          width: options.width,
         }).overflowMarquee().addClass('animating');
       }
     }
