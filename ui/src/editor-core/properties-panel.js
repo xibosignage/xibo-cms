@@ -677,7 +677,7 @@ PropertiesPanel.prototype.render = function(
             helpText: propertiesPanelTrans.effectHelpText,
             value: targetAux.effect,
             type: 'effectSelector',
-            variant: 'showPaged',
+            variant: 'all',
             visibility: [],
           });
         }
@@ -877,7 +877,7 @@ PropertiesPanel.prototype.render = function(
               helpText: propertiesPanelTrans.effectHelpText,
               value: targetAux.effect,
               type: 'effectSelector',
-              variant: 'showPaged',
+              variant: 'all',
               visibility: [],
             });
           }
