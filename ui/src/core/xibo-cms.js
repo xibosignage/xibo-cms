@@ -152,16 +152,21 @@ function XiboInitialise(scope, options) {
             $('#xibo-filter-clear-button').html()
         );
 
-        // Append button
-        $(this).find(".XiboFilter .nav-tabs").append(buttonTemplate);
+        // Append button to tabs or container (if we don't have tabs)
+        if ($(this).find(".XiboFilter .nav-tabs").length > 0) {
+            $(this).find(".XiboFilter .nav-tabs").append(buttonTemplate);
+        } else {
+            $(this).find(".XiboFilter").prepend(buttonTemplate);
+            $(this).find(".XiboFilter .FilterDiv").addClass("pt-0");
+        }
 
         // Prevent enter key to submit form
         $(this).find(".XiboFilter .clear-filter-btn").on('click', function(event) {
-            console.log('Clear Fields');
+            // Reset fields
             form[0].reset();
 
             // Trigger change on select2
-            form.find('.select2-hidden-accessible').trigger('change');
+            form.find('.select2-hidden-accessible').val('').trigger('change');
 
             // Clear tags input
             form.find('.bootstrap-tagsinput').tagsinput('clear');
