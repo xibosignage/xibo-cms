@@ -30,7 +30,7 @@
     <schemaVersion>1</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>1</regionSpecific>
-    <renderAs>html</renderAs>
+    <renderAs>native</renderAs>
     <defaultDuration>60</defaultDuration>
     <settings></settings>
     <properties>

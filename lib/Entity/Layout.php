@@ -1643,26 +1643,35 @@ class Layout implements \JsonSerializable
                     $mediaNode->setAttribute('fileId', $media->mediaId);
                 }
 
-                // Tracker whether we have an updateInterval configured.
+                // Track whether we have an updateInterval configured.
                 $hasUpdatedInterval = false;
 
-                // Output all properties belonging to the module
+                // Output all properties belonging to the module (we are not interested in templates because they
+                // are all HTML rendered)
+                $module->decorateProperties($widget, true, false);
+
                 foreach ($module->properties as $property) {
-                    if ($property->isCData()) {
-                        if ($property->value !== null) {
-                            $optionNode = $document->createElement($property->id);
-                            $cdata = $document->createCDATASection($property->value);
-                            $optionNode->appendChild($cdata);
-                            $rawNode->appendChild($optionNode);
-                        }
-                    } else {
-                        // Skip any property named "uri" if we've already injected a special node for that.
-                        if ($uriInjected && $property->id == 'uri') {
+                    // We only output properties for native rendered widgets
+                    if ($module->renderAs === 'native') {
+                        if (($uriInjected && $property->id == 'uri') || empty($property->id)) {
+                            // Skip any property named "uri" if we've already injected a special node for that.
+                            // Skip properties without an id
                             continue;
                         }
 
-                        if (!empty($property->id)) {
-                            $optionNode = $document->createElement($property->id, $property->value ?? '');
+                        // We have something to output
+                        $optionNode = $document->createElement($property->id);
+
+                        if ($property->isCData()) {
+                            $cdata = $document->createCDATASection($property->value);
+                            $optionNode->appendChild($cdata);
+
+                            // Add to the raw node
+                            $rawNode->appendChild($optionNode);
+                        } else {
+                            $optionNode->nodeValue = $property->value ?? '';
+
+                            // Add to the options node
                             $optionsNode->appendChild($optionNode);
                         }
                     }
