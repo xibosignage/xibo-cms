@@ -8,21 +8,21 @@
             <div class="tab-content">
                 <div class="tab-pane active" id="generalTab">
                     {{> inputs/hidden id="type" value=region.type customClass="region-input" }}
-                    {{> inputs/text value=region.name id="name" title="Name" helpText="An optional name for this widget" customClass="region-input" }}
-                    {{> inputs/text value=region.syncKey id="syncKey" title="Content Synchronisation Key" helpText="If this layout is scheduled using a synchronised event, this key will be used to match with other layouts in the same event." customClass="region-input" }}
-                    {{> inputs/checkbox value=(getOption region.regionOptions "loop") id="loop" title="Loop?" helpText="If there is only one item in this %region.type% should it loop?" customClass="region-input" }}
-                    {{> inputs/message messageType="info" title="When should the %regionType% Loop be enabled?"}}
-                    {{> inputs/message messageType="info" title="* If your %regionType% contains more than one Widget, Loop should not be enabled."}}
-                    {{> inputs/message messageType="info" title="* If your %regionType% contains one Widget, and that Widget is a 'fixed' item (eg Text), Loop should not be enabled."}}
-                    {{> inputs/message messageType="info" title="* If your %regionType% contains one Widget, and that Widget needs to update periodically (eg RSS Ticker Widget), Loop can be enabled ONLY if the Widget needs to update MORE frequently than the duration of the overall Layout."}}
+                    {{> inputs/text value=region.name id="name" title=trans.region.name helpText=trans.region.nameHelpText customClass="region-input" }}
+                    {{> inputs/text value=region.syncKey id="syncKey" title=trans.region.syncKey helpText=trans.region.syncKeyHelpText customClass="region-input" }}
+                    {{> inputs/checkbox value=(getOption region.regionOptions "loop") id="loop" title=trans.region.loop helpText=trans.region.loopHelpText customClass="region-input" }}
+                    {{> inputs/message messageType="info" title=trans.region.loopMessage1}}
+                    {{> inputs/message messageType="info" title=trans.region.loopMessage2}}
+                    {{> inputs/message messageType="info" title=trans.region.loopMessage3}}
+                    {{> inputs/message messageType="info" title=trans.region.loopMessage4}}
                 </div>
                 <div class="tab-pane" id="positioningTab">
-                    {{> inputs/number value=region.zIndex id="zIndex" title="Layer" helpText="The layering order of this %regionType% (z-index). Advanced use only." customClass="position-input" }}
-                    {{> inputs/number value=region.top id="top" title="Top" helpText="The top position of the %regionType%" customClass="position-input" }}
-                    {{> inputs/number value=region.left id="left" title="Left" helpText="The left position of the %regionType%" customClass="position-input" }}
-                    {{> inputs/number value=region.width id="width" title="Width" helpText="The width of the %regionType%" customClass="position-input" }}
-                    {{> inputs/number value=region.height id="height" title="Height" helpText="The height of the %regionType%" customClass="position-input" }}
-                    {{> button id="setFullScreenButton" type="btn-block btn-outline-primary inline-btn" name="Make this %regionType% full screen, dimensions will be set to %layout.width% by %layout.height%." customClass="position-input" }}
+                    {{> inputs/number value=region.zIndex id="zIndex" title=trans.region.layer helpText=trans.region.layerHelpText customClass="position-input" }}
+                    {{> inputs/number value=region.top id="top" title=trans.region.top helpText=trans.region.topHelpText customClass="position-input" }}
+                    {{> inputs/number value=region.left id="left" title=trans.region.left helpText=trans.region.leftHelpText customClass="position-input" }}
+                    {{> inputs/number value=region.width id="width" title=trans.region.width helpText=trans.region.widthHelpText customClass="position-input" }}
+                    {{> inputs/number value=region.height id="height" title=trans.region.height helpText=trans.region.heightHelpText customClass="position-input" }}
+                    {{> button id="setFullScreenButton" type="btn-block btn-outline-primary inline-btn" name=trans.region.makeRegionFullScreen customClass="position-input" }}
                 </div>
             </div>
         </form>
