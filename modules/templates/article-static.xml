@@ -137,7 +137,8 @@ $(target).find('#content').empty();
 
 // Add items to container
 for (var index = 0; index < items.length; index++) {
-  $(items[index]).appendTo($(target).find('#content'));
+  var $newItem = $('<div>').addClass('item').html(items[index]);
+  $(target).find('#content').append($newItem);
 }
 
 // Render

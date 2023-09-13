@@ -319,23 +319,24 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
     this.expireStatus = status;
 
     // save status message
-    this.expireStatusTitle = '<p>' + EXPIRE_STATUS_MSG_MAP[status] + '</p>';
+    this.expireStatusTitle = '<p class="font-weight-bold mb-0 text-left">' +
+      EXPIRE_STATUS_MSG_MAP[status] + '</p>';
 
     if (this.fromDt > this.DATE_MIN) {
       this.expireStatusTitle +=
-      '<p>' +
+      '<p class="mb-0">' +
       widgetStatusTrans.startTime +
       ': ' +
-      moment.unix(this.fromDt).format(jsDateFormat) +
+      moment.unix(this.fromDt).tz(timezone).format(jsDateFormat) +
       '</p>';
     }
 
     if (this.toDt < this.DATE_MAX) {
       this.expireStatusTitle +=
-      '<p>' +
+      '<p class="mb-0">' +
       widgetStatusTrans.endTime +
       ': ' +
-      moment.unix(this.toDt).format(jsDateFormat) +
+      moment.unix(this.toDt).tz(timezone).format(jsDateFormat) +
       '</p>';
     }
 
