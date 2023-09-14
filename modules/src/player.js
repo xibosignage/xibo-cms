@@ -1083,7 +1083,7 @@ $(function() {
                         renderDataItem(
                           dataKey,
                           dataKey === 'empty' ?
-                            dataKey : dataItems[dataKey - 1],
+                            dataKey : {...(dataItems[dataKey - 1] || {})},
                           groupItem,
                           slotKey,
                           maxSlot,
@@ -1097,17 +1097,17 @@ $(function() {
                   }
                 });
 
-                if (isMarquee) {
-                  $grpContent.css({
-                    width: groupSlotObj.width,
-                    height: groupSlotObj.height,
-                    position: 'absolute',
-                    top: groupSlotObj.top,
-                    left: groupSlotObj.left,
-                    overflow: 'hidden',
-                    zIndex: groupSlotObj.layer,
-                  });
+                $grpContent.css({
+                  width: groupSlotObj.width,
+                  height: groupSlotObj.height,
+                  position: 'absolute',
+                  top: groupSlotObj.top,
+                  left: groupSlotObj.left,
+                  overflow: 'hidden',
+                  zIndex: groupSlotObj.layer,
+                });
 
+                if (isMarquee) {
                   const $scroller =
                     $(`<div class="${groupSlotObj.id}--marquee scroll"></div>`);
 
@@ -1172,7 +1172,7 @@ $(function() {
                           renderDataItem(
                             dataKey,
                             dataKey === 'empty' ?
-                              dataKey : dataItems[dataKey - 1],
+                              dataKey : {...(dataItems[dataKey - 1] || {})},
                             slotObj,
                             slotKey,
                             maxSlot,
