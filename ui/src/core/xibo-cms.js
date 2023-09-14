@@ -3498,6 +3498,7 @@ function initDatePicker($element, baseFormat, displayFormat, options, onChangeCa
             altFormat: displayFormat,
             dateFormat: baseFormat,
             locale: (language != 'en-GB') ? language : 'default',
+            defaultHour: '00',
             getWeek: function(dateObj) {
                 return moment(dateObj).week();
             },
