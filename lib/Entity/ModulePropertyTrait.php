@@ -30,11 +30,12 @@ use Xibo\Helper\DateFormatHelper;
 trait ModulePropertyTrait
 {
     /**
-     * @param \Xibo\Entity\Widget $widget
+     * @param Widget $widget
      * @param bool $includeDefaults
+     * @param bool $reverseFilters Reverse filters?
      * @return $this
      */
-    public function decorateProperties(Widget $widget, bool $includeDefaults = false)
+    public function decorateProperties(Widget $widget, bool $includeDefaults = false, bool $reverseFilters = true)
     {
         foreach ($this->properties as $property) {
             $property->value = $widget->getOptionValue($property->id, null);
@@ -54,7 +55,9 @@ trait ModulePropertyTrait
                 }
             }
 
-            $property->reverseFilters();
+            if ($reverseFilters) {
+                $property->reverseFilters();
+            }
         }
         return $this;
     }
