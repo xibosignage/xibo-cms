@@ -24,6 +24,7 @@
 namespace Xibo\Service;
 
 use Stash\Interfaces\PoolInterface;
+use Xibo\Entity\Display;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -110,9 +111,9 @@ interface DisplayNotifyServiceInterface
 
     /**
      * Notify that data has been updated for this display
-     * @param int $displayId
+     * @param \Xibo\Entity\Display $display
      * @param int $widgetId
      * @return void
      */
-    public function notifyDataUpdate(int $displayId, int $widgetId): void;
+    public function notifyDataUpdate(Display $display, int $widgetId): void;
 }

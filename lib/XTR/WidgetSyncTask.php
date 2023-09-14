@@ -23,11 +23,13 @@
 namespace Xibo\XTR;
 
 use Carbon\Carbon;
+use Xibo\Entity\Display;
 use Xibo\Entity\Module;
 use Xibo\Entity\Widget;
 use Xibo\Event\WidgetDataRequestEvent;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Widget\Provider\WidgetProviderInterface;
 
 /**
@@ -135,7 +137,7 @@ class WidgetSyncTask implements TaskInterface
                                     $module,
                                     $widget,
                                     $widgetInterface,
-                                    intval($display['displayId'])
+                                    $display,
                                 );
                                 $this->linkDisplays($widget->widgetId, [$display], $mediaIds);
                             }
@@ -182,9 +184,9 @@ class WidgetSyncTask implements TaskInterface
         Module $module,
         Widget $widget,
         ?WidgetProviderInterface $widgetInterface,
-        ?int $displayId
+        ?Display $display
     ): array {
-        $this->getLogger()->debug('cache: ' . $widget->widgetId . ' for display: ' . ($displayId ?? 0));
+        $this->getLogger()->debug('cache: ' . $widget->widgetId . ' for display: ' . ($display?->displayId ?? 0));
 
         $mediaIds = [];
 
@@ -197,15 +199,14 @@ class WidgetSyncTask implements TaskInterface
         $cacheKey = $this->moduleFactory->determineCacheKey(
             $module,
             $widget,
-            $displayId ?? 0,
+            $display?->displayId ?? 0,
             $dataProvider,
             $widgetInterface
         );
 
         // Set our provider up for the displays
-        if ($displayId !== null) {
-            $display = $this->displayFactory->getById($displayId);
-            $dataProvider->setDisplayProperties($display->latitude, $display->longitude, $displayId);
+        if ($display !== null) {
+            $dataProvider->setDisplayProperties($display->latitude, $display->longitude, $display->displayId);
         } else {
             $dataProvider->setDisplayProperties(
                 $this->getConfig()->getSetting('DEFAULT_LAT'),
@@ -279,25 +280,37 @@ class WidgetSyncTask implements TaskInterface
         return $mediaIds;
     }
 
+    /**
+     * @param \Xibo\Entity\Widget $widget
+     * @return Display[]
+     */
     private function getDisplays(Widget $widget): array
     {
         $sql = '
-            SELECT DISTINCT `requiredfile`.`displayId`, `display`.`client_code` AS versionCode
+            SELECT DISTINCT `requiredfile`.`displayId`
               FROM `requiredfile`
-                INNER JOIN `display`
-                ON `requiredfile`.`displayId` = `display`.`displayId`
              WHERE itemId = :widgetId
                 AND type = \'D\'
         ';
 
-        return $this->store->select($sql, ['widgetId' => $widget->widgetId]);
+        $displayIds = [];
+        foreach ($this->store->select($sql, ['widgetId' => $widget->widgetId]) as $record) {
+            $displayId = intval($record['displayId']);
+            try {
+                $displayIds[] = $this->displayFactory->getById($displayId);
+            } catch (NotFoundException) {
+                $this->getLogger()->error('getDisplayIds: unknown displayId: ' . $displayId);
+            }
+        }
+
+        return $displayIds;
     }
 
     /**
      * Link an array of displays with an array of media
      * @param int $widgetId
-     * @param array $displays
-     * @param array $mediaIds
+     * @param Display[] $displays
+     * @param int[] $mediaIds
      * @return void
      */
     private function linkDisplays(int $widgetId, array $displays, array $mediaIds): void
@@ -316,14 +329,11 @@ class WidgetSyncTask implements TaskInterface
         // 2 if an existing row is updated and
         // 0 if the existing row is set to its current values.
         foreach ($displays as $display) {
-            $displayId = intval($display['displayId']);
-            $versionCode = intval($display['versionCode']);
-
             $shouldNotify = false;
             foreach ($mediaIds as $mediaId) {
                 try {
                     $affected = $this->store->update($sql, [
-                        'displayId' => $displayId,
+                        'displayId' => $display->displayId,
                         'mediaId' => $mediaId
                     ]);
 
@@ -332,7 +342,7 @@ class WidgetSyncTask implements TaskInterface
                     }
                 } catch (\PDOException) {
                     // We link what we can, and log any failures.
-                    $this->getLogger()->error('linkDisplays: unable to link displayId: ' . $displayId
+                    $this->getLogger()->error('linkDisplays: unable to link displayId: ' . $display->displayId
                         . ' to mediaId: ' . $mediaId . ', most likely the media has since gone');
                 }
             }
@@ -341,13 +351,16 @@ class WidgetSyncTask implements TaskInterface
             // ----------------------
             // Newer displays (>= v4) should clear their cache only if linked media has changed
             // Older displays (< v4) should check in immediately on change
-            if ($versionCode >= 400) {
+            if ($display->clientCode >= 400) {
                 if ($shouldNotify) {
-                    $this->displayFactory->getDisplayNotifyService()->collectLater()->notifyByDisplayId($displayId);
+                    $this->displayFactory->getDisplayNotifyService()->collectLater()
+                        ->notifyByDisplayId($display->displayId);
                 }
-                $this->displayFactory->getDisplayNotifyService()->notifyDataUpdate($displayId, $widgetId);
+                $this->displayFactory->getDisplayNotifyService()
+                    ->notifyDataUpdate($display, $widgetId);
             } else {
-                $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByDisplayId($displayId);
+                $this->displayFactory->getDisplayNotifyService()->collectNow()
+                    ->notifyByDisplayId($display->displayId);
             }
         }
     }
@@ -370,7 +383,7 @@ class WidgetSyncTask implements TaskInterface
                         OR `display`.`lastAccessed` > :lastAccessed
                 )
         ';
-        
+
         $this->store->update($sql, [
             'modifiedAt' => Carbon::now()->subDay()->format(DateFormatHelper::getSystemFormat()),
             'lastAccessed' => $cutOff->unix(),

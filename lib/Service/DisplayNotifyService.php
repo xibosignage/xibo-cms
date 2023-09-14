@@ -30,6 +30,7 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\DeadlockException;
 use Xibo\XMR\CollectNowAction;
+use Xibo\XMR\DataUpdateAction;
 
 /**
  * Class DisplayNotifyService
@@ -917,16 +918,20 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
     }
 
     /** @inheritdoc */
-    public function notifyDataUpdate(int $displayId, int $widgetId): void
+    public function notifyDataUpdate(Display $display, int $widgetId): void
     {
-        if (in_array('dataUpdate_' . $displayId . '_' . $widgetId, $this->keysProcessed)) {
-            $this->log->debug('notifyDataUpdate: Already processed displayId: ' . $displayId . ', widgetId: '
-                . $widgetId . ', skipping this time.');
+        if (in_array('dataUpdate_' . $display->displayId . '_' . $widgetId, $this->keysProcessed)) {
+            $this->log->debug('notifyDataUpdate: Already processed displayId: ' . $display->displayId
+                . ', widgetId: ' . $widgetId . ', skipping this time.');
             return;
         }
-        $this->log->debug('notifyDataUpdate: Process displayId: ' . $displayId . ', widgetId: ' . $widgetId);
+        $this->log->debug('notifyDataUpdate: Process displayId: ' . $display->displayId . ', widgetId: ' . $widgetId);
 
-        // TODO: queue a message for updating a specific data item.
-
+        try {
+            $this->playerActionService->sendAction($display, new DataUpdateAction($widgetId));
+        } catch (\Exception $e) {
+            $this->log->notice('notifyDataUpdate: displayId: ' . $display->displayId
+                . ', save would have triggered Player Action, but the action failed with message: ' . $e->getMessage());
+        }
     }
 }
