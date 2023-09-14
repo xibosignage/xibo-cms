@@ -169,6 +169,28 @@ class WidgetDataProviderCache
     }
 
     /**
+     * Get the cache date for this data provider and key
+     * @param DataProvider $dataProvider
+     * @param string $cacheKey
+     * @return Carbon|null
+     */
+    public function getCacheDate(DataProvider $dataProvider, string $cacheKey): ?Carbon
+    {
+        // Construct a key
+        $this->key = '/widget/'
+            . ($dataProvider->getDataType() ?: $dataProvider->getDataSource())
+            . '/' . md5($cacheKey);
+
+        $this->getLog()->debug('getCacheDate: key is ' . $this->key);
+
+        // Get the cache
+        $this->cache = $this->pool->getItem($this->key);
+        $cacheCreationDt = $this->cache->getCreation();
+
+        return $cacheCreationDt ? Carbon::instance($cacheCreationDt) : null;
+    }
+
+    /**
      * @param DataProviderInterface $dataProvider
      * @throws \Xibo\Support\Exception\GeneralException
      */

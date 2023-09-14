@@ -862,6 +862,9 @@ class Soap
                                     ->save();
                                 $newRfIds[] = $getResourceRf->rfId;
 
+                                // Get the module
+                                $dataModule = $modules[$widget->type];
+
                                 // Get the widget modified date
                                 // we will use the latter of this vs the layout modified date as the updated attribute
                                 // on required files
@@ -879,32 +882,62 @@ class Soap
                                 $resourceFile->setAttribute('layoutid', $layoutId);
                                 $resourceFile->setAttribute('regionid', $region->regionId);
                                 $resourceFile->setAttribute('mediaid', $widget->widgetId);
-                                $resourceFile->setAttribute('updated', $updatedDt->format('U'));
-                                $fileElements->appendChild($resourceFile);
-                            }
 
-                            // Does this also have an associated data file?
-                            // we add this for < XMDS v7 as well, because the record is used by the widget sync task
-                            // the player shouldn't receive it.
-                            if ($modules[$widget->type]->isDataProviderExpected()
-                                || $modules[$widget->type]->isWidgetProviderAvailable()
-                            ) {
-                                // A node specifically for the widget data.
-                                if ($isSupportsDataUrl) {
-                                    $dataFile = $requiredFilesXml->createElement('file');
-                                    $dataFile->setAttribute('type', 'widget');
-                                    $dataFile->setAttribute('id', $widget->widgetId);
-                                    $dataFile->setAttribute(
-                                        'updateInterval',
-                                        $widget->getOptionValue('updateInterval', 120)
-                                    );
-                                    $fileElements->appendChild($dataFile);
+                                // Does this also have an associated data file?
+                                // we add this for < XMDS v7 as well, because the record is used by the widget sync task
+                                // the player shouldn't receive it.
+                                if ($dataModule->isDataProviderExpected() || $dataModule->isWidgetProviderAvailable()) {
+                                    // A node specifically for the widget data.
+                                    if ($isSupportsDataUrl) {
+                                        // Newer player (v4 onward), add widget node for returning data
+                                        $dataFile = $requiredFilesXml->createElement('file');
+                                        $dataFile->setAttribute('type', 'widget');
+                                        $dataFile->setAttribute('id', $widget->widgetId);
+                                        $dataFile->setAttribute(
+                                            'updateInterval',
+                                            $widget->getOptionValue('updateInterval', 120)
+                                        );
+                                        $fileElements->appendChild($dataFile);
+                                    } else {
+                                        // Older player, needs to change the updated date on the resource node
+                                        // Has our widget been updated recently?
+                                        $dataProvider = $dataModule->createDataProvider($widget);
+                                        try {
+                                            $widgetDataProviderCache = $this->moduleFactory
+                                                ->createWidgetDataProviderCache();
+                                            $cacheKey = $this->moduleFactory->determineCacheKey(
+                                                $dataModule,
+                                                $widget,
+                                                $this->display->displayId,
+                                                $dataProvider,
+                                                $dataModule->getWidgetProviderOrNull()
+                                            );
+
+                                            // We do not pass a modifiedDt in here because we always expect to be cached
+                                            $cacheDt = $widgetDataProviderCache->getCacheDate($dataProvider, $cacheKey);
+                                            if ($cacheDt !== null) {
+                                                $updatedDt = ($cacheDt->greaterThan($updatedDt))
+                                                    ? $cacheDt
+                                                    : $updatedDt;
+                                            }
+                                        } catch (\Exception) {
+                                            $this->getLog()->error(
+                                                'doRequiredFiles: Failed to get data cache modified date for widgetId '
+                                                . $widget->widgetId
+                                            );
+                                        }
+                                    }
+
+                                    // Used by WidgetSync to understand when to keep the cache warm
+                                    $getDataRf = $this->requiredFileFactory
+                                        ->createForGetData($this->display->displayId, $widget->widgetId)
+                                        ->save();
+                                    $newRfIds[] = $getDataRf->rfId;
                                 }
 
-                                $getDataRf = $this->requiredFileFactory
-                                    ->createForGetData($this->display->displayId, $widget->widgetId)
-                                    ->save();
-                                $newRfIds[] = $getDataRf->rfId;
+                                // Append our resource node.
+                                $resourceFile->setAttribute('updated', $updatedDt->format('U'));
+                                $fileElements->appendChild($resourceFile);
                             }
                         }
 

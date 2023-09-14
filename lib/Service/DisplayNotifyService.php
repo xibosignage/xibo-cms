@@ -395,159 +395,17 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
     /** @inheritdoc */
     public function notifyByDataSetId($dataSetId)
     {
-        $this->log->debug('Notify by DataSetId ' . $dataSetId);
+        $this->log->debug('notifyByDataSetId: dataSetId: ' . $dataSetId);
 
-        if (in_array('dataSet_' . $dataSetId, $this->keysProcessed)) {
-            $this->log->debug('Already processed ' . $dataSetId . ' skipping this time.');
+        if (in_array('dataSet', $this->keysProcessed)) {
+            $this->log->debug('notifyByDataSetId: already processed.');
             return;
         }
 
-        $sql = '
-           SELECT DISTINCT display.displayId, 
-                schedule.eventId, 
-                schedule.fromDt, 
-                schedule.toDt, 
-                schedule.recurrence_type AS recurrenceType,
-                schedule.recurrence_detail AS recurrenceDetail,
-                schedule.recurrence_range AS recurrenceRange,
-                schedule.recurrenceRepeatsOn,
-                schedule.lastRecurrenceWatermark,
-                schedule.dayPartId
-             FROM `schedule`
-               INNER JOIN `lkscheduledisplaygroup`
-               ON `lkscheduledisplaygroup`.eventId = `schedule`.eventId
-               INNER JOIN `lkdgdg`
-               ON `lkdgdg`.parentId = `lkscheduledisplaygroup`.displayGroupId
-               INNER JOIN `lkdisplaydg`
-               ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
-               INNER JOIN `display`
-               ON lkdisplaydg.DisplayID = display.displayID
-               INNER JOIN `lkcampaignlayout`
-               ON `lkcampaignlayout`.campaignId = `schedule`.campaignId
-               INNER JOIN `region`
-               ON `region`.layoutId = `lkcampaignlayout`.layoutId
-               INNER JOIN `playlist`
-               ON `playlist`.regionId = `region`.regionId
-               INNER JOIN `widget`
-               ON `widget`.playlistId = `playlist`.playlistId
-               INNER JOIN `widgetoption`
-               ON `widgetoption`.widgetId = `widget`.widgetId
-                    AND `widgetoption`.type = \'attrib\'
-                    AND `widgetoption`.option = \'dataSetId\'
-                    AND `widgetoption`.value = :activeDataSetId
-            WHERE (
-               (schedule.FromDT < :toDt AND IFNULL(`schedule`.toDt, UNIX_TIMESTAMP()) > :fromDt) 
-                  OR `schedule`.recurrence_range >= :fromDt 
-                  OR (
-                    IFNULL(`schedule`.recurrence_range, 0) = 0 AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\' 
-                  )
-               )
-           UNION
-           SELECT DISTINCT display.displayId,
-                0 AS eventId, 
-                0 AS fromDt, 
-                0 AS toDt, 
-                NULL AS recurrenceType, 
-                NULL AS recurrenceDetail,
-                NULL AS recurrenceRange,
-                NULL AS recurrenceRepeatsOn,
-                NULL AS lastRecurrenceWatermark,
-                NULL AS dayPartId
-             FROM `display`
-               INNER JOIN `lkcampaignlayout`
-               ON `lkcampaignlayout`.LayoutID = `display`.DefaultLayoutID
-               INNER JOIN `region`
-               ON `region`.layoutId = `lkcampaignlayout`.layoutId
-               INNER JOIN `playlist`
-               ON `playlist`.regionId = `region`.regionId
-               INNER JOIN `widget`
-               ON `widget`.playlistId = `playlist`.playlistId
-               INNER JOIN `widgetoption`
-               ON `widgetoption`.widgetId = `widget`.widgetId
-                    AND `widgetoption`.type = \'attrib\'
-                    AND `widgetoption`.option = \'dataSetId\'
-                    AND `widgetoption`.value = :activeDataSetId2
-           UNION
-           SELECT DISTINCT `lkdisplaydg`.displayId,
-                0 AS eventId, 
-                0 AS fromDt, 
-                0 AS toDt, 
-                NULL AS recurrenceType, 
-                NULL AS recurrenceDetail,
-                NULL AS recurrenceRange,
-                NULL AS recurrenceRepeatsOn,
-                NULL AS lastRecurrenceWatermark,
-                NULL AS dayPartId
-              FROM `lklayoutdisplaygroup`
-                INNER JOIN `lkdgdg`
-                ON `lkdgdg`.parentId = `lklayoutdisplaygroup`.displayGroupId
-                INNER JOIN `lkdisplaydg`
-                ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
-                INNER JOIN `lkcampaignlayout`
-                ON `lkcampaignlayout`.layoutId = `lklayoutdisplaygroup`.layoutId
-                INNER JOIN `region`
-                ON `region`.layoutId = `lkcampaignlayout`.layoutId
-                INNER JOIN `playlist`
-               ON `playlist`.regionId = `region`.regionId
-                INNER JOIN `widget`
-                ON `widget`.playlistId = `playlist`.playlistId
-                INNER JOIN `widgetoption`
-                ON `widgetoption`.widgetId = `widget`.widgetId
-                    AND `widgetoption`.type = \'attrib\'
-                    AND `widgetoption`.option = \'dataSetId\'
-                    AND `widgetoption`.value = :activeDataSetId3
-        ';
-
-        $currentDate = Carbon::now();
-        $rfLookAhead = $currentDate->copy()->addSeconds($this->config->getSetting('REQUIRED_FILES_LOOKAHEAD'));
-
-        $params = [
-            'fromDt' => $currentDate->subHour()->format('U'),
-            'toDt' => $rfLookAhead->format('U'),
-            'activeDataSetId' => $dataSetId,
-            'activeDataSetId2' => $dataSetId,
-            'activeDataSetId3' => $dataSetId
-        ];
-
-        foreach ($this->store->select($sql, $params) as $row) {
-            // Don't process if the displayId is already in the collection (there is little point in running the
-            // extra query)
-            if (in_array($row['displayId'], $this->displayIds)) {
-                $this->log->debug('displayId ' . $row['displayId'] . ' already in collection, skipping.');
-                continue;
-            }
-
-            // Is this schedule active?
-            if ($row['eventId'] != 0) {
-                $scheduleEvents = $this->scheduleFactory
-                    ->createEmpty()
-                    ->hydrate($row)
-                    ->getEvents($currentDate, $rfLookAhead);
-
-                if (count($scheduleEvents) <= 0) {
-                    $this->log->debug(
-                        'Skipping eventId ' . $row['eventId'] .
-                        ' because it doesnt have any active events in the window'
-                    );
-                    continue;
-                }
-            }
-
-            $this->log->debug(
-                'DataSet[' . $dataSetId .'] change caused notify on displayId[' .
-                $row['displayId'] . ']'
-            );
-
-            $this->displayIds[] = $row['displayId'];
-
-            if ($this->collectRequired) {
-                $this->displayIdsRequiringActions[] = $row['displayId'];
-            }
-        }
-
-        $this->keysProcessed[] = 'dataSet_' . $dataSetId;
-
-        $this->log->debug('Finished notify for dataSetId ' . $dataSetId);
+        // Set the Sync task to runNow
+        $this->store->update('UPDATE `task` SET `runNow` = 1 WHERE `class` LIKE :taskClassLike', [
+            'taskClassLike' => '%WidgetSyncTask%',
+        ]);
     }
 
     /** @inheritdoc */
@@ -1056,5 +914,19 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
         $this->keysProcessed[] = 'menuBoard_' . $menuId;
 
         $this->log->debug('Finished notify for Menu Board ID ' . $menuId);
+    }
+
+    /** @inheritdoc */
+    public function notifyDataUpdate(int $displayId, int $widgetId): void
+    {
+        if (in_array('dataUpdate_' . $displayId . '_' . $widgetId, $this->keysProcessed)) {
+            $this->log->debug('notifyDataUpdate: Already processed displayId: ' . $displayId . ', widgetId: '
+                . $widgetId . ', skipping this time.');
+            return;
+        }
+        $this->log->debug('notifyDataUpdate: Process displayId: ' . $displayId . ', widgetId: ' . $widgetId);
+
+        // TODO: queue a message for updating a specific data item.
+
     }
 }

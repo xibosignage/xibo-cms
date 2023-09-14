@@ -137,14 +137,14 @@ class WidgetSyncTask implements TaskInterface
                                     $widgetInterface,
                                     intval($display['displayId'])
                                 );
-                                $this->linkDisplays([$display], $mediaIds);
+                                $this->linkDisplays($widget->widgetId, [$display], $mediaIds);
                             }
                         } else {
                             $this->getLogger()->debug('widgetSyncTask: cache is not display specific');
 
                             // Just a single run will do it.
                             $mediaIds = $this->cache($module, $widget, $widgetInterface, null);
-                            $this->linkDisplays($this->getDisplays($widget), $mediaIds);
+                            $this->linkDisplays($widget->widgetId, $this->getDisplays($widget), $mediaIds);
                         }
 
                         // Record end time and aggregate for final total
@@ -282,8 +282,10 @@ class WidgetSyncTask implements TaskInterface
     private function getDisplays(Widget $widget): array
     {
         $sql = '
-            SELECT DISTINCT displayId
+            SELECT DISTINCT `requiredfile`.`displayId`, `display`.`client_code` AS versionCode
               FROM `requiredfile`
+                INNER JOIN `display`
+                ON `requiredfile`.`displayId` = `display`.`displayId`
              WHERE itemId = :widgetId
                 AND type = \'D\'
         ';
@@ -293,11 +295,12 @@ class WidgetSyncTask implements TaskInterface
 
     /**
      * Link an array of displays with an array of media
+     * @param int $widgetId
      * @param array $displays
      * @param array $mediaIds
      * @return void
      */
-    private function linkDisplays(array $displays, array $mediaIds): void
+    private function linkDisplays(int $widgetId, array $displays, array $mediaIds): void
     {
         $this->getLogger()->debug('linkDisplays: ' . count($displays) . ' displays, ' . count($mediaIds) . ' media');
 
@@ -314,6 +317,7 @@ class WidgetSyncTask implements TaskInterface
         // 0 if the existing row is set to its current values.
         foreach ($displays as $display) {
             $displayId = intval($display['displayId']);
+            $versionCode = intval($display['versionCode']);
 
             $shouldNotify = false;
             foreach ($mediaIds as $mediaId) {
@@ -333,8 +337,17 @@ class WidgetSyncTask implements TaskInterface
                 }
             }
 
-            if ($shouldNotify) {
-                $this->displayFactory->getDisplayNotifyService()->collectLater()->notifyByDisplayId($displayId);
+            // When should we notify?
+            // ----------------------
+            // Newer displays (>= v4) should clear their cache only if linked media has changed
+            // Older displays (< v4) should check in immediately on change
+            if ($versionCode >= 400) {
+                if ($shouldNotify) {
+                    $this->displayFactory->getDisplayNotifyService()->collectLater()->notifyByDisplayId($displayId);
+                }
+                $this->displayFactory->getDisplayNotifyService()->notifyDataUpdate($displayId, $widgetId);
+            } else {
+                $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByDisplayId($displayId);
             }
         }
     }

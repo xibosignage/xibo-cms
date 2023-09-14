@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -24,7 +24,6 @@
 namespace Xibo\Service;
 
 use Stash\Interfaces\PoolInterface;
-use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -108,4 +107,12 @@ interface DisplayNotifyServiceInterface
      * @param $menuId
      */
     public function notifyByMenuBoardId($menuId);
+
+    /**
+     * Notify that data has been updated for this display
+     * @param int $displayId
+     * @param int $widgetId
+     * @return void
+     */
+    public function notifyDataUpdate(int $displayId, int $widgetId): void;
 }
