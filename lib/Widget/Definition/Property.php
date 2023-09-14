@@ -436,7 +436,7 @@ class Property implements \JsonSerializable
      */
     public function applyFilters(): void
     {
-        if ($this->type === 'input' && $this->variant === 'uri') {
+        if ($this->type === 'text' && $this->variant === 'uri') {
             $this->value = urlencode($this->value);
         }
     }

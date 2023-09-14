@@ -498,15 +498,30 @@ $(function() {
         const hbsTemplate = hbs(
           Object.assign(data, globalOptions),
         );
+        let topPos = data.top;
+        let leftPos = data.left;
+
+        if (data.group) {
+          if (data.group.isMarquee) {
+            topPos = (data.top - data.group.top);
+            leftPos = (data.left - data.group.left);
+          } else {
+            if (data.top >= data.group.top) {
+              topPos = (data.top - data.group.top);
+            }
+            if (data.left >= data.group.left) {
+              leftPos = (data.left - data.group.left);
+            }
+          }
+        }
+
         let cssStyles = {
           height: data.height,
           width: data.width,
           position: 'absolute',
-          top: (data.group && data.group.isMarquee) ?
-            (data.top - data.group.top) : data.top,
-          left: (data.group && data.group.isMarquee) ?
-            (data.left - data.group.left) : data.left,
-          'z-index': data.layer,
+          top: topPos,
+          left: leftPos,
+          zIndex: data.layer,
           transform: `rotate(${data?.rotation || 0}deg)`,
         };
 
@@ -516,7 +531,7 @@ $(function() {
             position: 'absolute',
             top: data.top,
             left: data.left,
-            'z-index': data.layer,
+            zIndex: data.layer,
           };
         }
 
@@ -748,16 +763,21 @@ $(function() {
                         data-group-key="${dataItemKey}"></div>`);
             const groupKey = '.' + groupId +
                 '--item[data-group-key=%key%]';
+            let groupItemStyles = {
+              width: groupObj.width,
+              height: groupObj.height,
+            };
 
             if (groupObj && groupObj.isMarquee) {
-              $groupContentItem.css({
+              groupItemStyles = {
+                ...groupItemStyles,
                 position: 'relative',
                 display: 'flex',
                 flexShrink: '0',
-                width: groupObj.width,
-                height: groupObj.height,
-              });
+              };
             }
+
+            $groupContentItem.css(groupItemStyles);
 
             if ($groupContent &&
               $groupContent.find(
@@ -1184,6 +1204,14 @@ $(function() {
                         });
 
                         $grpItem.wrapInner($scroller.prop('outerHTML'));
+                      } else {
+                        $grpItem.css({
+                          position: 'absolute',
+                          top: slotObj.top,
+                          left: slotObj.left,
+                          width: slotObj.width,
+                          height: slotObj.height,
+                        });
                       }
 
                       $content.append($grpItem);
