@@ -1135,7 +1135,6 @@ $(function() {
                   widget.isRepeatData,
                 );
 
-                const itemGroupProps = itemsGroup.slice(0, 1)[0];
                 $.each(Object.keys(standaloneData[keyValue]),
                   function(slotIndex, slotKey) {
                     const slotObj =
@@ -1191,7 +1190,7 @@ $(function() {
 
                       $grpItem.xiboElementsRender(
                         {
-                          ...itemGroupProps,
+                          ...slotObj,
                           parentId: grpCln,
                           itemsPerPage: maxSlot,
                           numItems: dataItems.length,

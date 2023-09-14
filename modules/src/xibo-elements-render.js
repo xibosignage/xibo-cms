@@ -157,6 +157,13 @@ jQuery.fn.extend({
       // Make sure the speed is something sensible
       options.speed = (options.speed === 0) ?
         1 : options.speed * (options.height / 25);
+
+      if ($this.find('.scroll').length > 0) {
+        $this.find('.scroll').css({
+          flexDirection: 'column',
+          height: 'auto',
+        });
+      }
     }
 
     if (marquee) {
