@@ -886,7 +886,7 @@ class Soap
                                 // Does this also have an associated data file?
                                 // we add this for < XMDS v7 as well, because the record is used by the widget sync task
                                 // the player shouldn't receive it.
-                                if ($dataModule->isDataProviderExpected() || $dataModule->isWidgetProviderAvailable()) {
+                                if ($dataModule->isDataProviderExpected()) {
                                     // A node specifically for the widget data.
                                     if ($isSupportsDataUrl) {
                                         // Newer player (v4 onward), add widget node for returning data
@@ -2339,7 +2339,7 @@ class Soap
             if (!$isSupportsDataUrl) {
                 foreach ($widgets as $widget) {
                     $dataModule = $this->moduleFactory->getByType($widget->type);
-                    if ($dataModule->isDataProviderExpected() || $dataModule->isWidgetProviderAvailable()) {
+                    if ($dataModule->isDataProviderExpected()) {
                         // We only ever return cache.
                         $dataProvider = $module->createDataProvider($widget);
 

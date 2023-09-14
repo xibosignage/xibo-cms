@@ -1120,7 +1120,8 @@ class Widget extends Base
         $module = $this->moduleFactory->getByType($widget->type);
 
         // This is always a preview
-        if (!$module->isDataProviderExpected() && !$module->isWidgetProviderAvailable()) {
+        // We only return data if a data provider is expected.
+        if (!$module->isDataProviderExpected()) {
             return $response->withJson([]);
         }
 

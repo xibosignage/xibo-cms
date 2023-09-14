@@ -108,7 +108,7 @@ class WidgetSyncTask implements TaskInterface
                     // data is cached ahead of time here.
                     // This also refreshes any library or external images referenced by the data so that they aren't
                     // considered for removal.
-                    if ($module->isDataProviderExpected() || $module->isWidgetProviderAvailable()) {
+                    if ($module->isDataProviderExpected()) {
                         $this->getLogger()->debug('widgetSyncTask: data provider expected.');
 
                         // Record start time
