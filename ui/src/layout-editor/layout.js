@@ -609,6 +609,7 @@ Layout.prototype.addObject = function(
  * @param {number} objectId - object id
  * @param {object =} [options] - Delete submit params/options
  * @param {boolean =} [showLoadingScreen] - Show loading screen for the request
+ * @param {boolean =} [deselectObject] - Deselect object before deleting
  * @return {object} - Manager change
  * @return {Promise} - Promise object
  */
@@ -617,12 +618,10 @@ Layout.prototype.deleteObject = function(
   objectId,
   options = null,
   showLoadingScreen = true,
+  deselectObject = true,
 ) {
   (showLoadingScreen) &&
     lD.common.showLoadingScreen('deleteObject');
-
-  (options.deselectObject == undefined) &&
-    (options.deselectObject = true);
 
   // Save all changes first
   return lD.historyManager.saveAllChanges().then((res) => {
@@ -632,7 +631,7 @@ Layout.prototype.deleteObject = function(
       objectId,
     ).then((_res) => {
       // Unselect selected object before deleting
-      (options.deselectObject) &&
+      (deselectObject) &&
         lD.selectObject();
 
       (showLoadingScreen) &&
