@@ -136,6 +136,7 @@ jQuery.fn.extend({
         ((options.effect === 'marqueeLeft') ? 'left' : 'right');
 
       // Make sure the speed is something sensible
+      // This speed calculation gives as 80 pixels per second
       options.speed = (options.speed === 0) ? 1 : options.speed / 25 * 1000;
 
       // Add gap between
@@ -155,6 +156,7 @@ jQuery.fn.extend({
       options.direction = ((options.effect === 'marqueeUp') ? 'up' : 'down');
 
       // Make sure the speed is something sensible
+      // This speed calculation gives as 80 pixels per second
       options.speed = (options.speed === 0) ?
         1 : options.speed / 25 * 1000;
 
