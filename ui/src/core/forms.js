@@ -1063,6 +1063,7 @@ window.forms = {
             url: urlsForApi.playlist.get.url +
               '?notPlaylistId=' + $form.data('playlistId'),
             dataType: 'json',
+            delay: 250,
             data: function(params) {
               const query = {
                 start: 0,

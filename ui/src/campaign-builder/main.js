@@ -137,6 +137,7 @@ window.cB = {
       ajax: {
         url: $selector.data('searchUrl'),
         dataType: 'json',
+        delay: 250,
         data: function(params) {
           const query = {
             isDisplaySpecific: -1,

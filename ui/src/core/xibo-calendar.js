@@ -1484,6 +1484,7 @@ var setupSelectForSchedule = function (dialog) {
         ajax: {
             url: $campaignSelect.data('searchUrl'),
             dataType: 'json',
+            delay: 250,
             data: function(params) {
                 var query = {
                     isLayoutSpecific: $campaignSelect.data('searchIsLayoutSpecific'),
@@ -1547,6 +1548,7 @@ var setupSelectForSchedule = function (dialog) {
         ajax: {
             url: $displaySelect.data('searchUrl'),
             dataType: 'json',
+            delay: 250,
             dropdownParent: $(dialog),
             data: function(params) {
                 var query = {
