@@ -196,6 +196,11 @@
         <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <div class="col-sm-10">
             <select class="form-control" {% if type == "dropdownmulti" %}multiple{% endif %} name="{{ name }}" id="{{ name }}" {{ callBack }} {% if readonly %}readonly{% endif %}
+                {% if type == "dropdownmulti" %}
+                    data-allow-clear="true"
+                    data-placeholder--id=null
+                    data-placeholder--value=""
+                {% endif %}
                 {% if dataAttributes|length > 0 %}
                     {% for attribute in dataAttributes %}
                         {{ attribute.name }}="{{ attribute.value }}"

@@ -195,6 +195,7 @@ Topbar.prototype.setupJumpList = function(jumpListContainer) {
     ajax: {
       url: jumpList.data().url,
       dataType: 'json',
+      delay: 250,
       data: function(params) {
         const query = {
           layout: params.term,
@@ -253,7 +254,6 @@ Topbar.prototype.setupJumpList = function(jumpListContainer) {
           },
         };
       },
-      delay: 250,
     },
   });
 

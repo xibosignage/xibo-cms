@@ -496,6 +496,7 @@ const formHelpers = function() {
       ajax: {
         url: selector.data().searchUrl,
         dataType: 'json',
+        delay: 250,
         data: function(params) {
           const queryText = params.term;
           const queryTags = '';
@@ -563,7 +564,6 @@ const formHelpers = function() {
             },
           };
         },
-        delay: 250,
       },
       templateResult: function(state) {
         if (!state.id) {
