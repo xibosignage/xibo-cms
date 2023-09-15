@@ -237,7 +237,7 @@ class WidgetHtmlRenderer
             }
 
             // Render
-            $output = $this->render($region, $widgets, $moduleTemplates);
+            $output = $this->render($widget->widgetId, $region, $widgets, $moduleTemplates);
 
             // Cache to the library
             file_put_contents($cachePath, $output);
@@ -382,12 +382,14 @@ class WidgetHtmlRenderer
      * @throws \Xibo\Support\Exception\NotFoundException
      */
     private function render(
+        int $widgetId,
         Region $region,
         array $widgets,
         array $moduleTemplates
     ): string {
         // Build up some data for twig
         $twig = [];
+        $twig['widgetId'] = $widgetId;
         $twig['hbs'] = [];
         $twig['twig'] = [];
         $twig['style'] = [];
