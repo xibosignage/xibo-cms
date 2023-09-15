@@ -125,7 +125,7 @@ class Soap7 extends Soap6
 
             // We just want the data.
             $dataModule = $this->moduleFactory->getByType($widget->type);
-            if ($dataModule->isDataProviderExpected() || $dataModule->isWidgetProviderAvailable()) {
+            if ($dataModule->isDataProviderExpected()) {
                 // We only ever return cache.
                 $dataProvider = $module->createDataProvider($widget);
 

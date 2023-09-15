@@ -479,7 +479,7 @@ class WidgetHtmlRenderer
             ];
 
             // Should we expect data?
-            if ($module->isDataProviderExpected() || $module->isWidgetProviderAvailable()) {
+            if ($module->isDataProviderExpected()) {
                 $widgetData['url'] = '[[dataUrl=' . $widget->widgetId . ']]';
                 $widgetData['data'] = '[[data=' . $widget->widgetId . ']]';
             } else {
