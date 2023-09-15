@@ -348,6 +348,14 @@ class Widget extends Base
             $template->decorateProperties($widget);
         }
 
+        $widgetName = $widget->getOptionValue('name', null);
+
+        if ($media !== null) {
+            $widgetName = $media->name;
+        } else if ($widgetName === null) {
+            $widgetName = $module->name;
+        }
+
         // Pass to view
         $this->getState()->template = '';
         $this->getState()->setData([
@@ -356,7 +364,7 @@ class Widget extends Base
             'media' => $media,
             'mediaEditable' => $media === null ? false : $this->getUser()->checkEditable($media),
             'commonProperties' => [
-                'name' => $widget->getOptionValue('name', null),
+                'name' => $widgetName,
                 'enableStat' => $widget->getOptionValue('enableStat', null),
                 'isRepeatData' => $widget->getOptionValue('isRepeatData', null),
                 'duration' => $widget->duration,
@@ -457,12 +465,30 @@ class Widget extends Base
         }
 
         $module = $this->moduleFactory->getByType($widget->type);
+        $widgetName = $widget->getOptionValue('name', $module->name);
+
+        $media = null;
+        if ($module->regionSpecific == 0) {
+            try {
+                $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
+            } catch (NotFoundException $e) {
+                $this->getLog()->error('Library Widget does not have a Media Id. widgetId: ' . $id);
+            }
+        }
 
         // Handle common parameters.
         $widget->useDuration = $params->getCheckbox('useDuration');
         $widget->duration = $params->getInt('duration', ['default' => $module->defaultDuration]);
         $widget->setOptionValue('name', 'attrib', $params->getString('name'));
         $widget->setOptionValue('enableStat', 'attrib', $params->getString('enableStat'));
+
+        if ($params->getString('name') === '') {
+            if ($media !== null) {
+                $widgetName = $media->name;
+            }
+
+            $widget->setOptionValue('name', 'attrib', $widgetName);
+        }
 
         // Handle special common properties for widgets with data
         if ($module->isDataProviderExpected()) {
