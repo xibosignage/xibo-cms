@@ -24,7 +24,9 @@ const Common = require('../editor-core/common.js');
 
 // Check condition
 const checkCondition = function(type, value, targetValue, isTopLevel = true) {
-  if (type === 'eq' && targetValue == value) {
+  if (type === 'ne' && value === '') {
+    return true;
+  } else if (type === 'eq' && targetValue == value) {
     return true;
   } else if (type === 'neq' && targetValue != value) {
     return true;
@@ -2117,13 +2119,13 @@ window.forms = {
             return $conditionTargetElem.length !== 0;
           }
 
-          if (test.conditions && targetId) {
+          if (test.conditions.length > 0 && targetId) {
             for (let i = 0; i < test.conditions.length; i++) {
               const conditionField = test.conditions[i].field;
               const $conditionTargetElem = $(container)
                 .find(`[name="${conditionField}"]`);
 
-              if ($conditionTargetElem.length == 0) {
+              if ($conditionTargetElem.length === 0) {
                 return false;
               }
             }
@@ -2150,11 +2152,12 @@ window.forms = {
 
               // Get condition target value based on type
               const conditionTargetValue =
-                ($conditionTarget.attr('type') == 'checkbox') ?
+                ($conditionTarget.length !== 0 &&
+                  $conditionTarget.attr('type') === 'checkbox') ?
                   $conditionTarget.is(':checked') :
                   $conditionTarget.val();
 
-              newTestResult = checkCondition(
+              const newTestResult = checkCondition(
                 condition.type,
                 condition.value,
                 conditionTargetValue,
@@ -2194,8 +2197,10 @@ window.forms = {
             }
           }
 
-          // Check test when any of the targets change
-          $(container).find(testTargets).on('change', checkTest);
+          if (String(testTargets).length > 0) {
+            // Check test when any of the targets change
+            $(container).find(testTargets).on('change', checkTest);
+          }
 
           // Run on first load
           checkTest();
@@ -2205,7 +2210,7 @@ window.forms = {
         if (Array.isArray(visibility)) {
           for (let i = 0; i < visibility.length; i++) {
             const test = visibility[i];
-            isConditionTargetExists(test) && buildTest(test, $(el));
+            buildTest(test, $(el));
           }
         } else {
           // Otherwise, process the single condition
