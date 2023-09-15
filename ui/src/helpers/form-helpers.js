@@ -2058,16 +2058,6 @@ const formHelpers = function() {
       $buttonContainer.append($detachButton);
       $buttonContainer.append($attachButton);
     });
-
-    // Hide/Show back button depending on the type of widget
-    if (
-      container.find('form').data('formStep') != undefined &&
-      container.find('form').data('formStep') > 1
-    ) {
-      container.find('button#back').removeClass('d-none');
-    } else {
-      container.find('button#back').addClass('d-none');
-    }
   };
 
   /**
@@ -2097,16 +2087,6 @@ const formHelpers = function() {
     switch (actionType) {
       case 'save':
         this.widgetFormEditSubmit(container, widgetType);
-        break;
-
-      case 'back':
-        // Get current step
-        const currentStep = container.find('form').data('formStep');
-        this.widgetFormRender(
-          options.sourceObj,
-          options.data,
-          (currentStep - 1),
-        );
         break;
 
       case 'close':

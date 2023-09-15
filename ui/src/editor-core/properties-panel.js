@@ -379,18 +379,6 @@ PropertiesPanel.prototype.saveElement = function(
 };
 
 /**
- * Go to the previous form step
- * @param {object} element - the element that the form relates to
- */
-PropertiesPanel.prototype.back = function(element) {
-  // Get current step
-  const currentStep = this.DOMObject.find('form').data('formStep');
-
-  // Render previous form
-  this.render(element, currentStep - 1);
-};
-
-/**
  * Delete selected element
  * @param {object} element - the element that the form relates to
  */
@@ -401,14 +389,12 @@ PropertiesPanel.prototype.delete = function(element) {
 /**
  * Render panel
  * @param {Object} target - the element object to be rendered
- * @param {number} step - the step to render
  * @param {boolean} actionEditMode - render while editing an action
  * @param {boolean} openActionTab - open action tab after rendering
  * @return {boolean} - result status
  */
 PropertiesPanel.prototype.render = function(
   target,
-  step,
   actionEditMode = false,
   openActionTab = false,
 ) {
@@ -491,11 +477,6 @@ PropertiesPanel.prototype.render = function(
   // Build request path
   let requestPath = urlsForApi[target.type].getForm.url;
   requestPath = requestPath.replace(':id', target[target.type + 'Id']);
-
-  // If we have a step to render, append it to the request path
-  if (step !== undefined && typeof step == 'number') {
-    requestPath += '?step=' + step;
-  }
 
   // If there was still a render request, abort it
   if (this.renderRequest != undefined) {
@@ -1431,21 +1412,21 @@ PropertiesPanel.prototype.initFields = function(
         }
       });
 
-    // Handle back button based on form page
-    if (
-      self.DOMObject.find('form').data('formStep') != undefined &&
-      self.DOMObject.find('form').data('formStep') > 1
-    ) {
-      self.DOMObject.find('button#back').removeClass('d-none');
-    } else {
-      self.DOMObject.find('button#back').addClass('d-none');
-    }
-
-    // Handle delete button
+    // Create delete button
     if (actionEditMode) {
-      self.DOMObject.find('button#delete').removeClass('d-none');
+      const deleteButton =
+        $('<button type="button" class="delete btn btn-danger">')
+          .html(editorsTrans.delete);
+
+      deleteButton.on('click', function(e) {
+        e.preventDefault();
+        app.deleteSelectedObject();
+      });
+
+      // Add to button container
+      self.DOMObject.find('.button-container').prepend(deleteButton);
     } else {
-      self.DOMObject.find('button#delete').addClass('d-none');
+      self.DOMObject.find('.button-container button#delete').remove();
     }
 
     // Render action tab
@@ -1796,7 +1777,9 @@ PropertiesPanel.prototype.addActionToContainer = function(
       objType = 'layout';
     }
 
-    return app.getObjectByTypeAndId(objType, objId, auxObjId)[nameIndex];
+    return (app.getObjectByTypeAndId(objType, objId, auxObjId)) ?
+      app.getObjectByTypeAndId(objType, objId, auxObjId)[nameIndex] :
+      '';
   };
 
   // Check if current element is trigger or target for this action

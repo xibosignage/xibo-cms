@@ -621,6 +621,9 @@ Layout.prototype.deleteObject = function(
   (showLoadingScreen) &&
     lD.common.showLoadingScreen('deleteObject');
 
+  (options.deselectObject == undefined) &&
+    (options.deselectObject = true);
+
   // Save all changes first
   return lD.historyManager.saveAllChanges().then((res) => {
   // Remove changes from the history array
@@ -628,8 +631,9 @@ Layout.prototype.deleteObject = function(
       objectType,
       objectId,
     ).then((_res) => {
-    // Unselect selected object before deleting
-      lD.selectObject();
+      // Unselect selected object before deleting
+      (options.deselectObject) &&
+        lD.selectObject();
 
       (showLoadingScreen) &&
         lD.common.hideLoadingScreen('deleteObject');
