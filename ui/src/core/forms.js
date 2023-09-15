@@ -1880,7 +1880,8 @@ window.forms = {
 
       // Add the options
       $.each(effects, function(_index, element) {
-        if (effectsType !== 'all' && element.group !== effectsType) {
+        if ((effectsType !== 'all' && element.group !== effectsType) ||
+          element.effect === 'none') {
           return;
         }
         $el.append(

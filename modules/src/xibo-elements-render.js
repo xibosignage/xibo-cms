@@ -136,7 +136,8 @@ jQuery.fn.extend({
         ((options.effect === 'marqueeLeft') ? 'left' : 'right');
 
       // Make sure the speed is something sensible
-      options.speed = (options.speed === 0) ? 1 : options.speed;
+      // This speed calculation gives as 80 pixels per second
+      options.speed = (options.speed === 0) ? 1 : options.speed / 25 * 1000;
 
       // Add gap between
       if ($this.find('.scroll').length > 0) {
@@ -155,8 +156,16 @@ jQuery.fn.extend({
       options.direction = ((options.effect === 'marqueeUp') ? 'up' : 'down');
 
       // Make sure the speed is something sensible
+      // This speed calculation gives as 80 pixels per second
       options.speed = (options.speed === 0) ?
-        1 : options.speed * (options.height / 25);
+        1 : options.speed / 25 * 1000;
+
+      if ($this.find('.scroll').length > 0) {
+        $this.find('.scroll').css({
+          flexDirection: 'column',
+          height: 'auto',
+        });
+      }
     }
 
     if (marquee) {
@@ -167,7 +176,7 @@ jQuery.fn.extend({
         // our new plugin speed is pixels per second
         $this.attr({
           'data-is-legacy': false,
-          'data-speed': options.speed / 25 * 1000,
+          'data-speed': options.speed,
           'data-direction': options.direction,
           'data-duplicated': options.seamless,
           'data-gap': options.gap,
