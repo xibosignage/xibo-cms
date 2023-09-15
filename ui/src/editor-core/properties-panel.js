@@ -206,7 +206,7 @@ PropertiesPanel.prototype.save = function(
 
         // If we're saving a widget, reload region on the viewer
         if (
-          !savingElement &&
+          !(savingElement || savingElementGroup) &&
           target.type === 'widget' &&
           app.viewer
         ) {
