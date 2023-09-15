@@ -1191,10 +1191,9 @@ lD.deleteObject = function(
     lD.layout.deleteObject(
       objectType,
       objectId,
-      {
-        // Don't deselect object if it's a drawer widget
-        deselectObject: !drawerWidget,
-      },
+      null,
+      true,
+      !drawerWidget, // don't deselect Object if it's a drawer widget
     ).then((_res) => {
       if (drawerWidget) {
         // Detach action form
