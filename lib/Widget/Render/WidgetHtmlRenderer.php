@@ -585,6 +585,9 @@ class WidgetHtmlRenderer
 
                 // Join together the template properties for this element, and the element properties
                 foreach ($widgetElements as $widgetIndex => $widgetElement) {
+                    // Assert the widgetId
+                    $widgetElements[$widgetIndex]['widgetId'] = $widget->widgetId;
+
                     foreach (($widgetElement['elements'] ?? []) as $elementIndex => $element) {
                         $this->getLog()->debug('render: elements: processing widget index ' . $widgetIndex
                             . ', element index ' . $elementIndex . ' with id ' . $element['id']);

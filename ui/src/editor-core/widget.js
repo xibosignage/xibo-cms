@@ -741,7 +741,6 @@ Widget.prototype.saveElements = function(
     dataType: 'json',
     data: JSON.stringify([
       {
-        widgetId: widgetId,
         elements: elementsToSave,
       },
     ]),
