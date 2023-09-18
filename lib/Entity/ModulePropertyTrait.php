@@ -166,6 +166,22 @@ trait ModulePropertyTrait
     }
 
     /**
+     * Gets the default value for a property
+     * @param string $id
+     * @return mixed
+     */
+    public function getPropertyDefault(string $id): mixed
+    {
+        foreach ($this->properties as $property) {
+            if ($property->id === $id) {
+                return $property->default;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * @throws \Xibo\Support\Exception\InvalidArgumentException|\Xibo\Support\Exception\ValueTooLargeException
      */
     public function validateProperties(string $stage, $additionalProperties = []): void

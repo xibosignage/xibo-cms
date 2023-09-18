@@ -897,7 +897,10 @@ class Soap
                                     $dataFile->setAttribute('id', $widget->widgetId);
                                     $dataFile->setAttribute(
                                         'updateInterval',
-                                        $widget->getOptionValue('updateInterval', 120)
+                                        $widget->getOptionValue(
+                                            'updateInterval',
+                                            $dataModule->getPropertyDefault('updateInterval') ?? 120,
+                                        )
                                     );
                                     $fileElements->appendChild($dataFile);
                                 } else if ($isShouldSendHtml) {
