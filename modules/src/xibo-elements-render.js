@@ -41,7 +41,7 @@ jQuery.fn.extend({
       parentId: '',
       layer: 0,
       seamless: true,
-      gap: 20,
+      gap: 50,
     };
     let isGroup = false;
     const $content = $('#content');
@@ -90,14 +90,12 @@ jQuery.fn.extend({
       $this.prepend(elementWrapper);
     }
 
-    const cycleElement = isGroup ?
-      `.${options.id}` :
-      `.element-wrapper--${options.parentId}`;
+    const cycleElement = `.${options.id}`;
 
     if (isMarquee && isUseNewMarquee) {
       $this.marquee('destroy');
-    } else if ($content.find(cycleElement).length) {
-      $(cycleElement).find('.anim-cycle').cycle('destroy');
+    } else if ($content.find(cycleElement + '.cycle-slideshow').length) {
+      $(cycleElement + '.cycle-slideshow').cycle('destroy');
     }
 
     let marquee = false;
@@ -190,6 +188,14 @@ jQuery.fn.extend({
           height: options.height,
           width: options.width,
         }).overflowMarquee().addClass('animating');
+      }
+
+      // Correct for up / down
+      if (
+        options.effect === 'marqueeUp' ||
+        options.effect === 'marqueeDown'
+      ) {
+        $this.find('.js-marquee').css({marginBottom: 0});
       }
     }
 

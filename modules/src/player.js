@@ -528,10 +528,22 @@ $(function() {
         if (isStatic) {
           cssStyles = {
             ...cssStyles,
-            position: 'absolute',
             top: data.top,
             left: data.left,
             zIndex: data.layer,
+          };
+        }
+
+        if (!data.isGroup && data.dataOverride === 'text' &&
+          data.group.isMarquee &&
+          (data.effect === 'marqueeLeft' || data.effect === 'marqueeRight')) {
+          cssStyles = {
+            ...cssStyles,
+            position: 'static',
+            top: 'unset',
+            left: 'unset',
+            width: 'auto',
+            display: 'inline-block',
           };
         }
 
@@ -699,6 +711,7 @@ $(function() {
             ) + 1;
         };
         const renderDataItem = function(
+          isGroup,
           dataItemKey,
           dataItem,
           item,
@@ -782,20 +795,41 @@ $(function() {
             if ($groupContent &&
               $groupContent.find(
                 groupKey.replace('%key%', dataItemKey),
-              ).length === 0
-            ) {
+              ).length === 0) {
               $groupContent.append($groupContentItem);
             }
 
-            const $itemContainer = $groupContent.find(
-              groupKey.replace('%key%', dataItemKey),
-            );
+            let isSingleElement = false;
+
+            if (!isGroup && item.dataOverride === 'text' &&
+              groupObj.isMarquee) {
+              if (item.effect === 'marqueeLeft' ||
+                  item.effect === 'marqueeRight') {
+                if ($groupContent.find(
+                  groupKey.replace('%key%', dataItemKey),
+                ).length === 1) {
+                  $groupContent.find(
+                    groupKey.replace('%key%', dataItemKey),
+                  ).remove();
+                }
+                isSingleElement = true;
+              } else if (item.effect === 'marqueeDown' ||
+                item.effect === 'marqueeUp') {
+                isSingleElement = false;
+              }
+            }
+
+            const $itemContainer = isSingleElement ?
+              $groupContent : $groupContent.find(
+                groupKey.replace('%key%', dataItemKey),
+              );
 
             $itemContainer.append(
               renderElement(
                 item.hbs,
                 Object.assign(
                   item.templateData,
+                  {isGroup},
                   (String(item.dataOverride).length > 0 &&
                       String(item.dataOverrideWith).length > 0) ?
                     dataItem : {data: dataItem},
@@ -1081,6 +1115,7 @@ $(function() {
                     $.each(groupSlotObj?.items,
                       function(itemKey, groupItem) {
                         renderDataItem(
+                          true,
                           dataKey,
                           dataKey === 'empty' ?
                             dataKey : {...(dataItems[dataKey - 1] || {})},
@@ -1170,6 +1205,7 @@ $(function() {
                       $.each(dataKeys,
                         function(dataKeyIndx, dataKey) {
                           renderDataItem(
+                            false,
                             dataKey,
                             dataKey === 'empty' ?
                               dataKey : {...(dataItems[dataKey - 1] || {})},
@@ -1211,6 +1247,7 @@ $(function() {
                           left: slotObj.left,
                           width: slotObj.width,
                           height: slotObj.height,
+                          zIndex: slotObj.layer,
                         });
                       }
 
