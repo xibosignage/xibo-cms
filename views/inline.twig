@@ -110,6 +110,11 @@
     <div class="form-group mr-1 mb-1 {{ groupClass }}">
         <label class="control-label mr-1" for="{{ name }}" title="{{ helpText }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <select class="form-control" {% if type == "dropdownmulti" %}multiple{% endif %} name="{{ name }}" id="{{ name }}" {{ callBack }}
+        {% if type == "dropdownmulti" %}
+            data-allow-clear="true"
+            data-placeholder--id=null
+            data-placeholder--value=""
+        {% endif %}
         {% if dataAttributes|length > 0 %}
         {% for attribute in dataAttributes %}
             {{ attribute.name }}="{{ attribute.value }}"

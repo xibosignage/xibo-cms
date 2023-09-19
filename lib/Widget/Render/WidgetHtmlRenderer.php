@@ -237,7 +237,7 @@ class WidgetHtmlRenderer
             }
 
             // Render
-            $output = $this->render($region, $widgets, $moduleTemplates);
+            $output = $this->render($widget->widgetId, $region, $widgets, $moduleTemplates);
 
             // Cache to the library
             file_put_contents($cachePath, $output);
@@ -382,12 +382,14 @@ class WidgetHtmlRenderer
      * @throws \Xibo\Support\Exception\NotFoundException
      */
     private function render(
+        int $widgetId,
         Region $region,
         array $widgets,
         array $moduleTemplates
     ): string {
         // Build up some data for twig
         $twig = [];
+        $twig['widgetId'] = $widgetId;
         $twig['hbs'] = [];
         $twig['twig'] = [];
         $twig['style'] = [];
@@ -479,7 +481,7 @@ class WidgetHtmlRenderer
             ];
 
             // Should we expect data?
-            if ($module->isDataProviderExpected() || $module->isWidgetProviderAvailable()) {
+            if ($module->isDataProviderExpected()) {
                 $widgetData['url'] = '[[dataUrl=' . $widget->widgetId . ']]';
                 $widgetData['data'] = '[[data=' . $widget->widgetId . ']]';
             } else {
@@ -583,6 +585,9 @@ class WidgetHtmlRenderer
 
                 // Join together the template properties for this element, and the element properties
                 foreach ($widgetElements as $widgetIndex => $widgetElement) {
+                    // Assert the widgetId
+                    $widgetElements[$widgetIndex]['widgetId'] = $widget->widgetId;
+
                     foreach (($widgetElement['elements'] ?? []) as $elementIndex => $element) {
                         $this->getLog()->debug('render: elements: processing widget index ' . $widgetIndex
                             . ', element index ' . $elementIndex . ' with id ' . $element['id']);

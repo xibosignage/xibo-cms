@@ -27,7 +27,7 @@
     <class>\Xibo\Widget\DashboardProvider</class>
     <dataCacheKey>%widgetId%_%displayId%</dataCacheKey>
     <type>dashboard</type>
-    <dataType></dataType>
+    <dataType>xibo-dashboard-service</dataType>
     <schemaVersion>1</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>1</regionSpecific>

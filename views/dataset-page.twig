@@ -83,6 +83,7 @@
                                         <th>{% trans "Owner" %}</th>
                                         <th>{% trans "Sharing" %}</th>
                                         <th>{% trans "Last Sync" %}</th>
+                                        <th>{% trans "Data Last Modified" %}</th>
                                         <th class="rowMenu"></th>
                                     </tr>
                                 </thead>
@@ -142,6 +143,11 @@
                     },
                     {
                         "data": "lastSync",
+                        responsivePriority: 4,
+                        "render": dataTableDateFromUnix
+                    },
+                    {
+                        "data": "lastDataEdit",
                         responsivePriority: 4,
                         "render": dataTableDateFromUnix
                     },

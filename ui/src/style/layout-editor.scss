@@ -1726,12 +1726,19 @@ div#bg_media_name {
             flex: 1;
             padding: 6px;
             font-size: 12px;
+            max-width: 50%;
 
             & > div:not(.element-header) {
                 padding: 6px;
                 border-radius: 2px;
                 margin-bottom: 3px;
                 min-height: 30px;
+
+                &, & > p {
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                }
             }
         }
 

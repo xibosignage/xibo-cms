@@ -149,6 +149,7 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
 
   // Cached data
   this.cachedData = {};
+  this.forceRecalculateData = false;
 
   this.validateRequiredElements = function() {
     const moduleType = this.subType;
@@ -740,7 +741,6 @@ Widget.prototype.saveElements = function(
     dataType: 'json',
     data: JSON.stringify([
       {
-        widgetId: widgetId,
         elements: elementsToSave,
       },
     ]),
@@ -1080,6 +1080,14 @@ Widget.prototype.getData = function() {
   // If data request is already in progress, return cached promise
   if (self.cachedDataPromise) {
     return self.cachedDataPromise;
+  }
+
+  if (self.forceRecalculateData) {
+    // Clear cached data
+    self.cachedData = {};
+
+    // Set force back to false (since we're going to get new data)
+    self.forceRecalculateData = false;
   }
 
   // If widget already has data for that index, use cached data

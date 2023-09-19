@@ -292,7 +292,7 @@ class Module extends Base
     public function clearCache(Request $request, Response $response, $id)
     {
         $module = $this->moduleFactory->getById($id);
-        if ($module->isDataProviderExpected() || $module->isWidgetProviderAvailable()) {
+        if ($module->isDataProviderExpected()) {
             $this->moduleFactory->clearCacheForDataType($module->dataType);
         }
 

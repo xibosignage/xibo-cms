@@ -352,15 +352,6 @@ class Module implements \JsonSerializable
     }
 
     /**
-     * Is a widget provider available
-     * @return bool
-     */
-    public function isWidgetProviderAvailable(): bool
-    {
-        return $this->widgetProvider !== null;
-    }
-
-    /**
      * Get this module's widget provider, or null if there isn't one
      * @return \Xibo\Widget\Provider\WidgetProviderInterface|null
      */

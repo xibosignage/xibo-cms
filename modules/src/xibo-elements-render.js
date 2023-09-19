@@ -22,6 +22,7 @@ jQuery.fn.extend({
   xiboElementsRender: function(options, items) {
     const $this = $(this);
     const defaults = {
+      selector: null,
       effect: 'none',
       pauseEffectOnStart: true,
       duration: 50,
@@ -30,7 +31,7 @@ jQuery.fn.extend({
       takeItemsFrom: 'start',
       reverseOrder: 0,
       itemsPerPage: 1,
-      speed: 1000,
+      speed: 2,
       previewWidth: 0,
       previewHeight: 0,
       scaleOverride: 0,
@@ -39,9 +40,23 @@ jQuery.fn.extend({
       displayDirection: 0,
       parentId: '',
       layer: 0,
+      seamless: true,
+      gap: 50,
     };
-    const $content = $('#content');
     let isGroup = false;
+    const $content = $('#content');
+    const isAndroid = navigator.userAgent.indexOf('Android') > -1;
+
+    // Is marquee effect
+    const isMarquee =
+        options.effect === 'marqueeLeft' ||
+        options.effect === 'marqueeRight' ||
+        options.effect === 'marqueeUp' ||
+        options.effect === 'marqueeDown';
+
+    const isUseNewMarquee = options.effect === 'marqueeUp' ||
+        options.effect === 'marqueeDown' ||
+        !isAndroid;
 
     options = $.extend({}, defaults, options);
 
@@ -75,11 +90,19 @@ jQuery.fn.extend({
       $this.prepend(elementWrapper);
     }
 
-    const cycleElement = isGroup ?
-      `.${options.id}` :
-      `.element-wrapper--${options.parentId}`;
+    const cycleElement = `.${options.id}`;
 
-    if ($content.find(cycleElement).length) {
+    if (isMarquee && isUseNewMarquee) {
+      $this.marquee('destroy');
+    } else if ($content.find(cycleElement + '.cycle-slideshow').length) {
+      $(cycleElement + '.cycle-slideshow').cycle('destroy');
+    }
+
+    let marquee = false;
+
+    if (options.effect === 'none') {
+      // Do nothing
+    } else if (!isMarquee && $content.find(cycleElement).length) {
       // Make sure the speed is something sensible
       options.speed = (options.speed <= 200) ? 1000 : options.speed;
 
@@ -102,6 +125,78 @@ jQuery.fn.extend({
         autoHeight: false,
         sync: false,
       });
+    } else if (
+      options.effect === 'marqueeLeft' ||
+      options.effect === 'marqueeRight'
+    ) {
+      marquee = true;
+      options.direction =
+        ((options.effect === 'marqueeLeft') ? 'left' : 'right');
+
+      // Make sure the speed is something sensible
+      // This speed calculation gives as 80 pixels per second
+      options.speed = (options.speed === 0) ? 1 : options.speed / 25 * 1000;
+
+      // Add gap between
+      if ($this.find('.scroll').length > 0) {
+        $this.find('.scroll').css({
+          paddingLeft: !options.seamless ? options.gap : 0,
+          paddingRight: !options.seamless ? options.gap : 0,
+          columnGap: options.gap,
+        });
+      }
+    } else if (
+      options.effect === 'marqueeUp' ||
+      options.effect === 'marqueeDown'
+    ) {
+      // We want a marquee
+      marquee = true;
+      options.direction = ((options.effect === 'marqueeUp') ? 'up' : 'down');
+
+      // Make sure the speed is something sensible
+      // This speed calculation gives as 80 pixels per second
+      options.speed = (options.speed === 0) ?
+        1 : options.speed / 25 * 1000;
+
+      if ($this.find('.scroll').length > 0) {
+        $this.find('.scroll').css({
+          flexDirection: 'column',
+          height: 'auto',
+        });
+      }
+    }
+
+    if (marquee) {
+      if (isUseNewMarquee) {
+        // in old marquee scroll delay is 85 milliseconds
+        // options.speed is the scrollamount
+        // which is the number of pixels per 85 milliseconds
+        // our new plugin speed is pixels per second
+        $this.attr({
+          'data-is-legacy': false,
+          'data-speed': options.speed,
+          'data-direction': options.direction,
+          'data-duplicated': options.seamless,
+          'data-gap': options.gap,
+        }).marquee().addClass('animating');
+      } else {
+        $this.attr({
+          'data-is-legacy': true,
+          scrollamount: options.speed,
+          behaviour: 'scroll',
+          direction: options.direction,
+          height: options.height,
+          width: options.width,
+        }).overflowMarquee().addClass('animating');
+      }
+
+      // Correct for up / down
+      if (
+        options.effect === 'marqueeUp' ||
+        options.effect === 'marqueeDown'
+      ) {
+        $this.find('.js-marquee').css({marginBottom: 0});
+      }
     }
 
     return $this;

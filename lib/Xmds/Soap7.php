@@ -125,7 +125,7 @@ class Soap7 extends Soap6
 
             // We just want the data.
             $dataModule = $this->moduleFactory->getByType($widget->type);
-            if ($dataModule->isDataProviderExpected() || $dataModule->isWidgetProviderAvailable()) {
+            if ($dataModule->isDataProviderExpected()) {
                 // We only ever return cache.
                 $dataProvider = $module->createDataProvider($widget);
 
@@ -159,15 +159,14 @@ class Soap7 extends Soap6
                         $sql = '
                             SELECT `media`.`mediaId`,
                                    `media`.`storedAs`,
-                                   `media`.storedAs,
-                                   `media`.fileSize,
-                                   `media`.released,
-                                   `media`.md5,
-                                   `display_media`.id AS displayMediaId
+                                   `media`.`fileSize`,
+                                   `media`.`released`,
+                                   `media`.`md5`,
+                                   `display_media`.`mediaId` AS displayMediaId
                               FROM `media`
                                 LEFT OUTER JOIN `display_media`
-                                ON `display_media`.mediaid = `media`.mediaId
-                                    AND `display_media`.displayId = :displayId
+                                ON `display_media`.`mediaId` = `media`.`mediaId`
+                                    AND `display_media`.`displayId` = :displayId
                              WHERE `media`.`mediaId` IN ( ' . implode(',', $mediaIds) . ')
                         ';
 

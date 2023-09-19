@@ -50,7 +50,11 @@ const PropertiesPanel = function(parent, container) {
   this.DOMObject = container;
 
   // Initialy loaded data on the form
-  this.formSerializedLoadData = '';
+  this.formSerializedLoadData = {
+    layout: '',
+    region: '',
+    widget: '',
+  };
 
   this.inlineEditor = false;
 
@@ -114,9 +118,9 @@ PropertiesPanel.prototype.save = function(
       'canvas',
     );
 
-    // Reset element's parent widget data
-    // So it can be reloaded in all elements
-    target.cachedData = {};
+    // Mark the element widget as needed to reload data
+    target.forceRecalculateData = true;
+
 
     // Save element properties
     if (originalTarget.type === 'element') {
@@ -184,7 +188,7 @@ PropertiesPanel.prototype.save = function(
       'saveForm',
       target.type, // targetType
       target[target.type + 'Id'], // targetId
-      this.formSerializedLoadData, // oldValues
+      this.formSerializedLoadData[target.type], // oldValues
       formNewData, // newValues
       {
         customRequestPath: requestPath,
@@ -202,7 +206,7 @@ PropertiesPanel.prototype.save = function(
 
         // If we're saving a widget, reload region on the viewer
         if (
-          !savingElement &&
+          !(savingElement || savingElementGroup) &&
           target.type === 'widget' &&
           app.viewer
         ) {
@@ -242,33 +246,39 @@ PropertiesPanel.prototype.save = function(
               refreshEditor: (target.type === 'layout'),
               reloadPropertiesPanel: false,
             },
-          );
+          ).then(() => {
+            // Save element
+            if (savingElement) {
+              // Reload Data and then save element
+              // Only save after having saved the widget
+              self.saveElement(
+                originalTarget,
+                form.find('[name].element-property'),
+              );
+            }
+
+            // Save elements or element groups
+            if (
+              savingElement ||
+              savingElementGroup
+            ) {
+              // If we're saving an element, reload all elements
+              // from the widget that the element is in
+              for (element in target.elements) {
+                if (
+                  Object.prototype.hasOwnProperty
+                    .call(target.elements, element)
+                ) {
+                  app.viewer.renderElementContent(target.elements[element]);
+                }
+              }
+            }
+          });
         }
       };
 
-      // Save element
-      if (savingElement) {
-        // Only save after having saved the widget
-        this.saveElement(
-          originalTarget,
-          form.find('[name].element-property'),
-        ).then(reloadData);
-      }
-
-      // Save elements or element groups
-      if (
-        savingElement ||
-        savingElementGroup
-      ) {
-        // If we're saving an element, reload all elements
-        // from the widget that the element is in
-        for (element in target.elements) {
-          if (Object.prototype.hasOwnProperty.call(target.elements, element)) {
-            app.viewer.renderElementContent(target.elements[element]);
-          }
-        }
-      } else if (reloadAfterSave) {
-        // Reload data
+      // Reload data
+      if (reloadAfterSave) {
         reloadData();
       }
 
@@ -360,24 +370,12 @@ PropertiesPanel.prototype.saveElement = function(
   return parentWidget.saveElements().then((_res) => {
     // Update element position
     if (positionChanged) {
-      app.viewer.updateElement(target);
+      app.viewer.updateElement(parentWidget.elements[target.elementId]);
     } else {
       // Render element content
-      app.viewer.renderElementContent(target);
+      app.viewer.renderElementContent(parentWidget.elements[target.elementId]);
     }
   });
-};
-
-/**
- * Go to the previous form step
- * @param {object} element - the element that the form relates to
- */
-PropertiesPanel.prototype.back = function(element) {
-  // Get current step
-  const currentStep = this.DOMObject.find('form').data('formStep');
-
-  // Render previous form
-  this.render(element, currentStep - 1);
 };
 
 /**
@@ -391,14 +389,12 @@ PropertiesPanel.prototype.delete = function(element) {
 /**
  * Render panel
  * @param {Object} target - the element object to be rendered
- * @param {number} step - the step to render
  * @param {boolean} actionEditMode - render while editing an action
  * @param {boolean} openActionTab - open action tab after rendering
  * @return {boolean} - result status
  */
 PropertiesPanel.prototype.render = function(
   target,
-  step,
   actionEditMode = false,
   openActionTab = false,
 ) {
@@ -481,11 +477,6 @@ PropertiesPanel.prototype.render = function(
   // Build request path
   let requestPath = urlsForApi[target.type].getForm.url;
   requestPath = requestPath.replace(':id', target[target.type + 'Id']);
-
-  // If we have a step to render, append it to the request path
-  if (step !== undefined && typeof step == 'number') {
-    requestPath += '?step=' + step;
-  }
 
   // If there was still a render request, abort it
   if (this.renderRequest != undefined) {
@@ -679,7 +670,7 @@ PropertiesPanel.prototype.render = function(
             helpText: propertiesPanelTrans.effectHelpText,
             value: targetAux.effect,
             type: 'effectSelector',
-            variant: 'showPaged',
+            variant: 'all',
             visibility: [],
           });
         }
@@ -879,7 +870,7 @@ PropertiesPanel.prototype.render = function(
               helpText: propertiesPanelTrans.effectHelpText,
               value: targetAux.effect,
               type: 'effectSelector',
-              variant: 'showPaged',
+              variant: 'all',
               visibility: [],
             });
           }
@@ -1396,7 +1387,15 @@ PropertiesPanel.prototype.initFields = function(
   // Save form data if not a element
   // and avoid saving element specific inputs
   if (!targetIsElement) {
-    self.formSerializedLoadData =
+    // Reset saved data
+    self.formSerializedLoadData = {
+      layout: '',
+      region: '',
+      widget: '',
+    };
+
+    // Save for this type
+    self.formSerializedLoadData[target.type] =
       self.DOMObject.find('form [name]:not(.element-property)').serialize();
   }
 
@@ -1413,21 +1412,21 @@ PropertiesPanel.prototype.initFields = function(
         }
       });
 
-    // Handle back button based on form page
-    if (
-      self.DOMObject.find('form').data('formStep') != undefined &&
-      self.DOMObject.find('form').data('formStep') > 1
-    ) {
-      self.DOMObject.find('button#back').removeClass('d-none');
-    } else {
-      self.DOMObject.find('button#back').addClass('d-none');
-    }
-
-    // Handle delete button
+    // Create delete button
     if (actionEditMode) {
-      self.DOMObject.find('button#delete').removeClass('d-none');
+      const deleteButton =
+        $('<button type="button" class="delete btn btn-danger">')
+          .html(editorsTrans.delete);
+
+      deleteButton.on('click', function(e) {
+        e.preventDefault();
+        app.deleteSelectedObject();
+      });
+
+      // Add to button container
+      self.DOMObject.find('.button-container').prepend(deleteButton);
     } else {
-      self.DOMObject.find('button#delete').addClass('d-none');
+      self.DOMObject.find('.button-container button#delete').remove();
     }
 
     // Render action tab
@@ -1578,14 +1577,14 @@ PropertiesPanel.prototype.saveRegion = function(
     urlsForApi.region.saveForm.url.replace(':id', element[element.type + 'Id']);
 
   // If form is valid, and it changed, submit it ( add change )
-  if (form.valid() && self.formSerializedLoadData != formNewData) {
+  if (form.valid() && self.formSerializedLoadData.region != formNewData) {
     // Add a save form change to the history array
     // with previous form state and the new state
     app.historyManager.addChange(
       'saveForm',
       element.type, // targetType
       element[element.type + 'Id'], // targetId
-      self.formSerializedLoadData, // oldValues
+      self.formSerializedLoadData.region, // oldValues
       formNewData, // newValues
       {
         customRequestPath: {
@@ -1778,7 +1777,9 @@ PropertiesPanel.prototype.addActionToContainer = function(
       objType = 'layout';
     }
 
-    return app.getObjectByTypeAndId(objType, objId, auxObjId)[nameIndex];
+    return (app.getObjectByTypeAndId(objType, objId, auxObjId)) ?
+      app.getObjectByTypeAndId(objType, objId, auxObjId)[nameIndex] :
+      '';
   };
 
   // Check if current element is trigger or target for this action

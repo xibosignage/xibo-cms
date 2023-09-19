@@ -202,6 +202,7 @@
                 ajax: {
                     url: $select.data("searchUrl"),
                     dataType: "json",
+                    delay: 250,
                     data: function (params) {
                         return {
                             q: params.term, // search term

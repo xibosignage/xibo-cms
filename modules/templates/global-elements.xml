@@ -365,6 +365,11 @@ $(target).find('.date').each(function(_idx, dateEl){
                 <helpText>Enter the URL of the image you want to use.</helpText>
                 <default>https://xibosignage.com/dist/img/header-logo.svg</default>
             </property>
+            <property id="opacity" type="number">
+                <title>Opacity</title>
+                <helpText>Should the image have some transparency? Choose from 0 to 100.</helpText>
+                <default>100</default>
+            </property>
             <property id="objectFit" type="dropdown" mode="single">
                 <title>Scale type</title>
                 <helpText>How should this image be scaled?</helpText>
@@ -431,7 +436,13 @@ $(target).find('.date').each(function(_idx, dateEl){
 <div class="global-elements-image img-container" style="width:100%; height: 100%; overflow: hidden; position: relative;
     {{#if roundBorder}}border-radius: {{borderRadius}}px;{{/if}}">
     {{#if url}}
-        <img src="{{url}}" style="width:100%; height: 100%; object-fit: {{objectFit}}; object-position: {{alignId}} {{valignId}}; position: absolute; top: 0; left: 0;"/>
+        <img src="{{url}}" style="
+            width:100%; height: 100%;
+            object-fit: {{objectFit}};
+            object-position: {{alignId}} {{valignId}};
+            opacity: {{opacity}}%;
+            position: absolute; top: 0; left: 0;"
+        />
     {{/if}}
 </div>
             ]]></hbs>
@@ -671,7 +682,7 @@ $(target).find('.date').each(function(_idx, dateEl){
     style="background-color: {{backgroundColor}};
     {{#if outline}}border: {{outlineWidth}}px solid {{outlineColor}};{{/if}}
     {{#if roundBorder}}border-radius: {{borderRadius}}px;{{/if}}
-    width: 100%; height: 100%;"
+    width: 100%; height: 100%; box-sizing: border-box;"
 >
 </div>
             ]]></hbs>
