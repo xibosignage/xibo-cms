@@ -291,17 +291,18 @@ class Playlist extends Base
 
                     // Embed the name of this widget
                     $widget->setUnmatchedProperty('moduleName', $module->name);
+                    $widgetName = $widget->getOptionValue('name', null);
 
                     if ($module->regionSpecific == 0) {
                         // Use the media assigned to this widget
                         $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
                         $media->load();
-                        $widget->setUnmatchedProperty('name', $widget->getOptionValue('name', $media->name));
+                        $widget->setUnmatchedProperty('name', $widgetName ?: $media->name);
 
                         // Augment with tags
                         $widget->setUnmatchedProperty('tags', $media->tags);
                     } else {
-                        $widget->setUnmatchedProperty('name', $widget->getOptionValue('name', $module->name));
+                        $widget->setUnmatchedProperty('name', $widgetName ?: $module->name);
                         $widget->setUnmatchedProperty('tags', []);
                     }
 
