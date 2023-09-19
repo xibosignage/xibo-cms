@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-09-12 13:06+0100\n"
+"POT-Creation-Date: 2023-09-19 13:41+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 #: locale/moduletranslate.php:3 locale/dbtranslate.php:73
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1670
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1864
 #: cache/1b/1b4d10b8bb67ce8b30ada153b15daf6e.php:429
 msgid "Audio"
 msgstr ""
@@ -52,6 +52,7 @@ msgstr ""
 #: locale/moduletranslate.php:8 locale/moduletranslate.php:682
 #: cache/3d/3d43e8adbd5d771e55b4c097d061edee.php:105
 #: cache/ea/ea83fd6b5caea08dc04b78466d82213e.php:171
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1467
 msgid "Loop?"
 msgstr ""
 
@@ -265,7 +266,7 @@ msgid "Code to be triggered when no events are ongoing at the moment."
 msgstr ""
 
 #: locale/moduletranslate.php:51
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1942
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2136
 msgid "Canvas"
 msgstr ""
 
@@ -316,15 +317,15 @@ msgstr ""
 #: locale/moduletranslate.php:736 locale/moduletranslate.php:798
 #: locale/moduletranslate.php:815 locale/moduletranslate.php:838
 #: locale/moduletranslate.php:2138 locale/moduletranslate.php:2172
-#: locale/moduletranslate.php:2188 locale/moduletranslate.php:2295
-#: locale/moduletranslate.php:2311 locale/moduletranslate.php:2359
-#: locale/moduletranslate.php:2382 locale/moduletranslate.php:2405
-#: locale/moduletranslate.php:2428 locale/moduletranslate.php:2451
-#: locale/moduletranslate.php:2474 locale/moduletranslate.php:2497
-#: locale/moduletranslate.php:2520 locale/moduletranslate.php:2543
-#: locale/moduletranslate.php:2566 locale/moduletranslate.php:2589
-#: locale/moduletranslate.php:2612 locale/moduletranslate.php:2635
-#: locale/moduletranslate.php:2669
+#: locale/moduletranslate.php:2190 locale/moduletranslate.php:2297
+#: locale/moduletranslate.php:2313 locale/moduletranslate.php:2361
+#: locale/moduletranslate.php:2384 locale/moduletranslate.php:2407
+#: locale/moduletranslate.php:2430 locale/moduletranslate.php:2453
+#: locale/moduletranslate.php:2476 locale/moduletranslate.php:2499
+#: locale/moduletranslate.php:2522 locale/moduletranslate.php:2545
+#: locale/moduletranslate.php:2568 locale/moduletranslate.php:2591
+#: locale/moduletranslate.php:2614 locale/moduletranslate.php:2637
+#: locale/moduletranslate.php:2671
 msgid "Horizontal Align"
 msgstr ""
 
@@ -346,18 +347,19 @@ msgstr ""
 #: locale/moduletranslate.php:738 locale/moduletranslate.php:800
 #: locale/moduletranslate.php:817 locale/moduletranslate.php:840
 #: locale/moduletranslate.php:2139 locale/moduletranslate.php:2173
-#: locale/moduletranslate.php:2190 locale/moduletranslate.php:2296
-#: locale/moduletranslate.php:2312 locale/moduletranslate.php:2361
-#: locale/moduletranslate.php:2384 locale/moduletranslate.php:2407
-#: locale/moduletranslate.php:2430 locale/moduletranslate.php:2453
-#: locale/moduletranslate.php:2476 locale/moduletranslate.php:2499
-#: locale/moduletranslate.php:2522 locale/moduletranslate.php:2545
-#: locale/moduletranslate.php:2568 locale/moduletranslate.php:2591
-#: locale/moduletranslate.php:2614 locale/moduletranslate.php:2637
-#: locale/moduletranslate.php:2671
+#: locale/moduletranslate.php:2192 locale/moduletranslate.php:2298
+#: locale/moduletranslate.php:2314 locale/moduletranslate.php:2363
+#: locale/moduletranslate.php:2386 locale/moduletranslate.php:2409
+#: locale/moduletranslate.php:2432 locale/moduletranslate.php:2455
+#: locale/moduletranslate.php:2478 locale/moduletranslate.php:2501
+#: locale/moduletranslate.php:2524 locale/moduletranslate.php:2547
+#: locale/moduletranslate.php:2570 locale/moduletranslate.php:2593
+#: locale/moduletranslate.php:2616 locale/moduletranslate.php:2639
+#: locale/moduletranslate.php:2673
 #: cache/3d/3d43e8adbd5d771e55b4c097d061edee.php:167
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1114
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1375
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1507
 #: cache/4c/4c1de7ab59196b70ffa9f9da4d4e3b9c.php:407
 msgid "Left"
 msgstr ""
@@ -370,7 +372,7 @@ msgstr ""
 #: locale/moduletranslate.php:425 locale/moduletranslate.php:626
 #: locale/moduletranslate.php:739 locale/moduletranslate.php:801
 #: locale/moduletranslate.php:818 locale/moduletranslate.php:841
-#: locale/moduletranslate.php:2191
+#: locale/moduletranslate.php:2193
 msgid "Centre"
 msgstr ""
 
@@ -382,15 +384,15 @@ msgstr ""
 #: locale/moduletranslate.php:740 locale/moduletranslate.php:802
 #: locale/moduletranslate.php:819 locale/moduletranslate.php:842
 #: locale/moduletranslate.php:2141 locale/moduletranslate.php:2175
-#: locale/moduletranslate.php:2192 locale/moduletranslate.php:2298
-#: locale/moduletranslate.php:2314 locale/moduletranslate.php:2363
-#: locale/moduletranslate.php:2386 locale/moduletranslate.php:2409
-#: locale/moduletranslate.php:2432 locale/moduletranslate.php:2455
-#: locale/moduletranslate.php:2478 locale/moduletranslate.php:2501
-#: locale/moduletranslate.php:2524 locale/moduletranslate.php:2547
-#: locale/moduletranslate.php:2570 locale/moduletranslate.php:2593
-#: locale/moduletranslate.php:2616 locale/moduletranslate.php:2639
-#: locale/moduletranslate.php:2673
+#: locale/moduletranslate.php:2194 locale/moduletranslate.php:2300
+#: locale/moduletranslate.php:2316 locale/moduletranslate.php:2365
+#: locale/moduletranslate.php:2388 locale/moduletranslate.php:2411
+#: locale/moduletranslate.php:2434 locale/moduletranslate.php:2457
+#: locale/moduletranslate.php:2480 locale/moduletranslate.php:2503
+#: locale/moduletranslate.php:2526 locale/moduletranslate.php:2549
+#: locale/moduletranslate.php:2572 locale/moduletranslate.php:2595
+#: locale/moduletranslate.php:2618 locale/moduletranslate.php:2641
+#: locale/moduletranslate.php:2675
 msgid "Right"
 msgstr ""
 
@@ -402,15 +404,15 @@ msgstr ""
 #: locale/moduletranslate.php:741 locale/moduletranslate.php:803
 #: locale/moduletranslate.php:820 locale/moduletranslate.php:843
 #: locale/moduletranslate.php:2142 locale/moduletranslate.php:2176
-#: locale/moduletranslate.php:2193 locale/moduletranslate.php:2299
-#: locale/moduletranslate.php:2315 locale/moduletranslate.php:2364
-#: locale/moduletranslate.php:2387 locale/moduletranslate.php:2410
-#: locale/moduletranslate.php:2433 locale/moduletranslate.php:2456
-#: locale/moduletranslate.php:2479 locale/moduletranslate.php:2502
-#: locale/moduletranslate.php:2525 locale/moduletranslate.php:2548
-#: locale/moduletranslate.php:2571 locale/moduletranslate.php:2594
-#: locale/moduletranslate.php:2617 locale/moduletranslate.php:2640
-#: locale/moduletranslate.php:2674
+#: locale/moduletranslate.php:2195 locale/moduletranslate.php:2301
+#: locale/moduletranslate.php:2317 locale/moduletranslate.php:2366
+#: locale/moduletranslate.php:2389 locale/moduletranslate.php:2412
+#: locale/moduletranslate.php:2435 locale/moduletranslate.php:2458
+#: locale/moduletranslate.php:2481 locale/moduletranslate.php:2504
+#: locale/moduletranslate.php:2527 locale/moduletranslate.php:2550
+#: locale/moduletranslate.php:2573 locale/moduletranslate.php:2596
+#: locale/moduletranslate.php:2619 locale/moduletranslate.php:2642
+#: locale/moduletranslate.php:2676
 msgid "Vertical Align"
 msgstr ""
 
@@ -420,14 +422,14 @@ msgstr ""
 #: locale/moduletranslate.php:281 locale/moduletranslate.php:368
 #: locale/moduletranslate.php:629 locale/moduletranslate.php:742
 #: locale/moduletranslate.php:804 locale/moduletranslate.php:821
-#: locale/moduletranslate.php:844 locale/moduletranslate.php:2365
-#: locale/moduletranslate.php:2388 locale/moduletranslate.php:2411
-#: locale/moduletranslate.php:2434 locale/moduletranslate.php:2457
-#: locale/moduletranslate.php:2480 locale/moduletranslate.php:2503
-#: locale/moduletranslate.php:2526 locale/moduletranslate.php:2549
-#: locale/moduletranslate.php:2572 locale/moduletranslate.php:2595
-#: locale/moduletranslate.php:2618 locale/moduletranslate.php:2641
-#: locale/moduletranslate.php:2675
+#: locale/moduletranslate.php:844 locale/moduletranslate.php:2367
+#: locale/moduletranslate.php:2390 locale/moduletranslate.php:2413
+#: locale/moduletranslate.php:2436 locale/moduletranslate.php:2459
+#: locale/moduletranslate.php:2482 locale/moduletranslate.php:2505
+#: locale/moduletranslate.php:2528 locale/moduletranslate.php:2551
+#: locale/moduletranslate.php:2574 locale/moduletranslate.php:2597
+#: locale/moduletranslate.php:2620 locale/moduletranslate.php:2643
+#: locale/moduletranslate.php:2677
 msgid "How should this widget be vertically aligned?"
 msgstr ""
 
@@ -439,18 +441,19 @@ msgstr ""
 #: locale/moduletranslate.php:743 locale/moduletranslate.php:805
 #: locale/moduletranslate.php:822 locale/moduletranslate.php:845
 #: locale/moduletranslate.php:2143 locale/moduletranslate.php:2177
-#: locale/moduletranslate.php:2195 locale/moduletranslate.php:2300
-#: locale/moduletranslate.php:2316 locale/moduletranslate.php:2366
-#: locale/moduletranslate.php:2389 locale/moduletranslate.php:2412
-#: locale/moduletranslate.php:2435 locale/moduletranslate.php:2458
-#: locale/moduletranslate.php:2481 locale/moduletranslate.php:2504
-#: locale/moduletranslate.php:2527 locale/moduletranslate.php:2550
-#: locale/moduletranslate.php:2573 locale/moduletranslate.php:2596
-#: locale/moduletranslate.php:2619 locale/moduletranslate.php:2642
-#: locale/moduletranslate.php:2676
+#: locale/moduletranslate.php:2197 locale/moduletranslate.php:2302
+#: locale/moduletranslate.php:2318 locale/moduletranslate.php:2368
+#: locale/moduletranslate.php:2391 locale/moduletranslate.php:2414
+#: locale/moduletranslate.php:2437 locale/moduletranslate.php:2460
+#: locale/moduletranslate.php:2483 locale/moduletranslate.php:2506
+#: locale/moduletranslate.php:2529 locale/moduletranslate.php:2552
+#: locale/moduletranslate.php:2575 locale/moduletranslate.php:2598
+#: locale/moduletranslate.php:2621 locale/moduletranslate.php:2644
+#: locale/moduletranslate.php:2678
 #: cache/3d/3d43e8adbd5d771e55b4c097d061edee.php:152
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1110
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1371
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1499
 #: cache/4c/4c1de7ab59196b70ffa9f9da4d4e3b9c.php:411
 msgid "Top"
 msgstr ""
@@ -463,15 +466,15 @@ msgstr ""
 #: locale/moduletranslate.php:744 locale/moduletranslate.php:806
 #: locale/moduletranslate.php:823 locale/moduletranslate.php:846
 #: locale/moduletranslate.php:2144 locale/moduletranslate.php:2178
-#: locale/moduletranslate.php:2196 locale/moduletranslate.php:2301
-#: locale/moduletranslate.php:2317 locale/moduletranslate.php:2367
-#: locale/moduletranslate.php:2390 locale/moduletranslate.php:2413
-#: locale/moduletranslate.php:2436 locale/moduletranslate.php:2459
-#: locale/moduletranslate.php:2482 locale/moduletranslate.php:2505
-#: locale/moduletranslate.php:2528 locale/moduletranslate.php:2551
-#: locale/moduletranslate.php:2574 locale/moduletranslate.php:2597
-#: locale/moduletranslate.php:2620 locale/moduletranslate.php:2643
-#: locale/moduletranslate.php:2677
+#: locale/moduletranslate.php:2198 locale/moduletranslate.php:2303
+#: locale/moduletranslate.php:2319 locale/moduletranslate.php:2369
+#: locale/moduletranslate.php:2392 locale/moduletranslate.php:2415
+#: locale/moduletranslate.php:2438 locale/moduletranslate.php:2461
+#: locale/moduletranslate.php:2484 locale/moduletranslate.php:2507
+#: locale/moduletranslate.php:2530 locale/moduletranslate.php:2553
+#: locale/moduletranslate.php:2576 locale/moduletranslate.php:2599
+#: locale/moduletranslate.php:2622 locale/moduletranslate.php:2645
+#: locale/moduletranslate.php:2679
 msgid "Middle"
 msgstr ""
 
@@ -483,15 +486,15 @@ msgstr ""
 #: locale/moduletranslate.php:745 locale/moduletranslate.php:807
 #: locale/moduletranslate.php:824 locale/moduletranslate.php:847
 #: locale/moduletranslate.php:2145 locale/moduletranslate.php:2179
-#: locale/moduletranslate.php:2197 locale/moduletranslate.php:2302
-#: locale/moduletranslate.php:2318 locale/moduletranslate.php:2368
-#: locale/moduletranslate.php:2391 locale/moduletranslate.php:2414
-#: locale/moduletranslate.php:2437 locale/moduletranslate.php:2460
-#: locale/moduletranslate.php:2483 locale/moduletranslate.php:2506
-#: locale/moduletranslate.php:2529 locale/moduletranslate.php:2552
-#: locale/moduletranslate.php:2575 locale/moduletranslate.php:2598
-#: locale/moduletranslate.php:2621 locale/moduletranslate.php:2644
-#: locale/moduletranslate.php:2678
+#: locale/moduletranslate.php:2199 locale/moduletranslate.php:2304
+#: locale/moduletranslate.php:2320 locale/moduletranslate.php:2370
+#: locale/moduletranslate.php:2393 locale/moduletranslate.php:2416
+#: locale/moduletranslate.php:2439 locale/moduletranslate.php:2462
+#: locale/moduletranslate.php:2485 locale/moduletranslate.php:2508
+#: locale/moduletranslate.php:2531 locale/moduletranslate.php:2554
+#: locale/moduletranslate.php:2577 locale/moduletranslate.php:2600
+#: locale/moduletranslate.php:2623 locale/moduletranslate.php:2646
+#: locale/moduletranslate.php:2680
 msgid "Bottom"
 msgstr ""
 
@@ -743,14 +746,14 @@ msgstr ""
 
 #: locale/moduletranslate.php:152 locale/moduletranslate.php:790
 #: locale/moduletranslate.php:984 locale/moduletranslate.php:1606
-#: locale/moduletranslate.php:1607 locale/moduletranslate.php:2332
-#: locale/moduletranslate.php:2333 locale/moduletranslate.php:2691
+#: locale/moduletranslate.php:1607 locale/moduletranslate.php:2334
+#: locale/moduletranslate.php:2335 locale/moduletranslate.php:2693
 msgid "Original Width"
 msgstr ""
 
 #: locale/moduletranslate.php:153 locale/moduletranslate.php:791
 #: locale/moduletranslate.php:985 locale/moduletranslate.php:1608
-#: locale/moduletranslate.php:2334 locale/moduletranslate.php:2692
+#: locale/moduletranslate.php:2336 locale/moduletranslate.php:2694
 msgid ""
 "This is the intended width of the template and is used to scale the Widget "
 "within its region when the template is applied."
@@ -758,13 +761,13 @@ msgstr ""
 
 #: locale/moduletranslate.php:154 locale/moduletranslate.php:792
 #: locale/moduletranslate.php:986 locale/moduletranslate.php:1609
-#: locale/moduletranslate.php:2335 locale/moduletranslate.php:2693
+#: locale/moduletranslate.php:2337 locale/moduletranslate.php:2695
 msgid "Original Height"
 msgstr ""
 
 #: locale/moduletranslate.php:155 locale/moduletranslate.php:793
 #: locale/moduletranslate.php:987 locale/moduletranslate.php:1610
-#: locale/moduletranslate.php:2336 locale/moduletranslate.php:2694
+#: locale/moduletranslate.php:2338 locale/moduletranslate.php:2696
 msgid ""
 "This is the intended height of the template and is used to scale the Widget "
 "within its region when the template is applied."
@@ -848,16 +851,16 @@ msgstr ""
 #: locale/moduletranslate.php:875 locale/moduletranslate.php:980
 #: locale/moduletranslate.php:994 locale/moduletranslate.php:1001
 #: locale/moduletranslate.php:1226 locale/moduletranslate.php:1605
-#: locale/moduletranslate.php:2148 locale/moduletranslate.php:2258
-#: locale/moduletranslate.php:2259 locale/moduletranslate.php:2347
-#: locale/moduletranslate.php:2370 locale/moduletranslate.php:2393
-#: locale/moduletranslate.php:2416 locale/moduletranslate.php:2439
-#: locale/moduletranslate.php:2462 locale/moduletranslate.php:2485
-#: locale/moduletranslate.php:2508 locale/moduletranslate.php:2531
-#: locale/moduletranslate.php:2554 locale/moduletranslate.php:2577
-#: locale/moduletranslate.php:2600 locale/moduletranslate.php:2623
-#: locale/moduletranslate.php:2646 locale/moduletranslate.php:2687
-#: locale/moduletranslate.php:2702 locale/moduletranslate.php:2709
+#: locale/moduletranslate.php:2148 locale/moduletranslate.php:2260
+#: locale/moduletranslate.php:2261 locale/moduletranslate.php:2349
+#: locale/moduletranslate.php:2372 locale/moduletranslate.php:2395
+#: locale/moduletranslate.php:2418 locale/moduletranslate.php:2441
+#: locale/moduletranslate.php:2464 locale/moduletranslate.php:2487
+#: locale/moduletranslate.php:2510 locale/moduletranslate.php:2533
+#: locale/moduletranslate.php:2556 locale/moduletranslate.php:2579
+#: locale/moduletranslate.php:2602 locale/moduletranslate.php:2625
+#: locale/moduletranslate.php:2648 locale/moduletranslate.php:2689
+#: locale/moduletranslate.php:2704 locale/moduletranslate.php:2711
 #: cache/3c/3cff55fb510343a28bcab4eebabcb98a.php:283
 #: cache/68/683636238aff529d5a7b7478118dede4.php:2886
 #: cache/ee/ee0c1651752b1209943673ee1794a659.php:283
@@ -867,16 +870,16 @@ msgstr ""
 #: locale/moduletranslate.php:268 locale/moduletranslate.php:616
 #: locale/moduletranslate.php:876 locale/moduletranslate.php:981
 #: locale/moduletranslate.php:995 locale/moduletranslate.php:1002
-#: locale/moduletranslate.php:1227 locale/moduletranslate.php:2260
-#: locale/moduletranslate.php:2348 locale/moduletranslate.php:2371
-#: locale/moduletranslate.php:2394 locale/moduletranslate.php:2417
-#: locale/moduletranslate.php:2440 locale/moduletranslate.php:2463
-#: locale/moduletranslate.php:2486 locale/moduletranslate.php:2509
-#: locale/moduletranslate.php:2532 locale/moduletranslate.php:2555
-#: locale/moduletranslate.php:2578 locale/moduletranslate.php:2601
-#: locale/moduletranslate.php:2624 locale/moduletranslate.php:2647
-#: locale/moduletranslate.php:2688 locale/moduletranslate.php:2703
-#: locale/moduletranslate.php:2710
+#: locale/moduletranslate.php:1227 locale/moduletranslate.php:2262
+#: locale/moduletranslate.php:2350 locale/moduletranslate.php:2373
+#: locale/moduletranslate.php:2396 locale/moduletranslate.php:2419
+#: locale/moduletranslate.php:2442 locale/moduletranslate.php:2465
+#: locale/moduletranslate.php:2488 locale/moduletranslate.php:2511
+#: locale/moduletranslate.php:2534 locale/moduletranslate.php:2557
+#: locale/moduletranslate.php:2580 locale/moduletranslate.php:2603
+#: locale/moduletranslate.php:2626 locale/moduletranslate.php:2649
+#: locale/moduletranslate.php:2690 locale/moduletranslate.php:2705
+#: locale/moduletranslate.php:2712
 msgid "The format to apply to all dates returned by the Widget."
 msgstr ""
 
@@ -897,14 +900,14 @@ msgstr ""
 #: locale/moduletranslate.php:937 locale/moduletranslate.php:951
 #: locale/moduletranslate.php:963 locale/moduletranslate.php:1066
 #: locale/moduletranslate.php:1205 locale/moduletranslate.php:1218
-#: locale/moduletranslate.php:2271 locale/moduletranslate.php:2355
-#: locale/moduletranslate.php:2378 locale/moduletranslate.php:2401
-#: locale/moduletranslate.php:2424 locale/moduletranslate.php:2447
-#: locale/moduletranslate.php:2470 locale/moduletranslate.php:2493
-#: locale/moduletranslate.php:2516 locale/moduletranslate.php:2539
-#: locale/moduletranslate.php:2562 locale/moduletranslate.php:2585
-#: locale/moduletranslate.php:2608 locale/moduletranslate.php:2631
-#: locale/moduletranslate.php:2665
+#: locale/moduletranslate.php:2273 locale/moduletranslate.php:2357
+#: locale/moduletranslate.php:2380 locale/moduletranslate.php:2403
+#: locale/moduletranslate.php:2426 locale/moduletranslate.php:2449
+#: locale/moduletranslate.php:2472 locale/moduletranslate.php:2495
+#: locale/moduletranslate.php:2518 locale/moduletranslate.php:2541
+#: locale/moduletranslate.php:2564 locale/moduletranslate.php:2587
+#: locale/moduletranslate.php:2610 locale/moduletranslate.php:2633
+#: locale/moduletranslate.php:2667
 msgid "Effect"
 msgstr ""
 
@@ -914,14 +917,14 @@ msgstr ""
 #: locale/moduletranslate.php:938 locale/moduletranslate.php:952
 #: locale/moduletranslate.php:964 locale/moduletranslate.php:1067
 #: locale/moduletranslate.php:1206 locale/moduletranslate.php:1219
-#: locale/moduletranslate.php:2272 locale/moduletranslate.php:2356
-#: locale/moduletranslate.php:2379 locale/moduletranslate.php:2402
-#: locale/moduletranslate.php:2425 locale/moduletranslate.php:2448
-#: locale/moduletranslate.php:2471 locale/moduletranslate.php:2494
-#: locale/moduletranslate.php:2517 locale/moduletranslate.php:2540
-#: locale/moduletranslate.php:2563 locale/moduletranslate.php:2586
-#: locale/moduletranslate.php:2609 locale/moduletranslate.php:2632
-#: locale/moduletranslate.php:2666
+#: locale/moduletranslate.php:2274 locale/moduletranslate.php:2358
+#: locale/moduletranslate.php:2381 locale/moduletranslate.php:2404
+#: locale/moduletranslate.php:2427 locale/moduletranslate.php:2450
+#: locale/moduletranslate.php:2473 locale/moduletranslate.php:2496
+#: locale/moduletranslate.php:2519 locale/moduletranslate.php:2542
+#: locale/moduletranslate.php:2565 locale/moduletranslate.php:2588
+#: locale/moduletranslate.php:2611 locale/moduletranslate.php:2634
+#: locale/moduletranslate.php:2668
 msgid "Please select the effect that will be used to transition between items."
 msgstr ""
 
@@ -931,26 +934,26 @@ msgstr ""
 #: locale/moduletranslate.php:939 locale/moduletranslate.php:953
 #: locale/moduletranslate.php:965 locale/moduletranslate.php:1068
 #: locale/moduletranslate.php:1207 locale/moduletranslate.php:1220
-#: locale/moduletranslate.php:2273 locale/moduletranslate.php:2357
-#: locale/moduletranslate.php:2380 locale/moduletranslate.php:2403
-#: locale/moduletranslate.php:2426 locale/moduletranslate.php:2449
-#: locale/moduletranslate.php:2472 locale/moduletranslate.php:2495
-#: locale/moduletranslate.php:2518 locale/moduletranslate.php:2541
-#: locale/moduletranslate.php:2564 locale/moduletranslate.php:2587
-#: locale/moduletranslate.php:2610 locale/moduletranslate.php:2633
-#: locale/moduletranslate.php:2667
+#: locale/moduletranslate.php:2275 locale/moduletranslate.php:2359
+#: locale/moduletranslate.php:2382 locale/moduletranslate.php:2405
+#: locale/moduletranslate.php:2428 locale/moduletranslate.php:2451
+#: locale/moduletranslate.php:2474 locale/moduletranslate.php:2497
+#: locale/moduletranslate.php:2520 locale/moduletranslate.php:2543
+#: locale/moduletranslate.php:2566 locale/moduletranslate.php:2589
+#: locale/moduletranslate.php:2612 locale/moduletranslate.php:2635
+#: locale/moduletranslate.php:2669
 msgid "Speed"
 msgstr ""
 
 #: locale/moduletranslate.php:274 locale/moduletranslate.php:622
-#: locale/moduletranslate.php:668 locale/moduletranslate.php:2274
-#: locale/moduletranslate.php:2358 locale/moduletranslate.php:2381
-#: locale/moduletranslate.php:2404 locale/moduletranslate.php:2427
-#: locale/moduletranslate.php:2450 locale/moduletranslate.php:2473
-#: locale/moduletranslate.php:2496 locale/moduletranslate.php:2519
-#: locale/moduletranslate.php:2542 locale/moduletranslate.php:2565
-#: locale/moduletranslate.php:2588 locale/moduletranslate.php:2611
-#: locale/moduletranslate.php:2634 locale/moduletranslate.php:2668
+#: locale/moduletranslate.php:668 locale/moduletranslate.php:2276
+#: locale/moduletranslate.php:2360 locale/moduletranslate.php:2383
+#: locale/moduletranslate.php:2406 locale/moduletranslate.php:2429
+#: locale/moduletranslate.php:2452 locale/moduletranslate.php:2475
+#: locale/moduletranslate.php:2498 locale/moduletranslate.php:2521
+#: locale/moduletranslate.php:2544 locale/moduletranslate.php:2567
+#: locale/moduletranslate.php:2590 locale/moduletranslate.php:2613
+#: locale/moduletranslate.php:2636 locale/moduletranslate.php:2670
 msgid ""
 "The transition speed of the selected effect in milliseconds (normal = 1000) "
 "or the Marquee Speed in a low to high scale (normal = 1)."
@@ -977,8 +980,8 @@ msgstr ""
 #: cache/8a/8acc5a2af63338673a6de3f58764bb95.php:399
 #: cache/89/8945ceeea3df1eea58421905bdc6dd5e.php:174
 #: cache/89/8945ceeea3df1eea58421905bdc6dd5e.php:249
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1502
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1606
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1696
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1800
 #: cache/1b/1b54f8dd2f1a33488bb30d63484f87f7.php:146
 #: cache/23/2360e54d15ebe919cd8f4305d3819359.php:412
 #: cache/05/05600263dc8230138bb0f89338bbef69.php:89
@@ -1208,7 +1211,7 @@ msgstr ""
 msgid "Enter text or HTML in the box below."
 msgstr ""
 
-#: locale/moduletranslate.php:341 locale/moduletranslate.php:2268
+#: locale/moduletranslate.php:341 locale/moduletranslate.php:2270
 msgid "Custom Style Sheets"
 msgstr ""
 
@@ -1266,7 +1269,7 @@ msgstr ""
 msgid "The Longitude for this widget"
 msgstr ""
 
-#: locale/moduletranslate.php:356 locale/moduletranslate.php:2320
+#: locale/moduletranslate.php:356 locale/moduletranslate.php:2322
 msgid "Units"
 msgstr ""
 
@@ -1416,7 +1419,7 @@ msgstr ""
 #: locale/moduletranslate.php:408 locale/moduletranslate.php:555
 #: locale/moduletranslate.php:863 locale/moduletranslate.php:1020
 #: locale/moduletranslate.php:2180 locale/dbtranslate.php:52
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1662
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1856
 #: lib/Widget/DataType/Product.php:52 lib/Widget/DataType/Article.php:77
 #: lib/Widget/DataType/ProductCategory.php:43
 msgid "Image"
@@ -1464,19 +1467,19 @@ msgid "Fit"
 msgstr ""
 
 #: locale/moduletranslate.php:417 locale/moduletranslate.php:438
-#: locale/moduletranslate.php:684 locale/moduletranslate.php:2183
+#: locale/moduletranslate.php:684 locale/moduletranslate.php:2185
 msgid "Scale type"
 msgstr ""
 
-#: locale/moduletranslate.php:418 locale/moduletranslate.php:2184
+#: locale/moduletranslate.php:418 locale/moduletranslate.php:2186
 msgid "How should this image be scaled?"
 msgstr ""
 
-#: locale/moduletranslate.php:423 locale/moduletranslate.php:2189
+#: locale/moduletranslate.php:423 locale/moduletranslate.php:2191
 msgid "How should this image be aligned?"
 msgstr ""
 
-#: locale/moduletranslate.php:428 locale/moduletranslate.php:2194
+#: locale/moduletranslate.php:428 locale/moduletranslate.php:2196
 msgid "How should this image be vertically aligned?"
 msgstr ""
 
@@ -1595,8 +1598,8 @@ msgstr ""
 msgid "Leave empty to use the one from settings."
 msgstr ""
 
-#: locale/moduletranslate.php:464 locale/moduletranslate.php:2326
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:349
+#: locale/moduletranslate.php:464 locale/moduletranslate.php:2328
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:360
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:333
 #: cache/58/582bf6a35fd9661de4021ae6aad02414.php:198
 msgid "Username"
@@ -1607,7 +1610,7 @@ msgid "Provide Mastodon username to get public statuses from the account."
 msgstr ""
 
 #: locale/moduletranslate.php:466
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:555
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:566
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:539
 #: lib/Report/DistributionReport.php:490
 #: lib/Report/SummaryDistributionCommonTrait.php:89
@@ -1694,7 +1697,7 @@ msgid "The duration specified is per item otherwise it is per menu."
 msgstr ""
 
 #: locale/moduletranslate.php:493
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1519
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1713
 msgid "Sort by"
 msgstr ""
 
@@ -1715,8 +1718,8 @@ msgid "Display Order"
 msgstr ""
 
 #: locale/moduletranslate.php:496 locale/moduletranslate.php:949
-#: locale/moduletranslate.php:2275 locale/moduletranslate.php:2278
-#: locale/moduletranslate.php:2679
+#: locale/moduletranslate.php:2277 locale/moduletranslate.php:2280
+#: locale/moduletranslate.php:2681
 #: cache/a2/a25dbce646a9a1ed849b53f6d93ed8cb.php:99
 #: cache/39/39cc315464ac8c34ba79db4a07dcc832.php:188
 #: cache/3d/3d685e4b4f0f4e045b5cc2697b26574d.php:160
@@ -1777,11 +1780,13 @@ msgstr ""
 #: cache/89/8945ceeea3df1eea58421905bdc6dd5e.php:242
 #: cache/e3/e3e074211e42eadb55ae8cb6ceeaa722.php:108
 #: cache/e3/e3e074211e42eadb55ae8cb6ceeaa722.php:147
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1494
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1528
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1602
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1870
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1950
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1451
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1537
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1688
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1722
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1796
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2064
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2144
 #: cache/1b/1b54f8dd2f1a33488bb30d63484f87f7.php:142
 #: cache/23/235acc51022bf578b604ce47dd2743a4.php:145
 #: cache/23/23114ff234f79ee13968407a57f6252d.php:100
@@ -1853,7 +1858,7 @@ msgstr ""
 msgid "Name"
 msgstr ""
 
-#: locale/moduletranslate.php:497 locale/moduletranslate.php:2282
+#: locale/moduletranslate.php:497 locale/moduletranslate.php:2284
 #: cache/04/04b4b8b9bb93bf0580422332c142abff.php:203
 #: cache/d4/d41eb57456e7d0ead8c455e4652b975c.php:148
 #: cache/fd/fd08b6cb6765ac676b671e9c5a7afe27.php:148
@@ -2061,7 +2066,7 @@ msgstr ""
 msgid "Media Content"
 msgstr ""
 
-#: locale/moduletranslate.php:556 locale/moduletranslate.php:2650
+#: locale/moduletranslate.php:556 locale/moduletranslate.php:2652
 #: cache/8e/8e4c9c1886827e5f797c4436d4051e48.php:126
 #: cache/8e/8e4c9c1886827e5f797c4436d4051e48.php:719
 msgid "Custom"
@@ -2108,7 +2113,7 @@ msgid ""
 msgstr ""
 
 #: locale/moduletranslate.php:565
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:394
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:405
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:378
 msgid "User Agent"
 msgstr ""
@@ -2316,7 +2321,7 @@ msgstr ""
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1062
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1074
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1236
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1835
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2029
 #: cache/34/3453edc522f8d2c6d1d154ad55500693.php:66
 #: lib/Entity/Schedule.php:1967
 msgid "Playlist"
@@ -2471,7 +2476,7 @@ msgstr ""
 #: locale/moduletranslate.php:662 locale/moduletranslate.php:890
 #: locale/moduletranslate.php:1032 locale/moduletranslate.php:1061
 #: locale/moduletranslate.php:1239 locale/moduletranslate.php:1614
-#: locale/moduletranslate.php:2341 locale/moduletranslate.php:2698
+#: locale/moduletranslate.php:2343 locale/moduletranslate.php:2700
 msgid "Optional JavaScript"
 msgstr ""
 
@@ -2506,9 +2511,10 @@ msgstr ""
 #: locale/moduletranslate.php:1550 locale/moduletranslate.php:1570
 #: locale/moduletranslate.php:1573 locale/moduletranslate.php:1577
 #: locale/moduletranslate.php:1580 locale/moduletranslate.php:1583
-#: locale/moduletranslate.php:1586 locale/moduletranslate.php:2685
-#: locale/moduletranslate.php:2700 locale/moduletranslate.php:2707
+#: locale/moduletranslate.php:1586 locale/moduletranslate.php:2687
+#: locale/moduletranslate.php:2702 locale/moduletranslate.php:2709
 #: cache/3c/3cafc6063c2a786736bea5bbf9d4cb6f.php:238
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1397
 #: cache/0c/0cc104a3d7987780eed7a70657ece580.php:104
 msgid "Background Colour"
 msgstr ""
@@ -2517,8 +2523,8 @@ msgstr ""
 #: locale/moduletranslate.php:853 locale/moduletranslate.php:878
 #: locale/moduletranslate.php:979 locale/moduletranslate.php:993
 #: locale/moduletranslate.php:1000 locale/moduletranslate.php:1065
-#: locale/moduletranslate.php:1231 locale/moduletranslate.php:2686
-#: locale/moduletranslate.php:2701 locale/moduletranslate.php:2708
+#: locale/moduletranslate.php:1231 locale/moduletranslate.php:2688
+#: locale/moduletranslate.php:2703 locale/moduletranslate.php:2710
 msgid ""
 "The selected effect works best with a background colour. Optionally add one "
 "here."
@@ -2535,7 +2541,7 @@ msgid ""
 msgstr ""
 
 #: locale/moduletranslate.php:671 locale/dbtranslate.php:54
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1678
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1872
 msgid "Video"
 msgstr ""
 
@@ -2624,7 +2630,7 @@ msgstr ""
 #: locale/moduletranslate.php:712
 #: cache/eb/ebcff77a4e266af34134679c91af4d2d.php:88
 #: cache/0a/0ae358955c92f467744fc6cf0f8f5624.php:118
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1417
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1611
 #: cache/cd/cdf12d9a1fc3b5db7965cfa8f9bb8d13.php:118
 msgid "Options"
 msgstr ""
@@ -2738,6 +2744,7 @@ msgstr ""
 
 #: locale/moduletranslate.php:748 locale/moduletranslate.php:1049
 #: locale/moduletranslate.php:1091
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1401
 #: cache/0c/0cc104a3d7987780eed7a70657ece580.php:109
 msgid "Use the colour picker to select the background colour"
 msgstr ""
@@ -2990,8 +2997,8 @@ msgstr ""
 
 #: locale/moduletranslate.php:861 locale/moduletranslate.php:1015
 #: locale/moduletranslate.php:1604 locale/moduletranslate.php:2146
-#: locale/moduletranslate.php:2147 locale/moduletranslate.php:2256
-#: locale/moduletranslate.php:2267 locale/moduletranslate.php:2327
+#: locale/moduletranslate.php:2147 locale/moduletranslate.php:2258
+#: locale/moduletranslate.php:2269 locale/moduletranslate.php:2329
 #: locale/dbtranslate.php:33 cache/04/04b11bf7b7a8190d66899471a8930ffd.php:350
 #: cache/66/661d79c5da6d14a0db85cd0980868ff7.php:166
 #: cache/0e/0ed8020e97c517a55ad881cfc5dd0b4c.php:184
@@ -3065,7 +3072,7 @@ msgstr ""
 #: locale/moduletranslate.php:1129 locale/moduletranslate.php:1144
 #: locale/moduletranslate.php:1159 locale/moduletranslate.php:1174
 #: locale/moduletranslate.php:1189 locale/moduletranslate.php:1232
-#: locale/moduletranslate.php:2696
+#: locale/moduletranslate.php:2698
 msgid "Item Template"
 msgstr ""
 
@@ -3079,11 +3086,11 @@ msgid "Enter text in the box below, used to display each article."
 msgstr ""
 
 #: locale/moduletranslate.php:885 locale/moduletranslate.php:1058
-#: locale/moduletranslate.php:1234 locale/moduletranslate.php:2263
+#: locale/moduletranslate.php:1234 locale/moduletranslate.php:2265
 msgid "Snippets"
 msgstr ""
 
-#: locale/moduletranslate.php:886 locale/moduletranslate.php:2264
+#: locale/moduletranslate.php:886 locale/moduletranslate.php:2266
 msgid "Choose element to add to template"
 msgstr ""
 
@@ -3095,7 +3102,7 @@ msgstr ""
 #: locale/moduletranslate.php:1116 locale/moduletranslate.php:1131
 #: locale/moduletranslate.php:1146 locale/moduletranslate.php:1161
 #: locale/moduletranslate.php:1176 locale/moduletranslate.php:1191
-#: locale/moduletranslate.php:1236 locale/moduletranslate.php:2269
+#: locale/moduletranslate.php:1236 locale/moduletranslate.php:2271
 msgid "No data message"
 msgstr ""
 
@@ -3113,7 +3120,7 @@ msgstr ""
 
 #: locale/moduletranslate.php:889 locale/moduletranslate.php:1030
 #: locale/moduletranslate.php:1031 locale/moduletranslate.php:1060
-#: locale/moduletranslate.php:1238 locale/moduletranslate.php:2340
+#: locale/moduletranslate.php:1238 locale/moduletranslate.php:2342
 msgid "Optional Stylesheet Template"
 msgstr ""
 
@@ -3153,18 +3160,18 @@ msgid "Image Fit"
 msgstr ""
 
 #: locale/moduletranslate.php:897 locale/moduletranslate.php:916
-#: locale/moduletranslate.php:934 locale/moduletranslate.php:2186
+#: locale/moduletranslate.php:934 locale/moduletranslate.php:2188
 msgid "Contain"
 msgstr ""
 
 #: locale/moduletranslate.php:898 locale/moduletranslate.php:917
-#: locale/moduletranslate.php:935 locale/moduletranslate.php:2187
+#: locale/moduletranslate.php:935 locale/moduletranslate.php:2189
 msgid "Cover"
 msgstr ""
 
 #: locale/moduletranslate.php:899 locale/moduletranslate.php:918
-#: locale/moduletranslate.php:936 locale/moduletranslate.php:2185
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2252
+#: locale/moduletranslate.php:936 locale/moduletranslate.php:2187
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2446
 msgid "Fill"
 msgstr ""
 
@@ -3177,8 +3184,8 @@ msgid "Background (content)"
 msgstr ""
 
 #: locale/moduletranslate.php:912 locale/moduletranslate.php:948
-#: locale/moduletranslate.php:1210 locale/moduletranslate.php:2276
-#: locale/moduletranslate.php:2281 locale/moduletranslate.php:2324
+#: locale/moduletranslate.php:1210 locale/moduletranslate.php:2278
+#: locale/moduletranslate.php:2283 locale/moduletranslate.php:2326
 #: locale/dbtranslate.php:148 cache/a2/a25dbce646a9a1ed849b53f6d93ed8cb.php:114
 #: cache/39/39cc315464ac8c34ba79db4a07dcc832.php:203
 #: cache/91/91982ff1ff9899125ec30731f264a8f4.php:165
@@ -3244,8 +3251,8 @@ msgstr ""
 #: locale/moduletranslate.php:1154 locale/moduletranslate.php:1169
 #: locale/moduletranslate.php:1184 locale/moduletranslate.php:1199
 #: locale/moduletranslate.php:1595 locale/moduletranslate.php:2118
-#: locale/moduletranslate.php:2154 locale/moduletranslate.php:2291
-#: locale/moduletranslate.php:2305
+#: locale/moduletranslate.php:2154 locale/moduletranslate.php:2293
+#: locale/moduletranslate.php:2307
 msgid "Font Size"
 msgstr ""
 
@@ -3265,11 +3272,11 @@ msgstr ""
 msgid "Currency Name"
 msgstr ""
 
-#: locale/moduletranslate.php:972 locale/moduletranslate.php:2681
+#: locale/moduletranslate.php:972 locale/moduletranslate.php:2683
 msgid "Last Trade Price"
 msgstr ""
 
-#: locale/moduletranslate.php:973 locale/moduletranslate.php:2682
+#: locale/moduletranslate.php:973 locale/moduletranslate.php:2684
 msgid "Change Percentage"
 msgstr ""
 
@@ -3286,14 +3293,14 @@ msgid "Currencies Custom HTML"
 msgstr ""
 
 #: locale/moduletranslate.php:982 locale/moduletranslate.php:996
-#: locale/moduletranslate.php:1003 locale/moduletranslate.php:2689
-#: locale/moduletranslate.php:2704 locale/moduletranslate.php:2711
+#: locale/moduletranslate.php:1003 locale/moduletranslate.php:2691
+#: locale/moduletranslate.php:2706 locale/moduletranslate.php:2713
 msgid "Items per Page"
 msgstr ""
 
 #: locale/moduletranslate.php:983 locale/moduletranslate.php:997
-#: locale/moduletranslate.php:1004 locale/moduletranslate.php:2690
-#: locale/moduletranslate.php:2705 locale/moduletranslate.php:2712
+#: locale/moduletranslate.php:1004 locale/moduletranslate.php:2692
+#: locale/moduletranslate.php:2707 locale/moduletranslate.php:2714
 msgid "This is the intended number of items on each page."
 msgstr ""
 
@@ -3847,8 +3854,8 @@ msgid "Icon"
 msgstr ""
 
 #: locale/moduletranslate.php:1594 locale/moduletranslate.php:2117
-#: locale/moduletranslate.php:2153 locale/moduletranslate.php:2292
-#: locale/moduletranslate.php:2306
+#: locale/moduletranslate.php:2153 locale/moduletranslate.php:2294
+#: locale/moduletranslate.php:2308
 msgid "Font Color"
 msgstr ""
 
@@ -3878,22 +3885,23 @@ msgstr ""
 #: locale/moduletranslate.php:1987 locale/moduletranslate.php:2018
 #: locale/moduletranslate.php:2049 locale/moduletranslate.php:2072
 #: locale/moduletranslate.php:2095
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1405
 #: cache/0c/0cc104a3d7987780eed7a70657ece580.php:121
 msgid "Background Image"
 msgstr ""
 
-#: locale/moduletranslate.php:1601 locale/moduletranslate.php:2198
-#: locale/moduletranslate.php:2223
+#: locale/moduletranslate.php:1601 locale/moduletranslate.php:2200
+#: locale/moduletranslate.php:2225
 msgid "Round Border"
 msgstr ""
 
-#: locale/moduletranslate.php:1602 locale/moduletranslate.php:2199
-#: locale/moduletranslate.php:2224
+#: locale/moduletranslate.php:1602 locale/moduletranslate.php:2201
+#: locale/moduletranslate.php:2226
 msgid "Should the square have rounded corners?"
 msgstr ""
 
-#: locale/moduletranslate.php:1603 locale/moduletranslate.php:2200
-#: locale/moduletranslate.php:2225
+#: locale/moduletranslate.php:1603 locale/moduletranslate.php:2202
+#: locale/moduletranslate.php:2227
 msgid "Border Radius"
 msgstr ""
 
@@ -3998,12 +4006,12 @@ msgstr ""
 #: locale/moduletranslate.php:2020 locale/moduletranslate.php:2051
 #: locale/moduletranslate.php:2074 locale/moduletranslate.php:2097
 #: cache/c8/c81aa074ed0c595eefef0776b8c89639.php:572
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:311
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:545
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:322
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:556
 #: cache/80/8016dad6634116cf39ffaf1bbf646931.php:628
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:295
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:529
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2400
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2594
 #: cache/38/38e5186bcfa9917c4ec02d8c626e2552.php:361
 #: cache/0e/0e02100c0f3615b819bb09d3e2a17b8a.php:400
 msgid "None"
@@ -4019,14 +4027,14 @@ msgstr ""
 #: locale/moduletranslate.php:2023 locale/moduletranslate.php:2054
 #: locale/moduletranslate.php:2077 locale/moduletranslate.php:2100
 #: locale/moduletranslate.php:2140 locale/moduletranslate.php:2174
-#: locale/moduletranslate.php:2297 locale/moduletranslate.php:2313
-#: locale/moduletranslate.php:2362 locale/moduletranslate.php:2385
-#: locale/moduletranslate.php:2408 locale/moduletranslate.php:2431
-#: locale/moduletranslate.php:2454 locale/moduletranslate.php:2477
-#: locale/moduletranslate.php:2500 locale/moduletranslate.php:2523
-#: locale/moduletranslate.php:2546 locale/moduletranslate.php:2569
-#: locale/moduletranslate.php:2592 locale/moduletranslate.php:2615
-#: locale/moduletranslate.php:2638 locale/moduletranslate.php:2672
+#: locale/moduletranslate.php:2299 locale/moduletranslate.php:2315
+#: locale/moduletranslate.php:2364 locale/moduletranslate.php:2387
+#: locale/moduletranslate.php:2410 locale/moduletranslate.php:2433
+#: locale/moduletranslate.php:2456 locale/moduletranslate.php:2479
+#: locale/moduletranslate.php:2502 locale/moduletranslate.php:2525
+#: locale/moduletranslate.php:2548 locale/moduletranslate.php:2571
+#: locale/moduletranslate.php:2594 locale/moduletranslate.php:2617
+#: locale/moduletranslate.php:2640 locale/moduletranslate.php:2674
 msgid "Center"
 msgstr ""
 
@@ -4365,11 +4373,19 @@ msgstr ""
 msgid "Enter the URL of the image you want to use."
 msgstr ""
 
-#: locale/moduletranslate.php:2201
+#: locale/moduletranslate.php:2183
+msgid "Opacity"
+msgstr ""
+
+#: locale/moduletranslate.php:2184
+msgid "Should the image have some transparency? Choose from 0 to 100."
+msgstr ""
+
+#: locale/moduletranslate.php:2203
 msgid "Line"
 msgstr ""
 
-#: locale/moduletranslate.php:2202
+#: locale/moduletranslate.php:2204
 #: cache/3d/3d43e8adbd5d771e55b4c097d061edee.php:182
 #: cache/3c/3c7bd12ad2faa21d9e80b1c4ee69d3b4.php:201
 #: cache/09/09ce3b6a0541b31d12645b44531faf96.php:245
@@ -4378,214 +4394,215 @@ msgstr ""
 #: cache/8c/8c08891d370939702e3d45696c9e38d6.php:138
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1102
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1379
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1536
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1515
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1730
 #: cache/4c/4c1de7ab59196b70ffa9f9da4d4e3b9c.php:415
 msgid "Width"
 msgstr ""
 
-#: locale/moduletranslate.php:2203
+#: locale/moduletranslate.php:2205
 #: cache/49/49b3c02c876e8a464a75e1682c064115.php:567
 msgid "Color"
 msgstr ""
 
-#: locale/moduletranslate.php:2204
+#: locale/moduletranslate.php:2206
 msgid "Style"
 msgstr ""
 
-#: locale/moduletranslate.php:2205
+#: locale/moduletranslate.php:2207
 msgid "Solid"
 msgstr ""
 
-#: locale/moduletranslate.php:2206
+#: locale/moduletranslate.php:2208
 msgid "Dotted"
 msgstr ""
 
-#: locale/moduletranslate.php:2207
+#: locale/moduletranslate.php:2209
 msgid "Dashed"
 msgstr ""
 
-#: locale/moduletranslate.php:2208
+#: locale/moduletranslate.php:2210
 msgid "Double"
 msgstr ""
 
-#: locale/moduletranslate.php:2209
+#: locale/moduletranslate.php:2211
 msgid "Tip1 Type"
 msgstr ""
 
-#: locale/moduletranslate.php:2210 locale/moduletranslate.php:2216
+#: locale/moduletranslate.php:2212 locale/moduletranslate.php:2218
 msgid "Squared"
 msgstr ""
 
-#: locale/moduletranslate.php:2211 locale/moduletranslate.php:2217
+#: locale/moduletranslate.php:2213 locale/moduletranslate.php:2219
 msgid "Diamond"
 msgstr ""
 
-#: locale/moduletranslate.php:2212 locale/moduletranslate.php:2218
+#: locale/moduletranslate.php:2214 locale/moduletranslate.php:2220
 msgid "Line Arrow"
 msgstr ""
 
-#: locale/moduletranslate.php:2213 locale/moduletranslate.php:2219
+#: locale/moduletranslate.php:2215 locale/moduletranslate.php:2221
 msgid "Solid Arrow"
 msgstr ""
 
-#: locale/moduletranslate.php:2214 locale/moduletranslate.php:2220
-#: locale/moduletranslate.php:2230
+#: locale/moduletranslate.php:2216 locale/moduletranslate.php:2222
+#: locale/moduletranslate.php:2232
 msgid "Circle"
 msgstr ""
 
-#: locale/moduletranslate.php:2215
+#: locale/moduletranslate.php:2217
 msgid "Tip2 Type"
 msgstr ""
 
-#: locale/moduletranslate.php:2221
+#: locale/moduletranslate.php:2223
 msgid "Rectangle"
 msgstr ""
 
-#: locale/moduletranslate.php:2222 locale/moduletranslate.php:2231
-#: locale/moduletranslate.php:2237 locale/moduletranslate.php:2243
-#: locale/moduletranslate.php:2249
+#: locale/moduletranslate.php:2224 locale/moduletranslate.php:2233
+#: locale/moduletranslate.php:2239 locale/moduletranslate.php:2245
+#: locale/moduletranslate.php:2251
 msgid "Background Color"
-msgstr ""
-
-#: locale/moduletranslate.php:2226 locale/moduletranslate.php:2232
-#: locale/moduletranslate.php:2238 locale/moduletranslate.php:2244
-#: locale/moduletranslate.php:2250
-msgid "Show Outline"
-msgstr ""
-
-#: locale/moduletranslate.php:2227
-msgid "Should the square have an outline?"
 msgstr ""
 
 #: locale/moduletranslate.php:2228 locale/moduletranslate.php:2234
 #: locale/moduletranslate.php:2240 locale/moduletranslate.php:2246
 #: locale/moduletranslate.php:2252
+msgid "Show Outline"
+msgstr ""
+
+#: locale/moduletranslate.php:2229
+msgid "Should the square have an outline?"
+msgstr ""
+
+#: locale/moduletranslate.php:2230 locale/moduletranslate.php:2236
+#: locale/moduletranslate.php:2242 locale/moduletranslate.php:2248
+#: locale/moduletranslate.php:2254
 msgid "Outline Color"
 msgstr ""
 
-#: locale/moduletranslate.php:2229 locale/moduletranslate.php:2235
-#: locale/moduletranslate.php:2241 locale/moduletranslate.php:2247
-#: locale/moduletranslate.php:2253
+#: locale/moduletranslate.php:2231 locale/moduletranslate.php:2237
+#: locale/moduletranslate.php:2243 locale/moduletranslate.php:2249
+#: locale/moduletranslate.php:2255
 msgid "Outline Width"
 msgstr ""
 
-#: locale/moduletranslate.php:2233
+#: locale/moduletranslate.php:2235
 msgid "Should the circle have an outline?"
 msgstr ""
 
-#: locale/moduletranslate.php:2236
+#: locale/moduletranslate.php:2238
 msgid "Triangle"
 msgstr ""
 
-#: locale/moduletranslate.php:2239
+#: locale/moduletranslate.php:2241
 msgid "Should the triangle have an outline?"
 msgstr ""
 
-#: locale/moduletranslate.php:2242
+#: locale/moduletranslate.php:2244
 msgid "Pentagon"
 msgstr ""
 
-#: locale/moduletranslate.php:2245
+#: locale/moduletranslate.php:2247
 msgid "Should the pentagon have an outline?"
 msgstr ""
 
-#: locale/moduletranslate.php:2248
+#: locale/moduletranslate.php:2250
 msgid "Hexagon"
 msgstr ""
 
-#: locale/moduletranslate.php:2251
+#: locale/moduletranslate.php:2253
 msgid "Should the hexagon have an outline?"
 msgstr ""
 
-#: locale/moduletranslate.php:2254 locale/moduletranslate.php:2265
+#: locale/moduletranslate.php:2256 locale/moduletranslate.php:2267
 #: cache/39/394b19a8eebf2eb1d9628eb62cde032c.php:116
 #: cache/c5/c5ca1344d07a74a91c5de3a21d4c2de4.php:107
 #: cache/fa/fa9935428c44daef4d95e4b582124caa.php:116
 msgid "Subject"
 msgstr ""
 
-#: locale/moduletranslate.php:2255 locale/moduletranslate.php:2266
+#: locale/moduletranslate.php:2257 locale/moduletranslate.php:2268
 msgid "Body"
 msgstr ""
 
-#: locale/moduletranslate.php:2257
+#: locale/moduletranslate.php:2259
 #: cache/09/09fa06e4cbb20e5f65e2075bff1da423.php:594
 #: cache/24/24c5ae3175cea2904ae6bd208e699f50.php:708
 #: cache/d2/d2fa8bed4d1e30769527c78081442bfc.php:178
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1552
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1746
 #: cache/23/238f0b98d7f96aca9a850e8b230fe1fb.php:291
 #: lib/Widget/DataType/Article.php:75
 msgid "Created Date"
 msgstr ""
 
-#: locale/moduletranslate.php:2261 locale/moduletranslate.php:2339
-#: locale/moduletranslate.php:2695
+#: locale/moduletranslate.php:2263 locale/moduletranslate.php:2341
+#: locale/moduletranslate.php:2697
 msgid "Main Template"
 msgstr ""
 
-#: locale/moduletranslate.php:2262
+#: locale/moduletranslate.php:2264
 msgid ""
 "The template for formatting your notifications. Enter [Subject] and [Body] "
 "with your desired formatting. Enter text or HTML in the box below."
 msgstr ""
 
-#: locale/moduletranslate.php:2270
+#: locale/moduletranslate.php:2272
 msgid ""
 "A message to display when there are no notifications to show. Enter text or "
 "HTML in the box below."
 msgstr ""
 
-#: locale/moduletranslate.php:2277
+#: locale/moduletranslate.php:2279
 msgid "Category Photo"
 msgstr ""
 
-#: locale/moduletranslate.php:2279
+#: locale/moduletranslate.php:2281
 msgid "Dim when unavailable?"
 msgstr ""
 
-#: locale/moduletranslate.php:2280
+#: locale/moduletranslate.php:2282
 msgid "Dim Color"
 msgstr ""
 
-#: locale/moduletranslate.php:2283 locale/moduletranslate.php:2307
+#: locale/moduletranslate.php:2285 locale/moduletranslate.php:2309
 msgid "Currency Code"
 msgstr ""
 
-#: locale/moduletranslate.php:2284 locale/moduletranslate.php:2308
+#: locale/moduletranslate.php:2286 locale/moduletranslate.php:2310
 msgid "The 3 digit currency code to apply to the price, e.g. USD/GBP/EUR"
 msgstr ""
 
-#: locale/moduletranslate.php:2285 locale/moduletranslate.php:2293
-#: locale/moduletranslate.php:2309
+#: locale/moduletranslate.php:2287 locale/moduletranslate.php:2295
+#: locale/moduletranslate.php:2311
 msgid "Prefix"
 msgstr ""
 
-#: locale/moduletranslate.php:2286 locale/moduletranslate.php:2294
-#: locale/moduletranslate.php:2310
+#: locale/moduletranslate.php:2288 locale/moduletranslate.php:2296
+#: locale/moduletranslate.php:2312
 msgid "Suffix"
 msgstr ""
 
-#: locale/moduletranslate.php:2287
+#: locale/moduletranslate.php:2289
 msgid "Allergy info"
 msgstr ""
 
-#: locale/moduletranslate.php:2288 lib/Widget/DataType/SocialMedia.php:73
+#: locale/moduletranslate.php:2290 lib/Widget/DataType/SocialMedia.php:73
 msgid "Photo"
 msgstr ""
 
-#: locale/moduletranslate.php:2289
+#: locale/moduletranslate.php:2291
 msgid "Options: Name"
 msgstr ""
 
-#: locale/moduletranslate.php:2290 locale/moduletranslate.php:2304
+#: locale/moduletranslate.php:2292 locale/moduletranslate.php:2306
 msgid "Option slot"
 msgstr ""
 
-#: locale/moduletranslate.php:2303
+#: locale/moduletranslate.php:2305
 msgid "Options: Value"
 msgstr ""
 
-#: locale/moduletranslate.php:2319
+#: locale/moduletranslate.php:2321
 #: cache/04/04b4b8b9bb93bf0580422332c142abff.php:223
 #: cache/d4/d41eb57456e7d0ead8c455e4652b975c.php:178
 #: cache/fd/fd08b6cb6765ac676b671e9c5a7afe27.php:178
@@ -4593,86 +4610,66 @@ msgstr ""
 msgid "Calories"
 msgstr ""
 
-#: locale/moduletranslate.php:2321
+#: locale/moduletranslate.php:2323
 msgid "Units margin"
 msgstr ""
 
-#: locale/moduletranslate.php:2322
+#: locale/moduletranslate.php:2324
 msgid "Units color"
 msgstr ""
 
-#: locale/moduletranslate.php:2323
+#: locale/moduletranslate.php:2325
 msgid "Profile Photo"
 msgstr ""
 
-#: locale/moduletranslate.php:2325
+#: locale/moduletranslate.php:2327
 msgid "Screen name"
 msgstr ""
 
-#: locale/moduletranslate.php:2328
+#: locale/moduletranslate.php:2330
 msgid "Post Photo"
 msgstr ""
 
-#: locale/moduletranslate.php:2329
+#: locale/moduletranslate.php:2331
 msgid "Post"
 msgstr ""
 
-#: locale/moduletranslate.php:2330
+#: locale/moduletranslate.php:2332
 msgid "Vintage Photo"
 msgstr ""
 
-#: locale/moduletranslate.php:2331
+#: locale/moduletranslate.php:2333
 msgid "Post - Dark"
 msgstr ""
 
-#: locale/moduletranslate.php:2337
+#: locale/moduletranslate.php:2339
 msgid "Original Padding"
 msgstr ""
 
-#: locale/moduletranslate.php:2338
+#: locale/moduletranslate.php:2340
 msgid ""
 "This is the intended padding of the template and is used to position the "
 "Widget within its region when the template is applied."
 msgstr ""
 
-#: locale/moduletranslate.php:2342
+#: locale/moduletranslate.php:2344
 msgid "Content Type"
 msgstr ""
 
-#: locale/moduletranslate.php:2343
+#: locale/moduletranslate.php:2345
 msgid "This is the intended tweet content type."
 msgstr ""
 
-#: locale/moduletranslate.php:2344
+#: locale/moduletranslate.php:2346
 msgid "All Posts"
 msgstr ""
 
-#: locale/moduletranslate.php:2345
+#: locale/moduletranslate.php:2347
 msgid "Posts with text only content"
 msgstr ""
 
-#: locale/moduletranslate.php:2346
+#: locale/moduletranslate.php:2348
 msgid "Posts with text and image content"
-msgstr ""
-
-#: locale/moduletranslate.php:2349 locale/moduletranslate.php:2372
-#: locale/moduletranslate.php:2395 locale/moduletranslate.php:2418
-#: locale/moduletranslate.php:2441 locale/moduletranslate.php:2464
-#: locale/moduletranslate.php:2487 locale/moduletranslate.php:2510
-#: locale/moduletranslate.php:2533 locale/moduletranslate.php:2556
-#: locale/moduletranslate.php:2579 locale/moduletranslate.php:2602
-#: locale/moduletranslate.php:2625
-msgid "Items Per Page"
-msgstr ""
-
-#: locale/moduletranslate.php:2350 locale/moduletranslate.php:2373
-#: locale/moduletranslate.php:2396 locale/moduletranslate.php:2419
-#: locale/moduletranslate.php:2442 locale/moduletranslate.php:2465
-#: locale/moduletranslate.php:2488 locale/moduletranslate.php:2511
-#: locale/moduletranslate.php:2534 locale/moduletranslate.php:2557
-#: locale/moduletranslate.php:2580 locale/moduletranslate.php:2603
-#: locale/moduletranslate.php:2626
-msgid "The number of items to show per page (default = 5)."
 msgstr ""
 
 #: locale/moduletranslate.php:2351 locale/moduletranslate.php:2374
@@ -4682,7 +4679,7 @@ msgstr ""
 #: locale/moduletranslate.php:2535 locale/moduletranslate.php:2558
 #: locale/moduletranslate.php:2581 locale/moduletranslate.php:2604
 #: locale/moduletranslate.php:2627
-msgid "Items direction"
+msgid "Items Per Page"
 msgstr ""
 
 #: locale/moduletranslate.php:2352 locale/moduletranslate.php:2375
@@ -4692,7 +4689,7 @@ msgstr ""
 #: locale/moduletranslate.php:2536 locale/moduletranslate.php:2559
 #: locale/moduletranslate.php:2582 locale/moduletranslate.php:2605
 #: locale/moduletranslate.php:2628
-msgid "The display order if there's more than one item."
+msgid "The number of items to show per page (default = 5)."
 msgstr ""
 
 #: locale/moduletranslate.php:2353 locale/moduletranslate.php:2376
@@ -4702,7 +4699,7 @@ msgstr ""
 #: locale/moduletranslate.php:2537 locale/moduletranslate.php:2560
 #: locale/moduletranslate.php:2583 locale/moduletranslate.php:2606
 #: locale/moduletranslate.php:2629
-msgid "Horizontal"
+msgid "Items direction"
 msgstr ""
 
 #: locale/moduletranslate.php:2354 locale/moduletranslate.php:2377
@@ -4712,158 +4709,178 @@ msgstr ""
 #: locale/moduletranslate.php:2538 locale/moduletranslate.php:2561
 #: locale/moduletranslate.php:2584 locale/moduletranslate.php:2607
 #: locale/moduletranslate.php:2630
+msgid "The display order if there's more than one item."
+msgstr ""
+
+#: locale/moduletranslate.php:2355 locale/moduletranslate.php:2378
+#: locale/moduletranslate.php:2401 locale/moduletranslate.php:2424
+#: locale/moduletranslate.php:2447 locale/moduletranslate.php:2470
+#: locale/moduletranslate.php:2493 locale/moduletranslate.php:2516
+#: locale/moduletranslate.php:2539 locale/moduletranslate.php:2562
+#: locale/moduletranslate.php:2585 locale/moduletranslate.php:2608
+#: locale/moduletranslate.php:2631
+msgid "Horizontal"
+msgstr ""
+
+#: locale/moduletranslate.php:2356 locale/moduletranslate.php:2379
+#: locale/moduletranslate.php:2402 locale/moduletranslate.php:2425
+#: locale/moduletranslate.php:2448 locale/moduletranslate.php:2471
+#: locale/moduletranslate.php:2494 locale/moduletranslate.php:2517
+#: locale/moduletranslate.php:2540 locale/moduletranslate.php:2563
+#: locale/moduletranslate.php:2586 locale/moduletranslate.php:2609
+#: locale/moduletranslate.php:2632
 msgid "Vertical"
 msgstr ""
 
-#: locale/moduletranslate.php:2360 locale/moduletranslate.php:2383
-#: locale/moduletranslate.php:2406 locale/moduletranslate.php:2429
-#: locale/moduletranslate.php:2452 locale/moduletranslate.php:2475
-#: locale/moduletranslate.php:2498 locale/moduletranslate.php:2521
-#: locale/moduletranslate.php:2544 locale/moduletranslate.php:2567
-#: locale/moduletranslate.php:2590 locale/moduletranslate.php:2613
-#: locale/moduletranslate.php:2636 locale/moduletranslate.php:2670
+#: locale/moduletranslate.php:2362 locale/moduletranslate.php:2385
+#: locale/moduletranslate.php:2408 locale/moduletranslate.php:2431
+#: locale/moduletranslate.php:2454 locale/moduletranslate.php:2477
+#: locale/moduletranslate.php:2500 locale/moduletranslate.php:2523
+#: locale/moduletranslate.php:2546 locale/moduletranslate.php:2569
+#: locale/moduletranslate.php:2592 locale/moduletranslate.php:2615
+#: locale/moduletranslate.php:2638 locale/moduletranslate.php:2672
 msgid "How should this widget be aligned?"
 msgstr ""
 
-#: locale/moduletranslate.php:2369
+#: locale/moduletranslate.php:2371
 msgid "Template 1 - text, profile image"
 msgstr ""
 
-#: locale/moduletranslate.php:2392
+#: locale/moduletranslate.php:2394
 msgid "Template 2 - text, profile image, photo"
 msgstr ""
 
-#: locale/moduletranslate.php:2415
+#: locale/moduletranslate.php:2417
 msgid "Template 3 - text"
 msgstr ""
 
-#: locale/moduletranslate.php:2438
+#: locale/moduletranslate.php:2440
 msgid "Template 4 - text, profile image"
 msgstr ""
 
-#: locale/moduletranslate.php:2461
+#: locale/moduletranslate.php:2463
 msgid "Template 5 - text, profile image"
 msgstr ""
 
-#: locale/moduletranslate.php:2484
+#: locale/moduletranslate.php:2486
 msgid "Template 6 - text, profile image"
 msgstr ""
 
-#: locale/moduletranslate.php:2507
+#: locale/moduletranslate.php:2509
 msgid "Template 7 - text, profile image"
 msgstr ""
 
-#: locale/moduletranslate.php:2530
+#: locale/moduletranslate.php:2532
 msgid "Template 8 - text, profile image"
 msgstr ""
 
-#: locale/moduletranslate.php:2553
+#: locale/moduletranslate.php:2555
 msgid "Template 9 - text, logo"
 msgstr ""
 
-#: locale/moduletranslate.php:2576
+#: locale/moduletranslate.php:2578
 msgid "Template 10 - text, photo, logo"
 msgstr ""
 
-#: locale/moduletranslate.php:2599
+#: locale/moduletranslate.php:2601
 msgid "Template 11 - text, logo"
 msgstr ""
 
-#: locale/moduletranslate.php:2622
+#: locale/moduletranslate.php:2624
 msgid "Template 12 - text, profile image, logo"
 msgstr ""
 
-#: locale/moduletranslate.php:2645
+#: locale/moduletranslate.php:2647
 msgid "Metro Social"
 msgstr ""
 
-#: locale/moduletranslate.php:2648
+#: locale/moduletranslate.php:2650
 msgid "Colours Template"
 msgstr ""
 
-#: locale/moduletranslate.php:2649
+#: locale/moduletranslate.php:2651
 msgid ""
 "Select the template colours you would like to apply values to the colours "
 "below."
 msgstr ""
 
-#: locale/moduletranslate.php:2651
+#: locale/moduletranslate.php:2653
 msgid "Colours 1 - Default"
 msgstr ""
 
-#: locale/moduletranslate.php:2652
+#: locale/moduletranslate.php:2654
 msgid "Colours 2 - Full"
 msgstr ""
 
-#: locale/moduletranslate.php:2653
+#: locale/moduletranslate.php:2655
 msgid "Colours 3 - Gray Scale"
 msgstr ""
 
-#: locale/moduletranslate.php:2654
+#: locale/moduletranslate.php:2656
 msgid "Colours 4 - Light"
 msgstr ""
 
-#: locale/moduletranslate.php:2655
+#: locale/moduletranslate.php:2657
 msgid "Colours 5 - Soft"
 msgstr ""
 
-#: locale/moduletranslate.php:2656
+#: locale/moduletranslate.php:2658
 msgid "Colours 6 - Vivid"
 msgstr ""
 
-#: locale/moduletranslate.php:2657
+#: locale/moduletranslate.php:2659
 msgid "Color 1"
 msgstr ""
 
-#: locale/moduletranslate.php:2658
+#: locale/moduletranslate.php:2660
 msgid "Color 2"
 msgstr ""
 
-#: locale/moduletranslate.php:2659
+#: locale/moduletranslate.php:2661
 msgid "Color 3"
 msgstr ""
 
-#: locale/moduletranslate.php:2660
+#: locale/moduletranslate.php:2662
 msgid "Color 4"
 msgstr ""
 
-#: locale/moduletranslate.php:2661
+#: locale/moduletranslate.php:2663
 msgid "Color 5"
 msgstr ""
 
-#: locale/moduletranslate.php:2662
+#: locale/moduletranslate.php:2664
 msgid "Color 6"
 msgstr ""
 
-#: locale/moduletranslate.php:2663
+#: locale/moduletranslate.php:2665
 msgid "Color 7"
 msgstr ""
 
-#: locale/moduletranslate.php:2664
+#: locale/moduletranslate.php:2666
 msgid "Color 8"
 msgstr ""
 
-#: locale/moduletranslate.php:2680
+#: locale/moduletranslate.php:2682
 msgid "Symbol"
 msgstr ""
 
-#: locale/moduletranslate.php:2683
+#: locale/moduletranslate.php:2685
 msgid "Stock Icon"
 msgstr ""
 
-#: locale/moduletranslate.php:2684
+#: locale/moduletranslate.php:2686
 msgid "Stocks Custom HTML"
 msgstr ""
 
-#: locale/moduletranslate.php:2697
+#: locale/moduletranslate.php:2699
 msgid "Optional Stylesheet"
 msgstr ""
 
-#: locale/moduletranslate.php:2699
+#: locale/moduletranslate.php:2701
 msgid "Stocks 1"
 msgstr ""
 
-#: locale/moduletranslate.php:2706
+#: locale/moduletranslate.php:2708
 msgid "Stocks 2"
 msgstr ""
 
@@ -4871,7 +4888,7 @@ msgstr ""
 msgid "Fade In"
 msgstr ""
 
-#: locale/dbtranslate.php:27 cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2428
+#: locale/dbtranslate.php:27 cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2622
 msgid "Fade Out"
 msgstr ""
 
@@ -5337,7 +5354,7 @@ msgstr ""
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:843
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:864
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1265
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1640
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1834
 #: cache/1b/1b54f8dd2f1a33488bb30d63484f87f7.php:68
 #: cache/23/235acc51022bf578b604ce47dd2743a4.php:68
 #: cache/23/23114ff234f79ee13968407a57f6252d.php:65
@@ -5516,8 +5533,8 @@ msgstr ""
 #: cache/32/32885dae79820faade39c5207ec15914.php:341
 #: cache/a7/a7a26926ec2b52230c8037d640a807ea.php:561
 #: cache/37/37f12704cf17017038d73d9ee1907d04.php:627
-#: cache/53/53221a3cb3187e41cde32cfa796d45a7.php:480
-#: cache/53/53221a3cb3187e41cde32cfa796d45a7.php:498
+#: cache/53/53221a3cb3187e41cde32cfa796d45a7.php:481
+#: cache/53/53221a3cb3187e41cde32cfa796d45a7.php:499
 msgid "Next"
 msgstr ""
 
@@ -5623,7 +5640,7 @@ msgstr ""
 #: cache/42/429bc3b90e0dd835a4548e949ce40ad6.php:69
 #: cache/8d/8de7dd9661211f3ba39933b564d76990.php:70
 #: cache/72/72bfb52fd80e06544d4442d19663906a.php:72
-#: cache/53/53221a3cb3187e41cde32cfa796d45a7.php:475
+#: cache/53/53221a3cb3187e41cde32cfa796d45a7.php:476
 #: cache/06/064860d0048e253d534fdf8acb4ec0bd.php:78
 #: cache/cb/cbba241d915c7e565fbb58c637b124a8.php:78
 #: cache/d3/d3aa1431a8c1ca36890facca4eb9503f.php:69
@@ -5995,7 +6012,7 @@ msgstr ""
 #: cache/5e/5ec96adf0346509994d4c975eac80689.php:102
 #: cache/8a/8acc5a2af63338673a6de3f58764bb95.php:175
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:941
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1981
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2175
 #: cache/23/2360e54d15ebe919cd8f4305d3819359.php:166
 #: cache/63/63a123f42a16165e90cd9f604b2de4bd.php:122
 #: cache/0b/0bf1ec6ab33ef0ba5938df774146f8dc.php:141
@@ -6010,7 +6027,7 @@ msgstr ""
 #: cache/70/70af2bbd82243291558c9b83caec5b48.php:161
 #: lib/Controller/Template.php:217 lib/Controller/DisplayGroup.php:347
 #: lib/Controller/Campaign.php:348 lib/Controller/MenuBoard.php:189
-#: lib/Controller/Playlist.php:406 lib/Controller/Library.php:658
+#: lib/Controller/Playlist.php:407 lib/Controller/Library.php:658
 #: lib/Controller/Layout.php:1768 lib/Controller/Display.php:935
 msgid "Select Folder"
 msgstr ""
@@ -6045,7 +6062,7 @@ msgstr ""
 #: cache/89/8945ceeea3df1eea58421905bdc6dd5e.php:269
 #: cache/e3/e3e074211e42eadb55ae8cb6ceeaa722.php:55
 #: cache/e3/e3e074211e42eadb55ae8cb6ceeaa722.php:85
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1610
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1804
 #: cache/23/238f0b98d7f96aca9a850e8b230fe1fb.php:175
 #: cache/23/238f0b98d7f96aca9a850e8b230fe1fb.php:261
 #: cache/23/2360e54d15ebe919cd8f4305d3819359.php:200
@@ -6316,7 +6333,7 @@ msgstr ""
 #: cache/9e/9e2a80ecdd8879e59308a644c1f6721f.php:204
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1220
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1232
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1851
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2045
 #: cache/38/38e5186bcfa9917c4ec02d8c626e2552.php:188
 #: cache/0e/0e02100c0f3615b819bb09d3e2a17b8a.php:204
 #: cache/fe/fe92f223f863fb1896ced5bd33b8c256.php:343
@@ -6328,7 +6345,7 @@ msgstr ""
 #: cache/3d/3d685e4b4f0f4e045b5cc2697b26574d.php:88
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1070
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1228
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2359
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2553
 msgid "Widget"
 msgstr ""
 
@@ -6339,14 +6356,14 @@ msgid "Sharing for %objectName%"
 msgstr ""
 
 #: cache/3d/3d685e4b4f0f4e045b5cc2697b26574d.php:180
-#: cache/e7/e7012f849ea8937cd0edbed2b7de4de8.php:973
+#: cache/e7/e7012f849ea8937cd0edbed2b7de4de8.php:982
 #: cache/1b/1b4d10b8bb67ce8b30ada153b15daf6e.php:212
 #: cache/11/1107af5e0742401bd7bdcb180ef3991e.php:173
 msgid "View"
 msgstr ""
 
 #: cache/3d/3d685e4b4f0f4e045b5cc2697b26574d.php:184
-#: cache/e7/e7012f849ea8937cd0edbed2b7de4de8.php:977
+#: cache/e7/e7012f849ea8937cd0edbed2b7de4de8.php:986
 #: cache/88/880da8bf57750f4e35ce30624c0c6d79.php:166
 #: cache/fe/fe92f223f863fb1896ced5bd33b8c256.php:555
 #: cache/11/1107af5e0742401bd7bdcb180ef3991e.php:177
@@ -6354,7 +6371,7 @@ msgstr ""
 #: lib/Controller/DisplayGroup.php:329 lib/Controller/DataSet.php:253
 #: lib/Controller/ScheduleReport.php:219 lib/Controller/Notification.php:217
 #: lib/Controller/Campaign.php:327 lib/Controller/Campaign.php:335
-#: lib/Controller/MenuBoard.php:181 lib/Controller/Playlist.php:391
+#: lib/Controller/MenuBoard.php:181 lib/Controller/Playlist.php:392
 #: lib/Controller/Transition.php:94 lib/Controller/Library.php:643
 #: lib/Controller/SyncGroup.php:170 lib/Controller/DataSetColumn.php:170
 #: lib/Controller/Tag.php:230 lib/Controller/Layout.php:1760
@@ -6370,7 +6387,7 @@ msgstr ""
 
 #: cache/3d/3d685e4b4f0f4e045b5cc2697b26574d.php:188
 #: cache/c8/c81aa074ed0c595eefef0776b8c89639.php:77
-#: cache/e7/e7012f849ea8937cd0edbed2b7de4de8.php:981
+#: cache/e7/e7012f849ea8937cd0edbed2b7de4de8.php:990
 #: cache/68/6890d35803a665b9db578df45f0f60f0.php:57
 #: cache/f9/f92fcbc3e5aadf70527c18c1877f9814.php:56
 #: cache/88/880da8bf57750f4e35ce30624c0c6d79.php:170
@@ -6391,8 +6408,8 @@ msgstr ""
 #: lib/Controller/ScheduleReport.php:245 lib/Controller/Notification.php:224
 #: lib/Controller/Campaign.php:393 lib/Controller/Campaign.php:406
 #: lib/Controller/SavedReport.php:178 lib/Controller/SavedReport.php:184
-#: lib/Controller/MenuBoard.php:242 lib/Controller/Playlist.php:456
-#: lib/Controller/Playlist.php:467 lib/Controller/Library.php:683
+#: lib/Controller/MenuBoard.php:242 lib/Controller/Playlist.php:457
+#: lib/Controller/Playlist.php:468 lib/Controller/Library.php:683
 #: lib/Controller/Library.php:689 lib/Controller/SyncGroup.php:184
 #: lib/Controller/DataSetColumn.php:178 lib/Controller/Tag.php:237
 #: lib/Controller/Tag.php:243 lib/Controller/Layout.php:1818
@@ -6420,7 +6437,7 @@ msgstr ""
 #: cache/d2/d2fa8bed4d1e30769527c78081442bfc.php:186
 #: cache/fb/fb12c90670ac105c9ea03fcc99876e87.php:104
 #: cache/fb/fb12c90670ac105c9ea03fcc99876e87.php:171
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1506
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1700
 #: cache/f3/f3286f195f132c53823b9bb1068e5cc9.php:137
 #: cache/f3/f3286f195f132c53823b9bb1068e5cc9.php:208
 #: cache/8d/8de7dd9661211f3ba39933b564d76990.php:409
@@ -6548,7 +6565,8 @@ msgstr ""
 #: cache/8c/8c08891d370939702e3d45696c9e38d6.php:142
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1106
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1383
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1540
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1523
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1734
 #: cache/4c/4c1de7ab59196b70ffa9f9da4d4e3b9c.php:419
 msgid "Height"
 msgstr ""
@@ -6560,7 +6578,9 @@ msgstr ""
 #: cache/3d/3d43e8adbd5d771e55b4c097d061edee.php:212
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1122
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1347
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1938
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1433
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1491
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2132
 #: cache/0c/0cc104a3d7987780eed7a70657ece580.php:197
 msgid "Layer"
 msgstr ""
@@ -6604,6 +6624,7 @@ msgstr ""
 #: cache/e7/e796ca1083ad3813266a62e6854798e8.php:91
 #: cache/68/683636238aff529d5a7b7478118dede4.php:1115
 #: cache/d5/d548e4848346b34fa2915d684010817b.php:245
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1561
 #: cache/cb/cbed339b261aade59b9d7cdbdfb46dcc.php:870
 #: cache/11/1140e2fe8d16f9c5bd7224da78abee20.php:91
 msgid "Enable Stats Collection?"
@@ -6627,6 +6648,7 @@ msgstr ""
 #: cache/09/09ce3b6a0541b31d12645b44531faf96.php:321
 #: cache/8a/8acc5a2af63338673a6de3f58764bb95.php:290
 #: cache/49/49b3c02c876e8a464a75e1682c064115.php:280
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1569
 #: cache/74/74cac03bd6d6bdd54edcfd79c1c2a2fb.php:338
 #: cache/74/74cac03bd6d6bdd54edcfd79c1c2a2fb.php:492
 #: cache/74/74cac03bd6d6bdd54edcfd79c1c2a2fb.php:506
@@ -6649,6 +6671,7 @@ msgstr ""
 #: cache/68/683636238aff529d5a7b7478118dede4.php:1947
 #: cache/68/683636238aff529d5a7b7478118dede4.php:3469
 #: cache/8a/8acc5a2af63338673a6de3f58764bb95.php:295
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1573
 #: cache/74/74cac03bd6d6bdd54edcfd79c1c2a2fb.php:492
 #: cache/74/74cac03bd6d6bdd54edcfd79c1c2a2fb.php:506
 #: cache/74/74cac03bd6d6bdd54edcfd79c1c2a2fb.php:575
@@ -6667,6 +6690,7 @@ msgstr ""
 #: cache/68/683636238aff529d5a7b7478118dede4.php:1235
 #: cache/68/683636238aff529d5a7b7478118dede4.php:1291
 #: cache/8a/8acc5a2af63338673a6de3f58764bb95.php:300
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1577
 #: cache/23/2360e54d15ebe919cd8f4305d3819359.php:301
 #: cache/c5/c52b8109558dd3acc604e183177113c8.php:272
 #: cache/10/10b7f3b85c460e6ccc00e28eed2bf591.php:912
@@ -6686,7 +6710,7 @@ msgstr ""
 #: cache/4e/4ecfb080a1b970aaf8c60b2a16c13a4f.php:67
 #: cache/67/671e1a0d15cf6622a031b0a7a49f5956.php:73
 #: cache/37/37f12704cf17017038d73d9ee1907d04.php:344
-#: cache/53/53221a3cb3187e41cde32cfa796d45a7.php:490
+#: cache/53/53221a3cb3187e41cde32cfa796d45a7.php:491
 msgid "Close"
 msgstr ""
 
@@ -6834,7 +6858,7 @@ msgstr ""
 #: cache/80/8016dad6634116cf39ffaf1bbf646931.php:353
 #: cache/7d/7d93daaf181fe08e96e60d7e241a1d1c.php:99
 #: cache/88/880da8bf57750f4e35ce30624c0c6d79.php:633
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2152
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2346
 #: cache/38/38e5186bcfa9917c4ec02d8c626e2552.php:258
 #: cache/51/5183626e7e19083fdf9708e7d778f66f.php:150
 #: cache/0e/0e02100c0f3615b819bb09d3e2a17b8a.php:274
@@ -6849,7 +6873,7 @@ msgstr ""
 #: cache/80/8016dad6634116cf39ffaf1bbf646931.php:368
 #: cache/7d/7d93daaf181fe08e96e60d7e241a1d1c.php:114
 #: cache/88/880da8bf57750f4e35ce30624c0c6d79.php:648
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2156
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2350
 #: cache/38/38e5186bcfa9917c4ec02d8c626e2552.php:273
 #: cache/51/5183626e7e19083fdf9708e7d778f66f.php:165
 #: cache/0e/0e02100c0f3615b819bb09d3e2a17b8a.php:289
@@ -6932,7 +6956,7 @@ msgstr ""
 
 #: cache/c8/c81aa074ed0c595eefef0776b8c89639.php:395
 #: cache/80/8016dad6634116cf39ffaf1bbf646931.php:475
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2347
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2541
 msgid "Action Type"
 msgstr ""
 
@@ -6945,7 +6969,7 @@ msgstr ""
 #: cache/80/8016dad6634116cf39ffaf1bbf646931.php:485
 #: cache/77/774dde73b0eb7965a680b8a52776fa6b.php:234
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1293
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1747
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1941
 msgid "Navigate to Layout"
 msgstr ""
 
@@ -6958,7 +6982,7 @@ msgstr ""
 #: cache/23/23114ff234f79ee13968407a57f6252d.php:133
 #: cache/a7/a7a26926ec2b52230c8037d640a807ea.php:711
 #: cache/cb/cb1c15ce617fd7e7648d38bb0b2b48f5.php:554
-#: cache/cb/cb1c15ce617fd7e7648d38bb0b2b48f5.php:1233
+#: cache/cb/cb1c15ce617fd7e7648d38bb0b2b48f5.php:1245
 #: cache/d3/d3aa1431a8c1ca36890facca4eb9503f.php:135
 #: cache/10/1090c5665a57f49e6b968318ca49de82.php:113
 #: lib/Entity/Schedule.php:1961
@@ -6968,9 +6992,9 @@ msgstr ""
 #: cache/c8/c81aa074ed0c595eefef0776b8c89639.php:425
 #: cache/80/8016dad6634116cf39ffaf1bbf646931.php:505
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1317
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2343
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2537
 #: cache/fa/fa66e594804204b7397616a42725bee8.php:87
-#: cache/cb/cb1c15ce617fd7e7648d38bb0b2b48f5.php:1205
+#: cache/cb/cb1c15ce617fd7e7648d38bb0b2b48f5.php:1217
 msgid "Trigger Code"
 msgstr ""
 
@@ -6983,7 +7007,7 @@ msgstr ""
 #: cache/80/8016dad6634116cf39ffaf1bbf646931.php:520
 #: cache/77/774dde73b0eb7965a680b8a52776fa6b.php:242
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1333
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2363
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2557
 msgid "Layout Code"
 msgstr ""
 
@@ -7083,8 +7107,8 @@ msgid "Per Minute"
 msgstr ""
 
 #: cache/c8/c81aa074ed0c595eefef0776b8c89639.php:582
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:617
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:690
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:628
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:701
 #: cache/3c/3c7bd12ad2faa21d9e80b1c4ee69d3b4.php:139
 #: cache/68/683636238aff529d5a7b7478118dede4.php:1076
 #: cache/80/8016dad6634116cf39ffaf1bbf646931.php:638
@@ -7099,8 +7123,8 @@ msgid "Hourly"
 msgstr ""
 
 #: cache/c8/c81aa074ed0c595eefef0776b8c89639.php:587
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:622
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:695
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:633
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:706
 #: cache/3c/3c7bd12ad2faa21d9e80b1c4ee69d3b4.php:139
 #: cache/68/683636238aff529d5a7b7478118dede4.php:1081
 #: cache/80/8016dad6634116cf39ffaf1bbf646931.php:643
@@ -7115,8 +7139,8 @@ msgid "Daily"
 msgstr ""
 
 #: cache/c8/c81aa074ed0c595eefef0776b8c89639.php:592
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:627
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:700
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:638
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:711
 #: cache/80/8016dad6634116cf39ffaf1bbf646931.php:648
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:608
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:681
@@ -7126,8 +7150,8 @@ msgid "Weekly"
 msgstr ""
 
 #: cache/c8/c81aa074ed0c595eefef0776b8c89639.php:597
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:637
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:710
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:648
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:721
 #: cache/80/8016dad6634116cf39ffaf1bbf646931.php:653
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:618
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:691
@@ -7137,8 +7161,8 @@ msgid "Monthly"
 msgstr ""
 
 #: cache/c8/c81aa074ed0c595eefef0776b8c89639.php:602
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:647
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:720
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:658
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:731
 #: cache/80/8016dad6634116cf39ffaf1bbf646931.php:658
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:628
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:701
@@ -7163,7 +7187,7 @@ msgstr ""
 #: cache/0e/0e02100c0f3615b819bb09d3e2a17b8a.php:455
 #: cache/fe/fe92f223f863fb1896ced5bd33b8c256.php:564
 #: cache/fe/fe92f223f863fb1896ced5bd33b8c256.php:640
-#: cache/a7/a7a26926ec2b52230c8037d640a807ea.php:2008
+#: cache/a7/a7a26926ec2b52230c8037d640a807ea.php:2009
 msgid "Monday"
 msgstr ""
 
@@ -7177,7 +7201,7 @@ msgstr ""
 #: cache/0e/0e02100c0f3615b819bb09d3e2a17b8a.php:460
 #: cache/fe/fe92f223f863fb1896ced5bd33b8c256.php:568
 #: cache/fe/fe92f223f863fb1896ced5bd33b8c256.php:640
-#: cache/a7/a7a26926ec2b52230c8037d640a807ea.php:2012
+#: cache/a7/a7a26926ec2b52230c8037d640a807ea.php:2013
 msgid "Tuesday"
 msgstr ""
 
@@ -7191,7 +7215,7 @@ msgstr ""
 #: cache/0e/0e02100c0f3615b819bb09d3e2a17b8a.php:465
 #: cache/fe/fe92f223f863fb1896ced5bd33b8c256.php:572
 #: cache/fe/fe92f223f863fb1896ced5bd33b8c256.php:640
-#: cache/a7/a7a26926ec2b52230c8037d640a807ea.php:2016
+#: cache/a7/a7a26926ec2b52230c8037d640a807ea.php:2017
 msgid "Wednesday"
 msgstr ""
 
@@ -7205,7 +7229,7 @@ msgstr ""
 #: cache/0e/0e02100c0f3615b819bb09d3e2a17b8a.php:470
 #: cache/fe/fe92f223f863fb1896ced5bd33b8c256.php:576
 #: cache/fe/fe92f223f863fb1896ced5bd33b8c256.php:640
-#: cache/a7/a7a26926ec2b52230c8037d640a807ea.php:2020
+#: cache/a7/a7a26926ec2b52230c8037d640a807ea.php:2021
 msgid "Thursday"
 msgstr ""
 
@@ -7219,7 +7243,7 @@ msgstr ""
 #: cache/0e/0e02100c0f3615b819bb09d3e2a17b8a.php:475
 #: cache/fe/fe92f223f863fb1896ced5bd33b8c256.php:580
 #: cache/fe/fe92f223f863fb1896ced5bd33b8c256.php:640
-#: cache/a7/a7a26926ec2b52230c8037d640a807ea.php:2024
+#: cache/a7/a7a26926ec2b52230c8037d640a807ea.php:2025
 msgid "Friday"
 msgstr ""
 
@@ -7233,7 +7257,7 @@ msgstr ""
 #: cache/0e/0e02100c0f3615b819bb09d3e2a17b8a.php:480
 #: cache/fe/fe92f223f863fb1896ced5bd33b8c256.php:584
 #: cache/fe/fe92f223f863fb1896ced5bd33b8c256.php:640
-#: cache/a7/a7a26926ec2b52230c8037d640a807ea.php:2028
+#: cache/a7/a7a26926ec2b52230c8037d640a807ea.php:2029
 msgid "Saturday"
 msgstr ""
 
@@ -7247,7 +7271,7 @@ msgstr ""
 #: cache/0e/0e02100c0f3615b819bb09d3e2a17b8a.php:485
 #: cache/fe/fe92f223f863fb1896ced5bd33b8c256.php:588
 #: cache/fe/fe92f223f863fb1896ced5bd33b8c256.php:640
-#: cache/a7/a7a26926ec2b52230c8037d640a807ea.php:2032
+#: cache/a7/a7a26926ec2b52230c8037d640a807ea.php:2033
 msgid "Sunday"
 msgstr ""
 
@@ -7358,7 +7382,7 @@ msgstr ""
 #: cache/9f/9f9a142004ca4a1c914a4395fe586017.php:239
 #: cache/a4/a4b5f52b1992bb349e8a30b19ff24645.php:154
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:829
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2276
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2470
 msgid "Playlists"
 msgstr ""
 
@@ -7478,10 +7502,11 @@ msgstr ""
 #: cache/eb/eb0b05526f681e297aa747d8a42bfc36.php:76
 #: cache/8a/8acc5a2af63338673a6de3f58764bb95.php:410
 #: cache/89/8945ceeea3df1eea58421905bdc6dd5e.php:274
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1449
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1544
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1878
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1954
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1553
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1643
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1738
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2072
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2148
 #: cache/23/2360e54d15ebe919cd8f4305d3819359.php:423
 #: cache/c5/c52b8109558dd3acc604e183177113c8.php:148
 #: cache/fe/fe92f223f863fb1896ced5bd33b8c256.php:388
@@ -7586,7 +7611,7 @@ msgstr ""
 #: cache/12/128a25d2a51c15a82cded4869488f710.php:194
 #: cache/66/661d79c5da6d14a0db85cd0980868ff7.php:296
 #: cache/66/661d79c5da6d14a0db85cd0980868ff7.php:384
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1830
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2024
 #: cache/35/35be00044edc69c7e0405b74ef1b4562.php:211
 #: cache/08/08aee2625ba2279e6a2c6465471b11e8.php:155
 #: cache/cb/cb0f801b3d2ddd3d1f61f47414d32047.php:150
@@ -7717,13 +7742,13 @@ msgstr ""
 #: cache/09/09fa06e4cbb20e5f65e2075bff1da423.php:590
 #: cache/24/24c5ae3175cea2904ae6bd208e699f50.php:656
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:96
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1584
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1778
 #: cache/70/70af2bbd82243291558c9b83caec5b48.php:124
 msgid "Remote"
 msgstr ""
 
 #: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:100
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:301
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:312
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:100
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:285
 msgid "Authentication"
@@ -7765,100 +7790,106 @@ msgstr ""
 msgid "Is this DataSet connected to a remote data source?"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:221
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:222
+msgid ""
+"This DataSet has been accessed or updated recently, which means the CMS will "
+"keep it active."
+msgstr ""
+
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:232
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:208
 msgid "Method"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:226
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:237
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:213
 msgid "What type of request needs to be made to get the remote data?"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:231
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:242
 #: cache/04/04b11bf7b7a8190d66899471a8930ffd.php:225
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:218
 msgid "GET"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:236
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:247
 #: cache/04/04b11bf7b7a8190d66899471a8930ffd.php:230
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:223
 msgid "POST"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:251
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:262
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:238
 msgid "URI"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:256
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:267
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:243
 msgid "URL to the Remote DataSet for GET and POST."
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:268
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:279
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:255
 msgid "Replacements"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:272
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:283
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:259
 msgid "Request date: {{DATE}}"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:276
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:287
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:263
 msgid "Request time: {{TIME}}"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:280
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:291
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:267
 msgid ""
 "Dependant fields: {{COL.NAME}} where NAME is a FieldName from the dependant "
 "DataSet"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:286
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:297
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:273
 msgid ""
 "Data to add to this request. This should be URL encoded, e.g. paramA=1&amp;"
 "paramB=2."
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:306
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:317
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:290
 msgid ""
 "Select the authentication requirements for the remote data source. These "
 "will be added to the request."
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:316
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:327
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:300
 msgid "Basic"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:321
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:332
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:305
 msgid "Digest"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:326
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:337
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:310
 msgid "NTLM"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:331
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:342
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:315
 msgid "Bearer"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:354
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:365
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:338
 msgid "Enter the authentication Username"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:364
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:375
 #: cache/9f/9fdba8e23ed4ab1fa30c86aed8306cba.php:217
 #: cache/0a/0ae358955c92f467744fc6cf0f8f5624.php:145
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:348
@@ -7868,57 +7899,57 @@ msgstr ""
 msgid "Password"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:369
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:380
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:353
 msgid "Corresponding Password"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:379
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:390
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:363
 msgid "Custom Headers"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:384
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:395
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:368
 msgid ""
 "Comma separated string of custom HTTP headers in headerName:headerValue "
 "format"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:399
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:410
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:383
 msgid ""
 "Optionally set specific User Agent for this request, provide only the value, "
 "relevant header will be added automatically"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:411
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:422
 #: cache/9f/9fdba8e23ed4ab1fa30c86aed8306cba.php:320
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:395
 msgid "Source"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:416
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:427
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:400
 msgid "Select source type of the provided remote Dataset URL"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:421
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:432
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:405
 msgid "JSON"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:426
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:437
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:410
 msgid "CSV"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:441
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:452
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:425
 msgid "Data root"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:446
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:457
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:430
 msgid ""
 "Please enter the element in your remote data which we should use as the "
@@ -7927,98 +7958,98 @@ msgid ""
 "returned."
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:456
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:467
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:440
 msgid "CSV separator"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:461
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:472
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:445
 msgid "What separator should be used for CSV source?"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:466
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:477
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:450
 msgid "Comma"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:472
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:483
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:456
 msgid "Semicolon"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:478
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:489
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:462
 msgid "Space"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:484
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:495
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:468
 msgid "Tab"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:490
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:501
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:474
 msgid "Pipe"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:509
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:520
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:493
-#: cache/b2/b21687508ff5b0bb637fdbd3f8c0d3c6.php:623
+#: cache/b2/b21687508ff5b0bb637fdbd3f8c0d3c6.php:632
 msgid "Ignore first row?"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:514
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:525
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:498
 msgid "For CSV source, should the first row be ignored?"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:526
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:537
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:510
 msgid "Test data URL"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:535
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:546
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:519
 msgid "Aggregation"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:540
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:551
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:524
 msgid "Aggregate received data by the given method"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:550
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:561
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:534
 msgid "Summarize"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:571
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:582
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:555
 msgid "By Field"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:581
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:592
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:562
 msgid ""
 "Using JSON syntax enter the path below the Data root by which the above "
 "aggregation should be applied."
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:585
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:596
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:566
 msgid ""
 "Summarize: Values in this field will be summarized and stored in one column."
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:589
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:600
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:570
 msgid ""
 "Count: All individual values in this field will be counted and stored in one "
 "Column for each value"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:600
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:611
 #: cache/52/522b66fbe5b8efaad37d81db81288730.php:67
 #: cache/52/522b66fbe5b8efaad37d81db81288730.php:69
 #: cache/24/24c5ae3175cea2904ae6bd208e699f50.php:82
@@ -8033,36 +8064,36 @@ msgstr ""
 msgid "Refresh"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:605
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:616
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:586
 msgid "How often should this remote data be fetched and imported?"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:612
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:623
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:593
 msgid "Constantly"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:632
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:705
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:643
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:716
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:613
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:686
 msgid "Every two Weeks"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:642
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:715
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:653
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:726
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:623
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:696
 msgid "Quaterly"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:668
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:679
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:649
 msgid "Truncate DataSet"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:673
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:684
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:654
 msgid ""
 "Select when you would like the Data to be truncated out of this DataSet. The "
@@ -8070,43 +8101,43 @@ msgid ""
 "adding new data."
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:680
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:691
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:661
 #: lib/Controller/Library.php:572
 msgid "Never"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:685
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:696
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:666
 #: cache/a7/a7a26926ec2b52230c8037d640a807ea.php:1438
-#: cache/a7/a7a26926ec2b52230c8037d640a807ea.php:1893
-#: cache/a7/a7a26926ec2b52230c8037d640a807ea.php:1908
+#: cache/a7/a7a26926ec2b52230c8037d640a807ea.php:1894
+#: cache/a7/a7a26926ec2b52230c8037d640a807ea.php:1909
 msgid "Always"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:725
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:736
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:706
 msgid "Every second Year"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:748
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:759
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:729
 msgid "Truncate with no new data?"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:753
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:764
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:734
 msgid ""
 "Should the DataSet data be truncated even if no new data is pulled from the "
 "source?"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:763
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:774
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:744
 msgid "Depends on DataSet"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:771
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:782
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:752
 msgid ""
 "The DataSet you select here will be processed in advance and have its values "
@@ -8114,39 +8145,39 @@ msgid ""
 "tab."
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:781
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:792
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:762
 msgid "Row Limit"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:786
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:797
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:767
 msgid ""
 "Optionally provide a row limit for this DataSet. When left empty the DataSet "
 "row limit from CMS Settings will be used."
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:796
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:807
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:777
 msgid "Limit Policy"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:801
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:812
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:782
 msgid "What should happen when this Dataset reaches the row limit?"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:806
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:817
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:787
 msgid "Stop Syncing"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:811
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:822
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:792
 msgid "First In First Out"
 msgstr ""
 
-#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:816
+#: cache/86/86d9a0599e765017f2e6f2e4a7025625.php:827
 #: cache/04/04b11bf7b7a8190d66899471a8930ffd.php:73
 #: cache/41/413dbe6a803c413d6ff11377888e1e0d.php:797
 #: cache/dc/dc491f32668885ef8be3c5ae4c7dc6e5.php:56
@@ -8231,7 +8262,7 @@ msgstr ""
 #: cache/a7/a7a26926ec2b52230c8037d640a807ea.php:58
 #: cache/a7/a7a26926ec2b52230c8037d640a807ea.php:112
 #: cache/a7/a7a26926ec2b52230c8037d640a807ea.php:1591
-#: lib/Controller/Campaign.php:297 lib/Controller/Playlist.php:536
+#: lib/Controller/Campaign.php:297 lib/Controller/Playlist.php:537
 #: lib/Controller/Library.php:775 lib/Controller/Layout.php:1708
 #: lib/Controller/Display.php:996
 msgid "Schedule"
@@ -8377,19 +8408,19 @@ msgid ""
 "Ensure that ‘Enable Stats Collection’ is set to ‘On’ in the Display Settings."
 msgstr ""
 
-#: cache/e7/e7012f849ea8937cd0edbed2b7de4de8.php:969
+#: cache/e7/e7012f849ea8937cd0edbed2b7de4de8.php:978
 msgid "Group"
 msgstr ""
 
-#: cache/e7/e7012f849ea8937cd0edbed2b7de4de8.php:1443
+#: cache/e7/e7012f849ea8937cd0edbed2b7de4de8.php:1452
 #: cache/2d/2d67b2aac34d9a8cd68e4dad8db97260.php:124
 #: cache/04/04b11bf7b7a8190d66899471a8930ffd.php:291
 #: cache/04/04b4b8b9bb93bf0580422332c142abff.php:138
 msgid "Use Regex?"
 msgstr ""
 
-#: cache/e7/e7012f849ea8937cd0edbed2b7de4de8.php:1448
-#: cache/14/141f2aabb4058b99bdb959f047612216.php:1935
+#: cache/e7/e7012f849ea8937cd0edbed2b7de4de8.php:1457
+#: cache/14/141f2aabb4058b99bdb959f047612216.php:1944
 msgid ""
 "When filtering by multiple names, which logical operator should be used?"
 msgstr ""
@@ -8634,6 +8665,7 @@ msgstr ""
 #: cache/65/651e2483d1426d8b1b7ce3fef030fb15.php:88
 #: cache/8c/8c08891d370939702e3d45696c9e38d6.php:89
 #: cache/8c/8c08891d370939702e3d45696c9e38d6.php:134
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1425
 #: cache/63/63a123f42a16165e90cd9f604b2de4bd.php:210
 #: cache/0c/0cc104a3d7987780eed7a70657ece580.php:182
 #: cache/10/10b7f3b85c460e6ccc00e28eed2bf591.php:336
@@ -10227,13 +10259,13 @@ msgstr ""
 msgid "Select one or more rows to delete"
 msgstr ""
 
-#: cache/14/141f2aabb4058b99bdb959f047612216.php:2022
-#: cache/14/141f2aabb4058b99bdb959f047612216.php:2033
+#: cache/14/141f2aabb4058b99bdb959f047612216.php:2031
+#: cache/14/141f2aabb4058b99bdb959f047612216.php:2042
 msgid "Choose"
 msgstr ""
 
-#: cache/14/141f2aabb4058b99bdb959f047612216.php:2024
-#: cache/14/141f2aabb4058b99bdb959f047612216.php:2031
+#: cache/14/141f2aabb4058b99bdb959f047612216.php:2033
+#: cache/14/141f2aabb4058b99bdb959f047612216.php:2040
 msgid "Change"
 msgstr ""
 
@@ -10490,7 +10522,7 @@ msgstr ""
 
 #: cache/f5/f5c7640aa7fbb9ab7e2caec1a409d7c2.php:274
 #: cache/89/8945ceeea3df1eea58421905bdc6dd5e.php:289
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2351
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2545
 #: cache/fe/fe92f223f863fb1896ced5bd33b8c256.php:186
 msgid "Target Type"
 msgstr ""
@@ -10526,7 +10558,7 @@ msgstr ""
 #: cache/77/774dde73b0eb7965a680b8a52776fa6b.php:246
 #: cache/89/8945ceeea3df1eea58421905bdc6dd5e.php:293
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1245
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2355
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2549
 #: cache/fe/fe92f223f863fb1896ced5bd33b8c256.php:204
 msgid "Target"
 msgstr ""
@@ -10679,7 +10711,7 @@ msgstr ""
 
 #: cache/9f/9f9a142004ca4a1c914a4395fe586017.php:125
 #: cache/a4/a4b5f52b1992bb349e8a30b19ff24645.php:80
-#: lib/Controller/Playlist.php:1700 lib/Controller/Library.php:2095
+#: lib/Controller/Playlist.php:1701 lib/Controller/Library.php:2095
 #: lib/Controller/Layout.php:1640
 msgid "Design"
 msgstr ""
@@ -11150,8 +11182,8 @@ msgstr ""
 #: cache/24/24c5ae3175cea2904ae6bd208e699f50.php:557
 #: cache/7d/7d8878cf40b2a074d7a7dd990858a580.php:90
 #: cache/49/49b3c02c876e8a464a75e1682c064115.php:187
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1510
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1532
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1704
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1726
 #: cache/74/74cac03bd6d6bdd54edcfd79c1c2a2fb.php:270
 #: cache/c5/c52b8109558dd3acc604e183177113c8.php:288
 #: cache/cb/cbed339b261aade59b9d7cdbdfb46dcc.php:243
@@ -11214,7 +11246,7 @@ msgstr ""
 #: cache/24/24c5ae3175cea2904ae6bd208e699f50.php:632
 #: cache/49/49b3c02c876e8a464a75e1682c064115.php:365
 #: cache/49/49b3c02c876e8a464a75e1682c064115.php:371
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1614
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1808
 #: cache/cb/cbed339b261aade59b9d7cdbdfb46dcc.php:423
 #: cache/cb/cbed339b261aade59b9d7cdbdfb46dcc.php:580
 #: cache/10/10b7f3b85c460e6ccc00e28eed2bf591.php:316
@@ -11248,7 +11280,7 @@ msgstr ""
 #: cache/09/09fa06e4cbb20e5f65e2075bff1da423.php:598
 #: cache/24/24c5ae3175cea2904ae6bd208e699f50.php:712
 #: cache/d2/d2fa8bed4d1e30769527c78081442bfc.php:182
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1556
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1750
 #: cache/23/238f0b98d7f96aca9a850e8b230fe1fb.php:295
 #: cache/f3/f3286f195f132c53823b9bb1068e5cc9.php:204
 msgid "Modified Date"
@@ -11423,7 +11455,7 @@ msgstr ""
 
 #: cache/24/24c5ae3175cea2904ae6bd208e699f50.php:415
 #: cache/49/49b3c02c876e8a464a75e1682c064115.php:193
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1566
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1760
 #: cache/74/74cac03bd6d6bdd54edcfd79c1c2a2fb.php:276
 #: cache/c5/c52b8109558dd3acc604e183177113c8.php:297
 #: cache/cb/cbed339b261aade59b9d7cdbdfb46dcc.php:250
@@ -11433,7 +11465,7 @@ msgstr ""
 
 #: cache/24/24c5ae3175cea2904ae6bd208e699f50.php:420
 #: cache/49/49b3c02c876e8a464a75e1682c064115.php:193
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1570
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1764
 #: cache/74/74cac03bd6d6bdd54edcfd79c1c2a2fb.php:276
 #: cache/c5/c52b8109558dd3acc604e183177113c8.php:300
 #: cache/cb/cbed339b261aade59b9d7cdbdfb46dcc.php:253
@@ -11572,7 +11604,7 @@ msgstr ""
 #: cache/a5/a593dac8469a0e585ebaf44442696494.php:96
 #: cache/0a/0ae358955c92f467744fc6cf0f8f5624.php:281
 #: cache/cd/cdf12d9a1fc3b5db7965cfa8f9bb8d13.php:325
-#: cache/53/53221a3cb3187e41cde32cfa796d45a7.php:596
+#: cache/53/53221a3cb3187e41cde32cfa796d45a7.php:597
 msgid "Set a home folder to use as the default folder for new content."
 msgstr ""
 
@@ -11597,7 +11629,7 @@ msgid ""
 msgstr ""
 
 #: cache/7d/7d8878cf40b2a074d7a7dd990858a580.php:97
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1548
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1742
 msgid "File Size"
 msgstr ""
 
@@ -12615,7 +12647,7 @@ msgid "Navigate to layout with code [layoutTag]?"
 msgstr ""
 
 #: cache/77/774dde73b0eb7965a680b8a52776fa6b.php:218
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1958
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2152
 msgid "Empty layout"
 msgstr ""
 
@@ -12629,7 +12661,7 @@ msgstr ""
 
 #: cache/77/774dde73b0eb7965a680b8a52776fa6b.php:230
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1297
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1751
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1945
 msgid "Navigate to Widget"
 msgstr ""
 
@@ -12727,7 +12759,7 @@ msgid "Send Command"
 msgstr ""
 
 #: cache/ae/ae925f8de1afddaa54d77aba65ebb00b.php:93
-#: cache/cb/cb1c15ce617fd7e7648d38bb0b2b48f5.php:1242
+#: cache/cb/cb1c15ce617fd7e7648d38bb0b2b48f5.php:1254
 msgid ""
 "Pick a command to send to the Player. If the CMS has XMR enabled this will "
 "be sent immediately, otherwise it will show an error."
@@ -12761,62 +12793,62 @@ msgid "Add RSS"
 msgstr ""
 
 #: cache/ae/ae039a69e1615431d4752f5fb2b147d3.php:211
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2163
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2357
 msgid "Ascending"
 msgstr ""
 
 #: cache/ae/ae039a69e1615431d4752f5fb2b147d3.php:215
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2167
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2361
 msgid "Descending"
 msgstr ""
 
 #: cache/ae/ae039a69e1615431d4752f5fb2b147d3.php:260
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2174
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2368
 msgid "starts with"
 msgstr ""
 
 #: cache/ae/ae039a69e1615431d4752f5fb2b147d3.php:266
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2180
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2374
 msgid "ends with"
 msgstr ""
 
 #: cache/ae/ae039a69e1615431d4752f5fb2b147d3.php:272
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2186
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2380
 msgid "contains"
 msgstr ""
 
 #: cache/ae/ae039a69e1615431d4752f5fb2b147d3.php:278
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2192
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2386
 msgid "equals"
 msgstr ""
 
 #: cache/ae/ae039a69e1615431d4752f5fb2b147d3.php:284
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2198
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2392
 msgid "does not start with"
 msgstr ""
 
 #: cache/ae/ae039a69e1615431d4752f5fb2b147d3.php:290
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2204
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2398
 msgid "does not end with"
 msgstr ""
 
 #: cache/ae/ae039a69e1615431d4752f5fb2b147d3.php:296
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2210
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2404
 msgid "does not contain"
 msgstr ""
 
 #: cache/ae/ae039a69e1615431d4752f5fb2b147d3.php:302
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2216
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2410
 msgid "does not equal"
 msgstr ""
 
 #: cache/ae/ae039a69e1615431d4752f5fb2b147d3.php:308
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2222
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2416
 msgid "greater than"
 msgstr ""
 
 #: cache/ae/ae039a69e1615431d4752f5fb2b147d3.php:314
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2228
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2422
 msgid "less than"
 msgstr ""
 
@@ -12829,12 +12861,12 @@ msgid "is not empty"
 msgstr ""
 
 #: cache/ae/ae039a69e1615431d4752f5fb2b147d3.php:335
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2237
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2431
 msgid "Or"
 msgstr ""
 
 #: cache/ae/ae039a69e1615431d4752f5fb2b147d3.php:341
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2243
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2437
 msgid "And"
 msgstr ""
 
@@ -12997,7 +13029,7 @@ msgstr ""
 #: cache/31/31805080e1e51d4a56cb67fa60bdcb2f.php:72
 #: lib/Controller/Template.php:234 lib/Controller/DisplayGroup.php:335
 #: lib/Controller/DataSet.php:243 lib/Controller/Campaign.php:376
-#: lib/Controller/Playlist.php:398 lib/Controller/Library.php:650
+#: lib/Controller/Playlist.php:399 lib/Controller/Library.php:650
 #: lib/Controller/Layout.php:1785 lib/Controller/DisplayProfile.php:199
 #: lib/Controller/UserGroup.php:174
 msgid "Copy"
@@ -13269,8 +13301,8 @@ msgstr ""
 
 #: cache/66/661d79c5da6d14a0db85cd0980868ff7.php:479
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:825
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1646
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1757
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1840
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1951
 msgid "Widgets"
 msgstr ""
 
@@ -13360,7 +13392,7 @@ msgid ""
 msgstr ""
 
 #: cache/25/257d7652c0b04ca6e480ad5c9beaa3c2.php:79
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2284
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2478
 msgid "Spots"
 msgstr ""
 
@@ -14063,7 +14095,7 @@ msgid "Module not enabled!"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:812
-#: lib/Controller/Playlist.php:381
+#: lib/Controller/Playlist.php:382
 msgid "Timeline"
 msgstr ""
 
@@ -14089,7 +14121,7 @@ msgid "Are you sure you want to replace your Layout with a template?"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:868
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1965
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2159
 #: cache/10/10b7f3b85c460e6ccc00e28eed2bf591.php:691
 msgid "Replace"
 msgstr ""
@@ -14115,7 +14147,7 @@ msgstr ""
 #: cache/08/08aee2625ba2279e6a2c6465471b11e8.php:261
 #: cache/cb/cb0f801b3d2ddd3d1f61f47414d32047.php:282
 #: cache/10/10b7f3b85c460e6ccc00e28eed2bf591.php:619
-#: cache/b2/b21687508ff5b0bb637fdbd3f8c0d3c6.php:320
+#: cache/b2/b21687508ff5b0bb637fdbd3f8c0d3c6.php:329
 msgid "Start upload"
 msgstr ""
 
@@ -14123,47 +14155,47 @@ msgstr ""
 #: cache/08/08aee2625ba2279e6a2c6465471b11e8.php:265
 #: cache/cb/cb0f801b3d2ddd3d1f61f47414d32047.php:286
 #: cache/10/10b7f3b85c460e6ccc00e28eed2bf591.php:623
-#: cache/b2/b21687508ff5b0bb637fdbd3f8c0d3c6.php:324
+#: cache/b2/b21687508ff5b0bb637fdbd3f8c0d3c6.php:333
 msgid "Cancel upload"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:897
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1989
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2183
 #: cache/37/37f12704cf17017038d73d9ee1907d04.php:606
 #: cache/cb/cb0f801b3d2ddd3d1f61f47414d32047.php:290
-#: cache/b2/b21687508ff5b0bb637fdbd3f8c0d3c6.php:328
+#: cache/b2/b21687508ff5b0bb637fdbd3f8c0d3c6.php:337
 msgid "Processing..."
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:909
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2013
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2207
 msgid "Set Expiry Dates"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:913
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2017
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2211
 msgid "Use the check box to set Start and End dates and times for Widgets"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:917
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2021
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2215
 #: cache/72/72bfb52fd80e06544d4442d19663906a.php:97
 msgid "Select the start time for this widget"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:921
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2025
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2219
 #: cache/72/72bfb52fd80e06544d4442d19663906a.php:112
 msgid "Select the end time for this widget"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:925
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2029
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2223
 msgid "Delete on Expiry"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:929
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2033
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2227
 #: cache/72/72bfb52fd80e06544d4442d19663906a.php:127
 msgid ""
 "When the End Time for this Widget passes should the Widget be removed from "
@@ -14179,7 +14211,7 @@ msgid "Remove file from the Media Library"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:945
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1985
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2179
 #: cache/cb/cbed339b261aade59b9d7cdbdfb46dcc.php:805
 #: cache/10/10b7f3b85c460e6ccc00e28eed2bf591.php:631
 msgid "Change Current Folder location"
@@ -14291,8 +14323,8 @@ msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1066
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1224
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1839
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1855
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2033
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2049
 msgid "Zone"
 msgstr ""
 
@@ -14424,23 +14456,23 @@ msgid "Edit Action"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1277
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1731
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1925
 msgid "Next Layout"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1281
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1735
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1929
 msgid "Previous Layout"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1285
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1739
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1933
 #: cache/1b/1b4d10b8bb67ce8b30ada153b15daf6e.php:255
 msgid "Next Widget"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1289
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1743
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1937
 #: cache/1b/1b4d10b8bb67ce8b30ada153b15daf6e.php:251
 msgid "Previous Widget"
 msgstr ""
@@ -14454,7 +14486,7 @@ msgid "Select of create a Widget to be loaded"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1309
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2339
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2533
 msgid "Trigger Type"
 msgstr ""
 
@@ -14512,105 +14544,245 @@ msgid ""
 "height%."
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1401
-msgid "%tagCount% tags"
-msgstr ""
-
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1405
-msgid "Delete selected %object%"
-msgstr ""
-
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1409
-msgid "Select multiple widgets"
+#: cache/0c/0cc104a3d7987780eed7a70657ece580.php:131
+msgid "No Image set, add from Toolbar or Upload!"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1413
-msgid "Change Layout"
+#: cache/0c/0cc104a3d7987780eed7a70657ece580.php:143
+msgid "Add background image"
+msgstr ""
+
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1417
+#: cache/0c/0cc104a3d7987780eed7a70657ece580.php:156
+msgid "Upload"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1421
+#: cache/0c/0cc104a3d7987780eed7a70657ece580.php:164
+#: cache/37/37f12704cf17017038d73d9ee1907d04.php:412
+msgid "Remove"
+msgstr ""
+
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1429
+#: cache/0c/0cc104a3d7987780eed7a70657ece580.php:187
+msgid "Change the resolution"
+msgstr ""
+
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1437
+#: cache/0c/0cc104a3d7987780eed7a70657ece580.php:202
+msgid ""
+"The layering order of the background image (z-index). Advanced use only."
+msgstr ""
+
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1441
+#: cache/0c/0cc104a3d7987780eed7a70657ece580.php:212
+msgid "Automatically apply Transitions?"
+msgstr ""
+
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1445
+#: cache/0c/0cc104a3d7987780eed7a70657ece580.php:217
+msgid ""
+"When enabled, the default Transition type and duration will be applied to "
+"all widgets on this Layout."
+msgstr ""
+
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1455
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1541
+msgid "An optional name for this widget"
+msgstr ""
+
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1459
+msgid "Content Synchronisation Key"
+msgstr ""
+
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1463
+msgid ""
+"If this layout is scheduled using a synchronised event, this key will be "
+"used to match with other layouts in the same event."
+msgstr ""
+
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1471
+msgid "If there is only one item in this %region.type% should it loop?"
+msgstr ""
+
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1475
+msgid "When should the %regionType% Loop be enabled?"
+msgstr ""
+
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1479
+msgid ""
+"* If your %regionType% contains more than one Widget, Loop should not be "
+"enabled."
+msgstr ""
+
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1483
+msgid ""
+"* If your %regionType% contains one Widget, and that Widget is a 'fixed' "
+"item (eg Text), Loop should not be enabled."
+msgstr ""
+
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1487
+msgid ""
+"* If your %regionType% contains one Widget, and that Widget needs to update "
+"periodically (eg RSS Ticker Widget), Loop can be enabled ONLY if the Widget "
+"needs to update MORE frequently than the duration of the overall Layout."
+msgstr ""
+
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1495
+msgid "The layering order of this %regionType% (z-index). Advanced use only."
+msgstr ""
+
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1503
+msgid "The top position of the %regionType%"
+msgstr ""
+
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1511
+msgid "The left position of the %regionType%"
+msgstr ""
+
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1519
+msgid "The width of the %regionType%"
+msgstr ""
+
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1527
+msgid "The height of the %regionType%"
+msgstr ""
+
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1531
+msgid ""
+"Make this %regionType% full screen, dimensions will be set to %layout.width% "
+"by %layout.height%."
+msgstr ""
+
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1545
+msgid "Set a duration?"
+msgstr ""
+
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1549
+msgid "Select to provide a specific duration for this Widget"
+msgstr ""
+
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1557
+msgid "The duration of the widget in seconds"
+msgstr ""
+
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1565
+msgid ""
+"Enable the collection of Proof of Play statistics for this Widget. Ensure "
+"that ‘Enable Stats Collection’ is set to ‘On’ in the Display Settings."
+msgstr ""
+
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1581
+msgid "Repeat items to fill all data slots?"
+msgstr ""
+
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1585
+msgid ""
+"Once all items have been placed in a slot, any empty slots will be filled "
+"with items from the start."
+msgstr ""
+
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1595
+msgid "%tagCount% tags"
+msgstr ""
+
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1599
+msgid "Delete selected %object%"
+msgstr ""
+
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1603
+msgid "Select multiple widgets"
+msgstr ""
+
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1607
+msgid "Change Layout"
+msgstr ""
+
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1615
 msgid "Tooltips?"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1425
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1619
 msgid ""
 "Show/Hide tooltips which provide help; informational tooltips will remain."
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1429
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1623
 msgid "Library Media Search"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1433
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1627
 msgid "Close all tabs"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1437
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1490
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1631
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1684
 msgid "Search"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1441
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1635
 msgid "Select"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1445
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1639
 msgid "Deselect"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1453
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1647
 msgid "Preview media"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1457
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1651
 #: lib/Controller/SavedReport.php:142
 msgid "Open"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1461
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1655
 msgid "Mark as favourite"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1465
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1659
 msgid "Scroll to the start!"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1469
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1663
 msgid "Scroll to the end!"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1473
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1667
 msgid "Scroll left!"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1477
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1671
 msgid "Scroll right!"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1481
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1675
 msgid "Upload new"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1485
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1679
 msgid "Upload %obj%"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1498
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1692
 #: cache/10/10b7f3b85c460e6ccc00e28eed2bf591.php:311
 msgid "Tag"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1514
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1708
 msgid "Provider"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1524
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1718
 msgid "Media Id"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1562
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1576
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2388
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1756
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1770
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2582
 #: cache/cb/cbed339b261aade59b9d7cdbdfb46dcc.php:247
 #: cache/cb/cbed339b261aade59b9d7cdbdfb46dcc.php:295
 #: cache/cb/cbed339b261aade59b9d7cdbdfb46dcc.php:317
@@ -14618,558 +14790,558 @@ msgstr ""
 msgid "All"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1580
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1774
 msgid "Local"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1589
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1783
 msgid "Library Search %tagId%"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1594
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1788
 msgid "Tools"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1598
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2331
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1792
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2525
 msgid "Id"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1620
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1814
 msgid "Media Add Queue"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1624
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1818
 msgid "Clear Queue"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1628
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1822
 msgid "Add to Selected Zone"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1632
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1826
 msgid "Add to Playlist"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1636
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1830
 msgid "Click in Zone to Add"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1650
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1844
 msgid "Add widgets"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1654
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1848
 msgid "Global"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1658
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1852
 msgid "Global Elements"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1666
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1860
 msgid "Library image search"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1674
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1868
 msgid "Library audio search"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1682
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1876
 msgid "Library video search"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1686
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1880
 msgid "Other"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1690
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1884
 msgid "Library other media search"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1694
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1765
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2327
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1888
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1959
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2521
 #: cache/1b/1b4d10b8bb67ce8b30ada153b15daf6e.php:216
 msgid "Actions"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1698
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1892
 msgid "Interactive actions"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1702
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1896
 msgid "Layout Templates"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1706
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1900
 msgid "Search for Layout Templates"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1712
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1906
 msgid "Move Window"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1716
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1910
 msgid "Close Window"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1720
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1914
 msgid "Minimise Window"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1724
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1918
 msgid "New Tab"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1761
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1955
 msgid "Data Widgets"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1769
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1963
 msgid "Favourites"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1773
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1967
 msgid "Elements"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1777
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1971
 msgid "Stencils"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1781
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1975
 msgid "Static Templates"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1785
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1979
 msgid "Close content"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1789
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1983
 msgid "No widgets to display"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1793
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1987
 msgid "No actions to display"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1797
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1991
 msgid "No templates to display"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1801
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1995
 msgid "No media to display!"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1805
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1999
 msgid "Show more"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1809
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2003
 msgid "No more results for this filter!"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1814
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2008
 #: cache/cb/cb1c15ce617fd7e7648d38bb0b2b48f5.php:934
 msgid "Close Preview"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1818
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2012
 #: cache/cb/cb1c15ce617fd7e7648d38bb0b2b48f5.php:938
 msgid "Change window size"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1822
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2016
 msgid "Select media to add"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1826
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1886
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2020
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2080
 msgid "Dimensions"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1843
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2037
 msgid "Element"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1847
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2041
 msgid "Element Group"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1859
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2053
 msgid "Replace your Layout with a template?"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1863
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2057
 msgid "Required"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1874
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2068
 #: cache/1b/1b4d10b8bb67ce8b30ada153b15daf6e.php:302
 msgid "Layout name"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1882
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2076
 #: cache/1b/1b4d10b8bb67ce8b30ada153b15daf6e.php:306
 msgid "Layout duration"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1890
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2084
 #: cache/1b/1b4d10b8bb67ce8b30ada153b15daf6e.php:310
 msgid "Layout dimensions"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1894
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2088
 msgid "Layout Actions:"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1898
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2092
 msgid "My Layouts?"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1906
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2100
 msgid "Revert %target% form save"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1910
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2104
 msgid "Revert %target% order"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1914
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2108
 msgid "Revert %target% transformation"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1918
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1926
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2112
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2120
 msgid "Revert %target% creation"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1922
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2116
 msgid "Revert %target% assignment"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1934
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2128
 msgid "Layers"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1946
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2140
 msgid "In %groupId%"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1969
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2163
 #: cache/10/10b7f3b85c460e6ccc00e28eed2bf591.php:742
 msgid "Add Replacement"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1973
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2167
 #: cache/10/10b7f3b85c460e6ccc00e28eed2bf591.php:746
 msgid "Start Replace"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1977
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2171
 #: cache/10/10b7f3b85c460e6ccc00e28eed2bf591.php:750
 msgid "Cancel Replace"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1994
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2188
 #: cache/c5/c52b8109558dd3acc604e183177113c8.php:312
 #: cache/10/10b7f3b85c460e6ccc00e28eed2bf591.php:755
 msgid "Update this media in all layouts it is assigned to?"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:1998
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2192
 #: cache/c5/c52b8109558dd3acc604e183177113c8.php:317
 #: cache/10/10b7f3b85c460e6ccc00e28eed2bf591.php:759
 msgid "Note: It will only be updated in layouts you have permission to edit."
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2004
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2198
 #: cache/10/10b7f3b85c460e6ccc00e28eed2bf591.php:765
 msgid "Delete the old version?"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2008
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2202
 #: cache/10/10b7f3b85c460e6ccc00e28eed2bf591.php:769
 msgid ""
 "Completely remove the old version of this media item if a new file is being "
 "uploaded."
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2041
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2235
 msgid "ERROR"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2045
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2239
 msgid "There was a problem loading the Layout!"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2049
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2243
 msgid "There was a problem loading the Playlist!"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2053
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2247
 msgid "User save preferences failed!"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2057
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2251
 msgid "User load preferences failed!"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2061
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2255
 msgid "Library load failed!"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2065
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2259
 msgid "Form load failed!"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2069
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2263
 msgid "Revert failed: %error%"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2073
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2267
 msgid "Save order failed: %error%"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2077
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2271
 msgid "Delete failed: %error%"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2081
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2275
 msgid "Save all changes failed!"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2085
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2279
 msgid "Remove all changes failed!!"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2089
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2283
 msgid "Importing media failed!!"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2093
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2287
 msgid "Add media failed: %error%"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2097
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2291
 msgid "Add module failed: %error%"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2101
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2295
 msgid "Create region failed: %error%"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2105
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2299
 msgid "List order not Changed!"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2109
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2303
 msgid "Playlist save order failed!"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2113
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2307
 msgid "Get form failed!"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2117
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2311
 msgid "Transform zone failed!"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2121
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2315
 msgid "Preview failed!"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2125
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2319
 msgid "No widgets need saving!"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2129
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2323
 msgid "Missing required property %property%"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2133
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2327
 #: cache/cb/cbed339b261aade59b9d7cdbdfb46dcc.php:712
 #: lib/Connector/XiboAudienceReportingConnector.php:899
 #: lib/Connector/XiboAudienceReportingConnector.php:974
 msgid "Unknown Error"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2140
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2334
 msgid "Set to start"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2144
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2338
 msgid "Set to expire"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2148
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2342
 #: cache/05/05600263dc8230138bb0f89338bbef69.php:104 web/xmds.php:136
 msgid "Expired"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2256
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2450
 msgid "Fill - use the first Playlist to fill any remaining Spots"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2260
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2454
 msgid "Pad"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2264
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2458
 msgid "Pad - use the first Playlist to pad any remaining Spots"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2268
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2462
 msgid "Repeat"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2272
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2466
 msgid ""
 "Repeat - repeat the Widgets in this Playlist until the number of Spots have "
 "been filled"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2280
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2474
 msgid ""
 "How many spots would you like on this Sub-Playlist? This is used before "
 "ordering to expand or shrink the list to the specified size. Leave empty to "
 "use the count of Widgets."
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2288
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2482
 msgid ""
 "Set the duration of all Widgets in the Playlist to a specific value in "
 "seconds. Leave empty to use each Widget duration."
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2292
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2486
 msgid "Spot Length"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2296
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2490
 msgid ""
 "If there are not enough Widgets fill all spots, how should the remaining "
 "spots be filled?"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2300
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2494
 msgid "Spot Fill"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2304
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2498
 msgid "You do not have access to this playlist"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2308
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2502
 msgid "Playlist Id"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2315
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2509
 msgid "Columns Available"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2319
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2513
 msgid "Columns Selected"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2335
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2529
 msgid "Owner Id"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2369
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2563
 msgid "Add Action"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2373
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2567
 msgid "Click to Add a new Action"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2381
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2575
 msgid "There can only be one category per zone!"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2392
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2586
 msgid "Show All"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2396
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2590
 msgid "Show Paged"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2404
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2598
 msgid "No Transition"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2408
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2602
 msgid "Marquee Left"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2412
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2606
 msgid "Marquee Right"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2416
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2610
 msgid "Marquee Up"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2420
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2614
 msgid "Marquee Down"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2424
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2618
 msgid "Fade"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2432
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2626
 msgid "Scroll Horizontal"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2436
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2630
 msgid "Scroll Vertical"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2440
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2634
 msgid "Flip Horizontal"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2444
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2638
 msgid "Flip Vertical"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2448
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2642
 msgid "Shuffle"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2452
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2646
 msgid "Tile Slide"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2456
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2650
 msgid "Tile Blind"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2464
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2658
 msgid "Edit Playlist - %playlistName% - "
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2468
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2662
 msgid "Widgets count"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2473
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2667
 msgid "Zoom In"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2477
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2671
 msgid "Zoom Out"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2481
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2675
 msgid "Default zoom"
 msgstr ""
 
-#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2485
+#: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2679
 msgid "Change scale mode"
 msgstr ""
 
@@ -15691,7 +15863,7 @@ msgstr ""
 #: cache/cb/cb0f801b3d2ddd3d1f61f47414d32047.php:263
 #: cache/10/10b7f3b85c460e6ccc00e28eed2bf591.php:602
 #: cache/10/10b7f3b85c460e6ccc00e28eed2bf591.php:710
-#: cache/b2/b21687508ff5b0bb637fdbd3f8c0d3c6.php:360
+#: cache/b2/b21687508ff5b0bb637fdbd3f8c0d3c6.php:369
 #: lib/XTR/MaintenanceDailyTask.php:157 lib/XTR/NotificationTidyTask.php:115
 #: lib/XTR/MaintenanceRegularTask.php:150 lib/XTR/StatsArchiveTask.php:134
 #: lib/XTR/AuditLogArchiveTask.php:125 lib/XTR/RemoteDataSetFetchTask.php:214
@@ -17384,44 +17556,8 @@ msgstr ""
 msgid "Mirror"
 msgstr ""
 
-#: cache/0c/0cc104a3d7987780eed7a70657ece580.php:131
-msgid "No Image set, add from Toolbar or Upload!"
-msgstr ""
-
 #: cache/0c/0cc104a3d7987780eed7a70657ece580.php:139
 msgid "Background thumbnail"
-msgstr ""
-
-#: cache/0c/0cc104a3d7987780eed7a70657ece580.php:143
-msgid "Add background image"
-msgstr ""
-
-#: cache/0c/0cc104a3d7987780eed7a70657ece580.php:156
-msgid "Upload"
-msgstr ""
-
-#: cache/0c/0cc104a3d7987780eed7a70657ece580.php:164
-#: cache/37/37f12704cf17017038d73d9ee1907d04.php:412
-msgid "Remove"
-msgstr ""
-
-#: cache/0c/0cc104a3d7987780eed7a70657ece580.php:187
-msgid "Change the resolution"
-msgstr ""
-
-#: cache/0c/0cc104a3d7987780eed7a70657ece580.php:202
-msgid ""
-"The layering order of the background image (z-index). Advanced use only."
-msgstr ""
-
-#: cache/0c/0cc104a3d7987780eed7a70657ece580.php:212
-msgid "Automatically apply Transitions?"
-msgstr ""
-
-#: cache/0c/0cc104a3d7987780eed7a70657ece580.php:217
-msgid ""
-"When enabled, the default Transition type and duration will be applied to "
-"all widgets on this Layout."
 msgstr ""
 
 #: cache/8f/8ff33b0a8b8fc5a9fe400184b8838e4f.php:57
@@ -17676,7 +17812,7 @@ msgstr ""
 #: lib/Controller/DataSet.php:305 lib/Controller/DataSet.php:311
 #: lib/Controller/Campaign.php:422 lib/Controller/Campaign.php:428
 #: lib/Controller/MenuBoard.php:213 lib/Controller/MenuBoard.php:221
-#: lib/Controller/Playlist.php:487 lib/Controller/Playlist.php:499
+#: lib/Controller/Playlist.php:488 lib/Controller/Playlist.php:500
 #: lib/Controller/Library.php:704 lib/Controller/Library.php:710
 #: lib/Controller/Layout.php:1873 lib/Controller/Layout.php:1879
 #: lib/Controller/Display.php:1137 lib/Controller/Display.php:1150
@@ -18391,7 +18527,11 @@ msgstr ""
 msgid "Preview in new window"
 msgstr ""
 
-#: cache/cb/cb1c15ce617fd7e7648d38bb0b2b48f5.php:1211
+#: cache/cb/cb1c15ce617fd7e7648d38bb0b2b48f5.php:954
+msgid "Clear Filters"
+msgstr ""
+
+#: cache/cb/cb1c15ce617fd7e7648d38bb0b2b48f5.php:1223
 msgid ""
 "Enter the code associated with the web hook you wish to trigger. Please note "
 "that for this action to work, the webhook trigger code has to be added to "
@@ -19065,35 +19205,39 @@ msgstr ""
 msgid "Last Sync"
 msgstr ""
 
-#: cache/b2/b21687508ff5b0bb637fdbd3f8c0d3c6.php:316
+#: cache/b2/b21687508ff5b0bb637fdbd3f8c0d3c6.php:209
+msgid "Data Last Modified"
+msgstr ""
+
+#: cache/b2/b21687508ff5b0bb637fdbd3f8c0d3c6.php:325
 msgid "Add CSV Files"
 msgstr ""
 
-#: cache/b2/b21687508ff5b0bb637fdbd3f8c0d3c6.php:346
+#: cache/b2/b21687508ff5b0bb637fdbd3f8c0d3c6.php:355
 msgid ""
 "If the CSV file contains non-ASCII characters please ensure the file is "
 "UTF-8 encoded"
 msgstr ""
 
-#: cache/b2/b21687508ff5b0bb637fdbd3f8c0d3c6.php:353
+#: cache/b2/b21687508ff5b0bb637fdbd3f8c0d3c6.php:362
 msgid "CSV Import"
 msgstr ""
 
-#: cache/b2/b21687508ff5b0bb637fdbd3f8c0d3c6.php:608
+#: cache/b2/b21687508ff5b0bb637fdbd3f8c0d3c6.php:617
 msgid "Overwrite existing data?"
 msgstr ""
 
-#: cache/b2/b21687508ff5b0bb637fdbd3f8c0d3c6.php:613
+#: cache/b2/b21687508ff5b0bb637fdbd3f8c0d3c6.php:622
 msgid ""
 "Erase all content in this DataSet and overwrite it with the new content in "
 "this import."
 msgstr ""
 
-#: cache/b2/b21687508ff5b0bb637fdbd3f8c0d3c6.php:628
+#: cache/b2/b21687508ff5b0bb637fdbd3f8c0d3c6.php:637
 msgid "Ignore the first row? Useful if the CSV has headings."
 msgstr ""
 
-#: cache/b2/b21687508ff5b0bb637fdbd3f8c0d3c6.php:638
+#: cache/b2/b21687508ff5b0bb637fdbd3f8c0d3c6.php:647
 msgid ""
 "In the fields below please enter the column number in the CSV file that "
 "corresponds to the Column Heading listed. This should be done before Adding "
@@ -19156,7 +19300,7 @@ msgstr ""
 #: lib/Controller/DisplayGroup.php:2664 lib/Controller/DataSet.php:621
 #: lib/Controller/Notification.php:576 lib/Controller/Campaign.php:649
 #: lib/Controller/Campaign.php:1385 lib/Controller/Folder.php:216
-#: lib/Controller/Playlist.php:786 lib/Controller/SyncGroup.php:291
+#: lib/Controller/Playlist.php:787 lib/Controller/SyncGroup.php:291
 #: lib/Controller/DataSetColumn.php:385 lib/Controller/Tag.php:359
 #: lib/Controller/Layout.php:493 lib/Controller/CypressTest.php:284
 #: lib/Controller/DisplayProfile.php:303 lib/Controller/DisplayProfile.php:644
@@ -19172,7 +19316,7 @@ msgstr ""
 #: lib/Controller/DisplayGroup.php:1025 lib/Controller/DataSet.php:915
 #: lib/Controller/ScheduleReport.php:429 lib/Controller/Notification.php:706
 #: lib/Controller/Campaign.php:959 lib/Controller/MenuBoard.php:461
-#: lib/Controller/Folder.php:284 lib/Controller/Playlist.php:977
+#: lib/Controller/Folder.php:284 lib/Controller/Playlist.php:978
 #: lib/Controller/Transition.php:158 lib/Controller/Library.php:1401
 #: lib/Controller/SyncGroup.php:557 lib/Controller/DataSetColumn.php:592
 #: lib/Controller/Tag.php:544 lib/Controller/Connector.php:205
@@ -19195,7 +19339,7 @@ msgstr ""
 #: lib/Controller/ScheduleReport.php:467 lib/Controller/Notification.php:765
 #: lib/Controller/Campaign.php:1038 lib/Controller/SavedReport.php:285
 #: lib/Controller/MenuBoard.php:538 lib/Controller/Folder.php:358
-#: lib/Controller/Playlist.php:1058 lib/Controller/Library.php:1009
+#: lib/Controller/Playlist.php:1059 lib/Controller/Library.php:1009
 #: lib/Controller/SyncGroup.php:635 lib/Controller/DataSetColumn.php:681
 #: lib/Controller/Tag.php:629 lib/Controller/Layout.php:1017
 #: lib/Controller/MenuBoardCategory.php:517
@@ -19232,9 +19376,9 @@ msgstr ""
 #: lib/Controller/Widget.php:191 lib/Controller/Widget.php:456
 #: lib/Controller/Widget.php:666 lib/Controller/Widget.php:824
 #: lib/Controller/Widget.php:989 lib/Controller/Widget.php:1078
-#: lib/Controller/Widget.php:1427 lib/Controller/Widget.php:1536
-#: lib/Controller/Widget.php:1618 lib/Controller/Playlist.php:1309
-#: lib/Controller/Playlist.php:1473 lib/Controller/Layout.php:750
+#: lib/Controller/Widget.php:1428 lib/Controller/Widget.php:1537
+#: lib/Controller/Widget.php:1619 lib/Controller/Playlist.php:1310
+#: lib/Controller/Playlist.php:1474 lib/Controller/Layout.php:750
 #: lib/Controller/Layout.php:834 lib/Controller/Region.php:229
 #: lib/Controller/Region.php:376 lib/Controller/Region.php:462
 #: lib/Controller/Region.php:527 lib/Controller/Region.php:748
@@ -19269,9 +19413,9 @@ msgstr ""
 #: lib/Controller/Widget.php:321 lib/Controller/Widget.php:448
 #: lib/Controller/Widget.php:721 lib/Controller/Widget.php:816
 #: lib/Controller/Widget.php:885 lib/Controller/Widget.php:981
-#: lib/Controller/Widget.php:1070 lib/Controller/Widget.php:1333
-#: lib/Controller/Widget.php:1419 lib/Controller/Widget.php:1528
-#: lib/Controller/Widget.php:1610
+#: lib/Controller/Widget.php:1070 lib/Controller/Widget.php:1334
+#: lib/Controller/Widget.php:1420 lib/Controller/Widget.php:1529
+#: lib/Controller/Widget.php:1611
 msgid "This Widget is not shared with you with edit permission"
 msgstr ""
 
@@ -19358,51 +19502,51 @@ msgstr ""
 msgid "Removed Audio"
 msgstr ""
 
-#: lib/Controller/Widget.php:1112 lib/Controller/Widget.php:1244
+#: lib/Controller/Widget.php:1112 lib/Controller/Widget.php:1245
 msgid "This Region is not shared with you"
 msgstr ""
 
-#: lib/Controller/Widget.php:1117 lib/Controller/Widget.php:1249
+#: lib/Controller/Widget.php:1117 lib/Controller/Widget.php:1250
 msgid "This Widget is not shared with you"
 msgstr ""
 
-#: lib/Controller/Widget.php:1206
+#: lib/Controller/Widget.php:1207
 msgid "No data providers configured"
 msgstr ""
 
-#: lib/Controller/Widget.php:1315
+#: lib/Controller/Widget.php:1316
 msgid "Problem rendering widget"
 msgstr ""
 
-#: lib/Controller/Widget.php:1479
+#: lib/Controller/Widget.php:1480
 msgid "Edited Expiry"
 msgstr ""
 
-#: lib/Controller/Widget.php:1543
+#: lib/Controller/Widget.php:1544
 msgid "You can only set a target region on a Widget in the drawer."
 msgstr ""
 
-#: lib/Controller/Widget.php:1567
+#: lib/Controller/Widget.php:1568
 msgid "Target region set"
 msgstr ""
 
-#: lib/Controller/Widget.php:1628
+#: lib/Controller/Widget.php:1629
 msgid "Invalid element JSON"
 msgstr ""
 
-#: lib/Controller/Widget.php:1663
+#: lib/Controller/Widget.php:1664
 msgid "Saved elements"
 msgstr ""
 
-#: lib/Controller/Widget.php:1688
+#: lib/Controller/Widget.php:1689
 msgid "Please supply a propertyId"
 msgstr ""
 
-#: lib/Controller/Widget.php:1742
+#: lib/Controller/Widget.php:1743
 msgid "Please provide a widgetId"
 msgstr ""
 
-#: lib/Controller/Widget.php:1761
+#: lib/Controller/Widget.php:1762
 msgid "Widget does not have a data type"
 msgstr ""
 
@@ -19412,7 +19556,7 @@ msgstr ""
 
 #: lib/Controller/Template.php:223 lib/Controller/DisplayGroup.php:360
 #: lib/Controller/Campaign.php:361 lib/Controller/MenuBoard.php:198
-#: lib/Controller/Playlist.php:417 lib/Controller/Library.php:668
+#: lib/Controller/Playlist.php:418 lib/Controller/Library.php:668
 #: lib/Controller/Layout.php:1774 lib/Controller/Display.php:949
 msgid "Move to Folder"
 msgstr ""
@@ -19907,7 +20051,7 @@ msgstr ""
 msgid "Please provide an assetId"
 msgstr ""
 
-#: lib/Controller/Fault.php:109 lib/Entity/Layout.php:1918
+#: lib/Controller/Fault.php:109 lib/Entity/Layout.php:1927
 msgid "Can't create ZIP. Error Code: "
 msgstr ""
 
@@ -19995,89 +20139,89 @@ msgstr ""
 msgid "Widget cache"
 msgstr ""
 
-#: lib/Controller/Playlist.php:353
+#: lib/Controller/Playlist.php:354
 msgid "This Playlist has enable stat collection set to ON"
 msgstr ""
 
-#: lib/Controller/Playlist.php:360
+#: lib/Controller/Playlist.php:361
 msgid "This Playlist has enable stat collection set to OFF"
 msgstr ""
 
-#: lib/Controller/Playlist.php:367
+#: lib/Controller/Playlist.php:368
 msgid "This Playlist has enable stat collection set to INHERIT"
 msgstr ""
 
-#: lib/Controller/Playlist.php:428 lib/Controller/Playlist.php:439
+#: lib/Controller/Playlist.php:429 lib/Controller/Playlist.php:440
 #: lib/Controller/Library.php:739 lib/Controller/Library.php:745
 #: lib/Controller/Layout.php:1835 lib/Controller/Layout.php:1841
 msgid "Enable stats collection?"
 msgstr ""
 
-#: lib/Controller/Playlist.php:520 lib/Controller/Library.php:758
+#: lib/Controller/Playlist.php:521 lib/Controller/Library.php:758
 msgid "Usage Report"
 msgstr ""
 
-#: lib/Controller/Playlist.php:669
+#: lib/Controller/Playlist.php:670
 msgid "Please enter playlist name"
 msgstr ""
 
-#: lib/Controller/Playlist.php:711 lib/Controller/Playlist.php:959
+#: lib/Controller/Playlist.php:712 lib/Controller/Playlist.php:960
 msgid ""
 "No filters have been set for this dynamic Playlist, please click the Filters "
 "tab to define"
 msgstr ""
 
-#: lib/Controller/Playlist.php:1199 lib/Controller/Library.php:2246
+#: lib/Controller/Playlist.php:1200 lib/Controller/Library.php:2246
 #: lib/Controller/Layout.php:2158
 #, php-format
 msgid "Copied as %s"
 msgstr ""
 
-#: lib/Controller/Playlist.php:1312
+#: lib/Controller/Playlist.php:1313
 msgid ""
 "This Playlist is dynamically managed so cannot accept manual assignments."
 msgstr ""
 
-#: lib/Controller/Playlist.php:1318
+#: lib/Controller/Playlist.php:1319
 msgid "Please provide Media to Assign"
 msgstr ""
 
-#: lib/Controller/Playlist.php:1333
+#: lib/Controller/Playlist.php:1334
 msgid "You do not have permissions to use this media"
 msgstr ""
 
-#: lib/Controller/Playlist.php:1338
+#: lib/Controller/Playlist.php:1339
 #, php-format
 msgid "You cannot assign file type %s to a playlist"
 msgstr ""
 
-#: lib/Controller/Playlist.php:1398
+#: lib/Controller/Playlist.php:1399
 msgid "Media Assigned"
 msgstr ""
 
-#: lib/Controller/Playlist.php:1483
+#: lib/Controller/Playlist.php:1484
 msgid "Cannot Save empty region playlist. Please add widgets"
 msgstr ""
 
-#: lib/Controller/Playlist.php:1502
+#: lib/Controller/Playlist.php:1503
 msgid "Order Changed"
 msgstr ""
 
-#: lib/Controller/Playlist.php:1640 lib/Controller/Playlist.php:1717
+#: lib/Controller/Playlist.php:1641 lib/Controller/Playlist.php:1718
 msgid "Specified Playlist item is not in use."
 msgstr ""
 
-#: lib/Controller/Playlist.php:1710 lib/Controller/Library.php:2105
+#: lib/Controller/Playlist.php:1711 lib/Controller/Library.php:2105
 #: lib/Controller/Layout.php:1686
 msgid "Preview Layout"
 msgstr ""
 
-#: lib/Controller/Playlist.php:1785
+#: lib/Controller/Playlist.php:1786
 #, php-format
 msgid "For Playlist %s Enable Stats Collection is set to %s"
 msgstr ""
 
-#: lib/Controller/Playlist.php:1918
+#: lib/Controller/Playlist.php:1919
 #, php-format
 msgid "Playlist %s moved to Folder %s"
 msgstr ""
@@ -20424,7 +20568,7 @@ msgid ""
 "This function is available only to User who originally locked this Layout."
 msgstr ""
 
-#: lib/Controller/Layout.php:3076 lib/Entity/Layout.php:2257
+#: lib/Controller/Layout.php:3076 lib/Entity/Layout.php:2266
 msgid "Empty Region"
 msgstr ""
 
@@ -21369,7 +21513,7 @@ msgstr ""
 msgid "Please select a Widget"
 msgstr ""
 
-#: lib/Entity/Module.php:545
+#: lib/Entity/Module.php:536
 msgid "Default Duration is a required field."
 msgstr ""
 
@@ -21594,40 +21738,40 @@ msgid ""
 "edge. Please check the allowed Resize Limit in Administration -> Settings"
 msgstr ""
 
-#: lib/Entity/Layout.php:1819
+#: lib/Entity/Layout.php:1828
 msgid "Missing one or more required elements"
 msgstr ""
 
-#: lib/Entity/Layout.php:1835
+#: lib/Entity/Layout.php:1844
 #, php-format
 msgid "%s is pending conversion"
 msgstr ""
 
-#: lib/Entity/Layout.php:1840
+#: lib/Entity/Layout.php:1849
 #, php-format
 msgid ""
 "%s is too large. Please ensure that none of the images in your layout are "
 "larger than your Resize Limit on their longest edge."
 msgstr ""
 
-#: lib/Entity/Layout.php:1852
+#: lib/Entity/Layout.php:1861
 msgid "Misconfigured Playlist"
 msgstr ""
 
-#: lib/Entity/Layout.php:2246
+#: lib/Entity/Layout.php:2255
 #, php-format
 msgid "There is an error with this Layout: %s"
 msgstr ""
 
-#: lib/Entity/Layout.php:2325 lib/Entity/Layout.php:2454
+#: lib/Entity/Layout.php:2334 lib/Entity/Layout.php:2463
 msgid "Not a Draft"
 msgstr ""
 
-#: lib/Entity/Layout.php:2540
+#: lib/Entity/Layout.php:2549
 msgid "Draft Layouts must have a parent"
 msgstr ""
 
-#: lib/Entity/Layout.php:2674 lib/Listener/WidgetListener.php:199
+#: lib/Entity/Layout.php:2683 lib/Listener/WidgetListener.php:199
 msgid "Cannot add the same SubPlaylist twice."
 msgstr ""
 
@@ -23154,17 +23298,17 @@ msgid ""
 "Layout code."
 msgstr ""
 
-#: lib/Xmds/Soap.php:2545
+#: lib/Xmds/Soap.php:2586
 #, php-format
 msgid "Recovery for Display %s"
 msgstr ""
 
-#: lib/Xmds/Soap.php:2546
+#: lib/Xmds/Soap.php:2587
 #, php-format
 msgid "Display ID %d is now back online %s"
 msgstr ""
 
-#: lib/Xmds/Soap.php:2617
+#: lib/Xmds/Soap.php:2658
 msgid "Bandwidth allowance exceeded"
 msgstr ""
 
