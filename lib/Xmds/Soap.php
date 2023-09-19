@@ -2349,17 +2349,17 @@ class Soap
                     $dataModule = $this->moduleFactory->getByType($widget->type);
                     if ($dataModule->isDataProviderExpected()) {
                         // We only ever return cache.
-                        $dataProvider = $module->createDataProvider($widget);
+                        $dataProvider = $dataModule->createDataProvider($widget);
 
                         // Use the cache if we can.
                         try {
                             $widgetDataProviderCache = $this->moduleFactory->createWidgetDataProviderCache();
                             $cacheKey = $this->moduleFactory->determineCacheKey(
-                                $module,
+                                $dataModule,
                                 $widget,
                                 $this->display->displayId,
                                 $dataProvider,
-                                $module->getWidgetProviderOrNull()
+                                $dataModule->getWidgetProviderOrNull()
                             );
 
                             // We do not pass a modifiedDt in here because we always expect to be cached.
