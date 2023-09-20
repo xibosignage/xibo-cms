@@ -531,13 +531,8 @@ $app->get('/stats/export', ['\Xibo\Controller\Stats','export'])
     ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['proof-of-play']))
     ->setName('stats.export');
 
-/**
- * Log
- * @SWG\Tag(
- *  name="log",
- *  description="Logs"
- * )
- */
+// Log (no APIs)
+// -------------
 $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/log', ['\Xibo\Controller\Logging', 'grid'])->setName('log.search');
     $group->delete('/log', ['\Xibo\Controller\Logging', 'truncate'])->setName('log.truncate');
