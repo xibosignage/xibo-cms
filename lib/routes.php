@@ -719,13 +719,8 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->delete('/daypart/{id}', ['\Xibo\Controller\DayPart','delete'])->setName('daypart.delete');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['daypart.modify']));
 
-/**
- * Tasks
- * @SWG\Tag(
- *  name="task",
- *  description="Tasks"
- * )
- */
+// Tasks (no APIs)
+// ----
 $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/task', ['\Xibo\Controller\Task', 'grid'])->setName('task.search');
     $group->post('/task', ['\Xibo\Controller\Task', 'add'])->setName('task.add');
@@ -734,14 +729,8 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->post('/task/{id}/run', ['\Xibo\Controller\Task', 'runNow'])->setName('task.runNow');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['task.view']));
 
-/**
- * Report schedule
- * @SWG\Tag(
- *  name="report",
- *  description="Report schedule"
- * )
- */
-
+// Report schedule (no APIs)
+// -------------------------
 $app->get('/report/reportschedule', ['\Xibo\Controller\ScheduleReport','reportScheduleGrid'])->setName('reportschedule.search');
 $app->group('', function (RouteCollectorProxy $group) {
     $group->post('/report/reportschedule', ['\Xibo\Controller\ScheduleReport','reportScheduleAdd'])->setName('reportschedule.add');
@@ -799,13 +788,8 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/tag/usage/{id}', ['\Xibo\Controller\Tag', 'usage'])->setName('tag.usage');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['tag.view']));
 
-/**
- * Actions
- * @SWG\Tag(
- *  name="actions",
- *  description="Actions"
- * )
- */
+// Actions (no APIs)
+// -----------------
 $app->get('/action', ['\Xibo\Controller\Action', 'grid'])->setName('action.search');
 $app->group('', function (RouteCollectorProxy $group) {
     $group->post('/action', ['\Xibo\Controller\Action', 'add'])->setName('action.add');

@@ -6912,6 +6912,74 @@
                 }
             }
         },
+        "/module/properties/{id}": {
+            "get": {
+                "tags": [
+                    "module"
+                ],
+                "summary": "Get Module Properties",
+                "description": "Get a module properties which are needed to for the editWidget call",
+                "operationId": "getModuleProperties",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "The ModuleId",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Module"
+                        }
+                    }
+                }
+            }
+        },
+        "/module/template/{dataType}/properties/{id}": {
+            "get": {
+                "tags": [
+                    "module"
+                ],
+                "summary": "Get Module Template Properties",
+                "description": "Get a module template properties which are needed to for the editWidget call",
+                "operationId": "getModuleProperties",
+                "parameters": [
+                    {
+                        "name": "dataType",
+                        "in": "path",
+                        "description": "The Template DataType",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "The Template Id",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "id": "string",
+                                "type": "string",
+                                "title": "string",
+                                "helpText": "string",
+                                "options": "array"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/notification": {
             "get": {
                 "tags": [
@@ -14523,23 +14591,11 @@
             "description": "Dayparting"
         },
         {
-            "name": "task",
-            "description": "Tasks"
-        },
-        {
-            "name": "report",
-            "description": "Report schedule"
-        },
-        {
             "name": "Player Software"
         },
         {
             "name": "tags",
             "description": "Tags"
-        },
-        {
-            "name": "actions",
-            "description": "Actions"
         },
         {
             "name": "menuBoard",

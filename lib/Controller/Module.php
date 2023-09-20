@@ -21,12 +21,14 @@
  */
 namespace Xibo\Controller;
 
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\ModuleTemplateFactory;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
@@ -154,6 +156,7 @@ class Module extends Base
      *      description="successful operation",
      *      @SWG\Schema(ref="#/definitions/Module")
      *  )
+     * )
      * @param Request $request
      * @param Response $response
      * @param $id
@@ -353,14 +356,15 @@ class Module extends Base
      *          additionalProperties={"id":"string", "type":"string", "title":"string", "helpText":"string", "options":"array"}
      *      )
      *  )
+     * )
      * @param Request $request
      * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
+     * @param string $dataType
+     * @param string $id
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
     // phpcs:enable
     public function getTemplateProperties(Request $request, Response $response, string $dataType, string $id)
