@@ -14567,10 +14567,6 @@
             "description": "Statistics"
         },
         {
-            "name": "log",
-            "description": "Logs"
-        },
-        {
             "name": "user",
             "description": "Users"
         },
