@@ -1936,6 +1936,23 @@ window.forms = {
       }
     });
 
+    // Select2 dropdown
+    findElements(
+      '.select2-hidden-accessible',
+      target,
+    ).each(function(_k, el) {
+      const $el = $(el);
+
+      $el.on('select2:open', function(event) {
+        const $search = $(event.target).data('select2').dropdown?.$search;
+        setTimeout(function() {
+          if ($search) {
+            $search.get(0).focus();
+          }
+        }, 10);
+      });
+    });
+
     // Handle field dependencies for the container
     // only if we don't have a target
     if (!target) {
