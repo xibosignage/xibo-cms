@@ -1858,7 +1858,7 @@ window.forms = {
     ).each(function(_k, el) {
       // Populate the effect list with options
       const $el = $(el).find('select');
-      const effectsType = $el.data('effects-type');
+      const effectsType = $el.data('effects-type').split(' ');
 
       // Effects
       const effects = [
@@ -1881,10 +1881,23 @@ window.forms = {
 
       // Add the options
       $.each(effects, function(_index, element) {
-        if ((effectsType !== 'all' && element.group !== effectsType) ||
-          element.effect === 'none') {
+        // Don't add effect if it's none and
+        // the target is a element or element-group
+        if (
+          effectsType.indexOf('noNone') != -1 &&
+          element.effect === 'none'
+        ) {
           return;
         }
+
+        // Don't add effect if the target effect type isn't all or a valid type
+        if (
+          effectsType.indexOf('all') === -1 &&
+          effectsType.indexOf(element.group) === -1
+        ) {
+          return;
+        }
+
         $el.append(
           $('<option value="' +
             element.effect +

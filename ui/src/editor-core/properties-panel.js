@@ -670,7 +670,7 @@ PropertiesPanel.prototype.render = function(
             helpText: propertiesPanelTrans.effectHelpText,
             value: targetAux.effect,
             type: 'effectSelector',
-            variant: 'all',
+            variant: 'all noNone',
             visibility: [],
           });
         }
@@ -870,7 +870,7 @@ PropertiesPanel.prototype.render = function(
               helpText: propertiesPanelTrans.effectHelpText,
               value: targetAux.effect,
               type: 'effectSelector',
-              variant: 'all',
+              variant: 'all noNone',
               visibility: [],
             });
           }
