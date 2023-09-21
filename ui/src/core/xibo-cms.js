@@ -3292,6 +3292,12 @@ function makePagedSelect(element, parent) {
         }
     });
 
+    element.on('select2:open', function(event) {
+        setTimeout(function() {
+            $(event.target).data('select2').dropdown?.$search.get(0).focus();
+        }, 10);
+    });
+
     // Set initial value if exists
     if(
         [undefined, ''].indexOf(element.data("initialValue")) == -1 &&
