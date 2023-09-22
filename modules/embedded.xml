@@ -39,18 +39,18 @@
         <property id="transparency" type="checkbox">
             <title>Background transparent?</title>
             <helpText>Should the Widget be shown with a transparent background? Also requires the embedded content to have a transparent background.</helpText>
-            <default>1</default>
+            <default>0</default>
         </property>
         <property id="scaleContent" type="checkbox">
             <title>Scale Content?</title>
             <helpText>Should the embedded content be scaled along with the layout?</helpText>
-            <default>1</default>
+            <default>0</default>
             <playerCompatibility windows="v2 R253+"></playerCompatibility>
         </property>
         <property id="isPreNavigate" type="checkbox">
             <title>Preload?</title>
             <helpText>Should this Widget be loaded entirely off-screen so that it is ready when shown? Dynamic content will start running off screen.</helpText>
-            <default>1</default>
+            <default>0</default>
         </property>
         <property id="embedHtml" type="code" allowLibraryRefs="true" variant="html">
             <title>HTML to embed</title>

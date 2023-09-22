@@ -60,17 +60,18 @@ class ModulesTableVerFourMigration extends AbstractMigration
 
         // Pull through old modules, having a guess at their names.
         try {
+            //phpcs:disable
             $this->execute('
-            INSERT INTO `module` (`moduleId`, `enabled`, `previewEnabled`, `defaultDuration`, `settings`)
-            SELECT DISTINCT LOWER(CASE WHEN `class` LIKE \'%Custom%\' 
-                       THEN IFNULL(installname, module)
-                       ELSE CONCAT(\'core-\', `module`)
-                   END),
-                   `enabled`,
-                   `previewEnabled`,
-                   `defaultDuration`, 
-                   `settings`
-              FROM `module_old`');
+                INSERT INTO `module` (`moduleId`, `enabled`, `previewEnabled`, `defaultDuration`, `settings`)
+                SELECT LOWER(CASE WHEN `class` LIKE \'%Custom%\' THEN IFNULL(installname, module) ELSE CONCAT(\'core-\', `module`) END),
+                    MAX(`enabled`),
+                    MAX(`previewEnabled`),
+                    MAX(`defaultDuration`),
+                    MAX(`settings`)
+                  FROM `module_old`
+                GROUP BY LOWER(CASE WHEN `class` LIKE \'%Custom%\' THEN IFNULL(installname, module) ELSE CONCAT(\'core-\', `module`) END)
+            ');
+            //phpcs:enable
 
             // Handle any specific renames
             $this->execute('UPDATE `module` SET moduleId = \'core-rss-ticker\' WHERE moduleId = \'core-ticker\'');

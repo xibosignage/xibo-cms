@@ -381,11 +381,12 @@
             }
         });
 
-        $(".article_date").each(function(index, element) {
-            if($(".article_date").length > 1){
-                // Replace the ISO date with a nice formatted date "for humans"
-                $(this).html(moment($(this).html(), systemDateFormat).fromNow());
-            }
+        $('.article_date').each(function(index, element) {
+          // Replace the ISO date with a nice formatted date "for humans"
+          const date = $(element).html();
+          if (date) {
+            $(element).html(moment(date, systemDateFormat).fromNow());
+          }
         });
 
         var table = $("#displays").DataTable({

@@ -31,6 +31,7 @@ class Extend implements \JsonSerializable
     public $template;
     public $override;
     public $with;
+    public $escapeHtml;
 
     /** @inheritDoc */
     public function jsonSerialize(): array
@@ -39,6 +40,7 @@ class Extend implements \JsonSerializable
             'template' => $this->template,
             'override' => $this->override,
             'with' => $this->with,
+            'escapeHtml' => $this->escapeHtml,
         ];
     }
 }
