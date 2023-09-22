@@ -24,6 +24,7 @@ namespace Xibo\Widget\Definition;
 
 /**
  * A Legacy Type
+ * @SWG\Definition()
  */
 class LegacyType implements \JsonSerializable
 {

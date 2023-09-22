@@ -74,7 +74,18 @@ class Module extends Base
     }
 
     /**
-     * A grid of modules
+     * @SWG\Get(
+     *  path="/module",
+     *  operationId="moduleSearch",
+     *  tags={"module"},
+     *  summary="Module Search",
+     *  description="Get a list of all modules available to this CMS",
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Module")
+     *  )
+     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -154,7 +165,7 @@ class Module extends Base
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Module")
+     *      @SWG\Schema(ref="#/definitions/Property")
      *  )
      * )
      * @param Request $request
@@ -307,7 +318,25 @@ class Module extends Base
     }
 
     /**
-     * Get a list of templates available for a particular data type
+     * @SWG\Get(
+     *  path="/module/templates/{dataType}",
+     *  operationId="moduleTemplateSearch",
+     *  tags={"module"},
+     *  summary="Module Template Search",
+     *  description="Get a list of templates available for a particular data type",
+     *  @SWG\Parameter(
+     *      name="dataType",
+     *      in="path",
+     *      description="DataType to return templates for",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="An array of module templates for the provided datatype",
+     *      @SWG\Schema(ref="#/definitions/ModuleTemplate")
+     *  )
+     * )
      * @param \Slim\Http\ServerRequest $request
      * @param \Slim\Http\Response $response
      * @param string $dataType

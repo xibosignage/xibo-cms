@@ -6912,6 +6912,24 @@
                 }
             }
         },
+        "/module": {
+            "get": {
+                "tags": [
+                    "module"
+                ],
+                "summary": "Module Search",
+                "description": "Get a list of all modules available to this CMS",
+                "operationId": "moduleSearch",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Module"
+                        }
+                    }
+                }
+            }
+        },
         "/module/properties/{id}": {
             "get": {
                 "tags": [
@@ -6933,7 +6951,34 @@
                     "200": {
                         "description": "successful operation",
                         "schema": {
-                            "$ref": "#/definitions/Module"
+                            "$ref": "#/definitions/Property"
+                        }
+                    }
+                }
+            }
+        },
+        "/module/templates/{dataType}": {
+            "get": {
+                "tags": [
+                    "module"
+                ],
+                "summary": "Module Template Search",
+                "description": "Get a list of templates available for a particular data type",
+                "operationId": "moduleTemplateSearch",
+                "parameters": [
+                    {
+                        "name": "dataType",
+                        "in": "path",
+                        "description": "DataType to return templates for",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "An array of module templates for the provided datatype",
+                        "schema": {
+                            "$ref": "#/definitions/ModuleTemplate"
                         }
                     }
                 }
@@ -12950,7 +12995,9 @@
                 "legacyTypes": {
                     "description": "Legacy type codes for this module",
                     "type": "array",
-                    "items": {}
+                    "items": {
+                        "$ref": "#/definitions/LegacyType"
+                    }
                 },
                 "dataType": {
                     "description": "The data type of the data expected to be returned by this modules data provider",
@@ -13010,6 +13057,13 @@
                         "type": "string"
                     }
                 },
+                "properties": {
+                    "description": "Properties to display in the property panel and supply to stencils",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Property"
+                    }
+                },
                 "onInitialize": {
                     "description": "JavaScript function run when a module is initialised, before data is returned",
                     "type": "string"
@@ -13054,18 +13108,33 @@
                     "description": "An array of additional module specific settings",
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "$ref": "#/definitions/Property"
                     }
                 },
                 "propertyGroups": {
                     "description": "An array of additional module specific group properties",
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "$ref": "#/definitions/PropertyGroup"
                     }
                 },
                 "requiredElements": {
                     "description": "An array of required elements",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "isInstalled": {
+                    "description": "$isInstalled Is this module installed?",
+                    "type": "boolean"
+                },
+                "isError": {
+                    "description": "$isError Does this module have any errors?",
+                    "type": "boolean"
+                },
+                "errors": {
+                    "description": "$errors An array of errors this module has.",
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -13075,16 +13144,64 @@
         },
         "ModuleTemplate": {
             "properties": {
+                "templateId": {
+                    "description": "The templateId",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "Type of template (static|element|stencil)",
+                    "type": "string"
+                },
+                "extends": {
+                    "description": "If this template extends another",
+                    "$ref": "#/definitions/Extend"
+                },
+                "dataType": {
+                    "description": "The datatype of this template",
+                    "type": "string"
+                },
+                "title": {
+                    "description": "The title",
+                    "type": "string"
+                },
+                "icon": {
+                    "description": "Icon",
+                    "type": "string"
+                },
+                "thumbnail": {
+                    "description": "",
+                    "type": "string"
+                },
                 "showIn": {
                     "description": "A flag indicating whether the template should be excluded from the Layout Editor",
                     "type": "string"
+                },
+                "properties": {
+                    "description": "Properties",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Property"
+                    }
+                },
+                "isVisible": {
+                    "description": "Is Visible?",
+                    "type": "boolean"
                 },
                 "propertyGroups": {
                     "description": "An array of additional module specific group properties",
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "$ref": "#/definitions/PropertyGroup"
                     }
+                },
+                "stencil": {
+                    "description": "A stencil, if needed",
+                    "$ref": "#/definitions/Stencil"
+                },
+                "assets": {
+                    "description": "",
+                    "type": "array",
+                    "items": {}
                 }
             }
         },
@@ -14383,7 +14500,57 @@
                     "type": "string"
                 }
             }
-        }
+        },
+        "Element": {},
+        "Extend": {},
+        "LegacyType": {},
+        "Option": {
+            "properties": {
+                "name": {
+                    "description": "Name",
+                    "type": "string"
+                },
+                "image": {
+                    "description": "Image: optional image asset",
+                    "type": "string"
+                },
+                "set": {
+                    "description": "Set",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
+                    "description": "Title: shown in the dropdown/select",
+                    "type": "string"
+                }
+            }
+        },
+        "Property": {
+            "properties": {
+                "id": {
+                    "description": "ID, saved as a widget option",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "Type, determines the field type",
+                    "type": "string"
+                },
+                "title": {
+                    "description": "Title: shown in the property panel",
+                    "type": "string"
+                },
+                "helpText": {
+                    "description": "Help Text: shown in the property panel",
+                    "type": "string"
+                }
+            }
+        },
+        "PropertyGroup": {},
+        "Rule": {},
+        "Stencil": {},
+        "Test": {}
     },
     "parameters": {
         "actionId": {
