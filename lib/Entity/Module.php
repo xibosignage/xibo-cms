@@ -176,7 +176,10 @@ class Module implements \JsonSerializable
     /** @var \Xibo\Widget\Definition\Stencil|null Stencil for this modules HTML cache */
     public $stencil;
 
-    /** @var \Xibo\Widget\Definition\Property[]|null */
+    /**
+     * @SWG\Property(description="Properties to display in the property panel and supply to stencils")
+     * @var \Xibo\Widget\Definition\Property[]|null
+     */
     public $properties;
 
     /** @var \Xibo\Widget\Definition\Asset[]|null */
@@ -247,21 +250,13 @@ class Module implements \JsonSerializable
     public $defaultDuration;
 
     /**
-     * @SWG\Property(
-     *     description="An array of additional module specific settings",
-     *     type="array",
-     *     @SWG\Items(type="string")
-     * )
+     * @SWG\Property(description="An array of additional module specific settings")
      * @var \Xibo\Widget\Definition\Property[]
      */
     public $settings = [];
 
     /**
-     * @SWG\Property(
-     *     description="An array of additional module specific group properties",
-     *     type="array",
-     *     @SWG\Items(type="string")
-     * )
+     * @SWG\Property(description="An array of additional module specific group properties")
      * @var \Xibo\Widget\Definition\PropertyGroup[]
      */
     public $propertyGroups = [];
@@ -276,13 +271,22 @@ class Module implements \JsonSerializable
      */
     public $requiredElements = [];
 
-    /** @var bool $isInstalled Is this module installed? */
+    /**
+     * @SWG\Property()
+     * @var bool $isInstalled Is this module installed?
+     */
     public $isInstalled;
 
-    /** @var bool $isError Does this module have any errors? */
+    /**
+     * @SWG\Property()
+     * @var bool $isError Does this module have any errors?
+     */
     public $isError;
 
-    /** @var string[] $errors An array of errors this module has. */
+    /**
+     * @SWG\Property()
+     * @var string[] $errors An array of errors this module has.
+     */
     public $errors;
 
     // </editor-fold>

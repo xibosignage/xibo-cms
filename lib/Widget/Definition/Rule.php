@@ -24,6 +24,7 @@ namespace Xibo\Widget\Definition;
 
 /**
  * A rule to apply to a property
+ * @SWG\Definition()
  */
 class Rule implements \JsonSerializable
 {

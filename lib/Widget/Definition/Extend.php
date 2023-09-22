@@ -23,6 +23,7 @@
 namespace Xibo\Widget\Definition;
 
 /**
+ * @SWG\Definition()
  * A class representing one template extending another
  */
 class Extend implements \JsonSerializable

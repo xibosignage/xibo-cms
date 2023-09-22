@@ -24,6 +24,7 @@ namespace Xibo\Widget\Definition;
 
 /**
  * Represents a test/group of conditions
+ * @SWG\Definition()
  */
 class Test implements \JsonSerializable
 {

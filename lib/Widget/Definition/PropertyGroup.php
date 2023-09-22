@@ -24,6 +24,7 @@ namespace Xibo\Widget\Definition;
 
 /**
  * A class representing an instance of a group property to put a property in assigned Tab
+ * @SWG\Definition()
  */
 class PropertyGroup implements \JsonSerializable
 {

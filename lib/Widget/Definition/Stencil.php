@@ -23,6 +23,7 @@
 namespace Xibo\Widget\Definition;
 
 /**
+ * @SWG\Definition()
  * A Stencil is a template which is rendered in the server and/or client
  * it can optionally have properties and/or elements
  */

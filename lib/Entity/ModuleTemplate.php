@@ -26,6 +26,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Factory\ModuleTemplateFactory;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Widget\Definition\Asset;
 
 /**
  * Represents a module template
@@ -36,28 +37,44 @@ class ModuleTemplate implements \JsonSerializable
     use EntityTrait;
     use ModulePropertyTrait;
 
-    /** @var string The templateId */
+    /**
+     * @SWG\Property()
+     * @var string The templateId
+     */
     public $templateId;
 
-    /** @var string Type of template (static|element|stencil) */
+    /**
+     * @SWG\Property()
+     * @var string Type of template (static|element|stencil)
+     */
     public $type;
 
-    /** @var \Xibo\Widget\Definition\Extend|null If this template extends another */
+    /**
+     * @SWG\Property()
+     * @var \Xibo\Widget\Definition\Extend|null If this template extends another
+     */
     public $extends;
 
-    /** @var string The datatype of this template */
+    /**
+     * @SWG\Property()
+     * @var string The datatype of this template
+     */
     public $dataType;
 
-    /** @var string The title */
+    /**
+     * @SWG\Property()
+     * @var string The title
+     */
     public $title;
 
     /**
-     * Icon
-     * @var string
+     * @SWG\Property()
+     * @var string Icon
      */
     public $icon;
 
     /**
+     * @SWG\Property()
      * Thumbnail
      * this is the location to a module template's thumbnail, which should be added to the installation
      * relative to the module class file.
@@ -83,26 +100,34 @@ class ModuleTemplate implements \JsonSerializable
      */
     public $showIn = 'both';
 
-    /** @var \Xibo\Widget\Definition\Property[]|null */
+    /**
+     * @SWG\Property()
+     * @var \Xibo\Widget\Definition\Property[]|null Properties
+     */
     public $properties;
 
-    /** @var bool Is Visible? */
+    /**
+     * @SWG\Property()
+     * @var bool Is Visible?
+     */
     public $isVisible = true;
 
     /**
-     * @SWG\Property(
-     *     description="An array of additional module specific group properties",
-     *     type="array",
-     *     @SWG\Items(type="string")
-     * )
+     * @SWG\Property(description="An array of additional module specific group properties")
      * @var \Xibo\Widget\Definition\PropertyGroup[]
      */
     public $propertyGroups = [];
 
-    /** @var \Xibo\Widget\Definition\Stencil|null */
+    /**
+     * @SWG\Property()
+     * @var \Xibo\Widget\Definition\Stencil|null A stencil, if needed
+     */
     public $stencil;
 
-    /** @var  */
+    /**
+     * @SWG\Property()
+     * @var Asset[]
+     */
     public $assets;
 
     /** @var string A Renderer to run if custom rendering is required. */
