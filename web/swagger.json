@@ -14544,6 +14544,10 @@
                 "helpText": {
                     "description": "Help Text: shown in the property panel",
                     "type": "string"
+                },
+                "default": {
+                    "description": "An optional default value",
+                    "type": "string"
                 }
             }
         },

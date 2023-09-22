@@ -63,6 +63,10 @@ class Property implements \JsonSerializable
     /** @var \Xibo\Widget\Definition\Rule  */
     public $validation;
 
+    /**
+     * @SWG\Property()
+     * @var string An optional default value
+     */
     public $default;
 
     /** @var \Xibo\Widget\Definition\Option[] */
