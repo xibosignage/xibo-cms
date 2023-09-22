@@ -43,7 +43,7 @@
     </template>
     <template>
         <id>article_content</id>
-        <extends override="text" with="data.content" escape="false">text</extends>
+        <extends override="text" with="data.content" escapeHtml="false">text</extends>
         <title>Content</title>
         <type>element</type>
         <dataType>article</dataType>

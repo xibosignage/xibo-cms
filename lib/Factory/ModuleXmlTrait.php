@@ -421,6 +421,7 @@ trait ModuleXmlTrait
                 $extend->template = trim($node->textContent);
                 $extend->override = $node->getAttribute('override');
                 $extend->with = $node->getAttribute('with');
+                $extend->escapeHtml = $node->getAttribute('escapeHtml') !== 'false';
                 $extends[] = $extend;
             }
         }
