@@ -28,7 +28,7 @@ describe('Summary by Layout, Media or Event', function() {
   });
 
   it('Range: Today, Checks duration and count of a layout stat', () => {
-    // Create and alias for load layout
+    // Create alias
     cy.intercept({
       url: '/display?start=*',
       query: {display: display1},
@@ -57,13 +57,14 @@ describe('Summary by Layout, Media or Event', function() {
 
     // Click on the Apply button
     cy.contains('Apply').should('be.visible').click();
+    // Wait for report data
+    cy.wait('@reportData');
 
     cy.get('.chart-container').should('be.visible');
 
     // Click on Tabular
     cy.contains('Tabular').should('be.visible').click();
     cy.contains('Next').should('be.visible').click();
-    cy.wait('@reportData');
 
     // Should have media stats
     cy.get('#summaryTbl tbody tr:nth-child(3) td:nth-child(1)').contains('12:00 PM'); // Period
@@ -75,6 +76,7 @@ describe('Summary by Layout, Media or Event', function() {
     const reportschedule = 'Daily Summary by Layout 1 and Display 1';
 
     // Create and alias for load layout
+    cy.intercept('/report/reportschedule/form/add*').as('reportScheduleAddForm');
     cy.intercept({
       url: '/display?start=*',
       query: {display: display1},
@@ -102,6 +104,7 @@ describe('Summary by Layout, Media or Event', function() {
     // ------
     // Create a Daily Summary Report Schedule
     cy.get('#reportAddBtn').click();
+    cy.wait('@reportScheduleAddForm');
     cy.get('#reportScheduleAddForm #name ').type(reportschedule);
 
     // Click on the select2 selection
