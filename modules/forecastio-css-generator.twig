@@ -88,13 +88,13 @@
 
 {% macro colors(backgroundColor, textColor, iconsColor, footerColor, footerTextColor, footerIconsColor, shadowColor) %}
     {% if backgroundColor != '' %}
-    #content .container {
+    #content > div {
         background-color: {{ backgroundColor }} !important;
     }
     {% endif %}
 
     {% if textColor != '' %}
-    #content .container {
+    #content > div {
         color: {{ textColor }} !important;
     }
     {% endif %}
