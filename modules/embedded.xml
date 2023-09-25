@@ -72,7 +72,7 @@
                 {{embedScript|raw}}
             </script>
             <style>
-                {{embedStyle}}
+                {{embedStyle|raw}}
             </style>
         ]]></twig>
     </stencil>
