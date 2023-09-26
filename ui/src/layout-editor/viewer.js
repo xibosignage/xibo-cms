@@ -1600,6 +1600,41 @@ Viewer.prototype.renderElementContent = function(
         const elData = elementData?.data;
         const meta = elementData?.meta;
 
+        // If parent widget isn't valid, replace error message
+        if (!$.isEmptyObject(parentWidget.validateData)) {
+          const $messageContainer = $elementContainer.find('.invalid-parent');
+          const errorArray = [$messageContainer.prop('title')];
+
+          // Required elements message
+          const requiredElementsErrorMessage =
+            parentWidget.checkRequiredElements();
+
+          (requiredElementsErrorMessage) &&
+            errorArray.push(
+              '<p>' +
+              requiredElementsErrorMessage +
+              '</p>');
+
+          // Default error message
+          (parentWidget.validateData.errorMessage) &&
+            errorArray.push(
+              '<p>' +
+              parentWidget.validateData.errorMessage +
+              '</p>');
+
+          (parentWidget.validateData.sampleDataMessage) &&
+            errorArray.push(
+              '<p class="sample-data">( ' +
+              parentWidget.validateData.sampleDataMessage +
+              ' )</p>');
+
+          // Set title/tooltip
+          $messageContainer.tooltip('dispose')
+            .prop('title', '<div class="custom-tooltip">' +
+            errorArray.join('') + '</div>');
+          $messageContainer.tooltip();
+        }
+
         // Check all data elements and make replacements
         for (const key in elData) {
           if (elData.hasOwnProperty(key)) {
