@@ -642,6 +642,7 @@ class WidgetHtmlRenderer
                     'extends' => [
                         'override' => $moduleTemplate->extends?->override,
                         'with' => $moduleTemplate->extends?->with,
+                        'escapeHtml' => $moduleTemplate->extends?->escapeHtml,
                     ],
                 ];
             } else if ($extension !== null) {
@@ -654,6 +655,7 @@ class WidgetHtmlRenderer
                     'extends' => [
                         'override' => $moduleTemplate->extends?->override,
                         'with' => $moduleTemplate->extends?->with,
+                        'escapeHtml' => $moduleTemplate->extends?->escapeHtml,
                     ],
                 ];
 

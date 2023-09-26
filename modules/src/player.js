@@ -575,6 +575,7 @@ $(function() {
         elementCopy.hbs = null;
         elementCopy.dataOverride = null;
         elementCopy.dataOverrideWith = null;
+        elementCopy.escapeHtml = null;
 
         // Compile the template if it exists
         if ($template && $template.length > 0) {
@@ -582,6 +583,8 @@ $(function() {
               $template?.data('extends-override');
           elementCopy.dataOverrideWith =
               $template?.data('extends-with');
+          elementCopy.escapeHtml =
+              $template?.data('escape-html');
 
           elementCopy.hbs = Handlebars.compile($template.html());
         }
