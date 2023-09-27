@@ -1903,3 +1903,18 @@ body[layout-editor-fs] .moveable-control-box {
     color: $xibo-color-accent !important;
     font-size: 1rem !important;
 }
+
+/* Custom tooltip */
+.custom-tooltip {
+    text-align: left;
+    color: $xibo-color-neutral-0;
+    line-height: 1.2;
+
+    p {
+       margin: 0.3rem 0; 
+    }
+
+    .sample-data {
+        color: $xibo-color-tertiary;
+    }
+}
