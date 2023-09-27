@@ -51,7 +51,7 @@ class IcsProvider implements WidgetProviderInterface
         // Do we have a feed configured?
         $uri = $dataProvider->getProperty('uri');
         if (empty($uri)) {
-            throw new InvalidArgumentException('Please enter the URI to a valid ICS feed.', 'uri');
+            throw new InvalidArgumentException(__('Please enter the URI to a valid ICS feed.'), 'uri');
         }
 
         // Create an ICal helper and pass it the contents of the file.
