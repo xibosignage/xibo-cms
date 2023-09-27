@@ -152,7 +152,7 @@ $(function() {
         xiboIC.reportFault({
           code: '5001',
           reason: 'No Data',
-        });
+        }, {targetId: widget.widgetId});
       }
 
       onDataError(httpStatus, response);
@@ -160,7 +160,7 @@ $(function() {
       xiboIC.reportFault({
         code: '5001',
         reason: 'No Data',
-      });
+      }, {targetId: widget.widgetId});
     }
   }
 
