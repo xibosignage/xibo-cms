@@ -38,17 +38,19 @@ jQuery.fn.extend({
         const elementHTML = $(element).html();
         const match = elementHTML.match(/\[dailyForecast.*?\]/g);
 
-        // Get the number of days
-        const numDays = match[0].split('|')[1];
-        const offset = match[0].split('|')[2].replace(']', '');
+        if (match) {
+          // Get the number of days
+          const numDays = match[0].split('|')[1];
+          const offset = match[0].split('|')[2].replace(']', '');
 
-        // Replace HTML on the element
-        $(element).html(elementHTML.replace(
-          match[0],
-          '<div class="forecast-container" ' +
-          'data-days-num="' + numDays + '" ' +
-          'data-days-offset="' + offset + '"></div>',
-        ));
+          // Replace HTML on the element
+          $(element).html(elementHTML.replace(
+            match[0],
+            '<div class="forecast-container" ' +
+            'data-days-num="' + numDays + '" ' +
+            'data-days-offset="' + offset + '"></div>',
+          ));
+        }
       }
 
       // Social Media
