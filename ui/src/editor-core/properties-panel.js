@@ -1010,6 +1010,7 @@ PropertiesPanel.prototype.render = function(
           left: targetAux.left,
           width: targetAux.width,
           height: targetAux.height,
+          zIndex: targetAux.layer,
         };
       } else if (targetAux?.type === 'element') {
         positionProperties = {
@@ -1079,7 +1080,11 @@ PropertiesPanel.prototype.render = function(
       ) {
         positionProperties.zIndexCanvas = app.layout.canvas.zIndex;
 
-        positionProperties.showElementLayer = true;
+        (targetAux?.type == 'element') &&
+          (positionProperties.showElementLayer = true);
+
+        (targetAux?.type == 'element-group') &&
+            (positionProperties.showElementGroupLayer = true);
       }
 
       self.DOMObject.find('#advancedTab').after(
@@ -1208,7 +1213,11 @@ PropertiesPanel.prototype.render = function(
               height: form.find('[name="height"]').val() * viewerScale,
               top: form.find('[name="top"]').val() * viewerScale,
               left: form.find('[name="left"]').val() * viewerScale,
+              zIndex: zIndexVal,
             });
+
+            // Save layer
+            targetAux.layer = zIndexVal;
 
             // Scale group
             // Update element dimension properties

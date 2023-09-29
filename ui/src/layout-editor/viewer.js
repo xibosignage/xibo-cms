@@ -1198,6 +1198,22 @@ Viewer.prototype.updateElementGroup = _.throttle(function(
 }, drawThrottle);
 
 /**
+ * Update element group
+ * @param {object} elementGroup
+ */
+Viewer.prototype.updateElementGroupLayer = _.throttle(function(
+  elementGroup,
+  layer,
+) {
+  const $container = lD.viewer.DOMObject.find(`#${elementGroup.elementId}`);
+
+  // Update element index
+  $container.css({
+    'z-index': (layer) ? layer : elementGroup.layer,
+  });
+}, drawThrottle);
+
+/**
  * Update Region
  * @param {object} region - region object
  * @param {boolean} changed - if region was changed
@@ -1393,6 +1409,13 @@ Viewer.prototype.renderElement = function(
       top: element.group.top * viewerScale,
       width: element.group.width * viewerScale,
     });
+
+    // Update element group index
+    if (element.group.layer) {
+      $groupContainer.css({
+        'z-index': element.group.layer,
+      });
+    }
   }
 
   // Render element content and handle interactions after
@@ -3116,6 +3139,8 @@ Viewer.prototype.editGroup = function(
     const viewerOverlayIndex =
       self.DOMObject.find('.viewer-overlay').css('z-index');
 
+    // Save original layer to data
+    $(groupDOMObject).data('layer', $(groupDOMObject).css('z-index'));
     $(groupDOMObject).css('z-index', Number(viewerOverlayIndex) + 1);
 
     // Give group the same background as the layout's
@@ -3129,8 +3154,12 @@ Viewer.prototype.editGroup = function(
     self.DOMObject.find('.designer-region-canvas')
       .css('zIndex', lD.layout.canvas.zIndex);
 
-    // Unset group z-index
-    $(groupDOMObject).css('z-index', '');
+    // Unset or reset group z-index
+    const originalLayer = $(groupDOMObject).data('layer');
+    $(groupDOMObject).css(
+      'z-index',
+      originalLayer ? originalLayer : '',
+    );
 
     // Remove background color
     $(groupDOMObject).css('background-color', '');

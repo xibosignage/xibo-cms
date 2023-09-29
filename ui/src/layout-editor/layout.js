@@ -132,10 +132,6 @@ Layout.prototype.createDataStructure = function(data) {
       // Save index
       newRegion.index = parseInt(region) + 1;
 
-      // Check if new region has top layer and set it
-      (newRegion.zIndex > lD.topLayer) &&
-        (lD.topLayer = newRegion.zIndex);
-
       // Widgets
       const widgets = newRegion.playlists.widgets;
 
@@ -193,10 +189,6 @@ Layout.prototype.createDataStructure = function(data) {
                   newWidget,
                 );
 
-              // Check if new element has top layer and set it
-              (newElement.layer > lD.topLayer) &&
-                (lD.topLayer = newElement.layer);
-
               // Update elements map for the widget
               newWidget.updateElementMap(newElement);
 
@@ -215,6 +207,12 @@ Layout.prototype.createDataStructure = function(data) {
                       data.regions[region].regionId,
                       newWidget,
                     );
+                }
+
+                // If group has no layer, give the element layer to it
+                if (!newWidget.elementGroups[newElement.groupId].layer) {
+                  newWidget.elementGroups[newElement.groupId].layer =
+                    newElement.layer;
                 }
 
                 // Add group reference to element
