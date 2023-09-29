@@ -576,6 +576,7 @@ $(function() {
         elementCopy.dataOverride = null;
         elementCopy.dataOverrideWith = null;
         elementCopy.escapeHtml = null;
+        elementCopy.isExtended = false;
 
         // Compile the template if it exists
         if ($template && $template.length > 0) {
@@ -585,6 +586,11 @@ $(function() {
               $template?.data('extends-with');
           elementCopy.escapeHtml =
               $template?.data('escape-html');
+
+          if (String(elementCopy.dataOverride).length > 0 &&
+            String(elementCopy.dataOverrideWith).length > 0) {
+            elementCopy.isExtended = true;
+          }
 
           elementCopy.hbs = Handlebars.compile($template.html());
         }
@@ -840,12 +846,15 @@ $(function() {
                 )),
             );
 
+            const onTemplateRenderId = item.isExtended ?
+              item.dataOverride : item.templateData.id;
+
             // Handle the rendering of the template
             if (typeof window[
-              `onTemplateRender_${item.templateData.id}`
+              `onTemplateRender_${onTemplateRenderId}`
             ] === 'function') {
               const onTemplateRender = window[
-                `onTemplateRender_${item.templateData.id}`];
+                `onTemplateRender_${onTemplateRenderId}`];
               const itemID =
                   item.uniqueID || item.templateData?.uniqueID;
 
