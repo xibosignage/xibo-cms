@@ -345,6 +345,95 @@ Cypress.Commands.add('createDisplaygroup', function(name) {
   });
 });
 
+// Dataset
+Cypress.Commands.add('createDataset', function(name) {
+  cy.request({
+    method: 'POST',
+    url: '/api/dataset',
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {
+      dataSet: name,
+    },
+  }).then((res) => {
+    return res.body.datasetId;
+  });
+});
+
+// Sync Group
+Cypress.Commands.add('createSyncGroup', function(name) {
+  cy.request({
+    method: 'POST',
+    url: '/api/syncgroup/add',
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {
+      name: name,
+      syncPublisherPort: 9590,
+    },
+  }).then((res) => {
+    return res.body.datasetId;
+  });
+});
+
+// DayPart
+Cypress.Commands.add('createDayPart', function(name) {
+  cy.request({
+    method: 'POST',
+    url: '/api/daypart',
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {
+      name: name,
+      startTime: '01:00:00',
+      endTime: '02:00:00',
+    },
+  }).then((res) => {
+    return res.body.id;
+  });
+});
+
+// Tag
+Cypress.Commands.add('createTag', function(name) {
+  cy.request({
+    method: 'POST',
+    url: '/api/tag',
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {
+      name: name,
+    },
+  }).then((res) => {
+    return res.body.id;
+  });
+});
+
+
+// Menuboard
+Cypress.Commands.add('createMenuboard', function(name) {
+  cy.request({
+    method: 'POST',
+    url: '/api/menuboard',
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {
+      name: name,
+    },
+  }).then((res) => {
+    return res.body.id;
+  });
+});
+
 /**
  * Open playlist editor modal and wait for toolbar user prefs to load
  * @param {String} playlistName
