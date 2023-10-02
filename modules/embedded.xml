@@ -59,9 +59,9 @@
         <property id="embedStyle" type="code" allowLibraryRefs="true" variant="css">
             <title>Custom Style Sheets</title>
         </property>
-        <property id="embedJavaScript" type="code" variant="javascript">
+        <property id="embedJavaScript" type="code" allowLibraryRefs="true" variant="javascript">
             <title>JavaScript</title>
-            <helpText>Add any JavaScript to be called, do not include script tags.</helpText>
+            <helpText>Add JavaScript to be included in the HTML. Do not use [] array notation as this is reserved for library references. Do not include script tags.</helpText>
         </property>
         <property id="embedScript" type="code" variant="html">
             <title>HEAD content to embed</title>
