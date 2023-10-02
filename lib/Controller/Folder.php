@@ -95,12 +95,7 @@ class Folder extends Base
             $this->folderFactory->decorateWithSharing($folder);
             $this->folderFactory->decorateWithUsage($folder);
 
-            return $response->withJson([
-                'folder' => $folder,
-                'homeFolderCount' => $folder->getUnmatchedProperty('homeFolderCount'),
-                'sharing' => $folder->getUnmatchedProperty('sharing'),
-                'usage' => $folder->getUnmatchedProperty('usage')
-            ]);
+            return $response->withJson($folder);
         } else {
             // Show a tree view of all folders.
             $rootFolder = $this->folderFactory->getById(1);

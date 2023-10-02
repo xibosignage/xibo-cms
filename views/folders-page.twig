@@ -83,10 +83,10 @@
 
     {% verbatim %}
     <script type="text/x-handlebars-template" id="folders-info-panel">
-        <div class="card p-3 mb-0" data-folder-id="{{ folder.id }}">
+        <div class="card p-3 mb-0" data-folder-id="{{ id }}">
             <div class="card-body">
                 <h5 class="card-title">{% endverbatim %}{{ "Folder info"|trans }}{% verbatim %}</h5>
-                <p>{{folder.text}}</p>
+                <p>{{text}}</p>
                 <ul>
                     <li>{% endverbatim %}{{ "Number of times used as a home folder:"|trans }}{% verbatim %} {{homeFolderCount}}</li>
                 </ul>
