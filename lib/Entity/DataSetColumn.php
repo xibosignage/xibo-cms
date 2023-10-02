@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -275,13 +275,15 @@ class DataSetColumn implements \JsonSerializable
 
         // if formula dataSetType is set and formula is not empty, try to execute the SQL to validate it - we're ignoring client side formulas here.
         if ($this->dataSetColumnTypeId == 2 && $this->formula != '' && substr($this->formula, 0, 1) !== '$') {
-           try {
-               $formula = str_replace('[DisplayId]', 0, $this->formula);
-               $this->getStore()->select('SELECT * FROM (SELECT `id`, ' . $formula . ' AS `' . $this->heading . '`  FROM `dataset_' . $this->dataSetId . '`) dataset WHERE 1 = 1 ', []);
-           } catch (\Exception $e) {
-               $this->getLog()->debug('Formula validation failed with following message ' . $e->getMessage());
-               throw new InvalidArgumentException(__('Provided formula is invalid'), 'formula');
-           }
+            try {
+                $formula = str_replace('[DisplayId]', 0, $this->formula);
+                // replace DisplayGeoLocation with default CMS location, just to validate here.
+                $formula = str_replace('[DisplayGeoLocation]', "GEOMFROMTEXT('POINT(51.504 -0.104)')", $formula);
+                $this->getStore()->select('SELECT * FROM (SELECT `id`, ' . $formula . ' AS `' . $this->heading . '`  FROM `dataset_' . $this->dataSetId . '`) dataset WHERE 1 = 1 ', []);
+            } catch (\Exception $e) {
+                $this->getLog()->debug('Formula validation failed with following message ' . $e->getMessage());
+                throw new InvalidArgumentException(__('Provided formula is invalid'), 'formula');
+            }
         }
     }
 
