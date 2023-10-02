@@ -7,6 +7,9 @@
     {{#if showElementLayer}}
         {{set "layerTitle" trans.positionTab.elementLayer}}
         {{set "layerHelp" trans.positionTab.elementLayerHelp}}
+    {{else if showElementGroupLayer}}
+        {{set "layerTitle" trans.positionTab.elementGroupLayer}}
+        {{set "layerHelp" trans.positionTab.elementGroupLayerHelp}}
     {{else}}
         {{set "layerTitle" trans.positionTab.layer}}
         {{set "layerHelp" trans.positionTab.layerHelp}}

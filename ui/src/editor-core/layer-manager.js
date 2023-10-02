@@ -39,6 +39,9 @@ const LayerManager = function(parent, container, viewerContainer) {
 
   // Show/Hide ( false by default )
   this.visible = false;
+
+  // Save scroll position
+  this.scrollPosition = 0;
 };
 
 /**
@@ -60,7 +63,10 @@ LayerManager.prototype.createStructure = function() {
       arrayToAdd[layer] = [];
     }
 
-    arrayToAdd[layer].push(object);
+    const newIdx = arrayToAdd[layer].push(object);
+
+    // Return newly added object
+    return arrayToAdd[layer][newIdx-1];
   };
 
   const parseDuration = function(duration) {
@@ -82,6 +88,35 @@ LayerManager.prototype.createStructure = function() {
     canvasObject.duration = parseDuration(canvas.duration);
     canvasObject.subLayers = [];
 
+    const getGroupInCanvasStructure = function(group, widget) {
+      let groupInCanvas = null;
+      canvasObject.subLayers.forEach((layer) => {
+        layer.forEach((obj) => {
+          if (obj.type == 'elementGroup' && obj.id == group.id) {
+            groupInCanvas = obj;
+          }
+        });
+      });
+
+      // If there's no group, create it
+      if (!groupInCanvas) {
+        groupInCanvas = addToLayerStructure(
+          group.layer,
+          {
+            type: 'elementGroup',
+            name: group.id,
+            id: group.id,
+            moduleIcon: lD.common.getModuleByType(widget.subType).icon,
+            selected: group.selected,
+            layers: [],
+          },
+          canvasObject.subLayers,
+        );
+      }
+
+      return groupInCanvas;
+    };
+
     // Get elements
     if (canvas.widgets) {
       Object.values(canvas.widgets).forEach((widget) => {
@@ -93,21 +128,34 @@ LayerManager.prototype.createStructure = function() {
           ($.isEmptyObject(element.template)) &&
             promiseArray.push(element.getTemplate());
 
-          addToLayerStructure(element.layer, {
-            type: 'element',
-            name: (element.template.title) ?
-              element.template.title : element.id,
-            // Element has parent widget duration
-            duration: parseDuration(widget.getDuration()),
-            id: element.elementId,
-            icon: element.template.icon,
-            moduleIcon: moduleIcon,
-            hasGroup: (element.groupId != undefined),
-            groupId: layerManagerTrans.inGroup
-              .replace('%groupId%', element.groupId),
-            selected: element.selected,
-          },
-          canvasObject.subLayers,
+          // Element has group
+          const hasGroup = (element.groupId != undefined);
+
+          // Add to canvas or to group
+          if (hasGroup) {
+            const group = widget.elementGroups[element.groupId];
+            arrayToAddTo = getGroupInCanvasStructure(group, widget).layers;
+          } else {
+            arrayToAddTo = canvasObject.subLayers;
+          }
+
+          addToLayerStructure(
+            element.layer,
+            {
+              type: 'element',
+              name: (element.template.title) ?
+                element.template.title : element.id,
+              // Element has parent widget duration
+              duration: parseDuration(widget.getDuration()),
+              id: element.elementId,
+              icon: element.template.icon,
+              moduleIcon: moduleIcon,
+              hasGroup: hasGroup,
+              groupId: layerManagerTrans.inGroup
+                .replace('%groupId%', element.groupId),
+              selected: element.selected,
+            },
+            arrayToAddTo,
           );
         });
       });
@@ -211,7 +259,8 @@ LayerManager.prototype.render = function(reset) {
         });
 
         // Select items
-        this.DOMObject.find('.layer-manager-layer-item.selectable')
+        this.DOMObject
+          .find('.layer-manager-layer-item.selectable:not(.selected)')
           .off('click').on('click', function(ev) {
             const elementId = $(ev.currentTarget).data('item-id');
             const $viewerObject = self.viewerContainer.find('#' + elementId);
@@ -236,6 +285,19 @@ LayerManager.prototype.render = function(reset) {
               $auxTarget.addClass('selected-from-layer-manager');
             }
           });
+
+        // Handle scroll
+        this.DOMObject.find('.layer-manager-body')
+          .on('scrollend', function(ev) {
+            // Save scroll value
+            self.scrollPosition = $(ev.currentTarget).scrollTop();
+          });
+
+        // If we have a scroll value, restore it
+        if (self.scrollPosition != 0) {
+          this.DOMObject.find('.layer-manager-body')
+            .scrollTop(self.scrollPosition);
+        }
 
         // Handle close button
         this.DOMObject.find('.close-layer-manager')

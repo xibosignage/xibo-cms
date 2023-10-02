@@ -1632,7 +1632,7 @@ div#bg_media_name {
             flex-basis: 30px;
             font-weight: bold;
             text-align: center;
-            background-color: $xibo-color-primary-l20;
+            background-color: $xibo-color-primary-l10;
             height: 32px;
             display: flex;
             align-items: center;
@@ -1651,13 +1651,6 @@ div#bg_media_name {
             text-align: center;
         }
 
-        &.has-group {
-            .module-icon {
-                padding: 2px;
-                border: 2px solid $xibo-color-neutral-0;
-            }
-        }
-
         &.selected {
             color: $xibo-color-neutral-0;
             background-color: $xibo-color-accent !important;
@@ -1665,17 +1658,21 @@ div#bg_media_name {
             .layer {
                 background-color: darken($xibo-color-accent, 5%) !important;
             }
+
+            .layer-item-in-group-helper {
+                background-color: darken($xibo-color-accent, 10%) !important;
+            }
         }
 
-        &.selectable {
+        &.selectable:not(.selected) {
             cursor: pointer;
 
             &:hover {
                 color: $xibo-color-secondary;
-                background-color: lighten($xibo-color-accent, 15%);
+                background-color: lighten($xibo-color-accent, 20%) !important;
 
                 .layer {
-                    background-color: lighten($xibo-color-accent, 12%);
+                    background-color: lighten($xibo-color-accent, 15%) !important;
                 }
             }
         }
@@ -1684,11 +1681,45 @@ div#bg_media_name {
     .layer-manager-canvas-layers {
         .layer-manager-layer-item {
             padding-left: 16px;
-            background-color: darken($xibo-color-primary-l60, 10%);
-            color: $xibo-color-neutral-0;
+            background-color: $xibo-color-primary-l5;
 
             .layer {
-                background-color: $xibo-color-primary-l60;
+                background-color: darken($xibo-color-primary-l5, 5%);
+            }
+
+            .layer-item-in-group {
+                display: flex;
+                width: 4px;
+                height: 100%;
+                background-color: unset;
+                flex-direction: column;
+
+                .layer-item-in-group-helper {
+                    background-color: darken($xibo-color-primary-l5, 5%);
+                    width: 100%;
+                    height: 100%;
+                }
+            }
+
+            &.element-group {
+                .name {
+                    font-size: 0.9rem;
+                }
+            }
+
+            &.has-group {
+                padding-left: 22px;
+                background-color: $xibo-color-primary-l10;
+
+                .layer {
+                    margin-left: -2px;
+                    background-color: darken($xibo-color-primary-l10, 5%);
+                }
+    
+                .module-icon {
+                    padding: 2px;
+                    border: 2px solid $xibo-color-neutral-0;
+                }
             }
         }
     }
@@ -1893,7 +1924,6 @@ body[layout-editor-fs] .moveable-control-box {
 .moveable-bounds {
     background: $xibo-color-semantic-error !important;
 }
-
 
 .moveable-control.moveable-origin, .moveable-normal.red {
     background: $xibo-color-accent !important;

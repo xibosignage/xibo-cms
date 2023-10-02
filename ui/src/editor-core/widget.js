@@ -690,6 +690,7 @@ Widget.prototype.saveElements = function(
         width: element.group.width,
         height: element.group.height,
         effect: element.group.effect,
+        layer: element.group.layer,
         pinSlot: element.group.pinSlot,
       };
 
