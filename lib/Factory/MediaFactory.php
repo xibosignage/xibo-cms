@@ -620,15 +620,18 @@ class MediaFactory extends BaseFactory
         // Unused only?
         if ($sanitizedFilter->getInt('unusedOnly') === 1) {
             $body .= '
-                AND media.mediaId NOT IN (SELECT mediaId FROM `lkwidgetmedia`)
-                AND media.mediaId NOT IN (SELECT mediaId FROM `lkmediadisplaygroup`)
-                AND media.mediaId NOT IN (SELECT mediaId FROM `menu_category` WHERE mediaId IS NOT NULL)
-                AND media.mediaId NOT IN (SELECT mediaId FROM `menu_product` WHERE mediaId IS NOT NULL)
-                AND media.mediaId NOT IN (SELECT backgroundImageId FROM `layout` WHERE backgroundImageId IS NOT NULL)
-                AND media.type <> \'module\'
-                AND media.type <> \'font\'
-                AND media.type <> \'playersoftware\'
-                AND media.type <> \'savedreport\'
+                AND `media`.`mediaId` NOT IN (SELECT `mediaId` FROM `display_media`)
+                AND `media`.`mediaId` NOT IN (SELECT `mediaId` FROM `lkwidgetmedia`)
+                AND `media`.`mediaId` NOT IN (SELECT `mediaId` FROM `lkmediadisplaygroup`)
+                AND `media`.`mediaId` NOT IN (SELECT `mediaId` FROM `menu_category` WHERE `mediaId` IS NOT NULL)
+                AND `media`.`mediaId` NOT IN (SELECT `mediaId` FROM `menu_product` WHERE `mediaId` IS NOT NULL)
+                AND `media`.`mediaId` NOT IN (
+                    SELECT `backgroundImageId` FROM `layout` WHERE `backgroundImageId` IS NOT NULL
+                )
+                AND `media`.`type` <> \'module\'
+                AND `media`.`type` <> \'font\'
+                AND `media`.`type` <> \'playersoftware\'
+                AND `media`.`type` <> \'savedreport\'
             ';
 
             // DataSets with library images
@@ -663,6 +666,13 @@ class MediaFactory extends BaseFactory
 
                 $body .= ') ';
             }
+        }
+
+        // Unlinked only?
+        if ($sanitizedFilter->getInt('unlinkedOnly') === 1) {
+            $body .= '
+                AND `media`.`mediaId` NOT IN (SELECT `mediaId` FROM `display_media`)
+            ';
         }
 
         if ($sanitizedFilter->getString('name') != null) {
