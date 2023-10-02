@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -142,7 +142,7 @@ abstract class AlphaVantageBase extends ModuleWidget
 
                 $request = $client->request('GET', 'https://www.alphavantage.co/query', $this->getConfig()->getGuzzleProxy([
                     'query' => [
-                        'function' => $isPaidPlan ? 'TIME_SERIES_DAILY' : 'TIME_SERIES_DAILY_ADJUSTED',
+                        'function' => $isPaidPlan ? 'TIME_SERIES_DAILY_ADJUSTED' : 'TIME_SERIES_DAILY',
                         'symbol' => $symbol,
                         'apikey' => $this->getApiKey()
                     ]
