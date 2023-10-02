@@ -75,7 +75,7 @@ $(document).ready(function() {
         // Callback function to navigate to calendar date with the date picker
         const navigateToCalendarDate = function() {
             if(calendar != undefined) {
-                let selectedDate = moment(moment($('#fromDt').val()).format(jsDateOnlyFormat));
+                let selectedDate = moment(moment($('#fromDt').val()).format(systemDateFormat));
                 // Add event to the picker to update the calendar
                 calendar.navigate('date', selectedDate);
             }
@@ -96,12 +96,12 @@ $(document).ready(function() {
                         let from =  moment(
                           moment($('#fromDt').val())
                             .startOf('day')
-                            .format(jsDateOnlyFormat)
+                            .format(systemDateFormat)
                         )
                         let to =  moment(
                           moment($('#toDt').val())
                             .startOf('day')
-                            .format(jsDateOnlyFormat)
+                            .format(systemDateFormat)
                         )
 
                         let diff = to.diff(from, 'days');
@@ -576,7 +576,7 @@ $(document).ready(function() {
                 // Sync the date of the date picker to the current calendar date
                 if (this.options.position.start != undefined && this.options.position.start != "") {
                     // Update timepicker
-                    updateDatePicker($('#dateInput'), moment.unix(this.options.position.start.getTime() / 1000).format(jsDateOnlyFormat), jsDateOnlyFormat);
+                    updateDatePicker($('#dateInput'), moment.unix(this.options.position.start.getTime() / 1000).format(systemDateFormat), systemDateFormat);
                 }
 
                 if (typeof this.getTitle === "function")

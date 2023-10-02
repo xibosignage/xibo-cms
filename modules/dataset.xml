@@ -26,7 +26,7 @@
     <icon>fa fa-table</icon>
     <class>\Xibo\Widget\DataSetProvider</class>
     <compatibilityClass>\Xibo\Widget\Compatibility\DatasetWidgetCompatibility</compatibilityClass>
-    <dataCacheKey>%dataSetId%_%lowerLimit%_%lowerLimit%_%numItems%_%orderClauses%_%useOrderingClause%_%ordering%_%filterClauses%_%useFilteringClause%_%filter%</dataCacheKey>
+    <dataCacheKey>%dataSetId%_%lowerLimit%_%upperLimit%_%numItems%_%orderClauses%_%useOrderingClause%_%ordering%_%filterClauses%_%useFilteringClause%_%filter%_%displayId%</dataCacheKey>
     <type>dataset</type>
     <dataType>dataset</dataType>
     <legacyType>datasetticker</legacyType>

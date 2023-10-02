@@ -34,7 +34,7 @@ use Xibo\Support\Exception\InvalidArgumentException;
  * @package Xibo\Entity
  * @SWG\Definition()
  */
-class Folder
+class Folder implements \JsonSerializable
 {
     use EntityTrait;
 

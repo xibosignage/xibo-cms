@@ -305,7 +305,7 @@ class AlphaVantageConnector implements ConnectorInterface
 
                 $request = $this->getClient()->request('GET', 'https://www.alphavantage.co/query', [
                     'query' => [
-                        'function' => $isPaidPlan === 1 ? 'TIME_SERIES_DAILY' : 'TIME_SERIES_DAILY_ADJUSTED',
+                        'function' => $isPaidPlan === 1 ? 'TIME_SERIES_DAILY_ADJUSTED' : 'TIME_SERIES_DAILY',
                         'symbol' => $symbol,
                         'apikey' => $this->getSetting('apiKey')
                     ]
@@ -360,7 +360,7 @@ class AlphaVantageConnector implements ConnectorInterface
             if ($item['Change'] > 0) {
                 $item['ChangeIcon'] = 'up-arrow';
                 $item['ChangeStyle'] = 'value-up';
-            } else if ($item['Change'] < 0){
+            } else if ($item['Change'] < 0) {
                 $item['ChangeIcon'] = 'down-arrow';
                 $item['ChangeStyle'] = 'value-down';
             }
@@ -390,7 +390,10 @@ class AlphaVantageConnector implements ConnectorInterface
                 'Missing Items for Currencies Module with WidgetId ' .
                 $dataProvider->getWidgetId()
             );
-            throw new InvalidArgumentException(__('Missing Items for Currencies Module. Please provide items in order to proceed.'), 'items');
+            throw new InvalidArgumentException(
+                __('Missing Items for Currencies Module. Please provide items in order to proceed.'),
+                'items'
+            );
         }
 
         // Does this require a reversed conversion?
