@@ -305,7 +305,7 @@ class AlphaVantageConnector implements ConnectorInterface
 
                 $request = $this->getClient()->request('GET', 'https://www.alphavantage.co/query', [
                     'query' => [
-                        'function' => $isPaidPlan === 1 ? 'TIME_SERIES_DAILY' : 'TIME_SERIES_DAILY_ADJUSTED',
+                        'function' => $isPaidPlan === 1 ? 'TIME_SERIES_DAILY_ADJUSTED' : 'TIME_SERIES_DAILY',
                         'symbol' => $symbol,
                         'apikey' => $this->getSetting('apiKey')
                     ]
