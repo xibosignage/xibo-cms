@@ -59,21 +59,28 @@
         <property id="embedStyle" type="code" allowLibraryRefs="true" variant="css">
             <title>Custom Style Sheets</title>
         </property>
-        <property id="embedScript" type="code" variant="javascript">
+        <property id="embedJavaScript" type="code" variant="javascript">
+            <title>JavaScript</title>
+            <helpText>Add any JavaScript to be called, do not include script tags.</helpText>
+        </property>
+        <property id="embedScript" type="code" variant="html">
             <title>HEAD content to embed</title>
-            <helpText>Please include script tags.</helpText>
+            <helpText>Add content to appear within the HEAD tags on this embedded HTML. Please include script tags.</helpText>
         </property>
     </properties>
     <preview></preview>
     <stencil>
+        <head><![CDATA[
+{{embedScript|raw}}
+        ]]></head>
         <twig><![CDATA[
-            {{embedHtml|raw}}
-            <script type="text/javascript">
-                {{embedScript|raw}}
-            </script>
-            <style>
-                {{embedStyle|raw}}
-            </style>
+{{embedHtml|raw}}
+<script type="text/javascript">
+    {{embedJavaScript|raw}}
+</script>
+<style>
+    {{embedStyle|raw}}
+</style>
         ]]></twig>
     </stencil>
     <onInitialize><![CDATA[

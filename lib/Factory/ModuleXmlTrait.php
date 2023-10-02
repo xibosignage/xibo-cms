@@ -64,6 +64,8 @@ trait ModuleXmlTrait
                 } else if ($childNode->nodeName === 'hbs') {
                     $stencil->hbsId = $childNode->getAttribute('id');
                     $stencil->hbs = trim($childNode->textContent);
+                } else if ($childNode->nodeName === 'head') {
+                    $stencil->head = trim($childNode->textContent);
                 } else if ($childNode->nodeName === 'style') {
                     $stencil->style = trim($childNode->textContent);
                 } else if ($childNode->nodeName === 'elements') {
@@ -77,7 +79,11 @@ trait ModuleXmlTrait
                 }
             }
 
-            if ($stencil->twig !== null || $stencil->hbs !== null || $stencil->style !== null) {
+            if ($stencil->twig !== null
+                || $stencil->hbs !== null
+                || $stencil->head !== null
+                || $stencil->style !== null
+            ) {
                 $stencils[] = $stencil;
             }
         }

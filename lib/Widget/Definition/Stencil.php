@@ -39,6 +39,9 @@ class Stencil implements \JsonSerializable
     public $hbs;
 
     /** @var string|null */
+    public $head;
+
+    /** @var string|null */
     public $style;
 
     /** @var string|null */
@@ -59,6 +62,7 @@ class Stencil implements \JsonSerializable
         return [
             'hbsId' => $this->hbsId,
             'hbs' => $this->hbs,
+            'head' => $this->head,
             'style' => $this->style,
             'width' => $this->width,
             'height' => $this->height,
