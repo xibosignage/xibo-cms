@@ -84,7 +84,8 @@ class FontFactory extends BaseFactory
                 )
             )
         );
-        $font->fileName = $fileName;
+
+        $font->fileName = preg_replace('/[^-.\w]/', '-', $fileName);
         $font->size = filesize($file);
         $font->md5 = md5_file($file);
         return $font;
