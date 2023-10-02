@@ -673,8 +673,7 @@
                             data.start = dataToSend.start;
                             data.order = dataToSend.order;
                             data.columns = [];
-                            // remove buttons column
-                            dataToSend.columns.pop();
+
                             $.each(dataToSend.columns, function (index, e) {
                                 var col = {};
                                 col.data = e.data;
