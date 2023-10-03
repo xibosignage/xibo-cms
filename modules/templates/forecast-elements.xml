@@ -125,9 +125,6 @@ if (String(value).includes('°C')) {
 
 return value + '%';
         ]]></onElementParseData>
-        <assets>
-            <asset id="weather-humidity-percent" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/weather-humidity-percent.png" />
-        </assets>
     </template>
     <template>
         <id>weather_icon</id>
