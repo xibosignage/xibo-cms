@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2022 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -412,6 +412,11 @@ class Install
         // Check if the user has added a trailing slash. If not, add one.
         if (!((substr($library_location, -1) == '/') || (substr($library_location, -1) == '\\'))) {
             $library_location = $library_location . '/';
+        }
+
+        // Attempt to create fonts sub-folder in Library location
+        if (!mkdir($library_location . 'fonts', 0777, true)) {
+            throw new InstallationError(__('Could not create the fonts sub-folder under Library Location directory for you. Please ensure the webserver has permission to create a folder in this location, or create the folder manually and grant permission for the webserver to write to the folder.'));//phpcs:ignore
         }
 
         try {
