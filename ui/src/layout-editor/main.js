@@ -112,6 +112,9 @@ window.lD = {
 
 // Load Layout and build app structure
 $(() => {
+  // Add class to body so we can use CSS specifically on it
+  $('body').addClass('editor-opened');
+
   // Get layout id
   const layoutId = lD.editorContainer.attr('data-layout-id');
 
