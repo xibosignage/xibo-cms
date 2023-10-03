@@ -284,7 +284,7 @@ $(() => {
             inactiveCheck: function() {
               return lD.templateEditMode ||
                 (lD.layout.editable ||
-                 !lD.layout.scheduleNowPermission);
+                  !lD.layout.scheduleNowPermission);
             },
             inactiveCheckClass: 'd-none',
           },
@@ -551,8 +551,8 @@ lD.selectObject =
               .selected = true;
 
             this.selectedObject =
-                this.layout.regions[target.data('widgetRegion')]
-                  .widgets[newSelectedId];
+              this.layout.regions[target.data('widgetRegion')]
+                .widgets[newSelectedId];
           }
         } else if (newSelectedType === 'element') {
           const parentRegion = target.data('regionId');
@@ -1271,7 +1271,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
   const draggableData = $(draggable).data();
   const droppableIsDrawer = ($(droppable).data('subType') === 'drawer');
   const droppableIsZone = ($(droppable).data('subType') === 'zone');
-  const droppableIsPlaylist =($(droppable).data('subType') === 'playlist');
+  const droppableIsPlaylist = ($(droppable).data('subType') === 'playlist');
   const droppableIsWidget = $(droppable).hasClass('designer-widget');
   const droppableIsElement = $(droppable).hasClass('designer-element');
   const droppableIsElementGroup =
@@ -1439,10 +1439,10 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
     // if draggable is type global or if both are the same type
     const canBeAddedToGroup = function() {
       return $(droppable).hasClass('editing') &&
-      (
-        draggableData.dataType == 'global' ||
-        draggableData.dataType == $(droppable).data('elementType')
-      );
+        (
+          draggableData.dataType == 'global' ||
+          draggableData.dataType == $(droppable).data('elementType')
+        );
     };
 
     // Create group if group is type global
@@ -1659,7 +1659,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           const targetWidget = lD.getObjectByTypeAndId(
             'widget',
             'widget_' + $(droppable).data('regionId') + '_' +
-              $(droppable).data('widgetId'),
+            $(droppable).data('widgetId'),
             'canvas',
           );
 
@@ -1687,7 +1687,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           const targetWidget = lD.getObjectByTypeAndId(
             'widget',
             'widget_' + $(droppable).data('regionId') + '_' +
-              $(droppable).data('widgetId'),
+            $(droppable).data('widgetId'),
             'canvas',
           );
 
@@ -1932,10 +1932,10 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
     } else if (droppableIsZone || droppableIsPlaylist) {
       // Get zone region
       const region =
-      lD.getObjectByTypeAndId(
-        'region',
-        'region_' + $(droppable).data('regionId'),
-      );
+        lD.getObjectByTypeAndId(
+          'region',
+          'region_' + $(droppable).data('regionId'),
+        );
 
       // Add module to zone
       lD.addModuleToPlaylist(
@@ -2292,8 +2292,8 @@ lD.addMediaToPlaylist = function(
       // Save the new widget as temporary
       lD.viewer.saveTemporaryObject(
         'widget_' +
-          res.data.regionId + '_' +
-          res.data.newWidgets[0].widgetId,
+        res.data.regionId + '_' +
+        res.data.newWidgets[0].widgetId,
         'widget',
         {
           type: 'widget',
@@ -4090,7 +4090,8 @@ lD.populateDropdownWithLayoutElements = function(
     // Update widgetId
     if (
       $widgetIDInput.length > 0 &&
-      $widgetIDInput.val() != ''
+      $widgetIDInput.val() != '' &&
+      getDrawerWidgets
     ) {
       // Call update widget drawer edit element
       handleEditWidget($widgetIDInput.val());
@@ -4117,18 +4118,60 @@ lD.populateDropdownWithLayoutElements = function(
 
   // Open or edit drawer widget
   const handleEditWidget = function(dropdownValue) {
+    const $dropdownParent = $dropdown.parent();
+
+    const removeDeleteButton = function() {
+      // Remove delete widget button
+      $dropdown.siblings('.delete-widget-btn').remove();
+
+      // Remove class from container
+      $dropdownParent.removeClass('delete-active');
+    };
+
     if (dropdownValue === 'create') {
       // Create new
       lD.viewer.addActionEditArea(actionData, 'create');
-    } else if (dropdownValue != '') {
+
+      removeDeleteButton();
+    } else if (dropdownValue != '' && dropdownValue != null) {
       // Update action widget data
       actionData.widgetId = dropdownValue;
 
       // Edit existing
       lD.viewer.addActionEditArea(actionData, 'edit');
+
+      // Show delete button on dropdown
+      if ($dropdown.siblings('.delete-widget-btn').length === 0) {
+        const $deleteBtn = $(
+          '<div class="btn btn-danger delete-widget-btn" title="' +
+          editorsTrans.actions.deleteWidget + '">' +
+          editorsTrans.actions.deleteWidget +
+          '</div>',
+        ).on('click', function() {
+          const widgetId = $dropdown.val();
+          const drawerId = lD.getObjectByTypeAndId('drawer').regionId;
+
+          removeDeleteButton();
+
+          lD.deleteObject(
+            'widget',
+            widgetId,
+            drawerId,
+            true,
+          );
+        });
+
+        // Append to dropdown parent
+        $dropdownParent.append($deleteBtn);
+
+        // Add class to container
+        $dropdownParent.addClass('delete-active');
+      }
     } else {
       // Remove edit area
       lD.viewer.removeActionEditArea();
+
+      removeDeleteButton();
     }
   };
 

@@ -1412,23 +1412,6 @@ PropertiesPanel.prototype.initFields = function(
         }
       });
 
-    // Create delete button
-    if (actionEditMode) {
-      const deleteButton =
-        $('<button type="button" class="delete btn btn-danger">')
-          .html(editorsTrans.delete);
-
-      deleteButton.on('click', function(e) {
-        e.preventDefault();
-        app.deleteSelectedObject();
-      });
-
-      // Add to button container
-      self.DOMObject.find('.button-container').prepend(deleteButton);
-    } else {
-      self.DOMObject.find('.button-container button#delete').remove();
-    }
-
     // Render action tab
     if (
       app.mainObjectType === 'layout' &&
