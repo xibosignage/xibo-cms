@@ -1943,9 +1943,10 @@ class Layout extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Check Permissions
-        if (!$this->getUser()->checkEditable($layout))
+        if (!$this->getUser()->checkEditable($layout)) {
             throw new AccessDeniedException();
-
+        }
+        
         // Edits always happen on Drafts, get the draft Layout using the Parent Layout ID
         if ($layout->schemaVersion < 2) {
             $resolution = $this->resolutionFactory->getByDesignerDimensions($layout->width, $layout->height);
@@ -1961,7 +1962,13 @@ class Layout extends Base
         $this->getState()->setData([
             'layout' => $layout,
             'resolution' => $resolution,
-            'resolutions' => $this->resolutionFactory->query(['resolution'], ['withCurrent' => $resolution->resolutionId]),
+            'resolutions' => $this->resolutionFactory->query(
+                ['resolution'],
+                [
+                    'withCurrent' => $resolution->resolutionId,
+                    'enabled' => 1
+                ]
+            ),
             'backgroundId' => $backgroundId,
             'backgrounds' => $backgrounds,
         ]);
