@@ -283,6 +283,11 @@ LayerManager.prototype.render = function(reset) {
 
               // Mark object with selected from manager class
               $auxTarget.addClass('selected-from-layer-manager');
+
+              // If it's an element, we need to set canvas zIndex
+              // to auto for it to show over all other static widgets
+              lD.viewer.DOMObject.find('.designer-region-canvas')
+                .addClass('canvas-element-selected-from-layer-manager');
             }
           });
 

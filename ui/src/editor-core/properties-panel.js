@@ -711,25 +711,28 @@ PropertiesPanel.prototype.render = function(
         // if we created a new effect for element group input
         // handle when changed
         if (targetAux.effect !== undefined) {
-          self.DOMObject.find('[name="effect"]').on('change', function(ev) {
-            let effectValue = $(ev.currentTarget).val();
+          self.DOMObject.find('[name="effect"]')
+            .on('change', function(ev, options) {
+              if (!options?.skipSave) {
+                let effectValue = $(ev.currentTarget).val();
 
-            // If value is lower than minSlotValue
-            // set it to minSlotValue
-            if (String(effectValue).length === 0) {
-              effectValue = 'noTransition';
-              $(ev.currentTarget).val(effectValue);
-            }
+                // If value is lower than minSlotValue
+                // set it to minSlotValue
+                if (String(effectValue).length === 0) {
+                  effectValue = 'noTransition';
+                  $(ev.currentTarget).val(effectValue);
+                }
 
-            // update slot for the group
-            targetAux.updateEffect(effectValue, true);
+                // update slot for the group
+                targetAux.updateEffect(effectValue, true);
 
-            // save elements
-            target.saveElements();
+                // save elements
+                target.saveElements();
 
-            // Render canvas again
-            app.viewer.renderCanvas(app.layout.canvas);
-          });
+                // Render canvas again
+                app.viewer.renderCanvas(app.layout.canvas);
+              }
+            });
         }
 
         showAppearanceTab();

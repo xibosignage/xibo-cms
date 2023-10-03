@@ -2437,6 +2437,10 @@ Viewer.prototype.selectElement = function(
   if (!multiSelect) {
     this.DOMObject.find('.selected, .selected-from-layer-manager')
       .removeClass('selected selected-from-layer-manager');
+
+    // Also remove select from layer manager from canvas
+    self.DOMObject.find('.designer-region-canvas')
+      .removeClass('canvas-element-selected-from-layer-manager');
   }
 
   // Remove all editing from groups

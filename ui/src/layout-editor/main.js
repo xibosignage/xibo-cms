@@ -1465,8 +1465,11 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
       }
     }
 
+    // Calculate next available top layer
+    const topLayer = lD.calculateLayers().availableTop;
+
     // Get canvas
-    this.layout.getCanvas().then((canvas) => {
+    this.layout.getCanvas(topLayer).then((canvas) => {
       // Create element
       const createElement = function({
         id,
@@ -4608,11 +4611,16 @@ lD.calculateLayers = function(
     layerMap[calculatedLayers.top + 1] === undefined &&
     !isSingleOnTopLayer
   ) {
-    // Set top value, but not over the limit
-    calculatedLayers.availableTop = Math.min(
-      (calculatedLayers.top + 1),
-      limits.top,
-    );
+    // If we don't have any layers yet, set to 0
+    if (layerMap.length === 0) {
+      calculatedLayers.availableTop = 0;
+    } else {
+      // Set top value, but not over the limit
+      calculatedLayers.availableTop = Math.min(
+        (calculatedLayers.top + 1),
+        limits.top,
+      );
+    }
   }
 
   // Find the next available layer at bottom
