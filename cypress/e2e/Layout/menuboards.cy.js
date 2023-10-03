@@ -87,10 +87,9 @@ describe('Menuboards', function() {
         // Get the request body (form data)
         const response = interception.response;
         const responseData = response.body.data; // Access the "data" property
-        const menuboard = responseData.name;
 
         // assertion on the "menuboard" value
-        expect(menuboard).to.eq('Cypress Test Menuboard Edited ' + testRun);
+        expect(responseData.name).to.eq('Cypress Test Menuboard Edited ' + testRun);
       });
     });
   });
@@ -124,9 +123,10 @@ describe('Menuboards', function() {
     });
   });
 
-  it.only('add categories to a menuboard', function() {
+  // -------------------
+  it('should add categories and products to a menuboard', function() {
     // Create a new menuboard and then search for it and delete it
-    cy.createMenuboard('Cypress Test Menuboard ' + testRun).then((res) => {
+    cy.createMenuboard('Cypress Test Menuboard ' + testRun).then((menuId) => {
       cy.intercept({
         url: '/menuboard?*',
         query: {name: 'Cypress Test Menuboard ' + testRun},
@@ -149,17 +149,292 @@ describe('Menuboards', function() {
       cy.contains('Add Category').click();
 
       cy.get('.modal input#name')
-        .type('Cypress Test Menuboard Category ' + testRun + '_1');
+        .type('Cypress Test Category ' + testRun + '_1');
+      cy.get('.modal input#description')
+        .type('Category description');
       cy.get('.modal input#code')
         .type('MENUBOARDCAT');
-      cy.get('.modal input#description')
-        .type('Menuboard Description');
 
       // Add first by clicking next
       cy.get('.modal .save-button').click();
 
       // Check if menuboard is added in toast message
       cy.contains('Added Menu Board Category');
+
+      // Wait for the grid reload
+      // cy.wait('@loadCategoryGridAfterSearch');
+
+      // Click on the first row element to open the delete modal
+      cy.get('#menuBoardCategories tr:first-child .dropdown-toggle').click();
+      cy.get('#menuBoardCategories tr:first-child .menuBoardCategory_button_viewproducts').click();
+
+      // Click on the Add Product button
+      cy.contains('Add Product').click();
+
+      cy.get('.modal input#name')
+        .type('Cypress Test Product ' + testRun + '_1');
+      cy.get('.modal input#description')
+        .type('Category description');
+      cy.get('.modal input#code')
+        .type('MENUBOARDPROD');
+
+      // Add first by clicking next
+      cy.get('.modal .save-button').click();
+
+      // Check if menuboard is added in toast message
+      cy.contains('Added Menu Board Product');
+    });
+  });
+
+  // -------------------
+  // Categories
+  it('should add a category', function() {
+    // Create a new menuboard and then search for it and delete it
+    cy.createMenuboard('Cypress Test Menuboard ' + testRun).then((menuId) => {
+      // GO to products page
+      cy.visit('/menuboard/' + menuId + '/categories/view');
+      // Click on the Add Category button
+      cy.contains('Add Category').click();
+
+      cy.get('.modal input#name')
+        .type('Cypress Test Category ' + testRun + '_1');
+      cy.get('.modal input#description')
+        .type('Category description');
+      cy.get('.modal input#code')
+        .type('MENUBOARDCAT');
+
+      // Add first by clicking next
+      cy.get('.modal .save-button').click();
+
+      // Check toast message
+      cy.contains('Added Menu Board Category');
+
+      // Delete the menuboard and assert success
+      cy.deleteMenuboard(menuId).then((response) => {
+        expect(response.status).to.equal(204);
+      });
+    });
+  });
+
+  it('searches and edit existing category', function() {
+    // Create a new menuboard and then search for it and delete it
+    cy.createMenuboard('Cypress Test Menuboard ' + testRun).then((menuId) => {
+      cy.createMenuboardCat('Cypress Test Category ' + testRun, menuId).then((menuCatId) => {
+        cy.intercept({
+          url: '/menuboard/' + menuId + '/categories?*',
+          query: {name: 'Cypress Test Category ' + testRun},
+        }).as('loadGridAfterSearch');
+
+        // Intercept the PUT request
+        cy.intercept({
+          method: 'PUT',
+          url: '/menuboard/' + menuCatId + '/category',
+        }).as('putRequest');
+
+        // GO to products page
+        cy.visit('/menuboard/' + menuId + '/categories/view');
+        // Filter for the created menuboard
+        cy.get('#Filter input[name="name"]')
+          .type('Cypress Test Category ' + testRun);
+
+        // Wait for the grid reload
+        cy.wait('@loadGridAfterSearch');
+
+        // Click on the first row element to open the delete modal
+        cy.get('#menuBoardCategories tr:first-child .dropdown-toggle').click();
+        cy.get('#menuBoardCategories tr:first-child .menuBoardCategory_edit_button').click();
+
+        // EDIT
+        cy.get('.modal input#name').clear()
+          .type('Cypress Test Category Edited ' + testRun);
+
+        cy.get('.bootbox .save-button').click();
+
+        // Wait for the intercepted PUT request and check the form data
+        cy.wait('@putRequest').then((interception) => {
+          // Get the request body (form data)
+          const response = interception.response;
+          const responseData = response.body.data; // Access the "data" property
+
+          // assertion on the "menuboard" value
+          expect(responseData.name).to.eq('Cypress Test Category Edited ' + testRun);
+        });
+
+        // Delete the menuboard and assert success
+        cy.deleteMenuboard(menuId).then((response) => {
+          expect(response.status).to.equal(204);
+        });
+      });
+    });
+  });
+
+  it('searches and delete existing category', function() {
+    // Create a new menuboard and then search for it and delete it
+    cy.createMenuboard('Cypress Test Menuboard ' + testRun).then((menuId) => {
+      cy.createMenuboardCat('Cypress Test Category ' + testRun, menuId).then((menuCatId) => {
+        cy.intercept({
+          url: '/menuboard/' + menuId + '/categories?*',
+          query: {name: 'Cypress Test Category ' + testRun},
+        }).as('loadGridAfterSearch');
+
+        // Intercept the PUT request
+        cy.intercept({
+          method: 'PUT',
+          url: '/menuboard/' + menuCatId + '/category',
+        }).as('putRequest');
+
+        // GO to products page
+        cy.visit('/menuboard/' + menuId + '/categories/view');
+        // Filter for the created menuboard
+        cy.get('#Filter input[name="name"]')
+          .type('Cypress Test Category ' + testRun);
+
+        // Wait for the grid reload
+        cy.wait('@loadGridAfterSearch');
+
+        // Click on the first row element to open the delete modal
+        cy.get('#menuBoardCategories tr:first-child .dropdown-toggle').click();
+        cy.get('#menuBoardCategories tr:first-child .menuBoardCategory_delete_button').click();
+
+        // Delete test category
+        cy.get('.bootbox .save-button').click();
+
+        // Check toast message
+        cy.get('.toast').contains('Deleted Cypress Test Category');
+
+        // Delete the menuboard and assert success
+        cy.deleteMenuboard(menuId).then((response) => {
+          expect(response.status).to.equal(204);
+        });
+      });
+    });
+  });
+
+  // -------------------
+  // Products
+  it('should add a product', function() {
+    // Create a new menuboard and then search for it and delete it
+    cy.createMenuboard('Cypress Test Menuboard ' + testRun).then((menuId) => {
+      cy.createMenuboardCat('Cypress Test Category ' + testRun, menuId).then((menuCatId) => {
+        // GO to products page
+        cy.visit('/menuboard/' + menuCatId + '/products/view');
+        // Click on the Add Product button
+        cy.contains('Add Product').click();
+
+        cy.get('.modal input#name')
+          .type('Cypress Test Product ' + testRun);
+        cy.get('.modal input#description')
+          .type('Category description');
+        cy.get('.modal input#code')
+          .type('MENUBOARDPROD');
+
+        // Add first by clicking next
+        cy.get('.modal .save-button').click();
+
+        // Check if menuboard is added in toast message
+        cy.contains('Added Menu Board Product');
+      });
+    });
+  });
+
+  it('searches and edit existing product', function() {
+    // Create a new menuboard and then search for it and delete it
+    cy.createMenuboard('Cypress Test Menuboard ' + testRun).then((menuId) => {
+      cy.log(menuId);
+      cy.createMenuboardCat('Cypress Test Category ' + testRun, menuId).then((menuCatId) => {
+        cy.log(menuCatId);
+        cy.createMenuboardCatProd('Cypress Test Product ' + testRun, menuCatId).then((menuProdId) => {
+          cy.log(menuProdId);
+          cy.intercept({
+            url: '/menuboard/' + menuCatId + '/products?*',
+            query: {name: 'Cypress Test Product ' + testRun},
+          }).as('loadGridAfterSearch');
+
+          // Intercept the PUT request
+          cy.intercept({
+            method: 'PUT',
+            url: '/menuboard/' + menuProdId + '/product',
+          }).as('putRequest');
+
+          // GO to products page
+          cy.visit('/menuboard/' + menuCatId + '/products/view');
+          // Filter for the created menuboard
+          cy.get('#Filter input[name="name"]')
+            .type('Cypress Test Product ' + testRun);
+
+          // Wait for the grid reload
+          cy.wait('@loadGridAfterSearch');
+
+          // Click on the first row element to open the delete modal
+          cy.get('#menuBoardProducts tr:first-child .dropdown-toggle').click();
+          cy.get('#menuBoardProducts tr:first-child .menuBoardProduct_edit_button').click();
+
+          // EDIT
+          cy.get('.modal input#name').clear()
+            .type('Cypress Test Product Edited ' + testRun);
+
+          cy.get('.bootbox .save-button').click();
+
+          // Wait for the intercepted PUT request and check the form data
+          cy.wait('@putRequest').then((interception) => {
+            // Get the request body (form data)
+            const response = interception.response;
+            const responseData = response.body.data; // Access the "data" property
+
+            // assertion on the "menuboard" value
+            expect(responseData.name).to.eq('Cypress Test Product Edited ' + testRun);
+          });
+
+          // Delete the menuboard and assert success
+          cy.deleteMenuboard(menuId).then((response) => {
+            expect(response.status).to.equal(204);
+          });
+        });
+      });
+    });
+  });
+
+  it('searches and delete existing product', function() {
+    // Create a new menuboard and then search for it and delete it
+    cy.createMenuboard('Cypress Test Menuboard ' + testRun).then((menuId) => {
+      cy.createMenuboardCat('Cypress Test Category ' + testRun, menuId).then((menuCatId) => {
+        cy.createMenuboardCatProd('Cypress Test Product ' + testRun, menuCatId).then((menuProdId) => {
+          cy.intercept({
+            url: '/menuboard/' + menuCatId + '/products?*',
+            query: {name: 'Cypress Test Product ' + testRun},
+          }).as('loadGridAfterSearch');
+
+          // Intercept the PUT request
+          cy.intercept({
+            method: 'PUT',
+            url: '/menuboard/' + menuProdId + '/product',
+          }).as('putRequest');
+
+          // GO to products page
+          cy.visit('/menuboard/' + menuCatId + '/products/view');
+          // Filter for the created menuboard
+          cy.get('#Filter input[name="name"]')
+            .type('Cypress Test Product ' + testRun);
+
+          // Wait for the grid reload
+          cy.wait('@loadGridAfterSearch');
+
+          // Click on the first row element to open the delete modal
+          cy.get('#menuBoardProducts tr:first-child .dropdown-toggle').click();
+          cy.get('#menuBoardProducts tr:first-child .menuBoardProduct_delete_button').click();
+
+          // Delete test menuboard
+          cy.get('.bootbox .save-button').click();
+
+          // Check toast message
+          cy.get('.toast').contains('Deleted Cypress Test Product');
+
+          // Delete the menuboard and assert success
+          cy.deleteMenuboard(menuId).then((response) => {
+            expect(response.status).to.equal(204);
+          });
+        });
+      });
     });
   });
 });

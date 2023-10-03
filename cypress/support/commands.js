@@ -430,7 +430,124 @@ Cypress.Commands.add('createMenuboard', function(name) {
       name: name,
     },
   }).then((res) => {
-    return res.body.id;
+    return res.body.menuId;
+  });
+});
+
+// User
+Cypress.Commands.add('createUser', function(name, password, userTypeId, homeFolderId) {
+  cy.request({
+    method: 'POST',
+    url: '/api/user',
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {
+      userName: name,
+      password: password,
+      userTypeId: userTypeId,
+      homeFolderId: homeFolderId,
+      homePageId: 'icondashboard.view',
+    },
+  }).then((res) => {
+    return res.body.userId;
+  });
+});
+
+// Delete Usergroup
+Cypress.Commands.add('deleteUser', function(userId) {
+  cy.request({
+    method: 'DELETE',
+    url: '/api/user/' + userId,
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {},
+  }).then((res) => {
+    return res;
+  });
+});
+
+// Usergroup
+Cypress.Commands.add('createUsergroup', function(name) {
+  cy.request({
+    method: 'POST',
+    url: '/api/group',
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {
+      group: name,
+    },
+  }).then((res) => {
+    return res.body.groupId;
+  });
+});
+
+// Delete Usergroup
+Cypress.Commands.add('deleteUsergroup', function(groupId) {
+  cy.request({
+    method: 'DELETE',
+    url: '/api/group/' + groupId,
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {},
+  }).then((res) => {
+    return res;
+  });
+});
+
+// Menuboard Category
+Cypress.Commands.add('createMenuboardCat', function(name, menuId) {
+  cy.request({
+    method: 'POST',
+    url: '/api/menuboard/' + menuId + '/' + 'category',
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {
+      name: name,
+    },
+  }).then((res) => {
+    return res.body.menuCategoryId;
+  });
+});
+
+// Menuboard Category Product
+Cypress.Commands.add('createMenuboardCatProd', function(name, menuCatId) {
+  cy.request({
+    method: 'POST',
+    url: '/api/menuboard/' + menuCatId + '/' + 'product',
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {
+      name: name,
+    },
+  }).then((res) => {
+    return res.body.menuProductId;
+  });
+});
+
+// Delete Menuboard
+Cypress.Commands.add('deleteMenuboard', function(menuId) {
+  cy.request({
+    method: 'DELETE',
+    url: '/api/menuboard/' + menuId,
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {},
+  }).then((res) => {
+    return res;
   });
 });
 
