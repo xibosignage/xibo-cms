@@ -1627,35 +1627,61 @@ Viewer.prototype.renderElementContent = function(
         if (!$.isEmptyObject(parentWidget.validateData)) {
           const $messageContainer = $elementContainer.find('.invalid-parent');
           const errorArray = [$messageContainer.prop('title')];
+          const hasGroup = Boolean(element.groupId);
+          const $groupContainer = (hasGroup) ?
+            $elementContainer.parents('.designer-element-group') : null;
 
-          // Required elements message
-          const requiredElementsErrorMessage =
-            parentWidget.checkRequiredElements();
+          // Add if elemens has no group or
+          // if has group but the group doesn't have message yet
+          if (
+            !hasGroup ||
+            (
+              hasGroup &&
+              $groupContainer.find('> .invalid-parent').length == 0
+            )
+          ) {
+            // Required elements message
+            const requiredElementsErrorMessage =
+              parentWidget.checkRequiredElements();
 
-          (requiredElementsErrorMessage) &&
-            errorArray.push(
-              '<p>' +
-              requiredElementsErrorMessage +
-              '</p>');
+            (requiredElementsErrorMessage) &&
+              errorArray.push(
+                '<p>' +
+                requiredElementsErrorMessage +
+                '</p>');
 
-          // Default error message
-          (parentWidget.validateData.errorMessage) &&
-            errorArray.push(
-              '<p>' +
-              parentWidget.validateData.errorMessage +
-              '</p>');
+            // Default error message
+            (parentWidget.validateData.errorMessage) &&
+              errorArray.push(
+                '<p>' +
+                parentWidget.validateData.errorMessage +
+                '</p>');
 
-          (parentWidget.validateData.sampleDataMessage) &&
-            errorArray.push(
-              '<p class="sample-data">( ' +
-              parentWidget.validateData.sampleDataMessage +
-              ' )</p>');
+            (parentWidget.validateData.sampleDataMessage) &&
+              errorArray.push(
+                '<p class="sample-data">( ' +
+                parentWidget.validateData.sampleDataMessage +
+                ' )</p>');
 
-          // Set title/tooltip
-          $messageContainer.tooltip('dispose')
-            .prop('title', '<div class="custom-tooltip">' +
-            errorArray.join('') + '</div>');
-          $messageContainer.tooltip();
+            // If element has group, move error to group
+            (hasGroup) && $messageContainer.appendTo(
+              $elementContainer.parents('.designer-element-group'),
+            );
+
+            // Set title/tooltip
+            $messageContainer.tooltip('dispose')
+              .prop('title', '<div class="custom-tooltip">' +
+              errorArray.join('') + '</div>');
+            $messageContainer.tooltip();
+
+            // Show tooltip
+            $messageContainer.removeClass('d-none');
+          }
+
+          // Remove message from element if it's in a group
+          if (hasGroup) {
+            $elementContainer.find('.invalid-parent').remove();
+          }
         }
 
         // Check all data elements and make replacements
