@@ -107,24 +107,44 @@ jQuery.fn.extend({
       options.speed = (options.speed <= 200) ? 1000 : options.speed;
 
       const numberOfSlides = items?.length || 1;
-
       const duration = (options.durationIsPerItem) ?
         options.duration :
         options.duration / numberOfSlides;
       const timeout = duration * 1000;
       const noTransitionSpeed = 200;
-
-      $(cycleElement).addClass('cycle-slideshow').cycle({
-        fx: (options.effect === 'noTransition' || options.effect === 'none') ?
-          'none' : options.effect,
-        speed: (
+      let cycle2Config = {
+        'data-cycle-fx': (options.effect === 'noTransition' ||
+          options.effect === 'none') ? 'none' : options.effect,
+        'data-cycle-speed': (
           options.effect === 'noTransition' || options.effect === 'none'
         ) ? noTransitionSpeed : options.speed,
-        timeout: timeout,
-        slides: `> .${options.parentId}--item`,
-        autoHeight: false,
-        sync: false,
-      });
+        'data-cycle-timeout': timeout,
+        'data-cycle-slides': `> .${options.parentId}--item`,
+        'data-cycle-auto-height': false,
+      };
+
+      if (options.effect === 'scrollHorz') {
+        $(cycleElement).find(`> .${options.parentId}--item`)
+          .each(function(idx, elem) {
+            $(elem).css({width: '-webkit-fill-available'});
+          });
+      } else {
+        cycle2Config = {
+          ...cycle2Config,
+          'data-cycle-sync': false,
+        };
+      }
+
+      $(cycleElement).addClass('cycle-slideshow').attr(cycle2Config).cycle();
+
+      // Add some margin for each slide when options.effect === scrollHorz
+      if (options.effect === 'scrollHorz') {
+        $(cycleElement).css({width: options.width + (options.gap / 2)});
+        $(cycleElement).find('.cycle-slide').css({
+          marginLeft: options.gap / 4,
+          marginRight: options.gap / 4,
+        });
+      }
     } else if (
       options.effect === 'marqueeLeft' ||
       options.effect === 'marqueeRight'
