@@ -148,9 +148,9 @@ class ResolutionFactory extends BaseFactory
             $sortOrder = ['resolution'];
         }
 
-        $entities = array();
+        $entities = [];
 
-        $params = array();
+        $params = [];
         $select  = '
           SELECT `resolution`.resolutionId,
               `resolution`.resolution,
@@ -224,6 +224,13 @@ class ResolutionFactory extends BaseFactory
             } else {
                 $body .= ' AND intended_width > intended_height ';
             }
+        }
+        
+        // for Layout Background form, always return Layout current resolution
+        // even if it is disabled
+        if ($parsedFilter->getInt('withCurrent') !== null) {
+            $body .= ' OR `resolution`.resolutionId = :withCurrent ';
+            $params['withCurrent'] = $parsedFilter->getInt('withCurrent');
         }
 
         if ($parsedFilter->getInt('userId') !== null) {
