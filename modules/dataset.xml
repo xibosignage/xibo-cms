@@ -20,7 +20,7 @@
   -->
 <module>
     <id>core-dataset</id>
-    <name>Dataset</name>
+    <name>DataSet</name>
     <author>Core</author>
     <description>Display DataSet content</description>
     <icon>fa fa-table</icon>
