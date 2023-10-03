@@ -2,7 +2,7 @@
     data-toggle="tooltip" 
     data-type="widget" 
     data-sub-type="{{type}}"
-    data-target="{{#if target}}{{target}}{{else}}layout playlist{{/if}}"
+    data-target="{{#if target}}{{target}}{{else}}layout {{#if editingPlaylist}}playlist{{/if}}{{/if}}"
     data-region-specific="{{regionSpecific}}"
     data-valid-ext="{{ validExtensions }}"
     data-max-size="{{ maxSize }}" 

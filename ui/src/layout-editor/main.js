@@ -408,7 +408,11 @@ lD.selectObject =
       if (
         target &&
         (
-          ['drawer', 'zone', 'playlist'].includes(target.data('subType')) ||
+          (
+            target.data('subType') == 'playlist' &&
+            lD.common.hasTarget(card, 'playlist')
+          ) ||
+          ['drawer', 'zone'].includes(target.data('subType')) ||
           (
             target.hasClass('designer-widget') &&
             activeDroppable
