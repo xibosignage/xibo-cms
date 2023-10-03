@@ -354,7 +354,8 @@ class MediaService implements MediaServiceInterface
             [
                 'expires' => Carbon::now()->format('U'),
                 'allModules' => 1,
-                'length' => 100
+                'unlinkedOnly' => 1,
+                'length' => 100,
             ]
         ) as $entry) {
             // If the media type is a module, then pretend it's a generic file
