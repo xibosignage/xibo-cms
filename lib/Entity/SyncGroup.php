@@ -31,6 +31,7 @@ use Xibo\Factory\SyncGroupFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * @SWG\Definition()
@@ -137,7 +138,7 @@ class SyncGroup implements \JsonSerializable
     }
 
     /**
-     * @return array[Display]
+     * @return Display[]
      * @throws NotFoundException
      */
     public function getSyncGroupMembers(): array
@@ -284,6 +285,18 @@ class SyncGroup implements \JsonSerializable
 
         if (!isset($this->leadDisplayId) && isset($this->syncGroupId)) {
             throw new InvalidArgumentException(__('Please select lead Display for this sync group'), 'leadDisplayId');
+        }
+    }
+
+    public function validateForSchedule(SanitizerInterface $sanitizer)
+    {
+        foreach ($this->getSyncGroupMembers() as $display) {
+            if (empty($sanitizer->getInt('layoutId_' . $display->displayId))) {
+                $this->getLog()->error('Sync Event : Missing Layout for DisplayID ' . $display->displayId);
+                throw new InvalidArgumentException(
+                    __('Please make sure to select a Layout for all Displays in this Sync Group.')
+                );
+            }
         }
     }
 

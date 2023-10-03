@@ -1101,7 +1101,9 @@ class Schedule extends Base
         $this->getLog()->debug('Add Schedule');
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        $embed = ($sanitizedParams->getString('embed') != null) ? explode(',', $sanitizedParams->getString('embed')) : [];
+        $embed = ($sanitizedParams->getString('embed') != null)
+            ? explode(',', $sanitizedParams->getString('embed'))
+            : [];
 
         // Get the custom day part to use as a default day part
         $customDayPart = $this->dayPartFactory->getCustomDayPart();
@@ -1266,17 +1268,14 @@ class Schedule extends Base
         // API Request
         $rows = [];
         if ($this->isApi($request)) {
-
             $reminders =  $sanitizedParams->getArray('scheduleReminders', ['default' => []]);
             foreach ($reminders as $i => $reminder) {
-
                 $rows[$i]['reminder_value'] = (int) $reminder['reminder_value'];
                 $rows[$i]['reminder_type'] = (int) $reminder['reminder_type'];
                 $rows[$i]['reminder_option'] = (int) $reminder['reminder_option'];
                 $rows[$i]['reminder_isEmailHidden'] = (int) $reminder['reminder_isEmailHidden'];
             }
         } else {
-
             for ($i=0; $i < count($sanitizedParams->getIntArray('reminder_value', ['default' => []])); $i++) {
                 $rows[$i]['reminder_value'] = $sanitizedParams->getIntArray('reminder_value')[$i];
                 $rows[$i]['reminder_type'] = $sanitizedParams->getIntArray('reminder_type')[$i];
@@ -1287,7 +1286,6 @@ class Schedule extends Base
 
         // Save new reminders
         foreach ($rows as $reminder) {
-
             // Do not add reminder if empty value provided for number of minute/hour
             if ($reminder['reminder_value'] == 0) {
                 continue;
@@ -1314,6 +1312,7 @@ class Schedule extends Base
 
         if ($this->isSyncEvent($schedule->eventTypeId)) {
             $syncGroup = $this->syncGroupFactory->getById($schedule->syncGroupId);
+            $syncGroup->validateForSchedule($sanitizedParams);
             $schedule->updateSyncLinks($syncGroup, $sanitizedParams);
         }
 
@@ -1866,16 +1865,16 @@ class Schedule extends Base
 
         if ($this->isSyncEvent($schedule->eventTypeId)) {
             $syncGroup = $this->syncGroupFactory->getById($schedule->syncGroupId);
+            $syncGroup->validateForSchedule($sanitizedParams);
             $schedule->updateSyncLinks($syncGroup, $sanitizedParams);
         }
 
         // Get form reminders
         $rows = [];
         for ($i=0; $i < count($sanitizedParams->getIntArray('reminder_value',['default' => []])); $i++) {
-
             $entry = [];
 
-            if ($sanitizedParams->getIntArray('reminder_scheduleReminderId')[$i] == null ) {
+            if ($sanitizedParams->getIntArray('reminder_scheduleReminderId')[$i] == null) {
                 continue;
             }
 
