@@ -45,6 +45,10 @@ function openUploadForm(options) {
     uploadTemplate = Handlebars.compile($('#' + options.templateId).html());
   }
 
+  if (typeof maxImagePixelSize === undefined || maxImagePixelSize === '') {
+    maxImagePixelSize = 0;
+  }
+
   // Handle bars and open a dialog
   const dialog = bootbox.dialog({
     message: uploadTemplate(options.templateOptions),

@@ -17,7 +17,7 @@
 
 {# Max image resize size from settings #}
 <script type="text/javascript">
-  const maxImagePixelSize = {{ settings.DEFAULT_RESIZE_LIMIT }};
+  let maxImagePixelSize = "{{ settings.DEFAULT_RESIZE_LIMIT }}";
 </script>
 
 {# Handlebars Templates #}
