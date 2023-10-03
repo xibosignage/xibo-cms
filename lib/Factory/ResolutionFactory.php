@@ -168,16 +168,19 @@ class ResolutionFactory extends BaseFactory
            WHERE 1 = 1
         ';
 
-        if ($parsedFilter->getInt('enabled', ['default' => -1]) != -1) {
+        if ($parsedFilter->getInt('enabled', ['default' => -1]) != -1
+            && $parsedFilter->getInt('withCurrent') !== null
+        ) {
+            $body .= ' AND ( enabled = :enabled OR `resolution`.resolutionId = :withCurrent) ';
+            $params['enabled'] = $parsedFilter->getInt('enabled');
+            $params['withCurrent'] = $parsedFilter->getInt('withCurrent');
+        }
+
+        if ($parsedFilter->getInt('enabled', ['default' => -1]) != -1
+            && $parsedFilter->getInt('withCurrent') === null
+        ) {
             $body .= ' AND enabled = :enabled ';
             $params['enabled'] = $parsedFilter->getInt('enabled');
-
-            // for Layout Background form, always return Layout current resolution
-            // even if it is disabled
-            if ($parsedFilter->getInt('withCurrent') !== null) {
-                $body .= ' OR `resolution`.resolutionId = :withCurrent ';
-                $params['withCurrent'] = $parsedFilter->getInt('withCurrent');
-            }
         }
 
         if ($parsedFilter->getInt('resolutionId') !== null) {
