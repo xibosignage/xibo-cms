@@ -560,6 +560,10 @@ body.editor-opened {
         .designer-region-canvas {
             width: 0;
             height: 0;
+
+            &.canvas-element-selected-from-layer-manager {
+                z-index: auto !important;
+            }
         }
 
         .designer-region-drawer {

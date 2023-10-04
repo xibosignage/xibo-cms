@@ -995,6 +995,9 @@ Widget.prototype.removeElement = function(
       app.layout.deleteObject('widget', this.widgetId).then(reloadLayout);
     }
   } else {
+    // Last element will be the one being saved
+    const lastElement = save;
+
     // Recalculate required elements
     this.validateRequiredElements();
 
@@ -1008,16 +1011,16 @@ Widget.prototype.removeElement = function(
         reloadViewer: false,
       });
       lD.viewer.selectElement(null, false, false);
-    } else if (lD.selectedObject.type != 'layout') {
+    } else if (lD.selectedObject.type != 'layout' && lastElement) {
       // If we have a selected object other than layout, reload properties panel
       lD.propertiesPanel.render(lD.selectedObject);
     }
 
     // Reload viewer to update widget valid status
-    lD.viewer.render();
+    (lastElement) && lD.viewer.render();
 
     // If we're not removing widget, we need ot update element map
-    this.updateElementMap();
+    (lastElement) && this.updateElementMap();
   }
 };
 
