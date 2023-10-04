@@ -101,7 +101,7 @@ window.pE = {
  */
 pE.loadEditor = function(inline = false) {
   // Add class to body so we can use CSS specifically on it
-  $('body').addClass('editor-opened');
+  (!inline) && $('body').addClass('editor-opened');
 
   pE.common.showLoadingScreen();
 
@@ -743,7 +743,7 @@ pE.close = function() {
   $('#editor-container').empty();
 
   // Remove editing class from body
-  $('body').removeClass('editor-opened');
+  (!this.inline) && $('body').removeClass('editor-opened');
 };
 
 /**
