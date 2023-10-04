@@ -434,6 +434,23 @@ Cypress.Commands.add('createMenuboard', function(name) {
   });
 });
 
+// Application
+Cypress.Commands.add('createApplication', function(name) {
+  cy.request({
+    method: 'POST',
+    url: '/api/application',
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {
+      name: name,
+    },
+  }).then((res) => {
+    return res.body.key;
+  });
+});
+
 // User
 Cypress.Commands.add('createUser', function(name, password, userTypeId, homeFolderId) {
   cy.request({
@@ -455,7 +472,7 @@ Cypress.Commands.add('createUser', function(name, password, userTypeId, homeFold
   });
 });
 
-// Delete Usergroup
+// Delete User
 Cypress.Commands.add('deleteUser', function(userId) {
   cy.request({
     method: 'DELETE',
