@@ -112,6 +112,9 @@ window.lD = {
 
 // Load Layout and build app structure
 $(() => {
+  // Add class to body so we can use CSS specifically on it
+  $('body').addClass('editor-opened');
+
   // Get layout id
   const layoutId = lD.editorContainer.attr('data-layout-id');
 
@@ -405,7 +408,11 @@ lD.selectObject =
       if (
         target &&
         (
-          ['drawer', 'zone', 'playlist'].includes(target.data('subType')) ||
+          (
+            target.data('subType') == 'playlist' &&
+            lD.common.hasTarget(card, 'playlist')
+          ) ||
+          ['drawer', 'zone'].includes(target.data('subType')) ||
           (
             target.hasClass('designer-widget') &&
             activeDroppable

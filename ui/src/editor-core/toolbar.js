@@ -1481,7 +1481,14 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
             module.trans.upload =
               module.trans.uploadType.replace('%obj%', module.name);
 
-            const $uploadCard = $(ToolbarCardMediaUploadTemplate(module));
+            const $uploadCard = $(ToolbarCardMediaUploadTemplate(
+              Object.assign(
+                {},
+                module,
+                {
+                  editingPlaylist: self.isPlaylist,
+                })),
+            );
             $mediaContent.append($uploadCard).masonry('appended', $uploadCard);
           }
         };

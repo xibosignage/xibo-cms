@@ -24,7 +24,7 @@
 @import "mixins";
 
 // CSS
-body {
+body.editor-opened {
     overflow: hidden;
 }
 
@@ -1094,7 +1094,7 @@ body {
             }
         }
 
-        .slot, .invalid-parent {
+        .slot {
             position: absolute;
             left: 2px;
             top: 2px;
@@ -1107,17 +1107,7 @@ body {
             opacity: 0.3;
         }
 
-        .invalid-parent {
-            left: auto;
-            top: auto;
-            right: 2px;
-            bottom: 2px;
-            background-color: $xibo-color-semantic-error;
-            color: $xibo-color-neutral-0;
-            opacity: 0.6;
-        }
-
-        &:hover .slot, &:hover .invalid-parent {
+        &:hover .slot {
             opacity: 0.8;
         }
 
@@ -1232,6 +1222,10 @@ body {
             opacity: 0.3;
         }
 
+        & > .invalid-parent {
+            z-index: $viewer-object-group-bts-z-index !important;
+        }
+
         &:hover > .slot, &:hover > .group-edit-btn {
             opacity: 0.8;
         }
@@ -1252,6 +1246,27 @@ body {
             * {
                 opacity: 0.6;
             }
+        }
+    }
+
+    .designer-element, .designer-element-group {
+        .invalid-parent {
+            position: absolute;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-weight: bold;
+            z-index: 100;
+            left: auto;
+            top: auto;
+            right: 2px;
+            bottom: 2px;
+            background-color: $xibo-color-semantic-error;
+            color: $xibo-color-neutral-0;
+            opacity: 0.6;
+        }
+
+        &:hover .invalid-parent {
+            opacity: 0.8;
         }
     }
 
