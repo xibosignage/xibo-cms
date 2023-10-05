@@ -151,7 +151,13 @@ class Applications extends Base
         $this->getState()->template = 'grid';
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        $applications = $this->applicationFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter([], $sanitizedParams));
+        $applications = $this->applicationFactory->query(
+            $this->gridRenderSort($sanitizedParams),
+            $this->gridRenderFilter(
+                ['name' => $sanitizedParams->getString('name')],
+                $sanitizedParams
+            )
+        );
 
         foreach ($applications as $application) {
             if ($this->isApi($request)) {
@@ -165,18 +171,17 @@ class Applications extends Base
             $application->buttons = [];
 
             if ($application->userId == $this->getUser()->userId || $this->getUser()->getUserTypeId() == 1) {
-
                 // Edit
                 $application->buttons[] = [
                     'id' => 'application_edit_button',
-                    'url' => $this->urlFor($request,'application.edit.form', ['id' => $application->key]),
+                    'url' => $this->urlFor($request, 'application.edit.form', ['id' => $application->key]),
                     'text' => __('Edit')
                 ];
 
                 // Delete
                 $application->buttons[] = [
                     'id' => 'application_delete_button',
-                    'url' => $this->urlFor($request,'application.delete.form', ['id' => $application->key]),
+                    'url' => $this->urlFor($request, 'application.delete.form', ['id' => $application->key]),
                     'text' => __('Delete')
                 ];
             }
