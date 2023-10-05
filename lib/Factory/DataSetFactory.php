@@ -762,11 +762,7 @@ class DataSetFactory extends BaseFactory
                             break;
                         default:
                             // Default value, assume it will be a string and filter it accordingly.
-                            $result[$column->heading] = filter_var(
-                                $value[1],
-                                FILTER_SANITIZE_STRING,
-                                FILTER_FLAG_NO_ENCODE_QUOTES
-                            );
+                            $result[$column->heading] = strip_tags($value[1]);
                     }
                 }
             } else {
