@@ -1303,11 +1303,14 @@ window.forms = {
 
     // Colour picker
     findElements(
-      '.colorpicker-input',
+      '.colorpicker-input.colorpicker-element',
       target,
     ).each(function(_k, el) {
       // Init the colour picker
-      $(el).colorpicker();
+      $(el).colorpicker({
+        container: $(el).find('.picker-container'),
+        align: 'left',
+      });
 
       const $inputElement = $(el).find('input');
       $inputElement.on('focusout', function() {
