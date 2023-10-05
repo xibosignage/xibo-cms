@@ -274,16 +274,25 @@ class ModuleFactory extends BaseFactory
 
     /**
      * Get an array of all modules except canvas
+     * @param array $filter
      * @return Module[]
      */
-    public function getAllExceptCanvas(): array
+    public function getAllExceptCanvas(array $filter = []): array
     {
+        $sanitizedFilter = $this->getSanitizer($filter);
         $this->getLog()->debug('ModuleFactory: getAllButCanvas');
         $modules = [];
         foreach ($this->load() as $module) {
             // Hide the canvas module from the module list
             if ($module->moduleId != 'core-canvas') {
-                $modules[] = $module;
+                // do we have a name filter?
+                if (!empty($sanitizedFilter->getString('name'))) {
+                    if (str_contains(strtolower($module->name), strtolower($sanitizedFilter->getString('name')))) {
+                        $modules[] = $module;
+                    }
+                } else {
+                    $modules[] = $module;
+                }
             }
         }
         return $modules;
