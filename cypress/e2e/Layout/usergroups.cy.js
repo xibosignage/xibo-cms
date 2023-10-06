@@ -82,7 +82,7 @@ describe('Usergroups', function() {
       cy.wait('@putRequest').then((interception) => {
         // Get the request body (form data)
         const response = interception.response;
-        const responseData = response.body.data; // Access the "data" property
+        const responseData = response.body.data;
 
         // assertion on the "usergroup" value
         expect(responseData.group).to.eq('Cypress Test Usergroup Edited ' + testRun);

@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/* eslint-disable max-len */
 describe('Display Groups', function() {
   let testRun = '';
 
@@ -61,12 +62,13 @@ describe('Display Groups', function() {
     cy.contains('Added Cypress Test Displaygroup ' + testRun + '_2');
   });
 
-
   it('searches and delete existing displaygroup', function() {
     // Create a new displaygroup and then search for it and delete it
     cy.createDisplaygroup('Cypress Test Displaygroup ' + testRun).then((res) => {
-      cy.server();
-      cy.route('/displaygroup?draw=2&*').as('displaygroupGridLoad');
+      cy.intercept({
+        url: '/displaygroup?*',
+        query: {displayGroup: 'Cypress Test Displaygroup ' + testRun},
+      }).as('loadGridAfterSearch');
 
       cy.visit('/displaygroup/view');
 
@@ -75,7 +77,7 @@ describe('Display Groups', function() {
         .type('Cypress Test Displaygroup ' + testRun);
 
       // Wait for the grid reload
-      cy.wait('@displaygroupGridLoad');
+      cy.wait('@loadGridAfterSearch');
 
       // Click on the first row element to open the delete modal
       cy.get('#displaygroups tr:first-child .dropdown-toggle').click();
@@ -89,6 +91,138 @@ describe('Display Groups', function() {
     });
   });
 
+  // seeded displays: dispgrp_disp1, dispgrp_disp2
+  it.only('manage membership for a displaygroup', function() {
+    cy.createDisplaygroup('Cypress Test Displaygroup ' + testRun).then((res) => {
+      // assign displays to display group
+      cy.intercept({
+        url: '/displaygroup?*',
+        query: {displayGroup: 'Cypress Test Displaygroup ' + testRun},
+      }).as('loadGridAfterSearch');
+
+      // Intercept the PUT request
+      cy.intercept({
+        method: 'POST',
+        url: /\/displaygroup\/\d+\/display\/assign$/,
+      }).as('postRequest');
+
+      cy.intercept({
+        url: '/display*',
+        query: {display: 'dispgrp_disp1'},
+      }).as('loadDisplayAfterSearch');
+
+      cy.visit('/displaygroup/view');
+
+      // Filter for the created displaygroup
+      cy.get('#Filter input[name="displayGroup"]')
+        .type('Cypress Test Displaygroup ' + testRun);
+
+      // Wait for the grid reload
+      cy.wait('@loadGridAfterSearch');
+
+      // Click on the first row element to open the delete modal
+      cy.get('#displaygroups tr:first-child .dropdown-toggle').click();
+      cy.get('#displaygroups tr:first-child .displaygroup_button_group_members').click();
+
+      cy.get('.modal #display').type('dispgrp_disp1');
+
+      cy.wait('@loadDisplayAfterSearch');
+      cy.get('#displaysMembersTable').within(() => {
+        // count the rows within table
+        cy.get('tbody').find('tr').should('have.length', 1);
+        cy.get('tbody tr:first-child input[type="checkbox"]').check();
+      });
+
+      // Save assignments
+      cy.get('.bootbox .save-button').click();
+
+      // Wait for the intercepted POST request and check the form data
+      cy.wait('@postRequest').then((interception) => {
+        // Get the request body (form data)
+        const response = interception.response;
+        const body = response.body;
+        expect(body.success).to.eq(true);
+      });
+    });
+  });
+
+  // -------
+  // Dynamic display group
+  // Seeded data
+  // Displays: disp_dynamic1, disp_dynamic2
+  it('should add a dynamic display group', function() {
+    cy.intercept({
+      url: '/display?*',
+      query: {display: 'dynamic'},
+    }).as('loadDisplayGridAfterSearch');
+
+    cy.visit('/displaygroup/view');
+
+    // Click on the Add Displaygroup button
+    cy.contains('Add Display Group').click();
+
+    cy.get('.modal input#displayGroup')
+      .type('Cypress Test Displaygroup ' + testRun);
+
+    // Add first by clicking next
+    cy.get('.modal #isDynamic').check();
+    // Type "dynamic" into the input field with the name "dynamicCriteria"
+    cy.get('.modal input[name="dynamicCriteria"]').type('dynamic');
+    cy.wait('@loadDisplayGridAfterSearch');
+
+    // Add first by clicking next
+    cy.get('.modal .save-button').click();
+
+    // Check if displaygroup is added in toast message
+    cy.contains('Added Cypress Test Displaygroup ' + testRun);
+  });
+
+  it('should edit the criteria of a dynamic display group', function() {
+    // Create a new displaygroup with dynamic criteria
+    cy.createDisplaygroup('Cypress Test Displaygroup Dynamic ' + testRun, true, 'dynamic').then((res) => {
+      cy.intercept({
+        url: '/displaygroup?*',
+        query: {displayGroup: 'Cypress Test Displaygroup Dynamic ' + testRun},
+      }).as('loadGridAfterSearch');
+
+      // Intercept the PUT request
+      cy.intercept({
+        method: 'PUT',
+        url: '/displaygroup/*',
+      }).as('putRequest');
+
+      cy.visit('/displaygroup/view');
+
+      // Filter for the created displaygroup
+      cy.get('#Filter input[name="displayGroup"]')
+        .type('Cypress Test Displaygroup Dynamic ' + testRun);
+
+      // Wait for the grid reload
+      cy.wait('@loadGridAfterSearch');
+
+      // Click on the first row element to open the delete modal
+      cy.get('#displaygroups tr:first-child .dropdown-toggle').click();
+      cy.get('#displaygroups tr:first-child .displaygroup_button_edit').click();
+
+      cy.get('.modal input[name="dynamicCriteria"]').clear().type('dynamic_edited');
+
+      // Delete test displaygroup
+      cy.get('.bootbox .save-button').click();
+
+      // Wait for the intercepted PUT request and check the form data
+      cy.wait('@putRequest').then((interception) => {
+        // Get the request body (form data)
+        const response = interception.response;
+        const responseData = response.body.data;
+
+        // assertion on the "display" value
+        expect(responseData.dynamicCriteria).to.eq('dynamic_edited');
+      });
+    });
+  });
+
+  // -------
+  // -- Delete Many
   it('selects multiple display groups and delete them', function() {
     // Create a new displaygroup and then search for it and delete it
     cy.createDisplaygroup('Cypress Test Displaygroup ' + testRun).then((res) => {

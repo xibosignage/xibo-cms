@@ -62,7 +62,7 @@ describe('Users', function() {
 
   it('searches and edit existing user', function() {
     // Create a new user and then search for it and delete it
-    cy.createUser('CypressTestUser' + testRun, 'password', 3, 1).then((userId) => {
+    cy.createUser('CypressTestUser' + testRun, 'password', 3, 1).then((id) => {
       cy.intercept({
         url: '/user?*',
         query: {userName: 'CypressTestUser' + testRun},
@@ -97,14 +97,14 @@ describe('Users', function() {
       cy.wait('@putRequest').then((interception) => {
         // Get the request body (form data)
         const response = interception.response;
-        const responseData = response.body.data; // Access the "data" property
+        const responseData = response.body.data;
 
         // assertion on the "user" value
         expect(responseData.userName).to.eq('CypressTestUserEdited' + testRun);
       });
 
       // Delete the user and assert success
-      cy.deleteUser(userId).then((res) => {
+      cy.deleteUser(id).then((res) => {
         expect(res.status).to.equal(200);
       });
     });
@@ -112,7 +112,7 @@ describe('Users', function() {
 
   it('searches and delete existing user', function() {
     // Create a new user and then search for it and delete it
-    cy.createUser('CypressTestUser' + testRun, 'password', 3, 1).then((userId) => {
+    cy.createUser('CypressTestUser' + testRun, 'password', 3, 1).then((id) => {
       cy.intercept({
         url: '/user?*',
         query: {userName: 'CypressTestUser' + testRun},

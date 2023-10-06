@@ -329,7 +329,21 @@ Cypress.Commands.add('createCampaign', function(name) {
 });
 
 // Display Group
-Cypress.Commands.add('createDisplaygroup', function(name) {
+Cypress.Commands.add('createDisplaygroup', function(name, isDynamic = false, criteria) {
+  // Define the request body object
+  const requestBody = {
+    displayGroup: name,
+  };
+
+  // Add 'isDynamic' to the request body if it's true
+  if (isDynamic) {
+    requestBody.isDynamic = true;
+  }
+  // Add 'isDynamic' to the request body if it's true
+  if (criteria) {
+    requestBody.dynamicCriteria = criteria;
+  }
+
   cy.request({
     method: 'POST',
     url: '/api/displaygroup',
@@ -337,11 +351,57 @@ Cypress.Commands.add('createDisplaygroup', function(name) {
     headers: {
       Authorization: 'Bearer ' + Cypress.env('accessToken'),
     },
-    body: {
-      displayGroup: name,
-    },
+    body: requestBody,
   }).then((res) => {
     return res.body.displaygroupId;
+  });
+});
+
+// Delete Display group
+Cypress.Commands.add('deleteDisplaygroup', function(id) {
+  cy.request({
+    method: 'DELETE',
+    url: '/api/displaygroup/' + id,
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {},
+  }).then((res) => {
+    return res;
+  });
+});
+
+// Display Profile
+Cypress.Commands.add('createDisplayProfile', function(name, type) {
+  cy.request({
+    method: 'POST',
+    url: '/api/displayprofile',
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {
+      name: name,
+      type: type,
+    },
+  }).then((res) => {
+    return res.body.displayProfileId;
+  });
+});
+
+// Delete display profile
+Cypress.Commands.add('deleteDisplayProfile', function(id) {
+  cy.request({
+    method: 'DELETE',
+    url: '/api/displayprofile/' + id,
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {},
+  }).then((res) => {
+    return res;
   });
 });
 
@@ -473,10 +533,10 @@ Cypress.Commands.add('createUser', function(name, password, userTypeId, homeFold
 });
 
 // Delete User
-Cypress.Commands.add('deleteUser', function(userId) {
+Cypress.Commands.add('deleteUser', function(id) {
   cy.request({
     method: 'DELETE',
-    url: '/api/user/' + userId,
+    url: '/api/user/' + id,
     form: true,
     headers: {
       Authorization: 'Bearer ' + Cypress.env('accessToken'),
@@ -505,10 +565,10 @@ Cypress.Commands.add('createUsergroup', function(name) {
 });
 
 // Delete Usergroup
-Cypress.Commands.add('deleteUsergroup', function(groupId) {
+Cypress.Commands.add('deleteUsergroup', function(id) {
   cy.request({
     method: 'DELETE',
-    url: '/api/group/' + groupId,
+    url: '/api/group/' + id,
     form: true,
     headers: {
       Authorization: 'Bearer ' + Cypress.env('accessToken'),
@@ -554,10 +614,10 @@ Cypress.Commands.add('createMenuboardCatProd', function(name, menuCatId) {
 });
 
 // Delete Menuboard
-Cypress.Commands.add('deleteMenuboard', function(menuId) {
+Cypress.Commands.add('deleteMenuboard', function(id) {
   cy.request({
     method: 'DELETE',
-    url: '/api/menuboard/' + menuId,
+    url: '/api/menuboard/' + id,
     form: true,
     headers: {
       Authorization: 'Bearer ' + Cypress.env('accessToken'),

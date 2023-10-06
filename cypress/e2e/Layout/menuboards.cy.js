@@ -86,7 +86,7 @@ describe('Menuboards', function() {
       cy.wait('@putRequest').then((interception) => {
         // Get the request body (form data)
         const response = interception.response;
-        const responseData = response.body.data; // Access the "data" property
+        const responseData = response.body.data;
 
         // assertion on the "menuboard" value
         expect(responseData.name).to.eq('Cypress Test Menuboard Edited ' + testRun);
@@ -254,7 +254,7 @@ describe('Menuboards', function() {
         cy.wait('@putRequest').then((interception) => {
           // Get the request body (form data)
           const response = interception.response;
-          const responseData = response.body.data; // Access the "data" property
+          const responseData = response.body.data;
 
           // assertion on the "menuboard" value
           expect(responseData.name).to.eq('Cypress Test Category Edited ' + testRun);
@@ -379,7 +379,7 @@ describe('Menuboards', function() {
           cy.wait('@putRequest').then((interception) => {
             // Get the request body (form data)
             const response = interception.response;
-            const responseData = response.body.data; // Access the "data" property
+            const responseData = response.body.data;
 
             // assertion on the "menuboard" value
             expect(responseData.name).to.eq('Cypress Test Product Edited ' + testRun);
