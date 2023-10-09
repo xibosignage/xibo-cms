@@ -19,10 +19,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 $(function() {
-  // Check the query params to see if we're in editor mode
-  const urlParams = new URLSearchParams(window.location.search);
-  const isPreview = urlParams.get('preview') === '1';
-
   // Defaut scaler function
   const defaultScaler = function(
     _id,
@@ -48,167 +44,6 @@ $(function() {
       $(target).xiboLayoutScaler(properties);
     }
   };
-
-  const macroRegex = /^%(\+|\-)[0-9]([0-9])?(d|h|m|s)%$/gi;
-
-  const composeUTCDateFromMacro = (macroStr) => {
-    const utcFormat = 'YYYY-MM-DDTHH:mm:ssZ';
-    const dateNow = moment().utc();
-    // Check if input has the correct format
-    const dateStr = String(macroStr);
-
-    if (dateStr.length === 0 ||
-        dateStr.match(macroRegex) === null
-    ) {
-      return dateNow.format(utcFormat);
-    }
-
-    // Trim the macro date string
-    const dateOffsetStr = dateStr.replaceAll('%', '');
-    const params = (op) => dateOffsetStr.replace(op, '')
-      .split(/(\d+)/).filter(Boolean);
-    const addRegex = /^\+/g;
-    const subtractRegex = /^\-/g;
-
-    // Check if it's add or subtract offset and return composed date
-    if (dateOffsetStr.match(addRegex) !== null) {
-      return dateNow.add(...params(addRegex)).format(utcFormat);
-    } else if (dateOffsetStr.match(subtractRegex) !== null) {
-      return dateNow.subtract(...params(subtractRegex)).format(utcFormat);
-    }
-  };
-
-  /**
-   * Compose final data
-   * @param {object} widget
-   * @param {object|array} data
-   * @return {object}
-   */
-  function composeFinalData(widget, data) {
-    const finalData = {
-      isSampleData: false,
-      dataItems: [],
-      isArray: Array.isArray(data?.data),
-      showError: false,
-    };
-    const composeSampleData = () => {
-      finalData.isSampleData = true;
-
-      if (widget.sample === null) {
-        finalData.dataItems = [];
-        return [];
-      }
-
-      // If data is empty, use sample data instead
-      // Add single element or array of elements
-      finalData.dataItems = (Array.isArray(widget.sample)) ?
-        widget.sample.slice(0) : [widget.sample];
-
-      return finalData.dataItems.reduce((data, item) => {
-        Object.keys(item).forEach((itemKey) => {
-          if (String(item[itemKey]).match(macroRegex) !== null) {
-            item[itemKey] = composeUTCDateFromMacro(item[itemKey]);
-          }
-        });
-
-        return [...data, {...item}];
-      }, []);
-    };
-
-    if (isPreview) {
-      if (finalData.isArray) {
-        if (data?.data?.length > 0) {
-          finalData.dataItems = data?.data;
-        } else if (widget.sample && Array.isArray(widget.sample)) {
-          finalData.dataItems = composeSampleData();
-        }
-      } else if (data?.success === false || !widget.isValid) {
-        finalData.dataItems = composeSampleData();
-      }
-    } else {
-      finalData.dataItems = data?.data || [];
-    }
-
-    if (data?.success === false || !widget.isValid) {
-      finalData.showError = true;
-    }
-
-    return finalData;
-  }
-
-  /**
-   * onDataError callback
-   * @param {Object} widget - Widget
-   * @param {string|number} httpStatus
-   * @param {Object} response - Response body|json
-   */
-  function onDataErrorCallback(widget, httpStatus, response) {
-    const onDataError = window[
-      `onDataError_${widget.widgetId}`
-    ];
-
-    if (typeof onDataError === 'function') {
-      if (onDataError(httpStatus, response) == false) {
-        xiboIC.reportFault({
-          code: '5001',
-          reason: 'No Data',
-        }, {targetId: widget.widgetId});
-      }
-
-      onDataError(httpStatus, response);
-    } else {
-      xiboIC.reportFault({
-        code: '5001',
-        reason: 'No Data',
-      }, {targetId: widget.widgetId});
-    }
-  }
-
-  /**
-   * Get widget data
-   * @param {object} widget
-   * @return {Promise}
-   */
-  function getWidgetData(widget) {
-    return new Promise(function(resolve) {
-      // if we have data on the widget (for older players),
-      // or if we are not in preview and have empty data on Widget (like text)
-      // do not run ajax use that data instead
-      // if (!isPreview) {
-      if (widget.data?.data !== undefined) {
-        resolve(widget.data);
-      } else if (widget.url) {
-        // else get data from widget.url,
-        // this will be either getData for preview
-        // or new json file for v4 players
-        $.ajax({
-          method: 'GET',
-          url: widget.url,
-        }).done(function(data) {
-          if (data && data.hasOwnProperty('success') &&
-            data.success === false && data.error
-          ) {
-            onDataErrorCallback(widget, data.error, data);
-          }
-
-          if (Array.isArray(data) && data.length === 0) {
-            xiboIC.expireNow({targetId: xiboICTargetId});
-          }
-
-          resolve(data);
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-          onDataErrorCallback(widget, jqXHR.status, jqXHR.responseJSON);
-          console.log(jqXHR, textStatus, errorThrown);
-
-          if (jqXHR.status === 404) {
-            xiboIC.expireNow({targetId: xiboICTargetId});
-          }
-        });
-      } else {
-        resolve(null);
-      }
-    });
-  }
 
   /**
    * Re-compose slotsData for repeat/non-repeat data widget
@@ -643,7 +478,7 @@ $(function() {
         };
         const elementGroups = playerElements.reduce(
           function(elemGroups, elemGroup) {
-            const isGroup = elemGroup.hasOwnProperty('groupId');
+            const isGroup = PlayerHelper.isGroup(elemGroup);
 
             // Initialize object values
             if (!isGroup &&
@@ -706,19 +541,6 @@ $(function() {
           });
         }
 
-        const getMaxSlot = (objectsArray, itemsKey, minValue) => {
-          const groupItems = objectsArray?.length > 0 ?
-            objectsArray.reduce(
-              (a, b) => [...a, ...b[itemsKey]], []) :
-            null;
-
-          return groupItems === null ?
-            minValue :
-            Math.max(...groupItems.map(function(elem) {
-              return elem?.slot || 0;
-            }),
-            ) + 1;
-        };
         const renderDataItem = function(
           isGroup,
           dataItemKey,
@@ -898,7 +720,7 @@ $(function() {
           isStandalone,
         ) {
           const groupValues = Object.values(groupsData);
-          const maxSlot = getMaxSlot(groupValues, slotItemsKey, 1);
+          const maxSlot = PlayerHelper.getMaxSlot(groupValues, slotItemsKey, 1);
           let pinnedSlot = null;
 
           if (!isStandalone) {
@@ -1281,77 +1103,132 @@ $(function() {
               }
             });
         }
+
+        console.log({
+          elementGroups,
+          mappedSlotGroup,
+          mappedSlotsStandaloneData,
+        });
       }
     }
   }
 
-  const cmsElements = {};
-  // Call the data url and parse out the template.
-  $.each(widgetData, function(_key, widget) {
-    // Check if we have template from templateId or module
-    // and set it as the template
-    let $template = null;
-    let moduleTemplate = false;
-    if ($('#hbs-' + widget.templateId).length > 0) {
-      $template = $('#hbs-' + widget.templateId);
-    } else if ($('#hbs-module').length > 0) {
-      $template = $('#hbs-module');
-      moduleTemplate = true;
-    }
+  PlayerHelper
+    .init(widgetData, elements)
+    .then(({widgets}) => {
+      if (Object.keys(widgets).length > 0) {
+        Object.keys(widgets).forEach(function(widgetKey) {
+          const widget = widgets[widgetKey];
 
-    // Save widgetData to xic
-    xiboIC.set(widget.widgetId, 'widgetData', widget);
+          // Check if we have template from templateId or module
+          // and set it as the template
+          let $template = null;
+          let moduleTemplate = false;
+          if ($('#hbs-' + widget.templateId).length > 0) {
+            $template = $('#hbs-' + widget.templateId);
+          } else if ($('#hbs-module').length > 0) {
+            $template = $('#hbs-module');
+            moduleTemplate = true;
+          }
 
-    let hbs = null;
-    // Compile the template if it exists
-    if ($template && $template.length > 0) {
-      hbs = Handlebars.compile($template.html());
-    }
+          // Save widgetData to xic
+          xiboIC.set(widget.widgetId, 'widgetData', widget);
 
-    const $content = $('#content');
-    cmsElements[widget.widgetId] = {};
+          let hbs = null;
+          // Compile the template if it exists
+          if ($template && $template.length > 0) {
+            hbs = Handlebars.compile($template.html());
+          }
 
-    if (elements !== undefined && elements?.length > 0) {
-      $.each(elements, function(elemKey, elemVal) {
-        if (elemVal?.length > 0) {
-          $.each(elemVal, function(elemValKey, elemObj) {
-            if (elemObj.widgetId === widget.widgetId) {
-              cmsElements[elemObj.widgetId] = {
-                widget: widget,
-                ...elemObj,
-              };
-            }
-          });
-        }
-      });
-    }
+          const $content = $('#content');
 
-    getWidgetData(widget).then(function(data) {
-      const {dataItems, showError} = composeFinalData(widget, data);
+          initStaticTemplates(
+            $template,
+            $content,
+            moduleTemplate,
+            hbs,
+            widget,
+            widget.data,
+            widget.showError,
+            widget.data,
+          );
 
-      initStaticTemplates(
-        $template,
-        $content,
-        moduleTemplate,
-        hbs,
-        widget,
-        dataItems,
-        showError,
-        data,
-      );
-
-      // Get widget with templateId = elements
-      if ((widget.templateId === 'elements' || widget.templateId === null) &&
-        typeof elements !== 'undefined') {
-        const widgetElements = cmsElements[widget.widgetId]?.elements || [];
-
-        initPlayerElements(
-          widgetElements,
-          widget,
-          dataItems,
-          showError,
-        );
+          // Get widget with templateId = elements
+          if ((widget.templateId === 'elements' ||
+            widget.templateId === null) &&
+            typeof elements !== 'undefined') {
+            initPlayerElements(
+              widget.elements,
+              widget,
+              widget.data,
+              widget.showError,
+            );
+          }
+        });
       }
     });
-  });
+
+  // Call the data url and parse out the template.
+  // $.each(widgetData, function(_key, widget) {
+  //   // Check if we have template from templateId or module
+  //   // and set it as the template
+  //   let $template = null;
+  //   let moduleTemplate = false;
+  //   if ($('#hbs-' + widget.templateId).length > 0) {
+  //     $template = $('#hbs-' + widget.templateId);
+  //   } else if ($('#hbs-module').length > 0) {
+  //     $template = $('#hbs-module');
+  //     moduleTemplate = true;
+  //   }
+  //
+  //   // Save widgetData to xic
+  //   xiboIC.set(widget.widgetId, 'widgetData', widget);
+  //
+  //   let hbs = null;
+  //   // Compile the template if it exists
+  //   if ($template && $template.length > 0) {
+  //     hbs = Handlebars.compile($template.html());
+  //   }
+  //
+  //   const $content = $('#content');
+  //   let widgetElements = [];
+  //
+  //   if (elements !== undefined && elements?.length > 0) {
+  //     $.each(elements, function(elemKey, elemVal) {
+  //       if (elemVal?.length > 0) {
+  //         $.each(elemVal, function(elemValKey, elemObj) {
+  //           if (elemObj.widgetId === widget.widgetId) {
+  //             widgetElements = elemObj?.elements || [];
+  //           }
+  //         });
+  //       }
+  //     });
+  //   }
+  //
+  //   getWidgetData(widget).then(function(data) {
+  //     const {dataItems, showError} = composeFinalData(widget, data);
+  //
+  //     initStaticTemplates(
+  //       $template,
+  //       $content,
+  //       moduleTemplate,
+  //       hbs,
+  //       widget,
+  //       dataItems,
+  //       showError,
+  //       data,
+  //     );
+  //
+  //     // Get widget with templateId = elements
+  //     if ((widget.templateId === 'elements' || widget.templateId === null) &&
+  //       typeof elements !== 'undefined') {
+  //       initPlayerElements(
+  //         widgetElements,
+  //         widget,
+  //         dataItems,
+  //         showError,
+  //       );
+  //     }
+  //   });
+  // });
 });
