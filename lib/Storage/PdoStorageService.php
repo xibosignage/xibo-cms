@@ -333,7 +333,6 @@ class PdoStorageService implements StorageServiceInterface
                 $this->close($connection);
             }
             return $records;
-
         } catch (\PDOException $PDOException) {
             // Throw if we're not expected to reconnect.
             if (!$reconnect) {
