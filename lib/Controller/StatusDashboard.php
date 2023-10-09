@@ -402,8 +402,6 @@ class StatusDashboard extends Base
                             ];
                         }
 
-                        $this->getLog()->debug(var_export($latestNews, true));
-
                         // Store in the cache for 1 day
                         $cache->set($latestNews);
                         $cache->expiresAfter(86400);
