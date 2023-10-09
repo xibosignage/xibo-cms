@@ -148,9 +148,9 @@ class ResolutionFactory extends BaseFactory
             $sortOrder = ['resolution'];
         }
 
-        $entities = array();
+        $entities = [];
 
-        $params = array();
+        $params = [];
         $select  = '
           SELECT `resolution`.resolutionId,
               `resolution`.resolution,
@@ -168,7 +168,17 @@ class ResolutionFactory extends BaseFactory
            WHERE 1 = 1
         ';
 
-        if ($parsedFilter->getInt('enabled', ['default' => -1]) != -1) {
+        if ($parsedFilter->getInt('enabled', ['default' => -1]) != -1
+            && $parsedFilter->getInt('withCurrent') !== null
+        ) {
+            $body .= ' AND ( enabled = :enabled OR `resolution`.resolutionId = :withCurrent) ';
+            $params['enabled'] = $parsedFilter->getInt('enabled');
+            $params['withCurrent'] = $parsedFilter->getInt('withCurrent');
+        }
+
+        if ($parsedFilter->getInt('enabled', ['default' => -1]) != -1
+            && $parsedFilter->getInt('withCurrent') === null
+        ) {
             $body .= ' AND enabled = :enabled ';
             $params['enabled'] = $parsedFilter->getInt('enabled');
         }

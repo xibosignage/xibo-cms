@@ -125,9 +125,6 @@ if (String(value).includes('°C')) {
 
 return value + '%';
         ]]></onElementParseData>
-        <assets>
-            <asset id="weather-humidity-percent" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/weather-humidity-percent.png" />
-        </assets>
     </template>
     <template>
         <id>weather_icon</id>
@@ -240,6 +237,66 @@ if (meta && meta.hasOwnProperty('Attribution')) {
         <startWidth>480</startWidth>
         <startHeight>600</startHeight>
         <properties>
+            <property id="bgFromLibrary" type="checkbox">
+                <title>Select from Library</title>
+                <default>0</default>
+                <helpText>Should the background image be coming from library?</helpText>
+            </property>
+            <property id="weatherBg" type="mediaSelector">
+                <title>Background from Library</title>
+                <visibility>
+                    <test type="and">
+                        <condition field="bgFromLibrary" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="objectFit" type="dropdown" mode="single">
+                <title>Scale type</title>
+                <helpText>How should this image be scaled?</helpText>
+                <default>contain</default>
+                <options>
+                    <option name="fill">Fill</option>
+                    <option name="contain">Contain</option>
+                    <option name="cover">Cover</option>
+                </options>
+                <visibility>
+                    <test type="and">
+                        <condition field="bgFromLibrary" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="alignId" type="dropdown" mode="single">
+                <title>Horizontal Align</title>
+                <helpText>How should this image be aligned?</helpText>
+                <default>center</default>
+                <options>
+                    <option name="left">Left</option>
+                    <option name="center">Centre</option>
+                    <option name="right">Right</option>
+                </options>
+                <visibility>
+                    <test>
+                        <condition field="bgFromLibrary" type="eq">1</condition>
+                        <condition field="objectFit" type="neq">fill</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="valignId" type="dropdown" mode="single">
+                <title>Vertical Align</title>
+                <helpText>How should this image be vertically aligned?</helpText>
+                <default>middle</default>
+                <options>
+                    <option name="top">Top</option>
+                    <option name="middle">Middle</option>
+                    <option name="bottom">Bottom</option>
+                </options>
+                <visibility>
+                    <test>
+                        <condition field="bgFromLibrary" type="eq">1</condition>
+                        <condition field="objectFit" type="neq">fill</condition>
+                    </test>
+                </visibility>
+            </property>
             <property id="roundBorder" type="checkbox">
                 <title>Round Border</title>
                 <default>0</default>
@@ -257,8 +314,22 @@ if (meta && meta.hasOwnProperty('Attribution')) {
         </properties>
         <stencil>
             <hbs><![CDATA[
+{{#if bgFromLibrary}}
+    {{#if weatherBg}}
+        <div class="global-elements-image img-container" style="width:100%; height: 100%; overflow: hidden; position: relative;
+            {{#if roundBorder}}border-radius: {{borderRadius}}px;{{/if}}">
+            <img src="/library/download/{{weatherBg}}" style="
+                width:100%; height: 100%;
+                object-fit: {{objectFit}};
+                object-position: {{alignId}} {{valignId}};
+                position: absolute; top: 0; left: 0;"
+            />
+        </div>
+    {{/if}}
+{{else}}
 <div class="forecast-elements-background-image {{#if data.icon}}has-bg{{/if}}"
     style="background-image: url('[[assetId=bg-{{data.icon}}]]')"></div>
+{{/if}}
             ]]></hbs>
             <style><![CDATA[
 .forecast-elements-background-image:not(.has-bg) {

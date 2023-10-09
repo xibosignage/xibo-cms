@@ -45,7 +45,10 @@ describe('Campaigns', function() {
     });
   });
 
-  it.skip('should schedule an event campaign that has no priority, no recurrence', function() {
+  it('should schedule an event campaign that has no priority, no recurrence', function() {
+    cy.intercept('GET', '/schedule?draw=2*').as('scheduleLoad');
+    cy.intercept('GET', '/schedule/form/add?*').as('scheduleAddForm');
+
     // Set up intercepts with aliases
     cy.intercept({
       url: '/display?start=*',
@@ -64,8 +67,13 @@ describe('Campaigns', function() {
 
     // Visit the page and click on the Add Event button
     cy.visit('/schedule/view');
+    // Wait for schedule draw 2
+    cy.wait('@scheduleLoad');
+    cy.contains('Clear Filters').should('be.visible').click();
     cy.contains('Add Event').click();
+    cy.wait('@scheduleAddForm');
 
+    // Fill in Add form
     cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection > .select2-selection > .select2-selection__rendered')
       .type(display1);
     cy.wait('@loadDisplaygroupAfterSearch');
@@ -93,6 +101,10 @@ describe('Campaigns', function() {
 
     // Validate - schedule creation should be successful
     cy.visit('/schedule/view');
+    //cy.get('.select2-selection__clear').click();
+    cy.contains('Clear Filters').should('be.visible').click();
+
+
     cy.get('#DisplayList + span .select2-selection').click();
     // Type the display name
     cy.get('.select2-container--open input[type="search"]').type(display1);
@@ -106,7 +118,9 @@ describe('Campaigns', function() {
     cy.get('#schedule-grid').contains(campaignSchedule1);
   });
 
-  it.skip('should schedule an event layout that has no priority, no recurrence', function() {
+  it('should schedule an event layout that has no priority, no recurrence', function() {
+    cy.intercept('GET', '/schedule?draw=2*').as('scheduleLoad');
+    cy.intercept('GET', '/schedule/form/add?*').as('scheduleAddForm');
     cy.intercept({
       url: '/displaygroup?*',
       query: {displayGroup: display1},
@@ -123,7 +137,11 @@ describe('Campaigns', function() {
 
     // Click on the Add Event button
     cy.visit('/schedule/view');
+    // Wait for schedule draw 2
+    cy.wait('@scheduleLoad');
+    cy.contains('Clear Filters').should('be.visible').click();
     cy.contains('Add Event').click();
+    cy.wait('@scheduleAddForm');
 
     // display
     cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection > .select2-selection > .select2-selection__rendered')
@@ -154,7 +172,9 @@ describe('Campaigns', function() {
     cy.contains('Added Event');
   });
 
-  it.skip('should schedule an event command/overlay layout that has no priority, no recurrence', function() {
+  it('should schedule an event command/overlay layout that has no priority, no recurrence', function() {
+    cy.intercept('GET', '/schedule?draw=2*').as('scheduleLoad');
+    cy.intercept('GET', '/schedule/form/add?*').as('scheduleAddForm');
     cy.intercept({
       url: '/displaygroup?*',
       query: {displayGroup: display1},
@@ -167,7 +187,11 @@ describe('Campaigns', function() {
 
     // Click on the Add Event button
     cy.visit('/schedule/view');
+    // Wait for schedule draw 2
+    cy.wait('@scheduleLoad');
+    cy.contains('Clear Filters').should('be.visible').click();
     cy.contains('Add Event').click();
+    cy.wait('@scheduleAddForm');
 
     // display
     cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection > .select2-selection > .select2-selection__rendered')
@@ -209,7 +233,11 @@ describe('Campaigns', function() {
     cy.get('.modal .modal-footer').contains('Save').click();
   });
 
-  it.skip('should edit a scheduled event', function() {
+  it('should edit a scheduled event', function() {
+    cy.intercept('GET', '/schedule/data/events?*').as('scheduleDataEvent');
+    cy.intercept('GET', '/schedule?draw=2*').as('scheduleLoad2');
+    cy.intercept('GET', '/schedule?draw=3*').as('scheduleLoad3');
+    cy.intercept('GET', '/schedule/form/add?*').as('scheduleAddForm');
     cy.intercept({
       url: '/displaygroup?*',
       query: {displayGroup: display2},
@@ -221,6 +249,9 @@ describe('Campaigns', function() {
     }).as('loadLayoutSpecificCampaign');
 
     cy.visit('/schedule/view');
+    // Wait for schedule draw 2
+    cy.wait('@scheduleLoad2');
+    cy.contains('Clear Filters').should('be.visible').click();
 
     // ---------
     // Edit a schedule - add another display
@@ -245,11 +276,14 @@ describe('Campaigns', function() {
       .click();
 
     cy.get('.modal .modal-footer').contains('Save').click();
+
     cy.get('#schedule-grid tbody').contains('2');
 
-    // cy.get('#schedule-grid tbody tr').should('have.length', 2);
-    // cy.get('#schedule-grid tr:first-child .dropdown-toggle').invoke('show').click();
-    // cy.get('#schedule-grid tr:first-child .schedule_button_delete').click();
-    // cy.get('.bootbox .save-button').click();
+    cy.get('#schedule-grid tbody tr').should('have.length', 2);
+    cy.wait('@scheduleLoad3');
+    cy.wait('@scheduleDataEvent');
+    cy.get('#schedule-grid tr:first-child .dropdown-toggle').click();
+    cy.get('#schedule-grid tr:first-child .schedule_button_delete').click();
+    cy.get('.bootbox .save-button').click();
   });
 });

@@ -152,7 +152,7 @@ $(function() {
         xiboIC.reportFault({
           code: '5001',
           reason: 'No Data',
-        });
+        }, {targetId: widget.widgetId});
       }
 
       onDataError(httpStatus, response);
@@ -160,7 +160,7 @@ $(function() {
       xiboIC.reportFault({
         code: '5001',
         reason: 'No Data',
-      });
+      }, {targetId: widget.widgetId});
     }
   }
 
@@ -191,10 +191,18 @@ $(function() {
             onDataErrorCallback(widget, data.error, data);
           }
 
+          if (Array.isArray(data) && data.length === 0) {
+            xiboIC.expireNow({targetId: xiboICTargetId});
+          }
+
           resolve(data);
         }).fail(function(jqXHR, textStatus, errorThrown) {
           onDataErrorCallback(widget, jqXHR.status, jqXHR.responseJSON);
           console.log(jqXHR, textStatus, errorThrown);
+
+          if (jqXHR.status === 404) {
+            xiboIC.expireNow({targetId: xiboICTargetId});
+          }
         });
       } else {
         resolve(null);
@@ -284,10 +292,6 @@ $(function() {
     widget.items = [];
     const $target = $('body');
 
-    if (dataItems.length === 0 && showError) {
-      xiboIC.expireNow({targetId: widget.widgetId});
-    }
-
     if (showError && data?.message) {
       $target.append(
         '<div class="error-message" role="alert">' +
@@ -335,7 +339,7 @@ $(function() {
 
         // IF we added item template
         templateAlreadyAdded = true;
-      };
+      }
 
       // Add item to the widget object
       (item) && widget.items.push(item);
@@ -486,10 +490,6 @@ $(function() {
     dataItems,
     showError,
   ) {
-    if (dataItems.length === 0 && showError) {
-      xiboIC.expireNow({targetId: widget.widgetId});
-    }
-
     // Parse out the template with elements.
     if (elements?.length > 0) {
       const $content = $('#content');
@@ -575,6 +575,8 @@ $(function() {
         elementCopy.hbs = null;
         elementCopy.dataOverride = null;
         elementCopy.dataOverrideWith = null;
+        elementCopy.escapeHtml = null;
+        elementCopy.isExtended = false;
 
         // Compile the template if it exists
         if ($template && $template.length > 0) {
@@ -582,6 +584,13 @@ $(function() {
               $template?.data('extends-override');
           elementCopy.dataOverrideWith =
               $template?.data('extends-with');
+          elementCopy.escapeHtml =
+              $template?.data('escape-html');
+
+          if (String(elementCopy.dataOverride).length > 0 &&
+            String(elementCopy.dataOverrideWith).length > 0) {
+            elementCopy.isExtended = true;
+          }
 
           elementCopy.hbs = Handlebars.compile($template.html());
         }
@@ -837,12 +846,15 @@ $(function() {
                 )),
             );
 
+            const onTemplateRenderId = item.isExtended ?
+              item.dataOverride : item.templateData.id;
+
             // Handle the rendering of the template
             if (typeof window[
-              `onTemplateRender_${item.templateData.id}`
+              `onTemplateRender_${onTemplateRenderId}`
             ] === 'function') {
               const onTemplateRender = window[
-                `onTemplateRender_${item.templateData.id}`];
+                `onTemplateRender_${onTemplateRenderId}`];
               const itemID =
                   item.uniqueID || item.templateData?.uniqueID;
 

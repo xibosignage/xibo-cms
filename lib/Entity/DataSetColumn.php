@@ -295,6 +295,8 @@ class DataSetColumn implements \JsonSerializable
         ) {
             try {
                 $formula = str_replace('[DisplayId]', 0, $this->formula);
+                $formula = str_replace('[DisplayGeoLocation]', "ST_GEOMFROMTEXT('POINT(51.504 -0.104)')", $formula);
+
                 $this->getStore()->select('
                     SELECT * 
                       FROM (

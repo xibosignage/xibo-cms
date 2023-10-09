@@ -371,19 +371,14 @@
             // TRANSLATIONS
             var editorsTrans = {
                 deleteTitle: "{{ "Delete %obj%" |trans }}",
-                deleteMultipleTitle: "{{ "Delete selected items" |trans }}",
-                deleteConfirm: "{{ "Are you sure? All changes related to this object will be erased" |trans }}",
                 onbeforeunload: "{{ "Changes that you have made may not be saved!" |trans }}",
                 yes: "{{ "Yes" |trans }}",
                 no: "{{ "No" |trans }}",
                 selectAll: "{{ "Select All" |trans }}",
-                allChangesSaved: "{{ "All changes saved!" |trans }}",
                 back: "{{ "Back" |trans }}",
                 delete: "{{ "Delete" |trans }}",
                 loadPropertyForObject: "{{ "Load %prop% for %obj%" |trans }}",
                 loading: "{{ "Loading" |trans }}",
-                tooltipsDisabled: "{{ "Tooltips disabled!" |trans }}",
-                tooltipsEnabled: "{{ "Tooltips enabled!" |trans }}",
                 retire: "{{ "Retire" |trans }}",
                 publish: "{{ "Publish" |trans }}",
                 discard: "{{ "Discard"|trans }}",
@@ -394,13 +389,14 @@
                 zoomOutEditor: "{{ "Zoom out"|trans }}",
                 couldNotCopy: "{{ "Could not copy"|trans }}",
                 copied: "{{ "Copied!"|trans }}",
-                invalidModule:  "{{ "Module not enabled!"|trans }}",
+                invalidModule:  "{{ "This widget isn't enabled and can't be configured, please contact your administrator for help."|trans }}",
                 timeline: "{{ "Timeline"|trans }}",
                 actions: {
                     layouts:  "{{ "Layouts"|trans }}",
                     regions: "{{ "Zones"|trans }}",
                     widgets: "{{ "Widgets"|trans }}",
                     playlists: "{{ "Playlists"|trans }}",
+                    deleteWidget: "{{ "Delete"|trans }}",
                     deleteModal: {
                         title: "{{ "Delete Action"|trans }}",
                         message: "{{ "Are you sure you want to delete this action?"|trans }}",
@@ -443,14 +439,6 @@
                 selectedFolderTitle: "{{ "Upload files to this Folder"|trans }}:"
             };
 
-            var deleteMenuTrans = {
-                mainMessage: "{{ "Are you sure you want to remove this %obj%? This action cannot be undone." |trans }}",
-                infoDeleteMessage: "{{ "This widget is linked to Media in the Library which is also in use elsewhere. If this should be deleted then please do so from the Library page." |trans }}",
-                deleteMediaFromLibraryTitle: "{{ "Also delete from the Library?" |trans }}",
-                deleteMediaFromLibraryMessage: "{{ "This widget is linked to Media in the Library. Check this option to also delete that Media." |trans }}",
-                deleteMultipleObjects: "{{ "Are you sure you want to remove these items? This action cannot be undone."|trans }}"
-            };
-
             var contextMenuTrans = {
                 editAudio: "{{ "Edit Attached Audio" |trans }}",
                 editExpiry: "{{ "Edit Expiry Dates" |trans }}",
@@ -490,10 +478,10 @@
                 left: "{{ "Left" |trans }}",
                 scale: "{{ "Scale"|trans }}",
                 layer: "{{ "Layer"|trans }}",
-                invalidWidget:  "{{ "This widget needs to be configured before it will be shown"|trans }}",
+                invalidWidget:  "{{ "This widget needs to be configured before it will be shown."|trans }}",
                 requiredElementsMessage: "{{ "This widget needs to have at least one of the following elements: %elements%." |trans }}",
                 dataSlot: "{{ "Data Slot"|trans }}",
-                dataSlotHelpText: "{{ "When there are more than one of the same element for a widget you can set the slot for each element. For example with two of the same element you'd have data slot 1 and data slot 2. If 10 items were returned slot 1 would receive items 1,3,5,7,9 and slot 2 would receive items 2,4,6,8,19."|trans }}",
+                dataSlotHelpText: "{{ "When there are more than one of the same element for a widget you can set the slot for each element. For example with two of the same element you'd have data slot 1 and data slot 2. If 10 items were returned slot 1 would receive items 1,3,5,7,9 and slot 2 would receive items 2,4,6,8,10."|trans }}",
                 pinSlot: "{{ "Pin this slot?"|trans }}",
                 pinSlotHelpText: "{{ "The first item that appears in a slot will be pinned and will not cycle with the rest of the items."|trans }}",
                 groupScale: "{{ "Scale with group"|trans }}",
@@ -507,7 +495,6 @@
                     bottomRight: "{{ "Bottom/Right" |trans }}",
                 },
                 somethingWentWrong: "{{ "Something went wrong!"|trans }}",
-                selectATarget: "{{ "Select a target zone!"|trans }}",
                 actions: {
                     noActionsToShow: "{{ "No actions to show"|trans }}",
                     otherActions: "{{ "Other Actions" |trans }}",
@@ -556,6 +543,8 @@
                     layerHelp: "{{ "Layer related to all layout objects" |trans }}",
                     elementLayer: "{{ "Element Layer" |trans }}",
                     elementLayerHelp: "{{ "Layer for the element related to other elements" |trans }}",
+                    elementGroupLayer: "{{ "Element Group Layer" |trans }}",
+                    elementGroupLayerHelp: "{{ "Layer for the element group related to other groups or elements without group" |trans }}",
                     canvasLayer: "{{ "Canvas Layer" |trans }}",
                     canvasLayerHelp: "{{ "Layer for the canvas containing all elements" |trans }}",
                     top: "{{ "Top" |trans }}",
@@ -623,15 +612,11 @@
             };
 
             var toolbarTrans = {
-                toolbarTagsMessage: "{{ "%tagCount% tags" |trans }}",
                 deleteObject: "{{ "Delete selected %object%" |trans }}",
-                selectMultipleWidgets: "{{ "Select multiple widgets" |trans }}",
                 changeLayout: "{{ "Change Layout" |trans }}",
                 options: "{{ "Options" |trans }}",
                 displayTooltipsName: "{{ "Tooltips?" |trans }}",
                 displayTooltipsTitle: "{{ "Show/Hide tooltips which provide help; informational tooltips will remain." |trans }}",
-                createNewTab: "{{ "Library Media Search" |trans }}",
-                closeAllTabs: "{{ "Close all tabs" |trans }}",
                 search: "{{ "Search" |trans }}",
                 select: "{{ "Select" |trans }}",
                 deselect: "{{ "Deselect" |trans }}",
@@ -639,10 +624,6 @@
                 preview: "{{ "Preview media" |trans }}",
                 open: "{{ "Open" |trans }}",
                 addAsFavourite: "{{ "Mark as favourite" |trans }}",
-                moduleNavStart: "{{ "Scroll to the start!" |trans }}",
-                moduleNavEnd: "{{ "Scroll to the end!" |trans }}",
-                moduleNavLeft: "{{ "Scroll left!" |trans }}",
-                moduleNavRight: "{{ "Scroll right!" |trans }}",
                 upload: "{{ "Upload new" |trans }}",
                 uploadType: "{{ "Upload %obj%" |trans }}",
                 searchFilters: {
@@ -675,23 +656,6 @@
                   both: "{{ "All"|trans }}",
                   local: "{{ "Local"|trans }}",
                   remote: "{{ "Remote"|trans }}"
-                },
-                tabName: "{{ "Library Search %tagId%" |trans }}",
-                tableHeader: {
-                    toolsName: "{{ "Tools" |trans }}",
-                    id: "{{ "Id"|trans }}",
-                    name: "{{ "Name"|trans }}",
-                    type: "{{ "Type"|trans }}",
-                    tags: "{{ "Tags"|trans }}",
-                    thumbnail: "{{ "Thumbnail"|trans }}"
-                },
-                queue: {
-                    title: "{{ "Media Add Queue"|trans }}",
-                    clear: "{{ "Clear Queue"|trans }}",
-                    addToRegion: "{{ "Add to Selected Zone"|trans }}",
-                    addToPlaylist: "{{ "Add to Playlist"|trans }}",
-                    selectRegion: "{{ "Click in Zone to Add"|trans }}",
-                    cancel: "{{ "Cancel"|trans }}"
                 },
                 menuItems: {
                     widgetsName: "{{ "Widgets" |trans }}",
@@ -784,6 +748,7 @@
                 title: "{{ "Layers" |trans }}",
                 layer: "{{ "Layer" |trans }}",
                 canvas: "{{ "Canvas" |trans }}",
+                group: "{{ "Group" |trans }}",
                 inGroup: "{{ "In %groupId%" |trans }}",
                 name: "{{ "Name" |trans }}",
                 duration: "{{ "Duration" |trans }}",

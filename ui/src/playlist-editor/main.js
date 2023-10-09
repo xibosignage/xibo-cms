@@ -100,6 +100,9 @@ window.pE = {
  * @param {string} inline - Is this an inline playlist editor?
  */
 pE.loadEditor = function(inline = false) {
+  // Add class to body so we can use CSS specifically on it
+  (!inline) && $('body').addClass('editor-opened');
+
   pE.common.showLoadingScreen();
 
   // Save and change toastr positioning
@@ -738,6 +741,9 @@ pE.close = function() {
   toastr.options.positionClass = this.toastrPosition;
 
   $('#editor-container').empty();
+
+  // Remove editing class from body
+  (!this.inline) && $('body').removeClass('editor-opened');
 };
 
 /**

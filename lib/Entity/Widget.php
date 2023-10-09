@@ -894,7 +894,7 @@ class Widget implements \JsonSerializable
                     }
                 }
 
-                // Is this a medtor selector? and if so should we assign the library media
+                // Is this a media selector? and if so should we assign the library media
                 if ($property->type === 'mediaSelector') {
                     if (!empty($value) && is_numeric($value)) {
                         $this->assignMedia(intval($value));

@@ -151,6 +151,11 @@
             ]]></twig>
         </stencil>
         <onTemplateRender><![CDATA[
+// No data message
+if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !== '') {
+    items.push(properties.noDataMessage);
+}
+
 // Columns to be shown in the table
 var columnIndex = JSON.parse(properties.columns);
 var columns = (meta && meta.mapping) ? meta.mapping.filter(function (column) {
@@ -265,7 +270,7 @@ $datasetTableContainer.dataSetRender(properties);
                     </test>
                 </visibility>
             </property>
-            <property id="template" type="richText" allowLibraryRefs="true" variant="html">
+            <property id="template" type="code" allowLibraryRefs="true" variant="html">
                 <title>Item Template</title>
                 <helpText>Enter text in the box below, used to display each article.</helpText>
                 <visibility>
@@ -640,6 +645,11 @@ table.DataSetTable {visibility:hidden;}
             ]]></twig>
         </stencil>
         <onTemplateRender><![CDATA[
+// No data message
+if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !== '') {
+    items.push(properties.noDataMessage);
+}
+
 // Columns to be shown in the table
 var columnIndex = JSON.parse(properties.columns);
 var columns = (meta && meta.mapping) ? meta.mapping.filter(function (column) {
@@ -908,6 +918,11 @@ table.DataSetTable {visibility:hidden;}
         ]]></twig>
         </stencil>
         <onTemplateRender><![CDATA[
+// No data message
+if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !== '') {
+    items.push(properties.noDataMessage);
+}
+
 // Columns to be shown in the table
 var columnIndex = JSON.parse(properties.columns);
 var columns = (meta && meta.mapping) ? meta.mapping.filter(function (column) {
@@ -1167,6 +1182,11 @@ table.DataSetTable {visibility:hidden;}
         ]]></twig>
         </stencil>
         <onTemplateRender><![CDATA[
+// No data message
+if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !== '') {
+    items.push(properties.noDataMessage);
+}
+
 // Columns to be shown in the table
 var columnIndex = JSON.parse(properties.columns);
 var columns = (meta && meta.mapping) ? meta.mapping.filter(function (column) {
@@ -1424,6 +1444,11 @@ table.DataSetTable {visibility:hidden;}
         ]]></twig>
         </stencil>
         <onTemplateRender><![CDATA[
+// No data message
+if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !== '') {
+    items.push(properties.noDataMessage);
+}
+
 // Columns to be shown in the table
 var columnIndex = JSON.parse(properties.columns);
 var columns = (meta && meta.mapping) ? meta.mapping.filter(function (column) {
@@ -1679,6 +1704,11 @@ table.DataSetTable {visibility:hidden;}
         ]]></twig>
         </stencil>
         <onTemplateRender><![CDATA[
+// No data message
+if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !== '') {
+    items.push(properties.noDataMessage);
+}
+
 // Columns to be shown in the table
 var columnIndex = JSON.parse(properties.columns);
 var columns = (meta && meta.mapping) ? meta.mapping.filter(function (column) {
@@ -1932,6 +1962,11 @@ table.DataSetTable {visibility:hidden;}
         ]]></twig>
         </stencil>
         <onTemplateRender><![CDATA[
+// No data message
+if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !== '') {
+    items.push(properties.noDataMessage);
+}
+
 // Columns to be shown in the table
 var columnIndex = JSON.parse(properties.columns);
 var columns = (meta && meta.mapping) ? meta.mapping.filter(function (column) {
@@ -2180,6 +2215,11 @@ table.DataSetTable {visibility:hidden;}
         ]]></twig>
         </stencil>
         <onTemplateRender><![CDATA[
+// No data message
+if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !== '') {
+    items.push(properties.noDataMessage);
+}
+
 // Columns to be shown in the table
 var columnIndex = JSON.parse(properties.columns);
 var columns = (meta && meta.mapping) ? meta.mapping.filter(function (column) {
@@ -2469,6 +2509,11 @@ table.DataSetTable {visibility:hidden;}
         ]]></twig>
         </stencil>
         <onTemplateRender><![CDATA[
+// No data message
+if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !== '') {
+    items.push(properties.noDataMessage);
+}
+
 // Columns to be shown in the table
 var columnIndex = JSON.parse(properties.columns);
 var columns = (meta && meta.mapping) ? meta.mapping.filter(function (column) {
@@ -2572,8 +2617,9 @@ $datasetTableContainer.dataSetRender(properties);
         <id>dataset_slideshow</id>
         <type>static</type>
         <dataType>dataset</dataType>
-        <title>Dataset Image Slideshow</title>
-        <thumbnail>dataset-slideshow</thumbnail>
+        <showIn>playlist</showIn>
+        <icon>fas fa-film</icon>
+        <title>Image Slideshow</title>
         <properties>
             <property id="dataTypeId" type="hidden">
                 <default>4,5</default>
@@ -2678,8 +2724,189 @@ $('body').xiboLayoutScaler(properties);
 
 $(target).xiboTextRender(Object.assign(properties, globalOptions), $(target).find('#content > *'));
         ]]></onTemplateRender>
-        <assets>
-            <asset id="dataset-slideshow" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/dataset/dataset-slideshow.png" />
-        </assets>
+    </template>
+    <template>
+        <id>dataset_string_template</id>
+        <type>static</type>
+        <dataType>dataset</dataType>
+        <showIn>playlist</showIn>
+        <icon>fa fa-font</icon>
+        <title>String template with placeholders</title>
+        <properties>
+            <property type="message">
+                <title>Select a dataset to display appearance options.</title>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="eq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="template" type="richText" allowLibraryRefs="true" variant="html">
+                <title>Item Template</title>
+                <helpText>Enter text in the box below, used to display each article.</helpText>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="dataTypeSnippets" type="snippet" mode="dataType" target="template">
+                <title>Snippets</title>
+                <helpText>Choose data type snippet</helpText>
+                <dependsOn>dataSetId</dependsOn>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="itemsSideBySide" type="checkbox">
+                <title>Show items side by side?</title>
+                <helpText>Should items be shown side by side?</helpText>
+                <default>0</default>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="backgroundColor" type="color">
+                <title>Background Colour</title>
+                <helpText>The selected effect works best with a background colour. Optionally add one here.</helpText>
+                <default></default>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="effect" type="effectSelector" variant="all">
+                <title>Effect</title>
+                <helpText>Please select the effect that will be used to transition between items.</helpText>
+                <default>noTransition</default>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="speed" type="number">
+                <title>Speed</title>
+                <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)</helpText>
+                <default>1000</default>
+                <visibility>
+                    <test type="and">
+                        <condition field="effect" type="neq">none</condition>
+                        <condition field="effect" type="neq">noTransition</condition>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="itemsPerPage" type="number">
+                <title>Items per page</title>
+                <helpText>If an effect has been selected, how many pages should we split the items across? If you don't enter anything here 1 item will be put on each page.</helpText>
+                <default>1</default>
+                <visibility>
+                    <test type="and">
+                        <condition field="effect" type="neq">none</condition>
+                        <condition field="effect" type="neq">marqueeLeft</condition>
+                        <condition field="effect" type="neq">marqueeRight</condition>
+                        <condition field="effect" type="neq">marqueeUp</condition>
+                        <condition field="effect" type="neq">marqueeDown</condition>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
+                <title>No data message</title>
+                <helpText>A message to display when no data is returned from the source</helpText>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <preview></preview>
+        <stencil>
+            <twig><![CDATA[
+<style>
+{% if itemsSideBySide %}
+.item, .page {
+    float: left;
+}
+{% endif %}
+
+{% if backgroundColor != '' %}
+body {
+    background-color: {{ backgroundColor }};
+}
+{% endif %}
+</style>
+        ]]></twig>
+        </stencil>
+        <onTemplateRender><![CDATA[
+// Module renderer options
+// id: The id of the widget
+// target: The target element to render
+// items: The items to render
+// properties: The properties for the widget
+
+// No data message
+if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !== '') {
+    items.push(properties.noDataMessage);
+}
+
+// Clear the content container
+$(target).find('#content').empty();
+
+// If we don't have metadata, we can't render anything
+if (!meta || !meta.mapping) {
+    return;
+}
+
+// Get dataset columns from meta.mapping
+var columnTypes = {};
+for (var i = 0; i < meta.mapping.length; i++) {
+    var column = meta.mapping[i];
+    columnTypes[column.dataSetColumnId] = {
+        type: column.dataTypeId
+    };
+}
+
+// Add content for each item
+// make replacements
+// and wrap it in a div with the item class
+for (var i = 0; i < items.length; i++) {
+    var item = items[i];
+
+    // Replace the template with the item content
+    var content = properties.template.replace(/\[(.*?)\]/g, function (match, column) {
+        var itemId = column.split('|')[0];
+        var itemCol = column.split('|')[1];
+        var itemType = columnTypes[itemCol].type;
+        var itemValue = item[itemId];
+
+        // If this is an image column, wrap it in an image tag
+        if (itemType === 4 || itemType === 5) {
+            itemValue = itemValue ? '<img src="' + itemValue + '" />' : '';
+        }
+
+        return itemValue ? itemValue : '';
+    });
+
+    // Add the content to the target
+    $(target).find('#content').append(
+        $('<div>')
+            .addClass('item')
+            .append(content)
+    );
+}
+
+// Scale the layout
+$('body').xiboLayoutScaler(properties);
+
+$(target).xiboTextRender(Object.assign(properties, globalOptions), $(target).find('#content > *'));
+        ]]></onTemplateRender>
     </template>
 </templates>

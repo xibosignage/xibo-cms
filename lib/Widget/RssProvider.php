@@ -51,7 +51,7 @@ class RssProvider implements WidgetProviderInterface
     {
         $uri = $dataProvider->getProperty('uri');
         if (empty($uri)) {
-            throw new InvalidArgumentException(__('Please enter a the URI to a valid RSS feed.'), 'uri');
+            throw new InvalidArgumentException(__('Please enter the URI to a valid RSS feed.'), 'uri');
         }
 
         $picoFeedLoggingEnabled = Environment::isDevMode();

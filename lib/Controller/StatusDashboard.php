@@ -35,6 +35,7 @@ use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\ByteFormatter;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\MediaService;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -367,8 +368,10 @@ class StatusDashboard extends Base
 
                         // Pull out the content type and body
                         $result = explode('charset=', $responseGuzzle->getHeaderLine('Content-Type'));
-                        $document['encoding'] = isset($result[1]) ? $result[1] : '';
+                        $document['encoding'] = $result[1] ?? '';
                         $document['xml'] = $responseGuzzle->getBody();
+
+                        $this->getLog()->debug($document['xml']);
 
                         // Get the feed parser
                         $reader = new Reader();
@@ -381,23 +384,22 @@ class StatusDashboard extends Base
                         $latestNews = [];
 
                         foreach ($feed->getItems() as $item) {
-                            /* @var \PicoFeed\Parser\Item $item */
-
                             // Try to get the description tag
-                            if (!$desc = $item->getTag('description')) {
+                            $desc = $item->getTag('description');
+                            if (!$desc) {
                                 // use content with tags stripped
                                 $content = strip_tags($item->getContent());
                             } else {
                                 // use description
-                                $content = (isset($desc[0]) ? $desc[0] : strip_tags($item->getContent()));
+                                $content = ($desc[0] ?? strip_tags($item->getContent()));
                             }
 
-                            $latestNews[] = array(
+                            $latestNews[] = [
                                 'title' => $item->getTitle(),
                                 'description' => $content,
                                 'link' => $item->getUrl(),
-                                'date' => Carbon::createFromTimestamp($item->getDate()->format('U'))
-                            );
+                                'date' => Carbon::instance($item->getDate())->format(DateFormatHelper::getSystemFormat()),
+                            ];
                         }
 
                         // Store in the cache for 1 day

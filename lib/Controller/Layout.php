@@ -1473,7 +1473,7 @@ class Layout extends Base
                         $module = $this->moduleFactory->getByType($widget->type);
                     } catch (NotFoundException $notFoundException) {
                         // This module isn't available, mark it as invalid.
-                        $widget->isValid = 0;
+                        $widget->isValid = false;
                         $widget->setUnmatchedProperty('moduleName', __('Invalid Module'));
                         $widget->setUnmatchedProperty('name', __('Invalid Module'));
                         $widget->setUnmatchedProperty('tags', []);
@@ -1504,7 +1504,7 @@ class Layout extends Base
                     if (in_array('widget_validity', $embed)) {
                         $status = 0;
                         $layout->assessWidgetStatus($module, $widget, $status);
-                        $widget->isValid = $status;
+                        $widget->isValid = $status === 1;
                     }
 
                     // apply default transitions to a dynamic parameters on widget object.
@@ -1943,9 +1943,10 @@ class Layout extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Check Permissions
-        if (!$this->getUser()->checkEditable($layout))
+        if (!$this->getUser()->checkEditable($layout)) {
             throw new AccessDeniedException();
-
+        }
+        
         // Edits always happen on Drafts, get the draft Layout using the Parent Layout ID
         if ($layout->schemaVersion < 2) {
             $resolution = $this->resolutionFactory->getByDesignerDimensions($layout->width, $layout->height);
@@ -1961,7 +1962,13 @@ class Layout extends Base
         $this->getState()->setData([
             'layout' => $layout,
             'resolution' => $resolution,
-            'resolutions' => $this->resolutionFactory->query(['resolution'], ['withCurrent' => $resolution->resolutionId]),
+            'resolutions' => $this->resolutionFactory->query(
+                ['resolution'],
+                [
+                    'withCurrent' => $resolution->resolutionId,
+                    'enabled' => 1
+                ]
+            ),
             'backgroundId' => $backgroundId,
             'backgrounds' => $backgrounds,
         ]);

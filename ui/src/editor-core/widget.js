@@ -151,6 +151,8 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
   this.cachedData = {};
   this.forceRecalculateData = false;
 
+  this.validateData = {};
+
   this.validateRequiredElements = function() {
     const moduleType = this.subType;
     // Check if element is required
@@ -688,6 +690,7 @@ Widget.prototype.saveElements = function(
         width: element.group.width,
         height: element.group.height,
         effect: element.group.effect,
+        layer: element.group.layer,
         pinSlot: element.group.pinSlot,
       };
 
@@ -992,6 +995,9 @@ Widget.prototype.removeElement = function(
       app.layout.deleteObject('widget', this.widgetId).then(reloadLayout);
     }
   } else {
+    // Last element will be the one being saved
+    const lastElement = save;
+
     // Recalculate required elements
     this.validateRequiredElements();
 
@@ -1005,16 +1011,16 @@ Widget.prototype.removeElement = function(
         reloadViewer: false,
       });
       lD.viewer.selectElement(null, false, false);
-    } else if (lD.selectedObject.type != 'layout') {
+    } else if (lD.selectedObject.type != 'layout' && lastElement) {
       // If we have a selected object other than layout, reload properties panel
       lD.propertiesPanel.render(lD.selectedObject);
     }
 
     // Reload viewer to update widget valid status
-    lD.viewer.render();
+    (lastElement) && lD.viewer.render();
 
     // If we're not removing widget, we need ot update element map
-    this.updateElementMap();
+    (lastElement) && this.updateElementMap();
   }
 };
 
@@ -1135,10 +1141,24 @@ Widget.prototype.getData = function() {
               data: sampleData,
               meta: data?.meta || {},
             };
+
+            // Save error to widget
+            self.validateData = {
+              sampleDataMessage: layoutEditorTrans.showingSampleData,
+            };
+
+            // If we have an error, add it to the validate data
+            if (data.success === false) {
+              self.validateData.errorMessage = data.message;
+            }
+
             resolve(self.cachedData);
           }
         }
       } else {
+        // Valid, so reset messages
+        self.validateData = {};
+
         // Run onDataLoad/onParseData
         Object.keys(modulesList).forEach(function(item) {
           if (modulesList[item].type === self.subType
@@ -1192,6 +1212,33 @@ Widget.prototype.getData = function() {
 
   // Return promise
   return self.cachedDataPromise;
+};
+
+/**
+ * Update element map for this widget
+ * @return {string} error message
+ */
+Widget.prototype.checkRequiredElements = function() {
+  let errorMessage = '';
+  const self = this;
+
+  // Check if we need to show the required elements error message
+  if (self.requiredElements && self.requiredElements.valid == false) {
+    const dataType = lD.common.getModuleByType(self.subType).dataType;
+
+    // Get element names for the missing elements
+    const requiredMissingElements =
+      self.requiredElements.missing.map((el) => {
+        const elTitle = lD.templateManager.templates[dataType][el].title;
+        return (elTitle != undefined) ? elTitle : el;
+      });
+
+    errorMessage =
+      propertiesPanelTrans.requiredElementsMessage
+        .replace('%elements%', requiredMissingElements.join(', '));
+  }
+
+  return errorMessage;
 };
 
 /**

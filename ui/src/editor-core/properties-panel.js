@@ -528,21 +528,12 @@ PropertiesPanel.prototype.render = function(
       // Check if we can use is repeat data
       dataToRender.repeatDataActive = hasData;
 
-      // Check if we need to show the required elements error message
-      if (target.requiredElements && target.requiredElements.valid == false) {
-        const dataType = lD.common.getModuleByType(target.subType).dataType;
+      // Check required elements
+      const errorMessage = target.checkRequiredElements();
 
-        // Get element names for the missing elements
-        const requiredMissingElements =
-          target.requiredElements.missing.map((el) => {
-            const elTitle = lD.templateManager.templates[dataType][el].title;
-            return (elTitle != undefined) ? elTitle : el;
-          });
-
+      if (errorMessage != '') {
         dataToRender.showErrorMessage = true;
-        dataToRender.errorMessage =
-          propertiesPanelTrans.requiredElementsMessage
-            .replace('%elements%', requiredMissingElements.join(', '));
+        dataToRender.errorMessage = errorMessage;
       }
     }
 
@@ -670,7 +661,7 @@ PropertiesPanel.prototype.render = function(
             helpText: propertiesPanelTrans.effectHelpText,
             value: targetAux.effect,
             type: 'effectSelector',
-            variant: 'all',
+            variant: 'all noNone',
             visibility: [],
           });
         }
@@ -720,25 +711,28 @@ PropertiesPanel.prototype.render = function(
         // if we created a new effect for element group input
         // handle when changed
         if (targetAux.effect !== undefined) {
-          self.DOMObject.find('[name="effect"]').on('change', function(ev) {
-            let effectValue = $(ev.currentTarget).val();
+          self.DOMObject.find('[name="effect"]')
+            .on('change', function(ev, options) {
+              if (!options?.skipSave) {
+                let effectValue = $(ev.currentTarget).val();
 
-            // If value is lower than minSlotValue
-            // set it to minSlotValue
-            if (String(effectValue).length === 0) {
-              effectValue = 'noTransition';
-              $(ev.currentTarget).val(effectValue);
-            }
+                // If value is lower than minSlotValue
+                // set it to minSlotValue
+                if (String(effectValue).length === 0) {
+                  effectValue = 'noTransition';
+                  $(ev.currentTarget).val(effectValue);
+                }
 
-            // update slot for the group
-            targetAux.updateEffect(effectValue, true);
+                // update slot for the group
+                targetAux.updateEffect(effectValue, true);
 
-            // save elements
-            target.saveElements();
+                // save elements
+                target.saveElements();
 
-            // Render canvas again
-            app.viewer.renderCanvas(app.layout.canvas);
-          });
+                // Render canvas again
+                app.viewer.renderCanvas(app.layout.canvas);
+              }
+            });
         }
 
         showAppearanceTab();
@@ -870,7 +864,7 @@ PropertiesPanel.prototype.render = function(
               helpText: propertiesPanelTrans.effectHelpText,
               value: targetAux.effect,
               type: 'effectSelector',
-              variant: 'all',
+              variant: 'all noNone',
               visibility: [],
             });
           }
@@ -1010,6 +1004,7 @@ PropertiesPanel.prototype.render = function(
           left: targetAux.left,
           width: targetAux.width,
           height: targetAux.height,
+          zIndex: targetAux.layer,
         };
       } else if (targetAux?.type === 'element') {
         positionProperties = {
@@ -1079,7 +1074,11 @@ PropertiesPanel.prototype.render = function(
       ) {
         positionProperties.zIndexCanvas = app.layout.canvas.zIndex;
 
-        positionProperties.showElementLayer = true;
+        (targetAux?.type == 'element') &&
+          (positionProperties.showElementLayer = true);
+
+        (targetAux?.type == 'element-group') &&
+            (positionProperties.showElementGroupLayer = true);
       }
 
       self.DOMObject.find('#advancedTab').after(
@@ -1208,7 +1207,11 @@ PropertiesPanel.prototype.render = function(
               height: form.find('[name="height"]').val() * viewerScale,
               top: form.find('[name="top"]').val() * viewerScale,
               left: form.find('[name="left"]').val() * viewerScale,
+              zIndex: zIndexVal,
             });
+
+            // Save layer
+            targetAux.layer = zIndexVal;
 
             // Scale group
             // Update element dimension properties
@@ -1411,23 +1414,6 @@ PropertiesPanel.prototype.initFields = function(
           );
         }
       });
-
-    // Create delete button
-    if (actionEditMode) {
-      const deleteButton =
-        $('<button type="button" class="delete btn btn-danger">')
-          .html(editorsTrans.delete);
-
-      deleteButton.on('click', function(e) {
-        e.preventDefault();
-        app.deleteSelectedObject();
-      });
-
-      // Add to button container
-      self.DOMObject.find('.button-container').prepend(deleteButton);
-    } else {
-      self.DOMObject.find('.button-container button#delete').remove();
-    }
 
     // Render action tab
     if (

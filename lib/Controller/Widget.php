@@ -553,7 +553,7 @@ class Widget extends Base
         foreach ($widget->mediaIds as $mediaId) {
             try {
                 $this->mediaFactory->getById($mediaId);
-            } catch (NotFoundException $notFoundException) {
+            } catch (NotFoundException) {
                 throw new InvalidArgumentException(sprintf(
                     __('Your library reference %d does not exist.'),
                     $mediaId

@@ -23,6 +23,7 @@
 namespace Xibo\Widget\Definition;
 
 /**
+ * @SWG\Definition()
  * A class representing an instance of an element template
  */
 class Element implements \JsonSerializable

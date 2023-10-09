@@ -23,14 +23,33 @@
 namespace Xibo\Widget\Definition;
 
 /**
- * Option
- * typically used when paired with a dropdown
+ * Option: typically used when paired with a dropdown
+ * @SWG\Definition()
  */
 class Option implements \JsonSerializable
 {
+    /**
+     * @SWG\Property(description="Name")
+     * @var string
+     */
     public $name;
+
+    /**
+     * @SWG\Property(description="Image: optional image asset")
+     * @var string
+     */
     public $image;
+
+    /**
+     * @SWG\Property(description="Set")
+     * @var string[]
+     */
     public $set = [];
+
+    /**
+     * * @SWG\Property(description="Title: shown in the dropdown/select")
+     * @var string
+     */
     public $title;
 
     /**

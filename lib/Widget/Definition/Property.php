@@ -32,17 +32,41 @@ use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * A Property
+ * @SWG\Definition()
  */
 class Property implements \JsonSerializable
 {
+    /**
+     * @SWG\Property(description="ID, saved as a widget option")
+     * @var string
+     */
     public $id;
+
+    /**
+     * @SWG\Property(description="Type, determines the field type")
+     * @var string
+     */
     public $type;
+
+    /**
+     * @SWG\Property(description="Title: shown in the property panel")
+     * @var string
+     */
     public $title;
+
+    /**
+     * @SWG\Property(description="Help Text: shown in the property panel")
+     * @var string
+     */
     public $helpText;
 
     /** @var \Xibo\Widget\Definition\Rule  */
     public $validation;
 
+    /**
+     * @SWG\Property()
+     * @var string An optional default value
+     */
     public $default;
 
     /** @var \Xibo\Widget\Definition\Option[] */

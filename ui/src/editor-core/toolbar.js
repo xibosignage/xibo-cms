@@ -1481,7 +1481,14 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
             module.trans.upload =
               module.trans.uploadType.replace('%obj%', module.name);
 
-            const $uploadCard = $(ToolbarCardMediaUploadTemplate(module));
+            const $uploadCard = $(ToolbarCardMediaUploadTemplate(
+              Object.assign(
+                {},
+                module,
+                {
+                  editingPlaylist: self.isPlaylist,
+                })),
+            );
             $mediaContent.append($uploadCard).masonry('appended', $uploadCard);
           }
         };
@@ -2609,8 +2616,8 @@ Toolbar.prototype.loadTemplates = function(
           // don't show items based on showIn property
           // or elements and stencils if we are in playlist editor
           if (
-            el.showIn == 'playlist' && !isPlaylist ||
-            el.showIn == 'layout' && isPlaylist ||
+            el.showIn == 'playlist' && !self.isPlaylist ||
+            el.showIn == 'layout' && self.isPlaylist ||
             el.showIn == 'none' ||
             el.type === 'element' && self.isPlaylist ||
             el.type === 'element-group' && self.isPlaylist

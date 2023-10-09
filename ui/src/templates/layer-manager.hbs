@@ -21,19 +21,46 @@
                         </div>
                         {{#each layers as |canvasLayer canvasLayerIdx|}}
                             {{#each this}}
-                                <div class="layer-manager-layer-item selectable {{#if hasGroup}}has-group{{/if}} {{#if selected}}selected{{/if}}" data-item-id="{{id}}">
-                                    <div class="layer">{{canvasLayerIdx}}</div>
-                                    {{#eq type 'element'}}
+                                {{#eq type 'elementGroup'}}
+                                     <div class="layer-manager-layer-item selectable element-group {{#if selected}}selected{{/if}}" data-item-id="{{id}}">
+                                        <div class="layer">{{canvasLayerIdx}}</div>
                                         {{#if moduleIcon}}
-                                            <i class="module-icon {{#if moduleIcon}}{{moduleIcon}}{{else}}fas fa-object-group{{/if}}" {{#if hasGroup}}title="{{groupId}}"{{/if}}></i>
+                                            <i class="module-icon {{#if moduleIcon}}{{moduleIcon}}{{else}}fas fa-object-group{{/if}}"></i>
                                         {{/if}}
-                                        <i class="element-icon {{#if icon}}{{icon}}{{else}}fas fa-atom{{/if}}"></i>
-                                    {{/eq}}
-                                    <span class="name" title="{{../../../../trans.name}}">{{name}}</span>
-                                    {{#if duration}}
-                                        <span class="duration" title="{{../../../../trans.duration}}">{{duration}}</span>
-                                    {{/if}}
-                                </div>
+                                        <span class="label">{{../../../../trans.group}}</span><span class="name" title="{{../../../../trans.id}}">({{id}})</span>
+                                    </div>
+                                    {{#each layers as |groupLayer groupLayerIdx|}}
+                                        {{#each this}}
+                                            <div class="layer-manager-layer-item selectable has-group {{#if selected}}selected{{/if}}" data-item-id="{{id}}">
+                                                <div class="layer-item-in-group">
+                                                    <div class="layer-item-in-group-helper"></div>
+                                                </div>
+                                                <div class="layer">{{groupLayerIdx}}</div>
+                                                {{#eq type 'element'}}
+                                                    <i class="element-icon {{#if icon}}{{icon}}{{else}}fas fa-atom{{/if}}"></i>
+                                                {{/eq}}
+                                                <span class="name" title="{{../../../../../../trans.name}}">{{name}}</span>
+                                                {{#if duration}}
+                                                    <span class="duration" title="{{../../../../../../trans.duration}}">{{duration}}</span>
+                                                {{/if}}
+                                            </div>
+                                        {{/each}}
+                                    {{/each}}
+                                {{else}}
+                                    <div class="layer-manager-layer-item selectable  {{#if selected}}selected{{/if}}" data-item-id="{{id}}">
+                                        <div class="layer">{{canvasLayerIdx}}</div>
+                                        {{#eq type 'element'}}
+                                            {{#if moduleIcon}}
+                                                <i class="module-icon {{#if moduleIcon}}{{moduleIcon}}{{else}}fas fa-object-group{{/if}}" {{#if hasGroup}}title="{{groupId}}"{{/if}}></i>
+                                            {{/if}}
+                                            <i class="element-icon {{#if icon}}{{icon}}{{else}}fas fa-atom{{/if}}"></i>
+                                        {{/eq}}
+                                        <span class="name" title="{{../../../../trans.name}}">{{name}}</span>
+                                        {{#if duration}}
+                                            <span class="duration" title="{{../../../../trans.duration}}">{{duration}}</span>
+                                        {{/if}}
+                                    </div>
+                                {{/eq}}
                             {{/each}}
                         {{/each}}
                     </div>

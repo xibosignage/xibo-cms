@@ -300,6 +300,11 @@ Topbar.prototype.setupJumpList = function(jumpListContainer) {
         $search.trigger('input');
       }, 100);
     });
+
+    // Force search field focus
+    setTimeout(function() {
+      $search.get(0).focus();
+    }, 10);
   });
 };
 

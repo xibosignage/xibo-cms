@@ -30,6 +30,9 @@
         <!-- Copyright 2006-2022 Xibo Signage Ltd. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
         <script type="text/javascript" src="[[PlayerBundle]]"></script>
         <link href="[[FontBundle]]" rel="stylesheet">
+        {% for item in head %}
+            {{ item|raw }}
+        {% endfor %}
         <style type="text/css">
             body {
                 margin: 0;
@@ -46,6 +49,13 @@
                 margin-bottom:0;
             }
         </style>
+        {% if style|length > 0 %}
+        <style type="text/css">
+            {% for item in style %}
+            {{ item|raw }}
+            {% endfor %}
+        </style>
+        {% endif %}
     </head>
     <body>
         <div id="content"></div>
@@ -59,13 +69,6 @@
         <script id="{{ asset.id }}" type="text/javascript" src="[[assetId={{ asset.id }}]]"></script>
         {% endif %}
     {% endfor %}
-    {% if style|length > 0 %}
-        <style type="text/css">
-        {% for item in style %}
-            {{ item|raw }}
-        {% endfor %}
-        </style>
-    {% endif %}
     </body>
     <script type="text/javascript">
         var xiboICTargetId = {{ widgetId }};
@@ -93,6 +96,7 @@
             data-gap="{{ item.gapBetweenHbs }}"
             data-extends-override="{{ item.extends.override }}"
             data-extends-with="{{ item.extends.with }}"
+            data-escape-html="{{ item.extends.escapeHtml }}"
     >{{ item.content|raw }}</script>
 {% endfor %}
 {% for widgetId, parser in onInitialize %}

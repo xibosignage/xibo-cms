@@ -132,10 +132,6 @@ Layout.prototype.createDataStructure = function(data) {
       // Save index
       newRegion.index = parseInt(region) + 1;
 
-      // Check if new region has top layer and set it
-      (newRegion.zIndex > lD.topLayer) &&
-        (lD.topLayer = newRegion.zIndex);
-
       // Widgets
       const widgets = newRegion.playlists.widgets;
 
@@ -193,10 +189,6 @@ Layout.prototype.createDataStructure = function(data) {
                   newWidget,
                 );
 
-              // Check if new element has top layer and set it
-              (newElement.layer > lD.topLayer) &&
-                (lD.topLayer = newElement.layer);
-
               // Update elements map for the widget
               newWidget.updateElementMap(newElement);
 
@@ -215,6 +207,15 @@ Layout.prototype.createDataStructure = function(data) {
                       data.regions[region].regionId,
                       newWidget,
                     );
+                }
+
+                // If group has no layer, give the element layer to it
+                if (
+                  newWidget.elementGroups[newElement.groupId].layer == null ||
+                  newWidget.elementGroups[newElement.groupId].layer == undefined
+                ) {
+                  newWidget.elementGroups[newElement.groupId].layer =
+                    newElement.layer;
                 }
 
                 // Add group reference to element
@@ -891,10 +892,10 @@ Layout.prototype.createDrawer = function(drawerData) {
 
 /**
  * Create or get canvas region
- * @param {object} canvasData - Canvas data
+ * @param {number=} canvasLayer - Canvas layer
  * @return {Promise} Promise with the canvas region
  */
-Layout.prototype.getCanvas = function() {
+Layout.prototype.getCanvas = function(canvasLayer) {
   const self = this;
   // If we have a canvas already, return it
   if (!$.isEmptyObject(this.canvas)) {
@@ -904,6 +905,13 @@ Layout.prototype.getCanvas = function() {
   // Create canvas as a region
   // return promise
   return new Promise(function(resolve, reject) {
+    // If we have a layer, set it to the dimensions
+    const dimensions = {
+      width: self.width,
+      height: self.height,
+    };
+    (canvasLayer) && (dimensions.zIndex = canvasLayer);
+
     // Create canvas as a region
     // always add to the top left
     // and with the same dimensions as the layout
@@ -915,10 +923,7 @@ Layout.prototype.getCanvas = function() {
           top: 0,
           left: 0,
         },
-        dimensions: {
-          width: self.width,
-          height: self.height,
-        },
+        dimensions,
       }).then((res) => {
       // Push Region to the Layout region array
       self.canvas = new Canvas(

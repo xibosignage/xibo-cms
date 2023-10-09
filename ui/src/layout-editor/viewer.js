@@ -1198,6 +1198,22 @@ Viewer.prototype.updateElementGroup = _.throttle(function(
 }, drawThrottle);
 
 /**
+ * Update element group
+ * @param {object} elementGroup
+ */
+Viewer.prototype.updateElementGroupLayer = _.throttle(function(
+  elementGroup,
+  layer,
+) {
+  const $container = lD.viewer.DOMObject.find(`#${elementGroup.elementId}`);
+
+  // Update element index
+  $container.css({
+    'z-index': (layer) ? layer : elementGroup.layer,
+  });
+}, drawThrottle);
+
+/**
  * Update Region
  * @param {object} region - region object
  * @param {boolean} changed - if region was changed
@@ -1393,6 +1409,13 @@ Viewer.prototype.renderElement = function(
       top: element.group.top * viewerScale,
       width: element.group.width * viewerScale,
     });
+
+    // Update element group index
+    if (element.group.layer) {
+      $groupContainer.css({
+        'z-index': element.group.layer,
+      });
+    }
   }
 
   // Render element content and handle interactions after
@@ -1600,6 +1623,67 @@ Viewer.prototype.renderElementContent = function(
         const elData = elementData?.data;
         const meta = elementData?.meta;
 
+        // If parent widget isn't valid, replace error message
+        if (!$.isEmptyObject(parentWidget.validateData)) {
+          const $messageContainer = $elementContainer.find('.invalid-parent');
+          const errorArray = [$messageContainer.prop('title')];
+          const hasGroup = Boolean(element.groupId);
+          const $groupContainer = (hasGroup) ?
+            $elementContainer.parents('.designer-element-group') : null;
+
+          // Add if elemens has no group or
+          // if has group but the group doesn't have message yet
+          if (
+            !hasGroup ||
+            (
+              hasGroup &&
+              $groupContainer.find('> .invalid-parent').length == 0
+            )
+          ) {
+            // Required elements message
+            const requiredElementsErrorMessage =
+              parentWidget.checkRequiredElements();
+
+            (requiredElementsErrorMessage) &&
+              errorArray.push(
+                '<p>' +
+                requiredElementsErrorMessage +
+                '</p>');
+
+            // Default error message
+            (parentWidget.validateData.errorMessage) &&
+              errorArray.push(
+                '<p>' +
+                parentWidget.validateData.errorMessage +
+                '</p>');
+
+            (parentWidget.validateData.sampleDataMessage) &&
+              errorArray.push(
+                '<p class="sample-data">( ' +
+                parentWidget.validateData.sampleDataMessage +
+                ' )</p>');
+
+            // If element has group, move error to group
+            (hasGroup) && $messageContainer.appendTo(
+              $elementContainer.parents('.designer-element-group'),
+            );
+
+            // Set title/tooltip
+            $messageContainer.tooltip('dispose')
+              .prop('title', '<div class="custom-tooltip">' +
+              errorArray.join('') + '</div>');
+            $messageContainer.tooltip();
+
+            // Show tooltip
+            $messageContainer.removeClass('d-none');
+          }
+
+          // Remove message from element if it's in a group
+          if (hasGroup) {
+            $elementContainer.find('.invalid-parent').remove();
+          }
+        }
+
         // Check all data elements and make replacements
         for (const key in elData) {
           if (elData.hasOwnProperty(key)) {
@@ -1666,6 +1750,9 @@ Viewer.prototype.renderElementContent = function(
             );
           }
         }
+
+        // Escape HTML
+        convertedProperties.escapeHtml = template?.extends?.escapeHtml;
 
         // Compile hbs template with data
         let hbsHtml = hbsTemplate(convertedProperties);
@@ -2376,6 +2463,10 @@ Viewer.prototype.selectElement = function(
   if (!multiSelect) {
     this.DOMObject.find('.selected, .selected-from-layer-manager')
       .removeClass('selected selected-from-layer-manager');
+
+    // Also remove select from layer manager from canvas
+    self.DOMObject.find('.designer-region-canvas')
+      .removeClass('canvas-element-selected-from-layer-manager');
   }
 
   // Remove all editing from groups
@@ -3113,6 +3204,8 @@ Viewer.prototype.editGroup = function(
     const viewerOverlayIndex =
       self.DOMObject.find('.viewer-overlay').css('z-index');
 
+    // Save original layer to data
+    $(groupDOMObject).data('layer', $(groupDOMObject).css('z-index'));
     $(groupDOMObject).css('z-index', Number(viewerOverlayIndex) + 1);
 
     // Give group the same background as the layout's
@@ -3126,8 +3219,12 @@ Viewer.prototype.editGroup = function(
     self.DOMObject.find('.designer-region-canvas')
       .css('zIndex', lD.layout.canvas.zIndex);
 
-    // Unset group z-index
-    $(groupDOMObject).css('z-index', '');
+    // Unset or reset group z-index
+    const originalLayer = $(groupDOMObject).data('layer');
+    $(groupDOMObject).css(
+      'z-index',
+      originalLayer ? originalLayer : '',
+    );
 
     // Remove background color
     $(groupDOMObject).css('background-color', '');

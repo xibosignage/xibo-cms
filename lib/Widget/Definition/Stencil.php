@@ -23,6 +23,7 @@
 namespace Xibo\Widget\Definition;
 
 /**
+ * @SWG\Definition()
  * A Stencil is a template which is rendered in the server and/or client
  * it can optionally have properties and/or elements
  */
@@ -36,6 +37,9 @@ class Stencil implements \JsonSerializable
 
     /** @var string|null */
     public $hbs;
+
+    /** @var string|null */
+    public $head;
 
     /** @var string|null */
     public $style;
@@ -58,6 +62,7 @@ class Stencil implements \JsonSerializable
         return [
             'hbsId' => $this->hbsId,
             'hbs' => $this->hbs,
+            'head' => $this->head,
             'style' => $this->style,
             'width' => $this->width,
             'height' => $this->height,

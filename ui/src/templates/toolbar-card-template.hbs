@@ -10,8 +10,12 @@
 
 {{#if thumbnail}}
     <div class="toolbar-card-thumb">
-        <img src="{{thumbnail}}" />
+        <img src="{{thumbnail}}"  alt="{{title}}"/>
     </div>
+{{else}}
+    {{#if icon}}
+        <i class="element-icon {{icon}} card-icon"></i>
+    {{/if}}
 {{/if}}
 
     <div class="toolbar-content tooltip-always-on" data-toggle="tooltip" data-title="{{title}}">

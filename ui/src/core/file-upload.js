@@ -45,6 +45,10 @@ function openUploadForm(options) {
     uploadTemplate = Handlebars.compile($('#' + options.templateId).html());
   }
 
+  if (typeof maxImagePixelSize === undefined || maxImagePixelSize === '') {
+    maxImagePixelSize = 0;
+  }
+
   // Handle bars and open a dialog
   const dialog = bootbox.dialog({
     message: uploadTemplate(options.templateOptions),
@@ -275,9 +279,11 @@ function handleVideoCoverImage(e, data) {
           video.name = file.name;
           video.setAttribute('id', file.name);
           video.preload = 'metadata';
-
-          getVideoImage(video, 2);
-          video.addEventListener('seeked, pause', seekImage);
+          video.onseeked = createImage;
+          video.onpause = createImage;
+          // set current time to trigger event
+          // and create the cover image
+          video.currentTime = 2;
         }
       });
 
@@ -294,23 +300,9 @@ function handleVideoCoverImage(e, data) {
   }, 100);
 }
 
-function getVideoImage(video, secs) {
-  // both onseeked and onpause call the same function
-  // onseeked will be called with secs = 2 at the start
-  video.onloadedmetadata = function() {
-    this.currentTime = secs;
-  };
-  video.onseeked = createImage;
-  video.onpause = createImage;
-}
-
-function seekImage() {
-  // if we paused the video and seeked specific point in the video, generate new image
-  getVideoImage(this, this.currentTime);
-}
-
 function createImage() {
-  // this will actually create the image and save it to an object with file name as a key
+  // this will actually create the image
+  // and save it to an object with file name as a key
   const canvas = document.createElement('canvas');
   canvas.height = this.videoHeight;
   canvas.width = this.videoWidth;

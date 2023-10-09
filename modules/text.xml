@@ -55,7 +55,7 @@
         <property id="effect" type="effectSelector" variant="all">
             <title>Effect</title>
             <helpText>Please select the effect that will be used to transition between items.</helpText>
-            <default>noTransition</default>
+            <default>none</default>
         </property>
         <property id="speed" type="number">
             <title>Speed</title>

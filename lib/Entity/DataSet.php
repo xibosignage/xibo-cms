@@ -491,11 +491,11 @@ class DataSet implements \JsonSerializable
         // Sanitize the filter options provided
         // Get the Latitude and Longitude ( might be used in a formula )
         if ($displayId == 0) {
-            $displayGeoLocation = "GEOMFROMTEXT('POINT(" . $this->config->getSetting('DEFAULT_LAT') . " " . $this->config->getSetting('DEFAULT_LONG') . ")')";
-        }
-        else {
-            $displayGeoLocation = '(SELECT GeoLocation FROM `display` WHERE DisplayID = :displayId)';
-            $params['displayId'] = $displayId;
+            $displayGeoLocation =
+                "ST_GEOMFROMTEXT('POINT(" . $this->config->getSetting('DEFAULT_LAT') .
+                ' ' . $this->config->getSetting('DEFAULT_LONG') . ")')";
+        } else {
+            $displayGeoLocation = '(SELECT GeoLocation FROM `display` WHERE DisplayID =' . $displayId. ')';
         }
 
         // Build a SQL statement, based on the columns for this dataset

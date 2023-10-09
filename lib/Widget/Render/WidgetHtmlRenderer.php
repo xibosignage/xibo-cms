@@ -570,6 +570,12 @@ class WidgetHtmlRenderer
                         'gapBetweenHbs' => $module->stencil->gapBetweenHbs,
                     ];
                 }
+                if ($module->stencil->head !== null) {
+                    $twig['head'][] = $this->twig->fetchFromString(
+                        $this->decorateTranslations($module->stencil->head),
+                        $module->getPropertyValues()
+                    );
+                }
                 if ($module->stencil->style !== null) {
                     $twig['style'][] = $module->stencil->style;
                 }
@@ -620,6 +626,7 @@ class WidgetHtmlRenderer
         foreach ($moduleTemplates as $moduleTemplate) {
             // Handle extends.
             $extension = $moduleTemplate->getUnmatchedProperty('extends');
+            $isExtensionHasHead = false;
             $isExtensionHasStyle = false;
 
             // Render out any hbs
@@ -642,6 +649,7 @@ class WidgetHtmlRenderer
                     'extends' => [
                         'override' => $moduleTemplate->extends?->override,
                         'with' => $moduleTemplate->extends?->with,
+                        'escapeHtml' => $moduleTemplate->extends?->escapeHtml,
                     ],
                 ];
             } else if ($extension !== null) {
@@ -654,13 +662,27 @@ class WidgetHtmlRenderer
                     'extends' => [
                         'override' => $moduleTemplate->extends?->override,
                         'with' => $moduleTemplate->extends?->with,
+                        'escapeHtml' => $moduleTemplate->extends?->escapeHtml,
                     ],
                 ];
+
+                if ($extension->stencil->head !== null) {
+                    $twig['head'][] = $extension->stencil->head;
+                    $isExtensionHasHead = true;
+                }
 
                 if ($extension->stencil->style !== null) {
                     $twig['style'][] = $extension->stencil->style;
                     $isExtensionHasStyle = true;
                 }
+            }
+
+            // Render the module template's head, if present and not already output by the extension
+            if ($moduleTemplate->stencil !== null
+                && $moduleTemplate->stencil->head !== null
+                && !$isExtensionHasHead
+            ) {
+                $twig['head'][] = $moduleTemplate->stencil->head;
             }
 
             // Render the module template's style, if present and not already output by the extension

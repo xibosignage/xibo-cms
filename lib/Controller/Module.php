@@ -21,12 +21,14 @@
  */
 namespace Xibo\Controller;
 
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\ModuleTemplateFactory;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
@@ -72,7 +74,18 @@ class Module extends Base
     }
 
     /**
-     * A grid of modules
+     * @SWG\Get(
+     *  path="/module",
+     *  operationId="moduleSearch",
+     *  tags={"module"},
+     *  summary="Module Search",
+     *  description="Get a list of all modules available to this CMS",
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Module")
+     *  )
+     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -152,8 +165,9 @@ class Module extends Base
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Module")
+     *      @SWG\Schema(ref="#/definitions/Property")
      *  )
+     * )
      * @param Request $request
      * @param Response $response
      * @param $id
@@ -304,7 +318,25 @@ class Module extends Base
     }
 
     /**
-     * Get a list of templates available for a particular data type
+     * @SWG\Get(
+     *  path="/module/templates/{dataType}",
+     *  operationId="moduleTemplateSearch",
+     *  tags={"module"},
+     *  summary="Module Template Search",
+     *  description="Get a list of templates available for a particular data type",
+     *  @SWG\Parameter(
+     *      name="dataType",
+     *      in="path",
+     *      description="DataType to return templates for",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="An array of module templates for the provided datatype",
+     *      @SWG\Schema(ref="#/definitions/ModuleTemplate")
+     *  )
+     * )
      * @param \Slim\Http\ServerRequest $request
      * @param \Slim\Http\Response $response
      * @param string $dataType
@@ -353,14 +385,15 @@ class Module extends Base
      *          additionalProperties={"id":"string", "type":"string", "title":"string", "helpText":"string", "options":"array"}
      *      )
      *  )
+     * )
      * @param Request $request
      * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
+     * @param string $dataType
+     * @param string $id
+     * @return ResponseInterface|Response
      * @throws GeneralException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws ControllerNotImplemented
      */
     // phpcs:enable
     public function getTemplateProperties(Request $request, Response $response, string $dataType, string $id)

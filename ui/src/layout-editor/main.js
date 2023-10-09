@@ -112,6 +112,9 @@ window.lD = {
 
 // Load Layout and build app structure
 $(() => {
+  // Add class to body so we can use CSS specifically on it
+  $('body').addClass('editor-opened');
+
   // Get layout id
   const layoutId = lD.editorContainer.attr('data-layout-id');
 
@@ -284,7 +287,7 @@ $(() => {
             inactiveCheck: function() {
               return lD.templateEditMode ||
                 (lD.layout.editable ||
-                 !lD.layout.scheduleNowPermission);
+                  !lD.layout.scheduleNowPermission);
             },
             inactiveCheckClass: 'd-none',
           },
@@ -405,7 +408,11 @@ lD.selectObject =
       if (
         target &&
         (
-          ['drawer', 'zone', 'playlist'].includes(target.data('subType')) ||
+          (
+            target.data('subType') == 'playlist' &&
+            lD.common.hasTarget(card, 'playlist')
+          ) ||
+          ['drawer', 'zone'].includes(target.data('subType')) ||
           (
             target.hasClass('designer-widget') &&
             activeDroppable
@@ -551,8 +558,8 @@ lD.selectObject =
               .selected = true;
 
             this.selectedObject =
-                this.layout.regions[target.data('widgetRegion')]
-                  .widgets[newSelectedId];
+              this.layout.regions[target.data('widgetRegion')]
+                .widgets[newSelectedId];
           }
         } else if (newSelectedType === 'element') {
           const parentRegion = target.data('regionId');
@@ -1271,7 +1278,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
   const draggableData = $(draggable).data();
   const droppableIsDrawer = ($(droppable).data('subType') === 'drawer');
   const droppableIsZone = ($(droppable).data('subType') === 'zone');
-  const droppableIsPlaylist =($(droppable).data('subType') === 'playlist');
+  const droppableIsPlaylist = ($(droppable).data('subType') === 'playlist');
   const droppableIsWidget = $(droppable).hasClass('designer-widget');
   const droppableIsElement = $(droppable).hasClass('designer-element');
   const droppableIsElementGroup =
@@ -1439,10 +1446,10 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
     // if draggable is type global or if both are the same type
     const canBeAddedToGroup = function() {
       return $(droppable).hasClass('editing') &&
-      (
-        draggableData.dataType == 'global' ||
-        draggableData.dataType == $(droppable).data('elementType')
-      );
+        (
+          draggableData.dataType == 'global' ||
+          draggableData.dataType == $(droppable).data('elementType')
+        );
     };
 
     // Create group if group is type global
@@ -1465,8 +1472,11 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
       }
     }
 
+    // Calculate next available top layer
+    const topLayer = lD.calculateLayers().availableTop;
+
     // Get canvas
-    this.layout.getCanvas().then((canvas) => {
+    this.layout.getCanvas(topLayer).then((canvas) => {
       // Create element
       const createElement = function({
         id,
@@ -1659,7 +1669,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           const targetWidget = lD.getObjectByTypeAndId(
             'widget',
             'widget_' + $(droppable).data('regionId') + '_' +
-              $(droppable).data('widgetId'),
+            $(droppable).data('widgetId'),
             'canvas',
           );
 
@@ -1687,7 +1697,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           const targetWidget = lD.getObjectByTypeAndId(
             'widget',
             'widget_' + $(droppable).data('regionId') + '_' +
-              $(droppable).data('widgetId'),
+            $(droppable).data('widgetId'),
             'canvas',
           );
 
@@ -1932,10 +1942,10 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
     } else if (droppableIsZone || droppableIsPlaylist) {
       // Get zone region
       const region =
-      lD.getObjectByTypeAndId(
-        'region',
-        'region_' + $(droppable).data('regionId'),
-      );
+        lD.getObjectByTypeAndId(
+          'region',
+          'region_' + $(droppable).data('regionId'),
+        );
 
       // Add module to zone
       lD.addModuleToPlaylist(
@@ -2292,8 +2302,8 @@ lD.addMediaToPlaylist = function(
       // Save the new widget as temporary
       lD.viewer.saveTemporaryObject(
         'widget_' +
-          res.data.regionId + '_' +
-          res.data.newWidgets[0].widgetId,
+        res.data.regionId + '_' +
+        res.data.newWidgets[0].widgetId,
         'widget',
         {
           type: 'widget',
@@ -2666,8 +2676,7 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
 
   // Check if we can change the object layer
   const canChangeLayer = (
-    layoutObject.isEditable &&
-    layoutObject.type != 'element-group'
+    layoutObject.isEditable
   );
 
   // If it's an editable group show ungroup option
@@ -2763,6 +2772,10 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
       // Calculate Layers
       const calculatedLayers = lD.calculateLayers(
         originalLayer,
+        (
+          layoutObject.type === 'element' ||
+          layoutObject.type === 'element-group'
+        ),
         groupElements,
       );
 
@@ -2807,15 +2820,22 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
 
           // Update on viewer
           lD.viewer.updateRegion(layoutObject);
-        } else if (layoutObject.type === 'element') {
+        } else if (
+          layoutObject.type === 'element' ||
+          layoutObject.type === 'element-group'
+        ) {
           layoutObject.layer = newLayer;
 
           // Get widget
           const elementWidget =
             lD.getObjectByTypeAndId('widget', objAuxId, 'canvas');
 
-          // Update element in the viewer
-          lD.viewer.updateElement(layoutObject, true);
+          // Update element or element group in the viewer
+          if (layoutObject.type === 'element') {
+            lD.viewer.updateElement(layoutObject, true);
+          } else {
+            lD.viewer.updateElementGroupLayer(layoutObject);
+          }
 
           // Save elements to the widget
           elementWidget.saveElements();
@@ -4080,7 +4100,8 @@ lD.populateDropdownWithLayoutElements = function(
     // Update widgetId
     if (
       $widgetIDInput.length > 0 &&
-      $widgetIDInput.val() != ''
+      $widgetIDInput.val() != '' &&
+      getDrawerWidgets
     ) {
       // Call update widget drawer edit element
       handleEditWidget($widgetIDInput.val());
@@ -4107,18 +4128,60 @@ lD.populateDropdownWithLayoutElements = function(
 
   // Open or edit drawer widget
   const handleEditWidget = function(dropdownValue) {
+    const $dropdownParent = $dropdown.parent();
+
+    const removeDeleteButton = function() {
+      // Remove delete widget button
+      $dropdown.siblings('.delete-widget-btn').remove();
+
+      // Remove class from container
+      $dropdownParent.removeClass('delete-active');
+    };
+
     if (dropdownValue === 'create') {
       // Create new
       lD.viewer.addActionEditArea(actionData, 'create');
-    } else if (dropdownValue != '') {
+
+      removeDeleteButton();
+    } else if (dropdownValue != '' && dropdownValue != null) {
       // Update action widget data
       actionData.widgetId = dropdownValue;
 
       // Edit existing
       lD.viewer.addActionEditArea(actionData, 'edit');
+
+      // Show delete button on dropdown
+      if ($dropdown.siblings('.delete-widget-btn').length === 0) {
+        const $deleteBtn = $(
+          '<div class="btn btn-danger delete-widget-btn" title="' +
+          editorsTrans.actions.deleteWidget + '">' +
+          editorsTrans.actions.deleteWidget +
+          '</div>',
+        ).on('click', function() {
+          const widgetId = $dropdown.val();
+          const drawerId = lD.getObjectByTypeAndId('drawer').regionId;
+
+          removeDeleteButton();
+
+          lD.deleteObject(
+            'widget',
+            widgetId,
+            drawerId,
+            true,
+          );
+        });
+
+        // Append to dropdown parent
+        $dropdownParent.append($deleteBtn);
+
+        // Add class to container
+        $dropdownParent.addClass('delete-active');
+      }
     } else {
       // Remove edit area
       lD.viewer.removeActionEditArea();
+
+      removeDeleteButton();
     }
   };
 
@@ -4322,7 +4385,7 @@ lD.addElementsToWidget = function(
   addingToExistingGroup = false,
 ) {
   // Calculate next available global top layer
-  let topLayer = lD.calculateLayers().availableTop;
+  let topLayer = lD.calculateLayers(null, true).availableTop;
 
   // Add element promise array
   const addElementPromise = [];
@@ -4342,6 +4405,7 @@ lD.addElementsToWidget = function(
       // Calculate next available global top layer
       topLayer = lD.calculateLayers(
         null,
+        true,
         (widgetGroup) ? widgetGroup.elements : null,
       ).availableTop;
     }
@@ -4356,10 +4420,13 @@ lD.addElementsToWidget = function(
         'element_' + element.id + '_' +
         Math.floor(Math.random() * 1000000);
 
-      // Add layer to the next top layer
-      element.layer = (element.layer) ?
-        (element.layer + topLayer) :
-        topLayer;
+      // Add top layer to the group properties
+      if (element.groupId) {
+        element.groupProperties.layer = topLayer;
+      } else {
+        // Add element to the top layer
+        element.layer = topLayer;
+      }
 
       // Add element to the widget and push to array
       addElementPromise.push(widget.addElement(element, false));
@@ -4422,10 +4489,16 @@ lD.addElementsToWidget = function(
 /**
  * Calculate top layer
  * @param {number} baseLayer - Base layer to be compared
+ * @param {boolean=} calculateInCanvas
+ *  - Calculate layers only for canvas
  * @param {object=} groupElements - Calculate only for group elements
  * @return {object} Calculated layers
  */
-lD.calculateLayers = function(baseLayer, groupElements) {
+lD.calculateLayers = function(
+  baseLayer,
+  calculateInCanvas = false,
+  groupElements,
+) {
   const self = this;
 
   const limits = {
@@ -4450,7 +4523,7 @@ lD.calculateLayers = function(baseLayer, groupElements) {
     },
   };
 
-  const addElementToLayerMap = function(layer, elementType, elementId) {
+  const addObjToLayerMap = function(layer, objType, objId) {
     if (
       layerMap[layer] == undefined
     ) {
@@ -4458,9 +4531,27 @@ lD.calculateLayers = function(baseLayer, groupElements) {
     }
 
     layerMap[layer].push({
-      id: elementId,
-      type: elementType,
+      id: objId,
+      type: objType,
     });
+  };
+
+  const checkAndSaveLayer = function(layer, objType, objId) {
+    if (
+      calculatedLayers.top === null ||
+      layer > calculatedLayers.top) {
+      calculatedLayers.top = layer;
+    }
+
+    if (
+      calculatedLayers.bottom === null ||
+      layer < calculatedLayers.bottom
+    ) {
+      calculatedLayers.bottom = layer;
+    }
+
+    // Save to layer map
+    addObjToLayerMap(layer, objType, objId);
   };
 
   // Calculate only for elements in a group
@@ -4468,95 +4559,75 @@ lD.calculateLayers = function(baseLayer, groupElements) {
     Object.values(groupElements).forEach((element) => {
       const elementLayer = Number(element.layer);
 
-      if (
-        calculatedLayers.top === null ||
-        elementLayer > calculatedLayers.top) {
-        calculatedLayers.top = elementLayer;
-      }
-
-      if (
-        calculatedLayers.bottom === null ||
-        elementLayer < calculatedLayers.bottom
-      ) {
-        calculatedLayers.bottom = elementLayer;
-      }
-
-      // Save to layer map
-      addElementToLayerMap(elementLayer, 'element', element.elementId);
+      checkAndSaveLayer(elementLayer, 'element', element.elementId);
     });
-  } else {
-    // Check regions layers
-    Object.values(lD.layout.regions).forEach((region) => {
-      const regionLayer = Number(region.zIndex);
-
-      if (
-        calculatedLayers.top === null ||
-        regionLayer > calculatedLayers.top
-      ) {
-        calculatedLayers.top = regionLayer;
-      }
-
-      if (
-        calculatedLayers.bottom === null ||
-        regionLayer < calculatedLayers.bottom
-      ) {
-        calculatedLayers.bottom = regionLayer;
-      }
-
-      // Save to layer map
-      addElementToLayerMap(regionLayer, 'region', region.id);
-    });
-
-    // Check elements
+  } else if (calculateInCanvas) {
+    // Calculate only for canvas elements
     if (lD.layout.canvas.widgets) {
       Object.values(lD.layout.canvas.widgets).forEach((widget) => {
+        // Elements
         Object.values(widget.elements).forEach((element) => {
-          const elementLayer = Number(element.layer);
-
+          // Only calculate if it's a group-less element
           if (
-            calculatedLayers.top === null ||
-            elementLayer > calculatedLayers.top) {
-            calculatedLayers.top = elementLayer;
-          }
-
-          if (
-            calculatedLayers.bottom === null ||
-            elementLayer < calculatedLayers.bottom
+            element.groupId === '' ||
+            element.groupId === undefined
           ) {
-            calculatedLayers.bottom = elementLayer;
+            const elementLayer = Number(element.layer);
+            checkAndSaveLayer(elementLayer, 'element', element.elementId);
           }
+        });
 
-          // Save to layer map
-          addElementToLayerMap(elementLayer, 'element', element.elementId);
+        // Element groups
+        Object.values(widget.elementGroups).forEach((elementGroup) => {
+          const elementGroupLayer = Number(elementGroup.layer);
+          checkAndSaveLayer(elementGroupLayer, 'elementGroup', elementGroup.id);
         });
       });
     }
+  } else {
+    // Add canvas layer
+    if (!$.isEmptyObject(lD.layout.canvas)) {
+      checkAndSaveLayer(lD.layout.canvas.zIndex, 'region', lD.layout.canvas.id);
+    }
+
+    // Check regions layers
+    Object.values(lD.layout.regions).forEach((region) => {
+      const regionLayer = Number(region.zIndex);
+      checkAndSaveLayer(regionLayer, 'region', region.id);
+    });
 
     // Save layerMap to the global var
     self.layerMap = layerMap;
   }
 
   // Find if the element is already the only one on top and bottom layers
-  const isSingleOnTopLayer = (baseLayer === undefined) ? false : (
-    layerMap[calculatedLayers.top].length === 1 &&
-    calculatedLayers.top === baseLayer
-  );
+  const isSingleOnTopLayer =
+    (baseLayer === undefined || baseLayer === null) ? false : (
+      layerMap[calculatedLayers.top].length === 1 &&
+      calculatedLayers.top === baseLayer
+    );
 
-  const isSingleOnBottomLayer = (baseLayer === undefined) ? false : (
-    layerMap[calculatedLayers.bottom].length === 1 &&
-    calculatedLayers.bottom === baseLayer
-  );
+  const isSingleOnBottomLayer =
+    (baseLayer === undefined || baseLayer === null) ? false : (
+      layerMap[calculatedLayers.bottom].length === 1 &&
+      calculatedLayers.bottom === baseLayer
+    );
 
   // Find the next available layer at top
   if (
     layerMap[calculatedLayers.top + 1] === undefined &&
     !isSingleOnTopLayer
   ) {
-    // Set top value, but not over the limit
-    calculatedLayers.availableTop = Math.min(
-      (calculatedLayers.top + 1),
-      limits.top,
-    );
+    // If we don't have any layers yet, set to 0
+    if (layerMap.length === 0) {
+      calculatedLayers.availableTop = 0;
+    } else {
+      // Set top value, but not over the limit
+      calculatedLayers.availableTop = Math.min(
+        (calculatedLayers.top + 1),
+        limits.top,
+      );
+    }
   }
 
   // Find the next available layer at bottom
