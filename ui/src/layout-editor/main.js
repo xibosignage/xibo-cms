@@ -402,29 +402,42 @@ lD.selectObject =
         target.hasClass('ui-droppable-active') :
         true;
 
+      // Drop to target validations
+      const dropToPlaylist = (
+        target.data('subType') == 'playlist' &&
+        lD.common.hasTarget(card, 'playlist')
+      );
+
+      const dropToDrawerOrZone =
+        ['drawer', 'zone'].includes(target.data('subType'));
+
+      const dropToWidget = (
+        target.hasClass('designer-widget') &&
+        activeDroppable
+      );
+
+      const dropToActionTarget =
+        target.hasClass('ui-droppable-actions-target');
+
+      const dropToElementAndElGroup = (
+        (
+          target.hasClass('designer-element-group') ||
+          target.hasClass('designer-element')
+        ) &&
+        lD.common.hasTarget(card, 'element')
+      );
+
       // Deselect cards and drop zones
       this.toolbar.deselectCardsAndDropZones();
 
       if (
         target &&
         (
-          (
-            target.data('subType') == 'playlist' &&
-            lD.common.hasTarget(card, 'playlist')
-          ) ||
-          ['drawer', 'zone'].includes(target.data('subType')) ||
-          (
-            target.hasClass('designer-widget') &&
-            activeDroppable
-          ) ||
-          target.hasClass('ui-droppable-actions-target') ||
-          (
-            (
-              target.hasClass('designer-element-group') ||
-              target.hasClass('designer-element')
-            ) &&
-            lD.common.hasTarget(card, 'element')
-          )
+          dropToPlaylist ||
+          dropToDrawerOrZone ||
+          dropToWidget ||
+          dropToActionTarget ||
+          dropToElementAndElGroup
         )
       ) {
         // Send click position if we're adding to elements and element groups
