@@ -1529,7 +1529,10 @@ Viewer.prototype.renderElementContent = function(
     // to the extended template, if it exists
     // or to hardcoded values
     if (!element.width || !element.height) {
-      if (template.parent) {
+      if (template.startWidth && template.startHeight) {
+        element.width = template.startWidth;
+        element.height = template.startHeight;
+      } else if (template.parent) {
         element.width = template.parent.startWidth;
         element.height = template.parent.startHeight;
       } else {
@@ -1714,16 +1717,19 @@ Viewer.prototype.renderElementContent = function(
         const elementParseDataFn = window[`onElementParseData_${element.id}`];
         const hasElementParseDataFn = typeof elementParseDataFn === 'function';
         const isInData = extendOverrideKey !== null &&
-          elData && elData.hasOwnProperty(extendOverrideKey);
+          elData != undefined && elData.hasOwnProperty(extendOverrideKey);
         const isInMeta = metaKey !== null &&
           meta.hasOwnProperty(metaKey);
 
         if (extendWithDataKey !== null) {
+          const keyIsMediaItem = extendWithDataKey.match(/\[\[(.*?)\]\]/);
           if (isInData) {
             convertedProperties[extendOverrideKey] =
               (elData) && elData[extendWithDataKey];
           } else if (isInMeta) {
             convertedProperties[extendOverrideKey] = meta[metaKey];
+          } else if (keyIsMediaItem != null) {
+            convertedProperties[extendOverrideKey] = keyIsMediaItem[0];
           } else {
             convertedProperties[extendOverrideKey] =
               (elData) && elData[extendWithDataKey];
@@ -1767,6 +1773,28 @@ Viewer.prototype.renderElementContent = function(
 
           // Replace asset id with asset url
           hbsHtml = hbsHtml.replace(match, assetUrl);
+        });
+
+        // Replace [[mediaId]] with media URL or element media id
+        const mediaURLRegex = /\[\[[\w&\-]+\]\]/gi;
+        hbsHtml.match(mediaURLRegex)?.forEach((match) => {
+          const mediaId = match.split('[[')[1].split(']]')[0];
+          let replacement = mediaId;
+
+          if (mediaId === 'mediaId') {
+            // Replace with media id from element
+            replacement = element.mediaId;
+          } else if (mediaId.split('mediaId=').length == 2) {
+            // Replace with media id from  placeholder
+            replacement = mediaId.split('mediaId=')[1];
+          }
+
+          // Replace with media id path
+          const mediaUrl =
+            urlsForApi.library.download.url.replace(':id', replacement);
+
+          // Replace asset id with asset url
+          hbsHtml = hbsHtml.replace(match, mediaUrl);
         });
 
         // Append hbs html to the element

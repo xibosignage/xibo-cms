@@ -708,6 +708,11 @@ Widget.prototype.saveElements = function(
       }
     }
 
+    // Save media id if exists
+    if (element.mediaId !== undefined) {
+      elementObject.mediaId = element.mediaId;
+    }
+
     // Save slot if exists
     if (element.slot != undefined) {
       elementObject.slot = Number(element.slot);

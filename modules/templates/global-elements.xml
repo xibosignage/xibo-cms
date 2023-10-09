@@ -456,6 +456,17 @@ $(target).find('.date').each(function(_idx, dateEl){
         </assets>
     </template>
     <template>
+        <id>global_library_image</id>
+        <extends override="url" with="[[mediaId]]">global-image</extends>
+        <type>element</type>
+        <title>Library Image</title>
+        <dataType>global</dataType>
+        <showIn>none</showIn>
+        <canRotate>true</canRotate>
+        <startWidth>250</startWidth>
+        <startHeight>250</startHeight>
+    </template>
+    <template>
         <id>line</id>
         <title>Line</title>
         <type>element</type>

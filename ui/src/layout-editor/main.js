@@ -1273,16 +1273,17 @@ lD.deleteObject = function(
  * @param {object=} dropPosition - Position of the drop
  */
 lD.dropItemAdd = function(droppable, draggable, dropPosition) {
-  const draggableType = $(draggable).data('type');
-  const draggableSubType = $(draggable).data('subType');
-  const draggableData = $(draggable).data();
+  let draggableType = $(draggable).data('type');
+  let draggableSubType = $(draggable).data('subType');
+  const draggableData = Object.assign({}, $(draggable).data());
   const droppableIsDrawer = ($(droppable).data('subType') === 'drawer');
   const droppableIsZone = ($(droppable).data('subType') === 'zone');
   const droppableIsPlaylist = ($(droppable).data('subType') === 'playlist');
   const droppableIsWidget = $(droppable).hasClass('designer-widget');
-  const droppableIsElement = $(droppable).hasClass('designer-element');
+  let droppableIsElement = $(droppable).hasClass('designer-element');
   const droppableIsElementGroup =
     $(droppable).hasClass('designer-element-group');
+  let getTemplateBeforeAdding = '';
 
   /**
    * Import from provider or add media from library
@@ -1322,10 +1323,24 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
     });
   };
 
-  if (draggableType == 'media') {
-    // TODO If image, we need to chose if we want to create
-    // a canvas or frame region, for now we create a frame
+  // If draggable is a media image, we need to choose
+  // if it's going to be added as static widget or element
+  if (
+    draggableSubType === 'image' &&
+    // If droppable is a playlist or zone, do nothing
+    !(
+      droppableIsPlaylist ||
+      droppableIsZone
+    )
+  ) {
+    // Make a fake image element so it can go to the add element flow
+    draggableType = 'element';
+    droppableIsElement = true;
+    draggableSubType = 'global';
+    getTemplateBeforeAdding = 'global_library_image';
+  }
 
+  if (draggableType === 'media') {
     // Adding media
     const mediaId = $(draggable).data('mediaId');
 
@@ -1493,6 +1508,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
         groupId,
         properties,
         groupProperties,
+        mediaId,
       } = {},
       ) {
         // Create element object
@@ -1507,6 +1523,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           properties: properties,
           layer: layer,
           rotation: rotation,
+          mediaId: mediaId,
         };
 
         // Add group id if it belongs to a group
@@ -1623,6 +1640,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
                   top: (dropPosition) ? dropPosition.top : 0,
                   left: (dropPosition) ? dropPosition.left : 0,
                 },
+                mediaId: draggableData.mediaId,
               });
 
               // Add element to elements array
@@ -1637,121 +1655,173 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           }
         });
       } else {
-        // Element options
-        const elementOptions = {
-          id: draggableData.templateId,
-          type: draggableData.dataType,
-          left: (dropPosition) ? dropPosition.left : 0,
-          top: (dropPosition) ? dropPosition.top : 0,
-          width: draggableData.templateStartWidth,
-          height: draggableData.templateStartHeight,
-          layer: 0,
-          rotation: 0,
-          extendsTemplate: draggableData.extendsTemplate,
-          extendsOverride: draggableData.extendsOverride,
-          extendsOverrideId: draggableData.extendsOverrideId,
+        const addElement = function() {
+          // Element options
+          const elementOptions = {
+            id: draggableData.templateId,
+            type: draggableData.dataType,
+            left: (dropPosition) ? dropPosition.left : 0,
+            top: (dropPosition) ? dropPosition.top : 0,
+            width: draggableData.templateStartWidth,
+            height: draggableData.templateStartHeight,
+            layer: 0,
+            rotation: 0,
+            extendsTemplate: draggableData.extendsTemplate,
+            extendsOverride: draggableData.extendsOverride,
+            extendsOverrideId: draggableData.extendsOverrideId,
+            mediaId: draggableData.mediaId,
+          };
+
+          let addToGroup = false;
+          let addToGroupType = null;
+
+          // If element has a group, add to it
+          if (addToGroupId) {
+            elementOptions.groupId = addToGroupId;
+
+            // Get group
+            const elementGroup = lD.getObjectByTypeAndId(
+              'element-group',
+              addToGroupId,
+              addToGroupWidgetId,
+            );
+
+            const targetWidget = lD.getObjectByTypeAndId(
+              'widget',
+              'widget_' + $(droppable).data('regionId') + '_' +
+              $(droppable).data('widgetId'),
+              'canvas',
+            );
+
+            // Set group type as the same as the target widget
+            addToGroupType = targetWidget.subType;
+
+            // Add group object
+            elementOptions.group = elementGroup;
+
+            addToGroup = true;
+          }
+
+          // If we want to create a new element group
+          if (addToExistingElementId) {
+            // Generate a random group id
+            const groupId = 'group_' + Math.floor(Math.random() * 1000000);
+
+            // Get previous element
+            const previousElement = lD.getObjectByTypeAndId(
+              'element',
+              addToExistingElementId,
+              addToGroupWidgetId,
+            );
+
+            const targetWidget = lD.getObjectByTypeAndId(
+              'widget',
+              'widget_' + $(droppable).data('regionId') + '_' +
+              $(droppable).data('widgetId'),
+              'canvas',
+            );
+
+            // Create new element group
+            targetWidget.elementGroups[groupId] = new ElementGroup(
+              Object.assign(
+                {
+                  width: previousElement.width,
+                  height: previousElement.height,
+                  top: previousElement.top,
+                  left: previousElement.left,
+                },
+                {
+                  id: groupId,
+                },
+              ),
+              $(droppable).data('widgetId'),
+              $(droppable).data('regionId'),
+              targetWidget,
+            );
+
+            // Set group if for the elements
+            previousElement.groupId = groupId;
+            previousElement.group = targetWidget.elementGroups[groupId];
+            elementOptions.groupId = groupId;
+
+            // Check group type
+            addToGroupType = targetWidget.subType;
+
+            // Set new element layer to be the top layer
+            elementOptions.layer = previousElement.layer + 1;
+
+            // Add previous widget to the elements array
+            // and to element group
+            elements.push(previousElement);
+            targetWidget.elementGroups[groupId]
+              .elements[previousElement.elementId] = previousElement;
+
+            addToGroup = true;
+          }
+
+          // Create element
+          const element = createElement(elementOptions);
+
+          // Add element to elements array
+          elements.push(element);
+
+          // Create widget and add elements
+          createWidgetAndAddElements(
+            elements,
+            addToGroup,
+            addToGroupType,
+            addToGroup,
+          );
         };
 
-        let addToGroup = false;
-        let addToGroupType = null;
+        // If we need to get template first
+        if (getTemplateBeforeAdding != '') {
+          // Get template, create a fake image to data and add
+          const getTemplateAndAdd = function() {
+            lD.templateManager.getTemplateById(getTemplateBeforeAdding)
+              .then((template) => {
+                // Make a fake image element so
+                // it can go to the add element flow
+                draggableData.templateId = 'global_library_image';
+                draggableData.dataType = 'global';
+                draggableData.subType = 'global';
+                draggableData.extendsTemplate = 'global-image';
+                draggableData.extendsOverride = 'url';
+                draggableData.templateStartWidth = template.startWidth;
+                draggableData.templateStartHeight = template.startHeight;
 
-        // If element has a group, add to it
-        if (addToGroupId) {
-          elementOptions.groupId = addToGroupId;
+                addElement();
+              });
+          };
 
-          // Get group
-          const elementGroup = lD.getObjectByTypeAndId(
-            'element-group',
-            addToGroupId,
-            addToGroupWidgetId,
-          );
+          // If we need to upload media
+          if (draggableData.regionSpecific == 0) {
+            // On hide callback
+            const onHide = function(numUploads) {
+              if (numUploads > 0) {
+                getTemplateAndAdd();
+              }
+            };
 
-          const targetWidget = lD.getObjectByTypeAndId(
-            'widget',
-            'widget_' + $(droppable).data('regionId') + '_' +
-            $(droppable).data('widgetId'),
-            'canvas',
-          );
+            // On upload done callback
+            const onUploadDone = function(data) {
+              // Add media id to data
+              draggableData.mediaId = data.response().result.files[0].mediaId;
+            };
 
-          // Set group type as the same as the target widget
-          addToGroupType = targetWidget.subType;
-
-          // Add group object
-          elementOptions.group = elementGroup;
-
-          addToGroup = true;
+            lD.openUploadForm({
+              moduleData: draggableData,
+              onHide: onHide,
+              onUploadDone: onUploadDone,
+            });
+          } else {
+            // We don't need to upload, add right away
+            getTemplateAndAdd();
+          }
+        } else {
+          // Just add the element
+          addElement();
         }
-
-        // If we want to create a new element group
-        if (addToExistingElementId) {
-          // Generate a random group id
-          const groupId = 'group_' + Math.floor(Math.random() * 1000000);
-
-          // Get previous element
-          const previousElement = lD.getObjectByTypeAndId(
-            'element',
-            addToExistingElementId,
-            addToGroupWidgetId,
-          );
-
-          const targetWidget = lD.getObjectByTypeAndId(
-            'widget',
-            'widget_' + $(droppable).data('regionId') + '_' +
-            $(droppable).data('widgetId'),
-            'canvas',
-          );
-
-          // Create new element group
-          targetWidget.elementGroups[groupId] = new ElementGroup(
-            Object.assign(
-              {
-                width: previousElement.width,
-                height: previousElement.height,
-                top: previousElement.top,
-                left: previousElement.left,
-              },
-              {
-                id: groupId,
-              },
-            ),
-            $(droppable).data('widgetId'),
-            $(droppable).data('regionId'),
-            targetWidget,
-          );
-
-          // Set group if for the elements
-          previousElement.groupId = groupId;
-          previousElement.group = targetWidget.elementGroups[groupId];
-          elementOptions.groupId = groupId;
-
-          // Check group type
-          addToGroupType = targetWidget.subType;
-
-          // Set new element layer to be the top layer
-          elementOptions.layer = previousElement.layer + 1;
-
-          // Add previous widget to the elements array
-          // and to element group
-          elements.push(previousElement);
-          targetWidget.elementGroups[groupId]
-            .elements[previousElement.elementId] = previousElement;
-
-          addToGroup = true;
-        }
-
-        // Create element
-        const element = createElement(elementOptions);
-
-        // Add element to elements array
-        elements.push(element);
-
-        // Create widget and add elements
-        createWidgetAndAddElements(
-          elements,
-          addToGroup,
-          addToGroupType,
-          addToGroup,
-        );
       }
     });
   } else if (
@@ -2037,14 +2107,8 @@ lD.addModuleToPlaylist = function(
   reloadData = true,
 ) {
   if (moduleData.regionSpecific == 0) { // Upload form if not region specific
-    const validExt = moduleData.validExt.replace(/,/g, '|');
-    let numUploads = 0;
-
-    // Close the current dialog
-    bootbox.hideAll();
-
     // On hide callback
-    const onHide = function() {
+    const onHide = function(numUploads) {
       // If there are no uploads, and it's not a zone, delete the region
       if (numUploads === 0 && !zoneWidget) {
         lD.layout.deleteObject(
@@ -2066,55 +2130,33 @@ lD.addModuleToPlaylist = function(
       }
     };
 
-    openUploadForm({
-      url: libraryAddUrl,
-      title: uploadTrans.uploadMessage,
-      animateDialog: false,
-      initialisedBy: 'layout-designer-upload',
-      buttons: {
-        main: {
-          label: translations.done,
-          className: 'btn-primary btn-bb-main',
-        },
-      },
-      onHideCallback: onHide,
-      templateOptions: {
-        trans: uploadTrans,
-        upload: {
-          maxSize: moduleData.maxSize,
-          maxSizeMessage: moduleData.maxSizeMessage,
-          validExtensionsMessage: translations.validExtensions
-            .replace('%s', moduleData.validExt),
-          validExt: validExt,
-        },
-        playlistId: playlistId,
-        displayOrder: addToPosition,
-        currentWorkingFolderId: lD.folderId,
-        showWidgetDates: false,
-        folderSelector: true,
-      },
-      uploadDoneEvent: function(data) {
-        // If the upload is successful, increase the number of uploads
-        numUploads += 1;
+    // On upload done callback
+    const onUploadDone = function(data) {
+      // Get added widget id
+      const widgetId = data.response().result.files[0].widgetId;
 
-        // Get added widget id
-        const widgetId = data.response().result.files[0].widgetId;
+      // The new selected object as the id based
+      // on the previous selected region
+      if (!drawerWidget) {
+        lD.viewer.saveTemporaryObject(
+          'widget_' + regionId + '_' + widgetId,
+          'widget',
+          {
+            type: 'widget',
+            parentType: 'region',
+            widgetRegion: 'region_' + regionId,
+          },
+        );
+      }
+    };
 
-        // The new selected object as the id based
-        // on the previous selected region
-        if (!drawerWidget) {
-          lD.viewer.saveTemporaryObject(
-            'widget_' + regionId + '_' + widgetId,
-            'widget',
-            {
-              type: 'widget',
-              parentType: 'region',
-              widgetRegion: 'region_' + regionId,
-            },
-          );
-        }
-      },
-    }).attr('data-test', 'uploadFormModal');
+    lD.openUploadForm({
+      playlistId: playlistId,
+      moduleData: moduleData,
+      addToPosition: addToPosition,
+      onHide: onHide,
+      onUploadDone: onUploadDone,
+    });
   } else { // Add widget to a region
     lD.common.showLoadingScreen('addModuleToPlaylist');
 
@@ -2240,6 +2282,70 @@ lD.addModuleToPlaylist = function(
       );
     });
   }
+};
+
+/**
+ * Open upload form
+ * @param {number} playlistId
+ * @param {object} moduleData
+ * @param {object} addToPosition
+ * @param {function} onHide
+ * @param {function} onUploadDone
+ */
+lD.openUploadForm = function({
+  playlistId,
+  moduleData,
+  addToPosition,
+  onHide,
+  onUploadDone,
+} = {},
+) {
+  const validExt = moduleData.validExt.replace(/,/g, '|');
+  let numUploads = 0;
+
+  // Close the current dialog
+  bootbox.hideAll();
+
+  openUploadForm({
+    url: libraryAddUrl,
+    title: uploadTrans.uploadMessage,
+    animateDialog: false,
+    initialisedBy: 'layout-designer-upload',
+    buttons: {
+      main: {
+        label: translations.done,
+        className: 'btn-primary btn-bb-main',
+      },
+    },
+    onHideCallback: function() {
+      if ( typeof onHide === 'function') {
+        onHide(numUploads);
+      }
+    },
+    templateOptions: {
+      trans: uploadTrans,
+      upload: {
+        maxSize: moduleData.maxSize,
+        maxSizeMessage: moduleData.maxSizeMessage,
+        validExtensionsMessage: translations.validExtensions
+          .replace('%s', moduleData.validExt),
+        validExt: validExt,
+      },
+      playlistId: playlistId,
+      displayOrder: addToPosition,
+      currentWorkingFolderId: lD.folderId,
+      showWidgetDates: false,
+      folderSelector: true,
+    },
+    uploadDoneEvent: function(data) {
+      // If the upload is successful, increase the number of uploads
+      numUploads += 1;
+
+      if ( typeof onUploadDone === 'function') {
+        onUploadDone(data);
+      }
+    },
+  }).attr('data-test', 'uploadFormModal');
 };
 
 /**

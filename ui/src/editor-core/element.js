@@ -60,6 +60,9 @@ const Element = function(data, widgetId, regionId, parentWidget) {
 
   // Animation effect
   this.effect = data.effect || 'noTransition';
+
+  // Media
+  this.mediaId = data.mediaId;
 };
 
 /**
