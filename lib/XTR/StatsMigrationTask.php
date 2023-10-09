@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -113,7 +113,7 @@ class StatsMigrationTask implements TaskInterface
                 $statSql->execute();
 
                 $statArchiveSqlCount =  0;
-                if ( $this->archiveExist === true) {
+                if ($this->archiveExist) {
                     /** @noinspection SqlResolve */
                     $statArchiveSql = $this->store->getConnection()->prepare('SELECT statId FROM stat_archive LIMIT 1');
                     $statArchiveSql->execute();
@@ -152,7 +152,7 @@ class StatsMigrationTask implements TaskInterface
             // (work is considered to be done at that point).
             else {
 
-                if ($this->archiveExist == true) {
+                if ($this->archiveExist) {
                     $this->runMessage = '## Moving from stat_archive to stat (MySQL)' . PHP_EOL;
 
                     $this->quitMigrationTaskOrDisableStatArchiveTask();
@@ -319,7 +319,7 @@ class StatsMigrationTask implements TaskInterface
 
         // Migration from stat_archive table to Mongo
         // After migration delete only stat_archive
-        if ($this->archiveExist == true) {
+        if ($this->archiveExist) {
             $this->migrationStatArchiveToMongo($options);
         }
     }
