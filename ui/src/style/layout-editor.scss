@@ -1955,6 +1955,10 @@ div#bg_media_name {
     z-index: $viewer-moveable-z-index !important;
 }
 
+body[multi-select-active] .moveable-control-box {
+    z-index: 0 !important;
+}
+
 body[layout-editor-fs] .moveable-control-box {
     z-index: calc(#{$designer-overlay-z-index} + 30) !important;
 }

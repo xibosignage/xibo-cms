@@ -94,6 +94,23 @@ const Viewer = function(parent, container) {
     this.parent.editorContainer.find('#layerManager'),
     this.DOMObject,
   );
+
+  this.multiSelectActive = false;
+
+  // Events for shift key
+  addEventListener('keydown', (e) => {
+    if (e.key === 'Shift') {
+      this.multiSelectActive = true;
+      $('body').attr('multi-select-active', true);
+    }
+  });
+
+  addEventListener('keyup', (e) => {
+    if (e.key === 'Shift') {
+      this.multiSelectActive = false;
+      $('body').removeAttr('multi-select-active');
+    }
+  });
 };
 
 /**
@@ -2556,9 +2573,7 @@ Viewer.prototype.updateMoveable = function(
     }
 
     // Update snap to elements targets
-    if (multipleSelected) {
-      this.moveable.elementGuidelines = [];
-    } else if (
+    if (
       updateTarget &&
       this.moveableOptions.snapToElements
     ) {
