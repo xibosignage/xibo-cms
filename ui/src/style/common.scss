@@ -99,6 +99,11 @@ $fa-font-path: "~font-awesome/fonts";
             }
         }
     }
+    .colorpicker-element.colorpicker-input {
+        .picker-container {
+            position: relative;
+        }
+    }
 }
 
 /* Layout Manager */

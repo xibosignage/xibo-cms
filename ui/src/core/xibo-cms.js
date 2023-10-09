@@ -370,8 +370,10 @@ function XiboInitialise(scope, options) {
     });
 
     // Colour picker
-    $(scope + " .colorpicker-input").each(function() {
-        $(this).colorpicker();
+    $(scope + " .colorpicker-input:not(.colorpicker-element)").each(function() {
+        $(this).colorpicker({
+            container: $(this).parent(),
+        });
     });
 
     // Initialize tags input form
@@ -1399,8 +1401,10 @@ function XiboInitialise(scope, options) {
                   });
 
                   // init color picker
-                  $form.find('.colorpicker-input').each(function() {
-                      $(this).colorpicker();
+                  $form.find('.colorpicker-input:not(.colorpicker-element)').each(function() {
+                      $(this).colorpicker({
+                        container: $(this).parent(),
+                      });
                   });
 
                   // change input visibility depending on what we selected for media/playlist
