@@ -661,6 +661,15 @@ Widget.prototype.saveElements = function(
     // Save only id and value for element properties if they are not empty
     if (element.properties != undefined) {
       element.properties = Object.values(element.properties).map((property) => {
+        // If property is mediaId and it's null, use element mediaId
+        if (
+          property.id === 'mediaId' &&
+          element.mediaId !== undefined &&
+          property.value === null
+        ) {
+          property.value = element.mediaId;
+        }
+
         return {
           id: property.id,
           value: property.value,

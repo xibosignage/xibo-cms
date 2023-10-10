@@ -440,7 +440,7 @@ $(target).find('.date').each(function(_idx, dateEl){
 <div class="global-elements-image img-container" style="width:100%; height: 100%; overflow: hidden; position: relative;
     {{#if roundBorder}}border-radius: {{borderRadius}}px;{{/if}}">
     {{#if url}}
-        <img src="{{url}}" style="
+        <img src="{{{url}}}" style="
             width:100%; height: 100%;
             object-fit: {{objectFit}};
             object-position: {{alignId}} {{valignId}};
@@ -457,7 +457,7 @@ $(target).find('.date').each(function(_idx, dateEl){
     </template>
     <template>
         <id>global_library_image</id>
-        <extends override="url" with="[[mediaId]]">global-image</extends>
+        <extends override="url" with="mediaId">global-image</extends>
         <type>element</type>
         <title>Library Image</title>
         <dataType>global</dataType>
@@ -465,6 +465,9 @@ $(target).find('.date').each(function(_idx, dateEl){
         <canRotate>true</canRotate>
         <startWidth>250</startWidth>
         <startHeight>250</startHeight>
+        <properties>
+            <property id="mediaId" type="text"></property>
+        </properties>
     </template>
     <template>
         <id>line</id>

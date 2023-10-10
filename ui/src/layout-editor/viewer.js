@@ -1722,14 +1722,14 @@ Viewer.prototype.renderElementContent = function(
           meta.hasOwnProperty(metaKey);
 
         if (extendWithDataKey !== null) {
-          const keyIsMediaItem = extendWithDataKey.match(/\[\[(.*?)\]\]/);
           if (isInData) {
             convertedProperties[extendOverrideKey] =
               (elData) && elData[extendWithDataKey];
           } else if (isInMeta) {
             convertedProperties[extendOverrideKey] = meta[metaKey];
-          } else if (keyIsMediaItem != null) {
-            convertedProperties[extendOverrideKey] = keyIsMediaItem[0];
+          } else if (extendWithDataKey === 'mediaId') {
+            convertedProperties[extendOverrideKey] =
+              '[[mediaId=' + convertedProperties[extendWithDataKey] + ']]';
           } else {
             convertedProperties[extendOverrideKey] =
               (elData) && elData[extendWithDataKey];
@@ -1776,22 +1776,11 @@ Viewer.prototype.renderElementContent = function(
         });
 
         // Replace [[mediaId]] with media URL or element media id
-        const mediaURLRegex = /\[\[[\w&\-]+\]\]/gi;
+        const mediaURLRegex = /\[\[mediaId=[\w&\-]+\]\]/gi;
         hbsHtml.match(mediaURLRegex)?.forEach((match) => {
-          const mediaId = match.split('[[')[1].split(']]')[0];
-          let replacement = mediaId;
-
-          if (mediaId === 'mediaId') {
-            // Replace with media id from element
-            replacement = element.mediaId;
-          } else if (mediaId.split('mediaId=').length == 2) {
-            // Replace with media id from  placeholder
-            replacement = mediaId.split('mediaId=')[1];
-          }
-
-          // Replace with media id path
+          const mediaId = match.split('[[mediaId=')[1].split(']]')[0];
           const mediaUrl =
-            urlsForApi.library.download.url.replace(':id', replacement);
+            urlsForApi.library.download.url.replace(':id', mediaId);
 
           // Replace asset id with asset url
           hbsHtml = hbsHtml.replace(match, mediaUrl);
