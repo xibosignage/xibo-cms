@@ -661,6 +661,15 @@ Widget.prototype.saveElements = function(
     // Save only id and value for element properties if they are not empty
     if (element.properties != undefined) {
       element.properties = Object.values(element.properties).map((property) => {
+        // If property is mediaId and it's null, use element mediaId
+        if (
+          property.id === 'mediaId' &&
+          element.mediaId !== undefined &&
+          property.value === null
+        ) {
+          property.value = element.mediaId;
+        }
+
         return {
           id: property.id,
           value: property.value,
@@ -706,6 +715,11 @@ Widget.prototype.saveElements = function(
       if (element.effect !== undefined) {
         elementObject.effect = element.effect;
       }
+    }
+
+    // Save media id if exists
+    if (element.mediaId !== undefined) {
+      elementObject.mediaId = element.mediaId;
     }
 
     // Save slot if exists

@@ -1546,7 +1546,10 @@ Viewer.prototype.renderElementContent = function(
     // to the extended template, if it exists
     // or to hardcoded values
     if (!element.width || !element.height) {
-      if (template.parent) {
+      if (template.startWidth && template.startHeight) {
+        element.width = template.startWidth;
+        element.height = template.startHeight;
+      } else if (template.parent) {
         element.width = template.parent.startWidth;
         element.height = template.parent.startHeight;
       } else {
@@ -1731,7 +1734,7 @@ Viewer.prototype.renderElementContent = function(
         const elementParseDataFn = window[`onElementParseData_${element.id}`];
         const hasElementParseDataFn = typeof elementParseDataFn === 'function';
         const isInData = extendOverrideKey !== null &&
-          elData && elData.hasOwnProperty(extendOverrideKey);
+          elData != undefined && elData.hasOwnProperty(extendOverrideKey);
         const isInMeta = metaKey !== null &&
           meta.hasOwnProperty(metaKey);
 
@@ -1741,6 +1744,9 @@ Viewer.prototype.renderElementContent = function(
               (elData) && elData[extendWithDataKey];
           } else if (isInMeta) {
             convertedProperties[extendOverrideKey] = meta[metaKey];
+          } else if (extendWithDataKey === 'mediaId') {
+            convertedProperties[extendOverrideKey] =
+              '[[mediaId=' + convertedProperties[extendWithDataKey] + ']]';
           } else {
             convertedProperties[extendOverrideKey] =
               (elData) && elData[extendWithDataKey];
@@ -1784,6 +1790,17 @@ Viewer.prototype.renderElementContent = function(
 
           // Replace asset id with asset url
           hbsHtml = hbsHtml.replace(match, assetUrl);
+        });
+
+        // Replace [[mediaId]] with media URL or element media id
+        const mediaURLRegex = /\[\[mediaId=[\w&\-]+\]\]/gi;
+        hbsHtml.match(mediaURLRegex)?.forEach((match) => {
+          const mediaId = match.split('[[mediaId=')[1].split(']]')[0];
+          const mediaUrl =
+            urlsForApi.library.download.url.replace(':id', mediaId);
+
+          // Replace asset id with asset url
+          hbsHtml = hbsHtml.replace(match, mediaUrl);
         });
 
         // Append hbs html to the element
