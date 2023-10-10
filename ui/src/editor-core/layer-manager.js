@@ -342,7 +342,48 @@ LayerManager.prototype.render = function(reset) {
 
       this.firstRender = false;
     }
+
+    // Scroll to selected
+    self.scrollToSelected();
   });
+};
+
+/**
+ * Scroll to selected item
+ */
+LayerManager.prototype.scrollToSelected = function() {
+  const self = this;
+  const $selectedItem = self.DOMObject.find('.selected');
+
+  // Render to selected
+  if ($selectedItem.length > 0) {
+    // Check if the element is outside the render view
+    const $layerManagerContainer =
+      self.DOMObject.find('.layer-manager-body');
+    const headerHeight = $('.layer-manager-header').height();
+    const viewHeight = $layerManagerContainer.height();
+
+    const elemHeight = $selectedItem.height();
+    const elemTop = $selectedItem.position().top - headerHeight;
+    const elemBottom = elemTop + $selectedItem.height();
+
+    const isVisible =
+      (elemTop + elemHeight <= viewHeight) &&
+      (elemBottom >= elemHeight);
+
+    if (!isVisible) {
+      const scrollAdjust =
+        (elemTop + elemHeight > viewHeight) ?
+          ((elemTop + elemHeight) - viewHeight) :
+          (elemBottom - elemHeight);
+
+      // Scroll to element ( using deltas )
+      const viewTop = $layerManagerContainer.scrollTop();
+      $layerManagerContainer.scrollTop(
+        viewTop + scrollAdjust,
+      );
+    }
+  }
 };
 
 module.exports = LayerManager;
