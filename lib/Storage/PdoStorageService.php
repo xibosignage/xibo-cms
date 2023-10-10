@@ -183,7 +183,11 @@ class PdoStorageService implements StorageServiceInterface
                 $this->close($connection);
             }
 
-            return $exists;
+            if ($exists) {
+                return true;
+            } else {
+                return false;
+            }
         } catch (\PDOException $PDOException) {
             // Throw if we're not expected to reconnect.
             if (!$reconnect) {
@@ -329,7 +333,6 @@ class PdoStorageService implements StorageServiceInterface
                 $this->close($connection);
             }
             return $records;
-
         } catch (\PDOException $PDOException) {
             // Throw if we're not expected to reconnect.
             if (!$reconnect) {
