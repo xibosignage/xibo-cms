@@ -1746,7 +1746,7 @@ Viewer.prototype.renderElementContent = function(
             convertedProperties[extendOverrideKey] = meta[metaKey];
           } else if (extendWithDataKey === 'mediaId') {
             convertedProperties[extendOverrideKey] =
-              '[[mediaId=' + convertedProperties[extendWithDataKey] + ']]';
+              '[[mediaId=' + element.mediaId + ']]';
           } else {
             convertedProperties[extendOverrideKey] =
               (elData) && elData[extendWithDataKey];

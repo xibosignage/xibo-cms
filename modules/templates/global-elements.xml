@@ -465,9 +465,6 @@ $(target).find('.date').each(function(_idx, dateEl){
         <canRotate>true</canRotate>
         <startWidth>250</startWidth>
         <startHeight>250</startHeight>
-        <properties>
-            <property id="mediaId" type="text"></property>
-        </properties>
     </template>
     <template>
         <id>line</id>
