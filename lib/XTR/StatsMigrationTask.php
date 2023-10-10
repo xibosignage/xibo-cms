@@ -315,7 +315,7 @@ class StatsMigrationTask implements TaskInterface
         }
     }
 
-    function migrationStatToMongo($options)
+    private function migrationStatToMongo($options)
     {
 
         $this->appendRunMessage('## Moving from stat to Mongo');
@@ -416,7 +416,7 @@ class StatsMigrationTask implements TaskInterface
         }
     }
 
-    function migrationStatArchiveToMongo($options)
+    private function migrationStatArchiveToMongo($options)
     {
 
         $this->appendRunMessage(PHP_EOL. '## Moving from stat_archive to Mongo');
@@ -549,7 +549,7 @@ class StatsMigrationTask implements TaskInterface
     }
 
     // Get low watermark from file
-    function getWatermarkFromFile($fileName, $tableName)
+    private function getWatermarkFromFile($fileName, $tableName)
     {
 
         if (file_exists($fileName)) {
@@ -576,7 +576,7 @@ class StatsMigrationTask implements TaskInterface
     }
 
     // Check if end of records
-    function checkEndOfRecords($recordCount, $fileName)
+    private function checkEndOfRecords($recordCount, $fileName)
     {
 
         if ($recordCount == 0) {
@@ -594,7 +594,7 @@ class StatsMigrationTask implements TaskInterface
     }
 
     // Check loop limits
-    function checkLoopLimits($numberOfLoops, $optionsNumberOfLoops, $fileName, $watermark)
+    private function checkLoopLimits($numberOfLoops, $optionsNumberOfLoops, $fileName, $watermark)
     {
 
         if ($numberOfLoops == $optionsNumberOfLoops) {
@@ -613,7 +613,7 @@ class StatsMigrationTask implements TaskInterface
     }
 
     // Disable the task
-    function disableTask()
+    private function disableTask()
     {
 
         $this->appendRunMessage('# Disabling task.');
@@ -628,7 +628,7 @@ class StatsMigrationTask implements TaskInterface
     }
 
     // Disable the task
-    function quitMigrationTaskOrDisableStatArchiveTask()
+    private function quitMigrationTaskOrDisableStatArchiveTask()
     {
 
         // Quit the migration task if stat archive task is running
@@ -652,7 +652,7 @@ class StatsMigrationTask implements TaskInterface
     }
 
     // Cahce/Get display
-    function getDisplay($displayId)
+    private function getDisplay($displayId)
     {
 
         // Get display if in memory
