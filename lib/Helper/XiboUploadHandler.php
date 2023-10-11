@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022-2023 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -28,6 +28,7 @@ use Xibo\Entity\Permission;
 use Xibo\Entity\Widget;
 use Xibo\Event\LibraryReplaceEvent;
 use Xibo\Event\LibraryReplaceWidgetEvent;
+use Xibo\Event\LibraryUploadCompleteEvent;
 use Xibo\Event\MediaDeleteEvent;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -167,6 +168,12 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // Save
                 $media->save(['oldMedia' => $oldMedia]);
+
+                // Upload finished
+                $controller->getDispatcher()->dispatch(
+                    new LibraryUploadCompleteEvent($media),
+                    LibraryUploadCompleteEvent::$NAME
+                );
 
                 // Post process
                 $playerVersionFactory = null;
@@ -379,6 +386,12 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // Save
                 $media->save();
+
+                // Upload finished
+                $controller->getDispatcher()->dispatch(
+                    new LibraryUploadCompleteEvent($media),
+                    LibraryUploadCompleteEvent::$NAME
+                );
 
                 // Post process
                 $playerVersionFactory = null;
