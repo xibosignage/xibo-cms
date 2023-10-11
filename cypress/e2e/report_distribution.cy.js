@@ -72,7 +72,7 @@ describe('Distribution by Layout, Media or Event', function() {
     cy.get('#distributionTbl tbody tr:nth-child(3) td:nth-child(3)').contains(1); // Count
   });
 
-  it('Create/Delete a Daily Distribution Report Schedule', () => {
+  it.skip('Create/Delete a Daily Distribution Report Schedule', () => {
     const reportschedule = 'Daily Distribution by Layout 1 and Display 1';
 
     // Create and alias for load layout

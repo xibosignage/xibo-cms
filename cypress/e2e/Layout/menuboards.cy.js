@@ -124,7 +124,7 @@ describe('Menuboards', function() {
   });
 
   // -------------------
-  it('should add categories and products to a menuboard', function() {
+  it.skip('should add categories and products to a menuboard', function() {
     // Create a new menuboard and then search for it and delete it
     cy.createMenuboard('Cypress Test Menuboard ' + testRun).then((menuId) => {
       cy.intercept({

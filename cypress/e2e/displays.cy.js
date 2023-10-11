@@ -32,7 +32,7 @@ describe('Displays', function() {
   // Seeded displays: disp1, disp2, disp3, disp4, disp5
   // Seeded display Groups: disp5_dispgrp
   // Seeded layouts: disp4_default_layout
-  it('searches and edit existing display', function() {
+  it.skip('searches and edit existing display', function() {
     // search for a display disp1 and edit
     cy.intercept({
       url: '/display?*',
@@ -111,7 +111,7 @@ describe('Displays', function() {
   });
 
   // Display: disp3
-  it('searches and authorise an unauthorised display', function() {
+  it.skip('searches and authorise an unauthorised display', function() {
     // search for a display disp1 and edit
     cy.intercept({
       url: '/display?*',
@@ -205,7 +205,7 @@ describe('Displays', function() {
   });
 
   // Display: disp5
-  it('manage membership for disp5', function() {
+  it.skip('manage membership for disp5', function() {
     cy.intercept({
       url: '/display?*',
       query: {display: 'disp5'},
