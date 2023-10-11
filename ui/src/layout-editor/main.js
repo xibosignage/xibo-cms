@@ -1340,10 +1340,11 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
   // if it's going to be added as static widget or element
   if (
     draggableSubType === 'image' &&
-    // If droppable is a playlist or zone, do nothing
+    // If droppable is a playlist, drawer or zone, do nothing
     !(
       droppableIsPlaylist ||
-      droppableIsZone
+      droppableIsZone ||
+      droppableIsDrawer
     )
   ) {
     // Make a fake image element so it can go to the add element flow
