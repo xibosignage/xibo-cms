@@ -990,7 +990,11 @@ PropertiesPanel.prototype.render = function(
     if (
       app.mainObjectType === 'layout' &&
       (
-        target.type === 'widget' ||
+        (
+          target.type === 'widget' &&
+          // Don't show for drawer widget
+          target.drawerWidget != true
+        ) ||
         target.subType === 'playlist' ||
         isElementGroup
       )

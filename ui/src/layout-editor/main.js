@@ -397,29 +397,32 @@ lD.selectObject =
     if (!$.isEmptyObject(this.toolbar.selectedCard)) {
       // Get card object
       const card = this.toolbar.selectedCard[0];
-      // Check if droppable is active
-      const activeDroppable = (target) ?
-        target.hasClass('ui-droppable-active') :
-        true;
 
       // Drop to target validations
       const dropToPlaylist = (
+        target &&
         target.data('subType') == 'playlist' &&
         lD.common.hasTarget(card, 'playlist')
       );
 
-      const dropToDrawerOrZone =
-        ['drawer', 'zone'].includes(target.data('subType'));
-
-      const dropToWidget = (
-        target.hasClass('designer-widget') &&
-        activeDroppable
+      const dropToDrawerOrZone = (
+        target &&
+        ['drawer', 'zone'].includes(target.data('subType'))
       );
 
-      const dropToActionTarget =
-        target.hasClass('ui-droppable-actions-target');
+      const dropToWidget = (
+        target &&
+        target.hasClass('designer-widget') &&
+        target.hasClass('ui-droppable-active')
+      );
+
+      const dropToActionTarget = (
+        target &&
+        target.hasClass('ui-droppable-actions-target')
+      );
 
       const dropToElementAndElGroup = (
+        target &&
         (
           target.hasClass('designer-element-group') ||
           target.hasClass('designer-element')
