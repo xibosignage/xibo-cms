@@ -418,7 +418,22 @@ Cypress.Commands.add('createDataset', function(name) {
       dataSet: name,
     },
   }).then((res) => {
-    return res.body.datasetId;
+    return res.body.dataSetId;
+  });
+});
+
+// Delete Dataset
+Cypress.Commands.add('deleteDataset', function(id) {
+  cy.request({
+    method: 'DELETE',
+    url: '/api/dataset/' + id,
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {},
+  }).then((res) => {
+    return res;
   });
 });
 

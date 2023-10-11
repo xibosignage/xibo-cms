@@ -45,6 +45,95 @@ describe('Datasets', function() {
     cy.contains('Added Cypress Test Dataset ' + testRun + '_1');
   });
 
+  it('searches and edit existing dataset', function() {
+    // Create a new dataset and then search for it and delete it
+    cy.createDataset('Cypress Test Dataset ' + testRun).then((id) => {
+      cy.intercept({
+        url: '/dataset?*',
+        query: {dataSet: 'Cypress Test Dataset ' + testRun},
+      }).as('loadGridAfterSearch');
+
+      // Intercept the PUT request
+      cy.intercept({
+        method: 'PUT',
+        url: '/dataset/*',
+      }).as('putRequest');
+
+      cy.visit('/dataset/view');
+
+      // Filter for the created dataset
+      cy.get('#Filter input[name="dataSet"]')
+        .type('Cypress Test Dataset ' + testRun);
+
+      // Wait for the grid reload
+      cy.wait('@loadGridAfterSearch');
+
+      // Click on the first row element to open the delete modal
+      cy.get('#datasets tr:first-child .dropdown-toggle').click();
+      cy.get('#datasets tr:first-child .dataset_button_edit').click();
+
+      cy.get('.modal input#dataSet').clear()
+        .type('Cypress Test Dataset Edited ' + testRun);
+
+      // edit test dataset
+      cy.get('.bootbox .save-button').click();
+
+      // Wait for the intercepted PUT request and check the form data
+      cy.wait('@putRequest').then((interception) => {
+        // Get the request body (form data)
+        const response = interception.response;
+        const responseData = response.body.data;
+
+        // assertion on the "dataset" value
+        expect(responseData.dataSet).to.eq('Cypress Test Dataset Edited ' + testRun);
+      });
+
+      // Delete the dataset and assert success
+      cy.deleteDataset(id).then((res) => {
+        expect(res.status).to.equal(204);
+      });
+    });
+  });
+
+  it.only('copy an existing dataset', function() {
+    // Create a new dataset and then search for it and delete it
+    cy.createDataset('Cypress Test Dataset ' + testRun).then((res) => {
+      cy.intercept({
+        url: '/dataset?*',
+        query: {dataSet: 'Cypress Test Dataset ' + testRun},
+      }).as('loadGridAfterSearch');
+
+      // Intercept the POST request
+      cy.intercept({
+        method: 'POST',
+        url: /\/dataset\/copy\/\d+/,
+      }).as('postRequest');
+
+      cy.visit('/dataset/view');
+
+      // Filter for the created dataset
+      cy.get('#Filter input[name="dataSet"]')
+        .type('Cypress Test Dataset ' + testRun);
+
+      // Wait for the grid reload
+      cy.wait('@loadGridAfterSearch');
+
+      // Click on the first row element to open the delete modal
+      cy.get('#datasets tr:first-child .dropdown-toggle').click();
+      cy.get('#datasets tr:first-child .dataset_button_copy').click();
+
+      // Delete test dataset
+      cy.get('.bootbox .save-button').click();
+
+      // Wait for the intercepted POST request and check the form data
+      cy.wait('@postRequest').then((interception) => {
+        // Get the request body (form data)
+        const response = interception.response;
+        const responseData = response.body.data;
+        expect(responseData.dataSet).to.include('Cypress Test Dataset ' + testRun + ' 2');
+      });
+    });
+  });
 
   it('searches and delete existing dataset', function() {
     // Create a new dataset and then search for it and delete it

@@ -62,6 +62,46 @@ describe('Display Groups', function() {
     cy.contains('Added Cypress Test Displaygroup ' + testRun + '_2');
   });
 
+  it('copy an existing displaygroup', function() {
+    // Create a new displaygroup and then search for it and delete it
+    cy.createDisplaygroup('Cypress Test Displaygroup ' + testRun).then((res) => {
+      cy.intercept({
+        url: '/displaygroup?*',
+        query: {displayGroup: 'Cypress Test Displaygroup ' + testRun},
+      }).as('loadGridAfterSearch');
+
+      // Intercept the POST request
+      cy.intercept({
+        method: 'POST',
+        url: /\/displaygroup\/\d+\/copy$/,
+      }).as('postRequest');
+
+      cy.visit('/displaygroup/view');
+
+      // Filter for the created displaygroup
+      cy.get('#Filter input[name="displayGroup"]')
+        .type('Cypress Test Displaygroup ' + testRun);
+
+      // Wait for the grid reload
+      cy.wait('@loadGridAfterSearch');
+
+      // Click on the first row element to open the delete modal
+      cy.get('#displaygroups tr:first-child .dropdown-toggle').click();
+      cy.get('#displaygroups tr:first-child .displaygroup_button_copy').click();
+
+      // Delete test displaygroup
+      cy.get('.bootbox .save-button').click();
+
+      // Wait for the intercepted POST request and check the form data
+      cy.wait('@postRequest').then((interception) => {
+        // Get the request body (form data)
+        const response = interception.response;
+        const responseData = response.body.data;
+        expect(responseData.displayGroup).to.include('Cypress Test Displaygroup ' + testRun + ' 2');
+      });
+    });
+  });
+
   it('searches and delete existing displaygroup', function() {
     // Create a new displaygroup and then search for it and delete it
     cy.createDisplaygroup('Cypress Test Displaygroup ' + testRun).then((res) => {
@@ -91,8 +131,8 @@ describe('Display Groups', function() {
     });
   });
 
-  // seeded displays: dispgrp_disp1, dispgrp_disp2
-  it.only('manage membership for a displaygroup', function() {
+  // Seeded displays: dispgrp_disp1, dispgrp_disp2
+  it('manage membership for a displaygroup', function() {
     cy.createDisplaygroup('Cypress Test Displaygroup ' + testRun).then((res) => {
       // assign displays to display group
       cy.intercept({
@@ -147,9 +187,7 @@ describe('Display Groups', function() {
   });
 
   // -------
-  // Dynamic display group
-  // Seeded data
-  // Displays: disp_dynamic1, disp_dynamic2
+  // Seeded displays: dispgrp_disp_dynamic1, dispgrp_disp_dynamic2
   it('should add a dynamic display group', function() {
     cy.intercept({
       url: '/display?*',

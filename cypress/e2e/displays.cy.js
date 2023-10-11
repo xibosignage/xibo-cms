@@ -29,10 +29,9 @@ describe('Displays', function() {
     testRun = Cypress._.random(0, 1e9);
   });
 
-  // Displays are seeded for this test
-  // Displays: disp1, disp2, disp3, disp4, disp5
-  // Display Groups: disp5_dispgrp
-  // Layouts: disp4_default_layout
+  // Seeded displays: disp1, disp2, disp3, disp4, disp5
+  // Seeded display Groups: disp5_dispgrp
+  // Seeded layouts: disp4_default_layout
   it('searches and edit existing display', function() {
     // search for a display disp1 and edit
     cy.intercept({
