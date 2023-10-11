@@ -428,7 +428,7 @@ class WidgetHtmlRenderer
 
         // Extend any elements which need to be extended.
         foreach ($moduleTemplates as $moduleTemplate) {
-            if ($moduleTemplate->type === 'element' && $moduleTemplate->dataType !== 'global'
+            if ($moduleTemplate->type === 'element'
                 && !empty($moduleTemplate->extends)
                 && array_key_exists($moduleTemplate->extends->template, $globalElements)
             ) {
@@ -614,6 +614,14 @@ class WidgetHtmlRenderer
                                     );
                             }
                         }
+
+                        // Check the element for a mediaId property and set it to
+                        // [[mediaId=the_id_from_the_mediaId_property]]
+                        if (!empty($element['mediaId'])) {
+                            // Update the element so we output the mediaId replacement
+                            $widgetElements[$widgetIndex]['elements'][$elementIndex]['properties']['mediaId']
+                                = '[[mediaId=' . $element['mediaId'] . ']]';
+                        }
                     }
                 }
 
@@ -624,6 +632,8 @@ class WidgetHtmlRenderer
         // Render out HBS/style from templates
         // we do not render Twig here
         foreach ($moduleTemplates as $moduleTemplate) {
+            $this->getLog()->debug('render: outputting module template ' . $moduleTemplate->templateId);
+
             // Handle extends.
             $extension = $moduleTemplate->getUnmatchedProperty('extends');
             $isExtensionHasHead = false;

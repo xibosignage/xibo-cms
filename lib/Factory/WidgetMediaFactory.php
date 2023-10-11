@@ -38,16 +38,6 @@ class WidgetMediaFactory extends BaseFactory
     }
 
     /**
-     * Media Linked to Widgets by WidgetId
-     * @param int $widgetId
-     * @return array[int]
-     */
-    public function getModuleOnlyByWidgetId($widgetId)
-    {
-        return $this->query(null, ['widgetId' => $widgetId, 'moduleOnly' => 1]);
-    }
-
-    /**
      * @param int $mediaId
      * @return int
      * @throws \Xibo\Support\Exception\NotFoundException
