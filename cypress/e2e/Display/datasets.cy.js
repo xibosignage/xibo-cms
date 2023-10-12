@@ -29,7 +29,7 @@ describe('Datasets', function() {
     testRun = Cypress._.random(0, 1e9);
   });
 
-  it('should add one empty and one filled datasets', function() {
+  it('should add one empty dataset', function() {
     cy.visit('/dataset/view');
 
     // Click on the Add Dataset button

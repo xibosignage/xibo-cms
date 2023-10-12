@@ -193,7 +193,6 @@ class SeedDatabaseTask implements TaskInterface
                     // Cache
                     $this->displayGroups[$displayGroup->displayGroup] = $displayGroup->getId();
                 }
-
             } catch (GeneralException $e) {
                 $this->log->error('Error creating display group: '. $e->getMessage());
             }
@@ -273,7 +272,6 @@ class SeedDatabaseTask implements TaskInterface
                     // Cache
                     $this->displays[$display->display] = $display->displayId;
                 }
-
             } catch (GeneralException $e) {
                 $this->log->error('Error creating display: ' . $e->getMessage());
             }
@@ -636,7 +634,6 @@ class SeedDatabaseTask implements TaskInterface
                 'count' => 1,
             ];
             $this->store->insert('INSERT INTO `stat` (' . $columns . ') VALUES (' . $values . ')', $params);
-
         } catch (GeneralException $e) {
             $this->getLogger()->error('Error inserting stats: '. $e->getMessage());
         }
@@ -892,7 +889,6 @@ class SeedDatabaseTask implements TaskInterface
             'displayId' => $this->displays['POP Display 1']
         ]);
         $this->store->commitIfNecessary();
-
     }
 
     private function createCommands()
