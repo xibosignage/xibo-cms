@@ -195,15 +195,20 @@ const PlayerHelper = function() {
     return elements.length > 0 && elements.reduce(function(collection, item) {
       const element = _self.decorateElement(item, widget);
       const isGroup = _self.isGroup(element);
+      const standaloneKey = element.type === 'dataset' ?
+        element.id + '_' + element.templateData.datasetField :
+        element.id;
+
 
       // Initialize object values
       if (!isGroup &&
-          !collection.standalone.hasOwnProperty(element.id)
+        !collection.standalone.hasOwnProperty(standaloneKey)
       ) {
-        collection.standalone[element.id] = [];
+        collection.standalone[standaloneKey] = [];
       }
+
       if (isGroup &&
-          !collection.groups.hasOwnProperty(element.groupId)
+        !collection.groups.hasOwnProperty(element.groupId)
       ) {
         collection.groups[element.groupId] = {
           ...globalOptions,
@@ -222,8 +227,8 @@ const PlayerHelper = function() {
       if (!isGroup &&
         Object.keys(collection.standalone).length > 0
       ) {
-        collection.standalone[element.id] = [
-          ...collection.standalone[element.id],
+        collection.standalone[standaloneKey] = [
+          ...collection.standalone[standaloneKey],
           {
             ...element,
             numItems: 1,
