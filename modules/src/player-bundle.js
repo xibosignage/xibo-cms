@@ -40,6 +40,9 @@ import './xibo-webpage-render';
 import './xibo-worldclock-render';
 import './xibo-elements-render';
 import './editor-render';
+
+// Import PlayerHelper
+window.PlayerHelper = require('../../ui/src/helpers/player-helper.js');
 import './player';
 
 window.jQuery = window.$ = require('jquery');
@@ -58,6 +61,7 @@ window.pdfjsLib = require('pdfjs-dist/es5/build/pdf.js');
 // Include common helpers/transformer
 window.transformer = require('../../ui/src/helpers/transformer.js');
 window.ArrayHelper = require('../../ui/src/helpers/array.js');
+window.DateFormatHelper = require('../../ui/src/helpers/date-format-helper.js');
 
 // Plugins
 require('../vendor/flipclock.min.js');

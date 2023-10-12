@@ -24,6 +24,8 @@
 
 // Load templates
 const LayerManager = require('../editor-core/layer-manager.js');
+const DateFormatHelper = require('../helpers/date-format-helper.js');
+
 const viewerTemplate = require('../templates/viewer.hbs');
 const viewerWidgetTemplate = require('../templates/viewer-widget.hbs');
 const viewerLayoutPreview = require('../templates/viewer-layout-preview.hbs');
@@ -1459,36 +1461,6 @@ Viewer.prototype.renderElementContent = function(
   const $assetContainer =
     this.parent.editorContainer.find('#asset-container');
 
-  const macroRegex = /^%(\+|\-)[0-9]([0-9])?(d|h|m|s)%$/gi;
-
-  // TODO: Copied from player.js, to be added to a library so it can be reused
-  const composeUTCDateFromMacro = (macroStr) => {
-    const utcFormat = 'YYYY-MM-DDTHH:mm:ssZ';
-    const dateNow = moment().utc();
-    // Check if input has the correct format
-    const dateStr = String(macroStr);
-
-    if (dateStr.length === 0 ||
-        dateStr.match(macroRegex) === null
-    ) {
-      return dateNow.format(utcFormat);
-    }
-
-    // Trim the macro date string
-    const dateOffsetStr = dateStr.replaceAll('%', '');
-    const params = (op) => dateOffsetStr.replace(op, '')
-      .split(/(\d+)/).filter(Boolean);
-    const addRegex = /^\+/g;
-    const subtractRegex = /^\-/g;
-
-    // Check if it's add or subtract offset and return composed date
-    if (dateOffsetStr.match(addRegex) !== null) {
-      return dateNow.add(...params(addRegex)).format(utcFormat);
-    } else if (dateOffsetStr.match(subtractRegex) !== null) {
-      return dateNow.subtract(...params(subtractRegex)).format(utcFormat);
-    }
-  };
-
   // Get element template ( most of the time
   // template will be already loaded/cached )
   element.getTemplate().then((template) => {
@@ -1710,9 +1682,9 @@ Viewer.prototype.renderElementContent = function(
             const data = elData[key];
 
             // Check if data needs to be replaced
-            if (String(data) && String(data).match(macroRegex) !== null) {
+            if (String(data) && String(data).match(DateFormatHelper.macroRegex) !== null) {
               // Replace macro with current date
-              elData[key] = composeUTCDateFromMacro(data);
+              elData[key] = DateFormatHelper.composeUTCDateFromMacro(data);
             }
           }
         }
