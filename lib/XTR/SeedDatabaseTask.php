@@ -167,7 +167,14 @@ class SeedDatabaseTask implements TaskInterface
      */
     private function createDisplayGroups(): void
     {
-        $displayGroups = ['POP Display Group', 'Display Group 1', 'Display Group 2'];
+        $displayGroups = [
+            'POP Display Group',
+            'Display Group 1',
+            'Display Group 2',
+
+            // Display groups for displaygroups.cy.js test
+            'disp5_dispgrp',
+        ];
 
         foreach ($displayGroups as $displayGroupName) {
             try {
@@ -186,7 +193,6 @@ class SeedDatabaseTask implements TaskInterface
                     // Cache
                     $this->displayGroups[$displayGroup->displayGroup] = $displayGroup->getId();
                 }
-
             } catch (GeneralException $e) {
                 $this->log->error('Error creating display group: '. $e->getMessage());
             }
@@ -208,6 +214,20 @@ class SeedDatabaseTask implements TaskInterface
                 'clientType' => 'android', 'clientCode' => 400, 'clientVersion' => 4],
             'List Campaign Display 2' => ['license' => Random::generateString(12, 'seed'), 'licensed' => true,
                 'clientType' => 'android', 'clientCode' => 400, 'clientVersion' => 4],
+
+            // Displays for displays.cy.js test
+            'disp1' => ['license' => 'disp1', 'licensed' => true, 'clientType' => 'android', 'clientCode' => 400, 'clientVersion' => 4],
+            'disp2' => ['license' => 'disp2', 'licensed' => true, 'clientType' => 'android', 'clientCode' => 400, 'clientVersion' => 4],
+            'disp3' => ['license' => 'disp3', 'licensed' => false, 'clientType' => 'android', 'clientCode' => 400, 'clientVersion' => 4],
+            'disp4' => ['license' => 'disp4', 'licensed' => true, 'clientType' => 'android', 'clientCode' => 400, 'clientVersion' => 4],
+            'disp5' => ['license' => 'disp5', 'licensed' => true, 'clientType' => 'android', 'clientCode' => 400, 'clientVersion' => 4],
+
+            // Displays for displaygroups.cy.js test
+            'dispgrp_disp1' => ['license' => 'dispgrp_disp1', 'licensed' => true, 'clientType' => 'android', 'clientCode' => 400, 'clientVersion' => 4],
+            'dispgrp_disp2' => ['license' => 'dispgrp_disp2', 'licensed' => true, 'clientType' => 'android', 'clientCode' => 400, 'clientVersion' => 4],
+            'dispgrp_disp_dynamic1' => ['license' => 'dispgrp_disp_dynamic1', 'licensed' => true, 'clientType' => 'android', 'clientCode' => 400, 'clientVersion' => 4],
+            'dispgrp_disp_dynamic2' => ['license' => 'dispgrp_disp_dynamic2', 'licensed' => true, 'clientType' => 'android', 'clientCode' => 400, 'clientVersion' => 4],
+
 
             // 6 displays for xmds
             'phpunitv7' => ['license' => 'PHPUnit7', 'licensed' => true, 'clientType' => 'android', 'clientCode' => 400, 'clientVersion' => 4],
@@ -252,7 +272,6 @@ class SeedDatabaseTask implements TaskInterface
                     // Cache
                     $this->displays[$display->display] = $display->displayId;
                 }
-
             } catch (GeneralException $e) {
                 $this->log->error('Error creating display: ' . $e->getMessage());
             }
@@ -298,6 +317,9 @@ class SeedDatabaseTask implements TaskInterface
             'List Campaign Layout 1' => 'export-list-campaign-layout-1.zip',
             'List Campaign Layout 2' => 'export-list-campaign-layout-2.zip',
             'POP Layout 1' => 'export-pop-layout-1.zip',
+
+            // Layout for displaygroups.cy.js test
+            'disp4_default_layout' => 'export-disp4-default-layout.zip',
         ];
 
         // Get all layouts
@@ -612,7 +634,6 @@ class SeedDatabaseTask implements TaskInterface
                 'count' => 1,
             ];
             $this->store->insert('INSERT INTO `stat` (' . $columns . ') VALUES (' . $values . ')', $params);
-
         } catch (GeneralException $e) {
             $this->getLogger()->error('Error inserting stats: '. $e->getMessage());
         }
@@ -868,7 +889,6 @@ class SeedDatabaseTask implements TaskInterface
             'displayId' => $this->displays['POP Display 1']
         ]);
         $this->store->commitIfNecessary();
-
     }
 
     private function createCommands()
