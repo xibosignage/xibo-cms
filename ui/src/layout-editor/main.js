@@ -1198,8 +1198,9 @@ lD.deleteObject = function(
     // Delete element from widget
     widget.removeElement(
       objectId,
-      true,
-    );
+      {
+        reload: false,
+      });
   } else if (objectType === 'element-group') {
     // For element groups, we delete all elements in the group
     // Get parent widget
@@ -1210,7 +1211,11 @@ lD.deleteObject = function(
     );
 
     // Delete element from widget
-    widget.removeElementGroup(objectId);
+    widget.removeElementGroup(
+      objectId,
+      {
+        reload: false,
+      });
   } else {
     lD.common.showLoadingScreen('deleteObject');
 
@@ -3064,20 +3069,59 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
       lD.openPlaylistEditor(layoutObject.playlists.playlistId, layoutObject);
     } else if (target.data('action') == 'Ungroup') {
       // Get widget
-      const elementWidget =
+      const elementsWidget =
         lD.getObjectByTypeAndId('widget', objAuxId, 'canvas');
+
+      // Canvas widget
+      const canvasWidget = lD.getObjectByTypeAndId('canvasWidget');
+
+      let saveCanvas = false;
 
       // Remove group from elements
       Object.values(layoutObject.elements).forEach((el) => {
-        el.groupId = '';
+        // Remove group from element
+        el.groupId = undefined;
         delete el.group;
+
+        // If there's a global element in a non global widget
+        // move it to the global widget instead
+        if (
+          elementsWidget.subType != 'global' &&
+          el.elementType === 'global'
+        ) {
+          // Make a copy and add to canvas
+          canvasWidget.addElement(Object.assign({}, el), false);
+          saveCanvas = true;
+
+          // Delete old element
+          elementsWidget.removeElement(el.elementId, {
+            reloadLayerManager: false,
+            removeFromViewer: false,
+            save: false,
+            reload: false,
+          });
+        }
       });
 
       // Remove group from widget
-      delete elementWidget.elementGroups[layoutObject.id];
+      delete elementsWidget.elementGroups[layoutObject.id];
 
-      // Save elements
-      elementWidget.saveElements().then((_res) => {
+      // Save elements for the target widget
+      const saveElementsRequests = [
+        elementsWidget.saveElements({
+          forceRequest: true,
+        }),
+      ];
+
+      // If we also need to save canvas
+      if (saveCanvas) {
+        saveElementsRequests.push(canvasWidget.saveElements({
+          forceRequest: true,
+        }));
+      }
+
+      // Save all requests and reload data
+      Promise.all(saveElementsRequests).then((_res) => {
         // Deselect object
         lD.selectObject();
 
@@ -3107,7 +3151,9 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
  * @param {object=} position - Page menu position
  */
 lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
-  const objectsArray = $.makeArray($('.selected'));
+  const objectsArray = $.makeArray(
+    (objs) ? objs : lD.viewer.DOMObject.find('.selected'),
+  );
 
   // Don't open context menu in read only mode
   if (lD.readOnlyMode) {
@@ -3138,6 +3184,42 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
     return true;
   });
 
+  // Check if element(s) can be added to group to group
+  let groupCount = 0;
+  let canBeAddedToGroup = true;
+  tempWidgetId = undefined;
+  for (let index = 0; index < objectsArray.length; index++) {
+    const $item = $(objectsArray[index]);
+
+    // If it's a group, count it
+    ($item.hasClass('designer-element-group')) && groupCount++;
+
+    // If we have more than one group, fail condition
+    if (groupCount > 1) {
+      canBeAddedToGroup = false;
+      break;
+    }
+
+    // If it's not a global element
+    // check if the widget is the same as the other elements
+    if ($item.data('elementType') != 'global') {
+      if (tempWidgetId === undefined) {
+        tempWidgetId = $item.data('widgetId');
+      } else {
+        // Check if it's the same widget
+        if (tempWidgetId != $item.data('widgetId')) {
+          canBeAddedToGroup = false;
+          break;
+        }
+      }
+    }
+  }
+
+  // Check if we have exactly one group
+  if (groupCount != 1) {
+    canBeAddedToGroup = false;
+  }
+
   // Check if all can be deleted ( have class deletable or editable )
   const canBeDeleted = objectsArray.every((el) => {
     return $(el).is('.deletable, .editable');
@@ -3146,7 +3228,8 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
   // Don't open context menu if we can't group or delete elements
   if (
     canBeGrouped === false &&
-    canBeDeleted === false
+    canBeDeleted === false &&
+    canBeAddedToGroup === false
   ) {
     return;
   }
@@ -3157,6 +3240,7 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
       trans: contextMenuTrans,
       canBeGrouped: canBeGrouped,
       canBeDeleted: canBeDeleted,
+      canBeAddedToGroup: canBeAddedToGroup,
     }),
   );
 
@@ -3228,12 +3312,18 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
           if (type === 'elements') {
             auxWidget.removeElement(
               itemId,
-              save,
+              {
+                save: save,
+                reload: false,
+              },
             );
           } else {
             auxWidget.removeElementGroup(
               itemId,
-              save,
+              {
+                save: save,
+                reload: false,
+              },
             );
           }
         });
@@ -3323,6 +3413,7 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
       let elementsType = 'global';
       const canvasWidget = lD.getObjectByTypeAndId('canvasWidget');
       let elementsWidget = canvasWidget;
+      let saveCanvas = false;
 
       $elementsToBeGrouped.each((_idx, el) => {
         const elData = $(el).data();
@@ -3376,16 +3467,28 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
           element.elementType === 'global' &&
           elementsWidget.subType != 'global'
         ) {
-          // Make a copy and add to new widget
-          elementsWidget.addElement(Object.assign({}, element), false);
+          // Make a copy of the element
+          const copy = Object.assign({}, element);
+
+          // Add to new widget
+          elementsWidget.addElement(copy, false);
 
           // Delete old element
-          canvasWidget.removeElement(element.elementId, true);
+          canvasWidget.removeElement(element.elementId, {
+            reloadLayerManager: false,
+            removeFromViewer: false,
+            save: false,
+            reload: false,
+          });
+          saveCanvas = true;
         }
 
         // Add element to group
         newGroup.elements[elId] = element;
       });
+
+      // Deselect all objects
+      lD.selectObject();
 
       // Select new group
       lD.viewer.saveTemporaryObject(
@@ -3400,7 +3503,198 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
       );
 
       // Update group dimensions
-      newGroup.updateGroupDimensions(true);
+      newGroup.updateGroupDimensions(false);
+
+      // Save elements for the target widget
+      const saveElementsRequests = [
+        elementsWidget.saveElements({
+          forceRequest: true,
+        }),
+      ];
+
+      // If we also need to save canvas
+      if (saveCanvas) {
+        saveElementsRequests.push(canvasWidget.saveElements({
+          forceRequest: true,
+        }));
+      }
+
+      // Save all requests and reload data
+      Promise.all(saveElementsRequests).then((_res) => {
+        // Deselect object
+        lD.selectObject();
+
+        // Reload data and select element when data reloads
+        lD.reloadData(lD.layout,
+          {
+            refreshEditor: true,
+          });
+      });
+    } else if (target.data('action') == 'addToGroup') {
+      // Elements
+      const $elementsToBeGrouped =
+        lD.viewer.DOMObject.find('.selected.designer-element');
+      // Original group
+      const $originalGroup =
+        lD.viewer.DOMObject.find('.selected.designer-element-group');
+
+      // Elements to be grouped and elements from group
+      const $allElementsToBeGrouped = $elementsToBeGrouped.add(
+        $originalGroup.find('.designer-element'),
+      );
+
+      // Check if not all items are global typed
+      let elementsToBeAddedType = 'global';
+      let elementToBeAddedWidget;
+      $elementsToBeGrouped.each((_idx, el) => {
+        const elData = $(el).data();
+
+        if (elementsToBeAddedType != elData.elementType) {
+          elementsToBeAddedType = elData.elementType;
+          elementToBeAddedWidget = lD.getObjectByTypeAndId(
+            'widget',
+            'widget_' + elData.regionId + '_' +
+            elData.widgetId,
+            'canvas',
+          );
+          // Stop loop
+          return false;
+        }
+      });
+
+
+      // Target group widget comes from the original group
+      let targetWidget = lD.getObjectByTypeAndId(
+        'widget',
+        'widget_' + $originalGroup.data('regionId') + '_' +
+          $originalGroup.data('widgetId'),
+        'canvas',
+      );
+
+      // Get original group id and type
+      const originalGroupId = $originalGroup.prop('id');
+      const originalGroupType = $originalGroup.data('elementType');
+
+      // Flag to see if we need to save original widget
+      let saveOriginalWidget = false;
+      let widgetToSave;
+
+      // Get group from elements
+      let targetGroup;
+
+      // If original group type is global
+      // but elements are not, we need to move group between widgets
+      if (
+        originalGroupType === 'global' &&
+        elementsToBeAddedType != 'global'
+      ) {
+        // Get group from original widget
+        targetGroup = targetWidget.elementGroups[originalGroupId];
+
+        // Add group to target widget
+        targetGroup.regionId = elementToBeAddedWidget.regionId.split('_')[1];
+        targetGroup.widgetId = elementToBeAddedWidget.widgetId;
+        elementToBeAddedWidget.elementGroups[originalGroupId] = targetGroup;
+
+        // Remove group from original widget
+        delete targetWidget.elementGroups[originalGroupId];
+
+        // Change target widget
+        targetWidget = elementToBeAddedWidget;
+      }
+
+      // Get target group
+      targetGroup = targetWidget.elementGroups[originalGroupId];
+
+      // Add group to elements
+      $allElementsToBeGrouped.each((_idx, el) => {
+        const elData = $(el).data();
+        const elId = $(el).attr('id');
+
+        element = lD.getObjectByTypeAndId(
+          'element',
+          elId,
+          'widget_' + elData.regionId + '_' + elData.widgetId,
+        );
+
+        // Add group to element
+        element.groupId = originalGroupId;
+        element.group = targetGroup;
+
+        // Element widget
+        elementsWidget = lD.getObjectByTypeAndId(
+          'widget',
+          'widget_' + elData.regionId + '_' + elData.widgetId,
+          'canvas',
+        );
+
+        // If element's widget is different from the target
+        // we need to move it to the new one and remove it from the original
+        if (
+          targetWidget.id != elementsWidget.id
+        ) {
+          // Make a copy of the element
+          const copy = Object.assign({}, element);
+
+          // Add to target widget
+          targetWidget.addElement(copy, false);
+
+          // Remove from original widget
+          elementsWidget.removeElement(element.elementId, {
+            reloadLayerManager: false,
+            removeFromViewer: false,
+            save: false,
+            reload: false,
+          });
+
+          // Save original widget
+          saveOriginalWidget = true;
+          widgetToSave = elementsWidget;
+        }
+
+        // Add element to group
+        targetGroup.elements[elId] = element;
+      });
+
+      // Deselect all objects
+      lD.selectObject();
+
+      // Change group properties so it can be the selected object on reload
+      lD.selectedObject.id = targetGroup.id;
+      lD.selectedObject.type = 'element-group';
+      const $groupInViewer =
+        lD.viewer.DOMObject.find('.designer-element-group#' + targetGroup.id);
+      $groupInViewer.data('widgetId', targetGroup.widgetId);
+      $groupInViewer.data('regionId', targetGroup.regionId);
+
+      // Update group dimensions
+      targetGroup.updateGroupDimensions(false);
+
+      // Save elements for the target widget
+      const saveElementsRequests = [
+        targetWidget.saveElements({
+          forceRequest: true,
+        }),
+      ];
+
+      // If we also need to save canvas
+      if (saveOriginalWidget) {
+        saveElementsRequests.push(widgetToSave.saveElements({
+          forceRequest: true,
+        }));
+      }
+
+      // Save all requests and reload data
+      Promise.all(saveElementsRequests).then((_res) => {
+        // Deselect object
+        lD.selectObject();
+
+        // Reload data and select element when data reloads
+        lD.reloadData(lD.layout,
+          {
+            refreshEditor: true,
+          });
+      });
     }
 
     // Remove context menu

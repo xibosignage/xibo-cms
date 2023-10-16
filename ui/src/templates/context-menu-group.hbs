@@ -7,6 +7,12 @@
                 </div>
             {{/if}}
 
+            {{#if canBeAddedToGroup}}
+                <div class="context-menu-btn addElementsToGroupBtn" data-title="{{trans.addElementsToGroup}}" data-action="addToGroup" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
+                    <i class="fas fa-chain"></i><span>{{trans.addElementsToGroup}}</span>
+                </div>
+            {{/if}}
+
             {{#if canBeDeleted}}
                 <div class="context-menu-btn deleteGroupElementsBtn" data-title="{{trans.deleteGroupElements}}" data-action="Delete" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
                     <i class="fa fa-trash"></i><span>{{trans.deleteGroupElements}}</span>

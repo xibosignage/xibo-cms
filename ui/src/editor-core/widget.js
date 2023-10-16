@@ -644,28 +644,155 @@ Widget.prototype.getNextWidget = function(reverse = false) {
 /**
  * Save elements to widget
  * @param {object} elements - elements to save
+ * @param {boolean} reload - reload layout
+ * @param {boolean} forceRequest
+ *  - always make request even another one is happening
  * @return {Promise} - Promise
  */
 Widget.prototype.saveElements = function(
-  elements,
+  {
+    elements = null,
+    reload = false,
+    forceRequest = false,
+  } = {},
 ) {
   const self = this;
+  const app = this.editorObject;
   const widgetId = this.widgetId;
   const linkToAPI = urlsForApi.widget.saveElements;
   const requestPath = linkToAPI.url.replace(':id', widgetId);
 
   let elementsToSave = (elements) ? elements : this.elements;
 
+  let savePending;
+
+  const reloadLayout = function(forceReload = false) {
+    if (reload || forceReload) {
+      app.reloadData(app.layout,
+        {
+          refreshEditor: true,
+        });
+    }
+  };
+
+  // If there's no more elements in widget, remove it
+  if (Object.keys(elementsToSave).length == 0) {
+    const isGlobalWidget = (this.subType === 'global');
+    let removeCanvasRegion = false;
+    let removeCurrentWidget = false;
+    let unsetCanvasDuration = false;
+
+    // If we deleted the last global element
+    if (isGlobalWidget) {
+      // Check if we have other widgets on the canvas region
+      if (Object.keys(this.parent.widgets).length > 1) {
+        removeCanvasRegion = false;
+        removeCurrentWidget = false;
+        unsetCanvasDuration = true;
+      } else {
+        // Otherwise, just remove the region
+        removeCanvasRegion = true;
+      }
+    } else if (Object.keys(this.parent.widgets).length === 2) {
+      // If it's not a global element, and
+      // we only have this widget and the global
+
+      // Check if the global widget has elements
+      let globalHasElements = true;
+      $.each(this.parent.widgets, function(i, e) {
+        if (e.subType === 'global' && Object.keys(e.elements).length === 0) {
+          globalHasElements = false;
+        }
+      });
+
+      // If global has no elements, we delete region altogether
+      if (!globalHasElements) {
+        removeCanvasRegion = true;
+      } else {
+        removeCurrentWidget = true;
+      }
+    } else {
+      // If it's not global, and we have more than 2 widgets, remove this one
+      removeCurrentWidget = true;
+    }
+
+    // If we removed all global elements
+    // but we still have other widgets in canvas
+    // Set canvas region duration to null to reset it
+    if (unsetCanvasDuration) {
+      const linkToAPI = urlsForApi.widget.saveForm;
+      const requestPath = linkToAPI.url.replace(':id', self.widgetId);
+
+      // Data to be saved
+      const dataToSave = {
+        name: self.widgetName,
+        useDuration: false,
+        duration: null,
+      };
+
+      // Set widget duration to 0
+      savePending = $.ajax({
+        url: requestPath,
+        type: linkToAPI.type,
+        data: dataToSave,
+      }).done(function(res) {
+        if (!res.success) {
+          // Login Form needed?
+          if (res.login) {
+            window.location.href = window.location.href;
+            location.reload();
+          } else {
+            toastr.error(errorMessagesTrans.formLoadFailed);
+
+            // Just an error we dont know about
+            if (res.message == undefined) {
+              console.error(res);
+            } else {
+              console.error(res.message);
+            }
+          }
+        }
+      }).catch(function(jqXHR, textStatus, errorThrown) {
+        console.error(jqXHR, textStatus, errorThrown);
+        toastr.error(errorMessagesTrans.formLoadFailed);
+      });
+    } else if (
+      removeCanvasRegion
+    ) {
+      // Remove region
+      app.layout.deleteObject('region', this.parent.regionId)
+        .then(() => {
+          reloadLayout(true);
+        });
+    } else if (removeCurrentWidget) {
+      // Remove widget
+      app.layout.deleteObject('widget', this.widgetId)
+        .then(() => {
+          reloadLayout(true);
+        });
+    }
+
+    // If we removed widget or region, we
+    // skip saving elements
+    if (
+      removeCanvasRegion ||
+      removeCurrentWidget
+    ) {
+      return Promise.resolve();
+    }
+  }
+
   // Convert element to the correct type
   elementsToSave = Object.values(elementsToSave).map((element) => {
     // Save only id and value for element properties if they are not empty
     if (element.properties != undefined) {
-      element.properties = Object.values(element.properties).map((property) => {
-        return {
-          id: property.id,
-          value: property.value,
-        };
-      });
+      element.properties =
+        Object.values(element.properties).map((property) => {
+          return {
+            id: property.id,
+            value: property.value,
+          };
+        });
     }
 
     const elementObject = {
@@ -738,49 +865,79 @@ Widget.prototype.saveElements = function(
 
   lD.common.showLoadingScreen();
 
-  // If there was still a render request, abort it
-  if (self.saveElementsRequest != undefined) {
-    self.saveElementsRequest.abort('requestAborted');
-  }
-
-  return self.saveElementsRequest = $.ajax({
-    url: requestPath,
-    type: linkToAPI.type,
-    dataType: 'json',
-    data: JSON.stringify([
-      {
-        elements: elementsToSave,
-      },
-    ]),
-  }).fail(function(jqXHR, textStatus, errorThrown) {
-    // Clear request var after response
-    self.saveElementsRequest = undefined;
-
-    if (textStatus != 'requestAborted') {
-      console.error('saveElementsToWidget', jqXHR, textStatus, errorThrown);
+  const saveElementsRequest = function() {
+    if (
+      self.saveElementsRequest == 'force' &&
+      forceRequest === false
+    ) {
+      // If the previous request was forced, cancel current
+      return Promise.resolve('Cancelled due to previous force request!');
+    } else if (
+      self.saveElementsRequest != undefined &&
+      forceRequest === false
+    ) {
+      // If there was still a render request, abort it
+      self.saveElementsRequest.abort('requestAborted');
     }
-  }).always(function(res) {
-    // Clear request var after response
-    self.saveElementsRequest = undefined;
 
-    if (!res.success) {
-      // Login Form needed?
-      if (res.login) {
-        window.location.href = window.location.href;
-        location.reload();
+    const saveRequest = $.ajax({
+      url: requestPath,
+      type: linkToAPI.type,
+      dataType: 'json',
+      data: JSON.stringify([
+        {
+          elements: elementsToSave,
+        },
+      ]),
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+      // Clear request var after response
+      self.saveElementsRequest = undefined;
+
+      if (textStatus != 'requestAborted') {
+        console.error('saveElementsToWidget', jqXHR, textStatus, errorThrown);
+      }
+    }).always(function(res) {
+      // Clear request var after response
+      self.saveElementsRequest = undefined;
+
+      if (res.success) {
+        reloadLayout();
       } else {
-        if (res.statusText != 'requestAborted') {
-          // Just an error we dont know about
-          if (res.message == undefined) {
-            console.error(res);
-          } else {
-            console.error(res.message);
+        // Login Form needed?
+        if (res.login) {
+          window.location.href = window.location.href;
+          location.reload();
+        } else {
+          if (res.statusText != 'requestAborted') {
+            // Just an error we dont know about
+            if (res.message == undefined) {
+              console.error(res);
+            } else {
+              console.error(res.message);
+            }
           }
         }
       }
+      lD.common.hideLoadingScreen();
+    });
+
+    // If this request is forced, save flag and return request
+    if (forceRequest === true) {
+      self.saveElementsRequest = 'force';
+    } else {
+      // Save request so it can be cancelled if we repeat the request
+      self.saveElementsRequest = saveRequest;
     }
-    lD.common.hideLoadingScreen();
-  });
+
+    // Return save request
+    return saveRequest;
+  };
+
+  if (savePending) {
+    return savePending.then(saveElementsRequest);
+  } else {
+    return saveElementsRequest();
+  }
 };
 
 /**
@@ -793,11 +950,14 @@ Widget.prototype.addElement = function(
   element,
   save = true,
 ) {
+  // Region id parse
+  const regionId = (this.regionId.split('region_') > 1) ?
+    this.regionId : this.regionId.split('region_')[1];
   // Add element to object
   const newElement = this.elements[element.elementId] = new Element(
     element,
     this.widgetId,
-    this.regionId,
+    regionId,
     this,
   );
 
@@ -805,7 +965,10 @@ Widget.prototype.addElement = function(
   this.elements[element.elementId].slot = this.updateElementMap(newElement);
 
   // If we have a groupId, add or assign it to the group
-  if (element.groupId != undefined) {
+  if (
+    element.groupId != undefined &&
+    element.groupId != ''
+  ) {
     if (this.elementGroups[element.groupId] == undefined) {
       this.elementGroups[element.groupId] = new ElementGroup(
         Object.assign(
@@ -815,7 +978,7 @@ Widget.prototype.addElement = function(
           },
         ),
         this.widgetId,
-        this.regionId,
+        regionId,
         this,
       );
     }
@@ -852,17 +1015,22 @@ Widget.prototype.addElement = function(
  * Remove element
  * @param {string} elementId - id of the element to remove
  * @param {boolean} save - if true, save changes to widget
+ * @param {boolean} removeFromViewer - if true, remove from viewer
+ * @param {boolean} reload - if true, reload after removing
  */
 Widget.prototype.removeElement = function(
   elementId,
-  save,
+  {
+    save = true,
+    removeFromViewer = true,
+    reloadLayerManager = true,
+    reload = true,
+  } = {},
 ) {
-  const app = this.editorObject;
   const elementGroupId = this.elements[elementId].groupId;
-  const self = this;
 
   // Remove element from DOM
-  $(`#${elementId}`).remove();
+  (removeFromViewer) && $(`#${elementId}`).remove();
 
   // Remove element from object
   delete this.elements[elementId];
@@ -896,137 +1064,35 @@ Widget.prototype.removeElement = function(
     }
   }
 
-  // Check if there's no more elements in widget and remove it
-  if (Object.keys(this.elements).length == 0) {
-    const isGlobalWidget = (this.subType === 'global');
-    let removeCanvasRegion = false;
-    let removeCurrentWidget = false;
-    let unsetCanvasDuration = false;
+  // Recalculate required elements
+  this.validateRequiredElements();
 
-    // If we deleted the last global element
-    if (isGlobalWidget) {
-      // Check if we have other widgets on the canvas region
-      if (Object.keys(this.parent.widgets).length > 1) {
-        removeCanvasRegion = false;
-        removeCurrentWidget = false;
-        unsetCanvasDuration = true;
-      } else {
-        // Otherwise, just remove the region
-        removeCanvasRegion = true;
-      }
-    } else if (Object.keys(this.parent.widgets).length === 2) {
-      // If it's not a global element, and
-      // we only have this widget and the global
+  // Only save if we're not removing the widget
+  // Save changes to widget
+  (save && !savedAlready) && this.saveElements({
+    reload: reload,
+  });
 
-      // Check if the global widget has elements
-      let globalHasElements = true;
-      $.each(this.parent.widgets, function(i, e) {
-        if (e.subType === 'global' && Object.keys(e.elements).length === 0) {
-          globalHasElements = false;
-        }
-      });
-
-      // If global has no elements, we delete region altogether
-      if (!globalHasElements) {
-        removeCanvasRegion = true;
-      } else {
-        removeCurrentWidget = true;
-      }
-    } else {
-      // If it's not global, and we have more than 2 widgets, remove this one
-      removeCurrentWidget = true;
-    }
-
-    const reloadLayout = function() {
-      app.reloadData(app.layout,
-        {
-          refreshEditor: true,
-        });
-    };
-
-    // If we removed all global elements
-    // but we still have other widgets in canvas
-    // Set canvas region duration to null to reset it
-    if (unsetCanvasDuration) {
-      // Save elements first ( to remove them from widget )
-      this.saveElements().then(function() {
-        const linkToAPI = urlsForApi.widget.saveForm;
-        const requestPath = linkToAPI.url.replace(':id', self.widgetId);
-
-        // Data to be saved
-        const dataToSave = {
-          name: self.widgetName,
-          useDuration: false,
-          duration: null,
-        };
-
-        // Set widget duration to 0
-        $.ajax({
-          url: requestPath,
-          type: linkToAPI.type,
-          data: dataToSave,
-        }).done(function(res) {
-          if (res.success) {
-            reloadLayout();
-          } else {
-            // Login Form needed?
-            if (res.login) {
-              window.location.href = window.location.href;
-              location.reload();
-            } else {
-              toastr.error(errorMessagesTrans.formLoadFailed);
-
-              // Just an error we dont know about
-              if (res.message == undefined) {
-                console.error(res);
-              } else {
-                console.error(res.message);
-              }
-            }
-          }
-        }).catch(function(jqXHR, textStatus, errorThrown) {
-          console.error(jqXHR, textStatus, errorThrown);
-          toastr.error(errorMessagesTrans.formLoadFailed);
-        });
-      });
-    } else if (
-      removeCanvasRegion
-    ) {
-      // Remove region
-      app.layout.deleteObject('region', this.parent.regionId)
-        .then(reloadLayout);
-    } else if (removeCurrentWidget) {
-      // Remove widget
-      app.layout.deleteObject('widget', this.widgetId).then(reloadLayout);
-    }
-  } else {
-    // Last element will be the one being saved
-    const lastElement = save;
-
-    // Recalculate required elements
-    this.validateRequiredElements();
-
-    // Only save if we're not removing the widget
-    // Save changes to widget
-    (save && !savedAlready) && this.saveElements();
-
-    // If object is selected, remove it from selection
-    if (lD.selectedObject.elementId == elementId) {
-      lD.selectObject({
-        reloadViewer: false,
-      });
-      lD.viewer.selectElement(null, false, false);
-    } else if (lD.selectedObject.type != 'layout' && lastElement) {
-      // If we have a selected object other than layout, reload properties panel
-      lD.propertiesPanel.render(lD.selectedObject);
-    }
-
-    // Reload viewer to update widget valid status
-    (lastElement) && lD.viewer.render();
-
-    // If we're not removing widget, we need ot update element map
-    (lastElement) && this.updateElementMap();
+  // If object is selected, remove it from selection
+  if (lD.selectedObject.elementId == elementId) {
+    lD.selectObject({
+      reloadViewer: false,
+    });
+    lD.viewer.selectElement(null, false, false);
+  } else if (lD.selectedObject.type != 'layout' && save) {
+    // If we have a selected object other than layout, reload properties panel
+    lD.propertiesPanel.render(lD.selectedObject);
   }
+
+  // Reload viewer to update widget valid status
+  (reload) && lD.viewer.render();
+
+  // If we're not removing widget, we need ot update element map
+  (save) && this.updateElementMap();
+
+  // Update layer manager
+  (reloadLayerManager) &&
+    lD.viewer.layerManager.render();
 };
 
 /**
@@ -1036,7 +1102,10 @@ Widget.prototype.removeElement = function(
  */
 Widget.prototype.removeElementGroup = function(
   groupId,
-  save = true,
+  {
+    save = true,
+    reload = true,
+  } = {},
 ) {
   const self = this;
   // Get element group
@@ -1057,7 +1126,10 @@ Widget.prototype.removeElementGroup = function(
       // Delete element from widget
       self.removeElement(
         element.elementId,
-        lastElement && save,
+        {
+          save: (lastElement && save),
+          reload: reload,
+        },
       );
     });
 
