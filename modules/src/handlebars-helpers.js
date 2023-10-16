@@ -39,34 +39,34 @@ Handlebars.registerHelper('weatherBackgroundImage', function(
 ) {
   let bgImage = false;
 
-  if ((typeof cloudyImage!== 'undefined' && cloudyImage !== '') &&
+  if ((typeof cloudyImage !== 'undefined' && cloudyImage !== '') &&
     icon === 'cloudy') {
     bgImage = cloudyImage;
-  } else if ((typeof dayCloudyImage!== 'undefined' && dayCloudyImage !== '') &&
+  } else if ((typeof dayCloudyImage !== 'undefined' && dayCloudyImage !== '') &&
     icon === 'partly-cloudy-day') {
     bgImage = dayCloudyImage;
-  } else if ((typeof dayClearImage!== 'undefined' && dayClearImage !== '') &&
+  } else if ((typeof dayClearImage !== 'undefined' && dayClearImage !== '') &&
     icon === 'clear-day') {
     bgImage = dayClearImage;
-  } else if ((typeof fogImage!== 'undefined' && fogImage !== '') &&
+  } else if ((typeof fogImage !== 'undefined' && fogImage !== '') &&
     icon === 'fog') {
     bgImage = fogImage;
-  } else if ((typeof hailImage!== 'undefined' && hailImage !== '') &&
+  } else if ((typeof hailImage !== 'undefined' && hailImage !== '') &&
     icon === 'sleet') {
     bgImage = hailImage;
-  } else if ((typeof nightClearImage!== 'undefined' &&
+  } else if ((typeof nightClearImage !== 'undefined' &&
     nightClearImage !== '') && icon === 'clear-night') {
     bgImage = nightClearImage;
-  } else if ((typeof nightPartlyCloudyImage!== 'undefined' &&
+  } else if ((typeof nightPartlyCloudyImage !== 'undefined' &&
     nightPartlyCloudyImage !== '') && icon === 'partly-cloudy-night') {
     bgImage = nightPartlyCloudyImage;
-  } else if ((typeof rainImage!== 'undefined' && rainImage !== '') &&
+  } else if ((typeof rainImage !== 'undefined' && rainImage !== '') &&
     icon === 'rain') {
     bgImage = rainImage;
-  } else if ((typeof snowImage!== 'undefined' && snowImage !== '') &&
+  } else if ((typeof snowImage !== 'undefined' && snowImage !== '') &&
     icon === 'snow') {
     bgImage = snowImage;
-  } else if ((typeof windImage!== 'undefined' && windImage !== '') &&
+  } else if ((typeof windImage !== 'undefined' && windImage !== '') &&
     icon === 'wind') {
     bgImage = windImage;
   }
