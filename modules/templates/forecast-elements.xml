@@ -254,7 +254,7 @@ if (meta && meta.hasOwnProperty('Attribution')) {
             <property id="objectFit" type="dropdown" mode="single">
                 <title>Scale type</title>
                 <helpText>How should this image be scaled?</helpText>
-                <default>contain</default>
+                <default>cover</default>
                 <options>
                     <option name="fill">Fill</option>
                     <option name="contain">Contain</option>
@@ -291,17 +291,6 @@ if (meta && meta.hasOwnProperty('Attribution')) {
                     </test>
                 </visibility>
             </property>
-            <property id="backgroundImage" type="dropdown" mode="single">
-                <title>Background Image</title>
-                <helpText>The background image to use</helpText>
-                <default>none</default>
-                <options>
-                    <option name="none">None</option>
-                    <option name="fit">Fit</option>
-                    <option name="stretch">Stretch</option>
-                    <option name="center">Center</option>
-                </options>
-            </property>
             <property type="header" variant="main">
                 <title>Backgrounds</title>
                 <visibility>
@@ -312,180 +301,56 @@ if (meta && meta.hasOwnProperty('Attribution')) {
             </property>
             <property type="message">
                 <title>Select images from the media library to replace the default weather backgrounds.</title>
-                <visibility>
-                    <test>
-                        <condition field="backgroundImage" type="neq">none</condition>
-                    </test>
-                </visibility>
             </property>
             <property id="cloudyImage" type="mediaSelector">
                 <title>Cloudy</title>
-                <visibility>
-                    <test>
-                        <condition field="backgroundImage" type="neq">none</condition>
-                    </test>
-                </visibility>
             </property>
             <property id="dayCloudyImage" type="mediaSelector">
                 <title>Cloudy day</title>
-                <visibility>
-                    <test>
-                        <condition field="backgroundImage" type="neq">none</condition>
-                    </test>
-                </visibility>
             </property>
-            <property id="daySunnyImage" type="mediaSelector">
+            <property id="dayClearImage" type="mediaSelector">
                 <title>Clear</title>
-                <visibility>
-                    <test>
-                        <condition field="backgroundImage" type="neq">none</condition>
-                    </test>
-                </visibility>
             </property>
             <property id="fogImage" type="mediaSelector">
                 <title>Fog</title>
-                <visibility>
-                    <test>
-                        <condition field="backgroundImage" type="neq">none</condition>
-                    </test>
-                </visibility>
             </property>
             <property id="hailImage" type="mediaSelector">
                 <title>Hail</title>
-                <visibility>
-                    <test>
-                        <condition field="backgroundImage" type="neq">none</condition>
-                    </test>
-                </visibility>
             </property>
             <property id="nightClearImage" type="mediaSelector">
                 <title>Clear night</title>
-                <visibility>
-                    <test>
-                        <condition field="backgroundImage" type="neq">none</condition>
-                    </test>
-                </visibility>
             </property>
             <property id="nightPartlyCloudyImage" type="mediaSelector">
                 <title>Cloudy night</title>
-                <visibility>
-                    <test>
-                        <condition field="backgroundImage" type="neq">none</condition>
-                    </test>
-                </visibility>
             </property>
             <property id="rainImage" type="mediaSelector">
                 <title>Raining</title>
-                <visibility>
-                    <test>
-                        <condition field="backgroundImage" type="neq">none</condition>
-                    </test>
-                </visibility>
             </property>
             <property id="snowImage" type="mediaSelector">
                 <title>Snowing</title>
-                <visibility>
-                    <test>
-                        <condition field="backgroundImage" type="neq">none</condition>
-                    </test>
-                </visibility>
             </property>
             <property id="windyImage" type="mediaSelector">
                 <title>Windy</title>
-                <visibility>
-                    <test>
-                        <condition field="backgroundImage" type="neq">none</condition>
-                    </test>
-                </visibility>
             </property>
         </properties>
         <stencil>
             <hbs><![CDATA[
-{{#if backgroundImage}}
-    {{#eq backgroundImage 'none'}}
-        <div class="forecast-elements-background-image
-            {{#if data.icon}}has-bg{{/if}}
-            {{#if data.icon}}{{data.icon}}{{/if}}"
-
-            style="background-image: url('[[assetId=bg-{{data.icon}}]]');
-            {{#if data.icon}}
-                {{#if roundBorder}}
-                    {{#if borderRadius}}border-radius: {{borderRadius}}px;{{/if}}
-                {{/if}}
-            {{/if}}"></div>
-    {{else}}
-        <div class="global-elements-image img-container forecast-elements-background-image {{data.icon}}"
-            style="width:100%; height: 100%; overflow: hidden; position: relative;">
-            <img src="
-                {{#neq cloudyImage ''}}
-                    {{#eq data.icon 'cloudy'}}/library/download/{{cloudyImage}}?preview=1{{/eq}}
-                {{/neq}}
-                {{#neq dayCloudyImage ''}}
-                    {{#eq data.icon 'partly-cloudy-day'}}/library/download/{{dayCloudyImage}}?preview=1{{/eq}}
-                {{/neq}}
-                {{#neq daySunnyImage ''}}
-                    {{#eq data.icon 'clear-day'}}/library/download/{{daySunnyImage}}?preview=1{{/eq}}
-                {{/neq}}
-                {{#neq fogImage ''}}
-                    {{#eq data.icon 'fog'}}/library/download/{{fogImage}}?preview=1{{/eq}}
-                {{/neq}}
-                {{#neq hailImage ''}}
-                    {{#eq data.icon 'sleet'}}/library/download/{{hailImage}}?preview=1{{/eq}}
-                {{/neq}}
-                {{#neq nightClearImage ''}}
-                    {{#eq data.icon 'clear-night'}}/library/download/{{nightClearImage}}?preview=1{{/eq}}
-                {{/neq}}
-                {{#neq nightPartlyCloudyImage ''}}
-                    {{#eq data.icon 'partly-cloudy-night'}}/library/download/{{nightPartlyCloudyImage}}?preview=1{{/eq}}
-                {{/neq}}
-                {{#neq rainImage ''}}
-                    {{#eq data.icon 'rain'}}/library/download/{{rainImage}}?preview=1{{/eq}}
-                {{/neq}}
-                {{#neq snowImage ''}}
-                    {{#eq data.icon 'snow'}}/library/download/{{snowImage}}?preview=1{{/eq}}
-                {{/neq}}
-                {{#neq windImage ''}}
-                    {{#eq data.icon 'wind'}}/library/download/{{windImage}}?preview=1{{/eq}}
-                {{/neq}}"
-                style="width:100%; height: 100%;
-                object-fit: {{objectFit}};
-                object-position: {{alignId}} {{valignId}};
-                position: absolute; top: 0; left: 0;
-                {{#if data.icon}}
-                    {{#if roundBorder}}
-                        {{#if borderRadius}}border-radius: {{borderRadius}}px;{{/if}}
-                    {{/if}}
-                {{/if}}"
-            />
-        </div>
-    {{/eq}}
-{{else}}
-<div class="forecast-elements-background-image {{#if data.icon}}has-bg {{data.icon}}{{/if}}"
-    style="background-image: url('[[assetId=bg-{{data.icon}}]]');
-    {{#if data.icon}}
-        {{#if roundBorder}}
-            {{#if borderRadius}}border-radius: {{borderRadius}}px;{{/if}}
-        {{/if}}
-    {{/if}}"></div>
-{{/if}}
+<div class="global-elements-image img-container forecast-elements-background-image weather-bg--{{data.icon}}"
+    style="width:100%; height: 100%; overflow: hidden; position: relative;">
+    {{set 'bgImg' (weatherBackgroundImage data.icon cloudyImage dayCloudyImage dayClearImage fogImage hailImage nightClearImage nightPartlyCloudyImage rainImage snowImage windImage)}}
+    <img src="{{#if @root.bgImg}}/library/download/{{@root.bgImg}}?preview=1{{else}}[[assetId=bg-{{data.icon}}]]{{/if}}"
+        style="width:100%; height: 100%;
+        object-fit: {{objectFit}};
+        object-position: {{alignId}} {{valignId}};
+        position: absolute; top: 0; left: 0;
+        {{#if data.icon}}
+            {{#if roundBorder}}
+                {{#if borderRadius}}border-radius: {{borderRadius}}px;{{/if}}
+            {{/if}}
+        {{/if}}"
+    />
+</div>
             ]]></hbs>
-            <style><![CDATA[
-.forecast-elements-background-image:not(.has-bg) {
-    background-image: none !important;
-}
-
-.forecast-elements-background-image.has-bg {
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    left: 0;
-    top: 0;
-    z-index: -1;
-}
-            ]]></style>
         </stencil>
         <assets>
             <asset id="bg-cloudy" type="path" mimeType="image/jpeg" path="/modules/assets/forecastio/wi-cloudy.jpg"></asset>
