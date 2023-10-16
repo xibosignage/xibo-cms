@@ -2622,6 +2622,14 @@ Viewer.prototype.updateMoveable = function(
   } else {
     this.moveable.target = null;
 
+    // Clear rogue moveable elements
+    const controlElement = this.moveable.getControlBoxElement();
+    $('.moveable-control-box').each((_idx, moveable) => {
+      if (!$(moveable).is(controlElement)) {
+        $(moveable).remove();
+      }
+    });
+
     // Hide snap controls
     this.DOMObject.parent().find('.snap-controls').hide();
   }
