@@ -199,7 +199,7 @@ ElementGroup.prototype.updateGroupDimensions = function(
       );
 
     // Save JSON with new element into the widget
-    widget.saveElements().then((_res) => {
+    return widget.saveElements().then((_res) => {
       // Reload data and select element when data reloads
       lD.reloadData(lD.layout,
         {
@@ -207,6 +207,8 @@ ElementGroup.prototype.updateGroupDimensions = function(
         });
     });
   }
+
+  return Promise.resolve();
 };
 
 /**
