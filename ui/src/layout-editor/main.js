@@ -23,6 +23,9 @@
 // Include public path for webpack
 require('../../public_path');
 
+window.Handlebars = require('handlebars/dist/handlebars.min.js');
+require('../../../modules/src/handlebars-helpers.js');
+
 // Include handlebars templates
 const designerMainTemplate = require('../templates/layout-editor.hbs');
 const messageTemplate = require('../templates/message.hbs');
