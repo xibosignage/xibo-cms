@@ -771,6 +771,7 @@ body.editor-opened {
                     overflow: hidden auto;
                     padding: 0 1rem;
                     margin-top: 0.5rem;
+                    flex: 1;
                 }
             }
 
@@ -1955,8 +1956,16 @@ div#bg_media_name {
     z-index: $viewer-moveable-z-index !important;
 }
 
-body[multi-select-active] .moveable-control-box {
-    z-index: 0 !important;
+body[multi-select-active] {
+    .moveable-control-box {
+        z-index: 0 !important;
+    }
+
+    .layout-live-preview {
+        & > .designer-region-canvas, & > #regions > * {
+            z-index: 1 !important;
+        }
+    }
 }
 
 body[layout-editor-fs] .moveable-control-box {

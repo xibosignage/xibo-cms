@@ -417,7 +417,7 @@ $(target).find('.date').each(function(_idx, dateEl){
             <property id="roundBorder" type="checkbox">
                 <title>Round Border</title>
                 <default>0</default>
-                <helpText>Should the square have rounded corners?</helpText>
+                <helpText>Should the image have rounded corners?</helpText>
                 <visibility>
                     <test>
                         <condition field="objectFit" type="neq">contain</condition>
@@ -656,7 +656,7 @@ $(target).find('.date').each(function(_idx, dateEl){
             <property id="roundBorder" type="checkbox">
                 <title>Round Border</title>
                 <default>0</default>
-                <helpText>Should the square have rounded corners?</helpText>
+                <helpText>Should the rectangle have rounded corners?</helpText>
             </property>
             <property id="borderRadius" type="number">
                 <title>Border Radius</title>
@@ -670,7 +670,7 @@ $(target).find('.date').each(function(_idx, dateEl){
             <property id="outline" type="checkbox">
                 <title>Show Outline</title>
                 <default>1</default>
-                <helpText>Should the square have an outline?</helpText>
+                <helpText>Should the rectangle have an outline?</helpText>
             </property>
             <property id="outlineColor" type="color">
                 <title>Outline Color</title>
