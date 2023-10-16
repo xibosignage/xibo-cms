@@ -771,6 +771,7 @@ body.editor-opened {
                     overflow: hidden auto;
                     padding: 0 1rem;
                     margin-top: 0.5rem;
+                    flex: 1;
                 }
             }
 
@@ -1957,7 +1958,7 @@ div#bg_media_name {
 
 body[multi-select-active] {
     .moveable-control-box {
-    z-index: 0 !important;
+        z-index: 0 !important;
     }
 
     .layout-live-preview {
