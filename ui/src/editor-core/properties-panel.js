@@ -554,6 +554,18 @@ PropertiesPanel.prototype.render = function(
       const regionType = (target.subType === 'frame') ?
         'widget' : target.subType;
       dataToRender.regionType = propertiesPanelTrans[regionType];
+
+      if (
+        target.subType === 'frame' &&
+        $.isEmptyObject(target.widgets)
+      ) {
+        self.DOMObject.html(
+          '<div class="unsuccessMessage invalid-region-message">' +
+          errorMessagesTrans.invalidRegion +
+          '</div>');
+
+        return;
+      }
     }
 
     const propertiesPanelOptions = {
