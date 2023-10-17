@@ -676,7 +676,13 @@ Viewer.prototype.handleInteractions = function() {
 
               self.selectElement($(e.target), shiftIsPressed);
             } else if (
-              $(e.target).data('subType') === 'zone' &&
+              (
+                $(e.target).data('subType') === 'zone' ||
+                (
+                  $(e.target).data('subType') === 'frame' &&
+                  $(e.target).is('.designer-region-frame.invalid-region')
+                )
+              ) &&
               $(e.target).hasClass('designer-region') &&
               !$(e.target).hasClass('selected')
             ) {
@@ -962,6 +968,7 @@ Viewer.prototype.renderRegion = function(
   const self = this;
   const $container = this.DOMObject.find(`#${region.id}`);
   const isPlaylist = region.subType == 'playlist';
+  const isZone = region.subType == 'zone';
 
   // Get first widget of the region
   const widget = (widgetToLoad) ?
@@ -975,6 +982,15 @@ Viewer.prototype.renderRegion = function(
 
   // If there's no widget, return
   if (!widget && !isPlaylist) {
+    // If it's not a zone, we need to mark region as an error
+    // so it can be highlighted
+    if (!isZone) {
+      $container.addClass('invalid-region');
+      $container.append(
+        '<p class="invalid-region-message">' +
+        viewerTrans.invalidRegion +
+        '</p>');
+    }
     return;
   }
 
