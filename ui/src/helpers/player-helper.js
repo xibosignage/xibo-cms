@@ -299,8 +299,8 @@ const PlayerHelper = function() {
     }
 
     elemCopy.templateData = Object.assign(
-      {}, elemProps, elemCopy, globalOptions,
-      {uniqueID: elemCopy.elementId, prop: elemCopy},
+      {}, elemCopy, elemProps, globalOptions,
+      {uniqueID: elemCopy.elementId, prop: {...elemCopy, ...elemProps}},
     );
 
     // Get widget info if exists.
@@ -317,6 +317,21 @@ const PlayerHelper = function() {
         },
       );
       elemCopy.withData = true;
+    } else {
+      // Elements with no data can be extended.
+      // Thus, we have to decorate the element with extended params
+      if (elemCopy.dataOverride !== null &&
+        elemCopy.dataOverrideWith !== null) {
+        const extendWith =
+          transformer.getExtendedDataKey(elemCopy.dataOverrideWith);
+
+        // Check if extendWith exist in elemProps and templateData
+        if (elemProps.hasOwnProperty(extendWith)) {
+          elemCopy[elemCopy.dataOverride] = elemProps[extendWith];
+          elemCopy.templateData[elemCopy.dataOverride] =
+            elemProps[extendWith];
+        }
+      }
     }
 
     return elemCopy;
