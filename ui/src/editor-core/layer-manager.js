@@ -106,8 +106,10 @@ LayerManager.prototype.createStructure = function() {
             type: 'elementGroup',
             name: group.id,
             id: group.id,
+            widgetId: 'widget_' + group.regionId + '_' + group.widgetId,
             moduleIcon: lD.common.getModuleByType(widget.subType).icon,
             selected: group.selected,
+            expanded: group.expanded,
             layers: [],
           },
           canvasObject.subLayers,
@@ -310,6 +312,16 @@ LayerManager.prototype.render = function(reset) {
             self.setVisible(false);
           });
 
+        // Handle extend group button
+        this.DOMObject.find('.expand-group-button')
+          .off('click').on('click', function(ev) {
+            const $elementGroup = $(ev.currentTarget).parents('.element-group');
+            self.expandGroup(
+              $elementGroup.data('item-id'),
+              $elementGroup.data('widget-id'),
+            );
+          });
+
         // Show
         this.DOMObject.show();
       } else {
@@ -384,6 +396,93 @@ LayerManager.prototype.scrollToSelected = function() {
       );
     }
   }
+};
+
+/**
+ * Expand group elements
+ * @param {string} type
+ * @param {string} id
+ * @return {object} found object or false
+ */
+LayerManager.prototype.getItemFromLayerStructure = function(type, id) {
+  const checkIfTarget = function(item) {
+    return (
+      type === item.type &&
+      id === item.id
+    );
+  };
+
+  let found = false;
+
+  this.layerStructure.forEach((layer) => {
+    layer.forEach((layerItem) => {
+      if (layerItem.type === 'canvas') {
+        if (checkIfTarget(layerItem)) {
+          found = layerItem;
+        } else {
+          layerItem.layers.forEach((canvasLayer) => {
+            canvasLayer.forEach((canvasLayerItem) => {
+              if (canvasLayerItem.type === 'elementGroup') {
+                if (checkIfTarget(canvasLayerItem)) {
+                  found = canvasLayerItem;
+                } else {
+                  canvasLayerItem.layers.forEach((groupLayer) => {
+                    groupLayer.forEach((groupLayerItem) => {
+                      if (checkIfTarget(groupLayerItem)) {
+                        found = groupLayerItem;
+                      }
+                    });
+                  });
+                }
+              } else {
+                if (checkIfTarget(canvasLayerItem)) {
+                  found = canvasLayerItem;
+                }
+              }
+            });
+          });
+        }
+      } else {
+        if (checkIfTarget(layerItem)) {
+          found = layerItem;
+        }
+      }
+    });
+  });
+
+  return found;
+};
+
+/**
+ * Expand group elements
+ * @param {string} groupId Group id to expand
+ * @param {string} widgetId Widget id containing the group
+ */
+LayerManager.prototype.expandGroup = function(
+  groupId,
+  widgetId,
+) {
+  const self = this;
+
+  // Find group in the layer structure
+  const groupLayerObj = self.getItemFromLayerStructure('elementGroup', groupId);
+
+  // Get element group object
+  const groupObj = lD.getObjectByTypeAndId(
+    'element-group',
+    groupId,
+    widgetId,
+  );
+
+  // Switch extend property
+  groupLayerObj.expanded = (groupLayerObj.expanded == undefined) ?
+    false: !groupLayerObj.expanded;
+
+  // Mark main object with extend option
+  groupObj.expanded = groupLayerObj.expanded;
+
+  // Render again to show the changes
+  self.render();
 };
 
 module.exports = LayerManager;

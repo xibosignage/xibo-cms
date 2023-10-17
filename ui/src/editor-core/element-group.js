@@ -30,6 +30,9 @@ const ElementGroup = function(data, widgetId, regionId, parentWidget) {
   this.isEditable = (parentWidget) ? parentWidget.isEditable : true;
   this.isDeletable = (parentWidget) ? parentWidget.isDeletable : true;
   this.effect = data.effect || 'noTransition';
+
+  // Expanded on layer manager
+  this.expanded = false;
 };
 
 ElementGroup.prototype.updateSlot = function(

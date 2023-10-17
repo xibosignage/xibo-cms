@@ -1271,8 +1271,10 @@ Viewer.prototype.updateRegion = _.throttle(function(
   });
 
   // Update z index if set
+  let redrawLayerManager = false;
   if (region.zIndex != undefined) {
     $container.css('z-index', region.zIndex);
+    redrawLayerManager = true;
   }
 
   // Update region content
@@ -1280,6 +1282,11 @@ Viewer.prototype.updateRegion = _.throttle(function(
     lD.viewer.renderRegionDebounced(region);
   } else {
     lD.viewer.updateRegionContent(region, changed);
+  }
+
+  // Redraw layer manager to reflect the layer change
+  if (redrawLayerManager) {
+    lD.viewer.layerManager.render();
   }
 }, drawThrottle);
 
@@ -1682,7 +1689,10 @@ Viewer.prototype.renderElementContent = function(
             const data = elData[key];
 
             // Check if data needs to be replaced
-            if (String(data) && String(data).match(DateFormatHelper.macroRegex) !== null) {
+            if (
+              String(data) &&
+              String(data).match(DateFormatHelper.macroRegex) !== null
+            ) {
               // Replace macro with current date
               elData[key] = DateFormatHelper.composeUTCDateFromMacro(data);
             }
@@ -3199,8 +3209,26 @@ Viewer.prototype.editGroup = function(
     self.selectElement();
   }
 
-  // Only add editing class if we were not
+  // If we're not editing yet, start
   if (!editing) {
+    // Get group object from structure
+    const groupId = $(groupDOMObject).attr('id');
+    const groupObj = lD.getObjectByTypeAndId(
+      'element-group',
+      groupId,
+      'widget_' +
+        $(groupDOMObject).data('regionId') +
+        '_' +
+        $(groupDOMObject).data('widgetId'),
+    );
+
+    // If group isn't expanded, do it and reload layer manager
+    if (groupObj.expanded === false) {
+      groupObj.expanded = true;
+      lD.viewer.layerManager.render();
+    }
+
+    // Add editing class
     $(groupDOMObject).addClass('editing');
 
     // Unset canvas z-index
