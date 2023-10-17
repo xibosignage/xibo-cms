@@ -1084,9 +1084,13 @@ class Widget implements \JsonSerializable
             $action->delete();
         }
 
-        // Delete any actions that were targeting this Widget, to avoid orphaned records in action table.
-        $this->getStore()->update('DELETE FROM `action` WHERE widgetId = :widgetId', ['widgetId' => $this->widgetId]);
-
+        // Set widgetId to null on any navWidget action that was using this drawer Widget.
+        $this->getStore()->update(
+            'UPDATE `action` SET `action`.widgetId = NULL
+                WHERE widgetId = :widgetId AND `action`.actionType = \'navWidget\' ',
+            ['widgetId' => $this->widgetId]
+        );
+        
         // Unlink Media
         $this->mediaIds = [];
         $this->unlinkMedia();
