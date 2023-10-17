@@ -4841,8 +4841,11 @@ lD.addElementsToWidget = function(
         Math.floor(Math.random() * 1000000);
 
       // Add top layer to the group properties
-      if (element.groupId) {
-        element.groupProperties.layer = topLayer;
+      if (
+        element.groupId
+      ) {
+        (element.groupProperties) &&
+         (element.groupProperties.layer = topLayer);
       } else {
         // Add element to the top layer
         element.layer = topLayer;
