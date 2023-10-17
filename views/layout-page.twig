@@ -113,9 +113,13 @@
 
                 <div class="row">
                     <div class="col-sm-2 p-3 bg-light" id="grid-folder-filter">
+                        <input id="jstree-search" type="text" placeholder="{% trans "Search" %}">
                         <div class="form-check">
                             <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
                             <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "All Folders" %}</label>
+                        </div>
+                        <div class="folder-search-no-results d-none">
+                            <p>{% trans 'No Folders matching the search term' %}</p>
                         </div>
                         <div id="container-folder-tree"></div>
                     </div>
