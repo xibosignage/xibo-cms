@@ -397,10 +397,16 @@ class Soap
                             $fileType = $node->getAttribute('fileType');
                         }
 
+                        // Use the realId if we have it.
+                        $realId = $node->getAttribute('realId');
+                        if (empty($realId)) {
+                            $realId = $node->getAttribute('id');
+                        }
+
                         // Generate a new URL.
                         $newUrl = $this->generateRequiredFileDownloadPath(
                             $type,
-                            $node->getAttribute('id'),
+                            $realId,
                             $node->getAttribute('saveAs'),
                             $fileType,
                         );
@@ -2870,6 +2876,7 @@ class Soap
             $file->setAttribute('fileType', 'media');
 
             // We need an extra attribute so that we can retrieve the original asset type from cache.
+            $file->setAttribute('realId', $dependency->id);
             $file->setAttribute('assetType', $dependency->fileType);
         }
 
