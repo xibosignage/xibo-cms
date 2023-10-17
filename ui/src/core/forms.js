@@ -21,6 +21,7 @@
 /* eslint-disable new-cap */
 // Common functions/tools
 const Common = require('../editor-core/common.js');
+const PlayerHelper = require('../helpers/player-helper.js');
 
 // Check condition
 const checkCondition = function(type, value, targetValue, isTopLevel = true) {
@@ -1921,6 +1922,54 @@ window.forms = {
           [{
             skipSave: true,
           }]);
+      }
+
+      if ($(el).next().find('input[name="speed"]').length === 1) {
+        let currentSelected = null;
+        const speedInput = $(el).next().find('input[name="speed"]');
+        const setEffectSpeed = function(prevEffect, newEffect, currSpeed) {
+          const marqueeDefaultSpeed = 1;
+          const noneMarqueeDefaultSpeed = 1000;
+          const currIsMarquee = PlayerHelper.isMarquee(prevEffect);
+          const isMarquee = PlayerHelper.isMarquee(newEffect);
+
+          if (currIsMarquee && !isMarquee) {
+            return noneMarqueeDefaultSpeed;
+          } else if (!currIsMarquee && isMarquee) {
+            return marqueeDefaultSpeed;
+          } else {
+            if (String(currSpeed).length === 0) {
+              if (isMarquee) {
+                return marqueeDefaultSpeed;
+              } else {
+                return noneMarqueeDefaultSpeed;
+              }
+            } else {
+              return currSpeed;
+            }
+          }
+        };
+
+        $el.on('select2:open', function(e) {
+          currentSelected = e.currentTarget.value;
+        });
+
+        speedInput.val(setEffectSpeed(
+          currentSelected,
+          currentSelected,
+          speedInput.val(),
+        ));
+
+        $el.on('select2:select', function(e) {
+          const data = e.params.data;
+          const effect = data.id;
+
+          speedInput.val(setEffectSpeed(
+            currentSelected,
+            effect,
+            speedInput.val(),
+          ));
+        });
       }
     });
 
