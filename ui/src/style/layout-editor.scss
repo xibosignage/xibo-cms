@@ -1620,17 +1620,43 @@ div#bg_media_name {
         align-items: center;
         justify-content: space-between;
         cursor: grab;
+    }
 
+    .layer-manager-header, .expand-group-button {
         i {
             font-size: 1rem;
             padding: 3px 5px;
             cursor: pointer;
             border-radius: 4px;
             margin-right: -4px;
-
+    
             &:hover {
-                background-color: lighten($xibo-color-primary-d60, 30%);
+                @include set-transparent-color(background-color, $xibo-color-neutral-0, 0.3);
             }
+        }
+    }
+
+    .expand-group-button {
+        color: inherit;
+    }
+
+    .element-group.expanded .expand-group-button {
+        .show-expanded {
+            display: block;
+        }
+
+        .hide-expanded {
+            display: none;
+        }
+    }
+
+    .element-group:not(.expanded) .expand-group-button {
+        .show-expanded {
+            display: none;
+        }
+
+        .hide-expanded {
+            display: block;
         }
     }
 
