@@ -67,6 +67,7 @@ describe('Datasets', function() {
 
       // Wait for the grid reload
       cy.wait('@loadGridAfterSearch');
+      cy.get('#datasets tbody tr').should('have.length', 1);
 
       // Click on the first row element to open the delete modal
       cy.get('#datasets tr:first-child .dropdown-toggle').click();
@@ -95,7 +96,7 @@ describe('Datasets', function() {
     });
   });
 
-  it.only('copy an existing dataset', function() {
+  it('copy an existing dataset', function() {
     // Create a new dataset and then search for it and delete it
     cy.createDataset('Cypress Test Dataset ' + testRun).then((res) => {
       cy.intercept({
@@ -117,6 +118,7 @@ describe('Datasets', function() {
 
       // Wait for the grid reload
       cy.wait('@loadGridAfterSearch');
+      cy.get('#datasets tbody tr').should('have.length', 1);
 
       // Click on the first row element to open the delete modal
       cy.get('#datasets tr:first-child .dropdown-toggle').click();
@@ -149,6 +151,7 @@ describe('Datasets', function() {
 
       // Wait for the grid reload
       cy.wait('@datasetGridLoad');
+      cy.get('#datasets tbody tr').should('have.length', 1);
 
       // Click on the first row element to open the delete modal
       cy.get('#datasets tr:first-child .dropdown-toggle').click();

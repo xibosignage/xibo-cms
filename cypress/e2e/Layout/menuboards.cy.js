@@ -71,6 +71,7 @@ describe('Menuboards', function() {
 
       // Wait for the grid reload
       cy.wait('@loadGridAfterSearch');
+      cy.get('#menuBoards tbody tr').should('have.length', 1);
 
       // Click on the first row element to open the delete modal
       cy.get('#menuBoards tr:first-child .dropdown-toggle').click();
@@ -110,6 +111,7 @@ describe('Menuboards', function() {
 
       // Wait for the grid reload
       cy.wait('@loadGridAfterSearch');
+      cy.get('#menuBoards tbody tr').should('have.length', 1);
 
       // Click on the first row element to open the delete modal
       cy.get('#menuBoards tr:first-child .dropdown-toggle').click();
@@ -140,6 +142,7 @@ describe('Menuboards', function() {
 
       // Wait for the grid reload
       cy.wait('@loadGridAfterSearch');
+      cy.get('#menuBoards tbody tr').should('have.length', 1);
 
       // Click on the first row element to open the delete modal
       cy.get('#menuBoards tr:first-child .dropdown-toggle').click();
@@ -239,6 +242,7 @@ describe('Menuboards', function() {
 
         // Wait for the grid reload
         cy.wait('@loadGridAfterSearch');
+        cy.get('#menuBoardCategories tbody tr').should('have.length', 1);
 
         // Click on the first row element to open the delete modal
         cy.get('#menuBoardCategories tr:first-child .dropdown-toggle').click();
@@ -291,6 +295,7 @@ describe('Menuboards', function() {
 
         // Wait for the grid reload
         cy.wait('@loadGridAfterSearch');
+        cy.get('#menuBoardCategories tbody tr').should('have.length', 1);
 
         // Click on the first row element to open the delete modal
         cy.get('#menuBoardCategories tr:first-child .dropdown-toggle').click();
@@ -364,6 +369,7 @@ describe('Menuboards', function() {
 
           // Wait for the grid reload
           cy.wait('@loadGridAfterSearch');
+          cy.get('#menuBoardProducts tbody tr').should('have.length', 1);
 
           // Click on the first row element to open the delete modal
           cy.get('#menuBoardProducts tr:first-child .dropdown-toggle').click();
@@ -418,6 +424,7 @@ describe('Menuboards', function() {
 
           // Wait for the grid reload
           cy.wait('@loadGridAfterSearch');
+          cy.get('#menuBoardProducts tbody tr').should('have.length', 1);
 
           // Click on the first row element to open the delete modal
           cy.get('#menuBoardProducts tr:first-child .dropdown-toggle').click();
