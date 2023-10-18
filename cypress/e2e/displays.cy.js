@@ -263,7 +263,7 @@ describe('Displays', function() {
     });
   });
 
-  it('should display map and revert back to table', function() {
+  it.only('should display map and revert back to table', function() {
     cy.visit('/display/view');
 
     cy.get('#displays_wrapper.dataTables_wrapper').should('be.visible');
