@@ -1067,6 +1067,11 @@ Widget.prototype.removeElement = function(
   // Recalculate required elements
   this.validateRequiredElements();
 
+  // Validate other widget elements on the viewer
+  Object.values(this.elements).forEach((el) => {
+    lD.viewer.validateElement(el);
+  });
+
   // Only save if we're not removing the widget
   // Save changes to widget
   (save && !savedAlready) && this.saveElements({
@@ -1173,6 +1178,9 @@ Widget.prototype.getData = function() {
     self.forceRecalculateData = false;
   }
 
+  // Recalculate required elements
+  this.validateRequiredElements();
+
   // If widget already has data for that index, use cached data
   if (
     !$.isEmptyObject(self.cachedData)
@@ -1190,7 +1198,8 @@ Widget.prototype.getData = function() {
       type: linkToAPI.type,
       dataType: 'json',
     }).done((data) => {
-      if (!data.data || !self.isValid) {
+      // If we don't have data, show sample data
+      if (!data.data) {
         // Show sample data
         for (let i = 0; i < modulesList.length; i++) {
           if (modulesList[i].type === self.subType) {
@@ -1232,9 +1241,16 @@ Widget.prototype.getData = function() {
             resolve(self.cachedData);
           }
         }
-      } else {
-        // Valid, so reset messages
-        self.validateData = {};
+      } else { // If we have data, show even if widget is invalid
+        if (self.isValid) {
+          // Valid, so reset messages
+          self.validateData = {};
+        } else {
+          // Invalid widget
+          self.validateData = {
+            showError: true,
+          };
+        }
 
         // Run onDataLoad/onParseData
         Object.keys(modulesList).forEach(function(item) {
