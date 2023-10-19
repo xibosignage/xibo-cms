@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -363,44 +363,44 @@ class DisplayProfileFactory extends BaseFactory
             $sortOrder = ['name'];
         }
 
-        try {
-            $params = array();
-            $select = 'SELECT displayProfileId, name, type, config, isDefault, userId, isCustom ';
 
-            $body = ' FROM `displayprofile` WHERE 1 = 1 ';
+        $params = [];
+        $select = 'SELECT displayProfileId, name, type, config, isDefault, userId, isCustom ';
 
-            if ($parsedFilter->getInt('displayProfileId') !== null) {
-                $body .= ' AND displayProfileId = :displayProfileId ';
-                $params['displayProfileId'] = $parsedFilter->getInt('displayProfileId');
-            }
+        $body = ' FROM `displayprofile` WHERE 1 = 1 ';
 
-            if ($parsedFilter->getInt('isDefault') !== null) {
-                $body .= ' AND isDefault = :isDefault ';
-                $params['isDefault'] = $parsedFilter->getInt('isDefault');
-            }
+        if ($parsedFilter->getInt('displayProfileId') !== null) {
+            $body .= ' AND displayProfileId = :displayProfileId ';
+            $params['displayProfileId'] = $parsedFilter->getInt('displayProfileId');
+        }
 
-            // Filter by DisplayProfile Name?
-            if ($parsedFilter->getString('displayProfile') != null) {
-                $terms = explode(',', $parsedFilter->getString('displayProfile'));
-                $logicalOperator = $parsedFilter->getString('logicalOperatorName', ['default' => 'OR']);
-                $this->nameFilter(
-                    'displayprofile',
-                    'name',
-                    $terms,
-                    $body,
-                    $params,
-                    ($parsedFilter->getCheckbox('useRegexForName') == 1),
-                    $logicalOperator
-                );
-            }
+        if ($parsedFilter->getInt('isDefault') !== null) {
+            $body .= ' AND isDefault = :isDefault ';
+            $params['isDefault'] = $parsedFilter->getInt('isDefault');
+        }
 
-            if ($parsedFilter->getString('type') != null) {
-                $body .= ' AND type = :type ';
-                $params['type'] = $parsedFilter->getString('type');
-            }
+        // Filter by DisplayProfile Name?
+        if ($parsedFilter->getString('displayProfile') != null) {
+            $terms = explode(',', $parsedFilter->getString('displayProfile'));
+            $logicalOperator = $parsedFilter->getString('logicalOperatorName', ['default' => 'OR']);
+            $this->nameFilter(
+                'displayprofile',
+                'name',
+                $terms,
+                $body,
+                $params,
+                ($parsedFilter->getCheckbox('useRegexForName') == 1),
+                $logicalOperator
+            );
+        }
 
-            if ($parsedFilter->getInt('commandId') !== null) {
-                $body .= '
+        if ($parsedFilter->getString('type') != null) {
+            $body .= ' AND type = :type ';
+            $params['type'] = $parsedFilter->getString('type');
+        }
+
+        if ($parsedFilter->getInt('commandId') !== null) {
+            $body .= '
                     AND `displayprofile`.displayProfileId IN (
                         SELECT `lkcommanddisplayprofile`.displayProfileId
                           FROM `lkcommanddisplayprofile`
@@ -408,48 +408,44 @@ class DisplayProfileFactory extends BaseFactory
                     )
                 ';
 
-                $params['commandId'] = $parsedFilter->getInt('commandId');
-            }
-
-            if ($parsedFilter->getInt('userId') !== null) {
-                $body .= ' AND `displayprofile`.userId = :userId ';
-                $params['userId'] = $parsedFilter->getInt('userId');
-            }
-
-            // Sorting?
-            $order = '';
-            if (is_array($sortOrder)) {
-                $order .= 'ORDER BY ' . implode(',', $sortOrder);
-            }
-
-            $limit = '';
-            // Paging
-            if ($filterBy !== null && $parsedFilter->getInt('start') !== null && $parsedFilter->getInt('length') !== null) {
-                $limit = ' LIMIT ' . $parsedFilter->getInt('start', ['default' => 0]) . ', ' . $parsedFilter->getInt('length', ['default' => 10]);
-            }
-
-            $sql = $select . $body . $order . $limit;
-
-            foreach ($this->getStore()->select($sql, $params) as $row) {
-                $profile = $this->createEmpty()->hydrate($row, ['intProperties' => ['isDefault', 'isCustom']]);
-
-                $profile->excludeProperty('configDefault');
-                $profile->excludeProperty('configTabs');
-                $profiles[] = $profile;
-            }
-
-            // Paging
-            if ($limit != '' && count($profiles) > 0) {
-                $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
-                $this->_countLast = intval($results[0]['total']);
-            }
-
-            return $profiles;
-        } catch (\Exception $e) {
-            $this->getLog()->error($e);
-
-            throw new NotFoundException();
+            $params['commandId'] = $parsedFilter->getInt('commandId');
         }
+
+        if ($parsedFilter->getInt('userId') !== null) {
+            $body .= ' AND `displayprofile`.userId = :userId ';
+            $params['userId'] = $parsedFilter->getInt('userId');
+        }
+
+        // Sorting?
+        $order = '';
+        if (is_array($sortOrder)) {
+            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+        }
+
+        $limit = '';
+        // Paging
+        if ($filterBy !== null && $parsedFilter->getInt('start') !== null && $parsedFilter->getInt('length') !== null) {
+            $limit = ' LIMIT ' . $parsedFilter->getInt('start', ['default' => 0]) .
+                ', ' . $parsedFilter->getInt('length', ['default' => 10]);
+        }
+
+        $sql = $select . $body . $order . $limit;
+
+        foreach ($this->getStore()->select($sql, $params) as $row) {
+            $profile = $this->createEmpty()->hydrate($row, ['intProperties' => ['isDefault', 'isCustom']]);
+
+            $profile->excludeProperty('configDefault');
+            $profile->excludeProperty('configTabs');
+            $profiles[] = $profile;
+        }
+
+        // Paging
+        if ($limit != '' && count($profiles) > 0) {
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
+            $this->_countLast = intval($results[0]['total']);
+        }
+
+        return $profiles;
     }
 
     public function getAvailableTypes()
