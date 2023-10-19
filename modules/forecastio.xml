@@ -126,9 +126,7 @@ moment.locale(globalOptions.locale);
 var makeReplacement = (html, item) => {
     // Make replacements [] with item data
     return html.replace(/\[([^\]]+)\]/g, (match, key) => {
-        // If its [time] or [time|format] then return the time
         if (key === 'time' || key.indexOf('time|') === 0) {
-            // If its [time|format] then return the time with format
             if (key.indexOf('time|') === 0) {
                 return moment.unix(item.time).format(key.split('|')[1]);
             }

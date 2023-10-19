@@ -84,6 +84,8 @@ describe('Campaigns', function() {
       // Perform your desired actions or assertions here
       cy.log('Layout Loading');
 
+      cy.get('#layoutAssignments tbody tr').should('have.length', 2);
+
       // Assign a layout
       cy.get('#layoutAssignments tr:nth-child(1) a.assignItem').click();
       cy.get('#layoutAssignments tr:nth-child(2) a.assignItem').click();
