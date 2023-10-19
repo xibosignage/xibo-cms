@@ -51,7 +51,9 @@ describe('Users', function() {
 
     cy.get('.select2-container--bootstrap').eq(1).click();
     cy.wait('@loadHomepageAfterSearch');
-    cy.get('.select2-results__option').contains('Icon Dashboard').click();
+    cy.get('.select2-results__option')
+      .should('contain', 'Icon Dashboard')
+      .click();
 
     // Add first by clicking next
     cy.get('.modal .save-button').click();
