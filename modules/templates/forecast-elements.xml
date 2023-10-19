@@ -73,11 +73,15 @@ if (String(value).length === 0) {
     return '';
 }
 
-if (String(value).includes('°C')) {
-    return value;
-}
+if (properties.data && properties.data.temperatureUnit) {
+    var temperatureUnit = properties.data.temperatureUnit;
 
-return value + '<sup>°C</sup>';
+    if (String(value).includes('°' + temperatureUnit)) {
+        return value;
+    }
+
+    return value + '<sup>°' + temperatureUnit + '</sup>';
+}
         ]]></onElementParseData>
     </template>
     <template>
@@ -96,11 +100,15 @@ if (String(value).length === 0) {
     return '';
 }
 
-if (String(value).includes('°C')) {
-    return value;
-}
+if (properties.data && properties.data.temperatureUnit) {
+    var temperatureUnit = properties.data.temperatureUnit;
 
-return value + '<sup>°C</sup>';
+    if (String(value).includes('°' + temperatureUnit)) {
+        return value;
+    }
+
+    return value + '<sup>°' + temperatureUnit + '</sup>';
+}
         ]]></onElementParseData>
     </template>
     <template>
@@ -119,7 +127,7 @@ if (String(value).length === 0) {
     return '';
 }
 
-if (String(value).includes('°C')) {
+if (String(value).includes('%')) {
     return value;
 }
 
