@@ -3682,7 +3682,7 @@ function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected =
 
         $(container).jstree({
             "state" : state,
-            "plugins" : ["contextmenu", "state", "unique", "sort", "themes", "types", 'search'].concat(plugins),
+            "plugins" : ["contextmenu", "state", "unique", "sort", "types", 'search'].concat(plugins),
             "contextmenu":{
                 "items": function($node, checkContextMenuPermissions) {
                     // items in context menu need to check user permissions before we render them
@@ -3766,21 +3766,18 @@ function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected =
                         }
                     });
                 }},
-            "themes" : {
-                "responsive" : true
-            },
             "types" : {
                 "root" : {
-                    "icon" : "fa fa-file text-warning"
+                    "icon" : "fa fa-file text-xibo-primary"
                 },
                 "home" : {
-                    "icon" : "fa fa-home text-success"
+                    "icon" : "fa fa-home text-xibo-primary"
                 },
                 "default" : {
-                    "icon" : "fa fa-folder text-warning"
+                    "icon" : "fa fa-folder text-xibo-primary"
                 },
                 "open" : {
-                    "icon" : "fa fa-folder-open text-warning"
+                    "icon" : "fa fa-folder-open text-xibo-primary"
                 }
             },
             'search' : {
@@ -3799,7 +3796,11 @@ function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected =
                 },
                 'data' : {
                     "url": foldersUrl + (homeFolderId ? '?homeFolderId='+homeFolderId : '')
-                }
+                },
+                "themes" : {
+                    'responsive' : true,
+                    'dots' : false,
+                },
             }
         }).bind('ready.jstree', function(e, data) {
             // depending on the state of folder tree, hide/show as needed when we load the grid page
