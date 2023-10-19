@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -108,7 +108,7 @@ class DynamicPlaylistSyncTask implements TaskInterface
         foreach ($this->playlistFactory->query(null, ['isDynamic' => 1]) as $playlist) {
             try {
                 // We want to detect any differences in what should be assigned to this Playlist.
-                $playlist->load();
+                $playlist->load(['checkDisplayOrder' => true]);
 
                 $this->log->debug('Assessing Playlist: ' . $playlist->name);
 
@@ -128,6 +128,7 @@ class DynamicPlaylistSyncTask implements TaskInterface
                 // Query for media which would be assigned to this Playlist and see if there are any differences
                 $media = [];
                 $mediaIds = [];
+                $displayOrder = [];
                 foreach ($this->mediaFactory->query(null, [
                     'name' => $playlist->filterMediaName,
                     'logicalOperatorName' => $playlist->filterMediaNameLogicalOperator,
@@ -137,9 +138,11 @@ class DynamicPlaylistSyncTask implements TaskInterface
                     'userCheckUserId' => $playlist->getOwnerId(),
                     'start' => 0,
                     'length' => $playlist->maxNumberOfItems
-                ]) as $item) {
+                ]) as $index => $item) {
                     $media[$item->mediaId] = $item;
                     $mediaIds[] = $item->mediaId;
+                    // store the expected display order
+                    $displayOrder[$item->mediaId] = $index + 1;
                 }
 
                 // Work out if the set of widgets is different or not.
@@ -230,7 +233,8 @@ class DynamicPlaylistSyncTask implements TaskInterface
                                 break;
                             }
                             $assignmentMade = true;
-                            $this->createAndAssign($playlist, $item, $count);
+                            // make sure we pass the expected displayOrder for the new item we are about to add.
+                            $this->createAndAssign($playlist, $item, $displayOrder[$item->mediaId]);
                         }
                     }
 
@@ -296,7 +300,8 @@ class DynamicPlaylistSyncTask implements TaskInterface
             $module->widget->calculatedDuration = $mediaDuration;
 
             // Assign the widget to the playlist
-            $playlist->assignWidget($widget);
+            // making sure we pass the displayOrder here, otherwise it would be added to the end of the array.
+            $playlist->assignWidget($widget, $displayOrder);
         }
     }
 }
