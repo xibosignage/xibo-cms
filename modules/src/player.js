@@ -457,26 +457,36 @@ $(function() {
             ),
           );
 
-          const onTemplateRenderId = item.isExtended ?
-            item.dataOverride : item.templateData.id;
+          let onTemplateRender;
+          const itemID =
+            item.uniqueID || item.templateData?.uniqueID;
+
+          // Check if onTemplateRender for child template is isExtended
+          // And onTemplateRender is defined on child, then use it
+          // Else, use parent onTemplateRender
+          if (item.isExtended && typeof window[
+            `onTemplateRender_${item.templateData.id}`
+          ] === 'function') {
+            onTemplateRender =
+              window[`onTemplateRender_${item.templateData.id}`];
+          } else if (item.isExtended && typeof window [
+            `onTemplateRender_${item.dataOverride}`
+          ] === 'function') {
+            onTemplateRender =
+              window[`onTemplateRender_${item.dataOverride}`];
+          } else if (!item.isExtended) {
+            onTemplateRender =
+              window[`onTemplateRender_${item.templateData.id}`];
+          }
 
           // Handle the rendering of the template
-          if (typeof window[
-            `onTemplateRender_${onTemplateRenderId}`
-          ] === 'function') {
-            const onTemplateRender = window[
-              `onTemplateRender_${onTemplateRenderId}`];
-            const itemID =
-              item.uniqueID || item.templateData?.uniqueID;
-
-            (onTemplateRender) && onTemplateRender(
-              item.elementId,
-              $itemContainer.find(`.${itemID}--item`),
-              $content.find(`.${itemID}--item`),
-              {item, ...item.templateData, data: dataItem},
-              widget?.meta,
-            );
-          }
+          (onTemplateRender) && onTemplateRender(
+            item.elementId,
+            $itemContainer.find(`.${itemID}--item`),
+            $content.find(`.${itemID}--item`),
+            {item, ...item.templateData, data: dataItem},
+            widget?.meta,
+          );
         } else {
           if ($groupContent &&
             $groupContent.find(
