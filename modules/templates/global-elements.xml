@@ -335,16 +335,18 @@
             ]]></hbs>
         </stencil>
         <onTemplateRender><![CDATA[
-if (properties.lang) {
-  moment.locale(properties.lang);
-}
-
 // Match all affected elements and get date div value
 $(target).find('.date').each(function(_idx, dateEl){
     var dateValue = $(dateEl).data('date');
+    var globalDate = moment(dateValue);
+
+    // Check for lang config
+    if (properties.lang !== null && String(properties.lang).length > 0) {
+        globalDate.locale(properties.lang);
+    }
 
     // Format the date with the dateFormat property
-    var formattedDate = moment(dateValue).format(properties.dateFormat);
+    var formattedDate = globalDate.format(properties.dateFormat);
 
     // Set the date div value to the formatted date
     $(dateEl).html(formattedDate);

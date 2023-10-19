@@ -73,11 +73,15 @@ if (String(value).length === 0) {
     return '';
 }
 
-if (String(value).includes('°C')) {
-    return value;
-}
+if (properties.data && properties.data.temperatureUnit) {
+    var temperatureUnit = properties.data.temperatureUnit;
 
-return value + '<sup>°C</sup>';
+    if (String(value).includes('°' + temperatureUnit)) {
+        return value;
+    }
+
+    return value + '<sup>°' + temperatureUnit + '</sup>';
+}
         ]]></onElementParseData>
     </template>
     <template>
@@ -96,11 +100,15 @@ if (String(value).length === 0) {
     return '';
 }
 
-if (String(value).includes('°C')) {
-    return value;
-}
+if (properties.data && properties.data.temperatureUnit) {
+    var temperatureUnit = properties.data.temperatureUnit;
 
-return value + '<sup>°C</sup>';
+    if (String(value).includes('°' + temperatureUnit)) {
+        return value;
+    }
+
+    return value + '<sup>°' + temperatureUnit + '</sup>';
+}
         ]]></onElementParseData>
     </template>
     <template>
@@ -119,7 +127,7 @@ if (String(value).length === 0) {
     return '';
 }
 
-if (String(value).includes('°C')) {
+if (String(value).includes('%')) {
     return value;
 }
 
@@ -385,9 +393,15 @@ if (meta && meta.hasOwnProperty('Attribution')) {
 // Match all affected elements and get date div value
 $(target).find('.date').each(function(_idx, dateEl){
     var dateValue = $(dateEl).data('date');
+    var weatherDate = moment.unix(dateValue);
+
+    // Check for lang config
+    if (properties.lang !== null && String(properties.lang).length > 0) {
+        weatherDate.locale(properties.lang);
+    }
 
     // Format the date with the dateFormat property
-    var formattedDate = moment.unix(dateValue).format(properties.dateFormat);
+    var formattedDate = weatherDate.format(properties.dateFormat);
 
     // Set the date div value to the formatted date
     $(dateEl).html(formattedDate);
