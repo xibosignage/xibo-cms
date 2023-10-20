@@ -147,11 +147,8 @@ describe('Displays', function() {
     cy.wait('@putRequest').then((interception) => {
       // Get the request body (form data)
       const response = interception.response;
-      const responseData = response.body.data;
-
-      // assertion on the "display" value
-      expect(responseData.display).to.eq('dis_disp3');
-      expect(responseData.licensed).to.eq(1);
+      // assertion
+      expect(response.body.message).to.eq('Authorised set to 1 for dis_disp3');
     });
   });
 

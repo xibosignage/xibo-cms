@@ -33,6 +33,7 @@ describe('Transitions', function() {
     }).as('putRequest');
 
     cy.visit('/transition/view');
+    cy.get('#transitions tbody').contains('Fade In');
 
     // Click on the first row element to open the delete modal
     cy.get('#transitions tr:first-child .dropdown-toggle').click();
