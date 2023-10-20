@@ -96,8 +96,95 @@ describe('Datasets', function() {
     });
   });
 
-  it('copy an existing dataset', function() {
+  it('add row/column to an existing dataset', function() {
     // Create a new dataset and then search for it and delete it
+    cy.createDataset('Cypress Test Dataset ' + testRun).then((id) => {
+      cy.intercept({
+        url: '/dataset?*',
+        query: {dataSet: 'Cypress Test Dataset ' + testRun},
+      }).as('loadGridAfterSearch');
+
+      // Intercept the PUT request
+      cy.intercept({
+        method: 'POST',
+        url: /\/dataset\/\d+\/column$/,
+      }).as('postRequestAddColumn');
+
+      cy.intercept({
+        method: 'POST',
+        url: /\/dataset\/data\/\d+/,
+      }).as('postRequestAddRow');
+
+      cy.visit('/dataset/view');
+
+      // Filter for the created dataset
+      cy.get('#Filter input[name="dataSet"]')
+        .type('Cypress Test Dataset ' + testRun);
+
+      // Wait for the grid reload
+      cy.wait('@loadGridAfterSearch');
+      cy.get('#datasets tbody tr').should('have.length', 1);
+
+      // Click on the first row element to open the View data
+      cy.get('#datasets tr:first-child .dropdown-toggle').click();
+      cy.get('#datasets tr:first-child .dataset_button_viewcolumns').click();
+
+      cy.get('#datasets').contains('No data available in table');
+
+      // Add data row to dataset
+      cy.contains('Add Column').click();
+      cy.get('.modal input#heading').type('Col1');
+
+      // Save
+      cy.get('.bootbox .save-button').click();
+
+      // Wait for the intercepted PUT request and check the form data
+      cy.wait('@postRequestAddColumn').then((interception) => {
+        // Get the request body (form data)
+        const response = interception.response;
+        const responseData = response.body.data;
+
+        // assertion on the "dataset" value
+        expect(responseData.heading).to.eq('Col1');
+
+        cy.contains('View Data').click();
+        cy.get('#datasets').contains('No data available in table');
+
+        // Add data row to dataset
+        cy.contains('Add Row').click();
+        cy.get('#dataSetDataAdd').within(() => {
+          cy.get('input:first').type('Your text goes here');
+        });
+
+        // Save
+        cy.get('.bootbox .save-button').click();
+
+        // Wait for the intercepted request and check data
+        cy.wait('@postRequestAddRow').then((interception) => {
+          cy.contains('Added Row');
+        });
+      });
+
+      // Now try to delete the dataset
+      cy.visit('/dataset/view');
+
+      // Filter for the created dataset
+      cy.get('#Filter input[name="dataSet"]')
+        .type('Cypress Test Dataset ' + testRun);
+
+      // Wait for the grid reload
+      cy.wait('@loadGridAfterSearch');
+      cy.get('#datasets tbody tr').should('have.length', 1);
+
+      // Click on the first row element to open the View data
+      cy.get('#datasets tr:first-child .dropdown-toggle').click();
+      cy.get('#datasets tr:first-child .dataset_button_delete').click();
+    });
+  });
+
+
+  it('copy an existing dataset', function() {
+    // Create a new dataset and then search for it and copy it
     cy.createDataset('Cypress Test Dataset ' + testRun).then((res) => {
       cy.intercept({
         url: '/dataset?*',
@@ -124,7 +211,7 @@ describe('Datasets', function() {
       cy.get('#datasets tr:first-child .dropdown-toggle').click();
       cy.get('#datasets tr:first-child .dataset_button_copy').click();
 
-      // Delete test dataset
+      // save
       cy.get('.bootbox .save-button').click();
 
       // Wait for the intercepted POST request and check the form data

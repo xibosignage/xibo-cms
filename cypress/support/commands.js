@@ -470,7 +470,22 @@ Cypress.Commands.add('createDayPart', function(name) {
       endTime: '02:00:00',
     },
   }).then((res) => {
-    return res.body.id;
+    return res.body.dayPartId;
+  });
+});
+
+// Delete DayPart
+Cypress.Commands.add('deleteDayPart', function(id) {
+  cy.request({
+    method: 'DELETE',
+    url: '/api/daypart/' + id,
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {},
+  }).then((res) => {
+    return res;
   });
 });
 

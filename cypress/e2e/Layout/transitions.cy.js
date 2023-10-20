@@ -25,7 +25,7 @@ describe('Transitions', function() {
     cy.login();
   });
 
-  it('should add edit an transition', function() {
+  it('should edit an transition', function() {
     // Intercept the PUT request
     cy.intercept({
       method: 'PUT',
@@ -33,6 +33,7 @@ describe('Transitions', function() {
     }).as('putRequest');
 
     cy.visit('/transition/view');
+    cy.get('#transitions tbody tr').should('have.length', 3);
 
     // Click on the first row element to open the delete modal
     cy.get('#transitions tr:first-child .dropdown-toggle').click();
