@@ -11,7 +11,6 @@
             {{#each this}}
                 {{#eq type 'canvas'}}
                     <div class="layer-manager-canvas-layers">
-
                         <div class="layer-manager-layer-canvas" title="{{../trans.layer}}">
                             <div class="layer">{{layerIdx}}</div>
                             <span class="name" title="{{../../trans.canvas}}">{{../../trans.canvas}}</span>
@@ -69,17 +68,29 @@
                         {{/each}}
                     </div>
                 {{else}}
-                    <div class="layer-manager-layer-item {{#if selected}}selected{{/if}} selectable" data-item-id="{{id}}">
+                    <div class="layer-manager-layer-item {{#if selected}}selected{{/if}} selectable" data-item-id="{{id}}" data-type="{{type}}">
                         <div class="layer">{{layerIdx}}</div>
 
                         {{#eq type 'playlist'}}
-                            <i class="fa fa-list-ol"></i>
+                            <i class="fas fa-list" title="{{../../trans.playlist}}"></i>
+                        {{/eq}}
+                        {{#eq type 'zone'}}
+                            <i class="far fa-square" title="{{../../trans.zone}}"></i>
+                        {{/eq}}
+                        {{#eq type 'frame'}}
+                            <i class="fa fa-window-close" title="{{../../trans.invalidRegionHelp}}"></i>
                         {{/eq}}
                         {{#eq type 'staticWidget'}}
                             <i class="{{icon}}"></i>
                         {{/eq}}
 
-                        <span class="name" title="{{../../trans.name}}">{{name}}</span>
+                        <span class="name" title="{{../../trans.name}}">
+                            {{name}}
+                            {{#eq type 'frame'}}
+                                {{../../trans.invalidRegion}}
+                            {{/eq}}
+                        </span>
+
                         {{#if duration}}
                             <span class="duration" title="{{../../trans.duration}}">{{duration}}</span>
                         {{/if}}

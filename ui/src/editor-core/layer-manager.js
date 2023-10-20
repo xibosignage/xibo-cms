@@ -177,12 +177,25 @@ LayerManager.prototype.createStructure = function() {
     if (region.subType === 'playlist') {
       addToLayerStructure(region.zIndex, {
         type: 'playlist',
-        name: region.name,
+        name: (region.name != '') ?
+          region.name : `[${layerManagerTrans.playlist}]`,
         duration: parseDuration(region.duration),
         id: region.id,
         selected: region.selected,
       });
     } else {
+      // If we have an empty zone or frame, show it on the control
+      if ($.isEmptyObject(region.widgets)) {
+        addToLayerStructure(region.zIndex, {
+          type: region.subType,
+          name: (region.name != '') ?
+            region.name : `[${layerManagerTrans[region.subType]}]`,
+          duration: parseDuration(region.duration),
+          id: region.id,
+          selected: region.selected,
+        });
+      }
+
       Object.values(region.widgets).forEach((widget) => {
         addToLayerStructure(region.zIndex, {
           type: 'staticWidget',
