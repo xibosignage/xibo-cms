@@ -270,6 +270,7 @@ $(function() {
       url,
       meta,
     } = widget;
+    widget.items = [];
 
     if (Object.keys(elements.groups).length > 0 ||
     Object.keys(elements.standalone).length > 0) {
@@ -384,16 +385,11 @@ $(function() {
           if (typeof window[
             `onElementParseData_${item.templateData.id}`
           ] === 'function') {
-            const onElementParseData = window[
-              `onElementParseData_${item.templateData.id}`
-            ];
-
-            if (onElementParseData) {
-              dataItem[item.dataOverride] = onElementParseData(
+            dataItem[item.dataOverride] =
+              window[`onElementParseData_${item.templateData.id}`](
                 dataItem[extendDataWith],
                 {...item.templateData, data: dataItem},
               );
-            }
           }
 
           let groupItemStyles = {
@@ -592,6 +588,8 @@ $(function() {
                 $grpContent.find(`.${groupSlotObj.id}--item`),
               );
             });
+
+            widget.items.push($grpContent);
           }
         });
       }
@@ -693,6 +691,8 @@ $(function() {
                       },
                       $grpItem.find(`.${grpCln}--item`),
                     );
+
+                    widget.items.push($grpItem);
                   }
                 });
             } else {
@@ -715,6 +715,19 @@ $(function() {
             }
           });
       }
+
+      // Run defaultScaler for elements
+      defaultScaler(
+        widget.widgetId,
+        $content,
+        widget.items,
+        Object.assign(
+          widget.properties,
+          globalOptions,
+          {duration: widget.duration},
+        ),
+        meta,
+      );
     }
   }
 
