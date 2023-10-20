@@ -33,6 +33,7 @@ const Region = function(id, data, {backgroundColor = '#aaa'} = {}) {
   this.isDeletable = data.isDeletable;
   this.isPermissionsModifiable = data.isPermissionsModifiable;
   this.isPlaylist = data.type === 'playlist';
+  this.isFrame = data.type === 'frame';
 
   // Interactive actions
   this.actions = data.actions;

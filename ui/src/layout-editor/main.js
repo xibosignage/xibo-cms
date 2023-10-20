@@ -3067,6 +3067,14 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
     } else if (target.data('action') == 'editPlaylist') {
       // Open playlist editor
       lD.openPlaylistEditor(layoutObject.playlists.playlistId, layoutObject);
+    } else if (target.data('action') == 'editFrame') {
+      // Select widget frame to edit it
+      const $viewerRegion =
+        lD.viewer.DOMObject.find('#' + layoutObject.id);
+      lD.selectObject({
+        target: lD.viewer.DOMObject.find('#' + layoutObject.id),
+      });
+      lD.viewer.selectElement($viewerRegion);
     } else if (target.data('action') == 'Ungroup') {
       // Get widget
       const elementsWidget =
