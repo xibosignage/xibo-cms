@@ -7,13 +7,10 @@ const PlayerHelper = function() {
   this.init = (widgetData, elements) => new Promise((resolve) => {
     if (Array.isArray(widgetData)) {
       const _widgetData = [...widgetData];
-      const _widgetPromises = [];
 
-      _widgetData.forEach((widget) => {
-        _widgetPromises.push(this.getWidgetData(widget));
-      });
-
-      Promise.all(_widgetPromises).then((values) => {
+      Promise.all(_widgetData.map(function(widget) {
+        return _self.getWidgetData(widget);
+      })).then((values) => {
         const widgets = {};
         values.forEach((value, widgetIndex) => {
           let _elements = {standalone: {}, groups: {}};
