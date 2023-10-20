@@ -33,7 +33,7 @@ describe('Transitions', function() {
     }).as('putRequest');
 
     cy.visit('/transition/view');
-    cy.get('#transitions tbody tr').should('have.length', 1);
+    cy.get('#transitions tbody tr').should('have.length', 3);
 
     // Click on the first row element to open the delete modal
     cy.get('#transitions tr:first-child .dropdown-toggle').click();
