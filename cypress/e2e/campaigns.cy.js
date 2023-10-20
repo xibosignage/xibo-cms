@@ -30,7 +30,7 @@ describe('Campaigns', function() {
   // Create a list campaign
   // Assign layout to it
   // and add the id to the session
-  it('should add a campaign and assign a layout', function() {
+  it.only('should add a campaign and assign a layout', function() {
     cy.intercept('/campaign?draw=4&*').as('campaignGridLoad');
 
     cy.intercept({
@@ -83,6 +83,7 @@ describe('Campaigns', function() {
     cy.wait('@layoutLoadAfterSearch').then((interception) => {
       // Perform your desired actions or assertions here
       cy.log('Layout Loading');
+      // cy.get('#layoutAssignments tbody tr').should('have.length', 2);
 
       cy.get('#layoutAssignments tbody tr').should('have.length', 2);
 

@@ -25,7 +25,7 @@ describe('Transitions', function() {
     cy.login();
   });
 
-  it('should add edit an transition', function() {
+  it('should edit an transition', function() {
     // Intercept the PUT request
     cy.intercept({
       method: 'PUT',

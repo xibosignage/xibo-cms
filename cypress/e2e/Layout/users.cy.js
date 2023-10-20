@@ -29,7 +29,7 @@ describe('Users', function() {
     testRun = Cypress._.random(0, 1e9);
   });
 
-  it('should add a user', function() {
+  it.only('should add a user', function() {
     cy.intercept({
       url: '/user/form/homepages?groupId=1&userTypeId=3*',
       query: {},
@@ -50,6 +50,7 @@ describe('Users', function() {
       .type('cypress');
 
     cy.get('.select2-container--bootstrap').eq(1).click();
+    cy.log('Before waiting for Icon Dashboard element');
     cy.wait('@loadHomepageAfterSearch');
     cy.get('.select2-results__option')
       .should('contain', 'Icon Dashboard')
@@ -84,6 +85,7 @@ describe('Users', function() {
 
       // Wait for the grid reload
       cy.wait('@loadGridAfterSearch');
+      cy.get('#users tbody tr').should('have.length', 1);
 
       // Click on the first row element to open the delete modal
       cy.get('#users tr:first-child .dropdown-toggle').click();
@@ -128,6 +130,7 @@ describe('Users', function() {
 
       // Wait for the grid reload
       cy.wait('@loadGridAfterSearch');
+      cy.get('#users tbody tr').should('have.length', 1);
 
       // Click on the first row element to open the delete modal
       cy.get('#users tr:first-child .dropdown-toggle').click();

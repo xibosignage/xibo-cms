@@ -62,6 +62,7 @@ describe('Sync Groups', function() {
 
       // Wait for the grid reload
       cy.wait('@loadGridAfterSearch');
+      cy.get('#syncgroups tbody tr').should('have.length', 1);
 
       // Click on the first row element to open the delete modal
       cy.get('#syncgroups tr:first-child .dropdown-toggle').click();

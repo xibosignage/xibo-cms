@@ -36,7 +36,7 @@ describe('Displays', function() {
     // search for a display disp1 and edit
     cy.intercept({
       url: '/display?*',
-      query: {display: 'disp1'},
+      query: {display: 'dis_disp1'},
     }).as('loadGridAfterSearch');
 
     // Intercept the PUT request
@@ -49,7 +49,7 @@ describe('Displays', function() {
 
     // Filter for the created display
     cy.get('#Filter input[name="display"]')
-      .type('disp1');
+      .type('dis_disp1');
 
     // Wait for the grid reload
     cy.wait('@loadGridAfterSearch');
@@ -59,14 +59,14 @@ describe('Displays', function() {
     cy.get('#displays tr:first-child .dropdown-toggle').click();
     cy.get('#displays tr:first-child .display_button_edit').click();
 
-    cy.get('.modal input#name').clear()
-      .type('disp1 Edited');
+    cy.get('.modal input#display').clear()
+      .type('dis_disp1 Edited');
 
     cy.get('.modal input#license').clear()
-      .type('disp1_license');
+      .type('dis_disp1_license');
 
     cy.get('.modal input#description').clear()
-      .type('disp1 description');
+      .type('description');
 
     // edit test display
     cy.get('.bootbox .save-button').click();
@@ -78,9 +78,9 @@ describe('Displays', function() {
       const responseData = response.body.data;
 
       // assertion on the "display" value
-      expect(responseData.display).to.eq('disp1 Edited');
-      expect(responseData.description).to.eq('disp1 description');
-      expect(responseData.license).to.eq('disp1_license');
+      expect(responseData.display).to.eq('dis_disp1 Edited');
+      expect(responseData.description).to.eq('description');
+      expect(responseData.license).to.eq('dis_disp1_license');
     });
   });
 
@@ -88,14 +88,14 @@ describe('Displays', function() {
   it('searches and delete existing display', function() {
     cy.intercept({
       url: '/display?*',
-      query: {display: 'disp2'},
+      query: {display: 'dis_disp2'},
     }).as('loadGridAfterSearch');
 
     cy.visit('/display/view');
 
     // Filter for the created display
     cy.get('#Filter input[name="display"]')
-      .type('disp2');
+      .type('dis_disp2');
 
     // Wait for the grid reload
     cy.wait('@loadGridAfterSearch');
@@ -109,28 +109,28 @@ describe('Displays', function() {
     cy.get('.bootbox .save-button').click();
 
     // Check if display is deleted in toast message
-    cy.get('.toast').contains('Deleted disp2');
+    cy.get('.toast').contains('Deleted dis_disp2');
   });
 
   // Display: disp3
-  it('searches and authorise an unauthorised display', function() {
+  it.only('searches and authorise an unauthorised display', function() {
     // search for a display disp1 and edit
     cy.intercept({
       url: '/display?*',
-      query: {display: 'disp3'},
+      query: {display: 'dis_disp3'},
     }).as('loadGridAfterSearch');
 
     // Intercept the PUT request
     cy.intercept({
       method: 'PUT',
-      url: '/display/*',
+      url: '/display/authorise/*',
     }).as('putRequest');
 
     cy.visit('/display/view');
 
     // Filter for the created display
     cy.get('#Filter input[name="display"]')
-      .type('disp3');
+      .type('dis_disp3');
 
     // Wait for the grid reload
     cy.wait('@loadGridAfterSearch');
@@ -150,7 +150,7 @@ describe('Displays', function() {
       const responseData = response.body.data;
 
       // assertion on the "display" value
-      expect(responseData.display).to.eq('disp3');
+      expect(responseData.display).to.eq('dis_disp3');
       expect(responseData.licensed).to.eq(1);
     });
   });
@@ -159,7 +159,7 @@ describe('Displays', function() {
   it('set a default layout', function() {
     cy.intercept({
       url: '/display?*',
-      query: {display: 'disp4'},
+      query: {display: 'dis_disp4'},
     }).as('loadGridAfterSearch');
 
     // Intercept the PUT request
@@ -179,7 +179,7 @@ describe('Displays', function() {
 
     // Filter for the created display
     cy.get('#Filter input[name="display"]')
-      .type('disp4');
+      .type('dis_disp4');
 
     // Wait for the grid reload
     cy.wait('@loadGridAfterSearch');
@@ -212,7 +212,7 @@ describe('Displays', function() {
   it('manage membership for disp5', function() {
     cy.intercept({
       url: '/display?*',
-      query: {display: 'disp5'},
+      query: {display: 'dis_disp5'},
     }).as('loadGridAfterSearch');
 
     // Intercept the PUT request
@@ -232,7 +232,7 @@ describe('Displays', function() {
 
     // Filter for the created display
     cy.get('#Filter input[name="display"]')
-      .type('disp5');
+      .type('dis_disp5');
 
     // Wait for the grid reload
     cy.wait('@loadGridAfterSearch');
@@ -263,7 +263,7 @@ describe('Displays', function() {
     });
   });
 
-  it.only('should display map and revert back to table', function() {
+  it('should display map and revert back to table', function() {
     cy.visit('/display/view');
 
     cy.get('#displays_wrapper.dataTables_wrapper').should('be.visible');

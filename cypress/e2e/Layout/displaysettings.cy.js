@@ -105,6 +105,7 @@ describe('Display Settings', function() {
 
       // Wait for the grid reload
       cy.wait('@loadGridAfterSearch');
+      cy.get('#displayProfiles tbody tr').should('have.length', 1);
 
       // Click on the first row element to open the delete modal
       cy.get('#displayProfiles tr:first-child .dropdown-toggle').click();
@@ -149,6 +150,7 @@ describe('Display Settings', function() {
 
       // Wait for the grid reload
       cy.wait('@loadGridAfterSearch');
+      cy.get('#displayProfiles tbody tr').should('have.length', 1);
 
       // Click on the first row element to open the delete modal
       cy.get('#displayProfiles tr:first-child .dropdown-toggle').click();

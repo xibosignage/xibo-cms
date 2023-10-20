@@ -216,11 +216,11 @@ class SeedDatabaseTask implements TaskInterface
                 'clientType' => 'android', 'clientCode' => 400, 'clientVersion' => 4],
 
             // Displays for displays.cy.js test
-            'disp1' => ['license' => 'disp1', 'licensed' => true, 'clientType' => 'android', 'clientCode' => 400, 'clientVersion' => 4],
-            'disp2' => ['license' => 'disp2', 'licensed' => true, 'clientType' => 'android', 'clientCode' => 400, 'clientVersion' => 4],
-            'disp3' => ['license' => 'disp3', 'licensed' => false, 'clientType' => 'android', 'clientCode' => 400, 'clientVersion' => 4],
-            'disp4' => ['license' => 'disp4', 'licensed' => true, 'clientType' => 'android', 'clientCode' => 400, 'clientVersion' => 4],
-            'disp5' => ['license' => 'disp5', 'licensed' => true, 'clientType' => 'android', 'clientCode' => 400, 'clientVersion' => 4],
+            'dis_disp1' => ['license' => 'dis_disp1', 'licensed' => true, 'clientType' => 'android', 'clientCode' => 400, 'clientVersion' => 4],
+            'dis_disp2' => ['license' => 'dis_disp2', 'licensed' => true, 'clientType' => 'android', 'clientCode' => 400, 'clientVersion' => 4],
+            'dis_disp3' => ['license' => 'dis_disp3', 'licensed' => false, 'clientType' => 'android', 'clientCode' => 400, 'clientVersion' => 4],
+            'dis_disp4' => ['license' => 'dis_disp4', 'licensed' => true, 'clientType' => 'android', 'clientCode' => 400, 'clientVersion' => 4],
+            'dis_disp5' => ['license' => 'dis_disp5', 'licensed' => true, 'clientType' => 'android', 'clientCode' => 400, 'clientVersion' => 4],
 
             // Displays for displaygroups.cy.js test
             'dispgrp_disp1' => ['license' => 'dispgrp_disp1', 'licensed' => true, 'clientType' => 'android', 'clientCode' => 400, 'clientVersion' => 4],
