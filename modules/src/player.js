@@ -268,6 +268,7 @@ $(function() {
       templateId,
       widgetId,
       url,
+      meta,
     } = widget;
 
     if (Object.keys(elements.groups).length > 0 ||
@@ -485,7 +486,7 @@ $(function() {
             $itemContainer.find(`.${itemID}--item`),
             $content.find(`.${itemID}--item`),
             {item, ...item.templateData, data: dataItem},
-            widget?.meta,
+            meta,
           );
         } else {
           if ($groupContent &&
@@ -746,21 +747,21 @@ $(function() {
 
           const $content = $('#content');
 
-          initStaticTemplates(
-            $template,
-            $content,
-            moduleTemplate,
-            hbs,
-            widget,
-            widget.data,
-            widget.showError,
-            widget.data,
-          );
-
-          // Get widget with templateId = elements
-          if ((widget.templateId === 'elements' ||
+          if (widget.templateId !== 'elements' && widget.templateId !== null) {
+            initStaticTemplates(
+              $template,
+              $content,
+              moduleTemplate,
+              hbs,
+              widget,
+              widget.data,
+              widget.showError,
+              widget.data,
+            );
+          } else if ((widget.templateId === 'elements' ||
             widget.templateId === null) &&
             typeof widget.elements !== 'undefined') {
+            // Get widget with templateId = elements
             initPlayerElements(widget);
           }
         });

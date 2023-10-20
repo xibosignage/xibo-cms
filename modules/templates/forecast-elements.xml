@@ -231,7 +231,8 @@ return value + '%';
         <startHeight>100</startHeight>
         <onTemplateRender><![CDATA[
 if (meta && meta.hasOwnProperty('Attribution')) {
-    $(target).find('.global-elements-text > div:first-child').html(meta.Attribution);
+    var $childElem = $(target).is('.' + id + '--item') ? '> div:first-child' : '.global-elements-text > div:first-child';
+    $(target).find($childElem).html(meta.Attribution);
 }
         ]]></onTemplateRender>
     </template>
