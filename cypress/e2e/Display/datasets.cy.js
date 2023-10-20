@@ -96,7 +96,7 @@ describe('Datasets', function() {
     });
   });
 
-  it.only('add row/column to an existing dataset', function() {
+  it('add row/column to an existing dataset', function() {
     // Create a new dataset and then search for it and delete it
     cy.createDataset('Cypress Test Dataset ' + testRun).then((id) => {
       cy.intercept({

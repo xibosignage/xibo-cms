@@ -29,7 +29,7 @@ describe('Users', function() {
     testRun = Cypress._.random(0, 1e9);
   });
 
-  it.only('should add a user', function() {
+  it('should add a user', function() {
     cy.intercept({
       url: '/user/form/homepages?groupId=1&userTypeId=3*',
       query: {},
