@@ -1486,12 +1486,12 @@ class Layout extends Base
                     if ($module->regionSpecific == 0) {
                         // Use the media assigned to this widget
                         $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
-                        $widget->setUnmatchedProperty('name', $widget->getOptionValue('name', $media->name));
+                        $widget->setUnmatchedProperty('name', $widget->getOptionValue('name', null) ?: $media->name);
 
                         // Augment with tags
                         $widget->setUnmatchedProperty('tags', $media->tags);
                     } else {
-                        $widget->setUnmatchedProperty('name', $widget->getOptionValue('name', $module->name));
+                        $widget->setUnmatchedProperty('name', $widget->getOptionValue('name', null) ?: $module->name);
                         $widget->setUnmatchedProperty('tags', []);
                     }
 
