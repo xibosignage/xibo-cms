@@ -2632,6 +2632,15 @@ $datasetTableContainer.dataSetRender(properties);
                     </test>
                 </visibility>
             </property>
+            <property type="message">
+                <title>No image field is available for the selected DataSet.</title>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                        <condition field="datasetField" type="eq"></condition>
+                    </test>
+                </visibility>
+            </property>
             <property id="datasetField" type="datasetField">
                 <dependsOn>dataSetId</dependsOn>
                 <title>Select DataSet Field</title>
