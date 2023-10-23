@@ -79,6 +79,12 @@
                 </div>
             {{/if}}
 
+            {{#if isFrame}}
+                <div class="context-menu-btn editFrameBtn" data-title="{{trans.options}}" data-action="editFrame" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
+                    <i class="fa fa-cog"></i><span>{{trans.options}}</span>
+                </div>
+            {{/if}}
+
             {{#if isDeletable}}
                 <div class="context-menu-btn deleteBtn" data-title="{{trans.delete}}" data-action="Delete" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
                     <i class="fa fa-trash"></i><span>{{trans.delete}}</span>
