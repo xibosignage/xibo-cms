@@ -486,8 +486,91 @@ class ScheduleFactory extends BaseFactory
         // End both dates
 
         if ($parsedFilter->getIntArray('displayGroupIds') != null) {
-            $body .= ' AND `schedule`.eventId IN (SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup`
-             WHERE displayGroupId IN (' . implode(',', $parsedFilter->getIntArray('displayGroupIds')) . ')) ';
+            // non Schedule grid filter, keep it the way it was.
+            if ($parsedFilter->getInt('sharedSchedule') === null &&
+                $parsedFilter->getInt('directSchedule') === null
+            ) {
+                $body .= ' AND `schedule`.eventId IN (
+                    SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup`
+                    WHERE displayGroupId IN (' . implode(',', $parsedFilter->getIntArray('displayGroupIds')) . ')
+                     ) ';
+            } else {
+                // Schedule grid query
+                // check what options we were provided with and adjust query accordingly.
+                if ($parsedFilter->getInt('sharedSchedule') === 1) {
+                    if ($parsedFilter->getInt('directSchedule') === 1) {
+                        $body .= ' AND `schedule`.eventId IN (
+                        SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup`
+                          WHERE displayGroupId IN (' . implode(',', $parsedFilter->getIntArray('displayGroupIds')) . ')
+                          GROUP BY eventId
+                          HAVING COUNT(DISTINCT displayGroupId) = ' .
+                            count($parsedFilter->getIntArray('displayGroupIds')) .
+                            ') ';
+                    } else {
+                        $body .= ' AND (
+                        ( `schedule`.eventId IN (SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup`
+                         WHERE displayGroupId IN (' . implode(',', $parsedFilter->getIntArray('displayGroupIds')) . ')
+                          GROUP BY eventId
+                          HAVING COUNT(DISTINCT displayGroupId) = ' .
+                            count($parsedFilter->getIntArray('displayGroupIds')) . '
+                          ))
+                        OR `schedule`.eventID IN (
+                        SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup`
+                            INNER JOIN `lkdgdg` ON `lkdgdg`.parentId = `lkscheduledisplaygroup`.displayGroupId 
+                            INNER JOIN `lkdisplaydg` ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
+                            WHERE `lkdisplaydg`.DisplayID IN (
+                                SELECT lkdisplaydg.displayId FROM lkdisplaydg WHERE lkdisplaydg.displayGroupId IN ('
+                            . implode(',', $parsedFilter->getIntArray('displayGroupIds')) . ')
+                            )
+                            GROUP BY eventId
+                            HAVING COUNT(DISTINCT `lkscheduledisplaygroup`.displayGroupId) = ' .
+                            count($parsedFilter->getIntArray('displayGroupIds')) . '
+                        )
+                        OR `schedule`.eventID IN (
+                            SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup`
+                            INNER JOIN `lkdgdg` ON `lkdgdg`.parentId = `lkscheduledisplaygroup`.displayGroupId
+                            WHERE `lkscheduledisplaygroup`.displayGroupId IN (
+                            SELECT lkdgdg.childId FROM lkdgdg WHERE lkdgdg.parentId IN (' .
+                                implode(',', $parsedFilter->getIntArray('displayGroupIds')) .') 
+                                AND lkdgdg.depth > 0)
+                            GROUP BY eventId
+                            HAVING COUNT(DISTINCT `lkscheduledisplaygroup`.displayGroupId) = ' .
+                            count($parsedFilter->getIntArray('displayGroupIds')) . '    
+                        )
+                     ) ';
+                    }
+                } else {
+                    if ($parsedFilter->getInt('directSchedule') === 1) {
+                        $body .= ' AND `schedule`.eventId IN (
+                    SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup`
+                    WHERE displayGroupId IN (' . implode(',', $parsedFilter->getIntArray('displayGroupIds')) . ')
+                     ) ';
+                    } else {
+                        $body .= ' AND (
+                        ( `schedule`.eventId IN (SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup`
+                         WHERE displayGroupId IN (' .
+                            implode(',', $parsedFilter->getIntArray('displayGroupIds')) . ')) )
+                        OR `schedule`.eventID IN (
+                        SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup`
+                            INNER JOIN `lkdgdg` ON `lkdgdg`.parentId = `lkscheduledisplaygroup`.displayGroupId 
+                            INNER JOIN `lkdisplaydg` ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
+                            WHERE `lkdisplaydg`.DisplayID IN (
+                                SELECT lkdisplaydg.displayId FROM lkdisplaydg WHERE lkdisplaydg.displayGroupId IN ('
+                                . implode(',', $parsedFilter->getIntArray('displayGroupIds')) . ')
+                            )
+                        )
+                        OR `schedule`.eventID IN (
+                                SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup`
+                                INNER JOIN `lkdgdg` ON `lkdgdg`.parentId = `lkscheduledisplaygroup`.displayGroupId
+                                WHERE `lkscheduledisplaygroup`.displayGroupId IN (
+                                SELECT lkdgdg.childId FROM lkdgdg WHERE lkdgdg.parentId IN (' .
+                                implode(',', $parsedFilter->getIntArray('displayGroupIds')) .') 
+                                    AND lkdgdg.depth > 0)  
+                        )
+                     ) ';
+                    }
+                }
+            }
         }
 
         // Future schedules?
