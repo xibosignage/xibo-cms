@@ -1518,3 +1518,8 @@ div.dataTables_wrapper div.dataTables_info {
 .text-xibo-primary {
     color: #0E70F6;
 }
+
+.grid-folder-tree-container {
+    border: 1px solid #00000020;
+    border-radius: 0.25rem;
+}
