@@ -760,7 +760,13 @@ $(function() {
 
           const $content = $('#content');
 
-          if (widget.templateId !== 'elements' && widget.templateId !== null) {
+          if ((widget.templateId === 'elements' ||
+              (widget.templateId === null && (
+                Object.keys(widget.elements.groups).length > 0 ||
+                Object.keys(widget.elements.standalone).length > 0
+              ))) && typeof widget.elements !== 'undefined') {
+            initPlayerElements(widget);
+          } else {
             initStaticTemplates(
               $template,
               $content,
@@ -771,11 +777,6 @@ $(function() {
               widget.showError,
               widget.data,
             );
-          } else if ((widget.templateId === 'elements' ||
-            widget.templateId === null) &&
-            typeof widget.elements !== 'undefined') {
-            // Get widget with templateId = elements
-            initPlayerElements(widget);
           }
         });
       }
