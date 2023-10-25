@@ -64,7 +64,7 @@ const PlayerHelper = function() {
         xiboIC.reportFault({
           code: '5001',
           reason: 'No Data',
-        }, {targetId: widget.widgetId});
+        }, {targetId: xiboICTargetId});
       }
 
       onDataError(httpStatus, response);
@@ -72,7 +72,7 @@ const PlayerHelper = function() {
       xiboIC.reportFault({
         code: '5001',
         reason: 'No Data',
-      }, {targetId: widget.widgetId});
+      }, {targetId: xiboICTargetId});
     }
   };
 
