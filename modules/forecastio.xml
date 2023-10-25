@@ -120,7 +120,11 @@ if (items.length === 0) {
 }
 
 // Set moment locale
-moment.locale(globalOptions.locale);
+if (properties.lang !== null && String(properties.lang).length > 0) {
+    moment.locale(properties.lang);
+} else {
+    moment.locale(globalOptions.locale);
+}
 
 // Make replacements [] with target data
 var makeReplacement = (html, item) => {
