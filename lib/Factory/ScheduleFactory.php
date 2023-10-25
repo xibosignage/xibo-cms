@@ -497,78 +497,103 @@ class ScheduleFactory extends BaseFactory
             } else {
                 // Schedule grid query
                 // check what options we were provided with and adjust query accordingly.
-                if ($parsedFilter->getInt('sharedSchedule') === 1) {
-                    if ($parsedFilter->getInt('directSchedule') === 1) {
-                        $body .= ' AND `schedule`.eventId IN (
+                $sharedSchedule = ($parsedFilter->getInt('sharedSchedule') === 1);
+                $directSchedule =  ($parsedFilter->getInt('directSchedule') === 1);
+
+                // shared and direct
+                // events scheduled directly on the selected displays/groups
+                // and scheduled on all selected displays/groups
+                // Example : Two Displays selected, return only events scheduled directly to both of them
+                if ($sharedSchedule && $directSchedule) {
+                    $body .= ' AND `schedule`.eventId IN (
                         SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup`
                           WHERE displayGroupId IN (' . implode(',', $parsedFilter->getIntArray('displayGroupIds')) . ')
                           GROUP BY eventId
-                          HAVING COUNT(DISTINCT displayGroupId) = ' .
-                            count($parsedFilter->getIntArray('displayGroupIds')) .
-                            ') ';
-                    } else {
-                        $body .= ' AND (
+                          HAVING COUNT(DISTINCT displayGroupId) >= ' .
+                        count($parsedFilter->getIntArray('displayGroupIds')) .
+                        ') ';
+                }
+
+                // shared and not direct
+                // 1 - events scheduled on the selected display/groups
+                // 2 - events scheduled on a display group selected display is a member of
+                // 3 - events scheduled on a parent display group of selected display group
+                // and scheduled on all selected displays/groups
+                // Example : Two Displays selected, return only events scheduled directly to both of them
+                if ($sharedSchedule && !$directSchedule) {
+                    $body .= ' AND (
                         ( `schedule`.eventId IN (SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup`
                          WHERE displayGroupId IN (' . implode(',', $parsedFilter->getIntArray('displayGroupIds')) . ')
                           GROUP BY eventId
-                          HAVING COUNT(DISTINCT displayGroupId) = ' .
-                            count($parsedFilter->getIntArray('displayGroupIds')) . '
+                          HAVING COUNT(DISTINCT displayGroupId) >= ' .
+                        count($parsedFilter->getIntArray('displayGroupIds')) . '
                           ))
                         OR `schedule`.eventID IN (
                         SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup`
                             INNER JOIN `lkdgdg` ON `lkdgdg`.parentId = `lkscheduledisplaygroup`.displayGroupId 
                             INNER JOIN `lkdisplaydg` ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
                             WHERE `lkdisplaydg`.DisplayID IN (
-                                SELECT lkdisplaydg.displayId FROM lkdisplaydg WHERE lkdisplaydg.displayGroupId IN ('
-                            . implode(',', $parsedFilter->getIntArray('displayGroupIds')) . ')
-                            )
+                                SELECT lkdisplaydg.displayId FROM lkdisplaydg
+                                 INNER JOIN displaygroup ON lkdisplaydg.displayGroupId = displaygroup.displayGroupId 
+                                 WHERE lkdisplaydg.displayGroupId IN ('
+                        . implode(',', $parsedFilter->getIntArray('displayGroupIds')) . ')
+                            AND displaygroup.isDisplaySpecific = 1 ) 
                             GROUP BY eventId
-                            HAVING COUNT(DISTINCT `lkscheduledisplaygroup`.displayGroupId) = ' .
-                            count($parsedFilter->getIntArray('displayGroupIds')) . '
+                            HAVING COUNT(DISTINCT `lkdisplaydg`.displayId) >= ' .
+                        count($parsedFilter->getIntArray('displayGroupIds')) . '
                         )
                         OR `schedule`.eventID IN (
                             SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup`
                             INNER JOIN `lkdgdg` ON `lkdgdg`.parentId = `lkscheduledisplaygroup`.displayGroupId
                             WHERE `lkscheduledisplaygroup`.displayGroupId IN (
                             SELECT lkdgdg.childId FROM lkdgdg WHERE lkdgdg.parentId IN (' .
-                                implode(',', $parsedFilter->getIntArray('displayGroupIds')) .') 
+                        implode(',', $parsedFilter->getIntArray('displayGroupIds')) .') 
                                 AND lkdgdg.depth > 0)
                             GROUP BY eventId
-                            HAVING COUNT(DISTINCT `lkscheduledisplaygroup`.displayGroupId) = ' .
-                            count($parsedFilter->getIntArray('displayGroupIds')) . '    
+                            HAVING COUNT(DISTINCT `lkscheduledisplaygroup`.displayGroupId) >= ' .
+                        count($parsedFilter->getIntArray('displayGroupIds')) . '    
                         )
                      ) ';
-                    }
-                } else {
-                    if ($parsedFilter->getInt('directSchedule') === 1) {
-                        $body .= ' AND `schedule`.eventId IN (
+                }
+
+                // not shared and direct (old default)
+                // events scheduled directly on selected displays/groups
+                if (!$sharedSchedule && $directSchedule) {
+                    $body .= ' AND `schedule`.eventId IN (
                     SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup`
                     WHERE displayGroupId IN (' . implode(',', $parsedFilter->getIntArray('displayGroupIds')) . ')
                      ) ';
-                    } else {
-                        $body .= ' AND (
+                }
+
+                // not shared and not direct (new default)
+                // 1 - events scheduled on the selected display/groups
+                // 2 - events scheduled on a display group selected display is a member of
+                // 3 - events scheduled on a parent display group of selected display group
+                if (!$sharedSchedule && !$directSchedule) {
+                    $body .= ' AND (
                         ( `schedule`.eventId IN (SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup`
                          WHERE displayGroupId IN (' .
-                            implode(',', $parsedFilter->getIntArray('displayGroupIds')) . ')) )
+                        implode(',', $parsedFilter->getIntArray('displayGroupIds')) . ')) )
                         OR `schedule`.eventID IN (
                         SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup`
                             INNER JOIN `lkdgdg` ON `lkdgdg`.parentId = `lkscheduledisplaygroup`.displayGroupId 
                             INNER JOIN `lkdisplaydg` ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
                             WHERE `lkdisplaydg`.DisplayID IN (
-                                SELECT lkdisplaydg.displayId FROM lkdisplaydg WHERE lkdisplaydg.displayGroupId IN ('
-                                . implode(',', $parsedFilter->getIntArray('displayGroupIds')) . ')
-                            )
+                                SELECT lkdisplaydg.displayId FROM lkdisplaydg 
+                                INNER JOIN displaygroup ON lkdisplaydg.displayGroupId = displaygroup.displayGroupId
+                                 WHERE lkdisplaydg.displayGroupId IN ('
+                        . implode(',', $parsedFilter->getIntArray('displayGroupIds')) . ')
+                            AND displaygroup.isDisplaySpecific = 1 ) 
                         )
                         OR `schedule`.eventID IN (
                                 SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup`
                                 INNER JOIN `lkdgdg` ON `lkdgdg`.parentId = `lkscheduledisplaygroup`.displayGroupId
                                 WHERE `lkscheduledisplaygroup`.displayGroupId IN (
                                 SELECT lkdgdg.childId FROM lkdgdg WHERE lkdgdg.parentId IN (' .
-                                implode(',', $parsedFilter->getIntArray('displayGroupIds')) .') 
+                        implode(',', $parsedFilter->getIntArray('displayGroupIds')) .') 
                                     AND lkdgdg.depth > 0)  
                         )
                      ) ';
-                    }
                 }
             }
         }
