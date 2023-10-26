@@ -28,8 +28,6 @@ jQuery.fn.extend({
       duration: 50,
       durationIsPerItem: false,
       numItems: 1,
-      takeItemsFrom: 'start',
-      reverseOrder: 0,
       itemsPerPage: 1,
       speed: 2,
       previewWidth: 0,

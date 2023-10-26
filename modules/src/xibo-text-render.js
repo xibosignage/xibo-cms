@@ -26,9 +26,7 @@ jQuery.fn.extend({
       pauseEffectOnStart: true,
       duration: '50',
       durationIsPerItem: false,
-      numItems: 0,
-      takeItemsFrom: 'start',
-      reverseOrder: 0,
+      numItems: 1,
       itemsPerPage: 0,
       speed: '2',
       previewWidth: 0,
@@ -74,6 +72,9 @@ jQuery.fn.extend({
         $contentDiv.find('.scroll').remove();
       }
     };
+
+    // If number of items is not defined, get it from the item count
+    options.numItems = options.numItems ? options.numItems : items.length;
 
     // Calculate the dimensions of this item
     // based on the preview/original dimensions
@@ -246,6 +247,8 @@ jQuery.fn.extend({
           slides = slides + ' p';
 
           // Change the number of items
+          numberOfItems = $(slides).length;
+        } else if (options.type === 'text') {
           numberOfItems = $(slides).length;
         }
 

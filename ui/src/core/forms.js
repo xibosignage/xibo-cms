@@ -1864,6 +1864,9 @@ window.forms = {
       const $el = $(el).find('select');
       const effectsType = $el.data('effects-type').split(' ');
 
+      // Show option groups if we show all
+      const showOptionGroups = (effectsType.indexOf('all') != -1);
+
       // Effects
       const effects = [
         {effect: 'none', group: 'showAll'},
@@ -1902,7 +1905,23 @@ window.forms = {
           return;
         }
 
-        $el.append(
+        // Show option group if it doesn't exist
+        let $optionGroup = $el.find(`optgroup[data-type=${element.group}]`);
+        if (
+          showOptionGroups && $optionGroup.length == 0
+        ) {
+          $optionGroup =
+            $(`<optgroup
+              label="${effectsTranslations[element.group]}"
+              data-type="${element.group}">
+            </optgroup>`);
+          $el.append($optionGroup);
+        }
+
+        // Check if we add to option group or main select
+        const $appendTo = showOptionGroups ? $optionGroup : $el;
+
+        $appendTo.append(
           $('<option value="' +
             element.effect +
             '" data-optgroup="' +

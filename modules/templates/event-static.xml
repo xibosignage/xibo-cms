@@ -114,7 +114,13 @@ if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !=
 $(target).find('#content').empty();
 
 // Add items to container
-for (var index = 0; index < items.length; index++) {
+// If we have numItems, send only that number
+let numItems =
+  properties.numItems && properties.numItems < items.length ?
+  properties.numItems :
+  items.length;
+
+for (var index = 0; index < numItems; index++) {
   var $newItem = $('<div>').addClass('event').html(items[index]).appendTo('body');
   $(target).find('#content').append($newItem);
 }
