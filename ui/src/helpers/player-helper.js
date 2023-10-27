@@ -12,6 +12,17 @@ const PlayerHelper = function() {
         return _self.getWidgetData(widget);
       })).then((values) => {
         const widgets = {};
+        const widgetHasNoData = values.filter((val) => {
+          return val !== null &&
+            (val.hasOwnProperty('success') ||
+              val.hasOwnProperty('error'));
+        });
+
+        if (widgetHasNoData.length > 0) {
+          _self.onDataErrorCallback(404, widgetData);
+          resolve({widgets});
+        }
+
         values.forEach((value, widgetIndex) => {
           let _elements = {standalone: {}, groups: {}};
           const _widget = _widgetData[widgetIndex];
@@ -50,13 +61,12 @@ const PlayerHelper = function() {
 
   /**
    * onDataError callback
-   * @param {Object} widget - Widget
    * @param {string|number} httpStatus
    * @param {Object} response - Response body|json
    */
-  this.onDataErrorCallback = (widget, httpStatus, response) => {
+  this.onDataErrorCallback = (httpStatus, response) => {
     const onDataError = window[
-      `onDataError_${widget.widgetId}`
+      `onDataError_${xiboICTargetId}`
     ];
 
     if (typeof onDataError === 'function') {
@@ -64,7 +74,8 @@ const PlayerHelper = function() {
         xiboIC.reportFault({
           code: '5001',
           reason: 'No Data',
-        }, {targetId: widget.widgetId});
+        }, {targetId: xiboICTargetId});
+        xiboIC.expireNow({targetId: xiboICTargetId});
       }
 
       onDataError(httpStatus, response);
@@ -72,7 +83,8 @@ const PlayerHelper = function() {
       xiboIC.reportFault({
         code: '5001',
         reason: 'No Data',
-      }, {targetId: widget.widgetId});
+      }, {targetId: xiboICTargetId});
+      xiboIC.expireNow({targetId: xiboICTargetId});
     }
   };
 
@@ -82,7 +94,7 @@ const PlayerHelper = function() {
    * @return {Promise}
    */
   this.getWidgetData = (widget) => {
-    return new Promise(function(resolve) {
+    return new Promise(function(resolve, reject) {
       // if we have data on the widget (for older players),
       // or if we are not in preview and have empty data on Widget (like text)
       // do not run ajax use that data instead
@@ -97,24 +109,15 @@ const PlayerHelper = function() {
           method: 'GET',
           url: widget.url,
         }).done(function(data) {
-          if (data && data.hasOwnProperty('success') &&
-              data.success === false && data.error
-          ) {
-            _self.onDataErrorCallback(widget, data.error, data);
-          }
-
-          if (Array.isArray(data) && data.length === 0) {
-            xiboIC.expireNow({targetId: xiboICTargetId});
-          }
-
           resolve(data);
         }).fail(function(jqXHR, textStatus, errorThrown) {
           _self.onDataErrorCallback(widget, jqXHR.status, jqXHR.responseJSON);
           console.log(jqXHR, textStatus, errorThrown);
-
-          if (jqXHR.status === 404) {
-            xiboIC.expireNow({targetId: xiboICTargetId});
-          }
+          resolve({
+            error: jqXHR.status,
+            success: false,
+            data: jqXHR.responseJSON,
+          });
         });
       } else {
         resolve(null);
