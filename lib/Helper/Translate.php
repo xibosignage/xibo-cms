@@ -121,6 +121,55 @@ class Translate
     }
 
     /**
+     * Get translations for user selected language
+     * @param $config
+     * @param $language
+     * @return Translator
+     */
+    public static function getTranslationsFromLocale($config, $language = NULL): Translator
+    {
+        // The default language
+        $default = ($language === null) ? $config->getSetting('DEFAULT_LANGUAGE') : $language;
+
+        // Build an array of supported languages
+        $localeDir = PROJECT_ROOT . '/locale';
+        $supportedLanguages = array_map('basename', glob($localeDir . '/*.mo'));
+
+        // Record any matching languages we find.
+        $foundLanguage = null;
+
+        // Try to get the local firstly from _REQUEST (post then get)
+        if ($language != null) {
+            // Serve only the requested language
+            // Firstly, Sanitize it
+            self::$requestedLanguage = str_replace('-', '_', $language);
+
+            // Check its valid
+            if (in_array(self::$requestedLanguage . '.mo', $supportedLanguages)) {
+                $foundLanguage = self::$requestedLanguage;
+            }
+        }
+
+        // Are we still empty, then default language from settings
+        if ($foundLanguage == '') {
+            // Check the default
+            if (!in_array($default . '.mo', $supportedLanguages)) {
+                $default = 'en_GB';
+            }
+
+            // The default is valid
+            $foundLanguage = $default;
+        }
+
+        // Load translations
+        $translator = new Translator();
+        $translator->loadTranslations(Translations::fromMoFile($localeDir . '/' . $foundLanguage . '.mo'));
+        $translator->register();
+
+        return $translator;
+    }
+
+    /**
      * Get the Locale
      * @param null $characters The number of characters to take from the beginning of the local string
      * @return mixed
