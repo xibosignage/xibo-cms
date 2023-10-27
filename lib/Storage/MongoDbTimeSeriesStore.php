@@ -391,7 +391,6 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $cursor = $collectionPeriod->findOne(['name' => 'period']);
 
             if ($cursor === null) {
-
                 $this->log->error('Period collection does not exist in Mongo DB.');
                 // Period collection created
                 $collectionPeriod->insertOne(['name' => 'period']);
