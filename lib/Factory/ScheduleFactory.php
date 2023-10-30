@@ -486,13 +486,41 @@ class ScheduleFactory extends BaseFactory
         // End both dates
 
         if ($parsedFilter->getIntArray('displayGroupIds') != null) {
+            // parameterize the selected display/groups and number of selected display/groups
+            $selectedDisplayGroupIds = implode(',', $parsedFilter->getIntArray('displayGroupIds'));
+            $numberOfSelectedDisplayGroups = count($parsedFilter->getIntArray('displayGroupIds'));
+
+            // build date filter for sub-queries for shared schedules
+            $sharedScheduleDateFilter = '';
+            if ($parsedFilter->getInt('futureSchedulesFrom') !== null
+                && $parsedFilter->getInt('futureSchedulesTo') === null
+            ) {
+                // Get schedules that end after this date, or that recur after this date
+                $sharedScheduleDateFilter .= ' AND (IFNULL(`schedule`.toDt, `schedule`.fromDt) >= :futureSchedulesFrom
+             OR `schedule`.recurrence_range >= :futureSchedulesFrom OR (IFNULL(`schedule`.recurrence_range, 0) = 0)
+              AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\') ';
+                $params['futureSchedulesFrom'] = $parsedFilter->getInt('futureSchedulesFrom');
+            }
+
+            if ($parsedFilter->getInt('futureSchedulesFrom') !== null
+                && $parsedFilter->getInt('futureSchedulesTo') !== null
+            ) {
+                // Get schedules that end after this date, or that recur after this date
+                $sharedScheduleDateFilter .= ' AND ((schedule.fromDt < :futureSchedulesTo 
+            AND IFNULL(`schedule`.toDt, `schedule`.fromDt) >= :futureSchedulesFrom)
+             OR `schedule`.recurrence_range >= :futureSchedulesFrom OR (IFNULL(`schedule`.recurrence_range, 0) = 0
+              AND IFNULL(`schedule`.recurrence_type, \'\') <> \'\') ) ';
+                $params['futureSchedulesFrom'] = $parsedFilter->getInt('futureSchedulesFrom');
+                $params['futureSchedulesTo'] = $parsedFilter->getInt('futureSchedulesTo');
+            }
+
             // non Schedule grid filter, keep it the way it was.
             if ($parsedFilter->getInt('sharedSchedule') === null &&
                 $parsedFilter->getInt('directSchedule') === null
             ) {
                 $body .= ' AND `schedule`.eventId IN (
                     SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup`
-                    WHERE displayGroupId IN (' . implode(',', $parsedFilter->getIntArray('displayGroupIds')) . ')
+                    WHERE displayGroupId IN (' . $selectedDisplayGroupIds . ')
                      ) ';
             } else {
                 // Schedule grid query
@@ -506,11 +534,14 @@ class ScheduleFactory extends BaseFactory
                 // Example : Two Displays selected, return only events scheduled directly to both of them
                 if ($sharedSchedule && $directSchedule) {
                     $body .= ' AND `schedule`.eventId IN (
-                        SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup`
-                          WHERE displayGroupId IN (' . implode(',', $parsedFilter->getIntArray('displayGroupIds')) . ')
+                        SELECT `lkscheduledisplaygroup`.eventId
+                         FROM `lkscheduledisplaygroup`
+                          INNER JOIN `schedule` ON `schedule`.eventId = `lkscheduledisplaygroup`.eventId
+                          WHERE displayGroupId IN (' . $selectedDisplayGroupIds . ')' .
+                        $sharedScheduleDateFilter . '
                           GROUP BY eventId
                           HAVING COUNT(DISTINCT displayGroupId) >= ' .
-                        count($parsedFilter->getIntArray('displayGroupIds')) .
+                        $numberOfSelectedDisplayGroups .
                         ') ';
                 }
 
@@ -522,36 +553,41 @@ class ScheduleFactory extends BaseFactory
                 // Example : Two Displays selected, return only events scheduled directly to both of them
                 if ($sharedSchedule && !$directSchedule) {
                     $body .= ' AND (
-                        ( `schedule`.eventId IN (SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup`
-                         WHERE displayGroupId IN (' . implode(',', $parsedFilter->getIntArray('displayGroupIds')) . ')
+                        ( `schedule`.eventId IN (
+                        SELECT `lkscheduledisplaygroup`.eventId 
+                        FROM `lkscheduledisplaygroup`
+                         INNER JOIN `schedule` ON `schedule`.eventId = `lkscheduledisplaygroup`.eventId
+                         WHERE displayGroupId IN (' . $selectedDisplayGroupIds . ')' .
+                         $sharedScheduleDateFilter . '
                           GROUP BY eventId
-                          HAVING COUNT(DISTINCT displayGroupId) >= ' .
-                        count($parsedFilter->getIntArray('displayGroupIds')) . '
-                          ))
+                          HAVING COUNT(DISTINCT displayGroupId) >= ' . $numberOfSelectedDisplayGroups . '
+                        ))
                         OR `schedule`.eventID IN (
                         SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup`
+                            INNER JOIN `schedule` ON `schedule`.eventId = `lkscheduledisplaygroup`.eventId
                             INNER JOIN `lkdgdg` ON `lkdgdg`.parentId = `lkscheduledisplaygroup`.displayGroupId 
                             INNER JOIN `lkdisplaydg` ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
                             WHERE `lkdisplaydg`.DisplayID IN (
                                 SELECT lkdisplaydg.displayId FROM lkdisplaydg
                                  INNER JOIN displaygroup ON lkdisplaydg.displayGroupId = displaygroup.displayGroupId 
-                                 WHERE lkdisplaydg.displayGroupId IN ('
-                        . implode(',', $parsedFilter->getIntArray('displayGroupIds')) . ')
-                            AND displaygroup.isDisplaySpecific = 1 ) 
+                                 WHERE lkdisplaydg.displayGroupId IN (' . $selectedDisplayGroupIds . ')
+                            AND displaygroup.isDisplaySpecific = 1 ) ' .
+                            $sharedScheduleDateFilter . '
                             GROUP BY eventId
                             HAVING COUNT(DISTINCT `lkdisplaydg`.displayId) >= ' .
-                        count($parsedFilter->getIntArray('displayGroupIds')) . '
+                            $numberOfSelectedDisplayGroups . '
                         )
                         OR `schedule`.eventID IN (
                             SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup`
+                            INNER JOIN `schedule` ON `schedule`.eventId = `lkscheduledisplaygroup`.eventId
                             INNER JOIN `lkdgdg` ON `lkdgdg`.parentId = `lkscheduledisplaygroup`.displayGroupId
                             WHERE `lkscheduledisplaygroup`.displayGroupId IN (
-                            SELECT lkdgdg.childId FROM lkdgdg WHERE lkdgdg.parentId IN (' .
-                        implode(',', $parsedFilter->getIntArray('displayGroupIds')) .') 
-                                AND lkdgdg.depth > 0)
+                            SELECT lkdgdg.childId FROM lkdgdg
+                             WHERE lkdgdg.parentId IN (' . $selectedDisplayGroupIds .')  AND lkdgdg.depth > 0)' .
+                            $sharedScheduleDateFilter . '
                             GROUP BY eventId
                             HAVING COUNT(DISTINCT `lkscheduledisplaygroup`.displayGroupId) >= ' .
-                        count($parsedFilter->getIntArray('displayGroupIds')) . '    
+                            $numberOfSelectedDisplayGroups . '    
                         )
                      ) ';
                 }
@@ -561,7 +597,7 @@ class ScheduleFactory extends BaseFactory
                 if (!$sharedSchedule && $directSchedule) {
                     $body .= ' AND `schedule`.eventId IN (
                     SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup`
-                    WHERE displayGroupId IN (' . implode(',', $parsedFilter->getIntArray('displayGroupIds')) . ')
+                    WHERE displayGroupId IN (' . $selectedDisplayGroupIds . ')
                      ) ';
                 }
 
@@ -572,8 +608,7 @@ class ScheduleFactory extends BaseFactory
                 if (!$sharedSchedule && !$directSchedule) {
                     $body .= ' AND (
                         ( `schedule`.eventId IN (SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup`
-                         WHERE displayGroupId IN (' .
-                        implode(',', $parsedFilter->getIntArray('displayGroupIds')) . ')) )
+                         WHERE displayGroupId IN (' . $selectedDisplayGroupIds . ')) )
                         OR `schedule`.eventID IN (
                         SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup`
                             INNER JOIN `lkdgdg` ON `lkdgdg`.parentId = `lkscheduledisplaygroup`.displayGroupId 
@@ -581,17 +616,15 @@ class ScheduleFactory extends BaseFactory
                             WHERE `lkdisplaydg`.DisplayID IN (
                                 SELECT lkdisplaydg.displayId FROM lkdisplaydg 
                                 INNER JOIN displaygroup ON lkdisplaydg.displayGroupId = displaygroup.displayGroupId
-                                 WHERE lkdisplaydg.displayGroupId IN ('
-                        . implode(',', $parsedFilter->getIntArray('displayGroupIds')) . ')
+                                 WHERE lkdisplaydg.displayGroupId IN (' . $selectedDisplayGroupIds . ')
                             AND displaygroup.isDisplaySpecific = 1 ) 
                         )
                         OR `schedule`.eventID IN (
                                 SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup`
                                 INNER JOIN `lkdgdg` ON `lkdgdg`.parentId = `lkscheduledisplaygroup`.displayGroupId
                                 WHERE `lkscheduledisplaygroup`.displayGroupId IN (
-                                SELECT lkdgdg.childId FROM lkdgdg WHERE lkdgdg.parentId IN (' .
-                        implode(',', $parsedFilter->getIntArray('displayGroupIds')) .') 
-                                    AND lkdgdg.depth > 0)  
+                                SELECT lkdgdg.childId FROM lkdgdg 
+                                WHERE lkdgdg.parentId IN (' . $selectedDisplayGroupIds .')  AND lkdgdg.depth > 0)  
                         )
                      ) ';
                 }
