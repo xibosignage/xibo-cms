@@ -1,15 +1,44 @@
 name: Test Suite
 
 on:
-  pull_request:
-    branches-ignore:
-      - master
+  issue_comment:
+    types:
+      - created
+      - edited
 
 jobs:
   test-suite:
     name: Build Containers and Run Tests
     runs-on: ubuntu-22.04
     steps:
+      - name: Check Comment
+        id: check_comment
+        run: |
+          comment_body="${{ github.event.comment.body }}"
+          if [[ "$comment_body" =~ TEST:\ (all|\*) ]]; then
+            test_all=true
+            echo "All tests will be executed."
+          elif [[ "$comment_body" =~ TEST:(.*?)end ]]; then
+            specs="${BASH_REMATCH[1]}"
+            echo "Specs to test: $specs"
+            # Split the content by commas and remove spaces
+            IFS=',' read -ra content_array <<< "$specs"
+            # Remove leading and trailing spaces and slashes from each element
+            content_array=("${content_array[@]// /}")
+            content_array=("${content_array[@]#/}")
+            content_array=("${content_array[@]%/}")
+            # Add "/app/cypress/e2e/" prefix to each element
+            for ((i=0; i<${#content_array[@]}; i++)); do
+            content_array[$i]="/app/cypress/e2e/${content_array[$i]}"
+            done
+            # Join the content array elements with commas
+            content_no_spaces="$(IFS=','; echo "${content_array[*]}")"
+            echo "spec_content=$content_no_spaces" >> $GITHUB_ENV
+            echo "Extracted content: $spec_content"
+          else
+            echo "Comment does not match the expected format."
+            exit 1
+          fi
       - name: Checkout
         uses: actions/checkout@v1
         with:
@@ -57,7 +86,12 @@ jobs:
         run: |
           docker exec cms-db mysql -ucms -pjenkins cms -e "INSERT INTO oauth_clients (id, secret, name, userId, authCode, clientCredentials) VALUES ('MrGPc7e3IL1hA6w13l7Ru5giygxmNiafGNhFv89d', 'Pk6DdDgu2HzSoepcMHRabY60lDEvQ9ucTejYvc5dOgNVSNaOJirCUM83oAzlwe0KBiGR2Nhi6ltclyNC1rmcq0CiJZXzE42KfeatQ4j9npr6nMIQAzMal8O8RiYrIoono306CfyvSSJRfVfKExIjj0ZyE4TUrtPezJbKmvkVDzh8aj3kbanDKatirhwpfqfVdfgsqVNjzIM9ZgKHnbrTX7nNULL3BtxxNGgDMuCuvKiJFrLSyIIz1F4SNrHwHz', 'cypress', 1, 0, 1)"
           docker exec cms-db mysql -ucms -pjenkins cms -e "INSERT INTO oauth_client_scopes (clientId, scopeId) VALUES ('MrGPc7e3IL1hA6w13l7Ru5giygxmNiafGNhFv89d', 'all') ON DUPLICATE KEY UPDATE scopeId = scopeId"
-          docker run --ipc=host --name cms-cypress --link=cms-web:web -v $(pwd)/cypress.config.js:/app/cypress.config.js -v $(pwd)/cypress:/app/cypress ghcr.io/xibosignage/xibo-cms:cypress bash -c "CYPRESS_baseUrl=http://web /app/node_modules/.bin/cypress run --config screenshotsFolder=/app/cypress/results,video=false --reporter junit --reporter-options 'mochaFile=/app/cypress/results/results_cypress_[hash].xml,toConsole=true' && chown -R 1001:1001 /app/cypress/results && exit \${PIPESTATUS[0]};"
+          echo "Extracted content: $content_no_spaces"
+          if [[ "$test_all" == true ]]; then
+            docker run --ipc=host --name cms-cypress --link=cms-web:web -v $(pwd)/cypress.config.js:/app/cypress.config.js -v $(pwd)/cypress:/app/cypress ghcr.io/xibosignage/xibo-cms:cypress bash -c "CYPRESS_baseUrl=http://web /app/node_modules/.bin/cypress run --config screenshotsFolder=/app/cypress/results,video=false --reporter junit --reporter-options 'mochaFile=/app/cypress/results/results_cypress_[hash].xml,toConsole=true' && chown -R 1001:1001 /app/cypress/results && exit \${PIPESTATUS[0]};"
+          else
+            docker run --ipc=host --name cms-cypress --link=cms-web:web -v $(pwd)/cypress.config.js:/app/cypress.config.js -v $(pwd)/cypress:/app/cypress ghcr.io/xibosignage/xibo-cms:cypress bash -c "CYPRESS_baseUrl=http://web /app/node_modules/.bin/cypress run --config screenshotsFolder=/app/cypress/results,video=false --spec \"$spec_content\" --reporter junit --reporter-options 'mochaFile=/app/cypress/results/results_cypress_[hash].xml,toConsole=true' && chown -R 1001:1001 /app/cypress/results && exit \${PIPESTATUS[0]};"
+          fi
         continue-on-error: true
       - name: Save Cypress test results as an artifact
         uses: actions/upload-artifact@v3
