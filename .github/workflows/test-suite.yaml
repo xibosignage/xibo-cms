@@ -17,10 +17,8 @@ jobs:
           comment_body="${{ github.event.comment.body }}"
           if [[ "$comment_body" =~ TEST:\ (all|\*) ]]; then
             test_all=true
-            echo "All tests will be executed."
-          elif [[ "$comment_body" =~ TEST:(.*?)end ]]; then
+          elif [[ "$comment_body" =~ TEST:(.*?)END ]]; then
             specs="${BASH_REMATCH[1]}"
-            echo "Specs to test: $specs"
             # Split the content by commas and remove spaces
             IFS=',' read -ra content_array <<< "$specs"
             # Remove leading and trailing spaces and slashes from each element
@@ -34,7 +32,6 @@ jobs:
             # Join the content array elements with commas
             content_no_spaces="$(IFS=','; echo "${content_array[*]}")"
             echo "spec_content=$content_no_spaces" >> $GITHUB_ENV
-            echo "Extracted content: $spec_content"
           else
             echo "Comment does not match the expected format."
             exit 1
@@ -86,7 +83,6 @@ jobs:
         run: |
           docker exec cms-db mysql -ucms -pjenkins cms -e "INSERT INTO oauth_clients (id, secret, name, userId, authCode, clientCredentials) VALUES ('MrGPc7e3IL1hA6w13l7Ru5giygxmNiafGNhFv89d', 'Pk6DdDgu2HzSoepcMHRabY60lDEvQ9ucTejYvc5dOgNVSNaOJirCUM83oAzlwe0KBiGR2Nhi6ltclyNC1rmcq0CiJZXzE42KfeatQ4j9npr6nMIQAzMal8O8RiYrIoono306CfyvSSJRfVfKExIjj0ZyE4TUrtPezJbKmvkVDzh8aj3kbanDKatirhwpfqfVdfgsqVNjzIM9ZgKHnbrTX7nNULL3BtxxNGgDMuCuvKiJFrLSyIIz1F4SNrHwHz', 'cypress', 1, 0, 1)"
           docker exec cms-db mysql -ucms -pjenkins cms -e "INSERT INTO oauth_client_scopes (clientId, scopeId) VALUES ('MrGPc7e3IL1hA6w13l7Ru5giygxmNiafGNhFv89d', 'all') ON DUPLICATE KEY UPDATE scopeId = scopeId"
-          echo "Extracted content: $content_no_spaces"
           if [[ "$test_all" == true ]]; then
             docker run --ipc=host --name cms-cypress --link=cms-web:web -v $(pwd)/cypress.config.js:/app/cypress.config.js -v $(pwd)/cypress:/app/cypress ghcr.io/xibosignage/xibo-cms:cypress bash -c "CYPRESS_baseUrl=http://web /app/node_modules/.bin/cypress run --config screenshotsFolder=/app/cypress/results,video=false --reporter junit --reporter-options 'mochaFile=/app/cypress/results/results_cypress_[hash].xml,toConsole=true' && chown -R 1001:1001 /app/cypress/results && exit \${PIPESTATUS[0]};"
           else
