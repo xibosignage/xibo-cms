@@ -9,6 +9,7 @@ on:
 jobs:
   test-suite:
     name: Build Containers and Run Tests
+    if: github.event.issue.pull_request
     runs-on: ubuntu-22.04
     steps:
       - name: Check Comment
