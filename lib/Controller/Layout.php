@@ -3374,9 +3374,9 @@ class Layout extends Base
 
         $layout->save();
 
-        $layout = $this->layoutFactory->checkoutLayout($layout);
+        $draft = $this->layoutFactory->checkoutLayout($layout);
 
-        $region = $layout->regions[0];
+        $region = $draft->regions[0];
 
         // Create a module
         $module = $this->moduleFactory->getByType($type === 'media' ? $media->mediaType : 'subplaylist');
@@ -3429,18 +3429,21 @@ class Layout extends Base
         $region->getPlaylist()->save();
         $region->save();
 
-        $layout->publishDraft();
-        $layout->load();
+        // look up the record in the database
+        // as we do not set modifiedDt on the object on save.
+        $draft = $this->layoutFactory->getByParentId($layout->layoutId);
+        $draft->publishDraft();
+        $draft->load();
 
         // We also build the XLF at this point, and if we have a problem we prevent publishing and raise as an
         // error message
-        $layout->xlfToDisk(['notify' => true, 'exceptionOnError' => true, 'exceptionOnEmptyRegion' => false]);
+        $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true, 'exceptionOnEmptyRegion' => false]);
 
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 200,
-            'message' => sprintf(__('Created %s'), $layout->layout),
-            'data' => $layout
+            'message' => sprintf(__('Created %s'), $draft->layout),
+            'data' => $draft
         ]);
 
         return $this->render($request, $response);

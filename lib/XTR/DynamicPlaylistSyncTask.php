@@ -254,7 +254,7 @@ class DynamicPlaylistSyncTask implements TaskInterface
                             }
                             $assignmentMade = true;
                             // make sure we pass the expected displayOrder for the new item we are about to add.
-                            $this->createAndAssign($playlist, $item,  $displayOrder[$item->mediaId]);
+                            $this->createAndAssign($playlist, $item, $displayOrder[$item->mediaId]);
                         }
                     }
 

@@ -316,7 +316,7 @@ class LayoutFactory extends BaseFactory
      */
     public function getById($layoutId)
     {
-        if ($layoutId == 0) {
+        if (empty($layoutId)) {
             throw new NotFoundException(__('LayoutId is 0'));
         }
 
@@ -403,7 +403,7 @@ class LayoutFactory extends BaseFactory
      */
     public function getByParentId($layoutId)
     {
-        if ($layoutId == 0) {
+        if (empty($layoutId)) {
             throw new NotFoundException();
         }
 
