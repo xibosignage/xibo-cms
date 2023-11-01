@@ -372,7 +372,9 @@ class Soap5 extends Soap4
                 $this->display = $display;
                 $display->display = $displayName;
                 $display->auditingUntil = 0;
-                $display->defaultLayoutId = $this->getConfig()->getSetting('DEFAULT_LAYOUT');
+                // defaultLayoutId column cannot be null or empty string
+                // if we do not have global default layout, set it here to 0 to allow register to proceed
+                $display->defaultLayoutId = intval($this->getConfig()->getSetting('DEFAULT_LAYOUT', 0));
                 $display->license = $hardwareKey;
                 $display->licensed = $this->getConfig()->getSetting('DISPLAY_AUTO_AUTH', 0);
                 $display->incSchedule = 0;
