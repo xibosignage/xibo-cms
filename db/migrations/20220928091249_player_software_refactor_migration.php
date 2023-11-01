@@ -128,12 +128,15 @@ class PlayerSoftwareRefactorMigration extends AbstractMigration
                                         FROM `player_software`
                                      WHERE `player_software`.mediaId =' . $configValue
                             );
+
                             $config[$i]['value'] = $row['versionId'];
-                            $this->execute(
-                                'UPDATE `displayprofile`
-                                        SET config = \'' . json_encode($config) . '\' 
-                                     WHERE `displayprofile`.displayProfileId =' . $displayProfile['displayProfileId']
-                            );
+                            $sql = 'UPDATE `displayprofile` SET config = :config
+                                     WHERE `displayprofile`.displayProfileId = :displayProfileId';
+                            $params = [
+                                'config' => json_encode($config),
+                                'displayProfileId' => $displayProfile['displayProfileId']
+                            ];
+                            $this->execute($sql, $params);
                         }
                     }
                 }
@@ -152,12 +155,17 @@ class PlayerSoftwareRefactorMigration extends AbstractMigration
                                         FROM `player_software` 
                                      WHERE `player_software`.mediaId =' . $overrideConfigValue
                             );
+
                             $overrideConfig[$i]['value'] = $row['versionId'];
-                            $this->execute(
-                                'UPDATE `display`
-                                        SET overrideConfig = \'' . json_encode($overrideConfig) . '\' 
-                                     WHERE `display`.displayId =' . $display['displayId']
-                            );
+                            $sql = 'UPDATE `display` SET overrideConfig = :overrideConfig
+                                WHERE `display`.displayId = :displayId';
+
+                            $params = [
+                                'overrideConfig' => json_encode($overrideConfig),
+                                'displayId' => $display['displayId'],
+                            ];
+
+                            $this->execute($sql, $params);
                         }
                     }
                 }
