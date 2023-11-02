@@ -90,6 +90,9 @@ class Property implements \JsonSerializable
     /** @var bool Should translations be parsed in the value? */
     public $parseTranslations = false;
 
+    /** @var bool Should the prooperty be included in the XLF? */
+    public $includeInXlf = false;
+
     /** @var \Xibo\Widget\Definition\PlayerCompatibility */
     public $playerCompatibility;
 

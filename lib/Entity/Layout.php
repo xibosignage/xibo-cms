@@ -1652,7 +1652,7 @@ class Layout implements \JsonSerializable
 
                 foreach ($module->properties as $property) {
                     // We only output properties for native rendered widgets
-                    if ($module->renderAs === 'native') {
+                    if ($module->renderAs === 'native' || $property->includeInXlf) {
                         if (($uriInjected && $property->id == 'uri') || empty($property->id)) {
                             // Skip any property named "uri" if we've already injected a special node for that.
                             // Skip properties without an id
