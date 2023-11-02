@@ -51,7 +51,7 @@ class SAMLAuthentication extends AuthenticationBase
     public function addRoutes()
     {
         $app = $this->app;
-        $app->getContainer()->logoutRoute = 'saml.logout';
+        $app->getContainer()->set('logoutRoute', 'saml.logout');
 
         // Route providing SAML metadata
         $app->get('/saml/metadata', function (Request $request, Response $response) {

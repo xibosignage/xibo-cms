@@ -47,7 +47,7 @@ class CASAuthentication extends AuthenticationBase
     public function addRoutes()
     {
         $app = $this->app;
-        $app->getContainer()->logoutRoute = 'cas.logout';
+        $app->getContainer()->set('logoutRoute', 'cas.logout');
 
         $app->map(['GET', 'POST'], '/cas/login', function (\Slim\Http\ServerRequest $request, \Slim\Http\Response $response) {
 
