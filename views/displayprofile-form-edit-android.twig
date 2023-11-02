@@ -302,6 +302,7 @@
                     {% set title = "Video Engine"|trans %}
                     {% set helpText = "Select which video engine should be used to playback video. ExoPlayer is usually better, but if you experience issues you can revert back to Android Media Player. HLS always uses ExoPlayer. Available from v3 R300."|trans %}
                     {% set options = [
+                        { id: 'default', value: "Device Default"|trans },
                         { id: 'exoplayer', value: "ExoPlayer"|trans },
                         { id: 'mediaplayer', value: "Android Media Player"|trans },
                     ] %}
