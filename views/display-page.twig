@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -696,6 +696,9 @@
             //<editor-fold desc="The button click event displaying the map or grid>
 
             // Detect the dimensions of our container and set to match.
+            let map;
+            let displayIdCache = [];
+            let markerClusterGroup;
             const $displayMap = $('#display-map');
             const $mapBtn = $('#map_button');
             const $listBtn =  $('#list_button');
@@ -705,6 +708,13 @@
             $listBtn.hide();
 
             $mapBtn.click(function () {
+              if (!map) {
+                initializeMap();
+              } else {
+                setTimeout(function () {
+                  addMarkersToMap(map.getBounds().toBBoxString());
+                }, 500);
+              }
                 $('.map-legend').show()
                 $displayMap.show();
                 $mapBtn.hide();
@@ -727,16 +737,11 @@
 
             // <editor-fold desc="Leaflet Map>
 
-            let map;
-
-            // Wait until we have a width and height.
-            setTimeout(initializeMap, 1000);
-
             // Map resizing when folder is toggled
             window.refreshDisplayMap = function () {
                 if (map) {
                     // is display map visible??
-                    if ($("#display-map").is(":visible")) {
+                    if ($displayMap.is(':visible')) {
                         map.invalidateSize();
                     } else {
                         map.setView(map.getCenter(), map.getZoom());
@@ -762,7 +767,7 @@
 
                 // Tile layer
                 let tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
                 }).addTo(map);
 
                 // Print button
@@ -774,7 +779,7 @@
                 }).addTo(map);
 
                 // Create the marker cluster group
-                var markerClusterGroup = L.markerClusterGroup({
+                markerClusterGroup = L.markerClusterGroup({
                     maxClusterRadius: function (mapZoom) {
                         return mapZoom > 9 ? 20 : 80;
                     },
@@ -815,14 +820,13 @@
                     }
                 });
 
-                let bounds;
-                bounds = map.getBounds().toBBoxString();
+                let bounds = map.getBounds().toBBoxString();
 
                 map.on("moveend", _.debounce(function() {
                     bounds = map.getBounds().toBBoxString();
                     // is display map visible??
                     const isDisplayMapVisible = $displayMap.is(":visible");
-                    addMarkersToMap(!isDisplayMapVisible);
+                    addMarkersToMap(bounds, !isDisplayMapVisible);
                 }, 500));
 
                 map.on("resize", function() {
@@ -831,205 +835,205 @@
 
                 // Get display points and add to the map
                 // Do not clear layers
-                addMarkersToMap(false);
+                addMarkersToMap(bounds, false);
 
                 // Bind the filter form
-                $('.XiboGrid').find(".XiboFilter form input").on("keyup",  addMarkersToMap);
-                $('.XiboGrid').find(".XiboFilter form input, .XiboFilter form select").on("change", addMarkersToMap);
-
-                // Cache displayId
-                var added = [];
-
-                // Add display markers to the cluster group
-                function addMarkersToMap(clear = true) {
-
-                    if (clear) {
-                        markerClusterGroup.clearLayers();
-                        added = [];
-                        // console.log('Clear Layer');
-                    }
-
-                    // Make an ajax request for the displays feature
-                    // Load GeoJSON data and add it to the marker cluster group
-                    $.ajax($displayMap.data('displaysUrl'), {
-                        method: 'GET',
-                        data: $('.XiboGrid').find(".XiboFilter form").serialize() + '&bounds=' + bounds,
-                        success: function(response) {
-                            // displays
-                            if (response.features.length > 0) {
-
-                                // Define icons for display
-                                let uptoDateLoggedInIcon = L.icon({
-                                    iconUrl: '{{ theme.rootUri() }}dist/assets/map-marker-green-check.png',
-                                    iconRetinaUrl: '{{ theme.rootUri() }}dist/assets/map-marker-green-check-2x.png',
-                                    iconSize: [24, 40],
-                                    iconAnchor: [12, 40]
-                                });
-                                let uptoDateLoggedOutIcon = L.icon({
-                                    iconUrl: '{{ theme.rootUri() }}dist/assets/map-marker-green-cross.png',
-                                    iconRetinaUrl: '{{ theme.rootUri() }}dist/assets/map-marker-green-cross-2x.png',
-                                    iconSize: [24, 40],
-                                    iconAnchor: [12, 40]
-                                });
-                                let outOfDateLoggedInIcon = L.icon({
-                                    iconUrl: '{{ theme.rootUri() }}dist/assets/map-marker-yellow-check.png',
-                                    iconRetinaUrl: '{{ theme.rootUri() }}dist/assets/map-marker-yellow-check-2x.png',
-                                    iconSize: [24, 40],
-                                    iconAnchor: [12, 40]
-                                });
-                                let outOfDateLoggedOutIcon = L.icon({
-                                    iconUrl: '{{ theme.rootUri() }}dist/assets/map-marker-yellow-cross.png',
-                                    iconRetinaUrl: '{{ theme.rootUri() }}dist/assets/map-marker-yellow-cross-2x.png',
-                                    iconSize: [24, 40],
-                                    iconAnchor: [12, 40]
-                                });
-                                let downloadingLoggedInIcon = L.icon({
-                                    iconUrl: '{{ theme.rootUri() }}dist/assets/map-marker-red-check.png',
-                                    iconRetinaUrl: '{{ theme.rootUri() }}dist/assets/map-marker-red-check-2x.png',
-                                    iconSize: [24, 40],
-                                    iconAnchor: [12, 40]
-                                });
-                                let downloadingLoggedOutIcon = L.icon({
-                                    iconUrl: '{{ theme.rootUri() }}dist/assets/map-marker-red-cross.png',
-                                    iconRetinaUrl: '{{ theme.rootUri() }}dist/assets/map-marker-red-cross-2x.png',
-                                    iconSize: [24, 40],
-                                    iconAnchor: [12, 40]
-                                });
-
-                                // Loop through features (GeoJSON data) and add each marker to the cluster
-                                    let feature = L.geoJSON(response, {
-                                    pointToLayer: function (feature, latlng) {
-                                        let icon;
-
-                                        const icons = {
-                                            1: {
-                                                true: uptoDateLoggedInIcon,
-                                                false: uptoDateLoggedOutIcon
-                                            },
-                                            3: {
-                                                true: outOfDateLoggedInIcon,
-                                                false: outOfDateLoggedOutIcon
-                                            },
-                                            default: {
-                                                true: downloadingLoggedInIcon,
-                                                false: downloadingLoggedOutIcon
-                                            }
-                                        };
-
-                                        // The value of "mediaInventoryStatus" and "loggedIn" determines the "icon"
-                                        const loggedIn = feature.properties.loggedIn ? true: false;
-                                        const iconType = icons[feature.properties.mediaInventoryStatus] || icons.default;
-                                        icon = iconType[loggedIn];
-
-                                        let options = {
-                                            icon: icon
-                                        };
-
-                                        let popup = '<strong>' + feature.properties.display + '</strong>';
-                                        if (feature.properties.orientation) {
-                                            popup += '<br/><div style="width: 180px;"><span>Orientation: ' + feature.properties.orientation + '</span></div>';
-                                        }
-                                        if (feature.properties.status) {
-                                            popup += '<div style="width: 180px;"><span>Status: ' + feature.properties.status + '</span>';
-                                            if (feature.properties.loggedIn) {
-                                                popup += '<span> (Logged in) </span></div>';
-                                            } else {
-                                                popup += '<span> (Not logged in) </span></div>';
-                                            }
-                                        }
-                                        if (feature.properties.displayProfile) {
-                                            popup += '<div style="width: 180px;"><span>Display profile: ' + feature.properties.displayProfile + '</span></div>';
-                                        }
-                                        if (feature.properties.resolution) {
-                                            popup += '<div style="width: 180px;"><span>Resolution: ' + feature.properties.resolution + '</span></div>';
-                                        }
-                                        if (feature.properties.lastAccessed) {
-                                            let lastAccessed = moment(feature.properties.lastAccessed, "X").tz ?
-                                                moment(feature.properties.lastAccessed, "X").tz(timezone).format(jsDateFormat) :
-                                                moment(feature.properties.lastAccessed, "X").format(jsDateFormat);
-
-                                            popup += '<div style="width: 180px;"><span>Last accessed: ' + lastAccessed + '</span></div>';
-                                        }
-                                        if (feature.properties.thumbnail) {
-                                            popup += '<div style="width: 180px;"><img class="display-screenshot" src="' + feature.properties.thumbnail + '" /></div>';
-                                        }
-
-                                        if (!added.includes(feature.properties.displayId)) {
-
-                                            // Cache displayId
-                                            added.push(feature.properties.displayId);
-
-                                            var marker = L.marker(latlng, options);
-
-                                            // Add the inventory status to each marker so that we can count
-                                            // the status based displays in iconCreateFunction
-                                            marker.mediaInventoryStatus = feature.properties.mediaInventoryStatus;
-
-                                            // Add a marker
-                                            return marker.bindPopup(popup)
-                                                .openPopup()
-                                                .addTo(markerClusterGroup);
-                                        }
-                                    },
-                                });
-                            }
-                        }
-                    });
-
-                    // Add the cluster group to the map
-                    markerClusterGroup.addTo(map);
-
-                    markerClusterGroup.on('clustermouseover', function(event) {
-                        var clusterMarkers = event.layer.getAllChildMarkers();
-
-                        let upToDate = 0;
-                        let outOfDate = 0;
-                        let downloading = 0;
-
-                        clusterMarkers.forEach(function(marker) {
-                            switch (marker.mediaInventoryStatus) {
-                                case 1:
-                                    upToDate++;
-                                    break;
-                                case 3:
-                                    outOfDate++;
-                                    break;
-                                default:
-                                    downloading++;
-                                    break;
-                            }
-                        });
-
-                        let popContent = '<div><strong>Total number of displays</strong>';
-                        const statuses = [
-                            { count: upToDate, text: 'Up to date' },
-                            { count: outOfDate, text: 'Out of date' },
-                            { count: downloading, text: 'Downloading' }
-                        ];
-                        for (const { count, text } of statuses) {
-                            if (count > 0) {
-                                popContent += `<div>${text}: ${count}</div>`;
-                            }
-                        }
-                        popContent += '</div>';
-
-                        var popup = L.popup()
-                            .setLatLng(event.latlng)
-                            .setContent(popContent)
-                            .openOn(map);
-                    }).on('clustermouseout',function(event){
-                        map.closePopup();
-                    }).on('clusterclick',function(event){
-                        map.closePopup();
-                    });
-                }
+                $('.XiboGrid').find('.XiboFilter form input').on('keyup',  function() { addMarkersToMap(bounds); });
+                $('.XiboGrid').find('.XiboFilter form select').on('change', function() { addMarkersToMap(bounds); });
 
                 // Hide map/ Show Display List
                 $displayMap.hide();
             }
 
+          // Add display markers to the cluster group
+          function addMarkersToMap(bounds, clear = true) {
+
+            if (clear) {
+              markerClusterGroup.clearLayers();
+              displayIdCache = [];
+            }
+
+            if (!$displayMap.is(':visible')) {
+              return;
+            }
+
+            // Make an ajax request for the displays feature
+            // Load GeoJSON data and add it to the marker cluster group
+            $.ajax($displayMap.data('displaysUrl'), {
+              method: 'GET',
+              data: $('.XiboGrid').find(".XiboFilter form").serialize() + '&bounds=' + bounds,
+              success: function(response) {
+                // displays
+                if (response.features.length > 0) {
+
+                  // Define icons for display
+                  let uptoDateLoggedInIcon = L.icon({
+                    iconUrl: '{{ theme.rootUri() }}dist/assets/map-marker-green-check.png',
+                    iconRetinaUrl: '{{ theme.rootUri() }}dist/assets/map-marker-green-check-2x.png',
+                    iconSize: [24, 40],
+                    iconAnchor: [12, 40]
+                  });
+                  let uptoDateLoggedOutIcon = L.icon({
+                    iconUrl: '{{ theme.rootUri() }}dist/assets/map-marker-green-cross.png',
+                    iconRetinaUrl: '{{ theme.rootUri() }}dist/assets/map-marker-green-cross-2x.png',
+                    iconSize: [24, 40],
+                    iconAnchor: [12, 40]
+                  });
+                  let outOfDateLoggedInIcon = L.icon({
+                    iconUrl: '{{ theme.rootUri() }}dist/assets/map-marker-yellow-check.png',
+                    iconRetinaUrl: '{{ theme.rootUri() }}dist/assets/map-marker-yellow-check-2x.png',
+                    iconSize: [24, 40],
+                    iconAnchor: [12, 40]
+                  });
+                  let outOfDateLoggedOutIcon = L.icon({
+                    iconUrl: '{{ theme.rootUri() }}dist/assets/map-marker-yellow-cross.png',
+                    iconRetinaUrl: '{{ theme.rootUri() }}dist/assets/map-marker-yellow-cross-2x.png',
+                    iconSize: [24, 40],
+                    iconAnchor: [12, 40]
+                  });
+                  let downloadingLoggedInIcon = L.icon({
+                    iconUrl: '{{ theme.rootUri() }}dist/assets/map-marker-red-check.png',
+                    iconRetinaUrl: '{{ theme.rootUri() }}dist/assets/map-marker-red-check-2x.png',
+                    iconSize: [24, 40],
+                    iconAnchor: [12, 40]
+                  });
+                  let downloadingLoggedOutIcon = L.icon({
+                    iconUrl: '{{ theme.rootUri() }}dist/assets/map-marker-red-cross.png',
+                    iconRetinaUrl: '{{ theme.rootUri() }}dist/assets/map-marker-red-cross-2x.png',
+                    iconSize: [24, 40],
+                    iconAnchor: [12, 40]
+                  });
+
+                  // Loop through features (GeoJSON data) and add each marker to the cluster
+                  let feature = L.geoJSON(response, {
+                    pointToLayer: function (feature, latlng) {
+                      let icon;
+
+                      const icons = {
+                        1: {
+                          true: uptoDateLoggedInIcon,
+                          false: uptoDateLoggedOutIcon
+                        },
+                        3: {
+                          true: outOfDateLoggedInIcon,
+                          false: outOfDateLoggedOutIcon
+                        },
+                        default: {
+                          true: downloadingLoggedInIcon,
+                          false: downloadingLoggedOutIcon
+                        }
+                      };
+
+                      // The value of "mediaInventoryStatus" and "loggedIn" determines the "icon"
+                      const loggedIn = feature.properties.loggedIn ? true: false;
+                      const iconType = icons[feature.properties.mediaInventoryStatus] || icons.default;
+                      icon = iconType[loggedIn];
+
+                      let options = {
+                        icon: icon
+                      };
+
+                      let popup = '<strong>' + feature.properties.display + '</strong>';
+                      if (feature.properties.orientation) {
+                        popup += '<br/><div style="width: 180px;"><span>Orientation: ' + feature.properties.orientation + '</span></div>';
+                      }
+                      if (feature.properties.status) {
+                        popup += '<div style="width: 180px;"><span>Status: ' + feature.properties.status + '</span>';
+                        if (feature.properties.loggedIn) {
+                          popup += '<span> (Logged in) </span></div>';
+                        } else {
+                          popup += '<span> (Not logged in) </span></div>';
+                        }
+                      }
+                      if (feature.properties.displayProfile) {
+                        popup += '<div style="width: 180px;"><span>Display profile: ' + feature.properties.displayProfile + '</span></div>';
+                      }
+                      if (feature.properties.resolution) {
+                        popup += '<div style="width: 180px;"><span>Resolution: ' + feature.properties.resolution + '</span></div>';
+                      }
+                      if (feature.properties.lastAccessed) {
+                        let lastAccessed = moment(feature.properties.lastAccessed, "X").tz ?
+                          moment(feature.properties.lastAccessed, "X").tz(timezone).format(jsDateFormat) :
+                          moment(feature.properties.lastAccessed, "X").format(jsDateFormat);
+
+                        popup += '<div style="width: 180px;"><span>Last accessed: ' + lastAccessed + '</span></div>';
+                      }
+                      if (feature.properties.thumbnail) {
+                        popup += '<div style="width: 180px;"><img class="display-screenshot" src="' + feature.properties.thumbnail + '" /></div>';
+                      }
+
+                      if (!displayIdCache.includes(feature.properties.displayId)) {
+
+                        // Cache displayId
+                        displayIdCache.push(feature.properties.displayId);
+
+                        var marker = L.marker(latlng, options);
+
+                        // Add the inventory status to each marker so that we can count
+                        // the status based displays in iconCreateFunction
+                        marker.mediaInventoryStatus = feature.properties.mediaInventoryStatus;
+
+                        // Add a marker
+                        return marker.bindPopup(popup)
+                          .openPopup()
+                          .addTo(markerClusterGroup);
+                      }
+                    },
+                  });
+                }
+              }
+            });
+
+            // Add the cluster group to the map
+            markerClusterGroup.addTo(map);
+
+            markerClusterGroup.on('clustermouseover', function(event) {
+              var clusterMarkers = event.layer.getAllChildMarkers();
+
+              let upToDate = 0;
+              let outOfDate = 0;
+              let downloading = 0;
+
+              clusterMarkers.forEach(function(marker) {
+                switch (marker.mediaInventoryStatus) {
+                  case 1:
+                    upToDate++;
+                    break;
+                  case 3:
+                    outOfDate++;
+                    break;
+                  default:
+                    downloading++;
+                    break;
+                }
+              });
+
+              let popContent = '<div><strong>Total number of displays</strong>';
+              const statuses = [
+                { count: upToDate, text: 'Up to date' },
+                { count: outOfDate, text: 'Out of date' },
+                { count: downloading, text: 'Downloading' }
+              ];
+              for (const { count, text } of statuses) {
+                if (count > 0) {
+                  popContent += `<div>${text}: ${count}</div>`;
+                }
+              }
+              popContent += '</div>';
+
+              var popup = L.popup()
+                .setLatLng(event.latlng)
+                .setContent(popContent)
+                .openOn(map);
+            }).on('clustermouseout',function(event){
+              map.closePopup();
+            }).on('clusterclick',function(event){
+              map.closePopup();
+            });
+          }
+
             // Creating a pie chart for cluster childrens using HTML, CSS
-            var createPieChart = function(data, colors) {
+            const createPieChart = function(data, colors) {
                 // Get the total of all the data
                 let total = data.reduce(function(a, b) {
                     return a + b;
