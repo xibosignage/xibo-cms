@@ -172,6 +172,16 @@
                                         { optionid: "3", option: notApplicable}
                                     ] %}
                                     {{ inline.dropdown("commercialLicence", "single", title, "", options, "optionid", "option") }}
+
+                                    {% set title %}{% trans "Player supported?" %}{% endset %}
+                                    {% set yesOption %}{% trans "Yes" %}{% endset %}
+                                    {% set noOption %}{% trans "No" %}{% endset %}
+                                    {% set options = [
+                                        { optionid: "", option: "" },
+                                        { optionid: 1, option: yesOption},
+                                        { optionid: 0, option: noOption},
+                                    ] %}
+                                    {{ inline.dropdown("isPlayerSupported", "single", title, "", options, "optionid", "option") }}
                                 </div>
                             </div>
                         </form>
@@ -228,6 +238,7 @@
                                         <th>{% trans "Last Accessed" %}</th>
                                         <th>{% trans "Display Profile" %}</th>
                                         <th>{% trans "Version" %}</th>
+                                        <th>{% trans "Supported?" %}</th>
                                         <th>{% trans "Device Name" %}</th>
                                         <th>{% trans "IP Address" %}</th>
                                         <th>{% trans "Mac Address" %}</th>
@@ -306,8 +317,8 @@
 
             //<editor-fold desc="Display Grid>
 
-            var table = $("#displays").DataTable({
-                "language": dataTablesLanguage,
+            const table = $("#displays").DataTable({
+                language: dataTablesLanguage,
                 dom: dataTablesTemplate,
                 serverSide: true,
                 stateSave: true,
@@ -317,10 +328,10 @@
                 stateSaveCallback: dataTableStateSaveCallback,
                 filter: false,
                 searchDelay: 3000,
-                order: [[1, "asc"]],
+                order: [[1, 'asc']],
                 ajax: {
-                    "url": "{{ url_for("display.search") }}",
-                    "data": function (dataToSend) {
+                    url: '{{ url_for("display.search") }}',
+                    data: function (dataToSend) {
                         //make a new object so as not to destroy the input.
                         var data = {};
                         data.draw = dataToSend.draw;
@@ -332,7 +343,7 @@
                         $.each(dataToSend.columns, function (index, e) {
                             var col = {};
                             col.data = e.data;
-                            if (e.name != null && e.name != "")
+                            if (e.name != null && e.name != '')
                                 col.name = e.name;
                             data.columns.push(col);
                         });
@@ -437,6 +448,18 @@
                             return data.clientType + ' ' + data.clientVersion + '-' + data.clientCode;
                         },
                         "visible": false
+                    },
+                    {
+                      data: 'clientCode',
+                      responsivePriority: 3,
+                      render: function (data, type) {
+                        const playerVersionSupport = {{ playerVersion }};
+                        if (type !== 'display') {
+                          return data < playerVersionSupport ? '{{ "No"|trans }}' : '{{ "Yes"|trans }}';
+                        }
+                        return "<span class='fa " + (data < playerVersionSupport ? 'fa-times' : 'fa-check') + "'></span>";
+                      },
+                      visible: false
                     },
                     {"data": "deviceName", "visible": false, responsivePriority: 5},
                     {"data": "clientAddress", "visible": false, responsivePriority: 6},

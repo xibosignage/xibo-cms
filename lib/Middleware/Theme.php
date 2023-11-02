@@ -128,6 +128,7 @@ class Theme implements Middleware
         ];
         $view['version'] = Environment::$WEBSITE_VERSION_NAME;
         $view['revision'] = Environment::getGitCommit();
+        $view['playerVersion'] = Environment::$PLAYER_SUPPORT;
         $view['isDevMode'] = Environment::isDevMode();
         $samlSettings = $container->get('configService')->samlSettings;
         if (isset($samlSettings['workflow'])
