@@ -32,7 +32,7 @@ describe('Displays', function() {
   // Seeded displays: disp1, disp2, disp3, disp4, disp5
   // Seeded display Groups: disp5_dispgrp
   // Seeded layouts: disp4_default_layout
-  it.only('searches and edit existing display', function() {
+  it.only('searches and edit existing display - edit', function() {
     // search for a display disp1 and edit
     cy.intercept({
       url: '/display?*',
