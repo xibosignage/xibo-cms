@@ -35,6 +35,7 @@ class Environment
     public static $XLF_VERSION = 4;
     public static $VERSION_REQUIRED = '8.1.0';
     public static $VERSION_UNSUPPORTED = '9.0';
+    public static $PLAYER_SUPPORT = 300;
 
     /** @var null cache migration status for the whole request */
     private static $migrationStatus = null;

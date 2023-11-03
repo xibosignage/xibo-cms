@@ -504,6 +504,7 @@ class Display extends Base
             'syncGroupId' => $parsedQueryParams->getInt('syncGroupId'),
             'syncGroupIdMembers' => $parsedQueryParams->getInt('syncGroupIdMembers'),
             'xmrRegistered' => $parsedQueryParams->getInt('xmrRegistered'),
+            'isPlayerSupported' => $parsedQueryParams->getInt('isPlayerSupported'),
         ];
     }
 
@@ -646,6 +647,13 @@ class Display extends Base
      *       name="xmrRegistered",
      *       in="query",
      *       description="Filter by whether XMR is registed (1 or 0)",
+     *       type="integer",
+     *       required=false
+     *    ),
+     *  @SWG\Parameter(
+     *       name="isPlayerSupported",
+     *       in="query",
+     *       description="Filter by whether the player is supported (1 or 0)",
      *       type="integer",
      *       required=false
      *    ),

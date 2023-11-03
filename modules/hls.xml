@@ -50,7 +50,7 @@
                 </test>
             </rule>
         </property>
-        <property id="mute" type="checkbox">
+        <property id="mute" type="checkbox" includeInXlf="true">
             <title>Mute?</title>
             <helpText>Should the video be muted?</helpText>
             <default>%defaultMute%</default>
