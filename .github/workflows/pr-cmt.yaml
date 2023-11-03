@@ -1,6 +1,4 @@
 name: "Deploy on Comment"
-
-# https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows
 on:
   issue_comment:
     types: [created]
@@ -8,15 +6,16 @@ on:
 jobs:
   deploy:
     name: Deploy
-    # Only run if it#s a PR and the comment contains /deploy
     if: github.event.issue.pull_request && contains(github.event.comment.body, '/deploy')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     steps:
+      # Step 1: Determine the correct branch associated with the PR
       - name: Get branch of PR
         uses: xt0rted/pull-request-comment-branch@v1
         id: comment-branch
 
+      # Step 2: Set the status of the latest commit to "pending" at the beginning of the workflow
       - name: Set latest commit status as pending
         uses: myrotvorets/set-commit-status-action@master
         with:
@@ -24,22 +23,42 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           status: pending
 
+      # Step 3: Checkout the branch associated with the PR
       - name: Checkout PR branch ${{ steps.comment-branch.outputs.head_ref }}
         uses: actions/checkout@v3
         with:
           ref: ${{ steps.comment-branch.outputs.head_ref }}
 
-      - name: Setup Node.js 16
-        uses: actions/setup-node@v3
+      # Step 4: The Rest
+      - name: Checkout
+        uses: actions/checkout@v1
         with:
-          node-version: 16
+          fetch-depth: 1
+      - name: Configure Build X
+        uses: docker/setup-buildx-action@v1
+      - name: Build
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: Dockerfile.ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          tags: cms-web
+          build-args: GIT_COMMIT=${{ github.sha }}
+          push: false
+          load: true
+      - name: Pull
+        run: |
+          docker pull mysql:8
+          docker pull ghcr.io/xibosignage/xibo-xmr:latest
 
-      # Do the actual deployment (exit randomly with 0 or 1)
+      # Step 5: Perform the actual deployment (exit with a random status of 0 or 1)
       - name: Deploy
         run: |
           echo "Deploying..."
           exit $(($RANDOM%2))
 
+      # Step 6: Add a comment to the PR with the workflow result
       - name: Add workflow result as comment on PR
         uses: actions/github-script@v6
         if: always()
@@ -47,20 +66,4 @@ jobs:
           script: |
             const name = '${{ github.workflow	}}';
             const url = '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}';
-            const success = '${{ job.status }}' === 'success';
-            const body = `${name}: ${success ? 'succeeded ✅' : 'failed ❌'}\n${url}`;
-
-            await github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: body
-            })
-
-      - name: Set latest commit status as ${{ job.status }}
-        uses: myrotvorets/set-commit-status-action@master
-        if: always()
-        with:
-          sha: ${{ steps.comment-branch.outputs.head_sha }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-          status: ${{ job.status }}
+            const success = '${{ job.status }}'
