@@ -53,19 +53,20 @@
             <default>0</default>
         </property>
         <property id="embedHtml" type="code" allowLibraryRefs="true" variant="html">
-            <title>HTML to embed</title>
-            <helpText>Enter text or HTML in the box below.</helpText>
+            <title>HTML</title>
+            <helpText>Add HTML to be included between the BODY tag.</helpText>
         </property>
         <property id="embedStyle" type="code" allowLibraryRefs="true" variant="css">
-            <title>Custom Style Sheets</title>
+            <title>Style Sheet</title>
+            <helpText>Add CSS to be included immediately before the closing body tag. Please do not include style tags.</helpText>
         </property>
         <property id="embedJavaScript" type="code" allowLibraryRefs="true" variant="javascript">
             <title>JavaScript</title>
-            <helpText>Add JavaScript to be included in the HTML. Do not use [] array notation as this is reserved for library references. Do not include script tags.</helpText>
+            <helpText>Add JavaScript to be included immediately before the closing body tag. Do not use [] array notation as this is reserved for library references. Do not include script tags.</helpText>
         </property>
         <property id="embedScript" type="code" variant="html">
-            <title>HEAD content to embed</title>
-            <helpText>Add content to appear within the HEAD tags on this embedded HTML. Please include script tags.</helpText>
+            <title>HEAD</title>
+            <helpText>Add additional tags to appear immediately before the closing head tag, such as meta, link, etc. If your JavaScript uses the [] array notation add it inside script tags here.</helpText>
         </property>
     </properties>
     <preview></preview>
