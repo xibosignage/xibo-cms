@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -28,10 +28,15 @@ namespace Xibo\XMR;
  */
 class LicenceCheckAction extends PlayerAction
 {
+    public function __construct()
+    {
+        $this->setQos(4);
+    }
+
     /**
-     * @return mixed|string
+     * @return string
      */
-    public function getMessage()
+    public function getMessage(): string
     {
         $this->action = 'licenceCheck';
 

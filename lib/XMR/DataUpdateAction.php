@@ -20,7 +20,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 namespace Xibo\XMR;
 
 /**
@@ -35,10 +34,11 @@ class DataUpdateAction extends PlayerAction
      */
     public function __construct(protected int $widgetId)
     {
+        $this->setQos(5);
     }
 
     /** @inheritdoc */
-    public function getMessage()
+    public function getMessage(): string
     {
         $this->setQos(1);
         $this->action = 'dataUpdate';
