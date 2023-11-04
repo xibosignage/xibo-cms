@@ -463,7 +463,7 @@ class Property implements \JsonSerializable
      */
     public function applyFilters(): void
     {
-        if ($this->type === 'text' && $this->variant === 'uri') {
+        if ($this->variant === 'uri' || $this->type === 'commandBuilder') {
             $this->value = urlencode($this->value);
         }
     }
@@ -483,7 +483,7 @@ class Property implements \JsonSerializable
      */
     public function reverseFiltersOnValue(mixed $value): mixed
     {
-        if ($this->variant === 'uri' && !empty($value)) {
+        if (($this->variant === 'uri' || $this->type === 'commandBuilder') && !empty($value)) {
             $value = urldecode($value);
         }
         return $value;
