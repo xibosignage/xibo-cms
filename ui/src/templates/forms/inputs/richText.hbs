@@ -10,15 +10,14 @@
     </div>
     <div class="rich-text-main-container">
         <div class="text-area-buttons"></div>
-        <div class="rich-text-container">
-            <textarea type="text" class="form-control rich-text" id="input_{{id}}" name="{{#if name}}{{name}}{{else}}{{id}}{{/if}}"
-                {{#each customData}}
-                    data-{{this.name}}="{{this.value}}"
-                {{/each}}
-            />{{value}}</textarea>
+        <div class="rich-text-container-wrapper">
+            <div class="rich-text-container">
+                <textarea type="text" class="form-control rich-text" id="input_{{id}}" name="{{#if name}}{{name}}{{else}}{{id}}{{/if}}"
+                    {{#each customData}}
+                        data-{{this.name}}="{{this.value}}"
+                    {{/each}}
+                />{{value}}</textarea>
+            </div>
         </div>
     </div>
-    {{#if richTextControls}}
-        <div>Rich Text Controls</div>
-    {{/if}}
 </div>
