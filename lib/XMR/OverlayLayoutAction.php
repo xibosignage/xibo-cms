@@ -1,10 +1,24 @@
 <?php
 /*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2015 Spring Signage Ltd
- * (ChangeLayoutAction.php)
+ * Copyright (C) 2023 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 
 namespace Xibo\XMR;
 
@@ -18,6 +32,11 @@ class OverlayLayoutAction extends PlayerAction
     public $duration;
     public $downloadRequired;
     public $changeMode;
+
+    public function __construct()
+    {
+        $this->setQos(10);
+    }
 
     /**
      * Set details for this layout
@@ -38,15 +57,17 @@ class OverlayLayoutAction extends PlayerAction
     /**
      * @inheritdoc
      */
-    public function getMessage()
+    public function getMessage(): string
     {
         $this->action = 'overlayLayout';
 
-        if ($this->layoutId == 0)
+        if ($this->layoutId == 0) {
             throw new PlayerActionException(__('Layout Details not provided'));
+        }
 
-        if ($this->duration == 0)
+        if ($this->duration == 0) {
             throw new PlayerActionException(__('Duration not provided'));
+        }
 
         return $this->serializeToJson(['layoutId', 'duration', 'downloadRequired']);
     }
