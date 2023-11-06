@@ -1500,7 +1500,6 @@ window.forms = {
     ).each(function(_k, el) {
       formHelpers.setupCKEditor(
         container,
-        {},
         $(el).attr('id'),
         true,
         null,
@@ -2382,7 +2381,6 @@ window.forms = {
       // Reload
       formHelpers.setupCKEditor(
         $formContainer,
-        {},
         elId,
         true,
         null,

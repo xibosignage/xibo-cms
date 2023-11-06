@@ -100,7 +100,7 @@
     background-color: $xibo-color-neutral-1000;
 }
 #richTextDetachedOverlay {
-    z-index: calc($properties-panel-rich-text-container-z-index - 1);
+    z-index: calc($properties-panel-rich-text-container-z-index - 1) !important;
 }
 .rich-text-main-container {
     width: 100%;
@@ -109,9 +109,10 @@
     overflow: hidden;
     border-radius: 0 0 0.25rem 0.25rem;
 
-    .rich-text-container {
-        max-height: 200px;
-        overflow: hidden;
+    .rich-text-container-wrapper {
+        font-size: initial;
+        max-height: 202px;
+        overflow: auto;
 
         &.loading > * {
             display: none;
@@ -124,6 +125,10 @@
         left: 0;
         top: 0;
         z-index: 1;
+
+        button:focus {
+            box-shadow: none !important;
+        }
     }
 
     .cke_textarea_inline {
@@ -131,29 +136,107 @@
         outline-style: solid;
     }
 
-    &.detached {
-        .rich-text-container {
+    &.source {
+        .rich-text-container-wrapper {
+            background-color: $xibo-color-neutral-0 !important;
+            overflow: initial;
+
+            .rich-text-container {
+                height: 100% !important;
+            }
+        }
+
+        .cke_textarea_inline {
+            display: none;
+        }
+
+        textarea {
+            display: initial !important;
+            opacity: initial !important;
             height: 100% !important;
+            min-height: 160px;
+        }
+
+        .viewSourceButton {
+            outline: 2px solid $xibo-color-neutral-700;
+            outline-offset: -5px;
+            border-radius: 8px;
+        }
+
+        .zoomButton {
+            display: none;
+        }
+    }
+
+    &.detached {
+        .rich-text-container-wrapper {
+            height: calc(100% - 28.5px) !important;
             max-height: none;
         }
 
+        .rich-text-container {
+            height: 100%;
+        }
+
+        .rich-text-dimensions-control {
+            background: $xibo-color-neutral-100;
+            color: $xibo-color-neutral-900;
+
+            .control-label {
+                display: inline-block;
+            }
+        }
+
         z-index: $properties-panel-rich-text-container-z-index;
-        position: absolute;
-        top: 16px;
-        right: 16px;
+        position: fixed;
+        top: 100px;
+        right: 150px;
         outline-width: 1px;
-        width: calc(100vw - 380px) !important;
-        height: calc(100vh - 160px) !important;
+        width: calc(100vw - 300px) !important;
+        height: calc(100vh - 200px) !important;
         overflow: hidden;
 
         .text-area-buttons {
-            border-radius: 0;
+            border-radius: 0.25rem 0.25rem 0 0;
+            padding: 6px;
             @include set-transparent-color(background-color, $xibo-color-neutral-900, 0.9);
 
             button {
                 color: $xibo-color-neutral-0;
             }
         }
+    }
+}
+
+.rich-text-dimensions-control {
+    padding: 6px 8px;
+    background: $xibo-color-primary-d60;
+    margin: 0;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: flex-end;
+
+    .control-label {
+        display: none;
+    }
+
+    .form-group {
+        margin: 0;
+
+        input {
+            height: 25px;
+            width: 100%;
+        }
+
+        input[type=checkbox] {
+            margin: 0 6px;
+        }
+    }
+
+    select {
+        padding: 4px;
+        height: 28px;
     }
 }
 

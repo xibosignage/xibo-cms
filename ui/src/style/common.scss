@@ -31,29 +31,6 @@ $fa-font-path: "~font-awesome/fonts";
 
 
 // CSS
-/* Form Editor Controls */
-.form-editor-controls {
-    padding: 6px;
-    background: $xibo-color-neutral-900;
-    color: $xibo-color-neutral-100;
-
-    .form-group {
-        margin-right: 10px;
-
-        input {
-            height: 25px;
-        }
-
-        input[type=checkbox] {
-            margin: 0 6px;
-        }
-    }
-
-    select {
-        padding: 4px;
-        height: 28px;
-    }
-}
 
 /* Tab System */
 .form-container {
