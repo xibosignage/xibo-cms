@@ -394,7 +394,6 @@ class Applications extends Base
         $this->getState()->setData([
             'client' => $client,
             'scopes' => $scopes,
-            'users' => $this->userFactory->query(),
         ]);
 
         return $this->render($request, $response);

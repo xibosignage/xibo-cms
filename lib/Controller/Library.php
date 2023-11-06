@@ -296,9 +296,7 @@ class Library extends Base
             // Users we have permission to see
             $this->getState()->template = 'library-page';
             $this->getState()->setData([
-                'users' => $this->userFactory->query(),
                 'modules' => $this->moduleFactory->getLibraryModules(),
-                'groups' => $this->userGroupFactory->query(),
                 'validExt' => implode('|', $this->moduleFactory->getValidExtensions([]))
             ]);
         }

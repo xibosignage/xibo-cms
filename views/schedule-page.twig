@@ -1489,7 +1489,22 @@
                     '{% trans "Sunday" %}'
                   ];
 
-                  return daysOfTheWeek[data.recurrenceRepeatsOn - 1];
+                  let recurrenceArray = data.recurrenceRepeatsOn.split(',');
+
+                  if (recurrenceArray.length >= 1) {
+                    let stringToReturn = '';
+                    // go through each selected day, get the corresponding day name
+                    recurrenceArray.forEach((dayNumber, index) => {
+                      stringToReturn += daysOfTheWeek[dayNumber - 1];
+                      if (index < recurrenceArray.length - 1) {
+                        stringToReturn += ' ';
+                      }
+                    })
+
+                    return stringToReturn;
+                  } else {
+                    return '';
+                  }
                 } else if (data.recurrenceType === 'Month') {
                   return data.recurrenceMonthlyRepeatsOn
                 } else {

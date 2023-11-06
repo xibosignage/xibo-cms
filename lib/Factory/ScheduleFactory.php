@@ -735,7 +735,7 @@ class ScheduleFactory extends BaseFactory
                                  ELSE 2 END,
                             eventId';
         } else if (is_array($sortOrder) && !empty($sortOrder)) {
-            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+            $order .= ' ORDER BY ' . implode(',', $sortOrder);
         }
 
         // Paging

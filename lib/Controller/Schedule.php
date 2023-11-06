@@ -2292,8 +2292,18 @@ class Schedule extends Base
 
                 if ($event->recurrenceType === 'Week') {
                     $weekdays = Carbon::getDays();
-
-                    $repeatsOn = $weekdays[$event->recurrenceRepeatsOn - 1];
+                    $repeatDays = explode(',', $event->recurrenceRepeatsOn);
+                    $i = 0;
+                    foreach ($repeatDays as $repeatDay) {
+                        // Carbon getDays starts with Sunday,
+                        // return first element from that array if in our array we have 7 (Sunday)
+                        $repeatDay = ($repeatDay == 7) ? 0 : $repeatDay;
+                        $repeatsOn .= $weekdays[$repeatDay];
+                        if ($i < count($repeatDays) - 1) {
+                            $repeatsOn .= ', ';
+                        }
+                        $i++;
+                    }
                 } else if ($event->recurrenceType === 'Month') {
                     if ($event->recurrenceMonthlyRepeatsOn === 0) {
                         $repeatsOn = 'the ' . Carbon::parse($event->fromDt)->format('jS') . ' day of the month';

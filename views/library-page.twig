@@ -69,12 +69,35 @@
                             ] %}
 
                             {% set title %}{% trans "Owner" %}{% endset %}
-                            {% set users = [{userId: null, userName: ""}]|merge(users) %}
-                            {{ inline.dropdown("ownerId", "single", title, null, users, "userId", "userName", "", "selectPicker", "", "", "", attributes) }}
+                            {% set helpText %}{% trans "Show items owned by the selected User." %}{% endset %}
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: url_for("user.search") },
+                                { name: "data-search-term", value: "userName" },
+                                { name: "data-search-term-tags", value: "tags" },
+                                { name: "data-id-property", value: "userId" },
+                                { name: "data-text-property", value: "userName" },
+                                { name: "data-initial-key", value: "userId" },
+                            ] %}
+                            {{ inline.dropdown("ownerId", "single", title, "", null, "userId", "userName", helpText, "pagedSelect", "", "", "", attributes) }}
 
                             {% set title %}{% trans "Owner User Group" %}{% endset %}
                             {% set helpText %}{% trans "Show items owned by users in the selected User Group." %}{% endset %}
-                            {{ inline.dropdown("ownerUserGroupId", "single", title, "", [{groupId:null, group:""}]|merge(groups), "groupId", "group", helpText, "selectPicker", "", "", "", attributes) }}
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: url_for("group.search") },
+                                { name: "data-search-term", value: "group" },
+                                { name: "data-id-property", value: "groupId" },
+                                { name: "data-text-property", value: "group" },
+                                { name: "data-initial-key", value: "userGroupId" },
+                            ] %}
+                            {{ inline.dropdown("ownerUserGroupId", "single", title, "", null, "groupId", "group", helpText, "pagedSelect", "", "", "", attributes) }}
 
                             {% set title %}{% trans "Type" %}{% endset %}
                             {{ inline.dropdown("type", "single", title, "", [{"type": none, "name": ""}]|merge(modules), "type", "name") }}

@@ -132,6 +132,12 @@ function XiboInitialise(scope, options) {
                     } else if (field.length > 0) {
                         field.val(element.value);
                     }
+
+                    // if we have pagedSelect as inline filter for the grid
+                    // set the initial value here, to ensure the correct option gets selected.
+                    if (field.parent().hasClass('pagedSelect')) {
+                        field.data('initial-value', element.value)
+                    }
                 } catch (e) {
                     console.log("Error populating form saved value with selector input[name=" + element.name + "], select[name=" + element.name + "]");
                 }
@@ -3309,9 +3315,14 @@ function makePagedSelect(element, parent) {
     ) {
         var initialValue = element.data("initialValue");
         var initialKey = element.data("initialKey");
-
         var dataObj = {};
         dataObj[initialKey] = initialValue;
+
+        // if we have any filter options, add them here as well
+        // for example isDisplaySpecific filter is important for displayGroup.search
+        if (element.data("filterOptions") !== undefined) {
+            dataObj = $.extend({}, dataObj, element.data("filterOptions"));
+        }
 
         $.ajax({
             url: element.data("searchUrl"),

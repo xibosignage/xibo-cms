@@ -1759,7 +1759,6 @@ class User extends Base
             'objectId' => $id,
             'permissions' => $currentPermissions,
             'canSetOwner' => $object->canChangeOwner(),
-            'owners' => $this->userFactory->query(),
             'object' => $object,
             'objectNameOverride' => $this->getSanitizer($request->getParams())->getString('nameOverride'),
         ];

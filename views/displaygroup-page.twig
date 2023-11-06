@@ -58,7 +58,8 @@
                                 { name: "data-search-term", value: "display" },
                                 { name: "data-search-term-tags", value: "tags" },
                                 { name: "data-id-property", value: "displayId" },
-                                { name: "data-text-property", value: "display" }
+                                { name: "data-text-property", value: "display" },
+                                { name: "data-initial-key", value: "displayId" },
                             ] %}
                             {% set helpText %}{% trans "Return Display Groups that directly contain the selected Display." %}{% endset %}
                             {{ inline.dropdown("displayId", "single", title, "", null, "displayId", "display", helpText, "pagedSelect", "", "", "", attributes) }}

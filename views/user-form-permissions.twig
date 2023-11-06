@@ -52,7 +52,7 @@
 {% block callBack %}permissionsFormOpen{% endblock %}
 
 {% block formHtml %}
-    <div class="permissions-form">
+    <div class="permissions-form" id="permissionsForm">
         <div class="row">
             <div class="col-md-12">
             <p>{{object.type}}</p>
@@ -92,7 +92,19 @@
             <div class="col-md-12">
                 {% set title %}{% trans %}Owner{% endtrans %}{% endset %}
                 {% set helpText %}{% trans %}Change the Owner of this item. Leave empty to keep the current owner.{% endtrans %}{% endset %}
-                {{ forms.dropdown("ownerId", "single", title, "", [{"userId": null, "userName": ""}]|merge(owners), "userId", "userName", helpText) }}
+                {% set attributes = [
+                    { name: "data-width", value: "100%" },
+                    { name: "data-allow-clear", value: "true" },
+                    { name: "data-placeholder--id", value: null },
+                    { name: "data-placeholder--value", value: "" },
+                    { name: "data-search-url", value: url_for("user.search") },
+                    { name: "data-search-term", value: "userName" },
+                    { name: "data-search-term-tags", value: "tags" },
+                    { name: "data-id-property", value: "userId" },
+                    { name: "data-text-property", value: "userName" },
+                    { name: "data-anchor-element", value: "#permissionsForm"}
+                ] %}
+                {{ forms.dropdown("ownerId", "single", title, "", null, "userId", "userName", helpText, "pagedSelect", "", "", "", attributes) }}
             </div>
         </div>
         {% endif %}

@@ -106,7 +106,19 @@
 
                                     {% if currentUser.featureEnabled("displaygroup.view") %}
                                         {% set title %}{% trans "Display Group" %}{% endset %}
-                                        {{ inline.dropdown("displayGroupId", "single", title, "", [{displayGroupId:null, displayGroup:""}]|merge(displayGroups), "displayGroupId", "displayGroup") }}
+                                        {% set attributes = [
+                                            { name: "data-width", value: "200px" },
+                                            { name: "data-allow-clear", value: "true" },
+                                            { name: "data-placeholder--id", value: null },
+                                            { name: "data-placeholder--value", value: "" },
+                                            { name: "data-search-url", value:  url_for("displayGroup.search") },
+                                            { name: "data-filter-options", value: '{"isDisplaySpecific":0}' },
+                                            { name: "data-search-term", value: "displayGroup" },
+                                            { name: "data-id-property", value: "displayGroupId" },
+                                            { name: "data-text-property", value: "displayGroup" },
+                                            { name: "data-initial-key", value: "displayGroupId" },
+                                        ] %}
+                                        {{ inline.dropdown("displayGroupId", "single", title, "", null, "displayGroupId", "displayGroup", helpText, "pagedSelect", "", "", "", attributes) }}
                                     {% endif %}
 
                                     {% if currentUser.featureEnabled("displayprofile.view") %}
