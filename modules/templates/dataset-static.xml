@@ -151,9 +151,18 @@
             ]]></twig>
         </stencil>
         <onTemplateRender><![CDATA[
-// No data message
+// Show no data message
 if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !== '') {
-    items.push(properties.noDataMessage);
+    $(target).html(properties.noDataMessage);
+
+    // Scale the layout
+    $(target).xiboLayoutScaler(properties);
+
+    // Image render
+    $(target).find('img').xiboImageRender(properties);
+
+    // Don't render the rest
+    return;
 }
 
 // Columns to be shown in the table
@@ -409,9 +418,18 @@ body {
 // items: The items to render
 // properties: The properties for the widget
 
-// No data message
+// Show no data message
 if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !== '') {
-    items.push(properties.noDataMessage);
+    $(target).html(properties.noDataMessage);
+
+    // Scale the layout
+    $(target).xiboLayoutScaler(properties);
+
+    // Image render
+    $(target).find('img').xiboImageRender(properties);
+
+    // Don't render the rest
+    return;
 }
 
 // Clear the content container
@@ -645,9 +663,18 @@ table.DataSetTable {visibility:hidden;}
             ]]></twig>
         </stencil>
         <onTemplateRender><![CDATA[
-// No data message
+// Show no data message
 if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !== '') {
-    items.push(properties.noDataMessage);
+    $(target).html(properties.noDataMessage);
+
+    // Scale the layout
+    $(target).xiboLayoutScaler(properties);
+
+    // Image render
+    $(target).find('img').xiboImageRender(properties);
+
+    // Don't render the rest
+    return;
 }
 
 // Columns to be shown in the table
@@ -918,9 +945,18 @@ table.DataSetTable {visibility:hidden;}
         ]]></twig>
         </stencil>
         <onTemplateRender><![CDATA[
-// No data message
+// Show no data message
 if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !== '') {
-    items.push(properties.noDataMessage);
+    $(target).html(properties.noDataMessage);
+
+    // Scale the layout
+    $(target).xiboLayoutScaler(properties);
+
+    // Image render
+    $(target).find('img').xiboImageRender(properties);
+
+    // Don't render the rest
+    return;
 }
 
 // Columns to be shown in the table
@@ -1182,9 +1218,18 @@ table.DataSetTable {visibility:hidden;}
         ]]></twig>
         </stencil>
         <onTemplateRender><![CDATA[
-// No data message
+// Show no data message
 if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !== '') {
-    items.push(properties.noDataMessage);
+    $(target).html(properties.noDataMessage);
+
+    // Scale the layout
+    $(target).xiboLayoutScaler(properties);
+
+    // Image render
+    $(target).find('img').xiboImageRender(properties);
+
+    // Don't render the rest
+    return;
 }
 
 // Columns to be shown in the table
@@ -1444,9 +1489,18 @@ table.DataSetTable {visibility:hidden;}
         ]]></twig>
         </stencil>
         <onTemplateRender><![CDATA[
-// No data message
+// Show no data message
 if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !== '') {
-    items.push(properties.noDataMessage);
+    $(target).html(properties.noDataMessage);
+
+    // Scale the layout
+    $(target).xiboLayoutScaler(properties);
+
+    // Image render
+    $(target).find('img').xiboImageRender(properties);
+
+    // Don't render the rest
+    return;
 }
 
 // Columns to be shown in the table
@@ -1704,9 +1758,18 @@ table.DataSetTable {visibility:hidden;}
         ]]></twig>
         </stencil>
         <onTemplateRender><![CDATA[
-// No data message
+// Show no data message
 if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !== '') {
-    items.push(properties.noDataMessage);
+    $(target).html(properties.noDataMessage);
+
+    // Scale the layout
+    $(target).xiboLayoutScaler(properties);
+
+    // Image render
+    $(target).find('img').xiboImageRender(properties);
+
+    // Don't render the rest
+    return;
 }
 
 // Columns to be shown in the table
@@ -1962,9 +2025,18 @@ table.DataSetTable {visibility:hidden;}
         ]]></twig>
         </stencil>
         <onTemplateRender><![CDATA[
-// No data message
+// Show no data message
 if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !== '') {
-    items.push(properties.noDataMessage);
+    $(target).html(properties.noDataMessage);
+
+    // Scale the layout
+    $(target).xiboLayoutScaler(properties);
+
+    // Image render
+    $(target).find('img').xiboImageRender(properties);
+
+    // Don't render the rest
+    return;
 }
 
 // Columns to be shown in the table
@@ -2215,9 +2287,18 @@ table.DataSetTable {visibility:hidden;}
         ]]></twig>
         </stencil>
         <onTemplateRender><![CDATA[
-// No data message
+// Show no data message
 if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !== '') {
-    items.push(properties.noDataMessage);
+    $(target).html(properties.noDataMessage);
+
+    // Scale the layout
+    $(target).xiboLayoutScaler(properties);
+
+    // Image render
+    $(target).find('img').xiboImageRender(properties);
+
+    // Don't render the rest
+    return;
 }
 
 // Columns to be shown in the table
@@ -2509,9 +2590,18 @@ table.DataSetTable {visibility:hidden;}
         ]]></twig>
         </stencil>
         <onTemplateRender><![CDATA[
-// No data message
+// Show no data message
 if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !== '') {
-    items.push(properties.noDataMessage);
+    $(target).html(properties.noDataMessage);
+
+    // Scale the layout
+    $(target).xiboLayoutScaler(properties);
+
+    // Image render
+    $(target).find('img').xiboImageRender(properties);
+
+    // Don't render the rest
+    return;
 }
 
 // Columns to be shown in the table
@@ -2861,9 +2951,18 @@ body {
 // items: The items to render
 // properties: The properties for the widget
 
-// No data message
+// Show no data message
 if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !== '') {
-    items.push(properties.noDataMessage);
+    $(target).html(properties.noDataMessage);
+
+    // Scale the layout
+    $(target).xiboLayoutScaler(properties);
+
+    // Image render
+    $(target).find('img').xiboImageRender(properties);
+
+    // Don't render the rest
+    return;
 }
 
 // Clear the content container
