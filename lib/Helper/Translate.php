@@ -124,9 +124,9 @@ class Translate
      * Get translations for user selected language
      * @param $config
      * @param $language
-     * @return Translator
+     * @return Translator|null
      */
-    public static function getTranslationsFromLocale($config, $language = NULL): Translator
+    public static function getTranslationsFromLocale($config, $language): ?Translator
     {
         // The default language
         $default = ($language === null) ? $config->getSetting('DEFAULT_LANGUAGE') : $language;
@@ -140,25 +140,20 @@ class Translate
 
         // Try to get the local firstly from _REQUEST (post then get)
         if ($language != null) {
-            // Serve only the requested language
-            // Firstly, Sanitize it
-            self::$requestedLanguage = str_replace('-', '_', $language);
+            $parsedLanguage = str_replace('-', '_', $language);
 
             // Check its valid
-            if (in_array(self::$requestedLanguage . '.mo', $supportedLanguages)) {
-                $foundLanguage = self::$requestedLanguage;
+            if (in_array($parsedLanguage . '.mo', $supportedLanguages)) {
+                $foundLanguage = $parsedLanguage;
             }
         }
 
-        // Are we still empty, then default language from settings
+        // Are we still empty, then return null
         if ($foundLanguage == '') {
             // Check the default
             if (!in_array($default . '.mo', $supportedLanguages)) {
-                $default = 'en_GB';
+                return null;
             }
-
-            // The default is valid
-            $foundLanguage = $default;
         }
 
         // Load translations

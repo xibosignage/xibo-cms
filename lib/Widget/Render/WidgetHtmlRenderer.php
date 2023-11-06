@@ -24,7 +24,6 @@ namespace Xibo\Widget\Render;
 
 use Carbon\Carbon;
 use FilesystemIterator;
-use Gettext\Translator;
 use Illuminate\Support\Str;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
@@ -469,11 +468,19 @@ class WidgetHtmlRenderer
                 $widget->isValid = 0;
             }
 
-            $properties = $module->getPropertyValues();
+            $moduleLanguage = null;
             $translator = null;
 
-            if (array_key_exists('lang', $properties) && !empty($properties['lang'])) {
-                $translator = Translate::getTranslationsFromLocale($this->config, $properties['lang']);
+            // Check if a language property is defined against the module
+            // Note: We are using the language defined against the module and not from the module template
+            foreach ($module->properties as $property) {
+                if ($property->id === 'lang' && !empty($property->value)) {
+                    $moduleLanguage = $property->value;
+                }
+            }
+
+            if ($moduleLanguage !== null) {
+                $translator = Translate::getTranslationsFromLocale($this->config, $moduleLanguage);
             }
 
             // Output some sample data and a data url.
@@ -481,7 +488,7 @@ class WidgetHtmlRenderer
                 'widgetId' => $widget->widgetId,
                 'templateId' => $templateId,
                 'sample' => $module->sampleData,
-                'properties' => $properties,
+                'properties' => $module->getPropertyValues(),
                 'isValid' => $widget->isValid === 1,
                 'isRepeatData' => $widget->getOptionValue('isRepeatData', 1) === 1,
                 'duration' => $widget->duration,
@@ -751,10 +758,10 @@ class WidgetHtmlRenderer
     /**
      * Decorate translations in template files.
      * @param string $content
-     * @param Translator|null $translator
+     * @param \GetText\Translator $translator
      * @return string
      */
-    private function decorateTranslations(string $content, ?Translator $translator): string
+    private function decorateTranslations(string $content, ?\Gettext\Translator $translator): string
     {
         $matches = [];
         preg_match_all('/\|\|.*?\|\|/', $content, $matches);
@@ -763,7 +770,7 @@ class WidgetHtmlRenderer
             $translateTag = str_replace('||', '', $sub);
 
             // We have a valid translateTag to substitute
-            if ($translator instanceof Translator) {
+            if ($translator !== null) {
                 $replace = $translator->gettext($translateTag);
             } else {
                 $replace = __($translateTag);
