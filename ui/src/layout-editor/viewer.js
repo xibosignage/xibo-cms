@@ -1453,7 +1453,7 @@ Viewer.prototype.renderElement = function(
     });
 
     // Update element group index
-    if (element.group.layer) {
+    if (element.group.layer != undefined) {
       $groupContainer.css({
         'z-index': element.group.layer,
       });
