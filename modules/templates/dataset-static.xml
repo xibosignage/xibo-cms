@@ -441,7 +441,7 @@ for (var i = 0; i < items.length; i++) {
     var content = properties.template.replace(/\[(.*?)\]/g, function (match, column) {
         var itemId = column.split('|')[0];
         var itemCol = column.split('|')[1];
-        var itemType = columnTypes[itemCol].type;
+        var itemType = (itemCol) ? columnTypes[itemCol].type : '';
         var itemValue = item[itemId];
 
         // If this is an image column, wrap it in an image tag
@@ -2893,7 +2893,7 @@ for (var i = 0; i < items.length; i++) {
     var content = properties.template.replace(/\[(.*?)\]/g, function (match, column) {
         var itemId = column.split('|')[0];
         var itemCol = column.split('|')[1];
-        var itemType = columnTypes[itemCol].type;
+        var itemType = (itemCol) ? columnTypes[itemCol].type : '';
         var itemValue = item[itemId];
 
         // If this is an image column, wrap it in an image tag
