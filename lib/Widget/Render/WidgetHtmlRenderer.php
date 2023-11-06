@@ -544,7 +544,13 @@ class WidgetHtmlRenderer
                             if ($moduleTemplate->stencil->twig !== null) {
                                 $twig['twig'][] = $this->twig->fetchFromString(
                                     $this->decorateTranslations($moduleTemplate->stencil->twig, $translator),
-                                    $moduleTemplate->getPropertyValues()
+                                    $widgetData['templateProperties'],
+                                );
+                            }
+                            if ($moduleTemplate->stencil->style !== null) {
+                                $twig['style'][] = $this->twig->fetchFromString(
+                                    $moduleTemplate->stencil->style,
+                                    $widgetData['templateProperties'],
                                 );
                             }
                         }
@@ -564,10 +570,12 @@ class WidgetHtmlRenderer
             // What does our module have
             if ($module->stencil !== null) {
                 // Stencils have access to any module properties
+                $modulePropertyValues = $module->getPropertyValues();
+
                 if ($module->stencil->twig !== null) {
                     $twig['twig'][] = $this->twig->fetchFromString(
                         $this->decorateTranslations($module->stencil->twig, null),
-                        array_merge($module->getPropertyValues(), ['settings' => $module->getSettingsForOutput()]),
+                        array_merge($modulePropertyValues, ['settings' => $module->getSettingsForOutput()]),
                     );
                 }
                 if ($module->stencil->hbs !== null) {
@@ -581,11 +589,14 @@ class WidgetHtmlRenderer
                 if ($module->stencil->head !== null) {
                     $twig['head'][] = $this->twig->fetchFromString(
                         $this->decorateTranslations($module->stencil->head, null),
-                        $module->getPropertyValues()
+                        $modulePropertyValues,
                     );
                 }
                 if ($module->stencil->style !== null) {
-                    $twig['style'][] = $module->stencil->style;
+                    $twig['style'][] = $this->twig->fetchFromString(
+                        $module->stencil->style,
+                        $modulePropertyValues,
+                    );
                 }
             }
 

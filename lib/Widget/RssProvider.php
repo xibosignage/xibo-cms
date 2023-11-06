@@ -122,7 +122,7 @@ class RssProvider implements WidgetProviderInterface
                 usort($feedItems, function ($a, $b) {
                     /* @var Item $a */
                     /* @var Item $b */
-                    return $a->getDate()->getTimestamp() - $b->getDate()->getTimestamp();
+                    return $b->getDate()->getTimestamp() - $a->getDate()->getTimestamp();
                 });
             }
 

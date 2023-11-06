@@ -2235,6 +2235,8 @@ class Schedule extends Base
                 'name' => $params->getString('name'),
                 'useRegexForName' => $params->getCheckbox('useRegexForName'),
                 'logicalOperatorName' => $params->getString('logicalOperatorName'),
+                'directSchedule' => $params->getCheckbox('directSchedule'),
+                'sharedSchedule' => $params->getCheckbox('sharedSchedule'),
                 'gridFilter' => 1,
             ], $params)
         );

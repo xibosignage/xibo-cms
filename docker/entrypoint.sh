@@ -232,7 +232,7 @@ then
     /bin/sed -i "s/^MYSQL_BACKUP_ENABLED=.*$/MYSQL_BACKUP_ENABLED=$MYSQL_BACKUP_ENABLED/" /etc/periodic/15min/cms-db-backup
     /bin/sed -i "s/^MYSQL_DATABASE=.*$/MYSQL_DATABASE=$MYSQL_DATABASE/" /etc/periodic/15min/cms-db-backup
 
-    echo "*/15 * * * root /etc/periodic/15min/cms-db-backup > /dev/null 2>&1" > /etc/cron.d/cms_backup_cron
+    echo "*/15 * * * * root /etc/periodic/15min/cms-db-backup > /dev/null 2>&1" > /etc/cron.d/cms_backup_cron
     echo "" >> /etc/cron.d/cms_backup_cron
 
     # Update /var/www/maintenance with current environment (for cron)

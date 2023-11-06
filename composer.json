@@ -66,7 +66,7 @@
     "guzzlehttp/guzzle": "7.5.*",
     "league/oauth2-client": "^2.4",
     "james-heinrich/getid3": "^1.9",
-    "onelogin/php-saml": "3.3.x",
+    "onelogin/php-saml": "4.1.*",
     "infostars/picofeed": "dev-westphal/php8",
     "xibosignage/xibo-xmr": "0.*",
     "tedivm/stash": "^v0.17.6",

@@ -882,8 +882,8 @@ class Campaign extends Base
         if ($campaign->type === 'ad') {
             // Ad campaign
             // -----------
-            $campaign->startDt = $parsedRequestParams->getDate('startDt')->format('U');
-            $campaign->endDt = $parsedRequestParams->getDate('endDt')->format('U');
+            $campaign->startDt = $parsedRequestParams->getDate('startDt')?->format('U');
+            $campaign->endDt = $parsedRequestParams->getDate('endDt')?->format('U');
             $campaign->targetType = $parsedRequestParams->getString('targetType');
             $campaign->target = $parsedRequestParams->getInt('target');
 

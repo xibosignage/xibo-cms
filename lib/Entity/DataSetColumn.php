@@ -274,16 +274,19 @@ class DataSetColumn implements \JsonSerializable
 
             $select = rtrim($select, ',');
 
-            // $select has been quoted in the for loop - always test the original value of the column (we won't have changed the actualised table yet)
-            $SQL = 'SELECT id FROM `dataset_' . $this->dataSetId . '` WHERE `' . $this->getOriginalValue('heading') . '` NOT IN (' . $select . ')';
+            // $select has been quoted in the for loop
+            // always test the original value of the column (we won't have changed the actualised table yet)
+            $SQL = 'SELECT id FROM `dataset_' . $this->dataSetId . '` WHERE `' . $this->getOriginalValue('heading') . '` NOT IN (' . $select . ')';//phpcs:ignore
 
             $sth = $dbh->prepare($SQL);
-            $sth->execute(array(
-                'datasetcolumnid' => $this->dataSetColumnId
-            ));
+            $sth->execute();
 
-            if ($sth->fetch())
-                throw new InvalidArgumentException(__('New list content value is invalid as it does not include values for existing data'), 'listcontent');
+            if ($sth->fetch()) {
+                throw new InvalidArgumentException(
+                    __('New list content value is invalid as it does not include values for existing data'),
+                    'listcontent'
+                );
+            }
         }
 
         // if formula dataSetType is set and formula is not empty, try to execute the SQL to validate it - we're
