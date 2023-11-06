@@ -2300,7 +2300,7 @@ class Schedule extends Base
                         $repeatDay = ($repeatDay == 7) ? 0 : $repeatDay;
                         $repeatsOn .= $weekdays[$repeatDay];
                         if ($i < count($repeatDays) - 1) {
-                            $repeatsOn .= ' and ';
+                            $repeatsOn .= ', ';
                         }
                         $i++;
                     }
