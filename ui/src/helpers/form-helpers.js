@@ -651,18 +651,16 @@ const formHelpers = function() {
         // If region dimensions are defined, use them as base for the editor
         regionDimensions = region.dimensions;
 
-        if (this.namespace != undefined && this.namespace.viewer != undefined) {
-          if (inline) {
-            scale = scaleToContainer(
-              regionDimensions,
-              $richTextInput,
-              true);
-          } else {
-            // Calculate scale based on the region previewed in the viewer
-            scale =
-              this.namespace.viewer.DOMObject.find('.viewer-object').width() /
-              regionDimensions.width;
-          }
+        if (inline) {
+          scale = scaleToContainer(
+            regionDimensions,
+            $richTextInput,
+            true);
+        } else {
+          // Calculate scale based on the region previewed in the viewer
+          scale =
+            this.namespace.viewer.DOMObject.find('.viewer-object').width() /
+            regionDimensions.width;
         }
       }
 
@@ -1762,7 +1760,7 @@ const formHelpers = function() {
           }
 
           // Create overlay
-          const $customOverlay = $('.custom-overlay').clone();
+          const $customOverlay = $('.custom-overlay:first').clone();
           $customOverlay
             .attr('id', 'richTextDetachedOverlay')
             .appendTo($propertiesPanelContainer);
@@ -1955,6 +1953,7 @@ const formHelpers = function() {
       // Handle region controls
       if (
         self.mainObject.type != 'layout' &&
+        !self.namespace.inline &&
         $editorMainContainer.find('.rich-text-dimensions-control').length === 0
       ) {
         // Add to container
