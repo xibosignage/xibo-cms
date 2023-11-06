@@ -202,11 +202,6 @@ class Layout extends Base
     {
         // Call to render the template
         $this->getState()->template = 'layout-page';
-        $this->getState()->setData([
-            'users' => $this->userFactory->query(),
-            'groups' => $this->userGroupFactory->query(),
-            'displayGroups' => $this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1])
-        ]);
 
         return $this->render($request, $response);
     }

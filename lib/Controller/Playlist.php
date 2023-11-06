@@ -141,8 +141,6 @@ class Playlist extends Base
         // Call to render the template
         $this->getState()->template = 'playlist-page';
         $this->getState()->setData([
-            'users' => $this->userFactory->query(),
-            'groups' => $this->userGroupFactory->query(),
             'modules' => $moduleFactory->getAssignableModules()
         ]);
 

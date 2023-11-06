@@ -26,7 +26,6 @@ use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
-use Xibo\Entity\Media;
 use Xibo\Entity\ReportSchedule;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ReportScheduleFactory;
@@ -37,8 +36,6 @@ use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\ReportServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
-use Xibo\Storage\TimeSeriesStoreInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -582,7 +579,6 @@ class ScheduleReport extends Base
         // Call to render the template
         $this->getState()->template = 'report-schedule-page';
         $this->getState()->setData([
-            'users' => $this->userFactory->query(),
             'availableReports' => $availableReports
         ]);
 

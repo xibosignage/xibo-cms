@@ -256,7 +256,6 @@ class Display extends Base
 
         $this->getState()->setData([
             'mapConfig' => $mapConfig,
-            'displayGroups' => $this->displayGroupFactory->query(),
             'displayProfiles' => $displayProfiles
         ]);
 

@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -24,7 +24,6 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Entity\Media;
 use Xibo\Entity\ReportResult;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ReportScheduleFactory;
@@ -218,7 +217,6 @@ class SavedReport extends Base
         // Call to render the template
         $this->getState()->template = 'saved-report-page';
         $this->getState()->setData([
-            'users' => $this->userFactory->query(),
             'availableReports' => $availableReports
         ]);
 
