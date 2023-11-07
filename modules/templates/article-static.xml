@@ -682,6 +682,42 @@ $(target).xiboTextRender(properties, $(target).find('#content > .image, #content
                 <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)</helpText>
                 <default>1000</default>
             </property>
+            <property id="showSeparator" type="checkbox">
+                <title>Show a separator between items?</title>
+                <default>0</default>
+                <visibility>
+                    <test type="or">
+                        <condition field="effect" type="eq">marqueeLeft</condition>
+                        <condition field="effect" type="eq">marqueeRight</condition>
+                        <condition field="effect" type="eq">marqueeUp</condition>
+                        <condition field="effect" type="eq">marqueeDown</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="separator" type="richText" allowLibraryRefs="false" variant="html">
+                <title>Separator</title>
+                <helpText>A separator to show between marquee items</helpText>
+                <default>
+                <![CDATA[
+                    <p><span style="font-size: 72px;">/</span></p>
+                ]]></default>
+                <visibility>
+                    <test type="and">
+                        <condition field="effect" type="neq">none</condition>
+                        <condition field="effect" type="neq">noTransition</condition>
+                        <condition field="effect" type="neq">fade</condition>
+                        <condition field="effect" type="neq">fadeout</condition>
+                        <condition field="effect" type="neq">scrollHorz</condition>
+                        <condition field="effect" type="neq">scrollVert</condition>
+                        <condition field="effect" type="neq">flipHorz</condition>
+                        <condition field="effect" type="neq">flipVert</condition>
+                        <condition field="effect" type="neq">shuffle</condition>
+                        <condition field="effect" type="neq">tileSlide</condition>
+                        <condition field="effect" type="neq">tileBlind</condition>
+                        <condition field="showSeparator" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
             <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
                 <title>No data message</title>
                 <helpText>A message to display when no data is returned from the source</helpText>
@@ -762,6 +798,9 @@ html {
     height: 100%;
     text-align: center;
 }
+.js-marquee .copyright {
+    width: auto;
+}
 .copyright span {
     position: relative;
     font-size: 30px;
@@ -799,9 +838,24 @@ if (
     properties.numItems = parseInt(properties.numItems) + 1;
 }
 
+// Add separator
+if (
+    (
+        properties.effect == 'marqueeLeft' ||
+        properties.effect == 'marqueeRight' ||
+        properties.effect == 'marqueeUp' ||
+        properties.effect == 'marqueeDown'
+    ) && properties.showSeparator == 1 &&
+    properties.separator != ''
+) {
+    var $separator = $(properties.separator);
+    $separator.addClass('separator');
+    $(target).find('#content .article, #content .copyright').after($separator);
+}
+
 // Render
 $(target).xiboLayoutScaler(properties);
-$(target).xiboTextRender(properties, $(target).find('#content .article, #content .copyright'));
+$(target).xiboTextRender(properties, $(target).find('#content .article, #content .copyright, #content .separator'));
         ]]></onTemplateRender>
         <assets>
             <asset id="article_with_desc_and_name_separator" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/article/title-description-name.png" />
@@ -837,6 +891,42 @@ $(target).xiboTextRender(properties, $(target).find('#content .article, #content
                 <title>Speed</title>
                 <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)</helpText>
                 <default>1000</default>
+            </property>
+            <property id="showSeparator" type="checkbox">
+                <title>Show a separator between items?</title>
+                <default>0</default>
+                <visibility>
+                    <test type="or">
+                        <condition field="effect" type="eq">marqueeLeft</condition>
+                        <condition field="effect" type="eq">marqueeRight</condition>
+                        <condition field="effect" type="eq">marqueeUp</condition>
+                        <condition field="effect" type="eq">marqueeDown</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="separator" type="richText" allowLibraryRefs="false" variant="html">
+                <title>Separator</title>
+                <helpText>A separator to show between marquee items</helpText>
+                <default>
+                <![CDATA[
+                    <p><span style="font-size: 72px;">/</span></p>
+                ]]></default>
+                <visibility>
+                    <test type="and">
+                        <condition field="effect" type="neq">none</condition>
+                        <condition field="effect" type="neq">noTransition</condition>
+                        <condition field="effect" type="neq">fade</condition>
+                        <condition field="effect" type="neq">fadeout</condition>
+                        <condition field="effect" type="neq">scrollHorz</condition>
+                        <condition field="effect" type="neq">scrollVert</condition>
+                        <condition field="effect" type="neq">flipHorz</condition>
+                        <condition field="effect" type="neq">flipVert</condition>
+                        <condition field="effect" type="neq">shuffle</condition>
+                        <condition field="effect" type="neq">tileSlide</condition>
+                        <condition field="effect" type="neq">tileBlind</condition>
+                        <condition field="showSeparator" type="eq">1</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
                 <title>No data message</title>
@@ -907,6 +997,9 @@ html {
     top: 50%;
     transform: translateY(-50%);
 }
+.js-marquee .copyright {
+    width: auto;
+}
 {% endif %}
 </style>
             ]]></twig>
@@ -937,9 +1030,24 @@ if (
     properties.numItems = parseInt(properties.numItems) + 1;
 }
 
+// Add separator
+if (
+    (
+        properties.effect == 'marqueeLeft' ||
+        properties.effect == 'marqueeRight' ||
+        properties.effect == 'marqueeUp' ||
+        properties.effect == 'marqueeDown'
+    ) && properties.showSeparator == 1 &&
+    properties.separator != ''
+) {
+    var $separator = $(properties.separator);
+    $separator.addClass('separator');
+    $(target).find('#content .article, #content .copyright').after($separator);
+}
+
 // Render
 $(target).xiboLayoutScaler(properties);
-$(target).xiboTextRender(properties, $(target).find('#content .article, #content .copyright'));
+$(target).xiboTextRender(properties, $(target).find('#content .article, #content .copyright, #content .separator'));
         ]]></onTemplateRender>
         <assets>
             <asset id="article_title_only" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/article/title-only.png" />
