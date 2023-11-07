@@ -1519,7 +1519,7 @@ PropertiesPanel.prototype.initFields = function(
     // Auto save when changing inputs
     $(self.DOMObject).find('form').off()
       .on({
-        'change inputChange': function(_ev, options) {
+        'change inputChange xiboInputChange': function(_ev, options) {
           // If field is code input
           // only save when the event is a change/onfocus
           if (
