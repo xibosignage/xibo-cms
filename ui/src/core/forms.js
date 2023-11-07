@@ -1148,7 +1148,8 @@ window.forms = {
         });
 
         // Update the hidden field with a JSON string
-        $mixerHiddenInput.val(JSON.stringify(mixerItems));
+        $mixerHiddenInput.val(JSON.stringify(mixerItems))
+          .trigger('xiboInputChange');
       };
 
       // Clear existing fields
