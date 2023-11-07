@@ -262,8 +262,8 @@ describe('Campaigns', function() {
 
     // Should have 1
     cy.get('#schedule-grid tbody tr').should('have.length', 2);
-    cy.get('#schedule-grid tr:first-child .dropdown-toggle').click();
-    cy.get('#schedule-grid tr:first-child .schedule_button_edit').click();
+    cy.get('#schedule-grid tr:first-child .dropdown-toggle').click({force: true});
+    cy.get('#schedule-grid tr:first-child .schedule_button_edit').click({force: true});
 
     // display
     cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection > .select2-selection > .select2-selection__rendered')
@@ -282,8 +282,8 @@ describe('Campaigns', function() {
     cy.get('#schedule-grid tbody tr').should('have.length', 2);
     cy.wait('@scheduleLoad3');
     cy.wait('@scheduleDataEvent');
-    cy.get('#schedule-grid tr:first-child .dropdown-toggle').click();
-    cy.get('#schedule-grid tr:first-child .schedule_button_delete').click();
+    cy.get('#schedule-grid tr:first-child .dropdown-toggle').click({force: true});
+    cy.get('#schedule-grid tr:first-child .schedule_button_delete').click({force: true});
     cy.get('.bootbox .save-button').click();
   });
 });

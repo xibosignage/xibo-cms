@@ -70,8 +70,8 @@ describe('Datasets', function() {
       cy.get('#datasets tbody tr').should('have.length', 1);
 
       // Click on the first row element to open the delete modal
-      cy.get('#datasets tr:first-child .dropdown-toggle').click();
-      cy.get('#datasets tr:first-child .dataset_button_edit').click();
+      cy.get('#datasets tr:first-child .dropdown-toggle').click({force: true});
+      cy.get('#datasets tr:first-child .dataset_button_edit').click({force: true});
 
       cy.get('.modal input#dataSet').clear()
         .type('Cypress Test Dataset Edited ' + testRun);
@@ -126,8 +126,8 @@ describe('Datasets', function() {
       cy.get('#datasets tbody tr').should('have.length', 1);
 
       // Click on the first row element to open the View data
-      cy.get('#datasets tr:first-child .dropdown-toggle').click();
-      cy.get('#datasets tr:first-child .dataset_button_viewcolumns').click();
+      cy.get('#datasets tr:first-child .dropdown-toggle').click({force: true});
+      cy.get('#datasets tr:first-child .dataset_button_viewcolumns').click({force: true});
 
       cy.get('#datasets').contains('No data available in table');
 
@@ -177,8 +177,8 @@ describe('Datasets', function() {
       cy.get('#datasets tbody tr').should('have.length', 1);
 
       // Click on the first row element to open the View data
-      cy.get('#datasets tr:first-child .dropdown-toggle').click();
-      cy.get('#datasets tr:first-child .dataset_button_delete').click();
+      cy.get('#datasets tr:first-child .dropdown-toggle').click({force: true});
+      cy.get('#datasets tr:first-child .dataset_button_delete').click({force: true});
     });
   });
 
@@ -208,8 +208,8 @@ describe('Datasets', function() {
       cy.get('#datasets tbody tr').should('have.length', 1);
 
       // Click on the first row element to open the delete modal
-      cy.get('#datasets tr:first-child .dropdown-toggle').click();
-      cy.get('#datasets tr:first-child .dataset_button_copy').click();
+      cy.get('#datasets tr:first-child .dropdown-toggle').click({force: true});
+      cy.get('#datasets tr:first-child .dataset_button_copy').click({force: true});
 
       // save
       cy.get('.bootbox .save-button').click();
@@ -241,8 +241,8 @@ describe('Datasets', function() {
       cy.get('#datasets tbody tr').should('have.length', 1);
 
       // Click on the first row element to open the delete modal
-      cy.get('#datasets tr:first-child .dropdown-toggle').click();
-      cy.get('#datasets tr:first-child .dataset_button_delete').click();
+      cy.get('#datasets tr:first-child .dropdown-toggle').click({force: true});
+      cy.get('#datasets tr:first-child .dataset_button_delete').click({force: true});
 
       // Delete test dataset
       cy.get('.bootbox .save-button').click();

@@ -53,8 +53,8 @@ describe('Folders', function() {
     cy.get('#datatable-container').should('contain', 'child_folder_media');
 
     // Click the dropdown menu and choose a folder to move the image to
-    cy.get('#libraryItems tr:first-child .dropdown-toggle').click();
-    cy.get('#libraryItems tr:first-child .library_button_selectfolder').click();
+    cy.get('#libraryItems tr:first-child .dropdown-toggle').click({force: true});
+    cy.get('#libraryItems tr:first-child .library_button_selectfolder').click({force: true});
 
     // Expand the folder tree and select ChildFolder
     cy.get('#container-folder-form-tree>ul>li>i').click();
@@ -98,8 +98,8 @@ describe('Folders', function() {
 
     cy.wait('@userGridLoadAfterSearch');
     cy.get('#users tbody tr').should('have.length', 1);
-    cy.get('#users tr:first-child .dropdown-toggle').click();
-    cy.get('#users tr:first-child .user_button_set_home').click();
+    cy.get('#users tr:first-child .dropdown-toggle').click({force: true});
+    cy.get('#users tr:first-child .user_button_set_home').click({force: true});
     cy.get('#home-folder').should('be.visible');
     cy.get('.jstree-anchor:contains(\'FolderHome\')').should('be.visible').click();
     cy.get('.save-button').click();

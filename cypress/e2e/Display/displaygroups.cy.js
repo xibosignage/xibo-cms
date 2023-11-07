@@ -87,8 +87,8 @@ describe('Display Groups', function() {
       cy.get('#displaygroups tbody tr').should('have.length', 1);
 
       // Click on the first row element to open the delete modal
-      cy.get('#displaygroups tr:first-child .dropdown-toggle').click();
-      cy.get('#displaygroups tr:first-child .displaygroup_button_copy').click();
+      cy.get('#displaygroups tr:first-child .dropdown-toggle').click({force: true});
+      cy.get('#displaygroups tr:first-child .displaygroup_button_copy').click({force: true});
 
       // Delete test displaygroup
       cy.get('.bootbox .save-button').click();
@@ -122,8 +122,8 @@ describe('Display Groups', function() {
       cy.get('#displaygroups tbody tr').should('have.length', 1);
 
       // Click on the first row element to open the delete modal
-      cy.get('#displaygroups tr:first-child .dropdown-toggle').click();
-      cy.get('#displaygroups tr:first-child .displaygroup_button_delete').click();
+      cy.get('#displaygroups tr:first-child .dropdown-toggle').click({force: true});
+      cy.get('#displaygroups tr:first-child .displaygroup_button_delete').click({force: true});
 
       // Delete test displaygroup
       cy.get('.bootbox .save-button').click();
@@ -164,8 +164,8 @@ describe('Display Groups', function() {
       cy.get('#displaygroups tbody tr').should('have.length', 1);
 
       // Click on the first row element to open the delete modal
-      cy.get('#displaygroups tr:first-child .dropdown-toggle').click();
-      cy.get('#displaygroups tr:first-child .displaygroup_button_group_members').click();
+      cy.get('#displaygroups tr:first-child .dropdown-toggle').click({force: true});
+      cy.get('#displaygroups tr:first-child .displaygroup_button_group_members').click({force: true});
 
       cy.get('.modal #display').type('dispgrp_disp1');
 
@@ -243,8 +243,8 @@ describe('Display Groups', function() {
       cy.get('#displaygroups tbody tr').should('have.length', 1);
 
       // Click on the first row element to open the delete modal
-      cy.get('#displaygroups tr:first-child .dropdown-toggle').click();
-      cy.get('#displaygroups tr:first-child .displaygroup_button_edit').click();
+      cy.get('#displaygroups tr:first-child .dropdown-toggle').click({force: true});
+      cy.get('#displaygroups tr:first-child .displaygroup_button_edit').click({force: true});
 
       cy.get('.modal input[name="dynamicCriteria"]').clear().type('dynamic_edited');
 
