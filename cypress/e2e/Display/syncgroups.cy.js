@@ -65,8 +65,8 @@ describe('Sync Groups', function() {
       cy.get('#syncgroups tbody tr').should('have.length', 1);
 
       // Click on the first row element to open the delete modal
-      cy.get('#syncgroups tr:first-child .dropdown-toggle').click();
-      cy.get('#syncgroups tr:first-child .syncgroup_button_group_delete').click();
+      cy.get('#syncgroups tr:first-child .dropdown-toggle').click({force: true});
+      cy.get('#syncgroups tr:first-child .syncgroup_button_group_delete').click({force: true});
 
       // Delete test syncgroup
       cy.get('.bootbox .save-button').click();

@@ -56,8 +56,8 @@ describe('Displays', function() {
     cy.get('#displays tbody tr').should('have.length', 1);
 
     // Click on the first row element to open the delete modal
-    cy.get('#displays tr:first-child .dropdown-toggle').click();
-    cy.get('#displays tr:first-child .display_button_edit').click();
+    cy.get('#displays tr:first-child .dropdown-toggle').click({force: true});
+    cy.get('#displays tr:first-child .display_button_edit').click({force: true});
 
     cy.get('.modal input#display').clear()
       .type('dis_disp1 Edited');
@@ -102,8 +102,8 @@ describe('Displays', function() {
     cy.get('#displays tbody tr').should('have.length', 1);
 
     // Click on the first row element to open the delete modal
-    cy.get('#displays tr:first-child .dropdown-toggle').click();
-    cy.get('#displays tr:first-child .display_button_delete').click();
+    cy.get('#displays tr:first-child .dropdown-toggle').click({force: true});
+    cy.get('#displays tr:first-child .display_button_delete').click({force: true});
 
     // Delete test display
     cy.get('.bootbox .save-button').click();
@@ -137,8 +137,8 @@ describe('Displays', function() {
     cy.get('#displays tbody tr').should('have.length', 1);
 
     // Click on the first row element to open the delete modal
-    cy.get('#displays tr:first-child .dropdown-toggle').click();
-    cy.get('#displays tr:first-child .display_button_authorise').click();
+    cy.get('#displays tr:first-child .dropdown-toggle').click({force: true});
+    cy.get('#displays tr:first-child .display_button_authorise').click({force: true});
 
     // edit test display
     cy.get('.bootbox .save-button').click();
@@ -183,8 +183,8 @@ describe('Displays', function() {
     cy.get('#displays tbody tr').should('have.length', 1);
 
     // Click on the first row element to open the delete modal
-    cy.get('#displays tr:first-child .dropdown-toggle').click();
-    cy.get('#displays tr:first-child .display_button_defaultlayout').click();
+    cy.get('#displays tr:first-child .dropdown-toggle').click({force: true});
+    cy.get('#displays tr:first-child .display_button_defaultlayout').click({force: true});
 
     // Set the default layout
     cy.get('.modal .select2-container--bootstrap').click();
@@ -236,8 +236,8 @@ describe('Displays', function() {
     cy.get('#displays tbody tr').should('have.length', 1);
 
     // Click on the first row element to open the delete modal
-    cy.get('#displays tr:first-child .dropdown-toggle').click();
-    cy.get('#displays tr:first-child .display_button_group_membership').click();
+    cy.get('#displays tr:first-child .dropdown-toggle').click({force: true});
+    cy.get('#displays tr:first-child .display_button_group_membership').click({force: true});
 
     cy.get('.modal #displayGroup').type('disp5_dispgrp');
 

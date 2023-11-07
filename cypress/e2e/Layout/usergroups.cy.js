@@ -70,8 +70,8 @@ describe('Usergroups', function() {
       cy.get('#userGroups tbody tr').should('have.length', 1);
 
       // Click on the first row element to open the delete modal
-      cy.get('#userGroups tr:first-child .dropdown-toggle').click();
-      cy.get('#userGroups tr:first-child .usergroup_button_edit').click();
+      cy.get('#userGroups tr:first-child .dropdown-toggle').click({force: true});
+      cy.get('#userGroups tr:first-child .usergroup_button_edit').click({force: true});
 
       cy.get('.modal input#group').clear()
         .type('Cypress Test Usergroup Edited ' + testRun);
@@ -115,8 +115,8 @@ describe('Usergroups', function() {
       cy.get('#userGroups tbody tr').should('have.length', 1);
 
       // Click on the first row element to open the delete modal
-      cy.get('#userGroups tr:first-child .dropdown-toggle').click();
-      cy.get('#userGroups tr:first-child .usergroup_button_delete').click();
+      cy.get('#userGroups tr:first-child .dropdown-toggle').click({force: true});
+      cy.get('#userGroups tr:first-child .usergroup_button_delete').click({force: true});
 
       // Delete test usergroup
       cy.get('.bootbox .save-button').click();

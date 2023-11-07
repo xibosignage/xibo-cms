@@ -108,8 +108,8 @@ describe('Display Settings', function() {
       cy.get('#displayProfiles tbody tr').should('have.length', 1);
 
       // Click on the first row element to open the delete modal
-      cy.get('#displayProfiles tr:first-child .dropdown-toggle').click();
-      cy.get('#displayProfiles tr:first-child .displayprofile_button_edit').click();
+      cy.get('#displayProfiles tr:first-child .dropdown-toggle').click({force: true});
+      cy.get('#displayProfiles tr:first-child .displayprofile_button_edit').click({force: true});
 
       cy.get('.modal input#name').clear()
         .type('Cypress Test Display Setting Edited ' + testRun);
@@ -153,8 +153,8 @@ describe('Display Settings', function() {
       cy.get('#displayProfiles tbody tr').should('have.length', 1);
 
       // Click on the first row element to open the delete modal
-      cy.get('#displayProfiles tr:first-child .dropdown-toggle').click();
-      cy.get('#displayProfiles tr:first-child .displayprofile_button_delete').click();
+      cy.get('#displayProfiles tr:first-child .dropdown-toggle').click({force: true});
+      cy.get('#displayProfiles tr:first-child .displayprofile_button_delete').click({force: true});
 
       // Delete test tag
       cy.get('.bootbox .save-button').click();

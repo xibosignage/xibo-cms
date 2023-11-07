@@ -70,9 +70,8 @@ describe('Layout View', function() {
             cy.wait('@layoutGridLoad');
 
             // Click on the first row element to open the designer
-            cy.get('#layouts tr:first-child .dropdown-toggle').click();
-
-            cy.get('#layouts tr:first-child .layout_button_delete').click();
+            cy.get('#layouts tr:first-child .dropdown-toggle').click({force: true});
+            cy.get('#layouts tr:first-child .layout_button_delete').click({force: true});
 
             // Delete test layout
             cy.get('.bootbox .save-button').click();

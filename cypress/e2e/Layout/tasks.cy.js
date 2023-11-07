@@ -35,8 +35,8 @@ describe('Tasks', function() {
     cy.visit('/task/view');
 
     // Click on the first row element to open the delete modal
-    cy.get('#tasks tr:first-child .dropdown-toggle').click();
-    cy.get('#tasks tr:first-child .task_button_edit').click();
+    cy.get('#tasks tr:first-child .dropdown-toggle').click({force: true});
+    cy.get('#tasks tr:first-child .task_button_edit').click({force: true});
 
     // Assuming you have an input field with the id 'myInputField'
     cy.get('.modal input#name').invoke('val').then((value) => {

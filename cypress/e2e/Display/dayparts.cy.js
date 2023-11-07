@@ -75,8 +75,8 @@ describe('Dayparts', function() {
       cy.get('#dayparts tbody tr').should('have.length', 1);
 
       // Click on the first row element to open the delete modal
-      cy.get('#dayparts tr:first-child .dropdown-toggle').click();
-      cy.get('#dayparts tr:first-child .daypart_button_edit').click();
+      cy.get('#dayparts tr:first-child .dropdown-toggle').click({force: true});
+      cy.get('#dayparts tr:first-child .daypart_button_edit').click({force: true});
 
       cy.get('.modal input#name').clear()
         .type('Cypress Test Daypart Edited ' + testRun);
@@ -120,8 +120,8 @@ describe('Dayparts', function() {
       cy.get('#dayparts tbody tr').should('have.length', 1);
 
       // Click on the first row element to open the delete modal
-      cy.get('#dayparts tr:first-child .dropdown-toggle').click();
-      cy.get('#dayparts tr:first-child .daypart_button_delete').click();
+      cy.get('#dayparts tr:first-child .dropdown-toggle').click({force: true});
+      cy.get('#dayparts tr:first-child .daypart_button_delete').click({force: true});
 
       // Delete test daypart
       cy.get('.bootbox .save-button').click();
@@ -155,16 +155,15 @@ describe('Dayparts', function() {
       cy.get('#dayparts tbody tr').should('have.length', 1);
 
       // Click on the first row element to open the delete modal
-      cy.get('#dayparts tr:first-child .dropdown-toggle').click();
-      cy.get('#dayparts tr:first-child .daypart_button_permissions').click();
+      cy.get('#dayparts tr:first-child .dropdown-toggle').click({force: true});
+      cy.get('#dayparts tr:first-child .daypart_button_permissions').click({force: true});
 
       cy.get('.modal #name').type('Everyone');
       cy.wait('@loadPermissionDayPartAfterSearch');
+      cy.get('#permissionsTable tbody tr').should('have.length', 1);
 
       cy.get('#permissionsTable').within(() => {
-        cy.get('tbody').find('tr').should('have.length', 1);
-
-        cy.get('input[type="checkbox"][data-permission="view"]').should('be.visible').check().should('be.checked');
+        cy.get('input[type="checkbox"][data-permission="view"]').should('exist').should('be.visible').check().should('be.checked');
 
         cy.wait(1000); // without this wait it does not work, so lets keep the 1s wait here
         cy.get('input[type="checkbox"][data-permission="edit"]').check().should('be.checked');

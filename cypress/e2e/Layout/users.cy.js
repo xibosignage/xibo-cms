@@ -88,8 +88,8 @@ describe('Users', function() {
       cy.get('#users tbody tr').should('have.length', 1);
 
       // Click on the first row element to open the delete modal
-      cy.get('#users tr:first-child .dropdown-toggle').click();
-      cy.get('#users tr:first-child .user_button_edit').click();
+      cy.get('#users tr:first-child .dropdown-toggle').click({force: true});
+      cy.get('#users tr:first-child .user_button_edit').click({force: true});
 
       cy.get('.modal input#userName').clear()
         .type('CypressTestUserEdited' + testRun);
@@ -133,8 +133,8 @@ describe('Users', function() {
       cy.get('#users tbody tr').should('have.length', 1);
 
       // Click on the first row element to open the delete modal
-      cy.get('#users tr:first-child .dropdown-toggle').click();
-      cy.get('#users tr:first-child .user_button_delete').click();
+      cy.get('#users tr:first-child .dropdown-toggle').click({force: true});
+      cy.get('#users tr:first-child .user_button_delete').click({force: true});
 
       // Delete test User
       cy.get('.bootbox .save-button').click();

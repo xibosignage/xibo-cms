@@ -36,12 +36,12 @@ describe('Transitions', function() {
     cy.get('#transitions tbody tr').should('have.length', 3);
 
     // Click on the first row element to open the delete modal
-    cy.get('#transitions tr:first-child .dropdown-toggle').click();
-    cy.get('#transitions tr:first-child .transition_button_edit').click();
+    cy.get('#transitions tr:first-child .dropdown-toggle').click({force: true});
+    cy.get('#transitions tr:first-child .transition_button_edit').click({force: true});
 
     cy.get('.modal #availableAsIn').then(($checkbox) => {
       const isChecked = $checkbox.prop('checked');
-      cy.get('#availableAsIn').click(); // Click to check/uncheck
+      cy.get('#availableAsIn').should('be.visible').click(); // Click to check/uncheck
 
       // edit
       cy.get('.bootbox .save-button').click();

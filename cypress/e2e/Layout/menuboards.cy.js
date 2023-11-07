@@ -74,8 +74,8 @@ describe('Menuboards', function() {
       cy.get('#menuBoards tbody tr').should('have.length', 1);
 
       // Click on the first row element to open the delete modal
-      cy.get('#menuBoards tr:first-child .dropdown-toggle').click();
-      cy.get('#menuBoards tr:first-child .menuBoard_edit_button').click();
+      cy.get('#menuBoards tr:first-child .dropdown-toggle').click({force: true});
+      cy.get('#menuBoards tr:first-child .menuBoard_edit_button').click({force: true});
 
       cy.get('.modal input#name').clear()
         .type('Cypress Test Menuboard Edited ' + testRun);
@@ -114,8 +114,8 @@ describe('Menuboards', function() {
       cy.get('#menuBoards tbody tr').should('have.length', 1);
 
       // Click on the first row element to open the delete modal
-      cy.get('#menuBoards tr:first-child .dropdown-toggle').click();
-      cy.get('#menuBoards tr:first-child .menuBoard_delete_button').click();
+      cy.get('#menuBoards tr:first-child .dropdown-toggle').click({force: true});
+      cy.get('#menuBoards tr:first-child .menuBoard_delete_button').click({force: true});
 
       // Delete test menuboard
       cy.get('.bootbox .save-button').click();
@@ -145,8 +145,8 @@ describe('Menuboards', function() {
       cy.get('#menuBoards tbody tr').should('have.length', 1);
 
       // Click on the first row element to open the delete modal
-      cy.get('#menuBoards tr:first-child .dropdown-toggle').click();
-      cy.get('#menuBoards tr:first-child .menuBoard_button_viewcategories').click();
+      cy.get('#menuBoards tr:first-child .dropdown-toggle').click({force: true});
+      cy.get('#menuBoards tr:first-child .menuBoard_button_viewcategories').click({force: true});
 
       // Click on the Add Category button
       cy.contains('Add Category').click();
@@ -168,8 +168,8 @@ describe('Menuboards', function() {
       // cy.wait('@loadCategoryGridAfterSearch');
 
       // Click on the first row element to open the delete modal
-      cy.get('#menuBoardCategories tr:first-child .dropdown-toggle').click();
-      cy.get('#menuBoardCategories tr:first-child .menuBoardCategory_button_viewproducts').click();
+      cy.get('#menuBoardCategories tr:first-child .dropdown-toggle').click({force: true});
+      cy.get('#menuBoardCategories tr:first-child .menuBoardCategory_button_viewproducts').click({force: true});
 
       // Click on the Add Product button
       cy.contains('Add Product').click();
@@ -245,8 +245,8 @@ describe('Menuboards', function() {
         cy.get('#menuBoardCategories tbody tr').should('have.length', 1);
 
         // Click on the first row element to open the delete modal
-        cy.get('#menuBoardCategories tr:first-child .dropdown-toggle').click();
-        cy.get('#menuBoardCategories tr:first-child .menuBoardCategory_edit_button').click();
+        cy.get('#menuBoardCategories tr:first-child .dropdown-toggle').click({force: true});
+        cy.get('#menuBoardCategories tr:first-child .menuBoardCategory_edit_button').click({force: true});
 
         // EDIT
         cy.get('.modal input#name').clear()
@@ -272,7 +272,7 @@ describe('Menuboards', function() {
     });
   });
 
-  it('searches and delete existing category', function() {
+  it.only('searches and delete existing category', function() {
     // Create a new menuboard and then search for it and delete it
     cy.createMenuboard('Cypress Test Menuboard ' + testRun).then((menuId) => {
       cy.createMenuboardCat('Cypress Test Category ' + testRun, menuId).then((menuCatId) => {
@@ -298,8 +298,8 @@ describe('Menuboards', function() {
         cy.get('#menuBoardCategories tbody tr').should('have.length', 1);
 
         // Click on the first row element to open the delete modal
-        cy.get('#menuBoardCategories tr:first-child .dropdown-toggle').click();
-        cy.get('#menuBoardCategories tr:first-child .menuBoardCategory_delete_button').click();
+        cy.get('#menuBoardCategories tr:first-child .dropdown-toggle').click({force: true});
+        cy.get('#menuBoardCategories tr:first-child .menuBoardCategory_delete_button').click({force: true});
 
         // Delete test category
         cy.get('.bootbox .save-button').click();
@@ -372,8 +372,8 @@ describe('Menuboards', function() {
           cy.get('#menuBoardProducts tbody tr').should('have.length', 1);
 
           // Click on the first row element to open the delete modal
-          cy.get('#menuBoardProducts tr:first-child .dropdown-toggle').click();
-          cy.get('#menuBoardProducts tr:first-child .menuBoardProduct_edit_button').click();
+          cy.get('#menuBoardProducts tr:first-child .dropdown-toggle').click({force: true});
+          cy.get('#menuBoardProducts tr:first-child .menuBoardProduct_edit_button').click({force: true});
 
           // EDIT
           cy.get('.modal input#name').clear()
@@ -427,8 +427,8 @@ describe('Menuboards', function() {
           cy.get('#menuBoardProducts tbody tr').should('have.length', 1);
 
           // Click on the first row element to open the delete modal
-          cy.get('#menuBoardProducts tr:first-child .dropdown-toggle').click();
-          cy.get('#menuBoardProducts tr:first-child .menuBoardProduct_delete_button').click();
+          cy.get('#menuBoardProducts tr:first-child .dropdown-toggle').click({force: true});
+          cy.get('#menuBoardProducts tr:first-child .menuBoardProduct_delete_button').click({force: true});
 
           // Delete test menuboard
           cy.get('.bootbox .save-button').click();

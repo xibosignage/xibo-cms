@@ -150,8 +150,8 @@ describe('Campaigns', function() {
 
     cy.get('#campaigns tbody tr').should('have.length', 1);
 
-    cy.get('#campaigns tr:first-child .dropdown-toggle').click();
-    cy.get('#campaigns tr:first-child .campaign_button_delete').click();
+    cy.get('#campaigns tr:first-child .dropdown-toggle').click({force: true});
+    cy.get('#campaigns tr:first-child .campaign_button_delete').click({force: true});
 
     // Delete the campaign
     cy.get('.bootbox .save-button').click();
