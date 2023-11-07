@@ -981,6 +981,46 @@ window.forms = {
       }
     });
 
+    findElements(
+      '.languageSelect',
+      target,
+    ).each(function(_k, el) {
+      const $select = $(el).find('select.form-control');
+      const isMomentLocaleSelect = $(el).hasClass('momentLocales');
+
+      if (isMomentLocaleSelect) {
+        const momentLocales = moment.locales().sort();
+        const selectValue = $select.val();
+
+        // Remove all previous options
+        $select.find('option').remove();
+
+        // Add empty option to the start of the array
+        momentLocales.unshift('');
+
+        // Add options from moment
+        for (let index = 0; index < momentLocales.length; index++) {
+          const locale = momentLocales[index];
+
+          // Get translation if exists
+          const name = momentLocalesTrans[locale] || locale;
+
+          // Create new option
+          const $newOption =
+            $(`<option value="${locale}">${locale} - ${name}</option>`);
+
+          // Check if it's selected
+          if (selectValue == locale) {
+            $newOption.prop('selected', true);
+          }
+
+          $newOption.appendTo($select);
+        }
+      }
+
+      makeLocalSelect($select, container);
+    });
+
     // Playlist mixer
     findElements(
       '.playlist-mixer',
