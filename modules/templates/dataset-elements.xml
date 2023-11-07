@@ -194,7 +194,7 @@
     </template>
     <template>
         <id>dataset_data_html</id>
-        <extends override="text">text</extends>
+        <extends override="text" escapeHtml="false">text</extends>
         <title>HTML</title>
         <type>element</type>
         <dataType>dataset</dataType>
