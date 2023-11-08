@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -58,6 +58,18 @@ class ApplicationScope implements \JsonSerializable
     public function __construct($store, $log, $dispatcher)
     {
         $this->setCommonDependencies($store, $log, $dispatcher);
+    }
+
+    public function __serialize(): array
+    {
+        return $this->jsonSerialize();
+    }
+
+    public function __unserialize(array $data): void
+    {
+        foreach ($data as $key => $value) {
+            $this->{$key} = $value;
+        }
     }
 
     /**
