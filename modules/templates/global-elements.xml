@@ -207,7 +207,7 @@
                 <title>Date Format</title>
                 <default>d/m/Y H:i:s</default>
             </property>
-            <property id="lang" type="languageSelector">
+            <property id="lang" type="languageSelector" variant="momentLocales">
                 <title>Language</title>
                 <helpText>Select the language you would like to use.</helpText>
             </property>

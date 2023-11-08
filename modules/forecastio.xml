@@ -68,7 +68,7 @@
             <helpText>Select the units you would like to use.</helpText>
             <default>auto</default>
         </property>
-        <property id="lang" type="languageSelector">
+        <property id="lang" type="languageSelector" variant="momentLocales">
             <title>Language</title>
             <helpText>Select the language you would like to use.</helpText>
             <default>en</default>
