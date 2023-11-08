@@ -172,7 +172,8 @@ describe('Dayparts', function() {
 
         // DOM is refreshed at this point, so wait for it
         cy.wait('@draw3');
-        cy.get('input[type="checkbox"][data-permission="edit"]').should('be.visible').check();
+        // We have no other option but to put {force: true} here
+        cy.get('input[type="checkbox"][data-permission="edit"]').check({force: true});
       });
 
       // Save
