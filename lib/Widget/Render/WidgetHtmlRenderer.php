@@ -476,6 +476,7 @@ class WidgetHtmlRenderer
             foreach ($module->properties as $property) {
                 if ($property->type === 'languageSelector' && !empty($property->value)) {
                     $moduleLanguage = $property->value;
+                    break;
                 }
             }
 
