@@ -130,13 +130,18 @@ describe('Proof of Play', function() {
     // Wait for
     cy.wait('@reportData');
 
-    // Should have layout stat - Test a layout stat for an ad campaign, a layout and a display
-    cy.get('#stats tbody tr:nth-child(1) td:nth-child(1)').contains('layout'); // stat type
-    cy.get('#stats tbody tr:nth-child(1) td:nth-child(3)').contains('POP Display 1'); // display
-    cy.get('#stats tbody tr:nth-child(1) td:nth-child(4)').contains('POP Ad Campaign 1'); // ad campaign
-    cy.get('#stats tbody tr:nth-child(1) td:nth-child(6)').contains('POP Layout 1'); // layout
-    cy.get('#stats tbody tr:nth-child(1) td:nth-child(10)').contains(1); // number of plays
-    cy.get('#stats tbody tr:nth-child(1) td:nth-child(12)').contains(60); // total duration
+    cy.get('#stats').within(() => {
+      // Check if the "No data available in table" message is not present
+      cy.contains('No data available in table').should('not.exist');
+      cy.get('tbody tr').should('have.length', 1);
+      // Should have layout stat - Test a layout stat for an ad campaign, a layout and a display
+      cy.get('tbody td').eq(0).contains('layout'); // stat type
+      cy.get('tbody td').eq(2).contains('POP Display 1'); // display
+      cy.get('tbody td').eq(3).contains('POP Ad Campaign 1'); // ad campaign
+      cy.get('tbody td').eq(5).contains('POP Layout 1'); // layout
+      cy.get('tbody td').eq(9).contains(1); // number of plays
+      cy.get('tbody td').eq(11).contains(60); // total duration
+    });
   });
 
   it('Range: Today - Test event/widget stats for a layout and a display', function() {
