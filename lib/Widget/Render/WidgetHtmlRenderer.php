@@ -480,7 +480,7 @@ class WidgetHtmlRenderer
             }
 
             if ($moduleLanguage !== null) {
-                $translator = Translate::getTranslationsFromLocale($this->config, $moduleLanguage);
+                $translator = Translate::getTranslationsFromLocale($moduleLanguage);
             }
 
             // Output some sample data and a data url.

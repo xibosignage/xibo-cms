@@ -122,15 +122,11 @@ class Translate
 
     /**
      * Get translations for user selected language
-     * @param $config
      * @param $language
      * @return Translator|null
      */
-    public static function getTranslationsFromLocale($config, $language): ?Translator
+    public static function getTranslationsFromLocale($language): ?Translator
     {
-        // The default language
-        $default = ($language === null) ? $config->getSetting('DEFAULT_LANGUAGE') : $language;
-
         // Build an array of supported languages
         $localeDir = PROJECT_ROOT . '/locale';
         $supportedLanguages = array_map('basename', glob($localeDir . '/*.mo'));
@@ -145,15 +141,14 @@ class Translate
             // Check its valid
             if (in_array($parsedLanguage . '.mo', $supportedLanguages)) {
                 $foundLanguage = $parsedLanguage;
+            } else {
+                return null;
             }
         }
 
         // Are we still empty, then return null
         if ($foundLanguage == '') {
-            // Check the default
-            if (!in_array($default . '.mo', $supportedLanguages)) {
-                return null;
-            }
+            return null;
         }
 
         // Load translations
