@@ -48,6 +48,7 @@ require('bootstrap-colorpicker');
 
 // momentjs
 window.moment = require('moment');
+require('moment/min/locales');
 
 // moment-timezone
 require('moment-timezone');
