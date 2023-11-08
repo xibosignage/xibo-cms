@@ -1004,7 +1004,7 @@ class LayoutFactory extends BaseFactory
                 $regionType = $regionJson['type'];
             } else if ($regionIsDrawer === 1) {
                 $regionType = 'drawer';
-            } else if (count($regionWidgets) === 1) {
+            } else if (count($regionWidgets) === 1 && !$this->hasSubPlaylist($regionWidgets)) {
                 $regionType = 'frame';
             } else if (count($regionWidgets) === 0) {
                 $regionType = 'zone';
@@ -1130,7 +1130,10 @@ class LayoutFactory extends BaseFactory
                 // Sub-Playlist widgets with Playlists
                 if ($widget->type == 'subplaylist') {
                     $widgets = [];
-                    $this->getLog()->debug('Layout import, creating layout Playlists from JSON, there are ' . count($playlistJson) . ' Playlists to create');
+                    $this->getLog()->debug(
+                        'Layout import, creating layout Playlists from JSON, there are ' .
+                        count($playlistJson) . ' Playlists to create'
+                    );
 
                     // Get the subplaylists from widget option
                     $subPlaylistsOption = json_decode($widget->getOptionValue('subPlaylists', '[]'), true);
@@ -1150,7 +1153,7 @@ class LayoutFactory extends BaseFactory
 
                         // Check to see if it matches our Sub-Playlist widget config
                         foreach ($subPlaylistsOption as $subPlaylistItem) {
-                            if ($newPlaylist->playlistId === $subPlaylistItem['playlistId']) {
+                            if ($newPlaylist->playlistId === intval($subPlaylistItem['playlistId'])) {
                                 // Store the oldId to swap permissions later
                                 $oldIds[] = $newPlaylist->playlistId;
 
@@ -1171,7 +1174,7 @@ class LayoutFactory extends BaseFactory
                     $updatedSubPlaylists = [];
                     foreach ($combined as $old => $new) {
                         foreach ($subPlaylistsOption as $subPlaylistItem) {
-                            if ($subPlaylistItem['playlistId'] === $old) {
+                            if (intval($subPlaylistItem['playlistId']) === $old) {
                                 $subPlaylistItem['playlistId'] = $new;
                                 $updatedSubPlaylists[] = $subPlaylistItem;
                             }
@@ -1994,7 +1997,7 @@ class LayoutFactory extends BaseFactory
                     $updatedSubPlaylists = [];
                     foreach ($combined as $old => $new) {
                         foreach ($nestedSubPlaylists as $subPlaylistItem) {
-                            if ($subPlaylistItem['playlistId'] === $old) {
+                            if (intval($subPlaylistItem['playlistId']) === $old) {
                                 $subPlaylistItem['playlistId'] = $new;
                                 $updatedSubPlaylists[] = $subPlaylistItem;
                             }
@@ -2030,6 +2033,19 @@ class LayoutFactory extends BaseFactory
         }
 
         return $playlists;
+    }
+
+    public function hasSubPlaylist(array $widgets)
+    {
+        $hasSubPlaylist = false;
+
+        foreach ($widgets as $widget) {
+            if ($widget['type'] === 'subplaylist') {
+                $hasSubPlaylist = true;
+            }
+        }
+
+        return $hasSubPlaylist;
     }
 
     /**

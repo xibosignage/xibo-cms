@@ -91,6 +91,12 @@ class SubPlaylistWidgetCompatibility implements WidgetCompatibilityInterface
                 $widget->removeOption('subPlaylistOptions');
                 $upgraded = true;
             }
+        } else {
+            $this->getLog()->debug(
+                'upgradeWidget : subplaylist ' . $widget->widgetId .
+                ' with already updated widget options, save to update schema version'
+            );
+            $upgraded = true;
         }
 
         return $upgraded;

@@ -166,8 +166,8 @@ class WidgetListener
         $addedEntries = array_diff($subPlaylistIds, $existingSubPlaylistIds);
         $removedEntries = array_diff($existingSubPlaylistIds, $subPlaylistIds);
 
-        $this->logger->debug('Added ' . var_export($addedEntries, true));
-        $this->logger->debug('Removed ' . var_export($removedEntries, true));
+        $this->logger->debug('onWidgetEdit Added ' . var_export($addedEntries, true));
+        $this->logger->debug('onWidgetEdit Removed ' . var_export($removedEntries, true));
 
         // Remove items from closure table if necessary
         foreach ($removedEntries as $entry) {

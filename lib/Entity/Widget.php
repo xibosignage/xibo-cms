@@ -910,6 +910,7 @@ class Widget implements \JsonSerializable
             'audit' => true,
             'alwaysUpdate' => false,
             'import' => false,
+            'upgrade' => false,
         ], $options);
 
         $this->getLog()->debug('Saving widgetId ' . $this->getId() . ' with options. '
@@ -948,7 +949,14 @@ class Widget implements \JsonSerializable
         if ($isNew) {
             $this->add();
         } else {
-            $this->getDispatcher()->dispatch(new WidgetEditEvent($this), WidgetEditEvent::$NAME);
+            // When saving after Widget compatibility upgrade
+            // do not trigger this event, as it will throw an error
+            // this is due to mismatch between playlist closure table (already populated)
+            // and subPlaylists option original values (empty array) - attempt to add the same child will error out.
+            if (!$options['upgrade']) {
+                $this->getDispatcher()->dispatch(new WidgetEditEvent($this), WidgetEditEvent::$NAME);
+            }
+
             if ($this->hash != $this->hash() || $options['alwaysUpdate']) {
                 $this->update();
             }
