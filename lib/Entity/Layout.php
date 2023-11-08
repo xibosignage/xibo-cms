@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -2493,7 +2493,9 @@ class Layout implements \JsonSerializable
                 $assignedPlaylistIds = [];
                 $assignedPlaylists = json_decode($widget->getOptionValue('subPlaylists', '[]'), true);
                 foreach ($assignedPlaylists as $subPlaylistItem) {
-                    $assignedPlaylistIds[] = $subPlaylistItem['playlistId'];
+                    if (!in_array($subPlaylistItem['playlistId'], $assignedPlaylistIds)) {
+                        $assignedPlaylistIds[] = $subPlaylistItem['playlistId'];
+                    }
                 }
 
                 foreach ($this->regions as $region) {
