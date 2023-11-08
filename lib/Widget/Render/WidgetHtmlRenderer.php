@@ -474,7 +474,7 @@ class WidgetHtmlRenderer
             // Check if a language property is defined against the module
             // Note: We are using the language defined against the module and not from the module template
             foreach ($module->properties as $property) {
-                if ($property->id === 'lang' && !empty($property->value)) {
+                if ($property->type === 'languageSelector' && !empty($property->value)) {
                     $moduleLanguage = $property->value;
                 }
             }
