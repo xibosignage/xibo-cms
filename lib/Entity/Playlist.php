@@ -1207,7 +1207,8 @@ class Playlist implements \JsonSerializable
                 $playlistItems = json_decode($playlistWidget->getOptionValue('subPlaylists', '[]'), true);
                 foreach ($playlistItems as $nestedPlaylistItem) {
                     $nestedPlaylist = $this->playlistFactory->getById($nestedPlaylistItem['playlistId']);
-                    $nestedPlaylist->load();
+                    // include Widgets only for non dynamic Playlists #2392
+                    $nestedPlaylist->load(['loadWidgets' => !$nestedPlaylist->isDynamic]);
                     $this->getLog()->debug('playlist mappings parent id ' . $parentId);
                     $nestedPlaylistDefinitions[$nestedPlaylist->playlistId] = $nestedPlaylist;
 
