@@ -140,9 +140,14 @@ describe('Dayparts', function() {
       }).as('loadGridAfterSearch');
 
       cy.intercept({
-        url: '/user/permissions/DayPart/*',
         query: {name: 'Everyone'},
-      }).as('loadPermissionDayPartAfterSearch');
+        url: /\/user\/permissions\/DayPart\/\d+\?draw=2/,
+      }).as('draw2');
+
+      cy.intercept({
+        query: {name: 'Everyone'},
+        url: /\/user\/permissions\/DayPart\/\d+\?draw=3/,
+      }).as('draw3');
 
       cy.visit('/daypart/view');
 
@@ -159,14 +164,15 @@ describe('Dayparts', function() {
       cy.get('#dayparts tr:first-child .daypart_button_permissions').click({force: true});
 
       cy.get('.modal #name').type('Everyone');
-      cy.wait('@loadPermissionDayPartAfterSearch');
+      cy.wait('@draw2');
       cy.get('#permissionsTable tbody tr').should('have.length', 1);
 
       cy.get('#permissionsTable').within(() => {
-        cy.get('input[type="checkbox"][data-permission="view"]').should('exist').should('be.visible').check().should('be.checked');
+        cy.get('input[type="checkbox"][data-permission="view"]').should('be.visible').check();
 
-        cy.wait(1000); // without this wait it does not work, so lets keep the 1s wait here
-        cy.get('input[type="checkbox"][data-permission="edit"]').check().should('be.checked');
+        // DOM is refreshed at this point, so wait for it
+        cy.wait('@draw3');
+        cy.get('input[type="checkbox"][data-permission="edit"]').should('be.visible').check();
       });
 
       // Save
