@@ -48,6 +48,8 @@ class WidgetCompatibilityTask implements TaskInterface
 
     /** @var \Xibo\Factory\TaskFactory */
     private $taskFactory;
+    /** @var \Xibo\Factory\RegionFactory */
+    private $regionFactory;
 
     /** @var array The cache for layout */
     private $layoutCache = [];
@@ -60,6 +62,7 @@ class WidgetCompatibilityTask implements TaskInterface
         $this->layoutFactory = $container->get('layoutFactory');
         $this->playlistFactory = $container->get('playlistFactory');
         $this->taskFactory = $container->get('taskFactory');
+        $this->regionFactory = $container->get('regionFactory');
         return $this;
     }
 
@@ -186,7 +189,7 @@ class WidgetCompatibilityTask implements TaskInterface
                             if ($upgraded) {
                                 $widget->schemaVersion = $module->schemaVersion;
                                 $widget->type = $module->type;
-                                $widget->save(['alwaysUpdate'=>true]);
+                                $widget->save(['alwaysUpdate' => true, 'upgrade' => true]);
                                 $this->log->debug('WidgetCompatibilityTask: Upgraded');
                             }
                         } catch (\Exception $e) {
@@ -199,6 +202,26 @@ class WidgetCompatibilityTask implements TaskInterface
                     try {
                         // Get the layout of the widget and set it to rebuild.
                         $playlist = $this->playlistFactory->getById($widget->playlistId);
+
+                        // check if the Widget was assigned to a region playlist
+                        if ($playlist->isRegionPlaylist()) {
+                            $playlist->load();
+                            $region = $this->regionFactory->getById($playlist->regionId);
+
+                            // set the region type accordingly
+                            if ($region->isDrawer === 1) {
+                                $regionType = 'drawer';
+                            } else if (count($playlist->widgets) === 1 && $widget->type !== 'subplaylist') {
+                                $regionType = 'frame';
+                            } else if (count($playlist->widgets) === 0) {
+                                $regionType = 'zone';
+                            } else {
+                                $regionType = 'playlist';
+                            }
+
+                            $region->type = $regionType;
+                            $region->save(['notify' => false]);
+                        }
                         $playlist->notifyLayouts();
                     } catch (\Exception $e) {
                         $this->log->error('Failed to set layout rebuild for widgetId: ' . $widget->widgetId .
