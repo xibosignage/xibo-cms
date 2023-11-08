@@ -27,6 +27,7 @@ jQuery.fn.extend({
   ) {
     const items = [];
     const parser = new RegExp('\\[.*?\\]', 'g');
+    const pipeParser = new RegExp('\\|{1}', 'g');
     this.each(function() {
       // Parse the template for a list of things to substitute, and match those
       // with content from items.
@@ -42,6 +43,17 @@ jQuery.fn.extend({
           .replace(']', '');
         variable = variable.charAt(0).toLowerCase() + variable.substring(1);
 
+        // Check if variable has its own formatting
+        // Then, parse it and use later as dateFormat
+        let formatFromTemplate = null;
+
+        if (variable.match(pipeParser) !== null &&
+          variable.match(pipeParser).length === 1) {
+          const variableWithFormat = variable.split('|');
+          formatFromTemplate = variableWithFormat[1];
+          variable = variableWithFormat[0];
+        }
+
         if (mapping[variable]) {
           variable = mapping[variable];
         }
@@ -55,7 +67,8 @@ jQuery.fn.extend({
           // Is it a date field?
           dateFields.forEach((field) => {
             if (field === variable) {
-              value = moment(value).format(dateFormat);
+              value = moment(value).format(formatFromTemplate !== null ?
+                formatFromTemplate : dateFormat);
             }
           });
         }
