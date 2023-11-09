@@ -19,6 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+/* eslint-disable max-len */
 describe('Playlists Admin', function() {
   let testRun;
 
@@ -80,8 +81,8 @@ describe('Playlists Admin', function() {
       cy.get('button[data-toggle="selectAll"]').click();
 
       // Delete all
-      cy.get('.dataTables_info button[data-toggle="dropdown"]').click();
-      cy.get('.dataTables_info a[data-button-id="playlist_button_delete"]').click();
+      cy.get('.dataTables_info button[data-toggle="dropdown"]').click({force: true});
+      cy.get('.dataTables_info a[data-button-id="playlist_button_delete"]').click({force: true});
 
       cy.get('button.save-button').click();
 
