@@ -2624,6 +2624,13 @@
                         "description": "Filter by whether XMR is registed (1 or 0)",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "isPlayerSupported",
+                        "in": "query",
+                        "description": "Filter by whether the player is supported (1 or 0)",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
