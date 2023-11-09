@@ -468,6 +468,22 @@ class WidgetHtmlRenderer
                 $widget->isValid = 0;
             }
 
+            $moduleLanguage = null;
+            $translator = null;
+
+            // Check if a language property is defined against the module
+            // Note: We are using the language defined against the module and not from the module template
+            foreach ($module->properties as $property) {
+                if ($property->type === 'languageSelector' && !empty($property->value)) {
+                    $moduleLanguage = $property->value;
+                    break;
+                }
+            }
+
+            if ($moduleLanguage !== null) {
+                $translator = Translate::getTranslationsFromLocale($moduleLanguage);
+            }
+
             // Output some sample data and a data url.
             $widgetData = [
                 'widgetId' => $widget->widgetId,
@@ -535,7 +551,7 @@ class WidgetHtmlRenderer
                         if ($moduleTemplate->stencil !== null) {
                             if ($moduleTemplate->stencil->twig !== null) {
                                 $twig['twig'][] = $this->twig->fetchFromString(
-                                    $this->decorateTranslations($moduleTemplate->stencil->twig),
+                                    $this->decorateTranslations($moduleTemplate->stencil->twig, $translator),
                                     $widgetData['templateProperties'],
                                 );
                             }
@@ -566,13 +582,13 @@ class WidgetHtmlRenderer
 
                 if ($module->stencil->twig !== null) {
                     $twig['twig'][] = $this->twig->fetchFromString(
-                        $this->decorateTranslations($module->stencil->twig),
+                        $this->decorateTranslations($module->stencil->twig, null),
                         array_merge($modulePropertyValues, ['settings' => $module->getSettingsForOutput()]),
                     );
                 }
                 if ($module->stencil->hbs !== null) {
                     $twig['hbs']['module'] = [
-                        'content' => $this->decorateTranslations($module->stencil->hbs),
+                        'content' => $this->decorateTranslations($module->stencil->hbs, null),
                         'width' => $module->stencil->width,
                         'height' => $module->stencil->height,
                         'gapBetweenHbs' => $module->stencil->gapBetweenHbs,
@@ -580,8 +596,8 @@ class WidgetHtmlRenderer
                 }
                 if ($module->stencil->head !== null) {
                     $twig['head'][] = $this->twig->fetchFromString(
-                        $this->decorateTranslations($module->stencil->head),
-                        $modulePropertyValues
+                        $this->decorateTranslations($module->stencil->head, null),
+                        $modulePropertyValues,
                     );
                 }
                 if ($module->stencil->style !== null) {
@@ -663,7 +679,7 @@ class WidgetHtmlRenderer
 
                 // Output the hbs
                 $twig['hbs'][$moduleTemplate->templateId] = [
-                    'content' => $this->decorateTranslations($moduleTemplate->stencil->hbs),
+                    'content' => $this->decorateTranslations($moduleTemplate->stencil->hbs, null),
                     'width' => $moduleTemplate->stencil->width,
                     'height' => $moduleTemplate->stencil->height,
                     'gapBetweenHbs' => $moduleTemplate->stencil->gapBetweenHbs,
@@ -676,7 +692,7 @@ class WidgetHtmlRenderer
             } else if ($extension !== null) {
                 // Output the extension HBS instead
                 $twig['hbs'][$moduleTemplate->templateId] = [
-                    'content' => $this->decorateTranslations($extension->stencil->hbs),
+                    'content' => $this->decorateTranslations($extension->stencil->hbs, null),
                     'width' => $extension->stencil->width,
                     'height' => $extension->stencil->height,
                     'gapBetweenHbs' => $extension->stencil->gapBetweenHbs,
@@ -743,9 +759,10 @@ class WidgetHtmlRenderer
     /**
      * Decorate translations in template files.
      * @param string $content
+     * @param \GetText\Translator $translator
      * @return string
      */
-    private function decorateTranslations(string $content): string
+    private function decorateTranslations(string $content, ?\Gettext\Translator $translator): string
     {
         $matches = [];
         preg_match_all('/\|\|.*?\|\|/', $content, $matches);
@@ -754,7 +771,11 @@ class WidgetHtmlRenderer
             $translateTag = str_replace('||', '', $sub);
 
             // We have a valid translateTag to substitute
-            $replace = __($translateTag);
+            if ($translator !== null) {
+                $replace = $translator->gettext($translateTag);
+            } else {
+                $replace = __($translateTag);
+            }
 
             // Substitute the replacement we have found (it might be '')
             $content = str_replace($sub, $replace, $content);
