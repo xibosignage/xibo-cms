@@ -1159,7 +1159,7 @@ body.editor-opened {
             top: 0;
             left: 0;
             outline: 2px dashed $xibo-color-primary;
-            outline-offset: 1px;
+            outline-offset: -1px;
             z-index: $viewer-object-group-overlay-z-index;
         }
 

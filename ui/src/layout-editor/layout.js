@@ -294,6 +294,25 @@ Layout.prototype.createDataStructure = function(data) {
 };
 
 /**
+ * Remove object from data structure
+ * @param {string} objectType - Object type
+ * @param {string} objectId - Object ID
+ * @param {string} auxId - Object sub type or parent region (if widget)
+ */
+Layout.prototype.removeFromStructure = function(objectType, objectId, auxId) {
+  const self = this;
+
+  if (objectType === 'region' && auxId === 'canvas') {
+    // Set canvas as empty object
+    self.canvas = {};
+  } else if (objectType === 'region') {
+    delete self.regions[objectId];
+  } else if (objectType === 'widget') {
+    delete self.regions[auxId].widgets[objectType];
+  }
+};
+
+/**
  * Calculate timeline values ( duration, loops )
  * based on widget and region duration
  */

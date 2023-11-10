@@ -11,14 +11,14 @@
 >
     {{!-- Render Layout --}}
     <div class="layout-live-preview">
-        {{#with layout.canvas}}
-            <div id="{{id}}" 
+        {{#if renderCanvas}}
+            <div id="{{layout.canvas.id}}" 
                 class="designer-region-canvas"
                 style="
                     position:absolute;
-                    z-index: {{ zIndex }};">
+                    z-index: {{layout.canvas.zIndex}};">
             </div>
-        {{/with}}
+        {{/if}}
         <div id="regions">
             {{#each layout.regions}}
                 {{> viewer-region}}
