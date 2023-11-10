@@ -1,4 +1,4 @@
-name: Build Containers and Run Tests
+name: Test Suite
 
 on:
   issue_comment:
