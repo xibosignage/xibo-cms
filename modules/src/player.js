@@ -716,18 +716,20 @@ $(function() {
           });
       }
 
-      // Run defaultScaler for elements
-      defaultScaler(
-        widget.widgetId,
-        $content,
-        widget.items,
-        Object.assign(
-          widget.properties,
-          globalOptions,
-          {duration: widget.duration},
-        ),
-        meta,
-      );
+      if (templateId !== null && url !== null) {
+        // Run defaultScaler for global elements
+        defaultScaler(
+          widget.widgetId,
+          $content,
+          widget.items,
+          Object.assign(
+            widget.properties,
+            globalOptions,
+            {duration: widget.duration},
+          ),
+          meta,
+        );
+      }
     }
   }
 
