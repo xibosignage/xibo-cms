@@ -41,7 +41,8 @@ const PlayerHelper = function() {
             });
 
             if (Object.keys(_elements).length > 0) {
-              _self.decorateCollectionSlots(_elements, dataItems, _widget);
+              _elements =
+                _self.decorateCollectionSlots(_elements, dataItems, _widget);
             }
           }
 
@@ -342,6 +343,10 @@ const PlayerHelper = function() {
             elemProps[extendWith];
         }
       }
+    }
+
+    if (elemCopy?.renderData?.hasOwnProperty('durationIsPerItem')) {
+      elemCopy.durationIsPerItem = elemCopy.renderData.durationIsPerItem;
     }
 
     return elemCopy;
