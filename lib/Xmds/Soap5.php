@@ -417,7 +417,7 @@ class Soap5 extends Soap4
         // only sent by xmds v7
         if (!empty($commercialLicenceString) && !in_array($display->clientType, ['windows', 'linux'])) {
             $commercialLicenceString = strtolower($commercialLicenceString);
-            if ($commercialLicenceString === 'licensed') {
+            if ($commercialLicenceString === 'licensed' || $commercialLicenceString === 'full') {
                 $commercialLicence = 1;
             } elseif ($commercialLicenceString === 'trial') {
                 $commercialLicence = 2;
