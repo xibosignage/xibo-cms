@@ -779,12 +779,11 @@ Widget.prototype.saveElements = function(
       // Remove widget
       app.layout.deleteObject('widget', this.widgetId)
         .then(() => {
-          debugger;
           // Remove object from structure
           app.layout.removeFromStructure(
             'widget',
             this.widgetId,
-            this.regionId,
+            'canvas',
           );
 
           // Refresh layer manager

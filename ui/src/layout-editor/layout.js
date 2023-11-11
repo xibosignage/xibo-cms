@@ -307,8 +307,14 @@ Layout.prototype.removeFromStructure = function(objectType, objectId, auxId) {
     self.canvas = {};
   } else if (objectType === 'region') {
     delete self.regions[objectId];
+  } else if (objectType === 'widget' && auxId === 'canvas') {
+    delete self.canvas.widgets[
+      'widget' + '_' + self.canvas.regionId + '_' + objectId
+    ];
   } else if (objectType === 'widget') {
-    delete self.regions[auxId].widgets[objectType];
+    delete self.regions[auxId].widgets[
+      'widget' + '_' + auxId + '_' + objectId
+    ];
   }
 };
 
