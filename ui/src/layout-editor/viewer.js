@@ -1268,6 +1268,11 @@ Viewer.prototype.updateElement = _.throttle(function(
 Viewer.prototype.updateElementGroup = _.throttle(function(
   elementGroup,
 ) {
+  // Update slot
+  const $groupContainer = lD.viewer.DOMObject.find(`#${elementGroup.id}`);
+  $groupContainer.find('.slot span').html((Number(elementGroup.slot) + 1));
+
+  // Update all elements
   Object.values(elementGroup.elements).forEach((element) => {
     const $container = lD.viewer.DOMObject.find(`#${element.elementId}`);
 

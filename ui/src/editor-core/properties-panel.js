@@ -647,6 +647,7 @@ PropertiesPanel.prototype.render = function(
               id: 'pinSlot',
               title: propertiesPanelTrans.pinSlot,
               helpText: propertiesPanelTrans.pinSlotHelpText,
+              customClass: 'element-slot-input',
               value: targetAux.pinSlot,
               type: 'checkbox',
               visibility: [],
@@ -657,6 +658,7 @@ PropertiesPanel.prototype.render = function(
             id: 'slot',
             title: propertiesPanelTrans.dataSlot,
             helpText: propertiesPanelTrans.dataSlotHelpText,
+            customClass: 'element-slot-input',
             value: Number(targetAux.slot) + 1,
             min: minSlotValue,
             type: 'number',
@@ -691,23 +693,23 @@ PropertiesPanel.prototype.render = function(
         // handle when changed
         if (targetAux.slot !== undefined) {
           self.DOMObject.find('[name="slot"]').on('change', function(ev) {
-            let slotValue = $(ev.currentTarget).val();
+            let slotValue = Number($(ev.currentTarget).val());
 
             // If value is lower than minSlotValue
             // set it to minSlotValue
-            if (Number(slotValue) < minSlotValue) {
+            if (slotValue < minSlotValue) {
               slotValue = minSlotValue;
               $(ev.currentTarget).val(minSlotValue);
             }
 
             // update slot for the group
-            targetAux.updateSlot(Number(slotValue) - 1, true);
+            targetAux.updateSlot(slotValue - 1, true);
 
-            // save elements
-            target.saveElements();
-
-            // Render canvas again
-            app.viewer.renderCanvas(app.layout.canvas);
+            // Save elements
+            target.saveElements().then((_res) => {
+              // Update group
+              app.viewer.updateElementGroup(app.selectedObject);
+            });
           });
 
           // Handle pin slot property
@@ -852,6 +854,7 @@ PropertiesPanel.prototype.render = function(
                 id: 'pinSlot',
                 title: propertiesPanelTrans.pinSlot,
                 helpText: propertiesPanelTrans.pinSlotHelpText,
+                customClass: 'element-slot-input',
                 value: targetAux.pinSlot,
                 type: 'checkbox',
                 visibility: [],
@@ -863,6 +866,7 @@ PropertiesPanel.prototype.render = function(
                 id: 'slot',
                 title: propertiesPanelTrans.dataSlot,
                 helpText: propertiesPanelTrans.dataSlotHelpText,
+                customClass: 'element-slot-input',
                 value: Number(targetAux.slot) + 1,
                 min: minSlotValue,
                 type: 'number',
@@ -989,7 +993,15 @@ PropertiesPanel.prototype.render = function(
               }
             },
             focus: function(_ev) {
-              self.toSave = true;
+              // Skip slot inputs
+              // those are saved with elements
+              if (
+                $(_ev.currentTarget)
+                  .parents('.xibo-form-input.element-slot-input')
+                  .length === 0
+              ) {
+                self.toSave = true;
+              }
             },
           });
         });
@@ -1516,16 +1528,34 @@ PropertiesPanel.prototype.initFields = function(
       (getMemoizedFunc, obj) => getMemoizedFunc(obj)(obj),
     );
 
+    const skipSave = function(target) {
+      // If field is code input
+      // only save when the event is a change/onfocus
+      if (
+        $(target).hasClass('code-input') &&
+        _ev.type === 'inputChange'
+      ) {
+        return true;
+      }
+
+      // Skip slot inputs
+      // those are saved with elements
+      if (
+        $(target).parents('.xibo-form-input.element-slot-input')
+          .length > 0
+      ) {
+        return true;
+      }
+
+      return false;
+    };
+
     // Auto save when changing inputs
     $(self.DOMObject).find('form').off()
       .on({
         'change inputChange xiboInputChange': function(_ev, options) {
-          // If field is code input
-          // only save when the event is a change/onfocus
-          if (
-            $(_ev.currentTarget).hasClass('code-input') &&
-            _ev.type === 'inputChange'
-          ) {
+          // Check if we skip this field
+          if (skipSave(_ev.currentTarget)) {
             return;
           }
 
@@ -1536,8 +1566,9 @@ PropertiesPanel.prototype.initFields = function(
             );
           }
         },
-        'focus editorFocus': function() {
-          self.toSave = true;
+        'focus editorFocus': function(_ev, options) {
+          // Check if we dont skip this field
+          self.toSave = !skipSave(_ev.currentTarget);
         },
       },
       '.xibo-form-input:not(.position-input)' +
