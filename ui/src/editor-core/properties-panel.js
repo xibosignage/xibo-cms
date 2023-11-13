@@ -1528,12 +1528,12 @@ PropertiesPanel.prototype.initFields = function(
       (getMemoizedFunc, obj) => getMemoizedFunc(obj)(obj),
     );
 
-    const skipSave = function(target) {
+    const skipSave = function(target, event) {
       // If field is code input
       // only save when the event is a change/onfocus
       if (
         $(target).hasClass('code-input') &&
-        _ev.type === 'inputChange'
+        event.type === 'inputChange'
       ) {
         return true;
       }
@@ -1555,7 +1555,7 @@ PropertiesPanel.prototype.initFields = function(
       .on({
         'change inputChange xiboInputChange': function(_ev, options) {
           // Check if we skip this field
-          if (skipSave(_ev.currentTarget)) {
+          if (skipSave(_ev.currentTarget, _ev)) {
             return;
           }
 
@@ -1566,9 +1566,9 @@ PropertiesPanel.prototype.initFields = function(
             );
           }
         },
-        'focus editorFocus': function(_ev, options) {
+        'focus editorFocus': function(_ev) {
           // Check if we dont skip this field
-          self.toSave = !skipSave(_ev.currentTarget);
+          self.toSave = !skipSave(_ev.currentTarget, _ev);
         },
       },
       '.xibo-form-input:not(.position-input)' +
