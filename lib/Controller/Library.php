@@ -296,9 +296,7 @@ class Library extends Base
             // Users we have permission to see
             $this->getState()->template = 'library-page';
             $this->getState()->setData([
-                'users' => $this->userFactory->query(),
                 'modules' => $this->moduleFactory->getLibraryModules(),
-                'groups' => $this->userGroupFactory->query(),
                 'validExt' => implode('|', $this->moduleFactory->getValidExtensions([]))
             ]);
         }
@@ -551,14 +549,23 @@ class Library extends Base
             try {
                 $module = $this->moduleFactory->getByType($media->mediaType);
                 if ($module->hasThumbnail) {
-                    $media->setUnmatchedProperty(
-                        'thumbnail',
-                        $this->urlFor($request, 'library.download', [
-                            'id' => $media->mediaId
-                        ], [
-                            'preview' => 1
-                        ])
-                    );
+                    $renderThumbnail = true;
+                    // for video, check if the cover image exists here.
+                    if ($media->mediaType === 'video') {
+                        $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+                        $renderThumbnail = file_exists($libraryLocation . $media->mediaId . '_videocover.png');
+                    }
+                    
+                    if ($renderThumbnail) {
+                        $media->setUnmatchedProperty(
+                            'thumbnail',
+                            $this->urlFor($request, 'library.download', [
+                                'id' => $media->mediaId
+                            ], [
+                                'preview' => 1
+                            ])
+                        );
+                    }
                 }
             } catch (NotFoundException $notFoundException) {
                 $this->getLog()->error('Module ' . $media->mediaType . ' not found');

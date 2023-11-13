@@ -566,6 +566,17 @@ body.editor-opened {
             }
         }
 
+        .designer-region-frame.invalid-region {
+            background-color: $xibo-color-semantic-error;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            .invalid-region-message {
+                text-align: center;
+            }
+        }
+
         .designer-region-drawer {
             &::before {
                 content: "";
@@ -725,6 +736,11 @@ body.editor-opened {
         color: $xibo-color-primary-l5;
         padding: 30px;
         background-color: $xibo-color-semantic-error;
+
+        &.invalid-region-message {
+            margin: 16px;
+            border-radius: 3px;
+        }
     }
 
     .loading-container {
@@ -771,6 +787,7 @@ body.editor-opened {
                     overflow: hidden auto;
                     padding: 0 1rem;
                     margin-top: 0.5rem;
+                    flex: 1;
                 }
             }
 
@@ -1142,7 +1159,7 @@ body.editor-opened {
             top: 0;
             left: 0;
             outline: 2px dashed $xibo-color-primary;
-            outline-offset: 1px;
+            outline-offset: -1px;
             z-index: $viewer-object-group-overlay-z-index;
         }
 
@@ -1619,17 +1636,43 @@ div#bg_media_name {
         align-items: center;
         justify-content: space-between;
         cursor: grab;
+    }
 
+    .layer-manager-header, .expand-group-button {
         i {
             font-size: 1rem;
             padding: 3px 5px;
             cursor: pointer;
             border-radius: 4px;
             margin-right: -4px;
-
+    
             &:hover {
-                background-color: lighten($xibo-color-primary-d60, 30%);
+                @include set-transparent-color(background-color, $xibo-color-neutral-0, 0.3);
             }
+        }
+    }
+
+    .expand-group-button {
+        color: inherit;
+    }
+
+    .element-group.expanded .expand-group-button {
+        .show-expanded {
+            display: block;
+        }
+
+        .hide-expanded {
+            display: none;
+        }
+    }
+
+    .element-group:not(.expanded) .expand-group-button {
+        .show-expanded {
+            display: none;
+        }
+
+        .hide-expanded {
+            display: block;
         }
     }
 
@@ -1953,6 +1996,18 @@ div#bg_media_name {
 /* Moveable elements */
 .moveable-control-box {
     z-index: $viewer-moveable-z-index !important;
+}
+
+body[multi-select-active] {
+    .moveable-control-box {
+        z-index: 0 !important;
+    }
+
+    .layout-live-preview {
+        & > .designer-region-canvas, & > #regions > * {
+            z-index: 1 !important;
+        }
+    }
 }
 
 body[layout-editor-fs] .moveable-control-box {

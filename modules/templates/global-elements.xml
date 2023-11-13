@@ -207,7 +207,7 @@
                 <title>Date Format</title>
                 <default>d/m/Y H:i:s</default>
             </property>
-            <property id="lang" type="languageSelector">
+            <property id="lang" type="languageSelector" variant="momentLocales">
                 <title>Language</title>
                 <helpText>Select the language you would like to use.</helpText>
             </property>
@@ -335,16 +335,18 @@
             ]]></hbs>
         </stencil>
         <onTemplateRender><![CDATA[
-if (properties.lang) {
-  moment.locale(properties.lang);
-}
-
 // Match all affected elements and get date div value
 $(target).find('.date').each(function(_idx, dateEl){
     var dateValue = $(dateEl).data('date');
+    var globalDate = moment(dateValue);
+
+    // Check for lang config
+    if (properties.lang !== null && String(properties.lang).length > 0) {
+        globalDate.locale(properties.lang);
+    }
 
     // Format the date with the dateFormat property
-    var formattedDate = moment(dateValue).format(properties.dateFormat);
+    var formattedDate = globalDate.format(properties.dateFormat);
 
     // Set the date div value to the formatted date
     $(dateEl).html(formattedDate);
@@ -417,7 +419,7 @@ $(target).find('.date').each(function(_idx, dateEl){
             <property id="roundBorder" type="checkbox">
                 <title>Round Border</title>
                 <default>0</default>
-                <helpText>Should the square have rounded corners?</helpText>
+                <helpText>Should the image have rounded corners?</helpText>
                 <visibility>
                     <test>
                         <condition field="objectFit" type="neq">contain</condition>
@@ -440,7 +442,7 @@ $(target).find('.date').each(function(_idx, dateEl){
 <div class="global-elements-image img-container" style="width:100%; height: 100%; overflow: hidden; position: relative;
     {{#if roundBorder}}border-radius: {{borderRadius}}px;{{/if}}">
     {{#if url}}
-        <img src="{{url}}" style="
+        <img src="{{{url}}}" style="
             width:100%; height: 100%;
             object-fit: {{objectFit}};
             object-position: {{alignId}} {{valignId}};
@@ -454,6 +456,17 @@ $(target).find('.date').each(function(_idx, dateEl){
         <assets>
             <asset id="image" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/image.png" />
         </assets>
+    </template>
+    <template>
+        <id>global_library_image</id>
+        <extends override="url" with="mediaId">global-image</extends>
+        <type>element</type>
+        <title>Library Image</title>
+        <dataType>global</dataType>
+        <showIn>none</showIn>
+        <canRotate>true</canRotate>
+        <startWidth>250</startWidth>
+        <startHeight>250</startHeight>
     </template>
     <template>
         <id>line</id>
@@ -645,7 +658,7 @@ $(target).find('.date').each(function(_idx, dateEl){
             <property id="roundBorder" type="checkbox">
                 <title>Round Border</title>
                 <default>0</default>
-                <helpText>Should the square have rounded corners?</helpText>
+                <helpText>Should the rectangle have rounded corners?</helpText>
             </property>
             <property id="borderRadius" type="number">
                 <title>Border Radius</title>
@@ -659,7 +672,7 @@ $(target).find('.date').each(function(_idx, dateEl){
             <property id="outline" type="checkbox">
                 <title>Show Outline</title>
                 <default>1</default>
-                <helpText>Should the square have an outline?</helpText>
+                <helpText>Should the rectangle have an outline?</helpText>
             </property>
             <property id="outlineColor" type="color">
                 <title>Outline Color</title>

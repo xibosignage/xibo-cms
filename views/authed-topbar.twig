@@ -159,52 +159,112 @@
         <li class="nav-item dropdown">
             <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{% trans "Administration" %} <span class="caret"></span></a>
             <div class="dropdown-menu">
-        {% else %}
-            <li class="nav-item">
         {% endif %}
             {% if userMenuViewable %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("user.view") }}">{% trans "Users" %}</a>
+                {% if countViewable == 0 %}
+                <li class="nav-item">
+                {% endif %}
+                    <a class="{{ groupElementClass }}" href="{{ url_for("user.view") }}">{% trans "Users" %}</a>
+                {% if countViewable == 0 %}
+                </li>
+                {% endif %}
             {% endif %}
 
             {% if currentUser.featureEnabled("usergroup.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("group.view") }}">{% trans "User Groups" %}</a>
+                {% if countViewable == 0 %}
+                <li class="nav-item">
+                {% endif %}
+                    <a class="{{ groupElementClass }}" href="{{ url_for("group.view") }}">{% trans "User Groups" %}</a>
+                {% if countViewable == 0 %}
+                </li>
+                {% endif %}
             {% endif %}
 
             {% if currentUser.isSuperAdmin() %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("admin.view") }}">{% trans "Settings" %}</a>
+                {% if countViewable == 0 %}
+                <li class="nav-item">
+                {% endif %}
+                    <a class="{{ groupElementClass }}" href="{{ url_for("admin.view") }}">{% trans "Settings" %}</a>
+                {% if countViewable == 0 %}
+                </li>
+                {% endif %}
             {% endif %}
 
             {% if currentUser.isSuperAdmin() %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("application.view") }}">{% trans "Applications" %}</a>
+                {% if countViewable == 0 %}
+                <li class="nav-item">
+                {% endif %}
+                    <a class="{{ groupElementClass }}" href="{{ url_for("application.view") }}">{% trans "Applications" %}</a>
+                {% if countViewable == 0 %}
+                </li>
+                {% endif %}
             {% endif %}
 
             {% if currentUser.featureEnabled("module.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("module.view") }}">{% trans "Modules" %}</a>
+                {% if countViewable == 0 %}
+                <li class="nav-item">
+                {% endif %}
+                    <a class="{{ groupElementClass }}" href="{{ url_for("module.view") }}">{% trans "Modules" %}</a>
+                {% if countViewable == 0 %}
+                </li>
+                {% endif %}
             {% endif %}
 
             {% if currentUser.featureEnabled("transition.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("transition.view") }}">{% trans "Transitions" %}</a>
+                {% if countViewable == 0 %}
+                <li class="nav-item">
+                {% endif %}
+                    <a class="{{ groupElementClass }}" href="{{ url_for("transition.view") }}">{% trans "Transitions" %}</a>
+                {% if countViewable == 0 %}
+                </li>
+                {% endif %}
             {% endif %}
 
             {% if currentUser.featureEnabled("task.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("task.view") }}">{% trans "Tasks" %}</a>
+                {% if countViewable == 0 %}
+                <li class="nav-item">
+                {% endif %}
+                    <a class="{{ groupElementClass }}" href="{{ url_for("task.view") }}">{% trans "Tasks" %}</a>
+                {% if countViewable == 0 %}
+                </li>
+                {% endif %}
             {% endif %}
 
             {% if currentUser.featureEnabled("tag.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("tag.view") }}">{% trans "Tags" %}</a>
+                {% if countViewable == 0 %}
+                <li class="nav-item">
+                {% endif %}
+                    <a class="{{ groupElementClass }}" href="{{ url_for("tag.view") }}">{% trans "Tags" %}</a>
+                {% if countViewable == 0 %}
+                </li>
+                {% endif %}
             {% endif %}
 
             {% if currentUser.isSuperAdmin() %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("folders.view") }}">{% trans "Folders" %}</a>
+                {% if countViewable == 0 %}
+                <li class="nav-item">
+                {% endif %}
+                    <a class="{{ groupElementClass }}" href="{{ url_for("folders.view") }}">{% trans "Folders" %}</a>
+                {% if countViewable == 0 %}
+                </li>
+                {% endif %}
             {% endif %}
 
             {% if currentUser.featureEnabled("font.view") %}
-                <a class="{{ groupElementClass }}" href="{{ url_for("font.view") }}">{% trans "Fonts" %}</a>
+                {% if countViewable == 0 %}
+                <li class="nav-item">
+                {% endif %}
+                    <a class="{{ groupElementClass }}" href="{{ url_for("font.view") }}">{% trans "Fonts" %}</a>
+                {% if countViewable == 0 %}
+                </li>
+                {% endif %}
+            {% endif %}
+            {% if countViewable > 1 or (countViewable == 1 and userMenuViewable) %}
+            </div>
             {% endif %}
         {% if countViewable > 1 or (countViewable == 1 and userMenuViewable) %}
-            </div>
-        {% endif %}
         </li>
+        {% endif %}
     {% endif %}
 
     {% set countViewable = currentUser.featureEnabledCount(["report.view", "report.scheduling", "report.saving"]) %}

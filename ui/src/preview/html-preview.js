@@ -652,7 +652,9 @@ function media(parent, id, xml, options, preload) {
             if(self.checkIframeStatus) {
                 // Reload iframe
                 var iframeDOM = $("#" + self.containerName + ' #' + self.iframeName);
-                iframeDOM[0].src = iframeDOM[0].src;
+                // We remove this line because of flickering and
+                // We will need to address the duration
+                // iframeDOM[0].src = iframeDOM[0].src;
             } else {
                 $("#" + self.containerName).empty().append(self.iframe);
             }

@@ -106,8 +106,10 @@ LayerManager.prototype.createStructure = function() {
             type: 'elementGroup',
             name: group.id,
             id: group.id,
+            widgetId: 'widget_' + group.regionId + '_' + group.widgetId,
             moduleIcon: lD.common.getModuleByType(widget.subType).icon,
             selected: group.selected,
+            expanded: group.expanded,
             layers: [],
           },
           canvasObject.subLayers,
@@ -175,12 +177,25 @@ LayerManager.prototype.createStructure = function() {
     if (region.subType === 'playlist') {
       addToLayerStructure(region.zIndex, {
         type: 'playlist',
-        name: region.name,
+        name: (region.name != '') ?
+          region.name : `[${layerManagerTrans.playlist}]`,
         duration: parseDuration(region.duration),
         id: region.id,
         selected: region.selected,
       });
     } else {
+      // If we have an empty zone or frame, show it on the control
+      if ($.isEmptyObject(region.widgets)) {
+        addToLayerStructure(region.zIndex, {
+          type: region.subType,
+          name: (region.name != '') ?
+            region.name : `[${layerManagerTrans[region.subType]}]`,
+          duration: parseDuration(region.duration),
+          id: region.id,
+          selected: region.selected,
+        });
+      }
+
       Object.values(region.widgets).forEach((widget) => {
         addToLayerStructure(region.zIndex, {
           type: 'staticWidget',
@@ -279,7 +294,7 @@ LayerManager.prototype.render = function(reset) {
                 $viewerObject;
 
               // Select in viewer
-              lD.viewer.selectElement($auxTarget);
+              lD.viewer.selectObject($auxTarget);
 
               // Mark object with selected from manager class
               $auxTarget.addClass('selected-from-layer-manager');
@@ -308,6 +323,16 @@ LayerManager.prototype.render = function(reset) {
         this.DOMObject.find('.close-layer-manager')
           .off('click').on('click', function(ev) {
             self.setVisible(false);
+          });
+
+        // Handle extend group button
+        this.DOMObject.find('.expand-group-button')
+          .off('click').on('click', function(ev) {
+            const $elementGroup = $(ev.currentTarget).parents('.element-group');
+            self.expandGroup(
+              $elementGroup.data('item-id'),
+              $elementGroup.data('widget-id'),
+            );
           });
 
         // Show
@@ -342,7 +367,135 @@ LayerManager.prototype.render = function(reset) {
 
       this.firstRender = false;
     }
+
+    // Scroll to selected
+    self.scrollToSelected();
   });
+};
+
+/**
+ * Scroll to selected item
+ */
+LayerManager.prototype.scrollToSelected = function() {
+  const self = this;
+  const $selectedItem = self.DOMObject.find('.selected');
+
+  // Render to selected
+  if ($selectedItem.length > 0) {
+    // Check if the element is outside the render view
+    const $layerManagerContainer =
+      self.DOMObject.find('.layer-manager-body');
+    const headerHeight = $('.layer-manager-header').height();
+    const viewHeight = $layerManagerContainer.height();
+
+    const elemHeight = $selectedItem.height();
+    const elemTop = $selectedItem.position().top - headerHeight;
+    const elemBottom = elemTop + $selectedItem.height();
+
+    const isVisible =
+      (elemTop + elemHeight <= viewHeight) &&
+      (elemBottom >= elemHeight);
+
+    if (!isVisible) {
+      const scrollAdjust =
+        (elemTop + elemHeight > viewHeight) ?
+          ((elemTop + elemHeight) - viewHeight) :
+          (elemBottom - elemHeight);
+
+      // Scroll to element ( using deltas )
+      const viewTop = $layerManagerContainer.scrollTop();
+      $layerManagerContainer.scrollTop(
+        viewTop + scrollAdjust,
+      );
+    }
+  }
+};
+
+/**
+ * Expand group elements
+ * @param {string} type
+ * @param {string} id
+ * @return {object} found object or false
+ */
+LayerManager.prototype.getItemFromLayerStructure = function(type, id) {
+  const checkIfTarget = function(item) {
+    return (
+      type === item.type &&
+      id === item.id
+    );
+  };
+
+  let found = false;
+
+  this.layerStructure.forEach((layer) => {
+    layer.forEach((layerItem) => {
+      if (layerItem.type === 'canvas') {
+        if (checkIfTarget(layerItem)) {
+          found = layerItem;
+        } else {
+          layerItem.layers.forEach((canvasLayer) => {
+            canvasLayer.forEach((canvasLayerItem) => {
+              if (canvasLayerItem.type === 'elementGroup') {
+                if (checkIfTarget(canvasLayerItem)) {
+                  found = canvasLayerItem;
+                } else {
+                  canvasLayerItem.layers.forEach((groupLayer) => {
+                    groupLayer.forEach((groupLayerItem) => {
+                      if (checkIfTarget(groupLayerItem)) {
+                        found = groupLayerItem;
+                      }
+                    });
+                  });
+                }
+              } else {
+                if (checkIfTarget(canvasLayerItem)) {
+                  found = canvasLayerItem;
+                }
+              }
+            });
+          });
+        }
+      } else {
+        if (checkIfTarget(layerItem)) {
+          found = layerItem;
+        }
+      }
+    });
+  });
+
+  return found;
+};
+
+/**
+ * Expand group elements
+ * @param {string} groupId Group id to expand
+ * @param {string} widgetId Widget id containing the group
+ */
+LayerManager.prototype.expandGroup = function(
+  groupId,
+  widgetId,
+) {
+  const self = this;
+
+  // Find group in the layer structure
+  const groupLayerObj = self.getItemFromLayerStructure('elementGroup', groupId);
+
+  // Get element group object
+  const groupObj = lD.getObjectByTypeAndId(
+    'element-group',
+    groupId,
+    widgetId,
+  );
+
+  // Switch extend property
+  groupLayerObj.expanded = (groupLayerObj.expanded == undefined) ?
+    false: !groupLayerObj.expanded;
+
+  // Mark main object with extend option
+  groupObj.expanded = groupLayerObj.expanded;
+
+  // Render again to show the changes
+  self.render();
 };
 
 module.exports = LayerManager;

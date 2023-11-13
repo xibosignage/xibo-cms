@@ -77,9 +77,7 @@ class MenuBoard extends Base
     {
         // Call to render the template
         $this->getState()->template = 'menuboard-page';
-        $this->getState()->setData([
-            'users' => $this->userFactory->query()
-        ]);
+
         return $this->render($request, $response);
     }
 

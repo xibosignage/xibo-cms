@@ -40,7 +40,7 @@
         </property>
     </settings>
     <properties>
-        <property id="uri" type="text" variant="uri">
+        <property id="uri" type="text" variant="uri" includeInXlf="true">
             <title>Video Path</title>
             <helpText>A URL to the HLS video stream. Requires Player running Windows 8.1 or later, or Android 6 or later. Earlier Android devices may play HLS via the LocalVideo widget.</helpText>
             <rule>
@@ -50,7 +50,7 @@
                 </test>
             </rule>
         </property>
-        <property id="mute" type="checkbox">
+        <property id="mute" type="checkbox" includeInXlf="true">
             <title>Mute?</title>
             <helpText>Should the video be muted?</helpText>
             <default>%defaultMute%</default>

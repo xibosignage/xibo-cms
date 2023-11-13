@@ -9,12 +9,17 @@
                 <div class="tab-pane active" id="generalTab">
                     {{> inputs/hidden id="type" value=region.type customClass="region-input" }}
                     {{> inputs/text value=region.name id="name" title=trans.region.name helpText=trans.region.nameHelpText customClass="region-input" }}
-                    {{> inputs/text value=region.syncKey id="syncKey" title=trans.region.syncKey helpText=trans.region.syncKeyHelpText customClass="region-input" }}
-                    {{> inputs/checkbox value=(getOption region.regionOptions "loop") id="loop" title=trans.region.loop helpText=trans.region.loopHelpText customClass="region-input" }}
-                    {{> inputs/message messageType="info" title=trans.region.loopMessage1}}
-                    {{> inputs/message messageType="info" title=trans.region.loopMessage2}}
-                    {{> inputs/message messageType="info" title=trans.region.loopMessage3}}
-                    {{> inputs/message messageType="info" title=trans.region.loopMessage4}}
+
+                    {{#eq region.type 'playlist' }}
+                        {{> inputs/text value=region.syncKey id="syncKey" title=trans.region.syncKey helpText=trans.region.syncKeyHelpText customClass="region-input" }}
+                    {{/eq}}
+
+                    {{#eq region.type 'frame' }}
+                        {{> inputs/checkbox value=(getOption region.regionOptions "loop") id="loop" title=trans.region.loop helpText=trans.region.loopHelpText customClass="region-input" }}
+                        {{> inputs/message messageType="info" title=trans.region.loopMessage1}}
+                        {{> inputs/message messageType="info" title=trans.region.loopMessage2}}
+                        {{> inputs/message messageType="info" title=trans.region.loopMessage3}}
+                    {{/eq}}
                 </div>
                 <div class="tab-pane" id="positioningTab">
                     {{> inputs/number value=region.zIndex id="zIndex" title=trans.region.layer helpText=trans.region.layerHelpText customClass="position-input" }}

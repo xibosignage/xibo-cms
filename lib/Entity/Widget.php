@@ -222,10 +222,7 @@ class Widget implements \JsonSerializable
     public $folderId;
     public $permissionsFolderId;
 
-    /** @var int[] Original Module Media Ids */
-    private $originalModuleMediaIds = [];
-
-    /** @var array[int] Original Media IDs */
+    /** @var int[] Original Media IDs */
     private $originalMediaIds = [];
 
     /** @var array[WidgetAudio] Original Widget Audio */
@@ -599,16 +596,6 @@ class Widget implements \JsonSerializable
     }
 
     /**
-     * Clear Media
-     *  this must only clear module media, not "primary" media
-     */
-    public function clearCachedMedia()
-    {
-        $this->load();
-        $this->mediaIds = array_values(array_diff($this->mediaIds, $this->originalModuleMediaIds));
-    }
-
-    /**
      * Assign Audio Media
      * @param WidgetAudio $audio
      */
@@ -830,7 +817,6 @@ class Widget implements \JsonSerializable
         // Load any media assignments for this widget
         $this->mediaIds = $this->widgetMediaFactory->getByWidgetId($this->widgetId);
         $this->originalMediaIds = $this->mediaIds;
-        $this->originalModuleMediaIds = $this->widgetMediaFactory->getModuleOnlyByWidgetId($this->widgetId);
 
         // Load any widget audio assignments
         $this->audio = $this->widgetAudioFactory->getByWidgetId($this->widgetId);
@@ -924,6 +910,7 @@ class Widget implements \JsonSerializable
             'audit' => true,
             'alwaysUpdate' => false,
             'import' => false,
+            'upgrade' => false,
         ], $options);
 
         $this->getLog()->debug('Saving widgetId ' . $this->getId() . ' with options. '
@@ -962,7 +949,14 @@ class Widget implements \JsonSerializable
         if ($isNew) {
             $this->add();
         } else {
-            $this->getDispatcher()->dispatch(new WidgetEditEvent($this), WidgetEditEvent::$NAME);
+            // When saving after Widget compatibility upgrade
+            // do not trigger this event, as it will throw an error
+            // this is due to mismatch between playlist closure table (already populated)
+            // and subPlaylists option original values (empty array) - attempt to add the same child will error out.
+            if (!$options['upgrade']) {
+                $this->getDispatcher()->dispatch(new WidgetEditEvent($this), WidgetEditEvent::$NAME);
+            }
+
             if ($this->hash != $this->hash() || $options['alwaysUpdate']) {
                 $this->update();
             }
@@ -1098,9 +1092,13 @@ class Widget implements \JsonSerializable
             $action->delete();
         }
 
-        // Delete any actions that were targeting this Widget, to avoid orphaned records in action table.
-        $this->getStore()->update('DELETE FROM `action` WHERE widgetId = :widgetId', ['widgetId' => $this->widgetId]);
-
+        // Set widgetId to null on any navWidget action that was using this drawer Widget.
+        $this->getStore()->update(
+            'UPDATE `action` SET `action`.widgetId = NULL
+                WHERE widgetId = :widgetId AND `action`.actionType = \'navWidget\' ',
+            ['widgetId' => $this->widgetId]
+        );
+        
         // Unlink Media
         $this->mediaIds = [];
         $this->unlinkMedia();

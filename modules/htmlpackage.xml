@@ -40,7 +40,7 @@
         </property>
     </settings>
     <properties>
-        <property id="nominatedFile" type="text">
+        <property id="nominatedFile" type="text" variant="uri">
             <title>Nominated File</title>
             <helpText>Enter a nominated file name that player will attempt to open after extracting the .htz archive</helpText>
             <default>index.html</default>

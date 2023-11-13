@@ -25,6 +25,7 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Display;
 use Xibo\Entity\User;
+use Xibo\Helper\Environment;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
@@ -683,6 +684,17 @@ class DisplayFactory extends BaseFactory
             $body .= ' AND `display`.xmrChannel IS NOT NULL ';
         } else if ($parsedBody->getInt('xmrRegistered') === 0) {
             $body .= ' AND `display`.xmrChannel IS NULL ';
+        }
+
+        // Player version supported
+        if ($parsedBody->getInt('isPlayerSupported') !== null) {
+            if ($parsedBody->getInt('isPlayerSupported') === 1) {
+                $body .= ' AND `display`.client_code >= :playerSupport ';
+            } else {
+                $body .= ' AND `display`.client_code < :playerSupport ';
+            }
+
+            $params['playerSupport'] = Environment::$PLAYER_SUPPORT;
         }
 
         $this->viewPermissionSql(

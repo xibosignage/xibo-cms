@@ -132,6 +132,12 @@ function XiboInitialise(scope, options) {
                     } else if (field.length > 0) {
                         field.val(element.value);
                     }
+
+                    // if we have pagedSelect as inline filter for the grid
+                    // set the initial value here, to ensure the correct option gets selected.
+                    if (field.parent().hasClass('pagedSelect')) {
+                        field.data('initial-value', element.value)
+                    }
                 } catch (e) {
                     console.log("Error populating form saved value with selector input[name=" + element.name + "], select[name=" + element.name + "]");
                 }
@@ -370,8 +376,10 @@ function XiboInitialise(scope, options) {
     });
 
     // Colour picker
-    $(scope + " .colorpicker-input").each(function() {
-        $(this).colorpicker();
+    $(scope + " .colorpicker-input:not(.colorpicker-element)").each(function() {
+        $(this).colorpicker({
+            container: $(this).parent(),
+        });
     });
 
     // Initialize tags input form
@@ -1399,8 +1407,10 @@ function XiboInitialise(scope, options) {
                   });
 
                   // init color picker
-                  $form.find('.colorpicker-input').each(function() {
-                      $(this).colorpicker();
+                  $form.find('.colorpicker-input:not(.colorpicker-element)').each(function() {
+                      $(this).colorpicker({
+                        container: $(this).parent(),
+                      });
                   });
 
                   // change input visibility depending on what we selected for media/playlist
@@ -3305,9 +3315,14 @@ function makePagedSelect(element, parent) {
     ) {
         var initialValue = element.data("initialValue");
         var initialKey = element.data("initialKey");
-
         var dataObj = {};
         dataObj[initialKey] = initialValue;
+
+        // if we have any filter options, add them here as well
+        // for example isDisplaySpecific filter is important for displayGroup.search
+        if (element.data("filterOptions") !== undefined) {
+            dataObj = $.extend({}, dataObj, element.data("filterOptions"));
+        }
 
         $.ajax({
             url: element.data("searchUrl"),
@@ -3678,7 +3693,7 @@ function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected =
 
         $(container).jstree({
             "state" : state,
-            "plugins" : ["contextmenu", "state", "unique", "sort", "themes", "types"].concat(plugins),
+            "plugins" : ["contextmenu", "state", "unique", "sort", "types", 'search'].concat(plugins),
             "contextmenu":{
                 "items": function($node, checkContextMenuPermissions) {
                     // items in context menu need to check user permissions before we render them
@@ -3762,22 +3777,22 @@ function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected =
                         }
                     });
                 }},
-            "themes" : {
-                "responsive" : true
-            },
             "types" : {
                 "root" : {
-                    "icon" : "fa fa-file text-warning"
+                    "icon" : "fa fa-file text-xibo-primary"
                 },
                 "home" : {
-                    "icon" : "fa fa-home text-success"
+                    "icon" : "fa fa-home text-xibo-primary"
                 },
                 "default" : {
-                    "icon" : "fa fa-folder text-warning"
+                    "icon" : "fa fa-folder text-xibo-primary"
                 },
                 "open" : {
-                    "icon" : "fa fa-folder-open text-warning"
+                    "icon" : "fa fa-folder-open text-xibo-primary"
                 }
+            },
+            'search' : {
+                'show_only_matches' : true
             },
             'core' : {
                 "check_callback" : function (operation, node, parent, position, more) {
@@ -3792,7 +3807,11 @@ function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected =
                 },
                 'data' : {
                     "url": foldersUrl + (homeFolderId ? '?homeFolderId='+homeFolderId : '')
-                }
+                },
+                "themes" : {
+                    'responsive' : true,
+                    'dots' : false,
+                },
             }
         }).bind('ready.jstree', function(e, data) {
             // depending on the state of folder tree, hide/show as needed when we load the grid page
@@ -3976,7 +3995,16 @@ function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected =
             if (data.node.type !== 'root' && data.node.type !== 'home') {
                 data.instance.set_type(data.node, 'default');
             }
-        });
+        }).bind('search.jstree', function (nodes, str, res) {
+            // by default the plugin shows all folders if search does not match anything
+            // make it so we hide the tree in such cases,
+            if (str.nodes.length === 0) {
+                $(container).jstree(true).hide_all();
+                $(container).parent().find('.folder-search-no-results').removeClass('d-none')
+            } else {
+                $(container).parent().find('.folder-search-no-results').addClass('d-none')
+            }
+        })
 
         // on froms that have more than one modal active, this is needed to not confuse bootstrap
         // the (X) needs to close just the inner modal
@@ -3999,6 +4027,18 @@ function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected =
 
         // this is handler for the hamburger button on grid pages
         $('#folder-tree-select-folder-button').off("click").on('click', adjustDatatableSize)
+
+        var folderSearch = _.debounce(function () {
+            // show all folders, as it might be hidden if previous search returned empty.
+            $(container).jstree(true).show_all();
+            // for reasons, search event is not triggered on clear/empty search
+            // make sure we hide the div with message about no results here.
+            $(container).parent().find('.folder-search-no-results').addClass('d-none')
+            // search for the folder via entered string.
+            $(container).jstree(true).search($(this).val())
+        }, 500);
+        $('#jstree-search').on('keyup', folderSearch);
+        $('#jstree-search-form').on('keyup', folderSearch)
     }
 }
 

@@ -392,16 +392,11 @@ class RequiredFileFactory extends BaseFactory
                     throw new NotFoundException(__('Missing fileType'));
                 }
 
-                // File type media means that we will use a special negative itemId to get out the actual file.
-                if ($fileType === 'media') {
-                    $itemId = intval($itemId);
-                }
-
+                // HTTP links will always have the realId
                 $file = $this->getByDisplayAndDependency(
                     $displayId,
                     $fileType,
                     $itemId,
-                    !($fileType === 'media' && $itemId < 0)
                 );
 
                 // Update $file->path with the path on disk (likely /assets/$itemId)

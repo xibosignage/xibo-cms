@@ -21,6 +21,7 @@
 /* eslint-disable new-cap */
 // Common functions/tools
 const Common = require('../editor-core/common.js');
+const PlayerHelper = require('../helpers/player-helper.js');
 
 // Check condition
 const checkCondition = function(type, value, targetValue, isTopLevel = true) {
@@ -980,6 +981,46 @@ window.forms = {
       }
     });
 
+    findElements(
+      '.languageSelect',
+      target,
+    ).each(function(_k, el) {
+      const $select = $(el).find('select.form-control');
+      const isMomentLocaleSelect = $(el).hasClass('momentLocales');
+
+      if (isMomentLocaleSelect) {
+        const momentLocales = moment.locales().sort();
+        const selectValue = $select.val();
+
+        // Remove all previous options
+        $select.find('option').remove();
+
+        // Add empty option to the start of the array
+        momentLocales.unshift('');
+
+        // Add options from moment
+        for (let index = 0; index < momentLocales.length; index++) {
+          const locale = momentLocales[index];
+
+          // Get translation if exists
+          const name = momentLocalesTrans[locale] || locale;
+
+          // Create new option
+          const $newOption =
+            $(`<option value="${locale}">${locale} - ${name}</option>`);
+
+          // Check if it's selected
+          if (selectValue == locale) {
+            $newOption.prop('selected', true);
+          }
+
+          $newOption.appendTo($select);
+        }
+      }
+
+      makeLocalSelect($select, container);
+    });
+
     // Playlist mixer
     findElements(
       '.playlist-mixer',
@@ -1147,7 +1188,8 @@ window.forms = {
         });
 
         // Update the hidden field with a JSON string
-        $mixerHiddenInput.val(JSON.stringify(mixerItems));
+        $mixerHiddenInput.val(JSON.stringify(mixerItems))
+          .trigger('xiboInputChange');
       };
 
       // Clear existing fields
@@ -1303,11 +1345,14 @@ window.forms = {
 
     // Colour picker
     findElements(
-      '.colorpicker-input',
+      '.colorpicker-input.colorpicker-element',
       target,
     ).each(function(_k, el) {
       // Init the colour picker
-      $(el).colorpicker();
+      $(el).colorpicker({
+        container: $(el).find('.picker-container'),
+        align: 'left',
+      });
 
       const $inputElement = $(el).find('input');
       $inputElement.on('focusout', function() {
@@ -1496,7 +1541,6 @@ window.forms = {
     ).each(function(_k, el) {
       formHelpers.setupCKEditor(
         container,
-        {},
         $(el).attr('id'),
         true,
         null,
@@ -1860,6 +1904,9 @@ window.forms = {
       const $el = $(el).find('select');
       const effectsType = $el.data('effects-type').split(' ');
 
+      // Show option groups if we show all
+      const showOptionGroups = (effectsType.indexOf('all') != -1);
+
       // Effects
       const effects = [
         {effect: 'none', group: 'showAll'},
@@ -1898,7 +1945,23 @@ window.forms = {
           return;
         }
 
-        $el.append(
+        // Show option group if it doesn't exist
+        let $optionGroup = $el.find(`optgroup[data-type=${element.group}]`);
+        if (
+          showOptionGroups && $optionGroup.length == 0
+        ) {
+          $optionGroup =
+            $(`<optgroup
+              label="${effectsTranslations[element.group]}"
+              data-type="${element.group}">
+            </optgroup>`);
+          $el.append($optionGroup);
+        }
+
+        // Check if we add to option group or main select
+        const $appendTo = showOptionGroups ? $optionGroup : $el;
+
+        $appendTo.append(
           $('<option value="' +
             element.effect +
             '" data-optgroup="' +
@@ -1918,6 +1981,54 @@ window.forms = {
           [{
             skipSave: true,
           }]);
+      }
+
+      if ($(el).next().find('input[name="speed"]').length === 1) {
+        let currentSelected = null;
+        const speedInput = $(el).next().find('input[name="speed"]');
+        const setEffectSpeed = function(prevEffect, newEffect, currSpeed) {
+          const marqueeDefaultSpeed = 1;
+          const noneMarqueeDefaultSpeed = 1000;
+          const currIsMarquee = PlayerHelper.isMarquee(prevEffect);
+          const isMarquee = PlayerHelper.isMarquee(newEffect);
+
+          if (currIsMarquee && !isMarquee) {
+            return noneMarqueeDefaultSpeed;
+          } else if (!currIsMarquee && isMarquee) {
+            return marqueeDefaultSpeed;
+          } else {
+            if (String(currSpeed).length === 0) {
+              if (isMarquee) {
+                return marqueeDefaultSpeed;
+              } else {
+                return noneMarqueeDefaultSpeed;
+              }
+            } else {
+              return currSpeed;
+            }
+          }
+        };
+
+        $el.on('select2:open', function(e) {
+          currentSelected = e.currentTarget.value;
+        });
+
+        speedInput.val(setEffectSpeed(
+          currentSelected,
+          currentSelected,
+          speedInput.val(),
+        ));
+
+        $el.on('select2:select', function(e) {
+          const data = e.params.data;
+          const effect = data.id;
+
+          speedInput.val(setEffectSpeed(
+            currentSelected,
+            effect,
+            speedInput.val(),
+          ));
+        });
       }
     });
 
@@ -2311,7 +2422,6 @@ window.forms = {
       // Reload
       formHelpers.setupCKEditor(
         $formContainer,
-        {},
         elId,
         true,
         null,

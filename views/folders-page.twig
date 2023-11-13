@@ -31,6 +31,10 @@
         <div class="widget-body">
             <div class="row">
                 <div class="col-md-3">
+                    <input id="jstree-search" class="form-control" type="text" placeholder="{% trans "Search" %}">
+                    <div class="folder-search-no-results d-none">
+                        <p>{% trans 'No Folders matching the search term' %}</p>
+                    </div>
                     <div id="container-folder-tree"></div>
                 </div>
                 <div class="col-md-9">

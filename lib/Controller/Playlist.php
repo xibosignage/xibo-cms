@@ -141,8 +141,6 @@ class Playlist extends Base
         // Call to render the template
         $this->getState()->template = 'playlist-page';
         $this->getState()->setData([
-            'users' => $this->userFactory->query(),
-            'groups' => $this->userGroupFactory->query(),
             'modules' => $moduleFactory->getAssignableModules()
         ]);
 
@@ -297,12 +295,12 @@ class Playlist extends Base
                         // Use the media assigned to this widget
                         $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
                         $media->load();
-                        $widget->setUnmatchedProperty('name', $widgetName ?: $media->name);
+                        $widget->setUnmatchedProperty('name', $widget->getOptionValue('name', null) ?: $media->name);
 
                         // Augment with tags
                         $widget->setUnmatchedProperty('tags', $media->tags);
                     } else {
-                        $widget->setUnmatchedProperty('name', $widgetName ?: $module->name);
+                        $widget->setUnmatchedProperty('name', $widget->getOptionValue('name', null) ?: $module->name);
                         $widget->setUnmatchedProperty('tags', []);
                     }
 

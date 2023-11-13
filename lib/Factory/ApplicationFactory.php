@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -117,7 +117,7 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
      */
     public function getByName($name)
     {
-        $client = $this->query(null, ['name' => $name]);
+        $client = $this->query(null, ['name' => $name, 'useRegexForName' => 1]);
 
         if (count($client) <= 0) {
             throw new NotFoundException();
@@ -173,14 +173,24 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
             $params['clientId'] = $sanitizedFilter->getString('clientId');
         }
 
-        if ($sanitizedFilter->getString('name') != null) {
-            $body .= ' AND `oauth_clients`.name = :name';
-            $params['name'] = $sanitizedFilter->getString('name');
-        }
-
         if ($sanitizedFilter->getInt('userId') !== null) {
             $body .= ' AND `oauth_clients`.userId = :userId ';
             $params['userId'] = $sanitizedFilter->getInt('userId');
+        }
+
+        // Filter by Application Name?
+        if ($sanitizedFilter->getString('name') != null) {
+            $terms = explode(',', $sanitizedFilter->getString('name'));
+            $logicalOperator = $sanitizedFilter->getString('logicalOperatorName', ['default' => 'OR']);
+            $this->nameFilter(
+                'oauth_clients',
+                'name',
+                $terms,
+                $body,
+                $params,
+                ($sanitizedFilter->getCheckbox('useRegexForName') == 1),
+                $logicalOperator
+            );
         }
 
         // Sorting?

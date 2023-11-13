@@ -30,6 +30,9 @@ const ElementGroup = function(data, widgetId, regionId, parentWidget) {
   this.isEditable = (parentWidget) ? parentWidget.isEditable : true;
   this.isDeletable = (parentWidget) ? parentWidget.isDeletable : true;
   this.effect = data.effect || 'noTransition';
+
+  // Expanded on layer manager
+  this.expanded = false;
 };
 
 ElementGroup.prototype.updateSlot = function(
@@ -199,7 +202,7 @@ ElementGroup.prototype.updateGroupDimensions = function(
       );
 
     // Save JSON with new element into the widget
-    widget.saveElements().then((_res) => {
+    return widget.saveElements().then((_res) => {
       // Reload data and select element when data reloads
       lD.reloadData(lD.layout,
         {
@@ -207,6 +210,8 @@ ElementGroup.prototype.updateGroupDimensions = function(
         });
     });
   }
+
+  return Promise.resolve();
 };
 
 /**

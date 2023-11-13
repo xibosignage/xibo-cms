@@ -45,9 +45,6 @@
             <title>Media</title>
             <helpText>Choose media</helpText>
         </property>
-        <property id="javaScript" type="code" variant="javascript">
-            <title>Optional JavaScript</title>
-        </property>
         <property id="backgroundColor" type="color">
             <title>Background Colour</title>
             <helpText>The selected effect works best with a background colour. Optionally add one here.</helpText>
@@ -68,12 +65,33 @@
         </property>
         <property id="marqueeInlineSelector" type="text">
             <title>Marquee Selector</title>
-            <default>.item p</default>
+            <default>p</default>
             <helpText>The selector to use for stacking marquee items in a line when scrolling Left/Right.</helpText>
             <visibility>
                 <test>
                     <condition field="effect" type="neq">none</condition>
                 </test>
+            </visibility>
+        </property>
+                <property id="seeAdvancedFields" type="checkbox">
+            <title>Show advanced controls?</title>
+            <helpText>Show Javascript and CSS controls.</helpText>
+            <default>0</default>
+        </property>
+        <property id="javaScript" type="code" variant="javascript">
+            <title>Optional JavaScript</title>
+            <visibility>
+                <test>
+                    <condition field="seeAdvancedFields" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="styleSheet" type="code" allowLibraryRefs="true" variant="css">
+            <title>Optional Stylesheet</title>
+            <visibility>
+                <test>
+                    <condition field="seeAdvancedFields" type="eq">1</condition>
+                </test>qa
             </visibility>
         </property>
     </properties>
@@ -85,6 +103,7 @@
 </script>
 <style>
 {% if backgroundColor %}body { background-color: {{backgroundColor}}; }{% endif %}
+{{styleSheet|raw}}
 </style>
         ]]></twig>
     </stencil>

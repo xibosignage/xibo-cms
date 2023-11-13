@@ -52,7 +52,7 @@
                 <helpText>The format to apply to all dates returned by the Widget.</helpText>
                 <default>#DATE_FORMAT#</default>
             </property>
-            <property id="lang" type="languageSelector">
+            <property id="lang" type="languageSelector" variant="momentLocales">
                 <title>Language</title>
                 <helpText>Select the language you would like to use.</helpText>
             </property>
@@ -114,7 +114,13 @@ if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !=
 $(target).find('#content').empty();
 
 // Add items to container
-for (var index = 0; index < items.length; index++) {
+// If we have numItems, send only that number
+let numItems =
+  properties.numItems && properties.numItems < items.length ?
+  properties.numItems :
+  items.length;
+
+for (var index = 0; index < numItems; index++) {
   var $newItem = $('<div>').addClass('event').html(items[index]).appendTo('body');
   $(target).find('#content').append($newItem);
 }
@@ -156,7 +162,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .event'));
                 <helpText>The format to apply to event time (default HH:mm).</helpText>
                 <default>HH:mm</default>
             </property>
-            <property id="lang" type="languageSelector">
+            <property id="lang" type="languageSelector" variant="momentLocales">
                 <title>Language</title>
                 <helpText>Select the language you would like to use.</helpText>
             </property>
@@ -620,7 +626,7 @@ $(target).xiboCalendarRender(properties, items);
                 <helpText>The format to apply to event time (default HH:mm).</helpText>
                 <default>HH:mm</default>
             </property>
-            <property id="lang" type="languageSelector">
+            <property id="lang" type="languageSelector" variant="momentLocales">
                 <title>Language</title>
                 <helpText>Select the language you would like to use.</helpText>
             </property>
@@ -1097,7 +1103,7 @@ $(target).xiboCalendarRender(properties, items);
                 <helpText>The format to apply to event time (default HH:mm).</helpText>
                 <default>HH:mm</default>
             </property>
-            <property id="lang" type="languageSelector">
+            <property id="lang" type="languageSelector" variant="momentLocales">
                 <title>Language</title>
                 <helpText>Select the language you would like to use.</helpText>
             </property>
@@ -1576,7 +1582,7 @@ $(target).xiboCalendarRender(properties, items);
                 <helpText>The format to apply to event time (default HH:mm).</helpText>
                 <default>HH:mm</default>
             </property>
-            <property id="lang" type="languageSelector">
+            <property id="lang" type="languageSelector" variant="momentLocales">
                 <title>Language</title>
                 <helpText>Select the language you would like to use.</helpText>
             </property>
@@ -2053,7 +2059,7 @@ $(target).xiboCalendarRender(properties, items);
                 <helpText>The format to apply to event time (default HH:mm).</helpText>
                 <default>HH:mm</default>
             </property>
-            <property id="lang" type="languageSelector">
+            <property id="lang" type="languageSelector" variant="momentLocales">
                 <title>Language</title>
                 <helpText>Select the language you would like to use.</helpText>
             </property>
@@ -2462,7 +2468,7 @@ $(target).xiboCalendarRender(properties, items);
                 <helpText>The format to apply to event time (default HH:mm).</helpText>
                 <default>HH:mm</default>
             </property>
-            <property id="lang" type="languageSelector">
+            <property id="lang" type="languageSelector" variant="momentLocales">
                 <title>Language</title>
                 <helpText>Select the language you would like to use.</helpText>
             </property>
@@ -2874,7 +2880,7 @@ $(target).xiboCalendarRender(properties, items);
                 <helpText>The format to apply to event time (default HH:mm).</helpText>
                 <default>HH:mm</default>
             </property>
-            <property id="lang" type="languageSelector">
+            <property id="lang" type="languageSelector" variant="momentLocales">
                 <title>Language</title>
                 <helpText>Select the language you would like to use.</helpText>
             </property>
@@ -3191,7 +3197,7 @@ $(target).xiboCalendarRender(properties, items);
                 <helpText>The format to apply to event time (default HH:mm).</helpText>
                 <default>HH:mm</default>
             </property>
-            <property id="lang" type="languageSelector">
+            <property id="lang" type="languageSelector" variant="momentLocales">
                 <title>Language</title>
                 <helpText>Select the language you would like to use.</helpText>
             </property>

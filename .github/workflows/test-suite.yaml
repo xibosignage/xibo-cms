@@ -1,19 +1,60 @@
 name: Test Suite
 
 on:
-  pull_request:
-    branches-ignore:
-      - master
+  issue_comment:
+    types: [created]
 
 jobs:
   test-suite:
     name: Build Containers and Run Tests
+    if: github.event.issue.pull_request && contains(github.event.comment.body, 'TEST:')
     runs-on: ubuntu-22.04
     steps:
-      - name: Checkout
-        uses: actions/checkout@v1
+      # Step 1: Determine the correct branch associated with the PR
+      - name: Get branch of PR
+        uses: xt0rted/pull-request-comment-branch@v1
+        id: comment-branch
+
+      # Step 2: Set the status of the latest commit to "pending" at the beginning of the workflow
+      - name: Set latest commit status as pending
+        uses: myrotvorets/set-commit-status-action@master
         with:
-          fetch-depth: 1
+          sha: ${{ steps.comment-branch.outputs.head_sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: pending
+
+      # Step 3: Checkout the branch associated with the PR
+      - name: Checkout PR branch ${{ steps.comment-branch.outputs.head_ref }}
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ steps.comment-branch.outputs.head_sha }}
+
+      # Step 4: The Rest
+      - name: Check Comment
+        id: check_comment
+        run: |
+          comment_body="${{ github.event.comment.body }}"
+          if [[ "$comment_body" =~ TEST:\ (all|\*) ]]; then
+            test_all=true
+          elif [[ "$comment_body" =~ TEST:(.*?)END ]]; then
+            specs="${BASH_REMATCH[1]}"
+            # Split the content by commas and remove spaces
+            IFS=',' read -ra content_array <<< "$specs"
+            # Remove leading and trailing spaces and slashes from each element
+            content_array=("${content_array[@]// /}")
+            content_array=("${content_array[@]#/}")
+            content_array=("${content_array[@]%/}")
+            # Add "/app/cypress/e2e/" prefix to each element
+            for ((i=0; i<${#content_array[@]}; i++)); do
+            content_array[$i]="/app/cypress/e2e/${content_array[$i]}"
+            done
+            # Join the content array elements with commas
+            content_no_spaces="$(IFS=','; echo "${content_array[*]}")"
+            echo "spec_content=$content_no_spaces" >> $GITHUB_ENV
+          else
+            echo "Comment does not match the expected format."
+            exit 1
+          fi
       - name: Configure Build X
         uses: docker/setup-buildx-action@v1
       - name: Build
@@ -53,15 +94,53 @@ jobs:
         run: |
           docker exec --user www-data -t cms-web /bin/bash -c "cd /var/www/cms; php vendor/bin/phpunit --log-junit results.xml"
       - name: Run Cypress
-        continue-on-error: true
+        id: cypress
         run: |
           docker exec cms-db mysql -ucms -pjenkins cms -e "INSERT INTO oauth_clients (id, secret, name, userId, authCode, clientCredentials) VALUES ('MrGPc7e3IL1hA6w13l7Ru5giygxmNiafGNhFv89d', 'Pk6DdDgu2HzSoepcMHRabY60lDEvQ9ucTejYvc5dOgNVSNaOJirCUM83oAzlwe0KBiGR2Nhi6ltclyNC1rmcq0CiJZXzE42KfeatQ4j9npr6nMIQAzMal8O8RiYrIoono306CfyvSSJRfVfKExIjj0ZyE4TUrtPezJbKmvkVDzh8aj3kbanDKatirhwpfqfVdfgsqVNjzIM9ZgKHnbrTX7nNULL3BtxxNGgDMuCuvKiJFrLSyIIz1F4SNrHwHz', 'cypress', 1, 0, 1)"
           docker exec cms-db mysql -ucms -pjenkins cms -e "INSERT INTO oauth_client_scopes (clientId, scopeId) VALUES ('MrGPc7e3IL1hA6w13l7Ru5giygxmNiafGNhFv89d', 'all') ON DUPLICATE KEY UPDATE scopeId = scopeId"
-          docker run --ipc=host --name cms-cypress --link=cms-web:web -v $(pwd)/cypress.config.js:/app/cypress.config.js -v $(pwd)/cypress:/app/cypress ghcr.io/xibosignage/xibo-cms:cypress bash -c "CYPRESS_baseUrl=http://web /app/node_modules/.bin/cypress run --config screenshotsFolder=/app/cypress/results,video=false --reporter junit --reporter-options 'mochaFile=/app/cypress/results/results_cypress_[hash].xml,toConsole=true'; chown -R 1001:1001 /app/cypress/results"
+          if [[ "$test_all" == true ]]; then
+            docker run --ipc=host --name cms-cypress --link=cms-web:web -v $(pwd)/cypress.config.js:/app/cypress.config.js -v $(pwd)/cypress:/app/cypress ghcr.io/xibosignage/xibo-cms:cypress bash -c "CYPRESS_baseUrl=http://web /app/node_modules/.bin/cypress run --config screenshotsFolder=/app/cypress/results,video=false --reporter junit --reporter-options 'mochaFile=/app/cypress/results/results_cypress_[hash].xml,toConsole=true' && chown -R 1001:1001 /app/cypress/results && exit \${PIPESTATUS[0]};"
+          else
+            docker run --ipc=host --name cms-cypress --link=cms-web:web -v $(pwd)/cypress.config.js:/app/cypress.config.js -v $(pwd)/cypress:/app/cypress ghcr.io/xibosignage/xibo-cms:cypress bash -c "CYPRESS_baseUrl=http://web /app/node_modules/.bin/cypress run --config screenshotsFolder=/app/cypress/results,video=false --spec \"$spec_content\" --reporter junit --reporter-options 'mochaFile=/app/cypress/results/results_cypress_[hash].xml,toConsole=true' && chown -R 1001:1001 /app/cypress/results && exit \${PIPESTATUS[0]};"
+          fi
+        continue-on-error: true
       - name: Save Cypress test results as an artifact
-        if: failure()
         uses: actions/upload-artifact@v3
         with:
           name: cypress-test-results
           path: cypress/results
-          run: exit 1
+      - name: Check Cypress exit code
+        run: |
+          if [[ ${{ steps.cypress.outcome }} == 'success' ]]; then
+            echo "Cypress tests succeeded"
+          else
+            echo "Cypress tests failed with exit code ${{ steps.cypress.exitCode }}"
+            exit 1
+          fi
+      # Step 5: Add a comment to the PR with the workflow result
+      - name: Add workflow result as comment on PR
+        uses: actions/github-script@v6
+        if: always()
+        with:
+          script: |
+            const name = '${{ github.workflow	}}';
+            const url = '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}';
+            const success = '${{ job.status }}' === 'success';
+            const body = `${name}: ${success ? 'succeeded ✅' : 'failed ❌'}\n${url}`;
+
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            })
+
+      # Step 6: Set the status of the latest commit to the final job status
+      - name: Set latest commit status as ${{ job.status }}
+        uses: myrotvorets/set-commit-status-action@master
+        if: always()
+        with:
+          sha: ${{ steps.comment-branch.outputs.head_sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          status: ${{ job.status }}
+

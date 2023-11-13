@@ -24,7 +24,10 @@
 
 // Load templates
 const LayerManager = require('../editor-core/layer-manager.js');
+const DateFormatHelper = require('../helpers/date-format-helper.js');
+
 const viewerTemplate = require('../templates/viewer.hbs');
+const viewerRegionTemplate = require('../templates/viewer-region.hbs');
 const viewerWidgetTemplate = require('../templates/viewer-widget.hbs');
 const viewerLayoutPreview = require('../templates/viewer-layout-preview.hbs');
 const viewerActionEditRegionTemplate =
@@ -94,6 +97,23 @@ const Viewer = function(parent, container) {
     this.parent.editorContainer.find('#layerManager'),
     this.DOMObject,
   );
+
+  this.multiSelectActive = false;
+
+  // Events for shift key
+  addEventListener('keydown', (e) => {
+    if (e.key === 'Shift') {
+      this.multiSelectActive = true;
+      $('body').attr('multi-select-active', true);
+    }
+  });
+
+  addEventListener('keyup', (e) => {
+    if (e.key === 'Shift') {
+      this.multiSelectActive = false;
+      $('body').removeAttr('multi-select-active');
+    }
+  });
 };
 
 /**
@@ -169,8 +189,11 @@ Viewer.prototype.getLayoutOrientation = function(width, height) {
 /**
  * Render viewer
  * @param {object} forceReload - Force reload
+ * @param {object} target - Reload only target
 */
-Viewer.prototype.render = function(forceReload = false) {
+Viewer.prototype.render = function(forceReload = false, target = {}) {
+  const renderSingleObject = (!$.isEmptyObject(target));
+
   // Check background colour and set theme
   const hsvColor =
     (this.parent.layout.backgroundColor) ?
@@ -203,90 +226,150 @@ Viewer.prototype.render = function(forceReload = false) {
   // Set reload to false
   this.reload = false;
 
-  // Render the viewer
-  this.DOMObject.html(viewerTemplate());
+  if (renderSingleObject) {
+    const self = this;
+    const createCanvas = function() {
+      if (
+        lD.layout.canvas &&
+        self.DOMObject.find('.designer-region-canvas').length === 0
+      ) {
+        self.DOMObject.find('.layout-live-preview').append(
+          `<div id="${lD.layout.canvas.id}" 
+            class="designer-region-canvas"
+            style="
+              position:absolute;
+              z-index: ${lD.layout.canvas.zIndex};">
+            </div>`,
+        );
+      }
+    };
 
-  const $viewerContainer = this.DOMObject;
+    // Render single object
+    if (
+      target.type === 'widget' ||
+      target.type === 'region'
+    ) {
+      const regionId = (target.type === 'region') ?
+        target.id :
+        target.regionId;
+      const regionToRender = lD.layout.regions[regionId];
 
-  // If preview is playing, refresh the bottombar
-  if (this.previewPlaying && this.parent.selectedObject.type == 'layout') {
-    this.parent.bottombar.render(this.parent.selectedObject);
-  }
+      // Add region template to viewer
+      this.DOMObject.find('#regions').append(viewerRegionTemplate(
+        regionToRender,
+      ));
 
-  // Show loading template
-  $viewerContainer.html(loadingTemplate());
+      // If it's a zone, just update the region dimensions
+      if (
+        target.type === 'region' &&
+        target.subType === 'zone'
+      ) {
+        this.updateRegion(regionToRender);
+      } else {
+        this.renderRegion(regionToRender);
+      }
+    } else if (target.type === 'element') {
+      createCanvas();
 
-  // Set preview play as false
-  this.previewPlaying = false;
+      // Render element
+      this.renderElement(target, lD.layout.canvas);
+    } else if (target.type === 'element-group') {
+      createCanvas();
 
-  // Reset container properties
-  $viewerContainer.css('background',
-    (this.theme == 'dark') ? '#2c2d2e' : '#F3F8FF',
-  );
-  $viewerContainer.css('border', 'none');
-
-  // Apply viewer scale to the layout
-  this.containerObjectDimensions =
-    this.scaleObject(lD.layout, $viewerContainer);
-
-  this.orientation = this.getLayoutOrientation(
-    this.containerObjectDimensions.width,
-    this.containerObjectDimensions.height,
-  );
-
-  // Apply viewer scale to the layout
-  const scaledLayout = lD.layout.scale($viewerContainer);
-
-  const html = viewerTemplate({
-    type: 'layout',
-    renderLayout: true,
-    containerStyle: 'layout-player',
-    dimensions: this.containerObjectDimensions,
-    layout: scaledLayout,
-    trans: viewerTrans,
-    theme: this.theme,
-    orientation: this.orientation,
-  });
-
-  // Replace container html
-  $viewerContainer.html(html);
-
-  // Render background image or color to the preview
-  if (lD.layout.backgroundImage === null) {
-    $viewerContainer.find('.viewer-object')
-      .css('background', lD.layout.backgroundColor);
-  } else {
-    // Get API link
-    let linkToAPI = urlsForApi.layout.downloadBackground.url;
-    // Replace ID in the link
-    linkToAPI = linkToAPI.replace(':id', lD.layout.layoutId);
-
-    $viewerContainer.find('.viewer-object')
-      .css({
-        background:
-          'url(\'' + linkToAPI + '?preview=1&width=' +
-          (lD.layout.width * this.containerObjectDimensions.scale) +
-          '&height=' +
-          (
-            lD.layout.height *
-            this.containerObjectDimensions.scale
-          ) +
-          '&proportional=0&layoutBackgroundId=' +
-          lD.layout.backgroundImage + '\') top center no-repeat',
-        backgroundSize: '100% 100%',
-        backgroundColor: lD.layout.backgroundColor,
+      // Render all elements from group
+      Object.values(target.elements).forEach((element) => {
+        self.renderElement(element, lD.layout.canvas);
       });
-  }
-
-  // Render preview regions/widgets
-  for (const regionIndex in lD.layout.regions) {
-    if (lD.layout.regions.hasOwnProperty(regionIndex)) {
-      this.renderRegion(lD.layout.regions[regionIndex]);
     }
-  }
+  } else {
+    // Render full layout
 
-  // Render preview canvas if it's not an empty object
-  (!$.isEmptyObject(lD.layout.canvas)) && this.renderCanvas(lD.layout.canvas);
+    // Render the viewer
+    this.DOMObject.html(viewerTemplate());
+
+    const $viewerContainer = this.DOMObject;
+
+    // If preview is playing, refresh the bottombar
+    if (this.previewPlaying && this.parent.selectedObject.type == 'layout') {
+      this.parent.bottombar.render(this.parent.selectedObject);
+    }
+
+    // Show loading template
+    $viewerContainer.html(loadingTemplate());
+
+    // Set preview play as false
+    this.previewPlaying = false;
+
+    // Reset container properties
+    $viewerContainer.css('background',
+      (this.theme == 'dark') ? '#2c2d2e' : '#F3F8FF',
+    );
+    $viewerContainer.css('border', 'none');
+
+    // Apply viewer scale to the layout
+    this.containerObjectDimensions =
+      this.scaleObject(lD.layout, $viewerContainer);
+
+    this.orientation = this.getLayoutOrientation(
+      this.containerObjectDimensions.width,
+      this.containerObjectDimensions.height,
+    );
+
+    // Apply viewer scale to the layout
+    const scaledLayout = lD.layout.scale($viewerContainer);
+
+    const html = viewerTemplate({
+      type: 'layout',
+      renderLayout: true,
+      containerStyle: 'layout-player',
+      dimensions: this.containerObjectDimensions,
+      layout: scaledLayout,
+      renderCanvas: (!$.isEmptyObject(lD.layout.canvas)),
+      trans: viewerTrans,
+      theme: this.theme,
+      orientation: this.orientation,
+    });
+
+    // Replace container html
+    $viewerContainer.html(html);
+
+    // Render background image or color to the preview
+    if (lD.layout.backgroundImage === null) {
+      $viewerContainer.find('.viewer-object')
+        .css('background', lD.layout.backgroundColor);
+    } else {
+      // Get API link
+      let linkToAPI = urlsForApi.layout.downloadBackground.url;
+      // Replace ID in the link
+      linkToAPI = linkToAPI.replace(':id', lD.layout.layoutId);
+
+      $viewerContainer.find('.viewer-object')
+        .css({
+          background:
+            'url(\'' + linkToAPI + '?preview=1&width=' +
+            (lD.layout.width * this.containerObjectDimensions.scale) +
+            '&height=' +
+            (
+              lD.layout.height *
+              this.containerObjectDimensions.scale
+            ) +
+            '&proportional=0&layoutBackgroundId=' +
+            lD.layout.backgroundImage + '\') top center no-repeat',
+          backgroundSize: '100% 100%',
+          backgroundColor: lD.layout.backgroundColor,
+        });
+    }
+
+    // Render viewer regions/widgets
+    for (const regionIndex in lD.layout.regions) {
+      if (lD.layout.regions.hasOwnProperty(regionIndex)) {
+        this.renderRegion(lD.layout.regions[regionIndex]);
+      }
+    }
+
+    // Render viewer canvas if it's not an empty object
+    (!$.isEmptyObject(lD.layout.canvas)) && this.renderCanvas(lD.layout.canvas);
+  }
 
   // Handle UI interactions
   this.handleInteractions();
@@ -605,7 +688,7 @@ Viewer.prototype.handleInteractions = function() {
           reloadViewer: false,
           clickPosition: $(e.target).hasClass('layout') ? clickPosition : null,
         });
-        self.selectElement();
+        self.selectObject();
       } else if (
         $(e.target).hasClass('group-edit-btn')
       ) {
@@ -655,9 +738,15 @@ Viewer.prototype.handleInteractions = function() {
                 });
               }
 
-              self.selectElement($(e.target), shiftIsPressed);
+              self.selectObject($(e.target), shiftIsPressed);
             } else if (
-              $(e.target).data('subType') === 'zone' &&
+              (
+                $(e.target).data('subType') === 'zone' ||
+                (
+                  $(e.target).data('subType') === 'frame' &&
+                  $(e.target).is('.designer-region-frame.invalid-region')
+                )
+              ) &&
               $(e.target).hasClass('designer-region') &&
               !$(e.target).hasClass('selected')
             ) {
@@ -670,7 +759,7 @@ Viewer.prototype.handleInteractions = function() {
                   target: $(e.target),
                 });
               }
-              self.selectElement($(e.target), shiftIsPressed);
+              self.selectObject($(e.target), shiftIsPressed);
             } else if (
               $(e.target).find('.designer-widget').length > 0 &&
               !$(e.target).find('.designer-widget').hasClass('selected') &&
@@ -686,7 +775,7 @@ Viewer.prototype.handleInteractions = function() {
                   clickPosition: clickPosition,
                 });
               }
-              self.selectElement($(e.target), shiftIsPressed);
+              self.selectObject($(e.target), shiftIsPressed);
             } else if (
               $(e.target).hasClass('designer-element') &&
               !$(e.target).hasClass('selected')
@@ -701,7 +790,7 @@ Viewer.prototype.handleInteractions = function() {
                   clickPosition: clickPosition,
                 });
               }
-              self.selectElement($(e.target), shiftIsPressed);
+              self.selectObject($(e.target), shiftIsPressed);
             } else if (
               $(e.target).hasClass('group-select-overlay') &&
               !$(e.target).parent().hasClass('selected')
@@ -716,7 +805,7 @@ Viewer.prototype.handleInteractions = function() {
                   clickPosition: clickPosition,
                 });
               }
-              self.selectElement($(e.target).parent(), shiftIsPressed);
+              self.selectObject($(e.target).parent(), shiftIsPressed);
             }
           }, 200);
         } else {
@@ -738,7 +827,7 @@ Viewer.prototype.handleInteractions = function() {
             lD.selectObject({
               target: $(e.target),
             });
-            self.selectElement($(e.target), shiftIsPressed);
+            self.selectObject($(e.target), shiftIsPressed);
           } else if (
             $(e.target).hasClass('group-select-overlay')
           ) {
@@ -748,7 +837,7 @@ Viewer.prototype.handleInteractions = function() {
           } else {
             // Move out from group editing
             lD.selectObject();
-            self.selectElement();
+            self.selectObject();
           }
         }
       }
@@ -943,6 +1032,7 @@ Viewer.prototype.renderRegion = function(
   const self = this;
   const $container = this.DOMObject.find(`#${region.id}`);
   const isPlaylist = region.subType == 'playlist';
+  const isZone = region.subType == 'zone';
 
   // Get first widget of the region
   const widget = (widgetToLoad) ?
@@ -951,11 +1041,20 @@ Viewer.prototype.renderRegion = function(
 
   // If region is selected, update moveable
   if (region.selected) {
-    this.selectElement($container);
+    this.selectObject($container);
   }
 
   // If there's no widget, return
   if (!widget && !isPlaylist) {
+    // If it's not a zone, we need to mark region as an error
+    // so it can be highlighted
+    if (!isZone) {
+      $container.addClass('invalid-region');
+      $container.append(
+        '<p class="invalid-region-message">' +
+        viewerTrans.invalidRegion +
+        '</p>');
+    }
     return;
   }
 
@@ -1059,7 +1158,7 @@ Viewer.prototype.renderRegion = function(
 
     // If widget is selected, update moveable for the region
     if (widget && widget.selected) {
-      this.selectElement($container);
+      this.selectObject($container);
     }
 
     // Select droppables in the region
@@ -1252,8 +1351,10 @@ Viewer.prototype.updateRegion = _.throttle(function(
   });
 
   // Update z index if set
+  let redrawLayerManager = false;
   if (region.zIndex != undefined) {
     $container.css('z-index', region.zIndex);
+    redrawLayerManager = true;
   }
 
   // Update region content
@@ -1261,6 +1362,17 @@ Viewer.prototype.updateRegion = _.throttle(function(
     lD.viewer.renderRegionDebounced(region);
   } else {
     lD.viewer.updateRegionContent(region, changed);
+  }
+
+  // Redraw layer manager to reflect the layer change
+  if (redrawLayerManager) {
+    lD.viewer.layerManager.render();
+  }
+
+  // If region is selected, but not on the container, do it
+  if (region.selected && !$container.hasClass('selected')) {
+    lD.viewer.selectObject($container);
+    lD.viewer.updateMoveable();
   }
 }, drawThrottle);
 
@@ -1359,7 +1471,7 @@ Viewer.prototype.renderElement = function(
 
     // If group is selected, add selected class
     if (group.selected) {
-      this.selectElement($groupContainer);
+      this.selectObject($groupContainer);
     }
 
     // If group has source, add it to the container
@@ -1411,7 +1523,7 @@ Viewer.prototype.renderElement = function(
     });
 
     // Update element group index
-    if (element.group.layer) {
+    if (element.group.layer != undefined) {
       $groupContainer.css({
         'z-index': element.group.layer,
       });
@@ -1441,36 +1553,6 @@ Viewer.prototype.renderElementContent = function(
   // Get asset container to add element assets
   const $assetContainer =
     this.parent.editorContainer.find('#asset-container');
-
-  const macroRegex = /^%(\+|\-)[0-9]([0-9])?(d|h|m|s)%$/gi;
-
-  // TODO: Copied from player.js, to be added to a library so it can be reused
-  const composeUTCDateFromMacro = (macroStr) => {
-    const utcFormat = 'YYYY-MM-DDTHH:mm:ssZ';
-    const dateNow = moment().utc();
-    // Check if input has the correct format
-    const dateStr = String(macroStr);
-
-    if (dateStr.length === 0 ||
-        dateStr.match(macroRegex) === null
-    ) {
-      return dateNow.format(utcFormat);
-    }
-
-    // Trim the macro date string
-    const dateOffsetStr = dateStr.replaceAll('%', '');
-    const params = (op) => dateOffsetStr.replace(op, '')
-      .split(/(\d+)/).filter(Boolean);
-    const addRegex = /^\+/g;
-    const subtractRegex = /^\-/g;
-
-    // Check if it's add or subtract offset and return composed date
-    if (dateOffsetStr.match(addRegex) !== null) {
-      return dateNow.add(...params(addRegex)).format(utcFormat);
-    } else if (dateOffsetStr.match(subtractRegex) !== null) {
-      return dateNow.subtract(...params(subtractRegex)).format(utcFormat);
-    }
-  };
 
   // Get element template ( most of the time
   // template will be already loaded/cached )
@@ -1529,7 +1611,10 @@ Viewer.prototype.renderElementContent = function(
     // to the extended template, if it exists
     // or to hardcoded values
     if (!element.width || !element.height) {
-      if (template.parent) {
+      if (template.startWidth && template.startHeight) {
+        element.width = template.startWidth;
+        element.height = template.startHeight;
+      } else if (template.parent) {
         element.width = template.parent.startWidth;
         element.height = template.parent.startHeight;
       } else {
@@ -1558,17 +1643,6 @@ Viewer.prototype.renderElementContent = function(
       self.moveable.rotatable = element.canRotate;
     }
 
-    // Check if parent widget is not valid
-    const parentWidget = lD.getObjectByTypeAndId(
-      'widget',
-      'widget_' + element.regionId + '_' + element.widgetId,
-      'canvas',
-    );
-
-    const isValid =
-      parentWidget.isValid &&
-      parentWidget.requiredElements.valid;
-
     // Render element with template
     $elementContainer.html($(viewerElementContentTemplate({
       element: element,
@@ -1577,7 +1651,6 @@ Viewer.prototype.renderElementContent = function(
       originalWidth: element.width,
       originalHeight: element.height,
       trans: propertiesPanelTrans,
-      invalidParent: !isValid,
     })));
 
     // Get element properties
@@ -1623,66 +1696,8 @@ Viewer.prototype.renderElementContent = function(
         const elData = elementData?.data;
         const meta = elementData?.meta;
 
-        // If parent widget isn't valid, replace error message
-        if (!$.isEmptyObject(parentWidget.validateData)) {
-          const $messageContainer = $elementContainer.find('.invalid-parent');
-          const errorArray = [$messageContainer.prop('title')];
-          const hasGroup = Boolean(element.groupId);
-          const $groupContainer = (hasGroup) ?
-            $elementContainer.parents('.designer-element-group') : null;
-
-          // Add if elemens has no group or
-          // if has group but the group doesn't have message yet
-          if (
-            !hasGroup ||
-            (
-              hasGroup &&
-              $groupContainer.find('> .invalid-parent').length == 0
-            )
-          ) {
-            // Required elements message
-            const requiredElementsErrorMessage =
-              parentWidget.checkRequiredElements();
-
-            (requiredElementsErrorMessage) &&
-              errorArray.push(
-                '<p>' +
-                requiredElementsErrorMessage +
-                '</p>');
-
-            // Default error message
-            (parentWidget.validateData.errorMessage) &&
-              errorArray.push(
-                '<p>' +
-                parentWidget.validateData.errorMessage +
-                '</p>');
-
-            (parentWidget.validateData.sampleDataMessage) &&
-              errorArray.push(
-                '<p class="sample-data">( ' +
-                parentWidget.validateData.sampleDataMessage +
-                ' )</p>');
-
-            // If element has group, move error to group
-            (hasGroup) && $messageContainer.appendTo(
-              $elementContainer.parents('.designer-element-group'),
-            );
-
-            // Set title/tooltip
-            $messageContainer.tooltip('dispose')
-              .prop('title', '<div class="custom-tooltip">' +
-              errorArray.join('') + '</div>');
-            $messageContainer.tooltip();
-
-            // Show tooltip
-            $messageContainer.removeClass('d-none');
-          }
-
-          // Remove message from element if it's in a group
-          if (hasGroup) {
-            $elementContainer.find('.invalid-parent').remove();
-          }
-        }
+        // Validate widget
+        self.validateElement(element);
 
         // Check all data elements and make replacements
         for (const key in elData) {
@@ -1690,9 +1705,12 @@ Viewer.prototype.renderElementContent = function(
             const data = elData[key];
 
             // Check if data needs to be replaced
-            if (String(data) && String(data).match(macroRegex) !== null) {
+            if (
+              String(data) &&
+              String(data).match(DateFormatHelper.macroRegex) !== null
+            ) {
               // Replace macro with current date
-              elData[key] = composeUTCDateFromMacro(data);
+              elData[key] = DateFormatHelper.composeUTCDateFromMacro(data);
             }
           }
         }
@@ -1714,7 +1732,7 @@ Viewer.prototype.renderElementContent = function(
         const elementParseDataFn = window[`onElementParseData_${element.id}`];
         const hasElementParseDataFn = typeof elementParseDataFn === 'function';
         const isInData = extendOverrideKey !== null &&
-          elData && elData.hasOwnProperty(extendOverrideKey);
+          elData != undefined && elData.hasOwnProperty(extendOverrideKey);
         const isInMeta = metaKey !== null &&
           meta.hasOwnProperty(metaKey);
 
@@ -1724,6 +1742,9 @@ Viewer.prototype.renderElementContent = function(
               (elData) && elData[extendWithDataKey];
           } else if (isInMeta) {
             convertedProperties[extendOverrideKey] = meta[metaKey];
+          } else if (extendWithDataKey === 'mediaId') {
+            convertedProperties[extendOverrideKey] =
+              '[[mediaId=' + element.mediaId + ']]';
           } else {
             convertedProperties[extendOverrideKey] =
               (elData) && elData[extendWithDataKey];
@@ -1769,6 +1790,17 @@ Viewer.prototype.renderElementContent = function(
           hbsHtml = hbsHtml.replace(match, assetUrl);
         });
 
+        // Replace [[mediaId]] with media URL or element media id
+        const mediaURLRegex = /\[\[mediaId=[\w&\-]+\]\]/gi;
+        hbsHtml.match(mediaURLRegex)?.forEach((match) => {
+          const mediaId = match.split('[[mediaId=')[1].split(']]')[0];
+          const mediaUrl =
+            urlsForApi.library.download.url.replace(':id', mediaId);
+
+          // Replace asset id with asset url
+          hbsHtml = hbsHtml.replace(match, mediaUrl);
+        });
+
         // Append hbs html to the element
         $elementContainer.find('.element-content').html(hbsHtml);
 
@@ -1794,6 +1826,117 @@ Viewer.prototype.renderElementContent = function(
       });
     });
   });
+};
+
+/**
+ * Validate element
+ * @param {Object} element
+ */
+Viewer.prototype.validateElement = function(
+  element,
+) {
+  const $elementContainer =
+    this.DOMObject.find(`#${element.elementId}`);
+
+  // Check if parent widget is not valid
+  const parentWidget = lD.getObjectByTypeAndId(
+    'widget',
+    'widget_' + element.regionId + '_' + element.widgetId,
+    'canvas',
+  );
+
+  // Get error message
+  let $messageContainer = $elementContainer.find('.invalid-parent');
+  if ($messageContainer.length === 0) {
+    $messageContainer = $(
+      `<div class="invalid-parent d-none" data-html="true">
+          <i class="fa fa-warning"></i>
+      </div>`);
+
+    $messageContainer.appendTo($elementContainer);
+  }
+
+  // Is widget not valid?
+  const isNotValid = (
+    !$.isEmptyObject(parentWidget.validateData) ||
+    (
+      parentWidget.requiredElements &&
+      parentWidget.requiredElements.valid === false
+    )
+  );
+
+  // If parent widget isn't valid, show error message
+  if (isNotValid) {
+    const errorArray = [];
+    const hasGroup = Boolean(element.groupId);
+    const $groupContainer = (hasGroup) ?
+      $elementContainer.parents('.designer-element-group') : null;
+
+    // Add if elemens has no group or
+    // if has group but the group doesn't have message yet
+    if (
+      !hasGroup ||
+      (
+        hasGroup &&
+        $groupContainer.find('> .invalid-parent').length == 0
+      )
+    ) {
+      // Check required elements
+      const requiredElementsErrorMessage =
+        parentWidget.checkRequiredElements();
+
+      // Default message
+      // show only if we don't have required elements message
+      (!requiredElementsErrorMessage) &&
+        errorArray.push(
+          '<p>' +
+          propertiesPanelTrans.invalidWidget +
+          '</p>');
+
+      // Required elements message
+      (requiredElementsErrorMessage) &&
+        errorArray.push(
+          '<p>' +
+          requiredElementsErrorMessage +
+          '</p>');
+
+      // Request message
+      (parentWidget.validateData.errorMessage) &&
+        errorArray.push(
+          '<p>' +
+          parentWidget.validateData.errorMessage +
+          '</p>');
+
+      // Sample data message
+      (parentWidget.validateData.sampleDataMessage) &&
+        errorArray.push(
+          '<p class="sample-data">( ' +
+          parentWidget.validateData.sampleDataMessage +
+          ' )</p>');
+
+      // If element has group, move error to group
+      (hasGroup) && $messageContainer.appendTo(
+        $elementContainer.parents('.designer-element-group'),
+      );
+
+      // Set title/tooltip
+      $messageContainer.tooltip('dispose')
+        .prop('title', '<div class="custom-tooltip">' +
+        errorArray.join('') + '</div>');
+      $messageContainer.tooltip();
+
+      // Show tooltip
+      $messageContainer.removeClass('d-none');
+    }
+
+    // Remove message from element if it's in a group
+    if (hasGroup) {
+      $elementContainer.find('.invalid-parent').remove();
+    }
+  } else {
+    // Remove error message
+    $messageContainer.remove();
+  }
 };
 
 /**
@@ -2452,7 +2595,7 @@ Viewer.prototype.saveElementGroupProperties = function(
  * @param {boolean} multiSelect - Select another object
  * @param {boolean} removeEditFromGroup
  */
-Viewer.prototype.selectElement = function(
+Viewer.prototype.selectObject = function(
   element = null,
   multiSelect = false,
   removeEditFromGroup = true,
@@ -2525,7 +2668,6 @@ Viewer.prototype.updateMoveable = function(
 
   // Get selected element
   const $selectedElement = this.DOMObject.find('.selected');
-
   const multipleSelected = ($selectedElement.length > 1);
 
   // Update moveable if we have a selected element, and is not a drawerWidget
@@ -2556,9 +2698,7 @@ Viewer.prototype.updateMoveable = function(
     }
 
     // Update snap to elements targets
-    if (multipleSelected) {
-      this.moveable.elementGuidelines = [];
-    } else if (
+    if (
       updateTarget &&
       this.moveableOptions.snapToElements
     ) {
@@ -2617,6 +2757,14 @@ Viewer.prototype.updateMoveable = function(
     this.moveable.updateRect();
   } else {
     this.moveable.target = null;
+
+    // Clear rogue moveable elements
+    const controlElement = this.moveable.getControlBoxElement();
+    $('.moveable-control-box').each((_idx, moveable) => {
+      if (!$(moveable).is(controlElement)) {
+        $(moveable).remove();
+      }
+    });
 
     // Hide snap controls
     this.DOMObject.parent().find('.snap-controls').hide();
@@ -3137,6 +3285,43 @@ Viewer.prototype.addActionEditArea = function(
 };
 
 /**
+ * Remove object from viewer
+ * @param {string} objectType - Object type
+ * @param {string} objectId - Object ID
+ */
+Viewer.prototype.removeObject = function(objectType, objectId) {
+  // Remove from DOM
+  this.DOMObject
+    .find(`[data-type="${objectType}"][data-${objectType}-id="${objectId}"]`)
+    .remove();
+
+  // Update moveable
+  this.updateMoveable();
+};
+
+/**
+ * Toggle visibility from object in viewer
+ * @param {string} objectType - Object type
+ * @param {string} objectId - Object ID
+ * @param {boolean} hide - Hide?
+ */
+Viewer.prototype.toggleObject = function(objectType, objectId, hide) {
+  const $viewerObj = this.DOMObject
+    .find(`[data-type="${objectType}"][data-${objectType}-id="${objectId}"]`);
+
+  // If hide and it's selected, deselect from viewer
+  if (
+    hide &&
+    $viewerObj.hasClass('selected')
+  ) {
+    this.selectObject();
+  }
+
+  // Remove from DOM
+  $viewerObj.toggleClass('d-none', hide);
+};
+
+/**
  * Remove new widget action element
  */
 Viewer.prototype.removeActionEditArea = function() {
@@ -3151,8 +3336,13 @@ Viewer.prototype.removeActionEditArea = function() {
  * @param {object} data - Object data
  */
 Viewer.prototype.saveTemporaryObject = function(objectId, objectType, data) {
+  // Remove selected from the viewer
+  this.selectObject();
+
+  // Select new object
   lD.selectedObject.id = objectId;
   lD.selectedObject.type = objectType;
+
 
   // If it's an element, save also as elementId
   if (lD.selectedObject.type === 'element') {
@@ -3163,6 +3353,7 @@ Viewer.prototype.saveTemporaryObject = function(objectId, objectType, data) {
   $('<div>', {
     id: objectId,
     data: data,
+    class: 'viewer-temporary-object',
   }).appendTo(this.DOMObject);
 };
 
@@ -3181,14 +3372,32 @@ Viewer.prototype.editGroup = function(
       refreshEditor: false,
       reloadPropertiesPanel: false,
     });
-    self.selectElement('#' + elementToSelectOnLoad);
+    self.selectObject('#' + elementToSelectOnLoad);
   } else {
     lD.selectObject();
-    self.selectElement();
+    self.selectObject();
   }
 
-  // Only add editing class if we were not
+  // If we're not editing yet, start
   if (!editing) {
+    // Get group object from structure
+    const groupId = $(groupDOMObject).attr('id');
+    const groupObj = lD.getObjectByTypeAndId(
+      'element-group',
+      groupId,
+      'widget_' +
+        $(groupDOMObject).data('regionId') +
+        '_' +
+        $(groupDOMObject).data('widgetId'),
+    );
+
+    // If group isn't expanded, do it and reload layer manager
+    if (groupObj.expanded === false) {
+      groupObj.expanded = true;
+      lD.viewer.layerManager.render();
+    }
+
+    // Add editing class
     $(groupDOMObject).addClass('editing');
 
     // Unset canvas z-index

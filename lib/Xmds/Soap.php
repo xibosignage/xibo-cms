@@ -387,15 +387,28 @@ class Soap
                             default => 'P',
                         };
 
-                        if ($node->getAttribute('id') < 0 && $type === 'M') {
+                        // HTTP download for a v3 player will have saved the type and fileType as M and media
+                        // respectively, which is different to what we use in the URL.
+                        $assetType = $node->getAttribute('assetType');
+                        if (!empty($assetType)) {
                             $type = 'P';
+                            $fileType = $assetType;
+                        } else {
+                            $fileType = $node->getAttribute('fileType');
                         }
 
+                        // Use the realId if we have it.
+                        $realId = $node->getAttribute('realId');
+                        if (empty($realId)) {
+                            $realId = $node->getAttribute('id');
+                        }
+
+                        // Generate a new URL.
                         $newUrl = $this->generateRequiredFileDownloadPath(
                             $type,
-                            $node->getAttribute('id'),
+                            $realId,
                             $node->getAttribute('saveAs'),
-                            $node->getAttribute('fileType'),
+                            $fileType,
                         );
 
                         $node->setAttribute('path', $newUrl);
@@ -2861,6 +2874,10 @@ class Soap
             }
             $file->setAttribute('id', $dependency->legacyId);
             $file->setAttribute('fileType', 'media');
+
+            // We need an extra attribute so that we can retrieve the original asset type from cache.
+            $file->setAttribute('realId', $dependency->id);
+            $file->setAttribute('assetType', $dependency->fileType);
         }
 
         // Add our node

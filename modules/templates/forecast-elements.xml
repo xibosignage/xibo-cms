@@ -73,11 +73,15 @@ if (String(value).length === 0) {
     return '';
 }
 
-if (String(value).includes('°C')) {
-    return value;
-}
+if (properties.data && properties.data.temperatureUnit) {
+    var temperatureUnit = properties.data.temperatureUnit;
 
-return value + '<sup>°C</sup>';
+    if (String(value).includes('°' + temperatureUnit)) {
+        return value;
+    }
+
+    return value + '<sup>°' + temperatureUnit + '</sup>';
+}
         ]]></onElementParseData>
     </template>
     <template>
@@ -96,11 +100,15 @@ if (String(value).length === 0) {
     return '';
 }
 
-if (String(value).includes('°C')) {
-    return value;
-}
+if (properties.data && properties.data.temperatureUnit) {
+    var temperatureUnit = properties.data.temperatureUnit;
 
-return value + '<sup>°C</sup>';
+    if (String(value).includes('°' + temperatureUnit)) {
+        return value;
+    }
+
+    return value + '<sup>°' + temperatureUnit + '</sup>';
+}
         ]]></onElementParseData>
     </template>
     <template>
@@ -119,7 +127,7 @@ if (String(value).length === 0) {
     return '';
 }
 
-if (String(value).includes('°C')) {
+if (String(value).includes('%')) {
     return value;
 }
 
@@ -223,7 +231,8 @@ return value + '%';
         <startHeight>100</startHeight>
         <onTemplateRender><![CDATA[
 if (meta && meta.hasOwnProperty('Attribution')) {
-    $(target).find('.global-elements-text > div:first-child').html(meta.Attribution);
+    var $childElem = $(target).is('.' + id + '--item') ? '> div:first-child' : '.global-elements-text > div:first-child';
+    $(target).find($childElem).html(meta.Attribution);
 }
         ]]></onTemplateRender>
     </template>
@@ -237,33 +246,29 @@ if (meta && meta.hasOwnProperty('Attribution')) {
         <startWidth>480</startWidth>
         <startHeight>600</startHeight>
         <properties>
-            <property id="bgFromLibrary" type="checkbox">
-                <title>Select from Library</title>
+            <property id="roundBorder" type="checkbox">
+                <title>Round Border</title>
                 <default>0</default>
-                <helpText>Should the background image be coming from library?</helpText>
+                <helpText>Should the square have rounded corners?</helpText>
             </property>
-            <property id="weatherBg" type="mediaSelector">
-                <title>Background from Library</title>
+            <property id="borderRadius" type="number">
+                <title>Border Radius</title>
+                <default>20</default>
                 <visibility>
                     <test type="and">
-                        <condition field="bgFromLibrary" type="eq">1</condition>
+                        <condition field="roundBorder" type="eq">1</condition>
                     </test>
                 </visibility>
             </property>
             <property id="objectFit" type="dropdown" mode="single">
                 <title>Scale type</title>
                 <helpText>How should this image be scaled?</helpText>
-                <default>contain</default>
+                <default>cover</default>
                 <options>
                     <option name="fill">Fill</option>
                     <option name="contain">Contain</option>
                     <option name="cover">Cover</option>
                 </options>
-                <visibility>
-                    <test type="and">
-                        <condition field="bgFromLibrary" type="eq">1</condition>
-                    </test>
-                </visibility>
             </property>
             <property id="alignId" type="dropdown" mode="single">
                 <title>Horizontal Align</title>
@@ -276,7 +281,6 @@ if (meta && meta.hasOwnProperty('Attribution')) {
                 </options>
                 <visibility>
                     <test>
-                        <condition field="bgFromLibrary" type="eq">1</condition>
                         <condition field="objectFit" type="neq">fill</condition>
                     </test>
                 </visibility>
@@ -292,65 +296,70 @@ if (meta && meta.hasOwnProperty('Attribution')) {
                 </options>
                 <visibility>
                     <test>
-                        <condition field="bgFromLibrary" type="eq">1</condition>
                         <condition field="objectFit" type="neq">fill</condition>
                     </test>
                 </visibility>
             </property>
-            <property id="roundBorder" type="checkbox">
-                <title>Round Border</title>
-                <default>0</default>
-                <helpText>Should the square have rounded corners?</helpText>
-            </property>
-            <property id="borderRadius" type="number">
-                <title>Border Radius</title>
-                <default>20</default>
+            <property type="header" variant="main">
+                <title>Backgrounds</title>
                 <visibility>
-                    <test type="and">
-                        <condition field="roundBorder" type="eq">1</condition>
+                    <test>
+                        <condition field="backgroundImage" type="neq">none</condition>
                     </test>
                 </visibility>
+            </property>
+            <property type="message">
+                <title>Select images from the media library to replace the default weather backgrounds.</title>
+            </property>
+            <property id="cloudyImage" type="mediaSelector">
+                <title>Cloudy</title>
+            </property>
+            <property id="dayCloudyImage" type="mediaSelector">
+                <title>Cloudy day</title>
+            </property>
+            <property id="dayClearImage" type="mediaSelector">
+                <title>Clear</title>
+            </property>
+            <property id="fogImage" type="mediaSelector">
+                <title>Fog</title>
+            </property>
+            <property id="hailImage" type="mediaSelector">
+                <title>Hail</title>
+            </property>
+            <property id="nightClearImage" type="mediaSelector">
+                <title>Clear night</title>
+            </property>
+            <property id="nightPartlyCloudyImage" type="mediaSelector">
+                <title>Cloudy night</title>
+            </property>
+            <property id="rainImage" type="mediaSelector">
+                <title>Raining</title>
+            </property>
+            <property id="snowImage" type="mediaSelector">
+                <title>Snowing</title>
+            </property>
+            <property id="windyImage" type="mediaSelector">
+                <title>Windy</title>
             </property>
         </properties>
         <stencil>
             <hbs><![CDATA[
-{{#if bgFromLibrary}}
-    {{#if weatherBg}}
-        <div class="global-elements-image img-container" style="width:100%; height: 100%; overflow: hidden; position: relative;
-            {{#if roundBorder}}border-radius: {{borderRadius}}px;{{/if}}">
-            <img src="/library/download/{{weatherBg}}" style="
-                width:100%; height: 100%;
-                object-fit: {{objectFit}};
-                object-position: {{alignId}} {{valignId}};
-                position: absolute; top: 0; left: 0;"
-            />
-        </div>
-    {{/if}}
-{{else}}
-<div class="forecast-elements-background-image {{#if data.icon}}has-bg{{/if}}"
-    style="background-image: url('[[assetId=bg-{{data.icon}}]]')"></div>
-{{/if}}
+<div class="global-elements-image img-container forecast-elements-background-image weather-bg--{{data.icon}}"
+    style="width:100%; height: 100%; overflow: hidden; position: relative;">
+    {{set 'bgImg' (weatherBackgroundImage data.icon cloudyImage dayCloudyImage dayClearImage fogImage hailImage nightClearImage nightPartlyCloudyImage rainImage snowImage windImage)}}
+    <img src="{{#if @root.bgImg}}/library/download/{{@root.bgImg}}?preview=1{{else}}[[assetId=bg-{{data.icon}}]]{{/if}}"
+        style="width:100%; height: 100%;
+        object-fit: {{objectFit}};
+        object-position: {{alignId}} {{valignId}};
+        position: absolute; top: 0; left: 0;
+        {{#if data.icon}}
+            {{#if roundBorder}}
+                {{#if borderRadius}}border-radius: {{borderRadius}}px;{{/if}}
+            {{/if}}
+        {{/if}}"
+    />
+</div>
             ]]></hbs>
-            <style><![CDATA[
-.forecast-elements-background-image:not(.has-bg) {
-    background-image: none !important;
-}
-
-.forecast-elements-background-image.has-bg {
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    width: 100%;
-    height: 100%;
-    position: absolute;
-    left: 0;
-    top: 0;
-    z-index: -1;
-    {{#if roundBorder}}
-        {{#if borderRadius}}border-radius: {{borderRadius}}px;{{/if}}
-    {{/if}}
-}
-            ]]></style>
         </stencil>
         <assets>
             <asset id="bg-cloudy" type="path" mimeType="image/jpeg" path="/modules/assets/forecastio/wi-cloudy.jpg"></asset>
@@ -385,9 +394,15 @@ if (meta && meta.hasOwnProperty('Attribution')) {
 // Match all affected elements and get date div value
 $(target).find('.date').each(function(_idx, dateEl){
     var dateValue = $(dateEl).data('date');
+    var weatherDate = moment.unix(dateValue);
+
+    // Check for lang config
+    if (properties.lang !== null && String(properties.lang).length > 0) {
+        weatherDate.locale(properties.lang);
+    }
 
     // Format the date with the dateFormat property
-    var formattedDate = moment.unix(dateValue).format(properties.dateFormat);
+    var formattedDate = weatherDate.format(properties.dateFormat);
 
     // Set the date div value to the formatted date
     $(dateEl).html(formattedDate);

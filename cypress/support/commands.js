@@ -329,7 +329,21 @@ Cypress.Commands.add('createCampaign', function(name) {
 });
 
 // Display Group
-Cypress.Commands.add('createDisplaygroup', function(name) {
+Cypress.Commands.add('createDisplaygroup', function(name, isDynamic = false, criteria) {
+  // Define the request body object
+  const requestBody = {
+    displayGroup: name,
+  };
+
+  // Add 'isDynamic' to the request body if it's true
+  if (isDynamic) {
+    requestBody.isDynamic = true;
+  }
+  // Add 'isDynamic' to the request body if it's true
+  if (criteria) {
+    requestBody.dynamicCriteria = criteria;
+  }
+
   cy.request({
     method: 'POST',
     url: '/api/displaygroup',
@@ -337,11 +351,310 @@ Cypress.Commands.add('createDisplaygroup', function(name) {
     headers: {
       Authorization: 'Bearer ' + Cypress.env('accessToken'),
     },
-    body: {
-      displayGroup: name,
-    },
+    body: requestBody,
   }).then((res) => {
     return res.body.displaygroupId;
+  });
+});
+
+// Delete Display group
+Cypress.Commands.add('deleteDisplaygroup', function(id) {
+  cy.request({
+    method: 'DELETE',
+    url: '/api/displaygroup/' + id,
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {},
+  }).then((res) => {
+    return res;
+  });
+});
+
+// Display Profile
+Cypress.Commands.add('createDisplayProfile', function(name, type) {
+  cy.request({
+    method: 'POST',
+    url: '/api/displayprofile',
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {
+      name: name,
+      type: type,
+    },
+  }).then((res) => {
+    return res.body.displayProfileId;
+  });
+});
+
+// Delete display profile
+Cypress.Commands.add('deleteDisplayProfile', function(id) {
+  cy.request({
+    method: 'DELETE',
+    url: '/api/displayprofile/' + id,
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {},
+  }).then((res) => {
+    return res;
+  });
+});
+
+// Dataset
+Cypress.Commands.add('createDataset', function(name) {
+  cy.request({
+    method: 'POST',
+    url: '/api/dataset',
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {
+      dataSet: name,
+    },
+  }).then((res) => {
+    return res.body.dataSetId;
+  });
+});
+
+// Delete Dataset
+Cypress.Commands.add('deleteDataset', function(id) {
+  cy.request({
+    method: 'DELETE',
+    url: '/api/dataset/' + id,
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {},
+  }).then((res) => {
+    return res;
+  });
+});
+
+// Sync Group
+Cypress.Commands.add('createSyncGroup', function(name) {
+  cy.request({
+    method: 'POST',
+    url: '/api/syncgroup/add',
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {
+      name: name,
+      syncPublisherPort: 9590,
+    },
+  }).then((res) => {
+    return res.body.datasetId;
+  });
+});
+
+// DayPart
+Cypress.Commands.add('createDayPart', function(name) {
+  cy.request({
+    method: 'POST',
+    url: '/api/daypart',
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {
+      name: name,
+      startTime: '01:00:00',
+      endTime: '02:00:00',
+    },
+  }).then((res) => {
+    return res.body.dayPartId;
+  });
+});
+
+// Delete DayPart
+Cypress.Commands.add('deleteDayPart', function(id) {
+  cy.request({
+    method: 'DELETE',
+    url: '/api/daypart/' + id,
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {},
+  }).then((res) => {
+    return res;
+  });
+});
+
+// Tag
+Cypress.Commands.add('createTag', function(name) {
+  cy.request({
+    method: 'POST',
+    url: '/api/tag',
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {
+      name: name,
+    },
+  }).then((res) => {
+    return res.body.id;
+  });
+});
+
+
+// Menuboard
+Cypress.Commands.add('createMenuboard', function(name) {
+  cy.request({
+    method: 'POST',
+    url: '/api/menuboard',
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {
+      name: name,
+    },
+  }).then((res) => {
+    return res.body.menuId;
+  });
+});
+
+// Application
+Cypress.Commands.add('createApplication', function(name) {
+  cy.request({
+    method: 'POST',
+    url: '/api/application',
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {
+      name: name,
+    },
+  }).then((res) => {
+    return res.body.key;
+  });
+});
+
+// User
+Cypress.Commands.add('createUser', function(name, password, userTypeId, homeFolderId) {
+  cy.request({
+    method: 'POST',
+    url: '/api/user',
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {
+      userName: name,
+      password: password,
+      userTypeId: userTypeId,
+      homeFolderId: homeFolderId,
+      homePageId: 'icondashboard.view',
+    },
+  }).then((res) => {
+    return res.body.userId;
+  });
+});
+
+// Delete User
+Cypress.Commands.add('deleteUser', function(id) {
+  cy.request({
+    method: 'DELETE',
+    url: '/api/user/' + id,
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {},
+  }).then((res) => {
+    return res;
+  });
+});
+
+// Usergroup
+Cypress.Commands.add('createUsergroup', function(name) {
+  cy.request({
+    method: 'POST',
+    url: '/api/group',
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {
+      group: name,
+    },
+  }).then((res) => {
+    return res.body.groupId;
+  });
+});
+
+// Delete Usergroup
+Cypress.Commands.add('deleteUsergroup', function(id) {
+  cy.request({
+    method: 'DELETE',
+    url: '/api/group/' + id,
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {},
+  }).then((res) => {
+    return res;
+  });
+});
+
+// Menuboard Category
+Cypress.Commands.add('createMenuboardCat', function(name, menuId) {
+  cy.request({
+    method: 'POST',
+    url: '/api/menuboard/' + menuId + '/' + 'category',
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {
+      name: name,
+    },
+  }).then((res) => {
+    return res.body.menuCategoryId;
+  });
+});
+
+// Menuboard Category Product
+Cypress.Commands.add('createMenuboardCatProd', function(name, menuCatId) {
+  cy.request({
+    method: 'POST',
+    url: '/api/menuboard/' + menuCatId + '/' + 'product',
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {
+      name: name,
+    },
+  }).then((res) => {
+    return res.body.menuProductId;
+  });
+});
+
+// Delete Menuboard
+Cypress.Commands.add('deleteMenuboard', function(id) {
+  cy.request({
+    method: 'DELETE',
+    url: '/api/menuboard/' + id,
+    form: true,
+    headers: {
+      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+    },
+    body: {},
+  }).then((res) => {
+    return res;
   });
 });
 

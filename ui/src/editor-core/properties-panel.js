@@ -554,6 +554,18 @@ PropertiesPanel.prototype.render = function(
       const regionType = (target.subType === 'frame') ?
         'widget' : target.subType;
       dataToRender.regionType = propertiesPanelTrans[regionType];
+
+      if (
+        target.subType === 'frame' &&
+        $.isEmptyObject(target.widgets)
+      ) {
+        self.DOMObject.html(
+          '<div class="unsuccessMessage invalid-region-message">' +
+          errorMessagesTrans.invalidRegion +
+          '</div>');
+
+        return;
+      }
     }
 
     const propertiesPanelOptions = {
@@ -990,7 +1002,11 @@ PropertiesPanel.prototype.render = function(
     if (
       app.mainObjectType === 'layout' &&
       (
-        target.type === 'widget' ||
+        (
+          target.type === 'widget' &&
+          // Don't show for drawer widget
+          target.drawerWidget != true
+        ) ||
         target.subType === 'playlist' ||
         isElementGroup
       )
@@ -1503,7 +1519,7 @@ PropertiesPanel.prototype.initFields = function(
     // Auto save when changing inputs
     $(self.DOMObject).find('form').off()
       .on({
-        'change inputChange': function(_ev, options) {
+        'change inputChange xiboInputChange': function(_ev, options) {
           // If field is code input
           // only save when the event is a change/onfocus
           if (

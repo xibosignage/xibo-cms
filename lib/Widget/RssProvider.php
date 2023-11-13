@@ -122,7 +122,7 @@ class RssProvider implements WidgetProviderInterface
                 usort($feedItems, function ($a, $b) {
                     /* @var Item $a */
                     /* @var Item $b */
-                    return $a->getDate()->getTimestamp() - $b->getDate()->getTimestamp();
+                    return $b->getDate()->getTimestamp() - $a->getDate()->getTimestamp();
                 });
             }
 
@@ -152,7 +152,6 @@ class RssProvider implements WidgetProviderInterface
                 $imageSourceAttribute = $dataProvider->getProperty('imageSourceAttribute', null);
             }
 
-            $countItems = 0;
             // Parse each item into an article
             foreach ($feedItems as $item) {
                 /* @var Item $item */
@@ -192,13 +191,6 @@ class RssProvider implements WidgetProviderInterface
                 if ($dataProvider->getProperty('decodeHtml') == 1) {
                     $article->content = htmlspecialchars_decode($article->content);
                 }
-
-                // Return articles based on the value of numItems
-                if ($dataProvider->getProperty('numItems') == $countItems) {
-                    break;
-                }
-
-                $countItems++;
 
                 // Add the article.
                 $dataProvider->addItem($article);

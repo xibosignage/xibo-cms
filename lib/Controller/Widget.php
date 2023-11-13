@@ -518,9 +518,6 @@ class Widget extends Base
             $template = $this->moduleTemplateFactory->getByDataTypeAndId($module->dataType, $existingTemplateId);
         }
 
-        // Before we start, clean out any cached media
-        $widget->clearCachedMedia();
-
         // We're expecting all of our properties to be supplied for editing.
         foreach ($module->properties as $property) {
             if ($property->type === 'message') {
@@ -560,6 +557,8 @@ class Widget extends Base
                 ), 'libraryRef');
             }
         }
+
+        // TODO: remove media which is no longer referenced, without removing primary media and/or media in elements
 
         // If we have a validator interface, then use it now
         foreach ($widgetValidators as $widgetValidator) {
@@ -1622,6 +1621,19 @@ class Widget extends Base
         // Store the target regionId
         $widget->load();
 
+        // Get a list of elements that already exist and their mediaId's
+        $newMediaIds = [];
+        $existingMediaIds = [];
+        foreach (json_decode($widget->getOptionValue('elements', '[]'), true) as $widgetElement) {
+            foreach ($widgetElement['elements'] ?? [] as $element) {
+                if (!empty($element['mediaId'])) {
+                    $existingMediaIds[] = intval($element['mediaId']);
+                }
+            }
+        }
+
+        $this->getLog()->debug('saveElements: there are ' . count($existingMediaIds) . ' existing mediaIds');
+
         // Pull out elements directly from the request body
         $elements = $request->getBody()->getContents();
         $elementJson = json_decode($elements, true);
@@ -1639,6 +1651,18 @@ class Widget extends Base
                     $slots[] = $slotNo;
                     $uniqueSlots++;
                 }
+
+                // Handle elements with the mediaId property so that media is linked and unlinked correctly.
+                if (!empty($element['mediaId'])) {
+                    $mediaId = intval($element['mediaId']);
+
+                    if (!in_array($mediaId, $existingMediaIds)) {
+                        // Make sure it exists, and we have permission to use it.
+                        $this->mediaFactory->getById($mediaId, false);
+                    }
+                    $widget->assignMedia($mediaId);
+                    $newMediaIds[] = $mediaId;
+                }
             }
         }
 
@@ -1649,11 +1673,18 @@ class Widget extends Base
         // Save elements
         $widget->setOptionValue('elements', 'raw', $elements);
 
+        // Unassign any mediaIds from elements which are no longer used.
+        foreach ($existingMediaIds as $existingMediaId) {
+            if (!in_array($existingMediaId, $newMediaIds)) {
+                $widget->unassignMedia($existingMediaId);
+            }
+        }
+
         // Save
         $widget->save([
             'saveWidgetOptions' => true,
             'saveWidgetAudio' => false,
-            'saveWidgetMedia' => false,
+            'saveWidgetMedia' => true,
             'notifyDisplays' => false,
             'audit' => true
         ]);

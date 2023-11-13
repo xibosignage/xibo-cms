@@ -457,15 +457,13 @@ class Playlist implements \JsonSerializable
                     // This widget is >= the display order and therefore needs to be moved down one position.
                     $existingWidget->displayOrder = $existingWidget->displayOrder + 1;
                 }
-
-                // Set the incoming widget to the requested display order.
-                $widget->displayOrder = $displayOrder;
             }
+            // Set the incoming widget to the requested display order.
+            $widget->displayOrder = $displayOrder;
         } else {
             // Take the next available one
             $widget->displayOrder = count($this->widgets) + 1;
         }
-
         $this->widgets[] = $widget;
     }
 
@@ -515,7 +513,8 @@ class Playlist implements \JsonSerializable
             'loadPermissions' => true,
             'loadWidgets' => true,
             'loadTags' => true,
-            'loadActions' => true
+            'loadActions' => true,
+            'checkDisplayOrder' => false,
         ], $loadOptions);
 
         $this->getLog()->debug('Load Playlist with ' . json_encode($options));
@@ -531,6 +530,27 @@ class Playlist implements \JsonSerializable
                 /* @var Widget $widget */
                 $widget->load($options['loadActions']);
                 $this->widgets[] = $widget;
+            }
+
+            // for dynamic sync task
+            // make sure we have correct displayOrder on all existing Widgets here.
+            if ($this->isDynamic === 1 && $options['checkDisplayOrder']) {
+                // Sort the widgets by their display order
+                usort($this->widgets, function ($a, $b) {
+                    /**
+                     * @var Widget $a
+                     * @var Widget $b
+                     */
+                    return $a->displayOrder - $b->displayOrder;
+                });
+
+                $i = 0;
+                foreach ($this->widgets as $widget) {
+                    /* @var Widget $widget */
+                    $i++;
+                    // Assert the displayOrder
+                    $widget->displayOrder = $i;
+                }
             }
         }
 
@@ -1107,7 +1127,8 @@ class Playlist implements \JsonSerializable
                 $playlistItems = json_decode($playlistWidget->getOptionValue('subPlaylists', '[]'), true);
                 foreach ($playlistItems as $nestedPlaylistItem) {
                     $nestedPlaylist = $this->playlistFactory->getById($nestedPlaylistItem['playlistId']);
-                    $nestedPlaylist->load();
+                    // include Widgets only for non dynamic Playlists #2392
+                    $nestedPlaylist->load(['loadWidgets' => !$nestedPlaylist->isDynamic]);
                     $this->getLog()->debug('playlist mappings parent id ' . $parentId);
                     $nestedPlaylistDefinitions[$nestedPlaylist->playlistId] = $nestedPlaylist;
 

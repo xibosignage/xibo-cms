@@ -128,7 +128,7 @@
                             </div>
 
                             {% set title %}{% trans "Display Groups" %}{% endset %}
-                            <div class="form-group mr-1 mb-1 pagedSelect" style="min-width: 200px">
+                            <div class="form-group mr-2 mb-1 pagedSelect" style="min-width: 200px">
                                 <label class="control-label mr-1" for="DisplayGroupList" title=""
                                        accesskey="">{{ title }}</label>
                                 <select id="DisplayGroupList" class="form-control" name="displayGroupIds[]"
@@ -147,6 +147,37 @@
                                     {% endfor %}
                                 </select>
                             </div>
+
+                            {% set label %}{% trans "Direct Schedule?" %}{% endset %}
+                            {% set title %}{% trans "Show only events scheduled directly on selected Displays/Groups" %}{% endset %}
+                            <div class="form-group mr-1 mb-1">
+                                <label class="control-label mr-1" title="{{ title }}" for="directSchedule" accesskey="">{{ label }}</label>
+                                <div>
+                                    <div class="input-group" style="height: 34px">
+                                        <div class="input-group-append input-group-addon">
+                                            <div class="input-group-text">
+                                                <input title="{{ title }}" type="checkbox" id="directSchedule" name="directSchedule">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {% set title %}{% trans "Only show schedules which appear on all filtered displays/groups?" %}{% endset %}
+                            {% set label %}{% trans "Shared Schedule?" %}{% endset %}
+                            <div class="form-group mr-1 mb-1">
+                                <label class="control-label mr-1" title="{{ title }}" for="directSchedule" accesskey="">{{ label }}</label>
+                                <div>
+                                    <div class="input-group" style="height: 34px">
+                                        <div class="input-group-append input-group-addon">
+                                            <div class="input-group-text">
+                                                <input title="{{ title }}" type="checkbox" id="sharedSchedule" name="sharedSchedule">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             {% set title %}{% trans 'Geo Aware?' %}{% endset %}
                             {% set options = [
                                 { id: null, name: "Both"|trans },
@@ -1458,7 +1489,22 @@
                     '{% trans "Sunday" %}'
                   ];
 
-                  return daysOfTheWeek[data.recurrenceRepeatsOn - 1];
+                  let recurrenceArray = data.recurrenceRepeatsOn.split(',');
+
+                  if (recurrenceArray.length >= 1) {
+                    let stringToReturn = '';
+                    // go through each selected day, get the corresponding day name
+                    recurrenceArray.forEach((dayNumber, index) => {
+                      stringToReturn += daysOfTheWeek[dayNumber - 1];
+                      if (index < recurrenceArray.length - 1) {
+                        stringToReturn += ' ';
+                      }
+                    })
+
+                    return stringToReturn;
+                  } else {
+                    return '';
+                  }
                 } else if (data.recurrenceType === 'Month') {
                   return data.recurrenceMonthlyRepeatsOn
                 } else {

@@ -526,6 +526,10 @@
                     </div>
                     <div class="modal-body">
                         <div class="form-group card p-3 mb-3 bg-light">
+                        <input id="jstree-search-form" class="form-control" type="text" placeholder="{% trans "Search" %}">
+                        <div class="folder-search-no-results d-none">
+                            <p>{% trans 'No Folders matching the search term' %}</p>
+                        </div>
                             {% verbatim %}
                                 <div id="{{ container }}"></div>
                             {% endverbatim %}

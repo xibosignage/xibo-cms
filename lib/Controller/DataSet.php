@@ -88,9 +88,6 @@ class DataSet extends Base
     public function displayPage(Request $request, Response $response)
     {
         $this->getState()->template = 'dataset-page';
-        $this->getState()->setData([
-            'users' => $this->userFactory->query(),
-        ]);
 
         return $this->render($request, $response);
     }

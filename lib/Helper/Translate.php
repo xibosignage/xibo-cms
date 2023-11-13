@@ -121,6 +121,45 @@ class Translate
     }
 
     /**
+     * Get translations for user selected language
+     * @param $language
+     * @return Translator|null
+     */
+    public static function getTranslationsFromLocale($language): ?Translator
+    {
+        // Build an array of supported languages
+        $localeDir = PROJECT_ROOT . '/locale';
+        $supportedLanguages = array_map('basename', glob($localeDir . '/*.mo'));
+
+        // Record any matching languages we find.
+        $foundLanguage = null;
+
+        // Try to get the local firstly from _REQUEST (post then get)
+        if ($language != null) {
+            $parsedLanguage = str_replace('-', '_', $language);
+
+            // Check its valid
+            if (in_array($parsedLanguage . '.mo', $supportedLanguages)) {
+                $foundLanguage = $parsedLanguage;
+            } else {
+                return null;
+            }
+        }
+
+        // Are we still empty, then return null
+        if ($foundLanguage == '') {
+            return null;
+        }
+
+        // Load translations
+        $translator = new Translator();
+        $translator->loadTranslations(Translations::fromMoFile($localeDir . '/' . $foundLanguage . '.mo'));
+        $translator->register();
+
+        return $translator;
+    }
+
+    /**
      * Get the Locale
      * @param null $characters The number of characters to take from the beginning of the local string
      * @return mixed

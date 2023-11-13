@@ -21,11 +21,15 @@ const templates = {
     require('../templates/form-helpers-world-clock.hbs'),
   menuProductOptions:
     require('../templates/form-helpers-menuboard-product.hbs'),
+  editorRegionControls:
+    require('../templates/forms/inputs/add-ons/richTextRegionControls.hbs'),
 };
 
-const CKEDITOR_MIN_HEIGHT = 80;
+const CKEDITOR_MIN_HEIGHT = 120;
 const CKEDITOR_MAX_HEIGHT = 200;
 const CKEDITOR_OVERLAY_WIDTH = 2;
+const CKEDITOR_MARGIN = 8;
+const CKEDITOR_SCROLLBAR_MARGIN = 8;
 
 const formHelpers = function() {
   // Default params ( might change )
@@ -34,7 +38,6 @@ const formHelpers = function() {
   this.defaultRegionDimensions = {
     width: 800,
     height: 600,
-    scale: 1,
   };
 
   /**
@@ -295,181 +298,6 @@ const formHelpers = function() {
   };
 
   /**
-  * Setup dual type text area (advanced and simple modes)
-  * @param {object} dialog
-  *  - Dialog object ( the object that contains the replaceable fields )
-  * @param {string} textAreaID - text area ID - Snippets selector
-  * @param {boolean=} inlineEditor - Use the text area as inline editor
-  * @param {string=} customNoDataMessage
-  *  - Custom message to appear when the field is empty
-  */
-  this.setupDualTypeTextArea = function(
-    dialog,
-    textAreaID,
-    inlineEditor = false,
-    customNoDataMessage = null,
-  ) {
-    // Get disable checkbox
-    const self = this;
-    const $advancedEditorOption = $('#' + textAreaID + '_advanced', dialog);
-
-    const setupDualEditor = function(dialog, textAreaID) {
-      // Inline editor
-      if (inlineEditor) {
-        $(dialog).data().viewerObject
-          .setupInlineEditor(textAreaID, $advancedEditorOption.is(':checked'));
-
-        if (!$advancedEditorOption.is(':checked')) {
-          // Setup text area snippets
-          self.setupTextArea(dialog, textAreaID, customNoDataMessage);
-        }
-      } else { // Form editor
-        if (
-          $advancedEditorOption !== undefined &&
-          !$advancedEditorOption.is(':checked')
-        ) {
-          // Toggle elements visibility
-          dialog.find('.' + textAreaID + '-advanced-editor-show').hide();
-          dialog.find('.' + textAreaID + '-advanced-editor-hide').show();
-
-          // Destroy CKEditor if exists
-          self.destroyCKEditor(textAreaID);
-
-          // Try to hide the dimension controls
-          self.setupFormDimensionControls(dialog, false, textAreaID);
-
-          // Setup text area snippets
-          self.setupTextArea(dialog, textAreaID, customNoDataMessage);
-
-          // Add to the property panel the form editor class
-          dialog.find('#properties-panel-form-container')
-            .removeClass('form-editor-enabled');
-        } else {
-          // Toggle elements visibility
-          dialog.find('.' + textAreaID + '-advanced-editor-show').show();
-          dialog.find('.' + textAreaID + '-advanced-editor-hide').hide();
-
-          self.setupCKEditor(
-            dialog,
-            null,
-            textAreaID,
-            false,
-            customNoDataMessage,
-          );
-
-          // Remove class form editor from the property panel
-          dialog.find('#properties-panel-form-container')
-            .addClass('form-editor-enabled');
-        }
-      }
-    };
-    // Register an onchange listener to callback function
-    // on advanced editor checkbox change if exists
-    $advancedEditorOption.bootstrapSwitch().on(
-      'switchChange.bootstrapSwitch',
-      function(event, state) {
-        setupDualEditor(dialog, textAreaID);
-      });
-
-    setupDualEditor(dialog, textAreaID);
-  };
-
-  /**
-  * Setup form textarea with text/library snippets and no data message
-  * @param {object} dialog
-  *    - Dialog object ( the object that contains the replaceable fields )
-  * @param {string} textAreaId
-  *    - text area ID - Snippets selector
-  * @param {string=} customNoDataMessage
-  *    - Custom message to appear when the field is empty
-  */
-  this.setupTextArea = function(
-    dialog,
-    textAreaId,
-    customNoDataMessage = null,
-  ) {
-    // Get select elements
-    const $snippets =
-      $('.ckeditor_snippets_select[data-linked-to="' + textAreaId + '"]',
-        dialog);
-    const $mediaSelector =
-      $('.ckeditor_library_select[data-linked-to="' + textAreaId + '"]',
-        dialog);
-
-    // Setup Snippets
-    if ($snippets.length > 0) {
-      this.setupSnippetsSelector($snippets, function(e) {
-        const linkedTo = $snippets.data().linkedTo;
-        const target = $('#' + linkedTo, dialog);
-        const value = e.params.data.element.value;
-
-        if (target.length > 0 && value !== undefined) {
-          const text = '[' + value + ']';
-          const cursorPosition = target[0].selectionStart;
-          const previousText = target.val();
-
-          $('#' + linkedTo, dialog).val(
-            previousText.substring(0, cursorPosition) +
-            text +
-            previousText.substring(cursorPosition));
-        }
-      });
-    }
-
-    // Setup Media
-    if ($mediaSelector.length > 0) {
-      this.setupMediaSelector($mediaSelector, function(e) {
-        const linkedTo = $mediaSelector.data().linkedTo;
-        const value = e.params.data.id;
-        const target = $('#' + linkedTo, dialog);
-
-        if (target.length > 0 && value !== undefined) {
-          const text = '<img src="[' + value + ']"/>';
-          const cursorPosition = target[0].selectionStart;
-          const previousText = target.val();
-
-          $('#' + linkedTo, dialog).val(
-            previousText.substring(0, cursorPosition) +
-            text +
-            previousText.substring(cursorPosition));
-        }
-      });
-    }
-
-    // Handle no message data
-    if ($('#' + textAreaId, dialog).val() == '') {
-      // Background color from the mainObject
-      const backgroundColor =
-        (
-          this.mainObject != undefined &&
-          typeof this.mainObject.backgroundColor != 'undefined' &&
-          this.mainObject.backgroundColor != null
-        ) ?
-          this.mainObject.backgroundColor :
-          this.defaultBackgroundColor;
-
-      // Choose a complementary color
-      const color = $c.complement(backgroundColor);
-
-      let dataMessage = '';
-
-      if (textAreaId === 'noDataMessage') {
-        dataMessage = translations.noDataMessage;
-      } else if (customNoDataMessage !== null) {
-        dataMessage = customNoDataMessage;
-      } else {
-        dataMessage = translations.enterText;
-      }
-
-      $('#' + textAreaId, dialog)
-        .val(
-          '<span style="font-size: 48px; color:' + color + ';">' +
-          dataMessage +
-          '</span>');
-    }
-  };
-
-  /**
    * Setup the snippets' selector
    * @param {object} selector - DOM select object
    * @param {function} callback
@@ -687,17 +515,16 @@ const formHelpers = function() {
    * Create a CKEDITOR instance to conjure a text editor
    * @param {object} dialog
    *   - Dialog object ( the object that contains the replaceable fields )
-   * @param {object} extraData - Extra data
    * @param {string} textAreaId - Id of the text area to use for the editor
    * @param {bool=} inline - Inline editor option
    * @param {string=} customNoDataMessage
    *   - Custom message to appear when the field is empty
    * @param {boolean} focusOnBuild - Focus on the editor after building
    * @param {boolean} updateOnBlur - Update the field on blur
+   * @return {Promise} - Promise
    */
   this.setupCKEditor = function(
     dialog,
-    extraData,
     textAreaId,
     inline = false,
     customNoDataMessage = null,
@@ -706,156 +533,128 @@ const formHelpers = function() {
   ) {
     const self = this;
 
-    // Check if text area is visible
-    const visibleOnLoad = $(dialog).find('#' + textAreaId).is(':visible');
+    // Return promise
+    return new Promise((resolve, reject) => {
+      // Check if text area is visible
+      const visibleOnLoad = $(dialog).find('#' + textAreaId).is(':visible');
 
-    // COLORS
-    // Background color for the editor
-    const backgroundColor =
-      (
-        this.mainObject != undefined &&
-        typeof this.mainObject.backgroundColor != 'undefined' &&
-        this.mainObject.backgroundColor != null
-      ) ?
-        this.mainObject.backgroundColor :
-        this.defaultBackgroundColor;
+      // COLORS
+      // Background color for the editor
+      const backgroundColor =
+        (
+          this.mainObject != undefined &&
+          typeof this.mainObject.backgroundColor != 'undefined' &&
+          this.mainObject.backgroundColor != null
+        ) ?
+          this.mainObject.backgroundColor :
+          this.defaultBackgroundColor;
 
-    // Choose a complementary color
-    const color = $c.complement(backgroundColor);
+      // Choose a complementary color
+      const color = $c.complement(backgroundColor);
 
-    // Calculate if inline BG colour should be shown
-    const inlineHideBGColour = (
-      inline && this.mainObject.backgroundImage != undefined &&
-      this.mainObject.backgroundImage != null
-    );
+      // Calculate if inline BG colour should be shown
+      const inlineHideBGColour = (
+        inline && this.mainObject.backgroundImage != undefined &&
+        this.mainObject.backgroundImage != null
+      );
 
-    const scaleToContainer = (regionDimensions, $scaleTo, inline) => {
-      let width;
+      const scaleToContainer = (regionDimensions, $scaleTo, inline) => {
+        let width;
 
-      // If element isn't visible, set default dimensions
-      if (visibleOnLoad === false) {
-        width = $(dialog).find('form .tab-content').width();
-      } else {
-        if (inline) {
-          // Outer width for the inline element
-          width = $scaleTo.outerWidth() - 4;
+        // If element isn't visible, set default dimensions
+        if (visibleOnLoad === false) {
+          width = $(dialog).find('form .tab-content').width();
         } else {
-          // Inner width and a padding for the scrollbar
-          width =
-            $scaleTo.innerWidth() -
-            32 -
-            ((iframeBorderWidth + iframeMargin) * 2);
-        }
-      }
-
-      // Element side plus margin
-      const elementWidth = regionDimensions.width;
-      const elementHeight = regionDimensions.height;
-
-      let scale = width / elementWidth;
-
-      // Scale within limit values for inline
-      if (inline) {
-        if (elementHeight * scale < CKEDITOR_MIN_HEIGHT) {
-          scale = CKEDITOR_MIN_HEIGHT / elementHeight;
-        } else if (elementHeight * scale > CKEDITOR_MAX_HEIGHT) {
-          scale = CKEDITOR_MAX_HEIGHT / elementHeight;
-        }
-      }
-
-      return scale;
-    };
-
-    const iframeMargin = 10;
-    const iframeBorderWidth = 2;
-
-    // DIMENSIONS
-    let region = {};
-
-    // Get region dimensions
-    if (this.namespace == undefined) {
-      if (
-        dialog.find('form').data('regionWidth') != undefined &&
-        dialog.find('form').data('regionHeight') != undefined
-      ) {
-        // Get region dimension from form data
-        region.dimensions = {
-          width: dialog.find('form').data('regionWidth'),
-          height: dialog.find('form').data('regionHeight'),
-        };
-      } else {
-        // Empty region ( no dimensions set )
-        region = {};
-      }
-    } else if (this.namespace.mainRegion != undefined) {
-      region = this.namespace.mainRegion;
-    } else if (this.namespace.selectedObject.type == 'widget') {
-      const widget = this.namespace.selectedObject;
-      region = this.namespace.getObjectByTypeAndId('region', widget.regionId);
-    } else if (this.namespace.selectedObject.type == 'region') {
-      region =
-        this.namespace.getObjectByTypeAndId(
-          'region',
-          this.namespace.selectedObject.id,
-        );
-    }
-
-    let regionDimensions = null;
-    let scale = 1;
-
-    // Calculate dimensions
-    if (region.dimensions === undefined) {
-      // Without region
-      regionDimensions = this.defaultRegionDimensions;
-
-      // Try to show the dimension controls
-      this.setupFormDimensionControls(dialog, true);
-
-      // Dimensions
-      ['width', 'height'].forEach((dimension) => {
-        // Get or set the value
-        if ($.isNumeric($(dialog).find('.text_editor_' + dimension).val())) {
-          regionDimensions[dimension] =
-            parseFloat($(dialog).find('.text_editor_' + dimension).val());
-        } else {
-          $(dialog).find('.text_editor_' + dimension)
-            .val(regionDimensions[dimension]);
-        }
-
-        // Handle input change
-        $(dialog).find('.text_editor_' + dimension).focusout(() => {
-          // If the value was updated
-          if (
-            $(dialog).find('.text_editor_' + dimension).val() !=
-            regionDimensions[dimension]
-          ) {
-            this.restartCKEditors(dialog);
+          if (inline) {
+            // Outer width for the inline element
+            width =
+              $scaleTo.outerWidth() -
+              (CKEDITOR_MARGIN + CKEDITOR_SCROLLBAR_MARGIN);
+          } else {
+            // Inner width and a padding for the scrollbar
+            width =
+              $scaleTo.innerWidth() -
+              32 -
+              ((iframeBorderWidth + iframeMargin) * 2);
           }
-        });
-      });
+        }
 
-      // Scale
-      $(dialog).find('.text_editor_scale').off().change(() => {
-        this.restartCKEditors(dialog);
-      });
+        // Element side plus margin
+        const elementWidth = regionDimensions.width;
+        const elementHeight = regionDimensions.height;
 
-      // Calculate scale based on the form
-      // text area ( if scale checkbox check is true)
-      if ($(dialog).find('.text_editor_scale').is(':checked')) {
-        scale = scaleToContainer(
-          regionDimensions,
-          $(dialog).find('form'),
-          inline);
+        let scale = width / elementWidth;
+
+        // Scale within limit values for inline
+        if (inline) {
+          if (elementHeight * scale < CKEDITOR_MIN_HEIGHT) {
+            scale = (CKEDITOR_MIN_HEIGHT - CKEDITOR_MARGIN) / elementHeight;
+          } else if (elementHeight * scale > CKEDITOR_MAX_HEIGHT) {
+            scale = (CKEDITOR_MAX_HEIGHT - CKEDITOR_MARGIN) / elementHeight;
+          }
+        }
+
+        return scale;
+      };
+
+      const iframeMargin = 10;
+      const iframeBorderWidth = 2;
+
+      // DIMENSIONS
+      let region = {};
+
+      // Get region dimensions
+      if (this.namespace == undefined) {
+        if (
+          dialog.find('form').data('regionWidth') != undefined &&
+          dialog.find('form').data('regionHeight') != undefined
+        ) {
+          // Get region dimension from form data
+          region.dimensions = {
+            width: dialog.find('form').data('regionWidth'),
+            height: dialog.find('form').data('regionHeight'),
+          };
+        } else {
+          // Empty region ( no dimensions set )
+          region = {};
+        }
+      } else if (this.namespace.mainRegion != undefined) {
+        region = this.namespace.mainRegion;
+      } else if (this.namespace.selectedObject.type == 'widget') {
+        const widget = this.namespace.selectedObject;
+        region = this.namespace.getObjectByTypeAndId('region', widget.regionId);
+      } else if (this.namespace.selectedObject.type == 'region') {
+        region =
+          this.namespace.getObjectByTypeAndId(
+            'region',
+            this.namespace.selectedObject.id,
+          );
       }
-    } else {
-      // If region dimensions are defined, use them as base for the editor
-      regionDimensions = region.dimensions;
 
-      if (this.namespace != undefined && this.namespace.viewer != undefined) {
+      let regionDimensions = null;
+      let scale = 1;
+
+      const $richTextInput =
+        $(dialog).find('#' + textAreaId).parents('.rich-text-input');
+
+      // Calculate dimensions
+      if (region.dimensions === undefined) {
+        // Without region
+        regionDimensions = this.defaultRegionDimensions;
+
+        // Calculate scale based on defaults
+        scale = scaleToContainer(
+          this.defaultRegionDimensions,
+          $richTextInput,
+          true);
+      } else {
+        // If region dimensions are defined, use them as base for the editor
+        regionDimensions = region.dimensions;
+
         if (inline) {
           scale = scaleToContainer(
             regionDimensions,
-            $(dialog).find('#' + textAreaId).parents('.rich-text-input'),
+            $richTextInput,
             true);
         } else {
           // Calculate scale based on the region previewed in the viewer
@@ -864,228 +663,236 @@ const formHelpers = function() {
             regionDimensions.width;
         }
       }
-    }
 
-    const applyContentsToIframe = function(field) {
-      const $container = $(CKEDITOR.instances[textAreaId].container.$);
-      const $inputContainer =
-        $container.parents('.rich-text-input');
+      const applyContentsToIframe = function(field) {
+        const $container = $(CKEDITOR.instances[textAreaId].container.$);
+        const $inputContainer =
+          $container.parents('.rich-text-input');
 
-      if (inline) {
-        // Inline editor div tweaks to make them
-        // behave like the iframe rendered content
-        $('.cke_textarea_inline').css('width', regionDimensions.width);
-        $('.cke_textarea_inline').css('height', regionDimensions.height);
+        if (inline) {
+          // Inline editor div tweaks to make them
+          // behave like the iframe rendered content
+          $('.cke_textarea_inline').css('width', regionDimensions.width);
+          $('.cke_textarea_inline').css('height', regionDimensions.height);
 
-        // Show background colour if there's no background image on the layout
-        if (!inlineHideBGColour) {
-          $('.cke_textarea_inline').css('background', backgroundColor);
+          // Show background colour if there's no background image on the layout
+          if (!inlineHideBGColour) {
+            $('.cke_textarea_inline').css('background', backgroundColor);
+          }
+
+          $('.cke_textarea_inline').css('transform', 'scale(' + scale + ')');
+          $('.cke_textarea_inline').data('originaScale', scale);
+          $('.cke_textarea_inline').data('regionWidth', regionDimensions.width);
+          $('.cke_textarea_inline').data(
+            'regionHeight',
+            regionDimensions.height,
+          );
+          $('.cke_textarea_inline').data('currentScale', scale);
+          $('.cke_textarea_inline').css('transform-origin', '0 0');
+          $('.cke_textarea_inline').css('word-wrap', 'inherit');
+          $('.cke_textarea_inline').css('line-height', 'normal');
+          $('.cke_textarea_inline')
+            .css('outline-width', (CKEDITOR_OVERLAY_WIDTH / scale));
+
+          // Save new dimensions to data
+          $('.cke_textarea_inline').data({
+            width: regionDimensions.width * scale,
+            height: regionDimensions.height * scale,
+            scale: scale,
+          });
+
+          $('.cke_textarea_inline p').css('margin', '0 0 16px');
+          $('.cke_textarea_inline').show();
+        } else {
+          $('#cke_' + field + ' iframe').contents().find('head').append(
+            '' +
+            '<style>' +
+            'html { height: 100%; ' +
+            '}' +
+            'body {' +
+            'width: ' + regionDimensions.width + 'px; ' +
+            'height: ' + regionDimensions.height + 'px; ' +
+            'border: ' + iframeBorderWidth + 'px solid red; ' +
+            'background: ' + backgroundColor + '; ' +
+            'transform: scale(' + scale + '); ' +
+            'margin: ' + iframeMargin + 'px; ' +
+            'word-wrap: inherit; ' +
+            'transform-origin: 0 0; }' +
+            'h1, h2, h3, h4, p { margin-top: 0;}' +
+            '</style>');
         }
 
-        $('.cke_textarea_inline').css('transform', 'scale(' + scale + ')');
-        $('.cke_textarea_inline').data('originaScale', scale);
-        $('.cke_textarea_inline').data('currentScale', scale);
-        $('.cke_textarea_inline').css('transform-origin', '0 0');
-        $('.cke_textarea_inline').css('word-wrap', 'inherit');
-        $('.cke_textarea_inline').css('line-height', 'normal');
-        $('.cke_textarea_inline')
-          .css('outline-width', (CKEDITOR_OVERLAY_WIDTH / scale));
-
-        // Save new dimensions to data
-        $('.cke_textarea_inline').data({
-          width: regionDimensions.width * scale,
-          height: regionDimensions.height * scale,
-          scale: scale,
-        });
-
-        $('.cke_textarea_inline p').css('margin', '0 0 16px');
-        $('.cke_textarea_inline').show();
-      } else {
-        $('#cke_' + field + ' iframe').contents().find('head').append(
-          '' +
-          '<style>' +
-          'html { height: 100%; ' +
-          '}' +
-          'body {' +
-          'width: ' + regionDimensions.width + 'px; ' +
-          'height: ' + regionDimensions.height + 'px; ' +
-          'border: ' + iframeBorderWidth + 'px solid red; ' +
-          'background: ' + backgroundColor + '; ' +
-          'transform: scale(' + scale + '); ' +
-          'margin: ' + iframeMargin + 'px; ' +
-          'word-wrap: inherit; ' +
-          'transform-origin: 0 0; }' +
-          'h1, h2, h3, h4, p { margin-top: 0;}' +
-          '</style>');
-      }
-
-      // Set parent container height if data exists
-      const containerData = $container.data();
-      if (containerData !== undefined) {
-        const bottomMargin = 12;
-        // Set width and height to container
-        $container.parents('.rich-text-container')
-          .css('height', containerData.height + bottomMargin);
-      }
-
-      // If the field with changed width, apply the new scale
-      if (
-        regionDimensions.width * scale != $inputContainer.width() &&
-        visibleOnLoad === true &&
-        !inline
-      ) {
-        scale = scaleToContainer(
-          regionDimensions,
-          $(dialog).find('#' + textAreaId).parents('.rich-text-input'),
-          true);
-
-        applyContentsToIframe(field);
-      }
-    };
-
-    // Hide element to avoid glitch
-    $(dialog).find('#' + textAreaId).css('opacity', 0);
-
-    // CKEditor default config and init after config is loaded
-    this.getCKEditorConfig().then(function(config) {
-      CKEDITOR_DEFAULT_CONFIG = config;
-
-      // Set CKEDITOR viewer height based on
-      // region height ( plus content default margin + border*2: 40px )
-      const newHeight = (regionDimensions.height * scale) + (iframeMargin * 2);
-      CKEDITOR.config.height = (newHeight > 500) ? 500 : newHeight;
-
-      // Conjure up a text editor
-      if (inline) {
-        CKEDITOR.inline(textAreaId, CKEDITOR_DEFAULT_CONFIG);
-        (self.namespace.enableInlineModeEditing) &&
-          self.namespace.enableInlineModeEditing();
-      } else {
-        CKEDITOR.replace(textAreaId, CKEDITOR_DEFAULT_CONFIG);
-      }
-
-      // Bind to instance ready so that we
-      // can adjust some things about the editor.
-      CKEDITOR.instances[textAreaId].on('instanceReady', function(ev) {
-        // If not defined, cancel instance setup
-        if (CKEDITOR.instances[textAreaId] === undefined) {
-          return;
+        // Set parent container height if data exists
+        const containerData = $container.data();
+        if (containerData !== undefined) {
+          const bottomMargin = 2;
+          // Set width and height to container
+          $container.parents('.rich-text-container')
+            .css('height', containerData.height + bottomMargin);
         }
 
-        // Trigger focus on textarea on editor focus
-        ev.editor.on('focus', function(evt) {
-          // Trigger focus event on text area
-          $(evt.editor.element.$).trigger('editorFocus');
-        });
+        // If the field with changed width, apply the new scale
+        if (
+          regionDimensions.width * scale != $inputContainer.width() &&
+          visibleOnLoad === true &&
+          !inline
+        ) {
+          scale = scaleToContainer(
+            regionDimensions,
+            $(dialog).find('#' + textAreaId).parents('.rich-text-input'),
+            true);
 
-        // Apply scaling to this editor instance
-        applyContentsToIframe(textAreaId);
+          applyContentsToIframe(field);
+        } else {
+          resolve(true);
+        }
+      };
 
-        // Reapply the background style after switching
-        // to source view and back to the normal editing view
-        CKEDITOR.instances[textAreaId].on('contentDom', function() {
+      // Hide element to avoid glitch
+      $(dialog).find('#' + textAreaId).css('opacity', 0);
+
+      // CKEditor default config and init after config is loaded
+      return this.getCKEditorConfig().then(function(config) {
+        CKEDITOR_DEFAULT_CONFIG = config;
+
+        // Set CKEDITOR viewer height based on
+        // region height ( plus content default margin + border*2: 40px )
+        const newHeight =
+          (regionDimensions.height * scale) + (iframeMargin * 2);
+        CKEDITOR.config.height = (newHeight > 500) ? 500 : newHeight;
+
+        // Conjure up a text editor
+        if (inline) {
+          CKEDITOR.inline(textAreaId, CKEDITOR_DEFAULT_CONFIG);
+          (self.namespace.enableInlineModeEditing) &&
+            self.namespace.enableInlineModeEditing();
+        } else {
+          CKEDITOR.replace(textAreaId, CKEDITOR_DEFAULT_CONFIG);
+        }
+
+        // Bind to instance ready so that we
+        // can adjust some things about the editor.
+        CKEDITOR.instances[textAreaId].on('instanceReady', function(ev) {
+          // If not defined, cancel instance setup
+          if (CKEDITOR.instances[textAreaId] === undefined) {
+            return;
+          }
+
+          // Trigger focus on textarea on editor focus
+          ev.editor.on('focus', function(evt) {
+            // Trigger focus event on text area
+            $(evt.editor.element.$).trigger('editorFocus');
+          });
+
+          // Apply scaling to this editor instance
           applyContentsToIframe(textAreaId);
-        });
 
-        // Get the template data from the text area field
-        let data = $('#' + textAreaId).val();
+          // Reapply the background style after switching
+          // to source view and back to the normal editing view
+          CKEDITOR.instances[textAreaId].on('contentDom', function() {
+            applyContentsToIframe(textAreaId);
+          });
 
-        // Replace color if exists
-        if (data != undefined) {
-          data = data.replace(/#Color#/g, color);
-        }
+          // Get the template data from the text area field
+          let data = $('#' + textAreaId).val();
 
-        // Handle no message data
-        if (data == '') {
-          let dataMessage = '';
-
-          if (textAreaId === 'noDataMessage') {
-            dataMessage = translations.noDataMessage;
-          } else if (customNoDataMessage !== null) {
-            dataMessage = customNoDataMessage;
-          } else {
-            dataMessage = translations.enterText;
+          // Replace color if exists
+          if (data != undefined) {
+            data = data.replace(/#Color#/g, color);
           }
 
-          data = '<span style="font-size: 48px;"><span style="color: ' +
-            color +
-            ';">' +
-            dataMessage +
-            '</span></span>';
-        }
+          // Handle no message data
+          if (data == '') {
+            let dataMessage = '';
 
-        // Handle initial template set up
-        data = self.convertLibraryReferences(data);
-
-        CKEDITOR.instances[textAreaId].setData(data);
-
-        if (focusOnBuild) {
-          CKEDITOR.instances[textAreaId].focus();
-        }
-      });
-
-      // Do we have any snippets selector?
-      const $selectPickerSnippets =
-        $(
-          '.ckeditor_snippets_select[data-linked-to="' + textAreaId + '"]',
-          dialog);
-      // Select2 has been initialized
-      if ($selectPickerSnippets.length > 0) {
-        this.setupSnippetsSelector($selectPickerSnippets, function(e) {
-          const linkedTo = $selectPickerSnippets.data().linkedTo;
-          const value = e.params.data.element.value;
-
-          if (CKEDITOR.instances[linkedTo] != undefined &&
-            value !== undefined) {
-            const text = '[' + value + ']';
-
-            CKEDITOR.instances[linkedTo].insertText(text);
-          }
-        });
-      }
-
-      // Do we have a media selector?
-      const $selectPicker =
-        $(
-          '.ckeditor_library_select[data-linked-to="' + textAreaId + '"]',
-          dialog);
-      if ($selectPicker.length > 0) {
-        this.setupMediaSelector($selectPicker, function(e) {
-          const linkedTo = $selectPicker.data().linkedTo;
-          const value = e.params.data.imageUrl;
-
-          if (value !== undefined && value !== '' && linkedTo != null) {
-            if (CKEDITOR.instances[linkedTo] != undefined) {
-              CKEDITOR.instances[linkedTo]
-                .insertHtml('<img src="' + value + '" />');
+            if (textAreaId === 'noDataMessage') {
+              dataMessage = translations.noDataMessage;
+            } else if (customNoDataMessage !== null) {
+              dataMessage = customNoDataMessage;
+            } else {
+              dataMessage = translations.enterText;
             }
+
+            data = '<span style="font-size: 48px;"><span style="color: ' +
+              color +
+              ';">' +
+              dataMessage +
+              '</span></span>';
+          }
+
+          // Handle initial template set up
+          data = self.convertLibraryReferences(data);
+
+          CKEDITOR.instances[textAreaId].setData(data);
+
+          if (focusOnBuild) {
+            CKEDITOR.instances[textAreaId].focus();
           }
         });
-      }
 
-      // Update on blur
-      if (updateOnBlur) {
-        CKEDITOR.instances[textAreaId].on('blur', function() {
-          // Update CKEditor, but don't parse data (do that only on save)
-          self.updateCKEditor(textAreaId, false);
-        });
-      }
+        // Do we have any snippets selector?
+        const $selectPickerSnippets =
+          $(
+            '.ckeditor_snippets_select[data-linked-to="' + textAreaId + '"]',
+            dialog);
+        // Select2 has been initialized
+        if ($selectPickerSnippets.length > 0) {
+          this.setupSnippetsSelector($selectPickerSnippets, function(e) {
+            const linkedTo = $selectPickerSnippets.data().linkedTo;
+            const value = e.params.data.element.value;
 
-      return false;
+            if (CKEDITOR.instances[linkedTo] != undefined &&
+              value !== undefined) {
+              const text = '[' + value + ']';
+
+              CKEDITOR.instances[linkedTo].insertText(text);
+            }
+          });
+        }
+
+        // Do we have a media selector?
+        const $selectPicker =
+          $(
+            '.ckeditor_library_select[data-linked-to="' + textAreaId + '"]',
+            dialog);
+        if ($selectPicker.length > 0) {
+          this.setupMediaSelector($selectPicker, function(e) {
+            const linkedTo = $selectPicker.data().linkedTo;
+            const value = e.params.data.imageUrl;
+
+            if (value !== undefined && value !== '' && linkedTo != null) {
+              if (CKEDITOR.instances[linkedTo] != undefined) {
+                CKEDITOR.instances[linkedTo]
+                  .insertHtml('<img src="' + value + '" />');
+              }
+            }
+          });
+        }
+
+        // Update on blur
+        if (updateOnBlur) {
+          CKEDITOR.instances[textAreaId].on('blur', function() {
+            // Update CKEditor, but don't parse data (do that only on save)
+            self.updateCKEditor(textAreaId, false);
+          });
+        }
+
+        return false;
+      });
     });
   };
 
   /**
    * Restart all CKEDITOR instances
-   * @param {Object} dialog - The dialog object
+   * @param {Object} options - The ckeditor options
    */
-  this.restartCKEditors = function(dialog) {
+  this.restartCKEditors = function(options) {
     const self = this;
 
     $.each(CKEDITOR.instances, function(index, value) {
       CKEDITOR.instances[index].destroy();
 
-      self.setupCKEditor(dialog, null, index);
+      self.setupCKEditor(options);
     });
   };
 
@@ -1435,39 +1242,6 @@ const formHelpers = function() {
     }
 
     return templates[templateName];
-  };
-
-  /**
-   * Hide or show the form dimension controls for the editor
-   * @param {object} dialog - Dialog object
-   * @param {boolean} toggleFlag - Flag to show/hide controls
-   * @param {string} instanceToDestroy
-   *  - Name of the instance marked to be destroyed
-   */
-  this.setupFormDimensionControls = function(
-    dialog,
-    toggleFlag,
-    instanceToDestroy,
-  ) {
-    if (toggleFlag) {
-      // Display controls
-      $(dialog).find('.form-editor-controls-dimensions')
-        .toggleClass('d-none', false);
-    } else {
-      // Hide the controls if there are no CKEditor instances
-      // or the one that is left is marked to be destroyed
-      if (
-        $.isEmptyObject(CKEDITOR.instances) ||
-        (
-          Object.keys(CKEDITOR.instances).length === 1 &&
-          CKEDITOR.instances[instanceToDestroy] !== undefined
-        )
-      ) {
-        // Hide controls
-        $(dialog).find('.form-editor-controls-dimensions')
-          .toggleClass('d-none', true);
-      }
-    }
   };
 
   /**
@@ -1889,9 +1663,82 @@ const formHelpers = function() {
       const $propertiesPanelContainer =
         $container.parents('.properties-panel-container');
 
+      const scaleEditorToContainer = function(
+        $editor, option = '',
+      ) {
+        const $containerWrapper =
+          $editor.parents('.rich-text-container-wrapper');
+        const regionWidth = Number($editor.data('regionWidth'));
+        const regionHeight = Number($editor.data('regionHeight'));
+        const containerWidth = $containerWrapper[0].clientWidth;
+        const containerHeight = $containerWrapper[0].clientHeight;
+
+        // Scale to container
+        let newScale;
+        if (option === 'width') {
+          // Extra margin to compensate for the scroll bar width
+          const extraMargin = CKEDITOR_MARGIN + CKEDITOR_SCROLLBAR_MARGIN;
+          newScale = (containerWidth - extraMargin) / regionWidth;
+        } else if (option === 'height') {
+          newScale = (containerHeight - CKEDITOR_MARGIN) / regionHeight;
+        } else {
+          newScale = Math.min(
+            (containerWidth - CKEDITOR_MARGIN) / regionWidth,
+            (containerHeight - CKEDITOR_MARGIN) / regionHeight,
+          );
+        }
+
+        $editor.css('transform', 'scale(' + newScale + ')');
+        $editor.data('currentScale', newScale);
+
+        // Adjust overlay
+        $('.cke_textarea_inline')
+          .css(
+            'outline-width',
+            (CKEDITOR_OVERLAY_WIDTH / newScale),
+          );
+      };
+
+      // Button to view source code
+      const $viewSourceButton = $('<button/>', {
+        html: '<i class="fas fa-code"></i>',
+        type: 'button',
+        title: editorsTrans.viewSource,
+        placement: 'right',
+        'data-container': '.properties-panel',
+        class: 'btn btn-sm mr-auto viewSourceButton',
+        click: function() {
+          const textAreaId = $editorMainContainer.find('textarea').attr('id');
+
+          // Toggle source class
+          $editorMainContainer.toggleClass('source');
+
+          // If we turn off source, set value to ckeditor
+          if (!$editorMainContainer.hasClass('source')) {
+            // Restore text editor
+            self.setupCKEditor(
+              container,
+              textAreaId,
+              true,
+              null,
+              false,
+              true,
+            ).then(function(res) {
+              const $editor = $editorMainContainer.find('.cke_textarea_inline');
+              scaleEditorToContainer($editor);
+            });
+          } else {
+            // Destroy CKEditor
+            CKEDITOR.instances[textAreaId].destroy();
+          }
+        },
+      }).tooltip({
+        trigger: 'hover',
+      });
+
       // Button to detach editor
       const $detachButton = $('<button/>', {
-        html: '<i class="fas fa-window-restore"></i>',
+        html: '<i class="fas fa-expand-arrows-alt"></i>',
         type: 'button',
         title: editorsTrans.detachEditor,
         'data-container': '.properties-panel',
@@ -1912,28 +1759,17 @@ const formHelpers = function() {
             $propertiesPanelContainer.css('z-index', 'auto');
           }
 
-          // Increase editor scale
-          if ($editor.length > 0) {
-            const originalScale = $editor.data('originaScale');
-            const newScale = (originalScale * 4);
-            $editor.css('transform', 'scale(' + newScale + ')');
-            $editor.data('currentScale', newScale);
-
-            // Adjust overlay
-            $('.cke_textarea_inline')
-              .css(
-                'outline-width',
-                (CKEDITOR_OVERLAY_WIDTH / newScale),
-              );
-          }
-
           // Create overlay
-          const $customOverlay = $('.custom-overlay').clone();
+          const $customOverlay = $('.custom-overlay:first').clone();
           $customOverlay
             .attr('id', 'richTextDetachedOverlay')
-            .appendTo('body');
+            .appendTo($propertiesPanelContainer);
           $customOverlay
             .show();
+
+          // Add class to playlist modal if exists
+          $container.parents('.editor-modal')
+            .addClass('source-editor-opened', true);
 
           // Create temporary container with editor dimensions
           $('<div/>', {
@@ -1953,12 +1789,19 @@ const formHelpers = function() {
           $editorMainContainer.addClass('detached');
           $detachButton.addClass('d-none');
           $attachButton.removeClass('d-none');
+
+          // Recalculate scale
+          if ($editor.length > 0) {
+            scaleEditorToContainer($editor);
+          }
         },
-      }).tooltip();
+      }).tooltip({
+        trigger: 'hover',
+      });
 
       // Button to attach editor
       const $attachButton = $('<button/>', {
-        html: '<i class="fas fa-window-maximize"></i>',
+        html: '<i class="fas fa-compress-arrows-alt"></i>',
         type: 'button',
         title: editorsTrans.attachEditor,
         'data-container': '.properties-panel',
@@ -1977,32 +1820,29 @@ const formHelpers = function() {
             $propertiesPanelContainer.css('z-index', originalZindex);
           }
 
-          // Return to original scale
-          if ($editor.length > 0) {
-            const originalScale = $editor.data('originaScale');
-            $editor.css('transform', 'scale(' + originalScale + ')');
-            $editor.data('currentScale', originalScale);
-
-            // Adjust overlay
-            $('.cke_textarea_inline')
-              .css(
-                'outline-width',
-                (CKEDITOR_OVERLAY_WIDTH / originalScale),
-              );
-          }
-
           // Remove temporary container
           $container.find('.rich-text-temp-container').remove();
 
           // Remove overlay
           $('#richTextDetachedOverlay').remove();
 
+          // Remove class from playlist modal if exists
+          $container.parents('.editor-modal')
+            .removeClass('source-editor-opened');
+
           // Attach editor
           $editorMainContainer.removeClass('detached');
           $detachButton.removeClass('d-none');
           $attachButton.addClass('d-none');
+
+          // Recalculate scale
+          if ($editor.length > 0) {
+            scaleEditorToContainer($editor);
+          }
         },
-      }).tooltip();
+      }).tooltip({
+        trigger: 'hover',
+      });
 
       // Zoom buttons
       const $zoomInButton = $('<button/>', {
@@ -2010,7 +1850,7 @@ const formHelpers = function() {
         type: 'button',
         title: editorsTrans.zoomInEditor,
         'data-container': '.properties-panel',
-        class: 'btn btn-sm zoomInEditorButton',
+        class: 'btn btn-sm zoomButton zoomInEditorButton',
         click: function() {
           const $editor = $editorMainContainer.find('.cke_textarea_inline');
           const editorScale = Number($editor.data('currentScale'));
@@ -2018,14 +1858,16 @@ const formHelpers = function() {
           $editor.css('transform', 'scale(' + newScale + ')');
           $editor.data('currentScale', newScale);
         },
-      }).tooltip();
+      }).tooltip({
+        trigger: 'hover',
+      });
 
       const $zoomOutButton = $('<button/>', {
         html: '<i class="fa fa-search-minus"></i>',
         type: 'button',
         title: editorsTrans.zoomOutEditor,
         'data-container': '.properties-panel',
-        class: 'btn btn-sm zoomOutEditorButton',
+        class: 'btn btn-sm zoomButton zoomOutEditorButton',
         click: function() {
           const $editor = $editorMainContainer.find('.cke_textarea_inline');
           const editorScale = Number($editor.data('currentScale'));
@@ -2033,7 +1875,51 @@ const formHelpers = function() {
           $editor.css('transform', 'scale(' + newScale + ')');
           $editor.data('currentScale', newScale);
         },
-      }).tooltip();
+      }).tooltip({
+        trigger: 'hover',
+      });
+
+      const $resetZoomButton = $('<button/>', {
+        html: '<i class="fas fa-ruler-combined"></i>',
+        type: 'button',
+        title: editorsTrans.scaleToContainer,
+        'data-container': '.properties-panel',
+        class: 'btn btn-sm zoomButton scaleToContainer',
+        click: function() {
+          const $editor = $editorMainContainer.find('.cke_textarea_inline');
+          scaleEditorToContainer($editor);
+        },
+      }).tooltip({
+        trigger: 'hover',
+      });
+
+      const $scaleToWidth = $('<button/>', {
+        html: '<i class="fas fa-ruler-horizontal"></i>',
+        type: 'button',
+        title: editorsTrans.scaleToWidth,
+        'data-container': '.properties-panel',
+        class: 'btn btn-sm zoomButton scaleToWidth',
+        click: function() {
+          const $editor = $editorMainContainer.find('.cke_textarea_inline');
+          scaleEditorToContainer($editor, 'width');
+        },
+      }).tooltip({
+        trigger: 'hover',
+      });
+
+      const $scaleToHeight = $('<button/>', {
+        html: '<i class="fas fa-ruler-vertical"></i>',
+        type: 'button',
+        title: editorsTrans.scaleToHeight,
+        'data-container': '.properties-panel',
+        class: 'btn btn-sm zoomButton scaleToHeight',
+        click: function() {
+          const $editor = $editorMainContainer.find('.cke_textarea_inline');
+          scaleEditorToContainer($editor, 'height');
+        },
+      }).tooltip({
+        trigger: 'hover',
+      });
 
       // Add same background colour to editor container as the layout's
       const backgroundColor =
@@ -2044,28 +1930,72 @@ const formHelpers = function() {
       ) ?
         self.mainObject.backgroundColor :
         self.defaultBackgroundColor;
-      $editorContainer.css('background-color', backgroundColor);
+      $editorContainer.parent().css('background-color', backgroundColor);
 
       // Get button container
       $buttonContainer =
         $(el).parents('.xibo-form-input').find('.text-area-buttons');
 
+      // View source button
+      $buttonContainer.prepend($viewSourceButton);
+
       // Add zoom buttons
+      $buttonContainer.append($resetZoomButton);
+      $buttonContainer.append($scaleToWidth);
+      $buttonContainer.append($scaleToHeight);
       $buttonContainer.append($zoomInButton);
       $buttonContainer.append($zoomOutButton);
 
       // Add detach and attach buttons to container for the text area
       $buttonContainer.append($detachButton);
       $buttonContainer.append($attachButton);
+
+      // Handle region controls
+      if (
+        self.mainObject.type != 'layout' &&
+        !self.namespace.inline &&
+        $editorMainContainer.find('.rich-text-dimensions-control').length === 0
+      ) {
+        // Add to container
+        $buttonContainer
+          .after(templates.editorRegionControls({
+            trans: propertiesPanelTrans,
+            dimensions: self.defaultRegionDimensions,
+          }));
+
+        ['width', 'height'].forEach((dimension) => {
+          const $dimensionControl =
+            $editorMainContainer.find('.text-editor-' + dimension);
+          const targetName = (dimension == 'width') ?
+            'regionWidth' : 'regionHeight';
+
+          // Handle input change
+          $dimensionControl.on('focusout', () => {
+            const $editor = $editorMainContainer.find('.cke_textarea_inline');
+            const dataValue = $editor.data(targetName);
+            // If the value was updated
+            if (
+              $dimensionControl.val() !=
+              dataValue
+            ) {
+              // Update data
+              $editor.data(targetName, $dimensionControl.val());
+
+              // Update dimension
+              $editor.css(dimension, $dimensionControl.val());
+
+              scaleEditorToContainer($editor, '');
+            }
+          });
+        });
+      }
     });
   };
 
   /**
    * Run before submitting the permission form to process data
-   * @param {object} container - Container object containing form
-   * @param {object} widgetType - Widget/module type
    */
-  this.widgetFormEditBeforeSubmit = function(container, widgetType) {
+  this.widgetFormEditBeforeSubmit = function() {
     // Update CKEditor instances
     this.updateCKEditor();
   };

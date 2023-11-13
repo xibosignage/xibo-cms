@@ -1759,7 +1759,6 @@ class User extends Base
             'objectId' => $id,
             'permissions' => $currentPermissions,
             'canSetOwner' => $object->canChangeOwner(),
-            'owners' => $this->userFactory->query(),
             'object' => $object,
             'objectNameOverride' => $this->getSanitizer($request->getParams())->getString('nameOverride'),
         ];
@@ -1888,14 +1887,18 @@ class User extends Base
 
         // Should we update the owner?
         if ($sanitizedParams->getInt('ownerId') != 0) {
-
             $ownerId = $sanitizedParams->getInt('ownerId');
 
             $this->getLog()->debug('Requesting update to a new Owner - id = ' . $ownerId);
 
             if ($object->canChangeOwner()) {
                 $object->setOwner($ownerId);
-                $object->save(['notify' => false, 'manageDynamicDisplayLinks' => false, 'validate' => false]);
+                $object->save([
+                    'notify' => false,
+                    'manageDynamicDisplayLinks' => false,
+                    'validate' => false,
+                    'recalculateHash' => false
+                ]);
             } else {
                 throw new ConfigurationException(__('Cannot change owner on this Object'));
             }

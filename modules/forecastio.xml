@@ -68,7 +68,7 @@
             <helpText>Select the units you would like to use.</helpText>
             <default>auto</default>
         </property>
-        <property id="lang" type="languageSelector">
+        <property id="lang" type="languageSelector" variant="momentLocales">
             <title>Language</title>
             <helpText>Select the language you would like to use.</helpText>
             <default>en</default>
@@ -120,15 +120,17 @@ if (items.length === 0) {
 }
 
 // Set moment locale
-moment.locale(globalOptions.locale);
+if (properties.lang !== null && String(properties.lang).length > 0) {
+    moment.locale(properties.lang);
+} else {
+    moment.locale(globalOptions.locale);
+}
 
 // Make replacements [] with target data
 var makeReplacement = (html, item) => {
     // Make replacements [] with item data
     return html.replace(/\[([^\]]+)\]/g, (match, key) => {
-        // If its [time] or [time|format] then return the time
         if (key === 'time' || key.indexOf('time|') === 0) {
-            // If its [time|format] then return the time with format
             if (key.indexOf('time|') === 0) {
                 return moment.unix(item.time).format(key.split('|')[1]);
             }

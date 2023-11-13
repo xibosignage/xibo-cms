@@ -72,7 +72,25 @@ class WeatherWidgetCompatibility implements WidgetCompatibilityInterface
             $widget->changeOption('widgetOriginalHeight', 'widgetDesignHeight');
         }
 
+        // Process the background image properties so that they are removed if empty
+        $this->removeOptionIfEquals($widget, 'cloudy-image');
+        $this->removeOptionIfEquals($widget, 'day-cloudy-image');
+        $this->removeOptionIfEquals($widget, 'day-sunny-image');
+        $this->removeOptionIfEquals($widget, 'fog-image');
+        $this->removeOptionIfEquals($widget, 'hail-image');
+        $this->removeOptionIfEquals($widget, 'night-clear-image');
+        $this->removeOptionIfEquals($widget, 'night-partly-cloudy-image');
+        $this->removeOptionIfEquals($widget, 'rain-image');
+        $this->removeOptionIfEquals($widget, 'snow-image');
+        $this->removeOptionIfEquals($widget, 'windy-image');
         return true;
+    }
+
+    private function removeOptionIfEquals(Widget $widget, string $option): void
+    {
+        if ($widget->getOptionValue($option, null) === $option) {
+            $widget->removeOption($option);
+        }
     }
 
     public function saveTemplate(string $template, string $fileName): bool

@@ -23,6 +23,9 @@
 // Include public path for webpack
 require('../../public_path');
 
+window.Handlebars = require('handlebars/dist/handlebars.min.js');
+require('../../../modules/src/handlebars-helpers.js');
+
 // Include handlebars templates
 const designerMainTemplate = require('../templates/layout-editor.hbs');
 const messageTemplate = require('../templates/message.hbs');
@@ -397,10 +400,38 @@ lD.selectObject =
     if (!$.isEmptyObject(this.toolbar.selectedCard)) {
       // Get card object
       const card = this.toolbar.selectedCard[0];
-      // Check if droppable is active
-      const activeDroppable = (target) ?
-        target.hasClass('ui-droppable-active') :
-        true;
+
+      // Drop to target validations
+      const dropToPlaylist = (
+        target &&
+        target.data('subType') == 'playlist' &&
+        lD.common.hasTarget(card, 'playlist')
+      );
+
+      const dropToDrawerOrZone = (
+        target &&
+        ['drawer', 'zone'].includes(target.data('subType'))
+      );
+
+      const dropToWidget = (
+        target &&
+        target.hasClass('designer-widget') &&
+        target.hasClass('ui-droppable-active')
+      );
+
+      const dropToActionTarget = (
+        target &&
+        target.hasClass('ui-droppable-actions-target')
+      );
+
+      const dropToElementAndElGroup = (
+        target &&
+        (
+          target.hasClass('designer-element-group') ||
+          target.hasClass('designer-element')
+        ) &&
+        lD.common.hasTarget(card, 'element')
+      );
 
       // Deselect cards and drop zones
       this.toolbar.deselectCardsAndDropZones();
@@ -408,23 +439,11 @@ lD.selectObject =
       if (
         target &&
         (
-          (
-            target.data('subType') == 'playlist' &&
-            lD.common.hasTarget(card, 'playlist')
-          ) ||
-          ['drawer', 'zone'].includes(target.data('subType')) ||
-          (
-            target.hasClass('designer-widget') &&
-            activeDroppable
-          ) ||
-          target.hasClass('ui-droppable-actions-target') ||
-          (
-            (
-              target.hasClass('designer-element-group') ||
-              target.hasClass('designer-element')
-            ) &&
-            lD.common.hasTarget(card, 'element')
-          )
+          dropToPlaylist ||
+          dropToDrawerOrZone ||
+          dropToWidget ||
+          dropToActionTarget ||
+          dropToElementAndElGroup
         )
       ) {
         // Send click position if we're adding to elements and element groups
@@ -599,6 +618,7 @@ lD.selectObject =
  * Refresh designer
  * @param {boolean} [reloadToolbar=false] - Update toolbar
  * @param {boolean} [reloadViewer=false] - Reload viewer
+ * @param {object} [reloadViewerTarget={}] - Reload viewer target
  * @param {boolean} [reloadPropertiesPanel=false] - Reload properties panel
  * @param {boolean} [reloadLayerManager=true] - Reload layer manager
  */
@@ -606,6 +626,7 @@ lD.refreshEditor = function(
   {
     reloadToolbar = false,
     reloadViewer = false,
+    reloadViewerTarget = {},
     reloadPropertiesPanel = false,
     reloadLayerManager = true,
   } = {},
@@ -623,7 +644,7 @@ lD.refreshEditor = function(
 
   // Properties panel and viewer
   (reloadPropertiesPanel) && this.propertiesPanel.render(this.selectedObject);
-  (reloadViewer) && this.viewer.render(reloadViewer);
+  (reloadViewer) && this.viewer.render(reloadViewer, reloadViewerTarget);
   (reloadLayerManager) && this.viewer.layerManager.render();
 };
 
@@ -666,17 +687,25 @@ lD.reloadData = function(
       // get Layout folder id
       lD.folderId = lD.layout.folderId;
 
-      // Select the same object ( that will refresh the layout too )
+      // Select the same object
       const selectObjectId = (lD.selectedObject.type === 'element') ?
         lD.selectedObject.elementId :
         lD.selectedObject.id;
 
+      const $selectedDOMTarget = $('#' + selectObjectId);
+
       lD.selectObject({
-        target: $('#' + selectObjectId),
+        target: $selectedDOMTarget,
         forceSelect: true,
         refreshEditor: false, // Don't refresh the editor here
         reloadPropertiesPanel: false,
       });
+
+      // Check if the selected object is a temporary one
+      const targetToRender =
+        $selectedDOMTarget.hasClass('viewer-temporary-object') ?
+          lD.selectedObject :
+          {};
 
       // Reload the form helper connection
       formHelpers.setup(lD, lD.layout);
@@ -703,6 +732,7 @@ lD.reloadData = function(
       refreshEditor && lD.refreshEditor({
         reloadToolbar: reloadToolbar,
         reloadViewer: reloadViewer,
+        reloadViewerTarget: targetToRender,
         reloadPropertiesPanel: reloadPropertiesPanel,
       });
 
@@ -1179,8 +1209,9 @@ lD.deleteObject = function(
     // Delete element from widget
     widget.removeElement(
       objectId,
-      true,
-    );
+      {
+        reload: false,
+      });
   } else if (objectType === 'element-group') {
     // For element groups, we delete all elements in the group
     // Get parent widget
@@ -1191,9 +1222,20 @@ lD.deleteObject = function(
     );
 
     // Delete element from widget
-    widget.removeElementGroup(objectId);
+    widget.removeElementGroup(
+      objectId,
+      {
+        reload: false,
+      });
   } else {
     lD.common.showLoadingScreen('deleteObject');
+
+    // Hide in viewer
+    lD.viewer.toggleObject(
+      objectType,
+      objectId,
+      true,
+    );
 
     lD.layout.deleteObject(
       objectType,
@@ -1229,7 +1271,7 @@ lD.deleteObject = function(
           reloadViewer: false,
           reloadPropertiesPanel: false,
         });
-        lD.viewer.selectElement();
+        lD.viewer.selectObject();
 
         // Render properties panel with action tab
         lD.propertiesPanel.render(
@@ -1238,10 +1280,16 @@ lD.deleteObject = function(
           true, // Open action tab
         );
       } else {
+        // Remove widget from viewer
+        lD.viewer.removeObject(
+          objectType,
+          objectId,
+        );
+
         // Reload data ( if not a drawer widget)
         lD.reloadData(lD.layout,
           {
-            refreshEditor: true,
+            refreshEditor: false,
           });
       }
 
@@ -1251,6 +1299,13 @@ lD.deleteObject = function(
 
       // Show error returned or custom message to the user
       let errorMessage = '';
+
+      // Show back in viewer
+      lD.viewer.toggleObject(
+        objectType,
+        objectId,
+        false,
+      );
 
       if (typeof error == 'string') {
         errorMessage = error;
@@ -1273,16 +1328,17 @@ lD.deleteObject = function(
  * @param {object=} dropPosition - Position of the drop
  */
 lD.dropItemAdd = function(droppable, draggable, dropPosition) {
-  const draggableType = $(draggable).data('type');
-  const draggableSubType = $(draggable).data('subType');
-  const draggableData = $(draggable).data();
+  let draggableType = $(draggable).data('type');
+  let draggableSubType = $(draggable).data('subType');
+  const draggableData = Object.assign({}, $(draggable).data());
   const droppableIsDrawer = ($(droppable).data('subType') === 'drawer');
   const droppableIsZone = ($(droppable).data('subType') === 'zone');
   const droppableIsPlaylist = ($(droppable).data('subType') === 'playlist');
   const droppableIsWidget = $(droppable).hasClass('designer-widget');
-  const droppableIsElement = $(droppable).hasClass('designer-element');
+  let droppableIsElement = $(droppable).hasClass('designer-element');
   const droppableIsElementGroup =
     $(droppable).hasClass('designer-element-group');
+  let getTemplateBeforeAdding = '';
 
   /**
    * Import from provider or add media from library
@@ -1322,10 +1378,25 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
     });
   };
 
-  if (draggableType == 'media') {
-    // TODO If image, we need to chose if we want to create
-    // a canvas or frame region, for now we create a frame
+  // If draggable is a media image, we need to choose
+  // if it's going to be added as static widget or element
+  if (
+    draggableSubType === 'image' &&
+    // If droppable is a playlist, drawer or zone, do nothing
+    !(
+      droppableIsPlaylist ||
+      droppableIsZone ||
+      droppableIsDrawer
+    )
+  ) {
+    // Make a fake image element so it can go to the add element flow
+    draggableType = 'element';
+    droppableIsElement = true;
+    draggableSubType = 'global';
+    getTemplateBeforeAdding = 'global_library_image';
+  }
 
+  if (draggableType === 'media') {
     // Adding media
     const mediaId = $(draggable).data('mediaId');
 
@@ -1493,6 +1564,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
         groupId,
         properties,
         groupProperties,
+        mediaId,
       } = {},
       ) {
         // Create element object
@@ -1507,6 +1579,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           properties: properties,
           layer: layer,
           rotation: rotation,
+          mediaId: mediaId,
         };
 
         // Add group id if it belongs to a group
@@ -1623,6 +1696,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
                   top: (dropPosition) ? dropPosition.top : 0,
                   left: (dropPosition) ? dropPosition.left : 0,
                 },
+                mediaId: draggableData.mediaId,
               });
 
               // Add element to elements array
@@ -1637,121 +1711,173 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           }
         });
       } else {
-        // Element options
-        const elementOptions = {
-          id: draggableData.templateId,
-          type: draggableData.dataType,
-          left: (dropPosition) ? dropPosition.left : 0,
-          top: (dropPosition) ? dropPosition.top : 0,
-          width: draggableData.templateStartWidth,
-          height: draggableData.templateStartHeight,
-          layer: 0,
-          rotation: 0,
-          extendsTemplate: draggableData.extendsTemplate,
-          extendsOverride: draggableData.extendsOverride,
-          extendsOverrideId: draggableData.extendsOverrideId,
+        const addElement = function() {
+          // Element options
+          const elementOptions = {
+            id: draggableData.templateId,
+            type: draggableData.dataType,
+            left: (dropPosition) ? dropPosition.left : 0,
+            top: (dropPosition) ? dropPosition.top : 0,
+            width: draggableData.templateStartWidth,
+            height: draggableData.templateStartHeight,
+            layer: 0,
+            rotation: 0,
+            extendsTemplate: draggableData.extendsTemplate,
+            extendsOverride: draggableData.extendsOverride,
+            extendsOverrideId: draggableData.extendsOverrideId,
+            mediaId: draggableData.mediaId,
+          };
+
+          let addToGroup = false;
+          let addToGroupType = null;
+
+          // If element has a group, add to it
+          if (addToGroupId) {
+            elementOptions.groupId = addToGroupId;
+
+            // Get group
+            const elementGroup = lD.getObjectByTypeAndId(
+              'element-group',
+              addToGroupId,
+              addToGroupWidgetId,
+            );
+
+            const targetWidget = lD.getObjectByTypeAndId(
+              'widget',
+              'widget_' + $(droppable).data('regionId') + '_' +
+              $(droppable).data('widgetId'),
+              'canvas',
+            );
+
+            // Set group type as the same as the target widget
+            addToGroupType = targetWidget.subType;
+
+            // Add group object
+            elementOptions.group = elementGroup;
+
+            addToGroup = true;
+          }
+
+          // If we want to create a new element group
+          if (addToExistingElementId) {
+            // Generate a random group id
+            const groupId = 'group_' + Math.floor(Math.random() * 1000000);
+
+            // Get previous element
+            const previousElement = lD.getObjectByTypeAndId(
+              'element',
+              addToExistingElementId,
+              addToGroupWidgetId,
+            );
+
+            const targetWidget = lD.getObjectByTypeAndId(
+              'widget',
+              'widget_' + $(droppable).data('regionId') + '_' +
+              $(droppable).data('widgetId'),
+              'canvas',
+            );
+
+            // Create new element group
+            targetWidget.elementGroups[groupId] = new ElementGroup(
+              Object.assign(
+                {
+                  width: previousElement.width,
+                  height: previousElement.height,
+                  top: previousElement.top,
+                  left: previousElement.left,
+                },
+                {
+                  id: groupId,
+                },
+              ),
+              $(droppable).data('widgetId'),
+              $(droppable).data('regionId'),
+              targetWidget,
+            );
+
+            // Set group if for the elements
+            previousElement.groupId = groupId;
+            previousElement.group = targetWidget.elementGroups[groupId];
+            elementOptions.groupId = groupId;
+
+            // Check group type
+            addToGroupType = targetWidget.subType;
+
+            // Set new element layer to be the top layer
+            elementOptions.layer = previousElement.layer + 1;
+
+            // Add previous widget to the elements array
+            // and to element group
+            elements.push(previousElement);
+            targetWidget.elementGroups[groupId]
+              .elements[previousElement.elementId] = previousElement;
+
+            addToGroup = true;
+          }
+
+          // Create element
+          const element = createElement(elementOptions);
+
+          // Add element to elements array
+          elements.push(element);
+
+          // Create widget and add elements
+          createWidgetAndAddElements(
+            elements,
+            addToGroup,
+            addToGroupType,
+            addToGroup,
+          );
         };
 
-        let addToGroup = false;
-        let addToGroupType = null;
+        // If we need to get template first
+        if (getTemplateBeforeAdding != '') {
+          // Get template, create a fake image to data and add
+          const getTemplateAndAdd = function() {
+            lD.templateManager.getTemplateById(getTemplateBeforeAdding)
+              .then((template) => {
+                // Make a fake image element so
+                // it can go to the add element flow
+                draggableData.templateId = 'global_library_image';
+                draggableData.dataType = 'global';
+                draggableData.subType = 'global';
+                draggableData.extendsTemplate = 'global-image';
+                draggableData.extendsOverride = 'url';
+                draggableData.templateStartWidth = template.startWidth;
+                draggableData.templateStartHeight = template.startHeight;
 
-        // If element has a group, add to it
-        if (addToGroupId) {
-          elementOptions.groupId = addToGroupId;
+                addElement();
+              });
+          };
 
-          // Get group
-          const elementGroup = lD.getObjectByTypeAndId(
-            'element-group',
-            addToGroupId,
-            addToGroupWidgetId,
-          );
+          // If we need to upload media
+          if (draggableData.regionSpecific == 0) {
+            // On hide callback
+            const onHide = function(numUploads) {
+              if (numUploads > 0) {
+                getTemplateAndAdd();
+              }
+            };
 
-          const targetWidget = lD.getObjectByTypeAndId(
-            'widget',
-            'widget_' + $(droppable).data('regionId') + '_' +
-            $(droppable).data('widgetId'),
-            'canvas',
-          );
+            // On upload done callback
+            const onUploadDone = function(data) {
+              // Add media id to data
+              draggableData.mediaId = data.response().result.files[0].mediaId;
+            };
 
-          // Set group type as the same as the target widget
-          addToGroupType = targetWidget.subType;
-
-          // Add group object
-          elementOptions.group = elementGroup;
-
-          addToGroup = true;
+            lD.openUploadForm({
+              moduleData: draggableData,
+              onHide: onHide,
+              onUploadDone: onUploadDone,
+            });
+          } else {
+            // We don't need to upload, add right away
+            getTemplateAndAdd();
+          }
+        } else {
+          // Just add the element
+          addElement();
         }
-
-        // If we want to create a new element group
-        if (addToExistingElementId) {
-          // Generate a random group id
-          const groupId = 'group_' + Math.floor(Math.random() * 1000000);
-
-          // Get previous element
-          const previousElement = lD.getObjectByTypeAndId(
-            'element',
-            addToExistingElementId,
-            addToGroupWidgetId,
-          );
-
-          const targetWidget = lD.getObjectByTypeAndId(
-            'widget',
-            'widget_' + $(droppable).data('regionId') + '_' +
-            $(droppable).data('widgetId'),
-            'canvas',
-          );
-
-          // Create new element group
-          targetWidget.elementGroups[groupId] = new ElementGroup(
-            Object.assign(
-              {
-                width: previousElement.width,
-                height: previousElement.height,
-                top: previousElement.top,
-                left: previousElement.left,
-              },
-              {
-                id: groupId,
-              },
-            ),
-            $(droppable).data('widgetId'),
-            $(droppable).data('regionId'),
-            targetWidget,
-          );
-
-          // Set group if for the elements
-          previousElement.groupId = groupId;
-          previousElement.group = targetWidget.elementGroups[groupId];
-          elementOptions.groupId = groupId;
-
-          // Check group type
-          addToGroupType = targetWidget.subType;
-
-          // Set new element layer to be the top layer
-          elementOptions.layer = previousElement.layer + 1;
-
-          // Add previous widget to the elements array
-          // and to element group
-          elements.push(previousElement);
-          targetWidget.elementGroups[groupId]
-            .elements[previousElement.elementId] = previousElement;
-
-          addToGroup = true;
-        }
-
-        // Create element
-        const element = createElement(elementOptions);
-
-        // Add element to elements array
-        elements.push(element);
-
-        // Create widget and add elements
-        createWidgetAndAddElements(
-          elements,
-          addToGroup,
-          addToGroupType,
-          addToGroup,
-        );
       }
     });
   } else if (
@@ -2037,14 +2163,8 @@ lD.addModuleToPlaylist = function(
   reloadData = true,
 ) {
   if (moduleData.regionSpecific == 0) { // Upload form if not region specific
-    const validExt = moduleData.validExt.replace(/,/g, '|');
-    let numUploads = 0;
-
-    // Close the current dialog
-    bootbox.hideAll();
-
     // On hide callback
-    const onHide = function() {
+    const onHide = function(numUploads) {
       // If there are no uploads, and it's not a zone, delete the region
       if (numUploads === 0 && !zoneWidget) {
         lD.layout.deleteObject(
@@ -2066,55 +2186,33 @@ lD.addModuleToPlaylist = function(
       }
     };
 
-    openUploadForm({
-      url: libraryAddUrl,
-      title: uploadTrans.uploadMessage,
-      animateDialog: false,
-      initialisedBy: 'layout-designer-upload',
-      buttons: {
-        main: {
-          label: translations.done,
-          className: 'btn-primary btn-bb-main',
-        },
-      },
-      onHideCallback: onHide,
-      templateOptions: {
-        trans: uploadTrans,
-        upload: {
-          maxSize: moduleData.maxSize,
-          maxSizeMessage: moduleData.maxSizeMessage,
-          validExtensionsMessage: translations.validExtensions
-            .replace('%s', moduleData.validExt),
-          validExt: validExt,
-        },
-        playlistId: playlistId,
-        displayOrder: addToPosition,
-        currentWorkingFolderId: lD.folderId,
-        showWidgetDates: false,
-        folderSelector: true,
-      },
-      uploadDoneEvent: function(data) {
-        // If the upload is successful, increase the number of uploads
-        numUploads += 1;
+    // On upload done callback
+    const onUploadDone = function(data) {
+      // Get added widget id
+      const widgetId = data.response().result.files[0].widgetId;
 
-        // Get added widget id
-        const widgetId = data.response().result.files[0].widgetId;
+      // The new selected object as the id based
+      // on the previous selected region
+      if (!drawerWidget) {
+        lD.viewer.saveTemporaryObject(
+          'widget_' + regionId + '_' + widgetId,
+          'widget',
+          {
+            type: 'widget',
+            parentType: 'region',
+            widgetRegion: 'region_' + regionId,
+          },
+        );
+      }
+    };
 
-        // The new selected object as the id based
-        // on the previous selected region
-        if (!drawerWidget) {
-          lD.viewer.saveTemporaryObject(
-            'widget_' + regionId + '_' + widgetId,
-            'widget',
-            {
-              type: 'widget',
-              parentType: 'region',
-              widgetRegion: 'region_' + regionId,
-            },
-          );
-        }
-      },
-    }).attr('data-test', 'uploadFormModal');
+    lD.openUploadForm({
+      playlistId: playlistId,
+      moduleData: moduleData,
+      addToPosition: addToPosition,
+      onHide: onHide,
+      onUploadDone: onUploadDone,
+    });
   } else { // Add widget to a region
     lD.common.showLoadingScreen('addModuleToPlaylist');
 
@@ -2240,6 +2338,70 @@ lD.addModuleToPlaylist = function(
       );
     });
   }
+};
+
+/**
+ * Open upload form
+ * @param {number} playlistId
+ * @param {object} moduleData
+ * @param {object} addToPosition
+ * @param {function} onHide
+ * @param {function} onUploadDone
+ */
+lD.openUploadForm = function({
+  playlistId,
+  moduleData,
+  addToPosition,
+  onHide,
+  onUploadDone,
+} = {},
+) {
+  const validExt = moduleData.validExt.replace(/,/g, '|');
+  let numUploads = 0;
+
+  // Close the current dialog
+  bootbox.hideAll();
+
+  openUploadForm({
+    url: libraryAddUrl,
+    title: uploadTrans.uploadMessage,
+    animateDialog: false,
+    initialisedBy: 'layout-designer-upload',
+    buttons: {
+      main: {
+        label: translations.done,
+        className: 'btn-primary btn-bb-main',
+      },
+    },
+    onHideCallback: function() {
+      if ( typeof onHide === 'function') {
+        onHide(numUploads);
+      }
+    },
+    templateOptions: {
+      trans: uploadTrans,
+      upload: {
+        maxSize: moduleData.maxSize,
+        maxSizeMessage: moduleData.maxSizeMessage,
+        validExtensionsMessage: translations.validExtensions
+          .replace('%s', moduleData.validExt),
+        validExt: validExt,
+      },
+      playlistId: playlistId,
+      displayOrder: addToPosition,
+      currentWorkingFolderId: lD.folderId,
+      showWidgetDates: false,
+      folderSelector: true,
+    },
+    uploadDoneEvent: function(data) {
+      // If the upload is successful, increase the number of uploads
+      numUploads += 1;
+
+      if ( typeof onUploadDone === 'function') {
+        onUploadDone(data);
+      }
+    },
+  }).attr('data-test', 'uploadFormModal');
 };
 
 /**
@@ -2592,7 +2754,7 @@ lD.openPlaylistEditor = function(playlistId, region) {
     .removeClass('hidden');
 
   // Deselect viewer element
-  lD.viewer.selectElement();
+  lD.viewer.selectObject();
 
   // Show playlist editor
   $playlistEditorPanel.removeClass('hidden');
@@ -2936,22 +3098,69 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
     } else if (target.data('action') == 'editPlaylist') {
       // Open playlist editor
       lD.openPlaylistEditor(layoutObject.playlists.playlistId, layoutObject);
+    } else if (target.data('action') == 'editFrame') {
+      // Select widget frame to edit it
+      const $viewerRegion =
+        lD.viewer.DOMObject.find('#' + layoutObject.id);
+      lD.selectObject({
+        target: lD.viewer.DOMObject.find('#' + layoutObject.id),
+      });
+      lD.viewer.selectObject($viewerRegion);
     } else if (target.data('action') == 'Ungroup') {
       // Get widget
-      const elementWidget =
+      const elementsWidget =
         lD.getObjectByTypeAndId('widget', objAuxId, 'canvas');
+
+      // Canvas widget
+      const canvasWidget = lD.getObjectByTypeAndId('canvasWidget');
+
+      let saveCanvas = false;
 
       // Remove group from elements
       Object.values(layoutObject.elements).forEach((el) => {
-        el.groupId = '';
+        // Remove group from element
+        el.groupId = undefined;
         delete el.group;
+
+        // If there's a global element in a non global widget
+        // move it to the global widget instead
+        if (
+          elementsWidget.subType != 'global' &&
+          el.elementType === 'global'
+        ) {
+          // Make a copy and add to canvas
+          canvasWidget.addElement(Object.assign({}, el), false);
+          saveCanvas = true;
+
+          // Delete old element
+          elementsWidget.removeElement(el.elementId, {
+            reloadLayerManager: false,
+            removeFromViewer: false,
+            save: false,
+            reload: false,
+          });
+        }
       });
 
       // Remove group from widget
-      delete elementWidget.elementGroups[layoutObject.id];
+      delete elementsWidget.elementGroups[layoutObject.id];
 
-      // Save elements
-      elementWidget.saveElements().then((_res) => {
+      // Save elements for the target widget
+      const saveElementsRequests = [
+        elementsWidget.saveElements({
+          forceRequest: true,
+        }),
+      ];
+
+      // If we also need to save canvas
+      if (saveCanvas) {
+        saveElementsRequests.push(canvasWidget.saveElements({
+          forceRequest: true,
+        }));
+      }
+
+      // Save all requests and reload data
+      Promise.all(saveElementsRequests).then((_res) => {
         // Deselect object
         lD.selectObject();
 
@@ -2981,7 +3190,9 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
  * @param {object=} position - Page menu position
  */
 lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
-  const objectsArray = $.makeArray($('.selected'));
+  const objectsArray = $.makeArray(
+    (objs) ? objs : lD.viewer.DOMObject.find('.selected'),
+  );
 
   // Don't open context menu in read only mode
   if (lD.readOnlyMode) {
@@ -3012,6 +3223,42 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
     return true;
   });
 
+  // Check if element(s) can be added to group to group
+  let groupCount = 0;
+  let canBeAddedToGroup = true;
+  tempWidgetId = undefined;
+  for (let index = 0; index < objectsArray.length; index++) {
+    const $item = $(objectsArray[index]);
+
+    // If it's a group, count it
+    ($item.hasClass('designer-element-group')) && groupCount++;
+
+    // If we have more than one group, fail condition
+    if (groupCount > 1) {
+      canBeAddedToGroup = false;
+      break;
+    }
+
+    // If it's not a global element
+    // check if the widget is the same as the other elements
+    if ($item.data('elementType') != 'global') {
+      if (tempWidgetId === undefined) {
+        tempWidgetId = $item.data('widgetId');
+      } else {
+        // Check if it's the same widget
+        if (tempWidgetId != $item.data('widgetId')) {
+          canBeAddedToGroup = false;
+          break;
+        }
+      }
+    }
+  }
+
+  // Check if we have exactly one group
+  if (groupCount != 1) {
+    canBeAddedToGroup = false;
+  }
+
   // Check if all can be deleted ( have class deletable or editable )
   const canBeDeleted = objectsArray.every((el) => {
     return $(el).is('.deletable, .editable');
@@ -3020,7 +3267,8 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
   // Don't open context menu if we can't group or delete elements
   if (
     canBeGrouped === false &&
-    canBeDeleted === false
+    canBeDeleted === false &&
+    canBeAddedToGroup === false
   ) {
     return;
   }
@@ -3031,6 +3279,7 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
       trans: contextMenuTrans,
       canBeGrouped: canBeGrouped,
       canBeDeleted: canBeDeleted,
+      canBeAddedToGroup: canBeAddedToGroup,
     }),
   );
 
@@ -3102,12 +3351,18 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
           if (type === 'elements') {
             auxWidget.removeElement(
               itemId,
-              save,
+              {
+                save: save,
+                reload: false,
+              },
             );
           } else {
             auxWidget.removeElementGroup(
               itemId,
-              save,
+              {
+                save: save,
+                reload: false,
+              },
             );
           }
         });
@@ -3166,7 +3421,7 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
 
             if (deletedIndex == $regionsToBeDeleted.length) {
               // Stop deleting and deselect all elements
-              lD.viewer.selectElement();
+              lD.viewer.selectObject();
 
               // Hide loader
               lD.common.hideLoadingScreen('deleteMultiObject');
@@ -3186,7 +3441,7 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
         deleteNext();
       } else {
         // If we're not deleting any region, deselect elements now
-        lD.viewer.selectElement();
+        lD.viewer.selectObject();
       }
     } else if (target.data('action') == 'Group') {
       // Group elements
@@ -3197,6 +3452,7 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
       let elementsType = 'global';
       const canvasWidget = lD.getObjectByTypeAndId('canvasWidget');
       let elementsWidget = canvasWidget;
+      let saveCanvas = false;
 
       $elementsToBeGrouped.each((_idx, el) => {
         const elData = $(el).data();
@@ -3250,16 +3506,28 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
           element.elementType === 'global' &&
           elementsWidget.subType != 'global'
         ) {
-          // Make a copy and add to new widget
-          elementsWidget.addElement(Object.assign({}, element), false);
+          // Make a copy of the element
+          const copy = Object.assign({}, element);
+
+          // Add to new widget
+          elementsWidget.addElement(copy, false);
 
           // Delete old element
-          canvasWidget.removeElement(element.elementId, true);
+          canvasWidget.removeElement(element.elementId, {
+            reloadLayerManager: false,
+            removeFromViewer: false,
+            save: false,
+            reload: false,
+          });
+          saveCanvas = true;
         }
 
         // Add element to group
         newGroup.elements[elId] = element;
       });
+
+      // Deselect all objects
+      lD.selectObject();
 
       // Select new group
       lD.viewer.saveTemporaryObject(
@@ -3274,7 +3542,198 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
       );
 
       // Update group dimensions
-      newGroup.updateGroupDimensions(true);
+      newGroup.updateGroupDimensions(false);
+
+      // Save elements for the target widget
+      const saveElementsRequests = [
+        elementsWidget.saveElements({
+          forceRequest: true,
+        }),
+      ];
+
+      // If we also need to save canvas
+      if (saveCanvas) {
+        saveElementsRequests.push(canvasWidget.saveElements({
+          forceRequest: true,
+        }));
+      }
+
+      // Save all requests and reload data
+      Promise.all(saveElementsRequests).then((_res) => {
+        // Deselect object
+        lD.selectObject();
+
+        // Reload data and select element when data reloads
+        lD.reloadData(lD.layout,
+          {
+            refreshEditor: true,
+          });
+      });
+    } else if (target.data('action') == 'addToGroup') {
+      // Elements
+      const $elementsToBeGrouped =
+        lD.viewer.DOMObject.find('.selected.designer-element');
+      // Original group
+      const $originalGroup =
+        lD.viewer.DOMObject.find('.selected.designer-element-group');
+
+      // Elements to be grouped and elements from group
+      const $allElementsToBeGrouped = $elementsToBeGrouped.add(
+        $originalGroup.find('.designer-element'),
+      );
+
+      // Check if not all items are global typed
+      let elementsToBeAddedType = 'global';
+      let elementToBeAddedWidget;
+      $elementsToBeGrouped.each((_idx, el) => {
+        const elData = $(el).data();
+
+        if (elementsToBeAddedType != elData.elementType) {
+          elementsToBeAddedType = elData.elementType;
+          elementToBeAddedWidget = lD.getObjectByTypeAndId(
+            'widget',
+            'widget_' + elData.regionId + '_' +
+            elData.widgetId,
+            'canvas',
+          );
+          // Stop loop
+          return false;
+        }
+      });
+
+
+      // Target group widget comes from the original group
+      let targetWidget = lD.getObjectByTypeAndId(
+        'widget',
+        'widget_' + $originalGroup.data('regionId') + '_' +
+          $originalGroup.data('widgetId'),
+        'canvas',
+      );
+
+      // Get original group id and type
+      const originalGroupId = $originalGroup.prop('id');
+      const originalGroupType = $originalGroup.data('elementType');
+
+      // Flag to see if we need to save original widget
+      let saveOriginalWidget = false;
+      let widgetToSave;
+
+      // Get group from elements
+      let targetGroup;
+
+      // If original group type is global
+      // but elements are not, we need to move group between widgets
+      if (
+        originalGroupType === 'global' &&
+        elementsToBeAddedType != 'global'
+      ) {
+        // Get group from original widget
+        targetGroup = targetWidget.elementGroups[originalGroupId];
+
+        // Add group to target widget
+        targetGroup.regionId = elementToBeAddedWidget.regionId.split('_')[1];
+        targetGroup.widgetId = elementToBeAddedWidget.widgetId;
+        elementToBeAddedWidget.elementGroups[originalGroupId] = targetGroup;
+
+        // Remove group from original widget
+        delete targetWidget.elementGroups[originalGroupId];
+
+        // Change target widget
+        targetWidget = elementToBeAddedWidget;
+      }
+
+      // Get target group
+      targetGroup = targetWidget.elementGroups[originalGroupId];
+
+      // Add group to elements
+      $allElementsToBeGrouped.each((_idx, el) => {
+        const elData = $(el).data();
+        const elId = $(el).attr('id');
+
+        element = lD.getObjectByTypeAndId(
+          'element',
+          elId,
+          'widget_' + elData.regionId + '_' + elData.widgetId,
+        );
+
+        // Add group to element
+        element.groupId = originalGroupId;
+        element.group = targetGroup;
+
+        // Element widget
+        elementsWidget = lD.getObjectByTypeAndId(
+          'widget',
+          'widget_' + elData.regionId + '_' + elData.widgetId,
+          'canvas',
+        );
+
+        // If element's widget is different from the target
+        // we need to move it to the new one and remove it from the original
+        if (
+          targetWidget.id != elementsWidget.id
+        ) {
+          // Make a copy of the element
+          const copy = Object.assign({}, element);
+
+          // Add to target widget
+          targetWidget.addElement(copy, false);
+
+          // Remove from original widget
+          elementsWidget.removeElement(element.elementId, {
+            reloadLayerManager: false,
+            removeFromViewer: false,
+            save: false,
+            reload: false,
+          });
+
+          // Save original widget
+          saveOriginalWidget = true;
+          widgetToSave = elementsWidget;
+        }
+
+        // Add element to group
+        targetGroup.elements[elId] = element;
+      });
+
+      // Deselect all objects
+      lD.selectObject();
+
+      // Change group properties so it can be the selected object on reload
+      lD.selectedObject.id = targetGroup.id;
+      lD.selectedObject.type = 'element-group';
+      const $groupInViewer =
+        lD.viewer.DOMObject.find('.designer-element-group#' + targetGroup.id);
+      $groupInViewer.data('widgetId', targetGroup.widgetId);
+      $groupInViewer.data('regionId', targetGroup.regionId);
+
+      // Update group dimensions
+      targetGroup.updateGroupDimensions(false);
+
+      // Save elements for the target widget
+      const saveElementsRequests = [
+        targetWidget.saveElements({
+          forceRequest: true,
+        }),
+      ];
+
+      // If we also need to save canvas
+      if (saveOriginalWidget) {
+        saveElementsRequests.push(widgetToSave.saveElements({
+          forceRequest: true,
+        }));
+      }
+
+      // Save all requests and reload data
+      Promise.all(saveElementsRequests).then((_res) => {
+        // Deselect object
+        lD.selectObject();
+
+        // Reload data and select element when data reloads
+        lD.reloadData(lD.layout,
+          {
+            refreshEditor: true,
+          });
+      });
     }
 
     // Remove context menu
@@ -4338,7 +4797,7 @@ lD.editDrawerWidget = function(actionData, actionEditMode = true) {
   });
 
   // Select element in viewer
-  lD.viewer.selectElement($target);
+  lD.viewer.selectObject($target);
 
   // 4. Open property panel with drawer widget or same object
   lD.propertiesPanel.render(
@@ -4421,8 +4880,11 @@ lD.addElementsToWidget = function(
         Math.floor(Math.random() * 1000000);
 
       // Add top layer to the group properties
-      if (element.groupId) {
-        element.groupProperties.layer = topLayer;
+      if (
+        element.groupId
+      ) {
+        (element.groupProperties) &&
+         (element.groupProperties.layer = topLayer);
       } else {
         // Add element to the top layer
         element.layer = topLayer;

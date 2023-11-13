@@ -83,6 +83,16 @@ $timeline-step-height: 22px;
         }
     }
 
+    &.source-editor-opened {
+        .back-button {
+            z-index: auto;
+        }
+
+        .editor-side-bar nav.opened {
+            z-index: auto !important;
+        }
+    }
+
     &.properties-panel-opened {
         padding-right: 320px;
     }

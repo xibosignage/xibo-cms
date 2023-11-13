@@ -371,7 +371,11 @@ class Campaign implements \JsonSerializable
         }
         $startDt = $this->getStartDt();
         $endDt = $this->getEndDt();
-        $progress->daysTotal = $endDt->diffInDays($startDt);
+
+        // if start and end date are the same
+        // set the daysTotal to 1, to avoid potential division by 0 later on.
+        $progress->daysTotal = ($this->startDt === $this->endDt) ? 1 : $endDt->diffInDays($startDt);
+
         $progress->targetPerDay = $this->target / $progress->daysTotal;
 
         if ($startDt->isAfter($testDate)) {
@@ -491,6 +495,13 @@ class Campaign implements \JsonSerializable
 
             if ($this->campaignId !== null && count($this->displayGroupIds) <= 0) {
                 throw new InvalidArgumentException(__('Please select one or more displays'), 'displayGroupId[]');
+            }
+
+            if ($this->startDt !== null && $this->endDt !== null && $this->startDt > $this->endDt) {
+                throw new InvalidArgumentException(
+                    __('Cannot set end date to be earlier than the start date.'),
+                    'endDt'
+                );
             }
         } else {
             if ($this->listPlayOrder !== 'round' && $this->listPlayOrder !== 'block') {

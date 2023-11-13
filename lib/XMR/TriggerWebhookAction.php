@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -22,20 +22,25 @@
 
 namespace Xibo\XMR;
 
-
-class TriggerWebhookAction  extends PlayerAction
+/**
+ * Trigger a web hook on the player. This is intended mainly for testing purposes as you'd
+ * expect the trigger to be sent locally on the player
+ */
+class TriggerWebhookAction extends PlayerAction
 {
     public $triggerCode;
 
-    public function __construct($triggerCode) {
+    public function __construct($triggerCode)
+    {
         $this->triggerCode = $triggerCode;
+        $this->setQos(3);
     }
 
     /**
-     * @return mixed|string
+     * @return string
      * @throws PlayerActionException
      */
-    public function getMessage()
+    public function getMessage(): string
     {
         $this->action = 'triggerWebhook';
 

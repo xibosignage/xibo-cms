@@ -1652,7 +1652,7 @@ class Layout implements \JsonSerializable
 
                 foreach ($module->properties as $property) {
                     // We only output properties for native rendered widgets
-                    if ($module->renderAs === 'native') {
+                    if ($module->renderAs === 'native' || $property->includeInXlf) {
                         if (($uriInjected && $property->id == 'uri') || empty($property->id)) {
                             // Skip any property named "uri" if we've already injected a special node for that.
                             // Skip properties without an id
@@ -2651,13 +2651,15 @@ class Layout implements \JsonSerializable
     {
         // we only need to set the closure table records for the playlists assigned directly to the regionPlaylist here
         // all other relations between Playlists themselves are handled on import before layout is created
-        // as the SQL we run here is recursive everything will end up with correct parent/child relation and depth level.
+        // as the SQL we run here is recursive everything will end up with correct parent/child relation and depth level
         foreach ($this->getAllWidgets() as $widget) {
             if ($widget->type == 'subplaylist') {
                 $assignedPlaylistIds = [];
                 $assignedPlaylists = json_decode($widget->getOptionValue('subPlaylists', '[]'), true);
                 foreach ($assignedPlaylists as $subPlaylistItem) {
-                    $assignedPlaylistIds[] = $subPlaylistItem['playlistId'];
+                    if (!in_array($subPlaylistItem['playlistId'], $assignedPlaylistIds)) {
+                        $assignedPlaylistIds[] = $subPlaylistItem['playlistId'];
+                    }
                 }
 
                 foreach ($this->regions as $region) {
@@ -2673,10 +2675,9 @@ class Layout implements \JsonSerializable
 
         if (isset($parentId) && isset($child)) {
             foreach ($child as $childId) {
-
                 $this->getLog()->debug('Manage closure table for parent ' . $parentId . ' and child ' . $childId);
 
-                if ($this->getStore()->exists('SELECT parentId, childId, depth FROM lkplaylistplaylist WHERE childId = :childId AND parentId = :parentId ', [
+                if ($this->getStore()->exists('SELECT parentId, childId, depth FROM lkplaylistplaylist WHERE childId = :childId AND parentId = :parentId ', [//phpcs:ignore
                     'parentId' => $parentId,
                     'childId' => $childId
                 ])) {

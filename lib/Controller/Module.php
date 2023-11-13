@@ -103,8 +103,7 @@ class Module extends Base
             'moduleId' => $parsedQueryParams->getInt('moduleId')
         ];
 
-        // TODO: do we need a filter?
-        $modules = $this->moduleFactory->getAllExceptCanvas();
+        $modules = $this->moduleFactory->getAllExceptCanvas($filter);
 
         foreach ($modules as $module) {
             /* @var \Xibo\Entity\Module $module */
@@ -116,15 +115,15 @@ class Module extends Base
             $module->includeProperty('buttons');
 
             // Edit button
-            $module->buttons[] = array(
+            $module->buttons[] = [
                 'id' => 'module_button_edit',
                 'url' => $this->urlFor($request, 'module.settings.form', ['id' => $module->moduleId]),
                 'text' => __('Configure')
-            );
+            ];
 
             // Clear cache
             if ($module->regionSpecific == 1) {
-                $module->buttons[] = array(
+                $module->buttons[] = [
                     'id' => 'module_button_clear_cache',
                     'url' => $this->urlFor($request, 'module.clear.cache.form', ['id' => $module->moduleId]),
                     'text' => __('Clear Cache'),
@@ -136,7 +135,7 @@ class Module extends Base
                         ],
                         ['name' => 'commit-method', 'value' => 'PUT']
                     ]
-                );
+                ];
             }
         }
 

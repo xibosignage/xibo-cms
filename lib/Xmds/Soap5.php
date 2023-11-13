@@ -372,7 +372,9 @@ class Soap5 extends Soap4
                 $this->display = $display;
                 $display->display = $displayName;
                 $display->auditingUntil = 0;
-                $display->defaultLayoutId = $this->getConfig()->getSetting('DEFAULT_LAYOUT');
+                // defaultLayoutId column cannot be null or empty string
+                // if we do not have global default layout, set it here to 0 to allow register to proceed
+                $display->defaultLayoutId = intval($this->getConfig()->getSetting('DEFAULT_LAYOUT', 0));
                 $display->license = $hardwareKey;
                 $display->licensed = $this->getConfig()->getSetting('DISPLAY_AUTO_AUTH', 0);
                 $display->incSchedule = 0;
@@ -415,7 +417,7 @@ class Soap5 extends Soap4
         // only sent by xmds v7
         if (!empty($commercialLicenceString) && !in_array($display->clientType, ['windows', 'linux'])) {
             $commercialLicenceString = strtolower($commercialLicenceString);
-            if ($commercialLicenceString === 'licensed') {
+            if ($commercialLicenceString === 'licensed' || $commercialLicenceString === 'full') {
                 $commercialLicence = 1;
             } elseif ($commercialLicenceString === 'trial') {
                 $commercialLicence = 2;

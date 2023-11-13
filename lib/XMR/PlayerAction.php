@@ -23,21 +23,31 @@
 
 namespace Xibo\XMR;
 
-
+/**
+ * An adstract class which implements a Player Action Interface
+ * This class should be extended for each different action type
+ *
+ * When sending it will check that a default QOS/TTL has been configured. It is the responsibility
+ * of the extending class to set this on initialisation.
+ */
 abstract class PlayerAction implements PlayerActionInterface
 {
-    // The action
+    /** @var string The Action */
     public $action;
 
-    // TTL
+    /** @var string Created Date */
     public $createdDt;
+
+    /** @var int TTL */
     public $ttl;
 
     /** @var int QOS */
     private $qos;
 
-    // Channel and key
+    /** @var string Channel */
     private $channel;
+
+    /** @var string Public Key */
     private $publicKey;
 
     /**
@@ -47,11 +57,13 @@ abstract class PlayerAction implements PlayerActionInterface
      * @return $this
      * @throws PlayerActionException if the key is invalid
      */
-    public final function setIdentity($channel, $key)
+    final public function setIdentity(string $channel, string $key): PlayerActionInterface
     {
         $this->channel = $channel;
-        if (!$this->publicKey = openssl_get_publickey($key))
+        $this->publicKey = openssl_get_publickey($key);
+        if (!$this->publicKey) {
             throw new PlayerActionException('Invalid Public Key');
+        }
 
         return $this;
     }
@@ -61,7 +73,7 @@ abstract class PlayerAction implements PlayerActionInterface
      * @param int $ttl
      * @return $this
      */
-    public final function setTtl($ttl = 120)
+    final public function setTtl(int $ttl = 120): PlayerAction
     {
         $this->ttl = $ttl;
         return $this;
@@ -72,7 +84,7 @@ abstract class PlayerAction implements PlayerActionInterface
      * @param int $qos
      * @return $this
      */
-    public final function setQos($qos = 10)
+    final public function setQos(int $qos = 1): PlayerAction
     {
         $this->qos = $qos;
         return $this;
@@ -83,7 +95,7 @@ abstract class PlayerAction implements PlayerActionInterface
      * @param array $include
      * @return string
      */
-    public final function serializeToJson($include = [])
+    final public function serializeToJson(array $include = []): string
     {
         $include = array_merge(['action', 'createdDt', 'ttl'], $include);
 
@@ -101,7 +113,7 @@ abstract class PlayerAction implements PlayerActionInterface
      * @return array
      * @throws PlayerActionException
      */
-    public final function getEncryptedMessage(): array
+    final public function getEncryptedMessage(): array
     {
         $message = null;
 
@@ -119,22 +131,24 @@ abstract class PlayerAction implements PlayerActionInterface
     /**
      * Send the action to the specified connection and wait for a reply (acknowledgement)
      * @param string $connection
-     * @return string
+     * @return bool
      * @throws PlayerActionException
      */
-    public final function send($connection)
+    final public function send($connection): bool
     {
         try {
             // Set the message create date
             $this->createdDt = date('c');
 
             // Set the TTL if not already set
-            if ($this->ttl == 0)
+            if (empty($this->ttl)) {
                 $this->setTtl();
+            }
 
             // Set the QOS if not already set
-            if ($this->qos === null)
+            if (empty($this->qos)) {
                 $this->setQos();
+            }
 
             // Get the encrypted message
             $encrypted = $this->getEncryptedMessage();
@@ -169,25 +183,24 @@ abstract class PlayerAction implements PlayerActionInterface
                     // shall be returned.
                     $reply = $socket->recv(\ZMQ::MODE_DONTWAIT);
 
-                    if ($reply !== false)
+                    if ($reply !== false) {
                         break;
-
+                    }
                 } catch (\ZMQSocketException $sockEx) {
-                    if ($sockEx->getCode() !== \ZMQ::ERR_EAGAIN)
+                    if ($sockEx->getCode() !== \ZMQ::ERR_EAGAIN) {
                         throw $sockEx;
+                    }
                 }
 
                 usleep(100000);
-
             } while (--$retries);
 
             // Disconnect socket
             $socket->disconnect($connection);
 
             // Return the reply, if we couldn't connect then the reply will be false
-            return $reply;
-        }
-        catch (\ZMQSocketException $ex) {
+            return $reply !== false;
+        } catch (\ZMQSocketException $ex) {
             throw new PlayerActionException('XMR connection failed. Error = ' . $ex->getMessage());
         }
     }

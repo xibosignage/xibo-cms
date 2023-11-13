@@ -28,8 +28,6 @@ jQuery.fn.extend({
       duration: 50,
       durationIsPerItem: false,
       numItems: 1,
-      takeItemsFrom: 'start',
-      reverseOrder: 0,
       itemsPerPage: 1,
       speed: 2,
       previewWidth: 0,
@@ -61,6 +59,12 @@ jQuery.fn.extend({
     options = $.extend({}, defaults, options);
 
     const elementWrapper = $('<div class="element-wrapper"></div>');
+
+    if (!isMarquee) {
+      options.speed = 1000;
+    } else {
+      options.speed = 1;
+    }
 
     if (String(options.parentId).length > 0) {
       if (options.parentId === options.id) {
@@ -103,9 +107,6 @@ jQuery.fn.extend({
     if (options.effect === 'none') {
       // Do nothing
     } else if (!isMarquee && $content.find(cycleElement).length) {
-      // Make sure the speed is something sensible
-      options.speed = (options.speed <= 200) ? 1000 : options.speed;
-
       const numberOfSlides = items?.length || 1;
       const duration = (options.durationIsPerItem) ?
         options.duration :

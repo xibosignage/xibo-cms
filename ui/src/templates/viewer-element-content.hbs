@@ -15,12 +15,6 @@
 <div class="slot" title="{{trans.dataSlot}}">#<span>{{element.slotView}}</span></div>
 {{/neq}}
 
-{{#if invalidParent}}
-<div class="invalid-parent d-none" data-html="true" title="{{trans.invalidWidget}}">
-    <i class="fa fa-warning"></i>
-</div>
-{{/if}}
-
 {{#with template}}
     {{#if onTemplateRender}}
         <script type="text/javascript">

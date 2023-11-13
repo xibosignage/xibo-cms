@@ -22,7 +22,7 @@ const Element = function(data, widgetId, regionId, parentWidget) {
 
   this.id = data.id;
   this.elementId = data.elementId;
-  this.elementType = data.type;
+  this.elementType = (data.elementType) ? data.elementType : data.type;
 
   // has data type ( if it's not global )
   this.hasDataType = (data.type != 'global');
@@ -60,6 +60,9 @@ const Element = function(data, widgetId, regionId, parentWidget) {
 
   // Animation effect
   this.effect = data.effect || 'noTransition';
+
+  // Media
+  this.mediaId = data.mediaId;
 };
 
 /**
@@ -74,6 +77,14 @@ Element.prototype.getProperties = function() {
       // Create a full copy of the template object
       // (we don't want to modify the original template)
       const templateCopy = JSON.parse(JSON.stringify(template));
+
+      // If type is wrong, or not defined, change it to the template's
+      if (
+        typeof self.elementType === 'undefined' ||
+        template.dataType != self.elementType
+      ) {
+        self.elementType = template.dataType;
+      }
 
       // Merge template properties with element properties
       if (templateCopy != undefined) {
