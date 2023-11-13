@@ -28,10 +28,9 @@ jQuery.fn.extend({
     const items = [];
     const parser = new RegExp('\\[.*?\\]', 'g');
     const pipeParser = new RegExp('\\|{1}', 'g');
-    this.each(function() {
+    this.each(function(_idx, data) {
       // Parse the template for a list of things to substitute, and match those
       // with content from items.
-      const data = this;
       let replacement = template;
       let match = parser.exec(template);
       while (match != null) {
@@ -72,6 +71,9 @@ jQuery.fn.extend({
             }
           });
         }
+
+        // If value is null, set it as empty string
+        (value === null) && (value = '');
 
         // Finally set the replacement in the template
         replacement = replacement.replace(match[0], value);
