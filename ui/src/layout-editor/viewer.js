@@ -27,6 +27,7 @@ const LayerManager = require('../editor-core/layer-manager.js');
 const DateFormatHelper = require('../helpers/date-format-helper.js');
 
 const viewerTemplate = require('../templates/viewer.hbs');
+const viewerRegionTemplate = require('../templates/viewer-region.hbs');
 const viewerWidgetTemplate = require('../templates/viewer-widget.hbs');
 const viewerLayoutPreview = require('../templates/viewer-layout-preview.hbs');
 const viewerActionEditRegionTemplate =
@@ -188,8 +189,11 @@ Viewer.prototype.getLayoutOrientation = function(width, height) {
 /**
  * Render viewer
  * @param {object} forceReload - Force reload
+ * @param {object} target - Reload only target
 */
-Viewer.prototype.render = function(forceReload = false) {
+Viewer.prototype.render = function(forceReload = false, target = {}) {
+  const renderSingleObject = (!$.isEmptyObject(target));
+
   // Check background colour and set theme
   const hsvColor =
     (this.parent.layout.backgroundColor) ?
@@ -222,90 +226,150 @@ Viewer.prototype.render = function(forceReload = false) {
   // Set reload to false
   this.reload = false;
 
-  // Render the viewer
-  this.DOMObject.html(viewerTemplate());
+  if (renderSingleObject) {
+    const self = this;
+    const createCanvas = function() {
+      if (
+        lD.layout.canvas &&
+        self.DOMObject.find('.designer-region-canvas').length === 0
+      ) {
+        self.DOMObject.find('.layout-live-preview').append(
+          `<div id="${lD.layout.canvas.id}" 
+            class="designer-region-canvas"
+            style="
+              position:absolute;
+              z-index: ${lD.layout.canvas.zIndex};">
+            </div>`,
+        );
+      }
+    };
 
-  const $viewerContainer = this.DOMObject;
+    // Render single object
+    if (
+      target.type === 'widget' ||
+      target.type === 'region'
+    ) {
+      const regionId = (target.type === 'region') ?
+        target.id :
+        target.regionId;
+      const regionToRender = lD.layout.regions[regionId];
 
-  // If preview is playing, refresh the bottombar
-  if (this.previewPlaying && this.parent.selectedObject.type == 'layout') {
-    this.parent.bottombar.render(this.parent.selectedObject);
-  }
+      // Add region template to viewer
+      this.DOMObject.find('#regions').append(viewerRegionTemplate(
+        regionToRender,
+      ));
 
-  // Show loading template
-  $viewerContainer.html(loadingTemplate());
+      // If it's a zone, just update the region dimensions
+      if (
+        target.type === 'region' &&
+        target.subType === 'zone'
+      ) {
+        this.updateRegion(regionToRender);
+      } else {
+        this.renderRegion(regionToRender);
+      }
+    } else if (target.type === 'element') {
+      createCanvas();
 
-  // Set preview play as false
-  this.previewPlaying = false;
+      // Render element
+      this.renderElement(target, lD.layout.canvas);
+    } else if (target.type === 'element-group') {
+      createCanvas();
 
-  // Reset container properties
-  $viewerContainer.css('background',
-    (this.theme == 'dark') ? '#2c2d2e' : '#F3F8FF',
-  );
-  $viewerContainer.css('border', 'none');
-
-  // Apply viewer scale to the layout
-  this.containerObjectDimensions =
-    this.scaleObject(lD.layout, $viewerContainer);
-
-  this.orientation = this.getLayoutOrientation(
-    this.containerObjectDimensions.width,
-    this.containerObjectDimensions.height,
-  );
-
-  // Apply viewer scale to the layout
-  const scaledLayout = lD.layout.scale($viewerContainer);
-
-  const html = viewerTemplate({
-    type: 'layout',
-    renderLayout: true,
-    containerStyle: 'layout-player',
-    dimensions: this.containerObjectDimensions,
-    layout: scaledLayout,
-    trans: viewerTrans,
-    theme: this.theme,
-    orientation: this.orientation,
-  });
-
-  // Replace container html
-  $viewerContainer.html(html);
-
-  // Render background image or color to the preview
-  if (lD.layout.backgroundImage === null) {
-    $viewerContainer.find('.viewer-object')
-      .css('background', lD.layout.backgroundColor);
-  } else {
-    // Get API link
-    let linkToAPI = urlsForApi.layout.downloadBackground.url;
-    // Replace ID in the link
-    linkToAPI = linkToAPI.replace(':id', lD.layout.layoutId);
-
-    $viewerContainer.find('.viewer-object')
-      .css({
-        background:
-          'url(\'' + linkToAPI + '?preview=1&width=' +
-          (lD.layout.width * this.containerObjectDimensions.scale) +
-          '&height=' +
-          (
-            lD.layout.height *
-            this.containerObjectDimensions.scale
-          ) +
-          '&proportional=0&layoutBackgroundId=' +
-          lD.layout.backgroundImage + '\') top center no-repeat',
-        backgroundSize: '100% 100%',
-        backgroundColor: lD.layout.backgroundColor,
+      // Render all elements from group
+      Object.values(target.elements).forEach((element) => {
+        self.renderElement(element, lD.layout.canvas);
       });
-  }
-
-  // Render preview regions/widgets
-  for (const regionIndex in lD.layout.regions) {
-    if (lD.layout.regions.hasOwnProperty(regionIndex)) {
-      this.renderRegion(lD.layout.regions[regionIndex]);
     }
-  }
+  } else {
+    // Render full layout
 
-  // Render preview canvas if it's not an empty object
-  (!$.isEmptyObject(lD.layout.canvas)) && this.renderCanvas(lD.layout.canvas);
+    // Render the viewer
+    this.DOMObject.html(viewerTemplate());
+
+    const $viewerContainer = this.DOMObject;
+
+    // If preview is playing, refresh the bottombar
+    if (this.previewPlaying && this.parent.selectedObject.type == 'layout') {
+      this.parent.bottombar.render(this.parent.selectedObject);
+    }
+
+    // Show loading template
+    $viewerContainer.html(loadingTemplate());
+
+    // Set preview play as false
+    this.previewPlaying = false;
+
+    // Reset container properties
+    $viewerContainer.css('background',
+      (this.theme == 'dark') ? '#2c2d2e' : '#F3F8FF',
+    );
+    $viewerContainer.css('border', 'none');
+
+    // Apply viewer scale to the layout
+    this.containerObjectDimensions =
+      this.scaleObject(lD.layout, $viewerContainer);
+
+    this.orientation = this.getLayoutOrientation(
+      this.containerObjectDimensions.width,
+      this.containerObjectDimensions.height,
+    );
+
+    // Apply viewer scale to the layout
+    const scaledLayout = lD.layout.scale($viewerContainer);
+
+    const html = viewerTemplate({
+      type: 'layout',
+      renderLayout: true,
+      containerStyle: 'layout-player',
+      dimensions: this.containerObjectDimensions,
+      layout: scaledLayout,
+      renderCanvas: (!$.isEmptyObject(lD.layout.canvas)),
+      trans: viewerTrans,
+      theme: this.theme,
+      orientation: this.orientation,
+    });
+
+    // Replace container html
+    $viewerContainer.html(html);
+
+    // Render background image or color to the preview
+    if (lD.layout.backgroundImage === null) {
+      $viewerContainer.find('.viewer-object')
+        .css('background', lD.layout.backgroundColor);
+    } else {
+      // Get API link
+      let linkToAPI = urlsForApi.layout.downloadBackground.url;
+      // Replace ID in the link
+      linkToAPI = linkToAPI.replace(':id', lD.layout.layoutId);
+
+      $viewerContainer.find('.viewer-object')
+        .css({
+          background:
+            'url(\'' + linkToAPI + '?preview=1&width=' +
+            (lD.layout.width * this.containerObjectDimensions.scale) +
+            '&height=' +
+            (
+              lD.layout.height *
+              this.containerObjectDimensions.scale
+            ) +
+            '&proportional=0&layoutBackgroundId=' +
+            lD.layout.backgroundImage + '\') top center no-repeat',
+          backgroundSize: '100% 100%',
+          backgroundColor: lD.layout.backgroundColor,
+        });
+    }
+
+    // Render viewer regions/widgets
+    for (const regionIndex in lD.layout.regions) {
+      if (lD.layout.regions.hasOwnProperty(regionIndex)) {
+        this.renderRegion(lD.layout.regions[regionIndex]);
+      }
+    }
+
+    // Render viewer canvas if it's not an empty object
+    (!$.isEmptyObject(lD.layout.canvas)) && this.renderCanvas(lD.layout.canvas);
+  }
 
   // Handle UI interactions
   this.handleInteractions();
@@ -624,7 +688,7 @@ Viewer.prototype.handleInteractions = function() {
           reloadViewer: false,
           clickPosition: $(e.target).hasClass('layout') ? clickPosition : null,
         });
-        self.selectElement();
+        self.selectObject();
       } else if (
         $(e.target).hasClass('group-edit-btn')
       ) {
@@ -674,7 +738,7 @@ Viewer.prototype.handleInteractions = function() {
                 });
               }
 
-              self.selectElement($(e.target), shiftIsPressed);
+              self.selectObject($(e.target), shiftIsPressed);
             } else if (
               (
                 $(e.target).data('subType') === 'zone' ||
@@ -695,7 +759,7 @@ Viewer.prototype.handleInteractions = function() {
                   target: $(e.target),
                 });
               }
-              self.selectElement($(e.target), shiftIsPressed);
+              self.selectObject($(e.target), shiftIsPressed);
             } else if (
               $(e.target).find('.designer-widget').length > 0 &&
               !$(e.target).find('.designer-widget').hasClass('selected') &&
@@ -711,7 +775,7 @@ Viewer.prototype.handleInteractions = function() {
                   clickPosition: clickPosition,
                 });
               }
-              self.selectElement($(e.target), shiftIsPressed);
+              self.selectObject($(e.target), shiftIsPressed);
             } else if (
               $(e.target).hasClass('designer-element') &&
               !$(e.target).hasClass('selected')
@@ -726,7 +790,7 @@ Viewer.prototype.handleInteractions = function() {
                   clickPosition: clickPosition,
                 });
               }
-              self.selectElement($(e.target), shiftIsPressed);
+              self.selectObject($(e.target), shiftIsPressed);
             } else if (
               $(e.target).hasClass('group-select-overlay') &&
               !$(e.target).parent().hasClass('selected')
@@ -741,7 +805,7 @@ Viewer.prototype.handleInteractions = function() {
                   clickPosition: clickPosition,
                 });
               }
-              self.selectElement($(e.target).parent(), shiftIsPressed);
+              self.selectObject($(e.target).parent(), shiftIsPressed);
             }
           }, 200);
         } else {
@@ -763,7 +827,7 @@ Viewer.prototype.handleInteractions = function() {
             lD.selectObject({
               target: $(e.target),
             });
-            self.selectElement($(e.target), shiftIsPressed);
+            self.selectObject($(e.target), shiftIsPressed);
           } else if (
             $(e.target).hasClass('group-select-overlay')
           ) {
@@ -773,7 +837,7 @@ Viewer.prototype.handleInteractions = function() {
           } else {
             // Move out from group editing
             lD.selectObject();
-            self.selectElement();
+            self.selectObject();
           }
         }
       }
@@ -977,7 +1041,7 @@ Viewer.prototype.renderRegion = function(
 
   // If region is selected, update moveable
   if (region.selected) {
-    this.selectElement($container);
+    this.selectObject($container);
   }
 
   // If there's no widget, return
@@ -1094,7 +1158,7 @@ Viewer.prototype.renderRegion = function(
 
     // If widget is selected, update moveable for the region
     if (widget && widget.selected) {
-      this.selectElement($container);
+      this.selectObject($container);
     }
 
     // Select droppables in the region
@@ -1304,6 +1368,12 @@ Viewer.prototype.updateRegion = _.throttle(function(
   if (redrawLayerManager) {
     lD.viewer.layerManager.render();
   }
+
+  // If region is selected, but not on the container, do it
+  if (region.selected && !$container.hasClass('selected')) {
+    lD.viewer.selectObject($container);
+    lD.viewer.updateMoveable();
+  }
 }, drawThrottle);
 
 
@@ -1401,7 +1471,7 @@ Viewer.prototype.renderElement = function(
 
     // If group is selected, add selected class
     if (group.selected) {
-      this.selectElement($groupContainer);
+      this.selectObject($groupContainer);
     }
 
     // If group has source, add it to the container
@@ -2525,7 +2595,7 @@ Viewer.prototype.saveElementGroupProperties = function(
  * @param {boolean} multiSelect - Select another object
  * @param {boolean} removeEditFromGroup
  */
-Viewer.prototype.selectElement = function(
+Viewer.prototype.selectObject = function(
   element = null,
   multiSelect = false,
   removeEditFromGroup = true,
@@ -2598,7 +2668,6 @@ Viewer.prototype.updateMoveable = function(
 
   // Get selected element
   const $selectedElement = this.DOMObject.find('.selected');
-
   const multipleSelected = ($selectedElement.length > 1);
 
   // Update moveable if we have a selected element, and is not a drawerWidget
@@ -3216,6 +3285,43 @@ Viewer.prototype.addActionEditArea = function(
 };
 
 /**
+ * Remove object from viewer
+ * @param {string} objectType - Object type
+ * @param {string} objectId - Object ID
+ */
+Viewer.prototype.removeObject = function(objectType, objectId) {
+  // Remove from DOM
+  this.DOMObject
+    .find(`[data-type="${objectType}"][data-${objectType}-id="${objectId}"]`)
+    .remove();
+
+  // Update moveable
+  this.updateMoveable();
+};
+
+/**
+ * Toggle visibility from object in viewer
+ * @param {string} objectType - Object type
+ * @param {string} objectId - Object ID
+ * @param {boolean} hide - Hide?
+ */
+Viewer.prototype.toggleObject = function(objectType, objectId, hide) {
+  const $viewerObj = this.DOMObject
+    .find(`[data-type="${objectType}"][data-${objectType}-id="${objectId}"]`);
+
+  // If hide and it's selected, deselect from viewer
+  if (
+    hide &&
+    $viewerObj.hasClass('selected')
+  ) {
+    this.selectObject();
+  }
+
+  // Remove from DOM
+  $viewerObj.toggleClass('d-none', hide);
+};
+
+/**
  * Remove new widget action element
  */
 Viewer.prototype.removeActionEditArea = function() {
@@ -3230,8 +3336,13 @@ Viewer.prototype.removeActionEditArea = function() {
  * @param {object} data - Object data
  */
 Viewer.prototype.saveTemporaryObject = function(objectId, objectType, data) {
+  // Remove selected from the viewer
+  this.selectObject();
+
+  // Select new object
   lD.selectedObject.id = objectId;
   lD.selectedObject.type = objectType;
+
 
   // If it's an element, save also as elementId
   if (lD.selectedObject.type === 'element') {
@@ -3242,6 +3353,7 @@ Viewer.prototype.saveTemporaryObject = function(objectId, objectType, data) {
   $('<div>', {
     id: objectId,
     data: data,
+    class: 'viewer-temporary-object',
   }).appendTo(this.DOMObject);
 };
 
@@ -3260,10 +3372,10 @@ Viewer.prototype.editGroup = function(
       refreshEditor: false,
       reloadPropertiesPanel: false,
     });
-    self.selectElement('#' + elementToSelectOnLoad);
+    self.selectObject('#' + elementToSelectOnLoad);
   } else {
     lD.selectObject();
-    self.selectElement();
+    self.selectObject();
   }
 
   // If we're not editing yet, start

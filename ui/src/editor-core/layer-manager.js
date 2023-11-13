@@ -294,7 +294,7 @@ LayerManager.prototype.render = function(reset) {
                 $viewerObject;
 
               // Select in viewer
-              lD.viewer.selectElement($auxTarget);
+              lD.viewer.selectObject($auxTarget);
 
               // Mark object with selected from manager class
               $auxTarget.addClass('selected-from-layer-manager');

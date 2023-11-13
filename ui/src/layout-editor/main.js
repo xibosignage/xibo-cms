@@ -618,6 +618,7 @@ lD.selectObject =
  * Refresh designer
  * @param {boolean} [reloadToolbar=false] - Update toolbar
  * @param {boolean} [reloadViewer=false] - Reload viewer
+ * @param {object} [reloadViewerTarget={}] - Reload viewer target
  * @param {boolean} [reloadPropertiesPanel=false] - Reload properties panel
  * @param {boolean} [reloadLayerManager=true] - Reload layer manager
  */
@@ -625,6 +626,7 @@ lD.refreshEditor = function(
   {
     reloadToolbar = false,
     reloadViewer = false,
+    reloadViewerTarget = {},
     reloadPropertiesPanel = false,
     reloadLayerManager = true,
   } = {},
@@ -642,7 +644,7 @@ lD.refreshEditor = function(
 
   // Properties panel and viewer
   (reloadPropertiesPanel) && this.propertiesPanel.render(this.selectedObject);
-  (reloadViewer) && this.viewer.render(reloadViewer);
+  (reloadViewer) && this.viewer.render(reloadViewer, reloadViewerTarget);
   (reloadLayerManager) && this.viewer.layerManager.render();
 };
 
@@ -685,17 +687,25 @@ lD.reloadData = function(
       // get Layout folder id
       lD.folderId = lD.layout.folderId;
 
-      // Select the same object ( that will refresh the layout too )
+      // Select the same object
       const selectObjectId = (lD.selectedObject.type === 'element') ?
         lD.selectedObject.elementId :
         lD.selectedObject.id;
 
+      const $selectedDOMTarget = $('#' + selectObjectId);
+
       lD.selectObject({
-        target: $('#' + selectObjectId),
+        target: $selectedDOMTarget,
         forceSelect: true,
         refreshEditor: false, // Don't refresh the editor here
         reloadPropertiesPanel: false,
       });
+
+      // Check if the selected object is a temporary one
+      const targetToRender =
+        $selectedDOMTarget.hasClass('viewer-temporary-object') ?
+          lD.selectedObject :
+          {};
 
       // Reload the form helper connection
       formHelpers.setup(lD, lD.layout);
@@ -722,6 +732,7 @@ lD.reloadData = function(
       refreshEditor && lD.refreshEditor({
         reloadToolbar: reloadToolbar,
         reloadViewer: reloadViewer,
+        reloadViewerTarget: targetToRender,
         reloadPropertiesPanel: reloadPropertiesPanel,
       });
 
@@ -1219,6 +1230,13 @@ lD.deleteObject = function(
   } else {
     lD.common.showLoadingScreen('deleteObject');
 
+    // Hide in viewer
+    lD.viewer.toggleObject(
+      objectType,
+      objectId,
+      true,
+    );
+
     lD.layout.deleteObject(
       objectType,
       objectId,
@@ -1253,7 +1271,7 @@ lD.deleteObject = function(
           reloadViewer: false,
           reloadPropertiesPanel: false,
         });
-        lD.viewer.selectElement();
+        lD.viewer.selectObject();
 
         // Render properties panel with action tab
         lD.propertiesPanel.render(
@@ -1262,10 +1280,16 @@ lD.deleteObject = function(
           true, // Open action tab
         );
       } else {
+        // Remove widget from viewer
+        lD.viewer.removeObject(
+          objectType,
+          objectId,
+        );
+
         // Reload data ( if not a drawer widget)
         lD.reloadData(lD.layout,
           {
-            refreshEditor: true,
+            refreshEditor: false,
           });
       }
 
@@ -1275,6 +1299,13 @@ lD.deleteObject = function(
 
       // Show error returned or custom message to the user
       let errorMessage = '';
+
+      // Show back in viewer
+      lD.viewer.toggleObject(
+        objectType,
+        objectId,
+        false,
+      );
 
       if (typeof error == 'string') {
         errorMessage = error;
@@ -2723,7 +2754,7 @@ lD.openPlaylistEditor = function(playlistId, region) {
     .removeClass('hidden');
 
   // Deselect viewer element
-  lD.viewer.selectElement();
+  lD.viewer.selectObject();
 
   // Show playlist editor
   $playlistEditorPanel.removeClass('hidden');
@@ -3074,7 +3105,7 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
       lD.selectObject({
         target: lD.viewer.DOMObject.find('#' + layoutObject.id),
       });
-      lD.viewer.selectElement($viewerRegion);
+      lD.viewer.selectObject($viewerRegion);
     } else if (target.data('action') == 'Ungroup') {
       // Get widget
       const elementsWidget =
@@ -3390,7 +3421,7 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
 
             if (deletedIndex == $regionsToBeDeleted.length) {
               // Stop deleting and deselect all elements
-              lD.viewer.selectElement();
+              lD.viewer.selectObject();
 
               // Hide loader
               lD.common.hideLoadingScreen('deleteMultiObject');
@@ -3410,7 +3441,7 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
         deleteNext();
       } else {
         // If we're not deleting any region, deselect elements now
-        lD.viewer.selectElement();
+        lD.viewer.selectObject();
       }
     } else if (target.data('action') == 'Group') {
       // Group elements
@@ -4766,7 +4797,7 @@ lD.editDrawerWidget = function(actionData, actionEditMode = true) {
   });
 
   // Select element in viewer
-  lD.viewer.selectElement($target);
+  lD.viewer.selectObject($target);
 
   // 4. Open property panel with drawer widget or same object
   lD.propertiesPanel.render(

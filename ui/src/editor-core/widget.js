@@ -762,13 +762,32 @@ Widget.prototype.saveElements = function(
       // Remove region
       app.layout.deleteObject('region', this.parent.regionId)
         .then(() => {
-          reloadLayout(true);
+          // Remove object from structure
+          app.layout.removeFromStructure(
+            'region',
+            this.parent.regionId,
+            'canvas',
+          );
+
+          // Refresh layer manager
+          app.viewer.layerManager.render();
+
+          // Remove canvas from viewer
+          app.viewer.DOMObject.find('.designer-region-canvas').remove();
         });
     } else if (removeCurrentWidget) {
       // Remove widget
       app.layout.deleteObject('widget', this.widgetId)
         .then(() => {
-          reloadLayout(true);
+          // Remove object from structure
+          app.layout.removeFromStructure(
+            'widget',
+            this.widgetId,
+            'canvas',
+          );
+
+          // Refresh layer manager
+          app.viewer.layerManager.render();
         });
     }
 
@@ -1083,7 +1102,7 @@ Widget.prototype.removeElement = function(
     lD.selectObject({
       reloadViewer: false,
     });
-    lD.viewer.selectElement(null, false, false);
+    lD.viewer.selectObject(null, false, false);
   } else if (lD.selectedObject.type != 'layout' && save) {
     // If we have a selected object other than layout, reload properties panel
     lD.propertiesPanel.render(lD.selectedObject);
