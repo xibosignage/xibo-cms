@@ -23,7 +23,6 @@
         <id>article_custom_html</id>
         <type>static</type>
         <dataType>article</dataType>
-        <showIn>none</showIn>
         <title>Articles shown with custom HTML</title>
         <properties>
             <property id="customTemplate" type="hidden">

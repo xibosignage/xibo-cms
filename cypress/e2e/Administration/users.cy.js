@@ -49,6 +49,9 @@ describe('Users', function() {
     cy.get('.modal input#password')
       .type('cypress');
 
+    // Error checking - for incorrect email format
+    cy.get('.modal input#email').type('cypress');
+
     cy.get('.select2-container--bootstrap').eq(1).click();
     cy.log('Before waiting for Icon Dashboard element');
     cy.wait('@loadHomepageAfterSearch');
@@ -56,14 +59,20 @@ describe('Users', function() {
       .should('contain', 'Icon Dashboard')
       .click();
 
-    // Add first by clicking next
+    // Try saving
+    cy.get('.modal .save-button').click();
+
+    cy.contains('Please enter a valid email address.');
+    cy.get('.modal input#email').clear().type('cypress@test.com');
+
+    // Save
     cy.get('.modal .save-button').click();
 
     // Check if user is added in toast message
     cy.contains('Added CypressTestUser');
   });
 
-  it('searches and edit existing user', function() {
+  it.only('searches and edit existing user', function() {
     // Create a new user and then search for it and delete it
     cy.createUser('CypressTestUser' + testRun, 'password', 3, 1).then((id) => {
       cy.intercept({
@@ -93,6 +102,16 @@ describe('Users', function() {
 
       cy.get('.modal input#userName').clear()
         .type('CypressTestUserEdited' + testRun);
+
+      cy.get('.modal input#newPassword').clear().type('newPassword');
+      cy.get('.modal input#retypeNewPassword').clear().type('wrongPassword');
+
+      // edit test user
+      cy.get('.bootbox .save-button').click();
+
+      // Error checking - for password mismatch
+      cy.contains('Passwords do not match');
+      cy.get('.modal input#retypeNewPassword').clear().type('newPassword');
 
       // edit test user
       cy.get('.bootbox .save-button').click();
