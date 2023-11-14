@@ -72,7 +72,7 @@ describe('Users', function() {
     cy.contains('Added CypressTestUser');
   });
 
-  it.only('searches and edit existing user', function() {
+  it('searches and edit existing user', function() {
     // Create a new user and then search for it and delete it
     cy.createUser('CypressTestUser' + testRun, 'password', 3, 1).then((id) => {
       cy.intercept({
