@@ -108,6 +108,7 @@ describe('Users', function() {
 
       // edit test user
       cy.get('.bootbox .save-button').click();
+      cy.wait('@putRequest')
 
       // Error checking - for password mismatch
       cy.contains('Passwords do not match');
