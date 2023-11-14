@@ -296,4 +296,24 @@ describe('Display Groups', function() {
       cy.get('.modal-body').contains(': Success');
     });
   });
+
+  // ---------
+  // Tests - Error handling
+  it('should not add a displaygroup without dynamic criteria', function() {
+    cy.visit('/displaygroup/view');
+
+    // Click on the Add Displaygroup button
+    cy.contains('Add Display Group').click();
+
+    cy.get('.modal input#displayGroup')
+        .type('Cypress Test Displaygroup ' + testRun + '_1');
+
+    cy.get('.modal input#isDynamic').check();
+
+    // Add first by clicking next
+    cy.get('.modal .save-button').click();
+
+    // Check toast message
+    cy.contains('Dynamic Display Groups must have at least one Criteria specified.');
+  });
 });
