@@ -148,7 +148,7 @@ jQuery.fn.extend({
       }
 
       // Set ratio on the body incase we want to get it easily
-      $(el).data('ratio', ratio);
+      $(el).attr('data-ratio', ratio);
 
       // Handle alignment (do not add position absolute unless needed)
       if (!options.type || options.type !== 'text') {
