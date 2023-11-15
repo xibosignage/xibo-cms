@@ -60,6 +60,8 @@ const Region = function(id, data, {backgroundColor = '#aaa'} = {}) {
  * @param {number} [transform.height] - New height (for resize tranformation)
  * @param {number} [transform.top] - New top position (for move tranformation)
  * @param {number} [transform.left] - New left position (for move tranformation)
+ * @param {number} [transform.zIndex]
+ *  - New layer position (for move tranformation)
  * @param {bool=} saveToHistory - Flag to save or not to the change history
  */
 Region.prototype.transform = function(transform, saveToHistory = true) {

@@ -7,21 +7,21 @@
 
 <div class="layer-manager-body">
     {{#each layerStructure as |layer layerIdx|}}
-        <div class="layer-manager-layer">
-            {{#each this}}
-                {{#eq type 'canvas'}}
-                    <div class="layer-manager-canvas-layers">
-                        <div class="layer-manager-layer-canvas" title="{{../trans.layer}}">
-                            <div class="layer">{{layerIdx}}</div>
-                            <span class="name" title="{{../../trans.canvas}}">{{../../trans.canvas}}</span>
-                            {{#if duration}}
-                                <span class="duration" title="{{../../trans.duration}}">{{duration}}</span>
-                            {{/if}}
-                        </div>
-                        {{#each layers as |canvasLayer canvasLayerIdx|}}
-                            {{#each this}}
-                                {{#eq type 'elementGroup'}}
-                                     <div class="layer-manager-layer-item selectable element-group {{#if selected}}selected{{/if}} {{#if expanded}}expanded{{/if}}" data-item-id="{{id}}" data-widget-id="{{widgetId}}">
+        {{#each this}}
+            {{#eq type 'canvas'}}
+                <div class="layer-manager-canvas-layers sortable-main" data-layer="{{layerIdx}}" data-type="canvas">
+                    <div class="layer-manager-layer-canvas" title="{{../trans.layer}}">
+                        <div class="layer">{{layerIdx}}</div>
+                        <span class="name" title="{{../../trans.canvas}}">{{../../trans.canvas}}</span>
+                        {{#if duration}}
+                            <span class="duration" title="{{../../trans.duration}}">{{duration}}</span>
+                        {{/if}}
+                    </div>
+                    {{#each layers as |canvasLayer canvasLayerIdx|}}
+                        {{#each this}}
+                            {{#eq type 'elementGroup'}}
+                                <div class="element-group-wrapper sortable-canvas" data-item-id="{{id}}" data-type="{{type}}" data-widget-id="{{widgetId}}" data-region-id="{{regionId}}">
+                                    <div class="layer-manager-layer-item selectable element-group {{#if selected}}selected{{/if}} {{#if expanded}}expanded{{/if}}" data-item-id="{{id}}" data-widget-id="{{widgetId}}">
                                         <div class="layer">{{canvasLayerIdx}}</div>
                                         {{#if moduleIcon}}
                                             <i class="module-icon {{#if moduleIcon}}{{moduleIcon}}{{else}}fas fa-object-group{{/if}}"></i>
@@ -34,7 +34,7 @@
                                     </div>
                                     {{#each layers as |groupLayer groupLayerIdx|}}
                                         {{#each this}}
-                                            <div class="layer-manager-layer-item selectable has-group {{#if selected}}selected{{/if}} {{#unless ../../expanded}}hidden{{/unless}}" data-group-id="{{../../id}}" data-item-id="{{id}}">
+                                            <div class="layer-manager-layer-item sortable-element-group selectable has-group {{#if selected}}selected{{/if}} {{#unless ../../expanded}}hidden{{/unless}}" data-group-id="{{../../id}}" data-item-id="{{id}}">
                                                 <div class="layer-item-in-group">
                                                     <div class="layer-item-in-group-helper"></div>
                                                 </div>
@@ -49,55 +49,55 @@
                                             </div>
                                         {{/each}}
                                     {{/each}}
-                                {{else}}
-                                    <div class="layer-manager-layer-item selectable  {{#if selected}}selected{{/if}}" data-item-id="{{id}}">
-                                        <div class="layer">{{canvasLayerIdx}}</div>
-                                        {{#eq type 'element'}}
-                                            {{#if moduleIcon}}
-                                                <i class="module-icon {{#if moduleIcon}}{{moduleIcon}}{{else}}fas fa-object-group{{/if}}" {{#if hasGroup}}title="{{groupId}}"{{/if}}></i>
-                                            {{/if}}
-                                            <i class="element-icon {{#if icon}}{{icon}}{{else}}fas fa-atom{{/if}}"></i>
-                                        {{/eq}}
-                                        <span class="name" title="{{../../../../trans.name}}">{{name}}</span>
-                                        {{#if duration}}
-                                            <span class="duration" title="{{../../../../trans.duration}}">{{duration}}</span>
+                                </div>
+                            {{else}}
+                                <div class="layer-manager-layer-item selectable sortable-canvas {{#if selected}}selected{{/if}}" data-item-id="{{id}}" data-type="{{type}}" data-widget-id="{{widgetId}}"  data-region-id="{{regionId}}">
+                                    <div class="layer">{{canvasLayerIdx}}</div>
+                                    {{#eq type 'element'}}
+                                        {{#if moduleIcon}}
+                                            <i class="module-icon {{#if moduleIcon}}{{moduleIcon}}{{else}}fas fa-object-group{{/if}}" {{#if hasGroup}}title="{{groupId}}"{{/if}}></i>
                                         {{/if}}
-                                    </div>
-                                {{/eq}}
-                            {{/each}}
-                        {{/each}}
-                    </div>
-                {{else}}
-                    <div class="layer-manager-layer-item {{#if selected}}selected{{/if}} selectable" data-item-id="{{id}}" data-type="{{type}}">
-                        <div class="layer">{{layerIdx}}</div>
-
-                        {{#eq type 'playlist'}}
-                            <i class="fas fa-list" title="{{../../trans.playlist}}"></i>
-                        {{/eq}}
-                        {{#eq type 'zone'}}
-                            <i class="far fa-square" title="{{../../trans.zone}}"></i>
-                        {{/eq}}
-                        {{#eq type 'frame'}}
-                            <i class="fa fa-window-close" title="{{../../trans.invalidRegionHelp}}"></i>
-                        {{/eq}}
-                        {{#eq type 'staticWidget'}}
-                            <i class="{{icon}}"></i>
-                        {{/eq}}
-
-                        <span class="name" title="{{../../trans.name}}">
-                            {{name}}
-                            {{#eq type 'frame'}}
-                                {{../../trans.invalidRegion}}
+                                        <i class="element-icon {{#if icon}}{{icon}}{{else}}fas fa-atom{{/if}}"></i>
+                                    {{/eq}}
+                                    <span class="name" title="{{../../../../trans.name}}">{{name}}</span>
+                                    {{#if duration}}
+                                        <span class="duration" title="{{../../../../trans.duration}}">{{duration}}</span>
+                                    {{/if}}
+                                </div>
                             {{/eq}}
-                        </span>
+                        {{/each}}
+                    {{/each}}
+                </div>
+            {{else}}
+                <div class="layer-manager-layer-item sortable-main {{#if selected}}selected{{/if}} selectable" data-item-id="{{id}}" data-item-aux-id="{{auxId}}" data-type="{{type}}" data-layer="{{layerIdx}}">
+                    <div class="layer">{{layerIdx}}</div>
 
-                        {{#if duration}}
-                            <span class="duration" title="{{../../trans.duration}}">{{duration}}</span>
-                        {{/if}}
-                    </div>
-                {{/eq}}
-            {{/each}}
-        </div>
+                    {{#eq type 'playlist'}}
+                        <i class="fas fa-list" title="{{../../trans.playlist}}"></i>
+                    {{/eq}}
+                    {{#eq type 'zone'}}
+                        <i class="far fa-square" title="{{../../trans.zone}}"></i>
+                    {{/eq}}
+                    {{#eq type 'frame'}}
+                        <i class="fa fa-window-close" title="{{../../trans.invalidRegionHelp}}"></i>
+                    {{/eq}}
+                    {{#eq type 'staticWidget'}}
+                        <i class="{{icon}}"></i>
+                    {{/eq}}
+
+                    <span class="name" title="{{../../trans.name}}">
+                        {{name}}
+                        {{#eq type 'frame'}}
+                            {{../../trans.invalidRegion}}
+                        {{/eq}}
+                    </span>
+
+                    {{#if duration}}
+                        <span class="duration" title="{{../../trans.duration}}">{{duration}}</span>
+                    {{/if}}
+                </div>
+            {{/eq}}
+        {{/each}}
     {{else}}
         <div class="empty-layout-message">
             {{trans.emptyLayout}}
