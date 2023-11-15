@@ -654,7 +654,10 @@ function media(parent, id, xml, options, preload) {
                 var iframeDOM = $("#" + self.containerName + ' #' + self.iframeName);
                 // We remove this line because of flickering and
                 // We will need to address the duration
-                // iframeDOM[0].src = iframeDOM[0].src;
+                iframeDOM[0].src = iframeDOM[0].src;
+                
+                // Show back iframe
+                iframeDOM.show();
             } else {
                 $("#" + self.containerName).empty().append(self.iframe);
             }
@@ -787,6 +790,7 @@ function media(parent, id, xml, options, preload) {
     if (self.render == "html" || self.mediaType == "ticker") {
         self.checkIframeStatus = true;
         self.iframe = $('<iframe scrolling="no" id="' + self.iframeName + '" src="' + tmpUrl + '&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
+
         /* Check if the ticker duration is based on the number of items in the feed */
         if(self.options['durationisperitem'] == '1' || self.options['durationisperpage'] == '1') {
             var regex =  new RegExp("<!-- NUMITEMS=(.*?) -->"); 
@@ -851,6 +855,8 @@ function media(parent, id, xml, options, preload) {
     if(self.iframe && self.checkIframeStatus) {
         // Set state as false ( for now )
         self.ready = false;
+
+        self.iframe.hide();
 
         // Append iframe
         $("#" + self.containerName).empty().append(self.iframe);

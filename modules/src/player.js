@@ -184,11 +184,6 @@ $(function() {
       window.renders.push(window.onRender);
     }
 
-    // If there's no elements in renders, use the default scaler
-    if (window.renders.length === 0) {
-      window.renders.push(defaultScaler);
-    }
-
     // If we have a custom template, run the legacy template render first
     if (customTemplate) {
       const newOptions =
@@ -716,20 +711,18 @@ $(function() {
           });
       }
 
-      if (templateId !== null && url !== null) {
-        // Run defaultScaler for global elements
-        defaultScaler(
-          widget.widgetId,
-          $content,
-          widget.items,
-          Object.assign(
-            widget.properties,
-            globalOptions,
-            {duration: widget.duration},
-          ),
-          meta,
-        );
-      }
+      // Run defaultScaler for global elements
+      defaultScaler(
+        widget.widgetId,
+        $content,
+        widget.items,
+        Object.assign(
+          widget.properties,
+          globalOptions,
+          {duration: widget.duration},
+        ),
+        meta,
+      );
     }
   }
 
