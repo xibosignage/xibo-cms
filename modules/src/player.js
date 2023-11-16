@@ -18,7 +18,7 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-$(function() {
+$(window).on('load', function() {
   // Defaut scaler function
   const defaultScaler = function(
     _id,
@@ -761,6 +761,10 @@ $(function() {
           }
 
           const $content = $('#content');
+
+          // Set content to window dimensions
+          $content.width($(window).width());
+          $content.height($(window).height());
 
           if ((widget.templateId === 'elements' ||
               (widget.templateId === null && (

@@ -57,10 +57,9 @@
                 previewTranslations.target = "{{ "Target"|trans }}";
             {% endautoescape %}
 
+            // Removed the duplicate document ready function
             (function($){
-              $(document).ready(function(){
-                dsInit({{ layout.layoutId }}, {{ previewOptions|json_encode()|raw }}, true)
-              });
+                dsInit({{ layout.layoutId }}, {{ previewOptions|json_encode()|raw }}, true);
             }(jQuery));
         </script>
     </body>

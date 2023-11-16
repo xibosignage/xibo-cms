@@ -862,6 +862,12 @@ function media(parent, id, xml, options, preload) {
         });
     }
 
+    // Add self.iframe dimension for mediaType = global
+    if (self.iframe && self.mediaType === 'global') {
+        $(self.iframe).attr("width", self.divWidth + "px");
+        $(self.iframe).attr("height", self.divHeight + "px");
+    }
+
     // Attached audio
     if($(self.xml).find('audio').length > 0) {
         var $audioObj = $(self.xml).find('audio');
