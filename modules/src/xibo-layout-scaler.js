@@ -86,11 +86,6 @@ jQuery.fn.extend({
       newHeight = options.widgetDesignHeight;
     }
 
-    // Do nothing and return $(this) when ratio = 1
-    if (ratio == 1) {
-      return $(this);
-    }
-
     // Multiple element options
     const mElOptions = {};
 
@@ -109,14 +104,19 @@ jQuery.fn.extend({
 
       mElOptions.contentScaleX = width / mElOptions.contentWidth;
       mElOptions.contentScaleY = height / mElOptions.contentHeight;
+
+      // calculate/update ratio
+      ratio = Math.min(mElOptions.contentScaleX, mElOptions.contentScaleY);
+    }
+
+    // Do nothing and return $(this) when ratio = 1
+    if (ratio == 1) {
+      return $(this);
     }
 
     // Apply these details
     $(this).each(function(_idx, el) {
       if (!$.isEmptyObject(mElOptions)) {
-        // calculate/update ratio
-        ratio = Math.min(mElOptions.contentScaleX, mElOptions.contentScaleY);
-
         $(el).css('transform-origin', '0 0');
         $(el).css('transform', 'scale(' + ratio + ')');
         $(el).width(mElOptions.contentWidth);
