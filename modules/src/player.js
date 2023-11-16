@@ -184,11 +184,6 @@ $(function() {
       window.renders.push(window.onRender);
     }
 
-    // If there's no elements in renders, use the default scaler
-    if (window.renders.length === 0) {
-      window.renders.push(defaultScaler);
-    }
-
     // If we have a custom template, run the legacy template render first
     if (customTemplate) {
       const newOptions =
@@ -270,7 +265,6 @@ $(function() {
       url,
       meta,
     } = widget;
-    widget.items = [];
 
     if (Object.keys(elements.groups).length > 0 ||
     Object.keys(elements.standalone).length > 0) {
@@ -715,28 +709,14 @@ $(function() {
             }
           });
       }
-
-      if (templateId !== null && url !== null) {
-        // Run defaultScaler for global elements
-        defaultScaler(
-          widget.widgetId,
-          $content,
-          widget.items,
-          Object.assign(
-            widget.properties,
-            globalOptions,
-            {duration: widget.duration},
-          ),
-          meta,
-        );
-      }
     }
   }
 
   PlayerHelper
     .init(widgetData, elements)
-    .then(({widgets}) => {
+    .then(({widgets, countWidgetElements}) => {
       if (Object.keys(widgets).length > 0) {
+        let _countWidgetElements = 0;
         Object.keys(widgets).forEach(function(widgetKey) {
           const widget = widgets[widgetKey];
 
@@ -767,7 +747,20 @@ $(function() {
                 Object.keys(widget.elements.groups).length > 0 ||
                 Object.keys(widget.elements.standalone).length > 0
               ))) && typeof widget.elements !== 'undefined') {
+            widget.items = [];
+
+            _countWidgetElements++;
+
             initPlayerElements(widget);
+
+            if (countWidgetElements === _countWidgetElements) {
+              // Run xiboLayoutScaler to scale the content
+              $content.xiboLayoutScaler(Object.assign(
+                widget.properties,
+                globalOptions,
+                {duration: widget.duration},
+              ));
+            }
           } else {
             initStaticTemplates(
               $template,

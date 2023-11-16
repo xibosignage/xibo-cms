@@ -104,14 +104,19 @@ jQuery.fn.extend({
 
       mElOptions.contentScaleX = width / mElOptions.contentWidth;
       mElOptions.contentScaleY = height / mElOptions.contentHeight;
+
+      // calculate/update ratio
+      ratio = Math.min(mElOptions.contentScaleX, mElOptions.contentScaleY);
+    }
+
+    // Do nothing and return $(this) when ratio = 1
+    if (ratio == 1) {
+      return $(this);
     }
 
     // Apply these details
     $(this).each(function(_idx, el) {
       if (!$.isEmptyObject(mElOptions)) {
-        // calculate/update ratio
-        ratio = Math.min(mElOptions.contentScaleX, mElOptions.contentScaleY);
-
         $(el).css('transform-origin', '0 0');
         $(el).css('transform', 'scale(' + ratio + ')');
         $(el).width(mElOptions.contentWidth);
@@ -148,7 +153,7 @@ jQuery.fn.extend({
       }
 
       // Set ratio on the body incase we want to get it easily
-      $(el).data('ratio', ratio);
+      $(el).attr('data-ratio', ratio);
 
       // Handle alignment (do not add position absolute unless needed)
       if (!options.type || options.type !== 'text') {

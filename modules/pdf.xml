@@ -70,8 +70,8 @@ var pdfDoc = null,
 var canvas = document.getElementById('the-canvas');
 var ctx = canvas.getContext('2d');
 
-width = $('body').width();
-height = $('body').height();
+width = $(window).width();
+height = $(window).height();
 
 canvas.width = width;
 canvas.height = height;

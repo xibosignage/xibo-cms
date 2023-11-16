@@ -92,10 +92,11 @@
 if(typeof EmbedInit === 'function') {
     EmbedInit();
 }
-
+    ]]></onInitialize>
+    <onRender><![CDATA[
 if(properties.scaleContent) {
     window.scaleContent = true;
-    $('body').xiboLayoutScaler(globalOptions);
+    $(target).xiboLayoutScaler(globalOptions);
 }
-    ]]></onInitialize>
+]]></onRender>
 </module>
