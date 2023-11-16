@@ -3,7 +3,15 @@ const PlayerHelper = function() {
   const _self = this;
   const urlParams = new URLSearchParams(window.location.search);
   const isPreview = urlParams.get('preview') === '1';
+  let countWidgetElements = 0;
+  let countWidgetStatic = 0;
 
+  /**
+   * Initialize player with the available widgetData and elements
+   * @param {array} widgetData
+   * @param {array} elements
+   * @return {Promise<object>}
+   */
   this.init = (widgetData, elements) => new Promise((resolve) => {
     if (Array.isArray(widgetData)) {
       const _widgetData = [...widgetData];
@@ -46,6 +54,16 @@ const PlayerHelper = function() {
             }
           }
 
+          if (_widget.templateId === 'elements' ||
+              (_widget.templateId === null && (
+                Object.keys(_elements.groups).length > 0 ||
+                Object.keys(_elements.standalone).length > 0
+              ))) {
+            countWidgetElements++;
+          } else {
+            countWidgetStatic++;
+          }
+
           widgets[_widget.widgetId] = {
             ..._widget,
             data: dataItems,
@@ -55,7 +73,11 @@ const PlayerHelper = function() {
           };
         });
 
-        resolve({widgets});
+        resolve({
+          widgets,
+          countWidgetElements,
+          countWidgetStatic,
+        });
       });
     }
   });

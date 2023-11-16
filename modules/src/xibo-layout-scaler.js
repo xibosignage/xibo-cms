@@ -86,6 +86,11 @@ jQuery.fn.extend({
       newHeight = options.widgetDesignHeight;
     }
 
+    // Do nothing and return $(this) when ratio = 1
+    if (ratio == 1) {
+      return $(this);
+    }
+
     // Multiple element options
     const mElOptions = {};
 
@@ -148,7 +153,7 @@ jQuery.fn.extend({
       }
 
       // Set ratio on the body incase we want to get it easily
-      $(el).data('ratio', ratio);
+      $(el).attr('data-ratio', ratio);
 
       // Handle alignment (do not add position absolute unless needed)
       if (!options.type || options.type !== 'text') {
