@@ -3,6 +3,7 @@ const PlayerHelper = function() {
   const _self = this;
   const urlParams = new URLSearchParams(window.location.search);
   const isPreview = urlParams.get('preview') === '1';
+  let _elements = {standalone: {}, groups: {}};
   let countWidgetElements = 0;
   let countWidgetStatic = 0;
 
@@ -32,7 +33,6 @@ const PlayerHelper = function() {
         }
 
         values.forEach((value, widgetIndex) => {
-          let _elements = {standalone: {}, groups: {}};
           const _widget = _widgetData[widgetIndex];
           const {dataItems, showError} = this.composeFinalData(_widget, value);
 
@@ -215,7 +215,11 @@ const PlayerHelper = function() {
    * @return {object} {groups, standalone}
    */
   this.composeElements = (elements, widget) => {
-    return elements.length > 0 && elements.reduce(function(collection, item) {
+    if (!elements || elements.length === 0) {
+      return _elements;
+    }
+
+    return elements.reduce(function(collection, item) {
       const element = _self.decorateElement(item, widget);
       const isGroup = _self.isGroup(element);
       const standaloneKey = element.type === 'dataset' ?
