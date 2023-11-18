@@ -415,10 +415,10 @@ const PlayerHelper = function() {
           }
         }
 
-        const pinnedSlot = standalone[objKey].reduce(function(a, b) {
-          if (b.pinSlot) return b.slot + 1;
+        const pinnedSlots = standalone[objKey].reduce(function(a, b) {
+          if (b.pinSlot) return [...a, b.slot + 1];
           return a;
-        }, null);
+        }, []);
 
         _self.composeSlotsData('standalone', data, standalone, widget, {
           objKey,
@@ -427,7 +427,7 @@ const PlayerHelper = function() {
 
         widget.standaloneSlotsData[objKey] = _self.composeRepeatNonRepeatData(
           widget.standaloneSlotsData[objKey],
-          pinnedSlot,
+          pinnedSlots,
           widget.isRepeatData,
         );
       });
@@ -439,7 +439,7 @@ const PlayerHelper = function() {
     widget.groupSlotsData = {};
 
     if (Object.keys(elements.groups).length > 0) {
-      const {pinnedSlot} = _self.getGroupData(
+      const {pinnedSlots} = _self.getGroupData(
         elements.groups,
         'items',
       );
@@ -459,7 +459,7 @@ const PlayerHelper = function() {
 
       widget.groupSlotsData = _self.composeRepeatNonRepeatData(
         widget.groupSlotsData,
-        pinnedSlot,
+        pinnedSlots,
         widget.isRepeatData,
       );
     }
@@ -486,13 +486,13 @@ const PlayerHelper = function() {
       isStandalone ? item.objKey : 'items',
     );
     const maxSlot = groupData.maxSlot;
-    let pinnedSlot = groupData.pinnedSlot;
+    let pinnedSlots = groupData.pinnedSlots;
 
     if (isStandalone) {
-      pinnedSlot = collection[item.objKey].reduce(function(a, b) {
-        if (b.pinSlot) return b.slot + 1;
+      pinnedSlots = collection[item.objKey].reduce(function(a, b) {
+        if (b.pinSlot) return [...a, b.slot + 1];
         return a;
-      }, null);
+      }, []);
     }
 
     if (dataItems.length > 0) {
@@ -508,15 +508,13 @@ const PlayerHelper = function() {
 
         hasSlotFilled[type] = false;
 
-        if (isStandalone) {
-          if (lastSlotFilled[type] !== null &&
-              currCollection.length === maxSlot &&
-              pinnedSlot === maxSlot
-          ) {
-            lastSlotFilled[type] = null;
-            hasSlotFilled[type] = false;
-            break;
-          }
+        // Stop iteration through dataItems when all pinned slots are filled
+        // and maxSlot = pinnedSlots.length
+        if (lastSlotFilled[type] === null &&
+          pinnedSlots.length === maxSlot &&
+          currentKey > maxSlot
+        ) {
+          break;
         }
 
         for (const [, itemValue] of Object.entries(currCollection)) {
@@ -525,7 +523,7 @@ const PlayerHelper = function() {
           const isPinnedSlot = itemObj.pinSlot;
           const currentSlot = itemObj.slot + 1;
 
-          if (!isPinnedSlot && currentKey !== pinnedSlot) {
+          if (!isPinnedSlot && !pinnedSlots.includes(currentKey)) {
             // If lastSlotFilled is filled and is <= to currentSlot
             // Then, move to next slot
             if (lastSlotFilled[type] !== null &&
@@ -558,21 +556,35 @@ const PlayerHelper = function() {
 
             hasSlotFilled[type] = true;
             lastSlotFilled[type] = currentSlot;
+          } else if (!isPinnedSlot && pinnedSlots.includes(currentKey)) {
+            if (lastSlotFilled[type] !== null &&
+              currentSlot <= lastSlotFilled[type]
+            ) {
+              continue;
+            }
           } else if (isPinnedSlot &&
-              currentSlot === currentKey
+              currentSlot === currentKey &&
+              pinnedSlots.includes(currentSlot)
           ) {
             if (isStandalone) {
-              widget.standaloneSlotsData[item.objKey][pinnedSlot] =
-                  [pinnedSlot];
+              widget.standaloneSlotsData[item.objKey][currentSlot] =
+                  [currentKey];
             } else {
-              widget.groupSlotsData[pinnedSlot] = [pinnedSlot];
+              widget.groupSlotsData[currentSlot] = [currentKey];
             }
 
             hasSlotFilled[type] = true;
             lastSlotFilled[type] = currentSlot;
-          } else if (isPinnedSlot && pinnedSlot === maxSlot &&
+          } else if (isPinnedSlot && pinnedSlots.length > 0 &&
+              Math.max(...pinnedSlots) === maxSlot &&
               currentSlot !== currentKey
           ) {
+            if (lastSlotFilled[type] !== null &&
+              currentSlot <= lastSlotFilled[type]
+            ) {
+              continue;
+            }
+
             if (isStandalone) {
               widget.standaloneSlotsData[item.objKey][1] = [
                 ...widget.standaloneSlotsData[item.objKey][1],
@@ -605,20 +617,24 @@ const PlayerHelper = function() {
   /**
    * Re-compose slotsData for repeat/non-repeat data widget
    * @param {object} slotsData
-   * @param {number|null} pinnedSlot
+   * @param {array} pinnedSlots
    * @param {boolean} isRepeat
    * @return {object} slotsData
    */
   this.composeRepeatNonRepeatData = function(
     slotsData,
-    pinnedSlot,
+    pinnedSlots,
     isRepeat,
   ) {
     // Copy slotsData
     const groupSlotsData = {...slotsData};
     // Remove pinnedSlot from the object
-    if (slotsData.hasOwnProperty(pinnedSlot)) {
-      delete groupSlotsData[pinnedSlot];
+    if (pinnedSlots.length > 0) {
+      pinnedSlots.forEach(function(pinnedSlot) {
+        if (slotsData.hasOwnProperty(pinnedSlot)) {
+          delete groupSlotsData[pinnedSlot];
+        }
+      });
     }
 
     const dataCounts = Object.keys(groupSlotsData).reduce((a, b) => {
@@ -675,20 +691,20 @@ const PlayerHelper = function() {
   ) {
     const groupValues = Object.values(groupsData);
     const maxSlot = _self.getMaxSlot(groupValues, slotItemsKey, 1);
-    let pinnedSlot = null;
+    let pinnedSlots = [];
 
     if (!isStandalone) {
-      pinnedSlot = groupValues.reduce(
+      pinnedSlots = groupValues.reduce(
         function(a, b) {
-          if (b.pinSlot) return b.slot + 1;
+          if (b.pinSlot) return [...a, b.slot + 1];
           return a;
-        }, null);
+        }, []);
     }
 
     return {
       groupValues,
       maxSlot,
-      pinnedSlot,
+      pinnedSlots,
     };
   };
 
