@@ -1,0 +1,42 @@
+<div class="modal canvas-widget-modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">{{trans.title}}</h5>
+        <i class="modal-icon module-icon {{moduleIcon}}"></i>
+        {{#if buttons.cancel}}
+            <button type="button" class="close" data-dismiss="modal" aria-label="{{buttons.cancel.label}}">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        {{/if}}
+      </div>
+      <div class="modal-body">
+        <div class="widgets">
+          <div class="target-widget create-new-widget">
+            <span><i class="fa fa-plus mr-1"></i>{{trans.createNew}}</span>
+          </div>
+          {{#each widgets}}
+              <div class="target-widget" data-widget-id="{{id}}">
+                <div class="target-widget-name">
+                  <span class="target-widget-label">{{../trans.name}}:</span>
+                  <span>{{name}}</span>
+                </div>
+                <div class="target-widget-type">
+                  <span class="target-widget-label">{{../trans.type}}:</span>
+                  <span>{{type}}</span>
+                </div>
+                <div class="target-widget-numEl">
+                  <span class="target-widget-label">{{../trans.numEl}}:</span>
+                  <span>{{numEl}}</span>
+                </div>
+                <div class="target-widget-numElGr">
+                  <span class="target-widget-label">{{../trans.numElGr}}:</span>
+                  <span>{{numElGr}}</span>
+                </div>
+              </div>
+          {{/each}}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

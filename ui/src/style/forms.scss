@@ -362,6 +362,17 @@
     }
 }
 
+// Canvas widget control
+.canvas-widget-control {
+    padding: 6px;
+    background-color: $xibo-color-primary;
+
+    .canvas-widget-control-dropdown {
+        color: $xibo-color-primary-l10;
+        margin: 0;
+    }
+}
+
 // Snippets
 .snippet-selector {
     margin-top: -12px;

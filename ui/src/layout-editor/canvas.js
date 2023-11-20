@@ -41,7 +41,6 @@ const Canvas = function(id, data, layoutDimensions) {
   this.zIndex = data.zIndex;
 };
 
-
 /**
  * Change canvas layer
  * @param {number} [newLayer] - New left position (for move tranformation)
@@ -94,6 +93,34 @@ Canvas.prototype.changeLayer = function(newLayer, saveToHistory = true) {
   // Apply changes to the canvas ( updating values )
   this.zIndex = (newLayer != undefined) ?
     newLayer : this.zIndex;
+};
+
+/**
+ * Get widgets by type
+ * @param {string} type - Type of widget
+ * @param {boolean} getEditableOnly - Get only widgets that can be edited
+ * @return {object} Array of found widgets
+ */
+Canvas.prototype.getWidgetsOfType = function(type, getEditableOnly = true) {
+  const widgets = [];
+  const self = this;
+
+  Object.values(self.widgets).forEach((widget) => {
+    if (
+      (
+        (
+          getEditableOnly &&
+          widget.isEditable
+        ) ||
+        !getEditableOnly
+      ) &&
+      widget.subType === type
+    ) {
+      widgets.push(widget);
+    }
+  });
+
+  return widgets;
 };
 
 module.exports = Canvas;

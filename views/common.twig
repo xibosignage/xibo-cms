@@ -418,6 +418,14 @@
                         delete: "{{ "Replace"|trans }}"
                     },
                 },
+                selectWidgetFromCanvasModal: {
+                    title: "{{ "Select widget or create a new one"|trans }}",
+                    createNew: "{{ "Create new"|trans }}",
+                    name: "{{ "Name"|trans }}",
+                    type: "{{ "Type"|trans }}",
+                    numEl: "{{ "# of elements"|trans }}",
+                    numElGr: "{{ "# of element groups"|trans }}",
+                },
                 exit: "{{ "Exit"|trans }}",
             };
 
@@ -599,7 +607,7 @@
                     makeRegionFullScreen: "{{ "Make this %regionType% full screen, dimensions will be set to %layout.width% by %layout.height%." |trans }}",
                 },
                 widget: {
-                    name: "{{ "Name" |trans }}",
+                    name: "{{ "Widget Name" |trans }}",
                     nameHelpText: "{{ "An optional name for this widget" |trans }}",
                     useDuration: "{{ "Set a duration?" |trans }}",
                     useDurationHelpText: "{{ "Select to provide a specific duration for this Widget" |trans }}",
@@ -615,6 +623,10 @@
                 },
                 effect: "Effect",
                 effectHelpText: "Please select the effect that will be used to transition between items.",
+                canvasWidgetControl: {
+                    canvasWidgets: "{{ "Source Widget" |trans }}",
+                    canvasWidgetsHelp: "{{ "Widgets of the same type, change to move the source to a different widget." |trans }}",
+                }
             };
 
             var toolbarTrans = {

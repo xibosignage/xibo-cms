@@ -402,8 +402,8 @@ PropertiesPanel.prototype.render = function(
   const app = this.parent;
   const minSlotValue = 1;
   let targetAux;
-  let renderElements = false;
   let hasData = false;
+  let isElement = false;
   let isElementGroup = false;
 
   // Hide panel if no target element is passed
@@ -434,7 +434,7 @@ PropertiesPanel.prototype.render = function(
     targetAux = target.elements[elementId];
 
     // Set renderElements to true
-    renderElements = true;
+    isElement = true;
 
     // Check if it's element with data
     hasData = targetAux.hasDataType;
@@ -772,7 +772,7 @@ PropertiesPanel.prototype.render = function(
 
       // If we need to render the element properties
       if (
-        renderElements
+        isElement
       ) {
         // Get element properties
         targetAux.getProperties().then((properties) => {
@@ -1005,6 +1005,116 @@ PropertiesPanel.prototype.render = function(
             },
           });
         });
+      }
+
+      // If we're rendering an non-global element or group
+      // show canvas widget control
+      if (
+        (isElement || isElementGroup) &&
+        target.subType != 'global'
+      ) {
+        // Get widgets
+        const widgetsOfType =
+          app.layout.canvas.getWidgetsOfType(target.subType);
+
+        if (widgetsOfType.length > 1) {
+          // Append control
+          self.DOMObject.find('.form-container .widget-form').prepend(
+            templates.forms.canvasWidgetsSelector({
+              widgetId: target.widgetId,
+              widgets: widgetsOfType,
+              trans: propertiesPanelTrans.canvasWidgetControl,
+            }),
+          );
+
+          // Remove margin top from form container
+          self.DOMObject.find('.form-container').addClass('mt-0');
+
+          // Handle change control
+          self.DOMObject.find('.canvas-widget-control')
+            .on('change', function(ev) {
+              const updateInViewer = function(
+                id,
+                target,
+              ) {
+                const $target = app.viewer.DOMObject.find('#' + id);
+                $target.data('widgetId', target.widgetId);
+                $target.attr('data-widget-id', target.widgetId);
+                $target.data('regionId', target.regionId);
+                $target.attr('data-region-id', target.widgetId);
+              };
+
+              const oldWidget = target;
+              const newWidget =
+                app.getObjectByTypeAndId(
+                  'widget',
+                  $(ev.target).val(),
+                  'canvas',
+                );
+
+              const elementsToMove = (isElementGroup) ?
+                Object.values(targetAux.elements) :
+                [targetAux];
+              const groupsToMove = (isElementGroup) ?
+                [targetAux] :
+                [];
+
+              // Move elements
+              elementsToMove.forEach((element) => {
+                // Change region and widget ids
+                element.widgetId = newWidget.widgetId;
+                element.regionId = newWidget.regionId.split('_')[1];
+
+                // Update in viewer
+                updateInViewer(element.elementId, element);
+                app.viewer.renderElementContent(element);
+
+                // Add to new widget
+                newWidget.elements[element.elementId] = element;
+
+                // Remove from old widget
+                delete oldWidget.elements[element.elementId];
+              });
+
+              // Move groups
+              groupsToMove.forEach((group) => {
+                // Change region and widget ids
+                group.widgetId = newWidget.widgetId;
+                group.regionId = newWidget.regionId.split('_')[1];
+
+                // Update in viewer
+                updateInViewer(group.id, group);
+                Object.values(group.elements).forEach((el) => {
+                  updateInViewer(el.elementId, el);
+                  app.viewer.renderElementContent(el);
+                });
+
+                // Add to new widget
+                newWidget.elementGroups[group.id] = group;
+
+                // Remove from old widget
+                delete oldWidget.elementGroups[group.id];
+              });
+
+              // Save both widgets
+              oldWidget.saveElements();
+              newWidget.saveElements();
+            });
+
+          // If name is updated on the form
+          // Also update on the widget control
+          self.DOMObject.find('.form-control[name="name"]')
+            .on('change', function(ev) {
+              const $select =
+                self.DOMObject.find('.canvas-widget-control select');
+
+              // Update option
+              $select.find('option[selected]').html($(ev.currentTarget).val());
+
+              // Reload select2
+              makeLocalSelect($select);
+            });
+        }
       }
     }
 
@@ -1538,19 +1648,15 @@ PropertiesPanel.prototype.initFields = function(
         return true;
       }
 
-      // Skip slot inputs
-      // those are saved with elements
-      if (
-        $(target).parents('.xibo-form-input.element-slot-input')
-          .length > 0
-      ) {
-        return true;
-      }
-
       return false;
     };
 
     // Auto save when changing inputs
+    const skipXiboFormInput =
+      ':not(.position-input):not(.action-form-input)' +
+      ':not(.snippet-selector):not(.element-slot-input)' +
+      ':not(.canvas-widget-control-dropdown)';
+    const skipFormInput = ':not(.element-property)';
     $(self.DOMObject).find('form').off()
       .on({
         'change inputChange xiboInputChange': function(_ev, options) {
@@ -1571,13 +1677,9 @@ PropertiesPanel.prototype.initFields = function(
           self.toSave = !skipSave(_ev.currentTarget, _ev);
         },
       },
-      '.xibo-form-input:not(.position-input)' +
-        ':not(.action-form-input):not(.snippet-selector) ' +
-        'select:not(.element-property), ' +
-      '.xibo-form-input:not(.position-input):not(.action-form-input) ' +
-        'input:not(.element-property), ' +
-      '.xibo-form-input:not(.position-input):not(.action-form-input) ' +
-        'textarea:not(.element-property), ' +
+      `.xibo-form-input${skipXiboFormInput} select${skipFormInput}, ` +
+      `.xibo-form-input${skipXiboFormInput} input${skipFormInput}, ` +
+      `.xibo-form-input${skipXiboFormInput} textarea${skipFormInput}, ` +
       '[name="backgroundImageId"] ',
       );
   }

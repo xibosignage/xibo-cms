@@ -34,6 +34,8 @@ const contextMenuTemplate = require('../templates/context-menu.hbs');
 const contextMenuGroupTemplate = require('../templates/context-menu-group.hbs');
 const confirmationModalTemplate =
   require('../templates/confirmation-modal.hbs');
+const canvasWidgetModalTemplate =
+  require('../templates/canvas-widgets-modal.hbs');
 
 // Include modules
 const Layout = require('../layout-editor/layout.js');
@@ -1611,15 +1613,19 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
 
         // Check if we have a canvas widget with
         // subtype equal to the draggableSubType
-        // If we do, add the element to that widget
-        // If we don't, create a new widget
-        const currentWidget = Object.values(canvas.widgets).find((w) => {
-          return w.subType === newGroupType;
-        });
+        const widgetsOfType = canvas.getWidgetsOfType(newGroupType);
 
-        // If we don't have a widget, create a new one
-        // but don't reload data
-        if (!currentWidget) {
+        const addToWidget = function(widget) {
+          self.addElementsToWidget(
+            elements,
+            widget,
+            inGroup,
+            recalculateGroupBeforeSaving,
+          );
+        };
+
+        // Create new widget and add to it
+        const createNewWidget = function() {
           lD.addModuleToPlaylist(
             canvas.regionId,
             canvas.playlists.playlistId,
@@ -1639,21 +1645,76 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
             );
 
             // Add element to the new widget
-            self.addElementsToWidget(
-              elements,
-              newWidget,
-              inGroup,
-              recalculateGroupBeforeSaving,
-            );
+            addToWidget(newWidget);
           });
-        } else {
-          // Add element to the current widget
-          self.addElementsToWidget(
-            elements,
-            currentWidget,
-            inGroup,
-            recalculateGroupBeforeSaving,
+        };
+
+        if (newGroupType === 'global') {
+          // If it's type global, add to canvas widget
+          const canvasWidget = self.getObjectByTypeAndId(
+            'canvasWidget',
           );
+          addToWidget(canvasWidget);
+        } else if (widgetsOfType.length === 0) {
+          // If we don't have a widget, create a new one
+          createNewWidget();
+        } else {
+          // If we have at least one widget, let the user choose
+          const widgetsOfType = canvas.getWidgetsOfType(newGroupType)
+            .map((widget) => {
+              return {
+                id: widget.id,
+                name: widget.widgetName,
+                type: widget.moduleName,
+                numEl: Object.values(widget.elements).length,
+                numElGr: Object.values(widget.elementGroups).length,
+              };
+            });
+
+          const $modal = $(canvasWidgetModalTemplate(
+            {
+              trans: editorsTrans.selectWidgetFromCanvasModal,
+              moduleIcon: lD.common.getModuleByType(newGroupType).icon,
+              widgets: widgetsOfType,
+            },
+          ));
+
+          const removeModal = function() {
+            $modal.modal('hide');
+            // Remove modal
+            $modal.remove();
+
+            // Remove backdrop
+            $('.modal-backdrop.show').remove();
+          };
+
+          // Add modal to the DOM
+          self.editorContainer.append($modal);
+
+          // Show modal
+          $modal.modal('show');
+
+          // Handle select widget
+          $modal.find('.target-widget').on('click', function(ev) {
+            const $selectedWidget = $(ev.currentTarget);
+            // Remove modal
+            removeModal();
+
+            // Create widget or add to selected
+            if ($selectedWidget.hasClass('create-new-widget')) {
+              createNewWidget();
+            } else {
+              // Find selected widget
+              const targetWidget = self.getObjectByTypeAndId(
+                'widget',
+                $selectedWidget.data('widgetId'),
+                'canvas',
+              );
+
+              // Add element to the current widget
+              (targetWidget) && addToWidget(targetWidget);
+            }
+          });
         }
       };
 
