@@ -56,5 +56,7 @@ window.templates = {
     playlistMixer: require('./src/templates/forms/inputs/playlistMixer.hbs'),
     snippet: require('./src/templates/forms/inputs/snippet.hbs'),
     textArea: require('./src/templates/forms/inputs/textArea.hbs'),
+    canvasWidgetsSelector:
+      require('./src/templates/forms/inputs/canvasWidgetsSelector.hbs'),
   },
 };

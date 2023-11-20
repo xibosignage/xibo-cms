@@ -1309,7 +1309,7 @@ Viewer.prototype.updateElementGroupLayer = _.throttle(function(
   elementGroup,
   layer,
 ) {
-  const $container = lD.viewer.DOMObject.find(`#${elementGroup.elementId}`);
+  const $container = lD.viewer.DOMObject.find(`#${elementGroup.id}`);
 
   // Update element index
   $container.css({
