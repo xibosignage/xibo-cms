@@ -3509,6 +3509,8 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
       const $elementsToBeGrouped =
         lD.viewer.DOMObject.find('.selected.designer-element');
 
+      const elementsIds = [];
+
       // Check if not all elements are global typed
       let elementsType = 'global';
       const canvasWidget = lD.getObjectByTypeAndId('canvasWidget');
@@ -3550,6 +3552,8 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
       $elementsToBeGrouped.each((_idx, el) => {
         const elData = $(el).data();
         const elId = $(el).attr('id');
+
+        elementsIds.push(elId);
 
         element = lD.getObjectByTypeAndId(
           'element',
@@ -3625,10 +3629,18 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
         lD.selectObject();
 
         // Reload data and select element when data reloads
-        lD.reloadData(lD.layout,
+        lD.reloadData(
+          lD.layout,
           {
             refreshEditor: true,
+          },
+        ).then(() => {
+          // Move elements to the new group
+          elementsIds.forEach((elId) => {
+            const $el = lD.viewer.DOMObject.find('#' + elId);
+            $el.appendTo(lD.viewer.DOMObject.find('#' + groupId));
           });
+        });
       });
     } else if (target.data('action') == 'addToGroup') {
       // Elements
