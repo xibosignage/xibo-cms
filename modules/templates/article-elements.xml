@@ -51,6 +51,25 @@
         <canRotate>true</canRotate>
         <startWidth>500</startWidth>
         <startHeight>500</startHeight>
+        <properties>
+            <property id="removeNewLines" type="checkbox">
+                <title>Remove new lines?</title>
+                <default>0</default>
+                <helpText>Should new lines (\n) be removed from content?</helpText>
+            </property>
+        </properties>
+        <onElementParseData><![CDATA[
+// value - element to be parsed
+// properties
+if (
+    properties.removeNewLines === true &&
+    value != ''
+) {
+    return value.replaceAll('\n', '');
+} else {
+    return value;
+}
+        ]]></onElementParseData>
     </template>
     <template>
         <id>article_author</id>
