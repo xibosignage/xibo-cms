@@ -331,7 +331,4 @@ if (properties.freshnessTimeout > 0) {
     }, 10000);
 }
     ]]></onVisible>
-    <onRender>
-        $(target).xiboLayoutScaler(properties);
-    </onRender>
 </module>
