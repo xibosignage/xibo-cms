@@ -55,11 +55,6 @@
                 </test>
             </visibility>
         </property>
-        <property id="durationIsPerItem" type="checkbox">
-            <title>Duration is per item</title>
-            <helpText>The duration specified is per item otherwise it is per menu.</helpText>
-            <default>0</default>
-        </property>
         <property id="sortField" type="dropdown" mode="single">
             <title>Sort by</title>
             <helpText>How should we sort the menu items?</helpText>
