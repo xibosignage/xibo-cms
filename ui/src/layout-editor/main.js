@@ -5013,10 +5013,21 @@ lD.addElementsToWidget = function(
       }
 
       // Reload data and select element when data reloads
-      lD.reloadData(lD.layout,
+      lD.reloadData(
+        lD.layout,
         {
           refreshEditor: true,
+        },
+      ).then(() => {
+        const widgetAux = lD.layout.canvas.widgets[widget.id];
+        // Recalculate required elements
+        widgetAux.validateRequiredElements();
+
+        // Validate other widget elements on the viewer
+        Object.values(widgetAux.elements).forEach((el) => {
+          lD.viewer.validateElement(el);
         });
+      });
     });
   });
 };
