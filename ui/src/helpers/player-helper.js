@@ -3,6 +3,13 @@ const PlayerHelper = function() {
   const _self = this;
   const urlParams = new URLSearchParams(window.location.search);
   const isPreview = urlParams.get('preview') === '1';
+  const staticTemplateIds = [
+    'event_custom_html', 'daily_light', 'daily_dark', 'weekly_light',
+    'weekly_dark', 'monthly_light', 'monthly_dark', 'schedule_light',
+    'schedule_dark', 'article_custom_html', 'article_image_only',
+    'article_with_left_hand_text', 'article_with_title',
+    'article_with_desc_and_name_separator', 'article_title_only',
+  ];
   let _elements = {standalone: {}, groups: {}};
   let countWidgetElements = 0;
   let countWidgetStatic = 0;
@@ -34,7 +41,8 @@ const PlayerHelper = function() {
 
         values.forEach((value, widgetIndex) => {
           const _widget = _widgetData[widgetIndex];
-          const {dataItems, showError} = this.composeFinalData(_widget, value);
+          const {dataItems, showError} =
+            this.composeFinalData(_widget, value);
 
           if (elements !== undefined && elements?.length > 0) {
             elements.forEach(function(elemVal) {
@@ -203,6 +211,13 @@ const PlayerHelper = function() {
 
     if (data?.success === false || !widget.isValid) {
       finalData.showError = true;
+    }
+
+    if (finalData.isSampleData &&
+      staticTemplateIds.includes(widget.templateId) &&
+      widget.properties.hasOwnProperty('url')
+    ) {
+      finalData.dataItems = [];
     }
 
     return finalData;
