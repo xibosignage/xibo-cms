@@ -1,15 +1,6 @@
 const PlayerHelper = function() {
   // Check the query params to see if we're in editor mode
   const _self = this;
-  const urlParams = new URLSearchParams(window.location.search);
-  const isPreview = urlParams.get('preview') === '1';
-  const staticTemplateIds = [
-    'event_custom_html', 'daily_light', 'daily_dark', 'weekly_light',
-    'weekly_dark', 'monthly_light', 'monthly_dark', 'schedule_light',
-    'schedule_dark', 'article_custom_html', 'article_image_only',
-    'article_with_left_hand_text', 'article_with_title',
-    'article_with_desc_and_name_separator', 'article_title_only',
-  ];
   let _elements = {standalone: {}, groups: {}};
   let countWidgetElements = 0;
   let countWidgetStatic = 0;
@@ -31,7 +22,9 @@ const PlayerHelper = function() {
         const widgetHasNoData = values.filter((val) => {
           return val !== null &&
             (val.hasOwnProperty('success') ||
-              val.hasOwnProperty('error'));
+              val.hasOwnProperty('error') ||
+              (val.hasOwnProperty('data') && val?.data?.length === 0)
+            );
         });
 
         if (widgetHasNoData.length > 0) {
@@ -89,6 +82,22 @@ const PlayerHelper = function() {
       });
     }
   });
+
+  /**
+   * Checks if playerjs is used for preview or in editor
+   * @return {boolean}
+   */
+  this.isOnPreview = () => {
+    // This only refers to the iframe window, not the parent window
+    // const urlParams =
+    //     new URLSearchParams(window.location.search);
+    // const onIframePreview = urlParams.get('preview') === '1';
+    const parentWindow = window.parent;
+    const windowPreviewRegex =
+      new RegExp('(layout\\/preview\\/[0-9]+)', 'g');
+
+    return parentWindow.location.href.match(windowPreviewRegex) !== null;
+  };
 
   /**
    * onDataError callback
@@ -195,29 +204,33 @@ const PlayerHelper = function() {
       }, []);
     };
 
-    if (isPreview) {
-      if (finalData.isArray) {
-        if (data?.data?.length > 0) {
-          finalData.dataItems = data?.data;
-        } else if (widget.sample && Array.isArray(widget.sample)) {
-          finalData.dataItems = composeSampleData();
+    if (_self.isOnPreview()) {
+      if (widget.isDataExpected) {
+        finalData.dataItems = [];
+        if (finalData.isArray) {
+          if (data?.data?.length > 0) {
+            finalData.dataItems = data?.data;
+          }
+        } else if (data?.success === false || !widget.isValid) {
+          finalData.showError = true;
         }
-      } else if (data?.success === false || !widget.isValid) {
-        finalData.dataItems = composeSampleData();
+      } else {
+        finalData.showError = false;
       }
     } else {
-      finalData.dataItems = data?.data || [];
-    }
-
-    if (data?.success === false || !widget.isValid) {
-      finalData.showError = true;
-    }
-
-    if (finalData.isSampleData &&
-      staticTemplateIds.includes(widget.templateId) &&
-      widget.properties.hasOwnProperty('url')
-    ) {
-      finalData.dataItems = [];
+      if (widget.isDataExpected) {
+        if (finalData.isArray && data?.data?.length > 0) {
+          finalData.dataItems = data?.data;
+        } else if (data?.success === false || !widget.isValid) {
+          finalData.dataItems = composeSampleData();
+          finalData.showError = true;
+        } else if (data?.data?.length === 0) {
+          finalData.dataItems = composeSampleData();
+        }
+      } else {
+        finalData.dataItems = [];
+        finalData.showError = false;
+      }
     }
 
     return finalData;
@@ -240,7 +253,6 @@ const PlayerHelper = function() {
       const standaloneKey = element.type === 'dataset' ?
         element.id + '_' + element.templateData.datasetField :
         element.id;
-
 
       // Initialize object values
       if (!isGroup &&
