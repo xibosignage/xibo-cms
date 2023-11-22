@@ -153,6 +153,9 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
 
   this.validateData = {};
 
+  // Widget active target for adding elements
+  this.activeTarget = false;
+
   this.validateRequiredElements = function() {
     const moduleType = this.subType;
     // Check if element is required
@@ -681,11 +684,12 @@ Widget.prototype.saveElements = function(
     let removeCanvasRegion = false;
     let removeCurrentWidget = false;
     let unsetCanvasDuration = false;
+    const canvas = app.layout.canvas;
 
     // If we deleted the last global element
     if (isGlobalWidget) {
       // Check if we have other widgets on the canvas region
-      if (Object.keys(this.parent.widgets).length > 1) {
+      if (Object.keys(canvas.widgets).length > 1) {
         removeCanvasRegion = false;
         removeCurrentWidget = false;
         unsetCanvasDuration = true;
@@ -693,13 +697,13 @@ Widget.prototype.saveElements = function(
         // Otherwise, just remove the region
         removeCanvasRegion = true;
       }
-    } else if (Object.keys(this.parent.widgets).length === 2) {
+    } else if (Object.keys(canvas.widgets).length === 2) {
       // If it's not a global element, and
       // we only have this widget and the global
 
       // Check if the global widget has elements
       let globalHasElements = true;
-      $.each(this.parent.widgets, function(i, e) {
+      $.each(canvas.widgets, function(i, e) {
         if (e.subType === 'global' && Object.keys(e.elements).length === 0) {
           globalHasElements = false;
         }
@@ -760,12 +764,12 @@ Widget.prototype.saveElements = function(
       removeCanvasRegion
     ) {
       // Remove region
-      app.layout.deleteObject('region', this.parent.regionId)
+      app.layout.deleteObject('region', canvas.regionId)
         .then(() => {
           // Remove object from structure
           app.layout.removeFromStructure(
             'region',
-            this.parent.regionId,
+            canvas.regionId,
             'canvas',
           );
 

@@ -657,7 +657,11 @@ Layout.prototype.deleteObject = function(
       objectId,
     ).then((_res) => {
       // Unselect selected object before deleting
-      (deselectObject) &&
+      (
+        deselectObject &&
+        objectType === lD.selectedObject.type &&
+        objectId === lD.selectedObject[lD.selectedObject.type + 'Id']
+      ) &&
         lD.selectObject();
 
       (showLoadingScreen) &&
