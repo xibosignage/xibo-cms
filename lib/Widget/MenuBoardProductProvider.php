@@ -46,19 +46,20 @@ class MenuBoardProductProvider implements WidgetProviderInterface
 
     public function fetchDuration(DurationProviderInterface $durationProvider): WidgetProviderInterface
     {
-        $this->getLog()->debug('fetchDuration');
-        
-        $lowerLimit = $durationProvider->getWidget()->getOptionValue('lowerLimit', 0);
-        $upperLimit = $durationProvider->getWidget()->getOptionValue('upperLimit', 15);
-        $numItems = $upperLimit - $lowerLimit;
+        if ($durationProvider->getWidget()->getOptionValue('durationIsPerItem', 0) == 1) {
+            $this->getLog()->debug('fetchDuration: duration is per item');
 
-        $itemsPerPage = $durationProvider->getWidget()->getOptionValue('itemsPerPage', 0);
-        if ($itemsPerPage > 0) {
-            $numItems = ceil($numItems / $itemsPerPage);
+            $lowerLimit = $durationProvider->getWidget()->getOptionValue('lowerLimit', 0);
+            $upperLimit = $durationProvider->getWidget()->getOptionValue('upperLimit', 15);
+            $numItems = $upperLimit - $lowerLimit;
+
+            $itemsPerPage = $durationProvider->getWidget()->getOptionValue('itemsPerPage', 0);
+            if ($itemsPerPage > 0) {
+                $numItems = ceil($numItems / $itemsPerPage);
+            }
+
+            $durationProvider->setDuration($durationProvider->getWidget()->calculatedDuration * $numItems);
         }
-
-        $durationProvider->setDuration(($numItems)
-            * $durationProvider->getWidget()->calculatedDuration);
         return $this;
     }
 
