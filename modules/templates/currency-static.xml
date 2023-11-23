@@ -83,6 +83,20 @@
 
 <style>
 {{styleSheet|raw}}
+.error-message {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    text-align: center;
+    width: 100%;
+    padding: 12px 0;
+    background-color: #d05454;
+    color: white;
+    z-index: 2;
+    font-weight: bold;
+    font-size: 1.1rem;
+    opacity: 0.85;
+}
 </style>
         ]]></twig>
         </stencil>
@@ -263,6 +277,21 @@ body {
 .center-block {
     width: 50px;
     height: 50px;
+}
+
+.error-message {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    text-align: center;
+    width: 100%;
+    padding: 12px 0;
+    background-color: #d05454;
+    color: white;
+    z-index: 2;
+    font-weight: bold;
+    font-size: 1.1rem;
+    opacity: 0.85;
 }
 </style>
         ]]></twig>
@@ -475,6 +504,21 @@ body {
 
 .name-stock {
   color: gray;
+}
+
+.error-message {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    text-align: center;
+    width: 100%;
+    padding: 12px 0;
+    background-color: #d05454;
+    color: white;
+    z-index: 2;
+    font-weight: bold;
+    font-size: 1.1rem;
+    opacity: 0.85;
 }
 </style>
         ]]></twig>

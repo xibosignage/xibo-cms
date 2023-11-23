@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 $(function() {
-  // Defaut scaler function
+  // Default scaler function
   const defaultScaler = function(
     _id,
     target,
@@ -54,6 +54,7 @@ $(function() {
    * @param {object} widget
    * @param {Array} dataItems
    * @param {boolean} showError
+   * @param {string|null} errorMessage
    * @param {*} data
    */
   function initStaticTemplates(
@@ -64,15 +65,16 @@ $(function() {
     widget,
     dataItems,
     showError,
+    errorMessage,
     data,
   ) {
     widget.items = [];
     const $target = $('body');
 
-    if (showError && data?.message) {
+    if (PlayerHelper.isEditor && showError && errorMessage !== null) {
       $target.append(
         '<div class="error-message" role="alert">' +
-        data.message +
+        errorMessage +
         '</div>');
     }
 
@@ -770,6 +772,7 @@ $(function() {
               widget,
               widget.data,
               widget.showError,
+              widget.errorMessage,
               widget.data,
             );
           }

@@ -1136,6 +1136,12 @@ Viewer.prototype.renderRegion = function(
 
     $.extend(toolbarTrans, topbarTrans);
 
+    // Send isEditor flag with options.res.html for the iframe
+    if (!isPlaylist && options.res.html) {
+      options.res.html =
+        options.res.html.replace('?preview=1', '?preview=1&isEditor=1');
+    }
+
     // Replace container html
     const html = viewerWidgetTemplate(options);
 

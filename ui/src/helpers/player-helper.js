@@ -1,9 +1,13 @@
 const PlayerHelper = function() {
   // Check the query params to see if we're in editor mode
   const _self = this;
+  const urlParams = new URLSearchParams(window.location.search);
   let _elements = {standalone: {}, groups: {}};
   let countWidgetElements = 0;
   let countWidgetStatic = 0;
+
+  this.isPreview = urlParams.get('preview') === '1';
+  this.isEditor = urlParams.get('isEditor') === '1';
 
   /**
    * Initialize player with the available widgetData and elements
@@ -34,7 +38,7 @@ const PlayerHelper = function() {
 
         values.forEach((value, widgetIndex) => {
           const _widget = _widgetData[widgetIndex];
-          const {dataItems, showError} =
+          const {dataItems, showError, errorMessage} =
             this.composeFinalData(_widget, value);
 
           if (elements !== undefined && elements?.length > 0) {
@@ -70,6 +74,7 @@ const PlayerHelper = function() {
             data: dataItems,
             meta: value !== null ? value?.meta : {},
             showError,
+            errorMessage,
             elements: _elements,
           };
         });
@@ -82,22 +87,6 @@ const PlayerHelper = function() {
       });
     }
   });
-
-  /**
-   * Checks if playerjs is used for preview or in editor
-   * @return {boolean}
-   */
-  this.isOnPreview = () => {
-    // This only refers to the iframe window, not the parent window
-    // const urlParams =
-    //     new URLSearchParams(window.location.search);
-    // const onIframePreview = urlParams.get('preview') === '1';
-    const parentWindow = window.parent;
-    const windowPreviewRegex =
-      new RegExp('(layout\\/preview\\/[0-9]+)', 'g');
-
-    return parentWindow.location.href.match(windowPreviewRegex) !== null;
-  };
 
   /**
    * onDataError callback
@@ -177,6 +166,7 @@ const PlayerHelper = function() {
       dataItems: [],
       isArray: Array.isArray(data?.data),
       showError: false,
+      errorMessage: null,
     };
     const composeSampleData = () => {
       finalData.isSampleData = true;
@@ -204,33 +194,19 @@ const PlayerHelper = function() {
       }, []);
     };
 
-    if (_self.isOnPreview()) {
-      if (widget.isDataExpected) {
-        finalData.dataItems = [];
-        if (finalData.isArray) {
-          if (data?.data?.length > 0) {
-            finalData.dataItems = data?.data;
-          }
-        } else if (data?.success === false || !widget.isValid) {
-          finalData.showError = true;
-        }
+    if (widget.isDataExpected) {
+      if (finalData.isArray && data?.data?.length > 0) {
+        finalData.dataItems = data?.data;
       } else {
-        finalData.showError = false;
-      }
-    } else {
-      if (widget.isDataExpected) {
-        if (finalData.isArray && data?.data?.length > 0) {
-          finalData.dataItems = data?.data;
-        } else if (data?.success === false || !widget.isValid) {
-          finalData.dataItems = composeSampleData();
-          finalData.showError = true;
-        } else if (data?.data?.length === 0) {
-          finalData.dataItems = composeSampleData();
+        finalData.dataItems = _self.isEditor ? composeSampleData() : [];
+        if (data?.success === false || !widget.isValid) {
+          finalData.showError = _self.isEditor;
         }
-      } else {
-        finalData.dataItems = [];
-        finalData.showError = false;
       }
+    }
+
+    if (finalData.showError && data?.message) {
+      finalData.errorMessage = data?.message;
     }
 
     return finalData;
