@@ -1341,6 +1341,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
   const droppableIsElementGroup =
     $(droppable).hasClass('designer-element-group');
   let getTemplateBeforeAdding = '';
+  const fromProvider = $(draggable).hasClass('from-provider');
 
   /**
    * Import from provider or add media from library
@@ -1357,7 +1358,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
     drawerWidget = false,
   ) {
     return new Promise((resolve, reject) => {
-      if ($(draggable).hasClass('from-provider')) {
+      if (fromProvider) {
         lD.importFromProvider(
           [$(draggable).data('providerData')],
         ).then((res) => {
@@ -1930,6 +1931,20 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
               moduleData: draggableData,
               onHide: onHide,
               onUploadDone: onUploadDone,
+            });
+          } else if (fromProvider) {
+            lD.importFromProvider(
+              [draggableData.providerData],
+            ).then((res) => {
+              // If res is empty, it means that the import failed
+              if (res.length === 0) {
+                console.error(errorMessagesTrans.failedToImportMedia);
+              } else {
+                // Add media to draggableData
+                draggableData.mediaId = res[0];
+
+                getTemplateAndAdd();
+              }
             });
           } else {
             // We don't need to upload, add right away
@@ -4020,7 +4035,7 @@ lD.togglePanel = function($panel, forceToggle) {
 };
 
 /**
- * Toggle panel and refresh view containers
+ * Import from provider
  * @param {Array.<number, object>} items - list of items (id or a provider obj)
  * @return {Promise}
  */
