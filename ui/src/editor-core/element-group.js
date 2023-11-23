@@ -41,6 +41,11 @@ ElementGroup.prototype.updateSlot = function(
 ) {
   const self = this;
 
+  // If slotIndex is not defined, stop
+  if (slotIndex === undefined) {
+    return;
+  }
+
   if (
     !this.slot ||
     Number(slotIndex) > this.slot ||
