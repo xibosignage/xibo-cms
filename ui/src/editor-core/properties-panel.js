@@ -1017,21 +1017,127 @@ PropertiesPanel.prototype.render = function(
         const widgetsOfType =
           app.layout.canvas.getWidgetsOfType(target.subType);
 
-        if (widgetsOfType.length > 1) {
+        if (Object.values(widgetsOfType).length > 0) {
           // Append control
           self.DOMObject.find('.form-container .widget-form').prepend(
             templates.forms.canvasWidgetsSelector({
               widgetId: target.widgetId,
-              widgets: widgetsOfType,
+              widgets: Object.values(widgetsOfType),
               trans: propertiesPanelTrans.canvasWidgetControl,
             }),
           );
 
+          // Canvas control
+          const $canvasWidgetSelectorControl =
+            self.DOMObject.find('.canvas-widget-control');
+
+          // Get active widget
+          const activeWidget = app.layout.canvas.getActiveWidgetOfType(
+            target.subType,
+            true,
+            false,
+          );
+
+          // If we had previous active widget, mark is as inactive
+          (!$.isEmptyObject(activeWidget)) &&
+            (activeWidget.activeTarget = false);
+
+          // Mark widget as active
+          widgetsOfType[target.widgetId].activeTarget = true;
+
           // Remove margin top from form container
           self.DOMObject.find('.form-container').addClass('mt-0');
 
+          // Add and handle add button
+          const controlTrans = propertiesPanelTrans.canvasWidgetControl;
+          const $addButton =
+            $(`<div class="canvas-widget-control-add tooltip-always-on"
+              data-toggle="tooltip" 
+              data-placement="top"
+              title="${controlTrans.transferWidgetHelp}">
+              <i class="fa fa-arrow-circle-right"></i>
+              <span>
+                ${controlTrans.transferWidget}
+              </span>
+            </div>`);
+
+          // Check if we have other element or group in the widget
+          let hasMoreElements = false;
+          if (isElement) {
+            // We just need to have more than 1 element
+            hasMoreElements = (Object.values(target.elements).length > 1);
+          } else if (isElementGroup) {
+            // We need to have either another group
+            hasMoreElements = (Object.values(target.elementGroups).length > 1);
+
+            // Or 1 elements that doesn't belong to the group
+            if (hasMoreElements === false) {
+              Object.values(target.elements).every((el) => {
+                // If we found the widget, break the loop
+                if (el.groupId != targetAux.id) {
+                  hasMoreElements = true;
+                  // Break the loop
+                  return false;
+                }
+
+                // Keep going
+                return true;
+              });
+            }
+          }
+
+          // Only show add button if we have more than 1 element for the widget
+          if (hasMoreElements) {
+            $addButton.insertAfter(
+              $canvasWidgetSelectorControl
+                .find('.canvas-widget-control-dropdown .input-info-container'),
+            ).on('click', function(_ev) {
+              lD.addModuleToPlaylist(
+                app.layout.canvas.regionId,
+                app.layout.canvas.playlists.playlistId,
+                target.subType,
+                {
+                  type: targetAux.type,
+                },
+                null,
+                false,
+                false,
+                false,
+                false,
+              ).then((res) => {
+                const widgetId = res.data.widgetId;
+                // Reload data
+                app.reloadData(
+                  app.layout,
+                  {
+                    reloadPropertiesPanel: false,
+                  },
+                ).done(() => {
+                  // Add options to dropdown
+                  const $select =
+                    $canvasWidgetSelectorControl.find('select');
+
+                  // Get new widget
+                  const newWidget = app.getObjectByTypeAndId(
+                    'widget',
+                    'widget_' + app.layout.canvas.regionId + '_' + widgetId,
+                    'canvas',
+                  );
+
+                  // Update option
+                  $select.find('option[selected]').removeAttr('selected');
+                  $select.append(`<option value="${newWidget.widgetId}" 
+                    selected>${newWidget.widgetName}</option>`);
+
+                  // Trigger change
+                  $select.trigger('change');
+                });
+              });
+            });
+          }
+
           // Handle change control
-          self.DOMObject.find('.canvas-widget-control')
+          $canvasWidgetSelectorControl
             .on('change', function(ev) {
               const updateInViewer = function(
                 id,
@@ -1096,9 +1202,17 @@ PropertiesPanel.prototype.render = function(
                 delete oldWidget.elementGroups[group.id];
               });
 
+              // Make sure the selected object has the new widget id
+              lD.selectedObject.widgetId = newWidget.widgetId;
+
               // Save both widgets
-              oldWidget.saveElements();
-              newWidget.saveElements();
+              Promise.all([
+                oldWidget.saveElements(),
+                newWidget.saveElements(),
+              ]).then((_res) => {
+                // Reload properties panel
+                self.render(lD.selectedObject);
+              });
             });
 
           // If name is updated on the form
@@ -1115,6 +1229,31 @@ PropertiesPanel.prototype.render = function(
               makeLocalSelect($select);
             });
         }
+      } else {
+        // Show widget info for statics
+        const $widgetInfo = $(templates.forms.widgetInfo({
+          widgetName: target.widgetName,
+          trans: propertiesPanelTrans.widgetInfo,
+        }));
+
+        // Remove margin top from form container
+        self.DOMObject.find('.form-container').addClass('mt-0');
+
+        // Disable input
+        $widgetInfo.find('input').attr('disabled', 'disabled');
+
+        // Append control
+        $widgetInfo.prependTo(
+          self.DOMObject.find('.form-container .widget-form'),
+        );
+
+        // If name is updated on the form
+        // Also update on the widget info
+        self.DOMObject.find('.form-control[name="name"]')
+          .on('change', function(ev) {
+            // Update info
+            $widgetInfo.find('input').val($(ev.currentTarget).val());
+          });
       }
     }
 

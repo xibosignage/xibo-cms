@@ -364,12 +364,52 @@
 
 // Canvas widget control
 .canvas-widget-control {
-    padding: 6px;
+    padding: 8px;
     background-color: $xibo-color-primary;
 
     .canvas-widget-control-dropdown {
         color: $xibo-color-primary-l10;
         margin: 0;
+
+        .input-info-container {
+            display: inline-block;
+            float: none;
+            padding: 0;
+        }
+
+        .canvas-widget-control-add {
+            cursor: pointer;
+            float: right;
+            padding: 0 6px;
+            border-radius: 4px;
+
+            i {
+                margin-right: 4px;
+            }
+
+            &:hover {
+                background-color: darken($xibo-color-primary, 10%);
+            }
+        }
+    }
+}
+
+.widget-info-container {
+    padding: 8px;
+    background-color: $xibo-color-primary;
+
+    .xibo-form-input {
+        color: $xibo-color-primary-l10;
+        margin: 0;
+
+        .input-info-container {
+            padding: 0;
+        }
+
+        input {
+            border: none;
+            background-color: $xibo-color-primary-l20;
+        }
     }
 }
 

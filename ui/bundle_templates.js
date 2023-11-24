@@ -58,5 +58,7 @@ window.templates = {
     textArea: require('./src/templates/forms/inputs/textArea.hbs'),
     canvasWidgetsSelector:
       require('./src/templates/forms/inputs/canvasWidgetsSelector.hbs'),
+    widgetInfo:
+        require('./src/templates/forms/inputs/widgetInfo.hbs'),
   },
 };

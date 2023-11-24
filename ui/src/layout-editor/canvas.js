@@ -99,10 +99,10 @@ Canvas.prototype.changeLayer = function(newLayer, saveToHistory = true) {
  * Get widgets by type
  * @param {string} type - Type of widget
  * @param {boolean} getEditableOnly - Get only widgets that can be edited
- * @return {object} Array of found widgets
+ * @return {object} Found widgets
  */
 Canvas.prototype.getWidgetsOfType = function(type, getEditableOnly = true) {
-  const widgets = [];
+  const widgets = {};
   const self = this;
 
   Object.values(self.widgets).forEach((widget) => {
@@ -116,11 +116,63 @@ Canvas.prototype.getWidgetsOfType = function(type, getEditableOnly = true) {
       ) &&
       widget.subType === type
     ) {
-      widgets.push(widget);
+      widgets[widget.widgetId] = widget;
     }
   });
 
   return widgets;
+};
+
+/**
+ * Get widgets by type
+ * @param {string} type - Type of widget
+ * @param {boolean} getEditableOnly - Get only widgets that can be edited
+ * @param {boolean} getFirstIfNotActive
+ *  - Return first valid widget if we don't have an active
+ * @return {object} Active or first widget
+ */
+Canvas.prototype.getActiveWidgetOfType = function(
+  type,
+  getEditableOnly = true,
+  getFirstIfNotActive = true,
+) {
+  const self = this;
+  let targetWidget = {};
+  let firstWidgetAdded = false;
+
+  Object.values(self.widgets).every((widget) => {
+    const isValid = (
+      (
+        getEditableOnly &&
+        widget.isEditable
+      ) ||
+      !getEditableOnly
+    ) &&
+    widget.subType === type;
+
+    // Get first widget or active valid widget
+    if (isValid) {
+      if (
+        !widget.activeTarget &&
+        !firstWidgetAdded &&
+        getFirstIfNotActive
+      ) {
+        // Save targetWidget to be sent
+        // if we don't find an active one
+        firstWidgetAdded = true;
+        targetWidget = widget;
+      } else if (widget.activeTarget) {
+        // Active widget, return right away
+        targetWidget = widget;
+        return false;
+      }
+    }
+
+    return true;
+  });
+
+  // Return first found widget if we didn't have any active
+  return targetWidget;
 };
 
 module.exports = Canvas;
