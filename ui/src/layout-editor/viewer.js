@@ -740,6 +740,22 @@ Viewer.prototype.handleInteractions = function() {
 
               self.selectObject($(e.target), shiftIsPressed);
             } else if (
+              $(e.target).find('.designer-widget').length > 0 &&
+              !$(e.target).find('.designer-widget').hasClass('selected') &&
+              !$(e.target).hasClass('selected')
+            ) {
+              // If we're multi selecting, deselect all
+              if (shiftIsPressed) {
+                lD.selectObject();
+              } else {
+                // Select widget if exists
+                lD.selectObject({
+                  target: $(e.target).find('.designer-widget'),
+                  clickPosition: clickPosition,
+                });
+              }
+              self.selectObject($(e.target), shiftIsPressed);
+            } else if (
               (
                 $(e.target).data('subType') === 'zone' ||
                 (
@@ -757,22 +773,6 @@ Viewer.prototype.handleInteractions = function() {
                 // Select zone
                 lD.selectObject({
                   target: $(e.target),
-                });
-              }
-              self.selectObject($(e.target), shiftIsPressed);
-            } else if (
-              $(e.target).find('.designer-widget').length > 0 &&
-              !$(e.target).find('.designer-widget').hasClass('selected') &&
-              !$(e.target).hasClass('selected')
-            ) {
-              // If we're multi selecting, deselect all
-              if (shiftIsPressed) {
-                lD.selectObject();
-              } else {
-                // Select widget if exists
-                lD.selectObject({
-                  target: $(e.target).find('.designer-widget'),
-                  clickPosition: clickPosition,
                 });
               }
               self.selectObject($(e.target), shiftIsPressed);
