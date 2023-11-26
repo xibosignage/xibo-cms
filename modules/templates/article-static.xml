@@ -102,21 +102,6 @@
 {% if textDirection == "rtl" %}#content { direction: rtl; }{% endif %}
 {% if backgroundColor %}body { background-color: {{backgroundColor}}; }{% endif %}
 {{css}}
-
-.error-message {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    text-align: center;
-    width: 100%;
-    padding: 12px 0;
-    background-color: #d05454;
-    color: white;
-    z-index: 2;
-    font-weight: bold;
-    font-size: 1.1rem;
-    opacity: 0.85;
-}
 </style>
 {% endif %}
             ]]></twig>
@@ -237,21 +222,6 @@ body {
     transform: translateY(-50%);
 }
 {% endif %}
-
-.error-message {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    text-align: center;
-    width: 100%;
-    padding: 12px 0;
-    background-color: #d05454;
-    color: white;
-    z-index: 2;
-    font-weight: bold;
-    font-size: 1.1rem;
-    opacity: 0.85;
-}
 </style>
             ]]></twig>
         </stencil>
@@ -451,21 +421,6 @@ html {
     transform: translateY(-50%);
 }
 {% endif %}
-
-.error-message {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    text-align: center;
-    width: 100%;
-    padding: 12px 0;
-    background-color: #d05454;
-    color: white;
-    z-index: 2;
-    font-weight: bold;
-    font-size: 1.1rem;
-    opacity: 0.85;
-}
 </style>
             ]]></twig>
         </stencil>
@@ -649,21 +604,6 @@ html {
     transform: translateY(-50%);
 }
 {% endif %}
-
-.error-message {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    text-align: center;
-    width: 100%;
-    padding: 12px 0;
-    background-color: #d05454;
-    color: white;
-    z-index: 2;
-    font-weight: bold;
-    font-size: 1.1rem;
-    opacity: 0.85;
-}
 </style>
             ]]></twig>
         </stencil>
@@ -868,21 +808,6 @@ html {
     transform: translateY(-50%);
 }
 {% endif %}
-
-.error-message {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    text-align: center;
-    width: 100%;
-    padding: 12px 0;
-    background-color: #d05454;
-    color: white;
-    z-index: 2;
-    font-weight: bold;
-    font-size: 1.1rem;
-    opacity: 0.85;
-}
 </style>
             ]]></twig>
         </stencil>
@@ -1075,21 +1000,6 @@ html {
     width: auto;
 }
 {% endif %}
-
-.error-message {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    text-align: center;
-    width: 100%;
-    padding: 12px 0;
-    background-color: #d05454;
-    color: white;
-    z-index: 2;
-    font-weight: bold;
-    font-size: 1.1rem;
-    opacity: 0.85;
-}
 </style>
             ]]></twig>
         </stencil>

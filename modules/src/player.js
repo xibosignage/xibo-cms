@@ -72,10 +72,24 @@ $(function() {
     const $target = $('body');
 
     if (PlayerHelper.isEditor && showError && errorMessage !== null) {
-      $target.append(
-        '<div class="error-message" role="alert">' +
-        errorMessage +
-        '</div>');
+      const $errMsg = $('<div class="error-message" role="alert"></div>');
+
+      $errMsg.css({
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        textAlign: 'center',
+        width: '100%',
+        padding: '12px 0',
+        backgroundColor: '#d05454',
+        color: 'white',
+        zIndex: 2,
+        fontWeight: 'bold',
+        fontSize: '1.1rem',
+        opacity: 0.85,
+      }).html(errorMessage);
+
+      $target.append($errMsg);
     }
 
     // Add meta to the widget if it exists

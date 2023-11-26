@@ -560,21 +560,6 @@ ol, li {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
 }
-
-.error-message {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  text-align: center;
-  width: 100%;
-  padding: 12px 0;
-  background-color: #d05454;
-  color: white;
-  z-index: 2;
-  font-weight: bold;
-  font-size: 1.1rem;
-  opacity: 0.85;
-}
 </style>
           ]]></twig>
         </stencil>
@@ -1023,21 +1008,6 @@ ol, li {
 .calendar-event.multi-day.cropped-event-end {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
-}
-
-.error-message {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  text-align: center;
-  width: 100%;
-  padding: 12px 0;
-  background-color: #d05454;
-  color: white;
-  z-index: 2;
-  font-weight: bold;
-  font-size: 1.1rem;
-  opacity: 0.85;
 }
 </style>
             ]]></twig>
@@ -1511,21 +1481,6 @@ ol, li {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
 }
-
-.error-message {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  text-align: center;
-  width: 100%;
-  padding: 12px 0;
-  background-color: #d05454;
-  color: white;
-  z-index: 2;
-  font-weight: bold;
-  font-size: 1.1rem;
-  opacity: 0.85;
-}
 </style>
             ]]></twig>
         </stencil>
@@ -1995,21 +1950,6 @@ ol, li {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
 }
-
-.error-message {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  text-align: center;
-  width: 100%;
-  padding: 12px 0;
-  background-color: #d05454;
-  color: white;
-  z-index: 2;
-  font-weight: bold;
-  font-size: 1.1rem;
-  opacity: 0.85;
-}
 </style>
             ]]></twig>
         </stencil>
@@ -2407,21 +2347,6 @@ li {
 .calendar-day--not-current .calendar-event {
   opacity: 0.8;
 }
-
-.error-message {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    text-align: center;
-    width: 100%;
-    padding: 12px 0;
-    background-color: #d05454;
-    color: white;
-    z-index: 2;
-    font-weight: bold;
-    font-size: 1.1rem;
-    opacity: 0.85;
-}
 </style>
             ]]></twig>
         </stencil>
@@ -2816,21 +2741,6 @@ li {
 .calendar-day--not-current .calendar-event {
   opacity: 0.8;
 }
-
-.error-message {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    text-align: center;
-    width: 100%;
-    padding: 12px 0;
-    background-color: #d05454;
-    color: white;
-    z-index: 2;
-    font-weight: bold;
-    font-size: 1.1rem;
-    opacity: 0.85;
-}
 </style>
             ]]></twig>
         </stencil>
@@ -3136,21 +3046,6 @@ ol, li {
   color: var(--no-events-text-color);
   border-bottom: 0.5rem solid var(--no-events-text-color);
 }
-
-.error-message {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    text-align: center;
-    width: 100%;
-    padding: 12px 0;
-    background-color: #d05454;
-    color: white;
-    z-index: 2;
-    font-weight: bold;
-    font-size: 1.1rem;
-    opacity: 0.85;
-}
 </style>
             ]]></twig>
         </stencil>
@@ -3452,21 +3347,6 @@ ol, li {
   background-color: var(--no-events-bg-color);
   color: var(--no-events-text-color);
   border-bottom: 0.5rem solid var(--no-events-text-color);
-}
-
-.error-message {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    text-align: center;
-    width: 100%;
-    padding: 12px 0;
-    background-color: #d05454;
-    color: white;
-    z-index: 2;
-    font-weight: bold;
-    font-size: 1.1rem;
-    opacity: 0.85;
 }
 </style>
             ]]></twig>
