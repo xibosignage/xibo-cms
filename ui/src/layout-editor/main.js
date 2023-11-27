@@ -1237,6 +1237,18 @@ lD.deleteObject = function(
       true,
     );
 
+    // Select layout if we're deleting the selected region or widget
+    const regionId = (lD.selectedObject.type === 'widget') ?
+      lD.selectedObject.regionId :
+      'region_' + lD.selectedObject.regionId;
+
+    if (
+      objectType === 'region' &&
+      regionId === 'region_' + objectId
+    ) {
+      lD.selectObject();
+    }
+
     lD.layout.deleteObject(
       objectType,
       objectId,

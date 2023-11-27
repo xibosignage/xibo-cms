@@ -1150,7 +1150,14 @@ PropertiesPanel.prototype.render = function(
                 $target.attr('data-region-id', target.widgetId);
               };
 
-              const oldWidget = target;
+              const oldWidget =
+                app.getObjectByTypeAndId(
+                  'widget',
+                  'widget_' + target.regionId.split('region_')[1] +
+                  '_' + target.widgetId,
+                  'canvas',
+                );
+
               const newWidget =
                 app.getObjectByTypeAndId(
                   'widget',
