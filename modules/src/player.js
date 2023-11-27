@@ -333,16 +333,30 @@ $(function() {
             position: 'static',
             top: 'unset',
             left: 'unset',
-            width: 'auto',
-            display: 'inline-block',
+            width: data?.textWrap ? data.width : 'initial',
+            display: 'flex',
+            flexShrink: '0',
+            wordWrap: 'break-word',
           };
         }
 
-        return $(hbsTemplate).first()
+        const $renderedElem = $(hbsTemplate).first()
           .attr('id', data.elementId)
           .addClass(`${data.uniqueID}--item`)
-          .css(cssStyles)
-          .prop('outerHTML');
+          .css(cssStyles);
+
+        if (!data.isGroup && data.dataOverride === 'text' &&
+            data.group.isMarquee &&
+            (data.effect === 'marqueeLeft' || data.effect === 'marqueeRight')) {
+          $renderedElem.get(0).style.removeProperty('white-space');
+          $renderedElem.get(0).style.setProperty(
+            'white-space',
+            data?.textWrap ? 'unset' : 'nowrap',
+            'important',
+          );
+        }
+
+        return $renderedElem.prop('outerHTML');
       };
 
       const renderDataItem = function(
@@ -574,13 +588,18 @@ $(function() {
 
             if (isMarquee) {
               const $scroller =
-                // eslint-disable-next-line max-len
                 $(`<div class="${groupSlotObj.id}--marquee scroll"></div>`);
 
               $scroller.css({
                 display: 'flex',
                 height: groupSlotObj.height,
               });
+
+              if (groupSlotObj?.templateData?.verticalAlign) {
+                $scroller.css({
+                  alignItems: groupSlotObj?.templateData?.verticalAlign,
+                });
+              }
 
               $grpContent.wrapInner($scroller.prop('outerHTML'));
             }
@@ -675,6 +694,12 @@ $(function() {
                         display: 'flex',
                         height: slotObj.height,
                       });
+
+                      if (slotObj?.templateData?.verticalAlign) {
+                        $scroller.css({
+                          alignItems: slotObj?.templateData?.verticalAlign,
+                        });
+                      }
 
                       $grpItem.wrapInner($scroller.prop('outerHTML'));
                     } else {
