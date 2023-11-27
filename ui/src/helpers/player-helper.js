@@ -2,10 +2,12 @@ const PlayerHelper = function() {
   // Check the query params to see if we're in editor mode
   const _self = this;
   const urlParams = new URLSearchParams(window.location.search);
-  const isPreview = urlParams.get('preview') === '1';
   let _elements = {standalone: {}, groups: {}};
   let countWidgetElements = 0;
   let countWidgetStatic = 0;
+
+  this.isPreview = urlParams.get('preview') === '1';
+  this.isEditor = urlParams.get('isEditor') === '1';
 
   /**
    * Initialize player with the available widgetData and elements
@@ -24,7 +26,9 @@ const PlayerHelper = function() {
         const widgetHasNoData = values.filter((val) => {
           return val !== null &&
             (val.hasOwnProperty('success') ||
-              val.hasOwnProperty('error'));
+              val.hasOwnProperty('error') ||
+              (val.hasOwnProperty('data') && val?.data?.length === 0)
+            );
         });
 
         if (widgetHasNoData.length > 0) {
@@ -34,7 +38,8 @@ const PlayerHelper = function() {
 
         values.forEach((value, widgetIndex) => {
           const _widget = _widgetData[widgetIndex];
-          const {dataItems, showError} = this.composeFinalData(_widget, value);
+          const {dataItems, showError, errorMessage} =
+            this.composeFinalData(_widget, value);
 
           if (elements !== undefined && elements?.length > 0) {
             elements.forEach(function(elemVal) {
@@ -69,6 +74,7 @@ const PlayerHelper = function() {
             data: dataItems,
             meta: value !== null ? value?.meta : {},
             showError,
+            errorMessage,
             elements: _elements,
           };
         });
@@ -160,6 +166,7 @@ const PlayerHelper = function() {
       dataItems: [],
       isArray: Array.isArray(data?.data),
       showError: false,
+      errorMessage: null,
     };
     const composeSampleData = () => {
       finalData.isSampleData = true;
@@ -187,22 +194,19 @@ const PlayerHelper = function() {
       }, []);
     };
 
-    if (isPreview) {
-      if (finalData.isArray) {
-        if (data?.data?.length > 0) {
-          finalData.dataItems = data?.data;
-        } else if (widget.sample && Array.isArray(widget.sample)) {
-          finalData.dataItems = composeSampleData();
+    if (widget.isDataExpected) {
+      if (finalData.isArray && data?.data?.length > 0) {
+        finalData.dataItems = data?.data;
+      } else {
+        finalData.dataItems = _self.isEditor ? composeSampleData() : [];
+        if (data?.success === false || !widget.isValid) {
+          finalData.showError = _self.isEditor;
         }
-      } else if (data?.success === false || !widget.isValid) {
-        finalData.dataItems = composeSampleData();
       }
-    } else {
-      finalData.dataItems = data?.data || [];
     }
 
-    if (data?.success === false || !widget.isValid) {
-      finalData.showError = true;
+    if (finalData.showError && data?.message) {
+      finalData.errorMessage = data?.message;
     }
 
     return finalData;
@@ -225,7 +229,6 @@ const PlayerHelper = function() {
       const standaloneKey = element.type === 'dataset' ?
         element.id + '_' + element.templateData.datasetField :
         element.id;
-
 
       // Initialize object values
       if (!isGroup &&

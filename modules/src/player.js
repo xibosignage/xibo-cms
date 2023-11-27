@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 $(function() {
-  // Defaut scaler function
+  // Default scaler function
   const defaultScaler = function(
     _id,
     target,
@@ -54,6 +54,7 @@ $(function() {
    * @param {object} widget
    * @param {Array} dataItems
    * @param {boolean} showError
+   * @param {string|null} errorMessage
    * @param {*} data
    */
   function initStaticTemplates(
@@ -64,16 +65,31 @@ $(function() {
     widget,
     dataItems,
     showError,
+    errorMessage,
     data,
   ) {
     widget.items = [];
     const $target = $('body');
 
-    if (showError && data?.message) {
-      $target.append(
-        '<div class="error-message" role="alert">' +
-        data.message +
-        '</div>');
+    if (PlayerHelper.isEditor && showError && errorMessage !== null) {
+      const $errMsg = $('<div class="error-message" role="alert"></div>');
+
+      $errMsg.css({
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        textAlign: 'center',
+        width: '100%',
+        padding: '12px 0',
+        backgroundColor: '#d05454',
+        color: 'white',
+        zIndex: 2,
+        fontWeight: 'bold',
+        fontSize: '1.1rem',
+        opacity: 0.85,
+      }).html(errorMessage);
+
+      $target.append($errMsg);
     }
 
     // Add meta to the widget if it exists
@@ -770,6 +786,7 @@ $(function() {
               widget,
               widget.data,
               widget.showError,
+              widget.errorMessage,
               widget.data,
             );
           }
