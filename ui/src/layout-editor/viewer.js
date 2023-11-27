@@ -1044,6 +1044,14 @@ Viewer.prototype.renderRegion = function(
     this.selectObject($container);
   }
 
+  // Update region type and class
+  $container.attr('data-sub-type', region.subType)
+    .removeClass(
+      'designer-region-zone ' +
+      'designer-region-frame ' +
+      'designer-region-playlist',
+    ).addClass('designer-region-' + region.subType);
+
   // If there's no widget, return
   if (!widget && !isPlaylist) {
     // If it's not a zone, we need to mark region as an error
