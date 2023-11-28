@@ -62,6 +62,7 @@ class Schedule implements \JsonSerializable
     public static $MEDIA_EVENT = 7;
     public static $PLAYLIST_EVENT = 8;
     public static $SYNC_EVENT = 9;
+    public static $DATA_CONNECTOR_EVENT = 10;
     public static $DATE_MIN = 0;
     public static $DATE_MAX = 2147483647;
 
@@ -303,6 +304,12 @@ class Schedule implements \JsonSerializable
      * @var int
      */
     public $syncGroupId;
+
+    /**
+     * @SWG\Property(description="For data connector events, the data set id")
+     * @var int
+     */
+    public $dataSetId;
 
     /**
      * @SWG\Property(description="The userId of the user that last modified this Schedule")
@@ -928,7 +935,8 @@ class Schedule implements \JsonSerializable
                 `modifiedBy`,
                 `createdOn`,
                 `updatedOn`,
-                `name`
+                `name`,
+                `dataSetId`
             )
             VALUES (
                 :eventTypeId,
@@ -959,7 +967,8 @@ class Schedule implements \JsonSerializable
                 :modifiedBy,
                 :createdOn,
                 :updatedOn,
-                :name
+                :name,
+                :dataSetId
             )
         ', [
             'eventTypeId' => $this->eventTypeId,
@@ -992,7 +1001,8 @@ class Schedule implements \JsonSerializable
             'modifiedBy' => null,
             'createdOn' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             'updatedOn' => null,
-            'name' => !empty($this->name) ? $this->name : null
+            'name' => !empty($this->name) ? $this->name : null,
+            'dataSetId' => !empty($this->dataSetId) ? $this->dataSetId : null,
         ]);
     }
 
@@ -1030,7 +1040,8 @@ class Schedule implements \JsonSerializable
             `syncGroupId` = :syncGroupId,
             `modifiedBy` = :modifiedBy,
             `updatedOn` = :updatedOn,
-            `name` = :name
+            `name` = :name,
+            `dataSetId` = :dataSetId
           WHERE eventId = :eventId
         ', [
             'eventTypeId' => $this->eventTypeId,
@@ -1061,6 +1072,7 @@ class Schedule implements \JsonSerializable
             'modifiedBy' => $this->modifiedBy,
             'updatedOn' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             'name' => $this->name,
+            'dataSetId' => !empty($this->dataSetId) ? $this->dataSetId : null,
             'eventId' => $this->eventId,
         ]);
     }
@@ -1965,6 +1977,7 @@ class Schedule implements \JsonSerializable
             ['eventTypeId' => self::$ACTION_EVENT, 'eventTypeName' => __('Action')],
             ['eventTypeId' => self::$MEDIA_EVENT, 'eventTypeName' => __('Video/Image')],
             ['eventTypeId' => self::$PLAYLIST_EVENT, 'eventTypeName' => __('Playlist')],
+            ['eventTypeId' => self::$DATA_CONNECTOR_EVENT, 'eventTypeName' => __('Data Connector')],
         ];
     }
 

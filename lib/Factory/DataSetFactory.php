@@ -202,6 +202,7 @@ class DataSetFactory extends BaseFactory
             dataset.`code`,
             dataset.`isLookup`,
             dataset.`isRemote`,
+            dataset.`isRealTime`,
             dataset.`method`,
             dataset.`uri`,
             dataset.`postData`,
@@ -262,6 +263,11 @@ class DataSetFactory extends BaseFactory
             $params['isRemote'] = $parsedFilter->getInt('isRemote');
         }
 
+        if ($parsedFilter->getInt('isRealTime') !== null) {
+            $body .= ' AND dataset.isRealTime = :isRealTime ';
+            $params['isRealTime'] = $parsedFilter->getInt('isRealTime');
+        }
+
         if ($parsedFilter->getString('dataSet') != null) {
             $terms = explode(',', $parsedFilter->getString('dataSet'));
             $logicalOperator = $parsedFilter->getString('logicalOperatorName', ['default' => 'OR']);
@@ -309,7 +315,18 @@ class DataSetFactory extends BaseFactory
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $this->createEmpty()->hydrate($row, [
-                'intProperties' => ['isLookup', 'isRemote', 'clearRate', 'refreshRate', 'lastDataEdit', 'runsAfter', 'lastSync', 'lastClear', 'ignoreFirstRow']
+                'intProperties' => [
+                    'isLookup',
+                    'isRemote',
+                    'isRealTime',
+                    'clearRate',
+                    'refreshRate',
+                    'lastDataEdit',
+                    'runsAfter',
+                    'lastSync',
+                    'lastClear',
+                    'ignoreFirstRow',
+                ],
             ]);
         }
 

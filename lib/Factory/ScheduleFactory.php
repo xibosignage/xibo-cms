@@ -398,7 +398,8 @@ class ScheduleFactory extends BaseFactory
             `user`.userName as modifiedByName,
             `schedule`.createdOn,
             `schedule`.updatedOn,
-            `schedule`.name
+            `schedule`.name,
+            `schedule`.dataSetId
         ';
 
         $body = ' FROM `schedule`
@@ -758,7 +759,8 @@ class ScheduleFactory extends BaseFactory
                     'recurrenceMonthlyRepeatsOn',
                     'isGeoAware',
                     'maxPlaysPerHour',
-                    'modifiedBy'
+                    'modifiedBy',
+                    'dataSetId',
                 ]
             ]);
         }
