@@ -338,6 +338,12 @@
 // Match all affected elements and get date div value
 $(target).find('.date').each(function(_idx, dateEl){
     var dateValue = $(dateEl).data('date');
+
+    if (String(dateValue).length === 0 || !dateValue) {
+        $(dateEl).html('');
+        return;
+    }
+
     var globalDate = moment(dateValue);
 
     // Check for lang config

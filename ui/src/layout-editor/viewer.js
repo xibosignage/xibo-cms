@@ -1791,6 +1791,14 @@ Viewer.prototype.renderElementContent = function(
           }
         }
 
+        if (extendOverrideKey !== null || extendWithDataKey !== null) {
+          // Validate element data
+          self.validateElementData(
+            element,
+            convertedProperties[extendOverrideKey],
+          );
+        }
+
         // Escape HTML
         convertedProperties.escapeHtml = template?.extends?.escapeHtml;
 
@@ -1954,6 +1962,82 @@ Viewer.prototype.validateElement = function(
     }
   } else {
     // Remove error message
+    $messageContainer.remove();
+  }
+};
+
+/**
+ * Validate element data
+ * @param {Object} element
+ * @param {String} data
+ */
+Viewer.prototype.validateElementData = function(
+  element,
+  data,
+) {
+  const $elementContainer =
+    this.DOMObject.find(`#${element.elementId}`);
+
+  // Get error message
+  let $messageContainer = $elementContainer.find('.empty-element-data');
+  if ($messageContainer.length === 0) {
+    $messageContainer = $(
+      `<div class="empty-element-data d-none" data-html="true">
+        <i class="fa fa-warning"></i>
+      </div>`);
+
+    $messageContainer.appendTo($elementContainer);
+  }
+
+  const isNotValid = !data || typeof data === 'undefined' || data === '';
+
+  if (isNotValid) {
+    const errorArray = [];
+    const hasGroup = Boolean(element.groupId);
+    const $groupContainer = (hasGroup) ?
+      $elementContainer.parents('.designer-element-group') : null;
+    const elementType = element.elementType;
+
+    // Add if elemens has no group or
+    // if has group but the group doesn't have message yet
+    if (
+      !hasGroup ||
+      (
+        hasGroup &&
+        $groupContainer.find('> .empty-element-data').length === 0
+      )
+    ) {
+      errorArray.push(
+        '<p>' +
+        elementType.charAt(0).toUpperCase() +
+        elementType.substring(1) +
+        ' element' +
+        '</p>');
+
+      errorArray.push(
+        '<p>' +
+        layoutEditorTrans.emptyElementData +
+        '</p>');
+      // If element has group, move error to group
+      (hasGroup) && $messageContainer.appendTo(
+        $elementContainer.parents('.designer-element-group'),
+      );
+
+      // Set title/tooltip
+      $messageContainer.tooltip('dispose')
+        .prop('title', '<div class="custom-tooltip">' +
+          errorArray.join('') + '</div>');
+      $messageContainer.tooltip();
+
+      // Show tooltip
+      $messageContainer.removeClass('d-none');
+    }
+
+    // Remove message from element if it's in a group
+    if (hasGroup) {
+      $elementContainer.find('.empty-element-data').remove();
+    }
+  } else {
     $messageContainer.remove();
   }
 };

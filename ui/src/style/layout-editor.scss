@@ -1243,7 +1243,7 @@ body.editor-opened {
             opacity: 0.3;
         }
 
-        & > .invalid-parent {
+        & > .invalid-parent, & > .empty-element-data {
             z-index: $viewer-object-group-bts-z-index !important;
         }
 
@@ -1271,7 +1271,7 @@ body.editor-opened {
     }
 
     .designer-element, .designer-element-group {
-        .invalid-parent {
+        .invalid-parent, .empty-element-data {
             position: absolute;
             padding: 2px 5px;
             border-radius: 4px;
@@ -1286,8 +1286,10 @@ body.editor-opened {
             opacity: 0.6;
         }
 
-        &:hover .invalid-parent {
-            opacity: 0.8;
+        &:hover {
+            .invalid-parent, .empty-element-data {
+                opacity: 0.8;
+            }
         }
     }
 
