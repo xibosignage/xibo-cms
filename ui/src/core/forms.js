@@ -1838,7 +1838,65 @@ window.forms = {
         );
       };
 
-      if (snippetMode == 'dataType') {
+      if (snippetMode == 'dataSet') {
+        const dataSetFied = $(el).data('dependsOn');
+        const datasetId = $('[name=' + dataSetFied + ']').val();
+
+        // Initialise the dataset order clause
+        // if the dataset id is not empty
+        if (datasetId) {
+          // Get the dataset columns
+          $.ajax({
+            url: urlsForApi.dataset.search.url,
+            type: 'GET',
+            data: {
+              dataSetId: datasetId,
+            },
+            success: function(response) {
+              const data = response.data[0];
+              if (
+                data &&
+                data.columns &&
+                data.columns.length > 0) {
+                // Clear select options
+                $select.empty();
+
+                // Add data to the select options
+                $.each(data.columns, function(_index, col) {
+                  $select.append(
+                    $('<option data-snippet-type="' +
+                      col.dataType +
+                      '" value="' +
+                      col.dataSetColumnId +
+                      '">' +
+                      col.heading +
+                      '</option>'));
+                });
+
+                // If there are no options, hide
+                if (data.columns.length == 0) {
+                  $select.parent().hide();
+                } else {
+                  // Setup the snippet selector
+                  setupSnippets($select);
+                }
+
+                // Disable fields on non read only mode
+                if (readOnlyMode) {
+                  forms.makeFormReadOnly($select.parent());
+                }
+              } else {
+                $select.parent().hide();
+              }
+            },
+            error: function() {
+              $select.parent().append(
+                '{% trans "An unknown error has occurred. Please refresh" %}',
+              );
+            },
+          });
+        }
+      } else if (snippetMode == 'dataType') {
         // Get request path
         const requestPath =
           urlsForApi.widget.getDataType.url.replace(':id', targetId);
