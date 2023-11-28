@@ -1774,6 +1774,9 @@ window.forms = {
                 forceMoveMarkers: true,
               };
               editor.executeEdits('custom-code', [op]);
+
+              // Trigger change event
+              $targetField.trigger('change');
             } else {
               // Text area
               const cursorPosition = $targetField[0].selectionStart;
