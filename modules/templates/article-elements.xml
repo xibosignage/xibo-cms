@@ -61,7 +61,6 @@
         <onElementParseData><![CDATA[
 // value - element to be parsed
 // properties
-console.log(properties.removeNewLines);
 if (
     (
         properties.removeNewLines === true ||
