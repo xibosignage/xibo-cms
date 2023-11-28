@@ -288,9 +288,9 @@ $datasetTableContainer.dataSetRender(properties);
                     </test>
                 </visibility>
             </property>
-            <property id="dataTypeSnippets" type="snippet" mode="dataType" target="template">
+            <property id="dataSetSnippets" type="snippet" mode="dataSet" target="template">
                 <title>Snippets</title>
-                <helpText>Choose data type snippet</helpText>
+                <helpText>Choose data set snippet</helpText>
                 <dependsOn>dataSetId</dependsOn>
                 <visibility>
                     <test>
