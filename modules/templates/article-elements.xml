@@ -61,8 +61,12 @@
         <onElementParseData><![CDATA[
 // value - element to be parsed
 // properties
+console.log(properties.removeNewLines);
 if (
-    properties.removeNewLines === true &&
+    (
+        properties.removeNewLines === true ||
+        properties.removeNewLines === 1
+    ) &&
     value != ''
 ) {
     return value.replaceAll('\n', '');
