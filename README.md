@@ -71,7 +71,8 @@ git clone git@github.com:<your_id>/xibo-cms.git xibo-cms
 
 We maintain the following branches. To contribute to Xibo please also use the `develop` branch as your base.
 
-- develop: Work in progress toward 4.0.x
+- giacobini: Work in progress toward 4.1.x
+- develop: Bug fixes for 4.0.x
 - master: Currently 4.0
 - release33: Bug fixes for 3.3
 - release23: Bug fixes for 2.3
