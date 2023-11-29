@@ -38,6 +38,11 @@ const PlayerHelper = function() {
 
         values.forEach((value, widgetIndex) => {
           const _widget = _widgetData[widgetIndex];
+
+          if (!_widget.hasOwnProperty('isDataExpected')) {
+            _widget.isDataExpected = _widget.url !== null;
+          }
+
           const {dataItems, showError, errorMessage} =
             this.composeFinalData(_widget, value);
 
