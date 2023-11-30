@@ -231,9 +231,12 @@ const PlayerHelper = function() {
     return elements.reduce(function(collection, item) {
       const element = _self.decorateElement(item, widget);
       const isGroup = _self.isGroup(element);
-      const standaloneKey = element.type === 'dataset' ?
+      let standaloneKey = element.type === 'dataset' ?
         element.id + '_' + element.templateData.datasetField :
         element.id;
+
+      // Allow multiple data source of same element type by widget
+      standaloneKey += '_' + widget.widgetId;
 
       // Initialize object values
       if (!isGroup &&
@@ -242,20 +245,23 @@ const PlayerHelper = function() {
         collection.standalone[standaloneKey] = [];
       }
 
-      if (isGroup &&
-        !collection.groups.hasOwnProperty(element.groupId)
-      ) {
-        collection.groups[element.groupId] = {
-          ...globalOptions,
-          ...widget.properties,
-          ...element.groupProperties,
-          id: element.groupId,
-          uniqueID: element.groupId,
-          duration: widget.duration,
-          parentId: element.groupId,
-          slot: element.slot,
-          items: [],
-        };
+      let groupKey = null;
+      if (isGroup) {
+        groupKey = element.groupId + '_' + widget.widgetId;
+        if (!collection.groups.hasOwnProperty(groupKey)) {
+          collection.groups[groupKey] = {
+            ...globalOptions,
+            ...widget.properties,
+            ...element.groupProperties,
+            id: groupKey,
+            uniqueID: element.groupId,
+            duration: widget.duration,
+            parentId: groupKey,
+            widgetId: widget.widgetId,
+            slot: element.slot,
+            items: [],
+          };
+        }
       }
 
       // Fill in objects with items
@@ -272,11 +278,13 @@ const PlayerHelper = function() {
         ];
       }
 
-      if (isGroup && Object.keys(collection.groups).length > 0) {
-        collection.groups[element.groupId] = {
-          ...collection.groups[element.groupId],
+      if (isGroup && Object.keys(collection.groups).length > 0 &&
+        groupKey !== null
+      ) {
+        collection.groups[groupKey] = {
+          ...collection.groups[groupKey],
           items: [
-            ...collection.groups[element.groupId].items,
+            ...collection.groups[groupKey].items,
             {...element, numItems: 1},
           ],
         };
@@ -315,6 +323,7 @@ const PlayerHelper = function() {
     elemCopy.escapeHtml = null;
     elemCopy.isExtended = false;
     elemCopy.withData = false;
+    elemCopy.widgetId = widget.widgetId;
 
     // Compile the template if it exists
     if ($template && $template.length > 0) {
