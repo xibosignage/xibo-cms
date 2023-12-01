@@ -127,9 +127,9 @@ if (properties.lang !== null && String(properties.lang).length > 0) {
 }
 
 // Make replacements [] with target data
-var makeReplacement = (html, item) => {
+var makeReplacement = function(html, item) {
     // Make replacements [] with item data
-    return html.replace(/\[([^\]]+)\]/g, (match, key) => {
+    var replacer = function(match, key) {
         if (key === 'time' || key.indexOf('time|') === 0) {
             if (key.indexOf('time|') === 0) {
                 return moment.unix(item.time).format(key.split('|')[1]);
@@ -148,7 +148,8 @@ var makeReplacement = (html, item) => {
             return meta.Attribution;
         }
         return item[key];
-    });
+    };
+    return html.replace(/\[([^\]]+)\]/g, replacer);
 }
 
 // Get content container
@@ -192,8 +193,7 @@ if (daysNum > 0) {
     // Empty container
     $forecastContainer.empty();
 
-    // Add the forecast days
-    items.slice(1).forEach((day, index) => {
+    var slicer = function(day, index) {
         // Check if we are within the number of days
         if (index < daysNum) {
             // Make replacements [] with forecast day data
@@ -202,7 +202,10 @@ if (daysNum > 0) {
             // Add forecast day to forecast container
             $forecastContainer.append(forecastDayHTML);
         }
-    });
+    };
+
+    // Add the forecast days
+    items.slice(1).forEach(slicer);
 }
 
 // Handle images and scaling
