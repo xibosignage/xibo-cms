@@ -512,7 +512,8 @@ lD.selectObject =
         return;
       }
 
-      const oldSelectedId = this.selectedObject.id;
+      const oldSelectedId = (this.selectedObject.type === 'element') ?
+        this.selectedObject.elementId : this.selectedObject.id;
       const oldSelectedType = this.selectedObject.type;
 
       // If the selected object was different from the previous
@@ -2853,6 +2854,7 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
   const objId = $(obj).attr('id');
   const objType = $(obj).data('type');
   let canBeCopied = false;
+  let canHaveNewConfig = false;
   let objAuxId = null;
 
   // Don't open context menu in read only mode
@@ -2865,7 +2867,34 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
   } else if (objType == 'element' || objType == 'element-group') {
     objAuxId =
       'widget_' + $(obj).data('regionId') + '_' + $(obj).data('widgetId');
+    const elementWidget = lD.getObjectByTypeAndId('widget', objAuxId, 'canvas');
 
+    // Check if the element or group can have a new config
+    if (objType == 'element') {
+      // We just need to have more than 1 element
+      canHaveNewConfig = (Object.values(elementWidget.elements).length > 1);
+    } else if (objType == 'element-group') {
+      // We need to have either another group
+      canHaveNewConfig =
+        (Object.values(elementWidget.elementGroups).length > 1);
+
+      // Or 1 elements that doesn't belong to the group
+      if (canHaveNewConfig === false) {
+        Object.values(elementWidget.elements).every((el) => {
+          // If we found the widget, break the loop
+          if (el.groupId != objId) {
+            canHaveNewConfig = true;
+            // Break the loop
+            return false;
+          }
+
+          // Keep going
+          return true;
+        });
+      }
+    }
+
+    // All elements and groups can be duplicated
     canBeCopied = true;
   }
 
@@ -2889,6 +2918,7 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
     contextMenuTemplate(Object.assign(layoutObject, {
       trans: contextMenuTrans,
       canBeCopied: canBeCopied,
+      canHaveNewConfig: canHaveNewConfig,
       canChangeLayer: canChangeLayer,
       canUngroup: canUngroup,
     })),
@@ -3205,6 +3235,64 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
           {
             refreshEditor: true,
           });
+      });
+    } else if (target.data('action') == 'newConfig') {
+      const elementsToMove = [];
+      const groupsToMove = [];
+
+      // Get current widget
+      const oldWidget =
+        lD.getObjectByTypeAndId(
+          'widget',
+          objAuxId,
+          'canvas',
+        );
+
+      // Get elements or groups to be moved
+      if (layoutObject.type === 'element-group') {
+        groupsToMove.push(layoutObject);
+      } else {
+        elementsToMove.push(layoutObject);
+      }
+
+      // Create new widget
+      lD.addModuleToPlaylist(
+        lD.layout.canvas.regionId,
+        lD.layout.canvas.playlists.playlistId,
+        oldWidget.subType,
+        {
+          type: layoutObject.type,
+        },
+        null,
+        false,
+        false,
+        false,
+        false,
+      ).then((res) => {
+        const widgetId = res.data.widgetId;
+        // Reload data
+        lD.reloadData(
+          lD.layout,
+          {
+            reloadPropertiesPanel: false,
+          },
+        ).done(() => {
+          // Get new widget
+          const newWidget =
+            lD.getObjectByTypeAndId(
+              'widget',
+              widgetId,
+              'canvas',
+            );
+
+          // Move elements between widgets in canvas
+          lD.layout.canvas.moveElementsBetweenWidgets(
+            oldWidget.getFullId(),
+            newWidget.getFullId(),
+            elementsToMove,
+            groupsToMove,
+          );
+        });
       });
     } else {
       layoutObject.editPropertyForm(

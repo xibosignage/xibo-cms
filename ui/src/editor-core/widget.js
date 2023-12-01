@@ -404,6 +404,14 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
       this.isDeletable = data.isDeletable;
     }
   };
+
+  /**
+   * Get widget full id
+   * @return {string}
+   */
+  this.getFullId = function() {
+    return 'widget_' + this.regionId.split('region_')[1] + '_' + this.widgetId;
+  };
 };
 
 /**

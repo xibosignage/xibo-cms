@@ -395,21 +395,16 @@
 }
 
 .widget-info-container {
-    padding: 8px;
-    background-color: $xibo-color-primary;
+    text-align: center;
+    padding: 6px;
+    background-color: $xibo-color-primary-l60;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 
-    .xibo-form-input {
-        color: $xibo-color-primary-l10;
-        margin: 0;
-
-        .input-info-container {
-            padding: 0;
-        }
-
-        input {
-            border: none;
-            background-color: $xibo-color-primary-l20;
-        }
+    .widget-info-name {
+        color: $xibo-color-primary-l5;
+        font-weight: bold;
     }
 }
 
