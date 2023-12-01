@@ -789,7 +789,7 @@ window.forms = {
               getFieldItems(datasetCols, $dataTypeId.val()) || [];
 
             if (fieldItems.length > 0) {
-              $select.empty();
+              $select.find('option[value]').remove();
 
               $.each(fieldItems, function(_k, field) {
                 $select.append(
@@ -1862,7 +1862,7 @@ window.forms = {
                 data.columns &&
                 data.columns.length > 0) {
                 // Clear select options
-                $select.empty();
+                $select.find('option[value]').remove();
 
                 // Add data to the select options
                 $.each(data.columns, function(_index, col) {
@@ -1911,7 +1911,7 @@ window.forms = {
           success: function(response) {
             if (response && response.fields && response.fields.length > 0) {
               // Clear select options
-              $select.empty();
+              $select.find('option[value]').remove();
 
               // Add data to the select options
               $.each(response.fields, function(_index, element) {
