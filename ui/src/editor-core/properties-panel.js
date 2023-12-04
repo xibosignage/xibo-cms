@@ -1569,6 +1569,15 @@ PropertiesPanel.prototype.initFields = function(
         return true;
       }
 
+      // For rich text, check if CKEditor has changed
+      if (
+        $(target).hasClass('rich-text') &&
+        CKEDITOR.instances[$(target).attr('id')] &&
+        !CKEDITOR.instances[$(target).attr('id')].checkDirty()
+      ) {
+        return true;
+      }
+
       return false;
     };
 
