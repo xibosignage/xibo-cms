@@ -252,11 +252,13 @@ class DataSetColumn implements \JsonSerializable
             // We can check this is valid by building up a NOT IN sql statement, if we get results.. we know its not good
             $select = '';
 
-            $dbh = $this->getStore()->getConnection();
+            $dbh = $this->getStore()->getConnection('isolated');
 
             for ($i=0; $i < count($list); $i++) {
-                $list_val = $dbh->quote($list[$i]);
-                $select .= $list_val . ',';
+                if (!empty($list[$i])) {
+                    $list_val = $dbh->quote($list[$i]);
+                    $select .= $list_val . ',';
+                }
             }
 
             $select = rtrim($select, ',');
@@ -279,7 +281,7 @@ class DataSetColumn implements \JsonSerializable
                 $formula = str_replace('[DisplayId]', 0, $this->formula);
                 // replace DisplayGeoLocation with default CMS location, just to validate here.
                 $formula = str_replace('[DisplayGeoLocation]', "GEOMFROMTEXT('POINT(51.504 -0.104)')", $formula);
-                $this->getStore()->select('SELECT * FROM (SELECT `id`, ' . $formula . ' AS `' . $this->heading . '`  FROM `dataset_' . $this->dataSetId . '`) dataset WHERE 1 = 1 ', []);
+                $this->getStore()->select('SELECT * FROM (SELECT `id`, ' . $formula . ' AS `' . $this->heading . '`  FROM `dataset_' . $this->dataSetId . '`) dataset WHERE 1 = 1 ', [], 'isolated');
             } catch (\Exception $e) {
                 $this->getLog()->debug('Formula validation failed with following message ' . $e->getMessage());
                 throw new InvalidArgumentException(__('Provided formula is invalid'), 'formula');
