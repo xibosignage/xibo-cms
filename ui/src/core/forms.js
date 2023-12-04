@@ -1870,7 +1870,7 @@ window.forms = {
                     $('<option data-snippet-type="' +
                       col.dataType +
                       '" value="' +
-                      col.dataSetColumnId +
+                      col.heading + '|' + col.dataSetColumnId +
                       '">' +
                       col.heading +
                       '</option>'));

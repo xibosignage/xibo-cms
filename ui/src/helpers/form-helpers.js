@@ -821,7 +821,7 @@ const formHelpers = function() {
           }
 
           // Handle initial template set up
-          // data = self.convertLibraryReferences(data);
+          data = self.convertLibraryReferences(data);
 
           CKEDITOR.instances[textAreaId].setData(data);
 
