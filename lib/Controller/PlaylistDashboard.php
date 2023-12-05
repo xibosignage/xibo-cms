@@ -27,6 +27,7 @@ use Slim\Http\ServerRequest as Request;
 use Xibo\Event\SubPlaylistItemsEvent;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class PlaylistDashboard
@@ -82,8 +83,12 @@ class PlaylistDashboard extends Base
             if ($playlistId->value != 0) {
                 $playlist = $this->playlistFactory->getById($playlistId->value);
             }
-        } catch (GeneralException $exception) {
-            $this->getLog()->error('Problem getting playlistDashboardSelectedPlaylistId user option. e = ' . $exception->getMessage());
+        } catch (NotFoundException $notFoundException) {
+            // this is fine, no need to throw errors here.
+            $this->getLog()->debug(
+                'Problem getting playlistDashboardSelectedPlaylistId user option. e = ' .
+                $notFoundException->getMessage()
+            );
         }
 
         $this->getState()->template = 'playlist-dashboard';
