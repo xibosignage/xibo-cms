@@ -224,6 +224,7 @@ $(function() {
       globalOptions,
       {
         duration: widget.duration,
+        pauseEffectOnStart: globalOptions.pauseEffectOnStart ?? false,
       },
     );
 
