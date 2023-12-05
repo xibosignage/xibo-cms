@@ -775,7 +775,21 @@ class ModuleFactory extends BaseFactory
         if (array_key_exists($module->moduleId, $modulesWithSettings)) {
             $moduleSettings = $modulesWithSettings[$module->moduleId];
             $module->isInstalled = true;
-            $module->enabled = $moduleSettings->getInt('enabled', ['default' => 0]);
+
+            // make sure canvas is always enabled
+            if ($module->moduleId === 'core-canvas') {
+                $module->enabled = 1;
+                // update the table
+                if ($moduleSettings->getInt('enabled', ['default' => 0]) === 0) {
+                    $this->getStore()->update(
+                        'UPDATE `module` SET enabled = 1 WHERE `module`.moduleId = \'core-canvas\' ',
+                        []
+                    );
+                }
+            } else {
+                $module->enabled = $moduleSettings->getInt('enabled', ['default' => 0]);
+            }
+
             $module->previewEnabled = $moduleSettings->getInt('previewEnabled', ['default' => 0]);
             $module->defaultDuration = $moduleSettings->getInt('defaultDuration', ['default' => 10]);
 
