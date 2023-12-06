@@ -694,6 +694,18 @@ $(target).xiboTextRender(properties, $(target).find('#content > .image, #content
                     </test>
                 </visibility>
             </property>
+            <property id="showSideBySide" type="checkbox">
+                <title>Show items side by side?</title>
+                <default>0</default>
+                <visibility>
+                    <test type="or">
+                        <condition field="effect" type="eq">marqueeLeft</condition>
+                        <condition field="effect" type="eq">marqueeRight</condition>
+                        <condition field="effect" type="eq">marqueeUp</condition>
+                        <condition field="effect" type="eq">marqueeDown</condition>
+                    </test>
+                </visibility>
+            </property>
             <property id="separator" type="richText" allowLibraryRefs="false" variant="html">
                 <title>Separator</title>
                 <helpText>A separator to show between marquee items</helpText>
@@ -752,6 +764,10 @@ html {
 
 .article > div {
     font-family: Arial, Verdana, sans-serif;
+    {% if showSideBySide %}
+        display: inline-block;
+        padding-left: 10px;
+    {% endif %}
 }
 
 .name {
