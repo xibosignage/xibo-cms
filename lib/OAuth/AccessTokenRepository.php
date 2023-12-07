@@ -130,7 +130,7 @@ class AccessTokenRepository implements AccessTokenRepositoryInterface
     /** @inheritDoc */
     public function persistNewAccessToken(AccessTokenEntityInterface $accessTokenEntity)
     {
-        $date = $accessTokenEntity->getExpiryDateTime();
+        $date = clone $accessTokenEntity->getExpiryDateTime();
         // since stash cache sets expiresAt at up to provided date
         // with up to 15% less than the provided date
         // add more time to normal token expire, to ensure cache does not expire before the token.

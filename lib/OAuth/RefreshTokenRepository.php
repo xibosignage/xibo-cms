@@ -52,7 +52,7 @@ class RefreshTokenRepository implements RefreshTokenRepositoryInterface
      */
     public function persistNewRefreshToken(RefreshTokenEntityInterface $refreshTokenEntity)
     {
-        $date = $refreshTokenEntity->getExpiryDateTime();
+        $date = clone $refreshTokenEntity->getExpiryDateTime();
         // since stash cache sets expiresAt at up to provided date
         // with up to 15% less than the provided date
         // add more time to normal refresh token expire, to ensure cache does not expire before the token.
