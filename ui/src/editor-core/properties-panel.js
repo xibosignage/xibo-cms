@@ -1585,8 +1585,9 @@ PropertiesPanel.prototype.initFields = function(
     const skipXiboFormInput =
       ':not(.position-input):not(.action-form-input)' +
       ':not(.snippet-selector):not(.element-slot-input)' +
+      ':not(.ticker-tag-style-property)' +
       ':not(.canvas-widget-control-dropdown)';
-    const skipFormInput = ':not(.element-property)';
+    const skipFormInput = ':not(.element-property):not([data-tag-style-input])';
     $(self.DOMObject).find('form').off()
       .on({
         'change inputChange xiboInputChange': function(_ev, options) {

@@ -1053,4 +1053,266 @@ $(target).xiboTextRender(properties, $(target).find('#content .article, #content
             <asset id="article_title_only" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/article/title-only.png" />
         </assets>
     </template>
+    <template>
+        <id>article_marquee</id>
+        <type>static</type>
+        <dataType>article</dataType>
+        <title>Articles shown in a marquee</title>
+        <startWidth>1200</startWidth>
+        <startHeight>80</startHeight>
+        <properties>
+            <property id="selectedTags" type="tickerTagSelector">
+                <title>Selected Tags</title>
+                <helpText>Select tags to be displayed.</helpText>
+            </property>
+            <property id="effect" type="effectSelector" variant="showAll">
+                <title>Effect</title>
+                <helpText>Please select the effect that will be used to transition between items.</helpText>
+                <default>marqueeLeft</default>
+            </property>
+            <property id="speed" type="number">
+                <title>Speed</title>
+                <helpText>Marquee Speed in a low to high scale (normal = 1)</helpText>
+                <default>1</default>
+            </property>
+            <property id="dateFormat" type="text" variant="dateFormat">
+                <title>Date Format</title>
+                <helpText>The format to apply to all dates returned by the Widget.</helpText>
+                <default>#DATE_FORMAT#</default>
+            </property>
+            <property id="gapTags" type="number">
+                <title>Gap between tags</title>
+                <helpText>Value (in pixels) to set a gap between each item's tags.</helpText>
+                <default>6</default>
+            </property>
+            <property id="gapItems" type="number">
+                <title>Gap between items</title>
+                <helpText>Value (in pixels) to set a gap between each item.</helpText>
+                <default>6</default>
+            </property>
+            <property id="backgroundColor" type="color">
+                <title>Background Colour</title>
+                <helpText>The selected effect works best with a background colour. Optionally add one here.</helpText>
+                <default></default>
+            </property>
+            <property id="textDirection" type="dropdown" mode="single">
+                <title>Text direction</title>
+                <helpText>Which direction does the text in the feed use?</helpText>
+                <default>ltr</default>
+                <options>
+                    <option name="ltr">Left to Right (LTR)</option>
+                    <option name="rtl">Right to Left (RTL)</option>
+                </options>
+            </property>
+            <property id="showSeparator" type="checkbox">
+                <title>Show a separator between items?</title>
+                <default>0</default>
+                <visibility>
+                    <test type="or">
+                        <condition field="effect" type="eq">marqueeLeft</condition>
+                        <condition field="effect" type="eq">marqueeRight</condition>
+                        <condition field="effect" type="eq">marqueeUp</condition>
+                        <condition field="effect" type="eq">marqueeDown</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="separator" type="richText" allowLibraryRefs="false" variant="html">
+                <title>Separator</title>
+                <helpText>A separator to show between marquee items</helpText>
+                <default>
+                <![CDATA[
+                    <p><span style="font-size: 16px;">/</span></p>
+                ]]></default>
+                <visibility>
+                    <test type="and">
+                        <condition field="effect" type="neq">none</condition>
+                        <condition field="effect" type="neq">noTransition</condition>
+                        <condition field="effect" type="neq">fade</condition>
+                        <condition field="effect" type="neq">fadeout</condition>
+                        <condition field="effect" type="neq">scrollHorz</condition>
+                        <condition field="effect" type="neq">scrollVert</condition>
+                        <condition field="effect" type="neq">flipHorz</condition>
+                        <condition field="effect" type="neq">flipVert</condition>
+                        <condition field="effect" type="neq">shuffle</condition>
+                        <condition field="effect" type="neq">tileSlide</condition>
+                        <condition field="effect" type="neq">tileBlind</condition>
+                        <condition field="showSeparator" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="copyright" type="text">
+                <title>Copyright</title>
+                <helpText>Copyright information to display as the last item in this feed.</helpText>
+            </property>
+            <property id="copyrightFontFamily" type="fontSelector">
+                <title>Copyright Font Family</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+                <visibility>
+                    <test>
+                        <condition field="copyright" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="copyrightFontColor" type="color">
+                <title>Copyright Font Color</title>
+                <default></default>
+                <visibility>
+                    <test>
+                        <condition field="copyright" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="copyrightFontSize" type="number">
+                <title>Copyright Font Size</title>
+                <default></default>
+                <visibility>
+                    <test>
+                        <condition field="copyright" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="copyrightBold" type="checkbox">
+                <title>Bold</title>
+                <helpText>Should the copyright text be bold?</helpText>
+                <default>0</default>
+                <visibility>
+                    <test>
+                        <condition field="copyright" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="copyrightItalics" type="checkbox">
+                <title>Italics</title>
+                <helpText>Should the copyright text be italicised?</helpText>
+                <default>0</default>
+                <visibility>
+                    <test>
+                        <condition field="copyright" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="copyrightUnderline" type="checkbox">
+                <title>Underline</title>
+                <helpText>Should the copyright text be underlined?</helpText>
+                <default>0</default>
+                <visibility>
+                    <test>
+                        <condition field="copyright" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="noDataMessage" type="code" allowLibraryRefs="true" variant="html">
+                <title>No data message</title>
+                <helpText>A message to display when no data is returned from the source</helpText>
+            </property>
+        </properties>
+        <stencil>
+            <twig><![CDATA[
+{% if javaScript %}<script type="text/javascript">{{javaScript}}</script>{% endif %}
+{% if backgroundColor or textDirection == "rtl" or gapTags or gapItems %}
+<style>
+{% if textDirection == "rtl" %}#content { direction: rtl; }{% endif %}
+{% if backgroundColor %}body { background-color: {{backgroundColor}}; }{% endif %}
+{% if (effect == "marqueeLeft") or (effect == "marqueeRight") %}
+    {% if gapTags %}.marquee-item { margin-right: {{gapTags}}px; }{% endif %}
+    {% if gapItems %}.item.text-render-item, .separator { margin-right: {{gapItems}}px; }{% endif %}
+{% endif %}
+
+{% if (effect == "marqueeUp") or (effect == "marqueeDown") %}
+    {% if gapTags %}.marquee-item { margin-bottom: {{gapTags}}px; }{% endif %}
+    {% if gapItems %}.item.text-render-item, .separator { margin-bottom: {{gapItems}}px; }{% endif %}
+{% endif %}
+</style>
+{% endif %}
+            ]]></twig>
+        </stencil>
+        <onTemplateRender><![CDATA[
+// id: The id of the widget
+// target: The target element to render
+// items: The items to render
+// properties: The properties for the widget
+// -------------------------------------------
+
+// Generate template from chosen fields
+let selectedTags = (properties.selectedTags != null && properties.selectedTags != '') ? JSON.parse(properties.selectedTags) : [];
+
+properties.template = '';
+
+for (const tag in selectedTags) {
+    properties.template += '<span class="marquee-item marquee-' + tag + '" style="';
+
+    for (const style in selectedTags[tag]) {
+        (style === 'fontSize' && selectedTags[tag][style]) && (properties.template += 'font-size:' + selectedTags[tag][style] + 'px;');
+        (style === 'fontColor' && selectedTags[tag][style]) && (properties.template += 'color:' + selectedTags[tag][style] + ';');
+        (style === 'fontFamily' && selectedTags[tag][style]) && (properties.template += 'font-family:' + selectedTags[tag][style] + ';');
+        (style === 'bold' && selectedTags[tag][style]) && (properties.template += 'font-weight: bold;');
+        (style === 'italics' && selectedTags[tag][style]) && (properties.template += 'font-style: italic;');
+        (style === 'underline' && selectedTags[tag][style]) && (properties.template += 'text-decoration: underline;');
+        (style === 'width' && selectedTags[tag][style]) && (properties.template += 'width:' + selectedTags[tag][style] + ';');
+        (style === 'height' && selectedTags[tag][style]) && (properties.template += 'height:' + selectedTags[tag][style] + ';');
+        (style === 'opacity' && selectedTags[tag][style]) && (properties.template += 'opacity:' + selectedTags[tag][style] + ';');
+    }
+
+    properties.template += '">[' + tag + ']</span>';
+}
+
+if (items.length > 0) {
+    items = $(items).xiboSubstitutesParser(properties.template, properties.dateFormat, ['date', 'publishedDate'], {
+        description: 'summary',
+        copyright: 'author',
+    });
+}
+
+// No data message
+if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !== '') {
+    items.push(properties.noDataMessage);
+}
+
+// Copyright
+if (properties.copyright) {
+    let copyrightTemplate = '<span class="marquee-item marquee-copyright" style="';
+
+    (properties.copyrightFontFamily) && (copyrightTemplate += 'font-family:' + properties.copyrightFontFamily + ';');
+    (properties.copyrightFontColor) && (copyrightTemplate += 'color:' + properties.copyrightFontColor + ';');
+    (properties.copyrightFontSize) && (copyrightTemplate += 'font-size:' + properties.copyrightFontSize + 'px;');
+    (properties.copyrightBold) && (copyrightTemplate += 'font-weight: bold;');
+    (properties.copyrightItalics) && (copyrightTemplate += 'font-style: italic;');
+    (properties.copyrightUnderline) && (copyrightTemplate += 'text-decoration: underline;');
+
+    copyrightTemplate += '">' + properties.copyright + '</span>';
+
+    items.push(copyrightTemplate);
+}
+
+// Clear container
+$(target).find('#content').empty();
+
+// Add items to container
+for (var index = 0; index < items.length; index++) {
+  var $newItem = $('<div>').addClass('item').html(items[index]);
+  $(target).find('#content').append($newItem);
+}
+
+// Add separator
+if (
+    (
+        properties.effect == 'marqueeLeft' ||
+        properties.effect == 'marqueeRight' ||
+        properties.effect == 'marqueeUp' ||
+        properties.effect == 'marqueeDown'
+    ) && properties.showSeparator == 1 &&
+    properties.separator != ''
+) {
+    var $separator = $(properties.separator);
+    $separator.addClass('separator');
+    $(target).find('.item').after($separator);
+}
+
+// Render
+$(target).find('img').xiboImageRender(properties);
+
+$(target).xiboLayoutScaler(properties);
+$(target).xiboTextRender(properties, $(target).find('#content > *'));
+        ]]></onTemplateRender>
+    </template>
 </templates>

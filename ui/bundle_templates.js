@@ -60,5 +60,9 @@ window.templates = {
       require('./src/templates/forms/inputs/canvasWidgetsSelector.hbs'),
     widgetInfo:
         require('./src/templates/forms/inputs/widgetInfo.hbs'),
+    tickerTagSelector:
+      require('./src/templates/forms/inputs/tickerTagSelector.hbs'),
+    tickerTagStyle:
+      require('./src/templates/forms/inputs/tickerTagStyle.hbs'),
   },
 };
