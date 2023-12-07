@@ -2118,7 +2118,12 @@ class User extends Base
         $requestedPreference =  $request->getQueryParam('preference');
 
         if (!empty($requestedPreference)) {
-            $this->getState()->setData($this->getUser()->getOption($requestedPreference));
+            try {
+                $option = $this->getUser()->getOption($requestedPreference);
+            } catch (NotFoundException $exception) {
+                $option = [];
+            }
+            $this->getState()->setData($option);
         } else {
             $this->getState()->setData($this->getUser()->getUserOptions());
         }

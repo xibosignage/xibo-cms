@@ -789,7 +789,7 @@ window.forms = {
               getFieldItems(datasetCols, $dataTypeId.val()) || [];
 
             if (fieldItems.length > 0) {
-              $select.empty();
+              $select.find('option[value]').remove();
 
               $.each(fieldItems, function(_k, field) {
                 $select.append(
@@ -979,6 +979,184 @@ window.forms = {
           console.error(jqXHR, textStatus, errorThrown);
         });
       }
+    });
+
+    // Article tag selector
+    findElements(
+      '.ticker-tag-selector',
+      target,
+    ).each(function(_k, el) {
+      const $el = $(el);
+
+      // Get the columns
+      const tickerTagsMap = {
+        title: 'text',
+        summary: 'text',
+        content: 'text',
+        author: 'text',
+        permalink: 'text',
+        link: 'text',
+        date: 'date',
+        publishedDate: 'date',
+        image: 'image',
+      };
+
+      // Tag containers
+      const $tagsOutContainer = $el.find('#tagsOut');
+      const $tagsInContainer = $el.find('#tagsIn');
+
+      if ($tagsOutContainer.length == 0 ||
+        $tagsInContainer.length == 0) {
+        return;
+      }
+
+      const $selectHiddenInput =
+        $el.find('#input_' + $el.data('select-id'));
+      const tagsValue = $selectHiddenInput.val() ?
+        JSON.parse(
+          $selectHiddenInput.val(),
+        ) : [];
+
+      const selectedTags = Object.keys(tagsValue);
+
+      // Update the hidden field with a JSON string
+      // of the tags
+      const updateHiddenField = function(skipSave = false) {
+        const selectedTags = [];
+        const tagsValue = $selectHiddenInput.val() ?
+          JSON.parse(
+            $selectHiddenInput.val(),
+          ) : [];
+
+        $tagsInContainer.find('li').each(function(_index, tagEl) {
+          const tagId = $(tagEl).attr('id');
+          selectedTags.push(tagId);
+        });
+
+        // Clear all previous style controls
+        $el.find('.ticker-tag-styles .ticker-tag-style').remove();
+
+        // Add styles for each selected tag
+        selectedTags.forEach((tag) => {
+          const $newStyle = $(templates.forms.tickerTagStyle({
+            id: tag,
+            type: tickerTagsMap[tag],
+            value: tagsValue[tag],
+            trans: tickerTagSelectorTranslations,
+            fontsSearchUrl: getFontsUrl + '?length=10000',
+          }));
+
+          $newStyle.appendTo($el.find('.ticker-tag-styles'));
+
+          // Update hidden field on input change
+          $newStyle.off().on('change inputChange', updateTagsStylesHiddenField);
+        });
+
+        // Init fields
+        forms.initFields($el.find('.ticker-tag-styles'));
+
+        updateTagsStylesHiddenField();
+      };
+
+      const updateTagsStylesHiddenField = function() {
+        const selectedTagStylesValue = {};
+
+        $el.find('.ticker-tag-style').each(function(_index, tagContainer) {
+          const $container = $(tagContainer);
+          const tagId = $container.data('component-id');
+          selectedTagStylesValue[tagId] = {};
+
+          const $tagProperties =
+            $(tagContainer).find('.ticker-tag-style-property');
+
+          $tagProperties.find('select, input').each(function(_index, tagInput) {
+            const inputType = $(tagInput).data('tag-style-input');
+            const value = ($(tagInput).attr('type') === 'checkbox') ?
+              $(tagInput).is(':checked') :
+              $(tagInput).val();
+            selectedTagStylesValue[tagId][inputType] = value;
+          });
+        });
+
+        // Update the hidden field with a JSON string
+        $selectHiddenInput.val(JSON.stringify(selectedTagStylesValue))
+          .trigger('change');
+      };
+
+      // Clear existing fields
+      $tagsOutContainer.empty();
+      $tagsInContainer.empty();
+
+      const tagAvailableTitle =
+        tickerTagSelectorTranslations.tagAvailable;
+      const tagSelectedTitle =
+        tickerTagSelectorTranslations.tagSelected;
+
+      // Set titles
+      $el.find('.col-out-title').text(tagAvailableTitle);
+      $el.find('.col-in-title').text(tagSelectedTitle);
+
+      // Get the selected tags
+      const tickerTagsOut = [];
+      const tickerTagsIn = [];
+
+      // If the column is in the dataset
+      // add it to the selected tags
+      // if not add it to the remaining tags
+      $.each(Object.keys(tickerTagsMap), function(_index, tag) {
+        if (selectedTags.includes(tag)) {
+          tickerTagsIn.push(tag);
+        } else {
+          tickerTagsOut.push(tag);
+        }
+      });
+
+      // Populate the available tags
+      const $tagsOut = $el.find('#tagsOut');
+      $.each(tickerTagsOut, function(_index, tag) {
+        const $tag = $(
+          '<li class="li-sortable" id="' + tag +
+          '" data-tag-type="' + tickerTagsMap[tag] + '">' +
+          tickerTagSelectorTranslations[tag] +
+          '</li>',
+        ).data('tag-type', tickerTagsMap[tag]);
+
+        $tagsOut.append($tag);
+      });
+
+      // Populate the selected tags
+      const $tagsIn = $el.find('#tagsIn');
+      $.each(tickerTagsIn, function(_index, tag) {
+        const $tag = $(
+          '<li class="li-sortable" id="' + tag +
+          '" data-tag-type="' + tickerTagsMap[tag] + '">' +
+          tickerTagSelectorTranslations[tag] +
+          '</li>',
+        );
+
+        $tagsIn.append($tag);
+      });
+
+      if (!readOnlyMode) {
+        // Setup lists drag and sort ( with double click )
+        $el.find('#tagsIn, #tagsOut').sortable({
+          connectWith: '.connectedSortable',
+          dropOnEmpty: true,
+          receive: updateHiddenField,
+          update: updateHiddenField,
+        }).disableSelection();
+
+        // Double click to switch lists
+        $el.find('.li-sortable').on('dblclick', function(ev) {
+          const $this = $(ev.currentTarget);
+          $this.appendTo($this.parent().is('#tagsIn') ?
+            $tagsOut : $tagsIn);
+          updateHiddenField();
+        });
+      }
+
+      // Update hidden field on start
+      updateHiddenField(true);
     });
 
     findElements(
@@ -1774,6 +1952,9 @@ window.forms = {
                 forceMoveMarkers: true,
               };
               editor.executeEdits('custom-code', [op]);
+
+              // Trigger change event
+              $targetField.trigger('change');
             } else {
               // Text area
               const cursorPosition = $targetField[0].selectionStart;
@@ -1838,7 +2019,65 @@ window.forms = {
         );
       };
 
-      if (snippetMode == 'dataType') {
+      if (snippetMode == 'dataSet') {
+        const dataSetFied = $(el).data('dependsOn');
+        const datasetId = $('[name=' + dataSetFied + ']').val();
+
+        // Initialise the dataset order clause
+        // if the dataset id is not empty
+        if (datasetId) {
+          // Get the dataset columns
+          $.ajax({
+            url: urlsForApi.dataset.search.url,
+            type: 'GET',
+            data: {
+              dataSetId: datasetId,
+            },
+            success: function(response) {
+              const data = response.data[0];
+              if (
+                data &&
+                data.columns &&
+                data.columns.length > 0) {
+                // Clear select options
+                $select.find('option[value]').remove();
+
+                // Add data to the select options
+                $.each(data.columns, function(_index, col) {
+                  $select.append(
+                    $('<option data-snippet-type="' +
+                      col.dataType +
+                      '" value="' +
+                      col.heading + '|' + col.dataSetColumnId +
+                      '">' +
+                      col.heading +
+                      '</option>'));
+                });
+
+                // If there are no options, hide
+                if (data.columns.length == 0) {
+                  $select.parent().hide();
+                } else {
+                  // Setup the snippet selector
+                  setupSnippets($select);
+                }
+
+                // Disable fields on non read only mode
+                if (readOnlyMode) {
+                  forms.makeFormReadOnly($select.parent());
+                }
+              } else {
+                $select.parent().hide();
+              }
+            },
+            error: function() {
+              $select.parent().append(
+                '{% trans "An unknown error has occurred. Please refresh" %}',
+              );
+            },
+          });
+        }
+      } else if (snippetMode == 'dataType') {
         // Get request path
         const requestPath =
           urlsForApi.widget.getDataType.url.replace(':id', targetId);
@@ -1850,7 +2089,7 @@ window.forms = {
           success: function(response) {
             if (response && response.fields && response.fields.length > 0) {
               // Clear select options
-              $select.empty();
+              $select.find('option[value]').remove();
 
               // Add data to the select options
               $.each(response.fields, function(_index, element) {

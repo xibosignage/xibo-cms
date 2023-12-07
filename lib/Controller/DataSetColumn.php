@@ -146,10 +146,13 @@ class DataSetColumn extends Base
             throw new AccessDeniedException();
         }
 
-        $dataSetColumns = $this->dataSetColumnFactory->query($this->gridRenderSort($parsedRequestParams), [
-            'dataSetId' => $id,
-            'dataSetColumnId' => $parsedRequestParams->getInt('dataSetColumnId')
-        ]);
+        $dataSetColumns = $this->dataSetColumnFactory->query(
+            $this->gridRenderSort($parsedRequestParams),
+            $this->gridRenderFilter(
+                ['dataSetId' => $id, 'dataSetColumnId' => $parsedRequestParams->getInt('dataSetColumnId')],
+                $parsedRequestParams
+            )
+        );
 
         foreach ($dataSetColumns as $column) {
             /* @var \Xibo\Entity\DataSetColumn $column */
@@ -183,6 +186,7 @@ class DataSetColumn extends Base
 
         $this->getState()->template = 'grid';
         $this->getState()->setData($dataSetColumns);
+        $this->getState()->recordsTotal = $this->dataSetColumnFactory->countLast();
 
         return $this->render($request, $response);
     }

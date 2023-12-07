@@ -422,6 +422,7 @@ PropertiesPanel.prototype.render = function(
   // and save the element in a new variable
   if (target.type === 'element') {
     const elementId = target.elementId;
+    const isSelected = target.selected;
 
     // Get widget and change target
     target = app.getObjectByTypeAndId(
@@ -432,15 +433,15 @@ PropertiesPanel.prototype.render = function(
 
     // Get element from the widget
     targetAux = target.elements[elementId];
+    targetAux.selected = isSelected;
 
-    // Set renderElements to true
     isElement = true;
 
     // Check if it's element with data
     hasData = targetAux.hasDataType;
   } else if (target.type === 'element-group') {
-    // Save element group in targetAux
-    targetAux = target;
+    const groupId = target.id;
+    const isSelected = target.selected;
 
     // Get widget and set it as target
     target = app.getObjectByTypeAndId(
@@ -448,6 +449,10 @@ PropertiesPanel.prototype.render = function(
       'widget_' + target.regionId + '_' + target.widgetId,
       'canvas',
     );
+
+    // Get element from the widget
+    targetAux = target.elementGroups[groupId];
+    targetAux.selected = isSelected;
 
     isElementGroup = true;
 
@@ -675,7 +680,7 @@ PropertiesPanel.prototype.render = function(
             helpText: propertiesPanelTrans.effectHelpText,
             value: targetAux.effect,
             type: 'effectSelector',
-            variant: 'all noNone',
+            variant: 'showPaged noNone',
             visibility: [],
           });
         }
@@ -880,7 +885,7 @@ PropertiesPanel.prototype.render = function(
               helpText: propertiesPanelTrans.effectHelpText,
               value: targetAux.effect,
               type: 'effectSelector',
-              variant: 'all noNone',
+              variant: 'showPaged noNone',
               visibility: [],
             });
           }
@@ -1007,260 +1012,30 @@ PropertiesPanel.prototype.render = function(
         });
       }
 
+      // Show widget info
+      self.showWidgetInfo(target);
+
       // If we're rendering an non-global element or group
-      // show canvas widget control
+      // mark it as active ( and remove others from active )
       if (
         (isElement || isElementGroup) &&
-        target.subType != 'global'
+        target.subType != 'global' &&
+        !target.activeTarget
       ) {
-        // Get widgets
-        const widgetsOfType =
-          app.layout.canvas.getWidgetsOfType(target.subType);
-
-        if (Object.values(widgetsOfType).length > 0) {
-          // Append control
-          self.DOMObject.find('.form-container .widget-form').prepend(
-            templates.forms.canvasWidgetsSelector({
-              widgetId: target.widgetId,
-              widgets: Object.values(widgetsOfType),
-              trans: propertiesPanelTrans.canvasWidgetControl,
-            }),
-          );
-
-          // Canvas control
-          const $canvasWidgetSelectorControl =
-            self.DOMObject.find('.canvas-widget-control');
-
-          // Get active widget
-          const activeWidget = app.layout.canvas.getActiveWidgetOfType(
-            target.subType,
-            true,
-            false,
-          );
-
-          // If we had previous active widget, mark is as inactive
-          (!$.isEmptyObject(activeWidget)) &&
-            (activeWidget.activeTarget = false);
-
-          // Mark widget as active
-          widgetsOfType[target.widgetId].activeTarget = true;
-
-          // Remove margin top from form container
-          self.DOMObject.find('.form-container').addClass('mt-0');
-
-          // Add and handle add button
-          const controlTrans = propertiesPanelTrans.canvasWidgetControl;
-          const $addButton =
-            $(`<div class="canvas-widget-control-add tooltip-always-on"
-              data-toggle="tooltip" 
-              data-placement="top"
-              title="${controlTrans.transferWidgetHelp}">
-              <i class="fa fa-arrow-circle-right"></i>
-              <span>
-                ${controlTrans.transferWidget}
-              </span>
-            </div>`);
-
-          // Check if we have other element or group in the widget
-          let hasMoreElements = false;
-          if (isElement) {
-            // We just need to have more than 1 element
-            hasMoreElements = (Object.values(target.elements).length > 1);
-          } else if (isElementGroup) {
-            // We need to have either another group
-            hasMoreElements = (Object.values(target.elementGroups).length > 1);
-
-            // Or 1 elements that doesn't belong to the group
-            if (hasMoreElements === false) {
-              Object.values(target.elements).every((el) => {
-                // If we found the widget, break the loop
-                if (el.groupId != targetAux.id) {
-                  hasMoreElements = true;
-                  // Break the loop
-                  return false;
-                }
-
-                // Keep going
-                return true;
-              });
-            }
-          }
-
-          // Only show add button if we have more than 1 element for the widget
-          if (hasMoreElements) {
-            $addButton.insertAfter(
-              $canvasWidgetSelectorControl
-                .find('.canvas-widget-control-dropdown .input-info-container'),
-            ).on('click', function(_ev) {
-              lD.addModuleToPlaylist(
-                app.layout.canvas.regionId,
-                app.layout.canvas.playlists.playlistId,
-                target.subType,
-                {
-                  type: targetAux.type,
-                },
-                null,
-                false,
-                false,
-                false,
-                false,
-              ).then((res) => {
-                const widgetId = res.data.widgetId;
-                // Reload data
-                app.reloadData(
-                  app.layout,
-                  {
-                    reloadPropertiesPanel: false,
-                  },
-                ).done(() => {
-                  // Add options to dropdown
-                  const $select =
-                    $canvasWidgetSelectorControl.find('select');
-
-                  // Get new widget
-                  const newWidget = app.getObjectByTypeAndId(
-                    'widget',
-                    'widget_' + app.layout.canvas.regionId + '_' + widgetId,
-                    'canvas',
-                  );
-
-                  // Update option
-                  $select.find('option[selected]').removeAttr('selected');
-                  $select.append(`<option value="${newWidget.widgetId}" 
-                    selected>${newWidget.widgetName}</option>`);
-
-                  // Trigger change
-                  $select.trigger('change');
-                });
-              });
-            });
-          }
-
-          // Handle change control
-          $canvasWidgetSelectorControl
-            .on('change', function(ev) {
-              const updateInViewer = function(
-                id,
-                target,
-              ) {
-                const $target = app.viewer.DOMObject.find('#' + id);
-                $target.data('widgetId', target.widgetId);
-                $target.attr('data-widget-id', target.widgetId);
-                $target.data('regionId', target.regionId);
-                $target.attr('data-region-id', target.widgetId);
-              };
-
-              const oldWidget =
-                app.getObjectByTypeAndId(
-                  'widget',
-                  'widget_' + target.regionId.split('region_')[1] +
-                  '_' + target.widgetId,
-                  'canvas',
-                );
-
-              const newWidget =
-                app.getObjectByTypeAndId(
-                  'widget',
-                  $(ev.target).val(),
-                  'canvas',
-                );
-
-              const elementsToMove = (isElementGroup) ?
-                Object.values(targetAux.elements) :
-                [targetAux];
-              const groupsToMove = (isElementGroup) ?
-                [targetAux] :
-                [];
-
-              // Move elements
-              elementsToMove.forEach((element) => {
-                // Change region and widget ids
-                element.widgetId = newWidget.widgetId;
-                element.regionId = newWidget.regionId.split('_')[1];
-
-                // Update in viewer
-                updateInViewer(element.elementId, element);
-                app.viewer.renderElementContent(element);
-
-                // Add to new widget
-                newWidget.elements[element.elementId] = element;
-
-                // Remove from old widget
-                delete oldWidget.elements[element.elementId];
-              });
-
-              // Move groups
-              groupsToMove.forEach((group) => {
-                // Change region and widget ids
-                group.widgetId = newWidget.widgetId;
-                group.regionId = newWidget.regionId.split('_')[1];
-
-                // Update in viewer
-                updateInViewer(group.id, group);
-                Object.values(group.elements).forEach((el) => {
-                  updateInViewer(el.elementId, el);
-                  app.viewer.renderElementContent(el);
-                });
-
-                // Add to new widget
-                newWidget.elementGroups[group.id] = group;
-
-                // Remove from old widget
-                delete oldWidget.elementGroups[group.id];
-              });
-
-              // Make sure the selected object has the new widget id
-              lD.selectedObject.widgetId = newWidget.widgetId;
-
-              // Save both widgets
-              Promise.all([
-                oldWidget.saveElements(),
-                newWidget.saveElements(),
-              ]).then((_res) => {
-                // Reload properties panel
-                self.render(lD.selectedObject);
-              });
-            });
-
-          // If name is updated on the form
-          // Also update on the widget control
-          self.DOMObject.find('.form-control[name="name"]')
-            .on('change', function(ev) {
-              const $select =
-                self.DOMObject.find('.canvas-widget-control select');
-
-              // Update option
-              $select.find('option[selected]').html($(ev.currentTarget).val());
-
-              // Reload select2
-              makeLocalSelect($select);
-            });
-        }
-      } else {
-        // Show widget info for statics
-        const $widgetInfo = $(templates.forms.widgetInfo({
-          widgetName: target.widgetName,
-          trans: propertiesPanelTrans.widgetInfo,
-        }));
-
-        // Remove margin top from form container
-        self.DOMObject.find('.form-container').addClass('mt-0');
-
-        // Disable input
-        $widgetInfo.find('input').attr('disabled', 'disabled');
-
-        // Append control
-        $widgetInfo.prependTo(
-          self.DOMObject.find('.form-container .widget-form'),
+        // Get previous active widget
+        const activeWidget = app.layout.canvas.getActiveWidgetOfType(
+          target.subType,
+          true,
+          false,
         );
 
-        // If name is updated on the form
-        // Also update on the widget info
-        self.DOMObject.find('.form-control[name="name"]')
-          .on('change', function(ev) {
-            // Update info
-            $widgetInfo.find('input').val($(ev.currentTarget).val());
-          });
+        // If we had previous active widget, mark is as inactive
+        if (!$.isEmptyObject(activeWidget)) {
+          activeWidget.activeTarget = false;
+        }
+
+        // Mark widget as active
+        target.activeTarget = true;
       }
     }
 
@@ -1794,6 +1569,15 @@ PropertiesPanel.prototype.initFields = function(
         return true;
       }
 
+      // For rich text, check if CKEditor has changed
+      if (
+        $(target).hasClass('rich-text') &&
+        CKEDITOR.instances[$(target).attr('id')] &&
+        !CKEDITOR.instances[$(target).attr('id')].checkDirty()
+      ) {
+        return true;
+      }
+
       return false;
     };
 
@@ -1801,8 +1585,9 @@ PropertiesPanel.prototype.initFields = function(
     const skipXiboFormInput =
       ':not(.position-input):not(.action-form-input)' +
       ':not(.snippet-selector):not(.element-slot-input)' +
+      ':not(.ticker-tag-style-property)' +
       ':not(.canvas-widget-control-dropdown)';
-    const skipFormInput = ':not(.element-property)';
+    const skipFormInput = ':not(.element-property):not([data-tag-style-input])';
     $(self.DOMObject).find('form').off()
       .on({
         'change inputChange xiboInputChange': function(_ev, options) {
@@ -2361,6 +2146,217 @@ PropertiesPanel.prototype.updatePositionForm = function(properties) {
     // Change value in the form field
     $positionTab.find('[name="' + key + '"]').val(value);
   });
+};
+
+/**
+ * Show widget info
+ * @param {object} widget Target widget
+ */
+PropertiesPanel.prototype.showWidgetInfo = function(widget) {
+  const self = this;
+
+  // Show widget info for statics
+  const $widgetInfo = $(templates.forms.widgetInfo({
+    widget: widget,
+    trans: propertiesPanelTrans.widgetInfo,
+  }));
+
+  // Remove margin top from form container
+  self.DOMObject.find('.form-container').addClass('mt-0');
+
+  // Disable input
+  $widgetInfo.find('input').attr('disabled', 'disabled');
+
+  // Append control
+  $widgetInfo.prependTo(
+    self.DOMObject.find('.form-container .widget-form'),
+  );
+
+  // If name is updated on the form
+  // Also update on the widget info
+  self.DOMObject.find('.form-control[name="name"]')
+    .on('change', function(ev) {
+      // Update info
+      $widgetInfo.find('span').html($(ev.currentTarget).val());
+    });
+};
+
+/**
+ * Show widget control
+ * @param {object} target Target element or group
+ */
+PropertiesPanel.prototype.showWidgetControl = function(target) {
+  const self = this;
+  // Get widgets
+  const widgetsOfType =
+    app.layout.canvas.getWidgetsOfType(target.subType);
+
+  if (Object.values(widgetsOfType).length > 0) {
+    // Append control
+    self.DOMObject.find('.form-container .widget-form').prepend(
+      templates.forms.canvasWidgetsSelector({
+        widgetId: target.widgetId,
+        widgets: Object.values(widgetsOfType),
+        trans: propertiesPanelTrans.canvasWidgetControl,
+      }),
+    );
+
+    // Canvas control
+    const $canvasWidgetSelectorControl =
+      self.DOMObject.find('.canvas-widget-control');
+
+    // Get active widget
+    const activeWidget = app.layout.canvas.getActiveWidgetOfType(
+      target.subType,
+      true,
+      false,
+    );
+
+    // If we had previous active widget, mark is as inactive
+    (!$.isEmptyObject(activeWidget)) &&
+      (activeWidget.activeTarget = false);
+
+    // Mark widget as active
+    widgetsOfType[target.widgetId].activeTarget = true;
+
+    // Remove margin top from form container
+    self.DOMObject.find('.form-container').addClass('mt-0');
+
+    // Add and handle add button
+    const controlTrans = propertiesPanelTrans.canvasWidgetControl;
+    const $addButton =
+      $(`<div class="canvas-widget-control-add tooltip-always-on"
+        data-toggle="tooltip" 
+        data-placement="top"
+        title="${controlTrans.transferWidgetHelp}">
+        <i class="fa fa-arrow-circle-right"></i>
+        <span>
+          ${controlTrans.transferWidget}
+        </span>
+      </div>`);
+
+    // Check if we have other element or group in the widget
+    let hasMoreElements = false;
+    if (isElement) {
+      // We just need to have more than 1 element
+      hasMoreElements = (Object.values(target.elements).length > 1);
+    } else if (isElementGroup) {
+      // We need to have either another group
+      hasMoreElements = (Object.values(target.elementGroups).length > 1);
+
+      // Or 1 elements that doesn't belong to the group
+      if (hasMoreElements === false) {
+        Object.values(target.elements).every((el) => {
+          // If we found the widget, break the loop
+          if (el.groupId != targetAux.id) {
+            hasMoreElements = true;
+            // Break the loop
+            return false;
+          }
+
+          // Keep going
+          return true;
+        });
+      }
+    }
+
+    // Only show add button if we have more than 1 element for the widget
+    if (hasMoreElements) {
+      $addButton.insertAfter(
+        $canvasWidgetSelectorControl
+          .find('.canvas-widget-control-dropdown .input-info-container'),
+      ).on('click', function(_ev) {
+        lD.addModuleToPlaylist(
+          app.layout.canvas.regionId,
+          app.layout.canvas.playlists.playlistId,
+          target.subType,
+          {
+            type: targetAux.type,
+          },
+          null,
+          false,
+          false,
+          false,
+          false,
+        ).then((res) => {
+          const widgetId = res.data.widgetId;
+          // Reload data
+          app.reloadData(
+            app.layout,
+            {
+              reloadPropertiesPanel: false,
+            },
+          ).done(() => {
+            // Add options to dropdown
+            const $select =
+              $canvasWidgetSelectorControl.find('select');
+
+            // Get new widget
+            const newWidget = app.getObjectByTypeAndId(
+              'widget',
+              'widget_' + app.layout.canvas.regionId + '_' + widgetId,
+              'canvas',
+            );
+
+            // Update option
+            $select.find('option[selected]').removeAttr('selected');
+            $select.append(`<option value="${newWidget.widgetId}" 
+              selected>${newWidget.widgetName}</option>`);
+
+            // Trigger change
+            $select.trigger('change');
+          });
+        });
+      });
+    }
+
+    // Handle change control
+    $canvasWidgetSelectorControl
+      .on('change', function(ev) {
+        const oldWidget =
+          app.getObjectByTypeAndId(
+            'widget',
+            target.getFullId(),
+            'canvas',
+          );
+
+        const newWidget =
+          app.getObjectByTypeAndId(
+            'widget',
+            $(ev.target).val(),
+            'canvas',
+          );
+
+        const elementsToMove = (isElementGroup) ?
+          Object.values(targetAux.elements) :
+          [targetAux];
+        const groupsToMove = (isElementGroup) ?
+          [targetAux] :
+          [];
+
+        // Move elements between widgets in canvas
+        app.layout.canvas.moveElementsBetweenWidgets(
+          oldWidget.getFullId(),
+          newWidget.getFullId(),
+          elementsToMove,
+          groupsToMove,
+        );
+      });
+
+    // If name is updated on the form
+    // Also update on the widget control
+    self.DOMObject.find('.form-control[name="name"]')
+      .on('change', function(ev) {
+        const $select =
+          self.DOMObject.find('.canvas-widget-control select');
+
+        // Update option
+        $select.find('option[selected]').html($(ev.currentTarget).val());
+
+        // Reload select2
+        makeLocalSelect($select);
+      });
+  }
 };
 
 module.exports = PropertiesPanel;

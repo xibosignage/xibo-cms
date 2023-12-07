@@ -1743,10 +1743,10 @@ Viewer.prototype.renderElementContent = function(
         // Send element props
         convertedProperties.prop = element;
 
-        const extendOverrideKey = template?.extends?.override || null;
-        const extendWithDataKey = template?.extends ?
+        const extendOverrideKey = template.extends?.override || null;
+        const extendWithDataKey = template.extends?.with ?
           transformer.getExtendedDataKey(template.extends.with) : null;
-        const metaKey = (meta && transformer?.extends) ? transformer
+        const metaKey = (meta && template.extends?.with) ? transformer
           .getExtendedDataKey(template.extends.with, 'meta.') : null;
         const elementParseDataFn = window[`onElementParseData_${element.id}`];
         const hasElementParseDataFn = typeof elementParseDataFn === 'function';

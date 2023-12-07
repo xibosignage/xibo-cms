@@ -62,7 +62,10 @@
 // value - element to be parsed
 // properties
 if (
-    properties.removeNewLines === true &&
+    (
+        properties.removeNewLines === true ||
+        properties.removeNewLines === 1
+    ) &&
     value != ''
 ) {
     return value.replaceAll('\n', '');

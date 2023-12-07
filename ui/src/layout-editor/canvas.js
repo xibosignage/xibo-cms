@@ -175,4 +175,145 @@ Canvas.prototype.getActiveWidgetOfType = function(
   return targetWidget;
 };
 
+
+/**
+ * Move elements between widgets
+ * @param {object} sourceWidgetId - Old widget id
+ * @param {object} targetWidgetId - Target widget id
+ * @param {object[]} elements - Elements to be moved
+ * @param {object[]} groups - Groups to be moved
+ */
+Canvas.prototype.moveElementsBetweenWidgets = function(
+  sourceWidgetId,
+  targetWidgetId,
+  elements,
+  groups,
+) {
+  const self = this;
+
+  const sourceWidget = lD.layout.canvas.widgets[sourceWidgetId];
+  const targetWidget = lD.layout.canvas.widgets[targetWidgetId];
+  let reloadPropertiesPanel = false;
+
+  const updateInViewer = function(
+    id,
+    target,
+  ) {
+    const $target = lD.viewer.DOMObject.find('#' + id);
+    $target.data('widgetId', target.widgetId);
+    $target.attr('data-widget-id', target.widgetId);
+    $target.data('regionId', target.regionId);
+    $target.attr('data-region-id', target.widgetId);
+  };
+
+  // Move elements
+  elements.forEach((element) => {
+    // Change region and widget ids
+    element.widgetId = targetWidget.widgetId;
+    element.regionId = targetWidget.regionId.split('_')[1];
+
+    if (lD.selectedObject.elementId === element.elementId) {
+      reloadPropertiesPanel = true;
+      element.selected = true;
+      lD.selectedObject = element;
+    }
+
+    // Update in viewer
+    updateInViewer(element.elementId, element);
+    lD.viewer.renderElementContent(element);
+
+    // Add to new widget
+    targetWidget.elements[element.elementId] = element;
+
+    // Remove from old widget
+    self.removeFromCanvasWidget(
+      sourceWidget.id,
+      element.elementId,
+      'element',
+    );
+  });
+
+  // Move groups
+  groups.forEach((group) => {
+    const widgetId = targetWidget.widgetId;
+    const regionId = targetWidget.regionId.split('_')[1];
+    // Change region and widget ids
+    group.widgetId = widgetId;
+    group.regionId = regionId;
+
+    if (lD.selectedObject.id === group.id) {
+      reloadPropertiesPanel = true;
+      group.selected = true;
+      lD.selectedObject = group;
+    }
+
+    // Update in viewer
+    updateInViewer(group.id, group);
+    Object.values(group.elements).forEach((el) => {
+      // Change region and widget ids
+      el.widgetId = widgetId;
+      el.regionId = regionId;
+
+      if (lD.selectedObject.elementId === el.elementId) {
+        reloadPropertiesPanel = true;
+        el.selected = true;
+        lD.selectedObject = el;
+      }
+
+      updateInViewer(el.elementId, el);
+      lD.viewer.renderElementContent(el);
+
+      // Add to new widget
+      targetWidget.elements[el.elementId] = el;
+
+      // Remove from old widget
+      self.removeFromCanvasWidget(
+        sourceWidget.id,
+        el.elementId,
+        'element',
+      );
+    });
+
+    // Add to new widget
+    targetWidget.elementGroups[group.id] = group;
+
+    // Remove from old widget
+    self.removeFromCanvasWidget(
+      sourceWidget.id,
+      group.id,
+      'group',
+    );
+  });
+
+  // Save both widgets
+  Promise.all([
+    sourceWidget.saveElements(),
+    targetWidget.saveElements(),
+  ]).then((_res) => {
+    // Reload properties panel
+    (reloadPropertiesPanel) &&
+      lD.propertiesPanel.render(lD.selectedObject);
+  });
+};
+
+
+/**
+ * Remove elements or group from canvas widget
+ * @param {object} widgetId - Old widget
+ * @param {string} objectToRemoveId - Id of the Group or element to be removed
+ * @param {string} type - group or element
+
+ */
+Canvas.prototype.removeFromCanvasWidget = function(
+  widgetId,
+  objectToRemoveId,
+  type,
+) {
+  if (type === 'group') {
+    delete lD.layout.canvas.widgets[widgetId].elementGroups[objectToRemoveId];
+  } else {
+    delete lD.layout.canvas.widgets[widgetId].elements[objectToRemoveId];
+  }
+};
+
 module.exports = Canvas;

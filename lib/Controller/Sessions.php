@@ -156,11 +156,22 @@ class Sessions extends Base
         $session = $this->sessionFactory->getById($id);
 
         if ($session->userId != 0) {
-            $this->store->update('UPDATE `session` SET IsExpired = 1 WHERE userID = :userId ',
-                ['userId' => $session->userId]);
+            $this->store->update(
+                'UPDATE `session` SET IsExpired = 1 WHERE userID = :userId ',
+                ['userId' => $session->userId]
+            );
+
+            // if it is self logout from sessions, unset userid from php session as well.
+            if ($this->getUser()->userId === $session->userId) {
+                unset($_SESSION['userid']);
+                // redirect home
+                return $response->withRedirect($this->urlFor($request, 'home'));
+            }
         } else {
-            $this->store->update('UPDATE `session` SET IsExpired = 1 WHERE session_id = :session_id ',
-                ['session_id' => $id]);
+            $this->store->update(
+                'UPDATE `session` SET IsExpired = 1 WHERE session_id = :session_id ',
+                ['session_id' => $id]
+            );
         }
 
         // Return
