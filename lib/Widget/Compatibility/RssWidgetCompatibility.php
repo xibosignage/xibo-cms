@@ -55,6 +55,19 @@ class RssWidgetCompatibility implements WidgetCompatibilityInterface
                 'prominent-title-with-desc-and-name-separator' => 'article_with_desc_and_name_separator',
                 default => 'article_title_only',
             };
+
+            // If template id is "article_with_desc_and_name_separator"
+            // set showSideBySide to 1 to replicate behaviour in v3 for marquee
+            $effect = $widget->getOptionValue('effect', null);
+            if (
+                $newTemplateId === 'article_with_desc_and_name_separator' &&
+                $effect === 'marqueeLeft' ||
+                $effect === 'marqueeRight' ||
+                $effect === 'marqueeUp' ||
+                $effect === 'marqueeDown'
+            ) {
+                $widget->setOptionValue('showSideBySide', 'attrib', 1);
+            }
         }
         $widget->setOptionValue('templateId', 'attrib', $newTemplateId);
 
