@@ -1795,7 +1795,7 @@ Viewer.prototype.renderElementContent = function(
           // Validate element data
           self.validateElementData(
             element,
-            convertedProperties[extendOverrideKey],
+            elData,
           );
         }
 
@@ -1969,11 +1969,11 @@ Viewer.prototype.validateElement = function(
 /**
  * Validate element data
  * @param {Object} element
- * @param {String} data
+ * @param {Object} widgetData
  */
 Viewer.prototype.validateElementData = function(
   element,
-  data,
+  widgetData,
 ) {
   const $elementContainer =
     this.DOMObject.find(`#${element.elementId}`);
@@ -1989,7 +1989,8 @@ Viewer.prototype.validateElementData = function(
     $messageContainer.appendTo($elementContainer);
   }
 
-  const isNotValid = !data || typeof data === 'undefined' || data === '';
+  const isNotValid =
+    !widgetData || typeof widgetData === 'undefined' || widgetData === '';
 
   if (isNotValid) {
     const errorArray = [];
