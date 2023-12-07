@@ -1480,7 +1480,7 @@ var setupSelectForSchedule = function (dialog) {
     // Select lists
     var $campaignSelect = $('#campaignId', dialog);
     $campaignSelect.select2({
-        dropdownParent: $(dialog),
+        dropdownParent: $(dialog).find('form'),
         ajax: {
             url: $campaignSelect.data('searchUrl'),
             dataType: 'json',
@@ -1543,13 +1543,19 @@ var setupSelectForSchedule = function (dialog) {
         }
     });
 
+    $campaignSelect.on('select2:open', function(event) {
+        setTimeout(function() {
+            $(event.target).data('select2').dropdown.$search.get(0).focus();
+        }, 10);
+    })
+
     var $displaySelect = $('select[name="displayGroupIds[]"]', dialog);
     $displaySelect.select2({
+        dropdownParent: $(dialog).find('form'),
         ajax: {
             url: $displaySelect.data('searchUrl'),
             dataType: 'json',
             delay: 250,
-            dropdownParent: $(dialog),
             data: function(params) {
                 var query = {
                     isDisplaySpecific: -1,
