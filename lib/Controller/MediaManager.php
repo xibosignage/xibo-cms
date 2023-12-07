@@ -100,7 +100,7 @@ class MediaManager extends Base
         $sql .= ' GROUP BY type ';
         $sql .= ' ORDER BY 2 ';
 
-        $results = $this->store->select($sql, []);
+        $results = $this->store->select($sql, $params);
 
         $libraryUsage = [];
         $totalCount = 0;
