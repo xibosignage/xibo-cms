@@ -914,8 +914,7 @@ lD.showPublishScreen = function() {
       "#publishNow",
       "",
       ".publish-date-control"
-    );
-    lD.uploadThumbnail($("#layoutPublishForm #publishPreview"));`,
+    );`,
     'lD.layout.publish();',
   );
 };
@@ -4169,6 +4168,7 @@ lD.importFromProvider = function(items) {
 /**
  * Take and upload a thumbnail
  * @param {object} targetToAttach DOM object to attach the thumbnail to
+ * @return {Promise}
  */
 lD.uploadThumbnail = function(targetToAttach) {
   if ($(targetToAttach).length > 0) {
@@ -4179,19 +4179,27 @@ lD.uploadThumbnail = function(targetToAttach) {
     );
     $(targetToAttach).removeClass('d-none');
   }
-  const linkToAPI = urlsForApi.layout.addThumbnail;
-  const requestPath = linkToAPI.url.replace(':id', lD.layout.layoutId);
-  $.ajax({
-    url: requestPath,
-    type: 'POST',
-    success: function() {
-      // Attach to target
-      if ($(targetToAttach).length > 0) {
-        $(targetToAttach).find('.thumb-preview')
-          .replaceWith($('<img style="max-width: 150px; max-height: 100%;">')
-            .attr('src', requestPath));
-      }
-    },
+
+  return new Promise(function(resolve, reject) {
+    const linkToAPI = urlsForApi.layout.addThumbnail;
+    const requestPath = linkToAPI.url.replace(':id', lD.layout.layoutId);
+    $.ajax({
+      url: requestPath,
+      type: 'POST',
+      success: function() {
+        // Attach to target
+        if ($(targetToAttach).length > 0) {
+          $(targetToAttach).find('.thumb-preview')
+            .replaceWith($('<img style="max-width: 150px; max-height: 100%;">')
+              .attr('src', requestPath));
+        }
+
+        resolve();
+      },
+      fail: function() {
+        reject();
+      },
+    });
   });
 };
 

@@ -1941,7 +1941,7 @@ class Layout extends Base
         if (!$this->getUser()->checkEditable($layout)) {
             throw new AccessDeniedException();
         }
-        
+
         // Edits always happen on Drafts, get the draft Layout using the Parent Layout ID
         if ($layout->schemaVersion < 2) {
             $resolution = $this->resolutionFactory->getByDesignerDimensions($layout->width, $layout->height);
@@ -3055,9 +3055,16 @@ class Layout extends Base
                 $image = Img::canvas($layout->width, $layout->height, $layout->backgroundColor);
             }
 
+            $countRegions = count($layout->regions);
+
             // Draw some regions on it.
             foreach ($layout->regions as $region) {
                 try {
+                    // We don't do this for the canvas region.
+                    if ($countRegions > 1 && $region->type === 'canvas') {
+                        continue;
+                    }
+
                     // Get widgets in this region
                     $playlist = $region->getPlaylist()->setModuleFactory($this->moduleFactory);
                     $widgets = $playlist->expandWidgets();
