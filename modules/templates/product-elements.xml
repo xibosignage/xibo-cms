@@ -97,6 +97,8 @@ var options = {};
 if (properties.currencyCode && properties.currencyCode !== '') {
     options.style = 'currency';
     options.currency = properties.currencyCode;
+} else {
+    options.minimumFractionDigits = 2;
 }
 
 value = new Intl.NumberFormat(undefined, options).format(value);
