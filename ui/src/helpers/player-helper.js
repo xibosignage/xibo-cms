@@ -425,8 +425,8 @@ const PlayerHelper = function() {
 
           if (itemObj.length > 0) {
             widget.standaloneSlotsData[objKey] =
-              itemObj.reduce(function(a, b, slotKey) {
-                a[slotKey + 1] = [];
+              itemObj.reduce(function(a, b) {
+                a[b.slot + 1] = [];
                 return {...a};
               }, {});
           }
@@ -517,7 +517,7 @@ const PlayerHelper = function() {
 
       lastSlotFilled[type] = null;
 
-      for (const [dataItemKey] of Object.entries(dataItems)) {
+      dataLoop: for (const [dataItemKey] of Object.entries(dataItems)) {
         const hasSlotFilled = {};
         const currentKey = parseInt(dataItemKey) + 1;
         const currCollection = isStandalone ?
@@ -534,11 +534,30 @@ const PlayerHelper = function() {
           break;
         }
 
+        if (lastSlotFilled[type] === null &&
+          currCollection.length === maxSlot &&
+          currentKey > maxSlot
+        ) {
+          break;
+        }
+
+        if (lastSlotFilled[type] === null && isStandalone &&
+          pinnedSlots.length === currCollection.length &&
+          currentKey > maxSlot
+        ) {
+          break;
+        }
+
         for (const [, itemValue] of Object.entries(currCollection)) {
           const itemObj = isStandalone ?
             itemValue : collection[itemValue];
           const isPinnedSlot = itemObj.pinSlot;
           const currentSlot = itemObj.slot + 1;
+
+          // Skip if currentKey is less than the currentSlot
+          if (currentKey < currentSlot) {
+            continue dataLoop;
+          }
 
           if (!isPinnedSlot && !pinnedSlots.includes(currentKey)) {
             // If lastSlotFilled is filled and is <= to currentSlot
@@ -603,19 +622,19 @@ const PlayerHelper = function() {
             }
 
             if (isStandalone) {
-              widget.standaloneSlotsData[item.objKey][1] = [
-                ...widget.standaloneSlotsData[item.objKey][1],
+              widget.standaloneSlotsData[item.objKey][currentSlot] = [
+                ...widget.standaloneSlotsData[item.objKey][currentSlot],
                 currentKey,
               ];
             } else {
-              widget.groupSlotsData[1] = [
-                ...widget.groupSlotsData[1],
+              widget.groupSlotsData[currentSlot] = [
+                ...widget.groupSlotsData[currentSlot],
                 currentKey,
               ];
             }
 
             hasSlotFilled[type] = true;
-            lastSlotFilled[type] = 1;
+            lastSlotFilled[type] = currentSlot;
           }
 
           if (hasSlotFilled[type]) {
@@ -689,16 +708,24 @@ const PlayerHelper = function() {
     return slotsData;
   };
 
-  this.getMaxSlot = (objectsArray, itemsKey, minValue) => {
+  this.getMaxMinSlot = (objectsArray, itemsKey, minValue = 1) => {
     const groupItems = objectsArray?.length > 0 ?
       objectsArray.reduce(
         (a, b) => [...a, ...b[itemsKey]], []) : null;
-
-    return groupItems === null ?
+    const getSlots = (items) => items.map(function(elem) {
+      return elem?.slot || 0;
+    });
+    const minSlot = groupItems === null ?
       minValue :
-      Math.max(...groupItems.map(function(elem) {
-        return elem?.slot || 0;
-      })) + 1;
+      Math.min(...getSlots(groupItems)) + 1;
+    const maxSlot = groupItems === null ?
+      minValue :
+      Math.max(...getSlots(groupItems)) + 1;
+
+    return {
+      minSlot,
+      maxSlot,
+    };
   };
 
   this.getGroupData = function(
@@ -707,7 +734,8 @@ const PlayerHelper = function() {
     isStandalone,
   ) {
     const groupValues = Object.values(groupsData);
-    const maxSlot = _self.getMaxSlot(groupValues, slotItemsKey, 1);
+    const {maxSlot, minSlot} =
+      _self.getMaxMinSlot(groupValues, slotItemsKey);
     let pinnedSlots = [];
 
     if (!isStandalone) {
@@ -721,6 +749,7 @@ const PlayerHelper = function() {
     return {
       groupValues,
       maxSlot,
+      minSlot,
       pinnedSlots,
     };
   };
