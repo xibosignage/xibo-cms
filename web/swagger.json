@@ -401,7 +401,7 @@
                     {
                         "name": "targetType",
                         "in": "formData",
-                        "description": "For ad campaigns, how do we measure the target? plays|budget",
+                        "description": "For ad campaigns, how do we measure the target? plays|budget|imp",
                         "required": false,
                         "type": "string"
                     },
@@ -500,7 +500,7 @@
                     {
                         "name": "targetType",
                         "in": "formData",
-                        "description": "For ad campaigns, how do we measure the target? plays|budget",
+                        "description": "For ad campaigns, how do we measure the target? plays|budget|imp",
                         "required": false,
                         "type": "string"
                     },
@@ -11615,7 +11615,7 @@
                     "type": "string"
                 },
                 "targetType": {
-                    "description": "For an ad campaign, what's the target type, plays|budget",
+                    "description": "For an ad campaign, what's the target type, plays|budget|imp",
                     "type": "string"
                 },
                 "target": {
