@@ -79,6 +79,7 @@ class MediaManager extends Base
     {
         // Set up some suffixes
         $suffixes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
+        $params = [];
 
         // Library Size in Bytes
         $sql = '
