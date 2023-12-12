@@ -31,6 +31,7 @@ class Dependency
     const LEGACY_ID_OFFSET_FONT = 100000000;
     const LEGACY_ID_OFFSET_PLAYER_SOFTWARE = 200000000;
     const LEGACY_ID_OFFSET_ASSET = 300000000;
+    const LEGACY_ID_OFFSET_DATA_CONNECTOR = 400000000;
 
     public $fileType;
     public $legacyId;

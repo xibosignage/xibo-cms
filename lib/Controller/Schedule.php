@@ -1077,6 +1077,20 @@ class Schedule extends Base
      *      type="string",
      *      required=false
      *   ),
+     *   @SWG\Parameter(
+     *      name="dataSetId",
+     *      in="formData",
+     *      description="For Data Connector eventTypeId, the DataSet ID",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="dataSetParams",
+     *      in="formData",
+     *      description="For Data Connector eventTypeId, the DataSet params",
+     *      type="string",
+     *      required=false
+     *   ),
      *   @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -1152,6 +1166,19 @@ class Schedule extends Base
             ]);
         } else {
             $schedule->shareOfVoice = null;
+        }
+
+        // Fields only collected for data connector events
+        if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$DATA_CONNECTOR_EVENT) {
+            $schedule->dataSetId = $sanitizedParams->getInt('dataSetId', [
+                'throw' => function () {
+                    new InvalidArgumentException(
+                        __('Please select a DataSet'),
+                        'dataSetId'
+                    );
+                }
+            ]);
+            $schedule->dataSetParams = $sanitizedParams->getString('dataSetParams');
         }
 
         // API request can provide an array of coordinates or valid GeoJSON, handle both cases here.
@@ -1697,6 +1724,20 @@ class Schedule extends Base
      *      type="string",
      *      required=false
      *   ),
+     *   @SWG\Parameter(
+     *      name="dataSetId",
+     *      in="formData",
+     *      description="For Data Connector eventTypeId, the DataSet ID",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="dataSetParams",
+     *      in="formData",
+     *      description="For Data Connector eventTypeId, the DataSet params",
+     *      type="string",
+     *      required=false
+     *   ),
      *   @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -1772,6 +1813,19 @@ class Schedule extends Base
             ]);
         } else {
             $schedule->shareOfVoice = null;
+        }
+
+        // Fields only collected for data connector events
+        if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$DATA_CONNECTOR_EVENT) {
+            $schedule->dataSetId = $sanitizedParams->getInt('dataSetId', [
+                'throw' => function () {
+                    new InvalidArgumentException(
+                        __('Please select a DataSet'),
+                        'dataSetId'
+                    );
+                }
+            ]);
+            $schedule->dataSetParams = $sanitizedParams->getString('dataSetParams');
         }
 
         // API request can provide an array of coordinates or valid GeoJSON, handle both cases here.

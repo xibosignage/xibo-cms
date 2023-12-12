@@ -77,9 +77,11 @@
                         {% set helpText %}{% trans "Is this DataSet connected to a remote data source?" %}{% endset %}
                         {{ forms.checkbox("isRemote", title, 0, helpText) }}
 
-                        {% set title %}{% trans "Real time?" %}{% endset %}
-                        {% set helpText %}{% trans "Is this DataSet connected to a real time data source?" %}{% endset %}
-                        {{ forms.checkbox("isRealTime", title, 0, helpText) }}
+                        {% if currentUser.featureEnabled("dataset.realtime") %}
+                            {% set title %}{% trans "Real time?" %}{% endset %}
+                            {% set helpText %}{% trans "Is this DataSet connected to a real time data source?" %}{% endset %}
+                            {{ forms.checkbox("isRealTime", title, 0, helpText) }}
+                        {% endif %}
                     </div>
 
                     <div class="tab-pane" id="gateway">

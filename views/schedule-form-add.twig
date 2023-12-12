@@ -136,7 +136,7 @@
 
                         {% set title %}{% trans "Layout" %}{% endset %}
                         {% set helpText %}{% trans "Please select a Layout for this Event to show" %}{% endset %}
-                        {{ forms.dropdown("campaignId", "single", title, campaign.campaignId, [campaign], "campaignId", "campaign", helpText, "layout-control", "", "", "", attributes, "", "", "", readonlySelect) }}
+                        {{ forms.dropdown("campaignId", "single", title, null, null, "campaignId", "campaign", helpText, "layout-control", "", "", "", attributes, "", "", "", readonlySelect) }}
 
                         {% set title %}{% trans "Media" %}{% endset %}
                         {% set helpText %}{% trans "Select a Media file from the Library to use. The selected file will be shown full screen for this event." %}{% endset %}
@@ -196,6 +196,22 @@
                         {% set title %}{% trans "Command" %}{% endset %}
                         {% set helpText %}{% trans "Please select a command for this Event." %}{% endset %}
                         {{ forms.dropdown("commandId", "single", title, "", [{commandId: "", command: ""}]|merge(commands), "commandId", "command", helpText, "command-control") }}
+
+                        {% set title %}{% trans "DataSet" %}{% endset %}
+                        {% set helpText %}{% trans "Please select the real time DataSet related to this Data Connector event" %}{% endset %}
+
+                        {% set attributes = [
+                            { name: "data-width", value: "100%" },
+                            { name: "data-search-url", value: url_for("dataSet.search") ~ "?isRealTime=1" },
+                            { name: "data-search-term", value: "dataSet" },
+                            { name: "data-id-property", value: "dataSetId" },
+                            { name: "data-text-property", value: "dataSet" }
+                        ] %}
+                        {{ forms.dropdown("dataSetId", "single", title, "", null, "dataSetId", "dataSet", helpText, "pagedSelect data-connector-control", "", "", "", attributes) }}
+
+                        {% set title %}{% trans "Data Connector Parameters" %}{% endset %}
+                        {% set helpText %}{% trans "Optionally provide any parameters to be used by the Data Connector." %}{% endset %}
+                        {{ forms.input("dataSetParams", title, "", helpText, 'data-connector-control') }}
 
                         {% set title %}{% trans "Display Order" %}{% endset %}
                         {% set helpText %}{% trans "Please select the order this event should appear in relation to others when there is more than one event scheduled" %}{% endset %}

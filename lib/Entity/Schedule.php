@@ -306,10 +306,16 @@ class Schedule implements \JsonSerializable
     public $syncGroupId;
 
     /**
-     * @SWG\Property(description="For data connector events, the data set id")
+     * @SWG\Property(description="For data connector events, the dataSetId")
      * @var int
      */
     public $dataSetId;
+
+    /**
+     * @SWG\Property(description="For data connector events, the data set parameters")
+     * @var int
+     */
+    public $dataSetParams;
 
     /**
      * @SWG\Property(description="The userId of the user that last modified this Schedule")
@@ -679,6 +685,11 @@ class Schedule implements \JsonSerializable
                     );
                 }
             }
+        } else if ($this->eventTypeId === Schedule::$DATA_CONNECTOR_EVENT) {
+            if (!v::intType()->notEmpty()->validate($this->dataSetId)) {
+                throw new InvalidArgumentException(__('Please select a DataSet for this event.'), 'dataSetId');
+            }
+            $this->campaignId = null;
         } else {
             // No event type selected
             throw new InvalidArgumentException(__('Please select the Event Type'), 'eventTypeId');
@@ -936,7 +947,8 @@ class Schedule implements \JsonSerializable
                 `createdOn`,
                 `updatedOn`,
                 `name`,
-                `dataSetId`
+                `dataSetId`,
+                `dataSetParams`
             )
             VALUES (
                 :eventTypeId,
@@ -968,7 +980,8 @@ class Schedule implements \JsonSerializable
                 :createdOn,
                 :updatedOn,
                 :name,
-                :dataSetId
+                :dataSetId,
+                :dataSetParams
             )
         ', [
             'eventTypeId' => $this->eventTypeId,
@@ -1003,6 +1016,7 @@ class Schedule implements \JsonSerializable
             'updatedOn' => null,
             'name' => !empty($this->name) ? $this->name : null,
             'dataSetId' => !empty($this->dataSetId) ? $this->dataSetId : null,
+            'dataSetParams' => !empty($this->dataSetParams) ? $this->dataSetParams : null,
         ]);
     }
 
@@ -1041,7 +1055,8 @@ class Schedule implements \JsonSerializable
             `modifiedBy` = :modifiedBy,
             `updatedOn` = :updatedOn,
             `name` = :name,
-            `dataSetId` = :dataSetId
+            `dataSetId` = :dataSetId,
+            `dataSetParams` = :dataSetParams
           WHERE eventId = :eventId
         ', [
             'eventTypeId' => $this->eventTypeId,
@@ -1073,6 +1088,7 @@ class Schedule implements \JsonSerializable
             'updatedOn' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             'name' => $this->name,
             'dataSetId' => !empty($this->dataSetId) ? $this->dataSetId : null,
+            'dataSetParams' => !empty($this->dataSetParams) ? $this->dataSetParams : null,
             'eventId' => $this->eventId,
         ]);
     }

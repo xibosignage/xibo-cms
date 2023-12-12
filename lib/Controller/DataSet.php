@@ -212,7 +212,9 @@ class DataSet extends Base
             }
 
             if ($this->getUser()->featureEnabled('dataset.modify')) {
-                if ($user->checkEditable($dataSet)) {
+                if ($user->checkEditable($dataSet)
+                    && ($dataSet->isRealTime === 0 || $this->getUser()->featureEnabled('dataset.realtime'))
+                ) {
                     // View Columns
                     $dataSet->buttons[] = array(
                         'id' => 'dataset_button_viewcolumns',
@@ -279,7 +281,10 @@ class DataSet extends Base
                     }
                 }
 
-                if ($user->checkDeleteable($dataSet) && $dataSet->isLookup == 0) {
+                if ($user->checkDeleteable($dataSet)
+                    && $dataSet->isLookup == 0
+                    && ($dataSet->isRealTime === 0 || $this->getUser()->featureEnabled('dataset.realtime'))
+                ) {
                     $dataSet->buttons[] = ['divider' => true];
                     // Delete DataSet
                     $dataSet->buttons[] = [

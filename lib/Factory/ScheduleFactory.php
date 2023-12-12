@@ -244,7 +244,9 @@ class ScheduleFactory extends BaseFactory
                 `daypart`.isCustom,
                 `syncLayout`.layoutId AS syncLayoutId,
                 `syncLayout`.status AS syncLayoutStatus, 
-                `syncLayout`.duration AS syncLayoutDuration
+                `syncLayout`.duration AS syncLayoutDuration,
+                `schedule`.dataSetId,
+                `schedule`.dataSetParams
                FROM `schedule`
                 INNER JOIN `daypart`
                 ON `daypart`.dayPartId = `schedule`.dayPartId
@@ -399,7 +401,8 @@ class ScheduleFactory extends BaseFactory
             `schedule`.createdOn,
             `schedule`.updatedOn,
             `schedule`.name,
-            `schedule`.dataSetId
+            `schedule`.dataSetId,
+            `schedule`.dataSetParams
         ';
 
         $body = ' FROM `schedule`

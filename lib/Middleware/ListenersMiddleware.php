@@ -49,6 +49,7 @@ use Xibo\Listener\SyncGroupListener;
 use Xibo\Listener\TaskListener;
 use Xibo\Listener\WidgetListener;
 use Xibo\Xmds\Listeners\XmdsAssetsListener;
+use Xibo\Xmds\Listeners\XmdsDataConnectorListener;
 use Xibo\Xmds\Listeners\XmdsFontsListener;
 use Xibo\Xmds\Listeners\XmdsPlayerBundleListener;
 use Xibo\Xmds\Listeners\XmdsPlayerVersionListener;
@@ -395,6 +396,11 @@ class ListenersMiddleware implements MiddlewareInterface
             ->useLogger($c->get('logger'))
             ->useConfig($c->get('configService'));
 
+        $dataConnectorListener = new XmdsDataConnectorListener();
+        $dataConnectorListener
+            ->useLogger($c->get('logger'))
+            ->useConfig($c->get('configService'));
+
         $dispatcher->addListener('xmds.dependency.list', [$playerBundleListener, 'onDependencyList']);
         $dispatcher->addListener('xmds.dependency.request', [$playerBundleListener, 'onDependencyRequest']);
         $dispatcher->addListener('xmds.dependency.list', [$fontsListener, 'onDependencyList']);
@@ -402,5 +408,6 @@ class ListenersMiddleware implements MiddlewareInterface
         $dispatcher->addListener('xmds.dependency.list', [$playerVersionListner, 'onDependencyList']);
         $dispatcher->addListener('xmds.dependency.request', [$playerVersionListner, 'onDependencyRequest']);
         $dispatcher->addListener('xmds.dependency.request', [$assetsListener, 'onDependencyRequest']);
+        $dispatcher->addListener('xmds.dependency.request', [$dataConnectorListener, 'onDependencyRequest']);
     }
 }
