@@ -648,15 +648,32 @@ $(function() {
 
               $.each(Object.keys(standaloneData[keyValue]),
                 function(slotIndex, slotKey) {
-                  const slotObj =
-                    standaloneElems[keyValue][slotKey - 1];
+                  const slotObjs =
+                    Object.keys(standaloneElems).reduce((a, b) => {
+                      let itemCollection = {};
+                      if (standaloneElems[b].length > 0) {
+                        itemCollection =
+                          standaloneElems[b].reduce((coll, item) => {
+                            if (item.slot === slotKey - 1) {
+                              coll[slotKey] = item;
+                            }
+
+                            return coll;
+                          }, {});
+                      }
+
+                      a[b] = {...a[b], ...itemCollection};
+
+                      return a;
+                    }, {});
+                  const slotObj = slotObjs[keyValue][slotKey] || null;
                   const dataKeys =
                     standaloneData[keyValue][slotKey];
                   const grpCln = `${keyValue}_page-${slotKey}`;
                   const $grpItem =
                     $(`<div class="${grpCln}"></div>`);
                   const isMarquee =
-                    PlayerHelper.isMarquee(slotObj.effect);
+                    PlayerHelper.isMarquee(slotObj?.effect ?? 'noTransition');
 
                   if (dataKeys.length > 0) {
                     $.each(dataKeys,
