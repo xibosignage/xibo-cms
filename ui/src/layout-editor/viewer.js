@@ -740,6 +740,22 @@ Viewer.prototype.handleInteractions = function() {
 
               self.selectObject($(e.target), shiftIsPressed);
             } else if (
+              $(e.target).find('.designer-widget').length > 0 &&
+              !$(e.target).find('.designer-widget').hasClass('selected') &&
+              !$(e.target).hasClass('selected')
+            ) {
+              // If we're multi selecting, deselect all
+              if (shiftIsPressed) {
+                lD.selectObject();
+              } else {
+                // Select widget if exists
+                lD.selectObject({
+                  target: $(e.target).find('.designer-widget'),
+                  clickPosition: clickPosition,
+                });
+              }
+              self.selectObject($(e.target), shiftIsPressed);
+            } else if (
               (
                 $(e.target).data('subType') === 'zone' ||
                 (
@@ -757,22 +773,6 @@ Viewer.prototype.handleInteractions = function() {
                 // Select zone
                 lD.selectObject({
                   target: $(e.target),
-                });
-              }
-              self.selectObject($(e.target), shiftIsPressed);
-            } else if (
-              $(e.target).find('.designer-widget').length > 0 &&
-              !$(e.target).find('.designer-widget').hasClass('selected') &&
-              !$(e.target).hasClass('selected')
-            ) {
-              // If we're multi selecting, deselect all
-              if (shiftIsPressed) {
-                lD.selectObject();
-              } else {
-                // Select widget if exists
-                lD.selectObject({
-                  target: $(e.target).find('.designer-widget'),
-                  clickPosition: clickPosition,
                 });
               }
               self.selectObject($(e.target), shiftIsPressed);
@@ -1044,6 +1044,14 @@ Viewer.prototype.renderRegion = function(
     this.selectObject($container);
   }
 
+  // Update region type and class
+  $container.attr('data-sub-type', region.subType)
+    .removeClass(
+      'designer-region-zone ' +
+      'designer-region-frame ' +
+      'designer-region-playlist',
+    ).addClass('designer-region-' + region.subType);
+
   // If there's no widget, return
   if (!widget && !isPlaylist) {
     // If it's not a zone, we need to mark region as an error
@@ -1135,6 +1143,12 @@ Viewer.prototype.renderRegion = function(
     }
 
     $.extend(toolbarTrans, topbarTrans);
+
+    // Send isEditor flag with options.res.html for the iframe
+    if (!isPlaylist && options.res.html) {
+      options.res.html =
+        options.res.html.replace('?preview=1', '?preview=1&isEditor=1');
+    }
 
     // Replace container html
     const html = viewerWidgetTemplate(options);
@@ -1268,6 +1282,11 @@ Viewer.prototype.updateElement = _.throttle(function(
 Viewer.prototype.updateElementGroup = _.throttle(function(
   elementGroup,
 ) {
+  // Update slot
+  const $groupContainer = lD.viewer.DOMObject.find(`#${elementGroup.id}`);
+  $groupContainer.find('.slot span').html((Number(elementGroup.slot) + 1));
+
+  // Update all elements
   Object.values(elementGroup.elements).forEach((element) => {
     const $container = lD.viewer.DOMObject.find(`#${element.elementId}`);
 
@@ -1304,7 +1323,7 @@ Viewer.prototype.updateElementGroupLayer = _.throttle(function(
   elementGroup,
   layer,
 ) {
-  const $container = lD.viewer.DOMObject.find(`#${elementGroup.elementId}`);
+  const $container = lD.viewer.DOMObject.find(`#${elementGroup.id}`);
 
   // Update element index
   $container.css({
@@ -1724,10 +1743,10 @@ Viewer.prototype.renderElementContent = function(
         // Send element props
         convertedProperties.prop = element;
 
-        const extendOverrideKey = template?.extends?.override || null;
-        const extendWithDataKey = template?.extends ?
+        const extendOverrideKey = template.extends?.override || null;
+        const extendWithDataKey = template.extends?.with ?
           transformer.getExtendedDataKey(template.extends.with) : null;
-        const metaKey = (meta && transformer?.extends) ? transformer
+        const metaKey = (meta && template.extends?.with) ? transformer
           .getExtendedDataKey(template.extends.with, 'meta.') : null;
         const elementParseDataFn = window[`onElementParseData_${element.id}`];
         const hasElementParseDataFn = typeof elementParseDataFn === 'function';
@@ -1770,6 +1789,14 @@ Viewer.prototype.renderElementContent = function(
               convertedProperties,
             );
           }
+        }
+
+        if (extendOverrideKey !== null || extendWithDataKey !== null) {
+          // Validate element data
+          self.validateElementData(
+            element,
+            elData,
+          );
         }
 
         // Escape HTML
@@ -1935,6 +1962,83 @@ Viewer.prototype.validateElement = function(
     }
   } else {
     // Remove error message
+    $messageContainer.remove();
+  }
+};
+
+/**
+ * Validate element data
+ * @param {Object} element
+ * @param {Object} widgetData
+ */
+Viewer.prototype.validateElementData = function(
+  element,
+  widgetData,
+) {
+  const $elementContainer =
+    this.DOMObject.find(`#${element.elementId}`);
+
+  // Get error message
+  let $messageContainer = $elementContainer.find('.empty-element-data');
+  if ($messageContainer.length === 0) {
+    $messageContainer = $(
+      `<div class="empty-element-data d-none" data-html="true">
+        <i class="fa fa-warning"></i>
+      </div>`);
+
+    $messageContainer.appendTo($elementContainer);
+  }
+
+  const isNotValid =
+    !widgetData || typeof widgetData === 'undefined' || widgetData === '';
+
+  if (isNotValid) {
+    const errorArray = [];
+    const hasGroup = Boolean(element.groupId);
+    const $groupContainer = (hasGroup) ?
+      $elementContainer.parents('.designer-element-group') : null;
+    const elementType = element.elementType;
+
+    // Add if elemens has no group or
+    // if has group but the group doesn't have message yet
+    if (
+      !hasGroup ||
+      (
+        hasGroup &&
+        $groupContainer.find('> .empty-element-data').length === 0
+      )
+    ) {
+      errorArray.push(
+        '<p>' +
+        elementType.charAt(0).toUpperCase() +
+        elementType.substring(1) +
+        ' element' +
+        '</p>');
+
+      errorArray.push(
+        '<p>' +
+        layoutEditorTrans.emptyElementData +
+        '</p>');
+      // If element has group, move error to group
+      (hasGroup) && $messageContainer.appendTo(
+        $elementContainer.parents('.designer-element-group'),
+      );
+
+      // Set title/tooltip
+      $messageContainer.tooltip('dispose')
+        .prop('title', '<div class="custom-tooltip">' +
+          errorArray.join('') + '</div>');
+      $messageContainer.tooltip();
+
+      // Show tooltip
+      $messageContainer.removeClass('d-none');
+    }
+
+    // Remove message from element if it's in a group
+    if (hasGroup) {
+      $elementContainer.find('.empty-element-data').remove();
+    }
+  } else {
     $messageContainer.remove();
   }
 };

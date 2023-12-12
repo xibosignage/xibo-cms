@@ -1261,7 +1261,12 @@
           .on('change', function (e) {
             // Refresh the calendar view
             setTimeout(calendar.view(), 1000);
-          });
+          })
+          .on('select2:open', function(event) {
+            setTimeout(function() {
+              $(event.target).data('select2').dropdown.$search.get(0).focus();
+            }, 10);
+          })
 
         // Set up our show all selector control
         $('#showAll, #eventTypeId, #recurring, #geoAware,' +

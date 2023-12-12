@@ -19,7 +19,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 $(function() {
-  // Defaut scaler function
+  // Default scaler function
   const defaultScaler = function(
     _id,
     target,
@@ -54,6 +54,7 @@ $(function() {
    * @param {object} widget
    * @param {Array} dataItems
    * @param {boolean} showError
+   * @param {string|null} errorMessage
    * @param {*} data
    */
   function initStaticTemplates(
@@ -64,16 +65,31 @@ $(function() {
     widget,
     dataItems,
     showError,
+    errorMessage,
     data,
   ) {
     widget.items = [];
     const $target = $('body');
 
-    if (showError && data?.message) {
-      $target.append(
-        '<div class="error-message" role="alert">' +
-        data.message +
-        '</div>');
+    if (PlayerHelper.isEditor && showError && errorMessage !== null) {
+      const $errMsg = $('<div class="error-message" role="alert"></div>');
+
+      $errMsg.css({
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        textAlign: 'center',
+        width: '100%',
+        padding: '12px 0',
+        backgroundColor: '#d05454',
+        color: 'white',
+        zIndex: 2,
+        fontWeight: 'bold',
+        fontSize: '1.1rem',
+        opacity: 0.85,
+      }).html(errorMessage);
+
+      $target.append($errMsg);
     }
 
     // Add meta to the widget if it exists
@@ -184,11 +200,6 @@ $(function() {
       window.renders.push(window.onRender);
     }
 
-    // If there's no elements in renders, use the default scaler
-    if (window.renders.length === 0) {
-      window.renders.push(defaultScaler);
-    }
-
     // If we have a custom template, run the legacy template render first
     if (customTemplate) {
       const newOptions =
@@ -213,6 +224,7 @@ $(function() {
       globalOptions,
       {
         duration: widget.duration,
+        pauseEffectOnStart: globalOptions.pauseEffectOnStart ?? false,
       },
     );
 
@@ -270,7 +282,6 @@ $(function() {
       url,
       meta,
     } = widget;
-    widget.items = [];
 
     if (Object.keys(elements.groups).length > 0 ||
     Object.keys(elements.standalone).length > 0) {
@@ -323,16 +334,30 @@ $(function() {
             position: 'static',
             top: 'unset',
             left: 'unset',
-            width: 'auto',
-            display: 'inline-block',
+            width: data?.textWrap ? data.width : 'initial',
+            display: 'flex',
+            flexShrink: '0',
+            wordWrap: 'break-word',
           };
         }
 
-        return $(hbsTemplate).first()
+        const $renderedElem = $(hbsTemplate).first()
           .attr('id', data.elementId)
           .addClass(`${data.uniqueID}--item`)
-          .css(cssStyles)
-          .prop('outerHTML');
+          .css(cssStyles);
+
+        if (!data.isGroup && data.dataOverride === 'text' &&
+            data.group.isMarquee &&
+            (data.effect === 'marqueeLeft' || data.effect === 'marqueeRight')) {
+          $renderedElem.get(0).style.removeProperty('white-space');
+          $renderedElem.get(0).style.setProperty(
+            'white-space',
+            data?.textWrap ? 'unset' : 'nowrap',
+            'important',
+          );
+        }
+
+        return $renderedElem.prop('outerHTML');
       };
 
       const renderDataItem = function(
@@ -564,13 +589,18 @@ $(function() {
 
             if (isMarquee) {
               const $scroller =
-                // eslint-disable-next-line max-len
                 $(`<div class="${groupSlotObj.id}--marquee scroll"></div>`);
 
               $scroller.css({
                 display: 'flex',
                 height: groupSlotObj.height,
               });
+
+              if (groupSlotObj?.templateData?.verticalAlign) {
+                $scroller.css({
+                  alignItems: groupSlotObj?.templateData?.verticalAlign,
+                });
+              }
 
               $grpContent.wrapInner($scroller.prop('outerHTML'));
             }
@@ -666,6 +696,12 @@ $(function() {
                         height: slotObj.height,
                       });
 
+                      if (slotObj?.templateData?.verticalAlign) {
+                        $scroller.css({
+                          alignItems: slotObj?.templateData?.verticalAlign,
+                        });
+                      }
+
                       $grpItem.wrapInner($scroller.prop('outerHTML'));
                     } else {
                       $grpItem.css({
@@ -715,28 +751,14 @@ $(function() {
             }
           });
       }
-
-      if (templateId !== null && url !== null) {
-        // Run defaultScaler for global elements
-        defaultScaler(
-          widget.widgetId,
-          $content,
-          widget.items,
-          Object.assign(
-            widget.properties,
-            globalOptions,
-            {duration: widget.duration},
-          ),
-          meta,
-        );
-      }
     }
   }
 
   PlayerHelper
     .init(widgetData, elements)
-    .then(({widgets}) => {
+    .then(({widgets, countWidgetElements}) => {
       if (Object.keys(widgets).length > 0) {
+        let _countWidgetElements = 0;
         Object.keys(widgets).forEach(function(widgetKey) {
           const widget = widgets[widgetKey];
 
@@ -767,7 +789,20 @@ $(function() {
                 Object.keys(widget.elements.groups).length > 0 ||
                 Object.keys(widget.elements.standalone).length > 0
               ))) && typeof widget.elements !== 'undefined') {
+            widget.items = [];
+
+            _countWidgetElements++;
+
             initPlayerElements(widget);
+
+            if (countWidgetElements === _countWidgetElements) {
+              // Run xiboLayoutScaler to scale the content
+              $content.xiboLayoutScaler(Object.assign(
+                widget.properties,
+                globalOptions,
+                {duration: widget.duration},
+              ));
+            }
           } else {
             initStaticTemplates(
               $template,
@@ -777,6 +812,7 @@ $(function() {
               widget,
               widget.data,
               widget.showError,
+              widget.errorMessage,
               widget.data,
             );
           }

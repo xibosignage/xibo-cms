@@ -644,7 +644,7 @@ class MediaFactory extends BaseFactory
                   FROM dataset
                     INNER JOIN datasetcolumn
                     ON datasetcolumn.DataSetID = dataset.DataSetID
-                 WHERE DataTypeID = 5;
+                 WHERE DataTypeID = 5 AND `datasetcolumn`.dataSetColumnTypeId <> 2;
             ';
 
             $dataSets = $this->getStore()->select($dataSetSql, []);
@@ -937,12 +937,21 @@ class MediaFactory extends BaseFactory
         }
 
         // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\Media', $body, $params, '`media`.mediaId', '`media`.userId', $filterBy, '`media`.permissionsFolderId');
+        $this->viewPermissionSql(
+            'Xibo\Entity\Media',
+            $body,
+            $params,
+            '`media`.mediaId',
+            '`media`.userId',
+            $filterBy,
+            '`media`.permissionsFolderId'
+        );
 
         // Sorting?
         $order = '';
-        if (is_array($sortOrder))
-            $order .= 'ORDER BY ' . implode(',', $sortOrder);
+        if (is_array($sortOrder)) {
+            $order .= ' ORDER BY ' . implode(',', $sortOrder);
+        }
 
         $limit = '';
         // Paging

@@ -207,6 +207,10 @@ if (typeof updateClock === 'function') {
     setInterval(updateClock, 1000);
 }
     ]]></onVisible>
+    <onRender><![CDATA[
+      // Scale the content
+      $(target).xiboLayoutScaler(properties);
+]]></onRender>
     <assets>
         <asset id="clock-analogue-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/clock/clock-analogue-thumb.png" />
         <asset id="clock_bg_modern_dark" type="path" mime="image/png" path="/modules/assets/clock_bg_modern_dark.png"></asset>

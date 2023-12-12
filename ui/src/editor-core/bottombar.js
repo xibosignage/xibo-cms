@@ -42,15 +42,13 @@ Bottombar.prototype.render = function(object) {
       '';
 
   if (object.type == 'widget') {
-    const parentRegion = lD.getObjectByTypeAndId('region', object.regionId);
-
     // Render widget toolbar
     this.DOMObject.html(bottomBarViewerTemplate(
       {
-        regionName: (parentRegion) ? parentRegion.name : '',
         trans: newBottomBarTrans,
         readOnlyModeOn: readOnlyModeOn,
-        object: parentRegion,
+        object: object,
+        objectTypeName: newBottomBarTrans.objectType.widget,
         undoActive: checkHistory.undoActive,
         trashActive: trashBinActive,
       },
@@ -63,6 +61,7 @@ Bottombar.prototype.render = function(object) {
         readOnlyModeOn: readOnlyModeOn,
         renderLayout: true,
         object: object,
+        objectTypeName: newBottomBarTrans.objectType.layout,
         undoActive: checkHistory.undoActive,
         trashActive: trashBinActive,
       },
@@ -99,6 +98,7 @@ Bottombar.prototype.render = function(object) {
         trans: newBottomBarTrans,
         readOnlyModeOn: readOnlyModeOn,
         object: object,
+        objectTypeName: newBottomBarTrans.objectType.region,
         undoActive: checkHistory.undoActive,
         trashActive: trashBinActive,
       },
@@ -107,12 +107,19 @@ Bottombar.prototype.render = function(object) {
     object.type == 'element' ||
     object.type == 'element-group'
   ) {
+    const widget = lD.getObjectByTypeAndId(
+      'widget',
+      'widget_' + object.regionId + '_' + object.widgetId,
+      'canvas',
+    );
     // Render element and element group toolbar
     this.DOMObject.html(bottomBarViewerTemplate(
       {
         trans: newBottomBarTrans,
         readOnlyModeOn: readOnlyModeOn,
         object: object,
+        widget: widget,
+        objectTypeName: newBottomBarTrans.objectType[object.type],
         trashActive: trashBinActive,
       },
     ));

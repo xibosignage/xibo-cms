@@ -107,6 +107,7 @@ LayerManager.prototype.createStructure = function() {
             name: group.id,
             id: group.id,
             widgetId: 'widget_' + group.regionId + '_' + group.widgetId,
+            regionId: 'region_' + group.regionId,
             moduleIcon: lD.common.getModuleByType(widget.subType).icon,
             selected: group.selected,
             expanded: group.expanded,
@@ -147,6 +148,8 @@ LayerManager.prototype.createStructure = function() {
               type: 'element',
               name: (element.template.title) ?
                 element.template.title : element.id,
+              widgetId: 'widget_' + element.regionId + '_' + element.widgetId,
+              regionId: 'region_' + element.regionId,
               // Element has parent widget duration
               duration: parseDuration(widget.getDuration()),
               id: element.elementId,
@@ -204,6 +207,7 @@ LayerManager.prototype.createStructure = function() {
           duration: parseDuration(region.duration),
           icon: widget.getIcon(),
           id: widget.id,
+          auxId: widget.regionId,
           selected: widget.selected,
         });
       });
@@ -304,6 +308,52 @@ LayerManager.prototype.render = function(reset) {
               lD.viewer.DOMObject.find('.designer-region-canvas')
                 .addClass('canvas-element-selected-from-layer-manager');
             }
+          });
+
+        // Handle sorting
+        const saveSortDebounced = _.wrap(
+          _.memoize(
+            () => _.debounce(self.saveSort.bind(self), 500), _.property('type'),
+          ),
+          (getMemoizedFunc, obj) => getMemoizedFunc(obj)(obj),
+        );
+
+        // Sortable in main level
+        this.DOMObject.find('.layer-manager-body').sortable({
+          axis: 'y',
+          items: '.sortable-main',
+          containment: 'parent',
+          update: function() {
+            saveSortDebounced({
+              type: 'main',
+            });
+          },
+        });
+
+        // Sortable in canvas
+        this.DOMObject.find('.layer-manager-canvas-layers').sortable({
+          axis: 'y',
+          items: '.sortable-canvas',
+          containment: 'parent',
+          update: function() {
+            saveSortDebounced({
+              type: 'canvas',
+            });
+          },
+        });
+
+        // Sortable in element groups
+        this.DOMObject.find('.element-group-wrapper')
+          .sortable({
+            axis: 'y',
+            items: '.sortable-element-group',
+            containment: 'parent',
+            update: function(_ev, ui) {
+              saveSortDebounced({
+                type: 'element-group',
+                auxContainer: $(ui.item[0]).parent(),
+              });
+            },
           });
 
         // Handle scroll
@@ -496,6 +546,174 @@ LayerManager.prototype.expandGroup = function(
 
   // Render again to show the changes
   self.render();
+};
+
+
+/**
+ * Save sorting
+ * @param {string} type main, canvas or element-group
+ * @param {object} auxContainer if group, get the group to save
+ */
+LayerManager.prototype.saveSort = function({
+  type,
+  auxContainer,
+} = {}) {
+  // Update layer in position form
+  const updatePositionForm = function(index, layer) {
+    const options = {};
+    options[index] = layer;
+    lD.propertiesPanel.updatePositionForm(options);
+  };
+
+  if (type === 'main') {
+    lD.viewer.layerManager.DOMObject
+      .find('.layer-manager-body > .sortable-main')
+      .each((idx, target) => {
+        const $target = $(target);
+        const targetType = $target.data('type');
+        const targetId = (targetType === 'staticWidget') ?
+          $target.data('itemAuxId'):
+          $target.data('itemId');
+        const newLayer = idx;
+
+        let updateOnViewer = '';
+        if (targetType === 'canvas') {
+          // Only save canvas if we have a new value
+          if (lD.layout.canvas.zIndex != newLayer) {
+            const canvas = lD.getObjectByTypeAndId('canvas');
+            canvas.changeLayer(newLayer);
+
+            // If we're selecting an element, update canvas layer
+            if (lD.selectedObject.type === 'element') {
+              updatePositionForm('zIndexCanvas', newLayer);
+            }
+
+            // Save id to update on viewer
+            updateOnViewer = lD.layout.canvas.id;
+          }
+        } else {
+          // Update regions
+          const region = lD.getObjectByTypeAndId('region', targetId);
+
+          if (
+            region &&
+            region.zIndex != newLayer
+          ) {
+            region.transform({
+              zIndex: newLayer,
+            });
+
+            // If type region, check if selected is
+            // region or object and if it matches the target
+            if (
+              (
+                lD.selectedObject.type === 'region' &&
+                lD.selectedObject.id == region.id
+              ) ||
+              (
+                lD.selectedObject.type === 'widget' &&
+                lD.selectedObject.regionId == region.id
+              )
+            ) {
+              updatePositionForm('zIndex', newLayer);
+            }
+
+            // Save id to update on viewer
+            updateOnViewer = targetId;
+          }
+        }
+
+        // Update on viewer if needed
+        if (updateOnViewer != '') {
+          const $container = lD.viewer.DOMObject.find(`#${updateOnViewer}`);
+          $container.css('z-index', newLayer);
+        }
+      });
+  } else if (type === 'canvas') {
+    const widgetsToSave = {};
+    lD.viewer.layerManager.DOMObject
+      .find('.layer-manager-canvas-layers > .sortable-canvas')
+      .each((idx, target) => {
+        const $target = $(target);
+        const newLayer = idx;
+        const isGroup = ($target.data('type') == 'elementGroup');
+        const targetType = isGroup ? 'element-group' : 'element';
+        const targetId = $target.data('itemId');
+        const widgetId = $target.data('widgetId');
+        const regionId = $target.data('regionId');
+        const element = lD.getObjectByTypeAndId(targetType, targetId, widgetId);
+
+        if (element.layer != newLayer) {
+          // Change element layer in structure
+          element.layer = newLayer;
+
+          // Change in viewer
+          lD.viewer.DOMObject.find('#' + targetId)
+            .css('zIndex', newLayer);
+
+          // If we're selecting an element or a group
+          // that matches the changes target, update position form
+          if (
+            (
+              !isGroup &&
+              lD.selectedObject.type === 'element' &&
+              lD.selectedObject.elementId === element.elementId
+            ) ||
+            (
+              isGroup &&
+              lD.selectedObject.type === 'element-group' &&
+              lD.selectedObject.id === element.id
+            )
+          ) {
+            updatePositionForm('zIndex', newLayer);
+          }
+
+          // Mark widget to be saved
+          widgetsToSave[widgetId] =
+            lD.getObjectByTypeAndId('widget', widgetId, regionId);
+        }
+      });
+
+    // Save elements to target widgets
+    Object.values(widgetsToSave).forEach((widget) => {
+      widget.saveElements();
+    });
+  } else if (type === 'element-group') {
+    const $groupContainer = $(auxContainer);
+    const widgetId = $groupContainer.data('widgetId');
+    const regionId = $groupContainer.data('regionId');
+    $groupContainer.find('.sortable-element-group')
+      .each((idx, target) => {
+        const $target = $(target);
+        const newLayer = idx;
+        const targetId = $target.data('itemId');
+        const element = lD.getObjectByTypeAndId('element', targetId, widgetId);
+
+        if (element.layer != newLayer) {
+          // Change element layer in structure
+          element.layer = newLayer;
+
+          // Change in viewer
+          lD.viewer.DOMObject.find('#' + targetId)
+            .css('zIndex', newLayer);
+
+          // Update position form is element is selected
+          if (
+            lD.selectedObject.type === 'element' &&
+            lD.selectedObject.elementId === element.elementId
+          ) {
+            updatePositionForm('zIndex', newLayer);
+          }
+        }
+      });
+
+    // Save widget
+    const widget = lD.getObjectByTypeAndId('widget', widgetId, regionId);
+    widget.saveElements();
+  }
+
+  // Reload layer manager
+  this.render();
 };
 
 module.exports = LayerManager;

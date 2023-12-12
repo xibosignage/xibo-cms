@@ -265,11 +265,13 @@ class DataSetColumn implements \JsonSerializable
             // We can check this is valid by building up a NOT IN sql statement, if we get results.. we know its not good
             $select = '';
 
-            $dbh = $this->getStore()->getConnection();
+            $dbh = $this->getStore()->getConnection('isolated');
 
             for ($i=0; $i < count($list); $i++) {
-                $list_val = $dbh->quote($list[$i]);
-                $select .= $list_val . ',';
+                if (!empty($list[$i])) {
+                    $list_val = $dbh->quote($list[$i]);
+                    $select .= $list_val . ',';
+                }
             }
 
             $select = rtrim($select, ',');
@@ -306,7 +308,7 @@ class DataSetColumn implements \JsonSerializable
                           SELECT `id`, ' . $formula . ' AS `' . $this->heading . '` 
                             FROM `dataset_' . $this->dataSetId . '`
                       ) dataset
-                ', []);
+                ', [], 'isolated');
             } catch (\Exception $e) {
                 $this->getLog()->debug('Formula validation failed with following message ' . $e->getMessage());
                 throw new InvalidArgumentException(__('Provided formula is invalid'), 'formula');

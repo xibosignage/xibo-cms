@@ -1112,6 +1112,14 @@ class LayoutFactory extends BaseFactory
                     $widget->assignMedia($widget->tempId);
                 }
 
+                // if we have any elements with mediaIds, make sure we assign them here
+                if ($module->type === 'global' && !empty($mediaNode['mediaIds'])) {
+                    foreach ($mediaNode['mediaIds'] as $mediaId) {
+                        $this->getLog()->debug(sprintf('Assigning mediaId %d to element', $mediaId));
+                        $widget->assignMedia($mediaId);
+                    }
+                }
+
                 //
                 // Audio
                 //
@@ -1329,7 +1337,9 @@ class LayoutFactory extends BaseFactory
                 null,
                 $importTags
             );
+            /** @var Layout $layout */
             $layout = $jsonResults[0];
+            /** @var Playlist[] $playlists */
             $playlists = $jsonResults[1];
 
             if (array_key_exists('code', $layoutDetails['layoutDefinitions'])) {
@@ -1619,12 +1629,49 @@ class LayoutFactory extends BaseFactory
         }
         $uploadedMediaIds = array_combine($oldMediaIds, $newMediaIds);
 
+        foreach ($widgets as $widget) {
+            // handle importing elements with image.
+            // if we have multiple images in global widget
+            // we need to go through them here and replace all old media with new ones
+            // this cannot be done one by one in the loop when uploading from mapping
+            // as one widget can have multiple elements with mediaId in it.
+            if ($widget->type === 'global' && !empty($widget->getOptionValue('elements', []))) {
+                $widgetElements = $widget->getOptionValue('elements', null);
+                $widgetElements = json_decode($widgetElements, true);
+                $updatedWidgetElements = [];
+                $updatedElements = [];
+                foreach (($widgetElements ?? []) as $widgetElement) {
+                    foreach (($widgetElement['elements'] ?? []) as $element) {
+                        if (isset($element['mediaId'])) {
+                            foreach ($uploadedMediaIds as $old => $new) {
+                                if ($element['mediaId'] === $old) {
+                                    $element['mediaId'] = $new;
+                                }
+                            }
+                        }
+                        // if we have combo of say text element and image
+                        // make sure we have the element updated here (outside the if condition),
+                        // otherwise we would end up only with image elements in the options.
+                        $updatedElements[] = $element;
+                    }
+                }
+
+                if (!empty($updatedElements)) {
+                    $updatedWidgetElements[]['elements'] = $updatedElements;
+                    $widget->setOptionValue(
+                        'elements',
+                        'raw',
+                        json_encode($updatedWidgetElements)
+                    );
+                }
+            }
+        }
+
         // Playlists with media widgets
         // We will iterate through all Playlists we've created during layout import here and
         // replace any mediaIds if needed
         if (isset($playlists) && $playlistDetails !== false) {
             foreach ($playlists as $playlist) {
-                /** @var $playlist Playlist */
                 foreach ($playlist->widgets as $widget) {
                     $audioIds = $widget->getAudioIds();
 

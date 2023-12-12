@@ -2380,7 +2380,7 @@ class Soap
                                 throw new NotFoundException('Cache not ready');
                             }
 
-                            $data = $widgetDataProviderCache->decorateForPlayer($dataProvider->getData(), $media);
+                            $widgetData = $widgetDataProviderCache->decorateForPlayer($dataProvider->getData(), $media);
                         } catch (GeneralException $exception) {
                             // No data cached yet, exception
                             $this->getLog()->error('getResource: Failed to get data cache for widgetId '
@@ -2389,7 +2389,7 @@ class Soap
                         }
 
                         $data[$widget->widgetId] = [
-                            'data' => $data,
+                            'data' => $widgetData,
                             'meta' => $dataProvider->getMeta()
                         ];
                     }

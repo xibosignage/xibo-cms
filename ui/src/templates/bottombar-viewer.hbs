@@ -3,36 +3,28 @@
         {{! Element Info }}
         {{#eq object.type "widget"}}
             <div class="info d-inline">
-                {{#if regionName}}
-                    <span class="label-name align-middle d-inline-block">
-                        "{{regionName}}"
-                    </span>
-                    {{#ifCond object.widgetName '||' object.moduleName}}
-                        <i class="fas fa-arrow-right align-middle"></i>
-                    {{/ifCond}}
-                {{/if}}
                 {{#ifCond object.widgetName '||' object.moduleName}}
                     <span class="label-name align-middle d-inline-block">
-                        {{#if object.widgetName}}"{{object.widgetName}}"{{/if}} {{#if object.moduleName}}({{object.moduleName}}){{/if}}
+                        <strong>{{objectTypeName}}</strong> <span title="{{trans.widgetName}}">{{#if object.widgetName}}"{{object.widgetName}}"{{/if}}</span>
                     </span>
                 {{/ifCond}}
             </div>
         {{else eq object.type "element"}}
             <div class="info d-inline">
-                <span class="label-name align-middle" title="{{object.name}}">
-                    {{object.objectType}} - "{{object.id}}"" ({{trans.element}})
+                <span class="label-name align-middle">
+                    <strong>{{objectTypeName}}</strong> | <span title="{{trans.templateName}}">{{object.template.title}}</span> - <span title="{{trans.widgetName}}">{{#if widget.widgetName}}"{{widget.widgetName}}"{{/if}}</span>
                 </span>
             </div>
         {{else eq object.type "element-group"}}
             <div class="info d-inline">
-                <span class="label-name align-middle" title="{{object.name}}">
-                    {{object.id}} ({{trans.elementGroup}})
+                <span class="label-name align-middle">
+                    <strong>{{objectTypeName}}</strong> - <span title="{{trans.widgetName}}">{{#if widget.widgetName}}"{{widget.widgetName}}"{{/if}}</span>
                 </span>
             </div>
         {{else}}
             <div class="info d-inline">
-                <span class="label-name align-middle" title="{{object.name}}">
-                    "{{object.name}}"
+                <span class="label-name align-middle">
+                    <strong>{{objectTypeName}}</strong> <span title="{{trans.regionName}}">{{#if object.name}}"{{object.name}}"{{/if}}</span>
                 </span>
             </div>
         {{/eq}}

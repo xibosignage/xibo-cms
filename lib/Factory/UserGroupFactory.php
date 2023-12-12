@@ -884,12 +884,16 @@ class UserGroupFactory extends BaseFactory
     }
 
     /**
-     * @param string $homepage The home page id
-     * @return array|mixed
+     * @param string|null $homepage The home page id
+     * @return \Xibo\Entity\Homepage
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function getHomepageByName(string $homepage)
+    public function getHomepageByName(?string $homepage): Homepage
     {
+        if (empty($homepage)) {
+            throw new NotFoundException(__('Homepage has not been set'));
+        }
+
         $homepages = $this->getHomepages();
 
         if (!array_key_exists($homepage, $homepages)) {

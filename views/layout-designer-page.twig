@@ -78,6 +78,7 @@
                     actions: "{% trans "Actions" %}",
                     welcomeModalMessage: "{% trans "This is published and cannot be edited. You can checkout for editing below, or continue to view it in a read only mode." %}",
                     showingSampleData:  "{% trans "Showing sample data" %}",
+                    emptyElementData: "{% trans "Has empty data" %}",
                 };
 
                 var viewerTrans = {
@@ -134,6 +135,16 @@
                     stopPreviewLayout: "{% trans "Stop Layout preview" %}",
                     nextWidget: "{% trans "Next widget" %}",
                     previousWidget: "{% trans "Previous widget" %}",
+                    widgetName: "{% trans "Widget Name" %}",
+                    regionName: "{% trans "Region Name" %}",
+                    templateName: "{% trans "Template" %}",
+                    objectType: {
+                        layout: "{{ "Layout" |trans }}",
+                        region: "{{ "Region" |trans }}",
+                        widget: "{{ "Widget" |trans }}",
+                        element: "{{ "Element" |trans }}",
+                        "element-group": "{{ "Element Group" |trans }}",
+                    },
                     tools: {
                         region: {
                             name: "{{ "Region" |trans }}",

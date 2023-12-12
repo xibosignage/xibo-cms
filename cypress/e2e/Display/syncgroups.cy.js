@@ -36,15 +36,14 @@ describe('Sync Groups', function() {
     cy.contains('Add Sync Group').click();
 
     cy.get('.modal input#name')
-      .type('Cypress Test Sync Group ' + testRun + '_1');
+      .type('Cypress Test Sync Group ' + testRun);
 
     // Add first by clicking next
     cy.get('.modal .save-button').click();
 
     // Check if syncgroup is added in toast message
-    cy.contains('Added Cypress Test Sync Group ' + testRun + '_1');
+    cy.contains('Added Cypress Test Sync Group ' + testRun);
   });
-
 
   it('searches and delete existing syncgroup', function() {
     // Create a new syncgroup and then search for it and delete it
@@ -74,5 +73,25 @@ describe('Sync Groups', function() {
       // Check if syncgroup is deleted in toast message
       cy.get('.toast').contains('Deleted Cypress Test Sync Group');
     });
+  });
+
+  // ---------
+  // Tests - Error handling
+  it.only('should not add a syncgroup without publisher port', function() {
+    cy.visit('/syncgroup/view');
+
+    // Click on the Add Sync Group button
+    cy.contains('Add Sync Group').click();
+
+    cy.get('.modal input#name')
+        .type('Cypress Test Sync Group ' + testRun);
+
+    cy.get('#syncPublisherPort').clear();
+
+    // Add first by clicking next
+    cy.get('.modal .save-button').click();
+
+    // Check if syncgroup is added in toast message
+    cy.contains('Sync Publisher Port cannot be empty');
   });
 });

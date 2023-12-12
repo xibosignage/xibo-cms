@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -50,7 +50,7 @@ class Soap6 extends Soap5
             'serverKey' => $serverKey,
             'hardwareKey' => $hardwareKey
         ]);
-        
+
         // Sanitize
         $serverKey = $sanitizer->getString('serverKey');
         $hardwareKey = $sanitizer->getString('hardwareKey');
@@ -89,6 +89,11 @@ class Soap6 extends Soap5
             $regionId = $sanitizedFaultAlert->getInt('regionId');
             $mediaId = $sanitizedFaultAlert->getInt('mediaId');
             $widgetId = $sanitizedFaultAlert->getInt('widgetId');
+
+            // Trim the reason if it is too long
+            if (strlen($reason) >= 255) {
+                $reason = substr($reason, 0, 255);
+            }
 
             try {
                 $dbh = $this->getStore()->getConnection();

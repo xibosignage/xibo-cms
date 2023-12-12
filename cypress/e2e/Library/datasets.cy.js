@@ -182,7 +182,6 @@ describe('Datasets', function() {
     });
   });
 
-
   it('copy an existing dataset', function() {
     // Create a new dataset and then search for it and copy it
     cy.createDataset('Cypress Test Dataset ' + testRun).then((res) => {
@@ -282,5 +281,25 @@ describe('Datasets', function() {
       // Modal should contain one successful delete at least
       cy.get('.modal-body').contains(': Success');
     });
+  });
+
+  // ---------
+  // Tests - Error handling
+  it('should not add a remote dataset without URI', function() {
+    cy.visit('/dataset/view');
+
+    // Click on the Add Dataset button
+    cy.contains('Add DataSet').click();
+
+    cy.get('.modal input#dataSet')
+        .type('Cypress Test Dataset ' + testRun);
+
+    cy.get('.modal input#isRemote').check();
+
+    // Add first by clicking next
+    cy.get('.modal .save-button').click();
+
+    // Check error message
+    cy.contains('A remote DataSet must have a URI.');
   });
 });

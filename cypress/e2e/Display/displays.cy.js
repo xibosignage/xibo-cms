@@ -113,7 +113,7 @@ describe('Displays', function() {
   });
 
   // Display: disp3
-  it.only('searches and authorise an unauthorised display', function() {
+  it('searches and authorise an unauthorised display', function() {
     // search for a display disp1 and edit
     cy.intercept({
       url: '/display?*',
@@ -274,5 +274,53 @@ describe('Displays', function() {
     cy.get('#list_button').click();
 
     cy.get('#displays_wrapper.dataTables_wrapper').should('be.visible');
+  });
+
+  // ---------
+  // Tests - Error handling
+  it.only('should not be able to save while editing existing display with incorrect latitude/longitude', function() {
+    // search for a display disp1 and edit
+    cy.intercept({
+      url: '/display?*',
+      query: {display: 'dis_disp1'},
+    }).as('loadGridAfterSearch');
+
+    // Intercept the PUT request
+    cy.intercept({
+      method: 'PUT',
+      url: '/display/*',
+    }).as('putRequest');
+
+    cy.visit('/display/view');
+
+    // Filter for the created display
+    cy.get('#Filter input[name="display"]')
+        .type('dis_disp1');
+
+    // Wait for the grid reload
+    cy.wait('@loadGridAfterSearch');
+    cy.get('#displays tbody tr').should('have.length', 1);
+
+    // Click on the first row element to open the delete modal
+    cy.get('#displays tr:first-child .dropdown-toggle').click({force: true});
+    cy.get('#displays tr:first-child .display_button_edit').click({force: true});
+    cy.contains('Details').click();
+
+    cy.get('.modal input#latitude').type('1234');
+
+    // edit test display
+    cy.get('.bootbox .save-button').click();
+
+    // Check error message
+    cy.contains('The latitude entered is not valid.');
+
+    cy.get('.modal input#latitude').clear();
+    cy.get('.modal input#longitude').type('1234');
+
+    // edit test display
+    cy.get('.bootbox .save-button').click();
+
+    // Check error message
+    cy.contains('The longitude entered is not valid.');
   });
 });

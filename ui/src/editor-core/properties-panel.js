@@ -402,8 +402,8 @@ PropertiesPanel.prototype.render = function(
   const app = this.parent;
   const minSlotValue = 1;
   let targetAux;
-  let renderElements = false;
   let hasData = false;
+  let isElement = false;
   let isElementGroup = false;
 
   // Hide panel if no target element is passed
@@ -422,6 +422,7 @@ PropertiesPanel.prototype.render = function(
   // and save the element in a new variable
   if (target.type === 'element') {
     const elementId = target.elementId;
+    const isSelected = target.selected;
 
     // Get widget and change target
     target = app.getObjectByTypeAndId(
@@ -432,15 +433,15 @@ PropertiesPanel.prototype.render = function(
 
     // Get element from the widget
     targetAux = target.elements[elementId];
+    targetAux.selected = isSelected;
 
-    // Set renderElements to true
-    renderElements = true;
+    isElement = true;
 
     // Check if it's element with data
     hasData = targetAux.hasDataType;
   } else if (target.type === 'element-group') {
-    // Save element group in targetAux
-    targetAux = target;
+    const groupId = target.id;
+    const isSelected = target.selected;
 
     // Get widget and set it as target
     target = app.getObjectByTypeAndId(
@@ -448,6 +449,10 @@ PropertiesPanel.prototype.render = function(
       'widget_' + target.regionId + '_' + target.widgetId,
       'canvas',
     );
+
+    // Get element from the widget
+    targetAux = target.elementGroups[groupId];
+    targetAux.selected = isSelected;
 
     isElementGroup = true;
 
@@ -647,6 +652,7 @@ PropertiesPanel.prototype.render = function(
               id: 'pinSlot',
               title: propertiesPanelTrans.pinSlot,
               helpText: propertiesPanelTrans.pinSlotHelpText,
+              customClass: 'element-slot-input',
               value: targetAux.pinSlot,
               type: 'checkbox',
               visibility: [],
@@ -657,6 +663,7 @@ PropertiesPanel.prototype.render = function(
             id: 'slot',
             title: propertiesPanelTrans.dataSlot,
             helpText: propertiesPanelTrans.dataSlotHelpText,
+            customClass: 'element-slot-input',
             value: Number(targetAux.slot) + 1,
             min: minSlotValue,
             type: 'number',
@@ -673,7 +680,7 @@ PropertiesPanel.prototype.render = function(
             helpText: propertiesPanelTrans.effectHelpText,
             value: targetAux.effect,
             type: 'effectSelector',
-            variant: 'all noNone',
+            variant: 'showPaged noNone',
             visibility: [],
           });
         }
@@ -691,23 +698,23 @@ PropertiesPanel.prototype.render = function(
         // handle when changed
         if (targetAux.slot !== undefined) {
           self.DOMObject.find('[name="slot"]').on('change', function(ev) {
-            let slotValue = $(ev.currentTarget).val();
+            let slotValue = Number($(ev.currentTarget).val());
 
             // If value is lower than minSlotValue
             // set it to minSlotValue
-            if (Number(slotValue) < minSlotValue) {
+            if (slotValue < minSlotValue) {
               slotValue = minSlotValue;
               $(ev.currentTarget).val(minSlotValue);
             }
 
             // update slot for the group
-            targetAux.updateSlot(Number(slotValue) - 1, true);
+            targetAux.updateSlot(slotValue - 1, true);
 
-            // save elements
-            target.saveElements();
-
-            // Render canvas again
-            app.viewer.renderCanvas(app.layout.canvas);
+            // Save elements
+            target.saveElements().then((_res) => {
+              // Update group
+              app.viewer.updateElementGroup(app.selectedObject);
+            });
           });
 
           // Handle pin slot property
@@ -770,7 +777,7 @@ PropertiesPanel.prototype.render = function(
 
       // If we need to render the element properties
       if (
-        renderElements
+        isElement
       ) {
         // Get element properties
         targetAux.getProperties().then((properties) => {
@@ -852,6 +859,7 @@ PropertiesPanel.prototype.render = function(
                 id: 'pinSlot',
                 title: propertiesPanelTrans.pinSlot,
                 helpText: propertiesPanelTrans.pinSlotHelpText,
+                customClass: 'element-slot-input',
                 value: targetAux.pinSlot,
                 type: 'checkbox',
                 visibility: [],
@@ -863,6 +871,7 @@ PropertiesPanel.prototype.render = function(
                 id: 'slot',
                 title: propertiesPanelTrans.dataSlot,
                 helpText: propertiesPanelTrans.dataSlotHelpText,
+                customClass: 'element-slot-input',
                 value: Number(targetAux.slot) + 1,
                 min: minSlotValue,
                 type: 'number',
@@ -876,7 +885,7 @@ PropertiesPanel.prototype.render = function(
               helpText: propertiesPanelTrans.effectHelpText,
               value: targetAux.effect,
               type: 'effectSelector',
-              variant: 'all noNone',
+              variant: 'showPaged noNone',
               visibility: [],
             });
           }
@@ -989,10 +998,44 @@ PropertiesPanel.prototype.render = function(
               }
             },
             focus: function(_ev) {
-              self.toSave = true;
+              // Skip slot inputs
+              // those are saved with elements
+              if (
+                $(_ev.currentTarget)
+                  .parents('.xibo-form-input.element-slot-input')
+                  .length === 0
+              ) {
+                self.toSave = true;
+              }
             },
           });
         });
+      }
+
+      // Show widget info
+      self.showWidgetInfo(target);
+
+      // If we're rendering an non-global element or group
+      // mark it as active ( and remove others from active )
+      if (
+        (isElement || isElementGroup) &&
+        target.subType != 'global' &&
+        !target.activeTarget
+      ) {
+        // Get previous active widget
+        const activeWidget = app.layout.canvas.getActiveWidgetOfType(
+          target.subType,
+          true,
+          false,
+        );
+
+        // If we had previous active widget, mark is as inactive
+        if (!$.isEmptyObject(activeWidget)) {
+          activeWidget.activeTarget = false;
+        }
+
+        // Mark widget as active
+        target.activeTarget = true;
       }
     }
 
@@ -1516,16 +1559,40 @@ PropertiesPanel.prototype.initFields = function(
       (getMemoizedFunc, obj) => getMemoizedFunc(obj)(obj),
     );
 
+    const skipSave = function(target, event) {
+      // If field is code input
+      // only save when the event is a change/onfocus
+      if (
+        $(target).hasClass('code-input') &&
+        event.type === 'inputChange'
+      ) {
+        return true;
+      }
+
+      // For rich text, check if CKEditor has changed
+      if (
+        $(target).hasClass('rich-text') &&
+        CKEDITOR.instances[$(target).attr('id')] &&
+        !CKEDITOR.instances[$(target).attr('id')].checkDirty()
+      ) {
+        return true;
+      }
+
+      return false;
+    };
+
     // Auto save when changing inputs
+    const skipXiboFormInput =
+      ':not(.position-input):not(.action-form-input)' +
+      ':not(.snippet-selector):not(.element-slot-input)' +
+      ':not(.ticker-tag-style-property)' +
+      ':not(.canvas-widget-control-dropdown)';
+    const skipFormInput = ':not(.element-property):not([data-tag-style-input])';
     $(self.DOMObject).find('form').off()
       .on({
         'change inputChange xiboInputChange': function(_ev, options) {
-          // If field is code input
-          // only save when the event is a change/onfocus
-          if (
-            $(_ev.currentTarget).hasClass('code-input') &&
-            _ev.type === 'inputChange'
-          ) {
+          // Check if we skip this field
+          if (skipSave(_ev.currentTarget, _ev)) {
             return;
           }
 
@@ -1536,17 +1603,14 @@ PropertiesPanel.prototype.initFields = function(
             );
           }
         },
-        'focus editorFocus': function() {
-          self.toSave = true;
+        'focus editorFocus': function(_ev) {
+          // Check if we dont skip this field
+          self.toSave = !skipSave(_ev.currentTarget, _ev);
         },
       },
-      '.xibo-form-input:not(.position-input)' +
-        ':not(.action-form-input):not(.snippet-selector) ' +
-        'select:not(.element-property), ' +
-      '.xibo-form-input:not(.position-input):not(.action-form-input) ' +
-        'input:not(.element-property), ' +
-      '.xibo-form-input:not(.position-input):not(.action-form-input) ' +
-        'textarea:not(.element-property), ' +
+      `.xibo-form-input${skipXiboFormInput} select${skipFormInput}, ` +
+      `.xibo-form-input${skipXiboFormInput} input${skipFormInput}, ` +
+      `.xibo-form-input${skipXiboFormInput} textarea${skipFormInput}, ` +
       '[name="backgroundImageId"] ',
       );
   }
@@ -2082,6 +2146,217 @@ PropertiesPanel.prototype.updatePositionForm = function(properties) {
     // Change value in the form field
     $positionTab.find('[name="' + key + '"]').val(value);
   });
+};
+
+/**
+ * Show widget info
+ * @param {object} widget Target widget
+ */
+PropertiesPanel.prototype.showWidgetInfo = function(widget) {
+  const self = this;
+
+  // Show widget info for statics
+  const $widgetInfo = $(templates.forms.widgetInfo({
+    widget: widget,
+    trans: propertiesPanelTrans.widgetInfo,
+  }));
+
+  // Remove margin top from form container
+  self.DOMObject.find('.form-container').addClass('mt-0');
+
+  // Disable input
+  $widgetInfo.find('input').attr('disabled', 'disabled');
+
+  // Append control
+  $widgetInfo.prependTo(
+    self.DOMObject.find('.form-container .widget-form'),
+  );
+
+  // If name is updated on the form
+  // Also update on the widget info
+  self.DOMObject.find('.form-control[name="name"]')
+    .on('change', function(ev) {
+      // Update info
+      $widgetInfo.find('span').html($(ev.currentTarget).val());
+    });
+};
+
+/**
+ * Show widget control
+ * @param {object} target Target element or group
+ */
+PropertiesPanel.prototype.showWidgetControl = function(target) {
+  const self = this;
+  // Get widgets
+  const widgetsOfType =
+    app.layout.canvas.getWidgetsOfType(target.subType);
+
+  if (Object.values(widgetsOfType).length > 0) {
+    // Append control
+    self.DOMObject.find('.form-container .widget-form').prepend(
+      templates.forms.canvasWidgetsSelector({
+        widgetId: target.widgetId,
+        widgets: Object.values(widgetsOfType),
+        trans: propertiesPanelTrans.canvasWidgetControl,
+      }),
+    );
+
+    // Canvas control
+    const $canvasWidgetSelectorControl =
+      self.DOMObject.find('.canvas-widget-control');
+
+    // Get active widget
+    const activeWidget = app.layout.canvas.getActiveWidgetOfType(
+      target.subType,
+      true,
+      false,
+    );
+
+    // If we had previous active widget, mark is as inactive
+    (!$.isEmptyObject(activeWidget)) &&
+      (activeWidget.activeTarget = false);
+
+    // Mark widget as active
+    widgetsOfType[target.widgetId].activeTarget = true;
+
+    // Remove margin top from form container
+    self.DOMObject.find('.form-container').addClass('mt-0');
+
+    // Add and handle add button
+    const controlTrans = propertiesPanelTrans.canvasWidgetControl;
+    const $addButton =
+      $(`<div class="canvas-widget-control-add tooltip-always-on"
+        data-toggle="tooltip" 
+        data-placement="top"
+        title="${controlTrans.transferWidgetHelp}">
+        <i class="fa fa-arrow-circle-right"></i>
+        <span>
+          ${controlTrans.transferWidget}
+        </span>
+      </div>`);
+
+    // Check if we have other element or group in the widget
+    let hasMoreElements = false;
+    if (isElement) {
+      // We just need to have more than 1 element
+      hasMoreElements = (Object.values(target.elements).length > 1);
+    } else if (isElementGroup) {
+      // We need to have either another group
+      hasMoreElements = (Object.values(target.elementGroups).length > 1);
+
+      // Or 1 elements that doesn't belong to the group
+      if (hasMoreElements === false) {
+        Object.values(target.elements).every((el) => {
+          // If we found the widget, break the loop
+          if (el.groupId != targetAux.id) {
+            hasMoreElements = true;
+            // Break the loop
+            return false;
+          }
+
+          // Keep going
+          return true;
+        });
+      }
+    }
+
+    // Only show add button if we have more than 1 element for the widget
+    if (hasMoreElements) {
+      $addButton.insertAfter(
+        $canvasWidgetSelectorControl
+          .find('.canvas-widget-control-dropdown .input-info-container'),
+      ).on('click', function(_ev) {
+        lD.addModuleToPlaylist(
+          app.layout.canvas.regionId,
+          app.layout.canvas.playlists.playlistId,
+          target.subType,
+          {
+            type: targetAux.type,
+          },
+          null,
+          false,
+          false,
+          false,
+          false,
+        ).then((res) => {
+          const widgetId = res.data.widgetId;
+          // Reload data
+          app.reloadData(
+            app.layout,
+            {
+              reloadPropertiesPanel: false,
+            },
+          ).done(() => {
+            // Add options to dropdown
+            const $select =
+              $canvasWidgetSelectorControl.find('select');
+
+            // Get new widget
+            const newWidget = app.getObjectByTypeAndId(
+              'widget',
+              'widget_' + app.layout.canvas.regionId + '_' + widgetId,
+              'canvas',
+            );
+
+            // Update option
+            $select.find('option[selected]').removeAttr('selected');
+            $select.append(`<option value="${newWidget.widgetId}" 
+              selected>${newWidget.widgetName}</option>`);
+
+            // Trigger change
+            $select.trigger('change');
+          });
+        });
+      });
+    }
+
+    // Handle change control
+    $canvasWidgetSelectorControl
+      .on('change', function(ev) {
+        const oldWidget =
+          app.getObjectByTypeAndId(
+            'widget',
+            target.getFullId(),
+            'canvas',
+          );
+
+        const newWidget =
+          app.getObjectByTypeAndId(
+            'widget',
+            $(ev.target).val(),
+            'canvas',
+          );
+
+        const elementsToMove = (isElementGroup) ?
+          Object.values(targetAux.elements) :
+          [targetAux];
+        const groupsToMove = (isElementGroup) ?
+          [targetAux] :
+          [];
+
+        // Move elements between widgets in canvas
+        app.layout.canvas.moveElementsBetweenWidgets(
+          oldWidget.getFullId(),
+          newWidget.getFullId(),
+          elementsToMove,
+          groupsToMove,
+        );
+      });
+
+    // If name is updated on the form
+    // Also update on the widget control
+    self.DOMObject.find('.form-control[name="name"]')
+      .on('change', function(ev) {
+        const $select =
+          self.DOMObject.find('.canvas-widget-control select');
+
+        // Update option
+        $select.find('option[selected]').html($(ev.currentTarget).val());
+
+        // Reload select2
+        makeLocalSelect($select);
+      });
+  }
 };
 
 module.exports = PropertiesPanel;

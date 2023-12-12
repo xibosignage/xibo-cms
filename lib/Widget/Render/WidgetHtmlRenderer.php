@@ -494,6 +494,7 @@ class WidgetHtmlRenderer
                 'isRepeatData' => $widget->getOptionValue('isRepeatData', 1) === 1,
                 'duration' => $widget->duration,
                 'calculatedDuration' => $widget->calculatedDuration,
+                'isDataExpected' => $module->isDataProviderExpected(),
             ];
 
             // Should we expect data?

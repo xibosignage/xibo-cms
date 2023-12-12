@@ -241,7 +241,7 @@
 }
 
 // Data set column selector
-.dataset-column-selector {
+.dataset-column-selector, .ticker-tag-selector {
     display: flex;
     gap: 6px;
 
@@ -250,7 +250,8 @@
         min-width: 0;
 
         .text-info {
-            color: $xibo-color-secondary;
+            color: $xibo-color-secondary !important;
+            font-weight: bold;
         }
 
         .ui-sortable {
@@ -260,6 +261,35 @@
 
         .li-sortable {
             width: calc(100% - 12px);
+        }
+    }
+}
+
+// Ticker tag selector
+.ticker-tag-selector {
+    flex-wrap: wrap;
+
+    .ticker-tag-styles {
+        width: 100%;
+
+        .ticker-tag-style-title {
+            writing-mode: vertical-lr;
+            font-size: 1.2rem;
+            color: $xibo-color-secondary;
+        }
+
+        .ticker-tag-style {
+            display: flex;
+        }
+
+        .ticker-tag-style-properties {
+            border-left: 6px solid $xibo-color-primary-l60;
+            padding-left: 12px;
+            margin-left: 6px;
+
+            .form-group {
+                margin-bottom: 0.5rem;
+            }
         }
     }
 }
@@ -359,6 +389,52 @@
         padding: 10px;
         width: 100%;
         text-align: center !important;
+    }
+}
+
+// Canvas widget control
+.canvas-widget-control {
+    padding: 8px;
+    background-color: $xibo-color-primary;
+
+    .canvas-widget-control-dropdown {
+        color: $xibo-color-primary-l10;
+        margin: 0;
+
+        .input-info-container {
+            display: inline-block;
+            float: none;
+            padding: 0;
+        }
+
+        .canvas-widget-control-add {
+            cursor: pointer;
+            float: right;
+            padding: 0 6px;
+            border-radius: 4px;
+
+            i {
+                margin-right: 4px;
+            }
+
+            &:hover {
+                background-color: darken($xibo-color-primary, 10%);
+            }
+        }
+    }
+}
+
+.widget-info-container {
+    text-align: center;
+    padding: 6px;
+    background-color: $xibo-color-primary-l60;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+
+    .widget-info-name {
+        color: $xibo-color-primary-l5;
+        font-weight: bold;
     }
 }
 

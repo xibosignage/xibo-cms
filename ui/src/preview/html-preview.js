@@ -652,9 +652,8 @@ function media(parent, id, xml, options, preload) {
             if(self.checkIframeStatus) {
                 // Reload iframe
                 var iframeDOM = $("#" + self.containerName + ' #' + self.iframeName);
-                // We remove this line because of flickering and
-                // We will need to address the duration
-                // iframeDOM[0].src = iframeDOM[0].src;
+                iframeDOM.css({visibility: 'hidden'});
+                iframeDOM[0].src = iframeDOM[0].src;
             } else {
                 $("#" + self.containerName).empty().append(self.iframe);
             }
@@ -786,7 +785,7 @@ function media(parent, id, xml, options, preload) {
 
     if (self.render == "html" || self.mediaType == "ticker") {
         self.checkIframeStatus = true;
-        self.iframe = $('<iframe scrolling="no" id="' + self.iframeName + '" src="' + tmpUrl + '&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
+        self.iframe = $('<iframe scrolling="no" id="' + self.iframeName + '" src="' + tmpUrl + '&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0; visibility: hidden;"></iframe>');
         /* Check if the ticker duration is based on the number of items in the feed */
         if(self.options['durationisperitem'] == '1' || self.options['durationisperpage'] == '1') {
             var regex =  new RegExp("<!-- NUMITEMS=(.*?) -->"); 
@@ -820,7 +819,7 @@ function media(parent, id, xml, options, preload) {
     }
     else if (self.mediaType == "text" || self.mediaType == "datasetview" || self.mediaType == "webpage" || self.mediaType == "embedded") {
         self.checkIframeStatus = true;
-        self.iframe = $('<iframe scrolling="no" id="' + self.iframeName + '" src="' + tmpUrl + '&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
+        self.iframe = $('<iframe scrolling="no" id="' + self.iframeName + '" src="' + tmpUrl + '&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0; visibility: hidden;"></iframe>');
     }
     else if (self.mediaType == "video") {
         preload.addFiles(tmpUrl);
@@ -858,6 +857,7 @@ function media(parent, id, xml, options, preload) {
         // On iframe load, set state as ready to play full preview
         $(self.iframe).on('load', function(){
             self.ready = true;
+            $(self.iframe).css({visibility: 'visible'});
         });
     }
 

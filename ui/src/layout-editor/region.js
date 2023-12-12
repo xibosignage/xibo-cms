@@ -33,7 +33,10 @@ const Region = function(id, data, {backgroundColor = '#aaa'} = {}) {
   this.isDeletable = data.isDeletable;
   this.isPermissionsModifiable = data.isPermissionsModifiable;
   this.isPlaylist = data.type === 'playlist';
-  this.isFrame = data.type === 'frame';
+  this.isFrameOrZone = (
+    data.type === 'frame' ||
+    data.type === 'zone'
+  );
 
   // Interactive actions
   this.actions = data.actions;
@@ -60,6 +63,8 @@ const Region = function(id, data, {backgroundColor = '#aaa'} = {}) {
  * @param {number} [transform.height] - New height (for resize tranformation)
  * @param {number} [transform.top] - New top position (for move tranformation)
  * @param {number} [transform.left] - New left position (for move tranformation)
+ * @param {number} [transform.zIndex]
+ *  - New layer position (for move tranformation)
  * @param {bool=} saveToHistory - Flag to save or not to the change history
  */
 Region.prototype.transform = function(transform, saveToHistory = true) {

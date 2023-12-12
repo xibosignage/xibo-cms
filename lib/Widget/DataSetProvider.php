@@ -57,8 +57,12 @@ class DataSetProvider implements WidgetProviderInterface
             $upperLimit = $durationProvider->getWidget()->getOptionValue('upperLimit', 15);
             $numItems = $upperLimit - $lowerLimit;
 
+            // Workaround: dataset static (from v3 dataset view) has rowsPerPage instead.
+            $rowsPerPage = $durationProvider->getWidget()->getOptionValue('rowsPerPage', 0);
+            $itemsPerPage = $durationProvider->getWidget()->getOptionValue('itemsPerPage', 0);
+
             // If we have paging involved then work out the page count.
-            $itemsPerPage = $durationProvider->getWidget()->getOptionValue('rowsPerPage', 0);
+            $itemsPerPage = max($itemsPerPage, $rowsPerPage);
             if ($itemsPerPage > 0) {
                 $numItems = ceil($numItems / $itemsPerPage);
             }

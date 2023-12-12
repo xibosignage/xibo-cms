@@ -178,8 +178,11 @@ class PlayerSoftwareRefactorMigration extends AbstractMigration
         }
 
         // remove mediaId column and index/key
+        if ($table->hasForeignKey('mediaId')) {
+            $table->dropForeignKey('mediaId');
+        }
+        
         $table
-            ->dropForeignKey('mediaId')
             ->removeColumn('mediaId')
             ->save();
 

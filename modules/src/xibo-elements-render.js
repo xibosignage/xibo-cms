@@ -156,7 +156,7 @@ jQuery.fn.extend({
 
       // Make sure the speed is something sensible
       // This speed calculation gives as 80 pixels per second
-      options.speed = (options.speed === 0) ? 1 : options.speed / 25 * 1000;
+      options.speed = (options.speed === 0) ? 1 : options.speed;
 
       // Add gap between
       if ($this.find('.scroll').length > 0) {
@@ -177,7 +177,7 @@ jQuery.fn.extend({
       // Make sure the speed is something sensible
       // This speed calculation gives as 80 pixels per second
       options.speed = (options.speed === 0) ?
-        1 : options.speed / 25 * 1000;
+        1 : options.speed;
 
       if ($this.find('.scroll').length > 0) {
         $this.find('.scroll').css({
@@ -195,20 +195,36 @@ jQuery.fn.extend({
         // our new plugin speed is pixels per second
         $this.attr({
           'data-is-legacy': false,
-          'data-speed': options.speed,
+          'data-speed': options.speed / 25 * 1000,
           'data-direction': options.direction,
           'data-duplicated': options.seamless,
           'data-gap': options.gap,
         }).marquee().addClass('animating');
       } else {
-        $this.attr({
-          'data-is-legacy': true,
-          scrollamount: options.speed,
-          behaviour: 'scroll',
-          direction: options.direction,
-          height: options.height,
-          width: options.width,
-        }).overflowMarquee().addClass('animating');
+        let $scroller = $this.find('.scroll:not(.animating)');
+
+        if ($scroller.length !== 0) {
+          $scroller.attr({
+            'data-is-legacy': true,
+            scrollamount: options.speed,
+            behaviour: 'scroll',
+            direction: options.direction,
+            height: options.height,
+            width: options.width,
+          }).overflowMarquee().addClass('animating scroll');
+
+          $scroller = $this.find('.scroll.animating');
+          // Correct items alignment as $scroller styles are overridden
+          // after initializing overflowMarquee
+          if (options.effect === 'marqueeLeft' ||
+              options.effect === 'marqueeRight'
+          ) {
+            $scroller.find('> div').css({
+              display: 'flex',
+              flexDirection: 'row',
+            });
+          }
+        }
       }
 
       // Correct for up / down

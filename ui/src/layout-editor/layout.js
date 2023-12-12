@@ -451,10 +451,13 @@ Layout.prototype.publish = function() {
 
       toastr.success(res.message);
 
-      // Redirect to the new published layout ( read only mode )
-      window.location.href =
-        urlsForApi.layout.designer.url.replace(
-          ':id', res.data.layoutId) + '?vM=1';
+      // Update the thumbnail
+      lD.uploadThumbnail().finally(() => {
+        // Redirect to the new published layout ( read only mode )
+        window.location.href =
+          urlsForApi.layout.designer.url.replace(
+            ':id', res.data.layoutId) + '?vM=1';
+      });
     } else {
       lD.common.hideLoadingScreen();
 
@@ -657,7 +660,11 @@ Layout.prototype.deleteObject = function(
       objectId,
     ).then((_res) => {
       // Unselect selected object before deleting
-      (deselectObject) &&
+      (
+        deselectObject &&
+        objectType === lD.selectedObject.type &&
+        objectId === lD.selectedObject[lD.selectedObject.type + 'Id']
+      ) &&
         lD.selectObject();
 
       (showLoadingScreen) &&

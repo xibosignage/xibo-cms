@@ -418,6 +418,14 @@
                         delete: "{{ "Replace"|trans }}"
                     },
                 },
+                selectWidgetFromCanvasModal: {
+                    title: "{{ "Select widget or create a new one"|trans }}",
+                    createNew: "{{ "Create new"|trans }}",
+                    name: "{{ "Name"|trans }}",
+                    type: "{{ "Type"|trans }}",
+                    numEl: "{{ "# of elements"|trans }}",
+                    numElGr: "{{ "# of element groups"|trans }}",
+                },
                 exit: "{{ "Exit"|trans }}",
             };
 
@@ -430,7 +438,7 @@
                 widgetFromDt: "{{ "Start time" |trans }}",
                 widgetToDt: "{{ "End time" |trans }}",
                 widgetExpiryDates: "{{ "Set Expiry Dates" |trans }}",
-                widgetExpiryDatesMessage: "{{ "Use the check box to set Start and End dates and times for Widgets" |trans }}",
+                widgetExpiryDatesMessage: "{{ "Use the check box to set Start and End dates/times for media files and use the Start Upload button to apply to all files or the row upload button to upload individually." |trans }}",
                 widgetFromDtMessage: "{{ "Select the start time for this widget" |trans }}",
                 widgetToDtMessage: "{{ "Select the end time for this widget" |trans }}",
                 deleteOnExpiry: "{{ "Delete on Expiry" |trans }}",
@@ -461,6 +469,7 @@
                 sendToBack: "{{ "Send to back" |trans }}",
                 delete: "{{ "Delete"|trans }}",
                 copy: "{{ "Duplicate"|trans }}",
+                newConfig: "{{ "New Configuration"|trans }}",
                 groupElements: "{{ "Group elements"|trans }}",
                 ungroupElements: "{{ "Ungroup elements"|trans }}",
                 addElementsToGroup: "{{ "Add elements to group"|trans }}",
@@ -599,7 +608,7 @@
                     makeRegionFullScreen: "{{ "Make this %regionType% full screen, dimensions will be set to %layout.width% by %layout.height%." |trans }}",
                 },
                 widget: {
-                    name: "{{ "Name" |trans }}",
+                    name: "{{ "Widget Name" |trans }}",
                     nameHelpText: "{{ "An optional name for this widget" |trans }}",
                     useDuration: "{{ "Set a duration?" |trans }}",
                     useDurationHelpText: "{{ "Select to provide a specific duration for this Widget" |trans }}",
@@ -615,6 +624,15 @@
                 },
                 effect: "Effect",
                 effectHelpText: "Please select the effect that will be used to transition between items.",
+                canvasWidgetControl: {
+                    canvasWidgets: "{{ "Widget" |trans }}",
+                    canvasWidgetsHelp: "{{ "Widgets of the same type, change to transfer the source to a different widget." |trans }}",
+                    transferWidget: "{{ "Transfer" |trans }}",
+                    transferWidgetHelp: "{{ "Transfer the currently selected elements into a new widget!" |trans }}",
+                },
+                widgetInfo: {
+                    widgetName: "{{ "Widget Name" |trans }}",
+                }
             };
 
             var toolbarTrans = {
@@ -784,7 +802,7 @@
                     helpText: "{{ "Completely remove the old version of this media item if a new file is being uploaded."|trans }}"
                 },
                 widgetExpiryDates: "{{ "Set Expiry Dates" |trans }}",
-                widgetExpiryDatesMessage: "{{ "Use the check box to set Start and End dates and times for Widgets" |trans }}",
+                widgetExpiryDatesMessage: "{{ "Use the check box to set Start and End dates/times for media files and use the Start Upload button to apply to all files or the row upload button to upload individually." |trans }}",
                 widgetFromDtMessage: "{{ "Select the start time for this widget" |trans }}",
                 widgetToDtMessage: "{{ "Select the end time for this widget" |trans }}",
                 deleteOnExpiry: "{{ "Delete on Expiry" |trans }}",
@@ -818,6 +836,7 @@
                 requiredField: "{{  "Missing required property %property%"|trans }}",
                 unknown: "{{ "Unknown Error"|trans }}",
                 invalidRegion: "{{ "Region is invalid: Please delete it to validate the Layout!"|trans }}",
+                failedToImportMedia: "{{ "Failed to import media!"|trans }}",
             };
 
             var widgetStatusTrans = {
@@ -896,6 +915,34 @@
             var datasetColumnSelectorTranslations = {
                 colAvailable: "{{ "Columns Available"|trans }}",
                 colSelected: "{{ "Columns Selected"|trans }}",
+            };
+
+            var tickerTagSelectorTranslations = {
+                tagsTitle: "{{ "Tags"|trans }}",
+                tagsHelp: "{{ "Drag tags to the right column so thy can be displayed on the marquee."|trans }}",
+                tagAvailable: "{{ "Available"|trans }}",
+                tagSelected: "{{ "Selected"|trans }}",
+                title: "{{ "Title"|trans }}",
+                summary: "{{ "Summary"|trans }}",
+                content: "{{ "Content"|trans }}",
+                author: "{{ "Author"|trans }}",
+                permalink: "{{ "Permalink"|trans }}",
+                link: "{{ "Link"|trans }}",
+                date: "{{ "Date"|trans }}",
+                publishedDate: "{{ "Published Date"|trans }}",
+                image: "{{ "Image"|trans }}",
+                form: {
+                    fontFamily: "{{ "Font Family"|trans }}",
+                    fontColor: "{{ "Font Colour"|trans }}",
+                    fontSize: "{{ "Font Size"|trans }}",
+                    bold: "{{ "Bold"|trans }}",
+                    italics: "{{ "Italics"|trans }}",
+                    underline: "{{ "Underline"|trans }}",
+                    dateFormat: "{{ "Date Format"|trans }}",
+                    opacity: "{{ "Opacity"|trans }}",
+                    width: "{{ "Width"|trans }}",
+                    height: "{{ "Height"|trans }}",
+                }
             };
 
             var actionsTranslations = {
