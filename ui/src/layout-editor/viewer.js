@@ -1791,7 +1791,9 @@ Viewer.prototype.renderElementContent = function(
           }
         }
 
-        if (extendOverrideKey !== null || extendWithDataKey !== null) {
+        if (element.hasDataType &&
+          (extendOverrideKey !== null || extendWithDataKey !== null)
+        ) {
           // Validate element data
           self.validateElementData(
             element,
