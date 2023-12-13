@@ -32,7 +32,7 @@ class RealTimeDataMigration extends AbstractMigration
     {
         $this->table('dataset')
             ->addColumn('isRealTime', 'integer', [
-                'limit' => \Phinx\Db\Adapter\MysqlAdapter::BLOB_TINY,
+                'limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY,
                 'default' => 0,
                 'null' => false,
             ])
@@ -49,6 +49,7 @@ class RealTimeDataMigration extends AbstractMigration
                 'default' => null,
                 'null' => true
             ])
+            ->addForeignKey('dataSetId', 'dataset', 'dataSetId')
             ->save();
     }
 }
