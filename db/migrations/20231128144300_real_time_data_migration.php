@@ -49,7 +49,6 @@ class RealTimeDataMigration extends AbstractMigration
                 'default' => null,
                 'null' => true
             ])
-            ->addForeignKey('dataSetId', 'dataset', 'dataSetId')
             ->save();
     }
 }
