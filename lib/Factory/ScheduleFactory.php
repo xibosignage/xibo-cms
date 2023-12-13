@@ -244,7 +244,9 @@ class ScheduleFactory extends BaseFactory
                 `daypart`.isCustom,
                 `syncLayout`.layoutId AS syncLayoutId,
                 `syncLayout`.status AS syncLayoutStatus, 
-                `syncLayout`.duration AS syncLayoutDuration
+                `syncLayout`.duration AS syncLayoutDuration,
+                `schedule`.dataSetId,
+                `schedule`.dataSetParams
                FROM `schedule`
                 INNER JOIN `daypart`
                 ON `daypart`.dayPartId = `schedule`.dayPartId
@@ -398,7 +400,9 @@ class ScheduleFactory extends BaseFactory
             `user`.userName as modifiedByName,
             `schedule`.createdOn,
             `schedule`.updatedOn,
-            `schedule`.name
+            `schedule`.name,
+            `schedule`.dataSetId,
+            `schedule`.dataSetParams
         ';
 
         $body = ' FROM `schedule`
@@ -758,7 +762,8 @@ class ScheduleFactory extends BaseFactory
                     'recurrenceMonthlyRepeatsOn',
                     'isGeoAware',
                     'maxPlaysPerHour',
-                    'modifiedBy'
+                    'modifiedBy',
+                    'dataSetId',
                 ]
             ]);
         }

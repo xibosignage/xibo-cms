@@ -98,6 +98,7 @@
                                         <th>{% trans "Description" %}</th>
                                         <th>{% trans "Code" %}</th>
                                         <th>{% trans "Remote?" %}</th>
+                                        <th>{% trans "Real time?" %}</th>
                                         <th>{% trans "Owner" %}</th>
                                         <th>{% trans "Sharing" %}</th>
                                         <th>{% trans "Last Sync" %}</th>
@@ -152,6 +153,11 @@
                         "data": "isRemote",
                         responsivePriority: 3,
                         "render": dataTableTickCrossColumn
+                    },
+                    {
+                        data: 'isRealTime',
+                        responsivePriority: 3,
+                        render: dataTableTickCrossColumn,
                     },
                     { "data": "owner", responsivePriority: 3 },
                     {
@@ -337,11 +343,28 @@
             $(dialog).find('#sourceId').on('change', function() {
                 onSourceFieldChanged(dialog);
             });
+
+          onRealTimeFieldChanged(dialog);
+
+          $(dialog).find("#isRealTime").on('change', function() {
+            onRealTimeFieldChanged(dialog);
+          });
         }
 
         function onRemoteFieldChanged(dialog) {
             var isRemote = $(dialog).find("#isRemote").is(":checked");
             var $remoteTabs = $(dialog).find(".tabForRemoteDataSet");
+
+            if (isRemote) {
+                $remoteTabs.removeClass("d-none");
+            } else {
+                $remoteTabs.addClass("d-none");
+            }
+        }
+
+        function onRealTimeFieldChanged(dialog) {
+            var isRemote = $(dialog).find("#isRealTime").is(":checked");
+            var $remoteTabs = $(dialog).find(".tabForRealTimeDataSet");
 
             if (isRemote) {
                 $remoteTabs.removeClass("d-none");

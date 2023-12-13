@@ -66,6 +66,7 @@ use Xibo\Support\Exception\DeadlockException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Xmds\Entity\Dependency;
+use Xibo\Xmds\Listeners\XmdsDataConnectorListener;
 
 /**
  * Class Soap
@@ -551,10 +552,12 @@ class Soap
 
                 $this->getLog()->debug(count($scheduleEvents) . ' events for eventId ' . $schedule->eventId);
 
+                // Sync events
                 $layoutId = ($schedule->eventTypeId == Schedule::$SYNC_EVENT)
                     ? $parsedRow->getInt('syncLayoutId')
                     : $parsedRow->getInt('layoutId');
 
+                // Layout codes (action events)
                 $layoutCode = $parsedRow->getString('actionLayoutCode');
                 if ($layoutId != null &&
                     (
@@ -577,6 +580,18 @@ class Soap
                     } else {
                         $this->getLog()->error(sprintf(__('Scheduled Action Event ID %d contains an invalid Layout linked to it by the Layout code.'), $schedule->eventId));
                     }
+                }
+
+                // Data Connectors
+                if ($isSupportsDependency && $schedule->eventTypeId === Schedule::$DATA_CONNECTOR_EVENT) {
+                    $this->addDependency(
+                        $newRfIds,
+                        $requiredFilesXml,
+                        $fileElements,
+                        $httpDownloads,
+                        $isSupportsDependency,
+                        XmdsDataConnectorListener::getDataConnectorDependency($libraryLocation, $row['dataSetId']),
+                    );
                 }
             }
         } catch (\Exception $e) {
@@ -1261,8 +1276,10 @@ class Soap
 
             $this->getLog()->debug(sprintf('Resolved dependents for Schedule: %s.', json_encode($layoutDependents, JSON_PRETTY_PRINT)));
 
+            // Additional nodes.
             $overlayNodes = null;
             $actionNodes = null;
+            $dataConnectorNodes = null;
 
             // We must have some results in here by this point
             foreach ($events as $row) {
@@ -1429,6 +1446,23 @@ class Soap
                         $action->setAttribute('commandCode', $commandCode);
 
                         $actionNodes->appendChild($action);
+                    } else if ($eventTypeId === Schedule::$DATA_CONNECTOR_EVENT) {
+                        if ($dataConnectorNodes == null) {
+                            $dataConnectorNodes = $scheduleXml->createElement('dataConnectors');
+                        }
+
+                        $dataConnector = $scheduleXml->createElement('connector');
+                        $dataConnector->setAttribute('fromdt', $fromDt);
+                        $dataConnector->setAttribute('todt', $toDt);
+                        $dataConnector->setAttribute('scheduleid', $scheduleId);
+                        $dataConnector->setAttribute('priority', $is_priority);
+                        $dataConnector->setAttribute('duration', $row['duration'] ?? 0);
+                        $dataConnector->setAttribute('isGeoAware', $row['isGeoAware'] ?? 0);
+                        $dataConnector->setAttribute('geoLocation', $row['geoLocation'] ?? null);
+                        $dataConnector->setAttribute('dataKey', $row['dataSetId']);
+                        $dataConnector->setAttribute('dataParams', $row['dataSetParams']);
+                        $dataConnector->setAttribute('js', 'dataSet_' . $row['dataSetId'] . '.js');
+                        $dataConnectorNodes->appendChild($dataConnector);
                     }
                 }
             }
@@ -1441,6 +1475,11 @@ class Soap
             // Add Actions nodes if we had any
             if ($actionNodes != null) {
                 $layoutElements->appendChild($actionNodes);
+            }
+
+            // Add Data Connector nodes if we had any
+            if ($dataConnectorNodes != null) {
+                $layoutElements->appendChild($dataConnectorNodes);
             }
         } catch (\Exception $e) {
             $this->getLog()->error('Error getting the schedule. ' . $e->getMessage());

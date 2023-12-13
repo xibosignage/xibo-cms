@@ -112,6 +112,12 @@ class DataSet implements \JsonSerializable
     public $isRemote = 0;
 
     /**
+     * @SWG\Property(description="Flag to indicate whether this DataSet is Real time")
+     * @var int
+     */
+    public $isRealTime = 0;
+
+    /**
      * @SWG\Property(description="Method to fetch the Data, can be GET or POST")
      * @var string
      */
@@ -947,6 +953,17 @@ class DataSet implements \JsonSerializable
             throw new InvalidArgumentException(__('Cannot delete because DataSet is in use on one or more Layouts.'), 'dataSetId');
         }
 
+        if ($this->getStore()->exists('
+            SELECT `eventId` 
+              FROM `schedule`
+              WHERE `dataSetId` = :dataSetId
+        ', ['dataSetId' => $this->dataSetId])) {
+            throw new InvalidArgumentException(
+                __('Cannot delete because DataSet is in use on one or more Data Connector schedules.'),
+                'dataSetId'
+            );
+        }
+
         // Delete Permissions
         foreach ($this->permissions as $permission) {
             /* @var Permission $permission */
@@ -984,8 +1001,10 @@ class DataSet implements \JsonSerializable
      */
     private function add()
     {
-        $columns = 'DataSet, Description, UserID, `code`, `isLookup`, `isRemote`, `lastDataEdit`, `lastClear`, `folderId`, `permissionsFolderId`';
-        $values = ':dataSet, :description, :userId, :code, :isLookup, :isRemote, :lastDataEdit, :lastClear, :folderId, :permissionsFolderId';
+        $columns = 'DataSet, Description, UserID, `code`, `isLookup`, `isRemote`,';
+        $columns .= '`lastDataEdit`, `lastClear`, `folderId`, `permissionsFolderId`, `isRealTime`';
+        $values = ':dataSet, :description, :userId, :code, :isLookup, :isRemote,';
+        $values .= ':lastDataEdit, :lastClear, :folderId, :permissionsFolderId, :isRealTime';
 
         $params = [
             'dataSet' => $this->dataSet,
@@ -994,10 +1013,11 @@ class DataSet implements \JsonSerializable
             'code' => ($this->code == '') ? null : $this->code,
             'isLookup' => $this->isLookup,
             'isRemote' => $this->isRemote,
+            'isRealTime' => $this->isRealTime,
             'lastDataEdit' => 0,
             'lastClear' => 0,
             'folderId' => ($this->folderId === null) ? 1 : $this->folderId,
-            'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this-> permissionsFolderId
+            'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this-> permissionsFolderId,
         ];
 
         // Insert the extra columns we expect for a remote DataSet
@@ -1040,7 +1060,18 @@ class DataSet implements \JsonSerializable
      */
     private function edit()
     {
-        $sql = 'DataSet = :dataSet, Description = :description, userId = :userId, lastDataEdit = :lastDataEdit, `code` = :code, `isLookup` = :isLookup, `isRemote` = :isRemote, `folderId` = :folderId, `permissionsFolderId` = :permissionsFolderId ';
+        $sql = '
+            `DataSet` = :dataSet,
+            `Description` = :description,
+            `userId` = :userId, 
+            `lastDataEdit` = :lastDataEdit, 
+            `code` = :code, 
+            `isLookup` = :isLookup, 
+            `isRemote` = :isRemote, 
+            `isRealTime` = :isRealTime, 
+            `folderId` = :folderId, 
+            `permissionsFolderId` = :permissionsFolderId 
+        ';
         $params = [
             'dataSetId' => $this->dataSetId,
             'dataSet' => $this->dataSet,
@@ -1050,6 +1081,7 @@ class DataSet implements \JsonSerializable
             'code' => $this->code,
             'isLookup' => $this->isLookup,
             'isRemote' => $this->isRemote,
+            'isRealTime' => $this->isRealTime,
             'folderId' => $this->folderId,
             'permissionsFolderId' => $this->permissionsFolderId
         ];
@@ -1220,5 +1252,33 @@ class DataSet implements \JsonSerializable
     {
         $this->getLog()->debug('Force sync detected, clear cache for remote dataSet ID ' . $this->dataSetId);
         $this->pool->deleteItem('/dataset/cache/' . $this->dataSetId);
+    }
+
+    private function getScriptPath(): string
+    {
+        return $this->config->getSetting('LIBRARY_LOCATION')
+            . 'data_connectors' . DIRECTORY_SEPARATOR
+            . 'dataSet_' . $this->dataSetId . '.js';
+    }
+
+    public function getScript(): string
+    {
+        if ($this->isRealTime == 0) {
+            return '';
+        }
+
+        $path = $this->getScriptPath();
+        return (file_exists($path))
+            ? file_get_contents($path)
+            : '';
+    }
+
+    public function saveScript(string $script): void
+    {
+        if ($this->isRealTime == 1) {
+            $path = $this->getScriptPath();
+            file_put_contents($path, $script);
+            file_put_contents($path . '.md5', md5_file($path));
+        }
     }
 }

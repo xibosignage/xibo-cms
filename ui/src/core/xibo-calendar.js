@@ -964,27 +964,26 @@ var processScheduleFormElements = function(el) {
             console.log('Process: eventTypeId, val = ' + fieldVal);
 
             var layoutControlDisplay =
-              (fieldVal == 2 || fieldVal == 6 || fieldVal == 7 || fieldVal == 8) ? 'none' : '';
+              (fieldVal == 2 || fieldVal == 6 || fieldVal == 7 || fieldVal == 8 || fieldVal == 10) ? 'none' : '';
             var endTimeControlDisplay = (fieldVal == 2 || relativeTime) ? 'none' : '';
             var startTimeControlDisplay = (relativeTime && fieldVal != 2) ? 'none' : '';
             var dayPartControlDisplay = (fieldVal == 2) ? 'none' : '';
             var commandControlDisplay = (fieldVal == 2) ? '' : 'none';
-            var scheduleSyncControlDisplay = (fieldVal == 1) ? '' : 'none';
             var interruptControlDisplay = (fieldVal == 4) ? '' : 'none';
             var actionControlDisplay = (fieldVal == 6) ? '' : 'none';
-            var maxPlaysControlDisplay = (fieldVal == 2 || fieldVal == 6) ? 'none' : '';
+            var maxPlaysControlDisplay = (fieldVal == 2 || fieldVal == 6 || fieldVal == 10) ? 'none' : '';
             var mediaScheduleControlDisplay = (fieldVal == 7) ? '' : 'none';
             var playlistScheduleControlDisplay = (fieldVal == 8) ? '' : 'none';
             var playlistMediaScheduleControlDisplay = (fieldVal == 7 || fieldVal == 8) ? '' : 'none';
             var relativeTimeControlDisplay = (fieldVal == 2 || !relativeTime) ? 'none' : '';
             var relativeTimeCheckboxDisplay = (fieldVal == 2) ? 'none' : '';
+            var dataConnectorDisplay = fieldVal == 10 ? '' : 'none';
 
             $('.layout-control').css('display', layoutControlDisplay);
             $('.endtime-control').css('display', endTimeControlDisplay);
             $('.starttime-control').css('display', startTimeControlDisplay);
             $('.day-part-control').css('display', dayPartControlDisplay);
             $('.command-control').css('display', commandControlDisplay);
-            $('.sync-schedule-control').css('display', scheduleSyncControlDisplay);
             $('.interrupt-control').css('display', interruptControlDisplay);
             $('.action-control').css('display', actionControlDisplay);
             $('.max-plays-control').css('display', maxPlaysControlDisplay);
@@ -992,7 +991,8 @@ var processScheduleFormElements = function(el) {
             $('.playlist-control').css('display', playlistScheduleControlDisplay);
             $('.media-playlist-control').css('display', playlistMediaScheduleControlDisplay);
             $('.relative-time-control').css('display', relativeTimeControlDisplay);
-            $('.relative-time-checkbox').css('display', relativeTimeCheckboxDisplay)
+            $('.relative-time-checkbox').css('display', relativeTimeCheckboxDisplay);
+            $('.data-connector-control').css('display', dataConnectorDisplay);
 
             // action event type
             if (fieldVal === 6) {

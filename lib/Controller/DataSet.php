@@ -128,6 +128,13 @@ class DataSet extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="isRealTime",
+     *      in="query",
+     *      description="Filter by real time",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="userId",
      *      in="query",
      *      description="Filter by user Id",
@@ -171,6 +178,7 @@ class DataSet extends Base
             'dataSet' => $sanitizedParams->getString('dataSet'),
             'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
             'code' => $sanitizedParams->getString('code'),
+            'isRealTime' => $sanitizedParams->getInt('isRealTime'),
             'userId' => $sanitizedParams->getInt('userId'),
             'folderId' => $sanitizedParams->getInt('folderId'),
             'logicalOperatorName' => $sanitizedParams->getString('logicalOperatorName'),
@@ -204,7 +212,9 @@ class DataSet extends Base
             }
 
             if ($this->getUser()->featureEnabled('dataset.modify')) {
-                if ($user->checkEditable($dataSet)) {
+                if ($user->checkEditable($dataSet)
+                    && ($dataSet->isRealTime === 0 || $this->getUser()->featureEnabled('dataset.realtime'))
+                ) {
                     // View Columns
                     $dataSet->buttons[] = array(
                         'id' => 'dataset_button_viewcolumns',
@@ -271,7 +281,10 @@ class DataSet extends Base
                     }
                 }
 
-                if ($user->checkDeleteable($dataSet) && $dataSet->isLookup == 0) {
+                if ($user->checkDeleteable($dataSet)
+                    && $dataSet->isLookup == 0
+                    && ($dataSet->isRealTime === 0 || $this->getUser()->featureEnabled('dataset.realtime'))
+                ) {
                     $dataSet->buttons[] = ['divider' => true];
                     // Delete DataSet
                     $dataSet->buttons[] = [
@@ -381,6 +394,13 @@ class DataSet extends Base
      *      required=true
      *   ),
      *  @SWG\Parameter(
+     *      name="isRealTime",
+     *      in="formData",
+     *      description="Is this a real time DataSet?",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
      *      name="method",
      *      in="formData",
      *      description="The Request Method GET or POST",
@@ -521,6 +541,13 @@ class DataSet extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="dataConnectorScript",
+     *      in="formData",
+     *      description="If isRealTime then provide a script to connect to the data source",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="folderId",
      *      in="formData",
      *      description="Folder ID to which this object should be assigned to",
@@ -556,6 +583,7 @@ class DataSet extends Base
         $dataSet->description = $sanitizedParams->getString('description');
         $dataSet->code = $sanitizedParams->getString('code');
         $dataSet->isRemote = $sanitizedParams->getCheckbox('isRemote');
+        $dataSet->isRealTime = $sanitizedParams->getCheckbox('isRealTime');
         $dataSet->userId = $this->getUser()->userId;
 
         // Folders
@@ -612,6 +640,11 @@ class DataSet extends Base
         // Save
         $dataSet->save();
 
+        if ($dataSet->isRealTime === 1) {
+            // Set the script.
+            $dataSet->saveScript($sanitizedParams->getString('dataConnectorScript'));
+        }
+
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 201,
@@ -647,6 +680,7 @@ class DataSet extends Base
         $this->getState()->setData([
             'dataSet' => $dataSet,
             'dataSets' => $this->dataSetFactory->query(),
+            'script' => $dataSet->getScript(),
         ]);
 
         return $this->render($request, $response);
@@ -706,6 +740,13 @@ class DataSet extends Base
      *      required=true
      *   ),
      *  @SWG\Parameter(
+     *      name="isRealTime",
+     *      in="formData",
+     *      description="Is this a real time DataSet?",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
      *      name="method",
      *      in="formData",
      *      description="The Request Method GET or POST",
@@ -846,6 +887,13 @@ class DataSet extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="dataConnectorScript",
+     *      in="formData",
+     *      description="If isRealTime then provide a script to connect to the data source",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="folderId",
      *      in="formData",
      *      description="Folder ID to which this object should be assigned to",
@@ -872,6 +920,7 @@ class DataSet extends Base
         $dataSet->description = $sanitizedParams->getString('description');
         $dataSet->code = $sanitizedParams->getString('code');
         $dataSet->isRemote = $sanitizedParams->getCheckbox('isRemote');
+        $dataSet->isRealTime = $sanitizedParams->getCheckbox('isRealTime');
         $dataSet->folderId = $sanitizedParams->getInt('folderId', ['default' => $dataSet->folderId]);
 
         if ($dataSet->hasPropertyChanged('folderId')) {
@@ -906,6 +955,11 @@ class DataSet extends Base
         }
 
         $dataSet->save();
+
+        if ($dataSet->isRealTime === 1) {
+            // Set the script.
+            $dataSet->saveScript($sanitizedParams->getString('dataConnectorScript'));
+        }
 
         // Return
         $this->getState()->hydrate([

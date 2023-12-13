@@ -478,6 +478,11 @@ class UserGroupFactory extends BaseFactory
                     'group' => 'scheduling',
                     'title' => __('Allow creation of Synchronised Schedules')
                 ],
+                'schedule.dataConnector' => [
+                    'feature' => 'schedule.dataConnector',
+                    'group' => 'scheduling',
+                    'title' => __('Allow creation of Data Connector Schedules')
+                ],
                 'daypart.view' => [
                     'feature' => 'daypart.view',
                     'group' => 'scheduling',
@@ -527,6 +532,11 @@ class UserGroupFactory extends BaseFactory
                     'feature' => 'dataset.data',
                     'group' => 'library',
                     'title' => __('Allow edits including deletion to all data contained within a DataSet independently to Layouts')
+                ],
+                'dataset.dataConnector' => [
+                    'feature' => 'dataset.realtime',
+                    'group' => 'library',
+                    'title' => __('Create and update real time DataSets')
                 ],
                 'layout.view' => [
                     'feature' => 'layout.view',

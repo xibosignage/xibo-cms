@@ -44,6 +44,7 @@
                 <li class="nav-item tabForRemoteDataSet"><a class="nav-link" href="#auth" role="tab" data-toggle="tab"><span>{% trans "Authentication" %}</span></a></li>
                 <li class="nav-item tabForRemoteDataSet"><a class="nav-link" href="#data" role="tab" data-toggle="tab"><span>{% trans "Data" %}</span></a></li>
                 <li class="nav-item tabForRemoteDataSet"><a class="nav-link" href="#params" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
+                <li class="nav-item tabForRealTimeDataSet"><a class="nav-link" href="#realtime" role="tab" data-toggle="tab"><span>{% trans "Real time" %}</span></a></li>
             </ul>
             <form id="dataSetAddForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("dataSet.add") }}">
                 <div class="tab-content">
@@ -75,6 +76,12 @@
                         {% set title %}{% trans "Remote?" %}{% endset %}
                         {% set helpText %}{% trans "Is this DataSet connected to a remote data source?" %}{% endset %}
                         {{ forms.checkbox("isRemote", title, 0, helpText) }}
+
+                        {% if currentUser.featureEnabled("dataset.realtime") %}
+                            {% set title %}{% trans "Real time?" %}{% endset %}
+                            {% set helpText %}{% trans "Is this DataSet connected to a real time data source?" %}{% endset %}
+                            {{ forms.checkbox("isRealTime", title, 0, helpText) }}
+                        {% endif %}
                     </div>
 
                     <div class="tab-pane" id="gateway">
@@ -285,6 +292,19 @@
                             { typeid: "truncate", type: truncate },
                         ] %}
                         {{ forms.dropdown("limitPolicy", "single", title, "", options, "typeid", "type", helpText) }}
+                    </div>
+
+                    <div class="tab-pane" id="realtime">
+                        <div class="form-group row code-input-group xibo-code-input">
+                            <div class="col-sm-12">
+                                <small class="form-text text-muted">{{ "Data Connector JavaScript"|trans }}</small>
+                                <textarea class="form-control d-none code-input" id="input_script" name="dataConnectorScript" rows="10" data-code-type="javascript">{{ script }}</textarea>
+
+                                <div class="code-input-editor-container">
+                                    <div class="code-input-editor"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </form>
