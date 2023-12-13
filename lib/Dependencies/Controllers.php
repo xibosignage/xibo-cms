@@ -472,7 +472,8 @@ class Controllers
                     $c->get('dayPartFactory'),
                     $c->get('scheduleReminderFactory'),
                     $c->get('scheduleExclusionFactory'),
-                    $c->get('syncGroupFactory')
+                    $c->get('syncGroupFactory'),
+                    $c->get('scheduleCriteriaFactory')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;

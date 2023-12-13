@@ -78,7 +78,8 @@ class ScheduleFactory extends BaseFactory
         $userFactory,
         $scheduleReminderFactory,
         $scheduleExclusionFactory,
-        $user
+        $user,
+        private readonly ScheduleCriteriaFactory $scheduleCriteriaFactory
     ) {
         $this->setAclDependencies($user, $userFactory);
         $this->config = $config;
@@ -106,7 +107,8 @@ class ScheduleFactory extends BaseFactory
             $this->dayPartFactory,
             $this->userFactory,
             $this->scheduleReminderFactory,
-            $this->scheduleExclusionFactory
+            $this->scheduleExclusionFactory,
+            $this->scheduleCriteriaFactory
         );
     }
 

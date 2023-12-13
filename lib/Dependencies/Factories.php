@@ -387,7 +387,8 @@ class Factories
                     $c->get('userFactory'),
                     $c->get('scheduleReminderFactory'),
                     $c->get('scheduleExclusionFactory'),
-                    $c->get('user')
+                    $c->get('user'),
+                    $c->get('scheduleCriteriaFactory')
                 );
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;
@@ -403,6 +404,11 @@ class Factories
             },
             'scheduleExclusionFactory' => function (ContainerInterface $c) {
                 $repository = new \Xibo\Factory\ScheduleExclusionFactory();
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
+            },
+            'scheduleCriteriaFactory' => function (ContainerInterface $c) {
+                $repository = new \Xibo\Factory\ScheduleCriteriaFactory();
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;
             },

@@ -27,6 +27,7 @@ use Stash\Interfaces\PoolInterface;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\ScheduleCriteriaFactory;
 use Xibo\Factory\ScheduleExclusionFactory;
 use Xibo\Factory\ScheduleReminderFactory;
 use Xibo\Factory\UserFactory;
@@ -117,6 +118,16 @@ class Schedule implements \JsonSerializable
      * @var ScheduleReminder[]
      */
     public $scheduleReminders = [];
+
+    /**
+     * @SWG\Property(
+     *  description="Schedule Criteria assigned to this Scheduled Event.",
+     *  type="array",
+     *  @SWG\Items(ref="#/definitions/ScheduleCriteria")
+     * )
+     * @var ScheduleCriteria[]
+     */
+    public $criteria = [];
 
     /**
      * @SWG\Property(
@@ -397,8 +408,19 @@ class Schedule implements \JsonSerializable
      * @param ScheduleReminderFactory $scheduleReminderFactory
      * @param ScheduleExclusionFactory $scheduleExclusionFactory
      */
-    public function __construct($store, $log, $dispatcher, $config, $pool, $displayGroupFactory, $dayPartFactory, $userFactory, $scheduleReminderFactory, $scheduleExclusionFactory)
-    {
+    public function __construct(
+        $store,
+        $log,
+        $dispatcher,
+        $config,
+        $pool,
+        $displayGroupFactory,
+        $dayPartFactory,
+        $userFactory,
+        $scheduleReminderFactory,
+        $scheduleExclusionFactory,
+        private readonly ScheduleCriteriaFactory $scheduleCriteriaFactory
+    ) {
         $this->setCommonDependencies($store, $log, $dispatcher);
         $this->config = $config;
         $this->pool = $pool;
@@ -523,7 +545,8 @@ class Schedule implements \JsonSerializable
     public function load($options = [])
     {
         $options = array_merge([
-            'loadScheduleReminders' => false
+            'loadScheduleReminders' => false,
+            'loadScheduleCriteria' => true,
         ], $options);
 
         // If we are already loaded, then don't do it again
@@ -536,6 +559,11 @@ class Schedule implements \JsonSerializable
         // Load schedule reminders
         if ($options['loadScheduleReminders']) {
             $this->scheduleReminders = $this->scheduleReminderFactory->query(null, ['eventId'=> $this->eventId]);
+        }
+
+        // Load schedule criteria
+        if ($options['loadScheduleCriteria']) {
+            $this->criteria = $this->scheduleCriteriaFactory->getByEventId($this->eventId);
         }
 
         // Set the original values now that we're loaded.
@@ -812,6 +840,12 @@ class Schedule implements \JsonSerializable
             $this->manageAssignments($isEdit && $options['notify']);
         }
 
+        // Update schedule criteria
+        foreach ($this->criteria as $criteria) {
+            $criteria->eventId = $this->eventId;
+            $criteria->save();
+        }
+
         // Notify
         if ($options['notify']) {
             // Only if the schedule effects the immediate future - i.e. within the RF Look Ahead
@@ -875,6 +909,11 @@ class Schedule implements \JsonSerializable
                 $reminder->delete();
             }
         }
+
+        // Delete schedule criteria
+        $this->getStore()->update('DELETE FROM `schedule_criteria` WHERE `eventId` = :eventId', [
+            'eventId' => $this->eventId,
+        ]);
 
         if ($this->eventTypeId === self::$SYNC_EVENT) {
             $this->getStore()->update('DELETE FROM `schedule_sync` WHERE eventId = :eventId', [

@@ -642,7 +642,10 @@ var setupScheduleForm = function(dialog) {
     // geo schedule
     var $geoAware = $('#isGeoAware');
     var isGeoAware = $geoAware.is(':checked');
-    let $form = dialog.find('form')
+    let $form = dialog.find('form');
+
+  // Configure the schedule criteria fields.
+  configureCriteriaFields(dialog);
 
     if (isGeoAware) {
         // without this additional check the map will not load correctly, it should be initialised when we are on the Geo Location tab
@@ -732,29 +735,37 @@ var setupScheduleForm = function(dialog) {
         $recurrenceMonthlyRepeatsOn.find("option").remove().end().append($dayOption).append($weekdayOption).val($recurrenceMonthlyRepeatsOn.data("value"));
     });
 
-    // Bind to the dialog submit
-    $("#scheduleAddForm, #scheduleEditForm, #scheduleDeleteForm, #scheduleRecurrenceDeleteForm").submit(function(e) {
-        e.preventDefault();
+  // Bind to the dialog submit
+  // this should make any changes to the form needed before we submit.
+  // eslint-disable-next-line max-len
+  $('#scheduleAddForm, #scheduleEditForm, #scheduleDeleteForm, #scheduleRecurrenceDeleteForm')
+    .submit(function(e) {
+      e.preventDefault();
 
-        var form = $(this);
+      // eslint-disable-next-line no-invalid-this
+      const $form = $(this);
+      const data = $form.serializeObject();
 
-        $.ajax({
-            type: $(this).attr("method"),
-            url: $(this).attr("action"),
-            data: $(this).serialize(),
-            cache: false,
-            dataType: "json",
-            success: function(xhr, textStatus, error) {
+      // Criteria fields
+      processCriteriaFields($form, data);
 
-                XiboSubmitResponse(xhr, form);
+      $.ajax({
+        type: $form.attr('method'),
+        url: $form.attr('action'),
+        data: data,
+        cache: false,
+        dataType: 'json',
+        success: function(xhr, textStatus, error) {
+          // eslint-disable-next-line new-cap
+          XiboSubmitResponse(xhr, $form);
 
-                if (xhr.success && calendar !== undefined) {
-                    // Reload the Calendar
-                    calendar.options['clearCache'] = true;
-                    calendar.view();
-                }
-            }
-        });
+          if (xhr.success && calendar !== undefined) {
+            // Reload the Calendar
+            calendar.options['clearCache'] = true;
+            calendar.view();
+          }
+        },
+      });
     });
 
     // Popover
@@ -1695,4 +1706,75 @@ var setupSelectForSchedule = function (dialog) {
                 SystemMessage(xhr.responseText, false);
             })
     })
+};
+
+/**
+ * Configure criteria fields on the schedule add/edit forms.
+ * @param {object} dialog - Dialog object
+ */
+// eslint-disable-next-line no-unused-vars
+const configureCriteriaFields = function(dialog) {
+  const $fields = dialog.find('#scheduleCriteriaFields');
+  if ($fields.length <= 0) {
+    return;
+  }
+
+  // We use a template
+  const templateScheduleCriteriaFields =
+    Handlebars.compile($('#templateScheduleCriteriaFields').html());
+
+  // Existing criteria?
+  if ($fields.data('criteria').length >= 0) {
+    // Yes there are existing criteria
+    // Go through each one and add a field row to the form.
+    let i = 0;
+    $.each($fields.data('criteria'), function(index, element) {
+      i++;
+      element.isAdd = false;
+      element.i = i;
+      $fields.append(templateScheduleCriteriaFields(element));
+    });
+  }
+
+  // Add a row at the end for configuring a new criterion
+  $fields.append(templateScheduleCriteriaFields({
+    isAdd: true,
+  }));
+
+  // Buttons we've added should be bound.
+  $fields.on('click', 'button', function(e) {
+    e.preventDefault();
+    // eslint-disable-next-line no-invalid-this
+    const $button = $(this);
+    if ($button.data('isAdd')) {
+      $fields.append(templateScheduleCriteriaFields({
+        isAdd: true,
+      }));
+      $button.data('isAdd', false);
+    } else {
+      $button.closest('.form-group').remove();
+    }
+  });
+};
+
+const processCriteriaFields = function($form, data) {
+  data.criteria = [];
+  $.each(data.criteria_metric, function(index, element) {
+    if (element) {
+      data.criteria.push({
+        id: data.criteria_id[index],
+        type: data.criteria_type[index],
+        metric: element,
+        condition: data.criteria_condition[index],
+        value: data.criteria_value[index],
+      });
+    }
+  });
+
+  // Tidy up fields.
+  delete data['criteria_id'];
+  delete data['criteria_type'];
+  delete data['criteria_metric'];
+  delete data['criteria_criteria'];
+  delete data['criteria_value'];
 };
