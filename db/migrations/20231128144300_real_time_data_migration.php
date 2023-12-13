@@ -40,7 +40,6 @@ class RealTimeDataMigration extends AbstractMigration
 
         $this->table('schedule')
             ->addColumn('dataSetId', 'integer', [
-                'limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_REGULAR,
                 'default' => null,
                 'null' => true
             ])
