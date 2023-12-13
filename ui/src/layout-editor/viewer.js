@@ -1676,6 +1676,7 @@ Viewer.prototype.renderElementContent = function(
     element.getProperties().then((properties) => {
       // Convert properties to object with id and value
       const convertedProperties = {};
+      let hasCircleOutline = false;
       for (const key in properties) {
         if (properties.hasOwnProperty(key)) {
           const property = properties[key];
@@ -1696,6 +1697,18 @@ Viewer.prototype.renderElementContent = function(
               .convertPhpToMomentFormat(String(
                 convertedProperties[property.id],
               ));
+          }
+
+          // Calculate circle radius based on outlineWidth
+          if (element.id === 'circle') {
+            if (property.id === 'outline') {
+              hasCircleOutline = property.value;
+            }
+
+            if (property.id === 'outlineWidth') {
+              convertedProperties.circleRadius = hasCircleOutline ?
+                50 - (property.value / 4) : 50;
+            }
           }
         }
       }

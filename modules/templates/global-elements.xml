@@ -763,8 +763,8 @@ $(target).find('.date').each(function(_idx, dateEl){
     <defs>
         <symbol id="circle_{{uniqueID}}" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
             <circle
-                {{#if outline }}
-                    r="calc(50 - calc({{outlineWidth}} / 4))"
+                {{#if circleRadius}}
+                    r="{{circleRadius}}"
                 {{else}}
                     r="50"
                 {{/if}}
