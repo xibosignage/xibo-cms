@@ -51,7 +51,6 @@
             <property id="javaScript" type="code" allowLibraryRefs="true" variant="javascript">
                 <title>Optional JavaScript</title>
             </property>
-
             <property id="background-image" type="dropdown" mode="single">
                 <title>Background Image</title>
                 <helpText>The background image to use</helpText>
@@ -220,23 +219,27 @@
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
-                <helpText>The color of the text</helpText>
-                <default></default>
+                <helpText>The colour of the text</helpText>
+                <default>#000</default>
             </property>
             <property id="icons-color" type="color">
                 <title>Icons</title>
-                <helpText>The color of the icons</helpText>
-                <default></default>
+                <helpText>The colour of the icons</helpText>
+                <default>#000</default>
             </property>
             <property id="background-color" type="color">
                 <title>Background</title>
-                <helpText>The color of the background</helpText>
+                <helpText>The colour of the background</helpText>
                 <default></default>
             </property>
             <property id="shadow-color" type="color">
                 <title>Shadow</title>
-                <helpText>The color of the shadow</helpText>
-                <default></default>
+                <helpText>The colour of the shadow</helpText>
+                <default>rgba(255, 255, 255, 0.5)</default>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
             <property id="background-image" type="dropdown" mode="single">
                 <title>Background Image</title>
@@ -402,6 +405,7 @@
 .container-row {
   padding: 30px;
   padding-top: 50px;
+  padding-bottom: 55px;
   display: table;
   width: 100%;
 }
@@ -413,7 +417,11 @@
 body {
   width: 960px !important;
   height: 340px !important;
-  font-family: "Helvetica", "Arial", sans-serif;
+  {% if fontFamily %}
+    font-family: {{fontFamily}};
+  {% else %}
+    font-family: "Helvetica", "Arial", sans-serif;
+  {% endif %}
   line-height: 1;
 }
 
@@ -541,23 +549,27 @@ body {
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
-                <helpText>The color of the text</helpText>
-                <default></default>
+                <helpText>The colour of the text</helpText>
+                <default>#000</default>
             </property>
             <property id="icons-color" type="color">
                 <title>Icons</title>
-                <helpText>The color of the icons</helpText>
-                <default></default>
+                <helpText>The colour of the icons</helpText>
+                <default>#000</default>
             </property>
             <property id="background-color" type="color">
                 <title>Background</title>
-                <helpText>The color of the background</helpText>
+                <helpText>The colour of the background</helpText>
                 <default></default>
             </property>
             <property id="shadow-color" type="color">
                 <title>Shadow</title>
-                <helpText>The color of the shadow</helpText>
-                <default></default>
+                <helpText>The colour of the shadow</helpText>
+                <default>rgba(255, 255, 255, 0.5)</default>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
             <property id="background-image" type="dropdown" mode="single">
                 <title>Background Image</title>
@@ -721,7 +733,11 @@ body {
 body {
     width: 340px !important;
     height: 200px !important;
-    font-family: "Helvetica", "Arial", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     line-height: 1;
 }
 
@@ -838,23 +854,27 @@ body {
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
-                <helpText>The color of the text</helpText>
-                <default></default>
+                <helpText>The colour of the text</helpText>
+                <default>#000</default>
             </property>
             <property id="icons-color" type="color">
                 <title>Icons</title>
-                <helpText>The color of the icons</helpText>
-                <default></default>
+                <helpText>The colour of the icons</helpText>
+                <default>#000</default>
             </property>
             <property id="background-color" type="color">
                 <title>Background</title>
-                <helpText>The color of the background</helpText>
+                <helpText>The colour of the background</helpText>
                 <default></default>
             </property>
             <property id="shadow-color" type="color">
                 <title>Shadow</title>
-                <helpText>The color of the shadow</helpText>
-                <default></default>
+                <helpText>The colour of the shadow</helpText>
+                <default>rgba(255, 255, 255, 0.5)</default>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
             <property id="background-image" type="dropdown" mode="single">
                 <title>Background Image</title>
@@ -1026,7 +1046,11 @@ body {
 }
 
 body {
-    font-family: "Helvetica", "Arial", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     line-height: 1;
 }
 
@@ -1040,7 +1064,11 @@ body {
 }
 
 .current-temp {
-    font-family: "Helvetica", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     font-weight: bold;
     font-size: 100px;
 }
@@ -1135,38 +1163,42 @@ body {
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
-                <helpText>The color of the text</helpText>
-                <default></default>
+                <helpText>The colour of the text</helpText>
+                <default>#fff</default>
             </property>
             <property id="icons-color" type="color">
                 <title>Icons</title>
-                <helpText>The color of the icons</helpText>
-                <default></default>
+                <helpText>The colour of the icons</helpText>
+                <default>#fff</default>
             </property>
             <property id="background-color" type="color">
                 <title>Background</title>
-                <helpText>The color of the background</helpText>
+                <helpText>The colour of the background</helpText>
                 <default></default>
             </property>
             <property id="shadow-color" type="color">
                 <title>Shadow</title>
-                <helpText>The color of the shadow</helpText>
-                <default></default>
+                <helpText>The colour of the shadow</helpText>
+                <default>rgba(0, 0, 0, 0.4)</default>
             </property>
             <property id="footer-color" type="color">
                 <title>Footer Background</title>
-                <helpText>The color of the footer background</helpText>
-                <default></default>
+                <helpText>The colour of the footer background</helpText>
+                <default>#000</default>
             </property>
             <property id="footer-text-color" type="color">
                 <title>Footer Text</title>
-                <helpText>The color of the footer text</helpText>
-                <default></default>
+                <helpText>The colour of the footer text</helpText>
+                <default>#fff</default>
             </property>
             <property id="footer-icons-color" type="color">
                 <title>Footer Icons</title>
-                <helpText>The color of the footer icons</helpText>
-                <default></default>
+                <helpText>The colour of the footer icons</helpText>
+                <default>#fff</default>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
             <property id="background-image" type="dropdown" mode="single">
                 <title>Background Image</title>
@@ -1322,6 +1354,15 @@ body {
 .container {
     width: 1920px !important;
     height: 1080px !important;
+}
+
+body {
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
+    line-height: 1;
 }
 
 h1 {
@@ -1518,38 +1559,42 @@ h1 {
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
-                <helpText>The color of the text</helpText>
-                <default></default>
+                <helpText>The colour of the text</helpText>
+                <default>#fff</default>
             </property>
             <property id="icons-color" type="color">
                 <title>Icons</title>
-                <helpText>The color of the icons</helpText>
-                <default></default>
+                <helpText>The colour of the icons</helpText>
+                <default>#fff</default>
             </property>
             <property id="background-color" type="color">
                 <title>Background</title>
-                <helpText>The color of the background</helpText>
+                <helpText>The colour of the background</helpText>
                 <default></default>
             </property>
             <property id="shadow-color" type="color">
                 <title>Shadow</title>
-                <helpText>The color of the shadow</helpText>
-                <default></default>
+                <helpText>The colour of the shadow</helpText>
+                <default>#111</default>
             </property>
             <property id="footer-color" type="color">
                 <title>Footer Background</title>
-                <helpText>The color of the footer background</helpText>
-                <default></default>
+                <helpText>The colour of the footer background</helpText>
+                <default>#fff</default>
             </property>
             <property id="footer-text-color" type="color">
                 <title>Footer Text</title>
-                <helpText>The color of the footer text</helpText>
-                <default></default>
+                <helpText>The colour of the footer text</helpText>
+                <default>#333</default>
             </property>
             <property id="footer-icons-color" type="color">
                 <title>Footer Icons</title>
-                <helpText>The color of the footer icons</helpText>
-                <default></default>
+                <helpText>The colour of the footer icons</helpText>
+                <default>#333</default>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
             <property id="background-image" type="dropdown" mode="single">
                 <title>Background Image</title>
@@ -1736,8 +1781,12 @@ h1 {
 }
 
 body {
-  font-family: "Helvetica", "Arial", sans-serif;
-  line-height: 1;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
+    line-height: 1;
 }
 
 .container {
@@ -1964,18 +2013,32 @@ body {
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
-                <helpText>The color of the text</helpText>
-                <default></default>
+                <helpText>The colour of the text</helpText>
+                <default>#fff</default>
             </property>
             <property id="icons-color" type="color">
                 <title>Icons</title>
-                <helpText>The color of the icons</helpText>
-                <default></default>
+                <helpText>The colour of the icons</helpText>
+                <default>#fff</default>
+            </property>
+            <property id="cardsColor" type="color">
+                <title>Cards Background</title>
+                <helpText>The colour of the content cards</helpText>
+                <default>rgba(0, 0, 0, 0.56)</default>
+            </property>
+            <property id="dividerColor" type="color">
+                <title>Dividers Colour</title>
+                <helpText>The colour of the divider elements</helpText>
+                <default>#fff</default>
             </property>
             <property id="background-color" type="color">
                 <title>Background</title>
-                <helpText>The color of the background</helpText>
+                <helpText>The colour of the background</helpText>
                 <default></default>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
             <property id="background-image" type="dropdown" mode="single">
                 <title>Background Image</title>
@@ -2086,8 +2149,8 @@ body {
             </property>
         </properties>
         <stencil>
-            <width id="width">970</width>
-            <height id="height">493</height>
+            <width id="width">950</width>
+            <height id="height">520</height>
             <hbs></hbs>
             <twig><![CDATA[
 {% if attribute(_context, 'background-image') != 'none' %}
@@ -2179,6 +2242,12 @@ h1 {
     clear: both;
 }
 
+#content > div {
+    width: 100% !important;
+    height: 100% !important;
+    padding-top: 15px;
+}
+
 * {
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
@@ -2192,7 +2261,11 @@ h1 {
 }
 
 body {
-    font-family: "Helvetica", "Arial", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     line-height: 1;
     color: #fff;
 }
@@ -2204,15 +2277,19 @@ body {
 
 .contenedor {
     height: 300px;
-    background-color: rgba(0, 0, 0, 0.56);
     padding: 70px 20px 0 20px;
 }
 
 .upcoming {
     height: 193px;
-    background-color: rgba(0, 0, 0, 0.56);
-    border-top: 2px solid #fff;
+    border-top: 2px solid {{dividerColor}};
 }
+
+{% if cardsColor %}
+.contenedor, .upcoming, .rightnow {
+    background-color: {{cardsColor}};
+}
+{% endif %}
 
 .city {
     font-size: 50px;
@@ -2260,13 +2337,12 @@ body {
 }
 
 .border {
-    border-right: 2px solid #fff;
+    border-right: 2px solid {{dividerColor}};
 }
 
 .rightnow {
     height: 123.25px;
     padding-top: 20px;
-    background-color: rgba(0, 0, 0, 0.56);
 }
 
 .now {
@@ -2283,7 +2359,7 @@ body {
 }
 
 .small-border {
-    border-bottom: 2px solid #fff;
+    border-bottom: 2px solid {{dividerColor}};
 }
 
 .text-right {
@@ -2371,18 +2447,27 @@ body {
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
-                <helpText>The color of the text</helpText>
-                <default></default>
+                <helpText>The colour of the text</helpText>
+                <default>#fff</default>
             </property>
             <property id="icons-color" type="color">
                 <title>Icons</title>
-                <helpText>The color of the icons</helpText>
-                <default></default>
+                <helpText>The colour of the icons</helpText>
+                <default>#fff</default>
+            </property>
+            <property id="shadow-color" type="color">
+                <title>Shadow</title>
+                <helpText>The colour of the shadow</helpText>
+                <default>#111</default>
             </property>
             <property id="background-color" type="color">
                 <title>Background</title>
-                <helpText>The color of the background</helpText>
+                <helpText>The colour of the background</helpText>
                 <default></default>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
             <property id="background-image" type="dropdown" mode="single">
                 <title>Background Image</title>
@@ -2570,7 +2655,11 @@ h1 {
 }
 
 body {
-    font-family: "Helvetica", "Arial", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     line-height: 1;
 }
 
@@ -2595,7 +2684,11 @@ body {
 .date {
 
     font-size: 18px;
-    font-family: "Helvetica", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     font-weight: light;
     padding-bottom: 1px;
 }
@@ -2603,12 +2696,20 @@ body {
 .month {
     font-size: 15px;
 
-    font-family: "Helvetica", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     font-weight: light;
 }
 
 .current-temp {
-    font-family: "Helvetica", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     font-weight: bold;
     font-size: 100px;
 
@@ -2775,7 +2876,7 @@ body {
     null,
     null,
     null,
-    null,
+    attribute(_context, 'shadow-color'),
 ) }}
 </style>
             ]]></twig>
@@ -2795,23 +2896,27 @@ body {
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
-                <helpText>The color of the text</helpText>
-                <default></default>
+                <helpText>The colour of the text</helpText>
+                <default>#fff</default>
             </property>
             <property id="icons-color" type="color">
                 <title>Icons</title>
-                <helpText>The color of the icons</helpText>
-                <default></default>
+                <helpText>The colour of the icons</helpText>
+                <default>#fff</default>
             </property>
             <property id="background-color" type="color">
                 <title>Background</title>
-                <helpText>The color of the background</helpText>
+                <helpText>The colour of the background</helpText>
                 <default></default>
             </property>
             <property id="shadow-color" type="color">
                 <title>Shadow</title>
-                <helpText>The color of the shadow</helpText>
-                <default></default>
+                <helpText>The colour of the shadow</helpText>
+                <default>rgba(0, 0, 0, 0.4)</default>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
             <property id="background-image" type="dropdown" mode="single">
                 <title>Background Image</title>
@@ -2935,26 +3040,26 @@ body {
     <div class="row  main-panel">
         <div class="offset-xs-1 weather-col col-3">
             <div class="row">
-                <div class="date">[time|ddd] [time|DD]</div>
-                <div class="month">[time|MMM]</div>
-                <div class="current-temp">[temperatureRound]<sup>&deg;[temperatureUnit]</sup></div>
+                <div class="date shadowed">[time|ddd] [time|DD]</div>
+                <div class="month shadowed">[time|MMM]</div>
+                <div class="current-temp shadowed">[temperatureRound]<sup>&deg;[temperatureUnit]</sup></div>
             </div>
         </div>
         <div class="weather-col col-7 text-right">
-            <div class="main-icon"><i class="wi [wicon]"></i></div>
+            <div class="main-icon"><i class="wi [wicon] shadowed"></i></div>
 </div>
     </div>
     <div class="row footer">
         <div class="forecast-container" data-days-num="4"></div>
     </div>
-<div class="month shadowed powered">[Attribution]</div></div>
+<div class="month powered">[Attribution]</div></div>
 </div>
 
 <div class="forecast-day-template" style="display: none;">
 <div class="weather-col col-3">
-    <div class="small-day">[time|ddd]</div>
-    <div class="small-icon"><i class="wi [wicon]"></i></div>
-    <div class="small-temp">[temperatureMaxRound] &deg; [temperatureUnit] </div>
+    <div class="small-day shadowed">[time|ddd]</div>
+    <div class="small-icon shadowed"><i class="wi [wicon]"></i></div>
+    <div class="small-temp shadowed">[temperatureMaxRound] &deg; [temperatureUnit] </div>
 </div>
 </div>
 
@@ -3005,7 +3110,11 @@ body {
 }
 
  body {
-    font-family: "Helvetica", "Arial", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     line-height: 1;
 }
 
@@ -3015,6 +3124,9 @@ body {
     background-position: center;
     width: 970px !important;
     height: 700px !important;
+}
+
+.shadowed {
     text-shadow: 0px 0px 2px rgba(0, 0, 0, 0.4);
     filter: dropshadow(color=rgba(0, 0, 0, 0.4), offx=2, offy=2);
 }
@@ -3026,19 +3138,31 @@ body {
 .date {
     text-transform: uppercase;;
     font-size: 50px;
-    font-family: "Helvetica", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     font-weight: bold;
     padding-bottom: 5px;
 }
 
 .month {
     font-size: 40px;;
-    font-family: "Helvetica", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     font-weight: bold;
 }
 
 .current-temp {
-    font-family: "Helvetica", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     font-weight: bold;
     font-size: 130px;
 }
@@ -3215,18 +3339,27 @@ body {
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
-                <helpText>The color of the text</helpText>
-                <default></default>
+                <helpText>The colour of the text</helpText>
+                <default>#fff</default>
             </property>
             <property id="icons-color" type="color">
                 <title>Icons</title>
-                <helpText>The color of the icons</helpText>
-                <default></default>
+                <helpText>The colour of the icons</helpText>
+                <default>#fff</default>
+            </property>
+            <property id="shadow-color" type="color">
+                <title>Shadow</title>
+                <helpText>The colour of the shadow</helpText>
+                <default>#111</default>
             </property>
             <property id="background-color" type="color">
                 <title>Background</title>
-                <helpText>The color of the background</helpText>
+                <helpText>The colour of the background</helpText>
                 <default></default>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
             <property id="background-image" type="dropdown" mode="single">
                 <title>Background Image</title>
@@ -3420,7 +3553,11 @@ body {
 }
 
  body {
-    font-family: "Helvetica", "Arial", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     line-height: 1;
 }
 
@@ -3444,7 +3581,11 @@ body {
 
 .date {
     font-size: 18px;
-    font-family: "Helvetica", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     font-weight: light;
     padding-bottom: 1px;
 }
@@ -3452,12 +3593,20 @@ body {
 .month {
     font-size: 15px;
 
-    font-family: "Helvetica", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     font-weight: light;
 }
 
 .current-temp {
-    font-family: "Helvetica", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     font-weight: bold;
     font-size: 100px;
 
@@ -3577,7 +3726,7 @@ body {
 
     font-style: italic;
     text-align: left;
-text-transform: uppercase;
+    text-transform: uppercase;
 }
 
 .temp {
@@ -3681,7 +3830,7 @@ text-transform: uppercase;
     null,
     null,
     null,
-    null
+    attribute(_context, 'shadow-color')
 ) }}
 </style>
             ]]></twig>
@@ -3701,33 +3850,47 @@ text-transform: uppercase;
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
-                <helpText>The color of the text</helpText>
-                <default></default>
+                <helpText>The colour of the text</helpText>
+                <default>#fff</default>
             </property>
             <property id="icons-color" type="color">
                 <title>Icons</title>
-                <helpText>The color of the icons</helpText>
-                <default></default>
+                <helpText>The colour of the icons</helpText>
+                <default>#fff</default>
             </property>
             <property id="background-color" type="color">
                 <title>Background</title>
-                <helpText>The color of the background</helpText>
+                <helpText>The colour of the background</helpText>
                 <default></default>
             </property>
             <property id="shadow-color" type="color">
                 <title>Shadow</title>
-                <helpText>The color of the shadow</helpText>
-                <default></default>
+                <helpText>The colour of the shadow</helpText>
+                <default>rgba(0, 0, 0, 0.4)</default>
+            </property>
+            <property id="footerBackgroundEven" type="color">
+                <title>Footer Background 1</title>
+                <helpText>The colour of the footer background 1</helpText>
+                <default>rgba(255, 255, 255, 0.9)</default>
+            </property>
+            <property id="footerBackgroundOdd" type="color">
+                <title>Footer Background 2</title>
+                <helpText>The colour of the footer background 2</helpText>
+                <default>rgba(255, 255, 255, 0.6)</default>
             </property>
             <property id="footer-text-color" type="color">
                 <title>Footer Text</title>
-                <helpText>The color of the footer text</helpText>
-                <default></default>
+                <helpText>The colour of the footer text</helpText>
+                <default>#272625</default>
             </property>
             <property id="footer-icons-color" type="color">
                 <title>Footer Icons</title>
-                <helpText>The color of the footer icons</helpText>
-                <default></default>
+                <helpText>The colour of the footer icons</helpText>
+                <default>#272625</default>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
             <property id="background-image" type="dropdown" mode="single">
                 <title>Background Image</title>
@@ -3946,7 +4109,11 @@ h1 {
 }
 
 body {
-    font-family: "Helvetica", "Arial", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     line-height: 1;
 }
 
@@ -3970,9 +4137,12 @@ body {
 }
 
 .date {
-
     font-size: 18px;
-    font-family: "Helvetica", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     font-weight: light;
     padding-bottom: 1px;
 }
@@ -3980,12 +4150,20 @@ body {
 .month {
     font-size: 15px;
 
-    font-family: "Helvetica", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     font-weight: light;
 }
 
 .current-temp {
-    font-family: "Helvetica", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     font-weight: bold;
     font-size: 100px;
 
@@ -4034,14 +4212,14 @@ body {
 }
 
 .upcoming-days:nth-child(odd) {
-    background-color: rgba(255, 255, 255, 0.6);
-    background: rgba(255, 255, 255, 0.6);
+    background-color: {{footerBackgroundOdd}};
+    background: {{footerBackgroundOdd}};
 
 }
 
 .main-detail, .upcoming-days:nth-child(even) {
-    background-color: rgba(255, 255, 255, 0.9);
-    background: rgba(255, 255, 255, 0.9);
+    background-color: {{footerBackgroundEven}};
+    background: {{footerBackgroundEven}};
 }
 
 .details-box {
@@ -4177,33 +4355,47 @@ body {
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
-                <helpText>The color of the text</helpText>
-                <default></default>
+                <helpText>The colour of the text</helpText>
+                <default>#fff</default>
             </property>
             <property id="icons-color" type="color">
                 <title>Icons</title>
-                <helpText>The color of the icons</helpText>
-                <default></default>
+                <helpText>The colour of the icons</helpText>
+                <default>#fff</default>
             </property>
             <property id="background-color" type="color">
                 <title>Background</title>
-                <helpText>The color of the background</helpText>
+                <helpText>The colour of the background</helpText>
                 <default></default>
+            </property>
+            <property id="circleBackground" type="color">
+                <title>Circle Background</title>
+                <helpText>The colour of the circle background</helpText>
+                <default>rgba(0, 0, 0, 0.5)</default>
+            </property>
+            <property id="footerBackground" type="color">
+                <title>Footer Background</title>
+                <helpText>The colour of the footer background</helpText>
+                <default>rgba(255, 255, 255, 0.6)</default>
             </property>
             <property id="shadow-color" type="color">
                 <title>Shadow</title>
-                <helpText>The color of the shadow</helpText>
+                <helpText>The colour of the shadow</helpText>
                 <default></default>
             </property>
             <property id="footer-text-color" type="color">
                 <title>Footer Text</title>
-                <helpText>The color of the footer text</helpText>
-                <default></default>
+                <helpText>The colour of the footer text</helpText>
+                <default>#333</default>
             </property>
             <property id="footer-icons-color" type="color">
                 <title>Footer Icons</title>
-                <helpText>The color of the footer icons</helpText>
-                <default></default>
+                <helpText>The colour of the footer icons</helpText>
+                <default>#333</default>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
             <property id="background-image" type="dropdown" mode="single">
                 <title>Background Image</title>
@@ -4326,7 +4518,7 @@ body {
     <div class="container">
         <div class="row main-cont center-block">
             <div class="weather-col col-12 upcoming-days">
-                <div class="circle">
+                <div class="circle shadowed">
                     <div class="weather-col col-12">
                         <div class="small-icon">
                             <i class="wi [wicon]"></i></div>
@@ -4359,7 +4551,11 @@ body {
 body {
     width: 540px !important;
     height: 960px !important;
-    font-family: "Helvetica", "Arial", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     line-height: 1;
 }
 
@@ -4427,19 +4623,31 @@ h1 {
 
 .date {
     font-size: 18px;
-    font-family: "Helvetica", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     font-weight: light;
     padding-bottom: 1px;
 }
 
 .month {
     font-size: 15px;
-    font-family: "Helvetica", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     font-weight: light;
 }
 
 .current-temp {
-    font-family: "Helvetica", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     font-weight: bold;
     font-size: 100px;
 }
@@ -4498,8 +4706,8 @@ h1 {
 }
 
 .odd {
-    background-color: rgba(255, 255, 255, 0.6);
-    background: rgba(255, 255, 255, 0.6);
+    background-color: {{footerBackground}};
+    background: {{footerBackground}};
 }
 
 .details-box {
@@ -4560,7 +4768,7 @@ h1 {
     border-radius: 50%;
     width: 380px;
     height: 380px;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: {{circleBackground}};
 }
 
 .summary {
@@ -4681,28 +4889,47 @@ h1 {
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
-                <helpText>The color of the text</helpText>
-                <default></default>
+                <helpText>The colour of the text</helpText>
+                <default>#fff</default>
             </property>
             <property id="icons-color" type="color">
                 <title>Icons</title>
-                <helpText>The color of the icons</helpText>
-                <default></default>
+                <helpText>The colour of the icons</helpText>
+                <default>#fff</default>
+            </property>
+            <property id="currentContainerBackground" type="color">
+                <title>Current Container Background</title>
+                <helpText>The colour of the current container background</helpText>
+                <default>rgba(0, 0, 0, 0.8)</default>
+            </property>
+            <property id="forecastContainerBackground" type="color">
+                <title>Forecast Container Background</title>
+                <helpText>The colour of the forecast container background</helpText>
+                <default>rgba(0, 0, 0, 0.6)</default>
             </property>
             <property id="background-color" type="color">
                 <title>Background</title>
-                <helpText>The color of the background</helpText>
+                <helpText>The colour of the background</helpText>
                 <default></default>
             </property>
             <property id="footer-text-color" type="color">
                 <title>Footer Text</title>
-                <helpText>The color of the footer text</helpText>
-                <default></default>
+                <helpText>The colour of the footer text</helpText>
+                <default>#fff</default>
             </property>
             <property id="footer-icons-color" type="color">
                 <title>Footer Icons</title>
-                <helpText>The color of the footer icons</helpText>
-                <default></default>
+                <helpText>The colour of the footer icons</helpText>
+                <default>#fff</default>
+            </property>
+            <property id="footerBackground" type="color">
+                <title>Footer Background</title>
+                <helpText>The colour of the footer background</helpText>
+                <default>rgba(0, 0, 0, 0.7)</default>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
             <property id="background-image" type="dropdown" mode="single">
                 <title>Background Image</title>
@@ -4903,7 +5130,11 @@ h1 {
 }
 
 body {
-    font-family: "Helvetica", "Arial", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     line-height: 1;
 }
 
@@ -4935,19 +5166,31 @@ body {
 
 .date {
     font-size: 18px;
-    font-family: "Helvetica", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     font-weight: light;
     padding-bottom: 1px;
 }
 
 .month {
     font-size: 15px;
-    font-family: "Helvetica", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     font-weight: light;
 }
 
 .current-temp {
-    font-family: "Helvetica", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     font-weight: bold;
     font-size: 100px;
 }
@@ -4983,13 +5226,13 @@ body {
 }
 
 .even {
-    background-color: rgba(0, 0, 0, 0.6);
-    background: rgba(0, 0, 0, 0.6);
+    background-color: {{forecastContainerBackground}};
+    background: {{forecastContainerBackground}};
 }
 
 .odd {
-    background-color: rgba(0, 0, 0, 0.8);
-    background: rgba(0, 0, 0, 0.8);
+    background-color: {{currentContainerBackground}};
+    background: {{currentContainerBackground}};
 }
 
 .details-box {
@@ -5025,8 +5268,8 @@ body {
 
 .row-details {
     padding: 15px 35px;
-    background-color: rgba(0, 0, 0, 0.7);
-    background: rgba(0, 0, 0, 0.7);
+    background-color: {{footerBackground}};
+    background: {{footerBackground}};
 }
 
 .container-fluid, .container {
@@ -5125,18 +5368,22 @@ body {
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
-                <helpText>The color of the text</helpText>
-                <default></default>
+                <helpText>The colour of the text</helpText>
+                <default>#fff</default>
             </property>
             <property id="icons-color" type="color">
                 <title>Icons</title>
-                <helpText>The color of the icons</helpText>
-                <default></default>
+                <helpText>The colour of the icons</helpText>
+                <default>#fff</default>
             </property>
             <property id="background-color" type="color">
                 <title>Background</title>
-                <helpText>The color of the background</helpText>
-                <default></default>
+                <helpText>The colour of the background</helpText>
+                <default>#000</default>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
             <property id="background-image" type="dropdown" mode="single">
                 <title>Background Image</title>
@@ -5327,14 +5574,18 @@ h1 {
 
 body {
     background-color: #000;
-    font-family: "Helvetica", "Arial", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     line-height: 1;
 }
 
 .container {
     width: 960px !important;
     height: 180px !important;
-    padding-top: 30px;
+    padding-top: 24px;
 }
 
 .current-condition {
@@ -5364,10 +5615,9 @@ body {
 
 .powered {
     font-weight: bold;
-
     font-style: italic;
     padding-top: 26px;
-    font-size: 1.2em;
+    font-size: 0.8em;
 }
 
 .text-right {
@@ -5463,18 +5713,27 @@ body {
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
-                <helpText>The color of the text</helpText>
-                <default></default>
+                <helpText>The colour of the text</helpText>
+                <default>#fff</default>
             </property>
             <property id="icons-color" type="color">
                 <title>Icons</title>
-                <helpText>The color of the icons</helpText>
-                <default></default>
+                <helpText>The colour of the icons</helpText>
+                <default>#fff</default>
             </property>
             <property id="background-color" type="color">
                 <title>Background</title>
-                <helpText>The color of the background</helpText>
-                <default></default>
+                <helpText>The colour of the background</helpText>
+                <default>#000</default>
+            </property>
+            <property id="dividerColor" type="color">
+                <title>Dividers Colour</title>
+                <helpText>The colour of the divider elements</helpText>
+                <default>#fff</default>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
             <property id="background-image" type="dropdown" mode="single">
                 <title>Background Image</title>
@@ -5665,7 +5924,11 @@ h1 {
 
 body {
     background-color: #000;
-    font-family: "Helvetica", "Arial", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     line-height: 1;
 }
 
@@ -5708,7 +5971,7 @@ body {
 .border {
     padding-top: 25px;
     padding-bottom: 25px;
-    border-top: 3px solid #fff;
+    border-top: 3px solid {{dividerColor}};
 }
 
 .powered {
@@ -5819,33 +6082,42 @@ body {
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
-                <helpText>The color of the text</helpText>
-                <default></default>
+                <helpText>The colour of the text</helpText>
+                <default>#f9f9f9</default>
+            </property>
+            <property id="shadow-color" type="color">
+                <title>Shadow</title>
+                <helpText>The colour of the shadow</helpText>
+                <default>rgba(0, 0, 0, 0.6)</default>
             </property>
             <property id="icons-color" type="color">
                 <title>Icons</title>
-                <helpText>The color of the icons</helpText>
-                <default></default>
+                <helpText>The colour of the icons</helpText>
+                <default>#f9f9f9</default>
             </property>
             <property id="background-color" type="color">
                 <title>Background</title>
-                <helpText>The color of the background</helpText>
+                <helpText>The colour of the background</helpText>
                 <default></default>
             </property>
             <property id="footer-color" type="color">
                 <title>Footer Background</title>
-                <helpText>The color of the footer background</helpText>
-                <default></default>
+                <helpText>The colour of the footer background</helpText>
+                <default>rgba(0, 0, 0, 0.67)</default>
             </property>
             <property id="footer-text-color" type="color">
                 <title>Footer Text</title>
-                <helpText>The color of the footer text</helpText>
-                <default></default>
+                <helpText>The colour of the footer text</helpText>
+                <default>#f9f9f9</default>
             </property>
             <property id="footer-icons-color" type="color">
                 <title>Footer Icons</title>
-                <helpText>The color of the footer icons</helpText>
-                <default></default>
+                <helpText>The colour of the footer icons</helpText>
+                <default>#f9f9f9</default>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
             <property id="background-image" type="dropdown" mode="single">
                 <title>Background Image</title>
@@ -5987,6 +6259,14 @@ body {
 {% import "forecastio-css-generator.twig" as generateForecastCSS %}
 
 <style>
+body {
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
+}
+
 #content {
     color: #f9f9f9;
 }
@@ -6049,9 +6329,9 @@ body {
     font-size: 12px;
 }
 
-.powered {
+#content > div.powered {
     padding: 4px 0;
-    color: #000;
+    color: #000 !important;
     font-size: 13px;
     text-align: center;
     background-color: white;
@@ -6079,7 +6359,7 @@ body {
     attribute(_context, 'footer-color'),
     attribute(_context, 'footer-text-color'),
     attribute(_context, 'footer-icons-color'),
-    null
+    attribute(_context, 'shadow-color')
 ) }}
 </style>
             ]]></twig>
@@ -6099,33 +6379,42 @@ body {
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
-                <helpText>The color of the text</helpText>
-                <default></default>
+                <helpText>The colour of the text</helpText>
+                <default>#f9f9f9</default>
+            </property>
+            <property id="shadow-color" type="color">
+                <title>Shadow</title>
+                <helpText>The colour of the shadow</helpText>
+                <default>rgba(0, 0, 0, 0.6)</default>
             </property>
             <property id="icons-color" type="color">
                 <title>Icons</title>
-                <helpText>The color of the icons</helpText>
-                <default></default>
+                <helpText>The colour of the icons</helpText>
+                <default>#f9f9f9</default>
             </property>
             <property id="background-color" type="color">
                 <title>Background</title>
-                <helpText>The color of the background</helpText>
+                <helpText>The colour of the background</helpText>
                 <default></default>
             </property>
             <property id="footer-color" type="color">
                 <title>Footer Background</title>
-                <helpText>The color of the footer background</helpText>
-                <default></default>
+                <helpText>The colour of the footer background</helpText>
+                <default>rgba(0, 0, 0, 0.67)</default>
             </property>
             <property id="footer-text-color" type="color">
                 <title>Footer Text</title>
-                <helpText>The color of the footer text</helpText>
-                <default></default>
+                <helpText>The colour of the footer text</helpText>
+                <default>#f9f9f9</default>
             </property>
             <property id="footer-icons-color" type="color">
                 <title>Footer Icons</title>
-                <helpText>The color of the footer icons</helpText>
-                <default></default>
+                <helpText>The colour of the footer icons</helpText>
+                <default>#f9f9f9</default>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
             <property id="background-image" type="dropdown" mode="single">
                 <title>Background Image</title>
@@ -6277,6 +6566,11 @@ body {
 body {
     width: 250px !important;
     height: 250px !important;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
 }
 
 #content {
@@ -6373,7 +6667,7 @@ body {
     attribute(_context, 'footer-color'),
     attribute(_context, 'footer-text-color'),
     attribute(_context, 'footer-icons-color'),
-    null
+    attribute(_context, 'shadow-color')
 ) }}
 </style>
             ]]></twig>
@@ -6393,13 +6687,13 @@ body {
         <properties>
             <property id="footer-color" type="color">
                 <title>Footer Background</title>
-                <helpText>The color of the footer background</helpText>
-                <default></default>
+                <helpText>The colour of the footer background</helpText>
+                <default>rgba(255, 255, 255, 0.787)</default>
             </property>
             <property id="footer-text-color" type="color">
                 <title>Footer Text</title>
-                <helpText>The color of the footer text</helpText>
-                <default></default>
+                <helpText>The colour of the footer text</helpText>
+                <default>#000</default>
             </property>
             <property id="fontSize" type="number">
                 <title>Font Size</title>
@@ -6580,22 +6874,41 @@ body {
         <dataType>forecast</dataType>
         <title>Landscape - Weather fullscreen</title>
         <thumbnail>weather_18</thumbnail>
-        <startWidth>1200</startWidth>
-        <startHeight>800</startHeight>
+        <startWidth>960</startWidth>
+        <startHeight>540</startHeight>
         <properties>
             <property id="text-color" type="color">
                 <title>Text</title>
-                <helpText>The color of the text</helpText>
-                <default></default>
+                <helpText>The colour of the text</helpText>
+                <default>#fff</default>
             </property>
             <property id="icons-color" type="color">
                 <title>Icons</title>
-                <helpText>The color of the icons</helpText>
-                <default></default>
+                <helpText>The colour of the icons</helpText>
+                <default>#fff</default>
+            </property>
+            <property id="containerBackground" type="color">
+                <title>Container Background</title>
+                <helpText>The colour of the container background</helpText>
+                <default>rgba(0, 0, 0, 0.53)</default>
+            </property>
+            <property id="footer-color" type="color">
+                <title>Footer Background</title>
+                <helpText>The colour of the footer background</helpText>
+                <default>rgba(255, 255, 255, 0.787)</default>
+            </property>
+            <property id="footer-text-color" type="color">
+                <title>Footer Text</title>
+                <helpText>The colour of the footer text</helpText>
+                <default>#000</default>
             </property>
             <property id="fontSize" type="number">
                 <title>Font Size</title>
                 <default>13</default>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
             <property id="background-image" type="dropdown" mode="single">
                 <title>Background Image</title>
@@ -6732,7 +7045,7 @@ body {
                     </div>
                 </div>
 
-                <div class="row bg-footer">
+                <div class="row">
                     <div class="forecast-current">[summary]</div>
                     <div class="forecast-second">||Wind||: [windDirection] [windSpeed] [windSpeedUnit]</div>
                     <div class="forecast-second">||Humidity||: [humidityPercent]%</div>
@@ -6740,16 +7053,21 @@ body {
             </div>
         </div>
     </div>
-    <div class="weather-col col-12 powered">[Attribution]</div>
+    <div class="weather-col col-12 bg-footer powered">[Attribution]</div>
 </div>
 
 {% import "forecastio-css-generator.twig" as generateForecastCSS %}
 
 <style>
 body {
- width: 1920px !important;
- height: 1080px !important;
- }
+    width: 1920px !important;
+    height: 1080px !important;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
+}
 
 #content {
     color: #fff;
@@ -6761,14 +7079,13 @@ body {
 }
 
 .shadowed {
-text-shadow: 0px 0px 2px rgba(0, 0, 0, 0.4);
+    text-shadow: 0px 0px 2px rgba(0, 0, 0, 0.4);
     filter: dropshadow(color=rgba(0, 0, 0, 0.4), offx=2, offy=2);
 }
 
 .corner-info {
     width: 200px;
-    background-color: #000;
-    background-color: #0008;
+    background-color: {{containerBackground}};
     opacity: 0.6;
     border-radius: 0 0 30px 0;
     padding: 8px;
@@ -6806,15 +7123,15 @@ text-shadow: 0px 0px 2px rgba(0, 0, 0, 0.4);
 }
 
 .powered {
-  position: absolute;
- bottom: 0;
- width: 100%;
- padding: 4px 0;
-  color: #000;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    padding: 4px 0;
+    color: #000;
     font-size: {{fontSize}}px;
- text-align: center;
-  background-color: white;
-  background-color: rgba(255, 255, 255, 0.787);
+    text-align: center;
+    background-color: white;
+    background-color: rgba(255, 255, 255, 0.787);
 }
 
 {{ generateForecastCSS.backgrounds(
@@ -6835,8 +7152,8 @@ text-shadow: 0px 0px 2px rgba(0, 0, 0, 0.4);
     null,
     attribute(_context, 'text-color'),
     attribute(_context, 'icons-color'),
-    null,
-    null,
+    attribute(_context, 'footer-color'),
+    attribute(_context, 'footer-text-color'),
     null,
     null
 ) }}

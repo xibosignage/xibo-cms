@@ -84,15 +84,23 @@
                 <option name="bottom">Bottom</option>
             </options>
         </property>
+        <property id="labelFontFamily" type="fontSelector">
+            <title>Label Font</title>
+            <helpText>Select a custom font - leave empty to use the default font.</helpText>
+        </property>
         <property id="labelColor" type="color">
             <title>Label Colour</title>
-            <helpText>The color of the label</helpText>
-            <default></default>
+            <helpText>The colour of the label</helpText>
+            <default>#a1a1a1</default>
+        </property>
+        <property id="fontFamily" type="fontSelector">
+            <title>Date/Time Font</title>
+            <helpText>Select a custom font - leave empty to use the default font.</helpText>
         </property>
         <property id="dateTimeColor" type="color">
             <title>Date/Time Colour</title>
-            <helpText>The color of the text</helpText>
-            <default></default>
+            <helpText>The colour of the text</helpText>
+            <default>#323232</default>
         </property>
         <property id="backgroundColor" type="color">
             <title>Background Colour</title>
@@ -138,7 +146,9 @@
   margin: 0;
 }
 
+{% if labelFontFamily %}.world-clock-label { font-family: {{labelFontFamily}}; }{% endif %}
 {% if labelColor %}.world-clock-label { color: {{labelColor}}; }{% endif %}
+{% if fontFamily %}.hourText { font-family: {{fontFamily}}; }{% endif %}
 {% if dateTimeColor %}.hourText { color: {{dateTimeColor}}; }{% endif %}
 {% if backgroundColor %}body { background: {{backgroundColor}}; }{% endif %}
 

@@ -129,6 +129,35 @@ if (templateItems.length > 0) {
                 <helpText>The selected effect works best with a background colour. Optionally add one here.</helpText>
                 <default></default>
             </property>
+            <property id="itemBackgroundColor" type="color">
+                <title>Item Colour</title>
+                <helpText>Background colour for each currency item.</helpText>
+                <default>rgba(0, 0, 0, 0.87)</default>
+            </property>
+            <property id="itemFontColor" type="color">
+                <title>Item Font Colour</title>
+                <helpText>Font colour for each currency item.</helpText>
+                <default>#fff</default>
+            </property>
+            <property id="headerFontColor" type="color">
+                <title>Header Font Colour</title>
+                <helpText>Font colour for the header.</helpText>
+                <default>#fff</default>
+            </property>
+            <property id="upArrowColor" type="color">
+                <title>Up Arrow Colour</title>
+                <helpText>Colour for the up change arrow.</helpText>
+                <default>green</default>
+            </property>
+            <property id="downArrowColor" type="color">
+                <title>Down Arrow Colour</title>
+                <helpText>Colour for the down change arrow.</helpText>
+                <default>red</default>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+            </property>
             <property id="dateFormat" type="text" variant="dateFormat">
                 <title>Date Format</title>
                 <helpText>The format to apply to all dates returned by the Widget.</helpText>
@@ -169,8 +198,12 @@ if (templateItems.length > 0) {
 body {
     width: 820px !important;
     height: 420px !important;
-    font-family: "Helvetica", "Arial", sans-serif;
     line-height: 1;
+{% if fontFamily %}
+    font-family: {{fontFamily}};
+{% else %}
+    font-family: "Helvetica", "Arial", sans-serif;
+{% endif %}
 }
 
 .container-main {
@@ -189,14 +222,19 @@ body {
 
 .row-finance {
     height: 60px;
-    background: rgba(0, 0, 0, 0.87);
     margin-bottom: 20px;
+{% if itemBackgroundColor %}
+    background-color: {{itemBackgroundColor}};
+{% endif %}
 }
 
 .row-header {
     margin-right: -15px;
     margin-left: -15px;
     margin-bottom: 20px;
+{% if headerFontColor %}
+    color: {{headerFontColor}};
+{% endif %}
 }
 
 .header-rate {
@@ -209,7 +247,12 @@ body {
     font-size: 20px;
     padding-top: 20px;
     font-weight: bold;
-    color: #fff;
+}
+
+.page .value {
+{% if itemFontColor %}
+    color: {{itemFontColor}};
+{% endif %}
 }
 
 .img-circle {
@@ -228,13 +271,17 @@ body {
 
 .down-arrow {
     font-size: 20px;
-    color: red;
+{% if downArrowColor %}
+    color: {{downArrowColor}};
+{% endif %}
     padding-top: 17px;
 }
 
 .up-arrow {
     font-size: 20px;
-    color: green;
+{% if upArrowColor %}
+    color: {{upArrowColor}};
+{% endif %}
     padding-top: 17px;
 }
 
@@ -311,6 +358,40 @@ if (templateItems.length > 0) {
                 <helpText>The selected effect works best with a background colour. Optionally add one here.</helpText>
                 <default></default>
             </property>
+            <property id="itemBackgroundColor" type="color">
+                <title>Item Colour</title>
+                <helpText>Background colour for each currency item.</helpText>
+                <default>#e0e0e0</default>
+            </property>
+            <property id="itemFontColor" type="color">
+                <title>Item Font Colour</title>
+                <helpText>Font colour for each currency item.</helpText>
+                <default>#000</default>
+            </property>
+            <property id="borderLeftColor" type="color">
+                <title>Item Border Colour</title>
+                <helpText>Border colour for each currency item.</helpText>
+                <default>#264a88</default>
+            </property>
+            <property id="upArrowColor" type="color">
+                <title>Up Arrow Colour</title>
+                <helpText>Colour for the up change arrow.</helpText>
+                <default>green</default>
+            </property>
+            <property id="downArrowColor" type="color">
+                <title>Down Arrow Colour</title>
+                <helpText>Colour for the down change arrow.</helpText>
+                <default>red</default>
+            </property>
+            <property id="equalArrowColor" type="color">
+                <title>Equal Arrow Colour</title>
+                <helpText>Colour for the equal change arrow.</helpText>
+                <default>gray</default>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+            </property>
             <property id="dateFormat" type="text" variant="dateFormat">
                 <title>Date Format</title>
                 <helpText>The format to apply to all dates returned by the Widget.</helpText>
@@ -348,7 +429,11 @@ if (templateItems.length > 0) {
 body {
   width: 820px !important;
   height: 420px !important;
-  font-family: "Helvetica", "Arial", sans-serif;
+{% if fontFamily %}
+    font-family: {{fontFamily}};
+{% else %}
+    font-family: "Helvetica", "Arial", sans-serif;
+{% endif %}
   line-height: 1;
 }
 
@@ -370,9 +455,14 @@ body {
 
 .row-finance {
   height: 60px;
-  background: #e0e0e0;
   margin-bottom: 17px;
   border-left: #264a88 10px solid;
+{% if borderLeftColor %}
+    border-left-color: {{borderLeftColor}};
+{% endif %}
+{% if itemBackgroundColor %}
+    background: {{itemBackgroundColor}};
+{% endif %}
 }
 
 .row-finance>div {
@@ -382,8 +472,9 @@ body {
 .value {
   font-size: 20px;
   padding-top: 20px;
-  ;
-  color: #000;
+{% if itemFontColor %}
+  color: {{itemFontColor}};
+{% endif %}
   white-space: nowrap;
 }
 
@@ -394,6 +485,9 @@ body {
   border-left: 10px solid transparent;
   border-right: 10px solid transparent;
   border-top: 10px solid red;
+  {% if downArrowColor %}
+    border-top-color: {{downArrowColor}};
+  {% endif %}
 }
 
 .up-arrow {
@@ -403,6 +497,9 @@ body {
   border-left: 10px solid transparent;
   border-right: 10px solid transparent;
   border-bottom: 10px solid green;
+{% if upArrowColor %}
+    border-bottom-color: {{upArrowColor}};
+{% endif %}
 }
 
 .right-arrow {
@@ -412,6 +509,9 @@ body {
   border-left: 10px solid gray;
   border-top: 10px solid transparent;
   border-bottom: 10px solid transparent;
+{% if equalArrowColor %}
+    border-left-color: {{equalArrowColor}};
+{% endif %}
 }
 
 .img-circle {
@@ -459,18 +559,24 @@ body {
 }
 
 .value-up {
-  color: green;
-  font-weight: bold
+  font-weight: bold;
+{% if upArrowColor %}
+    color: {{upArrowColor}};
+{% endif %}
 }
 
 .value-down {
-  color: red;
-  font-weight: bold
+  font-weight: bold;
+{% if downArrowColor %}
+    color: {{downArrowColor}};
+{% endif %}
 }
 
 .value-equal {
-  color: gray;
-  font-weight: bold
+  font-weight: bold;
+{% if equalArrowColor %}
+    color: {{equalArrowColor}};
+{% endif %}
 }
 
 .name-stock {

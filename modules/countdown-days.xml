@@ -145,6 +145,29 @@
                 <option name="bottom">Bottom</option>
             </options>
         </property>
+        <property id="fontFamily" type="fontSelector">
+            <title>Text Font</title>
+            <helpText>Select a custom font - leave empty to use the default font.</helpText>
+        </property>
+        <property id="textColor" type="color">
+            <title>Text Colour</title>
+            <default>#1b1e56</default>
+        </property>
+        <property id="textBackgroundColor" type="color">
+            <title>Text Card Background Colour</title>
+        </property>
+        <property id="borderColor" type="color">
+            <title>Text Card Border Colour</title>
+            <default>#1b1e56</default>
+        </property>
+        <property id="labelFontFamily" type="fontSelector">
+            <title>Label Font</title>
+            <helpText>Select a custom font - leave empty to use the default font.</helpText>
+        </property>
+        <property id="labelTextColor" type="color">
+            <title>Label Colour</title>
+            <default>#333</default>
+        </property>
     </properties>
     <preview></preview>
     <stencil>
@@ -216,6 +239,14 @@ body {
     border-color: darkred;
     color: darkred;
 }
+
+{% if textColor %}#clockdiv div>span { color: {{textColor}}; }{% endif %}
+{% if fontFamily %}#clockdiv div>span { font-family: {{fontFamily}}; }{% endif %}
+{% if textBackgroundColor %}#clockdiv div>span { background-color: {{textBackgroundColor}}; }{% endif %}
+{% if borderColor %}#clockdiv div>span { border-color: {{borderColor}}; }{% endif %}
+{% if labelTextColor %}#clockdiv { color: {{labelTextColor}}; }{% endif %}
+{% if labelFontFamily %}#clockdiv { font-family: {{labelFontFamily}}; }{% endif %}
+
 </style>
         ]]></twig>
     </stencil>

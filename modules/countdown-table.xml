@@ -145,6 +145,38 @@
                 <option name="bottom">Bottom</option>
             </options>
         </property>
+        <property id="fontFamily" type="fontSelector">
+            <title>Font</title>
+            <helpText>Select a custom font - leave empty to use the default font.</helpText>
+        </property>
+        <property id="headerTextColor" type="color">
+            <title>Header Text Colour</title>
+            <default>#f1f1f1</default>
+        </property>
+        <property id="headerBackgroundColor" type="color">
+            <title>Header Background Colour</title>
+            <default>#747474</default>
+        </property>
+        <property id="evenRowTextColor" type="color">
+            <title>Even Row Text Colour</title>
+            <default>#333</default>
+        </property>
+        <property id="evenRowBackgroundColor" type="color">
+            <title>Even Row Background Colour</title>
+            <default>#d7d7d7</default>
+        </property>
+        <property id="oddRowTextColor" type="color">
+            <title>Odd Row Text Colour</title>
+            <default>#333</default>
+        </property>
+        <property id="oddRowBackgroundColor" type="color">
+            <title>Odd Row Background Colour</title>
+            <default>#ececec</default>
+        </property>
+        <property id="borderColor" type="color">
+            <title>Border Colour</title>
+            <default>#ccc</default>
+        </property>
     </properties>
     <preview></preview>
     <stencil>
@@ -222,6 +254,16 @@ tr.main-header td {
     color: #f1f1f1;
     font-weight: bolder;
 }
+
+{% if fontFamily %}tr { font-family: {{fontFamily}}; }{% endif %}
+{% if headerTextColor %}tr.main-header td { color: {{headerTextColor}}; }{% endif %}
+{% if headerBackgroundColor %}tr.main-header td { background: {{headerBackgroundColor}}; }{% endif %}
+{% if evenRowTextColor %}tr.header td { color: {{evenRowTextColor}}; }{% endif %}
+{% if evenRowBackgroundColor %}tr.header td { background-color: {{evenRowBackgroundColor}}; }{% endif %}
+{% if oddRowTextColor %}tr:not(.header):not(.main-header) td { color: {{oddRowTextColor}}; }{% endif %}
+{% if oddRowBackgroundColor %}tr:not(.header):not(.main-header) td { background-color: {{oddRowBackgroundColor}}; }{% endif %}
+{% if borderColor %}td { border-color: {{borderColor}}; }{% endif %}
+
 </style>
         ]]></twig>
     </stencil>

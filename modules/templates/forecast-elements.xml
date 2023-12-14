@@ -145,7 +145,7 @@ return value + '%';
         <startHeight>100</startHeight>
         <properties>
             <property id="fontColor" type="color">
-                <title>Font Color</title>
+                <title>Font Colour</title>
                 <default>%THEME_COLOR%</default>
             </property>
             <property id="fontSize" type="number">

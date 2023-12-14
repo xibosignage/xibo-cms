@@ -575,6 +575,16 @@ $(target).xiboTextRender(Object.assign(properties, globalOptions), $(target).fin
                     </test>
                 </visibility>
             </property>
+                <property id="fontColor" type="color">
+                    <title>Font Colour</title>
+                    <helpText>Use the colour picker to select the font colour</helpText>
+                    <default>#111</default>
+                    <visibility>
+                        <test>
+                            <condition field="dataSetId" type="neq"></condition>
+                        </test>
+                    </visibility>
+                </property>
                 <property id="backgroundColor" type="color">
                     <title>Background Colour</title>
                     <helpText>Use the colour picker to select the background colour</helpText>
@@ -593,9 +603,19 @@ $(target).xiboTextRender(Object.assign(properties, globalOptions), $(target).fin
                         </test>
                     </visibility>
                 </property>
-                <property id="fontColor" type="color">
-                    <title>Font Colour</title>
-                    <helpText>Use the colour picker to select the font colour</helpText>
+                <property id="headerFontColor" type="color">
+                    <title>Header Font Colour</title>
+                    <helpText>Use the colour picker to select the header font colour</helpText>
+                    <default>#111</default>
+                    <visibility>
+                        <test>
+                            <condition field="dataSetId" type="neq"></condition>
+                        </test>
+                    </visibility>
+                </property>
+                <property id="headerBackgroundColor" type="color">
+                    <title>Header Background Colour</title>
+                    <helpText>Use the colour picker to select the header background colour</helpText>
                     <visibility>
                         <test>
                             <condition field="dataSetId" type="neq"></condition>
@@ -635,6 +655,18 @@ table.DataSetTable, table.DataSetTable tr, table.DataSetTable th, table.DataSetT
 {% if fontColor %}
 table.DataSetTable {
     color: {{fontColor}};
+}
+{% endif %}
+
+{% if headerFontColor %}
+table.DataSetTable .HeaderRow {
+    color: {{headerFontColor}};
+}
+{% endif %}
+
+{% if headerBackgroundColor %}
+table.DataSetTable .HeaderRow {
+    background-color: {{headerBackgroundColor}};
 }
 {% endif %}
 

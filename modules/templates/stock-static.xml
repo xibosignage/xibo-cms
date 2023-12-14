@@ -120,6 +120,45 @@ $(target).find("#content").xiboFinanceRender(properties, items, body);
                 <helpText>The selected effect works best with a background colour. Optionally add one here.</helpText>
                 <default></default>
             </property>
+            <property id="itemBackgroundColor" type="color">
+                <title>Item Colour</title>
+                <helpText>Background colour for each stock item.</helpText>
+                <default>#e0e0e0</default>
+            </property>
+            <property id="itemFontColor" type="color">
+                <title>Item Font Colour</title>
+                <helpText>Font colour for each stock item.</helpText>
+                <default>#000</default>
+            </property>
+            <property id="itemLabelFontColor" type="color">
+                <title>Item Label Font Colour</title>
+                <helpText>Font colour for each stock item label.</helpText>
+                <default>gray</default>
+            </property>
+            <property id="borderLeftColor" type="color">
+                <title>Item Border Colour</title>
+                <helpText>Border colour for each stock item.</helpText>
+                <default>#264a88</default>
+            </property>
+            <property id="upArrowColor" type="color">
+                <title>Up Arrow Colour</title>
+                <helpText>Colour for the up change arrow.</helpText>
+                <default>green</default>
+            </property>
+            <property id="downArrowColor" type="color">
+                <title>Down Arrow Colour</title>
+                <helpText>Colour for the down change arrow.</helpText>
+                <default>red</default>
+            </property>
+            <property id="equalArrowColor" type="color">
+                <title>Equal Arrow Colour</title>
+                <helpText>Colour for the equal change arrow.</helpText>
+                <default>gray</default>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+            </property>
             <property id="dateFormat" type="text" variant="dateFormat">
                 <title>Date Format</title>
                 <helpText>The format to apply to all dates returned by the Widget.</helpText>
@@ -136,11 +175,11 @@ $(target).find("#content").xiboFinanceRender(properties, items, body);
             <height id="height">420</height>
             <hbs><![CDATA[
 <div class="row row-finance template-item">
-    <div class="weather-col col-2 value name-stock">{{SymbolTrimmed}}</div>
-    <div class="weather-col col-5 value ">{{Name}}</div>
-    <div class="weather-col col-2 text-right value">{{LastTradePriceOnly}} {{CurrencyUpper}}</div>
-    <div class="weather-col col-2 text-right value {{ChangeStyle}}">{{ChangePercentage}}%</div>
-    <div class="weather-col col-1 text-right"><div class="{{ChangeIcon}}"></div></div>
+    <div class="stock-col col-2 value name-stock">{{SymbolTrimmed}}</div>
+    <div class="stock-col col-5 value ">{{Name}}</div>
+    <div class="stock-col col-2 text-right value">{{LastTradePriceOnly}} {{CurrencyUpper}}</div>
+    <div class="stock-col col-2 text-right value {{ChangeStyle}}">{{ChangePercentage}}%</div>
+    <div class="stock-col col-1 text-right"><div class="{{ChangeIcon}}"></div></div>
 </div>
         ]]></hbs>
             <twig><![CDATA[
@@ -155,7 +194,7 @@ $(target).find("#content").xiboFinanceRender(properties, items, body);
 body {
  width: 820px !important;
  height: 420px !important;
- }
+}
 
 {% if backgroundColor %}body { background-color: {{backgroundColor}}; }{% endif %}
 
@@ -204,8 +243,12 @@ body {
     box-sizing: border-box;
 }
 
- body {
+body {
+{% if fontFamily %}
+    font-family: {{fontFamily}};
+{else}
     font-family: "Helvetica", "Arial", sans-serif;
+{% endif %}
     line-height: 1;
 }
 
@@ -230,6 +273,12 @@ body {
     background: #e0e0e0;
     margin-bottom: 17px;
     border-left: #264a88 10px solid;
+{% if borderLeftColor %}
+    border-left-color: {{borderLeftColor}};
+{% endif %}
+{% if itemBackgroundColor %}
+    background: {{itemBackgroundColor}};
+{% endif %}
 }
 
 .row {
@@ -245,7 +294,9 @@ body {
 .value {
     font-size: 19px;
     padding-top: 10px;
-    color: #000;
+{% if itemFontColor %}
+  color: {{itemFontColor}};
+{% endif %}
     white-space: nowrap;
 }
 
@@ -256,6 +307,9 @@ body {
     border-left: 10px solid transparent;
     border-right: 10px solid transparent;
     border-top: 10px solid red;
+{% if downArrowColor %}
+    border-top-color: {{downArrowColor}};
+{% endif %}
 }
 
 .up-arrow {
@@ -265,6 +319,9 @@ body {
     border-left: 10px solid transparent;
     border-right: 10px solid transparent;
     border-bottom: 10px solid green;
+{% if upArrowColor %}
+    border-bottom-color: {{upArrowColor}};
+{% endif %}
 }
 
 .right-arrow {
@@ -274,6 +331,9 @@ body {
     border-left: 10px solid gray;
     border-top: 10px solid transparent;
     border-bottom: 10px solid transparent;
+{% if equalArrowColor %}
+    border-left-color: {{equalArrowColor}};
+{% endif %}
 }
 
 .variant {
@@ -286,22 +346,30 @@ body {
 }
 
 .value-up {
-    color: green;
     font-weight: bold
+{% if upArrowColor %}
+    color: {{upArrowColor}};
+{% endif %}
 }
 
 .value-down {
-    color: red;
+{% if downArrowColor %}
+    color: {{downArrowColor}};
+{% endif %}
     font-weight: bold
 }
 
 .value-equal {
-    color: gray;
+{% if equalArrowColor %}
+    color: {{equalArrowColor}};
+{% endif %}
     font-weight: bold
 }
 
 .name-stock {
-    color: gray;
+    {% if itemLabelFontColor %}
+    color: {{itemLabelFontColor}};
+    {% endif %}
 }
 
 .col-1 {
@@ -316,7 +384,7 @@ body {
     width: 41.66666667%;
 }
 
-.weather-col {
+.stock-col {
     float: left;
     position: relative;
     min-height: 1px;
@@ -361,6 +429,35 @@ $(target).find("#content").xiboFinanceRender(properties, items, body);
                 <helpText>The selected effect works best with a background colour. Optionally add one here.</helpText>
                 <default></default>
             </property>
+            <property id="itemFontColor" type="color">
+                <title>Item Font Colour</title>
+                <helpText>Font colour for each stock item.</helpText>
+                <default>#000</default>
+            </property>
+            <property id="itemLabelFontColor" type="color">
+                <title>Item Label Font Colour</title>
+                <helpText>Font colour for each stock item label.</helpText>
+                <default>gray</default>
+            </property>
+            <property id="upArrowColor" type="color">
+                <title>Up Arrow Colour</title>
+                <helpText>Colour for the up change arrow.</helpText>
+                <default>green</default>
+            </property>
+            <property id="downArrowColor" type="color">
+                <title>Down Arrow Colour</title>
+                <helpText>Colour for the down change arrow.</helpText>
+                <default>red</default>
+            </property>
+            <property id="equalArrowColor" type="color">
+                <title>Equal Arrow Colour</title>
+                <helpText>Colour for the equal change arrow.</helpText>
+                <default>gray</default>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+            </property>
             <property id="dateFormat" type="text" variant="dateFormat">
                 <title>Date Format</title>
                 <helpText>The format to apply to all dates returned by the Widget.</helpText>
@@ -377,10 +474,10 @@ $(target).find("#content").xiboFinanceRender(properties, items, body);
             <height id="height">380</height>
             <hbs><![CDATA[
 <div class="row row-finance template-item">
-    <div class="weather-col col-12 name">{{Name}}</div>
-    <div class="weather-col col-12 subname">{{SymbolTrimmed}}</div>
-    <div class="weather-col col-12 value-currency">{{LastTradePriceOnly}} {{CurrencyUpper}}</div>
-    <div class="weather-col col-12 total">
+    <div class="stock-col col-12 name">{{Name}}</div>
+    <div class="stock-col col-12 subname">{{SymbolTrimmed}}</div>
+    <div class="stock-col col-12 value-currency">{{LastTradePriceOnly}} {{CurrencyUpper}}</div>
+    <div class="stock-col col-12 total">
         <div class="subtotal {{ChangeStyle}}">{{ChangePercentage}}%</div>
         <div class="subtotal {{ChangeIcon}}"></div>
     </div>
@@ -404,7 +501,11 @@ $(target).find("#content").xiboFinanceRender(properties, items, body);
 body {
     width: 500px !important;
     height: 380px !important;
+{% if fontFamily %}
+    font-family: {{fontFamily}};
+{else}
     font-family: "Helvetica", "Arial", sans-serif;
+{% endif %}
     line-height: 1;
 }
 
@@ -468,7 +569,9 @@ h1 {
 .value {
     font-size: 20px;
     padding-top: 10px;
-    color: #000;
+{% if itemFontColor %}
+  color: {{itemFontColor}};
+{% endif %}
 }
 
 .value-currency {
@@ -478,18 +581,24 @@ h1 {
 }
 
 .value-up {
-    color: green;
-    font-weight: bold
+    font-weight: bold;
+{% if upArrowColor %}
+    color: {{upArrowColor}};
+{% endif %}
 }
 
 .value-down {
-    color: red;
-    font-weight: bold
+    font-weight: bold;
+{% if downArrowColor %}
+    color: {{downArrowColor}};
+{% endif %}
 }
 
 .value-equal {
-    color: gray;
-    font-weight: bold
+    font-weight: bold;
+{% if equalArrowColor %}
+    color: {{equalArrowColor}};
+{% endif %}
 }
 
 .variant {
@@ -512,7 +621,9 @@ h1 {
 }
 
 .name-stock {
-    color: gray;
+{% if itemLabelFontColor %}
+  color: {{itemLabelFontColor}};
+{% endif %}
 }
 
 .name {
@@ -521,9 +632,11 @@ h1 {
 }
 
 .subname {
-    color: gray;
     font-size: 35px;
     margin-bottom: 30px;
+{% if itemLabelFontColor %}
+  color: {{itemLabelFontColor}};
+{% endif %}
 }
 
 .total {
@@ -543,6 +656,9 @@ h1 {
     border-left: 30px solid transparent;
     border-right: 30px solid transparent;
     border-top: 30px solid red;
+{% if downArrowColor %}
+    border-top-color: {{downArrowColor}};
+{% endif %}
 }
 
 .up-arrow {
@@ -552,6 +668,9 @@ h1 {
     border-left: 30px solid transparent;
     border-right: 30px solid transparent;
     border-bottom: 30px solid green;
+{% if upArrowColor %}
+    border-bottom-color: {{upArrowColor}};
+{% endif %}
 }
 
 .right-arrow {
@@ -561,13 +680,16 @@ h1 {
     border-left: 30px solid gray;
     border-top: 30px solid transparent;
     border-bottom: 30px solid transparent;
+{% if equalArrowColor %}
+    border-left-color: {{equalArrowColor}};
+{% endif %}
 }
 
 .col-12 {
     width: 100%;
 }
 
-.weather-col {
+.stock-col {
     float: left;
     position: relative;
     min-height: 1px;

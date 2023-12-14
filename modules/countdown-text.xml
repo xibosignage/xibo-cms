@@ -145,6 +145,26 @@
                 <option name="bottom">Bottom</option>
             </options>
         </property>
+        <property id="fontFamily" type="fontSelector">
+            <title>Font</title>
+            <helpText>Select a custom font - leave empty to use the default font.</helpText>
+        </property>
+        <property id="textColor" type="color">
+            <title>Text Colour</title>
+            <default>#222</default>
+        </property>
+        <property id="dividerTextColor" type="color">
+            <title>Divider Text Colour</title>
+            <default>#222</default>
+        </property>
+        <property id="warningColor" type="color">
+            <title>Text Colour</title>
+            <default>orange</default>
+        </property>
+        <property id="finishedColor" type="color">
+            <title>Text Colour</title>
+            <default>red</default>
+        </property>
     </properties>
     <preview></preview>
     <stencil>
@@ -170,13 +190,18 @@ body {
     padding: 9px 0;
 }
 
+{% if fontFamily %}.hoursAll, .hours, .minutes, .seconds { font-family: {{fontFamily}}; }{% endif %}
+{% if textColor %}.hoursAll, .hours, .minutes, .seconds  { color: {{textColor}}; }{% endif %}
+{% if dividerTextColor %}.countdown-container > p > span { color: {{dividerTextColor}}; }{% endif %}
+
 .warning .seconds, .warning .minutes, .warning .hours, .warning .hoursAll {
-    color: orange;
+    color: {{warningColor}};
 }
 
 .finished .seconds, .finished .minutes, .finished .hours, .finished .hoursAll {
-    color: red;
+    color: {{finishedColor}};
 }
+
 </style>
         ]]></twig>
     </stencil>
