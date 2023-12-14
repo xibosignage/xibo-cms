@@ -3071,8 +3071,14 @@ function XiboRefreshAllGrids() {
     $(" .XiboGrid table.dataTable").each(function() {
         const refresh = $(this).closest('.XiboGrid').data('refreshOnFormSubmit');
         if (refresh === undefined || refresh === null || refresh) {
-            // Render
-            $(this).DataTable().ajax.reload(null, false);
+            const table = $(this).DataTable();
+            const tableOptions = table.init();
+
+            // Only refresh if we have ajax enabled
+            if(tableOptions.serverSide) {
+                // Reload
+                table.ajax.reload(null, false);
+            }
         }
     });
 }

@@ -562,7 +562,7 @@ $(document).ready(function() {
                 if (this.options.view == 'agenda') {
                     // When agenda panel is ready, turn tables into datatables with paging
                     $('.agenda-panel').ready(function () {
-                        $('.agenda-table-layouts').dataTable({
+                        $('.agenda-table-layouts').DataTable({
                             "searching": false
                         });
                     });
