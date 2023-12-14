@@ -35,7 +35,7 @@
                 <default>0</default>
             </property>
             <property id="dimColor" type="color">
-                <title>Dim Color</title>
+                <title>Dim Colour</title>
                 <default>#888</default>
                 <visibility>
                     <test>
@@ -154,7 +154,7 @@ return value;
                 <default>24</default>
             </property>
             <property id="fontColor" type="color">
-                <title>Font Color</title>
+                <title>Font Colour</title>
                 <default>%THEME_COLOR%</default>
             </property>
             <property id="prefix" type="text">
@@ -254,7 +254,7 @@ if (
                 <default>24</default>
             </property>
             <property id="fontColor" type="color">
-                <title>Font Color</title>
+                <title>Font Colour</title>
                 <default>%THEME_COLOR%</default>
             </property>
             <property id="currencyCode" type="text">

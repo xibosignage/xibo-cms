@@ -276,19 +276,27 @@ $(target).xiboTextRender(properties, $(target).find('#content > .image, #content
             </property>
             <property id="itemBackgroundColor" type="color">
                 <title>Background (content)</title>
-                <default></default>
+                <default>black</default>
+            </property>
+            <property id="backgroundOpacity" type="number">
+                <title>Background opacity (content)</title>
+                <default>0.6</default>
             </property>
             <property id="itemTitleColor" type="color">
                 <title>Title</title>
-                <default></default>
+                <default>white</default>
             </property>
             <property id="itemDescriptionColor" type="color">
                 <title>Description</title>
-                <default></default>
+                <default>white</default>
             </property>
             <property id="itemFontSize" type="number">
                 <title>Font Size</title>
-                <default></default>
+                <default>16</default>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
             <property id="itemImageFit" type="dropdown" mode="single">
                 <title>Image Fit</title>
@@ -347,8 +355,6 @@ html {
   justify-content: center;
   color: white;
   background: black;
-  opacity: .6;
-  filter: alpha(opacity=60);
   position: absolute;
   bottom: 0;
   top: 0px;
@@ -376,8 +382,15 @@ html {
 body {
     background-color: {{backgroundColor}};
 }
-
 {% endif %}
+
+{% if backgroundOpacity %}
+.cycle-overlay {
+    opacity: {{backgroundOpacity}};
+    filter: alpha(opacity={{backgroundOpacity*100}});
+}
+{% endif %}
+
 {% if itemImageFit %}
 .image img {
   object-fit: {{itemImageFit}};
@@ -405,6 +418,12 @@ body {
 {% if itemFontSize %}
 html {
   font-size: {{itemFontSize}}px !important;
+}
+{% endif %}
+
+{% if fontFamily %}
+.description, .title {
+  font-family: {{fontFamily}} !important;
 }
 {% endif %}
 
@@ -475,15 +494,23 @@ $(target).xiboTextRender(properties, $(target).find('#content > .image, #content
             </property>
             <property id="itemBackgroundColor" type="color">
                 <title>Background (content)</title>
-                <default></default>
+                <default>black</default>
+            </property>
+            <property id="backgroundOpacity" type="number">
+                <title>Background opacity (content)</title>
+                <default>0.6</default>
             </property>
             <property id="itemTitleColor" type="color">
                 <title>Title</title>
-                <default></default>
+                <default>white</default>
             </property>
             <property id="itemFontSize" type="number">
                 <title>Font Size</title>
-                <default></default>
+                <default>16</default>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
             <property id="itemImageFit" type="dropdown" mode="single">
                 <title>Image Fit</title>
@@ -542,8 +569,6 @@ html {
 .cycle-overlay {
   color: white;
   background: black;
-  opacity: .6;
-  filter: alpha(opacity=60);
   position: absolute;
   bottom: 0;
   width: 100%;
@@ -564,6 +589,13 @@ html {
 {% if backgroundColor %}
 body {
     background-color: {{backgroundColor}};
+}
+{% endif %}
+
+{% if backgroundOpacity %}
+.cycle-overlay {
+    opacity: {{backgroundOpacity}};
+    filter: alpha(opacity={{backgroundOpacity*100}});
 }
 {% endif %}
 
@@ -588,6 +620,12 @@ body {
 {% if itemFontSize %}
 html {
   font-size: {{itemFontSize}}px !important;
+}
+{% endif %}
+
+{% if fontFamily %}
+.title {
+  font-family: {{fontFamily}} !important;
 }
 {% endif %}
 
@@ -656,21 +694,25 @@ $(target).xiboTextRender(properties, $(target).find('#content > .image, #content
                 <title>Background</title>
                 <default></default>
             </property>
+            <property id="itemNameColor" type="color">
+                <title>Name</title>
+                <default>#000</default>
+            </property>
             <property id="itemTitleColor" type="color">
                 <title>Title</title>
-                <default></default>
+                <default>#000</default>
             </property>
             <property id="itemDescriptionColor" type="color">
                 <title>Description</title>
-                <default></default>
-            </property>
-            <property id="itemNameColor" type="color">
-                <title>Name</title>
-                <default></default>
+                <default>#000</default>
             </property>
             <property id="itemFontSize" type="number">
                 <title>Font Size</title>
-                <default></default>
+                <default>16</default>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
             <property id="effect" type="effectSelector" variant="all">
                 <title>Effect</title>
@@ -808,6 +850,12 @@ html {
 }
 {% endif %}
 
+{% if fontFamily %}
+.title, .name, .description {
+  font-family: {{fontFamily}} !important;
+}
+{% endif %}
+
 {% if copyright %}
 .copyright {
     width: 100%;
@@ -892,11 +940,15 @@ $(target).xiboTextRender(properties, $(target).find('#content .article, #content
             </property>
             <property id="itemTitleColor" type="color">
                 <title>Title</title>
-                <default></default>
+                <default>#000</default>
             </property>
             <property id="itemFontSize" type="number">
                 <title>Font Size</title>
-                <default></default>
+                <default>16</default>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
             <property id="effect" type="effectSelector" variant="all">
                 <title>Effect</title>
@@ -997,6 +1049,12 @@ body {
 {% if itemFontSize %}
 html {
   font-size: {{itemFontSize}}px !important;
+}
+{% endif %}
+
+{% if fontFamily %}
+.title {
+  font-family: {{fontFamily}} !important;
 }
 {% endif %}
 
@@ -1170,7 +1228,7 @@ $(target).xiboTextRender(properties, $(target).find('#content .article, #content
                 </visibility>
             </property>
             <property id="copyrightFontColor" type="color">
-                <title>Copyright Font Color</title>
+                <title>Copyright Font Colour</title>
                 <default></default>
                 <visibility>
                     <test>

@@ -38,7 +38,7 @@
                 <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
             <property id="fontColor" type="color">
-                <title>Font Color</title>
+                <title>Font Colour</title>
                 <default>%THEME_COLOR%</default>
             </property>
             <property id="fontSize" type="number">
@@ -90,7 +90,7 @@
                 <helpText>Should the text have a shadow?</helpText>
             </property>
             <property id="textShadowColor" type="color">
-                <title>Text Shadow Color</title>
+                <title>Text Shadow Colour</title>
                 <visibility>
                     <test>
                         <condition field="textShadow" type="eq">1</condition>
@@ -216,7 +216,7 @@
                 <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
             <property id="fontColor" type="color">
-                <title>Font Color</title>
+                <title>Font Colour</title>
                 <default>%THEME_COLOR%</default>
             </property>
             <property id="fontSize" type="number">
@@ -258,7 +258,7 @@
                 <helpText>Should the text have a shadow?</helpText>
             </property>
             <property id="textShadowColor" type="color">
-                <title>Text Shadow Color</title>
+                <title>Text Shadow Colour</title>
                 <visibility>
                     <test>
                         <condition field="textShadow" type="eq">1</condition>
@@ -489,7 +489,7 @@ $(target).find('.date').each(function(_idx, dateEl){
                 <default>5</default>
             </property>
             <property id="lineColor" type="color">
-                <title>Color</title>
+                <title>Colour</title>
                 <default>%THEME_COLOR%</default>
             </property>
             <property id="lineStyle" type="dropdown" mode="single">
@@ -658,7 +658,7 @@ $(target).find('.date').each(function(_idx, dateEl){
         <startHeight>250</startHeight>
         <properties>
             <property id="backgroundColor" type="color">
-                <title>Background Color</title>
+                <title>Background Colour</title>
                 <default>#1775F6</default>
             </property>
             <property id="roundBorder" type="checkbox">
@@ -681,7 +681,7 @@ $(target).find('.date').each(function(_idx, dateEl){
                 <helpText>Should the rectangle have an outline?</helpText>
             </property>
             <property id="outlineColor" type="color">
-                <title>Outline Color</title>
+                <title>Outline Colour</title>
                 <default>%THEME_COLOR%</default>
                 <visibility>
                     <test>
@@ -724,7 +724,7 @@ $(target).find('.date').each(function(_idx, dateEl){
         <startHeight>250</startHeight>
         <properties>
             <property id="backgroundColor" type="color">
-                <title>Background Color</title>
+                <title>Background Colour</title>
                 <default>#1775F6</default>
             </property>
             <property id="outline" type="checkbox">
@@ -733,7 +733,7 @@ $(target).find('.date').each(function(_idx, dateEl){
                 <helpText>Should the circle have an outline?</helpText>
             </property>
             <property id="outlineColor" type="color">
-                <title>Outline Color</title>
+                <title>Outline Colour</title>
                 <default>%THEME_COLOR%</default>
                 <visibility>
                     <test>
@@ -802,7 +802,7 @@ $(target).find('.date').each(function(_idx, dateEl){
         <startHeight>250</startHeight>
         <properties>
             <property id="backgroundColor" type="color">
-                <title>Background Color</title>
+                <title>Background Colour</title>
                 <default>#1775F6</default>
             </property>
             <property id="outline" type="checkbox">
@@ -811,7 +811,7 @@ $(target).find('.date').each(function(_idx, dateEl){
                 <helpText>Should the triangle have an outline?</helpText>
             </property>
             <property id="outlineColor" type="color">
-                <title>Outline Color</title>
+                <title>Outline Colour</title>
                 <default>%THEME_COLOR%</default>
                 <visibility>
                     <test>
@@ -874,7 +874,7 @@ $(target).find('.date').each(function(_idx, dateEl){
         <startHeight>250</startHeight>
         <properties>
             <property id="backgroundColor" type="color">
-                <title>Background Color</title>
+                <title>Background Colour</title>
                 <default>#1775F6</default>
             </property>
             <property id="outline" type="checkbox">
@@ -883,7 +883,7 @@ $(target).find('.date').each(function(_idx, dateEl){
                 <helpText>Should the pentagon have an outline?</helpText>
             </property>
             <property id="outlineColor" type="color">
-                <title>Outline Color</title>
+                <title>Outline Colour</title>
                 <default>%THEME_COLOR%</default>
                 <visibility>
                     <test>
@@ -945,7 +945,7 @@ $(target).find('.date').each(function(_idx, dateEl){
         <startHeight>250</startHeight>
         <properties>
             <property id="backgroundColor" type="color">
-                <title>Background Color</title>
+                <title>Background Colour</title>
                 <default>#1775F6</default>
             </property>
             <property id="outline" type="checkbox">
@@ -954,7 +954,7 @@ $(target).find('.date').each(function(_idx, dateEl){
                 <helpText>Should the hexagon have an outline?</helpText>
             </property>
             <property id="outlineColor" type="color">
-                <title>Outline Color</title>
+                <title>Outline Colour</title>
                 <default>%THEME_COLOR%</default>
                 <visibility>
                     <test>

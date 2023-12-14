@@ -69,6 +69,30 @@
             <helpText>The offset in minutes that should be applied to the current time, or if a counter then date/time to run from in the format Y-m-d H:i:s.</helpText>
             <default></default>
         </property>
+        <property id="backgroundColor" type="color">
+            <title>Background Colour</title>
+        </property>
+        <property id="flipCardTextColor" type="color">
+            <title>Flip Card Text Colour</title>
+            <default>#ccc</default>
+        </property>
+        <property id="flipCardBackgroundColor" type="color">
+            <title>Flip Card Background Colour</title>
+            <default>#333</default>
+        </property>
+        <property id="dividerColor" type="color">
+            <title>Divider Colour</title>
+            <default>#323434</default>
+        </property>
+        <property id="ampmColor" type="color">
+            <title>AM/PM Colour</title>
+            <default>#313333</default>
+            <visibility>
+                <test>
+                    <condition field="clockFace" type="eq">TwelveHourClock</condition>
+                </test>
+            </visibility>
+        </property>
     </properties>
     <preview></preview>
     <stencil>
@@ -92,6 +116,14 @@ h1, h2, h3, h4, p {
     position: relative;
     margin: 0;
 }
+
+{% if backgroundColor %}body { background: {{backgroundColor}}; }{% endif %}
+{% if dividerColor %}.flip-clock-dot { background: {{dividerColor}}; }{% endif %}
+{% if ampmColor %}.flip-clock-meridium a { color: {{ampmColor}}; }{% endif %}
+
+{% if flipCardTextColor %}.flip-clock-wrapper ul li a div div.inn { color: {{flipCardTextColor}}; }{% endif %}
+{% if flipCardBackgroundColor %}.flip-clock-wrapper ul li a div div.inn { background-color: {{flipCardBackgroundColor}}; }{% endif %}
+
 </style>
         ]]></twig>
     </stencil>
