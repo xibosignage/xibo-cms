@@ -368,7 +368,7 @@ $(function() {
         slot,
         maxSlot,
         isPinSlot,
-        pinnedSlot,
+        pinnedSlots,
         groupId,
         $groupContent,
         groupObj,
@@ -541,8 +541,8 @@ $(function() {
         Object.values(groupSlotsData).length > 0) {
         const {
           maxSlot,
-          pinnedSlot,
-        } = PlayerHelper.getGroupData(elements.groups, 'items');
+          pinnedSlots,
+        } = PlayerHelper.getGroupData(elements.groups, 'items', false);
 
         $.each(Object.keys(groupSlotsData), function(slotIndex, slotKey) {
           const groupSlotId = widget.mappedSlotGroup[slotKey];
@@ -568,7 +568,7 @@ $(function() {
                       slotKey,
                       maxSlot,
                       groupItem.pinSlot,
-                      pinnedSlot,
+                      pinnedSlots,
                       groupSlotId,
                       $grpContent,
                       {...groupSlotObj, isMarquee},
@@ -635,38 +635,16 @@ $(function() {
               Object.keys(standaloneData[keyValue]).length > 0 &&
               templateId !== null && url !== null
             ) {
-              const {maxSlot} =
+              const {maxSlot, pinnedSlots} =
                 PlayerHelper.getGroupData(
                   [standaloneElems],
                   keyValue,
+                  true,
                 );
-              const itemsGroup = standaloneElems[keyValue];
-              const pinnedSlot = itemsGroup.reduce(function(a, b) {
-                if (b.pinSlot) return b.slot + 1;
-                return a;
-              }, null);
 
               $.each(Object.keys(standaloneData[keyValue]),
                 function(slotIndex, slotKey) {
-                  const slotObjs =
-                    Object.keys(standaloneElems).reduce((a, b) => {
-                      let itemCollection = {};
-                      if (standaloneElems[b].length > 0) {
-                        itemCollection =
-                          standaloneElems[b].reduce((coll, item) => {
-                            if (item.slot === slotKey - 1) {
-                              coll[slotKey] = item;
-                            }
-
-                            return coll;
-                          }, {});
-                      }
-
-                      a[b] = {...a[b], ...itemCollection};
-
-                      return a;
-                    }, {});
-                  const slotObj = slotObjs[keyValue][slotKey] || null;
+                  const slotObj = standaloneElems[keyValue][slotKey] || null;
                   const dataKeys =
                     standaloneData[keyValue][slotKey];
                   const grpCln = `${keyValue}_page-${slotKey}`;
@@ -687,7 +665,7 @@ $(function() {
                           slotKey,
                           maxSlot,
                           slotObj.pinSlot,
-                          pinnedSlot,
+                          pinnedSlots,
                           grpCln,
                           $grpItem,
                           {...slotObj, isMarquee},
@@ -752,14 +730,14 @@ $(function() {
               // Global elements should fall here but should validate
               if (Object.keys(standaloneElems).length > 0 &&
                 standaloneElems.hasOwnProperty(keyValue) &&
-                standaloneElems[keyValue].length > 0
+                Object.keys(standaloneElems[keyValue]).length > 0
               ) {
-                $.each(standaloneElems[keyValue],
-                  function(keyIndex, standaloneElem) {
-                    (standaloneElem.hbs) && $content.append(
+                $.each(Object.keys(standaloneElems[keyValue]),
+                  function(keyIndex, elemKey) {
+                    (standaloneElems[keyValue][elemKey].hbs) && $content.append(
                       renderElement(
-                        standaloneElem.hbs,
-                        standaloneElem.templateData,
+                        standaloneElems[keyValue][elemKey].hbs,
+                        standaloneElems[keyValue][elemKey].templateData,
                         true,
                       ),
                     );

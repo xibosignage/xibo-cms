@@ -39,6 +39,9 @@ const PlayerHelper = function() {
         values.forEach((value, widgetIndex) => {
           const _widget = _widgetData[widgetIndex];
 
+          // Initialize variable to check for mixed items
+          _widget.isMixed = false;
+
           if (!_widget.hasOwnProperty('isDataExpected')) {
             _widget.isDataExpected = _widget.url !== null;
           }
@@ -59,6 +62,25 @@ const PlayerHelper = function() {
             });
 
             if (Object.keys(_elements).length > 0) {
+              let elementsWithNoMetaData = 0;
+
+              if (Object.keys(_elements.standalone).length > 0) {
+                Object.keys(_elements.standalone).forEach(function(key) {
+                  if (Object.keys(_elements.standalone[key]).length > 0) {
+                    Object.keys(_elements.standalone[key]).forEach(
+                      function(elemKey, elemIndex, elems) {
+                        if (!_elements.standalone[key][elemKey].dataInMeta) {
+                          elementsWithNoMetaData++;
+                        }
+                      });
+                  }
+                });
+              }
+
+              _widget.isMixed = Object.keys(_elements.standalone).length > 0 &&
+                elementsWithNoMetaData > 0 &&
+                Object.keys(_elements.groups).length > 0;
+
               _elements =
                 _self.decorateCollectionSlots(_elements, dataItems, _widget);
             }
@@ -242,7 +264,7 @@ const PlayerHelper = function() {
       if (!isGroup &&
         !collection.standalone.hasOwnProperty(standaloneKey)
       ) {
-        collection.standalone[standaloneKey] = [];
+        collection.standalone[standaloneKey] = {};
       }
 
       let groupKey = null;
@@ -268,14 +290,14 @@ const PlayerHelper = function() {
       if (!isGroup &&
         Object.keys(collection.standalone).length > 0
       ) {
-        collection.standalone[standaloneKey] = [
-          ...collection.standalone[standaloneKey],
-          {
-            ...element,
-            numItems: 1,
-            duration: widget.duration,
-          },
-        ];
+        collection.standalone[standaloneKey][
+          Object.keys(collection.standalone[standaloneKey]).length + 1
+        ] =
+        {
+          ...element,
+          numItems: 1,
+          duration: widget.duration,
+        };
       }
 
       if (isGroup && Object.keys(collection.groups).length > 0 &&
@@ -331,6 +353,7 @@ const PlayerHelper = function() {
     elemCopy.isExtended = false;
     elemCopy.withData = false;
     elemCopy.widgetId = widget.widgetId;
+    elemCopy.dataInMeta = false;
 
     // Compile the template if it exists
     if ($template && $template.length > 0) {
@@ -404,6 +427,12 @@ const PlayerHelper = function() {
       elemCopy.durationIsPerItem = elemCopy.renderData.durationIsPerItem;
     }
 
+    // Check if element is extended and data is coming from meta
+    if (elemCopy.isExtended && elemCopy.dataOverrideWith !== null &&
+      elemCopy.dataOverrideWith.includes('meta')) {
+      elemCopy.dataInMeta = true;
+    }
+
     return elemCopy;
   };
 
@@ -432,7 +461,7 @@ const PlayerHelper = function() {
           const itemObj = standalone[objKey];
 
           if (!widget.standaloneSlotsData.hasOwnProperty(objKey)) {
-            widget.standaloneSlotsData[objKey] = [];
+            widget.standaloneSlotsData[objKey] = {};
           }
 
           if (itemObj.length > 0) {
@@ -444,15 +473,19 @@ const PlayerHelper = function() {
           }
         }
 
-        const pinnedSlots = standalone[objKey].reduce(function(a, b) {
-          if (b.pinSlot) return [...a, b.slot + 1];
-          return a;
-        }, []);
+        const pinnedSlots = Object.keys(standalone[objKey])
+          .reduce(function(a, b) {
+            const elem = standalone[objKey][b];
+            if (elem.pinSlot) return [...a, elem.slot + 1];
+            return a;
+          }, []);
 
         _self.composeSlotsData('standalone', data, standalone, widget, {
           objKey,
           lastSlotFilled: null,
         });
+
+        widget.singlePinnedSlots = pinnedSlots;
 
         widget.standaloneSlotsData[objKey] = _self.composeRepeatNonRepeatData(
           widget.standaloneSlotsData[objKey],
@@ -471,6 +504,7 @@ const PlayerHelper = function() {
       const {pinnedSlots} = _self.getGroupData(
         elements.groups,
         'items',
+        false,
       );
 
       widget.mappedSlotGroup = _self.mapSlot(
@@ -485,6 +519,8 @@ const PlayerHelper = function() {
       _self.composeSlotsData('groups', data, elements.groups, widget, {
         lastSlotFilled: null,
       });
+
+      widget.groupPinnedSlots = pinnedSlots;
 
       widget.groupSlotsData = _self.composeRepeatNonRepeatData(
         widget.groupSlotsData,
@@ -513,16 +549,10 @@ const PlayerHelper = function() {
     const groupData = _self.getGroupData(
       isStandalone ? [collection] : collection,
       isStandalone ? item.objKey : 'items',
+      isStandalone,
     );
     const maxSlot = groupData.maxSlot;
-    let pinnedSlots = groupData.pinnedSlots;
-
-    if (isStandalone) {
-      pinnedSlots = collection[item.objKey].reduce(function(a, b) {
-        if (b.pinSlot) return [...a, b.slot + 1];
-        return a;
-      }, []);
-    }
+    const pinnedSlots = groupData.pinnedSlots;
 
     if (dataItems.length > 0) {
       const lastSlotFilled = {};
@@ -546,14 +576,14 @@ const PlayerHelper = function() {
           break;
         }
 
-        if (lastSlotFilled[type] === null &&
+        if (widget.isMixed && lastSlotFilled[type] === null &&
           currCollection.length === maxSlot &&
           currentKey > maxSlot
         ) {
           break;
         }
 
-        if (lastSlotFilled[type] === null && isStandalone &&
+        if (widget.isMixed && lastSlotFilled[type] === null && isStandalone &&
           pinnedSlots.length === currCollection.length &&
           currentKey > maxSlot
         ) {
@@ -575,17 +605,20 @@ const PlayerHelper = function() {
             // If lastSlotFilled is filled and is <= to currentSlot
             // Then, move to next slot
             if (lastSlotFilled[type] !== null &&
-                currentSlot <= lastSlotFilled[type]) {
+              currentSlot <= lastSlotFilled[type]
+            ) {
               continue;
             }
 
             if (isStandalone) {
               const currentSlotItem =
-                  widget.standaloneSlotsData[item.objKey];
+                widget.standaloneSlotsData[item.objKey];
 
-              if (Object.keys(currentSlotItem).length > 0 &&
-                  currentSlotItem.hasOwnProperty(currentSlot)
-              ) {
+              if (!currentSlotItem.hasOwnProperty(currentSlot)) {
+                currentSlotItem[currentSlot] = [];
+              }
+
+              if (!currentSlotItem[currentSlot].includes(currentKey)) {
                 currentSlotItem[currentSlot] = [
                   ...currentSlotItem[currentSlot],
                   currentKey,
@@ -634,19 +667,19 @@ const PlayerHelper = function() {
             }
 
             if (isStandalone) {
-              widget.standaloneSlotsData[item.objKey][currentSlot] = [
-                ...widget.standaloneSlotsData[item.objKey][currentSlot],
+              widget.standaloneSlotsData[item.objKey][1] = [
+                ...widget.standaloneSlotsData[item.objKey][1],
                 currentKey,
               ];
             } else {
-              widget.groupSlotsData[currentSlot] = [
-                ...widget.groupSlotsData[currentSlot],
+              widget.groupSlotsData[1] = [
+                ...widget.groupSlotsData[1],
                 currentKey,
               ];
             }
 
             hasSlotFilled[type] = true;
-            lastSlotFilled[type] = currentSlot;
+            lastSlotFilled[type] = 1;
           }
 
           if (hasSlotFilled[type]) {
@@ -720,10 +753,37 @@ const PlayerHelper = function() {
     return slotsData;
   };
 
-  this.getMaxMinSlot = (objectsArray, itemsKey, minValue = 1) => {
+  /**
+   * Get items by Key
+   * @param {Object} items
+   * @param {String} itemsKey
+   * @param {Boolean} isStandalone
+   *
+   * @return {Array}
+   */
+  this.getItemsByKey = (items, itemsKey, isStandalone) => {
+    if (isStandalone && items.hasOwnProperty(itemsKey) &&
+        Object.keys(items[itemsKey]).length > 0
+    ) {
+      return Object.keys(items[itemsKey]).reduce(function(a, itemKey) {
+        return [...a, items[itemsKey][itemKey]];
+      }, []);
+    }
+
+    if (items.hasOwnProperty(itemsKey)) {
+      return items[itemsKey];
+    }
+
+    return [];
+  };
+
+  this.getMaxMinSlot = (objectsArray, itemsKey, isStandalone) => {
+    const minValue = 1;
     const groupItems = objectsArray?.length > 0 ?
       objectsArray.reduce(
-        (a, b) => [...a, ...b[itemsKey]], []) : null;
+        (a, b) => {
+          return [...a, ..._self.getItemsByKey(b, itemsKey, isStandalone)];
+        }, []) : null;
     const getSlots = (items) => items.map(function(elem) {
       return elem?.slot || 0;
     });
@@ -745,18 +805,20 @@ const PlayerHelper = function() {
     slotItemsKey,
     isStandalone,
   ) {
-    const groupValues = Object.values(groupsData);
+    let groupValues = Object.values(groupsData);
     const {maxSlot, minSlot} =
-      _self.getMaxMinSlot(groupValues, slotItemsKey);
-    let pinnedSlots = [];
+      _self.getMaxMinSlot(groupValues, slotItemsKey, isStandalone);
 
-    if (!isStandalone) {
-      pinnedSlots = groupValues.reduce(
-        function(a, b) {
-          if (b.pinSlot) return [...a, b.slot + 1];
-          return a;
-        }, []);
+    if (isStandalone) {
+      groupValues =
+        _self.getItemsByKey(groupsData[0], slotItemsKey, isStandalone);
     }
+
+    const pinnedSlots = groupValues.reduce(
+      function(a, b) {
+        if (b.pinSlot) return [...a, b.slot + 1];
+        return a;
+      }, []);
 
     return {
       groupValues,
