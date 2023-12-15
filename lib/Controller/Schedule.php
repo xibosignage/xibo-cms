@@ -33,6 +33,7 @@ use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\ScheduleCriteriaFactory;
 use Xibo\Factory\ScheduleExclusionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\ScheduleReminderFactory;
@@ -121,7 +122,8 @@ class Schedule extends Base
         $dayPartFactory,
         $scheduleReminderFactory,
         $scheduleExclusionFactory,
-        SyncGroupFactory $syncGroupFactory
+        SyncGroupFactory $syncGroupFactory,
+        private readonly ScheduleCriteriaFactory $scheduleCriteriaFactory
     ) {
         $this->session = $session;
         $this->scheduleFactory = $scheduleFactory;
@@ -1283,6 +1285,20 @@ class Schedule extends Base
             );
         }
 
+        // Schedule Criteria
+        $criteria = $sanitizedParams->getArray('criteria');
+        if (is_array($criteria) && count($criteria) > 0) {
+            foreach ($criteria as $item) {
+                $itemParams = $this->getSanitizer($item);
+                $criterion = $this->scheduleCriteriaFactory->createEmpty();
+                $criterion->metric = $itemParams->getString('metric');
+                $criterion->type = $itemParams->getString('type');
+                $criterion->condition = $itemParams->getString('condition');
+                $criterion->value = $itemParams->getString('value');
+                $schedule->criteria[] = $criterion;
+            }
+        }
+
         // Ready to do the add
         $schedule->setDisplayNotifyService($this->displayFactory->getDisplayNotifyService());
         if ($schedule->campaignId != null) {
@@ -1908,6 +1924,21 @@ class Schedule extends Base
         } else {
             // This is an always day part, which cannot be recurring, make sure we clear the recurring type if it has been set
             $schedule->recurrenceType = null;
+        }
+
+        // Schedule Criteria
+        $schedule->criteria = [];
+        $criteria = $sanitizedParams->getArray('criteria');
+        if (is_array($criteria)) {
+            foreach ($criteria as $item) {
+                $itemParams = $this->getSanitizer($item);
+                $criterion = $this->scheduleCriteriaFactory->createEmpty();
+                $criterion->metric = $itemParams->getString('metric');
+                $criterion->type = $itemParams->getString('type');
+                $criterion->condition = $itemParams->getString('condition');
+                $criterion->value = $itemParams->getString('value');
+                $schedule->criteria[] = $criterion;
+            }
         }
 
         // Ready to do the add
