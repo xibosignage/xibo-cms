@@ -26,6 +26,9 @@
         <showIn>none</showIn>
         <title>Stocks Custom HTML</title>
         <properties>
+            <property id="templateType" type="hidden">
+                <default>static</default>
+            </property>
             <property id="backgroundColor" type="color">
                 <title>Background Colour</title>
                 <helpText>The selected effect works best with a background colour. Optionally add one here.</helpText>
@@ -115,6 +118,9 @@ $(target).find("#content").xiboFinanceRender(properties, items, body);
         <startWidth>800</startWidth>
         <startHeight>450</startHeight>
         <properties>
+            <property id="templateType" type="hidden">
+                <default>static</default>
+            </property>
             <property id="backgroundColor" type="color">
                 <title>Background Colour</title>
                 <helpText>The selected effect works best with a background colour. Optionally add one here.</helpText>
@@ -424,6 +430,9 @@ $(target).find("#content").xiboFinanceRender(properties, items, body);
         <startWidth>550</startWidth>
         <startHeight>350</startHeight>
         <properties>
+            <property id="templateType" type="hidden">
+                <default>static</default>
+            </property>
             <property id="backgroundColor" type="color">
                 <title>Background Colour</title>
                 <helpText>The selected effect works best with a background colour. Optionally add one here.</helpText>

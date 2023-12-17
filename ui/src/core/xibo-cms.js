@@ -461,6 +461,7 @@ function XiboInitialise(scope, options) {
     const self = $(this);
     const autoCompleteUrl = self.data('autoCompleteUrl');
     const termKey = self.data('searchTermKey');
+    const templateType = $(scope + ' input[name=templateType]').val();
 
     if (autoCompleteUrl !== undefined && autoCompleteUrl !== '') {
       // Tags input with autocomplete
@@ -481,6 +482,10 @@ function XiboInitialise(scope, options) {
           },
           transform: function(list) {
             return list.data.length > 0 ? $.map(list.data, function(tagObj) {
+              if (templateType === 'static') {
+                return {tag: tagObj.type};
+              }
+
               return tagObj.type;
             }) : [];
           },
@@ -491,9 +496,21 @@ function XiboInitialise(scope, options) {
 
       promise
         .done(function() {
-          // Destroy tagsinput instance
-          if (typeof self.tagsinput === 'function') {
-            self.tagsinput('destroy');
+          if (templateType === undefined) {
+            // Destroy tagsinput instance
+            if (typeof self.tagsinput === 'function') {
+              self.tagsinput('destroy');
+            }
+          }
+
+          const tagsInputOptions = {
+            name: 'tags',
+            source: tags.ttAdapter(),
+          };
+
+          if (templateType === 'static') {
+            tagsInputOptions.displayKey = 'tag';
+            tagsInputOptions.valueKey = 'tag';
           }
 
           // Initialise tagsinput with autocomplete
@@ -501,10 +518,7 @@ function XiboInitialise(scope, options) {
             typeaheadjs: [{
               hint: true,
               highlight: true,
-            }, {
-              name: 'tags',
-              source: tags.ttAdapter(),
-            }],
+            }, tagsInputOptions],
           });
         })
         .fail(function() {
