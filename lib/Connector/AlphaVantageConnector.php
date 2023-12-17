@@ -255,16 +255,19 @@ class AlphaVantageConnector implements ConnectorInterface
 
                 $item = [];
 
-                foreach ($result['Time Series (Daily)'] as $series) {
+                $isFromCache = !array_key_exists('Time Series (Daily)', $result);
+                $results = $isFromCache ? $result : $result['Time Series (Daily)'];
+
+                foreach ($results as $series) {
                     $item = [
                         'Name' => $name,
                         'Symbol' => $symbol,
-                        'time' => $result['Meta Data']['3. Last Refreshed'],
-                        'LastTradePriceOnly' => round($series['4. close'], 4),
-                        'RawLastTradePriceOnly' => $series['4. close'],
-                        'YesterdayTradePriceOnly' => round($series['1. open'], 4),
-                        'RawYesterdayTradePriceOnly' => $series['1. open'],
-                        'TimeZone' => $result['Meta Data']['5. Time Zone'],
+                        'time' => $isFromCache ? $series['time'] : $result['Meta Data']['3. Last Refreshed'],
+                        'LastTradePriceOnly' => $isFromCache ? $series['LastTradePriceOnly'] : round($series['4. close'], 4),
+                        'RawLastTradePriceOnly' => $isFromCache ? $series['RawLastTradePriceOnly'] : $series['4. close'],
+                        'YesterdayTradePriceOnly' => $isFromCache ? $series['YesterdayTradePriceOnly'] : round($series['1. open'], 4),
+                        'RawYesterdayTradePriceOnly' => $isFromCache ? $series['RawYesterdayTradePriceOnly'] : $series['1. open'],
+                        'TimeZone' => $isFromCache ? $series['TimeZone'] : $result['Meta Data']['5. Time Zone'],
                         'Currency' => $currency
                     ];
 
@@ -300,6 +303,7 @@ class AlphaVantageConnector implements ConnectorInterface
             $cache->setInvalidationMethod(Invalidation::SLEEP, 5000, 15);
 
             $data = $cache->get();
+
             if ($cache->isMiss()) {
                 $this->getLogger()->debug('AlphaVantage Connector : getStockQuote is served from the API.');
 
@@ -325,6 +329,10 @@ class AlphaVantageConnector implements ConnectorInterface
                 $this->getPool()->save($cache);
             } else {
                 $this->getLogger()->debug('AlphaVantage Connector : getStockQuote is served from the cache.');
+            }
+
+            if (is_object($data) && $data->data) {
+                return $data->data;
             }
 
             return $data;
