@@ -315,6 +315,9 @@
                     </div>
 
                     <div class="tab-pane" id="tab-criteria">
+                        {% set message %}{% trans "Set criteria to determine when this event is active. All conditions must be true for an event to be included in the schedule loop. Events without criteria are always active." %}{% endset %}
+                        {{ forms.message(message) }}
+
                         <div id="scheduleCriteriaFields" data-criteria=""></div>
                     </div>
                 </div>

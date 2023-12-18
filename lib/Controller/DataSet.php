@@ -959,6 +959,8 @@ class DataSet extends Base
         if ($dataSet->isRealTime === 1) {
             // Set the script.
             $dataSet->saveScript($sanitizedParams->getString('dataConnectorScript'));
+
+            // TODO: we should notify displays which have this scheduled to them as data connectors.
         }
 
         // Return

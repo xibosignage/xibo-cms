@@ -493,6 +493,27 @@ class Schedule implements \JsonSerializable
     }
 
     /**
+     * @param ScheduleCriteria $criteria
+     * @return $this
+     */
+    public function addOrUpdateCriteria(ScheduleCriteria $criteria): Schedule
+    {
+        // Does this already exist?
+        foreach ($this->criteria as $existing) {
+            if ($existing->id !== null && $existing->id === $criteria->id) {
+                $this->criteria[] = $criteria;
+                return $this;
+            }
+        }
+
+        // We didn't find it.
+        $criteria->id = null;
+        $this->criteria[] = $criteria;
+
+        return $this;
+    }
+
+    /**
      * Are the provided dates within the schedule look ahead
      * @return bool
      * @throws GeneralException
@@ -545,6 +566,7 @@ class Schedule implements \JsonSerializable
     public function load($options = [])
     {
         $options = array_merge([
+            'loadDisplayGroups' => true,
             'loadScheduleReminders' => false,
             'loadScheduleCriteria' => true,
         ], $options);
@@ -554,7 +576,10 @@ class Schedule implements \JsonSerializable
             return;
         }
 
-        $this->displayGroups = $this->displayGroupFactory->getByEventId($this->eventId);
+        // Load display groups
+        if ($options['loadDisplayGroups']) {
+            $this->displayGroups = $this->displayGroupFactory->getByEventId($this->eventId);
+        }
 
         // Load schedule reminders
         if ($options['loadScheduleReminders']) {
@@ -841,9 +866,20 @@ class Schedule implements \JsonSerializable
         }
 
         // Update schedule criteria
+        $criteriaIds = [];
         foreach ($this->criteria as $criteria) {
             $criteria->eventId = $this->eventId;
             $criteria->save();
+
+            $criteriaIds[] = $criteria->id;
+        }
+
+        // Remove any that are no longer there.
+        foreach ($this->getOriginalValue('criteria') as $oldCriteria) {
+            /** @var ScheduleCriteria $oldCriteria */
+            if (!in_array($oldCriteria->id, $criteriaIds)) {
+                $oldCriteria->delete();
+            }
         }
 
         // Notify
