@@ -2316,6 +2316,88 @@ window.forms = {
       });
     });
 
+    let countExec = 0;
+    // Stocks symbol search
+    // Initialize tags input for properties panel with connectorProperties field
+    findElements(
+      'input[data-role=panelTagsInput]',
+      target,
+    ).each(function(_k, el) {
+      const self = $(el);
+      const autoCompleteUrl = self.data('autoCompleteUrl');
+      const termKey = self.data('searchTermKey');
+
+      if (autoCompleteUrl !== undefined && autoCompleteUrl !== '') {
+        countExec++;
+
+        // Tags input with autocomplete
+        const tags = new Bloodhound({
+          datumTokenizer: Bloodhound.tokenizers.whitespace,
+          queryTokenizer: Bloodhound.tokenizers.whitespace,
+          initialize: false,
+          remote: {
+            url: autoCompleteUrl,
+            prepare: function(query, settings) {
+              settings.data = {tag: query};
+
+              if (termKey !== undefined && termKey !== '') {
+                settings.data[termKey] = query;
+              }
+
+              return settings;
+            },
+            transform: function(list) {
+              return $.map(list.data, function(tagObj) {
+                if (countExec === 1) {
+                  return {tag: tagObj.type};
+                }
+
+                return tagObj.type;
+              });
+            },
+          },
+        });
+
+        const promise = tags.initialize();
+
+        promise
+          .done(function() {
+            if (countExec > 1 || self.prev().is('.bootstrap-tagsinput')) {
+              // Destroy tagsinput instance
+              if (typeof self.tagsinput === 'function') {
+                self.tagsinput('destroy');
+              }
+
+              countExec = 0;
+            }
+
+            const tagsInputOptions = {
+              name: 'tags',
+              source: tags.ttAdapter(),
+            };
+
+            if (countExec === 1) {
+              tagsInputOptions.displayKey = 'tag';
+              tagsInputOptions.valueKey = 'tag';
+            }
+
+            // Initialise tagsinput with autocomplete
+            self.tagsinput({
+              typeaheadjs: [{
+                hint: true,
+                highlight: true,
+              }, tagsInputOptions],
+            });
+          })
+          .fail(function() {
+            console.info('Auto-complete for tag failed! Using default...');
+            self.tagsinput();
+          });
+      } else {
+        self.tagsinput();
+      }
+    });
+
     // Handle field dependencies for the container
     // only if we don't have a target
     if (!target) {
