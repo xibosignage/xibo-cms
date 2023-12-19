@@ -730,7 +730,9 @@ Viewer.prototype.handleInteractions = function() {
             ) {
               // If we're multi selecting, deselect all
               if (shiftIsPressed) {
-                lD.selectObject();
+                lD.selectObject({
+                  reloadLayerManager: true,
+                });
               } else {
                 // Select region
                 lD.selectObject({
@@ -746,7 +748,9 @@ Viewer.prototype.handleInteractions = function() {
             ) {
               // If we're multi selecting, deselect all
               if (shiftIsPressed) {
-                lD.selectObject();
+                lD.selectObject({
+                  reloadLayerManager: true,
+                });
               } else {
                 // Select widget if exists
                 lD.selectObject({
@@ -768,7 +772,9 @@ Viewer.prototype.handleInteractions = function() {
             ) {
               // If we're multi selecting, deselect all
               if (shiftIsPressed) {
-                lD.selectObject();
+                lD.selectObject({
+                  reloadLayerManager: true,
+                });
               } else {
                 // Select zone
                 lD.selectObject({
@@ -782,7 +788,9 @@ Viewer.prototype.handleInteractions = function() {
             ) {
               // If we're multi selecting, deselect all
               if (shiftIsPressed) {
-                lD.selectObject();
+                lD.selectObject({
+                  reloadLayerManager: true,
+                });
               } else {
                 // Select element if exists
                 lD.selectObject({
@@ -797,7 +805,9 @@ Viewer.prototype.handleInteractions = function() {
             ) {
               // If we're multi selecting, deselect all
               if (shiftIsPressed) {
-                lD.selectObject();
+                lD.selectObject({
+                  reloadLayerManager: true,
+                });
               } else {
                 // Select element if exists
                 lD.selectObject({
@@ -2729,6 +2739,10 @@ Viewer.prototype.selectObject = function(
     // Also remove select from layer manager from canvas
     self.DOMObject.find('.designer-region-canvas')
       .removeClass('canvas-element-selected-from-layer-manager');
+
+    // Remove all multi select from layer manager
+    self.layerManager.DOMObject.find('.multi-selected')
+      .removeClass('multi-selected');
   }
 
   // Remove all editing from groups

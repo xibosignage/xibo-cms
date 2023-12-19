@@ -1715,7 +1715,7 @@ div#bg_media_name {
             text-align: center;
         }
 
-        &.selected {
+        &.selected, &.multi-selected {
             color: $xibo-color-neutral-0;
             background-color: $xibo-color-accent !important;
             
