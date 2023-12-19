@@ -1303,6 +1303,21 @@ class Soap
 
                 $this->getLog()->debug(count($scheduleEvents) . ' events for eventId ' . $schedule->eventId);
 
+                // Does this event have any criteria?
+                $criteriaNodes = [];
+                if (count($scheduleEvents) > 0) {
+                    $schedule->load(['loadDisplayGroups' => false]);
+
+                    foreach ($schedule->criteria as $scheduleCriteria) {
+                        $criteriaNode = $scheduleXml->createElement('criteria');
+                        $criteriaNode->setAttribute('metric', $scheduleCriteria->metric);
+                        $criteriaNode->setAttribute('condition', $scheduleCriteria->condition);
+                        $criteriaNode->setAttribute('type', $scheduleCriteria->type);
+                        $criteriaNode->textContent = $scheduleCriteria->value;
+                        $criteriaNodes[] = $criteriaNode;
+                    }
+                }
+
                 foreach ($scheduleEvents as $scheduleEvent) {
                     $eventTypeId = $row['eventTypeId'];
 
@@ -1389,6 +1404,13 @@ class Soap
                             }
                         }
 
+                        // Add criteria notes
+                        if (count($criteriaNodes) > 0) {
+                            foreach ($criteriaNodes as $criteriaNode) {
+                                $layout->appendChild($criteriaNode);
+                            }
+                        }
+
                         $layoutElements->appendChild($layout);
                     } elseif ($eventTypeId == Schedule::$COMMAND_EVENT) {
                         // Add a command node to the schedule
@@ -1396,6 +1418,14 @@ class Soap
                         $command->setAttribute('date', $fromDt);
                         $command->setAttribute('scheduleid', $scheduleId);
                         $command->setAttribute('code', $commandCode);
+
+                        // Add criteria notes
+                        if (count($criteriaNodes) > 0) {
+                            foreach ($criteriaNodes as $criteriaNode) {
+                                $command->appendChild($criteriaNode);
+                            }
+                        }
+
                         $layoutElements->appendChild($command);
                     } elseif ($eventTypeId == Schedule::$OVERLAY_EVENT && $options['includeOverlays']) {
                         // Ensure we have a layoutId (we may not if an empty campaign is assigned)
@@ -1426,6 +1456,13 @@ class Soap
                         $overlay->setAttribute('isGeoAware', $row['isGeoAware'] ?? 0);
                         $overlay->setAttribute('geoLocation', $row['geoLocation'] ?? null);
 
+                        // Add criteria notes
+                        if (count($criteriaNodes) > 0) {
+                            foreach ($criteriaNodes as $criteriaNode) {
+                                $overlay->appendChild($criteriaNode);
+                            }
+                        }
+
                         // Add to the overlays node list
                         $overlayNodes->appendChild($overlay);
                     } elseif ($eventTypeId == Schedule::$ACTION_EVENT) {
@@ -1445,6 +1482,13 @@ class Soap
                         $action->setAttribute('layoutCode', $row['actionLayoutCode']);
                         $action->setAttribute('commandCode', $commandCode);
 
+                        // Add criteria notes
+                        if (count($criteriaNodes) > 0) {
+                            foreach ($criteriaNodes as $criteriaNode) {
+                                $action->appendChild($criteriaNode);
+                            }
+                        }
+
                         $actionNodes->appendChild($action);
                     } else if ($eventTypeId === Schedule::$DATA_CONNECTOR_EVENT) {
                         if ($dataConnectorNodes == null) {
@@ -1459,9 +1503,17 @@ class Soap
                         $dataConnector->setAttribute('duration', $row['duration'] ?? 0);
                         $dataConnector->setAttribute('isGeoAware', $row['isGeoAware'] ?? 0);
                         $dataConnector->setAttribute('geoLocation', $row['geoLocation'] ?? null);
-                        $dataConnector->setAttribute('dataKey', $row['dataSetId']);
-                        $dataConnector->setAttribute('dataParams', $row['dataSetParams']);
+                        $dataConnector->setAttribute('dataSetId', $row['dataSetId']);
+                        $dataConnector->setAttribute('dataParams', urlencode($row['dataSetParams']));
                         $dataConnector->setAttribute('js', 'dataSet_' . $row['dataSetId'] . '.js');
+
+                        // Add criteria notes
+                        if (count($criteriaNodes) > 0) {
+                            foreach ($criteriaNodes as $criteriaNode) {
+                                $dataConnector->appendChild($criteriaNode);
+                            }
+                        }
+
                         $dataConnectorNodes->appendChild($dataConnector);
                     }
                 }

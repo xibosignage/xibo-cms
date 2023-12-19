@@ -493,6 +493,26 @@ class Schedule implements \JsonSerializable
     }
 
     /**
+     * @param ScheduleCriteria $criteria
+     * @param int|null $id
+     * @return $this
+     */
+    public function addOrUpdateCriteria(ScheduleCriteria $criteria, ?int $id = null): Schedule
+    {
+        // Does this already exist?
+        foreach ($this->getOriginalValue('criteria') as $existing) {
+            if ($id !== null && $existing->id === $id) {
+                $this->criteria[] = $criteria;
+                return $this;
+            }
+        }
+
+        // We didn't find it.
+        $this->criteria[] = $criteria;
+        return $this;
+    }
+
+    /**
      * Are the provided dates within the schedule look ahead
      * @return bool
      * @throws GeneralException
@@ -545,6 +565,7 @@ class Schedule implements \JsonSerializable
     public function load($options = [])
     {
         $options = array_merge([
+            'loadDisplayGroups' => true,
             'loadScheduleReminders' => false,
             'loadScheduleCriteria' => true,
         ], $options);
@@ -554,7 +575,10 @@ class Schedule implements \JsonSerializable
             return;
         }
 
-        $this->displayGroups = $this->displayGroupFactory->getByEventId($this->eventId);
+        // Load display groups
+        if ($options['loadDisplayGroups']) {
+            $this->displayGroups = $this->displayGroupFactory->getByEventId($this->eventId);
+        }
 
         // Load schedule reminders
         if ($options['loadScheduleReminders']) {
@@ -841,9 +865,29 @@ class Schedule implements \JsonSerializable
         }
 
         // Update schedule criteria
+        $criteriaIds = [];
         foreach ($this->criteria as $criteria) {
             $criteria->eventId = $this->eventId;
             $criteria->save();
+
+            $criteriaIds[] = $criteria->id;
+        }
+
+        // Remove records that no longer exist.
+        if (count($criteriaIds) > 0) {
+            // There are still criteria left
+            $this->getStore()->update('
+                DELETE FROM `schedule_criteria` 
+                 WHERE `id` NOT IN (' . implode(',', $criteriaIds) . ')
+                    AND `eventId` = :eventId
+            ', [
+                'eventId' => $this->eventId,
+            ]);
+        } else {
+            // No criteria left at all (or never was any)
+            $this->getStore()->update('DELETE FROM `schedule_criteria`  WHERE `eventId` = :eventId', [
+                'eventId' => $this->eventId,
+            ]);
         }
 
         // Notify

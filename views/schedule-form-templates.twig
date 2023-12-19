@@ -135,8 +135,8 @@
         <div class="col-sm-2">
             <label for="criteria_type[]">
                 <select class="form-control" name="criteria_type[]">
-                    <option value="Custom" {{#eq type "Custom"}}selected{{/eq}}>{% endverbatim %}{% trans "Custom" %}{% verbatim %}</option>
-                    <option value="Weather" {{#eq type "Weather"}}selected{{/eq}}>{% endverbatim %}{% trans "Weather" %}{% verbatim %}</option>
+                    <option value="custom" {{#eq type "custom"}}selected{{/eq}}>{% endverbatim %}{% trans "Custom" %}{% verbatim %}</option>
+                    <option value="weather" {{#eq type "weather"}}selected{{/eq}}>{% endverbatim %}{% trans "Weather" %}{% verbatim %}</option>
                 </select>
             </label>
         </div>
@@ -162,7 +162,7 @@
         </div>
         <div class="col-sm-2">
             <label for="criteria_value[]">
-                <input class="form-control" name="criteria_value[]" type="number" value="{{ value }}" />
+                <input class="form-control" name="criteria_value[]" type="text" value="{{ value }}" />
             </label>
         </div>
         <div class="col-sm-2">

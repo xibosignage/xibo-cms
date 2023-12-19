@@ -1295,7 +1295,7 @@ class Schedule extends Base
                 $criterion->type = $itemParams->getString('type');
                 $criterion->condition = $itemParams->getString('condition');
                 $criterion->value = $itemParams->getString('value');
-                $schedule->criteria[] = $criterion;
+                $schedule->addOrUpdateCriteria($criterion);
             }
         }
 
@@ -1937,7 +1937,7 @@ class Schedule extends Base
                 $criterion->type = $itemParams->getString('type');
                 $criterion->condition = $itemParams->getString('condition');
                 $criterion->value = $itemParams->getString('value');
-                $schedule->criteria[] = $criterion;
+                $schedule->addOrUpdateCriteria($criterion, $itemParams->getInt('id'));
             }
         }
 
