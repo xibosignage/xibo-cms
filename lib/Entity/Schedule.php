@@ -494,22 +494,21 @@ class Schedule implements \JsonSerializable
 
     /**
      * @param ScheduleCriteria $criteria
+     * @param int|null $id
      * @return $this
      */
-    public function addOrUpdateCriteria(ScheduleCriteria $criteria): Schedule
+    public function addOrUpdateCriteria(ScheduleCriteria $criteria, ?int $id = null): Schedule
     {
         // Does this already exist?
-        foreach ($this->criteria as $existing) {
-            if ($existing->id !== null && $existing->id === $criteria->id) {
+        foreach ($this->getOriginalValue('criteria') as $existing) {
+            if ($id !== null && $existing->id === $id) {
                 $this->criteria[] = $criteria;
                 return $this;
             }
         }
 
         // We didn't find it.
-        $criteria->id = null;
         $this->criteria[] = $criteria;
-
         return $this;
     }
 
@@ -874,13 +873,14 @@ class Schedule implements \JsonSerializable
             $criteriaIds[] = $criteria->id;
         }
 
-        // Remove any that are no longer there.
-        foreach ($this->getOriginalValue('criteria') as $oldCriteria) {
-            /** @var ScheduleCriteria $oldCriteria */
-            if (!in_array($oldCriteria->id, $criteriaIds)) {
-                $oldCriteria->delete();
-            }
-        }
+        // Remove records that no longer exist.
+        $this->getStore()->update('
+            DELETE FROM `schedule_criteria` 
+             WHERE `id` NOT IN (' . implode(',', $criteriaIds) . ')
+                AND `eventId` = :eventId
+        ', [
+            'eventId' => $this->eventId,
+        ]);
 
         // Notify
         if ($options['notify']) {

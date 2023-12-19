@@ -1927,17 +1927,17 @@ class Schedule extends Base
         }
 
         // Schedule Criteria
+        $schedule->criteria = [];
         $criteria = $sanitizedParams->getArray('criteria');
         if (is_array($criteria)) {
             foreach ($criteria as $item) {
                 $itemParams = $this->getSanitizer($item);
                 $criterion = $this->scheduleCriteriaFactory->createEmpty();
-                $criterion->id = $itemParams->getInt('id');
                 $criterion->metric = $itemParams->getString('metric');
                 $criterion->type = $itemParams->getString('type');
                 $criterion->condition = $itemParams->getString('condition');
                 $criterion->value = $itemParams->getString('value');
-                $schedule->addOrUpdateCriteria($criterion);
+                $schedule->addOrUpdateCriteria($criterion, $itemParams->getInt('id'));
             }
         }
 
