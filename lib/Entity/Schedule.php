@@ -874,13 +874,21 @@ class Schedule implements \JsonSerializable
         }
 
         // Remove records that no longer exist.
-        $this->getStore()->update('
-            DELETE FROM `schedule_criteria` 
-             WHERE `id` NOT IN (' . implode(',', $criteriaIds) . ')
-                AND `eventId` = :eventId
-        ', [
-            'eventId' => $this->eventId,
-        ]);
+        if (count($criteriaIds) > 0) {
+            // There are still criteria left
+            $this->getStore()->update('
+                DELETE FROM `schedule_criteria` 
+                 WHERE `id` NOT IN (' . implode(',', $criteriaIds) . ')
+                    AND `eventId` = :eventId
+            ', [
+                'eventId' => $this->eventId,
+            ]);
+        } else {
+            // No criteria left at all (or never was any)
+            $this->getStore()->update('DELETE FROM `schedule_criteria`  WHERE `eventId` = :eventId', [
+                'eventId' => $this->eventId,
+            ]);
+        }
 
         // Notify
         if ($options['notify']) {
