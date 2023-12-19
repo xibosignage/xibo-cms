@@ -313,7 +313,7 @@
 
 
         function dataSetFormOpen(dialog) {
-            // Bind the test button
+            // Bind the remote dataset test button
             $(dialog).find("#dataSetRemoteTestButton").on('click', function() {
                 var $form = $(dialog).find("form");
                 XiboRemoteRequest("{{ url_for("dataSet.test.remote") }}", $form.serializeObject(), function(response) {
@@ -343,28 +343,11 @@
             $(dialog).find('#sourceId').on('change', function() {
                 onSourceFieldChanged(dialog);
             });
-
-          onRealTimeFieldChanged(dialog);
-
-          $(dialog).find("#isRealTime").on('change', function() {
-            onRealTimeFieldChanged(dialog);
-          });
         }
 
         function onRemoteFieldChanged(dialog) {
             var isRemote = $(dialog).find("#isRemote").is(":checked");
             var $remoteTabs = $(dialog).find(".tabForRemoteDataSet");
-
-            if (isRemote) {
-                $remoteTabs.removeClass("d-none");
-            } else {
-                $remoteTabs.addClass("d-none");
-            }
-        }
-
-        function onRealTimeFieldChanged(dialog) {
-            var isRemote = $(dialog).find("#isRealTime").is(":checked");
-            var $remoteTabs = $(dialog).find(".tabForRealTimeDataSet");
 
             if (isRemote) {
                 $remoteTabs.removeClass("d-none");
