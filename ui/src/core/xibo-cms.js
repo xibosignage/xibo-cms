@@ -455,65 +455,6 @@ function XiboInitialise(scope, options) {
         });
     });
 
-  // Initialize tags input for properties panel with connectorProperties field
-  $(scope + ' input[data-role=panelTagsInput]').each(function() {
-    // eslint-disable-next-line no-invalid-this
-    const self = $(this);
-    const autoCompleteUrl = self.data('autoCompleteUrl');
-    const termKey = self.data('searchTermKey');
-
-    if (autoCompleteUrl !== undefined && autoCompleteUrl !== '') {
-      // Tags input with autocomplete
-      const tags = new Bloodhound({
-        datumTokenizer: Bloodhound.tokenizers.whitespace,
-        queryTokenizer: Bloodhound.tokenizers.whitespace,
-        initialize: false,
-        remote: {
-          url: autoCompleteUrl,
-          prepare: function(query, settings) {
-            settings.data = {tag: query};
-
-            if (termKey !== undefined && termKey !== '') {
-              settings.data[termKey] = query;
-            }
-
-            return settings;
-          },
-          transform: function(list) {
-            return list.data.length > 0 ? $.map(list.data, function(tagObj) {
-              return tagObj.type;
-            }) : [];
-          },
-        },
-      });
-
-      const promise = tags.initialize();
-
-      promise
-        .done(function() {
-          // Destroy tagsinput instance
-          if (typeof self.tagsinput === 'function') {
-            self.tagsinput('destroy');
-          }
-
-          // Initialise tagsinput with autocomplete
-          self.tagsinput({
-            typeaheadjs: [{
-              hint: true,
-              highlight: true,
-            }, {
-              name: 'tags',
-              source: tags.ttAdapter(),
-            }],
-          });
-        })
-        .fail(function() {
-          console.info('Auto-complete for tag failed! Using default...');
-          self.tagsinput();
-        });
-    }
-  });
-
     // Initialize tag with values function from xibo-forms.js
     // this needs to be initialised only once, otherwise some functions in it will be executed multiple times.
     if ($(scope + " .tags-with-value").length > 0) {
