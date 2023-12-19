@@ -268,6 +268,21 @@ LayerManager.prototype.render = function(reset) {
         // Append layout html to the main div
         this.DOMObject.html(html);
 
+        // Check if we have multi selected elements in the viewer
+        const $selectedInViewer = self.viewerContainer.find('.selected');
+        if ($selectedInViewer.length > 1) {
+          $selectedInViewer.each((_idx, el) => {
+            // If region is frame, get widget ID instead
+            const elId = ($(el).hasClass('designer-region-frame')) ?
+              $(el).find('.designer-widget').attr('id') :
+              $(el).attr('id');
+
+            // Mark elements as multi selected in the manager
+            self.DOMObject.find('[data-item-id="' + elId + '"]')
+              .addClass('multi-selected');
+          });
+        }
+
         // Make the layer div draggable
         this.DOMObject.draggable({
           handle: '.layer-manager-header',

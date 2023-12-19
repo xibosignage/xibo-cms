@@ -33,6 +33,8 @@ const ElementGroup = function(data, widgetId, regionId, parentWidget) {
 
   // Expanded on layer manager
   this.expanded = false;
+
+  this.selected = false;
 };
 
 ElementGroup.prototype.updateSlot = function(

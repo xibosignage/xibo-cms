@@ -1334,8 +1334,8 @@
                 $(target).html($inputFields);
 
                 if(timepickerFixFlag) {
-                    XiboInitialise('#' + $inputFieldsOld.parents('form').attr('id'));
-                    XiboInitialise('#' + $(target).parents('form').attr('id'));
+                    forms.initFields($inputFieldsOld.parents('form'), $inputFieldsOld.find('.dateControl'));
+                    forms.initFields($(target).parents('form'), $(target).find('.dateControl'));
                 }
 
                 if(timepickerOptionsFixFlag) {

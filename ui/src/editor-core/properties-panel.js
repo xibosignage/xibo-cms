@@ -272,6 +272,18 @@ PropertiesPanel.prototype.save = function(
                   app.viewer.renderElementContent(target.elements[element]);
                 }
               }
+
+              // If we're saving an element group, update bottom bar
+              (savingElementGroup) &&
+                app.bottombar.render(originalTarget);
+            }
+
+            // If we're saving a region, update bottom bar
+            // update bottom bar
+            if (originalTarget.type === 'region') {
+              app.bottombar.render(
+                app.getObjectByTypeAndId('region', originalTarget.regionId),
+              );
             }
           });
         }

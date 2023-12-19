@@ -63,6 +63,8 @@ const Element = function(data, widgetId, regionId, parentWidget) {
 
   // Media
   this.mediaId = data.mediaId;
+
+  this.selected = false;
 };
 
 /**

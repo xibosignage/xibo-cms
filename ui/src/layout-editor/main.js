@@ -382,6 +382,7 @@ $(() => {
  * @param {bool=} refreshEditor - Force refresh of the editor
  * @param {bool=} reloadViewer - Force viewer reload
  * @param {bool=} reloadPropertiesPanel - Force properties panel reload
+ * @param {bool=} reloadLayerManager - Force layer manager reload
  */
 lD.selectObject =
   function({
@@ -391,6 +392,7 @@ lD.selectObject =
     refreshEditor = true,
     reloadViewer = false,
     reloadPropertiesPanel = true,
+    reloadLayerManager = false,
   } = {}) {
     // Clear rogue tooltips
     lD.common.clearTooltips();
@@ -611,6 +613,11 @@ lD.selectObject =
           reloadViewer: reloadViewer,
           reloadPropertiesPanel: reloadPropertiesPanel,
         });
+      } else {
+        // Still reload layer manager
+        // even if we're not refreshing the whole editor
+        (reloadLayerManager) &&
+          lD.viewer.layerManager.render();
       }
     }
   };

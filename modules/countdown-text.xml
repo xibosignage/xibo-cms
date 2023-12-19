@@ -154,15 +154,15 @@
             <default>#222</default>
         </property>
         <property id="dividerTextColor" type="color">
-            <title>Divider Text Colour</title>
+            <title>Divider Colour</title>
             <default>#222</default>
         </property>
         <property id="warningColor" type="color">
-            <title>Text Colour</title>
+            <title>Warning Colour</title>
             <default>orange</default>
         </property>
         <property id="finishedColor" type="color">
-            <title>Text Colour</title>
+            <title>Finished Colour</title>
             <default>red</default>
         </property>
     </properties>
