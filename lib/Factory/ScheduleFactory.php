@@ -24,7 +24,6 @@ namespace Xibo\Factory;
 use Carbon\Carbon;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Schedule;
-use Xibo\Entity\ScheduleCriteria;
 use Xibo\Entity\User;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
@@ -777,24 +776,6 @@ class ScheduleFactory extends BaseFactory
             $this->_countLast = intval($results[0]['total']);
         }
 
-        return $entries;
-    }
-
-    /**
-     * Get all criteria for an event
-     * @param int $eventId
-     * @return ScheduleCriteria[]
-     */
-    public function getByEventId(int $eventId): array
-    {
-        $entries = [];
-
-        foreach ($this->getStore()->select('SELECT * FROM `schedule_criteria` WHERE `eventId` = :eventId', [
-            'eventId' => $eventId,
-        ]) as $row) {
-            // Create and hydrate
-            $entries[] = $this->createEmpty()->hydrate($row);
-        }
         return $entries;
     }
 }
