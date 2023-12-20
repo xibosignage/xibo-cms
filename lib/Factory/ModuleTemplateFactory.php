@@ -72,6 +72,21 @@ class ModuleTemplateFactory extends BaseFactory
     }
 
     /**
+     * @param int $id
+     * @return \Xibo\Entity\ModuleTemplate
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function getUserTemplateById(int $id): ModuleTemplate
+    {
+        $templates = $this->loadUserTemplates($id);
+        if (count($templates) !== 1) {
+            throw new NotFoundException(sprintf(__('Template not found for %s'), $id));
+        }
+
+        return $templates[0];
+    }
+
+    /**
      * @param string $dataType
      * @param string $id
      * @return \Xibo\Entity\ModuleTemplate
@@ -142,9 +157,46 @@ class ModuleTemplateFactory extends BaseFactory
      * Get an array of all modules
      * @return \Xibo\Entity\ModuleTemplate[]
      */
-    public function getAll(): array
+    public function getAll(?string $ownership = null): array
     {
-        return $this->load();
+        $templates = $this->load();
+
+        if ($ownership === null) {
+            return $templates;
+        } else {
+            $ownedBy = [];
+            foreach ($templates as $template) {
+                if ($ownership === $template->ownership) {
+                    $ownedBy[] = $template;
+                }
+            }
+            return $ownedBy;
+        }
+    }
+
+    /**
+     * Load user templates from the database.
+     * @return ModuleTemplate[]
+     */
+    public function loadUserTemplates($id = null): array
+    {
+        $templates = [];
+        $params = [];
+
+        $sql = 'SELECT * FROM `module_templates`';
+        if ($id !== null) {
+            $sql .= ' WHERE `id` = :id ';
+            $params['id'] = $id;
+        }
+
+        foreach ($this->getStore()->select($sql, $params) as $row) {
+            $template = $this->createUserTemplate($row['xml']);
+            $template->id = intval($row['id']);
+            $template->templateId = $row['templateId'];
+            $template->dataType = $row['dataType'];
+            $templates[] = $template;
+        }
+        return $templates;
     }
 
     /**
@@ -171,32 +223,54 @@ class ModuleTemplateFactory extends BaseFactory
         if ($this->templates === null) {
             $this->getLog()->debug('Loading templates');
 
-            $files = array_merge(
-                glob(PROJECT_ROOT . '/modules/templates/*.xml'),
-                glob(PROJECT_ROOT . '/custom/modules/templates/*.xml')
+            $this->templates = array_merge(
+                $this->loadFolder(
+                    PROJECT_ROOT . '/modules/templates/*.xml',
+                    'system',
+                ),
+                $this->loadFolder(
+                    PROJECT_ROOT . '/custom/modules/templates/*.xml',
+                    'custom'
+                ),
+                $this->loadUserTemplates(),
             );
-
-            foreach ($files as $file) {
-                // Create our module entity from this file
-                try {
-                    $this->createMultiFromXml($file);
-                } catch (\Exception $exception) {
-                    $this->getLog()->error('Unable to create template from '
-                        . basename($file) . ', skipping. e = ' . $exception->getMessage());
-                }
-            }
         }
 
         return $this->templates;
     }
 
     /**
+     * Load templates
+     * @return \Xibo\Entity\ModuleTemplate[]
+     */
+    private function loadFolder(string $folder, string $ownership): array
+    {
+        $this->getLog()->debug('loadFolder: Loading templates from ' . $folder);
+        $templates = [];
+
+        foreach (glob($folder) as $file) {
+            // Create our module entity from this file
+            try {
+                $templates = array_merge($templates, $this->createMultiFromXml($file, $ownership));
+            } catch (\Exception $exception) {
+                $this->getLog()->error('Unable to create template from '
+                    . basename($file) . ', skipping. e = ' . $exception->getMessage());
+            }
+        }
+
+        return $templates;
+    }
+
+    /**
      * Create multiple templates from XML
      * @param string $file
-     * @return void
+     * @param string $ownership
+     * @return ModuleTemplate[]
      */
-    private function createMultiFromXml(string $file): void
+    private function createMultiFromXml(string $file, string $ownership): array
     {
+        $templates = [];
+
         $xml = new \DOMDocument();
         $xml->load($file);
 
@@ -206,21 +280,26 @@ class ModuleTemplateFactory extends BaseFactory
                     . ' templates in ' . $file);
                 foreach ($node->childNodes as $childNode) {
                     if ($childNode instanceof \DOMElement) {
-                        $this->templates[] = $this->createFromXml($childNode);
+                        $templates[] = $this->createFromXml($childNode, $ownership, $file);
                     }
                 }
             }
         }
+
+        return $templates;
     }
 
     /**
      * @param \DOMElement $xml
+     * @param string $ownership
+     * @param string $file
      * @return \Xibo\Entity\ModuleTemplate
      */
-    private function createFromXml(\DOMElement $xml): ModuleTemplate
+    private function createFromXml(\DOMElement $xml, string $ownership, string $file): ModuleTemplate
     {
         // TODO: cache this into Stash
-        $template = new ModuleTemplate($this->getStore(), $this->getLog(), $this->getDispatcher(), $this);
+        $template = new ModuleTemplate($this->getStore(), $this->getLog(), $this->getDispatcher(), $this, $file);
+        $template->ownership = $ownership;
         $template->templateId = $this->getFirstValueOrDefaultFromXmlNode($xml, 'id');
         $template->type = $this->getFirstValueOrDefaultFromXmlNode($xml, 'type');
         $template->dataType = $this->getFirstValueOrDefaultFromXmlNode($xml, 'dataType');
@@ -291,6 +370,16 @@ class ModuleTemplateFactory extends BaseFactory
                 . ' has invalid assets. e: ' .  $e->getMessage());
         }
 
+        return $template;
+    }
+
+    public function createUserTemplate(string $xmlString): ModuleTemplate
+    {
+        $xml = new \DOMDocument();
+        $xml->loadXML($xmlString);
+
+        $template = $this->createFromXml($xml->documentElement, 'user', 'database');
+        $template->setUnmatchedProperty('xml', $xmlString);
         return $template;
     }
 }

@@ -571,6 +571,27 @@ $app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['module.view']));
 
 //
+// Developer
+//
+$app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
+    $group->get('/developer/template/view', ['\Xibo\Controller\Developer', 'displayTemplatePage'])
+        ->setName('developer.templates.view');
+    $group->get('/developer/template', ['\Xibo\Controller\Developer', 'templateGrid'])
+        ->setName('developer.templates.search');
+
+    $group->get('/developer/template/form/add', ['\Xibo\Controller\Developer', 'templateAddForm'])
+        ->setName('developer.templates.form.add');
+
+    $group->get('/developer/template/form/edit/{id}', ['\Xibo\Controller\Developer', 'templateEditForm'])
+        ->setName('developer.templates.form.edit');
+
+    $group->post('/developer/template', ['\Xibo\Controller\Developer', 'templateAdd'])
+        ->setName('developer.templates.add');
+    $group->put('/developer/template/{id}', ['\Xibo\Controller\Developer', 'templateEdit'])
+        ->setName('developer.templates.edit');
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['developer.edit']));
+
+//
 // transition
 //
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {

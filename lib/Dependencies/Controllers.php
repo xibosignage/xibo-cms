@@ -147,6 +147,14 @@ class Controllers
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
+            '\Xibo\Controller\Developer' => function (ContainerInterface $c) {
+                $controller = new \Xibo\Controller\Developer(
+                    $c->get('moduleFactory'),
+                    $c->get('moduleTemplateFactory')
+                );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
+            },
             '\Xibo\Controller\Display' => function (ContainerInterface $c) {
                 $controller = new \Xibo\Controller\Display(
                     $c->get('store'),

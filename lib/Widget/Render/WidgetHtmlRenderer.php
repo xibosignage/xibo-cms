@@ -269,7 +269,7 @@ class WidgetHtmlRenderer
                 $output = str_replace('[[FontBundle]]', $urlFor('library.font.css', []), $output);
             } else if ($match === 'ViewPortWidth') {
                 $output = str_replace('[[ViewPortWidth]]', $region->width, $output);
-            } else if (Str::startsWith($match, 'dataUrl')) {
+            } else if (Str::startsWith($match, 'dataUrl') || Str::startsWith($match, 'realTimeDataUrl')) {
                 $value = explode('=', $match);
                 $output = str_replace(
                     '[[' . $match . ']]',
@@ -335,6 +335,10 @@ class WidgetHtmlRenderer
             } else if ($match === 'ViewPortWidth') {
                 // Player does this itself.
                 continue;
+            } else if (Str::startsWith($match, 'realTimeDataUrl')) {
+                $value = explode('=', $match);
+                $replace = '/realtime?dataKey=' . $value[1];
+                $output = str_replace('[[' . $match . ']]', $replace, $output);
             } else if (Str::startsWith($match, 'dataUrl')) {
                 $value = explode('=', $match);
                 $replace = $isSupportsDataUrl ? $value[1] . '.json' : 'null';
@@ -499,7 +503,11 @@ class WidgetHtmlRenderer
 
             // Should we expect data?
             if ($module->isDataProviderExpected()) {
-                $widgetData['url'] = '[[dataUrl=' . $widget->widgetId . ']]';
+                if ($module->type === 'realtime-data') {
+                    $widgetData['url'] = '[[realTimeDataUrl=' . $widget->widgetId . ']]';
+                } else {
+                    $widgetData['url'] = '[[dataUrl=' . $widget->widgetId . ']]';
+                }
                 $widgetData['data'] = '[[data=' . $widget->widgetId . ']]';
             } else {
                 $widgetData['url'] = null;
