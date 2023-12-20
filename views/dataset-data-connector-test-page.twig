@@ -81,6 +81,21 @@
               notifyHost: function(dataSetId, widgetId) {
                 // Update the table.
                 window.parent.receiveData('notify', dataSetId);
+              },
+
+              /**
+               * Make a request to the configured server/player
+               * @param  {string} path - Request path
+               * @param  {Object} [options] - Optional params
+               * @param  {string} [options.type]
+               * @param  {Object[]} [options.headers]
+               *  Request headers in the format {key: key, value: value}
+               * @param  {Object} [options.data]
+               * @param  {callback} [options.done]
+               * @param  {callback} [options.error]
+               */
+              makeRequest: function(path, {type, headers, data, done, error} = {}) {
+                window.parent.makeRequest(path, {type, headers, data, done, error});
               }
             }
             return mainLib;

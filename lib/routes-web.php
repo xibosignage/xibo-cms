@@ -420,6 +420,7 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->post('/dataset/cache/clear/{id}', ['\Xibo\Controller\DataSet', 'clearCache'])->setName('dataSet.clear.cache');
 
     $group->get('/dataset/dataConnector/{id}', ['\Xibo\Controller\DataSet', 'dataConnectorView'])->setName('dataSet.dataConnector.view');
+    $group->get('/dataset/dataConnector/request/{id}', ['\Xibo\Controller\DataSet', 'dataConnectorRequest'])->setName('dataSet.dataConnector.request');
     $group->get('/dataset/dataConnector/test/{id}', ['\Xibo\Controller\DataSet', 'dataConnectorTest'])->setName('dataSet.dataConnector.test');
 
     // columns

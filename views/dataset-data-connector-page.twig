@@ -77,17 +77,19 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <h3>DataSet</h3>
-                                <table id="dataconnector-main-data" class="table" style="height: 30vh;">
-                                    <thead>
-                                    {% for column in dataSet.getColumn() %}
-                                        <th>{{ column.heading }}</th>
-                                    {% endfor %}
-                                        <th>Unmapped</th>
-                                    </thead>
-                                    <tbody>
+                                <div class="table-container" style="height: 30vh; overflow-y: scroll;">
+                                    <table id="dataconnector-main-data" class="table" style="height: 30vh;">
+                                        <thead>
+                                        {% for column in dataSet.getColumn() %}
+                                            <th>{{ column.heading }}</th>
+                                        {% endfor %}
+                                            <th>Unmapped</th>
+                                        </thead>
+                                        <tbody>
 
-                                    </tbody>
-                                </table>
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                         <div class="row">
@@ -141,7 +143,7 @@
                   // Make a new row
                   let html = '<tr>';
                   {% for column in dataSet.getColumn() %}
-                  html += '<td data-id="{{ column.heading }}">{{ column.heading }}</td>';
+                  html += '<td data-id="{{ column.heading }}"></td>';
                   {% endfor %}
                   html += '<td data-id="unmatched"></td></tr>';
                   const $newRow = $(html);
@@ -152,7 +154,7 @@
                     if ($newRow.find('td[data-id=' + colIndex).length > 0) {
                       $newRow.find('td[data-id=' + colIndex).append(row[colIndex]);
                     } else {
-                      $newRow.find('td[data-id=unmatched').append(row[colIndex]);
+                      $newRow.find('td[data-id=unmatched').append(colIndex + ': ' + row[colIndex] + '<br/>');
                     }
                   });
                 });
@@ -163,6 +165,27 @@
               // Log
               $logs.append('Notify for ' + data).append('\n');
             }
+          }
+
+          window.makeRequest = function (path, {type, headers, data, done, error} = {}) {
+            $.ajax('{{ url_for("dataSet.dataConnector.request", {id: dataSet.dataSetId}) }}', {
+              data: {
+                url: path,
+                method: type,
+                headers: headers,
+                body: data
+              },
+              success: function(data, textStatus, jqXHR) {
+                if (typeof(done) == 'function') {
+                  done(jqXHR.status, data);
+                }
+              },
+              error: function(jqXHR, textStatus, errorThrown) {
+                if (typeof(done) == 'function') {
+                  error(jqXHR.status, jqXHR.responseText);
+                }
+              }
+            });
           }
 
           // Refresh the iframe.
