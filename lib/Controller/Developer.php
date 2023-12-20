@@ -26,7 +26,6 @@ use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\ModuleTemplateFactory;
 use Xibo\Support\Exception\AccessDeniedException;
-use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
@@ -39,7 +38,6 @@ class Developer extends Base
         private readonly ModuleFactory $moduleFactory,
         private readonly ModuleTemplateFactory $moduleTemplateFactory
     ) {
-
     }
 
     /**
@@ -47,7 +45,6 @@ class Developer extends Base
      * @param Request $request
      * @param Response $response
      * @return \Slim\Http\Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      */
     public function displayTemplatePage(Request $request, Response $response): Response
@@ -61,7 +58,6 @@ class Developer extends Base
      * @param \Slim\Http\ServerRequest $request
      * @param \Slim\Http\Response $response
      * @return \Slim\Http\Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      */
     public function templateGrid(Request $request, Response $response): Response
@@ -95,7 +91,6 @@ class Developer extends Base
      * @param Request $request
      * @param Response $response
      * @return \Slim\Http\Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      */
     public function templateAddForm(Request $request, Response $response): Response
@@ -110,10 +105,7 @@ class Developer extends Base
      * @param Response $response
      * @param $id
      * @return \Slim\Http\Response
-     * @throws \Xibo\Support\Exception\AccessDeniedException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function templateEditForm(Request $request, Response $response, $id): Response
     {
@@ -137,14 +129,13 @@ class Developer extends Base
      * @param Request $request
      * @param Response $response
      * @return \Slim\Http\Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      */
     public function templateAdd(Request $request, Response $response): Response
     {
         // When adding a template we just save the XML
         $params = $this->getSanitizer($request->getParams());
-        $xml = $params->getParam('xml', ['throw' => function() {
+        $xml = $params->getParam('xml', ['throw' => function () {
             throw new InvalidArgumentException(__('Please supply the templates XML'), 'xml');
         }]);
 
@@ -166,19 +157,19 @@ class Developer extends Base
      * @param Response $response
      * @param $id
      * @return Response
-     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function templateEdit(Request $request, Response $response, $id): Response
     {
         $template = $this->moduleTemplateFactory->getUserTemplateById($id);
 
         $params = $this->getSanitizer($request->getParams());
-        $xml = $params->getParam('xml', ['throw' => function() {
+        $xml = $params->getParam('xml', ['throw' => function () {
             throw new InvalidArgumentException(__('Please supply the templates XML'), 'xml');
         }]);
 
         // TODO: some checking that the templateId/dataType hasn't changed.
-        $template->setUnmatchedProperty('xml', $xml);
+        $template->setXml($xml);
         $template->save();
 
         if ($params->getCheckbox('isInvalidateWidget')) {

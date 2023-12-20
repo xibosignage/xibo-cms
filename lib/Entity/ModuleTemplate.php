@@ -148,6 +148,9 @@ class ModuleTemplate implements \JsonSerializable
     /** @var string $ownership Who owns this file? system|custom|user */
     public $ownership;
 
+    /** @var string $xml The XML used to build this template */
+    private $xml;
+
     /** @var \Xibo\Factory\ModuleTemplateFactory */
     private $moduleTemplateFactory;
 
@@ -179,15 +182,33 @@ class ModuleTemplate implements \JsonSerializable
         return $this->assets;
     }
 
+    /**
+     * Set XML for this Module Template
+     * @param string $xml
+     * @return void
+     */
+    public function setXml(string $xml): void
+    {
+        $this->xml = $xml;
+    }
+
+    /**
+     * Get XML for this Module Template
+     * @return string
+     */
     public function getXml(): string
     {
         if ($this->file === 'database') {
-            return $this->getUnmatchedProperty('xml');
+            return $this->xml;
         } else {
             return file_get_contents($this->file);
         }
     }
 
+    /**
+     * Save
+     * @return void
+     */
     public function save(): void
     {
         if ($this->file === 'database') {
@@ -199,6 +220,10 @@ class ModuleTemplate implements \JsonSerializable
         }
     }
 
+    /**
+     * Delete
+     * @return void
+     */
     public function delete(): void
     {
         if ($this->file === 'database') {
@@ -208,7 +233,11 @@ class ModuleTemplate implements \JsonSerializable
         }
     }
 
-    public function invalidate():void
+    /**
+     * Invalidate this module template for any widgets that use it
+     * @return void
+     */
+    public function invalidate(): void
     {
         // TODO: can we improve this via the event mechanism instead?
         $this->getStore()->update('
@@ -225,6 +254,10 @@ class ModuleTemplate implements \JsonSerializable
         ]);
     }
 
+    /**
+     * Add
+     * @return void
+     */
     private function add(): void
     {
         $this->id = $this->getStore()->insert('
@@ -233,10 +266,14 @@ class ModuleTemplate implements \JsonSerializable
         ', [
             'templateId' => $this->templateId,
             'dataType' => $this->dataType,
-            'xml' => $this->getUnmatchedProperty('xml')
+            'xml' => $this->xml,
         ]);
     }
 
+    /**
+     * Edit
+     * @return void
+     */
     private function edit(): void
     {
         $this->getStore()->update('
@@ -248,7 +285,7 @@ class ModuleTemplate implements \JsonSerializable
         ', [
             'templateId' => $this->templateId,
             'dataType' => $this->dataType,
-            'xml' => $this->getUnmatchedProperty('xml'),
+            'xml' => $this->xml,
             'id' => $this->id,
         ]);
     }

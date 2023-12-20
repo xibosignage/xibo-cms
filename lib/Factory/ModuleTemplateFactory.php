@@ -175,31 +175,6 @@ class ModuleTemplateFactory extends BaseFactory
     }
 
     /**
-     * Load user templates from the database.
-     * @return ModuleTemplate[]
-     */
-    public function loadUserTemplates($id = null): array
-    {
-        $templates = [];
-        $params = [];
-
-        $sql = 'SELECT * FROM `module_templates`';
-        if ($id !== null) {
-            $sql .= ' WHERE `id` = :id ';
-            $params['id'] = $id;
-        }
-
-        foreach ($this->getStore()->select($sql, $params) as $row) {
-            $template = $this->createUserTemplate($row['xml']);
-            $template->id = intval($row['id']);
-            $template->templateId = $row['templateId'];
-            $template->dataType = $row['dataType'];
-            $templates[] = $template;
-        }
-        return $templates;
-    }
-
-    /**
      * Get an array of all modules
      * @return Asset[]
      */
@@ -221,7 +196,7 @@ class ModuleTemplateFactory extends BaseFactory
     private function load(): array
     {
         if ($this->templates === null) {
-            $this->getLog()->debug('Loading templates');
+            $this->getLog()->debug('load: Loading templates');
 
             $this->templates = array_merge(
                 $this->loadFolder(
@@ -259,6 +234,48 @@ class ModuleTemplateFactory extends BaseFactory
         }
 
         return $templates;
+    }
+
+    /**
+     * Load user templates from the database.
+     * @return ModuleTemplate[]
+     */
+    public function loadUserTemplates($id = null): array
+    {
+        $this->getLog()->debug('load: Loading user templates');
+
+        $templates = [];
+        $params = [];
+
+        $sql = 'SELECT * FROM `module_templates`';
+        if ($id !== null) {
+            $sql .= ' WHERE `id` = :id ';
+            $params['id'] = $id;
+        }
+
+        foreach ($this->getStore()->select($sql, $params) as $row) {
+            $template = $this->createUserTemplate($row['xml']);
+            $template->id = intval($row['id']);
+            $template->templateId = $row['templateId'];
+            $template->dataType = $row['dataType'];
+            $templates[] = $template;
+        }
+        return $templates;
+    }
+
+    /**
+     * Create a user template from an XML string
+     * @param string $xmlString
+     * @return ModuleTemplate
+     */
+    public function createUserTemplate(string $xmlString): ModuleTemplate
+    {
+        $xml = new \DOMDocument();
+        $xml->loadXML($xmlString);
+
+        $template = $this->createFromXml($xml->documentElement, 'user', 'database');
+        $template->setXml($xmlString);
+        return $template;
     }
 
     /**
@@ -370,16 +387,6 @@ class ModuleTemplateFactory extends BaseFactory
                 . ' has invalid assets. e: ' .  $e->getMessage());
         }
 
-        return $template;
-    }
-
-    public function createUserTemplate(string $xmlString): ModuleTemplate
-    {
-        $xml = new \DOMDocument();
-        $xml->loadXML($xmlString);
-
-        $template = $this->createFromXml($xml->documentElement, 'user', 'database');
-        $template->setUnmatchedProperty('xml', $xmlString);
         return $template;
     }
 }
