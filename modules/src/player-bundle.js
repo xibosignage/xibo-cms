@@ -23,7 +23,7 @@
 const globalThis = require('globalthis/polyfill')();
 import 'core-js/stable/url-search-params';
 // Our own imports
-import 'xibo-interactive-control/dist/xibo-interactive-control.min.js';
+import 'xibo-interactive-control/src/xibo-interactive-control.js';
 import './xibo-calendar-render';
 import './xibo-countdown-render';
 import './xibo-finance-render';
@@ -40,10 +40,10 @@ import './xibo-webpage-render';
 import './xibo-worldclock-render';
 import './xibo-elements-render';
 import './editor-render';
+import './player';
 
 // Import PlayerHelper
 window.PlayerHelper = require('../../ui/src/helpers/player-helper.js');
-import './player';
 
 window.jQuery = window.$ = require('jquery');
 require('babel-polyfill');

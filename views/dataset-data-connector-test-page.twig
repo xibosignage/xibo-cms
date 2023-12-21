@@ -65,7 +65,7 @@
               setData: function(dataKey, data, {done, error} = {}) {
                 // Persist the data we've been given
                 window.parent.receiveData('set', {
-                  dataSetId: dataKey,
+                  dataKey: dataKey,
                   data: data
                 });
                 if (typeof (done) == 'function') {
@@ -75,12 +75,11 @@
 
               /**
                * Notify main application that we have new data. Called from data collector.
-               * @param {string} dataSetId - The id of the dataset
-               * @param {string} widgetId - Optional. Widget id to notify. If omitted, all widgets will be notified.
+               * @param {string} dataKey - The key of the data that has been changed.
                */
-              notifyHost: function(dataSetId, widgetId) {
+              notifyHost: function(dataKey) {
                 // Update the table.
-                window.parent.receiveData('notify', dataSetId);
+                window.parent.receiveData('notify', dataKey);
               },
 
               /**
