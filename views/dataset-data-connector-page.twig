@@ -120,6 +120,10 @@
           const $mainData = $('#dataconnector-main-data');
           const $otherData = $('#dataconnector-other-data');
           const $logs = $('#dataconnector-logs');
+          let otherData = {};
+
+          // Set up a channel which will broadcast data
+          const channel = new BroadcastChannel('xiboDC');
 
           // Set our script params from local storage if we have them
           $scriptParams.val(localStorage.getItem('dataSetRealtimeTestParams'));
@@ -133,10 +137,11 @@
               console.log('Script loaded');
               $script.find('iframe')[0].contentWindow.xiboDC.initialise({{ dataSet.dataSetId }}, $scriptParams.val());
             } else if (type === 'log') {
-              $logs.append(data).append('\n');
+              $logs.prepend('[' + new Date().getTime() + '] ' + data + '\n');
             } else if (type === 'set') {
               // Update the table
-              if (data.dataSetId == '{{ dataSet.dataSetId }}' && Array.isArray(data.data)) {
+              // if the dataKey matches my connector's DataSetId, then render out a table
+              if (data.dataKey == '{{ dataSet.dataSetId }}' && Array.isArray(data.data)) {
                 const $tableBody = $mainData.find('tbody');
                 $tableBody.find('tr').remove();
                 $.each(data.data, function (rowIndex, row) {
@@ -159,11 +164,18 @@
                   });
                 });
               } else {
-                $otherData.html(JSON.stringify(data));
+                // Grab the existing "other data" and see if there is a matching key.
+                otherData[data.dataKey] = data.data;
+                $otherData.html(JSON.stringify(otherData, null, 4));
               }
+
+              // Broadcast to interested parties.
+              channel.postMessage({type: "xiboDC_data", dataKey: data.dataKey, data: data.data});
             } else if (type === 'notify') {
               // Log
-              $logs.append('Notify for ' + data).append('\n');
+              $logs.prepend('[' + new Date().getTime() + '] Notify for ' + data + '\n');
+
+              channel.postMessage({type: "xiboDC_notify", dataKey: data});
             }
           }
 

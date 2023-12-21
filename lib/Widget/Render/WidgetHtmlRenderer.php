@@ -269,7 +269,7 @@ class WidgetHtmlRenderer
                 $output = str_replace('[[FontBundle]]', $urlFor('library.font.css', []), $output);
             } else if ($match === 'ViewPortWidth') {
                 $output = str_replace('[[ViewPortWidth]]', $region->width, $output);
-            } else if (Str::startsWith($match, 'dataUrl') || Str::startsWith($match, 'realTimeDataUrl')) {
+            } else if (Str::startsWith($match, 'dataUrl')) {
                 $value = explode('=', $match);
                 $output = str_replace(
                     '[[' . $match . ']]',
@@ -335,10 +335,6 @@ class WidgetHtmlRenderer
             } else if ($match === 'ViewPortWidth') {
                 // Player does this itself.
                 continue;
-            } else if (Str::startsWith($match, 'realTimeDataUrl')) {
-                $value = explode('=', $match);
-                $replace = '/realtime?dataKey=' . $value[1];
-                $output = str_replace('[[' . $match . ']]', $replace, $output);
             } else if (Str::startsWith($match, 'dataUrl')) {
                 $value = explode('=', $match);
                 $replace = $isSupportsDataUrl ? $value[1] . '.json' : 'null';
@@ -472,11 +468,9 @@ class WidgetHtmlRenderer
                 $widget->isValid = 0;
             }
 
+            // Parse out some common properties.
             $moduleLanguage = null;
-            $translator = null;
 
-            // Check if a language property is defined against the module
-            // Note: We are using the language defined against the module and not from the module template
             foreach ($module->properties as $property) {
                 if ($property->type === 'languageSelector' && !empty($property->value)) {
                     $moduleLanguage = $property->value;
@@ -484,6 +478,9 @@ class WidgetHtmlRenderer
                 }
             }
 
+            // Configure a translator for the module
+            // Note: We are using the language defined against the module and not from the module template
+            $translator = null;
             if ($moduleLanguage !== null) {
                 $translator = Translate::getTranslationsFromLocale($moduleLanguage);
             }
@@ -503,11 +500,7 @@ class WidgetHtmlRenderer
 
             // Should we expect data?
             if ($module->isDataProviderExpected()) {
-                if ($module->type === 'realtime-data') {
-                    $widgetData['url'] = '[[realTimeDataUrl=' . $widget->widgetId . ']]';
-                } else {
-                    $widgetData['url'] = '[[dataUrl=' . $widget->widgetId . ']]';
-                }
+                $widgetData['url'] = '[[dataUrl=' . $widget->widgetId . ']]';
                 $widgetData['data'] = '[[data=' . $widget->widgetId . ']]';
             } else {
                 $widgetData['url'] = null;

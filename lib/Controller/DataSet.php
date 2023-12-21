@@ -1697,10 +1697,10 @@ class DataSet extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return Response
      * @throws GeneralException
      */
-    public function dataConnectorView(Request $request, Response $response, $id)
+    public function dataConnectorView(Request $request, Response $response, $id): Response
     {
         $dataSet = $this->dataSetFactory->getById($id);
 
@@ -1724,10 +1724,10 @@ class DataSet extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return Response
      * @throws GeneralException
      */
-    public function dataConnectorTest(Request $request, Response $response, $id)
+    public function dataConnectorTest(Request $request, Response $response, $id): Response
     {
         $dataSet = $this->dataSetFactory->getById($id);
 
@@ -1751,10 +1751,10 @@ class DataSet extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return Response
      * @throws GeneralException
      */
-    public function dataConnectorRequest(Request $request, Response $response, $id)
+    public function dataConnectorRequest(Request $request, Response $response, $id): Response
     {
         $dataSet = $this->dataSetFactory->getById($id);
 
