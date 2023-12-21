@@ -1,0 +1,202 @@
+{#
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+{% import "forms.twig" as forms %}
+
+{% block title %}{% set dataSetName = dataSet.dataSet %}{% trans %}{{ dataSetName }} - Data Connector{% endtrans %} | {% endblock %}
+
+{% set hideNavigation = "1" %}
+
+{% block pageContent %}
+    <div id="data-connector-builder"
+         data-data-set-id="{{ dataSet.dataSetId }}">
+        <div class="back-button">
+            <a id="backBtn" class="btn btn-primary" href="{{ url_for("dataset.view") }}">
+                <i class="fa fa-angle-left"></i>
+                <span>{{ "Back"|trans }}</span>
+            </a>
+        </div>
+
+        <div class="widget mt-3">
+            <div class="widget-body">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="data-set-title">
+                            <h1>{{ dataSetName }}</h1>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-6">
+                        <form id="dataconnector-builder-form" class="XiboForm form-horizontal"
+                             method="put"
+                             action="{{ url_for("dataSet.dataConnector.update", {id: dataSet.dataSetId}) }}"
+                             data-submit-call-back="onSubmitCallback"
+                        >
+                            <div class="form-group row code-input-group xibo-code-input">
+                                <div class="col-sm-12">
+                                    <small class="form-text text-muted">{{ "Data Connector JavaScript"|trans }}</small>
+                                    <textarea class="form-control d-none code-input" id="input_script" name="dataConnectorScript" rows="30" data-code-type="javascript">{{ script }}</textarea>
+
+                                    <div class="code-input-editor-container" style="height: 70vh;">
+                                        <div class="code-input-editor"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{ forms.button("Save"|trans, "submit", null, null, null, "btn-success") }}
+                        </form>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="row">
+                            <div class="col-md-12">
+                                {{ inline.input("dataSetRealtimeTestParams", "Test Parameters"|trans) }}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <h3>DataSet</h3>
+                                <div class="table-container" style="height: 30vh; overflow-y: scroll;">
+                                    <table id="dataconnector-main-data" class="table" style="height: 30vh;">
+                                        <thead>
+                                        {% for column in dataSet.getColumn() %}
+                                            <th>{{ column.heading }}</th>
+                                        {% endfor %}
+                                            <th>Unmapped</th>
+                                        </thead>
+                                        <tbody>
+
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <h3>Other data</h3>
+                                <pre id="dataconnector-other-data" style="height: 30vh; overflow: scroll;"></pre>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <h3>Logs</h3>
+                                <pre id="dataconnector-logs" style="height: 30vh; overflow: scroll;"></pre>
+                            </div>
+                        </div>
+                        <div class="row" style="display: none;" id="dataconnector-script"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        $(function() {
+          const $script = $('#dataconnector-script');
+          const $scriptParams = $('#dataSetRealtimeTestParams');
+          const $mainData = $('#dataconnector-main-data');
+          const $otherData = $('#dataconnector-other-data');
+          const $logs = $('#dataconnector-logs');
+
+          // Set our script params from local storage if we have them
+          $scriptParams.val(localStorage.getItem('dataSetRealtimeTestParams'));
+
+          // Output the iframe containing the window
+          $script.html('<iframe src="{{ url_for("dataSet.dataConnector.test", {id: dataSet.dataSetId}) }}" />');
+
+          // Window message to receive data and logs.
+          window.receiveData = function(type, data) {
+            if (type === 'loaded') {
+              console.log('Script loaded');
+              $script.find('iframe')[0].contentWindow.xiboDC.initialise({{ dataSet.dataSetId }}, $scriptParams.val());
+            } else if (type === 'log') {
+              $logs.append(data).append('\n');
+            } else if (type === 'set') {
+              // Update the table
+              if (data.dataSetId == '{{ dataSet.dataSetId }}' && Array.isArray(data.data)) {
+                const $tableBody = $mainData.find('tbody');
+                $tableBody.find('tr').remove();
+                $.each(data.data, function (rowIndex, row) {
+                  // Make a new row
+                  let html = '<tr>';
+                  {% for column in dataSet.getColumn() %}
+                  html += '<td data-id="{{ column.heading }}"></td>';
+                  {% endfor %}
+                  html += '<td data-id="unmatched"></td></tr>';
+                  const $newRow = $(html);
+                  $tableBody.append($newRow);
+
+                  // Do we have a column for this item
+                  $.each(row, function(colIndex, col) {
+                    if ($newRow.find('td[data-id=' + colIndex).length > 0) {
+                      $newRow.find('td[data-id=' + colIndex).append(row[colIndex]);
+                    } else {
+                      $newRow.find('td[data-id=unmatched').append(colIndex + ': ' + row[colIndex] + '<br/>');
+                    }
+                  });
+                });
+              } else {
+                $otherData.html(JSON.stringify(data));
+              }
+            } else if (type === 'notify') {
+              // Log
+              $logs.append('Notify for ' + data).append('\n');
+            }
+          }
+
+          window.makeRequest = function (path, {type, headers, data, done, error} = {}) {
+            $.ajax('{{ url_for("dataSet.dataConnector.request", {id: dataSet.dataSetId}) }}', {
+              data: {
+                url: path,
+                method: type,
+                headers: headers,
+                body: data
+              },
+              success: function(data, textStatus, jqXHR) {
+                if (typeof(done) == 'function') {
+                  done(jqXHR.status, data);
+                }
+              },
+              error: function(jqXHR, textStatus, errorThrown) {
+                if (typeof(done) == 'function') {
+                  error(jqXHR.status, jqXHR.responseText);
+                }
+              }
+            });
+          }
+
+          // Refresh the iframe.
+          window.onSubmitCallback = function(xhr, form) {
+            $script.find('iframe')[0].contentWindow.location.reload();
+          }
+
+          $scriptParams.on('change', function() {
+            $script.find('iframe')[0].contentWindow.xiboDC.initialise({{ dataSet.dataSetId }}, $scriptParams.val());
+            localStorage.setItem('dataSetRealtimeTestParams', $scriptParams.val());
+          });
+        });
+    </script>
+{% endblock %}

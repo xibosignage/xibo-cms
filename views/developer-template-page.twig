@@ -1,0 +1,121 @@
+{#
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block title %}{{ "Module Templates"|trans }} | {% endblock %}
+
+{% block actionMenu %}
+    <div class="widget-action-menu pull-right">
+        <button class="btn btn-success XiboFormButton" title="{% trans "Add a new template" %}" href="{{ url_for("developer.templates.form.add") }}">
+            <i class="fa fa-plus" aria-hidden="true"></i> {% trans "Add Module Template" %}
+        </button>
+        <button class="btn btn btn-secondary" id="refreshGrid" title="{% trans "Refresh" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</button>
+    </div>
+{% endblock %}
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "Modules" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div class="XiboFilter card mb-3 bg-light">
+                    <div class="FilterDiv card-body" id="Filter">
+                        <form class="form-inline">
+                            {% set title %}{% trans "Name" %}{% endset %}
+                            {{ inline.input('name', title) }}
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData card pt-3">
+                    <table id="templates" class="table table-striped" data-state-preference-name="moduleGrid">
+                        <thead>
+                            <tr>
+                                <th>{% trans "ID" %}</th>
+                                <th>{% trans "Template ID" %}</th>
+                                <th>{% trans "Data Type" %}</th>
+                                <th>{% trans "Title" %}</th>
+                                <th>{% trans "Type" %}</th>
+                                <th class="rowMenu"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        var table = $('#templates').DataTable({
+            language: dataTablesLanguage,
+            dom: dataTablesTemplate,
+            serverSide: false,
+            stateSave: true,
+            stateDuration: 0,
+            responsive: true,
+            stateLoadCallback: dataTableStateLoadCallback,
+            stateSaveCallback: dataTableStateSaveCallback,
+            filter: false,
+            searchDelay: 3000,
+            order: [[ 0, 'asc']],
+            ajax: {
+              url: '{{ url_for("developer.templates.search") }}',
+              data: function (d) {
+                $.extend(d, $('#templates').closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+              }
+            },
+            columns: [
+                { data: 'id' , responsivePriority: 2},
+                { data: 'templateId' , responsivePriority: 2},
+                { data: 'dataType' },
+                { data: 'title' },
+                { data: 'type' },
+                {
+                    orderable: false,
+                    responsivePriority: 1,
+                    data: dataTableButtonsColumn
+                }
+            ]
+        });
+
+        table.on('draw', dataTableDraw);
+        table.on('processing.dt', dataTableProcessing);
+        dataTableAddButtons(table, $('#templates_wrapper').find('.dataTables_buttons'));
+
+        $('#refreshGrid').click(function () {
+            table.ajax.reload();
+        });
+
+        function moduleEditFormOpen(dialog) {
+            var moduleSettings = $(dialog).data('extra')['settings'];
+            var $targetContainer = $(dialog).find('.form-module-configure-fields')
+
+            forms.createFields(moduleSettings, $targetContainer);
+        }
+    </script>
+{% endblock %}

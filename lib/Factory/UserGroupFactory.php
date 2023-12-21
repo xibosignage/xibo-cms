@@ -803,6 +803,11 @@ class UserGroupFactory extends BaseFactory
                     'group' => 'system',
                     'title' => __('Page which allows for Module Management for the platform')
                 ],
+                'developer.edit' => [
+                    'feature' => 'developer.edit',
+                    'group' => 'system',
+                    'title' => __('Add/Edit custom modules and templates'),
+                ],
                 'transition.view' => [
                     'feature' => 'transition.view',
                     'group' => 'system',

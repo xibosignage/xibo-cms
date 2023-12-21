@@ -419,6 +419,10 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/dataset/form/cache/clear/{id}', ['\Xibo\Controller\DataSet', 'clearCacheForm'])->setName('dataSet.clear.cache.form');
     $group->post('/dataset/cache/clear/{id}', ['\Xibo\Controller\DataSet', 'clearCache'])->setName('dataSet.clear.cache');
 
+    $group->get('/dataset/dataConnector/{id}', ['\Xibo\Controller\DataSet', 'dataConnectorView'])->setName('dataSet.dataConnector.view');
+    $group->get('/dataset/dataConnector/request/{id}', ['\Xibo\Controller\DataSet', 'dataConnectorRequest'])->setName('dataSet.dataConnector.request');
+    $group->get('/dataset/dataConnector/test/{id}', ['\Xibo\Controller\DataSet', 'dataConnectorTest'])->setName('dataSet.dataConnector.test');
+
     // columns
     $group->get('/dataset/{id}/column/view', ['\Xibo\Controller\DataSetColumn','displayPage'])->setName('dataSet.column.view');
     $group->get('/dataset/{id}/column/form/add', ['\Xibo\Controller\DataSetColumn','addForm'])->setName('dataSet.column.add.form');
@@ -565,6 +569,27 @@ $app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/module/form/settings/{id}', ['\Xibo\Controller\Module','settingsForm'])
         ->setName('module.settings.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['module.view']));
+
+//
+// Developer
+//
+$app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
+    $group->get('/developer/template/view', ['\Xibo\Controller\Developer', 'displayTemplatePage'])
+        ->setName('developer.templates.view');
+    $group->get('/developer/template', ['\Xibo\Controller\Developer', 'templateGrid'])
+        ->setName('developer.templates.search');
+
+    $group->get('/developer/template/form/add', ['\Xibo\Controller\Developer', 'templateAddForm'])
+        ->setName('developer.templates.form.add');
+
+    $group->get('/developer/template/form/edit/{id}', ['\Xibo\Controller\Developer', 'templateEditForm'])
+        ->setName('developer.templates.form.edit');
+
+    $group->post('/developer/template', ['\Xibo\Controller\Developer', 'templateAdd'])
+        ->setName('developer.templates.add');
+    $group->put('/developer/template/{id}', ['\Xibo\Controller\Developer', 'templateEdit'])
+        ->setName('developer.templates.edit');
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['developer.edit']));
 
 //
 // transition

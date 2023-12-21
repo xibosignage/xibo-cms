@@ -37,6 +37,9 @@ class ModuleTemplate implements \JsonSerializable
     use EntityTrait;
     use ModulePropertyTrait;
 
+    /** @var int The database ID */
+    public $id;
+
     /**
      * @SWG\Property()
      * @var string The templateId
@@ -135,12 +138,18 @@ class ModuleTemplate implements \JsonSerializable
 
     /** @var string A data parser for elements */
     public $onElementParseData;
-    
+
     /** @var bool $isError Does this module have any errors? */
     public $isError;
 
     /** @var string[] $errors An array of errors this module has. */
     public $errors;
+
+    /** @var string $ownership Who owns this file? system|custom|user */
+    public $ownership;
+
+    /** @var string $xml The XML used to build this template */
+    private $xml;
 
     /** @var \Xibo\Factory\ModuleTemplateFactory */
     private $moduleTemplateFactory;
@@ -151,12 +160,14 @@ class ModuleTemplate implements \JsonSerializable
      * @param LogServiceInterface $log
      * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param \Xibo\Factory\ModuleTemplateFactory $moduleTemplateFactory
+     * @param string $file The file this template resides in
      */
     public function __construct(
         StorageServiceInterface $store,
         LogServiceInterface $log,
         EventDispatcherInterface $dispatcher,
-        ModuleTemplateFactory $moduleTemplateFactory
+        ModuleTemplateFactory $moduleTemplateFactory,
+        private readonly string $file
     ) {
         $this->setCommonDependencies($store, $log, $dispatcher);
         $this->moduleTemplateFactory = $moduleTemplateFactory;
@@ -169,5 +180,113 @@ class ModuleTemplate implements \JsonSerializable
     public function getAssets(): array
     {
         return $this->assets;
+    }
+
+    /**
+     * Set XML for this Module Template
+     * @param string $xml
+     * @return void
+     */
+    public function setXml(string $xml): void
+    {
+        $this->xml = $xml;
+    }
+
+    /**
+     * Get XML for this Module Template
+     * @return string
+     */
+    public function getXml(): string
+    {
+        if ($this->file === 'database') {
+            return $this->xml;
+        } else {
+            return file_get_contents($this->file);
+        }
+    }
+
+    /**
+     * Save
+     * @return void
+     */
+    public function save(): void
+    {
+        if ($this->file === 'database') {
+            if ($this->id === null) {
+                $this->add();
+            } else {
+                $this->edit();
+            }
+        }
+    }
+
+    /**
+     * Delete
+     * @return void
+     */
+    public function delete(): void
+    {
+        if ($this->file === 'database') {
+            $this->getStore()->update('DELETE FROM module_templates WHERE id = :id', [
+                'id' => $this->id
+            ]);
+        }
+    }
+
+    /**
+     * Invalidate this module template for any widgets that use it
+     * @return void
+     */
+    public function invalidate(): void
+    {
+        // TODO: can we improve this via the event mechanism instead?
+        $this->getStore()->update('
+            UPDATE `widget` SET modifiedDt = :now
+             WHERE widgetId IN (
+                SELECT widgetId
+                  FROM widgetoption 
+                 WHERE `option` = \'templateId\'
+                    AND `value` = :templateId
+             )
+        ', [
+            'now' => time(),
+            'templateId' => $this->templateId,
+        ]);
+    }
+
+    /**
+     * Add
+     * @return void
+     */
+    private function add(): void
+    {
+        $this->id = $this->getStore()->insert('
+            INSERT INTO `module_templates` (`templateId`, `dataType`, `xml`)
+                VALUES (:templateId, :dataType, :xml)
+        ', [
+            'templateId' => $this->templateId,
+            'dataType' => $this->dataType,
+            'xml' => $this->xml,
+        ]);
+    }
+
+    /**
+     * Edit
+     * @return void
+     */
+    private function edit(): void
+    {
+        $this->getStore()->update('
+            UPDATE `module_templates` SET
+                `templateId` = :templateId,
+                `dataType`= :dataType,
+                `xml` = :xml
+             WHERE `id` = :id
+        ', [
+            'templateId' => $this->templateId,
+            'dataType' => $this->dataType,
+            'xml' => $this->xml,
+            'id' => $this->id,
+        ]);
     }
 }

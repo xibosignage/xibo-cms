@@ -21,6 +21,9 @@
  */
 namespace Xibo\Controller;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
+use Illuminate\Support\Str;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\DataSetColumnFactory;
@@ -172,7 +175,7 @@ class DataSet extends Base
 
         // Embed?
         $embed = ($sanitizedParams->getString('embed') != null) ? explode(',', $sanitizedParams->getString('embed')) : [];
-        
+
         $filter = [
             'dataSetId' => $sanitizedParams->getInt('dataSetId'),
             'dataSet' => $sanitizedParams->getString('dataSet'),
@@ -212,9 +215,7 @@ class DataSet extends Base
             }
 
             if ($this->getUser()->featureEnabled('dataset.modify')) {
-                if ($user->checkEditable($dataSet)
-                    && ($dataSet->isRealTime === 0 || $this->getUser()->featureEnabled('dataset.realtime'))
-                ) {
+                if ($user->checkEditable($dataSet)) {
                     // View Columns
                     $dataSet->buttons[] = array(
                         'id' => 'dataset_button_viewcolumns',
@@ -230,6 +231,17 @@ class DataSet extends Base
                         'class' => 'XiboRedirectButton',
                         'text' => __('View RSS')
                     );
+
+                    if ($this->getUser()->featureEnabled('dataset.realtime') && $dataSet->isRealTime === 1) {
+                        $dataSet->buttons[] = [
+                            'id' => 'dataset_button_view_data_connector',
+                            'url' => $this->urlFor($request, 'dataSet.dataConnector.view', [
+                                'id' => $dataSet->dataSetId
+                            ]),
+                            'class' => 'XiboRedirectButton',
+                            'text' => __('View Data Connector'),
+                        ];
+                    }
 
                     // Divider
                     $dataSet->buttons[] = ['divider' => true];
@@ -640,11 +652,6 @@ class DataSet extends Base
         // Save
         $dataSet->save();
 
-        if ($dataSet->isRealTime === 1) {
-            // Set the script.
-            $dataSet->saveScript($sanitizedParams->getString('dataConnectorScript'));
-        }
-
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 201,
@@ -951,16 +958,74 @@ class DataSet extends Base
             $dataSet->ignoreFirstRow = $sanitizedParams->getCheckbox('ignoreFirstRow');
             $dataSet->rowLimit = $sanitizedParams->getInt('rowLimit');
             $dataSet->limitPolicy = $sanitizedParams->getString('limitPolicy') ?? 'stop';
-            $dataSet->csvSeparator = ($dataSet->sourceId === 2) ? $sanitizedParams->getString('csvSeparator') ?? ',' : null;
+            $dataSet->csvSeparator = ($dataSet->sourceId === 2)
+                ? $sanitizedParams->getString('csvSeparator') ?? ','
+                : null;
         }
 
         $dataSet->save();
 
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Edited %s'), $dataSet->dataSet),
+            'id' => $dataSet->dataSetId,
+            'data' => $dataSet
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Edit DataSet Data Connector
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     *
+     * @SWG\Put(
+     *  path="/dataset/dataConnector/{dataSetId}",
+     *  operationId="dataSetDataConnectorEdit",
+     *  tags={"dataset"},
+     *  summary="Edit DataSet Data Connector",
+     *  description="Edit a DataSet Data Connector",
+     *  @SWG\Parameter(
+     *      name="dataSetId",
+     *      in="path",
+     *      description="The DataSet ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dataConnectorScript",
+     *      in="formData",
+     *      description="If isRealTime then provide a script to connect to the data source",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/DataSet")
+     *  )
+     * )
+     */
+    public function updateDataConnector(Request $request, Response $response, $id)
+    {
+        $dataSet = $this->dataSetFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        if (!$this->getUser()->checkEditable($dataSet)) {
+            throw new AccessDeniedException();
+        }
+
         if ($dataSet->isRealTime === 1) {
             // Set the script.
-            $dataSet->saveScript($sanitizedParams->getString('dataConnectorScript'));
+            $dataSet->saveScript($sanitizedParams->getParam('dataConnectorScript'));
 
             // TODO: we should notify displays which have this scheduled to them as data connectors.
+        } else {
+            throw new InvalidArgumentException(__('This DataSet does not have a data connector'), 'isRealTime');
         }
 
         // Return
@@ -1625,5 +1690,126 @@ class DataSet extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Real-time data script editor
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     */
+    public function dataConnectorView(Request $request, Response $response, $id)
+    {
+        $dataSet = $this->dataSetFactory->getById($id);
+
+        if (!$this->getUser()->checkEditable($dataSet)) {
+            throw new AccessDeniedException();
+        }
+
+        $dataSet->load();
+
+        $this->getState()->template = 'dataset-data-connector-page';
+        $this->getState()->setData([
+            'dataSet' => $dataSet,
+            'script' => $dataSet->getScript(),
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Real-time data script test
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     */
+    public function dataConnectorTest(Request $request, Response $response, $id)
+    {
+        $dataSet = $this->dataSetFactory->getById($id);
+
+        if (!$this->getUser()->checkEditable($dataSet)) {
+            throw new AccessDeniedException();
+        }
+
+        $dataSet->load();
+
+        $this->getState()->template = 'dataset-data-connector-test-page';
+        $this->getState()->setData([
+            'dataSet' => $dataSet,
+            'script' => $dataSet->getScript(),
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Real-time data script test
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     */
+    public function dataConnectorRequest(Request $request, Response $response, $id)
+    {
+        $dataSet = $this->dataSetFactory->getById($id);
+
+        if (!$this->getUser()->checkEditable($dataSet)) {
+            throw new AccessDeniedException();
+        }
+
+        $params = $this->getSanitizer($request->getParams());
+        $url = $params->getString('url');
+        $method = $params->getString('method', ['default' => 'GET']);
+        $headers = $params->getArray('headers');
+        $body = $params->getArray('body');
+
+        // Verify that the requested URL appears in the script somewhere.
+        $script = $dataSet->getScript();
+
+        if (!Str::contains($script, $url)) {
+            throw new InvalidArgumentException(__('URL not found in data connector script'), 'url');
+        }
+
+        // Make the request
+        $options = [];
+        if (is_array($headers)) {
+            $options['headers'] = $headers;
+        }
+
+        if ($method === 'GET') {
+            $options['query'] = $body;
+        } else {
+            $options['body'] = $body;
+        }
+
+        $this->getLog()->debug('dataConnectorRequest: making request with options ' . var_export($options, true));
+
+        // Use guzzle to make the request
+        try {
+            $client = new Client();
+            $remoteResponse = $client->request($method, $url, $options);
+
+            // Format the response
+            $response->getBody()->write($remoteResponse->getBody()->getContents());
+            $response = $response->withAddedHeader('Content-Type', $remoteResponse->getHeader('Content-Type')[0]);
+            $response = $response->withStatus($remoteResponse->getStatusCode());
+        } catch (RequestException $exception) {
+            $this->getLog()->error('dataConnectorRequest: error with request: ' . $exception->getMessage());
+
+            if ($exception->hasResponse()) {
+                $remoteResponse = $exception->getResponse();
+                $response = $response->withStatus($remoteResponse->getStatusCode());
+                $response->getBody()->write($remoteResponse->getBody()->getContents());
+            } else {
+                $response = $response->withStatus(500);
+            }
+        }
+
+        return $response;
     }
 }

@@ -1,8 +1,8 @@
 {#
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -44,7 +44,6 @@
                 <li class="nav-item tabForRemoteDataSet"><a class="nav-link" href="#auth" role="tab" data-toggle="tab"><span>{% trans "Authentication" %}</span></a></li>
                 <li class="nav-item tabForRemoteDataSet"><a class="nav-link" href="#data" role="tab" data-toggle="tab"><span>{% trans "Data" %}</span></a></li>
                 <li class="nav-item tabForRemoteDataSet"><a class="nav-link" href="#params" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
-                <li class="nav-item tabForRealTimeDataSet"><a class="nav-link" href="#realtime" role="tab" data-toggle="tab"><span>{% trans "Real time" %}</span></a></li>
             </ul>
             <form id="dataSetEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("dataSet.edit", {id: dataSet.dataSetId}) }}">
                 <input type="hidden" name="testDataSetId" value="{{ dataSet.dataSetId }}"/>
@@ -301,19 +300,6 @@
                             { typeid: "truncate", type: truncate },
                         ] %}
                         {{ forms.dropdown("limitPolicy", "single", title, dataSet.limitPolicy, options, "typeid", "type", helpText) }}
-                    </div>
-
-                    <div class="tab-pane" id="realtime">
-                        <div class="form-group row code-input-group xibo-code-input">
-                            <div class="col-sm-12">
-                                <small class="form-text text-muted">{{ "Data Connector JavaScript"|trans }}</small>
-                                <textarea class="form-control d-none code-input" id="input_script" name="dataConnectorScript" rows="10" data-code-type="javascript">{{ script }}</textarea>
-
-                                <div class="code-input-editor-container">
-                                    <div class="code-input-editor"></div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </form>
