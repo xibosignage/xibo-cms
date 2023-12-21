@@ -470,13 +470,11 @@ class WidgetHtmlRenderer
 
             // Parse out some common properties.
             $moduleLanguage = null;
-            $dataSetId = null;
 
             foreach ($module->properties as $property) {
                 if ($property->type === 'languageSelector' && !empty($property->value)) {
                     $moduleLanguage = $property->value;
-                } else if ($property->id === 'dataSetId') {
-                    $dataSetId = $property->value;
+                    break;
                 }
             }
 
