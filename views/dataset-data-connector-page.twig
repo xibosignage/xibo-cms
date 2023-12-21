@@ -120,6 +120,7 @@
           const $mainData = $('#dataconnector-main-data');
           const $otherData = $('#dataconnector-other-data');
           const $logs = $('#dataconnector-logs');
+          let otherData = {};
 
           // Set our script params from local storage if we have them
           $scriptParams.val(localStorage.getItem('dataSetRealtimeTestParams'));
@@ -133,7 +134,7 @@
               console.log('Script loaded');
               $script.find('iframe')[0].contentWindow.xiboDC.initialise({{ dataSet.dataSetId }}, $scriptParams.val());
             } else if (type === 'log') {
-              $logs.append(data).append('\n');
+              $logs.prepend('[' + new Date().getTime() + '] ' + data + '\n');
             } else if (type === 'set') {
               // Update the table
               if (data.dataSetId == '{{ dataSet.dataSetId }}' && Array.isArray(data.data)) {
@@ -159,11 +160,13 @@
                   });
                 });
               } else {
-                $otherData.html(JSON.stringify(data));
+                // Grab the existing "other data" and see if there is a matching key.
+                otherData[data.dataSetId] = data.data;
+                $otherData.html(JSON.stringify(otherData, null, 4));
               }
             } else if (type === 'notify') {
               // Log
-              $logs.append('Notify for ' + data).append('\n');
+              $logs.prepend('[' + new Date().getTime() + '] Notify for ' + data + '\n');
             }
           }
 

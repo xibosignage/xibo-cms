@@ -472,18 +472,21 @@ class WidgetHtmlRenderer
                 $widget->isValid = 0;
             }
 
+            // Parse out some common properties.
             $moduleLanguage = null;
-            $translator = null;
+            $dataSetId = null;
 
-            // Check if a language property is defined against the module
-            // Note: We are using the language defined against the module and not from the module template
             foreach ($module->properties as $property) {
                 if ($property->type === 'languageSelector' && !empty($property->value)) {
                     $moduleLanguage = $property->value;
-                    break;
+                } else if ($property->id === 'dataSetId') {
+                    $dataSetId = $property->value;
                 }
             }
 
+            // Configure a translator for the module
+            // Note: We are using the language defined against the module and not from the module template
+            $translator = null;
             if ($moduleLanguage !== null) {
                 $translator = Translate::getTranslationsFromLocale($moduleLanguage);
             }
@@ -504,7 +507,7 @@ class WidgetHtmlRenderer
             // Should we expect data?
             if ($module->isDataProviderExpected()) {
                 if ($module->type === 'realtime-data') {
-                    $widgetData['url'] = '[[realTimeDataUrl=' . $widget->widgetId . ']]';
+                    $widgetData['url'] = '[[realTimeDataUrl=' . $dataSetId . ']]';
                 } else {
                     $widgetData['url'] = '[[dataUrl=' . $widget->widgetId . ']]';
                 }
