@@ -170,6 +170,10 @@
               }
 
               // Broadcast to interested parties.
+              // JSON.stringify if the data is an array or object, otherwise pass straight through.
+              if (typeof data.data !== 'string') {
+                data.data = JSON.stringify(data.data);
+              }
               channel.postMessage({type: "xiboDC_data", dataKey: data.dataKey, data: data.data});
             } else if (type === 'notify') {
               // Log
