@@ -122,6 +122,6 @@
     "serialize-javascript": "^3.1.0",
     "toastr": "~2.1.4",
     "underscore": "^1.12.1",
-    "xibo-interactive-control": "git+https://github.com/xibosignage/xibo-interactive-control.git#be2320a5a7ae13389fd0bf5cfc285d583f94e558"
+    "xibo-interactive-control": "git+https://github.com/xibosignage/xibo-interactive-control.git#6bd108730ed670616c89356769f36a05fd605518"
   }
 }
