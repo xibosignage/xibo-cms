@@ -139,36 +139,42 @@
             } else if (type === 'log') {
               $logs.prepend('[' + new Date().getTime() + '] ' + data + '\n');
             } else if (type === 'set') {
-              // Data is always set as a string
-              const events = JSON.parse(data.data);
-
               // Update the table
               // if the dataKey matches my connector's DataSetId, then render out a table
-              if (data.dataKey == '{{ dataSet.dataSetId }}' && Array.isArray(events)) {
-                const $tableBody = $mainData.find('tbody');
-                $tableBody.find('tr').remove();
-                $.each(data.data, function (rowIndex, row) {
-                  // Make a new row
-                  let html = '<tr>';
-                  {% for column in dataSet.getColumn() %}
-                  html += '<td data-id="{{ column.heading }}"></td>';
-                  {% endfor %}
-                  html += '<td data-id="unmatched"></td></tr>';
-                  const $newRow = $(html);
-                  $tableBody.append($newRow);
+              if (data.dataKey == '{{ dataSet.dataSetId }}') {
+                // Data is always set as a string
+                const events = JSON.parse(data.data);
 
-                  // Do we have a column for this item
-                  $.each(row, function(colIndex, col) {
-                    if ($newRow.find('td[data-id=' + colIndex).length > 0) {
-                      $newRow.find('td[data-id=' + colIndex).append(row[colIndex]);
-                    } else {
-                      $newRow.find('td[data-id=unmatched').append(colIndex + ': ' + row[colIndex] + '<br/>');
-                    }
+                if (Array.isArray(events)) {
+                  const $tableBody = $mainData.find('tbody');
+                  $tableBody.find('tr').remove();
+                  $.each(events, function (rowIndex, row) {
+                    // Make a new row
+                    let html = '<tr>';
+                      {% for column in dataSet.getColumn() %}
+                    html += '<td data-id="{{ column.heading }}"></td>';
+                      {% endfor %}
+                    html += '<td data-id="unmatched"></td></tr>';
+                    const $newRow = $(html);
+                    $tableBody.append($newRow);
+
+                    // Do we have a column for this item
+                    $.each(row, function (colIndex, col) {
+                      if ($newRow.find('td[data-id=' + colIndex).length > 0) {
+                        $newRow.find('td[data-id=' + colIndex).append(row[colIndex]);
+                      } else {
+                        $newRow.find('td[data-id=unmatched').append(colIndex + ': ' + row[colIndex] + '<br/>');
+                      }
+                    });
                   });
-                });
+                } else {
+                  // Treat it as other data.
+                  otherData[data.dataKey] = data.data;
+                  $otherData.html(JSON.stringify(otherData, null, 4));
+                }
               } else {
                 // Grab the existing "other data" and see if there is a matching key.
-                otherData[data.dataKey] = events;
+                otherData[data.dataKey] = data.data;
                 $otherData.html(JSON.stringify(otherData, null, 4));
               }
 
