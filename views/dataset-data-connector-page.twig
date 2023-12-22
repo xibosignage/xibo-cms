@@ -139,9 +139,12 @@
             } else if (type === 'log') {
               $logs.prepend('[' + new Date().getTime() + '] ' + data + '\n');
             } else if (type === 'set') {
+              // Data is always set as a string
+              const events = JSON.parse(data.data);
+
               // Update the table
               // if the dataKey matches my connector's DataSetId, then render out a table
-              if (data.dataKey == '{{ dataSet.dataSetId }}' && Array.isArray(data.data)) {
+              if (data.dataKey == '{{ dataSet.dataSetId }}' && Array.isArray(events)) {
                 const $tableBody = $mainData.find('tbody');
                 $tableBody.find('tr').remove();
                 $.each(data.data, function (rowIndex, row) {
@@ -165,16 +168,13 @@
                 });
               } else {
                 // Grab the existing "other data" and see if there is a matching key.
-                otherData[data.dataKey] = data.data;
+                otherData[data.dataKey] = events;
                 $otherData.html(JSON.stringify(otherData, null, 4));
               }
 
               // Broadcast to interested parties.
-              // JSON.stringify if the data is an array or object, otherwise pass straight through.
-              if (typeof data.data !== 'string') {
-                data.data = JSON.stringify(data.data);
-              }
-              channel.postMessage({type: "xiboDC_data", dataKey: data.dataKey, data: data.data});
+              // Use the original data.data (which is a string)
+              channel.postMessage({type: 'xiboDC_data', dataKey: data.dataKey, data: data.data});
             } else if (type === 'notify') {
               // Log
               $logs.prepend('[' + new Date().getTime() + '] Notify for ' + data + '\n');
