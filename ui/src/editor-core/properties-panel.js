@@ -464,6 +464,12 @@ PropertiesPanel.prototype.render = function(
 
     // Get element from the widget
     targetAux = target.elementGroups[groupId];
+
+    // If element group is already deleted, stop rendering
+    if (targetAux == undefined) {
+      return;
+    }
+
     targetAux.selected = isSelected;
 
     isElementGroup = true;
