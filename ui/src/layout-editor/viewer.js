@@ -1897,6 +1897,9 @@ Viewer.prototype.validateElement = function(
 ) {
   const $elementContainer =
     this.DOMObject.find(`#${element.elementId}`);
+  const $groupContainer =
+    $elementContainer.parents('.designer-element-group');
+  const hasGroup = Boolean(element.groupId);
 
   // Check if parent widget is not valid
   const parentWidget = lD.getObjectByTypeAndId(
@@ -1905,16 +1908,10 @@ Viewer.prototype.validateElement = function(
     'canvas',
   );
 
-  // Get error message
-  let $messageContainer = $elementContainer.find('.invalid-parent');
-  if ($messageContainer.length === 0) {
-    $messageContainer = $(
-      `<div class="invalid-parent d-none" data-html="true">
-          <i class="fa fa-warning"></i>
-      </div>`);
-
-    $messageContainer.appendTo($elementContainer);
-  }
+  // Get error message ( from element or group )
+  let $messageContainer = (hasGroup) ?
+    $groupContainer.find('> .invalid-parent') :
+    $elementContainer.find('> .invalid-parent');
 
   // Is widget not valid?
   const isNotValid = (
@@ -1928,71 +1925,64 @@ Viewer.prototype.validateElement = function(
   // If parent widget isn't valid, show error message
   if (isNotValid) {
     const errorArray = [];
-    const hasGroup = Boolean(element.groupId);
-    const $groupContainer = (hasGroup) ?
-      $elementContainer.parents('.designer-element-group') : null;
 
-    // Add if elemens has no group or
-    // if has group but the group doesn't have message yet
-    if (
-      !hasGroup ||
-      (
-        hasGroup &&
-        $groupContainer.find('> .invalid-parent').length == 0
-      )
-    ) {
-      // Check required elements
-      const requiredElementsErrorMessage =
-        parentWidget.checkRequiredElements();
+    // Create message container if it doesn't exist
+    if ($messageContainer.length === 0) {
+      $messageContainer = $(
+        `<div class="invalid-parent d-none" data-html="true">
+            <i class="fa fa-warning"></i>
+        </div>`);
 
-      // Default message
-      // show only if we don't have required elements message
-      (!requiredElementsErrorMessage) &&
-        errorArray.push(
-          '<p>' +
-          propertiesPanelTrans.invalidWidget +
-          '</p>');
-
-      // Required elements message
-      (requiredElementsErrorMessage) &&
-        errorArray.push(
-          '<p>' +
-          requiredElementsErrorMessage +
-          '</p>');
-
-      // Request message
-      (parentWidget.validateData.errorMessage) &&
-        errorArray.push(
-          '<p>' +
-          parentWidget.validateData.errorMessage +
-          '</p>');
-
-      // Sample data message
-      (parentWidget.validateData.sampleDataMessage) &&
-        errorArray.push(
-          '<p class="sample-data">( ' +
-          parentWidget.validateData.sampleDataMessage +
-          ' )</p>');
-
-      // If element has group, move error to group
-      (hasGroup) && $messageContainer.appendTo(
-        $elementContainer.parents('.designer-element-group'),
-      );
-
-      // Set title/tooltip
-      $messageContainer.tooltip('dispose')
-        .prop('title', '<div class="custom-tooltip">' +
-        errorArray.join('') + '</div>');
-      $messageContainer.tooltip();
-
-      // Show tooltip
-      $messageContainer.removeClass('d-none');
+      if (hasGroup) {
+        // Remove message from element if we're going to create the group one
+        $elementContainer.find('> .invalid-parent').remove();
+        $messageContainer.appendTo($groupContainer);
+      } else {
+        $messageContainer.appendTo($elementContainer);
+      }
     }
 
-    // Remove message from element if it's in a group
-    if (hasGroup) {
-      $elementContainer.find('.invalid-parent').remove();
-    }
+    // Check required elements
+    const requiredElementsErrorMessage =
+      parentWidget.checkRequiredElements();
+
+    // Default message
+    // show only if we don't have required elements message
+    (!requiredElementsErrorMessage) &&
+      errorArray.push(
+        '<p>' +
+        propertiesPanelTrans.invalidWidget +
+        '</p>');
+
+    // Required elements message
+    (requiredElementsErrorMessage) &&
+      errorArray.push(
+        '<p>' +
+        requiredElementsErrorMessage +
+        '</p>');
+
+    // Request message
+    (parentWidget.validateData.errorMessage) &&
+      errorArray.push(
+        '<p>' +
+        parentWidget.validateData.errorMessage +
+        '</p>');
+
+    // Sample data message
+    (parentWidget.validateData.sampleDataMessage) &&
+      errorArray.push(
+        '<p class="sample-data">( ' +
+        parentWidget.validateData.sampleDataMessage +
+        ' )</p>');
+
+    // Set title/tooltip
+    $messageContainer.tooltip('dispose')
+      .prop('title', '<div class="custom-tooltip">' +
+      errorArray.join('') + '</div>');
+    $messageContainer.tooltip();
+
+    // Show tooltip
+    $messageContainer.removeClass('d-none');
   } else {
     // Remove error message
     $messageContainer.remove();
@@ -2010,68 +2000,60 @@ Viewer.prototype.validateElementData = function(
 ) {
   const $elementContainer =
     this.DOMObject.find(`#${element.elementId}`);
+  const $groupContainer =
+    $elementContainer.parents('.designer-element-group');
+  const hasGroup = Boolean(element.groupId);
 
-  // Get error message
-  let $messageContainer = $elementContainer.find('.empty-element-data');
-  if ($messageContainer.length === 0) {
-    $messageContainer = $(
-      `<div class="empty-element-data d-none" data-html="true">
-        <i class="fa fa-warning"></i>
-      </div>`);
-
-    $messageContainer.appendTo($elementContainer);
-  }
+  // Get error message ( from element or group )
+  let $messageContainer = (hasGroup) ?
+    $groupContainer.find('> .empty-element-data') :
+    $elementContainer.find('> .empty-element-data');
 
   const isNotValid =
     !widgetData || typeof widgetData === 'undefined' || widgetData === '';
 
   if (isNotValid) {
     const errorArray = [];
-    const hasGroup = Boolean(element.groupId);
-    const $groupContainer = (hasGroup) ?
-      $elementContainer.parents('.designer-element-group') : null;
     const elementType = element.elementType;
 
-    // Add if elemens has no group or
-    // if has group but the group doesn't have message yet
-    if (
-      !hasGroup ||
-      (
-        hasGroup &&
-        $groupContainer.find('> .empty-element-data').length === 0
-      )
-    ) {
-      errorArray.push(
-        '<p>' +
-        elementType.charAt(0).toUpperCase() +
-        elementType.substring(1) +
-        ' element' +
-        '</p>');
+    // Create message if doesn't exist
+    if ($messageContainer.length === 0) {
+      $messageContainer = $(
+        `<div class="empty-element-data d-none" data-html="true">
+          <i class="fa fa-warning"></i>
+        </div>`);
 
-      errorArray.push(
-        '<p>' +
-        layoutEditorTrans.emptyElementData +
-        '</p>');
-      // If element has group, move error to group
-      (hasGroup) && $messageContainer.appendTo(
-        $elementContainer.parents('.designer-element-group'),
-      );
-
-      // Set title/tooltip
-      $messageContainer.tooltip('dispose')
-        .prop('title', '<div class="custom-tooltip">' +
-          errorArray.join('') + '</div>');
-      $messageContainer.tooltip();
-
-      // Show tooltip
-      $messageContainer.removeClass('d-none');
+      if (hasGroup) {
+        // Remove message from element if we're going to create the group one
+        $elementContainer.find('> .empty-element-data').remove();
+        $messageContainer.appendTo($groupContainer);
+      } else {
+        $messageContainer.appendTo($elementContainer);
+      }
     }
 
-    // Remove message from element if it's in a group
-    if (hasGroup) {
-      $elementContainer.find('.empty-element-data').remove();
-    }
+    errorArray.push(
+      '<p>' +
+      elementType.charAt(0).toUpperCase() +
+      elementType.substring(1) +
+      ' element' +
+      '</p>');
+
+    errorArray.push(
+      '<p>' +
+      layoutEditorTrans.emptyElementData +
+      '</p>');
+
+    // Set title/tooltip
+    $messageContainer.tooltip('dispose')
+      .prop('title', '<div class="custom-tooltip">' +
+        errorArray.join('') + '</div>');
+    $messageContainer.tooltip();
+
+    // Show tooltip
+    $messageContainer.removeClass('d-none');
   } else {
+    // Remove message
     $messageContainer.remove();
   }
 };

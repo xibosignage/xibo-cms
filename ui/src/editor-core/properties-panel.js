@@ -509,11 +509,16 @@ PropertiesPanel.prototype.render = function(
 
     // Show uncussess request message
     if (res.success === false) {
+      const errorMessage = (target.isEditable) ?
+        propertiesPanelTrans.somethingWentWrong :
+        propertiesPanelTrans.somethingWentWrongEditPermissions;
+
       self.DOMObject.html('<div class="unsuccessMessage">' +
-        (res.message) ?
-        res.message :
-        propertiesPanelTrans.somethingWentWrong +
-        '</div>');
+        (
+          (res.message) ?
+            res.message :
+            errorMessage
+        ) + '</div>');
       return false;
     }
 
