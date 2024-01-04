@@ -464,6 +464,12 @@ PropertiesPanel.prototype.render = function(
 
     // Get element from the widget
     targetAux = target.elementGroups[groupId];
+
+    // If element group is already deleted, stop rendering
+    if (targetAux == undefined) {
+      return;
+    }
+
     targetAux.selected = isSelected;
 
     isElementGroup = true;
@@ -509,11 +515,16 @@ PropertiesPanel.prototype.render = function(
 
     // Show uncussess request message
     if (res.success === false) {
+      const errorMessage = (target.isEditable) ?
+        propertiesPanelTrans.somethingWentWrong :
+        propertiesPanelTrans.somethingWentWrongEditPermissions;
+
       self.DOMObject.html('<div class="unsuccessMessage">' +
-        (res.message) ?
-        res.message :
-        propertiesPanelTrans.somethingWentWrong +
-        '</div>');
+        (
+          (res.message) ?
+            res.message :
+            errorMessage
+        ) + '</div>');
       return false;
     }
 

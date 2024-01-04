@@ -1176,8 +1176,12 @@ Widget.prototype.removeElementGroup = function(
   // If object is selected, remove it from selection
   if (this.editorObject.selectedObject.id == groupId) {
     this.editorObject.selectObject({
-      reloadViewer: true,
+      reloadViewer: false,
     });
+
+    // Update viewer moveable
+    (this.editorObject.viewer) &&
+      this.editorObject.viewer.updateMoveable();
   }
 
   // Remove element from the DOM
