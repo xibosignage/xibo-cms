@@ -1,473 +1,57 @@
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
 const PlayerHelper = function() {
   // Check the query params to see if we're in editor mode
-  const _self = this;
-  const urlParams = new URLSearchParams(window.location.search);
-  let _elements = {standalone: {}, groups: {}};
-  let countWidgetElements = 0;
-  let countWidgetStatic = 0;
-
-  this.isPreview = urlParams.get('preview') === '1';
-  this.isEditor = urlParams.get('isEditor') === '1';
-
-  /**
-   * Initialize player with the available widgetData and elements
-   * @param {array} widgetData
-   * @param {array} elements
-   * @return {Promise<object>}
-   */
-  this.init = (widgetData, elements) => new Promise((resolve) => {
-    if (Array.isArray(widgetData)) {
-      const _widgetData = [...widgetData];
-
-      Promise.all(_widgetData.map(function(widget) {
-        return _self.getWidgetData(widget);
-      })).then((values) => {
-        const widgets = {};
-        const widgetHasNoData = values.filter((val) => {
-          return val !== null &&
-            (val.hasOwnProperty('success') ||
-              val.hasOwnProperty('error') ||
-              (val.hasOwnProperty('data') && val?.data?.length === 0)
-            );
-        });
-
-        if (widgetHasNoData.length > 0) {
-          _self.onDataErrorCallback(404, widgetData);
-          resolve({widgets});
-        }
-
-        values.forEach((value, widgetIndex) => {
-          const _widget = _widgetData[widgetIndex];
-
-          // Initialize variable to check for mixed items
-          _widget.isMixed = false;
-
-          if (!_widget.hasOwnProperty('isDataExpected')) {
-            _widget.isDataExpected = _widget.url !== null;
-          }
-
-          const {dataItems, showError, errorMessage} =
-            this.composeFinalData(_widget, value);
-
-          if (elements !== undefined && elements?.length > 0) {
-            elements.forEach(function(elemVal) {
-              if (elemVal?.length > 0) {
-                elemVal.forEach(function(elemObj) {
-                  if (elemObj.widgetId === _widget.widgetId) {
-                    _elements = _self.composeElements(
-                      elemObj?.elements || [], _widget);
-                  }
-                });
-              }
-            });
-
-            if (Object.keys(_elements).length > 0) {
-              let elementsWithNoMetaData = 0;
-
-              if (Object.keys(_elements.standalone).length > 0) {
-                Object.keys(_elements.standalone).forEach(function(key) {
-                  if (Object.keys(_elements.standalone[key]).length > 0) {
-                    Object.keys(_elements.standalone[key]).forEach(
-                      function(elemKey, elemIndex, elems) {
-                        if (!_elements.standalone[key][elemKey].dataInMeta) {
-                          elementsWithNoMetaData++;
-                        }
-                      });
-                  }
-                });
-              }
-
-              _widget.isMixed = Object.keys(_elements.standalone).length > 0 &&
-                elementsWithNoMetaData > 0 &&
-                Object.keys(_elements.groups).length > 0;
-
-              _elements =
-                _self.decorateCollectionSlots(_elements, dataItems, _widget);
-            }
-          }
-
-          if (_widget.templateId === 'elements' ||
-              (_widget.templateId === null && (
-                Object.keys(_elements.groups).length > 0 ||
-                Object.keys(_elements.standalone).length > 0
-              ))) {
-            countWidgetElements++;
-          } else {
-            countWidgetStatic++;
-          }
-
-          widgets[_widget.widgetId] = {
-            ..._widget,
-            data: dataItems,
-            meta: value !== null ? value?.meta : {},
-            showError,
-            errorMessage,
-            elements: _elements,
-          };
-        });
-
-        resolve({
-          widgets,
-          countWidgetElements,
-          countWidgetStatic,
-        });
-      });
-    }
-  });
-
-  /**
-   * onDataError callback
-   * @param {string|number} httpStatus
-   * @param {Object} response - Response body|json
-   */
-  this.onDataErrorCallback = (httpStatus, response) => {
-    const onDataError = window[
-      `onDataError_${xiboICTargetId}`
-    ];
-
-    if (typeof onDataError === 'function') {
-      if (onDataError(httpStatus, response) == false) {
-        xiboIC.reportFault({
-          code: '5001',
-          reason: 'No Data',
-        }, {targetId: xiboICTargetId});
-        xiboIC.expireNow({targetId: xiboICTargetId});
-      }
-
-      onDataError(httpStatus, response);
-    } else {
-      xiboIC.reportFault({
-        code: '5001',
-        reason: 'No Data',
-      }, {targetId: xiboICTargetId});
-      xiboIC.expireNow({targetId: xiboICTargetId});
-    }
-  };
-
-  /**
-   * Get widget data
-   * @param {object} widget
-   * @return {Promise}
-   */
-  this.getWidgetData = (widget) => {
-    return new Promise(function(resolve, reject) {
-      // if we have data on the widget (for older players),
-      // or if we are not in preview and have empty data on Widget (like text)
-      // do not run ajax use that data instead
-      // if (!isPreview) {
-      if (widget.data?.data !== undefined) {
-        resolve(widget.data);
-      } else if (widget.url) {
-        // else get data from widget.url,
-        // this will be either getData for preview
-        // or new json file for v4 players
-        $.ajax({
-          method: 'GET',
-          url: widget.url,
-        }).done(function(data) {
-          resolve(data);
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-          _self.onDataErrorCallback(widget, jqXHR.status, jqXHR.responseJSON);
-          console.log(jqXHR, textStatus, errorThrown);
-          resolve({
-            error: jqXHR.status,
-            success: false,
-            data: jqXHR.responseJSON,
-          });
-        });
-      } else {
-        resolve(null);
-      }
-    });
-  };
-
-  /**
-   * Compose final data
-   * @param {object} widget
-   * @param {object|array} data
-   * @return {object}
-   */
-  this.composeFinalData = (widget, data) => {
-    const finalData = {
-      isSampleData: false,
-      dataItems: [],
-      isArray: Array.isArray(data?.data),
-      showError: false,
-      errorMessage: null,
-    };
-    const composeSampleData = () => {
-      finalData.isSampleData = true;
-
-      if (widget.sample === null) {
-        finalData.dataItems = [];
-        return [];
-      }
-
-      // If data is empty, use sample data instead
-      // Add single element or array of elements
-      finalData.dataItems = (Array.isArray(widget.sample)) ?
-        widget.sample.slice(0) : [widget.sample];
-
-      return finalData.dataItems.reduce((data, item) => {
-        Object.keys(item).forEach((itemKey) => {
-          if (String(item[itemKey])
-            .match(DateFormatHelper.macroRegex) !== null) {
-            item[itemKey] = DateFormatHelper
-              .composeUTCDateFromMacro(item[itemKey]);
-          }
-        });
-
-        return [...data, {...item}];
-      }, []);
-    };
-
-    if (widget.isDataExpected) {
-      if (finalData.isArray && data?.data?.length > 0) {
-        finalData.dataItems = data?.data;
-      } else {
-        finalData.dataItems = _self.isEditor ? composeSampleData() : [];
-        if (data?.success === false || !widget.isValid) {
-          finalData.showError = _self.isEditor;
-        }
-      }
-    }
-
-    if (finalData.showError && data?.message) {
-      finalData.errorMessage = data?.message;
-    }
-
-    return finalData;
-  };
-
-  /**
-   * Compose widget elements
-   * @param {array} elements
-   * @param {object} widget
-   * @return {object} {groups, standalone}
-   */
-  this.composeElements = (elements, widget) => {
-    if (!elements || elements.length === 0) {
-      return _elements;
-    }
-
-    return elements.reduce(function(collection, item) {
-      const element = _self.decorateElement(item, widget);
-      const isGroup = _self.isGroup(element);
-      let standaloneKey = element.type === 'dataset' ?
-        element.id + '_' + element.templateData.datasetField :
-        element.id;
-
-      // Allow multiple data source of same element type by widget
-      standaloneKey += '_' + widget.widgetId;
-
-      // Initialize object values
-      if (!isGroup &&
-        !collection.standalone.hasOwnProperty(standaloneKey)
-      ) {
-        collection.standalone[standaloneKey] = {};
-      }
-
-      let groupKey = null;
-      if (isGroup) {
-        groupKey = element.groupId + '_' + widget.widgetId;
-        if (!collection.groups.hasOwnProperty(groupKey)) {
-          collection.groups[groupKey] = {
-            ...globalOptions,
-            ...widget.properties,
-            ...element.groupProperties,
-            id: groupKey,
-            uniqueID: element.groupId,
-            duration: widget.duration,
-            parentId: groupKey,
-            widgetId: widget.widgetId,
-            slot: element.slot,
-            items: [],
-          };
-        }
-      }
-
-      // Fill in objects with items
-      if (!isGroup &&
-        Object.keys(collection.standalone).length > 0
-      ) {
-        collection.standalone[standaloneKey][
-          Object.keys(collection.standalone[standaloneKey]).length + 1
-        ] =
-        {
-          ...element,
-          numItems: 1,
-          duration: widget.duration,
-        };
-      }
-
-      if (isGroup && Object.keys(collection.groups).length > 0 &&
-        groupKey !== null
-      ) {
-        collection.groups[groupKey] = {
-          ...collection.groups[groupKey],
-          items: [
-            ...collection.groups[groupKey].items,
-            {...element, numItems: 1},
-          ],
-        };
-      }
-
-      return collection;
-    }, {standalone: {}, groups: {}});
-  };
-
-  /**
-   * Decorate element
-   * @param {object} element
-   * @param {object} widget
-   * @return {object} element
-   */
-  this.decorateElement = function(element, widget) {
-    const elemCopy = JSON.parse(JSON.stringify(element));
-    const elemProps = elemCopy?.properties || {};
-
-    elemProps.circleRadius = 0;
-    // Calculate circle radius based on outlineWidth
-    if (element.id === 'circle') {
-      elemProps.circleRadius = elemProps.outline === 1 ?
-        50 - (elemProps.outlineWidth / 4) : 50;
-    }
-
-    if (Object.keys(elemCopy).length > 0 &&
-        elemCopy.hasOwnProperty('properties')) {
-      delete elemCopy.properties;
-    }
-
-    // Check if we have template from templateId or module
-    // and set it as the template
-    let $template = null;
-    const templateSelector = `#hbs-${elemCopy.id}`;
-    if ($(templateSelector).length > 0) {
-      $template = $(templateSelector);
-    }
-
-    elemCopy.hbs = null;
-    elemCopy.dataOverride = null;
-    elemCopy.dataOverrideWith = null;
-    elemCopy.escapeHtml = null;
-    elemCopy.isExtended = false;
-    elemCopy.withData = false;
-    elemCopy.widgetId = widget.widgetId;
-    elemCopy.dataInMeta = false;
-
-    // Compile the template if it exists
-    if ($template && $template.length > 0) {
-      elemCopy.dataOverride =
-          $template?.data('extends-override');
-      elemCopy.dataOverrideWith =
-          $template?.data('extends-with');
-      elemCopy.escapeHtml =
-          $template?.data('escape-html');
-
-      if (String(elemCopy.dataOverride).length > 0 &&
-          String(elemCopy.dataOverrideWith).length > 0) {
-        elemCopy.isExtended = true;
-      }
-
-      elemCopy.hbs = Handlebars.compile($template.html());
-    }
-
-    // Special case for handling weather language
-    if (elemProps.hasOwnProperty('lang') &&
-        widget.properties.hasOwnProperty('lang')) {
-      const elemLang = elemProps.lang;
-      const widgetLang = widget.properties.lang;
-
-      elemProps.lang = (elemLang !== null && String(elemLang).length > 0) ?
-        elemLang : widgetLang;
-    }
-
-    elemCopy.templateData = Object.assign(
-      {}, elemCopy, elemProps, globalOptions,
-      {uniqueID: elemCopy.elementId, prop: {...elemCopy, ...elemProps}},
-    );
-
-    // Make a copy of circleRadius to templateData if exists
-    if (elemProps.hasOwnProperty('circleRadius')) {
-      elemCopy.templateData.circleRadius = elemProps.circleRadius;
-    }
-
-    // Get widget info if exists.
-    if (widget.templateId !== null && widget.url !== null) {
-      elemCopy.renderData = Object.assign(
-        {},
-        widget.properties,
-        elemCopy,
-        globalOptions,
-        {
-          duration: widget.duration,
-          marqueeInlineSelector: `.${elemCopy.templateData.id}--item`,
-          parentId: elemCopy.elementId,
-        },
-      );
-      elemCopy.withData = true;
-    } else {
-      // Elements with no data can be extended.
-      // Thus, we have to decorate the element with extended params
-      if (elemCopy.dataOverride !== null &&
-        elemCopy.dataOverrideWith !== null) {
-        const extendWith =
-          transformer.getExtendedDataKey(elemCopy.dataOverrideWith);
-
-        // Check if extendWith exist in elemProps and templateData
-        if (elemProps.hasOwnProperty(extendWith)) {
-          elemCopy[elemCopy.dataOverride] = elemProps[extendWith];
-          elemCopy.templateData[elemCopy.dataOverride] =
-            elemProps[extendWith];
-        }
-      }
-    }
-
-    if (elemCopy?.renderData?.hasOwnProperty('durationIsPerItem')) {
-      elemCopy.durationIsPerItem = elemCopy.renderData.durationIsPerItem;
-    }
-
-    // Check if element is extended and data is coming from meta
-    if (elemCopy.isExtended && elemCopy.dataOverrideWith !== null &&
-      elemCopy.dataOverrideWith.includes('meta')) {
-      elemCopy.dataInMeta = true;
-    }
-
-    return elemCopy;
-  };
+  const self = this;
 
   /**
    * Decorate slots with data
-   * @param {object} elements
-   * @param {array} dataItems
-   * @param {object} widget
-   * @return {object} elements
+   * @param {Array} dataItems
+   * @param {Object} currentWidget
+   * @return {Object} currentWidget
    */
-  this.decorateCollectionSlots = function(elements, dataItems, widget) {
-    _self.getStandaloneSlotsData(elements, dataItems, widget);
-    _self.getGroupSlotsData(elements, dataItems, widget);
-    return elements;
+  this.decorateCollectionSlots = function(dataItems, currentWidget) {
+    self.getStandaloneSlotsData(dataItems, currentWidget);
+    self.getGroupSlotsData(dataItems, currentWidget);
+
+    return currentWidget;
   };
 
-  this.getStandaloneSlotsData = function(elements, data, widget) {
-    const standalone = elements.standalone;
+  this.getStandaloneSlotsData = function(data, currentWidget) {
+    const standalone = currentWidget.elements.standalone;
     const objKeys = Object.keys(standalone);
-
-    widget.standaloneSlotsData = {};
 
     if (objKeys.length > 0) {
       objKeys.forEach(function(objKey) {
         if (standalone.hasOwnProperty(objKey)) {
           const itemObj = standalone[objKey];
 
-          if (!widget.standaloneSlotsData.hasOwnProperty(objKey)) {
-            widget.standaloneSlotsData[objKey] = {};
+          if (!currentWidget.standaloneSlotsData.hasOwnProperty(objKey)) {
+            currentWidget.standaloneSlotsData[objKey] = {};
           }
 
           if (itemObj.length > 0) {
-            widget.standaloneSlotsData[objKey] =
-              itemObj.reduce(function(a, b) {
-                a[b.slot + 1] = [];
+            currentWidget.standaloneSlotsData[objKey] =
+              itemObj.reduce(function(a, b, slotIndex) {
+                a[(b.slot ?? slotIndex) + 1] = [];
                 return {...a};
               }, {});
           }
@@ -480,52 +64,54 @@ const PlayerHelper = function() {
             return a;
           }, []);
 
-        _self.composeSlotsData('standalone', data, standalone, widget, {
-          objKey,
-          lastSlotFilled: null,
-        });
+        self.composeSlotsData(
+          'standalone', data, standalone, currentWidget, {
+            objKey,
+            lastSlotFilled: null,
+          });
 
-        widget.singlePinnedSlots = pinnedSlots;
+        currentWidget.singlePinnedSlots = pinnedSlots;
 
-        widget.standaloneSlotsData[objKey] = _self.composeRepeatNonRepeatData(
-          widget.standaloneSlotsData[objKey],
-          pinnedSlots,
-          widget.isRepeatData,
-        );
+        currentWidget.standaloneSlotsData[objKey] =
+          self.composeRepeatNonRepeatData(
+            currentWidget.standaloneSlotsData[objKey],
+            pinnedSlots,
+            currentWidget.isRepeatData,
+          );
       });
     }
   };
 
-  this.getGroupSlotsData = function(elements, data, widget) {
-    widget.mappedSlotGroup = {};
-    widget.groupSlotsData = {};
+  this.getGroupSlotsData = function(data, currentWidget) {
+    const elementGroups = currentWidget.elements.groups;
+    currentWidget.mappedSlotGroup = {};
 
-    if (Object.keys(elements.groups).length > 0) {
-      const {pinnedSlots} = _self.getGroupData(
-        elements.groups,
+    if (Object.keys(elementGroups).length > 0) {
+      const {pinnedSlots} = self.getGroupData(
+        elementGroups,
         'items',
         false,
       );
 
-      widget.mappedSlotGroup = _self.mapSlot(
-        Object.values(elements.groups), 'id',
+      currentWidget.mappedSlotGroup = self.mapSlot(
+        Object.values(elementGroups), 'id',
       );
-      widget.groupSlotsData =
-        Object.keys(widget.mappedSlotGroup).reduce(function(a, b) {
+      currentWidget.groupSlotsData =
+        Object.keys(currentWidget.mappedSlotGroup).reduce(function(a, b) {
           a[b] = [];
           return {...a};
         }, {});
 
-      _self.composeSlotsData('groups', data, elements.groups, widget, {
+      self.composeSlotsData('groups', data, elementGroups, currentWidget, {
         lastSlotFilled: null,
       });
 
-      widget.groupPinnedSlots = pinnedSlots;
+      currentWidget.groupPinnedSlots = pinnedSlots;
 
-      widget.groupSlotsData = _self.composeRepeatNonRepeatData(
-        widget.groupSlotsData,
+      currentWidget.groupSlotsData = self.composeRepeatNonRepeatData(
+        currentWidget.groupSlotsData,
         pinnedSlots,
-        widget.isRepeatData,
+        currentWidget.isRepeatData,
       );
     }
   };
@@ -535,18 +121,18 @@ const PlayerHelper = function() {
    * @param {string} type group|standalone
    * @param {array} dataItems Widget data
    * @param {object} collection {groups, standalone}
-   * @param {object} widget Widget object
+   * @param {Object} currentWidget Widget
    * @param {object?} item Optional item object
    */
   this.composeSlotsData = function(
     type,
     dataItems,
     collection,
-    widget,
+    currentWidget,
     item,
   ) {
     const isStandalone = type === 'standalone';
-    const groupData = _self.getGroupData(
+    const groupData = self.getGroupData(
       isStandalone ? [collection] : collection,
       isStandalone ? item.objKey : 'items',
       isStandalone,
@@ -576,14 +162,15 @@ const PlayerHelper = function() {
           break;
         }
 
-        if (widget.isMixed && lastSlotFilled[type] === null &&
+        if (currentWidget.isMixed && lastSlotFilled[type] === null &&
           currCollection.length === maxSlot &&
           currentKey > maxSlot
         ) {
           break;
         }
 
-        if (widget.isMixed && lastSlotFilled[type] === null && isStandalone &&
+        if (currentWidget.isMixed && lastSlotFilled[type] === null &&
+          isStandalone &&
           pinnedSlots.length === currCollection.length &&
           currentKey > maxSlot
         ) {
@@ -612,7 +199,7 @@ const PlayerHelper = function() {
 
             if (isStandalone) {
               const currentSlotItem =
-                widget.standaloneSlotsData[item.objKey];
+                currentWidget.standaloneSlotsData[item.objKey];
 
               if (!currentSlotItem.hasOwnProperty(currentSlot)) {
                 currentSlotItem[currentSlot] = [];
@@ -625,12 +212,12 @@ const PlayerHelper = function() {
                 ];
               }
 
-              widget.standaloneSlotsData[item.objKey] = {
+              currentWidget.standaloneSlotsData[item.objKey] = {
                 ...currentSlotItem,
               };
             } else {
-              widget.groupSlotsData[currentSlot] = [
-                ...widget.groupSlotsData[currentSlot],
+              currentWidget.groupSlotsData[currentSlot] = [
+                ...currentWidget.groupSlotsData[currentSlot],
                 currentKey,
               ];
             }
@@ -648,10 +235,10 @@ const PlayerHelper = function() {
               pinnedSlots.includes(currentSlot)
           ) {
             if (isStandalone) {
-              widget.standaloneSlotsData[item.objKey][currentSlot] =
+              currentWidget.standaloneSlotsData[item.objKey][currentSlot] =
                   [currentKey];
             } else {
-              widget.groupSlotsData[currentSlot] = [currentKey];
+              currentWidget.groupSlotsData[currentSlot] = [currentKey];
             }
 
             hasSlotFilled[type] = true;
@@ -667,13 +254,13 @@ const PlayerHelper = function() {
             }
 
             if (isStandalone) {
-              widget.standaloneSlotsData[item.objKey][1] = [
-                ...widget.standaloneSlotsData[item.objKey][1],
+              currentWidget.standaloneSlotsData[item.objKey][1] = [
+                ...currentWidget.standaloneSlotsData[item.objKey][1],
                 currentKey,
               ];
             } else {
-              widget.groupSlotsData[1] = [
-                ...widget.groupSlotsData[1],
+              currentWidget.groupSlotsData[1] = [
+                ...currentWidget.groupSlotsData[1],
                 currentKey,
               ];
             }
@@ -782,7 +369,7 @@ const PlayerHelper = function() {
     const groupItems = objectsArray?.length > 0 ?
       objectsArray.reduce(
         (a, b) => {
-          return [...a, ..._self.getItemsByKey(b, itemsKey, isStandalone)];
+          return [...a, ...self.getItemsByKey(b, itemsKey, isStandalone)];
         }, []) : null;
     const getSlots = (items) => items.map(function(elem) {
       return elem?.slot || 0;
@@ -807,11 +394,11 @@ const PlayerHelper = function() {
   ) {
     let groupValues = Object.values(groupsData);
     const {maxSlot, minSlot} =
-      _self.getMaxMinSlot(groupValues, slotItemsKey, isStandalone);
+      self.getMaxMinSlot(groupValues, slotItemsKey, isStandalone);
 
     if (isStandalone) {
       groupValues =
-        _self.getItemsByKey(groupsData[0], slotItemsKey, isStandalone);
+        self.getItemsByKey(groupsData[0], slotItemsKey, isStandalone);
     }
 
     const pinnedSlots = groupValues.reduce(
@@ -850,6 +437,240 @@ const PlayerHelper = function() {
       effect === 'marqueeRight' ||
       effect === 'marqueeUp' ||
       effect === 'marqueeDown';
+  };
+
+  this.renderElement = function(hbs, props, isStatic) {
+    const hbsTemplate = hbs(Object.assign(props, globalOptions));
+    let topPos = props.top;
+    let leftPos = props.left;
+
+    if (props.group) {
+      if (props.group.isMarquee) {
+        topPos = (props.top - props.group.top);
+        leftPos = (props.left - props.group.left);
+      } else {
+        if (props.top >= props.group.top) {
+          topPos = (props.top - props.group.top);
+        }
+        if (props.left >= props.group.left) {
+          leftPos = (props.left - props.group.left);
+        }
+      }
+    }
+
+    let cssStyles = {
+      height: props.height,
+      width: props.width,
+      position: 'absolute',
+      top: topPos,
+      left: leftPos,
+      zIndex: props.layer,
+      transform: `rotate(${props?.rotation || 0}deg)`,
+    };
+
+    if (isStatic) {
+      cssStyles = {
+        ...cssStyles,
+        top: props.top,
+        left: props.left,
+        zIndex: props.layer,
+      };
+    }
+
+    if (!props.isGroup && props.dataOverride === 'text' &&
+      props.group.isMarquee &&
+      (props.effect === 'marqueeLeft' || props.effect === 'marqueeRight')
+    ) {
+      cssStyles = {
+        ...cssStyles,
+        position: 'static',
+        top: 'unset',
+        left: 'unset',
+        width: props?.textWrap ? props.width : 'initial',
+        display: 'flex',
+        flexShrink: '0',
+        wordWrap: 'break-word',
+      };
+    }
+
+    const $renderedElem = $(hbsTemplate).first()
+      .attr('id', props.elementId)
+      .addClass(`${props.uniqueID}--item`)
+      .css(cssStyles);
+
+    if (!props.isGroup && props.dataOverride === 'text' &&
+      props.group.isMarquee &&
+      (props.effect === 'marqueeLeft' || props.effect === 'marqueeRight')
+    ) {
+      $renderedElem.get(0).style.removeProperty('white-space');
+      $renderedElem.get(0).style.setProperty(
+        'white-space',
+        props?.textWrap ? 'unset' : 'nowrap',
+        'important',
+      );
+    }
+
+    return $renderedElem.prop('outerHTML');
+  };
+
+  this.renderDataItem = function(
+    isGroup,
+    dataItemKey,
+    dataItem,
+    item,
+    slot,
+    maxSlot,
+    isPinSlot,
+    pinnedSlots,
+    groupId,
+    $groupContent,
+    groupObj,
+    meta,
+    $content,
+  ) {
+    const $groupContentItem = $(`<div class="${groupId}--item"
+      data-group-key="${dataItemKey}"></div>`);
+    const groupKey = '.' + groupId + '--item[data-group-key=%key%]';
+
+    // For each data item, parse it and add it to the content;
+    if (item.hasOwnProperty('hbs') &&
+      typeof item.hbs === 'function' && dataItemKey !== 'empty'
+    ) {
+      const extendDataWith = transformer
+        .getExtendedDataKey(item.dataOverrideWith);
+
+      if (extendDataWith !== null &&
+        dataItem.hasOwnProperty(extendDataWith)
+      ) {
+        dataItem[item.dataOverride] = dataItem[extendDataWith];
+      }
+
+      // Handle special case for setting data for the player
+      if (item.type === 'dataset' && Object.keys(dataItem).length > 0) {
+        if (item.dataOverride !== null &&
+            item.templateData?.datasetField !== undefined
+        ) {
+          item[item.dataOverride] = dataItem[item.templateData.datasetField];
+
+          // Change value in templateData if exists
+          if (item.templateData.hasOwnProperty(item.dataOverride)) {
+            item.templateData[item.dataOverride] =
+              dataItem[item.templateData.datasetField];
+          }
+        }
+      }
+
+      if (typeof window[
+        `onElementParseData_${item.templateData.id}`
+      ] === 'function') {
+        dataItem[item.dataOverride] =
+          window[`onElementParseData_${item.templateData.id}`](
+            dataItem[extendDataWith],
+            {...item.templateData, data: dataItem},
+          );
+      }
+
+      let groupItemStyles = {
+        width: groupObj.width,
+        height: groupObj.height,
+      };
+
+      if (groupObj && groupObj.isMarquee) {
+        groupItemStyles = {
+          ...groupItemStyles,
+          position: 'relative',
+          display: 'flex',
+          flexShrink: '0',
+        };
+      }
+
+      $groupContentItem.css(groupItemStyles);
+
+      if ($groupContent &&
+        $groupContent.find(
+          groupKey.replace('%key%', dataItemKey),
+        ).length === 0
+      ) {
+        $groupContent.append($groupContentItem);
+      }
+
+      let isSingleElement = false;
+
+      if (!isGroup && item.dataOverride === 'text' && groupObj.isMarquee) {
+        if (item.effect === 'marqueeLeft' || item.effect === 'marqueeRight') {
+          if ($groupContent.find(
+            groupKey.replace('%key%', dataItemKey)).length === 1
+          ) {
+            $groupContent.find(
+              groupKey.replace('%key%', dataItemKey),
+            ).remove();
+          }
+          isSingleElement = true;
+        } else if (item.effect === 'marqueeDown' ||
+            item.effect === 'marqueeUp') {
+          isSingleElement = false;
+        }
+      }
+
+      const $itemContainer = isSingleElement ?
+        $groupContent : $groupContent.find(
+          groupKey.replace('%key%', dataItemKey),
+        );
+
+      $itemContainer.append(
+        self.renderElement(
+          item.hbs,
+          Object.assign(
+            item.templateData,
+            {isGroup},
+            (String(item.dataOverride).length > 0 &&
+                String(item.dataOverrideWith).length > 0) ?
+              dataItem : {data: dataItem},
+            {group: groupObj},
+          ),
+        ),
+      );
+
+      let onTemplateRender;
+      const itemID = item.uniqueID || item.templateData?.uniqueID;
+
+      // Check if onTemplateRender for child template is isExtended
+      // And onTemplateRender is defined on child, then use it
+      // Else, use parent onTemplateRender
+      if (item.isExtended && typeof window[
+        `onTemplateRender_${item.templateData.id}`
+      ] === 'function') {
+        onTemplateRender = window[`onTemplateRender_${item.templateData.id}`];
+      } else if (item.isExtended && typeof window [
+        `onTemplateRender_${item.dataOverride}`
+      ] === 'function') {
+        onTemplateRender = window[`onTemplateRender_${item.dataOverride}`];
+      } else if (!item.isExtended) {
+        onTemplateRender = window[`onTemplateRender_${item.templateData.id}`];
+      }
+
+      // Handle the rendering of the template
+      (onTemplateRender) && onTemplateRender(
+        item.elementId,
+        $itemContainer.find(`.${itemID}--item`),
+        $content.find(`.${itemID}--item`),
+        {item, ...item.templateData, data: dataItem},
+        meta,
+      );
+    } else {
+      if ($groupContent &&
+        $groupContent.find(
+          groupKey.replace('%key%', dataItemKey)).length === 0
+      ) {
+        $groupContent.append($groupContentItem);
+      }
+
+      const $itemContainer = $groupContent.find(
+        groupKey.replace('%key%', dataItemKey),
+      );
+
+      $itemContainer.append('');
+    }
   };
 
   return this;

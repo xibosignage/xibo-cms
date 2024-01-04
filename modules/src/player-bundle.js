@@ -41,7 +41,7 @@ import './xibo-worldclock-render';
 import './xibo-elements-render';
 import './editor-render';
 
-// Import PlayerHelper
+window.XiboPlayer = require('./xibo-player.js');
 window.PlayerHelper = require('../../ui/src/helpers/player-helper.js');
 import './player';
 
