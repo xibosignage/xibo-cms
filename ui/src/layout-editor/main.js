@@ -1144,6 +1144,11 @@ lD.undoLastAction = function() {
  * Delete selected object
  */
 lD.deleteSelectedObject = function() {
+  // Prevent delete if it doesn't have permissions
+  if (lD.selectedObject.isDeletable === false) {
+    return;
+  }
+
   // For now, we always delete the region
   if (lD.selectedObject.type === 'region') {
     lD.deleteObject(
@@ -2918,6 +2923,18 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
     layoutObject.type === 'element-group'
   );
 
+  // If target is a frame, send single widget info
+  const singleWidget = (
+    layoutObject.type === 'region' &&
+    layoutObject.subType === 'frame'
+  ) ? Object.values(layoutObject.widgets)[0] : {};
+
+  // If target is group or element group, send parent widget
+  const elementWidget = (
+    layoutObject.type === 'element' ||
+    layoutObject.type === 'element-group'
+  ) ? lD.getObjectByTypeAndId('widget', objAuxId, 'canvas') : {};
+
   // Create menu and append to the designer div
   // ( using the object extended with translations )
   lD.editorContainer.append(
@@ -2927,6 +2944,12 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
       canHaveNewConfig: canHaveNewConfig,
       canChangeLayer: canChangeLayer,
       canUngroup: canUngroup,
+      widget: singleWidget,
+      isElementBased: (
+        layoutObject.type === 'element' ||
+        layoutObject.type === 'element-group'
+      ),
+      elementWidget: elementWidget,
     })),
   );
 
@@ -3301,9 +3324,37 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
         });
       });
     } else {
-      layoutObject.editPropertyForm(
-        target.data('property'), target.data('propertyType'),
-      );
+      const property = target.data('property');
+      const propertyType = target.data('propertyType');
+
+      // If we're editing permissions and it's a frame
+      // edit the widget's permissions instead
+      if (
+        property === 'PermissionsWidget' &&
+        layoutObject.type === 'region' &&
+        layoutObject.subType === 'frame'
+      ) {
+        // Call edit for widget instead
+        const regionWidget = Object.values(layoutObject.widgets)[0];
+        regionWidget.editPropertyForm('Permissions');
+      } else if (
+        property === 'PermissionsCanvasWidget' &&
+        (
+          layoutObject.type === 'element' ||
+          layoutObject.type === 'element-group'
+        )
+      ) {
+        // Call edit for canvas widget instead
+        const canvasWidget =
+          lD.getObjectByTypeAndId('widget', objAuxId, 'canvas');
+        canvasWidget.editPropertyForm('Permissions');
+      } else {
+        // Call normal edit form
+        layoutObject.editPropertyForm(
+          property,
+          propertyType,
+        );
+      }
     }
 
     // Remove context menu

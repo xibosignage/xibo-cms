@@ -824,7 +824,8 @@ Viewer.prototype.handleInteractions = function() {
           clicks = 0;
 
           if (
-            $(e.target).data('subType') === 'playlist'
+            $(e.target).data('subType') === 'playlist' &&
+            $(e.target).hasClass('editable')
           ) {
             // Edit region if it's a playlist
             playlistEditorBtnClick($(e.target).attr('id'));
@@ -1166,8 +1167,11 @@ Viewer.prototype.renderRegion = function(
     // Append layout html to the container div
     $container.html(html);
 
-    // If it's playlist add some playlist controls
-    if (isPlaylist) {
+    // If it's (an editable) playlist, add some playlist controls
+    if (
+      isPlaylist &&
+      region.isEditable
+    ) {
       region.playlistCountOfWidgets = res.extra && res.extra.countOfWidgets ?
         res.extra.countOfWidgets : 1;
 
@@ -2799,7 +2803,8 @@ Viewer.prototype.updateMoveable = function(
     (
       $selectedElement &&
       $.contains(document, $selectedElement[0]) &&
-      !$selectedElement.hasClass('drawerWidget')
+      !$selectedElement.hasClass('drawerWidget') &&
+      $selectedElement.hasClass('editable')
     )
   ) {
     if ($selectedElement.hasClass('designer-element-group')) {

@@ -736,11 +736,8 @@ body.editor-opened {
         color: $xibo-color-primary-l5;
         padding: 30px;
         background-color: $xibo-color-semantic-error;
-
-        &.invalid-region-message {
-            margin: 16px;
-            border-radius: 3px;
-        }
+        border-radius: 4px;
+        margin: 16px 16px 0 0;
     }
 
     .loading-container {
@@ -1489,7 +1486,6 @@ body.editor-opened {
 
 /* Locked mode */
 #layout-editor #lockedOverlay {
-    z-index: 1;
     display: block;
     position: absolute;
 }
