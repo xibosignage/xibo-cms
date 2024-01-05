@@ -78,7 +78,7 @@ Bottombar.prototype.render = function(object) {
           .removeClass('fa-stop-circle')
           .addClass('fa-play-circle')
           .attr('title', bottombarTrans.playPreviewLayout);
-        app.viewer.render(true);
+        app.viewer.update();
       } else {
         lD.viewer.playPreview(
           requestPath,
