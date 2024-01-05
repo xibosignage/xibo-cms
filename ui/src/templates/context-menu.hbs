@@ -67,10 +67,30 @@
                 </div>
             {{/if}}
 
-            {{#if isPermissionsModifiable}}
-                <div class="context-menu-btn permissionsBtn" data-title="{{trans.editPermissions}}" data-property="Permissions" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
-                    <i class="tool-icon-permissions"></i><span>{{trans.editPermissions}}</span>
-                </div>
+            {{#if isFrame}}
+                {{#if widget.isPermissionsModifiable}}
+                    <div class="context-menu-btn permissionsBtn" data-title="{{trans.editPermissions}}" data-property="PermissionsWidget" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
+                        <i class="tool-icon-permissions"></i><span>{{trans.editPermissions}}</span>
+                    </div>
+                {{/if}}
+
+                {{#if isPermissionsModifiable}}
+                    <div class="context-menu-btn permissionsBtn" data-title="{{trans.editRegionPermissions}}" data-property="Permissions" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
+                        <i class="tool-icon-permissions"></i><span>{{trans.editRegionPermissions}}</span>
+                    </div>
+                {{/if}}
+            {{else if isElementBased}}
+                {{#if elementWidget.isPermissionsModifiable}}
+                    <div class="context-menu-btn permissionsBtn" data-title="{{trans.editPermissions}}" data-property="PermissionsCanvasWidget" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
+                        <i class="tool-icon-permissions"></i><span>{{trans.editPermissions}}</span>
+                    </div>
+                {{/if}}
+            {{else}}
+                {{#if isPermissionsModifiable}}
+                    <div class="context-menu-btn permissionsBtn" data-title="{{trans.editPermissions}}" data-property="Permissions" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
+                        <i class="tool-icon-permissions"></i><span>{{trans.editPermissions}}</span>
+                    </div>
+                {{/if}}
             {{/if}}
 
             {{#if canBeCopied}}

@@ -667,6 +667,12 @@ Widget.prototype.saveElements = function(
     forceRequest = false,
   } = {},
 ) {
+  // If widget isn't editable, throw an error
+  if (this.isEditable === false) {
+    toastr.error(errorMessagesTrans.canvasWidgetNotShared);
+    return;
+  }
+
   const self = this;
   const app = this.editorObject;
   const widgetId = this.widgetId;
