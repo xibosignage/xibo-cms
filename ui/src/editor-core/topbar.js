@@ -121,6 +121,22 @@ Topbar.prototype.render = function() {
       ':id',
       self.parent.layout.parentLayoutId || self.parent.layout.layoutId),
     );
+
+    /**
+     * Wait for name field to show and select it
+     * so it can be easier to replace
+     */
+    function selectField() {
+      const $field = $('#layoutEditForm input#name');
+      // If field doesn't exist, wait and call method again
+      if ($field.length === 0) {
+        setTimeout(selectField, 200);
+      } else {
+        // Select name
+        $field.trigger('select');
+      }
+    }
+    selectField();
   });
 
   // Handle custom dropwdown buttons
