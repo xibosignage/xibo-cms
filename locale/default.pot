@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2023-09-11 10:18+0100\n"
+"POT-Creation-Date: 2024-01-08 13:19+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1657,7 +1657,7 @@ msgid "Please enter a SQL clause to filter this DataSet."
 msgstr ""
 
 #: cache/a2/a2d0b026772c3068019d6d0fd7a57ca9bd5ddc1db5186f459e831a084ee9c524.php:579
-#: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:936
+#: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:933
 #: cache/b8/b8b3f8b3ef6f74dd18b97e373f142616d93c9e36e87a9718ef222311979e86a8.php:193
 #: cache/68/6804cbeb9f56f03142ec4c42fb8507a1210854d8706c95ab17a5df99927ad5cc.php:1055
 #: cache/14/14a88857244c38ea50f08f80c35958212272f14402f24b4fee8a73e2210388bf.php:388
@@ -3192,7 +3192,7 @@ msgid "Style Sheet"
 msgstr ""
 
 #: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:132
-#: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:922
+#: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:919
 #: cache/7e/7e70f016ae27b700942d6611fd27869e4e8ff993b91d5dae14ba061bc3a5349d.php:83
 #: cache/7e/7e70f016ae27b700942d6611fd27869e4e8ff993b91d5dae14ba061bc3a5349d.php:507
 #: cache/68/6804cbeb9f56f03142ec4c42fb8507a1210854d8706c95ab17a5df99927ad5cc.php:111
@@ -3630,18 +3630,18 @@ msgstr ""
 msgid "Windy"
 msgstr ""
 
-#: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:704
+#: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:701
 msgid ""
 "Select images from the media library to replace the default weather "
 "backgrounds."
 msgstr ""
 
-#: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:753
+#: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:750
 msgid "Current Forecast Template"
 msgstr ""
 
-#: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:761
-#: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:836
+#: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:758
+#: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:833
 #: cache/7e/7e70f016ae27b700942d6611fd27869e4e8ff993b91d5dae14ba061bc3a5349d.php:457
 #: cache/68/6804cbeb9f56f03142ec4c42fb8507a1210854d8706c95ab17a5df99927ad5cc.php:891
 #: cache/d6/d6433cb82bcb82fe8f141eda565b182ac096adeba4f1f5a17f07937788658a86.php:740
@@ -3655,8 +3655,8 @@ msgstr ""
 msgid "Snippets"
 msgstr ""
 
-#: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:803
-#: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:878
+#: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:800
+#: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:875
 #: cache/7e/7e70f016ae27b700942d6611fd27869e4e8ff993b91d5dae14ba061bc3a5349d.php:406
 #: cache/68/6804cbeb9f56f03142ec4c42fb8507a1210854d8706c95ab17a5df99927ad5cc.php:840
 #: cache/68/6804cbeb9f56f03142ec4c42fb8507a1210854d8706c95ab17a5df99927ad5cc.php:991
@@ -3680,31 +3680,31 @@ msgstr ""
 msgid "Enter text or HTML in the box below."
 msgstr ""
 
-#: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:816
+#: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:813
 msgid ""
 "Enter the template for the current forecast. For a list of substitutions "
 "click Get Forecast below."
 msgstr ""
 
-#: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:828
+#: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:825
 msgid "Daily Forecast Template"
 msgstr ""
 
-#: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:891
+#: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:888
 msgid ""
 "Enter the template for the daily forecast. Replaces [dailyForecast] in main "
 "template."
 msgstr ""
 
-#: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:903
+#: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:900
 msgid "CSS Style Sheet"
 msgstr ""
 
-#: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:910
+#: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:907
 msgid "Enter a CSS style sheet to style the weather widget"
 msgstr ""
 
-#: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:941
+#: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:938
 #: cache/b8/b8b3f8b3ef6f74dd18b97e373f142616d93c9e36e87a9718ef222311979e86a8.php:198
 #: cache/68/6804cbeb9f56f03142ec4c42fb8507a1210854d8706c95ab17a5df99927ad5cc.php:1060
 #: cache/66/66ef7f1426d972019d384924c2a684a6759aa800912132b04d7db13a685058a1.php:899
@@ -3720,11 +3720,11 @@ msgid ""
 "be set to 60."
 msgstr ""
 
-#: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:953
+#: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:950
 msgid "Please press Get Forecast"
 msgstr ""
 
-#: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:969
+#: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:966
 msgid ""
 "The Weather Widget has not been configured yet, please ask your CMS "
 "Administrator to look at it for you."
@@ -6808,7 +6808,7 @@ msgid "Transfer to another CMS"
 msgstr ""
 
 #: cache/07/07a609e347004c9c2ddbc7b3f91f5d7decf36d8ece2dac1e03738fa52181fb77.php:88
-#: cache/8f/8f1201650a29b461e1be4b20ee065d76cb96c09a4a066e185060bbcb3867dcc8.php:1657
+#: cache/8f/8f1201650a29b461e1be4b20ee065d76cb96c09a4a066e185060bbcb3867dcc8.php:1664
 msgid ""
 "Please note: Once the CMS Address and Key are authenticated in this form the "
 "Display will attempt to register with the CMS Instance details entered. Once "
@@ -6828,7 +6828,7 @@ msgid "New CMS Key"
 msgstr ""
 
 #: cache/07/07a609e347004c9c2ddbc7b3f91f5d7decf36d8ece2dac1e03738fa52181fb77.php:110
-#: cache/8f/8f1201650a29b461e1be4b20ee065d76cb96c09a4a066e185060bbcb3867dcc8.php:1684
+#: cache/8f/8f1201650a29b461e1be4b20ee065d76cb96c09a4a066e185060bbcb3867dcc8.php:1691
 msgid "CMS Secret Key associated with the provided new CMS Address"
 msgstr ""
 
@@ -6837,7 +6837,7 @@ msgid "Two Factor Code"
 msgstr ""
 
 #: cache/07/07a609e347004c9c2ddbc7b3f91f5d7decf36d8ece2dac1e03738fa52181fb77.php:121
-#: cache/8f/8f1201650a29b461e1be4b20ee065d76cb96c09a4a066e185060bbcb3867dcc8.php:1697
+#: cache/8f/8f1201650a29b461e1be4b20ee065d76cb96c09a4a066e185060bbcb3867dcc8.php:1704
 msgid "Please enter your Two Factor authentication code"
 msgstr ""
 
@@ -8873,7 +8873,7 @@ msgstr ""
 
 #: cache/6e/6ec667b18d17402ebc7262b8df4c17b951119fe9c5275c012ef23758b115ff9b.php:117
 #: cache/6e/6ec667b18d17402ebc7262b8df4c17b951119fe9c5275c012ef23758b115ff9b.php:124
-#: cache/8f/8f1201650a29b461e1be4b20ee065d76cb96c09a4a066e185060bbcb3867dcc8.php:1733
+#: cache/8f/8f1201650a29b461e1be4b20ee065d76cb96c09a4a066e185060bbcb3867dcc8.php:1740
 #: lib/Connector/XiboSspConnector.php:99
 msgid "Unknown error"
 msgstr ""
@@ -16897,25 +16897,25 @@ msgid "Faults?"
 msgstr ""
 
 #: cache/8f/8f1201650a29b461e1be4b20ee065d76cb96c09a4a066e185060bbcb3867dcc8.php:1058
-#: cache/ca/ca11797d01cd041c49ac27bd239ee0598bd5d3963f24814d0e681cd9521e4e40.php:1249
+#: cache/ca/ca11797d01cd041c49ac27bd239ee0598bd5d3963f24814d0e681cd9521e4e40.php:1248
 msgid "VNC to this Display"
 msgstr ""
 
 #: cache/8f/8f1201650a29b461e1be4b20ee065d76cb96c09a4a066e185060bbcb3867dcc8.php:1068
-#: cache/ca/ca11797d01cd041c49ac27bd239ee0598bd5d3963f24814d0e681cd9521e4e40.php:1259
+#: cache/ca/ca11797d01cd041c49ac27bd239ee0598bd5d3963f24814d0e681cd9521e4e40.php:1258
 msgid "TeamViewer to this Display"
 msgstr ""
 
 #: cache/8f/8f1201650a29b461e1be4b20ee065d76cb96c09a4a066e185060bbcb3867dcc8.php:1079
-#: cache/ca/ca11797d01cd041c49ac27bd239ee0598bd5d3963f24814d0e681cd9521e4e40.php:1270
+#: cache/ca/ca11797d01cd041c49ac27bd239ee0598bd5d3963f24814d0e681cd9521e4e40.php:1269
 msgid "Webkey to this Display"
 msgstr ""
 
-#: cache/8f/8f1201650a29b461e1be4b20ee065d76cb96c09a4a066e185060bbcb3867dcc8.php:1671
+#: cache/8f/8f1201650a29b461e1be4b20ee065d76cb96c09a4a066e185060bbcb3867dcc8.php:1678
 msgid "Full URL to the new CMS, including https:// "
 msgstr ""
 
-#: cache/8f/8f1201650a29b461e1be4b20ee065d76cb96c09a4a066e185060bbcb3867dcc8.php:1864
+#: cache/8f/8f1201650a29b461e1be4b20ee065d76cb96c09a4a066e185060bbcb3867dcc8.php:1871
 msgid ""
 "Adjust the times of this timer. To add or remove a day, use the Display "
 "Profile."
@@ -18738,7 +18738,7 @@ msgstr ""
 #: lib/Controller/Layout.php:740 lib/Controller/Layout.php:847
 #: lib/Controller/MenuBoardCategory.php:418 lib/Controller/Help.php:223
 #: lib/Controller/DisplayProfile.php:460 lib/Controller/User.php:909
-#: lib/Controller/User.php:2548 lib/Controller/Applications.php:561
+#: lib/Controller/User.php:2556 lib/Controller/Applications.php:561
 #: lib/Controller/Resolution.php:399 lib/Controller/Region.php:398
 #: lib/Controller/Region.php:567 lib/Controller/Display.php:1687
 #: lib/Controller/MenuBoardProduct.php:600
@@ -19314,7 +19314,7 @@ msgstr ""
 #: lib/Controller/Layout.php:818 lib/Controller/Region.php:223
 #: lib/Controller/Region.php:364 lib/Controller/Region.php:448
 #: lib/Controller/Region.php:513 lib/Controller/Region.php:733
-#: lib/Controller/Region.php:829 lib/Helper/XiboUploadHandler.php:423
+#: lib/Controller/Region.php:829 lib/Helper/XiboUploadHandler.php:436
 msgid "This Layout is not a Draft, please checkout."
 msgstr ""
 
@@ -20070,7 +20070,7 @@ msgid "Turn Features on/off for this User"
 msgstr ""
 
 #: lib/Controller/User.php:567 lib/Controller/User.php:1044
-#: lib/Controller/User.php:1122 lib/Controller/User.php:2477
+#: lib/Controller/User.php:1122 lib/Controller/User.php:2485
 msgid "Only super and group admins can create users"
 msgstr ""
 
@@ -20143,76 +20143,80 @@ msgstr ""
 msgid "Please enter the password"
 msgstr ""
 
-#: lib/Controller/User.php:1553
+#: lib/Controller/User.php:1546
+msgid "Please choose a new password"
+msgstr ""
+
+#: lib/Controller/User.php:1561
 msgid "Password Changed"
 msgstr ""
 
-#: lib/Controller/User.php:1611 lib/Controller/User.php:1753
+#: lib/Controller/User.php:1619 lib/Controller/User.php:1761
 msgid "You do not have permission to edit these permissions."
 msgstr ""
 
-#: lib/Controller/User.php:1671 lib/Controller/User.php:1804
-#: lib/Controller/User.php:2012 lib/Controller/Display.php:1822
+#: lib/Controller/User.php:1679 lib/Controller/User.php:1812
+#: lib/Controller/User.php:2020 lib/Controller/Display.php:1822
 #: lib/Controller/Display.php:1858 lib/Controller/Display.php:1863
 msgid "The array of ids is empty!"
 msgstr ""
 
-#: lib/Controller/User.php:1690
+#: lib/Controller/User.php:1698
 msgid "You do not have permission to edit all the entities permissions."
 msgstr ""
 
-#: lib/Controller/User.php:1886
+#: lib/Controller/User.php:1894
 msgid "This object is not shared with you with edit permission"
 msgstr ""
 
-#: lib/Controller/User.php:1890
+#: lib/Controller/User.php:1898
 msgid "You cannot share the root folder"
 msgstr ""
 
-#: lib/Controller/User.php:1915
+#: lib/Controller/User.php:1923
 msgid "Cannot change owner on this Object"
 msgstr ""
 
-#: lib/Controller/User.php:1942 lib/Controller/User.php:2023
+#: lib/Controller/User.php:1950 lib/Controller/User.php:2031
 msgid "Share option Updated"
 msgstr ""
 
-#: lib/Controller/User.php:2038
+#: lib/Controller/User.php:2046
 msgid "Sharing requested without an entity"
 msgstr ""
 
-#: lib/Controller/User.php:2042
+#: lib/Controller/User.php:2050
 msgid "Sharing form requested without an object"
 msgstr ""
 
-#: lib/Controller/User.php:2202
+#: lib/Controller/User.php:2210
 msgid "Updated Preference"
 msgstr ""
 
-#: lib/Controller/User.php:2202 lib/Controller/User.php:2458
+#: lib/Controller/User.php:2210 lib/Controller/User.php:2466
 msgid "Updated Preferences"
 msgstr ""
 
-#: lib/Controller/User.php:2293 lib/Controller/User.php:2305
+#: lib/Controller/User.php:2301 lib/Controller/User.php:2313
 msgid "Access Denied to UserGroup"
 msgstr ""
 
-#: lib/Controller/User.php:2315
+#: lib/Controller/User.php:2323
 #, php-format
 msgid "%s assigned to User Groups"
 msgstr ""
 
-#: lib/Controller/User.php:2340
+#: lib/Controller/User.php:2348
 #, php-format
 msgid "%s has started the welcome tutorial"
 msgstr ""
 
-#: lib/Controller/User.php:2364
+#: lib/Controller/User.php:2372
 #, php-format
 msgid "%s has seen the welcome tutorial"
 msgstr ""
 
-#: lib/Controller/User.php:2445
+#: lib/Controller/User.php:2453
 msgid "Option available only for Super Admins"
 msgstr ""
 
@@ -20633,30 +20637,30 @@ msgid ""
 "There is a problem with this installation. \"install.php\" should be deleted."
 msgstr ""
 
-#: lib/Middleware/SAMLAuthentication.php:103
+#: lib/Middleware/SAMLAuthentication.php:102
 msgid "Your authentication provider could not log you in."
 msgstr ""
 
-#: lib/Middleware/SAMLAuthentication.php:117
+#: lib/Middleware/SAMLAuthentication.php:116
 msgid "No attributes retrieved from the IdP"
 msgstr ""
 
-#: lib/Middleware/SAMLAuthentication.php:131
+#: lib/Middleware/SAMLAuthentication.php:130
 msgid "No attributes could be mapped"
 msgstr ""
 
-#: lib/Middleware/SAMLAuthentication.php:141
+#: lib/Middleware/SAMLAuthentication.php:140
 #, php-format
 msgid ""
 "%s not retrieved from the IdP and required since is the field to identify "
 "the user"
 msgstr ""
 
-#: lib/Middleware/SAMLAuthentication.php:167
+#: lib/Middleware/SAMLAuthentication.php:166
 msgid "Invalid field_to_identify value. Review settings."
 msgstr ""
 
-#: lib/Middleware/SAMLAuthentication.php:175
+#: lib/Middleware/SAMLAuthentication.php:174
 msgid ""
 "User logged at the IdP but the account does not exist in the CMS and Just-In-"
 "Time provisioning is disabled"
@@ -20866,11 +20870,11 @@ msgstr ""
 msgid "Widget not found with ID %d"
 msgstr ""
 
-#: lib/Entity/Playlist.php:486
+#: lib/Entity/Playlist.php:485
 msgid "Cannot delete a Widget that isn't assigned to me"
 msgstr ""
 
-#: lib/Entity/Playlist.php:745
+#: lib/Entity/Playlist.php:766
 msgid "This Playlist belongs to a Region, please delete the Region instead."
 msgstr ""
 
@@ -20952,17 +20956,17 @@ msgstr ""
 msgid "Provided DataSet Column Type doesn't exist"
 msgstr ""
 
-#: lib/Entity/DataSetColumn.php:273
+#: lib/Entity/DataSetColumn.php:275
 msgid ""
 "New list content value is invalid as it does not include values for existing "
 "data"
 msgstr ""
 
-#: lib/Entity/DataSetColumn.php:283
+#: lib/Entity/DataSetColumn.php:287
 msgid "Provided formula is invalid"
 msgstr ""
 
-#: lib/Entity/DataSetColumn.php:404
+#: lib/Entity/DataSetColumn.php:408
 msgid "Existing data is incompatible with your new configuration"
 msgstr ""
 
@@ -21056,7 +21060,7 @@ msgstr ""
 msgid "Draft Layouts must have a parent"
 msgstr ""
 
-#: lib/Entity/Layout.php:2519 lib/Widget/SubPlaylist.php:352
+#: lib/Entity/Layout.php:2521 lib/Widget/SubPlaylist.php:352
 msgid "Cannot add the same SubPlaylist twice."
 msgstr ""
 
@@ -22276,12 +22280,12 @@ msgstr ""
 msgid "Entity not found"
 msgstr ""
 
-#: lib/Widget/Image.php:326
+#: lib/Widget/Image.php:327
 #, php-format
 msgid "%s is pending conversion"
 msgstr ""
 
-#: lib/Widget/Image.php:330 lib/Widget/Image.php:331
+#: lib/Widget/Image.php:331 lib/Widget/Image.php:332
 #, php-format
 msgid ""
 "%s is too large. Please ensure that none of the images in your layout are "
@@ -22289,7 +22293,7 @@ msgid ""
 "Limit in Administration -> Settings"
 msgstr ""
 
-#: lib/Widget/Image.php:335 lib/Widget/MenuBoard.php:241
+#: lib/Widget/Image.php:336 lib/Widget/MenuBoard.php:241
 #: lib/Widget/Chart.php:988 lib/Widget/LocalVideo.php:155
 #: lib/Widget/HtmlPackage.php:103 lib/Widget/WebPage.php:267
 #: lib/Widget/Pdf.php:136 lib/Widget/Text.php:323 lib/Widget/VideoIn.php:157
@@ -22935,20 +22939,20 @@ msgid ""
 "permission to unlink this file and retry"
 msgstr ""
 
-#: lib/Helper/XiboUploadHandler.php:66 lib/Helper/LayoutUploadHandler.php:55
+#: lib/Helper/XiboUploadHandler.php:67 lib/Helper/LayoutUploadHandler.php:55
 #, php-format
 msgid "Your library is full. Library Limit: %s K"
 msgstr ""
 
-#: lib/Helper/XiboUploadHandler.php:112
+#: lib/Helper/XiboUploadHandler.php:113
 msgid "Access denied replacing old media"
 msgstr ""
 
-#: lib/Helper/XiboUploadHandler.php:118 lib/Helper/XiboUploadHandler.php:234
+#: lib/Helper/XiboUploadHandler.php:119 lib/Helper/XiboUploadHandler.php:241
 msgid "You cannot replace this media with an item of a different type"
 msgstr ""
 
-#: lib/Helper/XiboUploadHandler.php:406
+#: lib/Helper/XiboUploadHandler.php:419
 msgid ""
 "Sorry this is a corrupted upload, the file size doesn't match what we're "
 "expecting."
@@ -23084,8 +23088,8 @@ msgid "Tidy Cache"
 msgstr ""
 
 #: lib/XTR/MaintenanceDailyTask.php:128 lib/XTR/MaintenanceDailyTask.php:180
-#: lib/XTR/StatsMigrationTask.php:225 lib/XTR/StatsMigrationTask.php:366
-#: lib/XTR/StatsMigrationTask.php:468 lib/XTR/StatsMigrationTask.php:638
+#: lib/XTR/StatsMigrationTask.php:218 lib/XTR/StatsMigrationTask.php:357
+#: lib/XTR/StatsMigrationTask.php:458 lib/XTR/StatsMigrationTask.php:625
 #: lib/XTR/ClearCachedMediaDataTask.php:81 lib/XTR/MediaOrientationTask.php:93
 msgid "Done."
 msgstr ""
@@ -23590,7 +23594,7 @@ msgid ""
 "please consult your administrator"
 msgstr ""
 
-#: lib/Storage/PdoStorageService.php:409
+#: lib/Storage/PdoStorageService.php:412
 #, php-format
 msgid "Failed to write to database after %d retries. Please try again later."
 msgstr ""
