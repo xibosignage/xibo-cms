@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -1030,23 +1030,6 @@ class ForecastIo extends ModuleWidget
     public function getBackgroundList()
     {
         return self::WEATHER_BACKGROUNDS;
-    }
-
-    /**
-     * @return \Xibo\Entity\Media[]
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    public function getBackgroundOptions()
-    {
-        $initBackgrounds = [];
-
-        foreach (self::WEATHER_BACKGROUNDS as $background) {
-            if ($this->getOption($background) != $background) {
-                $initBackgrounds[] = $this->getOption($background);
-            }
-        }
-
-        return $this->mediaFactory->query(null, array('disableUserCheck' => 1, 'id' => $initBackgrounds, 'allModules' => 1, 'type' => 'image'));
     }
 
     /**

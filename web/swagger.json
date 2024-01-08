@@ -12541,7 +12541,7 @@
                     "widget"
                 ],
                 "summary": "Parameters for editing existing image on a layout",
-                "description": "For uploading new image files, please refer to POST /library documentation.\n     *               For assigning existing image file to a Playlist please see POST /playlist/library/assign/{playlistId} documentation.\n     *               This call will replace existing Widget object, all not supplied parameters will be set to default.",
+                "description": "For uploading new image files, please refer to POST /library documentation.\r\n     *               For assigning existing image file to a Playlist please see POST /playlist/library/assign/{playlistId} documentation.\r\n     *               This call will replace existing Widget object, all not supplied parameters will be set to default.",
                 "operationId": "WidgetImageEdit",
                 "parameters": [
                     {
