@@ -1161,7 +1161,7 @@ Toolbar.prototype.openMenu = function(
 
     if (app.mainObjectType != 'playlist') {
       // Refresh main containers
-      app.viewer.render(true);
+      app.viewer.update();
     }
   }
 

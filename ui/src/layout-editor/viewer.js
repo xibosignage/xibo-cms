@@ -41,6 +41,7 @@ const viewerElementContentTemplate =
 const viewerPlaylistControlsTemplate =
   require('../templates/viewer-playlist-controls.hbs');
 const drawThrottle = 60;
+const drawElementThrottle = 30;
 
 /**
  * Viewer contructor
@@ -390,9 +391,9 @@ Viewer.prototype.render = function(forceReload = false, target = {}) {
   }
 
   // Refresh on window resize
-  $(window).on('resize', function() {
-    this.update();
-  }.bind(this));
+  $(window).on('resize', _.debounce(function() {
+    lD.viewer.update();
+  }, drawThrottle));
 
   // Update moveable
   this.updateMoveable(true);
@@ -1262,10 +1263,19 @@ Viewer.prototype.renderRegionDebounced = _.debounce(
 );
 
 /**
+ * Update element with throttle
+ */
+Viewer.prototype.updateElementWithThrottle = _.throttle(function(
+  element,
+) {
+  lD.viewer.updateElement(element);
+}, drawElementThrottle);
+
+/**
  * Update element
  * @param {object} element
  */
-Viewer.prototype.updateElement = _.throttle(function(
+Viewer.prototype.updateElement = function(
   element,
 ) {
   const $container = lD.viewer.DOMObject.find(`#${element.elementId}`);
@@ -1287,13 +1297,22 @@ Viewer.prototype.updateElement = _.throttle(function(
   lD.viewer.renderElementContent(
     element,
   );
-}, drawThrottle);
+};
+
+/**
+ * Update element group with throttle
+ */
+Viewer.prototype.updateElementGroupWithThrottle = _.throttle(function(
+  elementGroup,
+) {
+  lD.viewer.updateElementGroup(elementGroup);
+}, drawElementThrottle);
 
 /**
  * Update element group
  * @param {object} elementGroup
  */
-Viewer.prototype.updateElementGroup = _.throttle(function(
+Viewer.prototype.updateElementGroup = function(
   elementGroup,
 ) {
   // Update slot
@@ -1327,7 +1346,7 @@ Viewer.prototype.updateElementGroup = _.throttle(function(
       element,
     );
   });
-}, drawThrottle);
+};
 
 /**
  * Update element group
@@ -1346,11 +1365,21 @@ Viewer.prototype.updateElementGroupLayer = _.throttle(function(
 }, drawThrottle);
 
 /**
+ * Update region with throttle
+ */
+Viewer.prototype.updateRegionWithThrottle = _.throttle(function(
+  region,
+  changed = false,
+) {
+  lD.viewer.updateRegion(region, changed);
+}, drawThrottle);
+
+/**
  * Update Region
  * @param {object} region - region object
  * @param {boolean} changed - if region was changed
  */
-Viewer.prototype.updateRegion = _.throttle(function(
+Viewer.prototype.updateRegion = function(
   region,
   changed = false,
 ) {
@@ -1410,7 +1439,7 @@ Viewer.prototype.updateRegion = _.throttle(function(
     // Update bottom bar
     lD.bottombar.render(region);
   }
-}, drawThrottle);
+};
 
 
 /**
@@ -2101,7 +2130,7 @@ Viewer.prototype.toggleFullscreen = function() {
     $('body').removeAttr('layout-editor-fs');
   }
 
-  this.render(lD.selectedObject, lD.layout);
+  this.update();
 };
 
 /**
@@ -2316,12 +2345,12 @@ Viewer.prototype.initMoveable = function() {
     // Update target object
     if (selectedObject.type == 'region') {
       // Update region
-      self.updateRegion(selectedObject, true);
+      self.updateRegionWithThrottle(selectedObject, true);
     } else if (selectedObject.type == 'element') {
       // Update element
-      self.updateElement(selectedObject);
+      self.updateElementWithThrottle(selectedObject);
     } else if (selectedObject.type == 'element-group') {
-      self.updateElementGroup(selectedObject);
+      self.updateElementGroupWithThrottle(selectedObject);
     }
   }).on('resizeEnd', (e) => {
     // Save transformation
