@@ -160,14 +160,18 @@ function XiboInitialise(scope, options) {
 
         // Append button to tabs or container (if we don't have tabs)
         if ($(this).find(".XiboFilter .nav-tabs").length > 0) {
-            $(this).find(".XiboFilter .nav-tabs").append(buttonTemplate);
+            if ($(this).find(".XiboFilter .nav-tabs .clear-filter-btn-container").length === 0) {
+                $(this).find(".XiboFilter .nav-tabs").append(buttonTemplate);
+            }
         } else {
-            $(this).find(".XiboFilter").prepend(buttonTemplate);
-            $(this).find(".XiboFilter .FilterDiv").addClass("pt-0");
+            if ($(this).find(".XiboFilter .clear-filter-btn-container").length === 0) {
+                $(this).find(".XiboFilter").prepend(buttonTemplate);
+                $(this).find(".XiboFilter .FilterDiv").addClass("pt-0");
+            }
         }
 
         // Prevent enter key to submit form
-        $(this).find(".XiboFilter .clear-filter-btn").on('click', function(event) {
+        $(this).find(".XiboFilter .clear-filter-btn").off().on('click', function(event) {
             // Reset fields
             form[0].reset();
 
@@ -1431,10 +1435,13 @@ function XiboInitialise(scope, options) {
  * @param processing
  */
 function dataTableProcessing(e, settings, processing) {
-    if (processing)
-        $(e.target).closest('.widget').children(".widget-title").append('<span class="saving fa fa-cog fa-spin p-1"></span>');
-    else
+    if (processing) {
+        if ($(e.target).closest('.widget').closest(".widget").find(".saving").length === 0) {
+            $(e.target).closest('.widget').children(".widget-title").append('<span class="saving fa fa-cog fa-spin p-1"></span>');
+        }
+    } else {
         $(e.target).closest('.widget').closest(".widget").find(".saving").remove();
+    }
 }
 
 /**
