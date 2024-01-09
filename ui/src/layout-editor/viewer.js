@@ -901,20 +901,21 @@ Viewer.prototype.handleInteractions = function() {
     }.bind(this));
 
   // Handle snap buttons
-  $viewerContainer.siblings('#snapToGrid').off('click').click(function() {
-    this.moveableOptions.snapToGrid = !this.moveableOptions.snapToGrid;
+  $viewerContainer.parent().find('#snapToGrid')
+    .off('click').click(function() {
+      this.moveableOptions.snapToGrid = !this.moveableOptions.snapToGrid;
 
-    // Turn off snap to element if grid is on
-    if (this.moveableOptions.snapToGrid) {
-      this.moveableOptions.snapToElements = false;
-    }
+      // Turn off snap to element if grid is on
+      if (this.moveableOptions.snapToGrid) {
+        this.moveableOptions.snapToElements = false;
+      }
 
-    // Update moveable options
-    this.updateMoveableOptions();
+      // Update moveable options
+      this.updateMoveableOptions();
 
-    // Update moveable UI
-    this.updateMoveableUI();
-  }.bind(this));
+      // Update moveable UI
+      this.updateMoveableUI();
+    }.bind(this));
 
   $viewerContainer.parent().find('#snapToBorders')
     .off('click').click(function() {
