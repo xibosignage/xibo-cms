@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -279,11 +279,9 @@ class Soap5 extends Soap4
 
                 // Adspace Enabled CMS?
                 $isAdspaceEnabled = intval($this->getConfig()->getSetting('isAdspaceEnabled', 0));
-                if ($isAdspaceEnabled === 1) {
-                    $node = $return->createElement('isAdspaceEnabled', 1);
-                    $node->setAttribute('type', 'checkbox');
-                    $displayElement->appendChild($node);
-                }
+                $node = $return->createElement('isAdspaceEnabled', $isAdspaceEnabled);
+                $node->setAttribute('type', 'checkbox');
+                $displayElement->appendChild($node);
 
                 if (!empty($display->timeZone)) {
                     // Calculate local time
