@@ -114,6 +114,9 @@ if (typeof updateClock === 'function') {
     setInterval(updateClock, 1000);
 }
     ]]></onVisible>
+    <onRender><![CDATA[
+    $('body').xiboLayoutScaler(properties);
+]]></onRender>
     <assets>
         <asset id="clock-digital-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/clock/clock-digital-thumb.png" />
     </assets>
