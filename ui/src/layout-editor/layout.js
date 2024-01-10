@@ -627,7 +627,10 @@ Layout.prototype.addObject = function(
     null, // oldValues
     newValues, // newValues
     {
-      updateTargetId: true, // options.updateTargetId
+      updateTargetId: true,
+      // Don't add to history manager if it's a canvas
+      addToHistory: (objectSubtype != 'canvas'),
+      targetSubType: (objectSubtype) ? objectSubtype : null,
     },
   );
 };

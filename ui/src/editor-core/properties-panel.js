@@ -1592,6 +1592,13 @@ PropertiesPanel.prototype.initFields = function(
         return true;
       }
 
+      // If field is canvas layer, skip
+      if (
+        $(target).is('[name="zIndexCanvas"]')
+      ) {
+        return true;
+      }
+
       // For rich text, check if CKEditor has changed
       if (
         $(target).hasClass('rich-text') &&
@@ -1658,22 +1665,24 @@ PropertiesPanel.prototype.saveRegion = function(
     return false;
   }
 
-  const element = (savePositionForm) ?
+  const region = (savePositionForm) ?
     app.selectedObject.parent :
     app.selectedObject;
   const formNewData = form.serialize();
   const requestPath =
-    urlsForApi.region.saveForm.url.replace(':id', element[element.type + 'Id']);
+    urlsForApi.region.saveForm.url.replace(':id', region[region.type + 'Id']);
+
+  const formOldData = self.formSerializedLoadData[app.selectedObject.type];
 
   // If form is valid, and it changed, submit it ( add change )
-  if (form.valid() && self.formSerializedLoadData.region != formNewData) {
+  if (form.valid() && formOldData != formNewData) {
     // Add a save form change to the history array
     // with previous form state and the new state
     app.historyManager.addChange(
       'saveForm',
-      element.type, // targetType
-      element[element.type + 'Id'], // targetId
-      self.formSerializedLoadData.region, // oldValues
+      region.type, // targetType
+      region[region.type + 'Id'], // targetId
+      formOldData, // oldValues
       formNewData, // newValues
       {
         customRequestPath: {
@@ -1681,6 +1690,7 @@ PropertiesPanel.prototype.saveRegion = function(
           type: urlsForApi.region.saveForm.type,
         },
         upload: true, // options.upload
+        targetSubType: region.subType,
       },
     ).then((res) => { // Success
       // Clear error message

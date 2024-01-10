@@ -83,6 +83,7 @@ Canvas.prototype.changeLayer = function(newLayer, saveToHistory = true) {
       },
       {
         upload: true, // options.upload
+        targetSubType: 'canvas',
       },
     ).catch((error) => {
       toastr.error(errorMessagesTrans.transformRegionFailed);

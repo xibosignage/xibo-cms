@@ -19,6 +19,10 @@ Bottombar.prototype.render = function(object) {
   const app = this.parent;
   const readOnlyModeOn = (app?.readOnlyMode === true);
 
+  if (typeof object === 'undefined') {
+    object = this.parent.selectedObject;
+  }
+
   // Get topbar trans
   const newBottomBarTrans =
     $.extend({}, toolbarTrans, topbarTrans, bottombarTrans);
@@ -120,6 +124,7 @@ Bottombar.prototype.render = function(object) {
         object: object,
         widget: widget,
         objectTypeName: newBottomBarTrans.objectType[object.type],
+        undoActive: checkHistory.undoActive,
         trashActive: trashBinActive,
       },
     ));
