@@ -223,22 +223,22 @@ $(target).xiboTextRender(properties, $(target).find('#content > .social-media-it
                 <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
             <property id="postBackground" type="color">
-                <title>Post Background Color</title>
+                <title>Post Background Colour</title>
                 <helpText>The colour of the post background</helpText>
                 <default>#ecf0f1</default>
             </property>
             <property id="postTextColor" type="color">
-                <title>Post Text Color</title>
+                <title>Post Text Colour</title>
                 <helpText>The colour of the post text</helpText>
                 <default>#333</default>
             </property>
             <property id="postHeaderTextColor" type="color">
-                <title>Post Header Text Color</title>
+                <title>Post Header Text Colour</title>
                 <helpText>The colour of the post header text</helpText>
                 <default>#95a5a6</default>
             </property>
             <property id="profileBorderColor" type="color">
-                <title>Profile Border Color</title>
+                <title>Profile Border Colour</title>
                 <helpText>The colour of the profile border</helpText>
                 <default>#ecf0f1</default>
             </property>
@@ -442,22 +442,22 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                 <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
             <property id="postBackground" type="color">
-                <title>Post Background Color</title>
+                <title>Post Background Colour</title>
                 <helpText>The colour of the post background</helpText>
                 <default>#ecf0f1</default>
             </property>
             <property id="postTextColor" type="color">
-                <title>Post Text Color</title>
+                <title>Post Text Colour</title>
                 <helpText>The colour of the post text</helpText>
                 <default>#333</default>
             </property>
             <property id="postHeaderTextColor" type="color">
-                <title>Post Header Text Color</title>
+                <title>Post Header Text Colour</title>
                 <helpText>The colour of the post header text</helpText>
                 <default>#95a5a6</default>
             </property>
             <property id="profileBorderColor" type="color">
-                <title>Profile Border Color</title>
+                <title>Profile Border Colour</title>
                 <helpText>The colour of the profile border</helpText>
                 <default>#ecf0f1</default>
             </property>
@@ -678,7 +678,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                 <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
             <property id="postTextColor" type="color">
-                <title>Post Text Color</title>
+                <title>Post Text Colour</title>
                 <helpText>The colour of the post text</helpText>
                 <default>#333</default>
             </property>
@@ -816,7 +816,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                 <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
             <property id="postTextColor" type="color">
-                <title>Post Text Color</title>
+                <title>Post Text Colour</title>
                 <helpText>The colour of the post text</helpText>
                 <default>#333</default>
             </property>
@@ -968,7 +968,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                 <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
             <property id="postTextColor" type="color">
-                <title>Post Text Color</title>
+                <title>Post Text Colour</title>
                 <helpText>The colour of the post text</helpText>
                 <default>#333</default>
             </property>
@@ -1121,17 +1121,17 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                 <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
             <property id="postBackground" type="color">
-                <title>Post Background Color</title>
+                <title>Post Background Colour</title>
                 <helpText>The colour of the post background</helpText>
                 <default>rgba(255, 255, 255, 0.6)</default>
             </property>
             <property id="postTextColor" type="color">
-                <title>Post Text Color</title>
+                <title>Post Text Colour</title>
                 <helpText>The colour of the post text</helpText>
                 <default>#434343</default>
             </property>
             <property id="dateTextColor" type="color">
-                <title>Date Text Color</title>
+                <title>Date Text Colour</title>
                 <helpText>The colour of the date text</helpText>
                 <default>#6e6e6e</default>
             </property>
@@ -1334,22 +1334,22 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                 <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
             <property id="postBackground" type="color">
-                <title>Post Background Color</title>
+                <title>Post Background Colour</title>
                 <helpText>The colour of the post background</helpText>
                 <default>rgba(255, 255, 255, 0.6)</default>
             </property>
             <property id="postTextColor" type="color">
-                <title>Post Text Color</title>
+                <title>Post Text Colour</title>
                 <helpText>The colour of the post text</helpText>
                 <default>#434343</default>
             </property>
             <property id="usernameTextColor" type="color">
-                <title>User Name Text Color</title>
+                <title>User Name Text Colour</title>
                 <helpText>The colour of the username text</helpText>
                 <default>#434343</default>
             </property>
             <property id="dateTextColor" type="color">
-                <title>Date Text Color</title>
+                <title>Date Text Colour</title>
                 <helpText>The colour of the date text</helpText>
                 <default>#434343</default>
             </property>
@@ -1562,27 +1562,27 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                 <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
             <property id="postBackground" type="color">
-                <title>Post Background Color</title>
+                <title>Post Background Colour</title>
                 <helpText>The colour of the post background</helpText>
                 <default>rgba(255, 255, 255, 0.6)</default>
             </property>
             <property id="postInnerBackground" type="color">
-                <title>Inner Post Background Color</title>
+                <title>Inner Post Background Colour</title>
                 <helpText>The colour of the inner post background</helpText>
                 <default>#fff</default>
             </property>
             <property id="postInnerBorder" type="color">
-                <title>Inner Post Border Color</title>
+                <title>Inner Post Border Colour</title>
                 <helpText>The colour of the inner post border</helpText>
                 <default>#eee</default>
             </property>
             <property id="postTextColor" type="color">
-                <title>Post Text Color</title>
+                <title>Post Text Colour</title>
                 <helpText>The colour of the post text</helpText>
                 <default>#434343</default>
             </property>
             <property id="usernameTextColor" type="color">
-                <title>User Name Text Color</title>
+                <title>User Name Text Colour</title>
                 <helpText>The colour of the username text</helpText>
                 <default>#434343</default>
             </property>
@@ -1801,27 +1801,27 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                 <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
             <property id="postTextColor" type="color">
-                <title>Post Text Color</title>
+                <title>Post Text Colour</title>
                 <helpText>The colour of the post text</helpText>
                 <default>#434343</default>
             </property>
             <property id="postBackground" type="color">
-                <title>Post Background Color</title>
+                <title>Post Background Colour</title>
                 <helpText>The colour of the post background</helpText>
                 <default>#fff</default>
             </property>
             <property id="footerTextColor" type="color">
-                <title>Footer Text Color</title>
+                <title>Footer Text Colour</title>
                 <helpText>The colour of the footer text</helpText>
                 <default>#fff</default>
             </property>
             <property id="footerBackground" type="color">
-                <title>Footer Background Color</title>
+                <title>Footer Background Colour</title>
                 <helpText>The colour of the footer background</helpText>
                 <default>#1da1f2</default>
             </property>
             <property id="borderColor" type="color">
-                <title>Border Color</title>
+                <title>Border Colour</title>
                 <helpText>The colour of the border</helpText>
                 <default>#ddd</default>
             </property>
@@ -2026,22 +2026,22 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                 <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
             <property id="postTextColor" type="color">
-                <title>Post Text Color</title>
+                <title>Post Text Colour</title>
                 <helpText>The colour of the post text</helpText>
                 <default>#434343</default>
             </property>
             <property id="postBackground" type="color">
-                <title>Post Background Color</title>
+                <title>Post Background Colour</title>
                 <helpText>The colour of the post background</helpText>
                 <default>#fff</default>
             </property>
             <property id="footerTextColor" type="color">
-                <title>Footer Text Color</title>
+                <title>Footer Text Colour</title>
                 <helpText>The colour of the footer text</helpText>
                 <default>#fff</default>
             </property>
             <property id="footerBackground" type="color">
-                <title>Footer Background Color</title>
+                <title>Footer Background Colour</title>
                 <helpText>The colour of the footer background</helpText>
                 <default>#1da1f2</default>
             </property>
@@ -2256,22 +2256,22 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                 <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
             <property id="postTextColor" type="color">
-                <title>Post Text Color</title>
+                <title>Post Text Colour</title>
                 <helpText>The colour of the post text</helpText>
                 <default>#434343</default>
             </property>
             <property id="postBackground" type="color">
-                <title>Post Background Color</title>
+                <title>Post Background Colour</title>
                 <helpText>The colour of the post background</helpText>
                 <default>#fff</default>
             </property>
             <property id="headerTextColor" type="color">
-                <title>Header Text Color</title>
+                <title>Header Text Colour</title>
                 <helpText>The colour of the header text</helpText>
                 <default>#fff</default>
             </property>
             <property id="headerBackground" type="color">
-                <title>Header Background Color</title>
+                <title>Header Background Colour</title>
                 <helpText>The colour of the header background</helpText>
                 <default>#1da1f2</default>
             </property>
@@ -2494,32 +2494,32 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                 <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
             <property id="postTextColor" type="color">
-                <title>Post Text Color</title>
+                <title>Post Text Colour</title>
                 <helpText>The colour of the post text</helpText>
                 <default>#4d4d4d</default>
             </property>
             <property id="dateTextColor" type="color">
-                <title>Date Text Color</title>
+                <title>Date Text Colour</title>
                 <helpText>The colour of the date text</helpText>
                 <default>#4d4d4d</default>
             </property>
             <property id="postBackground" type="color">
-                <title>Post Background Color</title>
+                <title>Post Background Colour</title>
                 <helpText>The colour of the post background</helpText>
                 <default>#fff</default>
             </property>
             <property id="headerTextColor" type="color">
-                <title>Header Text Color</title>
+                <title>Header Text Colour</title>
                 <helpText>The colour of the header text</helpText>
                 <default>#fff</default>
             </property>
             <property id="headerBackground" type="color">
-                <title>Header Background Color</title>
+                <title>Header Background Colour</title>
                 <helpText>The colour of the header background</helpText>
                 <default>#1da1f2</default>
             </property>
             <property id="profileBorderColor" type="color">
-                <title>Profile Border Color</title>
+                <title>Profile Border Colour</title>
                 <helpText>The colour of the profile border</helpText>
                 <default>#fff</default>
             </property>
