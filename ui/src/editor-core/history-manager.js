@@ -101,6 +101,7 @@ HistoryManager.prototype.addChange = function(
     updateTargetType = null,
     customRequestPath = null,
     customRequestReplace = null,
+    targetSubType = null,
   } = {},
 ) {
   const changeId = this.changeUniqueId++;
@@ -110,6 +111,7 @@ HistoryManager.prototype.addChange = function(
     changeId,
     changeType,
     targetType,
+    targetSubType,
     targetId,
     oldValues,
     newValues,
@@ -466,6 +468,11 @@ HistoryManager.prototype.removeLastChange = function() {
  * Render Manager
  */
 HistoryManager.prototype.render = function() {
+  // Upload bottom bar if exists
+  if (this.parent.bottombar) {
+    this.parent.bottombar.render();
+  }
+
   if (this.visible == false) {
     return;
   }

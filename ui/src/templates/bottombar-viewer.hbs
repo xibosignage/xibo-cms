@@ -31,8 +31,8 @@
     </div>
 
     <div class="viewer-navbar-controls">
-        {{! Left region }}
-        <div class="pull-left">
+        {{! Left area }}
+        <div class="area-right">
             {{#if renderLayout}}
                 <button type="button" id="play-btn" class="btn btn-sm" data-toggle="tooltip" data-container=".editor-bottom-bar" data-placement="top" data-title="{{ trans.playPreviewLayout }}">
                     <i class="fa fa-play-circle" data-toggle="popover" title="{{ trans.playPreviewLayoutPOTitle }}" data-content="{{ trans.playPreviewLayoutPOMessage }}" data-placement="top"></i>
@@ -80,11 +80,11 @@
             {{/unless}}
         </div>
 
-        {{! Right region }}
-        <div class="pull-right">
+        {{! Right area }}
+        <div class="area-left">
             {{#unless readOnlyModeOn}}
                 {{#if undoActive}}
-                    <button type="button" id="undo-btn" class="btn btn-sm" data-toggle="tooltip" data-container=".editor-bottom-bar" data-placement="top"
+                    <button type="button" id="undo-btn" class="btn btn-sm tooltip-always-on" data-toggle="tooltip" data-container=".editor-bottom-bar" data-placement="top"
                         data-title="{{trans.undoActiveTitle}}">
                         <i class="fa fa-undo"></i>
                     </button>

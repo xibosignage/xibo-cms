@@ -919,8 +919,13 @@ pE.checkHistory = function() {
       typeof historyManagerTrans != 'undefined' &&
     historyManagerTrans.revert[lastAction.type] != undefined
     ) {
+      const actionTargetType =
+        (lastAction.target.subType) ?
+          lastAction.target.subType :
+          lastAction.target.type;
+
       undoActiveTitle = historyManagerTrans.revert[lastAction.type]
-        .replace('%target%', lastAction.target.type);
+        .replace('%target%', historyManagerTrans.target[actionTargetType]);
     } else {
       undoActiveTitle = '[' + lastAction.target.type + '] ' + lastAction.type;
     }
@@ -1035,15 +1040,7 @@ pE.handleInputs = function() {
     },
   }).attr('data-type', 'playlist');
 
-  // Handle keyboard keys
-  $('body').off('keydown.editor')
-    .on('keydown.editor', function(handler) {
-      if ($(handler.target).is($('body'))) {
-        if (handler.key == 'Delete') {
-          pE.deleteSelectedObject();
-        }
-      }
-    });
+  pE.handleKeyInputs();
 
   // Editor container select ( faking drag and drop )
   // to add a object to the playlist
@@ -1205,5 +1202,35 @@ pE.toggleMultiselectMode = function(forceSelect = null) {
     // Reload timeline
     timeline.render();
   }
+};
+
+/**
+ * Handle inputs
+ */
+pE.handleKeyInputs = function() {
+  const allowInputs = !(typeof(lD) != 'undefined' && lD?.readOnlyMode === true);
+
+  // Handle keyboard keys
+  $('body').off('keydown.editor')
+    .on('keydown.editor', function(handler) {
+      if ($(handler.target).is($('body'))) {
+        // Delete
+        if (
+          handler.key == 'Delete' &&
+          allowInputs
+        ) {
+          pE.deleteSelectedObject();
+        }
+
+        // Undo
+        if (
+          handler.key == 'z' &&
+          handler.ctrlKey &&
+          allowInputs
+        ) {
+          pE.undoLastAction();
+        }
+      }
+    });
 };
 

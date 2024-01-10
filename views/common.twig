@@ -761,12 +761,20 @@
 
             var historyManagerTrans = {
                 revert: {
-                    saveForm: "{{ "Revert %target% form save" |trans }}",
+                    saveForm: "{{ "Revert %target% save" |trans }}",
                     order: "{{ "Revert %target% order" |trans }}",
                     transform: "{{ "Revert %target% transformation" |trans }}",
                     addWidget: "{{ "Revert %target% creation" |trans }}",
                     addMedia: "{{ "Revert %target% assignment" |trans }}",
                     create: "{{ "Revert %target% creation"|trans }}"
+                },
+                target: {
+                    widget: "{{ "Widget" |trans }}",
+                    region: "{{ "Region" |trans }}",
+                    canvas: "{{ "Canvas" |trans }}",
+                    frame: "{{ "Frame" |trans }}",
+                    zone: "{{ "Zone" |trans }}",
+                    playlist: "{{ "Playlist" |trans }}",
                 }
             };
 

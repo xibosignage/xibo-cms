@@ -17,6 +17,7 @@
         right: 0;
         left: 0;
         @include border-radius(0 0 4px 4px);
+        flex-direction: column;
 
         span, .info {
             font-size: 1rem;
@@ -46,10 +47,20 @@
             }
 
             &#delete-btn {
-                color: $xibo-color-semantic-error;
+                color: $xibo-color-neutral-0;
+                background-color: $xibo-color-semantic-error;
 
                 &:hover {
-                    color: lighten($xibo-color-semantic-error, 10%);
+                    background-color: darken($xibo-color-semantic-error, 10%);
+                }
+            }
+
+            &#undo-btn {
+                color: $xibo-color-neutral-1000;
+                background-color: $xibo-color-semantic-warning;
+
+                &:hover {
+                    background-color: darken($xibo-color-semantic-warning, 10%);
                 }
             }
         }
@@ -63,14 +74,18 @@
         }
 
         .viewer-navbar-controls, .viewer-navbar-info {
+            width: 100%;
             display: flex;
             align-items: center;
             height: calc($viewer-bottom-bar-height / 2);
             padding: 0 1rem;
         }
 
+        .viewer-navbar-controls {
+            justify-content: space-between;
+        }
+
         .viewer-navbar-info {
-            width: 100%;
             margin: 0;
             color: $xibo-color-primary-l5;
             background-color: $xibo-color-primary;

@@ -2152,6 +2152,12 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
             res.data.regionPlaylist.playlistId,
             draggableSubType,
             draggableData,
+            null,
+            false,
+            false,
+            true,
+            true,
+            false,
           );
         } else {
           // Save zone or playlist to a temp object
@@ -2194,6 +2200,7 @@ lD.getUploadDialogClassName = function() {
  * @param {boolean} zoneWidget If the widget is in a zone
  * @param {boolean} reloadData If the layout should be reloaded
  * @param {boolean} selectNewWidget Select the new widget after being added
+ * @param {boolean} addToHistory Add change to history?
  * @return {Promise} Promise
  */
 lD.addModuleToPlaylist = function(
@@ -2206,6 +2213,7 @@ lD.addModuleToPlaylist = function(
   zoneWidget = false,
   reloadData = true,
   selectNewWidget = true,
+  addToHistory = true,
 ) {
   if (moduleData.regionSpecific == 0) { // Upload form if not region specific
     // On hide callback
@@ -2306,6 +2314,7 @@ lD.addModuleToPlaylist = function(
           url: requestPath,
           type: linkToAPI.type,
         },
+        addToHistory: addToHistory,
       },
     ).then((res) => { // Success
       // Check if we added a element
@@ -4113,9 +4122,14 @@ lD.checkHistory = function() {
       typeof historyManagerTrans != 'undefined' &&
       historyManagerTrans.revert[lastAction.type] != undefined
     ) {
+      const actionTargetType =
+        (lastAction.target.subType) ?
+          lastAction.target.subType :
+          lastAction.target.type;
+
       undoActiveTitle =
         historyManagerTrans.revert[lastAction.type]
-          .replace('%target%', lastAction.target.type);
+          .replace('%target%', historyManagerTrans.target[actionTargetType]);
     } else {
       undoActiveTitle =
         '[' + lastAction.target.type + '] ' + lastAction.type;
@@ -5350,16 +5364,30 @@ lD.calculateLayers = function(
  * Handle inputs
  */
 lD.handleInputs = function() {
+  const allowInputs = (
+    lD.readOnlyMode == false &&
+    lD.playlistEditorOpened === false
+  );
+
   // Handle keyboard keys
   $('body').off('keydown.editor')
     .on('keydown.editor', function(handler) {
       if ($(handler.target).is($('body'))) {
+        // Delete
         if (
           handler.key == 'Delete' &&
-          lD.readOnlyMode == false &&
-          lD.playlistEditorOpened === false
+          allowInputs
         ) {
           lD.deleteSelectedObject();
+        }
+
+        // Undo
+        if (
+          handler.key == 'z' &&
+          handler.ctrlKey &&
+          allowInputs
+        ) {
+          lD.undoLastAction();
         }
       }
     });
