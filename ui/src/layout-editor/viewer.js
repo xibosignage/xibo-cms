@@ -2148,12 +2148,15 @@ Viewer.prototype.initMoveable = function() {
 
   // Const save tranformation
   const saveTransformation = function(target) {
+    const deltaVal = 1;
+
     // Apply transformation to the element
     const transformSplit = (target.style.transform).split(/[(),]+/);
     let hasTranslate = false;
 
     // If the transform has translate
     if (target.style.transform.search('translate') != -1) {
+      // Set values to style
       target.style.left =
         `${parseFloat(target.style.left) + parseFloat(transformSplit[1])}px`;
       target.style.top =
@@ -2171,6 +2174,83 @@ Viewer.prototype.initMoveable = function() {
       target.style.transform = `rotate(${rotateValue})`;
     } else {
       target.style.transform = '';
+    }
+
+    // If snap to borders is active, prevent negative values
+    // Or snap to border if <1px delta
+    if (self.moveableOptions.snapToBorders) {
+      let left = Number(target.style.left.split('px')[0]);
+      let top = Number(target.style.top.split('px')[0]);
+      let width = Number(target.style.width.split('px')[0]);
+      let height = Number(target.style.height.split('px')[0]);
+
+      const boundsWidth =
+        self.moveable.bounds.right -
+        self.moveable.bounds.left;
+
+      const boundsHeight =
+        self.moveable.bounds.bottom -
+        self.moveable.bounds.top;
+
+      // Left
+      if (
+        left < self.moveable.bounds.left ||
+        Math.abs(left - self.moveable.bounds.left) < deltaVal
+      ) {
+        left = self.moveable.bounds.left;
+      }
+
+      // Width
+      // If longer than bound's width
+      const distanceToRightBound =
+        self.moveable.bounds.right - (left + width);
+      if (
+        width > boundsWidth
+      ) {
+        width = boundsWidth;
+      } else if (
+        left + width > self.moveable.bounds.right ||
+        (
+          distanceToRightBound != 0 &&
+          Math.abs(distanceToRightBound) < deltaVal
+        )
+      ) {
+        // If not longer but passes right bound, adjust left value
+        left = left - distanceToRightBound;
+      }
+
+      // Top
+      if (
+        top < self.moveable.bounds.top ||
+        Math.abs(top - self.moveable.bounds.top) < deltaVal
+      ) {
+        top = self.moveable.bounds.top;
+      }
+
+      // Height
+      // If taller than bounds
+      const distanceToBottomBound =
+        self.moveable.bounds.bottom - (top + height);
+      if (
+        height > boundsHeight
+      ) {
+        height = boundsHeight;
+      } else if (
+        top + height > self.moveable.bounds.bottom ||
+        (
+          distanceToBottomBound > 0 &&
+          Math.abs(distanceToBottomBound) < deltaVal
+        )
+      ) {
+        // If not taller but passes bottom bound, adjust top value
+        top = top - distanceToBottomBound;
+      }
+
+      // Set style again
+      target.style.left = `${left}px`;
+      target.style.top = `${top}px`;
+      target.style.width = `${width}px`;
+      target.style.height = `${height}px`;
     }
 
     // Return transform split
