@@ -593,6 +593,9 @@ XiboPlayer.prototype.renderStaticWidget = function(
 
   staticWidget.items = [];
 
+  // Save widgetData to xic
+  xiboIC.set(staticWidget.widgetId, 'widgetData', staticWidget);
+
   if (this.isEditor() && showError && errorMessage !== null) {
     const $errMsg = $('<div class="error-message" role="alert"></div>');
 
@@ -648,9 +651,6 @@ XiboPlayer.prototype.renderStaticWidget = function(
     $template = $('#hbs-module');
     moduleTemplate = true;
   }
-
-  // Save widgetData to xic
-  xiboIC.set(staticWidget.widgetId, 'widgetData', staticWidget);
 
   let hbs = null;
   // Compile the template if it exists
