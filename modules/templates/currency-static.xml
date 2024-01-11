@@ -158,11 +158,6 @@ if (templateItems.length > 0) {
                 <title>Font</title>
                 <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
-            <property id="dateFormat" type="text" variant="dateFormat">
-                <title>Date Format</title>
-                <helpText>The format to apply to all dates returned by the Widget.</helpText>
-                <default>#DATE_FORMAT#</default>
-            </property>
             <property id="maxItemsPerPage" type="number">
                 <title>Items per Page</title>
                 <helpText>This is the intended number of items on each page.</helpText>
@@ -391,11 +386,6 @@ if (templateItems.length > 0) {
             <property id="fontFamily" type="fontSelector">
                 <title>Font</title>
                 <helpText>Select a custom font - leave empty to use the default font.</helpText>
-            </property>
-            <property id="dateFormat" type="text" variant="dateFormat">
-                <title>Date Format</title>
-                <helpText>The format to apply to all dates returned by the Widget.</helpText>
-                <default>#DATE_FORMAT#</default>
             </property>
             <property id="maxItemsPerPage" type="number">
                 <title>Items per Page</title>

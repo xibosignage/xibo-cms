@@ -62,11 +62,6 @@
             <helpText>Tick if you would like your base currency to be used as the comparison currency for each currency you've entered. For example base/compare becomes compare/base - USD/GBP becomes GBP/USD.</helpText>
             <default>0</default>
         </property>
-        <property id="dateFormat" type="text" variant="dateFormat">
-            <title>Date Format</title>
-            <helpText>The format to apply to all dates returned by the Widget.</helpText>
-            <default>#DATE_FORMAT#</default>
-        </property>
         <property id="durationIsPerPage" type="checkbox">
             <title>Duration is per page</title>
             <helpText>The duration specified is per page/item otherwise the widget duration is divided between the number of pages/items.</helpText>
