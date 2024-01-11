@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -758,6 +758,8 @@ class WidgetListener
                 $module->defaultDuration,
                 $module->schemaVersion
             );
+
+            $widget->calculateDuration($module);
 
             $event->getRegion()->regionPlaylist->assignWidget($widget, 1);
             $event->getRegion()->regionPlaylist->save(['notify' => false, 'validate' => false]);
