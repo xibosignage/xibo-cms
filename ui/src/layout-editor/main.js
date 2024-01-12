@@ -1133,6 +1133,9 @@ lD.undoLastAction = function() {
       errorMessage = error.errorThrown;
     }
 
+    // Remove last change
+    lD.historyManager.removeLastChange();
+
     toastr.error(
       errorMessagesTrans.revertFailed.replace('%error%', errorMessage),
     );
