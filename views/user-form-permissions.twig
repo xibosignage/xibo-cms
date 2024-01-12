@@ -38,6 +38,8 @@
     {% elseif object.type == "frame" %}
         {% set objectName = "Region"|trans %}
     {% elseif object.type == "global" %}
+        {% set objectName = "Canvas global widget"|trans %}
+    {% elseif object.type == "canvas" %}
         {% set objectName = "Canvas"|trans %}
     {% else %}
         {% set objectName = entity|trans %}
