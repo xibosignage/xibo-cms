@@ -49,11 +49,6 @@
                 </test>
             </rule>
         </property>
-        <property id="dateFormat" type="text" variant="dateFormat">
-            <title>Date Format</title>
-            <helpText>The format to apply to all dates returned by the Widget.</helpText>
-            <default>#DATE_FORMAT#</default>
-        </property>
         <property id="durationIsPerPage" type="checkbox">
             <title>Duration is per page</title>
             <helpText>The duration specified is per page/item otherwise the widget duration is divided between the number of pages/items.</helpText>

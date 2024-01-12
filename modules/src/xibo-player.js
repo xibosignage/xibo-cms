@@ -665,7 +665,11 @@ XiboPlayer.prototype.renderStaticWidget = function(
     if (typeof window['onParseData_' + staticWidget.widgetId] === 'function') {
       item = window[
         'onParseData_' + staticWidget.widgetId
-      ](item, staticWidget.properties, staticWidget.meta);
+      ](
+        item,
+        Object.assign(staticWidget.properties, staticWidget.templateProperties),
+        staticWidget.meta,
+      );
     }
 
     // Add the item to the content
