@@ -242,9 +242,6 @@ $(target).xiboLayoutScaler(properties);
 
 // Render the countdown
 var $contentContainer = $(target).find('#content');
-$contentContainer.xiboCountdownRender(
-    properties,
-    $contentContainer.html(),
-);
-    ]]></onRender>
+$contentContainer.xiboCountdownRender(properties, $contentContainer.html());
+]]></onRender>
 </module>
