@@ -304,11 +304,8 @@ $(target).xiboLayoutScaler(properties);
 
 // Render the countdown
 var $contentContainer = $(target).find('#content');
-$contentContainer.xiboCountdownRender(
-    properties,
-    $contentContainer.html(),
-);
-    ]]></onRender>
+$contentContainer.xiboCountdownRender(properties,$contentContainer.html());
+]]></onRender>
     <assets>
         <asset id="countdown-clock-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/countdown/countdown-clock-thumb.png" />
     </assets>
