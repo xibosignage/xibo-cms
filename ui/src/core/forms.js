@@ -318,23 +318,9 @@ window.forms = {
             // Initialize popover
             $newField.find('[data-toggle="popover"]').popover({
               sanitize: false,
-            }).on('mouseenter', function() {
-              // eslint-disable-next-line no-invalid-this
-              const $this = $(this);
-              const popoverId = $this.attr('aria-describedby');
-
-              $('#' + popoverId)
-                .on('mouseenter', function() {
-                  $this.popover('show');
-                })
-                .on('mouseleave', function() {
-                  $this.popover('hide');
-                });
-            }).on('mouseleave', function() {
-              setTimeout(function() {
-                // eslint-disable-next-line no-invalid-this
-                $(this).popover('hide');
-              }, 300);
+              trigger: 'manual',
+            }).on('mouseenter', function(ev) {
+              $(ev.currentTarget).popover('show');
             });
           }
 

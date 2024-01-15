@@ -81,7 +81,7 @@
             'zIndex': form.find('[name="zIndex"]').val(),
         }, true);
 
-        app.viewer.updateRegion(layout.regions[regionId]);
+        app.viewer.updateRegion(layout.regions[regionId], true);
 
         app.viewer.updateMoveable();
     }
