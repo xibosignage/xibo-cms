@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -28,6 +28,7 @@ describe('Campaigns', function() {
 
   const display1 = 'List Campaign Display 1';
   const display2 = 'List Campaign Display 2';
+  const command1 = 'Set Timezone';
 
   beforeEach(function() {
     cy.login();
@@ -181,6 +182,11 @@ describe('Campaigns', function() {
     }).as('loadDisplaygroupAfterSearch');
 
     cy.intercept({
+      url: '/command?*',
+      query: {command: command1},
+    }).as('loadCommandAfterSearch');
+
+    cy.intercept({
       url: '/campaign?type=list*',
       query: {name: layoutSchedule1},
     }).as('loadListCampaignsAfterSearch');
@@ -201,8 +207,14 @@ describe('Campaigns', function() {
     cy.get('.select2-container--open .select2-dropdown .select2-results > ul > li').should('have.length', 2);
     cy.get('#select2-displayGroupIds-results > li > ul > li:first').contains(display1).click();
 
+    // command
     cy.get('.modal-content #eventTypeId').select('Command');
-    cy.get('.modal-content [name="commandId"]').select('Set Timezone');
+    cy.get('.command-control > .col-sm-10 > .select2 > .selection > .select2-selection > .select2-selection__rendered')
+      .type(command1);
+    cy.wait('@loadCommandAfterSearch');
+    cy.get('.select2-container--open').contains(command1);
+    cy.get('.select2-container--open .select2-results > ul > li').should('have.length', 1);
+    cy.get('.select2-container--open .select2-results > ul > li:first').contains(command1).click();
 
     cy.get('.starttime-control > .col-sm-10 > .input-group > .datePickerHelper').click();
     cy.get('.open > .flatpickr-innerContainer > .flatpickr-rContainer > .flatpickr-days > .dayContainer > .today').click();
