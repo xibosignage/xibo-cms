@@ -2893,9 +2893,13 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
     const elementWidget = lD.getObjectByTypeAndId('widget', objAuxId, 'canvas');
 
     // Check if the element or group can have a new config
-    if (objType == 'element') {
+    if (elementWidget.subType === 'global') {
+      // Global elements or groups can't get a new config
+      canHaveNewConfig = false;
+    } else if (objType == 'element') {
       // We just need to have more than 1 element
-      canHaveNewConfig = (Object.values(elementWidget.elements).length > 1);
+      canHaveNewConfig =
+        (Object.values(elementWidget.elements).length > 1);
     } else if (objType == 'element-group') {
       // We need to have either another group
       canHaveNewConfig =
