@@ -1133,6 +1133,9 @@ lD.undoLastAction = function() {
       errorMessage = error.errorThrown;
     }
 
+    // Remove last change
+    lD.historyManager.removeLastChange();
+
     toastr.error(
       errorMessagesTrans.revertFailed.replace('%error%', errorMessage),
     );
@@ -2959,6 +2962,7 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
         layoutObject.type === 'element-group'
       ),
       elementWidget: elementWidget,
+      canvas: lD.getObjectByTypeAndId('canvas'),
     })),
   );
 
@@ -3357,6 +3361,17 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
         const canvasWidget =
           lD.getObjectByTypeAndId('widget', objAuxId, 'canvas');
         canvasWidget.editPropertyForm('Permissions');
+      } else if (
+        property === 'PermissionsCanvas' &&
+        (
+          layoutObject.type === 'element' ||
+          layoutObject.type === 'element-group'
+        )
+      ) {
+        // Call edit for canvas widget instead
+        const canvas =
+          lD.getObjectByTypeAndId('canvas');
+        canvas.editPropertyForm('Permissions');
       } else {
         // Call normal edit form
         layoutObject.editPropertyForm(

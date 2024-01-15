@@ -416,6 +416,9 @@ pE.undoLastAction = function() {
       errorMessage = error.errorThrown;
     }
 
+    // Remove last change
+    pE.historyManager.removeLastChange();
+
     toastr.error(errorMessagesTrans.revertFailed
       .replace('%error%', errorMessage));
   });
