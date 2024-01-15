@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -838,9 +838,7 @@ class Schedule extends Base
         $defaultLong = (float)$this->getConfig()->getSetting('DEFAULT_LONG');
 
         $addFormData = [
-            'commands' => $this->commandFactory->query(),
             'dayParts' => $this->dayPartFactory->allWithSystem(),
-            'layoutCodes' => $this->layoutFactory->getLayoutCodes(),
             'displayGroupIds' => $displayGroupIds,
             'displayGroups' => $displayGroups,
             'reminders' => [],
@@ -860,8 +858,8 @@ class Schedule extends Base
                     ? $this->campaignFactory->getById($id)
                     : null
                 ),
-                'displayGroup' => (($from == 'DisplayGroup') ? [$this->displayGroupFactory->getById($id)] : null),
-                'displayGroupId' => (($from == 'DisplayGroup') ? (int)$id : 0),
+                'displayGroups' => (($from == 'DisplayGroup') ? [$this->displayGroupFactory->getById($id)] : null),
+                'displayGroupIds' => (($from == 'DisplayGroup') ? [$id] : [0]),
                 'mediaId' => (($from === 'Library') ? $id : null),
                 'playlistId' => (($from === 'Playlist') ? $id : null),
                 'readonlySelect' => !($from == 'DisplayGroup'),
@@ -1398,18 +1396,12 @@ class Schedule extends Base
         $this->getState()->template = 'schedule-form-edit';
         $this->getState()->setData([
             'event' => $schedule,
-            'campaigns' => $this->campaignFactory->query(
-                null,
-                ['isLayoutSpecific' => -1, 'retired' => 0, 'includeCampaignId' => $schedule->campaignId]
-            ),
-            'commands' => $this->commandFactory->query(),
             'dayParts' => $this->dayPartFactory->allWithSystem(),
             'displayGroups' => $schedule->displayGroups,
-            'campaign' => ($schedule->campaignId != '') ? $this->campaignFactory->getById($schedule->campaignId) : null,
+            'campaign' => !empty($schedule->campaignId) ? $this->campaignFactory->getById($schedule->campaignId) : null,
             'displayGroupIds' => array_map(function ($element) {
                 return $element->displayGroupId;
             }, $schedule->displayGroups),
-            'layoutCodes' => $this->layoutFactory->getLayoutCodes(),
             'reminders' => $scheduleReminders,
             'defaultLat' => $defaultLat,
             'defaultLong' => $defaultLong,
