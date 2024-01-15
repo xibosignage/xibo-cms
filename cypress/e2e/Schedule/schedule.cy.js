@@ -209,7 +209,7 @@ describe('Campaigns', function() {
 
     // command
     cy.get('.modal-content #eventTypeId').select('Command');
-    cy.get('.command-control > .col-sm-10 > .select2 > .selection > .select2-selection > .select2-selection__rendered')
+    cy.get('.command-control > .col-sm-10 > .select2 > .selection > .select2-selection')
       .type(command1);
     cy.wait('@loadCommandAfterSearch');
     cy.get('.select2-container--open').contains(command1);
