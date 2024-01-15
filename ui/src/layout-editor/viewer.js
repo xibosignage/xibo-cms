@@ -2192,14 +2192,6 @@ Viewer.prototype.initMoveable = function() {
         self.moveable.bounds.bottom -
         self.moveable.bounds.top;
 
-      // Left
-      if (
-        left < self.moveable.bounds.left ||
-        Math.abs(left - self.moveable.bounds.left) < deltaVal
-      ) {
-        left = self.moveable.bounds.left;
-      }
-
       // Width
       // If longer than bound's width
       const distanceToRightBound =
@@ -2219,12 +2211,12 @@ Viewer.prototype.initMoveable = function() {
         left = left - distanceToRightBound;
       }
 
-      // Top
+      // Left
       if (
-        top < self.moveable.bounds.top ||
-        Math.abs(top - self.moveable.bounds.top) < deltaVal
+        left < self.moveable.bounds.left ||
+        Math.abs(left - self.moveable.bounds.left) < deltaVal
       ) {
-        top = self.moveable.bounds.top;
+        left = self.moveable.bounds.left;
       }
 
       // Height
@@ -2244,6 +2236,14 @@ Viewer.prototype.initMoveable = function() {
       ) {
         // If not taller but passes bottom bound, adjust top value
         top = top - distanceToBottomBound;
+      }
+
+      // Top
+      if (
+        top < self.moveable.bounds.top ||
+        Math.abs(top - self.moveable.bounds.top) < deltaVal
+      ) {
+        top = self.moveable.bounds.top;
       }
 
       // Set style again
