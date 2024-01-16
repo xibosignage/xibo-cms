@@ -114,8 +114,10 @@ if (items.length === 0) {
     // Set the body dimensions to window dimensions
     $(target).css('cssText', 'width: 100% !important; height: 100% !important;');
 
-    // Show the error message
-    $(target).find('.error-message').show();
+    // Show the error message if it's in the layout editor
+    if (properties && properties.isEditor) {
+        $(target).find('.error-message').show();
+    }
     return;
 }
 

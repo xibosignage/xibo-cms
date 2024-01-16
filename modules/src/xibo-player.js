@@ -115,6 +115,8 @@ const XiboPlayer = function() {
     playerWidget.showError = showError;
     playerWidget.errorMessage = errorMessage;
     playerWidget.items = [];
+    playerWidget.isPreview = this.isPreview();
+    playerWidget.isEditor = this.isEditor();
 
     // Only add below props for widget with elements
     if (this.isStaticWidget(playerWidget) === false) {
@@ -767,8 +769,13 @@ XiboPlayer.prototype.renderStaticWidget = function(
     {
       duration: staticWidget.duration,
       pauseEffectOnStart: globalOptions.pauseEffectOnStart ?? false,
+      isPreview: staticWidget.isPreview,
+      isEditor: staticWidget.isEditor,
     },
   );
+
+  // Save widget as global variable
+  window.widget = staticWidget;
 
   // Run the render functions
   $.each(window.renders, function(_key, render) {
@@ -780,9 +787,6 @@ XiboPlayer.prototype.renderStaticWidget = function(
       staticWidget.meta,
     );
   });
-
-  // Save widget as global variable
-  window.widget = staticWidget;
 
   // Call the run on visible function if it exists
   if (
