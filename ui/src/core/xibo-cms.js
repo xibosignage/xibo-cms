@@ -1940,9 +1940,6 @@ function XiboFormRender(sourceObj, data = null) {
         return false;
     }
 
-    // Currently only support one of these at once.
-    bootbox.hideAll();
-
     lastForm = formUrl;
 
     // Call with AJAX
@@ -2009,6 +2006,12 @@ function XiboFormRender(sourceObj, data = null) {
                 if (sourceObj && typeof sourceObj === 'object') {
                   size = sourceObj.data().modalSize || 'large';
                 }
+
+                // Currently only support one of these at once.
+                // We have to move this here before calling bootbox.dialog
+                // to avoid multiple modal being opened
+                bootbox.hideAll();
+
                 var dialog = bootbox.dialog({
                         message: response.html,
                         title: dialogTitle,
