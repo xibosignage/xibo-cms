@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -215,9 +215,14 @@ trait EntityTrait
 
         foreach ($this->jsonSerialize() as $key => $value) {
             if (!is_array($value) && !is_object($value) && $this->propertyOriginallyExisted($key) && $this->hasPropertyChanged($key)) {
-
-                if ( isset($this->datesToFormat) && in_array($key, $this->datesToFormat)) {
-                    $changedProperties[$key] = Carbon::createFromTimestamp($this->getOriginalValue($key))->format(DateFormatHelper::getSystemFormat()) . ' > ' . Carbon::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat());
+                if (isset($this->datesToFormat) && in_array($key, $this->datesToFormat)) {
+                    $original = empty($this->getOriginalValue($key))
+                        ? $this->getOriginalValue($key)
+                        : Carbon::createFromTimestamp($this->getOriginalValue($key))->format(DateFormatHelper::getSystemFormat());
+                    $new = empty($value)
+                        ? $value
+                        : Carbon::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat());
+                    $changedProperties[$key] = $original . ' > ' . $new;
                 } else {
                     $changedProperties[$key] = $this->getOriginalValue($key) . ' > ' . $value;
                 }

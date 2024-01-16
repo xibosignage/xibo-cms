@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -648,7 +648,7 @@ $app->put('/transition/{id}', ['\Xibo\Controller\Transition','edit'])
 //
 $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/sessions', ['\Xibo\Controller\Sessions','grid'])->setName('sessions.search');
-    $group->get('/sessions/logout/{id}', ['\Xibo\Controller\Sessions','logout'])->setName('sessions.confirm.logout');
+    $group->delete('/sessions/logout/{id}', ['\Xibo\Controller\Sessions','logout'])->setName('sessions.confirm.logout');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['session.view']));
 
 //
