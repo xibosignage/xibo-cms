@@ -197,6 +197,9 @@ PropertiesPanel.prototype.save = function(
       // Success
       app.common.hideLoadingScreen();
 
+      // Save form data
+      this.formSerializedLoadData[target.type] = formNewData;
+
       // Clear error message
       formHelpers.clearErrorMessage(form);
 
@@ -1695,6 +1698,9 @@ PropertiesPanel.prototype.saveRegion = function(
     ).then((res) => { // Success
       // Clear error message
       formHelpers.clearErrorMessage(form);
+
+      // Update form data
+      self.formSerializedLoadData[app.selectedObject.type] = formNewData;
     }).catch((error) => { // Fail/error
       // Show error returned or custom message to the user
       let errorMessage = '';
