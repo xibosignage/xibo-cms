@@ -67,6 +67,7 @@ window.forms = {
      * @param {boolean} [playlistId] - If widget, the playlistId
      * @param {object[]} [propertyGroups] - Groups to add the properties to
      * @param {string} [customClass] - Custom class to add to the form fields
+     * @param {boolean} [prepend] - Prepend fields instead?
      *  - If the properties are for an element
      */
   createFields: function(
@@ -76,6 +77,7 @@ window.forms = {
     playlistId,
     propertyGroups = [],
     customClass,
+    prepend = false,
   ) {
     for (const key in properties) {
       if (properties.hasOwnProperty(key)) {
@@ -272,7 +274,11 @@ window.forms = {
           }
 
           // Append the new field to the target container
-          $targetContainer.append($newField);
+          if (prepend) {
+            $targetContainer.prepend($newField);
+          } else {
+            $targetContainer.append($newField);
+          }
 
           // Handle help text
           if (property.helpText) {

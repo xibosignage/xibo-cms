@@ -100,15 +100,17 @@ LayerManager.prototype.createStructure = function() {
 
       // If there's no group, create it
       if (!groupInCanvas) {
+        const module = lD.common.getModuleByType(widget.subType);
         groupInCanvas = addToLayerStructure(
           group.layer,
           {
             type: 'elementGroup',
-            name: group.id,
+            name: group.elementGroupName,
+            templateName: module.name,
             id: group.id,
             widgetId: 'widget_' + group.regionId + '_' + group.widgetId,
             regionId: 'region_' + group.regionId,
-            moduleIcon: lD.common.getModuleByType(widget.subType).icon,
+            moduleIcon: module.icon,
             selected: group.selected,
             expanded: group.expanded,
             layers: [],
@@ -146,8 +148,8 @@ LayerManager.prototype.createStructure = function() {
             element.layer,
             {
               type: 'element',
-              name: (element.template.title) ?
-                element.template.title : element.id,
+              name: element.elementName,
+              templateName: element.template.title,
               widgetId: 'widget_' + element.regionId + '_' + element.widgetId,
               regionId: 'region_' + element.regionId,
               // Element has parent widget duration
@@ -203,9 +205,10 @@ LayerManager.prototype.createStructure = function() {
         addToLayerStructure(region.zIndex, {
           type: 'staticWidget',
           name: (widget.widgetName != '') ?
-            widget.widgetName : `[${widget.moduleName}]`,
+            `"${widget.widgetName}"` : widget.moduleName,
           duration: parseDuration(region.duration),
           icon: widget.getIcon(),
+          moduleName: widget.moduleName,
           id: widget.id,
           auxId: widget.regionId,
           selected: widget.selected,

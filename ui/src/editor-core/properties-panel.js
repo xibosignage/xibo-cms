@@ -777,6 +777,43 @@ PropertiesPanel.prototype.render = function(
             });
         }
 
+        // Add name field to advanced tab
+        forms.createFields(
+          [{
+            id: 'elementGroupName',
+            title: propertiesPanelTrans.elementGroupName,
+            helpText: propertiesPanelTrans.elementGroupNameHelpText,
+            customClass: 'element-group-name-input',
+            value: targetAux.elementGroupName,
+            type: 'text',
+            visibility: [],
+          }],
+          self.DOMObject.find('#advancedTab'),
+          targetAux.elementId,
+          null,
+          null,
+          'element-group-property',
+          true, // Prepend
+        );
+
+        // Trigger save on name change
+        self.DOMObject.find('[name="elementGroupName"]')
+          .on('change', function(ev, options) {
+            if (!options?.skipSave) {
+              // Update name for the group
+              targetAux.elementGroupName = $(ev.currentTarget).val();
+
+              // Save elements
+              target.saveElements().then((_res) => {
+                // Update bottom bar
+                app.bottombar.render(targetAux);
+
+                // Update layer manager
+                app.viewer.layerManager.render();
+              });
+            }
+          });
+
         showAppearanceTab();
       }
 
@@ -932,6 +969,37 @@ PropertiesPanel.prototype.render = function(
             'element-property',
           );
 
+          // Add name field to advanced tab
+          forms.createFields(
+            [{
+              id: 'elementName',
+              title: propertiesPanelTrans.elementName,
+              helpText: propertiesPanelTrans.elementNameHelpText,
+              customClass: 'element-name-input',
+              value: targetAux.elementName,
+              type: 'text',
+              visibility: [],
+            }],
+            self.DOMObject.find('#advancedTab'),
+            targetAux.elementId,
+            null,
+            null,
+            'element-property element-common-property',
+            true, // Prepend
+          );
+
+          // Trigger save on name change
+          self.DOMObject.find('[name="elementName"]')
+            .on('change', function(ev, options) {
+              if (!options?.skipSave) {
+                // Update name for the group
+                targetAux.elementName = $(ev.currentTarget).val();
+
+                // Update layer manager
+                app.viewer.layerManager.render();
+              }
+            });
+
           // Show the appearance tab
           // and select it if element isn't the only one on the widget
           // or it's a global element
@@ -1021,12 +1089,14 @@ PropertiesPanel.prototype.render = function(
               }
             },
             focus: function(_ev) {
-              // Skip slot inputs
+              // Skip slot and widget name inputs
               // those are saved with elements
               if (
                 $(_ev.currentTarget)
-                  .parents('.xibo-form-input.element-slot-input')
-                  .length === 0
+                  .parents(
+                    '.xibo-form-input.element-slot-input,' +
+                    '.xibo-form-input.element-name-input',
+                  ).length === 0
               ) {
                 self.toSave = true;
               }
@@ -1617,7 +1687,10 @@ PropertiesPanel.prototype.initFields = function(
       ':not(.snippet-selector):not(.element-slot-input)' +
       ':not(.ticker-tag-style-property)' +
       ':not(.canvas-widget-control-dropdown)';
-    const skipFormInput = ':not(.element-property):not([data-tag-style-input])';
+    const skipFormInput =
+      ':not(.element-property)' +
+      ':not(.element-group-property)' +
+      ':not([data-tag-style-input])';
     $(self.DOMObject).find('form').off()
       .on({
         'change inputChange xiboInputChange': function(_ev, options) {
@@ -2187,6 +2260,7 @@ PropertiesPanel.prototype.updatePositionForm = function(properties) {
  */
 PropertiesPanel.prototype.showWidgetInfo = function(widget) {
   const self = this;
+  const moduleName = widget.moduleName;
 
   // Show widget info for statics
   const $widgetInfo = $(templates.forms.widgetInfo({
@@ -2209,8 +2283,13 @@ PropertiesPanel.prototype.showWidgetInfo = function(widget) {
   // Also update on the widget info
   self.DOMObject.find('.form-control[name="name"]')
     .on('change', function(ev) {
+      // If name field is empty, use the module name
+      const name = ($(ev.currentTarget).val() != '') ?
+        $(ev.currentTarget).val() :
+        moduleName;
+
       // Update info
-      $widgetInfo.find('span').html($(ev.currentTarget).val());
+      $widgetInfo.find('span').html(name);
     });
 };
 
