@@ -5185,10 +5185,8 @@ lD.addElementsToWidget = function(
         // Recalculate required elements
         widgetAux.validateRequiredElements();
 
-        // Validate other widget elements on the viewer
-        Object.values(widgetAux.elements).forEach((el) => {
-          lD.viewer.validateElement(el);
-        });
+        // Update viewer to revalidate all elements
+        lD.viewer.update();
       });
     });
   });
