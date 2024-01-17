@@ -12,13 +12,13 @@
         {{else eq object.type "element"}}
             <div class="info d-inline">
                 <span class="label-name align-middle">
-                    <strong>{{objectTypeName}}</strong> | <span title="{{trans.templateName}}">{{object.template.title}}</span> - <span title="{{trans.widgetName}}">{{#if widget.widgetName}}"{{widget.widgetName}}"{{/if}}</span>
+                    <strong>{{objectTypeName}}</strong> | <span title="{{trans.templateName}}">{{object.template.title}}</span>{{#if object.elementName}} - <span title="{{trans.elementName}}">"{{object.elementName}}"</span>{{/if}}
                 </span>
             </div>
         {{else eq object.type "element-group"}}
             <div class="info d-inline">
                 <span class="label-name align-middle">
-                    <strong>{{objectTypeName}}</strong> - <span title="{{trans.widgetName}}">{{#if widget.widgetName}}"{{widget.widgetName}}"{{/if}}</span>
+                    <strong>{{objectTypeName}}</strong>{{#if object.elementGroupName}} - <span title="{{trans.elementGroupName}}">"{{object.elementGroupName}}"</span>{{/if}}
                 </span>
             </div>
         {{else}}

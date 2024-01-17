@@ -13,6 +13,9 @@ const ElementGroup = function(data, widgetId, regionId, parentWidget) {
   this.regionId = regionId;
   this.type = 'element-group';
 
+  // Name
+  this.elementGroupName = (data.elementGroupName) ? data.elementGroupName : '';
+
   this.id = data.id;
   this.left = data.left;
   this.top = data.top;

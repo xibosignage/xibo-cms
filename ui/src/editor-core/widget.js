@@ -834,6 +834,7 @@ Widget.prototype.saveElements = function(
 
     const elementObject = {
       id: element.id,
+      elementName: element.elementName,
       elementId: element.elementId,
       type: element.elementType,
       left: element.left,
@@ -849,6 +850,7 @@ Widget.prototype.saveElements = function(
     if (element.group) {
       elementObject.groupId = element.group.id;
       elementObject.groupProperties = {
+        elementGroupName: element.group.elementGroupName,
         top: element.group.top,
         left: element.group.left,
         width: element.group.width,
