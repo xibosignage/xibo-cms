@@ -375,6 +375,9 @@ PropertiesPanel.prototype.saveElement = function(
         return propertyObject;
       }).get();
 
+    // Make sure we copy current target to widget elements
+    parentWidget.elements[target.elementId] = target;
+
     // Add to the element properties
     if (parentWidget.elements[target.elementId]) {
       parentWidget.elements[target.elementId].properties = elementProperties;
