@@ -928,6 +928,27 @@ XiboPlayer.prototype.renderWidgetElements = function(
           currentWidget.items.push($grpContent);
         }
       });
+    } else if (Object.keys(widgetElements?.groups ?? {}).length > 0 &&
+      Object.keys(groupSlotsData).length === 0 &&
+      Object.values(groupSlotsData).length === 0
+    ) {
+      const globalGroupedElements = widgetElements.groups;
+      $.each(Object.keys(globalGroupedElements), function(grpIndex, grpId) {
+        const groupObj = widgetElements.groups[grpId];
+
+        if (groupObj?.items.length > 0) {
+          $.each(groupObj.items,
+            function(itemKey, groupItem) {
+              (groupItem.hbs) && $content.append(
+                PlayerHelper.renderElement(
+                  groupItem.hbs,
+                  groupItem.templateData,
+                  true,
+                ),
+              );
+            });
+        }
+      });
     }
 
     if (Object.keys(standaloneSlotsData).length > 0 &&
