@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -1724,11 +1724,12 @@ const configureCriteriaFields = function(dialog) {
     Handlebars.compile($('#templateScheduleCriteriaFields').html());
 
   // Existing criteria?
-  if ($fields.data('criteria').length >= 0) {
+  const existingCriteria = $fields.data('criteria');
+  if (existingCriteria && existingCriteria.length >= 0) {
     // Yes there are existing criteria
     // Go through each one and add a field row to the form.
     let i = 0;
-    $.each($fields.data('criteria'), function(index, element) {
+    $.each(existingCriteria, function(index, element) {
       i++;
       element.isAdd = false;
       element.i = i;
