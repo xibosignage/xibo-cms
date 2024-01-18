@@ -1,6 +1,6 @@
 {#
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -71,44 +71,82 @@
                     <div class="col-lg-6">
                         <div class="row">
                             <div class="col-md-12">
-                                {{ inline.input("dataSetRealtimeTestParams", "Test Parameters"|trans) }}
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <h3>DataSet</h3>
-                                <div class="table-container" style="height: 30vh; overflow-y: scroll;">
-                                    <table id="dataconnector-main-data" class="table" style="height: 30vh;">
-                                        <thead>
-                                        {% for column in dataSet.getColumn() %}
-                                            <th>{{ column.heading }}</th>
-                                        {% endfor %}
-                                            <th>Unmapped</th>
-                                        </thead>
-                                        <tbody>
+                                <ul class="nav nav-tabs" role="tablist">
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="#tab-testParams" role="tab" data-toggle="tab">
+                                            <span>{% trans "Test Params" %}</span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link active" href="#tab-logs" role="tab" data-toggle="tab">
+                                            <span>{% trans "Logs" %}</span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="#tab-dataSet" role="tab" data-toggle="tab">
+                                            <span>{% trans "DataSet Data" %}</span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="#tab-otherData" role="tab" data-toggle="tab">
+                                            <span>{% trans "Other Data" %}</span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="#tab-scheduleCriteria" role="tab" data-toggle="tab">
+                                            <span>{% trans "Schedule Criteria" %}</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                                <div class="tab-content">
+                                    <div class="tab-pane" id="tab-testParams">
+                                        {{ inline.message("You can test passing parameters that would otherwise be set when this Data Connector is scheduled."|trans, "alert alert-info") }}
 
-                                        </tbody>
-                                    </table>
+                                        {{ inline.input("dataSetRealtimeTestParams", "Test Parameters"|trans) }}
+                                    </div>
+                                    <div class="tab-pane active" id="tab-logs">
+                                        <pre id="dataconnector-logs"></pre>
+                                    </div>
+                                    <div class="tab-pane" id="tab-dataSet">
+                                        <div class="table-container">
+                                            <table id="dataconnector-main-data" class="table">
+                                                <thead>
+                                                {% for column in dataSet.getColumn() %}
+                                                    <th>{{ column.heading }}</th>
+                                                {% endfor %}
+                                                <th>Unmapped</th>
+                                                </thead>
+                                                <tbody>
+
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane" id="tab-otherData">
+                                        <pre id="dataconnector-other-data"></pre>
+                                    </div>
+                                    <div class="tab-pane" id="tab-scheduleCriteria">
+                                        <div class="table-container">
+                                            <table id="dataconnector-schedule-criteria" class="table">
+                                                <thead>
+                                                    <th>{{ "Metric"|trans }}</th>
+                                                    <th>{{ "Value"|trans }}</th>
+                                                    <th>TTL</th>
+                                                </thead>
+                                                <tbody>
+
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <h3>Other data</h3>
-                                <pre id="dataconnector-other-data" style="height: 30vh; overflow: scroll;"></pre>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <h3>Logs</h3>
-                                <pre id="dataconnector-logs" style="height: 30vh; overflow: scroll;"></pre>
-                            </div>
-                        </div>
-                        <div class="row" style="display: none;" id="dataconnector-script"></div>
                     </div>
                 </div>
             </div>
         </div>
+        <div class="row" style="display: none;" id="dataconnector-script"></div>
     </div>
 {% endblock %}
 
@@ -119,8 +157,10 @@
           const $scriptParams = $('#dataSetRealtimeTestParams');
           const $mainData = $('#dataconnector-main-data');
           const $otherData = $('#dataconnector-other-data');
+          const $scheduleCriteria = $('#dataconnector-schedule-criteria');
           const $logs = $('#dataconnector-logs');
           let otherData = {};
+          let criteria = {};
 
           // Set up a channel which will broadcast data
           const channel = new BroadcastChannel('xiboDC');
@@ -137,7 +177,7 @@
               console.log('Script loaded');
               $script.find('iframe')[0].contentWindow.xiboDC.initialise({{ dataSet.dataSetId }}, $scriptParams.val());
             } else if (type === 'log') {
-              $logs.prepend('[' + new Date().getTime() + '] ' + data + '\n');
+              $logs.prepend('[' + moment().format('YY-MM-DD HH:mm:ss') + '] ' + data + '\n');
             } else if (type === 'set') {
               // Update the table
               // if the dataKey matches my connector's DataSetId, then render out a table
@@ -183,9 +223,16 @@
               channel.postMessage({type: 'xiboDC_data', dataKey: data.dataKey, data: data.data});
             } else if (type === 'notify') {
               // Log
-              $logs.prepend('[' + new Date().getTime() + '] Notify for ' + data + '\n');
+              $logs.prepend('[' + moment().format('YY-MM-DD HH:mm:ss') + '] Notify for ' + data + '\n');
 
               channel.postMessage({type: "xiboDC_notify", dataKey: data});
+            } else if (type === 'criteria') {
+              // Schedule criteria, update in the table.
+              criteria[data.dataKey] = data.data;
+              const $tableBody = $scheduleCriteria.find('tbody');
+              $.each(criteria, function (key, value) {
+                $tableBody.append('<tr><td>' + key + '</td><td>' + value.value + '</td><td>' + value.ttl + '</td></tr>');
+              });
             }
           }
 
