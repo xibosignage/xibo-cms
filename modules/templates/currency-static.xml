@@ -26,6 +26,15 @@
         <showIn>none</showIn>
         <title>Currencies Custom HTML</title>
         <properties>
+            <property id="effect" type="effectSelector" variant="showPaged">
+                <title>Effect</title>
+                <helpText>Please select the effect that will be used to transition between items.</helpText>
+                <default>noTransition</default>
+            </property>
+            <property id="speed" type="number">
+                <title>Speed</title>
+                <helpText>The transition speed of the selected effect in milliseconds (normal = 1000).</helpText>
+            </property>
             <property id="backgroundColor" type="color">
                 <title>Background Colour</title>
                 <helpText>The selected effect works best with a background colour. Optionally add one here.</helpText>
@@ -110,6 +119,10 @@ if (templateItems.length > 0) {
     $(body).hide();
 }
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="flags" type="path" mimeType="image/webp" path="/modules/assets/currency/flags.webp"></asset>
             <asset id="flagsCSS" type="path" mimeType="text/css" path="/modules/assets/currency/flags.css"></asset>
@@ -124,6 +137,15 @@ if (templateItems.length > 0) {
         <startWidth>500</startWidth>
         <startHeight>300</startHeight>
         <properties>
+            <property id="effect" type="effectSelector" variant="showPaged">
+                <title>Effect</title>
+                <helpText>Please select the effect that will be used to transition between items.</helpText>
+                <default>noTransition</default>
+            </property>
+            <property id="speed" type="number">
+                <title>Speed</title>
+                <helpText>The transition speed of the selected effect in milliseconds (normal = 1000).</helpText>
+            </property>
             <property id="backgroundColor" type="color">
                 <title>Background Colour</title>
                 <helpText>The selected effect works best with a background colour. Optionally add one here.</helpText>
@@ -333,6 +355,10 @@ if (templateItems.length > 0) {
     $(body).hide();
 }
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="currencies1" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/currency/currencies1.png"></asset>
             <asset id="flags" type="path" mimeType="image/webp" path="/modules/assets/currency/flags.webp"></asset>
@@ -348,6 +374,15 @@ if (templateItems.length > 0) {
         <startWidth>500</startWidth>
         <startHeight>300</startHeight>
         <properties>
+            <property id="effect" type="effectSelector" variant="showPaged">
+                <title>Effect</title>
+                <helpText>Please select the effect that will be used to transition between items.</helpText>
+                <default>noTransition</default>
+            </property>
+            <property id="speed" type="number">
+                <title>Speed</title>
+                <helpText>The transition speed of the selected effect in milliseconds (normal = 1000).</helpText>
+            </property>
             <property id="backgroundColor" type="color">
                 <title>Background Colour</title>
                 <helpText>The selected effect works best with a background colour. Optionally add one here.</helpText>
@@ -592,6 +627,10 @@ var body = $(target).find(".template-container");
 
 $(target).find("#content").xiboFinanceRender(properties, templateItems, body);
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="currencies2" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/currency/currencies2.png"></asset>
             <asset id="flags" type="path" mimeType="image/webp" path="/modules/assets/currency/flags.webp"></asset>

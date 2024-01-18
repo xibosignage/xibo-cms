@@ -177,6 +177,10 @@ $(target).xiboLayoutScaler(properties);
 $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .social-media-item'));
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="fulltime-np" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/fulltime-np.png" />
         </assets>
@@ -396,6 +400,10 @@ $(target).xiboLayoutScaler(properties);
 $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="fulltime-np" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/fulltime-np.png" />
         </assets>
@@ -632,6 +640,10 @@ $(target).xiboLayoutScaler(properties);
 $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="fulltime" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/fulltime.png" />
         </assets>
@@ -770,6 +782,10 @@ $(target).xiboLayoutScaler(properties);
 $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="textonly" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/textonly.png" />
         </assets>
@@ -922,6 +938,10 @@ $(target).xiboLayoutScaler(properties);
 $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="profileleft" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/profileleft.png" />
         </assets>
@@ -1075,6 +1095,10 @@ $(target).xiboLayoutScaler(properties);
 $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="profileright" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/profileright.png" />
         </assets>
@@ -1288,6 +1312,10 @@ $(target).xiboLayoutScaler(properties);
 $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="twitter1" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/twitter1.png" />
         </assets>
@@ -1516,6 +1544,10 @@ $(target).xiboLayoutScaler(properties);
 $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="twitter2" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/twitter2.png" />
         </assets>
@@ -1755,6 +1787,10 @@ $(target).xiboLayoutScaler(properties);
 $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="twitter4" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/twitter4.png" />
         </assets>
@@ -1980,6 +2016,10 @@ $(target).xiboLayoutScaler(properties);
 $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="twitter6np" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/twitter6np.png" />
         </assets>
@@ -2210,6 +2250,10 @@ $(target).xiboLayoutScaler(properties);
 $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="twitter6pl" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/twitter6pl.png" />
         </assets>
@@ -2448,6 +2492,10 @@ $(target).xiboLayoutScaler(properties);
 $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="twitter7" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/twitter7.png" />
         </assets>
@@ -2692,6 +2740,10 @@ $(target).xiboLayoutScaler(properties);
 $(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="twitter8" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/twitter8.png" />
         </assets>
@@ -3045,6 +3097,10 @@ $metroRenderContainer.xiboMetroRender(properties, itemsHTML, colors);
 // Render the images
 $metroRenderContainer.find('.cell').xiboImageRender(properties);
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="colors1" type="path" mime="image/png" path="/modules/assets/metro-colors/colors1.png" cmsOnly="true"></asset>
             <asset id="colors2" type="path" mime="image/png" path="/modules/assets/metro-colors/colors2.png" cmsOnly="true"></asset>

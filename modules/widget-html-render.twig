@@ -149,6 +149,13 @@
         }
     </script>
 {% endfor %}
+{% for templateId, renderer in onTemplateVisible %}
+    <script type="text/javascript" id="onTemplateVisible-{{ templateId }}">
+        function onTemplateVisible_{{ templateId }}(id, target, items, properties, meta) {
+            {{ renderer|raw  }}
+        }
+    </script>
+{% endfor %}
 {% for templateId, parser in onElementParseData %}
     <script type="text/javascript" id="onElementParseData-{{ templateId }}">
       function onElementParseData_{{ templateId }}(value, properties) {

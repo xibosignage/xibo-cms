@@ -54,20 +54,6 @@
             <helpText>The duration specified is per page/item otherwise the widget duration is divided between the number of pages/items.</helpText>
             <default>0</default>
         </property>
-        <property id="effect" type="effectSelector" variant="showPaged">
-            <title>Effect</title>
-            <helpText>Please select the effect that will be used to transition between items.</helpText>
-            <default>noTransition</default>
-        </property>
-        <property id="speed" type="number">
-            <title>Speed</title>
-            <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1).</helpText>
-            <visibility>
-                <test>
-                    <condition field="effect" type="neq">none</condition>
-                </test>
-            </visibility>
-        </property>
         <property id="alignmentH" type="dropdown" mode="single">
             <title>Horizontal Align</title>
             <helpText>How should this widget be horizontally aligned?</helpText>
@@ -98,10 +84,6 @@
     <stencil>
         <twig><![CDATA[]]></twig>
     </stencil>
-    <onVisible><![CDATA[
-// Start effects for this widget
-$(target).xiboLayoutAnimate(properties);
-    ]]></onVisible>
     <sampleData><![CDATA[
 [{
     "SymbolTrimmed": "Sample Stock Symbol 1",

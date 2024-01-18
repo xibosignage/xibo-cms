@@ -26,6 +26,15 @@
         <showIn>none</showIn>
         <title>Stocks Custom HTML</title>
         <properties>
+            <property id="effect" type="effectSelector" variant="showPaged">
+                <title>Effect</title>
+                <helpText>Please select the effect that will be used to transition between items.</helpText>
+                <default>noTransition</default>
+            </property>
+            <property id="speed" type="number">
+                <title>Speed</title>
+                <helpText>The transition speed of the selected effect in milliseconds (normal = 1000).</helpText>
+            </property>
             <property id="backgroundColor" type="color">
                 <title>Background Colour</title>
                 <helpText>The selected effect works best with a background colour. Optionally add one here.</helpText>
@@ -102,6 +111,10 @@ var body = $(target).find(".template-container");
 
 $(target).find("#content").xiboFinanceRender(properties, items, body);
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="stocks1" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/stocks/stocks1.png" />
         </assets>
@@ -115,6 +128,15 @@ $(target).find("#content").xiboFinanceRender(properties, items, body);
         <startWidth>800</startWidth>
         <startHeight>450</startHeight>
         <properties>
+            <property id="effect" type="effectSelector" variant="showPaged">
+                <title>Effect</title>
+                <helpText>Please select the effect that will be used to transition between items.</helpText>
+                <default>noTransition</default>
+            </property>
+            <property id="speed" type="number">
+                <title>Speed</title>
+                <helpText>The transition speed of the selected effect in milliseconds (normal = 1000).</helpText>
+            </property>
             <property id="backgroundColor" type="color">
                 <title>Background Colour</title>
                 <helpText>The selected effect works best with a background colour. Optionally add one here.</helpText>
@@ -411,6 +433,10 @@ var body = $(target).find(".template-container");
 
 $(target).find("#content").xiboFinanceRender(properties, items, body);
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="stocks1" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/stocks/stocks1.png" />
         </assets>
@@ -424,6 +450,15 @@ $(target).find("#content").xiboFinanceRender(properties, items, body);
         <startWidth>550</startWidth>
         <startHeight>350</startHeight>
         <properties>
+            <property id="effect" type="effectSelector" variant="showPaged">
+                <title>Effect</title>
+                <helpText>Please select the effect that will be used to transition between items.</helpText>
+                <default>noTransition</default>
+            </property>
+            <property id="speed" type="number">
+                <title>Speed</title>
+                <helpText>The transition speed of the selected effect in milliseconds (normal = 1000).</helpText>
+            </property>
             <property id="backgroundColor" type="color">
                 <title>Background Colour</title>
                 <helpText>The selected effect works best with a background colour. Optionally add one here.</helpText>
@@ -720,6 +755,10 @@ var body = $(target).find(".template-container");
 
 $(target).find("#content").xiboFinanceRender(properties, items, body);
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="stocks2" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/stocks/stocks2.png" />
         </assets>
