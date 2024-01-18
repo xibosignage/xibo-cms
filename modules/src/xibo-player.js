@@ -808,6 +808,26 @@ XiboPlayer.prototype.renderStaticWidget = function(
     }
   }
 
+  // Call the run on template visible function if it exists
+  if (
+    typeof window['onTemplateVisible_' + staticWidget.templateId] === 'function'
+  ) {
+    window.runOnTemplateVisible = function() {
+      window['onTemplateVisible_' + staticWidget.templateId](
+        staticWidget.widgetId,
+        $target,
+        staticWidget.items,
+        staticWidget.properties,
+        staticWidget.meta,
+      );
+    };
+    if (xiboIC.checkVisible()) {
+      window.runOnTemplateVisible();
+    } else {
+      xiboIC.addToQueue(window.runOnTemplateVisible);
+    }
+  }
+
   // Lock all interactions
   xiboIC.lockAllInteractions();
 };

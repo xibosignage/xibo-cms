@@ -121,5 +121,9 @@ $(target).find('img').xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > *'));
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
     </template>
 </templates>

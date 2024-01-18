@@ -228,10 +228,6 @@ if ((properties.takeItemsFrom === 'end' && properties.reverseOrder === 0) ||
 }
 return items;
     ]]></onDataLoad>
-    <onVisible><![CDATA[
-// Start effects for this widget
-$(target).xiboLayoutAnimate(properties);
-    ]]></onVisible>
     <sampleData><![CDATA[
 [{
     "author": "sample@example.com (Author 1)",

@@ -147,6 +147,10 @@ $(target).find('img').xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > *'));
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
     </template>
     <template>
         <id>article_image_only</id>
@@ -178,8 +182,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > *'));
             </property>
             <property id="speed" type="number">
                 <title>Speed</title>
-                <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)</helpText>
-                <default>1000</default>
+                <helpText>The transition speed of the selected effect in milliseconds (normal = 1000).</helpText>
             </property>
             <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
                 <title>No data message</title>
@@ -257,6 +260,10 @@ $(target).find('img').xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .image, #content > .copyright'));
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="article_image_only" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/article/image-only.png" />
         </assets>
@@ -315,8 +322,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .image, #content
             </property>
             <property id="speed" type="number">
                 <title>Speed</title>
-                <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)</helpText>
-                <default>1000</default>
+                <helpText>The transition speed of the selected effect in milliseconds (normal = 1000).</helpText>
             </property>
             <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
                 <title>No data message</title>
@@ -475,6 +481,10 @@ $(target).find('img').xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .image, #content > .copyright'));
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="article_with_left_hand_text" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/article/image-with-left-hand-text.png" />
         </assets>
@@ -529,8 +539,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .image, #content
             </property>
             <property id="speed" type="number">
                 <title>Speed</title>
-                <helpText>The transition speed of the selected effect in milliseconds (normal = 1000) or the Marquee Speed in a low to high scale (normal = 1)</helpText>
-                <default>1000</default>
+                <helpText>The transition speed of the selected effect in milliseconds (normal = 1000).</helpText>
             </property>
             <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
                 <title>No data message</title>
@@ -677,6 +686,10 @@ $(target).find('img').xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .image, #content > .copyright'));
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="article_with_title" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/article/image-with-title.png" />
         </assets>
@@ -921,6 +934,10 @@ if (
 $(target).xiboLayoutScaler(properties);
 $(target).xiboTextRender(properties, $(target).find('#content .article, #content .copyright, #content .separator'));
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="article_with_desc_and_name_separator" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/article/title-description-name.png" />
         </assets>
@@ -1123,6 +1140,10 @@ if (
 $(target).xiboLayoutScaler(properties);
 $(target).xiboTextRender(properties, $(target).find('#content .article, #content .copyright, #content .separator'));
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="article_title_only" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/article/title-only.png" />
         </assets>
@@ -1388,5 +1409,9 @@ $(target).find('img').xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > *'));
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
     </template>
 </templates>

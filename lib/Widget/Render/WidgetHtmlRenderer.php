@@ -400,6 +400,7 @@ class WidgetHtmlRenderer
         $twig['onDataError'] = [];
         $twig['onElementParseData'] = [];
         $twig['onTemplateRender'] = [];
+        $twig['onTemplateVisible'] = [];
         $twig['onInitialize'] = [];
         $twig['templateProperties'] = [];
         $twig['elements'] = [];
@@ -733,6 +734,10 @@ class WidgetHtmlRenderer
 
             if ($moduleTemplate->onTemplateRender !== null) {
                 $twig['onTemplateRender'][$moduleTemplate->templateId] = $moduleTemplate->onTemplateRender;
+            }
+
+            if ($moduleTemplate->onTemplateVisible !== null) {
+                $twig['onTemplateVisible'][$moduleTemplate->templateId] = $moduleTemplate->onTemplateVisible;
             }
 
             if ($moduleTemplate->onElementParseData !== null) {

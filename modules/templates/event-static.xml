@@ -131,6 +131,10 @@ $(target).find('img').xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .event'));
         ]]></onTemplateRender>
+    <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+    ]]></onTemplateVisible>
     </template>
     <!-- End of Custom Calendar -->
 

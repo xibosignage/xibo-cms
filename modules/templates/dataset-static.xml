@@ -486,6 +486,10 @@ $(target).xiboTextRender(Object.assign(properties, globalOptions), $(target).fin
 // Image render
 $(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
     </template>
     <template>
         <id>dataset_table_1</id>
@@ -2861,6 +2865,10 @@ $(target).xiboTextRender(Object.assign(properties, globalOptions), $(target).fin
 // Image render
 $(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
     </template>
     <template>
         <id>dataset_string_template</id>
@@ -3057,5 +3065,9 @@ $(target).xiboTextRender(Object.assign(properties, globalOptions), $(target).fin
 // Image render
 $(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
     </template>
 </templates>

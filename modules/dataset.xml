@@ -315,9 +315,6 @@ if ((properties.takeItemsFrom === 'end' && properties.reverseOrder === 0) ||
 return items;
         ]]></onDataLoad>
     <onVisible><![CDATA[
-// Start effects for this widget
-$(target).xiboLayoutAnimate(properties);
-
 // Do we have a freshnessTimeout?
 if (properties.freshnessTimeout > 0) {
     // Get the now moment time
