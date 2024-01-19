@@ -37,7 +37,7 @@ const XiboPlayer = function() {
       // if we have data on the widget (for older players),
       // or if we are not in preview and have empty data on Widget (like text)
       // do not run ajax use that data instead
-      if (currentWidget.url !== null) {
+      if (String(currentWidget.url) !== 'null') {
         // else get data from widget.url,
         // this will be either getData for preview
         // or new json file for v4 players
@@ -305,7 +305,9 @@ const XiboPlayer = function() {
     }
 
     // Get widget info if exists.
-    if (currentWidget.templateId !== null && currentWidget.url !== null) {
+    if (currentWidget.templateId !== null &&
+      String(currentWidget.url) !== 'null'
+    ) {
       elemCopy.renderData = Object.assign(
         {},
         currentWidget.properties,
