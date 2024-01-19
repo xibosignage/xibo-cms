@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -613,15 +613,14 @@ class ScheduleFactory extends BaseFactory
                         SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup`
                             INNER JOIN `lkdgdg` ON `lkdgdg`.parentId = `lkscheduledisplaygroup`.displayGroupId 
                             INNER JOIN `lkdisplaydg` ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
+                            INNER JOIN displaygroup ON lkdisplaydg.displayGroupId = displaygroup.displayGroupId
                             WHERE `lkdisplaydg`.DisplayID IN (
                                 SELECT lkdisplaydg.displayId FROM lkdisplaydg 
-                                INNER JOIN displaygroup ON lkdisplaydg.displayGroupId = displaygroup.displayGroupId
                                  WHERE lkdisplaydg.displayGroupId IN (' . $selectedDisplayGroupIds . ')
-                            AND displaygroup.isDisplaySpecific = 1 ) 
+                            ) AND displaygroup.isDisplaySpecific = 1 
                         )
                         OR `schedule`.eventID IN (
                                 SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup`
-                                INNER JOIN `lkdgdg` ON `lkdgdg`.parentId = `lkscheduledisplaygroup`.displayGroupId
                                 WHERE `lkscheduledisplaygroup`.displayGroupId IN (
                                 SELECT lkdgdg.childId FROM lkdgdg 
                                 WHERE lkdgdg.parentId IN (' . $selectedDisplayGroupIds .')  AND lkdgdg.depth > 0)  
