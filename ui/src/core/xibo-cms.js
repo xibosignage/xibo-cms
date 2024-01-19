@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -3261,7 +3261,7 @@ function makePagedSelect(element, parent) {
 
     element.on('select2:open', function(event) {
         setTimeout(function() {
-            $(event.target).data('select2').dropdown?.$search.get(0).focus();
+            $(event.target).data('select2').dropdown?.$search?.get(0).focus();
         }, 10);
     });
 
@@ -3400,7 +3400,7 @@ function makeLocalSelect(element, parent) {
 
     element.on('select2:open', function(event) {
         setTimeout(function() {
-            $(event.target).data('select2').dropdown?.$search.get(0).focus();
+            $(event.target).data('select2').dropdown?.$search?.get(0).focus();
         }, 10);
     });
 }
