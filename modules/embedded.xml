@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2023 Xibo Signage Ltd
+  ~ Copyright (C) 2024 Xibo Signage Ltd
   ~
   ~ Xibo - Digital Signage - https://xibosignage.com
   ~
@@ -36,7 +36,7 @@
     <startHeight>600</startHeight>
     <settings></settings>
     <properties>
-        <property id="transparency" type="checkbox">
+        <property id="transparency" type="checkbox" includeInXlf="true">
             <title>Background transparent?</title>
             <helpText>Should the Widget be shown with a transparent background? Also requires the embedded content to have a transparent background.</helpText>
             <default>0</default>
@@ -47,7 +47,7 @@
             <default>0</default>
             <playerCompatibility windows="v2 R253+"></playerCompatibility>
         </property>
-        <property id="isPreNavigate" type="checkbox">
+        <property id="isPreNavigate" type="checkbox" includeInXlf="true">
             <title>Preload?</title>
             <helpText>Should this Widget be loaded entirely off-screen so that it is ready when shown? Dynamic content will start running off screen.</helpText>
             <default>0</default>
