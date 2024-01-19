@@ -37,7 +37,7 @@ const XiboPlayer = function() {
       // if we have data on the widget (for older players),
       // or if we are not in preview and have empty data on Widget (like text)
       // do not run ajax use that data instead
-      if (currentWidget.url !== null) {
+      if (String(currentWidget.url) !== 'null') {
         // else get data from widget.url,
         // this will be either getData for preview
         // or new json file for v4 players
@@ -305,7 +305,9 @@ const XiboPlayer = function() {
     }
 
     // Get widget info if exists.
-    if (currentWidget.templateId !== null && currentWidget.url !== null) {
+    if (currentWidget.templateId !== null &&
+      String(currentWidget.url) !== 'null'
+    ) {
       elemCopy.renderData = Object.assign(
         {},
         currentWidget.properties,
@@ -946,6 +948,27 @@ XiboPlayer.prototype.renderWidgetElements = function(
           });
 
           currentWidget.items.push($grpContent);
+        }
+      });
+    } else if (Object.keys(widgetElements?.groups ?? {}).length > 0 &&
+      Object.keys(groupSlotsData).length === 0 &&
+      Object.values(groupSlotsData).length === 0
+    ) {
+      const globalGroupedElements = widgetElements.groups;
+      $.each(Object.keys(globalGroupedElements), function(grpIndex, grpId) {
+        const groupObj = widgetElements.groups[grpId];
+
+        if (groupObj?.items.length > 0) {
+          $.each(groupObj.items,
+            function(itemKey, groupItem) {
+              (groupItem.hbs) && $content.append(
+                PlayerHelper.renderElement(
+                  groupItem.hbs,
+                  groupItem.templateData,
+                  true,
+                ),
+              );
+            });
         }
       });
     }

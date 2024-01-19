@@ -419,7 +419,9 @@ const PlayerHelper = function() {
     if (items?.length > 0) {
       const mappedSlots = {};
       items.forEach(function(item) {
-        if (!mappedSlots.hasOwnProperty(item.slot + 1)) {
+        if (item.hasOwnProperty('slot') && item.slot !== undefined &&
+          !mappedSlots.hasOwnProperty(item.slot + 1)
+        ) {
           mappedSlots[item.slot + 1] = item[key];
         }
       });
