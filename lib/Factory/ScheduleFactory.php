@@ -603,6 +603,7 @@ class ScheduleFactory extends BaseFactory
 
                 // not shared and not direct (new default)
                 // 1 - events scheduled on the selected display/groups
+                // 2 - events scheduled on display members of the selected display group
                 // 2 - events scheduled on a display group selected display is a member of
                 // 3 - events scheduled on a parent display group of selected display group
                 if (!$sharedSchedule && !$directSchedule) {
@@ -618,6 +619,16 @@ class ScheduleFactory extends BaseFactory
                                 SELECT lkdisplaydg.displayId FROM lkdisplaydg 
                                  WHERE lkdisplaydg.displayGroupId IN (' . $selectedDisplayGroupIds . ')
                             ) AND displaygroup.isDisplaySpecific = 1 
+                        )
+                        OR `schedule`.eventID IN (
+                        SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup`
+                            INNER JOIN
+                             `lkdisplaydg` ON lkdisplaydg.DisplayGroupID = `lkscheduledisplaygroup`.displayGroupId
+                            WHERE `lkdisplaydg`.DisplayID IN (
+                                SELECT lkdisplaydg.displayId FROM lkdisplaydg 
+                                INNER JOIN displaygroup ON lkdisplaydg.displayGroupId = displaygroup.displayGroupId
+                                 WHERE lkdisplaydg.displayGroupId IN (' . $selectedDisplayGroupIds . ')
+                            AND displaygroup.isDisplaySpecific = 1 ) 
                         )
                         OR `schedule`.eventID IN (
                                 SELECT `lkscheduledisplaygroup`.eventId FROM `lkscheduledisplaygroup`
