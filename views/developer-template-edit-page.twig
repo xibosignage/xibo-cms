@@ -1,0 +1,204 @@
+{#
+/*
+ * Copyright (C) 2024 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+{% import "forms.twig" as forms %}
+
+{% block title %}{% set templateName = template.title %}{% trans %}{{ templateName }} - Module Template{% endtrans %} | {% endblock %}
+
+{% set hideNavigation = "1" %}
+
+{% block pageContent %}
+    <div id="developer-module-template-edit"
+         data-template-id="{{ template.templateId }}">
+        <div class="back-button">
+            <a id="backBtn" class="btn btn-primary" href="{{ url_for("developer.templates.view") }}">
+                <i class="fa fa-angle-left"></i>
+                <span>{{ "Back"|trans }}</span>
+            </a>
+        </div>
+        <div class="widget mt-3">
+            <div class="widget-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <form id="form-module-template"
+                              class="XiboForm form-horizontal"
+                              method="put"
+                              action="{{ url_for("developer.templates.edit", {id: template.id}) }}">
+
+                            <ul class="nav nav-tabs" role="tablist">
+                                <li class="nav-item">
+                                    <a class="nav-link active" href="#tab-general" role="tab" data-toggle="tab">
+                                        <span>{% trans "General" %}</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#tab-properties" role="tab" data-toggle="tab">
+                                        <span>{% trans "Properties" %}</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#tab-twig" role="tab" data-toggle="tab">
+                                        <span>{% trans "Twig" %}</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#tab-hbs" role="tab" data-toggle="tab">
+                                        <span>{% trans "HBS" %}</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#tab-style" role="tab" data-toggle="tab">
+                                        <span>{% trans "Style" %}</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#tab-head" role="tab" data-toggle="tab">
+                                        <span>{% trans "Head" %}</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#tab-onTemplateRender" role="tab" data-toggle="tab">
+                                        <span>{% trans "onTemplateRender" %}</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#tab-onTemplateVisible" role="tab" data-toggle="tab">
+                                        <span>{% trans "onTemplateVisible" %}</span>
+                                    </a>
+                                </li>
+                            </ul>
+                            <div class="tab-content">
+                                <div class="tab-pane active" id="tab-general">
+                                    {{ forms.alert("Changing the ID or DataType will break any existing Widgets which use this template.", "danger") }}
+
+                                    {% set title %}{% trans "ID" %}{% endset %}
+                                    {% set helpText %}{% trans "A unique ID for the module template" %}{% endset %}
+                                    {{ forms.input("templateId", title, template.templateId, helpText) }}
+
+                                    {% set title %}{% trans "Data Type" %}{% endset %}
+                                    {% set helpText %}{% trans "Which data type does this template need?" %}{% endset %}
+                                    {{ forms.input("dataType", title, template.dataType, helpText) }}
+
+                                    {% set title %}{% trans "Enabled?" %}{% endset %}
+                                    {% set helpText %}{% trans "Is this template enabled?" %}{% endset %}
+                                    {{ forms.checkbox("enabled", title, template.isEnabled, helpText) }}
+                                </div>
+                                <div class="tab-pane" id="tab-properties">
+                                    <div class="form-group row code-input-group xibo-code-input">
+                                        <div class="col-sm-12">
+                                            <small class="form-text text-muted">{{ "Properties"|trans }}</small>
+                                            <textarea class="form-control d-none code-input" id="input-properties" name="properties" rows="30" data-code-type="xml">{{ properties|raw }}</textarea>
+
+                                            <div class="code-input-editor-container" style="height: 70vh;">
+                                                <div class="code-input-editor"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane" id="tab-twig">
+                                    <div class="form-group row code-input-group xibo-code-input">
+                                        <div class="col-sm-12">
+                                            <small class="form-text text-muted">{{ "Twig"|trans }}</small>
+                                            <textarea class="form-control d-none code-input" id="input-twig" name="twig" rows="30" data-code-type="html">{{ template.stencil.twig|raw }}</textarea>
+
+                                            <div class="code-input-editor-container" style="height: 70vh;">
+                                                <div class="code-input-editor"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane" id="tab-hbs">
+                                    <div class="form-group row code-input-group xibo-code-input">
+                                        <div class="col-sm-12">
+                                            <small class="form-text text-muted">{{ "HBS"|trans }}</small>
+                                            <textarea class="form-control d-none code-input" id="input-hbs" name="hbs" rows="30" data-code-type="hbs">{{ template.stencil.hbs|raw }}</textarea>
+
+                                            <div class="code-input-editor-container" style="height: 70vh;">
+                                                <div class="code-input-editor"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane" id="tab-style">
+                                    <div class="form-group row code-input-group xibo-code-input">
+                                        <div class="col-sm-12">
+                                            <small class="form-text text-muted">{{ "Style"|trans }}</small>
+                                            <textarea class="form-control d-none code-input" id="input-style" name="style" rows="30" data-code-type="css">{{ template.stencil.style|raw }}</textarea>
+
+                                            <div class="code-input-editor-container" style="height: 70vh;">
+                                                <div class="code-input-editor"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane" id="tab-head">
+                                    <div class="form-group row code-input-group xibo-code-input">
+                                        <div class="col-sm-12">
+                                            <small class="form-text text-muted">{{ "Head"|trans }}</small>
+                                            <textarea class="form-control d-none code-input" id="input-head" name="head" rows="30" data-code-type="html">{{ template.stencil.head|raw }}</textarea>
+
+                                            <div class="code-input-editor-container" style="height: 70vh;">
+                                                <div class="code-input-editor"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane" id="tab-onTemplateRender">
+                                    <div class="form-group row code-input-group xibo-code-input">
+                                        <div class="col-sm-12">
+                                            <small class="form-text text-muted">{{ "onTemplateRender"|trans }}</small>
+                                            <textarea class="form-control d-none code-input" id="input-onTemplateRender" name="onTemplateRender" rows="30" data-code-type="javascript">{{ template.onTemplateRender|raw }}</textarea>
+
+                                            <div class="code-input-editor-container" style="height: 70vh;">
+                                                <div class="code-input-editor"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane" id="tab-onTemplateVisible">
+                                    <div class="form-group row code-input-group xibo-code-input">
+                                        <div class="col-sm-12">
+                                            <small class="form-text text-muted">{{ "onTemplateVisible"|trans }}</small>
+                                            <textarea class="form-control d-none code-input" id="input-onTemplateVisible" name="onTemplateVisible" rows="30" data-code-type="javascript">{{ template.onTemplateVisible|raw }}</textarea>
+
+                                            <div class="code-input-editor-container" style="height: 70vh;">
+                                                <div class="code-input-editor"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{ forms.checkbox("isInvalidateWidget", "Invalidate any widgets using this template"|trans, 1) }}
+
+                            {{ forms.button("Save"|trans, "submit", null, null, null, "btn-success") }}
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -578,6 +578,9 @@ $app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
         ->setName('developer.templates.view');
     $group->get('/developer/template', ['\Xibo\Controller\Developer', 'templateGrid'])
         ->setName('developer.templates.search');
+
+    $group->get('/developer/template/{id}', ['\Xibo\Controller\Developer', 'displayTemplateEditPage'])
+        ->setName('developer.templates.view.edit');
 
     $group->get('/developer/template/form/add', ['\Xibo\Controller\Developer', 'templateAddForm'])
         ->setName('developer.templates.form.add');

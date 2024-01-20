@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -258,6 +258,7 @@ class ModuleTemplateFactory extends BaseFactory
             $template->id = intval($row['id']);
             $template->templateId = $row['templateId'];
             $template->dataType = $row['dataType'];
+            $template->isEnabled = $row['enabled'] == 1;
             $templates[] = $template;
         }
         return $templates;
@@ -275,6 +276,7 @@ class ModuleTemplateFactory extends BaseFactory
 
         $template = $this->createFromXml($xml->documentElement, 'user', 'database');
         $template->setXml($xmlString);
+        $template->setDocument($xml);
         return $template;
     }
 
