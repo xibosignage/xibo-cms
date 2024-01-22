@@ -177,7 +177,12 @@ class Schedule extends Base
                         }
                     }
                 } catch (NotFoundException $e) {
-                    $this->getLog()->debug('Saved filter option for displayGroupId that no longer exists.');
+                    $this->getLog()->debug(
+                        sprintf(
+                            'Saved filter option for displayGroupId %d that no longer exists.',
+                            $displayGroupId
+                        )
+                    );
                 }
             }
         }
@@ -825,10 +830,19 @@ class Schedule extends Base
                     continue;
                 }
 
-                $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+                try {
+                    $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
-                if ($this->getUser()->checkViewable($displayGroup)) {
-                    $displayGroups[] = $displayGroup;
+                    if ($this->getUser()->checkViewable($displayGroup)) {
+                        $displayGroups[] = $displayGroup;
+                    }
+                } catch (NotFoundException $e) {
+                    $this->getLog()->debug(
+                        sprintf(
+                            'Saved filter option for displayGroupId %d that no longer exists.',
+                            $displayGroupId
+                        )
+                    );
                 }
             }
         }
