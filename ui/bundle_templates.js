@@ -64,5 +64,9 @@ window.templates = {
       require('./src/templates/forms/inputs/tickerTagSelector.hbs'),
     tickerTagStyle:
       require('./src/templates/forms/inputs/tickerTagStyle.hbs'),
+    datasetColStyleSelector:
+      require('./src/templates/forms/inputs/datasetColStyleSelector.hbs'),
+    datasetColStyle:
+      require('./src/templates/forms/inputs/datasetColStyle.hbs'),
   },
 };

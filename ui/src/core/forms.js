@@ -1013,7 +1013,7 @@ window.forms = {
 
       // Update the hidden field with a JSON string
       // of the tags
-      const updateHiddenField = function(skipSave = false) {
+      const updateHiddenField = _.debounce(function(skipSave = false) {
         const selectedTags = [];
         const tagsValue = $selectHiddenInput.val() ?
           JSON.parse(
@@ -1048,9 +1048,9 @@ window.forms = {
         forms.initFields($el.find('.ticker-tag-styles'));
 
         updateTagsStylesHiddenField();
-      };
+      }, 100);
 
-      const updateTagsStylesHiddenField = function() {
+      const updateTagsStylesHiddenField = _.debounce(function() {
         const selectedTagStylesValue = {};
 
         $el.find('.ticker-tag-style').each(function(_index, tagContainer) {
@@ -1060,6 +1060,9 @@ window.forms = {
 
           const $tagProperties =
             $(tagContainer).find('.ticker-tag-style-property');
+
+          // save tag type
+          selectedTagStylesValue[tagId]['tagType'] = tickerTagsMap[tagId];
 
           $tagProperties.find('select, input').each(function(_index, tagInput) {
             const inputType = $(tagInput).data('tag-style-input');
@@ -1073,7 +1076,7 @@ window.forms = {
         // Update the hidden field with a JSON string
         $selectHiddenInput.val(JSON.stringify(selectedTagStylesValue))
           .trigger('change');
-      };
+      }, 100);
 
       // Clear existing fields
       $tagsOutContainer.empty();
@@ -1149,6 +1152,230 @@ window.forms = {
 
       // Update hidden field on start
       updateHiddenField(true);
+    });
+
+    // Dataset col selector
+    findElements(
+      '.dataset-column-style-selector',
+      target,
+    ).each(function(_k, el) {
+      const $el = $(el);
+      const datasetId = $el.data('depends-on-value');
+
+      // Initialise the dataset column style selector
+      // if the dataset id is not empty
+      if (datasetId) {
+        // Get the dataset columns
+        $.ajax({
+          url: urlsForApi.dataset.search.url,
+          type: 'GET',
+          data: {
+            dataSetId: datasetId,
+          },
+        }).done(function(data) {
+          // Get the columns
+          const datasetCols = data.data[0].columns;
+
+          const datasetTypeMap = {
+            3: 'date',
+            5: 'image',
+          };
+
+          const getColStyle = function(col) {
+            return (datasetTypeMap[col]) ? datasetTypeMap[col] : 'text';
+          };
+
+          const getColById = function(colId) {
+            return datasetCols.find((col) => col.dataSetColumnId == colId);
+          };
+
+          // Column containers
+          const $colsOutContainer = $el.find('#colsOut');
+          const $colsInContainer = $el.find('#colsIn');
+
+          if ($colsOutContainer.length == 0 ||
+            $colsInContainer.length == 0) {
+            return;
+          }
+
+          const $selectHiddenInput =
+            $el.find('#input_' + $el.data('select-id'));
+          const colsValue = $selectHiddenInput.val() ?
+            JSON.parse(
+              $selectHiddenInput.val(),
+            ) : [];
+
+          const selectedCols = Object.keys(colsValue);
+
+          // Update the hidden field with a JSON string
+          // of the columns
+          const updateHiddenField = _.debounce(function(skipSave = false) {
+            const selectedCols = [];
+            const colsValue = $selectHiddenInput.val() ?
+              JSON.parse(
+                $selectHiddenInput.val(),
+              ) : [];
+
+            $colsInContainer.find('li').each(function(_index, colEl) {
+              const colId = $(colEl).attr('id');
+              const colType = getColStyle($(colEl).data('colType'));
+              const colObj = getColById(colId);
+              selectedCols.push({
+                id: colId,
+                type: colType,
+                name: colObj.heading,
+              });
+            });
+
+            // Clear all previous style controls
+            $el.find('.dataset-column-styles .dataset-col-style').remove();
+
+            // Add styles for each selected col
+            selectedCols.forEach((col) => {
+              const $newStyle = $(templates.forms.datasetColStyle({
+                id: col.id,
+                type: col.type,
+                name: col.name,
+                value: colsValue[col.id],
+                trans: datasetColStyleSelectorTranslations,
+                fontsSearchUrl: getFontsUrl + '?length=10000',
+              }));
+
+              $newStyle.appendTo($el.find('.dataset-column-styles'));
+
+              // Update hidden field on input change
+              $newStyle.off().on(
+                'change inputChange',
+                function() {
+                  updateColStylesHiddenField();
+                },
+              );
+            });
+
+            // Init fields
+            forms.initFields($el.find('.dataset-column-styles'));
+
+            updateColStylesHiddenField();
+          }, 100);
+
+          const updateColStylesHiddenField = _.debounce(function() {
+            const selectedColStylesValue = {};
+
+            let playOrder = 0;
+            $el.find('.dataset-col-style').each(function(_index, colContainer) {
+              const $container = $(colContainer);
+              const colId = $container.data('component-id');
+              selectedColStylesValue[colId] = {};
+
+              const $colProperties =
+                $(colContainer).find('.dataset-col-style-property');
+
+              // set play order
+              selectedColStylesValue[colId].playOrder = playOrder;
+              playOrder++;
+
+              // save colId
+              selectedColStylesValue[colId].colId = colId;
+
+              $colProperties.find('select, input')
+                .each(function(_index, colsInput) {
+                  const inputType =
+                    $(colsInput).data('dataset-col-style-input');
+                  const value = ($(colsInput).attr('type') === 'checkbox') ?
+                    $(colsInput).is(':checked') :
+                    $(colsInput).val();
+                  selectedColStylesValue[colId][inputType] = value;
+                });
+            });
+
+            // Update the hidden field with a JSON string
+            $selectHiddenInput.val(JSON.stringify(selectedColStylesValue))
+              .trigger('change');
+          }, 100);
+
+          // Clear existing fields
+          $colsOutContainer.empty();
+          $colsInContainer.empty();
+
+          const colsAvailableTitle =
+            datasetColStyleSelectorTranslations.colAvailable;
+          const colsSelectedTitle =
+            datasetColStyleSelectorTranslations.colSelected;
+
+          // Set titles
+          $el.find('.col-out-title').text(colsAvailableTitle);
+          $el.find('.col-in-title').text(colsSelectedTitle);
+
+          // Get the selected cols
+          const colsOut = [];
+          const colsIn = [];
+
+          // If the column is in the dataset
+          // add it to the selected cols
+          // if not add it to the remaining cols
+          $.each(Object.keys(datasetCols), function(_index, col) {
+            const colId = datasetCols[col].dataSetColumnId;
+            if (selectedCols.find((column) => colId == column)) {
+              colsIn.push(colId);
+            } else {
+              colsOut.push(colId);
+            }
+          });
+
+          // Populate the available columns
+          const $colsOut = $el.find('#colsOut');
+          $.each(colsOut, function(_index, col) {
+            const columnObj = getColById(col);
+            const $col = $(
+              '<li class="li-sortable" id="' +
+              columnObj.dataSetColumnId +
+              '" data-col-type="' + columnObj.dataTypeId + '">' +
+              columnObj.heading +
+              '</li>',
+            ).data('col-type', columnObj.dataTypeId);
+
+            $colsOut.append($col);
+          });
+
+          // Populate the selected columns
+          const $colsIn = $el.find('#colsIn');
+          $.each(colsIn, function(_index, col) {
+            const columnObj = getColById(col);
+            const $col = $(
+              '<li class="li-sortable" id="' +
+              columnObj.dataSetColumnId +
+              '" data-col-type="' + columnObj.dataTypeId + '">' +
+              columnObj.heading +
+              '</li>',
+            );
+
+            $colsIn.append($col);
+          });
+
+          if (!readOnlyMode) {
+            // Setup lists drag and sort ( with double click )
+            $el.find('#colsIn, #colsOut').sortable({
+              connectWith: '.connectedSortable',
+              dropOnEmpty: true,
+              receive: updateHiddenField,
+              update: updateHiddenField,
+            }).disableSelection();
+
+            // Double click to switch lists
+            $el.find('.li-sortable').on('dblclick', function(ev) {
+              const $this = $(ev.currentTarget);
+              $this.appendTo($this.parent().is('#colsIn') ?
+                $colsOut : $colsIn);
+              updateHiddenField();
+            });
+          }
+
+          // Update hidden field on start
+          updateHiddenField(true);
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+          console.error(jqXHR, textStatus, errorThrown);
+        });
+      }
     });
 
     findElements(

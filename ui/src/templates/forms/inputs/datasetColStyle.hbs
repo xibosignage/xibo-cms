@@ -1,0 +1,26 @@
+<div class="dataset-col-style pt-2 my-3"
+    data-component-id="{{id}}"
+>
+    <div class="dataset-col-style-title">{{name}}</div>
+    <div class="dataset-col-style-properties" id="{{concat "dataset-col-style-properties-" id}}" data-type="{{type}}">
+        {{#eq type "image"}}
+            {{> number value=value.opacity name=(concat 'style_' id '_opacity') customClass="dataset-col-style-property" customData=(arr (obj name='dataset-col-style-input' value='opacity')) title=trans.form.opacity}}
+            {{> number value=value.width name=(concat 'style_' id '_width') customClass="dataset-col-style-property" customData=(arr (obj name='dataset-col-style-input' value='width')) title=trans.form.width}}
+            {{> number value=value.height name=(concat 'style_' id '_height') customClass="dataset-col-style-property" customData=(arr (obj name='dataset-col-style-input' value='height')) title=trans.form.height}}
+        {{else}}
+            {{> number value=value.fontSize name=(concat 'style_' id '_fontSize') customClass="dataset-col-style-property" customData=(arr (obj name='dataset-col-style-input' value='fontSize')) title=trans.form.fontSize}}
+            {{> color value=value.fontColor name=(concat 'style_' id '_fontColor') customClass="dataset-col-style-property" customData=(arr (obj name='dataset-col-style-input' value='fontColor')) title=trans.form.fontColor}}
+            {{> dropdown value=value.fontFamily name=(concat 'style_' id '_fontFamily') title=trans.form.fontFamily customClass="font-selector dataset-col-style-property"
+                options=(arr (obj name='' title='')) optionsTitle="title" optionsValue="name"
+                customData=(arr
+                    (obj name='search-url' value=fontsSearchUrl)
+                    (obj name='value' value=value.fontFamily)
+                    (obj name='dataset-col-style-input' value='fontFamily')
+                )
+            }}
+            {{> checkbox value=value.bold name=(concat 'style_' id '_bold') customClass="dataset-col-style-property" customData=(arr (obj name='dataset-col-style-input' value='bold')) title=trans.form.bold}}
+            {{> checkbox value=value.italics name=(concat 'style_' id '_italics') customClass="dataset-col-style-property" customData=(arr (obj name='dataset-col-style-input' value='italics')) title=trans.form.italics}}
+            {{> checkbox value=value.underline name=(concat 'style_' id '_underline') customClass="dataset-col-style-property" customData=(arr (obj name='dataset-col-style-input' value='underline')) title=trans.form.underline}}
+        {{/eq}}
+    </div>
+</div>
