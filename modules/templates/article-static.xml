@@ -96,7 +96,7 @@
         </properties>
         <stencil>
             <twig><![CDATA[
-{% if javaScript %}<script type="text/javascript">{{javaScript}}</script>{% endif %}
+{% if javaScript %}<script type="text/javascript">{{javaScript|raw}}</script>{% endif %}
 {% if css or itemsSideBySide or backgroundColor or textDirection == "rtl" %}
 <style>
 {% if itemsSideBySide %}.text-render-item, .page { float: left; }{% endif %}
@@ -1303,7 +1303,7 @@ $(target).xiboLayoutAnimate(properties);
         </properties>
         <stencil>
             <twig><![CDATA[
-{% if javaScript %}<script type="text/javascript">{{javaScript}}</script>{% endif %}
+{% if javaScript %}<script type="text/javascript">{{javaScript|raw}}</script>{% endif %}
 {% if backgroundColor or textDirection == "rtl" or gapTags or gapItems %}
 <style>
 {% if textDirection == "rtl" %}#content { direction: rtl; }{% endif %}
