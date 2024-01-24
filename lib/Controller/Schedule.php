@@ -1776,6 +1776,20 @@ class Schedule extends Base
                     );
                 }
             ]);
+
+            // if this was originally Campaign event, now changed to interrupt,
+            // check if the selected Campaign is Layout specific
+            // set parentCampaignId to null, otherwise the event will not be editable.
+            if ($schedule->getOriginalValue('eventTypeId') === \Xibo\Entity\Schedule::$CAMPAIGN_EVENT) {
+                $campaign = $this->campaignFactory->getById($schedule->campaignId);
+                if ($campaign->isLayoutSpecific === 0) {
+                    throw new InvalidArgumentException(
+                        __('Cannot schedule campaign as an interrupt, please select a Layout instead.'),
+                        'campaignId'
+                    );
+                }
+                $schedule->parentCampaignId = null;
+            }
         } else {
             $schedule->shareOfVoice = null;
         }
@@ -2296,7 +2310,7 @@ class Schedule extends Base
                 $repeatsOn = '';
                 $repeatsUntil = '';
 
-                if ($event->recurrenceType === 'Week') {
+                if ($event->recurrenceType === 'Week' && !empty($event->recurrenceRepeatsOn)) {
                     $weekdays = Carbon::getDays();
                     $repeatDays = explode(',', $event->recurrenceRepeatsOn);
                     $i = 0;
