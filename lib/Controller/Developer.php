@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -74,8 +74,9 @@ class Developer extends Base
             // Edit button
             $template->buttons[] = [
                 'id' => 'template_button_edit',
-                'url' => $this->urlFor($request, 'developer.templates.form.edit', ['id' => $template->id]),
-                'text' => __('Edit')
+                'url' => $this->urlFor($request, 'developer.templates.view.edit', ['id' => $template->id]),
+                'text' => __('Edit'),
+                'class' => 'XiboRedirectButton',
             ];
         }
 
@@ -100,25 +101,29 @@ class Developer extends Base
     }
 
     /**
-     * Shows an edit form for a module template
+     * Display the module template page
      * @param Request $request
      * @param Response $response
-     * @param $id
+     * @param mixed $id The template ID to edit.
      * @return \Slim\Http\Response
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function templateEditForm(Request $request, Response $response, $id): Response
+    public function displayTemplateEditPage(Request $request, Response $response, $id): Response
     {
         $template = $this->moduleTemplateFactory->getUserTemplateById($id);
         if ($template->ownership !== 'user') {
             throw new AccessDeniedException();
         }
 
-        $this->getState()->template = 'developer-template-form-edit';
+        //TODO: temporary extraction of properties XML (should be a form field per property instead)
+        $doc = $template->getDocument();
+        /** @var \DOMElement $properties */
+        $properties = $doc->getElementsByTagName('properties')[0];
+
+        $this->getState()->template = 'developer-template-edit-page';
         $this->getState()->setData([
-            'id' => $id,
             'template' => $template,
-            'xml' => $template->getXml(),
+            'properties' => $doc->saveXML($properties),
         ]);
 
         return $this->render($request, $response);
@@ -135,11 +140,24 @@ class Developer extends Base
     {
         // When adding a template we just save the XML
         $params = $this->getSanitizer($request->getParams());
-        $xml = $params->getParam('xml', ['throw' => function () {
-            throw new InvalidArgumentException(__('Please supply the templates XML'), 'xml');
+        $templateId = $params->getString('templateId', ['throw' => function () {
+            throw new InvalidArgumentException(__('Please supply a unique template ID'), 'templateId');
+        }]);
+        $dataType = $params->getString('dataType', ['throw' => function () {
+            throw new InvalidArgumentException(__('Please supply a data type'), 'dataType');
         }]);
 
-        $template = $this->moduleTemplateFactory->createUserTemplate($xml);
+        // The most basic template possible.
+        $template = $this->moduleTemplateFactory->createUserTemplate('<?xml version="1.0"?>
+        <template>
+            <id>' . $templateId . '</id>
+            <title>' . $templateId . '</title>
+            <type>static</type>
+            <dataType>' . $dataType . '</dataType>
+            <showIn>layout</showIn>
+            <properties></properties>
+        </template>');
+
         $template->save();
 
         $this->getState()->hydrate([
@@ -164,18 +182,128 @@ class Developer extends Base
         $template = $this->moduleTemplateFactory->getUserTemplateById($id);
 
         $params = $this->getSanitizer($request->getParams());
-        $xml = $params->getParam('xml', ['throw' => function () {
-            throw new InvalidArgumentException(__('Please supply the templates XML'), 'xml');
+        $templateId = $params->getString('templateId', ['throw' => function () {
+            throw new InvalidArgumentException(__('Please supply a unique template ID'), 'templateId');
+        }]);
+        $dataType = $params->getString('dataType', ['throw' => function () {
+            throw new InvalidArgumentException(__('Please supply a data type'), 'dataType');
         }]);
 
-        // TODO: some checking that the templateId/dataType hasn't changed.
-        $template->setXml($xml);
+        $template->isEnabled = $params->getCheckbox('enabled');
+
+        // TODO: validate?
+        $twig = $params->getParam('twig');
+        $hbs = $params->getParam('hbs');
+        $style = $params->getParam('style');
+        $head = $params->getParam('head');
+        $properties = $params->getParam('properties');
+        $onTemplateRender = $params->getParam('onTemplateRender');
+        $onTemplateVisible = $params->getParam('onTemplateVisible');
+
+        // We need to edit the XML we have for this template.
+        $document = $template->getDocument();
+
+        // Root nodes
+        $this->setNode($document, 'onTemplateRender', $onTemplateRender);
+        $this->setNode($document, 'onTemplateVisible', $onTemplateVisible);
+
+        // Stencil nodes.
+        $stencilNodes = $document->getElementsByTagName('stencil');
+        if ($stencilNodes->count() <= 0) {
+            $stencilNode = $document->createElement('stencil');
+            $document->appendChild($stencilNode);
+        } else {
+            $stencilNode = $stencilNodes[0];
+        }
+
+        $this->setNode($document, 'twig', $twig, true, $stencilNode);
+        $this->setNode($document, 'hbs', $hbs, true, $stencilNode);
+        $this->setNode($document, 'style', $style, true, $stencilNode);
+        $this->setNode($document, 'head', $head, true, $stencilNode);
+
+        // Properties.
+        // TODO: this is temporary pending a properties UI
+        // this is different because we want to replace the properties node with a new one.
+        if (!empty($properties)) {
+            $newProperties = new \DOMDocument();
+            $newProperties->loadXML($properties);
+
+            // Do we have new nodes to import?
+            if ($newProperties->childNodes->count() > 0) {
+                $importedPropteries = $document->importNode($newProperties->documentElement, true);
+                if ($importedPropteries !== false) {
+                    $propertiesNodes = $document->getElementsByTagName('properties');
+                    if ($propertiesNodes->count() <= 0) {
+                        $document->appendChild($importedPropteries);
+                    } else {
+                        $document->documentElement->replaceChild($importedPropteries, $propertiesNodes[0]);
+                    }
+                }
+            }
+        }
+
+        // All done.
+        $template->setXml($document->saveXML());
         $template->save();
 
         if ($params->getCheckbox('isInvalidateWidget')) {
             $template->invalidate();
         }
 
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Edited %s'), $template->title),
+            'id' => $template->id,
+        ]);
+
         return $this->render($request, $response);
+    }
+
+    /**
+     * Helper function to set a node.
+     * @param \DOMDocument $document
+     * @param string $node
+     * @param string $value
+     * @param bool $cdata
+     * @param \DOMElement|null $childNode
+     * @return void
+     * @throws \DOMException
+     */
+    private function setNode(
+        \DOMDocument $document,
+        string $node,
+        string $value,
+        bool $cdata = true,
+        ?\DOMElement $childNode = null
+    ): void {
+        $addTo = $childNode ?? $document->documentElement;
+
+        $nodes = $addTo->getElementsByTagName($node);
+        if ($nodes->count() <= 0) {
+            if ($cdata) {
+                $element = $document->createElement($node);
+                $cdata = $document->createCDATASection($value);
+                $element->appendChild($cdata);
+            } else {
+                $element = $document->createElement($node, $value);
+            }
+
+            $addTo->appendChild($element);
+        } else {
+            /** @var \DOMElement $element */
+            $element = $nodes[0];
+            if ($cdata) {
+                $cdata = $document->createCDATASection($value);
+                $element->textContent = $value;
+
+                if ($element->firstChild !== null) {
+                    $element->replaceChild($cdata, $element->firstChild);
+                } else {
+                    //$element->textContent = '';
+                    $element->appendChild($cdata);
+                }
+            } else {
+                $element->textContent = $value;
+            }
+        }
     }
 }

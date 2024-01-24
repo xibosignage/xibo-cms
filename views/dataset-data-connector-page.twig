@@ -57,7 +57,9 @@
                             <div class="form-group row code-input-group xibo-code-input">
                                 <div class="col-sm-12">
                                     <small class="form-text text-muted">{{ "Data Connector JavaScript"|trans }}</small>
-                                    <textarea class="form-control d-none code-input" id="input_script" name="dataConnectorScript" rows="30" data-code-type="javascript">{{ script }}</textarea>
+                                    <textarea class="form-control d-none code-input" id="input_script" name="dataConnectorScript" rows="30" data-code-type="javascript">{% if script %}{{ script }}{% else %}window.onInit = function() {
+
+}{% endif %}</textarea>
 
                                     <div class="code-input-editor-container" style="height: 70vh;">
                                         <div class="code-input-editor"></div>

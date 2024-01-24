@@ -41,16 +41,13 @@
                   method="post"
                   action="{{ url_for("developer.templates.add") }}">
 
-                <div class="form-group row code-input-group xibo-code-input">
-                    <div class="col-sm-12">
-                        <small class="form-text text-muted">{{ "Module Template XML"|trans }}</small>
-                        <textarea class="form-control d-none code-input" id="input_script" name="xml" rows="30" data-code-type="xml"></textarea>
+                {% set title %}{% trans "ID" %}{% endset %}
+                {% set helpText %}{% trans "A unique ID for the module template" %}{% endset %}
+                {{ forms.input("templateId", title, "custom-", helpText) }}
 
-                        <div class="code-input-editor-container" style="height: 70vh;">
-                            <div class="code-input-editor"></div>
-                        </div>
-                    </div>
-                </div>
+                {% set title %}{% trans "Data Type" %}{% endset %}
+                {% set helpText %}{% trans "Which data type does this template need?" %}{% endset %}
+                {{ forms.input("dataType", title, "", helpText) }}
             </form>
         </div>
     </div>

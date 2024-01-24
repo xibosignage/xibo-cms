@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -116,6 +116,12 @@ class ModuleTemplate implements \JsonSerializable
     public $isVisible = true;
 
     /**
+     * @SWG\Property()
+     * @var bool Is Enabled?
+     */
+    public $isEnabled = true;
+
+    /**
      * @SWG\Property(description="An array of additional module specific group properties")
      * @var \Xibo\Widget\Definition\PropertyGroup[]
      */
@@ -150,6 +156,9 @@ class ModuleTemplate implements \JsonSerializable
 
     /** @var string $xml The XML used to build this template */
     private $xml;
+
+    /** @var \DOMDocument The DOM Document for this templates XML */
+    private $document;
 
     /** @var \Xibo\Factory\ModuleTemplateFactory */
     private $moduleTemplateFactory;
@@ -198,11 +207,33 @@ class ModuleTemplate implements \JsonSerializable
      */
     public function getXml(): string
     {
-        if ($this->file === 'database') {
-            return $this->xml;
-        } else {
-            return file_get_contents($this->file);
+        if ($this->file !== 'database') {
+            $this->xml = file_get_contents($this->file);
         }
+        return $this->xml;
+    }
+
+    /**
+     * Set Document
+     * @param \DOMDocument $document
+     * @return void
+     */
+    public function setDocument(\DOMDocument $document): void
+    {
+        $this->document = $document;
+    }
+
+    /**
+     * Get this templates DOM document
+     * @return \DOMDocument
+     */
+    public function getDocument(): \DOMDocument
+    {
+        if ($this->document === null) {
+            $this->document = new \DOMDocument();
+            $this->document->load($this->getXml());
+        }
+        return $this->document;
     }
 
     /**
@@ -280,12 +311,14 @@ class ModuleTemplate implements \JsonSerializable
             UPDATE `module_templates` SET
                 `templateId` = :templateId,
                 `dataType`= :dataType,
+                `enabled` = :enabled,
                 `xml` = :xml
              WHERE `id` = :id
         ', [
             'templateId' => $this->templateId,
             'dataType' => $this->dataType,
             'xml' => $this->xml,
+            'enabled' => $this->isEnabled ? 1 : 0,
             'id' => $this->id,
         ]);
     }

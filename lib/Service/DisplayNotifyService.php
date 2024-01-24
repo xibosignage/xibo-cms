@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -398,7 +398,7 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
     {
         $this->log->debug('notifyByDataSetId: dataSetId: ' . $dataSetId);
 
-        if (in_array('dataSet', $this->keysProcessed)) {
+        if (in_array('dataSet_' . $dataSetId, $this->keysProcessed)) {
             $this->log->debug('notifyByDataSetId: already processed.');
             return;
         }
@@ -407,6 +407,33 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
         $this->store->update('UPDATE `task` SET `runNow` = 1 WHERE `class` LIKE :taskClassLike', [
             'taskClassLike' => '%WidgetSyncTask%',
         ]);
+
+        // Query the schedule for any data connectors.
+        // This is a simple test to see if there are ever any schedules for this dataSetId
+        // TODO: this could be improved.
+        $sql = '
+            SELECT DISTINCT display.displayId
+             FROM `schedule`
+               INNER JOIN `lkscheduledisplaygroup`
+               ON `lkscheduledisplaygroup`.eventId = `schedule`.eventId
+               INNER JOIN `lkdgdg`
+               ON `lkdgdg`.parentId = `lkscheduledisplaygroup`.displayGroupId
+               INNER JOIN `lkdisplaydg`
+               ON `lkdisplaydg`.DisplayGroupID = `lkdgdg`.childId
+               INNER JOIN `display`
+               ON `lkdisplaydg`.DisplayID = `display`.displayID
+            WHERE `schedule`.dataSetId = :dataSetId
+        ';
+
+        foreach ($this->store->select($sql, ['dataSetId' => $dataSetId]) as $row) {
+            $this->displayIds[] = $row['displayId'];
+
+            if ($this->collectRequired) {
+                $this->displayIdsRequiringActions[] = $row['displayId'];
+            }
+        }
+
+        $this->keysProcessed[] = 'dataSet_' . $dataSetId;
     }
 
     /** @inheritdoc */

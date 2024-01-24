@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -1022,8 +1022,7 @@ class DataSet extends Base
         if ($dataSet->isRealTime === 1) {
             // Set the script.
             $dataSet->saveScript($sanitizedParams->getParam('dataConnectorScript'));
-
-            // TODO: we should notify displays which have this scheduled to them as data connectors.
+            $dataSet->notify();
         } else {
             throw new InvalidArgumentException(__('This DataSet does not have a data connector'), 'isRealTime');
         }
