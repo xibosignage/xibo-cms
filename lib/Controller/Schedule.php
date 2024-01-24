@@ -2296,7 +2296,7 @@ class Schedule extends Base
                 $repeatsOn = '';
                 $repeatsUntil = '';
 
-                if ($event->recurrenceType === 'Week') {
+                if ($event->recurrenceType === 'Week' && !empty($event->recurrenceRepeatsOn)) {
                     $weekdays = Carbon::getDays();
                     $repeatDays = explode(',', $event->recurrenceRepeatsOn);
                     $i = 0;
