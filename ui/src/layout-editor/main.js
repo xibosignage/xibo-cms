@@ -1035,7 +1035,12 @@ lD.loadFormFromAPI = function(
               generatedButtons[button] = {
                 label: button,
                 className: buttonType + ' btn-bb-' + button,
-                callback: function() {
+                callback: function(ev) {
+                  // Show loading cog
+                  $(ev.currentTarget).append(
+                    '&nbsp;<i class="fa fa-cog fa-spin"></i>',
+                  );
+
                   // Call global function by the function name
                   if (mainActionCallback != null && mainButtonAction) {
                     eval(mainActionCallback);
