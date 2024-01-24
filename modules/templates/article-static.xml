@@ -1332,11 +1332,11 @@ $(target).xiboLayoutAnimate(properties);
 // -------------------------------------------
 
 // Generate template from chosen fields
-let selectedTags = (properties.selectedTags != null && properties.selectedTags != '') ? JSON.parse(properties.selectedTags) : [];
+var selectedTags = (properties.selectedTags != null && properties.selectedTags != '') ? JSON.parse(properties.selectedTags) : [];
 
 properties.template = '';
 
-for (const tag in selectedTags) {
+for (var tag in selectedTags) {
     var isImage = (selectedTags[tag]['tagType'] === 'image');
 
     properties.template += '<span class="marquee-item marquee-' + tag;
@@ -1347,16 +1347,34 @@ for (const tag in selectedTags) {
 
     properties.template += '" style="';
 
-    for (const style in selectedTags[tag]) {
-        (style === 'fontSize' && selectedTags[tag][style]) && (properties.template += 'font-size:' + selectedTags[tag][style] + 'px;');
-        (style === 'fontColor' && selectedTags[tag][style]) && (properties.template += 'color:' + selectedTags[tag][style] + ';');
-        (style === 'fontFamily' && selectedTags[tag][style]) && (properties.template += 'font-family:' + selectedTags[tag][style] + ';');
-        (style === 'bold' && selectedTags[tag][style]) && (properties.template += 'font-weight: bold;');
-        (style === 'italics' && selectedTags[tag][style]) && (properties.template += 'font-style: italic;');
-        (style === 'underline' && selectedTags[tag][style]) && (properties.template += 'text-decoration: underline;');
-        (style === 'width' && selectedTags[tag][style]) && (properties.template += 'width:' + selectedTags[tag][style] + 'px;');
-        (style === 'height' && selectedTags[tag][style]) && (properties.template += 'height:' + selectedTags[tag][style] + 'px;');
-        (style === 'opacity' && selectedTags[tag][style]) && (properties.template += 'opacity:' + selectedTags[tag][style] + ';');
+    for (var style in selectedTags[tag]) {
+        if (style === 'fontSize' && selectedTags[tag][style]) {
+            properties.template += 'font-size:' + selectedTags[tag][style] + 'px;';
+        }
+        if (style === 'fontColor' && selectedTags[tag][style]) {
+            properties.template += 'color:' + selectedTags[tag][style] + ';';
+        }
+        if (style === 'fontFamily' && selectedTags[tag][style]) {
+            properties.template += 'font-family:' + selectedTags[tag][style] + ';';
+        }
+        if (style === 'bold' && selectedTags[tag][style]) {
+            properties.template += 'font-weight: bold;';
+        }
+        if (style === 'italics' && selectedTags[tag][style]) {
+            properties.template += 'font-style: italic;';
+        }
+        if (style === 'underline' && selectedTags[tag][style]) {
+            properties.template += 'text-decoration: underline;';
+        }
+        if (style === 'width' && selectedTags[tag][style]) {
+            properties.template += 'width:' + selectedTags[tag][style] + 'px;';
+        }
+        if (style === 'height' && selectedTags[tag][style]) {
+            properties.template += 'height:' + selectedTags[tag][style] + 'px;';
+        }
+        if (style === 'opacity' && selectedTags[tag][style]) {
+            properties.template += 'opacity:' + selectedTags[tag][style] + ';';
+        }
     }
 
     if (isImage) {
@@ -1380,14 +1398,26 @@ if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !=
 
 // Copyright
 if (properties.copyright) {
-    let copyrightTemplate = '<span class="marquee-item marquee-copyright" style="';
+    var copyrightTemplate = '<span class="marquee-item marquee-copyright" style="';
 
-    (properties.copyrightFontFamily) && (copyrightTemplate += 'font-family:' + properties.copyrightFontFamily + ';');
-    (properties.copyrightFontColor) && (copyrightTemplate += 'color:' + properties.copyrightFontColor + ';');
-    (properties.copyrightFontSize) && (copyrightTemplate += 'font-size:' + properties.copyrightFontSize + 'px;');
-    (properties.copyrightBold) && (copyrightTemplate += 'font-weight: bold;');
-    (properties.copyrightItalics) && (copyrightTemplate += 'font-style: italic;');
-    (properties.copyrightUnderline) && (copyrightTemplate += 'text-decoration: underline;');
+    if (properties.copyrightFontFamily) {
+        copyrightTemplate += 'font-family:' + properties.copyrightFontFamily + ';';
+    }
+    if (properties.copyrightFontColor) {
+        copyrightTemplate += 'color:' + properties.copyrightFontColor + ';';
+    }
+    if (properties.copyrightFontSize) {
+        copyrightTemplate += 'font-size:' + properties.copyrightFontSize + 'px;';
+    }
+    if (properties.copyrightBold) {
+        copyrightTemplate += 'font-weight: bold;';
+    }
+    if (properties.copyrightItalics) {
+        copyrightTemplate += 'font-style: italic;';
+    }
+    if (properties.copyrightUnderline) {
+        copyrightTemplate += 'text-decoration: underline;';
+    }
 
     copyrightTemplate += '">' + properties.copyright + '</span>';
 

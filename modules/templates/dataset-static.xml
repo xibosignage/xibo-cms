@@ -3345,7 +3345,7 @@ if (selectedColumns === null || Object.values(selectedColumns).length === 0) {
 
 // Convert to array and sort by play order
 selectedColumns = Object.values(selectedColumns);
-selectedColumns.sort((a, b) => { return a.playOrder - b.playOrder; });
+selectedColumns.sort(function(a, b) { return a.playOrder - b.playOrder; });
 
 // Get dataset columns from meta.mapping
 var columnInfo = {};
@@ -3359,7 +3359,7 @@ for (var i = 0; i < meta.mapping.length; i++) {
 
 // Generate template from chosen fields
 properties.template = '';
-for (const col in selectedColumns) {
+for (var col in selectedColumns) {
     var column = selectedColumns[col];
     var isMedia = (columnInfo[column.colId].type == 5 || columnInfo[column.colId].type === 4);
 
@@ -3371,16 +3371,34 @@ for (const col in selectedColumns) {
     
     properties.template += '" style="';
 
-    for (const style in selectedColumns[col]) {
-        (style === 'fontSize' && selectedColumns[col][style]) && (properties.template += 'font-size:' + selectedColumns[col][style] + 'px;');
-        (style === 'fontColor' && selectedColumns[col][style]) && (properties.template += 'color:' + selectedColumns[col][style] + ';');
-        (style === 'fontFamily' && selectedColumns[col][style]) && (properties.template += 'font-family:' + selectedColumns[col][style] + ';');
-        (style === 'bold' && selectedColumns[col][style]) && (properties.template += 'font-weight: bold;');
-        (style === 'italics' && selectedColumns[col][style]) && (properties.template += 'font-style: italic;');
-        (style === 'underline' && selectedColumns[col][style]) && (properties.template += 'text-decoration: underline;');
-        (style === 'width' && selectedColumns[col][style]) && (properties.template += 'width:' + selectedColumns[col][style] + 'px;');
-        (style === 'height' && selectedColumns[col][style]) && (properties.template += 'height:' + selectedColumns[col][style] + 'px;');
-        (style === 'opacity' && selectedColumns[col][style]) && (properties.template += 'opacity:' + selectedColumns[col][style] + ';');
+    for (var style in selectedColumns[col]) {
+        if (style === 'fontSize' && selectedColumns[col][style]) {
+            properties.template += 'font-size:' + selectedColumns[col][style] + 'px;';
+        }
+        if (style === 'fontColor' && selectedColumns[col][style]) {
+            properties.template += 'color:' + selectedColumns[col][style] + ';';
+        }
+        if (style === 'fontFamily' && selectedColumns[col][style]) {
+            properties.template += 'font-family:' + selectedColumns[col][style] + ';';
+        }
+        if (style === 'bold' && selectedColumns[col][style]) {
+            properties.template += 'font-weight: bold;';
+        }
+        if (style === 'italics' && selectedColumns[col][style]) {
+            properties.template += 'font-style: italic;';
+        }
+        if (style === 'underline' && selectedColumns[col][style]) {
+            properties.template += 'text-decoration: underline;';
+        }
+        if (style === 'width' && selectedColumns[col][style]) {
+            properties.template += 'width:' + selectedColumns[col][style] + 'px;';
+        }
+        if (style === 'height' && selectedColumns[col][style]) {
+            properties.template += 'height:' + selectedColumns[col][style] + 'px;';
+        }
+        if (style === 'opacity' && selectedColumns[col][style]) {
+            properties.template += 'opacity:' + selectedColumns[col][style] + ';';
+        }
     }
 
     properties.template += '">[' + columnInfo[column.colId].name + '|' + column.colId + ']</span>';
@@ -3393,14 +3411,26 @@ if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !=
 
 // Copyright
 if (properties.copyright) {
-    let copyrightTemplate = '<span class="marquee-item marquee-copyright" style="';
+    var copyrightTemplate = '<span class="marquee-item marquee-copyright" style="';
 
-    (properties.copyrightFontFamily) && (copyrightTemplate += 'font-family:' + properties.copyrightFontFamily + ';');
-    (properties.copyrightFontColor) && (copyrightTemplate += 'color:' + properties.copyrightFontColor + ';');
-    (properties.copyrightFontSize) && (copyrightTemplate += 'font-size:' + properties.copyrightFontSize + 'px;');
-    (properties.copyrightBold) && (copyrightTemplate += 'font-weight: bold;');
-    (properties.copyrightItalics) && (copyrightTemplate += 'font-style: italic;');
-    (properties.copyrightUnderline) && (copyrightTemplate += 'text-decoration: underline;');
+    if (properties.copyrightFontFamily) {
+        copyrightTemplate += 'font-family:' + properties.copyrightFontFamily + ';';
+    }
+    if (properties.copyrightFontColor) {
+        copyrightTemplate += 'color:' + properties.copyrightFontColor + ';';
+    }
+    if (properties.copyrightFontSize) {
+        copyrightTemplate += 'font-size:' + properties.copyrightFontSize + 'px;';
+    }
+    if (properties.copyrightBold) {
+        copyrightTemplate += 'font-weight: bold;';
+    }
+    if (properties.copyrightItalics) {
+        copyrightTemplate += 'font-style: italic;';
+    }
+    if (properties.copyrightUnderline) {
+        copyrightTemplate += 'text-decoration: underline;';
+    }
 
     copyrightTemplate += '">' + properties.copyright + '</span>';
 
