@@ -250,6 +250,11 @@ class Developer extends Base
             $template->invalidate();
         }
 
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Edited %s'), $template->title),
+            'id' => $template->id,
+        ]);
+
         return $this->render($request, $response);
     }
 
