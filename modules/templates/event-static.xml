@@ -115,7 +115,7 @@ $(target).find('#content').empty();
 
 // Add items to container
 // If we have numItems, send only that number
-let numItems =
+var numItems =
   properties.numItems && properties.numItems < items.length ?
   properties.numItems :
   items.length;
