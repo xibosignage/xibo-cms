@@ -468,8 +468,11 @@ Layout.prototype.publish = function() {
       } else {
         toastr.error(res.message);
 
-        // Close dialog
-        bootbox.hideAll();
+        // Remove loading icon from publish dialog
+        $(
+          '[data-test="publishFormLayoutForm"] ' +
+          '.btn-bb-Publish i.fa-cog',
+        ).remove();
       }
     }
   }).fail(function(jqXHR, textStatus, errorThrown) {
@@ -517,8 +520,11 @@ Layout.prototype.discard = function() {
       } else {
         toastr.error(res.message);
 
-        // Close dialog
-        bootbox.hideAll();
+        // Remove loading icon from publish dialog
+        $(
+          '[data-test="discardFormLayoutForm"] ' +
+          '.btn-bb-Discard i.fa-cog',
+        ).remove();
       }
     }
 
@@ -568,8 +574,11 @@ Layout.prototype.delete = function() {
       } else {
         toastr.error(res.message);
 
-        // Close dialog
-        bootbox.hideAll();
+        // Remove loading icon from publish dialog
+        $(
+          '[data-test="deleteFormLayoutForm"] ' +
+          '.btn-bb-Yes i.fa-cog',
+        ).remove();
       }
     }
 
