@@ -112,6 +112,11 @@
             <helpText>When all day events are excluded they are removed from the list of events in the feed and wont be shown</helpText>
             <default></default>
         </property>
+        <property id="showOnlyCurrent" type="checkbox">
+            <title>Show only current events?</title>
+            <helpText>Show current events and hide all other events from the feed.</helpText>
+            <default></default>
+        </property>
         <property id="excludeCurrent" type="checkbox">
             <title>Exclude current events?</title>
             <helpText>When current events are excluded they are removed from the list of events in the feed and wont be shown.</helpText>
@@ -183,6 +188,12 @@
     <onParseData><![CDATA[
 // item - element to be parsed
 // properties - object containing the values to be evaluated/used
+
+// If item comes as empty from data, skip parsing
+if (item === null) {
+    return null;
+}
+
 var now = moment();
 var startDate = moment(item.startDate);
 var endDate = moment(item.endDate);
@@ -200,11 +211,15 @@ if (endDate.isAfter(now)) {
     }
 }
 
-// Return element
 if (properties.excludeCurrent == 1 && item.currentEvent) {
+    // If it's current event and we need to exclude it, don't return it
+    return null;
+} else if (properties.showOnlyCurrent == 1 && !item.currentEvent) {
+    // If it's not current event, amd we only want to show current event, don't return it
     return null;
 }
 
+// Return element
 return item;
     ]]></onParseData>
     <onRender>
