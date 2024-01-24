@@ -1212,6 +1212,22 @@ class Widget extends Base
             $this->getLog()->debug('getData: Returning cache');
         }
 
+        // Add permissions needed to see linked media
+        $media = $widgetDataProviderCache->getCachedMediaIds();
+        $this->getLog()->debug('getData: linking ' . count($media) . ' images');
+
+        foreach ($media as $mediaId) {
+            // We link these module images to the user.
+            foreach ($this->permissionFactory->getAllByObjectId(
+                $this->getUser(),
+                'Xibo\Entity\Media',
+                $mediaId,
+            ) as $permission) {
+                $permission->view = 1;
+                $permission->save();
+            }
+        }
+
         // Decorate for output.
         $data = $widgetDataProviderCache->decorateForPreview(
             $dataProvider->getData(),

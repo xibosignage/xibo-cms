@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -2599,11 +2599,15 @@ class Layout extends Base
             $this->getConfig()->getSetting('SENDFILE_MODE')
         );
         $downloader->useLogger($this->getLog()->getLoggerInterface());
-        $response = $downloader->imagePreview($this->getSanitizer([
-            'width' => $layout->width,
-            'height' => $layout->height,
-            'proportional' => 0
-        ]), $media->storedAs, $response);
+        $response = $downloader->imagePreview(
+            $this->getSanitizer([
+                'width' => $layout->width,
+                'height' => $layout->height,
+                'proportional' => 0,
+            ]),
+            $media->storedAs,
+            $response,
+        );
 
         $this->setNoOutput(true);
         return $this->render($request, $response);
