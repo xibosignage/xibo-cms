@@ -185,43 +185,46 @@
         return false;
     }
 ]]></onDataError>
-    <onParseData><![CDATA[
-// item - element to be parsed
-// properties - object containing the values to be evaluated/used
-
-// If item comes as empty from data, skip parsing
-if (item === null) {
-    return null;
-}
+    <onDataLoad><![CDATA[
+// items: The items to render
+// meta: Metadata
+// properties: The properties for the widget
 
 var now = moment();
-var startDate = moment(item.startDate);
-var endDate = moment(item.endDate);
 
-// Check if there is an event ongoing and change it if the variable isn't set or is false
-if ((typeof ongoingEvent != 'undefined' || !window.ongoingEvent) && startDate.isBefore(now) && endDate.isAfter(now)) {
-    window.ongoingEvent = true;
-}
+for(var idx = 0; idx < items.length; idx++) {
+    var item = items[idx];
 
-if (endDate.isAfter(now)) {
-    if (moment(item.startDate).isBefore(now)) {
-        item.currentEvent = true;
-    } else {
-        item.currentEvent = false;
+    var startDate = moment(item.startDate);
+    var endDate = moment(item.endDate);
+
+    // Check if there is an event ongoing and change it if the variable isn't set or is false
+    if ((typeof ongoingEvent != 'undefined' || !window.ongoingEvent) && startDate.isBefore(now) && endDate.isAfter(now)) {
+        window.ongoingEvent = true;
+    }
+
+    if (endDate.isAfter(now)) {
+        if (moment(items[idx].startDate).isBefore(now)) {
+            items[idx].currentEvent = true;
+        } else {
+            items[idx].currentEvent = false;
+        }
+    }
+
+    // Filter items based on properties
+    if (
+        // If it's current event and we need to exclude it, don't return it
+        (properties.excludeCurrent == 1 && items[idx].currentEvent) ||
+        // If it's not current event, amd we only want to show current event, don't return it
+        (properties.showOnlyCurrent == 1 && !item.currentEvent)
+    ) {
+        items.splice(idx, 1);
+        idx--;
     }
 }
 
-if (properties.excludeCurrent == 1 && item.currentEvent) {
-    // If it's current event and we need to exclude it, don't return it
-    return null;
-} else if (properties.showOnlyCurrent == 1 && !item.currentEvent) {
-    // If it's not current event, amd we only want to show current event, don't return it
-    return null;
-}
-
-// Return element
-return item;
-    ]]></onParseData>
+return items;
+    ]]></onDataLoad>
     <onRender>
         <![CDATA[
 // Module renderer options
