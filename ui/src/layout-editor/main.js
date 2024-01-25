@@ -3058,6 +3058,7 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
         groupElements,
       );
 
+      let updateTopLayers = false;
       switch (actionType) {
         case 'bringToFront':
           // Only update layer if original isn't the top one
@@ -3078,6 +3079,7 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
           if (originalLayer != calculatedLayers.availableDown) {
             // Find below layer and get 1 under it
             newLayer = calculatedLayers.availableDown;
+            updateTopLayers = true;
           }
           break;
         case 'sendToBack':
@@ -3085,51 +3087,20 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
           if (originalLayer != calculatedLayers.availableBottom) {
             // Find bottom layer and add 1 under it
             newLayer = calculatedLayers.availableBottom;
+            updateTopLayers = true;
           }
           break;
       }
 
-      // Only update if we have a new layer
-      if (newLayer != null) {
-        if (layoutObject.type === 'region') {
-          // Transform region
-          layoutObject.transform({
-            zIndex: newLayer,
-          });
-
-          // Update on viewer
-          lD.viewer.updateRegion(layoutObject);
-        } else if (
-          layoutObject.type === 'element' ||
-          layoutObject.type === 'element-group'
-        ) {
-          layoutObject.layer = newLayer;
-
-          // Get widget
-          const elementWidget =
-            lD.getObjectByTypeAndId('widget', objAuxId, 'canvas');
-
-          // Update element or element group in the viewer
-          if (layoutObject.type === 'element') {
-            lD.viewer.updateElement(layoutObject, true);
-          } else {
-            lD.viewer.updateElementGroupLayer(layoutObject);
-          }
-
-          // Save elements to the widget
-          elementWidget.saveElements();
-        }
-
-        // If object is selected, update position form with new layer
-        if (layoutObject.selected) {
-          lD.propertiesPanel.updatePositionForm({
-            zIndex: newLayer,
-          });
-        }
-
-        // Update layer manager
-        lD.viewer.layerManager.render();
-      }
+      // Update layer manager
+      lD.viewer.layerManager.updateObjectLayer(
+        layoutObject,
+        newLayer,
+        {
+          widgetId: objAuxId,
+          updateObjectsInFront: updateTopLayers,
+        },
+      );
     } else if (target.data('action') == 'Copy') {
       // For now, use an offset value to position the new element
       const offsetMove = 20;

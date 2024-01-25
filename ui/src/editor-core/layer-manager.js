@@ -566,7 +566,6 @@ LayerManager.prototype.expandGroup = function(
   self.render();
 };
 
-
 /**
  * Save sorting
  * @param {string} type main, canvas or element-group
@@ -732,6 +731,200 @@ LayerManager.prototype.saveSort = function({
 
   // Reload layer manager
   this.render();
+};
+
+/**
+ * Update object layer
+ * @param {object} target region, element/element-group
+ * @param {number} layer new layer
+ * @param {object} options
+ * @param {boolean} [options.widgetId] widget id for elements
+ * @param {boolean} [options.updateObjectsInFront]
+ *  increase layer for all the elements in the same layer as target or above
+ */
+LayerManager.prototype.updateObjectLayer = function(
+  target,
+  layer,
+  {
+    widgetId = null,
+    updateObjectsInFront = false,
+  } = {}) {
+  // Only update if we have a new layer
+  if (layer != null) {
+    if (target.type === 'region') {
+      // Transform region
+      target.transform({
+        zIndex: layer,
+      });
+
+      // Update on viewer
+      lD.viewer.updateRegion(target);
+
+      // Update other objects if they are in front of the new layer
+      if (updateObjectsInFront) {
+        // Check if canvas needs to be moved
+        if (lD.layout.canvas && lD.layout.canvas.zIndex >= layer) {
+          lD.layout.canvas.changeLayer(
+            lD.layout.canvas.zIndex + 1,
+            false, // saveToHistory
+          );
+        }
+
+        // Check other regions on the layout
+        for (id in lD.layout.regions) {
+          if (
+            Object.prototype.hasOwnProperty
+              .call(lD.layout.regions, id)
+          ) {
+            const targetRegion = lD.layout.regions[id];
+
+            // If region layer needs to be moved
+            // and region isn't the target
+            if (
+              targetRegion.zIndex >= layer &&
+              targetRegion.id != target.id
+            ) {
+              targetRegion.transform({
+                zIndex: targetRegion.zIndex + 1,
+              });
+            }
+          }
+        }
+      }
+    } else if (
+      target.type === 'element' ||
+      target.type === 'element-group'
+    ) {
+      target.layer = layer;
+
+      // Get widget
+      const elementWidget =
+        lD.getObjectByTypeAndId('widget', widgetId, 'canvas');
+
+      // Update element or element group in the viewer
+      if (target.type === 'element') {
+        lD.viewer.updateElement(target, true);
+      } else {
+        lD.viewer.updateElementGroupLayer(target);
+      }
+
+      if (target.type === 'element' && target.group) {
+        // If target is element and in a group, update elements in its group
+        for (elId in target.group.elements) {
+          if (
+            Object.prototype.hasOwnProperty
+              .call(target.group.elements, elId)
+          ) {
+            const targetElement = target.group.elements[elId];
+
+            // If element layer needs to be moved
+            // and element isn't the target
+            if (
+              targetElement.layer >= layer &&
+              targetElement.elementId != target.elementId
+            ) {
+              targetElement.layer = targetElement.layer + 1;
+              lD.viewer.updateElement(targetElement, true);
+            }
+          }
+        }
+      } else {
+        // If target ins't in a group, update elements and groups in canvas
+        for (widgetId in lD.layout.canvas.widgets) {
+          if (
+            Object.prototype.hasOwnProperty
+              .call(lD.layout.canvas.widgets, widgetId)
+          ) {
+            const widget = lD.layout.canvas.widgets[widgetId];
+
+            // Elements
+            for (elId in widget.elements) {
+              if (
+                Object.prototype.hasOwnProperty
+                  .call(widget.elements, elId)
+              ) {
+                const targetWidgetElement = widget.elements[elId];
+                let updateElement = false;
+                const hasGroup = (!targetWidgetElement.group);
+                const updateLayerNeeded = (targetWidgetElement.layer >= layer);
+
+                // If original target is a group
+                if (
+                  target.type === 'element-group' &&
+                  hasGroup &&
+                  updateLayerNeeded
+                ) {
+                  updateElement = true;
+                } else if (
+                  hasGroup &&
+                  targetWidgetElement.elementId != target.elementId &&
+                  updateLayerNeeded
+                ) {
+                  // If element isn't in a group
+                  updateElement = true;
+                }
+
+                // If element layer needs to be moved
+                if (updateElement) {
+                  targetWidgetElement.layer = targetWidgetElement.layer + 1;
+                  lD.viewer.updateElement(targetWidgetElement, true);
+                }
+              }
+            }
+
+            // Element groups
+            for (elGrId in widget.elementGroups) {
+              if (
+                Object.prototype.hasOwnProperty
+                  .call(widget.elementGroups, elGrId)
+              ) {
+                const targetWidgetElementGroup = widget.elementGroups[elGrId];
+                let updateElement = false;
+                const updateLayerNeeded =
+                  (targetWidgetElementGroup.layer >= layer);
+
+                // If original target is a group, check if it's the same
+                if (
+                  target.type === 'element-group' &&
+                  targetWidgetElementGroup.id != target.id &&
+                  updateLayerNeeded
+                ) {
+                  updateElement = true;
+                } else if (
+                  target.type === 'element' &&
+                  updateLayerNeeded
+                ) {
+                  // If original target is an element
+                  // update group if layer needs it
+                  updateElement = true;
+                }
+
+                // If element layer needs to be moved
+                if (updateElement) {
+                  targetWidgetElementGroup.layer =
+                    targetWidgetElementGroup.layer + 1;
+                  lD.viewer.updateElementGroupLayer(targetWidgetElementGroup);
+                }
+              }
+            }
+          }
+        }
+      }
+
+      // Save elements to the widget
+      elementWidget.saveElements();
+    }
+
+    // If object is selected, update position form with new layer
+    if (target.selected) {
+      lD.propertiesPanel.updatePositionForm({
+        zIndex: layer,
+      });
+    }
+
+    // Update layer manager
+    lD.viewer.layerManager.render();
+  }
 };
 
 module.exports = LayerManager;
