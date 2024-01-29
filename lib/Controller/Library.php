@@ -1612,7 +1612,8 @@ class Library extends Base
         // Hand over to the widget downloader
         $downloader = new WidgetDownloader(
             $this->getConfig()->getSetting('LIBRARY_LOCATION'),
-            $this->getConfig()->getSetting('SENDFILE_MODE')
+            $this->getConfig()->getSetting('SENDFILE_MODE'),
+            $this->getConfig()->getSetting('DEFAULT_RESIZE_LIMIT', 6000)
         );
         $downloader->useLogger($this->getLog()->getLoggerInterface());
 
@@ -1716,7 +1717,8 @@ class Library extends Base
         // Hand over to the widget downloader
         $downloader = new WidgetDownloader(
             $this->getConfig()->getSetting('LIBRARY_LOCATION'),
-            $this->getConfig()->getSetting('SENDFILE_MODE')
+            $this->getConfig()->getSetting('SENDFILE_MODE'),
+            $this->getConfig()->getSetting('DEFAULT_RESIZE_LIMIT', 6000)
         );
         $downloader->useLogger($this->getLog()->getLoggerInterface());
         $response = $downloader->thumbnail($media, $response, $this->getConfig()->uri('img/error.png', true));
