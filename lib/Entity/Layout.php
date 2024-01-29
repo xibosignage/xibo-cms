@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -1413,6 +1413,7 @@ class Layout implements \JsonSerializable
                     && $countWidgets <= 1
                     && $regionLoop == 0
                     && $widget->type != 'video'
+                    && $widget->type != 'videoin'
                     && $layoutCountRegionsWithDuration >= 1
                     && $region->isDrawer === 0
                 ) {
@@ -1651,8 +1652,8 @@ class Layout implements \JsonSerializable
                 $module->decorateProperties($widget, true, false);
 
                 foreach ($module->properties as $property) {
-                    // We only output properties for native rendered widgets
-                    if ($module->renderAs === 'native' || $property->includeInXlf) {
+                    // We only output certain properties
+                    if ($property->includeInXlf) {
                         if (($uriInjected && $property->id == 'uri') || empty($property->id)) {
                             // Skip any property named "uri" if we've already injected a special node for that.
                             // Skip properties without an id
