@@ -1413,6 +1413,7 @@ class Layout implements \JsonSerializable
                     && $countWidgets <= 1
                     && $regionLoop == 0
                     && $widget->type != 'video'
+                    && $widget->type != 'videoin'
                     && $layoutCountRegionsWithDuration >= 1
                     && $region->isDrawer === 0
                 ) {
