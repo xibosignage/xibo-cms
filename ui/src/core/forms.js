@@ -194,6 +194,15 @@ window.forms = {
         // Stored command selector
         if (property.type === 'commandSelector') {
           property.commandSearchUrl = urlsForApi.command.search.url;
+
+          // If we don't have a value, set value key pair to null
+          if (property.value == '') {
+            property.initialValue = null;
+            property.initialKey = null;
+          } else {
+            property.initialValue = property.value;
+            property.initialKey = 'code';
+          }
         }
 
         // Playlist Mixer
