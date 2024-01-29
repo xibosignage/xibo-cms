@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -270,10 +270,15 @@ class Image extends ModuleWidget
 
                     $fit = $proportional && $sanitizedParams->getCheckbox('fit') === 1;
 
+                    // only use upsize constraint, if we the requested dimensions are larger than resize limit.
+                    $resizeLimit = $this->getConfig()->getSetting('DEFAULT_RESIZE_LIMIT', 6000);
+                    $useUpsizeConstraint = max($width, $height) > $resizeLimit;
+
                     $this->getLog()->debug('Whole file: ' . $filePath
                         . ' requested with Width and Height ' . $width . ' x ' . $height
                         . ', proportional: ' . var_export($proportional, true)
-                        . ', fit: ' . var_export($fit, true));
+                        . ', fit: ' . var_export($fit, true)
+                        . ', upsizeConstraint ' . var_export($useUpsizeConstraint, true));
 
                     $img = Img::make($filePath);
 
@@ -282,11 +287,13 @@ class Image extends ModuleWidget
                         if ($fit) {
                             $img->fit($width, $height);
                         } else {
-                            $img->resize($width, $height, function ($constraint) use ($proportional) {
+                            $img->resize($width, $height, function ($constraint) use ($proportional, $useUpsizeConstraint) {
                                 if ($proportional) {
                                     $constraint->aspectRatio();
                                 }
-                                $constraint->upsize();
+                                if ($useUpsizeConstraint) {
+                                    $constraint->upsize();
+                                }
                             });
                         }
                     }
