@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -179,6 +179,7 @@ class WidgetCompatibilityTask implements TaskInterface
                     $widgetCompatibilityInterface = $module->getWidgetCompatibilityOrNull();
                     if ($widgetCompatibilityInterface !== null) {
                         try {
+                            // Pass the widget through the compatibility interface.
                             $upgraded = $widgetCompatibilityInterface->upgradeWidget(
                                 $widget,
                                 $widget->schemaVersion,
@@ -188,7 +189,12 @@ class WidgetCompatibilityTask implements TaskInterface
                             // Save widget version
                             if ($upgraded) {
                                 $widget->schemaVersion = $module->schemaVersion;
-                                $widget->type = $module->type;
+
+                                // Assert the module type, unless the widget has already changed it.
+                                if (!$widget->hasPropertyChanged('type')) {
+                                    $widget->type = $module->type;
+                                }
+
                                 $widget->save(['alwaysUpdate' => true, 'upgrade' => true]);
                                 $this->log->debug('WidgetCompatibilityTask: Upgraded');
                             }
