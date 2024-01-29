@@ -1284,7 +1284,8 @@ class Widget extends Base
             // Create a downloader to deal with this.
             $downloader = new WidgetDownloader(
                 $this->getConfig()->getSetting('LIBRARY_LOCATION'),
-                $this->getConfig()->getSetting('SENDFILE_MODE')
+                $this->getConfig()->getSetting('SENDFILE_MODE'),
+                $this->getConfig()->getSetting('DEFAULT_RESIZE_LIMIT', 6000)
             );
             $downloader->useLogger($this->getLog()->getLoggerInterface());
             return $this->render($request, $downloader->download($media, $response));

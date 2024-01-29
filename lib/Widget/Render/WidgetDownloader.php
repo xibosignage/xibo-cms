@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -43,6 +43,9 @@ class WidgetDownloader
     /** @var string Send file mode */
     private $sendFileMode;
 
+    /** @var int CMS resize limit */
+    private $resizeLimit;
+
     /** @var LoggerInterface */
     private $logger;
 
@@ -52,10 +55,12 @@ class WidgetDownloader
      */
     public function __construct(
         string $libraryLocation,
-        string $sendFileMode
+        string $sendFileMode,
+        int $resizeLimit
     ) {
         $this->libraryLocation = $libraryLocation;
         $this->sendFileMode = $sendFileMode;
+        $this->resizeLimit = $resizeLimit;
     }
 
     /**
@@ -233,10 +238,14 @@ class WidgetDownloader
 
             $fit = $proportional && $params->getCheckbox('fit') === 1;
 
+            // only use upsize constraint, if we the requested dimensions are larger than resize limit.
+            $useUpsizeConstraint = max($width, $height) > $this->resizeLimit;
+
             $this->logger->debug('Whole file: ' . $filePath
                 . ' requested with Width and Height ' . $width . ' x ' . $height
                 . ', proportional: ' . var_export($proportional, true)
-                . ', fit: ' . var_export($fit, true));
+                . ', fit: ' . var_export($fit, true)
+                . ', upsizeConstraint ' . var_export($useUpsizeConstraint, true));
 
             // Does the thumbnail exist already?
             Img::configure(['driver' => 'gd']);
@@ -247,11 +256,13 @@ class WidgetDownloader
                 if ($fit) {
                     $img->fit($width, $height);
                 } else {
-                    $img->resize($width, $height, function ($constraint) use ($proportional) {
+                    $img->resize($width, $height, function ($constraint) use ($proportional, $useUpsizeConstraint) {
                         if ($proportional) {
                             $constraint->aspectRatio();
                         }
-                        $constraint->upsize();
+                        if ($useUpsizeConstraint) {
+                            $constraint->upsize();
+                        }
                     });
                 }
             }
