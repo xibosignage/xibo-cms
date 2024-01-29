@@ -63,7 +63,5 @@ window.ArrayHelper = require('../../ui/src/helpers/array.js');
 window.DateFormatHelper = require('../../ui/src/helpers/date-format-helper.js');
 
 // Plugins
-require('../vendor/flipclock.min.js');
-require('../vendor/flipclock.css');
 require('../vendor/jquery-cycle-2.1.6.min.js');
 require('../vendor/jquery.marquee.min.js');

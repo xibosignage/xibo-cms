@@ -240,6 +240,8 @@ if (properties.clockFace === "TwelveHourClock" || properties.clockFace === "Twen
 $(target).xiboLayoutScaler(properties);
     ]]></onRender>
     <assets>
+        <asset id="flipclock.js" type="path" mimeType="text/javascript" path="/modules/assets/flipclock/flipclock.min.js"></asset>
+        <asset id="flipclock.css" type="path" mimeType="text/css" path="/modules/assets/flipclock/flipclock.css"></asset>
         <asset id="clock-flip-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/clock/clock-flip-thumb.png" />
     </assets>
 </module>
