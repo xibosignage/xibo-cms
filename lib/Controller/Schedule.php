@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -730,17 +730,32 @@ class Schedule extends Base
     {
         // Get the display groups added to the session (if there are some)
         $displayGroupIds = $this->session->get('displayGroupIds');
+
+        if (!is_array($displayGroupIds)) {
+            $displayGroupIds = [];
+        }
+
         $displayGroups = [];
 
         if (count($displayGroupIds) > 0) {
             foreach ($displayGroupIds as $displayGroupId) {
-                if ($displayGroupId == -1)
+                if ($displayGroupId == -1) {
                     continue;
+                }
 
-                $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+                try {
+                    $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
-                if ($this->getUser()->checkViewable($displayGroup)) {
-                    $displayGroups[] = $displayGroup;
+                    if ($this->getUser()->checkViewable($displayGroup)) {
+                        $displayGroups[] = $displayGroup;
+                    }
+                } catch (NotFoundException $e) {
+                    $this->getLog()->debug(
+                        sprintf(
+                            'Saved filter option for displayGroupId %d that no longer exists.',
+                            $displayGroupId
+                        )
+                    );
                 }
             }
         }
