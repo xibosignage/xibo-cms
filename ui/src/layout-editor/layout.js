@@ -1105,4 +1105,42 @@ Layout.prototype.isEmpty = function() {
   return true;
 };
 
+/**
+ * Save multiple regions at once
+ * @param {Object[]} regions Array of regions to be saved
+ * @return {Promise} - Promise that resolves when the regions are saved
+ */
+Layout.prototype.saveMultipleRegions = function(regions) {
+  const self = this;
+  return new Promise(function(resolve, reject) {
+    const requestPath =
+      urlsForApi.region.transform.url.replace(':id', self.layoutId);
+
+    const requestData = [];
+    regions.forEach((region) => {
+      requestData.push({
+        width: region.dimensions.width,
+        height: region.dimensions.height,
+        top: region.dimensions.top,
+        left: region.dimensions.left,
+        zIndex: region.zIndex,
+        regionid: region.regionId,
+      });
+    });
+
+    $.ajax({
+      url: requestPath,
+      type: urlsForApi.region.transform.type,
+      data: {
+        regions: JSON.stringify(requestData),
+      },
+    }).done(function(data) {
+      resolve(data);
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+      // Reject promise and return an object with all values
+      reject(new Error({jqXHR, textStatus, errorThrown}));
+    });
+  });
+};
+
 module.exports = Layout;
