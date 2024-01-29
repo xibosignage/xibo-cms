@@ -3058,7 +3058,8 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
         groupElements,
       );
 
-      let updateTopLayers = false;
+      let updateLayerAbove = false;
+      let updateLayerAboveTarget = 0;
       switch (actionType) {
         case 'bringToFront':
           // Only update layer if original isn't the top one
@@ -3079,16 +3080,23 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
           if (originalLayer != calculatedLayers.availableDown) {
             // Find below layer and get 1 under it
             newLayer = calculatedLayers.availableDown;
-            updateTopLayers = true;
           }
+          // Still update layers
+          updateLayerAboveTarget =
+            (newLayer != null) ? newLayer : originalLayer;
+          updateLayerAbove = true;
           break;
         case 'sendToBack':
           // Only update layer if original isn't the bottom one
           if (originalLayer != calculatedLayers.availableBottom) {
             // Find bottom layer and add 1 under it
             newLayer = calculatedLayers.availableBottom;
-            updateTopLayers = true;
           }
+
+          // Still update layers
+          updateLayerAboveTarget =
+            (newLayer != null) ? newLayer : originalLayer;
+          updateLayerAbove = true;
           break;
       }
 
@@ -3098,7 +3106,8 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
         newLayer,
         {
           widgetId: objAuxId,
-          updateObjectsInFront: updateTopLayers,
+          updateObjectsInFront: updateLayerAbove,
+          updateObjectsInFrontTargetLayer: updateLayerAboveTarget,
         },
       );
     } else if (target.data('action') == 'Copy') {
