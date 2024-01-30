@@ -480,7 +480,7 @@ const PlayerHelper = function() {
     }
 
     if (!props.isGroup && props.dataOverride === 'text' &&
-      props.group.isMarquee &&
+      (props.group && props.group.isMarquee) &&
       (props.effect === 'marqueeLeft' || props.effect === 'marqueeRight')
     ) {
       cssStyles = {
@@ -501,7 +501,7 @@ const PlayerHelper = function() {
       .css(cssStyles);
 
     if (!props.isGroup && props.dataOverride === 'text' &&
-      props.group.isMarquee &&
+      (props.group && props.group.isMarquee) &&
       (props.effect === 'marqueeLeft' || props.effect === 'marqueeRight')
     ) {
       $renderedElem.get(0).style.removeProperty('white-space');
@@ -618,18 +618,19 @@ const PlayerHelper = function() {
         $groupContent : $groupContent.find(
           groupKey.replace('%key%', dataItemKey),
         );
+      const props = Object.assign(
+        item.templateData,
+        {isGroup},
+        (String(item.dataOverride).length > 0 &&
+        String(item.dataOverrideWith).length > 0) ?
+          dataItem : {data: dataItem},
+        {group: groupObj},
+      );
 
       $itemContainer.append(
         self.renderElement(
           item.hbs,
-          Object.assign(
-            item.templateData,
-            {isGroup},
-            (String(item.dataOverride).length > 0 &&
-                String(item.dataOverrideWith).length > 0) ?
-              dataItem : {data: dataItem},
-            {group: groupObj},
-          ),
+          props,
         ),
       );
 

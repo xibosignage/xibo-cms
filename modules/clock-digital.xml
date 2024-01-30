@@ -74,6 +74,9 @@
         </property>
     </properties>
     <preview></preview>
+    <stencil>
+        <hbs><![CDATA[<div class="clock-digital"></div>]]></hbs>
+    </stencil>
     <onInitialize><![CDATA[
 // Set moment locale
 moment.locale(properties.lang || globalOptions.locale);

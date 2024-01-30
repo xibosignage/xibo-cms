@@ -25,7 +25,7 @@ const XiboPlayer = function() {
   this.countWidgetElements = 0;
   this.countWidgetStatic = 0;
   this.urlParams = new URLSearchParams(window.location.search);
-  this.renderState = {
+  this.renderState = { // This should be per widget
     state: {
       handled: false,
       expire: false,
@@ -39,7 +39,6 @@ const XiboPlayer = function() {
    * @return {Promise<unknown>}
    */
   this.getWidgetData = function(currentWidget) {
-    const self = this;
     return new Promise(function(resolve, reject) {
       // if we have data on the widget (for older players),
       // or if we are not in preview and have empty data on Widget (like text)
@@ -54,10 +53,6 @@ const XiboPlayer = function() {
         }).done(function(data) {
           resolve(data);
         }).fail(function(jqXHR, textStatus, errorThrown) {
-          self.onDataErrorCallback(
-            jqXHR.status,
-            jqXHR.responseJSON,
-          );
           console.log(jqXHR, textStatus, errorThrown);
           resolve({
             error: jqXHR.status,
@@ -100,58 +95,28 @@ const XiboPlayer = function() {
     let playerWidget = inputWidget;
 
     const {dataItems, showError, errorMessage} =
-      this.composeWidgetData(playerWidget, data);
+      this.loadData(playerWidget, data);
     let widgetDataItems = dataItems;
 
-    const onTemplateDataLoadFn = this.onTemplateDataLoad({
-      widgetId: playerWidget.widgetId,
-    });
-    const templateDataLoadState = onTemplateDataLoadFn.state;
+    this.loadWidgetFunctions(playerWidget, dataItems);
 
-    if (templateDataLoadState.handled === false) {
-      // Run the onDataLoad function if it exists
-      const onDataLoadFn = this.onDataLoad({
-        dataItems: widgetDataItems,
-        meta: playerWidget.meta,
-        properties: playerWidget.properties,
-      });
-      const dataLoadState = onDataLoadFn.state;
+    const templateDataState = playerWidget.onTemplateDataLoad();
 
-      widgetDataItems = onDataLoadFn.dataItems;
+    if (!templateDataState.handled) {
+      const dataLoadState = playerWidget.onDataLoad();
+      console.log('onTemplateDataLoad::handled = ', templateDataState.handled);
 
-      // Opportunity to expire within onTemplateDataLoad
-      if (templateDataLoadState.expire === true) {
-        xiboIC.expireNow({targetId: xiboICTargetId});
-      }
+      widgetDataItems = dataLoadState.dataItems;
+      console.log('dataLoadState::widgetDataItems ', widgetDataItems);
 
-      if (templateDataLoadState.fault === true) {
-        // Call fault endpoint here
-        // xiboIC.reportFault({
-        //   code: '5001',
-        //   reason: 'No Data',
-        // }, {targetId: xiboICTargetId});
-      }
-
-      if (dataLoadState.handled === false) {
-        // Run the onParseData for every dataItem
-        widgetDataItems = this.onParseData(playerWidget, widgetDataItems);
-
-        // Opportunity to expire within onDataLoad
-        if (dataLoadState.expire === true) {
-          xiboIC.expireNow({targetId: xiboICTargetId});
-        }
-
-        if (dataLoadState.fault === true) {
-          // Call fault endpoint here
-          // xiboIC.reportFault({
-          //   code: '5001',
-          //   reason: 'No Data',
-          // }, {targetId: xiboICTargetId});
-        }
+      if (!dataLoadState.handled) {
+        console.log('onDataLoad::handled = ', dataLoadState.handled);
+        widgetDataItems = playerWidget.onParseData();
+        console.log('onParseData::widgetDataItems ', widgetDataItems);
       }
     } else {
-      // Run the onParseData for every dataItem
-      widgetDataItems = this.onParseData(playerWidget, widgetDataItems);
+      console.log('onTemplateDataLoad::handled = ', templateDataState.handled);
+      widgetDataItems = playerWidget.onParseData();
     }
 
     playerWidget.data = widgetDataItems;
@@ -188,6 +153,44 @@ const XiboPlayer = function() {
     };
 
     return playerWidget;
+  };
+
+  this.loadWidgetFunctions = function(playerWidget, dataItems) {
+    const self = this;
+    const params = this.getRenderParams(
+      playerWidget,
+      globalOptions,
+      {target: $('body')},
+    );
+
+    playerWidget.onTemplateDataLoad = function() {
+      return self.onTemplateDataLoad({
+        widgetId: playerWidget.widgetId,
+      });
+    };
+    playerWidget.onDataLoad = function() {
+      return self.onDataLoad({
+        dataItems,
+        meta: playerWidget.meta,
+        properties: playerWidget.properties,
+      });
+    };
+    playerWidget.onParseData = function() {
+      return self.onParseData(playerWidget, dataItems);
+    };
+    playerWidget.onTemplateRender = function() {
+      return self.onTemplateRender(params);
+    };
+    playerWidget.onRender = function() {
+      return self.onRender(params);
+    };
+    playerWidget.onTemplateVisible = function() {
+      return self.onTemplateVisible(params);
+    };
+    playerWidget.onVisible = function() {
+      console.log('Called onVisible...', params);
+      return self.onVisible(params);
+    };
   };
 
   /**
@@ -432,16 +435,20 @@ XiboPlayer.prototype.init = function(widgetData, elements) {
         inputWidget.isDataExpected = String(inputWidget.url) !== 'null';
       }
 
+      let currentWidget = self.playerWidget(inputWidget, []);
+      self.playerWidgets[inputWidget.widgetId] = currentWidget;
+
       // Check if inputWidget is a data widget
       if (inputWidget.isDataExpected) {
         // Load data
         self.getWidgetData(inputWidget).then(function(response) {
-          const currentWidget = self.playerWidget(inputWidget, response);
-          self.playerWidgets[inputWidget.widgetId] = currentWidget;
-
-          if (self.isStaticWidget(inputWidget)) {
+          currentWidget = self.playerWidget(inputWidget, response);
+          self.playerWidgets[currentWidget.widgetId] = currentWidget;
+          if (self.isStaticWidget(currentWidget)) {
+            console.log('Data Widget::Static');
             self.countWidgetStatic++;
           } else {
+            console.log('Data Widget::Elements');
             self.countWidgetElements++;
           }
 
@@ -457,13 +464,12 @@ XiboPlayer.prototype.init = function(widgetData, elements) {
             calledXiboScaler = true;
           }
         });
-      } else if (self.isModule(inputWidget)) { // It's a module
-        self.renderModule(inputWidget);
+      } else if (self.isModule(currentWidget)) { // It's a module
+        console.log('Non-data Widget::Module');
+        self.renderModule(currentWidget);
       } else { // All global elements goes here
-        const elementsWidget = self.playerWidget(inputWidget, []);
-        self.playerWidgets[inputWidget.widgetId] = elementsWidget;
-
-        self.renderElements(elementsWidget);
+        console.log('Non-data Widget::Global');
+        self.renderElements(currentWidget);
       }
     });
   }
@@ -493,7 +499,7 @@ XiboPlayer.prototype.noDataWidgets = function(dataCollection) {
  * @param {Object|Array} data
  * @return {Object} widgetData
  */
-XiboPlayer.prototype.composeWidgetData = function(currentWidget, data) {
+XiboPlayer.prototype.loadData = function(currentWidget, data) {
   const self = this;
   const widgetData = {
     isSampleData: false,
@@ -568,28 +574,6 @@ XiboPlayer.prototype.getElementsByWidgetId = function(widgetId, inputElements) {
   }
 
   return widgetElements;
-};
-
-XiboPlayer.prototype.onDataErrorCallback = function(httpStatus, response) {
-  const onDataError = window[`onDataError_${xiboICTargetId}`];
-
-  if (typeof onDataError === 'function') {
-    if (onDataError(httpStatus, response) == false) {
-      xiboIC.reportFault({
-        code: '5001',
-        reason: 'No Data',
-      }, {targetId: xiboICTargetId});
-      xiboIC.expireNow({targetId: xiboICTargetId});
-    }
-
-    onDataError(httpStatus, response);
-  } else {
-    xiboIC.reportFault({
-      code: '5001',
-      reason: 'No Data',
-    }, {targetId: xiboICTargetId});
-    xiboIC.expireNow({targetId: xiboICTargetId});
-  }
 };
 
 XiboPlayer.prototype.getWidgetById = function(widgetId) {
@@ -771,58 +755,25 @@ XiboPlayer.prototype.renderStaticWidget = function(
     // Merge new options with globalOptions
     globalOptions = Object.assign(globalOptions, newOptions);
   }
-
-  const renderParams = [
-    staticWidget,
-    globalOptions,
-    {target: $target},
-  ];
-
   // Save widget as global variable
   window.widget = staticWidget;
 
-  const onTemplateRenderFn = this.onTemplateRender(
-    this.getRenderParams(...renderParams));
-  const templateRenderState = onTemplateRenderFn.state;
+  const templateRenderState = staticWidget.onTemplateRender();
 
-  if (templateRenderState.handled === false
-  ) {
+  if (!templateRenderState.handled) {
     // Run module onRender function
-    this.onRender(this.getRenderParams(...renderParams));
-
-    if (templateRenderState.expire === true) {
-      xiboIC.expireNow({targetId: xiboICTargetId});
-    }
-
-    if (templateRenderState.fault === true) {
-      // Call fault endpoint here
-      // xiboIC.reportFault({
-      //   code: '5001',
-      //   reason: 'No Data',
-      // }, {targetId: xiboICTargetId});
-    }
+    staticWidget.onRender();
   } else {
-    // Check for onTemplateVisible first
-    const onTemplateVisibleFn = this.onTemplateVisible(
-      this.getRenderParams(...renderParams),
-    );
-    const templateVisibleState = onTemplateVisibleFn.state;
+    // Check for visibility
+    if (xiboIC.checkVisible()) {
+      const templateVisibleState = staticWidget.onTemplateVisible();
 
-    if (templateVisibleState.handled === false) {
-      // Call the run on visible function if it exists
-      this.onVisible(staticWidget);
-
-      if (templateVisibleState.expire === true) {
-        xiboIC.expireNow({targetId: xiboICTargetId});
+      if (!templateVisibleState.handled) {
+        staticWidget.onVisible();
       }
-
-      if (templateVisibleState.fault === true) {
-        // Call fault endpoint here
-        // xiboIC.reportFault({
-        //   code: '5001',
-        //   reason: 'No Data',
-        // }, {targetId: xiboICTargetId});
-      }
+    } else {
+      xiboIC.addToQueue(staticWidget.onTemplateVisible);
+      xiboIC.addToQueue(staticWidget.onVisible);
     }
   }
 
@@ -1102,12 +1053,18 @@ XiboPlayer.prototype.renderWidgetElements = function(
           }
         });
     }
+
+    // Check if we are visible
+    if (xiboIC.checkVisible()) {
+      currentWidget.onVisible();
+    } else {
+      xiboIC.addToQueue(currentWidget.onVisible);
+    }
   }
 };
 
 XiboPlayer.prototype.renderModule = function(currentWidget) {
   let $template = null;
-  const $target = $('body');
   if ($('#hbs-module').length > 0) {
     $template = $('#hbs-module');
   }
@@ -1133,16 +1090,14 @@ XiboPlayer.prototype.renderModule = function(currentWidget) {
   window.widget = currentWidget;
 
   // Run onRender
-  this.onRender(
-    this.getRenderParams(
-      currentWidget,
-      globalOptions,
-      {target: $target},
-    ),
-  );
+  currentWidget.onRender();
 
-  // Run onVisible
-  this.onVisible(currentWidget);
+  if (xiboIC.checkVisible()) {
+    // Run onVisible
+    currentWidget.onVisible();
+  } else {
+    xiboIC.addToQueue(currentWidget.onVisible);
+  }
 };
 
 XiboPlayer.prototype.renderElements = function(currentWidget) {
@@ -1184,17 +1139,19 @@ XiboPlayer.prototype.onTemplateDataLoad = function(params) {
     const onTemplateDataLoadFn = onTemplateDataLoad(params);
 
     if (onTemplateDataLoadFn !== undefined &&
-      (onTemplateDataLoadFn ?? {}).hasOwnProperty('state')
+      Object.keys(onTemplateDataLoadFn).length > 0
     ) {
-      onTemplateDataLoad(params);
-
-      return onTemplateDataLoadFn;
+      if ((onTemplateDataLoadFn ?? {}).hasOwnProperty('handled')) {
+        return onTemplateDataLoadFn;
+      } else {
+        return {...onTemplateDataLoadFn, handled: false};
+      }
+    } else {
+      return {handled: false};
     }
-
-    return this.renderState;
   }
 
-  return this.renderState;
+  return {handled: false};
 };
 
 XiboPlayer.prototype.onDataLoad = function(params) {
@@ -1205,15 +1162,18 @@ XiboPlayer.prototype.onDataLoad = function(params) {
     onDataLoad = window['onDataLoad_' + params.widgetId];
   }
 
-  let onDataLoadResponse = {...this.renderState, dataItems: []};
+  let onDataLoadResponse = {handled: false, dataItems: params.dataItems ?? []};
 
   if (onDataLoad) {
     const onDataLoadFn = onDataLoad(params);
-    if (onDataLoadFn !== undefined) {
-      if ((onDataLoadFn ?? {}).hasOwnProperty('state')) {
+
+    if (onDataLoadFn !== undefined &&
+        Object.keys(onDataLoadFn).length > 0
+    ) {
+      if ((onDataLoadFn ?? {}).hasOwnProperty('handled')) {
         onDataLoadResponse = {
           ...onDataLoadResponse,
-          state: onDataLoadFn.state,
+          handled: onDataLoadFn.handled,
         };
       }
 
@@ -1237,7 +1197,7 @@ XiboPlayer.prototype.onParseData = function(
   currentWidget,
   widgetDataItems,
 ) {
-  const dataItems = [];
+  const dataItems = widgetDataItems ?? [];
   // Parse the widgetDataItems if there is a parser function for the module
   if (typeof window['onParseData_' + currentWidget.widgetId] === 'function') {
     widgetDataItems.forEach(function(dataItem, _dataKey) {
@@ -1275,21 +1235,33 @@ XiboPlayer.prototype.onTemplateRender = function(params) {
     window.renders.push(window.onTemplateRender);
   }
 
+  let onTemplateRenderResponse = {handled: false};
   if (onTemplateRender) {
-    const onTemplateRenderFn = onTemplateRender(params);
+    const onTemplateRenderFn = onTemplateRender(
+      params.widgetId,
+      params.target,
+      params.items,
+      params.rendering,
+      params.meta,
+    );
 
     if (onTemplateRenderFn !== undefined &&
-      (onTemplateRenderFn ?? {}).hasOwnProperty('state')
+      Object.keys(onTemplateRenderFn).length > 0
     ) {
-      onTemplateRender(params);
+      if ((onTemplateRenderFn ?? {}).hasOwnProperty('handled')) {
+        onTemplateRenderResponse = {
+          ...onTemplateRenderResponse,
+          handled: onTemplateRenderFn.handled,
+        };
+      }
 
-      return onTemplateRenderFn;
+      return onTemplateRenderResponse;
     }
 
-    return this.renderState;
+    return onTemplateRenderResponse;
   }
 
-  return this.renderState;
+  return onTemplateRenderResponse;
 };
 
 XiboPlayer.prototype.onRender = function(params) {
@@ -1303,7 +1275,13 @@ XiboPlayer.prototype.onRender = function(params) {
     window.renders.push(window.onRender);
 
     // Run render function
-    window.onRender(params);
+    window.onRender(
+      params.widgetId,
+      params.target,
+      params.items,
+      params.rendering,
+      params.meta,
+    );
   }
 };
 
@@ -1317,54 +1295,55 @@ XiboPlayer.prototype.onTemplateVisible = function(params) {
   if (
     typeof window['onTemplateVisible_' + params.templateId] === 'function'
   ) {
-    let returnState = this.renderState;
+    let templateVisibleResponse = {handled: false};
     const onTemplateVisible = window['onTemplateVisible_' + params.templateId];
     window.runOnTemplateVisible = function() {
-      onTemplateVisible(params);
-    };
+      const onTemplateVisibleFn = onTemplateVisible(
+        params.widgetId,
+        params.target,
+        params.items,
+        params.rendering,
+        params.meta,
+      );
 
-    if (xiboIC.checkVisible()) {
-      if (onTemplateVisible) {
-        const onTemplateVisibleFn = onTemplateVisible(params);
-
-        if (onTemplateVisibleFn !== undefined &&
-          (onTemplateVisibleFn ?? {}).hasOwnProperty('state')
-        ) {
-          returnState = onTemplateVisibleFn(params);
+      if (onTemplateVisibleFn !== undefined &&
+        Object.keys(onTemplateVisibleFn).length > 0
+      ) {
+        if ((onTemplateVisibleFn ?? {}).hasOwnProperty('handled')) {
+          templateVisibleResponse = {
+            ...templateVisibleResponse,
+            handled: onTemplateVisibleFn.handled,
+          };
         }
+
+        return templateVisibleResponse;
       }
 
-      window.runOnTemplateVisible();
-    } else {
-      xiboIC.addToQueue(window.runOnTemplateVisible);
-    }
+      return templateVisibleResponse;
+    };
 
-    return returnState;
+    return window.runOnTemplateVisible();
   }
 
-  return this.renderState;
+  return {handled: false};
 };
 
-XiboPlayer.prototype.onVisible = function(currentWidget) {
+XiboPlayer.prototype.onVisible = function(params) {
   // Call the run on visible function if it exists
   if (
-    typeof window['onVisible_' + currentWidget.widgetId] === 'function'
+    typeof window['onVisible_' + params.widgetId] === 'function'
   ) {
     window.runOnVisible = function() {
-      window['onVisible_' + currentWidget.widgetId](
-        currentWidget.widgetId,
-        $('body'),
-        currentWidget.items,
-        currentWidget.properties,
-        currentWidget.meta,
+      window['onVisible_' + params.widgetId](
+        params.widgetId,
+        params.target,
+        params.items,
+        params.rendering,
+        params.meta,
       );
     };
 
-    if (xiboIC.checkVisible()) {
-      window.runOnVisible();
-    } else {
-      xiboIC.addToQueue(window.runOnVisible);
-    }
+    return window.runOnVisible();
   }
 };
 
