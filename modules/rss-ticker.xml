@@ -226,7 +226,7 @@ if ((properties.takeItemsFrom === 'end' && properties.reverseOrder === 0) ||
         items = $(newItems);
     }
 }
-return items;
+return {dataItems: items};
     ]]></onDataLoad>
     <sampleData><![CDATA[
 [{
