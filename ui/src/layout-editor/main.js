@@ -1159,10 +1159,18 @@ lD.deleteSelectedObject = function() {
 
   // For now, we always delete the region
   if (lD.selectedObject.type === 'region') {
+    // Check if it's playlist and it has at least one object in it
+    const needsConfirmationModal = (
+      lD.selectedObject.isPlaylist &&
+      Object.values(lD.selectedObject.widgets).length > 0
+    );
+
     lD.deleteObject(
       lD.selectedObject.type,
       lD.selectedObject[lD.selectedObject.type + 'Id'],
       null,
+      false,
+      needsConfirmationModal,
     );
   } else if (lD.selectedObject.type === 'widget') {
     // Drawer widget
@@ -1210,13 +1218,53 @@ lD.deleteSelectedObject = function() {
  * @param {string} objectId - Object id
  * @param {*} objectAuxId - Auxiliary object id (f.e.region for a widget)
  * @param {boolean=} drawerWidget - If we're deleting a drawer widget
+ * @param {boolean=} showConfirmationModal
+ *   - If we need to show a confirmation modal
  */
 lD.deleteObject = function(
   objectType,
   objectId,
   objectAuxId = null,
   drawerWidget = false,
+  showConfirmationModal = false,
 ) {
+  // Create modal before delete element
+  const createDeleteModal = function() {
+    bootbox.hideAll();
+
+    bootbox.dialog({
+      title: deleteModalTrans.playlist.title, // For playlist only for now
+      message: deleteModalTrans.playlist.message, // For playlist only for now
+      size: 'large',
+      buttons: {
+        cancel: {
+          label: editorsTrans.no,
+          className: 'btn-white btn-bb-cancel',
+        },
+        confirm: {
+          label: editorsTrans.yes,
+          className: 'btn-danger btn-bb-confirm',
+          callback: function() {
+            // Delete without modal
+            lD.deleteObject(
+              objectType,
+              objectId,
+              objectAuxId,
+              drawerWidget,
+              false,
+            );
+          },
+        },
+      },
+    }).attr('data-test', 'deleteObjectModal');
+  };
+
+  // Show confirmation modal if needed
+  if (showConfirmationModal) {
+    createDeleteModal();
+    return;
+  }
+
   // For elements, we just delete from the widget
   if (objectType === 'element') {
     // Get parent widget
@@ -3022,10 +3070,19 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
       // If layoutObject[objType + 'Id'] is null, use objId
       const newObjId = layoutObject[objType + 'Id'] || objId;
 
+      // Check if it's playlist and it has at least one object in it
+      const needsConfirmationModal = (
+        layoutObject.type === 'region' &&
+        layoutObject.isPlaylist &&
+        Object.values(layoutObject.widgets).length > 0
+      );
+
       lD.deleteObject(
         objType,
         newObjId,
         auxId,
+        false,
+        needsConfirmationModal,
       );
     } else if (target.data('action') == 'Move') {
       // Move widget in the timeline
