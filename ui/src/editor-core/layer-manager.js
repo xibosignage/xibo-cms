@@ -873,7 +873,7 @@ LayerManager.prototype.updateObjectLayer = function(
                 },
                 false);
 
-              regionToBeSaved.push(target);
+              regionToBeSaved.push(targetRegion);
 
               // Update on viewer
               lD.viewer.updateRegion(targetRegion);
