@@ -492,7 +492,6 @@ XiboPlayer.prototype.init = function(widgetData, elements) {
           [],
           false,
         );
-        currentWidget.isGlobal = true;
         self.playerWidgets[inputWidget.widgetId] = currentWidget;
         self.countGlobalElements++;
 
@@ -790,6 +789,9 @@ XiboPlayer.prototype.renderStaticWidget = function(staticWidget) {
 
   // Lock all interactions
   xiboIC.lockAllInteractions();
+
+  console.log(
+    '<<<END>>> renderStaticWidget for widget >', staticWidget.widgetId);
 };
 
 /**
@@ -823,307 +825,231 @@ XiboPlayer.prototype.renderWidgetElements = function(currentWidget) {
   const standaloneElems = widgetElements.standalone;
   const standaloneData = standaloneSlotsData;
 
-  if (!currentWidget.isGlobal) {
-    // Groups with data
-    if (Object.values(groupSlotsData).length > 0) {
-      const {
-        maxSlot,
-        pinnedSlots,
-      } = PlayerHelper.getGroupData(widgetElements.groups, 'items', false);
+  // Groups with data
+  if (Object.values(groupSlotsData).length > 0) {
+    const {
+      maxSlot,
+      pinnedSlots,
+    } = PlayerHelper.getGroupData(widgetElements.groups, 'items', false);
 
-      $.each(Object.keys(groupSlotsData), function(slotIndex, slotKey) {
-        const groupSlotId = currentWidget.mappedSlotGroup[slotKey];
-        const groupSlotObj = widgetElements.groups[groupSlotId];
-        const groupDataKeys = groupSlotsData[slotKey];
-        const $grpContent =
-            $(`<div class="${groupSlotId}"></div>`);
-        const isMarquee = PlayerHelper.isMarquee(groupSlotObj.effect);
+    $.each(Object.keys(groupSlotsData), function(slotIndex, slotKey) {
+      const groupSlotId = currentWidget.mappedSlotGroup[slotKey];
+      const groupSlotObj = widgetElements.groups[groupSlotId];
+      const groupDataKeys = groupSlotsData[slotKey];
+      const $grpContent =
+          $(`<div class="${groupSlotId}"></div>`);
+      const isMarquee = PlayerHelper.isMarquee(groupSlotObj.effect);
 
-        if (groupDataKeys.length > 0 &&
-            templateId !== null && url !== null
-        ) {
-          $.each(groupDataKeys, function(dataKeyIndx, dataKey) {
-            if (groupSlotObj?.items.length > 0) {
-              $.each(groupSlotObj.items,
-                function(itemKey, groupItem) {
-                  let dataItem = dataKey === 'empty' ?
-                    dataKey : {...(data[dataKey - 1] || {})};
+      if (groupDataKeys.length > 0 &&
+          templateId !== null && url !== null
+      ) {
+        $.each(groupDataKeys, function(dataKeyIndx, dataKey) {
+          if (groupSlotObj?.items.length > 0) {
+            $.each(groupSlotObj.items,
+              function(itemKey, groupItem) {
+                let dataItem = dataKey === 'empty' ?
+                  dataKey : {...(data[dataKey - 1] || {})};
 
-                  // Load element functions
-                  self.loadElementFunctions(groupItem, dataItem);
+                // Load element functions
+                self.loadElementFunctions(groupItem, dataItem);
 
-                  // Run onElementParseData function
-                  dataItem = groupItem.onElementParseData();
+                // Run onElementParseData function
+                dataItem = groupItem.onElementParseData();
 
-                  PlayerHelper.renderDataItem(
-                    true,
-                    dataKey,
-                    dataItem,
-                    groupItem,
-                    slotKey,
-                    maxSlot,
-                    groupItem.pinSlot,
-                    pinnedSlots,
-                    groupSlotId,
-                    $grpContent,
-                    {...groupSlotObj, isMarquee},
-                    meta,
-                    $content,
-                  );
-                });
-            }
-          });
-
-          $grpContent.css({
-            width: groupSlotObj.width,
-            height: groupSlotObj.height,
-            position: 'absolute',
-            top: groupSlotObj.top,
-            left: groupSlotObj.left,
-            overflow: 'hidden',
-            zIndex: groupSlotObj.layer,
-          });
-
-          if (isMarquee) {
-            const $scroller =
-                $(`<div class="${groupSlotObj.id}--marquee scroll"></div>`);
-
-            $scroller.css({
-              display: 'flex',
-              height: groupSlotObj.height,
-            });
-
-            if (groupSlotObj?.templateData?.verticalAlign) {
-              $scroller.css({
-                alignItems: groupSlotObj?.templateData?.verticalAlign,
-              });
-            }
-
-            $grpContent.wrapInner($scroller.prop('outerHTML'));
-          }
-
-          // Remove data group element if exists to avoid duplicate
-          if ($content.find('.' +
-              groupSlotId + '.cycle-slideshow').length === 1) {
-            $content.find('.' +
-                groupSlotId + '.cycle-slideshow').cycle('destroy');
-          }
-          if ($content.find('.' + groupSlotId).length === 1) {
-            $content.find('.' + groupSlotId).remove();
-          }
-
-          $content.append($grpContent);
-
-          $grpContent.promise().done(function() {
-            $grpContent.xiboElementsRender(
-              {
-                ...groupSlotObj,
-                itemsPerPage: maxSlot,
-                numItems: data.length,
-                selector: `.${groupSlotId}`,
-              },
-              $grpContent.find(`.${groupSlotObj.id}--item`),
-            );
-          });
-
-          currentWidget.items.push($grpContent);
-        }
-      });
-    }
-
-    // Standalone elements with data
-    if (Object.values(standaloneSlotsData).length > 0) {
-      $.each(Object.keys(standaloneData),
-        function(keyIndx, keyValue) {
-          if (standaloneData.hasOwnProperty(keyValue) &&
-            Object.keys(standaloneData[keyValue]).length > 0 &&
-            templateId !== null && url !== null
-          ) {
-            const {maxSlot, pinnedSlots} =
-              PlayerHelper.getGroupData(
-                [standaloneElems],
-                keyValue,
-                true,
-              );
-
-            $.each(Object.keys(standaloneData[keyValue]),
-              function(slotIndex, slotKey) {
-                const slotObj = standaloneElems[keyValue][slotKey] || null;
-                const dataKeys = standaloneData[keyValue][slotKey];
-                const grpCln = `${keyValue}_page-${slotKey}`;
-                const $grpItem = $(`<div class="${grpCln}"></div>`);
-                const isMarquee =
-                  PlayerHelper.isMarquee(slotObj?.effect ?? 'noTransition');
-
-                if (dataKeys.length > 0) {
-                  $.each(dataKeys,
-                    function(dataKeyIndx, dataKey) {
-                      let dataItem = dataKey === 'empty' ?
-                        dataKey : {...(data[dataKey - 1] || {})};
-
-                      // Load element functions
-                      self.loadElementFunctions(slotObj, dataItem);
-
-                      // Run onElementParseData function
-                      dataItem = slotObj.onElementParseData();
-
-                      PlayerHelper.renderDataItem(
-                        false,
-                        dataKey,
-                        dataItem,
-                        slotObj ?? {},
-                        slotKey,
-                        maxSlot,
-                        slotObj?.pinSlot,
-                        pinnedSlots,
-                        grpCln,
-                        $grpItem,
-                        {...slotObj, isMarquee},
-                        meta,
-                        $content,
-                      );
-                    });
-
-                  if (isMarquee) {
-                    $grpItem.css({
-                      width: slotObj.width,
-                      height: slotObj.height,
-                      position: 'absolute',
-                      top: slotObj.top,
-                      left: slotObj.left,
-                      overflow: 'hidden',
-                      zIndex: slotObj.layer,
-                    });
-
-                    const $scroller =
-                        $(`<div class="${slotObj.id}--marquee scroll"/>`);
-
-                    $scroller.css({
-                      display: 'flex',
-                      height: slotObj.height,
-                    });
-
-                    if (slotObj?.templateData?.verticalAlign) {
-                      $scroller.css({
-                        alignItems: slotObj?.templateData?.verticalAlign,
-                      });
-                    }
-
-                    $grpItem.wrapInner($scroller.prop('outerHTML'));
-                  } else {
-                    $grpItem.css({
-                      position: 'absolute',
-                      top: slotObj.top,
-                      left: slotObj.left,
-                      width: slotObj.width,
-                      height: slotObj.height,
-                      zIndex: slotObj.layer,
-                    });
-                  }
-
-                  // Remove data item element if it exists to avoid duplicate
-                  if ($content.find('.' +
-                      grpCln + '.cycle-slideshow').length === 1) {
-                    $content.find('.' +
-                        grpCln + '.cycle-slideshow').cycle('destroy');
-                  }
-                  if ($content.find('.' + grpCln).length === 1) {
-                    $content.find('.' + grpCln).remove();
-                  }
-
-                  $content.append($grpItem);
-
-                  $grpItem.xiboElementsRender(
-                    {
-                      ...slotObj,
-                      parentId: grpCln,
-                      itemsPerPage: maxSlot,
-                      numItems: data.length,
-                      id: grpCln,
-                      selector: `.${grpCln}`,
-                    },
-                    $grpItem.find(`.${grpCln}--item`),
-                  );
-
-                  currentWidget.items.push($grpItem);
-                }
+                PlayerHelper.renderDataItem(
+                  true,
+                  dataKey,
+                  dataItem,
+                  groupItem,
+                  slotKey,
+                  maxSlot,
+                  groupItem.pinSlot,
+                  pinnedSlots,
+                  groupSlotId,
+                  $grpContent,
+                  {...groupSlotObj, isMarquee},
+                  meta,
+                  $content,
+                );
               });
           }
         });
-    }
-  } else {
-    const globalGroupedElements = widgetElements.groups;
 
-    // Global group elements
-    $.each(Object.keys(globalGroupedElements), function(grpIndex, grpId) {
-      const groupObj = widgetElements.groups[grpId];
+        $grpContent.css({
+          width: groupSlotObj.width,
+          height: groupSlotObj.height,
+          position: 'absolute',
+          top: groupSlotObj.top,
+          left: groupSlotObj.left,
+          overflow: 'hidden',
+          zIndex: groupSlotObj.layer,
+        });
 
-      if (groupObj?.items.length > 0) {
-        $.each(groupObj.items,
-          function(itemKey, groupItem) {
-            // Load element functions
-            self.loadElementFunctions(groupItem, {});
+        if (isMarquee) {
+          const $scroller =
+              $(`<div class="${groupSlotObj.id}--marquee scroll"></div>`);
 
-            (groupItem.hbs) && $content.append(
-              PlayerHelper.renderElement(
-                groupItem.hbs,
-                groupItem.templateData,
-                true,
-              ),
-            );
-
-            const itemID =
-              groupItem.uniqueID || groupItem.templateData?.uniqueID;
-            const $itemContainer = $(`<div class="${grpId}"></div>`);
-
-            // Call onTemplateRender
-            // Handle the rendering of the template
-            (groupItem.onTemplateRender() !== undefined) &&
-              groupItem.onTemplateRender()(
-                groupItem.elementId,
-                $itemContainer.find(`.${itemID}--item`),
-                $content.find(`.${itemID}--item`),
-                {groupItem, ...groupItem.templateData, data: {}},
-                meta,
-              );
+          $scroller.css({
+            display: 'flex',
+            height: groupSlotObj.height,
           });
+
+          if (groupSlotObj?.templateData?.verticalAlign) {
+            $scroller.css({
+              alignItems: groupSlotObj?.templateData?.verticalAlign,
+            });
+          }
+
+          $grpContent.wrapInner($scroller.prop('outerHTML'));
+        }
+
+        // Remove data group element if exists to avoid duplicate
+        if ($content.find('.' +
+            groupSlotId + '.cycle-slideshow').length === 1) {
+          $content.find('.' +
+              groupSlotId + '.cycle-slideshow').cycle('destroy');
+        }
+        if ($content.find('.' + groupSlotId).length === 1) {
+          $content.find('.' + groupSlotId).remove();
+        }
+
+        $content.append($grpContent);
+
+        $grpContent.promise().done(function() {
+          $grpContent.xiboElementsRender(
+            {
+              ...groupSlotObj,
+              itemsPerPage: maxSlot,
+              numItems: data.length,
+              selector: `.${groupSlotId}`,
+            },
+            $grpContent.find(`.${groupSlotObj.id}--item`),
+          );
+        });
+
+        currentWidget.items.push($grpContent);
       }
     });
+  }
 
-    // Global standalone elements
-    $.each(Object.keys(standaloneElems),
+  // Standalone elements with data
+  if (Object.values(standaloneSlotsData).length > 0) {
+    $.each(Object.keys(standaloneData),
       function(keyIndx, keyValue) {
-        $.each(Object.keys(standaloneElems[keyValue]),
-          function(keyIndex, elemKey) {
-            const standaloneElem = standaloneElems[keyValue][elemKey];
-
-            // Load element functions
-            self.loadElementFunctions(standaloneElem, {});
-
-            (standaloneElem.hbs) && $content.append(
-              PlayerHelper.renderElement(
-                standaloneElem.hbs,
-                standaloneElem.templateData,
-                true,
-              ),
+        if (standaloneData.hasOwnProperty(keyValue) &&
+          Object.keys(standaloneData[keyValue]).length > 0 &&
+          templateId !== null && url !== null
+        ) {
+          const {maxSlot, pinnedSlots} =
+            PlayerHelper.getGroupData(
+              [standaloneElems],
+              keyValue,
+              true,
             );
 
-            const itemID =
-              standaloneElem.uniqueID || standaloneElem.templateData?.uniqueID;
-            const grpCln = `${keyValue}_page-${elemKey}`;
-            const $itemContainer = $(`<div class="${grpCln}"></div>`);
+          $.each(Object.keys(standaloneData[keyValue]),
+            function(slotIndex, slotKey) {
+              const slotObj = standaloneElems[keyValue][slotKey] || null;
+              const dataKeys = standaloneData[keyValue][slotKey];
+              const grpCln = `${keyValue}_page-${slotKey}`;
+              const $grpItem = $(`<div class="${grpCln}"></div>`);
+              const isMarquee =
+                PlayerHelper.isMarquee(slotObj?.effect ?? 'noTransition');
 
-            // Call onTemplateRender
-            // Handle the rendering of the template
-            (standaloneElem.onTemplateRender() !== undefined) &&
-              standaloneElem.onTemplateRender()(
-                standaloneElem.elementId,
-                $itemContainer.find(`.${itemID}--item`),
-                $content.find(`.${itemID}--item`),
-                {standaloneElem, ...standaloneElem.templateData, data: {}},
-                meta,
-              );
-          });
+              if (dataKeys.length > 0) {
+                $.each(dataKeys,
+                  function(dataKeyIndx, dataKey) {
+                    let dataItem = dataKey === 'empty' ?
+                      dataKey : {...(data[dataKey - 1] || {})};
+
+                    // Load element functions
+                    self.loadElementFunctions(slotObj, dataItem);
+
+                    // Run onElementParseData function
+                    dataItem = slotObj.onElementParseData();
+
+                    PlayerHelper.renderDataItem(
+                      false,
+                      dataKey,
+                      dataItem,
+                      slotObj ?? {},
+                      slotKey,
+                      maxSlot,
+                      slotObj?.pinSlot,
+                      pinnedSlots,
+                      grpCln,
+                      $grpItem,
+                      {...slotObj, isMarquee},
+                      meta,
+                      $content,
+                    );
+                  });
+
+                if (isMarquee) {
+                  $grpItem.css({
+                    width: slotObj.width,
+                    height: slotObj.height,
+                    position: 'absolute',
+                    top: slotObj.top,
+                    left: slotObj.left,
+                    overflow: 'hidden',
+                    zIndex: slotObj.layer,
+                  });
+
+                  const $scroller =
+                      $(`<div class="${slotObj.id}--marquee scroll"/>`);
+
+                  $scroller.css({
+                    display: 'flex',
+                    height: slotObj.height,
+                  });
+
+                  if (slotObj?.templateData?.verticalAlign) {
+                    $scroller.css({
+                      alignItems: slotObj?.templateData?.verticalAlign,
+                    });
+                  }
+
+                  $grpItem.wrapInner($scroller.prop('outerHTML'));
+                } else {
+                  $grpItem.css({
+                    position: 'absolute',
+                    top: slotObj.top,
+                    left: slotObj.left,
+                    width: slotObj.width,
+                    height: slotObj.height,
+                    zIndex: slotObj.layer,
+                  });
+                }
+
+                // Remove data item element if it exists to avoid duplicate
+                if ($content.find('.' +
+                    grpCln + '.cycle-slideshow').length === 1) {
+                  $content.find('.' +
+                      grpCln + '.cycle-slideshow').cycle('destroy');
+                }
+                if ($content.find('.' + grpCln).length === 1) {
+                  $content.find('.' + grpCln).remove();
+                }
+
+                $content.append($grpItem);
+
+                $grpItem.xiboElementsRender(
+                  {
+                    ...slotObj,
+                    parentId: grpCln,
+                    itemsPerPage: maxSlot,
+                    numItems: data.length,
+                    id: grpCln,
+                    selector: `.${grpCln}`,
+                  },
+                  $grpItem.find(`.${grpCln}--item`),
+                );
+
+                currentWidget.items.push($grpItem);
+              }
+            });
+        }
       });
   }
 
@@ -1133,6 +1059,103 @@ XiboPlayer.prototype.renderWidgetElements = function(currentWidget) {
   } else {
     xiboIC.addToQueue(currentWidget.onVisible);
   }
+
+  console.log(
+    '<<<END>>> of renderWidgetElements for widget >', currentWidget.widgetId);
+};
+
+/**
+ * Renders widget with global elements
+ * @param {Object} currentWidget Widget object
+ */
+XiboPlayer.prototype.renderGlobalElements = function(currentWidget) {
+  const self = this;
+  const {elements: widgetElements, meta} = currentWidget;
+  const $content = $('#content');
+  const groupedElements = widgetElements.groups;
+  const standaloneElements = widgetElements.standalone;
+
+  // Global grouped elements
+  $.each(Object.keys(groupedElements), function(grpIndex, grpId) {
+    const groupObj = groupedElements[grpId];
+
+    if (groupObj?.items.length > 0) {
+      $.each(groupObj.items,
+        function(itemKey, groupItem) {
+          // Load element functions
+          self.loadElementFunctions(groupItem, {});
+
+          (groupItem.hbs) && $content.append(
+            PlayerHelper.renderElement(
+              groupItem.hbs,
+              groupItem.templateData,
+              true,
+            ),
+          );
+
+          const itemID =
+            groupItem.uniqueID || groupItem.templateData?.uniqueID;
+          const $itemContainer = $(`<div class="${grpId}"></div>`);
+
+          // Call onTemplateRender
+          // Handle the rendering of the template
+          (groupItem.onTemplateRender() !== undefined) &&
+          groupItem.onTemplateRender()(
+            groupItem.elementId,
+            $itemContainer.find(`.${itemID}--item`),
+            $content.find(`.${itemID}--item`),
+            {groupItem, ...groupItem.templateData, data: {}},
+            meta,
+          );
+        });
+    }
+  });
+
+  // Global standalone elements
+  $.each(Object.keys(standaloneElements),
+    function(keyIndx, keyValue) {
+      $.each(Object.keys(standaloneElements[keyValue]),
+        function(keyIndex, elemKey) {
+          const standaloneElem = standaloneElements[keyValue][elemKey];
+
+          // Load element functions
+          self.loadElementFunctions(standaloneElem, {});
+
+          (standaloneElem.hbs) && $content.append(
+            PlayerHelper.renderElement(
+              standaloneElem.hbs,
+              standaloneElem.templateData,
+              true,
+            ),
+          );
+
+          const itemID =
+            standaloneElem.uniqueID || standaloneElem.templateData?.uniqueID;
+          const grpCln = `${keyValue}_page-${elemKey}`;
+          const $itemContainer = $(`<div class="${grpCln}"></div>`);
+
+          // Call onTemplateRender
+          // Handle the rendering of the template
+          (standaloneElem.onTemplateRender() !== undefined) &&
+          standaloneElem.onTemplateRender()(
+            standaloneElem.elementId,
+            $itemContainer.find(`.${itemID}--item`),
+            $content.find(`.${itemID}--item`),
+            {standaloneElem, ...standaloneElem.templateData, data: {}},
+            meta,
+          );
+        });
+    });
+
+  // Check if we are visible
+  if (xiboIC.checkVisible()) {
+    currentWidget.onVisible();
+  } else {
+    xiboIC.addToQueue(currentWidget.onVisible);
+  }
+
+  console.log(
+    '<<<END>>> of renderGlobalElements for widget >', currentWidget.widgetId);
 };
 
 /**
@@ -1174,14 +1197,8 @@ XiboPlayer.prototype.renderModule = function(currentWidget) {
   } else {
     xiboIC.addToQueue(currentWidget.onVisible);
   }
-};
 
-/**
- * Renders widget with global elements
- * @param {Object} currentWidget Widget object
- */
-XiboPlayer.prototype.renderGlobalElements = function(currentWidget) {
-  this.renderWidgetElements(currentWidget);
+  console.log('<<<END>>> of renderModule for widget >', currentWidget.widgetId);
 };
 
 /**
