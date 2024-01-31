@@ -538,40 +538,6 @@ const PlayerHelper = function() {
     if (item.hasOwnProperty('hbs') &&
       typeof item.hbs === 'function' && dataItemKey !== 'empty'
     ) {
-      // const extendDataWith = transformer
-      //   .getExtendedDataKey(item.dataOverrideWith);
-      //
-      // if (extendDataWith !== null &&
-      //   dataItem.hasOwnProperty(extendDataWith)
-      // ) {
-      //   dataItem[item.dataOverride] = dataItem[extendDataWith];
-      // }
-      //
-      // // Handle special case for setting data for the player
-      // if (item.type === 'dataset' && Object.keys(dataItem).length > 0) {
-      //   if (item.dataOverride !== null &&
-      //       item.templateData?.datasetField !== undefined
-      //   ) {
-      //     item[item.dataOverride] = dataItem[item.templateData.datasetField];
-      //
-      //     // Change value in templateData if exists
-      //     if (item.templateData.hasOwnProperty(item.dataOverride)) {
-      //       item.templateData[item.dataOverride] =
-      //         dataItem[item.templateData.datasetField];
-      //     }
-      //   }
-      // }
-      //
-      // if (typeof window[
-      //   `onElementParseData_${item.templateData.id}`
-      // ] === 'function') {
-      //   dataItem[item.dataOverride] =
-      //     window[`onElementParseData_${item.templateData.id}`](
-      //       dataItem[extendDataWith],
-      //       {...item.templateData, data: dataItem},
-      //     );
-      // }
-
       let groupItemStyles = {
         width: groupObj.width,
         height: groupObj.height,
@@ -633,24 +599,6 @@ const PlayerHelper = function() {
           props,
         ),
       );
-      //
-      // let onTemplateRender;
-      // const itemID = item.uniqueID || item.templateData?.uniqueID;
-      //
-      // // Check if onTemplateRender for child template is isExtended
-      // // And onTemplateRender is defined on child, then use it
-      // // Else, use parent onTemplateRender
-      // if (item.isExtended && typeof window[
-      //   `onTemplateRender_${item.templateData.id}`
-      // ] === 'function') {
-      //   onTemplateRender = window[`onTemplateRender_${item.templateData.id}`];
-      // } else if (item.isExtended && typeof window [
-      //   `onTemplateRender_${item.dataOverride}`
-      // ] === 'function') {
-      //   onTemplateRender = window[`onTemplateRender_${item.dataOverride}`];
-      // } else if (!item.isExtended) {
-      //   onTemplateRender = window[`onTemplateRender_${item.templateData.id}`];
-      // }
 
       const itemID = item.uniqueID || item.templateData?.uniqueID;
       // Handle the rendering of the template

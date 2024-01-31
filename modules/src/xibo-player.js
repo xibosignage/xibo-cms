@@ -833,6 +833,17 @@ XiboPlayer.prototype.renderWidgetElements = function(
   } = currentWidget;
   const $content = $('#content');
 
+  // Check if data is expected and we have elements but with no data
+  // Then expire
+  if (currentWidget.isDataExpected && data.length === 0) {
+    if (Object.keys(widgetElements?.standalone ?? {}).length > 0 ||
+      Object.keys(widgetElements?.groups ?? {}).length > 0
+    ) {
+      xiboIC.expireNow({targetId: xiboICTargetId});
+      return;
+    }
+  }
+
   if (Object.keys(widgetElements?.standalone ?? {}).length > 0 ||
     Object.keys(widgetElements?.groups ?? {}).length > 0
   ) {
