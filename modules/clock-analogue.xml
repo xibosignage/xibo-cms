@@ -208,8 +208,17 @@ if (typeof updateClock === 'function') {
 }
     ]]></onVisible>
     <onRender><![CDATA[
-      // Scale the content
-      $(target).xiboLayoutScaler(properties);
+var width = $(window).width();
+var height = $(window).height();
+
+// Clock size
+// Shrink by 2px to get a bit of space to the side.
+var size = Math.min(width, height) - 2;
+
+$(target).find('.hero-circle').css({
+    width: size + "px",
+    height: size + "px"
+});
 ]]></onRender>
     <assets>
         <asset id="clock-analogue-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/clock/clock-analogue-thumb.png" />
