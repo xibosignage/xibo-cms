@@ -1102,7 +1102,8 @@ html {
 // properties: The properties for the widget
 // -------------------------------------------
 // No data message
-if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !== '') {
+console.log({id, target, items, properties, meta});
+if (items.length == 0 && properties.noDataMessage && properties.noDataMessage !== '') {
     $(target).find('#content').append(properties.noDataMessage);
 }
 

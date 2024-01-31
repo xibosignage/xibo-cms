@@ -1316,6 +1316,11 @@ Widget.prototype.getData = function() {
               )();
 
               data.data = onDataLoad(data.data, data.meta, properties);
+
+              // Check for dataItems on onDataLoad response
+              if (data.data && data.data.hasOwnProperty('dataItems')) {
+                data.data = data.data.dataItems;
+              }
             }
 
             if (modulesList[item].onParseData) {
