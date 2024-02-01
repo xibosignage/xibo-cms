@@ -1277,7 +1277,8 @@ XiboPlayer.prototype.isStaticWidget = function(playerWidget) {
 };
 
 XiboPlayer.prototype.isModule = function(currentWidget) {
-  return !currentWidget.isDataExpected && $('#hbs-module').length > 0;
+  return (!currentWidget.isDataExpected && $('#hbs-module').length > 0) ||
+    (!currentWidget.isDataExpected && this.inputElements.length === 0);
 };
 
 /**
