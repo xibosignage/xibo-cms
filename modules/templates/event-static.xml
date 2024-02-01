@@ -82,7 +82,7 @@
         </properties>
         <stencil>
             <twig><![CDATA[
-{% if javaScript %}<script type="text/javascript">{{javaScript}}</script>{% endif %}
+{% if javaScript %}<script type="text/javascript">{{javaScript|raw}}</script>{% endif %}
 {% if styleSheet or itemsSideBySide or backgroundColor or textDirection == "rtl" %}
 <style>
 {% if itemsSideBySide %}.item, .page { float: left; }{% endif %}
@@ -115,7 +115,7 @@ $(target).find('#content').empty();
 
 // Add items to container
 // If we have numItems, send only that number
-let numItems =
+var numItems =
   properties.numItems && properties.numItems < items.length ?
   properties.numItems :
   items.length;

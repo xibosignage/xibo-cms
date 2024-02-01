@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -1908,13 +1908,26 @@ class User extends Base
             if ($object->permissionsClass() == 'Xibo\Entity\Campaign') {
                 $this->getLog()->debug('Changing owner on child Layout');
 
-                $this->getDispatcher()->dispatch(LayoutOwnerChangeEvent::$NAME, new LayoutOwnerChangeEvent($object->getId(), $ownerId));
+                $this->getDispatcher()->dispatch(
+                    new LayoutOwnerChangeEvent($object->getId(), $ownerId),
+                    LayoutOwnerChangeEvent::$NAME,
+                );
             }
         }
 
         if ($object->permissionsClass() === 'Xibo\Entity\Folder') {
             /** @var $object \Xibo\Entity\Folder */
             $object->managePermissions();
+        } else if ($object->permissionsClass() === 'Xibo\Entity\Region') {
+            /** @var $object \Xibo\Entity\Region */
+            // The regions own playlist should always have the same permissions.
+            $permissions = $this->permissionFactory->getAllByObjectId(
+                $this->getUser(),
+                'Xibo\Entity\Playlist',
+                $object->getPlaylist()->playlistId
+            );
+
+            $this->updatePermissions($permissions, $groupIds);
         }
 
         // Return

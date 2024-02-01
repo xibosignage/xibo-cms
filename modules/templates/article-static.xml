@@ -96,7 +96,7 @@
         </properties>
         <stencil>
             <twig><![CDATA[
-{% if javaScript %}<script type="text/javascript">{{javaScript}}</script>{% endif %}
+{% if javaScript %}<script type="text/javascript">{{javaScript|raw}}</script>{% endif %}
 {% if css or itemsSideBySide or backgroundColor or textDirection == "rtl" %}
 <style>
 {% if itemsSideBySide %}.text-render-item, .page { float: left; }{% endif %}
@@ -1303,7 +1303,7 @@ $(target).xiboLayoutAnimate(properties);
         </properties>
         <stencil>
             <twig><![CDATA[
-{% if javaScript %}<script type="text/javascript">{{javaScript}}</script>{% endif %}
+{% if javaScript %}<script type="text/javascript">{{javaScript|raw}}</script>{% endif %}
 {% if backgroundColor or textDirection == "rtl" or gapTags or gapItems %}
 <style>
 {% if textDirection == "rtl" %}#content { direction: rtl; }{% endif %}
@@ -1311,11 +1311,14 @@ $(target).xiboLayoutAnimate(properties);
 {% if (effect == "marqueeLeft") or (effect == "marqueeRight") %}
     {% if gapTags %}.marquee-item { margin-right: {{gapTags}}px; }{% endif %}
     {% if gapItems %}.item.text-render-item, .separator { margin-right: {{gapItems}}px; }{% endif %}
+    .is-media-item { display: inline-block; }
+    .marquee-item { vertical-align: middle; }
 {% endif %}
 
 {% if (effect == "marqueeUp") or (effect == "marqueeDown") %}
     {% if gapTags %}.marquee-item { margin-bottom: {{gapTags}}px; }{% endif %}
     {% if gapItems %}.item.text-render-item, .separator { margin-bottom: {{gapItems}}px; }{% endif %}
+    .marquee-item { display: block; }
 {% endif %}
 </style>
 {% endif %}
@@ -1329,26 +1332,56 @@ $(target).xiboLayoutAnimate(properties);
 // -------------------------------------------
 
 // Generate template from chosen fields
-let selectedTags = (properties.selectedTags != null && properties.selectedTags != '') ? JSON.parse(properties.selectedTags) : [];
+var selectedTags = (properties.selectedTags != null && properties.selectedTags != '') ? JSON.parse(properties.selectedTags) : [];
 
 properties.template = '';
 
-for (const tag in selectedTags) {
-    properties.template += '<span class="marquee-item marquee-' + tag + '" style="';
+for (var tag in selectedTags) {
+    var isImage = (selectedTags[tag]['tagType'] === 'image');
 
-    for (const style in selectedTags[tag]) {
-        (style === 'fontSize' && selectedTags[tag][style]) && (properties.template += 'font-size:' + selectedTags[tag][style] + 'px;');
-        (style === 'fontColor' && selectedTags[tag][style]) && (properties.template += 'color:' + selectedTags[tag][style] + ';');
-        (style === 'fontFamily' && selectedTags[tag][style]) && (properties.template += 'font-family:' + selectedTags[tag][style] + ';');
-        (style === 'bold' && selectedTags[tag][style]) && (properties.template += 'font-weight: bold;');
-        (style === 'italics' && selectedTags[tag][style]) && (properties.template += 'font-style: italic;');
-        (style === 'underline' && selectedTags[tag][style]) && (properties.template += 'text-decoration: underline;');
-        (style === 'width' && selectedTags[tag][style]) && (properties.template += 'width:' + selectedTags[tag][style] + ';');
-        (style === 'height' && selectedTags[tag][style]) && (properties.template += 'height:' + selectedTags[tag][style] + ';');
-        (style === 'opacity' && selectedTags[tag][style]) && (properties.template += 'opacity:' + selectedTags[tag][style] + ';');
+    properties.template += '<span class="marquee-item marquee-' + tag;
+
+    if (isImage) {
+        properties.template += ' is-media-item';
     }
 
-    properties.template += '">[' + tag + ']</span>';
+    properties.template += '" style="';
+
+    for (var style in selectedTags[tag]) {
+        if (style === 'fontSize' && selectedTags[tag][style]) {
+            properties.template += 'font-size:' + selectedTags[tag][style] + 'px;';
+        }
+        if (style === 'fontColor' && selectedTags[tag][style]) {
+            properties.template += 'color:' + selectedTags[tag][style] + ';';
+        }
+        if (style === 'fontFamily' && selectedTags[tag][style]) {
+            properties.template += 'font-family:' + selectedTags[tag][style] + ';';
+        }
+        if (style === 'bold' && selectedTags[tag][style]) {
+            properties.template += 'font-weight: bold;';
+        }
+        if (style === 'italics' && selectedTags[tag][style]) {
+            properties.template += 'font-style: italic;';
+        }
+        if (style === 'underline' && selectedTags[tag][style]) {
+            properties.template += 'text-decoration: underline;';
+        }
+        if (style === 'width' && selectedTags[tag][style]) {
+            properties.template += 'width:' + selectedTags[tag][style] + 'px;';
+        }
+        if (style === 'height' && selectedTags[tag][style]) {
+            properties.template += 'height:' + selectedTags[tag][style] + 'px;';
+        }
+        if (style === 'opacity' && selectedTags[tag][style]) {
+            properties.template += 'opacity:' + selectedTags[tag][style] + ';';
+        }
+    }
+
+    if (isImage) {
+        properties.template += '"><img style="width: 100%; height: 100%;" src="[' + tag + ']" /></span>';
+    } else {
+        properties.template += '">[' + tag + ']</span>';
+    }
 }
 
 if (items.length > 0) {
@@ -1365,14 +1398,26 @@ if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !=
 
 // Copyright
 if (properties.copyright) {
-    let copyrightTemplate = '<span class="marquee-item marquee-copyright" style="';
+    var copyrightTemplate = '<span class="marquee-item marquee-copyright" style="';
 
-    (properties.copyrightFontFamily) && (copyrightTemplate += 'font-family:' + properties.copyrightFontFamily + ';');
-    (properties.copyrightFontColor) && (copyrightTemplate += 'color:' + properties.copyrightFontColor + ';');
-    (properties.copyrightFontSize) && (copyrightTemplate += 'font-size:' + properties.copyrightFontSize + 'px;');
-    (properties.copyrightBold) && (copyrightTemplate += 'font-weight: bold;');
-    (properties.copyrightItalics) && (copyrightTemplate += 'font-style: italic;');
-    (properties.copyrightUnderline) && (copyrightTemplate += 'text-decoration: underline;');
+    if (properties.copyrightFontFamily) {
+        copyrightTemplate += 'font-family:' + properties.copyrightFontFamily + ';';
+    }
+    if (properties.copyrightFontColor) {
+        copyrightTemplate += 'color:' + properties.copyrightFontColor + ';';
+    }
+    if (properties.copyrightFontSize) {
+        copyrightTemplate += 'font-size:' + properties.copyrightFontSize + 'px;';
+    }
+    if (properties.copyrightBold) {
+        copyrightTemplate += 'font-weight: bold;';
+    }
+    if (properties.copyrightItalics) {
+        copyrightTemplate += 'font-style: italic;';
+    }
+    if (properties.copyrightUnderline) {
+        copyrightTemplate += 'text-decoration: underline;';
+    }
 
     copyrightTemplate += '">' + properties.copyright + '</span>';
 

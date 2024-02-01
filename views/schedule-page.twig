@@ -1483,7 +1483,7 @@
             responsivePriority: 4,
             data: function (data) {
               if (data.recurringEvent) {
-                if (data.recurrenceType === 'Week') {
+                if (data.recurrenceType === 'Week' && data.recurrenceRepeatsOn) {
                   const daysOfTheWeek = [
                     '{% trans "Monday" %}',
                     '{% trans "Tuesday" %}',

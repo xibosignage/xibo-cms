@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -2596,14 +2596,19 @@ class Layout extends Base
         // Hand over to the widget downloader
         $downloader = new WidgetDownloader(
             $this->getConfig()->getSetting('LIBRARY_LOCATION'),
-            $this->getConfig()->getSetting('SENDFILE_MODE')
+            $this->getConfig()->getSetting('SENDFILE_MODE'),
+            $this->getConfig()->getSetting('DEFAULT_RESIZE_LIMIT', 6000)
         );
         $downloader->useLogger($this->getLog()->getLoggerInterface());
-        $response = $downloader->imagePreview($this->getSanitizer([
-            'width' => $layout->width,
-            'height' => $layout->height,
-            'proportional' => 0
-        ]), $media->storedAs, $response);
+        $response = $downloader->imagePreview(
+            $this->getSanitizer([
+                'width' => $layout->width,
+                'height' => $layout->height,
+                'proportional' => 0,
+            ]),
+            $media->storedAs,
+            $response,
+        );
 
         $this->setNoOutput(true);
         return $this->render($request, $response);

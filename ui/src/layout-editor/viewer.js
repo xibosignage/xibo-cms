@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -1884,7 +1884,8 @@ Viewer.prototype.renderElementContent = function(
         hbsHtml.match(mediaURLRegex)?.forEach((match) => {
           const mediaId = match.split('[[mediaId=')[1].split(']]')[0];
           const mediaUrl =
-            urlsForApi.library.download.url.replace(':id', mediaId);
+            urlsForApi.library.download.url.replace(':id', mediaId) +
+              '?preview=1';
 
           // Replace asset id with asset url
           hbsHtml = hbsHtml.replace(match, mediaUrl);

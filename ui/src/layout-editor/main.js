@@ -1035,7 +1035,12 @@ lD.loadFormFromAPI = function(
               generatedButtons[button] = {
                 label: button,
                 className: buttonType + ' btn-bb-' + button,
-                callback: function() {
+                callback: function(ev) {
+                  // Show loading cog
+                  $(ev.currentTarget).append(
+                    '&nbsp;<i class="fa fa-cog fa-spin"></i>',
+                  );
+
                   // Call global function by the function name
                   if (mainActionCallback != null && mainButtonAction) {
                     eval(mainActionCallback);
@@ -3053,6 +3058,8 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
         groupElements,
       );
 
+      let updateLayerAbove = false;
+      let updateLayerAboveTarget = 0;
       switch (actionType) {
         case 'bringToFront':
           // Only update layer if original isn't the top one
@@ -3074,6 +3081,10 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
             // Find below layer and get 1 under it
             newLayer = calculatedLayers.availableDown;
           }
+          // Still update layers
+          updateLayerAboveTarget =
+            (newLayer != null) ? newLayer : originalLayer;
+          updateLayerAbove = true;
           break;
         case 'sendToBack':
           // Only update layer if original isn't the bottom one
@@ -3081,50 +3092,24 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
             // Find bottom layer and add 1 under it
             newLayer = calculatedLayers.availableBottom;
           }
+
+          // Still update layers
+          updateLayerAboveTarget =
+            (newLayer != null) ? newLayer : originalLayer;
+          updateLayerAbove = true;
           break;
       }
 
-      // Only update if we have a new layer
-      if (newLayer != null) {
-        if (layoutObject.type === 'region') {
-          // Transform region
-          layoutObject.transform({
-            zIndex: newLayer,
-          });
-
-          // Update on viewer
-          lD.viewer.updateRegion(layoutObject);
-        } else if (
-          layoutObject.type === 'element' ||
-          layoutObject.type === 'element-group'
-        ) {
-          layoutObject.layer = newLayer;
-
-          // Get widget
-          const elementWidget =
-            lD.getObjectByTypeAndId('widget', objAuxId, 'canvas');
-
-          // Update element or element group in the viewer
-          if (layoutObject.type === 'element') {
-            lD.viewer.updateElement(layoutObject, true);
-          } else {
-            lD.viewer.updateElementGroupLayer(layoutObject);
-          }
-
-          // Save elements to the widget
-          elementWidget.saveElements();
-        }
-
-        // If object is selected, update position form with new layer
-        if (layoutObject.selected) {
-          lD.propertiesPanel.updatePositionForm({
-            zIndex: newLayer,
-          });
-        }
-
-        // Update layer manager
-        lD.viewer.layerManager.render();
-      }
+      // Update layer manager
+      lD.viewer.layerManager.updateObjectLayer(
+        layoutObject,
+        newLayer,
+        {
+          widgetId: objAuxId,
+          updateObjectsInFront: updateLayerAbove,
+          updateObjectsInFrontTargetLayer: updateLayerAboveTarget,
+        },
+      );
     } else if (target.data('action') == 'Copy') {
       // For now, use an offset value to position the new element
       const offsetMove = 20;
