@@ -112,6 +112,11 @@
             <helpText>When all day events are excluded they are removed from the list of events in the feed and wont be shown</helpText>
             <default></default>
         </property>
+        <property id="excludePast" type="checkbox">
+            <title>Exclude past events?</title>
+            <helpText>When past events are excluded they are removed from the list of events in the feed and wont be shown.</helpText>
+            <default></default>
+        </property>
         <property id="showOnlyCurrent" type="checkbox">
             <title>Show only current events?</title>
             <helpText>Show current events and hide all other events from the feed.</helpText>
@@ -211,12 +216,20 @@ for(var idx = 0; idx < items.length; idx++) {
         }
     }
 
+    if(endDate.isBefore(now)) {
+        items[idx].pastEvent = true;
+    } else {
+        items[idx].pastEvent = false;
+    }
+
     // Filter items based on properties
     if (
-        // If it's current event and we need to exclude it, don't return it
+        // If it's current event and we need to exclude it
         (properties.excludeCurrent == 1 && items[idx].currentEvent) ||
-        // If it's not current event, amd we only want to show current event, don't return it
-        (properties.showOnlyCurrent == 1 && !item.currentEvent)
+        // If it's not current event, and we only want to show current events
+        (properties.showOnlyCurrent == 1 && !item.currentEvent) ||
+        // If it's a past event and we need to exclude it
+        (properties.excludePast == 1 && item.pastEvent)
     ) {
         items.splice(idx, 1);
         idx--;
