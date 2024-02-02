@@ -2,30 +2,30 @@
     <div class="viewer-navbar-info">
         {{! Element Info }}
         {{#eq object.type "widget"}}
-            <div class="info d-inline">
+            <div class="info">
                 {{#ifCond object.widgetName '||' object.moduleName}}
-                    <span class="label-name align-middle d-inline-block">
+                    <div class="label-name align-middle d-inline-block">
                         <strong>{{objectTypeName}}</strong> <span title="{{trans.widgetName}}">{{#if object.widgetName}}"{{object.widgetName}}"{{/if}}</span>
-                    </span>
+                    </div>
                 {{/ifCond}}
             </div>
         {{else eq object.type "element"}}
-            <div class="info d-inline">
-                <span class="label-name align-middle">
+            <div class="info">
+                <div class="label-name align-middle">
                     <strong>{{objectTypeName}}</strong> | <span title="{{trans.templateName}}">{{object.template.title}}</span>{{#if object.elementName}} - <span title="{{trans.elementName}}">"{{object.elementName}}"</span>{{/if}}
-                </span>
+                </div>
             </div>
         {{else eq object.type "element-group"}}
-            <div class="info d-inline">
-                <span class="label-name align-middle">
+            <div class="info">
+                <div class="label-name align-middle">
                     <strong>{{objectTypeName}}</strong>{{#if object.elementGroupName}} - <span title="{{trans.elementGroupName}}">"{{object.elementGroupName}}"</span>{{/if}}
-                </span>
+                </div>
             </div>
         {{else}}
-            <div class="info d-inline">
-                <span class="label-name align-middle">
+            <div class="info">
+                <div class="label-name align-middle">
                     <strong>{{objectTypeName}}</strong> <span title="{{trans.regionName}}">{{#if object.name}}"{{object.name}}"{{/if}}</span>
-                </span>
+                </div>
             </div>
         {{/eq}}
     </div>
