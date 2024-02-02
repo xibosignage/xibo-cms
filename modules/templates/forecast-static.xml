@@ -175,8 +175,8 @@
 <div class="forecast-day-template" style="display: none;">
 {{dailyTemplate|raw}}
 </div>
-
-<style>
+            ]]></twig>
+            <style><![CDATA[
 {{styleSheet|raw}}
 
 {% import "forecastio-css-generator.twig" as generateForecastCSS %}
@@ -204,8 +204,7 @@
     null,
     attribute(_context, 'shadow-color')
 ) }}
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
     </template>
     <template>
@@ -381,8 +380,8 @@
         <div class="small-day">[time|ddd]</div>
     </div>
 </div>
-
-<style>
+            ]]></twig>
+            <style><![CDATA[
 * {
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
@@ -531,8 +530,7 @@ body {
     null,
     attribute(_context, 'shadow-color')
 ) }}
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <assets>
             <asset id="weather_1" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_1.png" />
@@ -712,8 +710,8 @@ body {
         </div>
     </div>
 </div>
-
-<style>
+            ]]></twig>
+            <style><![CDATA[
 * {
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
@@ -836,8 +834,7 @@ body {
     null,
     attribute(_context, 'shadow-color')
 ) }}
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <assets>
             <asset id="weather_2" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_2.png" />
@@ -1015,8 +1012,8 @@ body {
 </div>
 
 {% import "forecastio-css-generator.twig" as generateForecastCSS %}
-
-<style>
+            ]]></twig>
+            <style><![CDATA[
 * {
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
@@ -1145,8 +1142,7 @@ body {
     null,
     attribute(_context, 'shadow-color')
 ) }}
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <assets>
             <asset id="weather_3" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_3.png" />
@@ -1347,10 +1343,10 @@ body {
         <div class="row text-center temp-details">[temperatureMaxRound] &deg; [temperatureUnit] </div>
     </div>
 </div>
-
+            ]]></twig>
+            <style><![CDATA[
 {% import "forecastio-css-generator.twig" as generateForecastCSS %}
 
-<style>
 .container {
     width: 1920px !important;
     height: 1080px !important;
@@ -1541,8 +1537,7 @@ h1 {
     attribute(_context, 'footer-icons-color'),
     attribute(_context, 'shadow-color')
 ) }}
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <assets>
             <asset id="weather_4" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_4.png" />
@@ -1737,10 +1732,10 @@ h1 {
         <div class="weather-col col-3 icon-up"><i class="wi [wicon]"></i></div>
     </div>
 </div>
-
+            ]]></twig>
+            <style><![CDATA[
 {% import "forecastio-css-generator.twig" as generateForecastCSS %}
 
-<style>
 body {
     width: 540px !important;
     height: 960px !important;
@@ -1995,8 +1990,7 @@ body {
     attribute(_context, 'footer-icons-color'),
     attribute(_context, 'shadow-color')
 ) }}
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <assets>
             <asset id="weather_5" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_5.png" />
@@ -2215,10 +2209,10 @@ body {
         <div class="temp-small">[temperatureMaxRound] &deg; [temperatureUnit]</div>
     </div>
 </div>
-
+            ]]></twig>
+            <style><![CDATA[
 {% import "forecastio-css-generator.twig" as generateForecastCSS %}
 
-<style>
 body {
     width: 970px !important;
     height: 493px !important;
@@ -2429,8 +2423,7 @@ body {
     null,
     null,
 ) }}
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <assets>
             <asset id="weather_6" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_6.png" />
@@ -2598,10 +2591,10 @@ body {
         </div>
     </div>
 </div>
-
+            ]]></twig>
+            <style><![CDATA[
 {% import "forecastio-css-generator.twig" as generateForecastCSS %}
 
-<style>
 body {
     width: 540px !important;
     height: 540px !important;
@@ -2878,8 +2871,7 @@ body {
     null,
     attribute(_context, 'shadow-color'),
 ) }}
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <assets>
             <asset id="weather_7" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_7.png" />
@@ -3062,10 +3054,10 @@ body {
     <div class="small-temp shadowed">[temperatureMaxRound] &deg; [temperatureUnit] </div>
 </div>
 </div>
-
+            ]]></twig>
+            <style><![CDATA[
 {% import "forecastio-css-generator.twig" as generateForecastCSS %}
 
-<style>
 body {
  width: 970px !important;
  height: 700px !important;
@@ -3321,8 +3313,7 @@ body {
     null,
     attribute(_context, 'shadow-color')
 ) }}
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <assets>
             <asset id="weather_8" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_8.png" />
@@ -3505,10 +3496,10 @@ body {
         <div class="weather-col col-4 icon-up shadowed">[temperatureMinRound]&deg; - [temperatureMaxRound]&deg; [temperatureUnit]</div>
     </div>
 </div>
-
+            ]]></twig>
+            <style><![CDATA[
 {% import "forecastio-css-generator.twig" as generateForecastCSS %}
 
-<style>
 body {
  width: 540px !important;
  height: 960px !important;
@@ -3832,8 +3823,7 @@ body {
     null,
     attribute(_context, 'shadow-color')
 ) }}
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <assets>
             <asset id="weather_9" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_9.png" />
@@ -4046,10 +4036,10 @@ body {
         <div class="small-temp">[temperatureMaxRound] &deg; [temperatureUnit]</div>
     </div>
 </div>
-
+            ]]></twig>
+            <style><![CDATA[
 {% import "forecastio-css-generator.twig" as generateForecastCSS %}
 
-<style>
 body {
     width: 960px !important;
     height: 540px !important;
@@ -4337,8 +4327,7 @@ body {
     attribute(_context, 'footer-icons-color'),
     attribute(_context, 'shadow-color')
 ) }}
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <assets>
             <asset id="weather_10" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_10.png" />
@@ -4544,10 +4533,10 @@ body {
         <div class="weather-col col-12 temp ">[temperatureMinRound]&deg; - [temperatureMaxRound]&deg; [temperatureUnit]</div>
     </div>
 </div>
-
+            ]]></twig>
+            <style><![CDATA[
 {% import "forecastio-css-generator.twig" as generateForecastCSS %}
 
-<style>
 body {
     width: 540px !important;
     height: 960px !important;
@@ -4871,8 +4860,7 @@ h1 {
     attribute(_context, 'footer-icons-color'),
     attribute(_context, 'shadow-color')
 ) }}
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <assets>
             <asset id="weather_11" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_11.png" />
@@ -5084,10 +5072,10 @@ h1 {
         <div class="small-temp">[temperatureMaxRound] &deg; [temperatureUnit]</div>
     </div>
 </div>
-
+            ]]></twig>
+            <style><![CDATA[
 {% import "forecastio-css-generator.twig" as generateForecastCSS %}
 
-<style>
 body {
     width: 960px !important;
     height: 540px !important;
@@ -5350,8 +5338,7 @@ body {
     attribute(_context, 'footer-icons-color'),
     null
 ) }}
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <assets>
             <asset id="weather_12" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_12.png" />
@@ -5523,10 +5510,10 @@ body {
         <div class="temp">[temperatureMaxRound] &deg; [temperatureUnit]</div>
     </div>
 </div>
-
+            ]]></twig>
+            <style><![CDATA[
 {% import "forecastio-css-generator.twig" as generateForecastCSS %}
 
-<style>
 body {
     width: 960px !important;
     height: 180px !important;
@@ -5695,8 +5682,7 @@ body {
     null,
     null
 ) }}
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <assets>
             <asset id="weather_13" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_13.png" />
@@ -5873,10 +5859,10 @@ body {
         <div class="temp">[temperatureMaxRound] &deg; [temperatureUnit]</div>
     </div>
 </div>
-
+            ]]></twig>
+            <style><![CDATA[
 {% import "forecastio-css-generator.twig" as generateForecastCSS %}
 
-<style>
 body {
     width: 189px !important;
     height: 900px !important;
@@ -6064,8 +6050,7 @@ body {
     null,
     null
 ) }}
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <assets>
             <asset id="weather_14" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_14.png" />
@@ -6255,10 +6240,10 @@ body {
         </div>
     </div><div class="weather-col col-12 powered">[Attribution]</div>
 </div>
-
+            ]]></twig>
+            <style><![CDATA[
 {% import "forecastio-css-generator.twig" as generateForecastCSS %}
 
-<style>
 body {
     {% if fontFamily %}
         font-family: {{fontFamily}};
@@ -6361,8 +6346,7 @@ body {
     attribute(_context, 'footer-icons-color'),
     attribute(_context, 'shadow-color')
 ) }}
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <assets>
             <asset id="weather_15" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_15.png" />
@@ -6559,10 +6543,10 @@ body {
     </div>
     <div class="weather-col col-12 powered">[Attribution]</div>
 </div>
-
+            ]]></twig>
+            <style><![CDATA[
 {% import "forecastio-css-generator.twig" as generateForecastCSS %}
 
-<style>
 body {
     width: 250px !important;
     height: 250px !important;
@@ -6669,8 +6653,7 @@ body {
     attribute(_context, 'footer-icons-color'),
     attribute(_context, 'shadow-color')
 ) }}
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <assets>
             <asset id="weather_16" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_16.png" />
@@ -6817,10 +6800,10 @@ body {
     <div class="container main-container"></div>
     <div class="weather-col col-12 powered bg-footer">[Attribution]</div>
 </div>
-
+            ]]></twig>
+            <style><![CDATA[
 {% import "forecastio-css-generator.twig" as generateForecastCSS %}
 
-<style>
 #content, .main-container {
     width: 100%;
     height: 100%;
@@ -6861,8 +6844,7 @@ body {
     null,
     null
 ) }}
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <assets>
             <asset id="weather_17" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_17.png" />
@@ -7055,10 +7037,10 @@ body {
     </div>
     <div class="weather-col col-12 bg-footer powered">[Attribution]</div>
 </div>
-
+            ]]></twig>
+            <style><![CDATA[
 {% import "forecastio-css-generator.twig" as generateForecastCSS %}
 
-<style>
 body {
     width: 1920px !important;
     height: 1080px !important;
@@ -7157,8 +7139,7 @@ body {
     null,
     null
 ) }}
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <assets>
             <asset id="weather_18" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/forecast/weather_18.png" />

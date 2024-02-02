@@ -47,10 +47,15 @@
     </properties>
     <stencil>
         <twig><![CDATA[
-<div class="pdf-container" style="text-align: center">
-    <canvas id="the-canvas"></canvas>
+<div class="pdf-container">
+  <canvas id="the-canvas"></canvas>
 </div>
         ]]></twig>
+        <style><![CDATA[
+.pdf-container {
+  text-align: center;
+}
+        ]]></style>
     </stencil>
 <onInitialize><![CDATA[
 // Get widgetData from xic

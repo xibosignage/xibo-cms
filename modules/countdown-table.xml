@@ -218,8 +218,7 @@
     </table>
 </div>
         ]]></hbs>
-        <twig><![CDATA[
-<style>
+        <style><![CDATA[
 body {
     width: 600px !important;
     height: 400px !important;
@@ -255,17 +254,15 @@ tr.main-header td {
     font-weight: bolder;
 }
 
-{% if fontFamily %}tr { font-family: {{fontFamily}}; }{% endif %}
-{% if headerTextColor %}tr.main-header td { color: {{headerTextColor}}; }{% endif %}
-{% if headerBackgroundColor %}tr.main-header td { background: {{headerBackgroundColor}}; }{% endif %}
-{% if evenRowTextColor %}tr.header td { color: {{evenRowTextColor}}; }{% endif %}
-{% if evenRowBackgroundColor %}tr.header td { background-color: {{evenRowBackgroundColor}}; }{% endif %}
-{% if oddRowTextColor %}tr:not(.header):not(.main-header) td { color: {{oddRowTextColor}}; }{% endif %}
-{% if oddRowBackgroundColor %}tr:not(.header):not(.main-header) td { background-color: {{oddRowBackgroundColor}}; }{% endif %}
-{% if borderColor %}td { border-color: {{borderColor}}; }{% endif %}
-
-</style>
-        ]]></twig>
+{% if fontFamily %}tr { font-family: {{fontFamily}} !important; }{% endif %}
+{% if headerTextColor %}tr.main-header td { color: {{headerTextColor}} !important; }{% endif %}
+{% if headerBackgroundColor %}tr.main-header td { background: {{headerBackgroundColor}} !important; }{% endif %}
+{% if evenRowTextColor %}tr.header td { color: {{evenRowTextColor}} !important; }{% endif %}
+{% if evenRowBackgroundColor %}tr.header td { background-color: {{evenRowBackgroundColor}} !important; }{% endif %}
+{% if oddRowTextColor %}tr:not(.header):not(.main-header) td { color: {{oddRowTextColor}} !important; }{% endif %}
+{% if oddRowBackgroundColor %}tr:not(.header):not(.main-header) td { background-color: {{oddRowBackgroundColor}} !important; }{% endif %}
+{% if borderColor %}td { border-color: {{borderColor}} !important; }{% endif %}
+        ]]></style>
     </stencil>
     <onRender><![CDATA[
 // Make replacements on render for all templates

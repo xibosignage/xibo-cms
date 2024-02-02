@@ -121,8 +121,7 @@
     </div>
 </div>
         ]]></hbs>
-        <twig><![CDATA[
-<style>
+        <style><![CDATA[
 body {
    background: #222;
  }
@@ -157,9 +156,7 @@ body {
 {% if fontFamily %}.world-clock { font-family: {{fontFamily}}; }{% endif %}
 {% if dateTimeColor %}.world-clock { color: {{dateTimeColor}}; }{% endif %}
 {% if backgroundColor %}body { background: {{backgroundColor}}; }{% endif %}
-
-</style>
-        ]]></twig>
+        ]]></style>
     </stencil>
     <onInitialize><![CDATA[
 // Set moment locale

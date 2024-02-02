@@ -403,7 +403,7 @@ $(target).find('.date').each(function(_idx, dateEl){
                 </options>
                 <visibility>
                     <test>
-                        <condition field="objectFit" type="neq">fill</condition>
+                        <condition field="objectFit" type="eq">contain</condition>
                     </test>
                 </visibility>
             </property>
@@ -418,7 +418,7 @@ $(target).find('.date').each(function(_idx, dateEl){
                 </options>
                 <visibility>
                     <test>
-                        <condition field="objectFit" type="neq">fill</condition>
+                        <condition field="objectFit" type="eq">contain</condition>
                     </test>
                 </visibility>
             </property>

@@ -119,8 +119,7 @@
     </div>
 </div>
         ]]></hbs>
-        <twig><![CDATA[
-<style>
+        <style><![CDATA[
 .clockContainer {
   text-align: center;
   padding: 5px;
@@ -151,9 +150,7 @@
 {% if fontFamily %}.hourText { font-family: {{fontFamily}}; }{% endif %}
 {% if dateTimeColor %}.hourText { color: {{dateTimeColor}}; }{% endif %}
 {% if backgroundColor %}body { background: {{backgroundColor}}; }{% endif %}
-
-</style>
-        ]]></twig>
+        ]]></style>
     </stencil>
     <onInitialize><![CDATA[
 // Set moment locale

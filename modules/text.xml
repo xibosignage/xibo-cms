@@ -101,11 +101,11 @@
 <script type="text/javascript">
     {{javaScript|raw}}
 </script>
-<style>
+        ]]></twig>
+        <style><![CDATA[
 {% if backgroundColor %}body { background-color: {{backgroundColor}}; }{% endif %}
 {{styleSheet|raw}}
-</style>
-        ]]></twig>
+        ]]></style>
     </stencil>
     <onInitialize><![CDATA[
 // id: The id of the widget
