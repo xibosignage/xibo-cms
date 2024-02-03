@@ -195,7 +195,7 @@ body.editor-opened {
     background-color: $xibo-color-neutral-100;
 
     /* SCROLLBAR */
-    scrollbar-color: $xibo-color-primary-d60 $xibo-color-primary;
+    scrollbar-color: $xibo-color-primary lighten($xibo-color-primary, 40%);
     /* For firefox */
     scrollbar-width: thin;
     /* For firefox */
