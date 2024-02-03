@@ -181,8 +181,7 @@
     </div>
 </div>
         ]]></hbs>
-        <twig><![CDATA[
-<style>
+        <style><![CDATA[
 body {
     width: 640px !important;
     height: 360px !important;
@@ -231,16 +230,13 @@ body {
     background: red;
 }
 
-
 {% if innerFontFamily %}#clockdiv > div > span { font-family: {{innerFontFamily}}; }{% endif %}
 {% if innerBackgroundColor %}#clockdiv > div > span { background: {{innerBackgroundColor}}; }{% endif %}
 {% if innerTextColor %}#clockdiv > div > span { color: {{innerTextColor}}; }{% endif %}
 {% if outerBackgroundColor %}#clockdiv > div { background: {{outerBackgroundColor}}; }{% endif %}
 {% if labelFontFamily %}#clockdiv .smalltext { font-family: {{labelFontFamily}}; }{% endif %}
 {% if labelTextColor %}#clockdiv > div { color: {{labelTextColor}}; }{% endif %}
-
-</style>
-        ]]></twig>
+        ]]></style>
     </stencil>
     <onRender><![CDATA[
 // Make replacements on render for all templates

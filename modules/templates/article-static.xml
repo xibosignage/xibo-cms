@@ -97,15 +97,15 @@
         <stencil>
             <twig><![CDATA[
 {% if javaScript %}<script type="text/javascript">{{javaScript|raw}}</script>{% endif %}
-{% if css or itemsSideBySide or backgroundColor or textDirection == "rtl" %}
-<style>
-{% if itemsSideBySide %}.text-render-item, .page { float: left; }{% endif %}
-{% if textDirection == "rtl" %}#content { direction: rtl; }{% endif %}
-{% if backgroundColor %}body { background-color: {{backgroundColor}}; }{% endif %}
-{{css}}
-</style>
-{% endif %}
             ]]></twig>
+            <style><![CDATA[
+{% if css or itemsSideBySide or backgroundColor or textDirection == "rtl" %}
+    {% if itemsSideBySide %}.text-render-item, .page { float: left; }{% endif %}
+    {% if textDirection == "rtl" %}#content { direction: rtl; }{% endif %}
+    {% if backgroundColor %}body { background-color: {{backgroundColor}}; }{% endif %}
+    {{css|raw}}
+{% endif %}
+            ]]></style>  
         </stencil>
         <onTemplateRender><![CDATA[
 // id: The id of the widget
@@ -199,8 +199,7 @@ $(target).xiboLayoutAnimate(properties);
     {{#if image}}<img src="{{image}}"/>{{/if}}
 </div>
             ]]></hbs>
-            <twig><![CDATA[
-<style>
+            <style><![CDATA[
 #content, .text-render-item, .image, .image img {
     width:100%; height: 100%;
 }
@@ -226,8 +225,7 @@ body {
     transform: translateY(-50%);
 }
 {% endif %}
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // id: The id of the widget
@@ -343,8 +341,7 @@ $(target).xiboLayoutAnimate(properties);
   </div>
 </div>
             ]]></hbs>
-            <twig><![CDATA[
-<style>
+            <style><![CDATA[
 html {
   /* Global font size, change for font scale */
   font-size: 16px;
@@ -447,8 +444,7 @@ html {
     transform: translateY(-50%);
 }
 {% endif %}
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // id: The id of the widget
@@ -559,8 +555,7 @@ $(target).xiboLayoutAnimate(properties);
   </div>
 </div>
             ]]></hbs>
-            <twig><![CDATA[
-<style>
+            <style><![CDATA[
 html {
   /* Global font size, change for font scale */
   font-size: 16px;
@@ -652,8 +647,7 @@ html {
     transform: translateY(-50%);
 }
 {% endif %}
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // id: The id of the widget
@@ -802,8 +796,7 @@ $(target).xiboLayoutAnimate(properties);
     <div><div class="description">{{{summary}}}</div></div>
 </div>
             ]]></hbs>
-            <twig><![CDATA[
-<style>
+            <style><![CDATA[
 html {
     /* Global font size, change for font scale */
     font-size: 16px;
@@ -886,8 +879,7 @@ html {
     transform: translateY(-50%);
 }
 {% endif %}
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // id: The id of the widget
@@ -1028,8 +1020,7 @@ $(target).xiboLayoutAnimate(properties);
     <div><div class="title"><strong>{{title}}</strong></div></div>
 </div>
             ]]></hbs>
-            <twig><![CDATA[
-<style>
+            <style><![CDATA[
 html {
     /* Global font size, change for font scale */
     font-size: 16px;
@@ -1092,8 +1083,7 @@ html {
     width: auto;
 }
 {% endif %}
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // id: The id of the widget
@@ -1304,8 +1294,8 @@ $(target).xiboLayoutAnimate(properties);
         <stencil>
             <twig><![CDATA[
 {% if javaScript %}<script type="text/javascript">{{javaScript|raw}}</script>{% endif %}
-{% if backgroundColor or textDirection == "rtl" or gapTags or gapItems %}
-<style>
+            ]]></twig>
+            <style><![CDATA[
 {% if textDirection == "rtl" %}#content { direction: rtl; }{% endif %}
 {% if backgroundColor %}body { background-color: {{backgroundColor}}; }{% endif %}
 {% if (effect == "marqueeLeft") or (effect == "marqueeRight") %}
@@ -1320,9 +1310,7 @@ $(target).xiboLayoutAnimate(properties);
     {% if gapItems %}.item.text-render-item, .separator { margin-bottom: {{gapItems}}px; }{% endif %}
     .marquee-item { display: block; }
 {% endif %}
-</style>
-{% endif %}
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // id: The id of the widget

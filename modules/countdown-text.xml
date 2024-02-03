@@ -177,8 +177,7 @@
     </p>
 </div>
         ]]></hbs>
-        <twig><![CDATA[
-<style>
+        <style><![CDATA[
 body {
     width: 280px !important;
     height: 100px !important;
@@ -201,9 +200,7 @@ body {
 .finished .seconds, .finished .minutes, .finished .hours, .finished .hoursAll {
     color: {{finishedColor}};
 }
-
-</style>
-        ]]></twig>
+        ]]></style>
     </stencil>
     <onRender><![CDATA[
 // Make replacements on render for all templates

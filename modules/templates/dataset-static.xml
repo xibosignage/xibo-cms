@@ -145,10 +145,10 @@
 {% if javaScript %}<script type="text/javascript">{{javaScript|raw}}</script>{% endif %}
 
 <div id="DataSetTableContainer"></div>
-<style>
-{{styleSheet|raw}}
-</style>
             ]]></twig>
+            <style><![CDATA[
+{{styleSheet|raw}}
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Show no data message
@@ -383,14 +383,14 @@ $datasetTableContainer.dataSetRender(properties);
         </properties>
         <preview></preview>
         <stencil>
-        <twig><![CDATA[
+            <twig><![CDATA[
 {% if javaScript %}
 <script type="text/javascript">
     {{javaScript|raw}}
 </script>
 {% endif %}
-
-<style>
+        ]]></twig>
+            <style><![CDATA[
 {% if itemsSideBySide %}
 .item, .page {
     float: left;
@@ -402,14 +402,9 @@ body {
     background-color: {{ backgroundColor }};
 }
 {% endif %}
-</style>
 
-{% if styleSheet %}
-<style>
-    {{styleSheet|raw}}
-</style>
-{% endif %}
-        ]]></twig>
+{{styleSheet|raw}}
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Module renderer options
@@ -633,7 +628,8 @@ $(target).xiboLayoutAnimate(properties);
             <stencil>
             <twig><![CDATA[
 <div class="DataSetTableContainer"></div>
-<style>
+            ]]></twig>
+            <style><![CDATA[
 /* Template Styles */
 table.DataSetTable {
     width: 100%;
@@ -698,8 +694,7 @@ table.DataSetTable.cycle-slide {
 {% if rowsPerPage > 0 %}
 table.DataSetTable {visibility:hidden;}
 {% endif %}
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Show no data message
@@ -899,9 +894,10 @@ $datasetTableContainer.dataSetRender(properties);
             </property>
         </properties>
         <stencil>
-        <twig><![CDATA[
+            <twig><![CDATA[
 <div class="DataSetTableContainer"></div>
-<style>
+            ]]></twig>
+            <style><![CDATA[
 /* Template Styles */
 table.DataSetTable {
     font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
@@ -980,8 +976,7 @@ table.DataSetTable.cycle-slide {
 {% if rowsPerPage > 0 %}
 table.DataSetTable {visibility:hidden;}
 {% endif %}
-</style>
-        ]]></twig>
+            ]]></style>   
         </stencil>
         <onTemplateRender><![CDATA[
 // Show no data message
@@ -1181,9 +1176,10 @@ $datasetTableContainer.dataSetRender(properties);
             </property>
         </properties>
         <stencil>
-        <twig><![CDATA[
+            <twig><![CDATA[
 <div class="DataSetTableContainer"></div>
-<style>
+            ]]></twig>
+            <style><![CDATA[
 /* Template Styles */
 table.DataSetTable {
     font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
@@ -1253,8 +1249,7 @@ table.DataSetTable.cycle-slide {
 {% if rowsPerPage > 0 %}
 table.DataSetTable {visibility:hidden;}
 {% endif %}
-</style>
-        ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Show no data message
@@ -1454,9 +1449,10 @@ $datasetTableContainer.dataSetRender(properties);
             </property>
         </properties>
         <stencil>
-        <twig><![CDATA[
+            <twig><![CDATA[
 <div class="DataSetTableContainer"></div>
-<style>
+            ]]></twig>
+            <style><![CDATA[
 /* Template Styles */
 table.DataSetTable {
     font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
@@ -1524,8 +1520,7 @@ table.DataSetTable.cycle-slide {
 {% if rowsPerPage > 0 %}
 table.DataSetTable {visibility:hidden;}
 {% endif %}
-</style>
-        ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Show no data message
@@ -1725,9 +1720,10 @@ $datasetTableContainer.dataSetRender(properties);
             </property>
         </properties>
         <stencil>
-        <twig><![CDATA[
+            <twig><![CDATA[
 <div class="DataSetTableContainer"></div>
-<style>
+            ]]></twig>
+            <style><![CDATA[
 /* Template Styles */
 table.DataSetTable {
     font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
@@ -1793,8 +1789,7 @@ table.DataSetTable.cycle-slide {
 {% if rowsPerPage > 0 %}
 table.DataSetTable {visibility:hidden;}
 {% endif %}
-</style>
-        ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Show no data message
@@ -1994,9 +1989,10 @@ $datasetTableContainer.dataSetRender(properties);
             </property>
         </properties>
         <stencil>
-        <twig><![CDATA[
+            <twig><![CDATA[
 <div class="DataSetTableContainer"></div>
-<style>
+            ]]></twig>
+            <style><![CDATA[
 /* Template Styles */
 table.DataSetTable {
     font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
@@ -2060,8 +2056,7 @@ table.DataSetTable.cycle-slide {
 {% if rowsPerPage > 0 %}
 table.DataSetTable {visibility:hidden;}
 {% endif %}
-</style>
-        ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Show no data message
@@ -2261,9 +2256,10 @@ $datasetTableContainer.dataSetRender(properties);
             </property>
         </properties>
         <stencil>
-        <twig><![CDATA[
+            <twig><![CDATA[
 <div class="DataSetTableContainer"></div>
-<style>
+            ]]></twig>
+            <style><![CDATA[
 /* Template Styles */
 table.DataSetTable {
     font-family: Montserrat, sans-serif;
@@ -2322,8 +2318,7 @@ table.DataSetTable.cycle-slide {
 {% if rowsPerPage > 0 %}
 table.DataSetTable {visibility:hidden;}
 {% endif %}
-</style>
-        ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Show no data message
@@ -2523,9 +2518,11 @@ $datasetTableContainer.dataSetRender(properties);
             </property>
         </properties>
         <stencil>
-        <twig><![CDATA[
+            <twig><![CDATA[
 <div class="DataSetTableContainer"></div>
-<style>
+            ]]></twig>
+            <style><![CDATA[
+
 /* Template Styles */
 table.DataSetTable {
     font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
@@ -2625,8 +2622,7 @@ table.DataSetTable.cycle-slide {
 {% if rowsPerPage > 0 %}
 table.DataSetTable {visibility:hidden;}
 {% endif %}
-</style>
-        ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Show no data message
@@ -2974,8 +2970,7 @@ $(target).xiboLayoutAnimate(properties);
         </properties>
         <preview></preview>
         <stencil>
-            <twig><![CDATA[
-<style>
+            <style><![CDATA[
 {% if itemsSideBySide %}
 .item, .page {
     float: left;
@@ -2987,8 +2982,7 @@ body {
     background-color: {{ backgroundColor }};
 }
 {% endif %}
-</style>
-        ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Module renderer options
@@ -3308,8 +3302,8 @@ $(target).xiboLayoutAnimate(properties);
         <stencil>
             <twig><![CDATA[
 {% if javaScript %}<script type="text/javascript">{{javaScript|raw}}</script>{% endif %}
-{% if backgroundColor or textDirection == "rtl" or gapTags or gapItems %}
-<style>
+            ]]></twig>
+            <style><![CDATA[
 {% if textDirection == "rtl" %}#content { direction: rtl; }{% endif %}
 {% if backgroundColor %}body { background-color: {{backgroundColor}}; }{% endif %}
 {% if (effect == "marqueeLeft") or (effect == "marqueeRight") %}
@@ -3324,9 +3318,7 @@ $(target).xiboLayoutAnimate(properties);
     {% if gapItems %}.item.text-render-item, .separator { margin-bottom: {{gapItems}}px; }{% endif %}
     .marquee-item { display: block; }
 {% endif %}
-</style>
-{% endif %}
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // id: The id of the widget

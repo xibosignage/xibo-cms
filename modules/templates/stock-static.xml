@@ -23,7 +23,6 @@
         <id>stocks_custom_html</id>
         <type>static</type>
         <dataType>stock</dataType>
-        <showIn>none</showIn>
         <title>Stocks Custom HTML</title>
         <properties>
             <property id="effect" type="effectSelector" variant="showPaged">
@@ -88,11 +87,10 @@
 <div class="item-template" style="display: none;">
 {{itemTemplate|raw}}
 </div>
-
-<style>
+            ]]></twig>
+            <style><![CDATA[
 {{styleSheet|raw}}
-</style>
-        ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Template renderer options
@@ -203,7 +201,7 @@ $(target).xiboLayoutAnimate(properties);
     <div class="stock-col col-2 text-right value {{ChangeStyle}}">{{ChangePercentage}}%</div>
     <div class="stock-col col-1 text-right"><div class="{{ChangeIcon}}"></div></div>
 </div>
-        ]]></hbs>
+            ]]></hbs>
             <twig><![CDATA[
 <div class="container-main template-container">
     <div class="container">
@@ -211,8 +209,8 @@ $(target).xiboLayoutAnimate(properties);
         </div>
     </div>
 </div>
-
-<style>
+            ]]></twig>
+            <style><![CDATA[
 body {
  width: 820px !important;
  height: 420px !important;
@@ -413,8 +411,7 @@ body {
     padding-right: 15px;
     padding-left: 15px;
 }
-</style>
-        ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Template renderer options
@@ -517,7 +514,7 @@ $(target).xiboLayoutAnimate(properties);
         <div class="subtotal {{ChangeIcon}}"></div>
     </div>
 </div>
-        ]]></hbs>
+            ]]></hbs>
             <twig><![CDATA[
 <div class="container-main template-container">
     <div class="container">
@@ -525,8 +522,8 @@ $(target).xiboLayoutAnimate(properties);
         </div>
     </div>
 </div>
-
-<style>
+            ]]></twig>
+            <style><![CDATA[
 * {
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
@@ -735,8 +732,7 @@ h1 {
 .logo {
     height: 40px;
 }
-</style>
-        ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Template renderer options

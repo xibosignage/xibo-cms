@@ -191,8 +191,7 @@
     </div>
 </div>
         ]]></hbs>
-        <twig><![CDATA[
-<style>
+        <style><![CDATA[
 body {
     width: 600px !important;
     height: 170px !important;
@@ -240,15 +239,13 @@ body {
     color: darkred;
 }
 
-{% if textColor %}#clockdiv div>span { color: {{textColor}}; }{% endif %}
-{% if fontFamily %}#clockdiv div>span { font-family: {{fontFamily}}; }{% endif %}
-{% if textBackgroundColor %}#clockdiv div>span { background-color: {{textBackgroundColor}}; }{% endif %}
-{% if borderColor %}#clockdiv div>span { border-color: {{borderColor}}; }{% endif %}
-{% if labelTextColor %}#clockdiv { color: {{labelTextColor}}; }{% endif %}
-{% if labelFontFamily %}#clockdiv { font-family: {{labelFontFamily}}; }{% endif %}
-
-</style>
-        ]]></twig>
+{% if textColor %}#clockdiv div>span { color: {{textColor}} !important; }{% endif %}
+{% if fontFamily %}#clockdiv div>span { font-family: {{fontFamily}} !important; }{% endif %}
+{% if textBackgroundColor %}#clockdiv div>span { background-color: {{textBackgroundColor}} !important; }{% endif %}
+{% if borderColor %}#clockdiv div>span { border-color: {{borderColor}} !important; }{% endif %}
+{% if labelTextColor %}#clockdiv { color: {{labelTextColor}} !important; }{% endif %}
+{% if labelFontFamily %}#clockdiv { font-family: {{labelFontFamily}} !important; }{% endif %}
+        ]]></style>
     </stencil>
     <onRender><![CDATA[
 // Make replacements on render for all templates

@@ -313,8 +313,7 @@
     {{/eq}}
 </div>
         ]]></hbs>
-        <twig><![CDATA[
-<style>
+        <style><![CDATA[
 body {
     {% if bgColor %}
         background: {{bgColor}};
@@ -531,8 +530,7 @@ body {
         left: 82px;
     }
 {% endif %}
-</style>
-        ]]></twig>
+        ]]></style>
     </stencil>
     <onInitialize><![CDATA[
 // Set moment locale

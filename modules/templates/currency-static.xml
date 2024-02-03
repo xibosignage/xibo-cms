@@ -89,11 +89,10 @@
     <img src="[[assetId=flags]]" class="flag-icon flag-icon-[NameShort]">
   </div>
 </div>
-
-<style>
+            ]]></twig>
+            <style><![CDATA[
 {{styleSheet|raw}}
-</style>
-        ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Template renderer options
@@ -199,7 +198,7 @@ $(target).xiboLayoutAnimate(properties);
   <div class="name value">{{NameShort}}</div>
   <div class="price text-center value">{{RawLastTradePriceOnly}}</div>
 </div>
-        ]]></hbs>
+            ]]></hbs>
             <twig><![CDATA[
 <div class="container-main template-container">
     <div class="container">
@@ -210,8 +209,8 @@ $(target).xiboLayoutAnimate(properties);
         </div>
     </div>
 </div>
-
-<style>
+            ]]></twig>
+            <style><![CDATA[
 body {
     width: 820px !important;
     height: 420px !important;
@@ -328,8 +327,7 @@ body {
     width: 50px;
     height: 50px;
 }
-</style>
-        ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Template renderer options
@@ -443,14 +441,14 @@ $(target).xiboLayoutAnimate(properties);
     <div class="perc value {{ChangeStyle}}">{{ChangePercentage}}%</div>
     <div class="arrow"><div class="{{ChangeIcon}}"></div></div>
 </div>
-        ]]></hbs>
+            ]]></hbs>
             <twig><![CDATA[
 <div class="container-main template-container">
   <div id="cycle-container" class="items-container">
   </div>
 </div>
-
-<style>
+            ]]></twig>
+            <style><![CDATA[
 body {
   width: 820px !important;
   height: 420px !important;
@@ -607,8 +605,7 @@ body {
 .name-stock {
   color: gray;
 }
-</style>
-        ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Template renderer options

@@ -132,8 +132,8 @@
 
 <div class="twitter-white-logo" data-url="[[assetAlias=providerLogoWhite]]" style="display: none;">
 <div class="twitter-blue-logo" data-url="[[assetAlias=providerLogo]]" style="display: none;">
-
-<style>
+            ]]></twig>
+        <style><![CDATA[
 /* Legacy properties from bootstrap */
 .social-media-item {
     float: left;
@@ -169,8 +169,7 @@ body {
 }
 
 {{styleSheet|raw}}
-</style>
-            ]]></twig>
+        ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
@@ -301,9 +300,7 @@ $(target).xiboLayoutAnimate(properties);
     </div>
 </div>
             ]]></hbs>
-            <twig><![CDATA[
-<style>
-
+            <style><![CDATA[
 .item {
     float: left;
 }
@@ -392,8 +389,7 @@ div.message-container {
     display: inline-block;
     max-height: 180px;
 }
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
@@ -527,9 +523,7 @@ $(target).xiboLayoutAnimate(properties);
     </div>
 </div>
             ]]></hbs>
-            <twig><![CDATA[
-<style>
-
+            <style><![CDATA[
 .item {
     float: left;
 }
@@ -632,8 +626,7 @@ div.message-container {
     display: inline-block;
     max-height: 880px;
 }
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
@@ -742,9 +735,7 @@ $(target).xiboLayoutAnimate(properties);
     </div>
 </div>
             ]]></hbs>
-            <twig><![CDATA[
-<style>
-
+            <style><![CDATA[
 .main-container {
     width: 600px !important;
     height: 150px !important;
@@ -774,8 +765,7 @@ $(target).xiboLayoutAnimate(properties);
 .item {
     float: left;
 }
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
@@ -883,9 +873,7 @@ $(target).xiboLayoutAnimate(properties);
     </div>
 </div>
             ]]></hbs>
-            <twig><![CDATA[
-<style>
-
+            <style><![CDATA[
 .main-container {
     width: 800px !important;
     height: 100px !important;
@@ -930,8 +918,7 @@ $(target).xiboLayoutAnimate(properties);
     width: calc(100% - 16px);
     padding: 8px;
 }
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
@@ -1039,9 +1026,7 @@ $(target).xiboLayoutAnimate(properties);
     </div>
 </div>
             ]]></hbs>
-            <twig><![CDATA[
-<style>
-
+            <style><![CDATA[
 .main-container {
     width: 800px !important;
     height: 100px !important;
@@ -1087,8 +1072,7 @@ $(target).xiboLayoutAnimate(properties);
     width: calc(100% - 16px);
     padding: 8px;
 }
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
@@ -1214,8 +1198,7 @@ $(target).xiboLayoutAnimate(properties);
     </div>
 </div>
             ]]></hbs>
-            <twig><![CDATA[
-<style>
+            <style><![CDATA[
 .item {
     float: left;
 }
@@ -1304,8 +1287,7 @@ body {
     width: fit-content;
     overflow-y: hidden;
 }
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
@@ -1440,8 +1422,7 @@ $(target).xiboLayoutAnimate(properties);
     </div>
 </div>
             ]]></hbs>
-            <twig><![CDATA[
-<style>
+            <style><![CDATA[
 .item {
     float: left;
 }
@@ -1536,8 +1517,7 @@ body {
     width: fit-content;
     overflow-y: hidden;
 }
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
@@ -1677,8 +1657,7 @@ $(target).xiboLayoutAnimate(properties);
     </div>
 </div>
             ]]></hbs>
-            <twig><![CDATA[
-<style>
+            <style><![CDATA[
 .item {
     float: left;
 }
@@ -1779,8 +1758,7 @@ body {
     width: fit-content;
     overflow-y: hidden;
 }
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
@@ -1917,8 +1895,7 @@ $(target).xiboLayoutAnimate(properties);
     </div>
 </div>
             ]]></hbs>
-            <twig><![CDATA[
-<style>
+            <style><![CDATA[
 .item {
     float: left;
 }
@@ -2008,8 +1985,7 @@ body {
     width: fit-content;
     overflow-y: hidden;
 }
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
@@ -2140,8 +2116,7 @@ $(target).xiboLayoutAnimate(properties);
     </div>
 </div>
             ]]></hbs>
-            <twig><![CDATA[
-<style>
+            <style><![CDATA[
 .item {
     float: left;
 }
@@ -2242,8 +2217,7 @@ body {
     max-width: 100%;
     height: auto;
 }
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
@@ -2374,8 +2348,7 @@ $(target).xiboLayoutAnimate(properties);
     </div>
 </div>
             ]]></hbs>
-            <twig><![CDATA[
-<style>
+            <style><![CDATA[
 .item {
     float: left;
 }
@@ -2484,8 +2457,7 @@ body {
     max-width: 100%;
     height: 100%;
 }
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
@@ -2626,8 +2598,7 @@ $(target).xiboLayoutAnimate(properties);
     </div>
 </div>
             ]]></hbs>
-            <twig><![CDATA[
-<style>
+            <style><![CDATA[
 body {
     {% if fontFamily %}
         font-family: {{fontFamily}};
@@ -2732,8 +2703,7 @@ body {
     max-width: 100%;
     max-height: 100%;
 }
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
@@ -2874,7 +2844,8 @@ $(target).xiboLayoutAnimate(properties);
             ]]></hbs>
             <twig><![CDATA[
 <div class="metro-render-container"></div>
-<style>
+            ]]></twig>
+            <style><![CDATA[
 * {
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
@@ -3052,8 +3023,7 @@ body {
 small {
     font-size: 70%;
 }
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Set widget design width and height based on the window orientation

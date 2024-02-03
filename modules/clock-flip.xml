@@ -99,8 +99,7 @@
         <hbs><![CDATA[
 <div id="clock"></div>
         ]]></hbs>
-<twig><![CDATA[
-<style>
+        <style><![CDATA[
 body {
     margin: 0;
     overflow: hidden;
@@ -117,15 +116,13 @@ h1, h2, h3, h4, p {
     margin: 0 !important;
 }
 
-{% if backgroundColor %}body { background: {{backgroundColor}}; }{% endif %}
-{% if dividerColor %}.flip-clock-dot { background: {{dividerColor}}; }{% endif %}
-{% if ampmColor %}.flip-clock-meridium a { color: {{ampmColor}}; }{% endif %}
+{% if backgroundColor %}body { background: {{backgroundColor}} !important; }{% endif %}
+{% if dividerColor %}.flip-clock-dot { background: {{dividerColor}} !important; }{% endif %}
+{% if ampmColor %}.flip-clock-meridium a { color: {{ampmColor}} !important; }{% endif %}
 
-{% if flipCardTextColor %}.flip-clock-wrapper ul li a div div.inn { color: {{flipCardTextColor}}; }{% endif %}
-{% if flipCardBackgroundColor %}.flip-clock-wrapper ul li a div div.inn { background-color: {{flipCardBackgroundColor}}; }{% endif %}
-
-</style>
-        ]]></twig>
+{% if flipCardTextColor %}.flip-clock-wrapper ul li a div div.inn { color: {{flipCardTextColor}} !important; }{% endif %}
+{% if flipCardBackgroundColor %}.flip-clock-wrapper ul li a div div.inn { background-color: {{flipCardBackgroundColor}} !important; }{% endif %}
+        ]]></style>
     </stencil>
     <onInitialize><![CDATA[
 // Set moment locale

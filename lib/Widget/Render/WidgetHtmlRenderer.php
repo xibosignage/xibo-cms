@@ -728,6 +728,7 @@ class WidgetHtmlRenderer
             if ($moduleTemplate->stencil !== null
                 && $moduleTemplate->stencil->style !== null
                 && !$isExtensionHasStyle
+                && $moduleTemplate->type === 'element'
             ) {
                 $twig['style'][] = $moduleTemplate->stencil->style;
             }
