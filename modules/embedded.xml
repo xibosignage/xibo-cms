@@ -52,7 +52,7 @@
             <helpText>Should this Widget be loaded entirely off-screen so that it is ready when shown? Dynamic content will start running off screen.</helpText>
             <default>0</default>
         </property>
-        <property id="embedHtml" type="code" allowLibraryRefs="true" variant="html">
+        <property id="embedHtml" type="code" allowLibraryRefs="true" variant="html" includeInXlf="true">
             <title>HTML</title>
             <helpText>Add HTML to be included between the BODY tag.</helpText>
         </property>
