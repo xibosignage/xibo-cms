@@ -427,7 +427,6 @@ class InstallMigration extends AbstractMigration
             ->addColumn('name', 'string', ['limit' => 254])
             ->addColumn('ownerId', 'integer')
             ->addForeignKey('ownerId', 'user', 'userId')
-            ->addIndex('regionId')
             ->save();
 
         $linkRegionPlaylist = $this->table('lkregionplaylist', ['id' => false, 'primary_key' => 'regionId', 'playlistId', 'displayOrder']);
