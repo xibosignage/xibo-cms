@@ -677,12 +677,8 @@ class Layout extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @return \Slim\Http\Response
+     * @throws \Xibo\Support\Exception\GeneralException
      * @SWG\Put(
      *  path="/layout/background/{layoutId}",
      *  operationId="layoutEditBackground",
@@ -730,7 +726,7 @@ class Layout extends Base
      *  )
      * )
      */
-    function editBackground(Request $request, Response $response, $id)
+    public function editBackground(Request $request, Response $response, $id): Response
     {
         $layout = $this->layoutFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -755,9 +751,28 @@ class Layout extends Base
         $resolution = $this->resolutionFactory->getById($sanitizedParams->getInt('resolutionId'));
 
         if ($layout->width != $resolution->width || $layout->height != $resolution->height) {
-            $saveRegions = true;
+            $this->getLog()->debug('editBackground: resolution dimensions have changed, updating layout');
+
+            $layout->load([
+                'loadPlaylists' => false,
+                'loadPermissions' => false,
+                'loadCampaigns' => false,
+                'loadActions' => false,
+            ]);
             $layout->width = $resolution->width;
             $layout->height = $resolution->height;
+            $layout->orientation = ($layout->width >= $layout->height) ? 'landscape' : 'portrait';
+
+            // Update the canvas region with its new width/height.
+            foreach ($layout->regions as $region) {
+                if ($region->type === 'canvas') {
+                    $this->getLog()->debug('editBackground: canvas region needs changing too');
+
+                    $region->width = $layout->width;
+                    $region->height = $layout->height;
+                    $saveRegions = true;
+                }
+            }
         }
 
         // Save
