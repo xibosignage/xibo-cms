@@ -33,12 +33,6 @@
             modulesList.push({{ module|json_encode|raw }});
         {% endfor %}
 
-        // USERS LIST
-        var usersList = [];
-        {% for user in users %}
-            usersList.push({{ user|json_encode|raw }});
-        {% endfor %}
-
         // Structure with API URLs
         var urlsForApi = {
             layout: {
@@ -280,6 +274,10 @@
                 }
             },
             user: {
+                get: {
+                    url: "{{ url_for("user.search") }}",
+                    type: 'GET'
+                },
                 getPref: {
                     url: "{{ url_for("user.pref") }}",
                     type: 'GET'

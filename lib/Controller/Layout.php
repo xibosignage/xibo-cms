@@ -264,7 +264,6 @@ class Layout extends Base
             'zoom' => $sanitizedParams->getDouble('zoom', [
                 'default' => $this->getUser()->getOptionValue('defaultDesignerZoom', 1)
             ]),
-            'users' => $this->userFactory->query(),
             'modules' => $moduleFactory->getAssignableModules(),
             'timeZones' => $timeZones,
         ];
