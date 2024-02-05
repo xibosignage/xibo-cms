@@ -143,7 +143,13 @@ const XiboPlayer = function() {
     // Useful when re-rendering the widget through the web console
     // parameter "shouldRefresh" defaults to =true to refresh widget data
     playerWidget.render = function(shouldRefresh = true) {
-      self.renderWidget(playerWidget, shouldRefresh);
+      if (playerWidget.isDataExpected) {
+        self.renderWidget(playerWidget, shouldRefresh);
+      } else if (self.isModule(playerWidget)) {
+        self.renderModule(playerWidget);
+      } else {
+        self.renderGlobalElements(playerWidget);
+      }
     };
 
     return playerWidget;
@@ -181,9 +187,13 @@ const XiboPlayer = function() {
     playerWidget.onTemplateRender = function(currentWidget) {
       return self.onTemplateRender(params, currentWidget);
     };
-    playerWidget.onRender = function(staticWidget) {
+    playerWidget.onRender = function(staticWidget, options) {
+      // We use staticWidget and options parameter to get updated parameters
+      // after loading these functions
+      const onRenderParams = options ? {...params, ...options} : params;
+
       return self.onRender({
-        ...params,
+        ...onRenderParams,
         items: staticWidget ? staticWidget.items : params.items,
       });
     };
@@ -1189,7 +1199,18 @@ XiboPlayer.prototype.renderModule = function(currentWidget) {
   window.widget = currentWidget;
 
   // Run onRender
-  currentWidget.onRender();
+  currentWidget.onRender(currentWidget, {
+    rendering: Object.assign(
+      currentWidget.properties,
+      globalOptions,
+      {
+        duration: currentWidget.duration,
+        pauseEffectOnStart: globalOptions.pauseEffectOnStart ?? false,
+        isPreview: currentWidget.isPreview,
+        isEditor: currentWidget.isEditor,
+      },
+    ),
+  });
 
   if (xiboIC.checkVisible()) {
     // Run onVisible
