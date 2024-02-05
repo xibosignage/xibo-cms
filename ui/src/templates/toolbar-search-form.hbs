@@ -18,11 +18,14 @@
         {{else eq @key "owner"}}
             <div class="form-group">
                 <label for="input-owner" class="mb-0">{{../trans.searchFilters.owner}}</label>
-                <select id="input-owner" name="ownerId" class="form-control mr-1 input-owner">
-                    <option value=""></option>
-                    {{#each this.values}}
-                        <option value="{{userId}}" {{#eq ../this.value userId}}selected{{/eq}}>{{name}}</option>
-                    {{/each}}
+                <select id="input-owner" name="ownerId" class="form-control mr-1 input-owner"
+                    {{#if searchUrl}}data-search-url="{{searchUrl}}"{{/if}}
+                    data-id-property="userId"
+                    data-search-term="userName"
+                    data-allow-clear="true"
+                    data-placeholder--id= "null"
+                    data-placeholder--value= ""
+                    data-text-property="userName">
                 </select>
             </div>
         {{else eq @key "orientation"}}
