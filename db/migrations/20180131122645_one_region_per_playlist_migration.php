@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,6 +22,10 @@
 
 use Phinx\Migration\AbstractMigration;
 
+/**
+ * @phpcs:disable PSR1.Classes.ClassDeclaration.MissingNamespace
+ * @phpcs:disable Generic.Files.LineLength.TooLong
+ */
 class OneRegionPerPlaylistMigration extends AbstractMigration
 {
     /**
@@ -35,7 +39,12 @@ class OneRegionPerPlaylistMigration extends AbstractMigration
             ->addColumn('createdDt', 'datetime', ['null' => true, 'default' => null])
             ->addColumn('modifiedDt', 'datetime', ['null' => true, 'default' => null])
             ->addColumn('duration', 'integer', ['default' => 0])
-            ->addColumn('requiresDurationUpdate', 'integer', ['default' => 0, 'limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
+            ->addColumn(
+                'requiresDurationUpdate',
+                'integer',
+                ['default' => 0, 'limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY]
+            )
+            ->addIndex('regionId')
             ->save();
 
         $this->execute('UPDATE `playlist` SET regionId = (SELECT MAX(regionId) FROM lkregionplaylist WHERE playlist.playlistId = lkregionplaylist.playlistId);');
