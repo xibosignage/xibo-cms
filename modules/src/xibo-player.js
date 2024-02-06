@@ -164,8 +164,8 @@ const XiboPlayer = function() {
     const self = this;
     const params = this.getRenderParams(
       playerWidget,
-      globalOptions,
       {target: $('body')},
+      globalOptions,
     );
 
     playerWidget.onTemplateDataLoad = function() {
@@ -184,8 +184,11 @@ const XiboPlayer = function() {
     playerWidget.onParseData = function(widgetDataItems) {
       return self.onParseData(playerWidget, widgetDataItems ?? dataItems);
     };
-    playerWidget.onTemplateRender = function(currentWidget) {
-      return self.onTemplateRender(params, currentWidget);
+    playerWidget.onTemplateRender = function(currentWidget, options) {
+      return self.onTemplateRender(
+        options ? {...params, ...options} : params,
+        currentWidget,
+      );
     };
     playerWidget.onRender = function(staticWidget, options) {
       // We use staticWidget and options parameter to get updated parameters
@@ -197,11 +200,11 @@ const XiboPlayer = function() {
         items: staticWidget ? staticWidget.items : params.items,
       });
     };
-    playerWidget.onTemplateVisible = function() {
-      return self.onTemplateVisible(params);
+    playerWidget.onTemplateVisible = function(options) {
+      return self.onTemplateVisible(options ? {...params, ...options} : params);
     };
-    playerWidget.onVisible = function() {
-      return self.onVisible(params);
+    playerWidget.onVisible = function(options) {
+      return self.onVisible(options ? {...params, ...options} : params);
     };
   };
 
@@ -775,18 +778,27 @@ XiboPlayer.prototype.renderStaticWidget = function(staticWidget) {
   // Save widget as global variable
   window.widget = staticWidget;
 
-  const templateRenderState = staticWidget.onTemplateRender(staticWidget);
+  // Updated params for rendering
+  const optionsForRendering = {
+    rendering: this.renderOptions(staticWidget, globalOptions),
+  };
+
+  const templateRenderState = staticWidget.onTemplateRender(
+    staticWidget,
+    optionsForRendering,
+  );
 
   if (!templateRenderState.handled) {
     // Run module onRender function
-    staticWidget.onRender(staticWidget);
+    staticWidget.onRender(staticWidget, optionsForRendering);
   }
 
   const onVisibleMethods = function() {
-    const templateVisibleState = staticWidget.onTemplateVisible();
+    const templateVisibleState =
+      staticWidget.onTemplateVisible(optionsForRendering);
 
     if (!templateVisibleState.handled) {
-      staticWidget.onVisible();
+      staticWidget.onVisible(optionsForRendering);
     }
   };
 
@@ -1198,23 +1210,17 @@ XiboPlayer.prototype.renderModule = function(currentWidget) {
   // Save widget as global variable
   window.widget = currentWidget;
 
+  // Updated params for rendering
+  const optionsForRendering = {
+    rendering: this.renderOptions(currentWidget, globalOptions),
+  };
+
   // Run onRender
-  currentWidget.onRender(currentWidget, {
-    rendering: Object.assign(
-      currentWidget.properties,
-      globalOptions,
-      {
-        duration: currentWidget.duration,
-        pauseEffectOnStart: globalOptions.pauseEffectOnStart ?? false,
-        isPreview: currentWidget.isPreview,
-        isEditor: currentWidget.isEditor,
-      },
-    ),
-  });
+  currentWidget.onRender(currentWidget, optionsForRendering);
 
   if (xiboIC.checkVisible()) {
     // Run onVisible
-    currentWidget.onVisible();
+    currentWidget.onVisible(optionsForRendering);
   } else {
     xiboIC.addToQueue(currentWidget.onVisible);
   }
@@ -1565,13 +1571,9 @@ XiboPlayer.prototype.saveTemplateDimensions = function($template) {
   }
 };
 
-XiboPlayer.prototype.getRenderParams = function(
-  currentWidget,
-  globalOptions,
-  options,
-) {
+XiboPlayer.prototype.renderOptions = function(currentWidget, globalOptions) {
   // Options for the render functions
-  const optionsForRendering = Object.assign(
+  return Object.assign(
     currentWidget.properties,
     globalOptions,
     {
@@ -1581,13 +1583,19 @@ XiboPlayer.prototype.getRenderParams = function(
       isEditor: currentWidget.isEditor,
     },
   );
+};
 
+XiboPlayer.prototype.getRenderParams = function(
+  currentWidget,
+  options,
+  globalOptions,
+) {
   return {
     templateId: currentWidget.templateId,
     widgetId: currentWidget.widgetId,
     target: options.target,
     items: currentWidget.items,
-    rendering: optionsForRendering,
+    rendering: this.renderOptions(currentWidget, globalOptions),
     properties: currentWidget.properties,
     meta: currentWidget.meta,
   };
