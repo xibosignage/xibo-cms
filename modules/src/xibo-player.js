@@ -24,16 +24,16 @@ const XiboPlayer = function() {
   this.playerWidgets = {};
   this.countWidgetElements = 0;
   this.countWidgetStatic = 0;
+  this.countGlobalElements = 0;
   this.urlParams = new URLSearchParams(window.location.search);
 
   /**
    * Get widget data
-   * @param {Object} currentWidget
+   * @param {Object} currentWidget Widget object
    * @return {Promise<unknown>}
    */
   this.getWidgetData = function(currentWidget) {
-    const self = this;
-    return new Promise(function(resolve, reject) {
+    return new Promise(function(resolve) {
       // if we have data on the widget (for older players),
       // or if we are not in preview and have empty data on Widget (like text)
       // do not run ajax use that data instead
@@ -47,10 +47,6 @@ const XiboPlayer = function() {
         }).done(function(data) {
           resolve(data);
         }).fail(function(jqXHR, textStatus, errorThrown) {
-          self.onDataErrorCallback(
-            jqXHR.status,
-            jqXHR.responseJSON,
-          );
           console.log(jqXHR, textStatus, errorThrown);
           resolve({
             error: jqXHR.status,
@@ -67,59 +63,64 @@ const XiboPlayer = function() {
   };
 
   /**
-   * Get all widgets data
-   * @param {Array} widgetList
-   * @return {Promise<unknown>}
-   */
-  this.getAllWidgetsData = function(widgetList) {
-    const self = this;
-    return new Promise(function(resolve) {
-      Promise.all(widgetList.map(function(widgetItem) {
-        return self.getWidgetData(widgetItem);
-      })).then(function(values) {
-        resolve(values);
-      });
-    });
-  };
-
-  /**
    * Compose Player Widget
-   * @param {Object} inputWidget
-   * @param {Object|Array} data
-   * @return {Object} playerWidget
+   * @param {Object} inputWidget Widget object
+   * @param {Object|null} data Widget data
+   * @param {Boolean} isDataWidget
+   * @return {Object} playerWidget Composed widget object
    */
-  this.playerWidget = function(inputWidget, data) {
+  this.playerWidget = function(inputWidget, data, isDataWidget) {
     const self = this;
     let playerWidget = inputWidget;
-    // Initialize widget properties
-    if (!playerWidget.hasOwnProperty('isDataExpected')) {
-      playerWidget.isDataExpected = playerWidget.url !== null;
+    const isStaticWidget = this.isStaticWidget(playerWidget);
+    let widgetDataItems = [];
+    let shouldShowError = false;
+    let withErrorMessage = null;
+
+    if (isDataWidget) {
+      const {dataItems, showError, errorMessage} =
+          this.loadData(playerWidget, data);
+      widgetDataItems = dataItems;
+      shouldShowError = showError;
+      withErrorMessage = errorMessage;
     }
 
-    const {dataItems, showError, errorMessage} =
-      this.composeWidgetData(playerWidget, data);
-
-    // Parse the dataItems if there is a parser function for the module
-    if (typeof window['onParseData_' + playerWidget.widgetId] === 'function') {
-      dataItems.forEach(function(dataItem, _dataKey) {
-        dataItems[_dataKey] = window['onParseData_' + playerWidget.widgetId](
-          dataItem,
-          playerWidget.properties,
-          playerWidget.meta,
-        );
-      });
-    }
-
-    playerWidget.data = dataItems;
     playerWidget.meta = data !== null ? data?.meta : {};
-    playerWidget.showError = showError;
-    playerWidget.errorMessage = errorMessage;
     playerWidget.items = [];
+
+    this.loadWidgetFunctions(playerWidget, widgetDataItems);
+
+    if (isDataWidget) {
+      const templateDataState = playerWidget.onTemplateDataLoad();
+
+      if (!templateDataState.handled) {
+        const dataLoadState = playerWidget.onDataLoad();
+        console.log(
+          'onTemplateDataLoad::handled = ', templateDataState.handled);
+
+        widgetDataItems = dataLoadState.dataItems;
+        console.log('dataLoadState::widgetDataItems ', widgetDataItems);
+
+        if (!dataLoadState.handled) {
+          console.log('onDataLoad::handled = ', dataLoadState.handled);
+          widgetDataItems = playerWidget.onParseData(widgetDataItems);
+          console.log('onParseData::widgetDataItems ', widgetDataItems);
+        }
+      } else {
+        console.log(
+          'onTemplateDataLoad::handled = ', templateDataState.handled);
+        widgetDataItems = playerWidget.onParseData();
+      }
+    }
+
+    playerWidget.data = widgetDataItems;
+    playerWidget.showError = shouldShowError;
+    playerWidget.errorMessage = withErrorMessage;
     playerWidget.isPreview = this.isPreview();
     playerWidget.isEditor = this.isEditor();
 
     // Only add below props for widget with elements
-    if (this.isStaticWidget(playerWidget) === false) {
+    if (!isStaticWidget && !self.isModule(playerWidget)) {
       const tempElements = this.getElementsByWidgetId(
         playerWidget.widgetId,
         this.inputElements,
@@ -135,26 +136,84 @@ const XiboPlayer = function() {
         Object.keys(playerWidget.elements.groups).length > 0)
       ) {
         playerWidget =
-          PlayerHelper.decorateCollectionSlots(dataItems, playerWidget);
+          PlayerHelper.decorateCollectionSlots(widgetDataItems, playerWidget);
       }
     }
 
-    playerWidget.render = function(shouldRefresh = false) {
-      self.renderWidget(playerWidget, shouldRefresh);
+    // Useful when re-rendering the widget through the web console
+    // parameter "shouldRefresh" defaults to =true to refresh widget data
+    playerWidget.render = function(shouldRefresh = true) {
+      if (playerWidget.isDataExpected) {
+        self.renderWidget(playerWidget, shouldRefresh);
+      } else if (self.isModule(playerWidget)) {
+        self.renderModule(playerWidget);
+      } else {
+        self.renderGlobalElements(playerWidget);
+      }
     };
 
     return playerWidget;
   };
 
   /**
+   * Define widget functions used for render flow
+   * @param {Object} playerWidget Widget object
+   * @param {Array} dataItems Widget data
+   */
+  this.loadWidgetFunctions = function(playerWidget, dataItems) {
+    const self = this;
+    const params = this.getRenderParams(
+      playerWidget,
+      globalOptions,
+      {target: $('body')},
+    );
+
+    playerWidget.onTemplateDataLoad = function() {
+      return self.onTemplateDataLoad({
+        widgetId: playerWidget.widgetId,
+      });
+    };
+    playerWidget.onDataLoad = function() {
+      return self.onDataLoad({
+        widgetId: playerWidget.widgetId,
+        dataItems,
+        meta: playerWidget.meta,
+        properties: playerWidget.properties,
+      });
+    };
+    playerWidget.onParseData = function(widgetDataItems) {
+      return self.onParseData(playerWidget, widgetDataItems ?? dataItems);
+    };
+    playerWidget.onTemplateRender = function(currentWidget) {
+      return self.onTemplateRender(params, currentWidget);
+    };
+    playerWidget.onRender = function(staticWidget, options) {
+      // We use staticWidget and options parameter to get updated parameters
+      // after loading these functions
+      const onRenderParams = options ? {...params, ...options} : params;
+
+      return self.onRender({
+        ...onRenderParams,
+        items: staticWidget ? staticWidget.items : params.items,
+      });
+    };
+    playerWidget.onTemplateVisible = function() {
+      return self.onTemplateVisible(params);
+    };
+    playerWidget.onVisible = function() {
+      return self.onVisible(params);
+    };
+  };
+
+  /**
    * Compose widget elements
-   * @param {Array} widgetElements
-   * @param {Object} currentWidget
+   * @param {Array} widgetElements Widget elements
+   * @param {Object} currentWidget Widget object
    * @return {Object} {standalone: {}, groups: {}}
    */
   this.composeElements = function(widgetElements, currentWidget) {
     if (!widgetElements || widgetElements.length === 0) {
-      return widgetElements;
+      return {standalone: {}, groups: {}};
     }
 
     const self = this;
@@ -232,6 +291,12 @@ const XiboPlayer = function() {
     return _widgetElements;
   };
 
+  /**
+   * Parse single element for extended properties
+   * @param {Object} element Element object
+   * @param {Object} currentWidget Widget object
+   * @return {Object} element
+   */
   this.decorateElement = function(element, currentWidget) {
     const elemCopy = JSON.parse(JSON.stringify(element));
     const elemProps = elemCopy?.properties || {};
@@ -352,29 +417,103 @@ const XiboPlayer = function() {
   };
 
   this.isGroup = function(element) {
-    return element.hasOwnProperty('groupId');
+    return Boolean(element.groupId);
   };
 };
 
+/**
+ * Initializes player widgets, accepting inputs from HTML output
+ * @param {Array} widgetData Input widgetData from HTML
+ * @param {Array} elements Input elements from HTML
+ */
 XiboPlayer.prototype.init = function(widgetData, elements) {
   const self = this;
+  let calledXiboScaler = false;
 
   self.inputWidgetData = widgetData;
   self.inputElements = elements;
 
-  self.getAllWidgetsData(self.inputWidgetData).then(function(values) {
-    if (self.noDataWidgets(values).length > 0) {
-      self.onDataErrorCallback(404, self.inputWidgetData);
-    }
+  // Create global render array of functions
+  window.renders = [];
 
-    values.forEach(function(value, widgetIndex) {
-      const currentWidget =
-        self.playerWidget(self.inputWidgetData[widgetIndex], value);
-      self.playerWidgets[currentWidget.widgetId] = currentWidget;
+  // Loop through each widget from widgetData
+  if (self.inputWidgetData.length > 0) {
+    self.inputWidgetData.forEach(function(inputWidget) {
+      // Save widgetData to xic
+      xiboIC.set(inputWidget.widgetId, 'widgetData', inputWidget);
+
+      // Run the onInitialize function if it exists
+      if (typeof window['onInitialize_' + inputWidget.widgetId] ===
+        'function') {
+        window['onInitialize_' + inputWidget.widgetId](
+          inputWidget.widgetId,
+          $('body'),
+          inputWidget.properties,
+          inputWidget.meta,
+        );
+        console.log('Called onInitialize for widget > ', inputWidget.widgetId);
+      }
+
+      // Set default isDataExpected value if it does not exist
+      if (!inputWidget.hasOwnProperty('isDataExpected')) {
+        inputWidget.isDataExpected = String(inputWidget.url) !== 'null';
+      }
+
+      // Check if inputWidget is a data widget
+      if (inputWidget.isDataExpected) {
+        // Load data
+        self.getWidgetData(inputWidget).then(function(response) {
+          if (self.isStaticWidget(inputWidget)) {
+            console.log('Data Widget::Static Template');
+            self.countWidgetStatic++;
+          } else {
+            console.log('Data Widget::Elements');
+            self.countWidgetElements++;
+          }
+
+          const currentWidget = self.playerWidget(
+            inputWidget,
+            response,
+            true,
+          );
+          self.playerWidgets[inputWidget.widgetId] = currentWidget;
+
+          self.renderWidget(currentWidget);
+
+          if (self.countWidgetElements > 0 && calledXiboScaler === false) {
+            self.runLayoutScaler(currentWidget);
+            calledXiboScaler = true;
+          }
+        });
+      } else if (self.isModule(inputWidget)) { // It's a module
+        console.log('Non-data Widget::Module');
+        const currentWidget = self.playerWidget(
+          inputWidget,
+          [],
+          false,
+        );
+        self.playerWidgets[inputWidget.widgetId] = currentWidget;
+
+        self.renderModule(currentWidget);
+      } else { // All global elements goes here
+        console.log('Non-data Widget::Global Elements');
+        const currentWidget = self.playerWidget(
+          inputWidget,
+          [],
+          false,
+        );
+        self.playerWidgets[inputWidget.widgetId] = currentWidget;
+        self.countGlobalElements++;
+
+        self.renderGlobalElements(currentWidget);
+
+        if (self.countGlobalElements > 0 && calledXiboScaler === false) {
+          self.runLayoutScaler(currentWidget);
+          calledXiboScaler = true;
+        }
+      }
     });
-
-    self.renderWidgets();
-  });
+  }
 };
 
 XiboPlayer.prototype.isPreview = function() {
@@ -385,23 +524,13 @@ XiboPlayer.prototype.isEditor = function() {
   return this.urlParams.get('isEditor') === '1';
 };
 
-XiboPlayer.prototype.noDataWidgets = function(dataCollection) {
-  return dataCollection.filter((val) => {
-    return val !== null &&
-      (val.hasOwnProperty('success') ||
-        val.hasOwnProperty('error') ||
-        (val.hasOwnProperty('data') && val?.data?.length === 0)
-      );
-  });
-};
-
 /**
  * Compose widget data
- * @param {Object} currentWidget
- * @param {Object|Array} data
+ * @param {Object} currentWidget Widget object
+ * @param {Object|Array} data Widget data from data provider
  * @return {Object} widgetData
  */
-XiboPlayer.prototype.composeWidgetData = function(currentWidget, data) {
+XiboPlayer.prototype.loadData = function(currentWidget, data) {
   const self = this;
   const widgetData = {
     isSampleData: false,
@@ -478,28 +607,6 @@ XiboPlayer.prototype.getElementsByWidgetId = function(widgetId, inputElements) {
   return widgetElements;
 };
 
-XiboPlayer.prototype.onDataErrorCallback = function(httpStatus, response) {
-  const onDataError = window[`onDataError_${xiboICTargetId}`];
-
-  if (typeof onDataError === 'function') {
-    if (onDataError(httpStatus, response) == false) {
-      xiboIC.reportFault({
-        code: '5001',
-        reason: 'No Data',
-      }, {targetId: xiboICTargetId});
-      xiboIC.expireNow({targetId: xiboICTargetId});
-    }
-
-    onDataError(httpStatus, response);
-  } else {
-    xiboIC.reportFault({
-      code: '5001',
-      reason: 'No Data',
-    }, {targetId: xiboICTargetId});
-    xiboIC.expireNow({targetId: xiboICTargetId});
-  }
-};
-
 XiboPlayer.prototype.getWidgetById = function(widgetId) {
   const playerWidgets = this.playerWidgets;
 
@@ -514,29 +621,42 @@ XiboPlayer.prototype.getWidgetById = function(widgetId) {
   return playerWidgets[widgetId];
 };
 
+/**
+ * Gets new widget data from data provider and calls callback parameter
+ * to re-render the widget
+ * @param {Object} currentWidget Widget object
+ * @param {Function} callback Callback function to call after getting new widget
+ * data
+ */
 XiboPlayer.prototype.getFreshWidgetData = function(currentWidget, callback) {
   if (!currentWidget) {
-    return false;
+    return;
   }
 
   const self = this;
   if (typeof callback === 'function') {
     this.getWidgetData(currentWidget).then(function(response) {
-      const freshWidget = self.playerWidget(currentWidget, response);
+      const freshWidget = self.playerWidget(currentWidget, response, true);
 
       if (self.playerWidgets.hasOwnProperty(freshWidget.widgetId)) {
         self.playerWidgets[freshWidget.widgetId] = freshWidget;
       }
 
-      callback.apply(self, [freshWidget, true]);
+      callback.apply(self, [freshWidget, false]);
     });
   }
 };
 
-XiboPlayer.prototype.renderWidget = function(widgetId, shouldRefresh) {
-  let currentWidget = widgetId;
+/**
+ * Renders data widgets (static template/elements)
+ * @param {Object} widget
+ * @param {Boolean?} shouldRefresh Optional parameter to get fresh widget data
+ * @param {Number?} widgetId Optional parameter to get widget object
+ */
+XiboPlayer.prototype.renderWidget = function(widget, shouldRefresh, widgetId) {
+  let currentWidget = widget;
 
-  if (typeof currentWidget === 'number') {
+  if (widgetId) {
     currentWidget = this.getWidgetById(widgetId);
   }
 
@@ -558,47 +678,16 @@ XiboPlayer.prototype.renderWidget = function(widgetId, shouldRefresh) {
   }
 };
 
-XiboPlayer.prototype.renderWidgets = function() {
-  const self = this;
-  const playerWidgets = this.getPlayerWidgets();
-
-  if (playerWidgets.length > 0) {
-    const $content = $('#content');
-
-    playerWidgets.forEach(function(playerWidget) {
-      if (self.isStaticWidget(playerWidget)) {
-        self.countWidgetStatic++;
-      } else {
-        self.countWidgetElements++;
-      }
-
-      self.renderWidget(playerWidget);
-
-      if (self.countWidgetElements === self.inputWidgetData.length) {
-        // Run xiboLayoutScaler to scale the content
-        $content.xiboLayoutScaler(Object.assign(
-          playerWidget.properties,
-          globalOptions,
-          {duration: playerWidget.duration},
-        ));
-      }
-    });
-  }
-};
-
-XiboPlayer.prototype.renderStaticWidget = function(
-  staticWidget,
-  shouldRefresh,
-) {
+/**
+ * Renders widget with static templates
+ * @param {Object} staticWidget Widget object
+ */
+XiboPlayer.prototype.renderStaticWidget = function(staticWidget) {
   const $target = $('body');
   const $content = $('#content');
   const {data, showError, errorMessage} = staticWidget;
-  let dataItems = data;
 
   staticWidget.items = [];
-
-  // Save widgetData to xic
-  xiboIC.set(staticWidget.widgetId, 'widgetData', staticWidget);
 
   if (this.isEditor() && showError && errorMessage !== null) {
     const $errMsg = $('<div class="error-message" role="alert"></div>');
@@ -626,34 +715,11 @@ XiboPlayer.prototype.renderStaticWidget = function(
     staticWidget.meta = data.meta;
   }
 
-  // Run the onInitialize function if it exists
-  if (typeof window['onInitialize_' + staticWidget.widgetId] === 'function') {
-    window['onInitialize_' + staticWidget.widgetId](
-      staticWidget.widgetId,
-      $target,
-      staticWidget.properties,
-      staticWidget.meta,
-    );
-  }
-
-  // Run the onDataLoad function if it exists
-  if (typeof window['onDataLoad_' + staticWidget.widgetId] === 'function') {
-    dataItems = window['onDataLoad_' + staticWidget.widgetId](
-      dataItems,
-      staticWidget.meta,
-      staticWidget.properties,
-    );
-  }
-
   // Check if we have template from templateId or module
   // and set it as the template
   let $template = null;
-  let moduleTemplate = false;
   if ($('#hbs-' + staticWidget.templateId).length > 0) {
     $template = $('#hbs-' + staticWidget.templateId);
-  } else if ($('#hbs-module').length > 0) {
-    $template = $('#hbs-module');
-    moduleTemplate = true;
   }
 
   let hbs = null;
@@ -663,48 +729,18 @@ XiboPlayer.prototype.renderStaticWidget = function(
   }
 
   // For each data item, parse it and add it to the content
-  let templateAlreadyAdded = false;
-  $.each(dataItems, function(_key, item) {
-    // Parse the data if there is a parser function
-    if (typeof window['onParseData_' + staticWidget.widgetId] === 'function') {
-      item = window[
-        'onParseData_' + staticWidget.widgetId
-      ](
-        item,
-        Object.assign(staticWidget.properties, staticWidget.templateProperties),
-        staticWidget.meta,
-      );
-    }
-
+  $.each(data, function(_key, item) {
     // Add the item to the content
     if (hbs) {
       $content.append(hbs(item));
-
-      // IF we added item template
-      templateAlreadyAdded = true;
     }
 
     // Add item to the widget object
     (item) && staticWidget.items.push(item);
   });
 
-  // If we don't have dataType, or we have a module template
-  // add it to the content with widget properties and global options
-  if (moduleTemplate && hbs && !templateAlreadyAdded) {
-    $content.append(hbs(
-      Object.assign(staticWidget.properties, globalOptions),
-    ));
-  }
-
   // Save template height and width if exists to global options
-  if ($template && $template.length > 0) {
-    $template.data('width') &&
-    (globalOptions.widgetDesignWidth = $template.data('width'));
-    $template.data('height') &&
-    (globalOptions.widgetDesignHeight = $template.data('height'));
-    $template.data('gap') &&
-    (globalOptions.widgetDesignGap = $template.data('gap'));
-  }
+  this.saveTemplateDimensions($template);
 
   // Save template properties to widget properties
   for (const key in staticWidget.templateProperties) {
@@ -722,33 +758,6 @@ XiboPlayer.prototype.renderStaticWidget = function(
     customTemplate = true;
   }
 
-  // Run the onRender function if it exists
-  if (typeof window['onRender_' + staticWidget.widgetId] === 'function') {
-    window.onRender = window['onRender_' + staticWidget.widgetId];
-  }
-
-  // Handle the rendering of the template
-  if (
-    typeof window['onTemplateRender_' + staticWidget.templateId] === 'function'
-  ) { // Custom scaler
-    window.onTemplateRender =
-      window['onTemplateRender_' + staticWidget.templateId];
-  }
-
-  // Create global render array of functions
-  window.renders = [];
-  // Template render function
-  if (window.onTemplateRender) {
-    // Save the render method in renders
-    window.renders.push(window.onTemplateRender);
-  }
-
-  // Module render function
-  if (window.onRender) {
-    // Save the render method in renders
-    window.renders.push(window.onRender);
-  }
-
   // If we have a custom template, run the legacy template render first
   if (customTemplate) {
     const newOptions =
@@ -763,81 +772,44 @@ XiboPlayer.prototype.renderStaticWidget = function(
     // Merge new options with globalOptions
     globalOptions = Object.assign(globalOptions, newOptions);
   }
-
-  // Options for the render functions
-  const optionsForRendering = Object.assign(
-    staticWidget.properties,
-    globalOptions,
-    {
-      duration: staticWidget.duration,
-      pauseEffectOnStart: globalOptions.pauseEffectOnStart ?? false,
-      isPreview: staticWidget.isPreview,
-      isEditor: staticWidget.isEditor,
-    },
-  );
-
   // Save widget as global variable
   window.widget = staticWidget;
 
-  // Run the render functions
-  $.each(window.renders, function(_key, render) {
-    render(
-      staticWidget.widgetId,
-      $target,
-      staticWidget.items,
-      optionsForRendering,
-      staticWidget.meta,
-    );
-  });
+  const templateRenderState = staticWidget.onTemplateRender(staticWidget);
 
-  // Call the run on visible function if it exists
-  if (
-    typeof window['onVisible_' + staticWidget.widgetId] === 'function'
-  ) {
-    window.runOnVisible = function() {
-      window['onVisible_' + staticWidget.widgetId](
-        staticWidget.widgetId,
-        $target,
-        staticWidget.items,
-        staticWidget.properties,
-        staticWidget.meta,
-      );
-    };
-    if (xiboIC.checkVisible()) {
-      window.runOnVisible();
-    } else {
-      xiboIC.addToQueue(window.runOnVisible);
-    }
+  if (!templateRenderState.handled) {
+    // Run module onRender function
+    staticWidget.onRender(staticWidget);
   }
 
-  // Call the run on template visible function if it exists
-  if (
-    typeof window['onTemplateVisible_' + staticWidget.templateId] === 'function'
-  ) {
-    window.runOnTemplateVisible = function() {
-      window['onTemplateVisible_' + staticWidget.templateId](
-        staticWidget.widgetId,
-        $target,
-        staticWidget.items,
-        staticWidget.properties,
-        staticWidget.meta,
-      );
-    };
-    if (xiboIC.checkVisible()) {
-      window.runOnTemplateVisible();
-    } else {
-      xiboIC.addToQueue(window.runOnTemplateVisible);
+  const onVisibleMethods = function() {
+    const templateVisibleState = staticWidget.onTemplateVisible();
+
+    if (!templateVisibleState.handled) {
+      staticWidget.onVisible();
     }
+  };
+
+  // Check for visibility
+  if (xiboIC.checkVisible()) {
+    onVisibleMethods();
+  } else {
+    xiboIC.addToQueue(onVisibleMethods);
   }
 
   // Lock all interactions
   xiboIC.lockAllInteractions();
+
+  console.log(
+    '<<<END>>> renderStaticWidget for widget >', staticWidget.widgetId);
 };
 
-XiboPlayer.prototype.renderWidgetElements = function(
-  currentWidget,
-  shouldRefresh,
-) {
+/**
+ * Renders widget elements
+ * @param {Object} currentWidget Widget object
+ */
+XiboPlayer.prototype.renderWidgetElements = function(currentWidget) {
+  const self = this;
   const {
     data,
     elements: widgetElements,
@@ -849,282 +821,789 @@ XiboPlayer.prototype.renderWidgetElements = function(
   } = currentWidget;
   const $content = $('#content');
 
-  if (Object.keys(widgetElements?.standalone ?? {}).length > 0 ||
-    Object.keys(widgetElements?.groups ?? {}).length > 0
-  ) {
-    if (Object.keys(groupSlotsData).length > 0 &&
-      Object.values(groupSlotsData).length > 0
-    ) {
-      const {
-        maxSlot,
-        pinnedSlots,
-      } = PlayerHelper.getGroupData(widgetElements.groups, 'items', false);
+  // Check if data is expected, and we have elements but with no data
+  // Then expire
+  if (currentWidget.isDataExpected && data.length === 0) {
+    xiboIC.expireNow({targetId: xiboICTargetId});
+    xiboIC.reportFault({
+      code: '5001',
+      reason: 'No Data',
+    }, {targetId: xiboICTargetId});
+    return;
+  }
 
-      $.each(Object.keys(groupSlotsData), function(slotIndex, slotKey) {
-        const groupSlotId = currentWidget.mappedSlotGroup[slotKey];
-        const groupSlotObj = widgetElements.groups[groupSlotId];
-        const groupDataKeys = groupSlotsData[slotKey];
-        const $grpContent =
-            $(`<div class="${groupSlotId}"></div>`);
-        const isMarquee = PlayerHelper.isMarquee(groupSlotObj.effect);
+  const standaloneElems = widgetElements.standalone;
+  const standaloneData = standaloneSlotsData;
 
-        if (groupDataKeys.length > 0 &&
-            templateId !== null && url !== null
-        ) {
-          $.each(groupDataKeys, function(dataKeyIndx, dataKey) {
-            if (groupSlotObj?.items.length > 0) {
-              $.each(groupSlotObj.items,
-                function(itemKey, groupItem) {
-                  PlayerHelper.renderDataItem(
-                    true,
-                    dataKey,
-                    dataKey === 'empty' ?
-                      dataKey : {...(data[dataKey - 1] || {})},
-                    groupItem,
-                    slotKey,
-                    maxSlot,
-                    groupItem.pinSlot,
-                    pinnedSlots,
-                    groupSlotId,
-                    $grpContent,
-                    {...groupSlotObj, isMarquee},
-                    meta,
-                    $content,
-                  );
-                });
-            }
-          });
+  // Groups with data
+  if (Object.values(groupSlotsData).length > 0) {
+    const {
+      maxSlot,
+      pinnedSlots,
+    } = PlayerHelper.getGroupData(widgetElements.groups, 'items', false);
 
-          $grpContent.css({
-            width: groupSlotObj.width,
-            height: groupSlotObj.height,
-            position: 'absolute',
-            top: groupSlotObj.top,
-            left: groupSlotObj.left,
-            overflow: 'hidden',
-            zIndex: groupSlotObj.layer,
-          });
+    $.each(Object.keys(groupSlotsData), function(slotIndex, slotKey) {
+      const groupSlotId = currentWidget.mappedSlotGroup[slotKey];
+      const groupSlotObj = widgetElements.groups[groupSlotId];
+      const groupDataKeys = groupSlotsData[slotKey];
+      const $grpContent =
+          $(`<div class="${groupSlotId}"></div>`);
+      const isMarquee = PlayerHelper.isMarquee(groupSlotObj.effect);
 
-          if (isMarquee) {
-            const $scroller =
-                $(`<div class="${groupSlotObj.id}--marquee scroll"></div>`);
+      if (groupDataKeys.length > 0 &&
+          templateId !== null && url !== null
+      ) {
+        $.each(groupDataKeys, function(dataKeyIndx, dataKey) {
+          if (groupSlotObj?.items.length > 0) {
+            $.each(groupSlotObj.items,
+              function(itemKey, groupItem) {
+                let dataItem = dataKey === 'empty' ?
+                  dataKey : {...(data[dataKey - 1] || {})};
 
-            $scroller.css({
-              display: 'flex',
-              height: groupSlotObj.height,
-            });
+                // Load element functions
+                self.loadElementFunctions(groupItem, dataItem);
 
-            if (groupSlotObj?.templateData?.verticalAlign) {
-              $scroller.css({
-                alignItems: groupSlotObj?.templateData?.verticalAlign,
-              });
-            }
+                // Run onElementParseData function
+                dataItem = groupItem.onElementParseData();
 
-            $grpContent.wrapInner($scroller.prop('outerHTML'));
-          }
-
-          // Remove data group element if exists to avoid duplicate
-          if ($content.find('.' +
-            groupSlotId + '.cycle-slideshow').length === 1) {
-            $content.find('.' +
-              groupSlotId + '.cycle-slideshow').cycle('destroy');
-          }
-          if ($content.find('.' + groupSlotId).length === 1) {
-            $content.find('.' + groupSlotId).remove();
-          }
-
-          $content.append($grpContent);
-
-          $grpContent.promise().done(function() {
-            $grpContent.xiboElementsRender(
-              {
-                ...groupSlotObj,
-                itemsPerPage: maxSlot,
-                numItems: data.length,
-                selector: `.${groupSlotId}`,
-              },
-              $grpContent.find(`.${groupSlotObj.id}--item`),
-            );
-          });
-
-          currentWidget.items.push($grpContent);
-        }
-      });
-    } else if (Object.keys(widgetElements?.groups ?? {}).length > 0 &&
-      Object.keys(groupSlotsData).length === 0 &&
-      Object.values(groupSlotsData).length === 0
-    ) {
-      const globalGroupedElements = widgetElements.groups;
-      $.each(Object.keys(globalGroupedElements), function(grpIndex, grpId) {
-        const groupObj = widgetElements.groups[grpId];
-
-        if (groupObj?.items.length > 0) {
-          $.each(groupObj.items,
-            function(itemKey, groupItem) {
-              (groupItem.hbs) && $content.append(
-                PlayerHelper.renderElement(
-                  groupItem.hbs,
-                  groupItem.templateData,
+                PlayerHelper.renderDataItem(
                   true,
-                ),
-              );
-            });
-        }
-      });
-    }
-
-    if (Object.keys(standaloneSlotsData).length > 0 &&
-      Object.values(standaloneSlotsData).length > 0
-    ) {
-      const standaloneData = standaloneSlotsData;
-      const standaloneElems = widgetElements.standalone;
-
-      $.each(Object.keys(standaloneData),
-        function(keyIndx, keyValue) {
-          if (standaloneData.hasOwnProperty(keyValue) &&
-            Object.keys(standaloneData[keyValue]).length > 0 &&
-            templateId !== null && url !== null
-          ) {
-            const {maxSlot, pinnedSlots} =
-              PlayerHelper.getGroupData(
-                [standaloneElems],
-                keyValue,
-                true,
-              );
-
-            $.each(Object.keys(standaloneData[keyValue]),
-              function(slotIndex, slotKey) {
-                const slotObj = standaloneElems[keyValue][slotKey] || null;
-                const dataKeys = standaloneData[keyValue][slotKey];
-                const grpCln = `${keyValue}_page-${slotKey}`;
-                const $grpItem = $(`<div class="${grpCln}"></div>`);
-                const isMarquee =
-                  PlayerHelper.isMarquee(slotObj?.effect ?? 'noTransition');
-
-                if (dataKeys.length > 0) {
-                  $.each(dataKeys,
-                    function(dataKeyIndx, dataKey) {
-                      PlayerHelper.renderDataItem(
-                        false,
-                        dataKey,
-                        dataKey === 'empty' ?
-                          dataKey : {...(data[dataKey - 1] || {})},
-                        slotObj ?? {},
-                        slotKey,
-                        maxSlot,
-                        slotObj?.pinSlot,
-                        pinnedSlots,
-                        grpCln,
-                        $grpItem,
-                        {...slotObj, isMarquee},
-                        meta,
-                        $content,
-                      );
-                    });
-
-                  if (isMarquee) {
-                    $grpItem.css({
-                      width: slotObj.width,
-                      height: slotObj.height,
-                      position: 'absolute',
-                      top: slotObj.top,
-                      left: slotObj.left,
-                      overflow: 'hidden',
-                      zIndex: slotObj.layer,
-                    });
-
-                    const $scroller =
-                      $(`<div class="${slotObj.id}--marquee scroll"/>`);
-
-                    $scroller.css({
-                      display: 'flex',
-                      height: slotObj.height,
-                    });
-
-                    if (slotObj?.templateData?.verticalAlign) {
-                      $scroller.css({
-                        alignItems: slotObj?.templateData?.verticalAlign,
-                      });
-                    }
-
-                    $grpItem.wrapInner($scroller.prop('outerHTML'));
-                  } else {
-                    $grpItem.css({
-                      position: 'absolute',
-                      top: slotObj.top,
-                      left: slotObj.left,
-                      width: slotObj.width,
-                      height: slotObj.height,
-                      zIndex: slotObj.layer,
-                    });
-                  }
-
-                  // Remove data item element if it exists to avoid duplicate
-                  if ($content.find('.' +
-                      grpCln + '.cycle-slideshow').length === 1) {
-                    $content.find('.' +
-                        grpCln + '.cycle-slideshow').cycle('destroy');
-                  }
-                  if ($content.find('.' + grpCln).length === 1) {
-                    $content.find('.' + grpCln).remove();
-                  }
-
-                  $content.append($grpItem);
-
-                  $grpItem.xiboElementsRender(
-                    {
-                      ...slotObj,
-                      parentId: grpCln,
-                      itemsPerPage: maxSlot,
-                      numItems: data.length,
-                      id: grpCln,
-                      selector: `.${grpCln}`,
-                    },
-                    $grpItem.find(`.${grpCln}--item`),
-                  );
-
-                  currentWidget.items.push($grpItem);
-                }
+                  dataKey,
+                  dataItem,
+                  groupItem,
+                  slotKey,
+                  maxSlot,
+                  groupItem.pinSlot,
+                  pinnedSlots,
+                  groupSlotId,
+                  $grpContent,
+                  {...groupSlotObj, isMarquee},
+                  meta,
+                  $content,
+                );
               });
-          } else {
-            // Global elements should fall here but should validate
-            if (Object.keys(standaloneElems).length > 0 &&
-              standaloneElems.hasOwnProperty(keyValue) &&
-              Object.keys(standaloneElems[keyValue]).length > 0
-            ) {
-              $.each(Object.keys(standaloneElems[keyValue]),
-                function(keyIndex, elemKey) {
-                  (standaloneElems[keyValue][elemKey].hbs) && $content.append(
-                    PlayerHelper.renderElement(
-                      standaloneElems[keyValue][elemKey].hbs,
-                      standaloneElems[keyValue][elemKey].templateData,
-                      true,
-                    ),
-                  );
-                });
-            }
           }
         });
-    }
+
+        $grpContent.css({
+          width: groupSlotObj.width,
+          height: groupSlotObj.height,
+          position: 'absolute',
+          top: groupSlotObj.top,
+          left: groupSlotObj.left,
+          overflow: 'hidden',
+          zIndex: groupSlotObj.layer,
+        });
+
+        if (isMarquee) {
+          const $scroller =
+              $(`<div class="${groupSlotObj.id}--marquee scroll"></div>`);
+
+          $scroller.css({
+            display: 'flex',
+            height: groupSlotObj.height,
+          });
+
+          if (groupSlotObj?.templateData?.verticalAlign) {
+            $scroller.css({
+              alignItems: groupSlotObj?.templateData?.verticalAlign,
+            });
+          }
+
+          $grpContent.wrapInner($scroller.prop('outerHTML'));
+        }
+
+        // Remove data group element if exists to avoid duplicate
+        if ($content.find('.' +
+            groupSlotId + '.cycle-slideshow').length === 1) {
+          $content.find('.' +
+              groupSlotId + '.cycle-slideshow').cycle('destroy');
+        }
+        if ($content.find('.' + groupSlotId).length === 1) {
+          $content.find('.' + groupSlotId).remove();
+        }
+
+        $content.append($grpContent);
+
+        $grpContent.promise().done(function() {
+          $grpContent.xiboElementsRender(
+            {
+              ...groupSlotObj,
+              itemsPerPage: maxSlot,
+              numItems: data.length,
+              selector: `.${groupSlotId}`,
+            },
+            $grpContent.find(`.${groupSlotObj.id}--item`),
+          );
+        });
+
+        currentWidget.items.push($grpContent);
+      }
+    });
   }
+
+  // Standalone elements with data
+  if (Object.values(standaloneSlotsData).length > 0) {
+    $.each(Object.keys(standaloneData),
+      function(keyIndx, keyValue) {
+        if (standaloneData.hasOwnProperty(keyValue) &&
+          Object.keys(standaloneData[keyValue]).length > 0 &&
+          templateId !== null && url !== null
+        ) {
+          const {maxSlot, pinnedSlots} =
+            PlayerHelper.getGroupData(
+              [standaloneElems],
+              keyValue,
+              true,
+            );
+
+          $.each(Object.keys(standaloneData[keyValue]),
+            function(slotIndex, slotKey) {
+              const slotObj = standaloneElems[keyValue][slotKey] || null;
+              const dataKeys = standaloneData[keyValue][slotKey];
+              const grpCln = `${keyValue}_page-${slotKey}`;
+              const $grpItem = $(`<div class="${grpCln}"></div>`);
+              const isMarquee =
+                PlayerHelper.isMarquee(slotObj?.effect ?? 'noTransition');
+
+              if (dataKeys.length > 0) {
+                $.each(dataKeys,
+                  function(dataKeyIndx, dataKey) {
+                    let dataItem = dataKey === 'empty' ?
+                      dataKey : {...(data[dataKey - 1] || {})};
+
+                    // Load element functions
+                    self.loadElementFunctions(slotObj, dataItem);
+
+                    // Run onElementParseData function
+                    dataItem = slotObj.onElementParseData();
+
+                    PlayerHelper.renderDataItem(
+                      false,
+                      dataKey,
+                      dataItem,
+                      slotObj ?? {},
+                      slotKey,
+                      maxSlot,
+                      slotObj?.pinSlot,
+                      pinnedSlots,
+                      grpCln,
+                      $grpItem,
+                      {...slotObj, isMarquee},
+                      meta,
+                      $content,
+                    );
+                  });
+
+                if (isMarquee) {
+                  $grpItem.css({
+                    width: slotObj.width,
+                    height: slotObj.height,
+                    position: 'absolute',
+                    top: slotObj.top,
+                    left: slotObj.left,
+                    overflow: 'hidden',
+                    zIndex: slotObj.layer,
+                  });
+
+                  const $scroller =
+                      $(`<div class="${slotObj.id}--marquee scroll"/>`);
+
+                  $scroller.css({
+                    display: 'flex',
+                    height: slotObj.height,
+                  });
+
+                  if (slotObj?.templateData?.verticalAlign) {
+                    $scroller.css({
+                      alignItems: slotObj?.templateData?.verticalAlign,
+                    });
+                  }
+
+                  $grpItem.wrapInner($scroller.prop('outerHTML'));
+                } else {
+                  $grpItem.css({
+                    position: 'absolute',
+                    top: slotObj.top,
+                    left: slotObj.left,
+                    width: slotObj.width,
+                    height: slotObj.height,
+                    zIndex: slotObj.layer,
+                  });
+                }
+
+                // Remove data item element if it exists to avoid duplicate
+                if ($content.find('.' +
+                    grpCln + '.cycle-slideshow').length === 1) {
+                  $content.find('.' +
+                      grpCln + '.cycle-slideshow').cycle('destroy');
+                }
+                if ($content.find('.' + grpCln).length === 1) {
+                  $content.find('.' + grpCln).remove();
+                }
+
+                $content.append($grpItem);
+
+                $grpItem.xiboElementsRender(
+                  {
+                    ...slotObj,
+                    parentId: grpCln,
+                    itemsPerPage: maxSlot,
+                    numItems: data.length,
+                    id: grpCln,
+                    selector: `.${grpCln}`,
+                  },
+                  $grpItem.find(`.${grpCln}--item`),
+                );
+
+                currentWidget.items.push($grpItem);
+              }
+            });
+        }
+      });
+  }
+
+  // Check if we are visible
+  if (xiboIC.checkVisible()) {
+    currentWidget.onVisible();
+  } else {
+    xiboIC.addToQueue(currentWidget.onVisible);
+  }
+
+  console.log(
+    '<<<END>>> of renderWidgetElements for widget >', currentWidget.widgetId);
 };
 
-XiboPlayer.prototype.getPlayerWidgets = function() {
-  const playerWidgets = this.playerWidgets;
+/**
+ * Renders widget with global elements
+ * @param {Object} currentWidget Widget object
+ */
+XiboPlayer.prototype.renderGlobalElements = function(currentWidget) {
+  const self = this;
+  const {elements: widgetElements, meta} = currentWidget;
+  const $content = $('#content');
+  const groupedElements = widgetElements.groups;
+  const standaloneElements = widgetElements.standalone;
 
-  if (Object.keys(playerWidgets).length === 0) {
-    return [];
+  // Global grouped elements
+  $.each(Object.keys(groupedElements), function(grpIndex, grpId) {
+    const groupObj = groupedElements[grpId];
+
+    if (groupObj?.items.length > 0) {
+      $.each(groupObj.items,
+        function(itemKey, groupItem) {
+          // Load element functions
+          self.loadElementFunctions(groupItem, {});
+
+          (groupItem.hbs) && $content.append(
+            PlayerHelper.renderElement(
+              groupItem.hbs,
+              groupItem.templateData,
+              true,
+            ),
+          );
+
+          const itemID =
+            groupItem.uniqueID || groupItem.templateData?.uniqueID;
+          const $itemContainer = $(`<div class="${grpId}"></div>`);
+
+          // Call onTemplateRender
+          // Handle the rendering of the template
+          (groupItem.onTemplateRender() !== undefined) &&
+          groupItem.onTemplateRender()(
+            groupItem.elementId,
+            $itemContainer.find(`.${itemID}--item`),
+            $content.find(`.${itemID}--item`),
+            {groupItem, ...groupItem.templateData, data: {}},
+            meta,
+          );
+        });
+    }
+  });
+
+  // Global standalone elements
+  $.each(Object.keys(standaloneElements),
+    function(keyIndx, keyValue) {
+      $.each(Object.keys(standaloneElements[keyValue]),
+        function(keyIndex, elemKey) {
+          const standaloneElem = standaloneElements[keyValue][elemKey];
+
+          // Load element functions
+          self.loadElementFunctions(standaloneElem, {});
+
+          (standaloneElem.hbs) && $content.append(
+            PlayerHelper.renderElement(
+              standaloneElem.hbs,
+              standaloneElem.templateData,
+              true,
+            ),
+          );
+
+          const itemID =
+            standaloneElem.uniqueID || standaloneElem.templateData?.uniqueID;
+          const grpCln = `${keyValue}_page-${elemKey}`;
+          const $itemContainer = $(`<div class="${grpCln}"></div>`);
+
+          // Call onTemplateRender
+          // Handle the rendering of the template
+          (standaloneElem.onTemplateRender() !== undefined) &&
+          standaloneElem.onTemplateRender()(
+            standaloneElem.elementId,
+            $itemContainer.find(`.${itemID}--item`),
+            $content.find(`.${itemID}--item`),
+            {standaloneElem, ...standaloneElem.templateData, data: {}},
+            meta,
+          );
+        });
+    });
+
+  // Check if we are visible
+  if (xiboIC.checkVisible()) {
+    currentWidget.onVisible();
+  } else {
+    xiboIC.addToQueue(currentWidget.onVisible);
   }
 
-  return Object.keys(playerWidgets).reduce(function(a, b) {
-    return [...a, playerWidgets[b]];
-  }, []);
+  console.log(
+    '<<<END>>> of renderGlobalElements for widget >', currentWidget.widgetId);
+};
+
+/**
+ * Renders widget module
+ * @param {Object} currentWidget Widget object
+ */
+XiboPlayer.prototype.renderModule = function(currentWidget) {
+  let $template = null;
+  if ($('#hbs-module').length > 0) {
+    $template = $('#hbs-module');
+  }
+
+  let hbs = null;
+  // Compile the template if it exists
+  if ($template && $template.length > 0) {
+    hbs = Handlebars.compile($template.html());
+  }
+
+  // If we don't have dataType, or we have a module template
+  // add it to the content with widget properties and global options
+  if (hbs) {
+    $('#content').append(hbs(
+      Object.assign(currentWidget.properties, globalOptions),
+    ));
+  }
+
+  // Save template height and width if exists to global options
+  this.saveTemplateDimensions($template);
+
+  // Save widget as global variable
+  window.widget = currentWidget;
+
+  // Run onRender
+  currentWidget.onRender(currentWidget, {
+    rendering: Object.assign(
+      currentWidget.properties,
+      globalOptions,
+      {
+        duration: currentWidget.duration,
+        pauseEffectOnStart: globalOptions.pauseEffectOnStart ?? false,
+        isPreview: currentWidget.isPreview,
+        isEditor: currentWidget.isEditor,
+      },
+    ),
+  });
+
+  if (xiboIC.checkVisible()) {
+    // Run onVisible
+    currentWidget.onVisible();
+  } else {
+    xiboIC.addToQueue(currentWidget.onVisible);
+  }
+
+  console.log('<<<END>>> of renderModule for widget >', currentWidget.widgetId);
+};
+
+/**
+ * Define element functions
+ * @param {Object} element Element
+ * @param {Object} dataItem Data item
+ */
+XiboPlayer.prototype.loadElementFunctions = function(element, dataItem) {
+  element.onElementParseData = function() {
+    const extendDataWith = transformer
+      .getExtendedDataKey(element.dataOverrideWith);
+
+    if (extendDataWith !== null &&
+      dataItem.hasOwnProperty(extendDataWith)
+    ) {
+      dataItem[element.dataOverride] = dataItem[extendDataWith];
+    }
+
+    // Handle special case for setting data for the player
+    if (element.type === 'dataset' && Object.keys(dataItem).length > 0) {
+      if (element.dataOverride !== null &&
+        element.templateData?.datasetField !== undefined
+      ) {
+        element[element.dataOverride] =
+          dataItem[element.templateData.datasetField];
+
+        // Change value in templateData if exists
+        if (element.templateData.hasOwnProperty(element.dataOverride)) {
+          element.templateData[element.dataOverride] =
+            dataItem[element.templateData.datasetField];
+        }
+      }
+    }
+
+    if (typeof window[
+      `onElementParseData_${element.templateData.id}`
+    ] === 'function') {
+      dataItem[element.dataOverride] =
+        window[`onElementParseData_${element.templateData.id}`](
+          dataItem[extendDataWith],
+          {...element.templateData, data: dataItem},
+        );
+    }
+
+    console.log('Called onElementParseData for element >', element.elementId);
+    return dataItem;
+  };
+  element.onTemplateRender = function() {
+    let onTemplateRender;
+
+    // Check if onTemplateRender for child template is isExtended
+    // And onTemplateRender is defined on child, then use it
+    // Else, use parent onTemplateRender
+    if (element.isExtended && typeof window[
+      `onTemplateRender_${element.templateData.id}`
+    ] === 'function') {
+      onTemplateRender = window[`onTemplateRender_${element.templateData.id}`];
+    } else if (element.isExtended && typeof window [
+      `onTemplateRender_${element.dataOverride}`
+    ] === 'function') {
+      onTemplateRender = window[`onTemplateRender_${element.dataOverride}`];
+    } else if (!element.isExtended) {
+      onTemplateRender = window[`onTemplateRender_${element.templateData.id}`];
+    }
+
+    console.log('Called onTemplateRender for element >', element.elementId);
+
+    return onTemplateRender;
+  };
 };
 
 XiboPlayer.prototype.isStaticWidget = function(playerWidget) {
   return playerWidget !== undefined && playerWidget !== null &&
     playerWidget.templateId !== 'elements' &&
     this.inputElements.length === 0;
+};
+
+XiboPlayer.prototype.isModule = function(currentWidget) {
+  return (!currentWidget.isDataExpected && $('#hbs-module').length > 0) ||
+    (!currentWidget.isDataExpected && this.inputElements.length === 0);
+};
+
+/**
+ * Caller function for onTemplateDataLoad
+ * @param {Object} params
+ * @return {Object} State to determine next step. E.g. {handled: false}
+ */
+XiboPlayer.prototype.onTemplateDataLoad = function(params) {
+  let onTemplateDataLoad = null;
+  // onTemplateDataLoad function should be checked and run first before
+  if (typeof window['onTemplateDataLoad_' + params.widgetId] ===
+    'function') {
+    onTemplateDataLoad =
+      window['onTemplateDataLoad_' + params.widgetId];
+  }
+
+  let onTemplateDataLoadRes = {handled: false};
+
+  if (onTemplateDataLoad) {
+    const onTemplateDataLoadResult = onTemplateDataLoad(params.widgetId);
+
+    if (onTemplateDataLoadResult !== undefined &&
+      Object.keys(onTemplateDataLoadResult).length > 0
+    ) {
+      if ((onTemplateDataLoadResult ?? {}).hasOwnProperty('handled')) {
+        onTemplateDataLoadRes = {
+          ...onTemplateDataLoadRes,
+          handled: onTemplateDataLoadResult.handled,
+        };
+      } else {
+        onTemplateDataLoadRes = {
+          ...onTemplateDataLoadResult,
+          ...onTemplateDataLoadRes,
+        };
+      }
+    }
+  }
+
+  return onTemplateDataLoadRes;
+};
+
+/**
+ * Caller function for onDataLoad
+ * @param {Object} params
+ * @return {Object} State to determine next step.
+ * E.g. {handled: false, dataItems: []}
+ */
+XiboPlayer.prototype.onDataLoad = function(params) {
+  let onDataLoad = null;
+  if (typeof window['onDataLoad_' + params.widgetId] === 'function') {
+    // onDataLoad callback function is currently not returning any state
+    // that can be used to identify what to do next
+    onDataLoad = window['onDataLoad_' + params.widgetId];
+  }
+
+  let onDataLoadResponse = {handled: false, dataItems: params.dataItems ?? []};
+
+  if (onDataLoad) {
+    const onDataLoadResult = onDataLoad(
+      params.dataItems,
+      params.meta,
+      params.properties,
+    );
+
+    if (onDataLoadResult !== undefined &&
+        Object.keys(onDataLoadResult).length > 0
+    ) {
+      if ((onDataLoadResult ?? {}).hasOwnProperty('handled')) {
+        onDataLoadResponse = {
+          ...onDataLoadResponse,
+          handled: onDataLoadResult.handled,
+        };
+      }
+
+      if ((onDataLoadResult ?? {}).hasOwnProperty('dataItems')) {
+        onDataLoadResponse = {
+          ...onDataLoadResponse,
+          dataItems: onDataLoadResult.dataItems,
+        };
+      }
+    }
+  }
+
+  return onDataLoadResponse;
+};
+
+/**
+ * Caller function for onParseData
+ * @param {Object} currentWidget Widget object
+ * @param {Array} widgetDataItems Widget data items
+ * @return {Array} Widget data items
+ */
+XiboPlayer.prototype.onParseData = function(
+  currentWidget,
+  widgetDataItems,
+) {
+  const dataItems = widgetDataItems ?? [];
+  // Parse the widgetDataItems if there is a parser function for the module
+  if (typeof window['onParseData_' + currentWidget.widgetId] === 'function') {
+    widgetDataItems.forEach(function(dataItem, _dataKey) {
+      dataItems[_dataKey] =
+        window['onParseData_' + currentWidget.widgetId](
+          dataItem,
+          currentWidget.properties,
+          currentWidget.meta,
+        );
+    });
+  }
+
+  return dataItems;
+};
+
+/**
+ * Caller function for onTemplateRender method
+ * @param {Object} params onTemplateRender parameters
+ * @param {Object?} currentWidget Optional widget object parameter
+ * to get updated widget
+ * @return {Object} State to determine next step. E.g. {handled: false}
+ */
+XiboPlayer.prototype.onTemplateRender = function(params, currentWidget) {
+  // Handle the rendering of the template
+  if (
+    typeof window['onTemplateRender_' + params.templateId] === 'function'
+  ) { // Custom scaler
+    window.onTemplateRender =
+      window['onTemplateRender_' + params.templateId];
+  }
+
+  let onTemplateRender = null;
+  // Template render function
+  if (window.onTemplateRender) {
+    onTemplateRender = window.onTemplateRender;
+    // Save the render method in renders
+    window.renders.push(window.onTemplateRender);
+  }
+
+  let onTemplateRenderResponse = {handled: false};
+  if (onTemplateRender) {
+    const onTemplateRenderResult = onTemplateRender(
+      params.widgetId,
+      params.target,
+      currentWidget ? currentWidget.items : params.items,
+      params.rendering,
+      params.meta,
+    );
+    console.log('Called onTemplateRender for widget > ', params.widgetId);
+
+    if (onTemplateRenderResult !== undefined &&
+      Object.keys(onTemplateRenderResult).length > 0
+    ) {
+      if ((onTemplateRenderResult ?? {}).hasOwnProperty('handled')) {
+        onTemplateRenderResponse = {
+          ...onTemplateRenderResponse,
+          handled: onTemplateRenderResult.handled,
+        };
+      }
+    }
+  }
+
+  return onTemplateRenderResponse;
+};
+
+/**
+ * Caller function for onRender method
+ * @param {Object} params
+ */
+XiboPlayer.prototype.onRender = function(params) {
+  // Run the onRender function if it exists
+  if (typeof window['onRender_' + params.widgetId] === 'function') {
+    window.onRender = window['onRender_' + params.widgetId];
+  }
+
+  if (window.onRender) {
+    // Save the render method in renders
+    window.renders.push(window.onRender);
+
+    // Run render function
+    window.onRender(
+      params.widgetId,
+      params.target,
+      params.items,
+      params.rendering,
+      params.meta,
+    );
+    console.log('Called onRender for widget > ', params.widgetId);
+  }
+};
+
+/**
+ * Caller function for onTemplateVisible
+ * @param {Object} params
+ * @return {Object} State to determine next step. E.g. {handled: false}
+ */
+XiboPlayer.prototype.onTemplateVisible = function(params) {
+  let templateVisibleResponse = {handled: false};
+  // Call the run on template visible function if it exists
+  if (
+    typeof window['onTemplateVisible_' + params.templateId] === 'function'
+  ) {
+    const onTemplateVisible = window['onTemplateVisible_' + params.templateId];
+    window.runOnTemplateVisible = function() {
+      const onTemplateVisibleResult = onTemplateVisible(
+        params.widgetId,
+        params.target,
+        params.items,
+        params.rendering,
+        params.meta,
+      );
+      console.log('Called onTemplateVisible for widget > ', params.widgetId);
+
+      if (onTemplateVisibleResult !== undefined &&
+        Object.keys(onTemplateVisibleResult).length > 0
+      ) {
+        if ((onTemplateVisibleResult ?? {}).hasOwnProperty('handled')) {
+          templateVisibleResponse = {
+            ...templateVisibleResponse,
+            handled: onTemplateVisibleResult.handled,
+          };
+        }
+      }
+
+      return templateVisibleResponse;
+    };
+
+    return window.runOnTemplateVisible();
+  }
+
+  return templateVisibleResponse;
+};
+
+/**
+ * Caller function for onVisible
+ * @param {Object} params
+ */
+XiboPlayer.prototype.onVisible = function(params) {
+  // Call the run on visible function if it exists
+  if (
+    typeof window['onVisible_' + params.widgetId] === 'function'
+  ) {
+    window.runOnVisible = function() {
+      window['onVisible_' + params.widgetId](
+        params.widgetId,
+        params.target,
+        params.items,
+        params.rendering,
+        params.meta,
+      );
+      console.log('Called onVisible for widget > ', params.widgetId);
+    };
+
+    window.runOnVisible();
+  }
+};
+
+XiboPlayer.prototype.saveTemplateDimensions = function($template) {
+  if ($template && $template.length > 0) {
+    $template.data('width') &&
+    (globalOptions.widgetDesignWidth = $template.data('width'));
+    $template.data('height') &&
+    (globalOptions.widgetDesignHeight = $template.data('height'));
+    $template.data('gap') &&
+    (globalOptions.widgetDesignGap = $template.data('gap'));
+  }
+};
+
+XiboPlayer.prototype.getRenderParams = function(
+  currentWidget,
+  globalOptions,
+  options,
+) {
+  // Options for the render functions
+  const optionsForRendering = Object.assign(
+    currentWidget.properties,
+    globalOptions,
+    {
+      duration: currentWidget.duration,
+      pauseEffectOnStart: globalOptions.pauseEffectOnStart ?? false,
+      isPreview: currentWidget.isPreview,
+      isEditor: currentWidget.isEditor,
+    },
+  );
+
+  return {
+    templateId: currentWidget.templateId,
+    widgetId: currentWidget.widgetId,
+    target: options.target,
+    items: currentWidget.items,
+    rendering: optionsForRendering,
+    properties: currentWidget.properties,
+    meta: currentWidget.meta,
+  };
+};
+
+/**
+ * Runs xiboLayoutScaler
+ * @param {Object} currentWidget Widget object
+ */
+XiboPlayer.prototype.runLayoutScaler = function(currentWidget) {
+  // Run xiboLayoutScaler once to scale the content
+  $('#content').xiboLayoutScaler(Object.assign(
+    currentWidget.properties,
+    globalOptions,
+    {duration: currentWidget.duration},
+  ));
 };
 
 const xiboPlayer = new XiboPlayer();

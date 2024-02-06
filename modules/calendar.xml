@@ -236,7 +236,7 @@ for(var idx = 0; idx < items.length; idx++) {
     }
 }
 
-return items;
+return {dataItems: items};
     ]]></onDataLoad>
     <onRender>
         <![CDATA[
