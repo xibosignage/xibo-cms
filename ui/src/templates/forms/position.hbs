@@ -4,6 +4,8 @@
         {{> inputs/hidden id="name" value=regionName customClass="position-input" }}
     {{/eq}}
 
+    {{> button id="bringToView" type="btn-block btn-outline-success inline-btn d-none mb-2" name=trans.positionTab.bringToView }}
+
     {{#if showElementLayer}}
         {{set "layerTitle" trans.positionTab.elementLayer}}
         {{set "layerHelp" trans.positionTab.elementLayerHelp}}

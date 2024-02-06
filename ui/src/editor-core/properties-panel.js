@@ -1250,6 +1250,19 @@ PropertiesPanel.prototype.render = function(
         self.DOMObject.find('#positionTab #setFullScreen').hide();
       }
 
+      // Check if we should show the bring to view button
+      const checkBringToView = function(pos) {
+        const notInView = (
+          pos.left > lD.layout.width ||
+          (pos.left + pos.width) < 0 ||
+          pos.top > lD.layout.height ||
+          (pos.top + pos.height) < 0
+        );
+        self.DOMObject.find('#positionTab #bringToView')
+          .toggleClass('d-none', !notInView);
+      };
+      checkBringToView(positionProperties);
+
       // If we change any input, update the target position
       self.DOMObject.find('#positionTab [name]').on(
         'change', _.debounce(function(ev) {
@@ -1301,14 +1314,18 @@ PropertiesPanel.prototype.render = function(
           if (targetAux == undefined) {
             // Widget
             const regionId = target.parent.id;
-
-            lD.layout.regions[regionId].transform({
+            const positions = {
               width: form.find('[name="width"]').val(),
               height: form.find('[name="height"]').val(),
               top: form.find('[name="top"]').val(),
               left: form.find('[name="left"]').val(),
               zIndex: zIndexVal,
-            }, true);
+            };
+
+            lD.layout.regions[regionId].transform(positions, true);
+
+            // Check bring to view button
+            checkBringToView(positions);
 
             lD.viewer.updateRegion(lD.layout.regions[regionId]);
 
@@ -1325,6 +1342,14 @@ PropertiesPanel.prototype.render = function(
               top: form.find('[name="top"]').val() * viewerScale,
               left: form.find('[name="left"]').val() * viewerScale,
               zIndex: zIndexVal,
+            });
+
+            // Check bring to view button
+            checkBringToView({
+              width: form.find('[name="width"]').val(),
+              height: form.find('[name="height"]').val(),
+              top: form.find('[name="top"]').val(),
+              left: form.find('[name="left"]').val(),
             });
 
             // Rotate element
@@ -1370,6 +1395,14 @@ PropertiesPanel.prototype.render = function(
 
             // Save layer
             targetAux.layer = zIndexVal;
+
+            // Check bring to view button
+            checkBringToView({
+              width: form.find('[name="width"]').val(),
+              height: form.find('[name="height"]').val(),
+              top: form.find('[name="top"]').val(),
+              left: form.find('[name="left"]').val(),
+            });
 
             // Scale group
             // Update element dimension properties
@@ -1441,6 +1474,129 @@ PropertiesPanel.prototype.render = function(
           form.find('[name="height"]').val(lD.layout.height);
           form.find('[name="top"]').val(0);
           form.find('[name="left"]').val(0);
+
+          // Check bring to view button
+          checkBringToView({
+            width: lD.layout.width,
+            height: lD.layout.height,
+            top: 0,
+            left: 0,
+          });
+
+          // Update moveable
+          lD.viewer.updateMoveable();
+        });
+
+      // Handle bring to view button
+      self.DOMObject.find('#positionTab #bringToView').off().on(
+        'click',
+        function(ev) {
+          const form = $(ev.currentTarget).parents('#positionTab');
+          const viewerScale = lD.viewer.containerObjectDimensions.scale;
+
+          // Get position to fix the item being outside of the layout
+          const calculateNewPosition = function(positions) {
+            if (Number(positions.left) > app.layout.width) {
+              positions.left = app.layout.width - positions.width;
+            }
+            if (Number(positions.left) + positions.width < 0) {
+              positions.left = 0;
+            }
+            if (Number(positions.top) > app.layout.height) {
+              positions.top = app.layout.height - positions.height;
+            }
+            if (Number(positions.top) + Number(positions.height) < 0) {
+              positions.top = 0;
+            }
+            return positions;
+          };
+
+          let newPosition = {};
+
+          if (targetAux == undefined) {
+            // Widget
+            const regionId = target.parent.id;
+
+            newPosition =
+              calculateNewPosition(lD.layout.regions[regionId].dimensions);
+
+            lD.layout.regions[regionId].transform(
+              newPosition,
+              true,
+            );
+
+            lD.viewer.updateRegion(lD.layout.regions[regionId], true);
+          } else if (targetAux?.type == 'element') {
+            // Element
+            const $targetElement = $('#' + targetAux.elementId);
+
+            newPosition =
+              calculateNewPosition({
+                width: targetAux.width,
+                height: targetAux.height,
+                top: targetAux.top,
+                left: targetAux.left,
+              });
+
+            // Move element
+            $targetElement.css({
+              width: newPosition.width * viewerScale,
+              height: newPosition.height * viewerScale,
+              top: newPosition.top * viewerScale,
+              left: newPosition.left * viewerScale,
+            });
+
+            // Save properties
+            lD.viewer.saveElementProperties($targetElement, true);
+
+            // Update element
+            lD.viewer.updateElement(targetAux, true);
+          } else if (targetAux?.type == 'element-group') {
+            const $targetElementGroup = $('#' + targetAux.id);
+
+            newPosition =
+              calculateNewPosition({
+                width: targetAux.width,
+                height: targetAux.height,
+                top: targetAux.top,
+                left: targetAux.left,
+              });
+
+            // Move element group
+            $targetElementGroup.css({
+              width: newPosition.width * viewerScale,
+              height: newPosition.height * viewerScale,
+              top: newPosition.top * viewerScale,
+              left: newPosition.left * viewerScale,
+            });
+
+            // Scale group
+            // Update element dimension properties
+            targetAux.transform({
+              width: newPosition.width,
+              height: newPosition.height,
+              top: newPosition.top,
+              left: newPosition.left,
+            });
+
+            lD.viewer.updateElementGroup(targetAux);
+
+            // Save properties
+            lD.viewer.saveElementGroupProperties(
+              $targetElementGroup,
+              true,
+              true,
+            );
+
+            // Update moveable
+            lD.viewer.updateMoveable();
+          }
+
+          // Change position tab values
+          form.find('[name="width"]').val(newPosition.width);
+          form.find('[name="height"]').val(newPosition.height);
+          form.find('[name="top"]').val(newPosition.top);
+          form.find('[name="left"]').val(newPosition.left);
 
           // Update moveable
           lD.viewer.updateMoveable();
@@ -2248,6 +2404,7 @@ PropertiesPanel.prototype.attachActionsForm = function() {
  * @param {object} properties
  */
 PropertiesPanel.prototype.updatePositionForm = function(properties) {
+  const app = this.parent;
   const $positionTab =
     this.DOMObject.find('form #positionTab, form.region-form #positioningTab');
 
@@ -2261,6 +2418,16 @@ PropertiesPanel.prototype.updatePositionForm = function(properties) {
     // Change value in the form field
     $positionTab.find('[name="' + key + '"]').val(value);
   });
+
+  // Check if we should show the bring to view button
+  const notInView = (
+    properties.left > app.layout.width ||
+    (properties.left + properties.width) < 0 ||
+    properties.top > app.layout.height ||
+    (properties.top + properties.height) < 0
+  );
+  $positionTab.find('#bringToView')
+    .toggleClass('d-none', !notInView);
 };
 
 /**
