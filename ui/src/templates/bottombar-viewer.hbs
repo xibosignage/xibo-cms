@@ -4,27 +4,27 @@
         {{#eq object.type "widget"}}
             <div class="info">
                 {{#ifCond object.widgetName '||' object.moduleName}}
-                    <div class="label-name align-middle d-inline-block">
-                        <strong>{{objectTypeName}}</strong> <span title="{{trans.widgetName}}">{{#if object.widgetName}}"{{object.widgetName}}"{{/if}}</span>
+                    <div class="label-name">
+                        <strong>{{objectTypeName}}</strong> <div class="name" title="{{trans.widgetName}} {{object.widgetName}}">{{#if object.widgetName}}"{{object.widgetName}}"{{/if}}</div>
                     </div>
                 {{/ifCond}}
             </div>
         {{else eq object.type "element"}}
             <div class="info">
-                <div class="label-name align-middle">
-                    <strong>{{objectTypeName}}</strong> | <span title="{{trans.templateName}}">{{object.template.title}}</span>{{#if object.elementName}} - <span title="{{trans.elementName}}">"{{object.elementName}}"</span>{{/if}}
+                <div class="label-name">
+                    <strong>{{objectTypeName}}</strong> | <div title="{{trans.templateName}}">{{object.template.title}}</div>{{#if object.elementName}} - <div class="name" title="{{trans.elementName}}">"{{object.elementName}}"</div>{{/if}}
                 </div>
             </div>
         {{else eq object.type "element-group"}}
             <div class="info">
-                <div class="label-name align-middle">
-                    <strong>{{objectTypeName}}</strong>{{#if object.elementGroupName}} - <span title="{{trans.elementGroupName}}">"{{object.elementGroupName}}"</span>{{/if}}
+                <div class="label-name">
+                    <strong>{{objectTypeName}}</strong>{{#if object.elementGroupName}} - <div class="name" title="{{trans.elementGroupName}}">"{{object.elementGroupName}}"</div>{{/if}}
                 </div>
             </div>
         {{else}}
             <div class="info">
-                <div class="label-name align-middle">
-                    <strong>{{objectTypeName}}</strong> <span title="{{trans.regionName}}">{{#if object.name}}"{{object.name}}"{{/if}}</span>
+                <div class="label-name">
+                    <strong>{{objectTypeName}}</strong> <div class="name" title="{{trans.regionName}}">{{#if object.name}}"{{object.name}}"{{/if}}</div>
                 </div>
             </div>
         {{/eq}}

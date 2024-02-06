@@ -82,6 +82,9 @@ body.editor-opened {
 .main-panel, .playlist-panel {
     flex: 1;
 
+    /* Prevent growing more than the allocated space, a fix for overlay in the viewer toolbar */
+    max-width: calc(100% - 320px);
+
     .main-panel-wrapper {
         position: relative;
         height: 100%;

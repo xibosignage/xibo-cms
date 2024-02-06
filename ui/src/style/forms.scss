@@ -428,12 +428,12 @@
     text-align: center;
     padding: 6px;
     background-color: $xibo-color-primary-l60;
+    color: $xibo-color-primary-l5;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 
     .widget-info-name {
-        color: $xibo-color-primary-l5;
         font-weight: bold;
     }
 }
