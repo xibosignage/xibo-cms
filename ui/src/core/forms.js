@@ -2735,7 +2735,9 @@ window.forms = {
     const replaceHTML = function(htmlString) {
       htmlString = htmlString.replace(/\%(.*?)\%/g, function(_m, group) {
         // Replace trimmed match with the value of the base object
-        return group.split('.').reduce((a, b) => a[b], baseObject);
+        return group.split('.').reduce((a, b) => {
+          return (a[b]) || `%${b}%`;
+        }, baseObject);
       });
 
       return htmlString;
