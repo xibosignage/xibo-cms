@@ -3328,25 +3328,22 @@ $(target).xiboLayoutAnimate(properties);
 // -------------------------------------------
 
 // Get selected columns
-var selectedColumns = JSON.parse(properties.selectedColumns);
-
-// If we don't have selected columns, stop rendering here
-if (selectedColumns === null || Object.values(selectedColumns).length === 0) {
-    return;
-}
+var selectedColumns = (properties.selectedColumns) ? JSON.parse(properties.selectedColumns) : [];
 
 // Convert to array and sort by play order
 selectedColumns = Object.values(selectedColumns);
-selectedColumns.sort(function(a, b) { return a.playOrder - b.playOrder; });
+selectedColumns.sort(function(a, b) {return a.playOrder - b.playOrder;});
 
 // Get dataset columns from meta.mapping
 var columnInfo = {};
-for (var i = 0; i < meta.mapping.length; i++) {
-    var column = meta.mapping[i];
-    columnInfo[column.dataSetColumnId] = {
-        name: column.heading,
-        type: column.dataTypeId
-    };
+if (meta) {
+    for (var i = 0; i < meta.mapping.length; i++) {
+        var column = meta.mapping[i];
+        columnInfo[column.dataSetColumnId] = {
+            name: column.heading,
+            type: column.dataTypeId
+        };
+    }
 }
 
 // Generate template from chosen fields
@@ -3360,7 +3357,7 @@ for (var col in selectedColumns) {
     if (isMedia) {
         properties.template += ' is-media-item';
     }
-    
+
     properties.template += '" style="';
 
     for (var style in selectedColumns[col]) {
@@ -3396,13 +3393,54 @@ for (var col in selectedColumns) {
     properties.template += '">[' + columnInfo[column.colId].name + '|' + column.colId + ']</span>';
 }
 
-// No data message
+
+// Clear containers
+$(target).find('#content').empty();
+$(target).find('.no-data-message').remove();
+
+var hasAddedItems = false;
 if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !== '') {
-    items.push(properties.noDataMessage);
+    // No data message
+    // Add message to the target content
+    $(target).find('#content').after(
+        $('<div>')
+            .addClass('no-data-message')
+            .append(properties.noDataMessage)
+    );
+} else {
+    // Add items to container
+    for (var i = 0; i < items.length; i++) {
+        var item = items[i];
+
+        // Replace the template with the item content
+        var content = properties.template.replace(/\[(.*?)\]/g, function(match, column) {
+            var itemId = column.split('|')[0];
+            var itemCol = column.split('|')[1];
+            var itemType = (itemCol) ? columnInfo[itemCol].type : '';
+            var itemValue = item[itemId];
+
+            // If this is an image column, wrap it in an image tag
+            if (itemType === 4 || itemType === 5) {
+                itemValue = itemValue ? '<img style="width: 100%; height: 100%;" src="' + itemValue + '" />' : '';
+            }
+
+            return itemValue ? itemValue : '';
+        });
+
+        // Add the content to the target
+        if(content != "") {
+            hasAddedItems = true;
+            $(target).find('#content').append(
+                $('<div>')
+                    .addClass('item')
+                    .append(content)
+            );
+        }
+    }
 }
 
 // Copyright
-if (properties.copyright) {
+if (hasAddedItems && properties.copyright) {
     var copyrightTemplate = '<span class="marquee-item marquee-copyright" style="';
 
     if (properties.copyrightFontFamily) {
@@ -3426,36 +3464,10 @@ if (properties.copyright) {
 
     copyrightTemplate += '">' + properties.copyright + '</span>';
 
-    items.push(copyrightTemplate);
-}
-
-// Clear container
-$(target).find('#content').empty();
-
-// Add items to container
-for (var i = 0; i < items.length; i++) {
-    var item = items[i];
-
-    // Replace the template with the item content
-    var content = properties.template.replace(/\[(.*?)\]/g, function (match, column) {
-        var itemId = column.split('|')[0];
-        var itemCol = column.split('|')[1];
-        var itemType = (itemCol) ? columnInfo[itemCol].type : '';
-        var itemValue = item[itemId];
-
-        // If this is an image column, wrap it in an image tag
-        if (itemType === 4 || itemType === 5) {
-            itemValue = itemValue ? '<img style="width: 100%; height: 100%;" src="' + itemValue + '" />' : '';
-        }
-
-        return itemValue ? itemValue : '';
-    });
-
-    // Add the content to the target
     $(target).find('#content').append(
         $('<div>')
             .addClass('item')
-            .append(content)
+            .append(copyrightTemplate)
     );
 }
 

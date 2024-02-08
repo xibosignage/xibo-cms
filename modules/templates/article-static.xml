@@ -1381,7 +1381,12 @@ if (items.length > 0) {
 
 // No data message
 if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !== '') {
-    items.push(properties.noDataMessage);
+    // Add message to the target content
+    $(target).find('#content').after(
+        $('<div>')
+            .addClass('no-data-message')
+            .append(properties.noDataMessage)
+    );
 }
 
 // Copyright
