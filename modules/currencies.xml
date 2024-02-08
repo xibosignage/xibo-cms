@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2023 Xibo Signage Ltd
+  ~ Copyright (C) 2024 Xibo Signage Ltd
   ~
   ~ Xibo - Digital Signage - https://xibosignage.com
   ~
@@ -24,7 +24,7 @@
     <author>Core</author>
     <description>A module for showing Currency pairs and exchange rates</description>
     <icon>fa fa-line-chart</icon>
-    <class></class>
+    <class>\Xibo\Widget\CurrenciesAndStocksProvider</class>
     <compatibilityClass>\Xibo\Widget\Compatibility\CurrenciesWidgetCompatibility</compatibilityClass>
     <type>currencies</type>
     <dataType>currency</dataType>

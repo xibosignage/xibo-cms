@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -130,6 +130,12 @@ interface DataProviderInterface
      * @return \Carbon\Carbon|null
      */
     public function getWidgetModifiedDt(): ?Carbon;
+
+    /**
+     * Indicate that we should use the event mechanism to handle this event.
+     * @return \Xibo\Widget\Provider\DataProviderInterface
+     */
+    public function setIsUseEvent(): DataProviderInterface;
 
     /**
      * Indicate that this data provider has been handled.
