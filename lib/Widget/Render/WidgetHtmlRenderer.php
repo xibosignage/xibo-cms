@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -493,7 +493,7 @@ class WidgetHtmlRenderer
                 'properties' => $module->getPropertyValues(),
                 'isValid' => $widget->isValid === 1,
                 'isRepeatData' => $widget->getOptionValue('isRepeatData', 1) === 1,
-                'duration' => $widget->duration,
+                'duration' => $widget->useDuration ? $widget->duration : $module->defaultDuration,
                 'calculatedDuration' => $widget->calculatedDuration,
                 'isDataExpected' => $module->isDataProviderExpected(),
             ];
