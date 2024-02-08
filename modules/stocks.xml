@@ -49,8 +49,8 @@
                 </test>
             </rule>
         </property>
-        <property id="durationIsPerPage" type="checkbox">
-            <title>Duration is per page</title>
+        <property id="durationIsPerItem" type="checkbox">
+            <title>Duration is per item</title>
             <helpText>The duration specified is per page/item otherwise the widget duration is divided between the number of pages/items.</helpText>
             <default>0</default>
         </property>
