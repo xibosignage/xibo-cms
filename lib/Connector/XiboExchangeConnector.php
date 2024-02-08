@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -93,7 +93,7 @@ class XiboExchangeConnector implements ConnectorInterface
         $this->getLogger()->debug('XiboExchangeConnector: onTemplateProvider');
 
         // Get a cache of the layouts.json file, or request one from download.
-        $uri = 'https://download.xibosignage.com/layouts.json';
+        $uri = 'https://download.xibosignage.com/layouts_v4.json';
         $key = md5($uri);
         $cache = $this->getPool()->getItem($key);
         $body = $cache->get();
