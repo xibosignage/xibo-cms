@@ -151,7 +151,7 @@
     </template>
     <template>
         <id>dataset_data_img</id>
-        <extends override="url">global-image</extends>
+        <extends override="url">global_image</extends>
         <title>Image</title>
         <type>element</type>
         <dataType>dataset</dataType>

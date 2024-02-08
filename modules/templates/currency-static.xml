@@ -100,7 +100,6 @@
 // target: The target element to render
 // items: The items to render
 // properties: The properties for the widget
-$(target).find('img').xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
 
 // Get body
@@ -117,6 +116,7 @@ if (templateItems.length > 0) {
     // Hide container
     $(body).hide();
 }
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <onTemplateVisible><![CDATA[
 // Start effects for this template
@@ -335,7 +335,6 @@ body {
 // target: The target element to render
 // items: The items to render
 // properties: The properties for the widget
-$(target).find("img").xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
 
 // Get items
@@ -352,6 +351,7 @@ if (templateItems.length > 0) {
     // Hide container
     $(body).hide();
 }
+$(target).find("img").xiboImageRender(properties);
         ]]></onTemplateRender>
         <onTemplateVisible><![CDATA[
 // Start effects for this template
@@ -613,7 +613,6 @@ body {
 // target: The target element to render
 // items: The items to render
 // properties: The properties for the widget
-$(target).find("img").xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
 
 // Get template items
@@ -623,6 +622,7 @@ var templateItems = $(target).find(".template-item");
 var body = $(target).find(".template-container");
 
 $(target).find("#content").xiboFinanceRender(properties, templateItems, body);
+$(target).find("img").xiboImageRender(properties);
         ]]></onTemplateRender>
         <onTemplateVisible><![CDATA[
 // Start effects for this template

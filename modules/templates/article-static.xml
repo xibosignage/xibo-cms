@@ -142,10 +142,9 @@ for (var index = 0; index < items.length; index++) {
 }
 
 // Render
-$(target).find('img').xiboImageRender(properties);
-
 $(target).xiboLayoutScaler(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > *'));
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <onTemplateVisible><![CDATA[
 // Start effects for this template
@@ -254,9 +253,9 @@ if (
 }
 
 // Render
-$(target).find('img').xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .image, #content > .copyright'));
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <onTemplateVisible><![CDATA[
 // Start effects for this template
@@ -473,9 +472,9 @@ if (
 }
 
 // Render
-$(target).find('img').xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .image, #content > .copyright'));
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <onTemplateVisible><![CDATA[
 // Start effects for this template
@@ -676,9 +675,9 @@ if (
 }
 
 // Render
-$(target).find('img').xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .image, #content > .copyright'));
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <onTemplateVisible><![CDATA[
 // Start effects for this template
@@ -1442,10 +1441,9 @@ if (
 }
 
 // Render
-$(target).find('img').xiboImageRender(properties);
-
 $(target).xiboLayoutScaler(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > *'));
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <onTemplateVisible><![CDATA[
 // Start effects for this template

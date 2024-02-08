@@ -164,13 +164,13 @@ properties.type = 'text';
 // Replace content with the parsed text
 $(target).find('#content').html(properties.text);
 
-// Image render
-$(target).find('img').xiboImageRender(properties);
-
 // Scale the layout
 $('body').xiboLayoutScaler(properties);
 
 $(target).xiboTextRender(Object.assign(properties, globalOptions), $(target).find('#content > *'));
+
+// Image render
+$(target).find('img').xiboImageRender(properties);
     ]]></onRender>
     <onVisible><![CDATA[
 // If we have a clock, create method and start it

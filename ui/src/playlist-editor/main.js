@@ -21,6 +21,9 @@
 // Include public path for webpack
 require('../../public_path');
 
+// Add image render lib
+import '/modules/src/xibo-image-render.js';
+
 // Include handlebars templates
 const playlistEditorTemplate =
   require('../templates/playlist-editor.hbs');

@@ -219,8 +219,8 @@ if (daysNum > 0) {
 }
 
 // Handle images and scaling
-$(target).find("img").xiboImageRender(properties);
 $content.xiboLayoutScaler(properties);
+$(target).find("img").xiboImageRender(properties);
     ]]></onRender>
     <assets>
         <asset id="animate" type="path" mimeType="text/css" path="/modules/assets/forecastio/animate.css"></asset>

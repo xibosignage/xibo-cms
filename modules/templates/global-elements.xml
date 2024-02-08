@@ -363,7 +363,7 @@ $(target).find('.date').each(function(_idx, dateEl){
         </assets>
     </template>
     <template>
-        <id>global-image</id>
+        <id>global_image</id>
         <type>element</type>
         <dataType>global</dataType>
         <title>Image</title>
@@ -459,13 +459,16 @@ $(target).find('.date').each(function(_idx, dateEl){
 </div>
             ]]></hbs>
         </stencil>
+        <onTemplateRender><![CDATA[
+$(target).find('img').xiboImageRender(properties);
+        ]]></onTemplateRender>
         <assets>
             <asset id="image" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/image.png" />
         </assets>
     </template>
     <template>
         <id>global_library_image</id>
-        <extends override="url" with="mediaId">global-image</extends>
+        <extends override="url" with="mediaId">global_image</extends>
         <type>element</type>
         <title>Library Image</title>
         <dataType>global</dataType>

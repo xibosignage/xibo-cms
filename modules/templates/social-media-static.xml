@@ -173,8 +173,8 @@ body {
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
-$(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .social-media-item'));
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <onTemplateVisible><![CDATA[
 // Start effects for this template
@@ -393,8 +393,8 @@ div.message-container {
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
-$(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <onTemplateVisible><![CDATA[
 // Start effects for this template
@@ -630,8 +630,8 @@ div.message-container {
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
-$(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <onTemplateVisible><![CDATA[
 // Start effects for this template
@@ -769,8 +769,8 @@ $(target).xiboLayoutAnimate(properties);
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
-$(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <onTemplateVisible><![CDATA[
 // Start effects for this template
@@ -922,8 +922,8 @@ $(target).xiboLayoutAnimate(properties);
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
-$(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <onTemplateVisible><![CDATA[
 // Start effects for this template
@@ -1076,8 +1076,8 @@ $(target).xiboLayoutAnimate(properties);
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
-$(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <onTemplateVisible><![CDATA[
 // Start effects for this template
@@ -1291,8 +1291,8 @@ body {
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
-$(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <onTemplateVisible><![CDATA[
 // Start effects for this template
@@ -1521,8 +1521,8 @@ body {
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
-$(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <onTemplateVisible><![CDATA[
 // Start effects for this template
@@ -1762,8 +1762,8 @@ body {
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
-$(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <onTemplateVisible><![CDATA[
 // Start effects for this template
@@ -1989,8 +1989,8 @@ body {
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
-$(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <onTemplateVisible><![CDATA[
 // Start effects for this template
@@ -2221,8 +2221,8 @@ body {
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
-$(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <onTemplateVisible><![CDATA[
 // Start effects for this template
@@ -2461,8 +2461,8 @@ body {
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
-$(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <onTemplateVisible><![CDATA[
 // Start effects for this template
@@ -2707,8 +2707,8 @@ body {
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
-$(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <onTemplateVisible><![CDATA[
 // Start effects for this template
@@ -3065,7 +3065,7 @@ for (var i = 1; i <= 8; i++) {
 $metroRenderContainer.xiboMetroRender(properties, itemsHTML, colors);
 
 // Render the images
-$metroRenderContainer.find('.cell').xiboImageRender(properties);
+$metroRenderContainer.find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <onTemplateVisible><![CDATA[
 // Start effects for this template
