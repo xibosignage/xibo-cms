@@ -342,9 +342,7 @@ const XiboPlayer = function() {
       elemCopy.escapeHtml =
         $template?.data('escape-html');
 
-      if (String(elemCopy.dataOverride).length > 0 &&
-        String(elemCopy.dataOverrideWith).length > 0
-      ) {
+      if (String(elemCopy.dataOverride).length > 0) {
         elemCopy.isExtended = true;
       }
 
@@ -977,6 +975,13 @@ XiboPlayer.prototype.renderWidgetElements = function(currentWidget) {
               const $grpItem = $(`<div class="${grpCln}"></div>`);
               const isMarquee =
                 PlayerHelper.isMarquee(slotObj?.effect ?? 'noTransition');
+
+              // If the slotObject isn't available lots of failures occur below
+              // this can happen when a user has skipped a slot
+              // (gone from 1 to 3)
+              if (!slotObj) {
+                return;
+              }
 
               if (dataKeys.length > 0) {
                 $.each(dataKeys,
