@@ -109,7 +109,7 @@ if (
     </template>
     <template>
         <id>article_image</id>
-        <extends override="url" with="data.image">global-image</extends>
+        <extends override="url" with="data.image">global_image</extends>
         <title>Image</title>
         <type>element</type>
         <dataType>article</dataType>

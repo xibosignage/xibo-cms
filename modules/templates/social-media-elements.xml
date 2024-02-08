@@ -21,7 +21,7 @@
 <templates>
     <template>
         <id>profile_photo</id>
-        <extends override="url" with="data.userProfileImage">global-image</extends>
+        <extends override="url" with="data.userProfileImage">global_image</extends>
         <type>element</type>
         <dataType>social-media</dataType>
         <title>Profile Photo</title>
@@ -75,7 +75,7 @@
     </template>
     <template>
         <id>post_photo</id>
-        <extends override="url" with="data.photo">global-image</extends>
+        <extends override="url" with="data.photo">global_image</extends>
         <type>element</type>
         <dataType>social-media</dataType>
         <title>Post Photo</title>

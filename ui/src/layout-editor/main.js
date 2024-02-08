@@ -26,6 +26,9 @@ require('../../public_path');
 window.Handlebars = require('handlebars/dist/handlebars.min.js');
 require('../../../modules/src/handlebars-helpers.js');
 
+// Add image render lib
+import '/modules/src/xibo-image-render.js';
+
 // Include handlebars templates
 const designerMainTemplate = require('../templates/layout-editor.hbs');
 const messageTemplate = require('../templates/message.hbs');
@@ -1926,7 +1929,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
                 draggableData.templateId = 'global_library_image';
                 draggableData.dataType = 'global';
                 draggableData.subType = 'global';
-                draggableData.extendsTemplate = 'global-image';
+                draggableData.extendsTemplate = 'global_image';
                 draggableData.extendsOverride = 'url';
                 draggableData.templateStartWidth = template.startWidth;
                 draggableData.templateStartHeight = template.startHeight;

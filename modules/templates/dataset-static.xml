@@ -254,11 +254,11 @@ $datasetTableContainer.appendTo($(target).find('#content'));
 // Scale the layout
 $(target).xiboLayoutScaler(properties);
 
-// Image render
-$datasetTableContainer.find('img').xiboImageRender(properties);
-
 // Call render
 $datasetTableContainer.dataSetRender(properties);
+
+// Image render
+$datasetTableContainer.find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <assets>
             <asset id="empty" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/dataset/0-empty.png" />
@@ -800,11 +800,11 @@ $datasetTableContainer.appendTo($(target).find('#content'));
 // Scale the layout
 $(target).xiboLayoutScaler(properties);
 
-// Image render
-$datasetTableContainer.find('img').xiboImageRender(properties);
-
 // Call render
 $datasetTableContainer.dataSetRender(properties);
+
+// Image render
+$datasetTableContainer.find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <assets>
             <asset id="empty" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/dataset/0-empty.png" />
@@ -1082,11 +1082,11 @@ $datasetTableContainer.appendTo($(target).find('#content'));
 // Scale the layout
 $(target).xiboLayoutScaler(properties);
 
-// Image render
-$datasetTableContainer.find('img').xiboImageRender(properties);
-
 // Call render
 $datasetTableContainer.dataSetRender(properties);
+
+// Image render
+$datasetTableContainer.find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <assets>
             <asset id="light-green" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/dataset/1-light-green.png" />
@@ -1355,11 +1355,11 @@ $datasetTableContainer.appendTo($(target).find('#content'));
 // Scale the layout
 $(target).xiboLayoutScaler(properties);
 
-// Image render
-$datasetTableContainer.find('img').xiboImageRender(properties);
-
 // Call render
 $datasetTableContainer.dataSetRender(properties);
+
+// Image render
+$datasetTableContainer.find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <assets>
             <asset id="simple-round-table" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/dataset/2-simple-round-table.png" />
@@ -1626,11 +1626,11 @@ $datasetTableContainer.appendTo($(target).find('#content'));
 // Scale the layout
 $(target).xiboLayoutScaler(properties);
 
-// Image render
-$datasetTableContainer.find('img').xiboImageRender(properties);
-
 // Call render
 $datasetTableContainer.dataSetRender(properties);
+
+// Image render
+$datasetTableContainer.find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <assets>
             <asset id="transparent-blue" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/dataset/3-transparent-blue.png" />
@@ -1895,11 +1895,11 @@ $datasetTableContainer.appendTo($(target).find('#content'));
 // Scale the layout
 $(target).xiboLayoutScaler(properties);
 
-// Image render
-$datasetTableContainer.find('img').xiboImageRender(properties);
-
 // Call render
 $datasetTableContainer.dataSetRender(properties);
+
+// Image render
+$datasetTableContainer.find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <assets>
             <asset id="orange-grey-striped" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/dataset/4-orange-grey-striped.png" />
@@ -2162,11 +2162,11 @@ $datasetTableContainer.appendTo($(target).find('#content'));
 // Scale the layout
 $(target).xiboLayoutScaler(properties);
 
-// Image render
-$datasetTableContainer.find('img').xiboImageRender(properties);
-
 // Call render
 $datasetTableContainer.dataSetRender(properties);
+
+// Image render
+$datasetTableContainer.find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <assets>
             <asset id="split-rows-" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/dataset/5-split-rows-.png" />
@@ -2424,11 +2424,11 @@ $datasetTableContainer.appendTo($(target).find('#content'));
 // Scale the layout
 $(target).xiboLayoutScaler(properties);
 
-// Image render
-$datasetTableContainer.find('img').xiboImageRender(properties);
-
 // Call render
 $datasetTableContainer.dataSetRender(properties);
+
+// Image render
+$datasetTableContainer.find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <assets>
             <asset id="dark-round" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/dataset/6-dark-round.png" />
@@ -2728,11 +2728,11 @@ $datasetTableContainer.appendTo($(target).find('#content'));
 // Scale the layout
 $(target).xiboLayoutScaler(properties);
 
-// Image render
-$datasetTableContainer.find('img').xiboImageRender(properties);
-
 // Call render
 $datasetTableContainer.dataSetRender(properties);
+
+// Image render
+$datasetTableContainer.find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <assets>
             <asset id="pill-colored" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/dataset/7-pill-colored.png" />
@@ -3487,10 +3487,9 @@ if (
 }
 
 // Render
-$(target).find('img').xiboImageRender(properties);
-
 $(target).xiboLayoutScaler(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > *'));
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <onTemplateVisible><![CDATA[
 // Start effects for this template
