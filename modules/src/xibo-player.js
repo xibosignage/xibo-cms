@@ -1165,6 +1165,9 @@ XiboPlayer.prototype.renderDataElements = function(currentWidget) {
     });
   }
 
+  // Find and handle any images
+  $content.find('img').xiboImageRender();
+
   // Check if we are visible
   if (xiboIC.checkVisible()) {
     currentWidget.onVisible();
@@ -1253,6 +1256,9 @@ XiboPlayer.prototype.renderGlobalElements = function(currentWidget) {
       }
     });
   }
+
+  // Find and handle any images
+  $content.find('img').xiboImageRender();
 
   // Check if we are visible
   if (xiboIC.checkVisible()) {
