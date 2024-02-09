@@ -913,6 +913,9 @@ XiboPlayer.prototype.renderStaticWidget = function(staticWidget) {
   let $template = null;
   if ($('#hbs-' + staticWidget.templateId).length > 0) {
     $template = $('#hbs-' + staticWidget.templateId);
+  } else if ($('#hbs-module').length > 0) {
+    // Dashboard module is using this template
+    $template = $('#hbs-module');
   }
 
   let hbs = null;
