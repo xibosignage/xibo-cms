@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -236,6 +236,7 @@ class ModuleTemplateFactory extends BaseFactory
         $template->onTemplateVisible = $this->getFirstValueOrDefaultFromXmlNode($xml, 'onTemplateVisible');
         $template->onElementParseData = $this->getFirstValueOrDefaultFromXmlNode($xml, 'onElementParseData');
         $template->showIn = $this->getFirstValueOrDefaultFromXmlNode($xml, 'showIn') ?? 'both';
+
         if (!empty($template->onTemplateRender)) {
             $template->onTemplateRender = trim($template->onTemplateRender);
         }

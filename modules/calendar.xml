@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2023 Xibo Signage Ltd
+  ~ Copyright (C) 2024 Xibo Signage Ltd
   ~
   ~ Xibo - Digital Signage - https://xibosignage.com
   ~
@@ -179,17 +179,6 @@
             <default></default>
         </property>
     </properties>
-    <onDataError><![CDATA[
-    if (typeof httpStatus === 'undefined' || typeof response === 'undefined') {
-        return false;
-    }
-
-    var hasSucceed = response.hasOwnProperty('success') && response.success === true;
-
-    if (!hasSucceed) {
-        return false;
-    }
-]]></onDataError>
     <onDataLoad><![CDATA[
 // items: The items to render
 // meta: Metadata

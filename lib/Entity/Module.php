@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -202,12 +202,6 @@ class Module implements \JsonSerializable
      * @var string
      */
     public $onDataLoad;
-
-    /**
-     * @SWG\Property(description="An error function to run when the widget is unable to fetch data")
-     * @var string
-     */
-    public $onDataError;
 
     /**
      * @SWG\Property(description="JavaScript function run when a module is rendered, after data has been returned")

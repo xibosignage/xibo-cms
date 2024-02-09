@@ -45,22 +45,29 @@ const XiboPlayer = function() {
           method: 'GET',
           url: currentWidget.url,
         }).done(function(data) {
+          // The contents of the JSON file will be an object with data and meta
           resolve({
             ...data,
-            onDataReady: true,
+            isDataReady: true,
           });
         }).fail(function(jqXHR, textStatus, errorThrown) {
           console.log(jqXHR, textStatus, errorThrown);
           resolve({
-            onDataReady: false,
+            isDataReady: false,
             error: jqXHR.status,
             success: false,
             data: jqXHR.responseJSON,
           });
         });
       } else if (currentWidget.data?.data !== undefined) {
-        resolve(currentWidget.data);
+        // This happens for v3 players where the data is already
+        // added to the HTML
+        resolve({
+          ...currentWidget.data,
+          isDataReady: true,
+        });
       } else {
+        // This should be impossible.
         resolve(null);
       }
     });
@@ -80,43 +87,31 @@ const XiboPlayer = function() {
     let widgetDataItems = [];
     let shouldShowError = false;
     let withErrorMessage = null;
-    let isDataReady = null;
 
     if (isDataWidget) {
-      const {dataItems, showError, errorMessage, onDataReady} =
+      const {dataItems, showError, errorMessage} =
           this.loadData(playerWidget, data);
       widgetDataItems = dataItems;
       shouldShowError = showError;
       withErrorMessage = errorMessage;
-      isDataReady = onDataReady;
     }
 
-    playerWidget.onDataReady = isDataReady;
+    playerWidget.isDataReady = data?.isDataReady || false;
     playerWidget.meta = data !== null ? data?.meta : {};
     playerWidget.items = [];
 
+    // Decorate this widget with all applicable functions
     this.loadWidgetFunctions(playerWidget, widgetDataItems);
 
     if (isDataWidget) {
-      const templateDataState = playerWidget.onTemplateDataLoad();
+      const dataLoadState = playerWidget.onDataLoad(widgetDataItems);
+      console.log('onDataLoad::handled = ', dataLoadState.handled);
 
-      if (!templateDataState.handled) {
-        const dataLoadState = playerWidget.onDataLoad();
-        console.log(
-          'onTemplateDataLoad::handled = ', templateDataState.handled);
+      widgetDataItems = dataLoadState.dataItems;
 
-        widgetDataItems = dataLoadState.dataItems;
-        console.log('dataLoadState::widgetDataItems ', widgetDataItems);
-
-        if (!dataLoadState.handled) {
-          console.log('onDataLoad::handled = ', dataLoadState.handled);
-          widgetDataItems = playerWidget.onParseData(widgetDataItems);
-          console.log('onParseData::widgetDataItems ', widgetDataItems);
-        }
-      } else {
-        console.log(
-          'onTemplateDataLoad::handled = ', templateDataState.handled);
-        widgetDataItems = playerWidget.onParseData();
+      if (!dataLoadState.handled) {
+        widgetDataItems = playerWidget.onParseData(widgetDataItems);
+        console.log('onParseData::widgetDataItems ', widgetDataItems);
       }
     }
 
@@ -184,9 +179,8 @@ const XiboPlayer = function() {
   /**
    * Define widget functions used for render flow
    * @param {Object} playerWidget Widget object
-   * @param {Array} dataItems Widget data
    */
-  this.loadWidgetFunctions = function(playerWidget, dataItems) {
+  this.loadWidgetFunctions = function(playerWidget) {
     const self = this;
     const params = this.getRenderParams(
       playerWidget,
@@ -194,21 +188,17 @@ const XiboPlayer = function() {
       globalOptions,
     );
 
-    playerWidget.onTemplateDataLoad = function() {
-      return self.onTemplateDataLoad({
-        widgetId: playerWidget.widgetId,
-      });
-    };
-    playerWidget.onDataLoad = function() {
+    playerWidget.onDataLoad = function(widgetDataItems) {
       return self.onDataLoad({
         widgetId: playerWidget.widgetId,
-        dataItems,
+        dataItems: widgetDataItems,
         meta: playerWidget.meta,
         properties: playerWidget.properties,
+        isDataReady: playerWidget.isDataReady,
       });
     };
     playerWidget.onParseData = function(widgetDataItems) {
-      return self.onParseData(playerWidget, widgetDataItems ?? dataItems);
+      return self.onParseData(playerWidget, widgetDataItems);
     };
     playerWidget.onTemplateRender = function(currentWidget, options) {
       return self.onTemplateRender(
@@ -717,7 +707,7 @@ XiboPlayer.prototype.isEditor = function() {
 };
 
 /**
- * Compose widget data
+ * Show sample data or an error if in the editor.
  * @param {Object} currentWidget Widget object
  * @param {Object|Array} data Widget data from data provider
  * @return {Object} widgetData
@@ -728,7 +718,6 @@ XiboPlayer.prototype.loadData = function(currentWidget, data) {
     isSampleData: false,
     dataItems: [],
     isArray: Array.isArray(data?.data),
-    onDataReady: data?.onDataReady,
     showError: false,
     errorMessage: null,
   };
@@ -901,6 +890,12 @@ XiboPlayer.prototype.renderStaticWidget = function(staticWidget) {
     }).html(errorMessage);
 
     $target.append($errMsg);
+  }
+
+  // Expire if the data is not ready
+  if (!staticWidget.isDataReady) {
+    console.error('static widget where data is not ready, expiring');
+    xiboIC.expireNow({targetId: xiboICTargetId});
   }
 
   // Add meta to the widget if it exists
@@ -1405,45 +1400,6 @@ XiboPlayer.prototype.isModule = function(currentWidget) {
 };
 
 /**
- * Caller function for onTemplateDataLoad
- * @param {Object} params
- * @return {Object} State to determine next step. E.g. {handled: false}
- */
-XiboPlayer.prototype.onTemplateDataLoad = function(params) {
-  let onTemplateDataLoad = null;
-  // onTemplateDataLoad function should be checked and run first before
-  if (typeof window['onTemplateDataLoad_' + params.widgetId] ===
-    'function') {
-    onTemplateDataLoad =
-      window['onTemplateDataLoad_' + params.widgetId];
-  }
-
-  let onTemplateDataLoadRes = {handled: false};
-
-  if (onTemplateDataLoad) {
-    const onTemplateDataLoadResult = onTemplateDataLoad(params.widgetId);
-
-    if (onTemplateDataLoadResult !== undefined &&
-      Object.keys(onTemplateDataLoadResult).length > 0
-    ) {
-      if ((onTemplateDataLoadResult ?? {}).hasOwnProperty('handled')) {
-        onTemplateDataLoadRes = {
-          ...onTemplateDataLoadRes,
-          handled: onTemplateDataLoadResult.handled,
-        };
-      } else {
-        onTemplateDataLoadRes = {
-          ...onTemplateDataLoadResult,
-          ...onTemplateDataLoadRes,
-        };
-      }
-    }
-  }
-
-  return onTemplateDataLoadRes;
-};
-
-/**
  * Caller function for onDataLoad
  * @param {Object} params
  * @return {Object} State to determine next step.
@@ -1464,6 +1420,7 @@ XiboPlayer.prototype.onDataLoad = function(params) {
       params.dataItems,
       params.meta,
       params.properties,
+      params.isDataReady,
     );
 
     if (onDataLoadResult !== undefined &&
