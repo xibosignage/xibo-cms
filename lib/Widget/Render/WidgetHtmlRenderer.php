@@ -397,8 +397,8 @@ class WidgetHtmlRenderer
         $twig['onRender'] = [];
         $twig['onParseData'] = [];
         $twig['onDataLoad'] = [];
-        $twig['onDataError'] = [];
         $twig['onElementParseData'] = [];
+        $twig['onTemplateDataLoad'] = [];
         $twig['onTemplateRender'] = [];
         $twig['onTemplateVisible'] = [];
         $twig['onInitialize'] = [];
@@ -521,9 +521,6 @@ class WidgetHtmlRenderer
             }
             if (!empty($module->onDataLoad)) {
                 $twig['onDataLoad'][$widget->widgetId] = $module->onDataLoad;
-            }
-            if (!empty($module->onDataError)) {
-                $twig['onDataError'][$widget->widgetId] = $module->onDataError;
             }
             if (!empty($module->onRender)) {
                 $twig['onRender'][$widget->widgetId] = $module->onRender;
@@ -731,6 +728,10 @@ class WidgetHtmlRenderer
                 && $moduleTemplate->type === 'element'
             ) {
                 $twig['style'][] = $moduleTemplate->stencil->style;
+            }
+
+            if ($moduleTemplate->onTemplateDataLoad !== null) {
+                $twig['onTemplateDataLoad'][$moduleTemplate->templateId] = $moduleTemplate->onTemplateDataLoad;
             }
 
             if ($moduleTemplate->onTemplateRender !== null) {
