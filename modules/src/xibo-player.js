@@ -45,10 +45,14 @@ const XiboPlayer = function() {
           method: 'GET',
           url: currentWidget.url,
         }).done(function(data) {
-          resolve(data);
+          resolve({
+            ...data,
+            onDataReady: true,
+          });
         }).fail(function(jqXHR, textStatus, errorThrown) {
           console.log(jqXHR, textStatus, errorThrown);
           resolve({
+            onDataReady: false,
             error: jqXHR.status,
             success: false,
             data: jqXHR.responseJSON,
@@ -71,20 +75,23 @@ const XiboPlayer = function() {
    */
   this.playerWidget = function(inputWidget, data, isDataWidget) {
     const self = this;
-    let playerWidget = inputWidget;
+    const playerWidget = inputWidget;
     const isStaticWidget = this.isStaticWidget(playerWidget);
     let widgetDataItems = [];
     let shouldShowError = false;
     let withErrorMessage = null;
+    let isDataReady = null;
 
     if (isDataWidget) {
-      const {dataItems, showError, errorMessage} =
+      const {dataItems, showError, errorMessage, onDataReady} =
           this.loadData(playerWidget, data);
       widgetDataItems = dataItems;
       shouldShowError = showError;
       withErrorMessage = errorMessage;
+      isDataReady = onDataReady;
     }
 
+    playerWidget.onDataReady = isDataReady;
     playerWidget.meta = data !== null ? data?.meta : {};
     playerWidget.items = [];
 
@@ -125,19 +132,8 @@ const XiboPlayer = function() {
         playerWidget.widgetId,
         this.inputElements,
       );
-      playerWidget.elements = this.composeElements(tempElements, playerWidget);
-      playerWidget.isMixed = false; // Identifier for mixed widget element
-      playerWidget.standaloneSlotsData = {};
-      playerWidget.groupSlotsData = {};
 
-      if (playerWidget.elements.hasOwnProperty('standalone') &&
-        playerWidget.elements.hasOwnProperty('groups') &&
-        (Object.keys(playerWidget.elements.standalone).length > 0 ||
-        Object.keys(playerWidget.elements.groups).length > 0)
-      ) {
-        playerWidget =
-          PlayerHelper.decorateCollectionSlots(widgetDataItems, playerWidget);
-      }
+      this.prepareWidgetElements(tempElements, playerWidget);
     }
 
     // Useful when re-rendering the widget through the web console
@@ -153,6 +149,36 @@ const XiboPlayer = function() {
     };
 
     return playerWidget;
+  };
+
+  /**
+   * Prepare widget elements (data and global)
+   * @param {Array} widgetElements
+   * @param {Object} currentWidget
+   * @return {Object} currentWidget
+   */
+  this.prepareWidgetElements = function(widgetElements, currentWidget) {
+    const transformedElems =
+        this.composeElements(widgetElements, currentWidget);
+
+    if (currentWidget.isDataExpected && widgetElements.length > 0) {
+      const {minSlot, maxSlot} =
+          PlayerHelper.getMinAndMaxSlot(Object.values(transformedElems));
+      // Compose data elements slots
+      currentWidget.maxSlot = maxSlot;
+      currentWidget.dataElements =
+          this.initSlots(transformedElems, minSlot, maxSlot);
+      currentWidget.pinnedSlots =
+          PlayerHelper.getPinnedSlots(currentWidget.dataElements);
+
+      this.composeDataSlots(currentWidget);
+      this.composeRNRData(currentWidget);
+    } else {
+      // These are global elements
+      currentWidget.globalElements = transformedElems;
+    }
+
+    return currentWidget;
   };
 
   /**
@@ -212,86 +238,244 @@ const XiboPlayer = function() {
    * Compose widget elements
    * @param {Array} widgetElements Widget elements
    * @param {Object} currentWidget Widget object
-   * @return {Object} {standalone: {}, groups: {}}
+   * @return {Object}
    */
   this.composeElements = function(widgetElements, currentWidget) {
-    if (!widgetElements || widgetElements.length === 0) {
-      return {standalone: {}, groups: {}};
-    }
-
     const self = this;
-    let elementsWithNoMetaData = 0;
-    const _widgetElements = widgetElements.reduce(function(collection, item) {
-      const element = self.decorateElement(item, currentWidget);
-      const isGroup = self.isGroup(element);
-      let standaloneKey = element.type === 'dataset' ?
-        element.id + '_' + element.templateData.datasetField :
-        element.id;
+    return widgetElements.reduce(function(collection, widgetElement) {
+      const grpId = widgetElement.groupId;
+      const hasGroup = Boolean(grpId);
 
-      // Allow multiple data source of same element type by widget
-      standaloneKey += '_' + currentWidget.widgetId;
-
-      // Initialize object values
-      if (!isGroup && !collection.standalone.hasOwnProperty(standaloneKey)) {
-        collection.standalone[standaloneKey] = {};
-      }
-
-      let groupKey = null;
-      if (isGroup) {
-        groupKey = element.groupId + '_' + currentWidget.widgetId;
-        if (!collection.groups.hasOwnProperty(groupKey)) {
-          collection.groups[groupKey] = {
-            ...globalOptions,
-            ...currentWidget.properties,
-            ...element.groupProperties,
-            id: groupKey,
-            uniqueID: element.groupId,
-            duration: currentWidget.duration,
-            parentId: groupKey,
-            widgetId: currentWidget.widgetId,
-            slot: element.slot,
+      // Check for group
+      if (hasGroup) {
+        const grpWidgetId = grpId + '_' + currentWidget.widgetId;
+        if (!Boolean(collection[grpWidgetId])) {
+          collection[grpWidgetId] = {
+            ...widgetElement.groupProperties,
+            groupId: widgetElement.groupId,
+            groupScale: widgetElement.groupScale,
+            slot: widgetElement.slot ?? undefined,
             items: [],
           };
         }
-      }
 
-      // Fill in objects with items
-      if (!isGroup && Object.keys(collection.standalone).length > 0) {
-        const keyIndex =
-          Object.keys(collection.standalone[standaloneKey]).length + 1;
-        collection.standalone[standaloneKey][keyIndex] =
-            {
-              ...element,
-              numItems: 1,
-              duration: currentWidget.duration,
-            };
+        if (Boolean(collection[grpWidgetId])) {
+          collection[grpWidgetId].items.push(
+            self.decorateElement(widgetElement, currentWidget),
+          );
+        }
+      } else {
+        const elemWidgetId =
+          widgetElement.elementId + '_' + currentWidget.widgetId;
 
-        if (!element.dataInMeta) {
-          elementsWithNoMetaData++;
+        if (!Boolean(collection[elemWidgetId])) {
+          collection[elemWidgetId] =
+            self.decorateElement({...widgetElement}, currentWidget);
         }
       }
 
-      if (isGroup && Object.keys(collection.groups).length > 0 &&
-        groupKey !== null
-      ) {
-        collection.groups[groupKey] = {
-          ...collection.groups[groupKey],
-          items: [
-            ...collection.groups[groupKey].items,
-            {...element, numItems: 1},
-          ],
-        };
-      }
-
       return collection;
-    }, {standalone: {}, groups: {}});
+    }, {});
+  };
 
-    currentWidget.isMixed =
-      Object.keys(_widgetElements.standalone).length > 0 &&
-      elementsWithNoMetaData > 0 &&
-      Object.keys(_widgetElements.groups).length > 0;
+  /**
+   * Initialize slots
+   * @param {Object} collection Data elements
+   * @param {Number} minSlot
+   * @param {Number} maxSlot
+   * @return {*}
+   */
+  this.initSlots = function(collection, minSlot, maxSlot) {
+    if (minSlot === 0) {
+      return minSlot;
+    }
 
-    return _widgetElements;
+    const dataSlots =
+      [...Array(maxSlot).keys()].reduce(function(slots, slot) {
+        slots[slot + 1] = {
+          items: {},
+          isPinnedSlot: false,
+          dataKeys: [],
+          slot: slot + 1,
+        };
+
+        return slots;
+      }, {});
+
+    if (Object.values(dataSlots).length > 0 &&
+      Object.values(collection).length > 0
+    ) {
+      Object.keys(collection).forEach(function(itemKey) {
+        const currentItem = collection[itemKey];
+        const currentSlot = currentItem.slot + 1;
+        if (Boolean(dataSlots[currentSlot])) {
+          dataSlots[currentSlot].items[itemKey] = currentItem;
+          dataSlots[currentSlot].hasGroup = Boolean(currentItem.groupId);
+          dataSlots[currentSlot].isPinnedSlot =
+            Object.keys(dataSlots[currentSlot].items).filter(function(k) {
+              return dataSlots[currentSlot].items[k].pinSlot === true;
+            }).length > 0;
+        }
+      });
+    }
+
+    return dataSlots;
+  };
+
+  /**
+   * Compose widget data slots
+   * @param {Object} currentWidget
+   */
+  this.composeDataSlots = function(currentWidget) {
+    const {
+      data,
+      maxSlot,
+      dataElements,
+      pinnedSlots,
+    } = currentWidget;
+
+    if (data.length > 0) {
+      let lastSlotFilled = null;
+
+      dataLoop: for (const [dataItemKey] of Object.entries(data)) {
+        let hasSlotFilled = false;
+        const currentKey = parseInt(dataItemKey) + 1;
+        const currCollection = Object.keys(dataElements);
+
+        // Stop iteration through data when all pinned slots are filled
+        // and maxSlot = pinnedSlots.length
+        if (lastSlotFilled === null &&
+            pinnedSlots.length === maxSlot &&
+            currentKey > maxSlot
+        ) {
+          break;
+        }
+
+        for (const [, itemValue] of Object.entries(currCollection)) {
+          const itemObj = dataElements[itemValue];
+          const isPinnedSlot = itemObj.isPinnedSlot;
+          const currentSlot = itemObj.slot;
+
+          // Skip if currentKey is less than the currentSlot
+          if (currentKey < currentSlot) {
+            continue dataLoop;
+          }
+
+          if (!isPinnedSlot && !pinnedSlots.includes(currentKey)) {
+            // If lastSlotFilled is filled and is <= to currentSlot
+            // Then, move to next slot
+            if (lastSlotFilled !== null &&
+                currentSlot <= lastSlotFilled
+            ) {
+              continue;
+            }
+
+            itemObj.dataKeys = [
+              ...itemObj.dataKeys,
+              currentKey,
+            ];
+
+            hasSlotFilled = true;
+            lastSlotFilled = currentSlot;
+          } else if (!isPinnedSlot && pinnedSlots.includes(currentKey)) {
+            if (lastSlotFilled !== null &&
+                currentSlot <= lastSlotFilled
+            ) {
+              continue;
+            }
+          } else if (isPinnedSlot &&
+              currentSlot === currentKey &&
+              pinnedSlots.includes(currentSlot)
+          ) {
+            itemObj.dataKeys = [
+              ...itemObj.dataKeys,
+              currentKey,
+            ];
+
+            hasSlotFilled = true;
+            lastSlotFilled = currentSlot;
+          } else if (isPinnedSlot && pinnedSlots.length > 0 &&
+              Math.max(...pinnedSlots) === maxSlot &&
+              currentSlot !== currentKey
+          ) {
+            if (lastSlotFilled !== null &&
+                currentSlot <= lastSlotFilled
+            ) {
+              continue;
+            }
+
+            itemObj.dataKeys = [
+              ...itemObj.dataKeys,
+              currentKey,
+            ];
+
+            hasSlotFilled = true;
+            lastSlotFilled = 1;
+          }
+
+          if (hasSlotFilled) {
+            hasSlotFilled = false;
+            if (lastSlotFilled % maxSlot === 0) {
+              lastSlotFilled = null;
+            }
+
+            break;
+          }
+        }
+      }
+    }
+  };
+
+  /**
+   * Compose repeat and non-repeat data
+   * @param {Object} currentWidget
+   */
+  this.composeRNRData = function(currentWidget) {
+    const {dataElements, pinnedSlots, isRepeatData} = currentWidget;
+    // Copy data elements slots
+    const groupSlotsData = {...dataElements};
+    // Remove pinnedSlot from the object
+    if (pinnedSlots.length > 0) {
+      pinnedSlots.forEach(function(pinnedSlot) {
+        if (Boolean(dataElements[pinnedSlot])) {
+          delete groupSlotsData[pinnedSlot];
+        }
+      });
+    }
+
+    const dataCounts = Object.keys(groupSlotsData).reduce((a, b) => {
+      a[b] = groupSlotsData[b].dataKeys.length;
+      return a;
+    }, {});
+    const maxCount = Math.max(
+      ...(Object.values(dataCounts).map((count) => Number(count))));
+    const minCount = Math.min(
+      ...(Object.values(dataCounts).map((count) => Number(count))));
+
+    if (minCount < maxCount) {
+      const nonPinnedDataKeys =
+          Object.values(groupSlotsData).reduce((a, b) => {
+            return [...a, ...(b.dataKeys)];
+          }, []).sort((a, b) => {
+            if (a < b) return -1;
+            if (a > b) return 1;
+            return 0;
+          });
+
+      Object.keys(groupSlotsData).forEach(function(slotIndex, slotKey) {
+        const dataCount = dataCounts[slotIndex];
+        if (dataCount < maxCount) {
+          const countDiff = maxCount - dataCount;
+          if (countDiff === 1) {
+            const poppedKey = nonPinnedDataKeys.shift();
+            dataElements[slotIndex].dataKeys.push(
+              isRepeatData ? poppedKey : 'empty');
+          }
+        }
+      });
+    }
+
+    currentWidget.dataElements = dataElements;
   };
 
   /**
@@ -539,6 +723,7 @@ XiboPlayer.prototype.loadData = function(currentWidget, data) {
     isSampleData: false,
     dataItems: [],
     isArray: Array.isArray(data?.data),
+    onDataReady: data?.onDataReady,
     showError: false,
     errorMessage: null,
   };
@@ -674,9 +859,9 @@ XiboPlayer.prototype.renderWidget = function(widget, shouldRefresh, widgetId) {
   } else {
     // Render widget elements
     if (shouldRefresh) {
-      this.getFreshWidgetData(currentWidget, this.renderWidgetElements);
+      this.getFreshWidgetData(currentWidget, this.renderDataElements);
     } else {
-      this.renderWidgetElements(currentWidget);
+      this.renderDataElements(currentWidget);
     }
   }
 };
@@ -820,15 +1005,10 @@ XiboPlayer.prototype.renderStaticWidget = function(staticWidget) {
  * Renders widget elements
  * @param {Object} currentWidget Widget object
  */
-XiboPlayer.prototype.renderWidgetElements = function(currentWidget) {
+XiboPlayer.prototype.renderDataElements = function(currentWidget) {
   const self = this;
   const {
     data,
-    elements: widgetElements,
-    groupSlotsData,
-    standaloneSlotsData,
-    templateId,
-    url,
     meta,
   } = currentWidget;
   const $content = $('#content');
@@ -844,235 +1024,142 @@ XiboPlayer.prototype.renderWidgetElements = function(currentWidget) {
     return;
   }
 
-  const standaloneElems = widgetElements.standalone;
-  const standaloneData = standaloneSlotsData;
+  // New implementation of widget elements rendering
+  if (currentWidget.dataElements && Object.values(currentWidget.dataElements)) {
+    // Loop through data slot of elements
+    Object.keys(currentWidget.dataElements).forEach(function(slotKey) {
+      const slotObj = currentWidget.dataElements[slotKey];
+      const dataKeys = slotObj.dataKeys;
 
-  // Groups with data
-  if (Object.values(groupSlotsData).length > 0) {
-    const {
-      maxSlot,
-      pinnedSlots,
-    } = PlayerHelper.getGroupData(widgetElements.groups, 'items', false);
+      if (Object.keys(slotObj.items).length > 0) {
+        Object.keys(slotObj.items).forEach(function(itemKey) {
+          const slotObjItem = slotObj.items[itemKey];
+          const isGroup = Boolean(slotObjItem.groupId);
+          const $slotItemContent = $(`<div class="${itemKey}"></div>`);
+          const isMarquee = PlayerHelper.isMarquee(slotObjItem?.efffect);
 
-    $.each(Object.keys(groupSlotsData), function(slotIndex, slotKey) {
-      const groupSlotId = currentWidget.mappedSlotGroup[slotKey];
-      const groupSlotObj = widgetElements.groups[groupSlotId];
-      const groupDataKeys = groupSlotsData[slotKey];
-      const $grpContent =
-          $(`<div class="${groupSlotId}"></div>`);
-      const isMarquee = PlayerHelper.isMarquee(groupSlotObj.effect);
+          dataKeys.forEach(function(dataKey) {
+            if (isGroup) {
+              // Check group items
+              if (slotObjItem.items.length > 0) {
+                // Loop through group items
+                slotObjItem.items.forEach(function(groupItem) {
+                  // Load element functions
+                  self.loadElementFunctions(groupItem, dataKey === 'empty' ?
+                    dataKey : {...(data[dataKey - 1] || {})});
 
-      if (groupDataKeys.length > 0 &&
-          templateId !== null && url !== null
-      ) {
-        $.each(groupDataKeys, function(dataKeyIndx, dataKey) {
-          if (groupSlotObj?.items.length > 0) {
-            $.each(groupSlotObj.items,
-              function(itemKey, groupItem) {
-                let dataItem = dataKey === 'empty' ?
-                  dataKey : {...(data[dataKey - 1] || {})};
+                  PlayerHelper.renderDataItem(
+                    isGroup,
+                    dataKey,
+                    groupItem.onElementParseData(dataKey === 'empty' ?
+                      dataKey : {...(data[dataKey - 1] || {})},
+                    ),
+                    groupItem,
+                    slotKey,
+                    currentWidget.maxSlot,
+                    groupItem.pinSlot,
+                    currentWidget.pinnedSlots,
+                    itemKey,
+                    $slotItemContent,
+                    {...slotObjItem, isMarquee},
+                    meta,
+                    $content,
+                  );
+                });
+              }
+            } else {
+              // Load element functions
+              self.loadElementFunctions(slotObjItem, dataKey === 'empty' ?
+                dataKey : {...(data[dataKey - 1] || {})});
 
-                // Load element functions
-                self.loadElementFunctions(groupItem, dataItem);
-
-                // Run onElementParseData function
-                dataItem = groupItem.onElementParseData();
-
-                PlayerHelper.renderDataItem(
-                  true,
-                  dataKey,
-                  dataItem,
-                  groupItem,
-                  slotKey,
-                  maxSlot,
-                  groupItem.pinSlot,
-                  pinnedSlots,
-                  groupSlotId,
-                  $grpContent,
-                  {...groupSlotObj, isMarquee},
-                  meta,
-                  $content,
-                );
-              });
-          }
-        });
-
-        $grpContent.css({
-          width: groupSlotObj.width,
-          height: groupSlotObj.height,
-          position: 'absolute',
-          top: groupSlotObj.top,
-          left: groupSlotObj.left,
-          overflow: 'hidden',
-          zIndex: groupSlotObj.layer,
-        });
-
-        if (isMarquee) {
-          const $scroller =
-              $(`<div class="${groupSlotObj.id}--marquee scroll"></div>`);
-
-          $scroller.css({
-            display: 'flex',
-            height: groupSlotObj.height,
+              PlayerHelper.renderDataItem(
+                isGroup,
+                dataKey,
+                slotObjItem.onElementParseData(dataKey === 'empty' ?
+                  dataKey : {...(data[dataKey - 1] || {})},
+                ),
+                slotObjItem,
+                slotKey,
+                currentWidget.maxSlot,
+                slotObjItem.pinSlot,
+                currentWidget.pinnedSlots,
+                itemKey,
+                $slotItemContent,
+                {...slotObjItem, isMarquee},
+                meta,
+                $content,
+              );
+            }
           });
 
-          if (groupSlotObj?.templateData?.verticalAlign) {
+          $slotItemContent.css({
+            width: slotObjItem.width,
+            height: slotObjItem.height,
+            position: 'absolute',
+            top: slotObjItem.top,
+            left: slotObjItem.left,
+            overflow: 'hidden',
+            zIndex: slotObjItem.layer,
+          });
+
+          if (isMarquee) {
+            const $scroller =
+              $(`<div class="${itemKey}--marquee scroll"></div>`);
+
             $scroller.css({
-              alignItems: groupSlotObj?.templateData?.verticalAlign,
+              display: 'flex',
+              height: slotObjItem.height,
             });
+
+            if (slotObjItem?.templateData?.verticalAlign) {
+              $scroller.css({
+                alignItems: slotObjItem?.templateData?.verticalAlign,
+              });
+            }
+
+            $slotItemContent.wrapInner($scroller.prop('outerHTML'));
+          } else {
+            if (!isGroup) {
+              $slotItemContent.css({
+                position: 'absolute',
+                top: slotObjItem.top,
+                left: slotObjItem.left,
+                width: slotObjItem.width,
+                height: slotObjItem.height,
+                zIndex: slotObjItem.layer,
+              });
+            }
           }
 
-          $grpContent.wrapInner($scroller.prop('outerHTML'));
-        }
+          // Remove data group element if exists to avoid duplicate
+          if ($content.find('.' +
+            itemKey + '.cycle-slideshow').length === 1) {
+            $content.find('.' +
+              itemKey + '.cycle-slideshow').cycle('destroy');
+          }
+          if ($content.find('.' + itemKey).length === 1) {
+            $content.find('.' + itemKey).remove();
+          }
 
-        // Remove data group element if exists to avoid duplicate
-        if ($content.find('.' +
-            groupSlotId + '.cycle-slideshow').length === 1) {
-          $content.find('.' +
-              groupSlotId + '.cycle-slideshow').cycle('destroy');
-        }
-        if ($content.find('.' + groupSlotId).length === 1) {
-          $content.find('.' + groupSlotId).remove();
-        }
+          $content.append($slotItemContent);
 
-        $content.append($grpContent);
-
-        $grpContent.promise().done(function() {
-          $grpContent.xiboElementsRender(
-            {
-              ...groupSlotObj,
-              itemsPerPage: maxSlot,
-              numItems: data.length,
-              selector: `.${groupSlotId}`,
-            },
-            $grpContent.find(`.${groupSlotObj.id}--item`),
-          );
-        });
-
-        currentWidget.items.push($grpContent);
-      }
-    });
-  }
-
-  // Standalone elements with data
-  if (Object.values(standaloneSlotsData).length > 0) {
-    $.each(Object.keys(standaloneData),
-      function(keyIndx, keyValue) {
-        if (standaloneData.hasOwnProperty(keyValue) &&
-          Object.keys(standaloneData[keyValue]).length > 0 &&
-          templateId !== null && url !== null
-        ) {
-          const {maxSlot, pinnedSlots} =
-            PlayerHelper.getGroupData(
-              [standaloneElems],
-              keyValue,
-              true,
+          $slotItemContent.promise().done(function() {
+            $slotItemContent.xiboElementsRender(
+              {
+                ...slotObjItem,
+                itemsPerPage: currentWidget?.maxSlot,
+                numItems: data.length,
+                id: itemKey,
+                selector: `.${itemKey}`,
+              },
+              $slotItemContent.find(`.${itemKey}--item`),
             );
 
-          $.each(Object.keys(standaloneData[keyValue]),
-            function(slotIndex, slotKey) {
-              const slotObj = standaloneElems[keyValue][slotKey] || null;
-              const dataKeys = standaloneData[keyValue][slotKey];
-              const grpCln = `${keyValue}_page-${slotKey}`;
-              const $grpItem = $(`<div class="${grpCln}"></div>`);
-              const isMarquee =
-                PlayerHelper.isMarquee(slotObj?.effect ?? 'noTransition');
-
-              if (dataKeys.length > 0) {
-                $.each(dataKeys,
-                  function(dataKeyIndx, dataKey) {
-                    let dataItem = dataKey === 'empty' ?
-                      dataKey : {...(data[dataKey - 1] || {})};
-
-                    // Load element functions
-                    self.loadElementFunctions(slotObj, dataItem);
-
-                    // Run onElementParseData function
-                    dataItem = slotObj.onElementParseData();
-
-                    PlayerHelper.renderDataItem(
-                      false,
-                      dataKey,
-                      dataItem,
-                      slotObj ?? {},
-                      slotKey,
-                      maxSlot,
-                      slotObj?.pinSlot,
-                      pinnedSlots,
-                      grpCln,
-                      $grpItem,
-                      {...slotObj, isMarquee},
-                      meta,
-                      $content,
-                    );
-                  });
-
-                if (isMarquee) {
-                  $grpItem.css({
-                    width: slotObj.width,
-                    height: slotObj.height,
-                    position: 'absolute',
-                    top: slotObj.top,
-                    left: slotObj.left,
-                    overflow: 'hidden',
-                    zIndex: slotObj.layer,
-                  });
-
-                  const $scroller =
-                      $(`<div class="${slotObj.id}--marquee scroll"/>`);
-
-                  $scroller.css({
-                    display: 'flex',
-                    height: slotObj.height,
-                  });
-
-                  if (slotObj?.templateData?.verticalAlign) {
-                    $scroller.css({
-                      alignItems: slotObj?.templateData?.verticalAlign,
-                    });
-                  }
-
-                  $grpItem.wrapInner($scroller.prop('outerHTML'));
-                } else {
-                  $grpItem.css({
-                    position: 'absolute',
-                    top: slotObj.top,
-                    left: slotObj.left,
-                    width: slotObj.width,
-                    height: slotObj.height,
-                    zIndex: slotObj.layer,
-                  });
-                }
-
-                // Remove data item element if it exists to avoid duplicate
-                if ($content.find('.' +
-                    grpCln + '.cycle-slideshow').length === 1) {
-                  $content.find('.' +
-                      grpCln + '.cycle-slideshow').cycle('destroy');
-                }
-                if ($content.find('.' + grpCln).length === 1) {
-                  $content.find('.' + grpCln).remove();
-                }
-
-                $content.append($grpItem);
-
-                $grpItem.xiboElementsRender(
-                  {
-                    ...slotObj,
-                    parentId: grpCln,
-                    itemsPerPage: maxSlot,
-                    numItems: data.length,
-                    id: grpCln,
-                    selector: `.${grpCln}`,
-                  },
-                  $grpItem.find(`.${grpCln}--item`),
-                );
-
-                currentWidget.items.push($grpItem);
-              }
-            });
-        }
-      });
+            currentWidget.items.push($slotItemContent);
+          });
+        });
+      }
+    });
   }
 
   // Check if we are visible
@@ -1083,7 +1170,7 @@ XiboPlayer.prototype.renderWidgetElements = function(currentWidget) {
   }
 
   console.log(
-    '<<<END>>> of renderWidgetElements for widget >', currentWidget.widgetId);
+    '<<<END>>> of renderDataElements for widget >', currentWidget.widgetId);
 };
 
 /**
@@ -1092,82 +1179,77 @@ XiboPlayer.prototype.renderWidgetElements = function(currentWidget) {
  */
 XiboPlayer.prototype.renderGlobalElements = function(currentWidget) {
   const self = this;
-  const {elements: widgetElements, meta} = currentWidget;
+  const {globalElements, meta} = currentWidget;
   const $content = $('#content');
-  const groupedElements = widgetElements.groups;
-  const standaloneElements = widgetElements.standalone;
 
-  // Global grouped elements
-  $.each(Object.keys(groupedElements), function(grpIndex, grpId) {
-    const groupObj = groupedElements[grpId];
+  // New implementation for global elements
+  if (globalElements && Object.values(globalElements).length > 0) {
+    Object.keys(globalElements).forEach(function(itemKey) {
+      const elemObj = globalElements[itemKey];
+      const isGroup = Boolean(elemObj.groupId);
 
-    if (groupObj?.items.length > 0) {
-      $.each(groupObj.items,
-        function(itemKey, groupItem) {
-          // Load element functions
-          self.loadElementFunctions(groupItem, {});
+      if (isGroup) {
+        // Grouped elements
+        if (elemObj.items.length > 0) {
+          // Loop through group items
+          elemObj.items.forEach(function(groupItem) {
+            // Load element functions
+            self.loadElementFunctions(groupItem, {});
 
-          (groupItem.hbs) && $content.append(
-            PlayerHelper.renderElement(
-              groupItem.hbs,
-              groupItem.templateData,
-              true,
-            ),
-          );
+            (groupItem.hbs) && $content.append(
+              PlayerHelper.renderElement(
+                groupItem.hbs,
+                groupItem.templateData,
+                true,
+              ),
+            );
 
-          const itemID =
-            groupItem.uniqueID || groupItem.templateData?.uniqueID;
-          const $itemContainer = $(`<div class="${grpId}"></div>`);
+            const itemID =
+                groupItem.uniqueID || groupItem.templateData?.uniqueID;
+            const $itemContainer = $(`<div class="${itemKey}"></div>`);
 
-          // Call onTemplateRender
-          // Handle the rendering of the template
-          (groupItem.onTemplateRender() !== undefined) &&
-          groupItem.onTemplateRender()(
-            groupItem.elementId,
+            // Call onTemplateRender
+            // Handle the rendering of the template
+            (groupItem.onTemplateRender() !== undefined) &&
+            groupItem.onTemplateRender()(
+              groupItem.elementId,
+              $itemContainer.find(`.${itemID}--item`),
+              $content.find(`.${itemID}--item`),
+              {groupItem, ...groupItem.templateData, data: {}},
+              meta,
+            );
+          });
+        }
+      } else {
+        // Single elements
+        // Load element functions
+        self.loadElementFunctions(elemObj, {});
+
+        (elemObj.hbs) && $content.append(
+          PlayerHelper.renderElement(
+            elemObj.hbs,
+            elemObj.templateData,
+            true,
+          ),
+        );
+
+        const itemID =
+          elemObj.uniqueID || elemObj.templateData?.uniqueID;
+        const $itemContainer = $(`<div class="${itemKey}"></div>`);
+
+        // Call onTemplateRender
+        // Handle the rendering of the template
+        (elemObj.onTemplateRender() !== undefined) &&
+          elemObj.onTemplateRender()(
+            elemObj.elementId,
             $itemContainer.find(`.${itemID}--item`),
             $content.find(`.${itemID}--item`),
-            {groupItem, ...groupItem.templateData, data: {}},
+            {elemObj, ...elemObj.templateData, data: {}},
             meta,
           );
-        });
-    }
-  });
-
-  // Global standalone elements
-  $.each(Object.keys(standaloneElements),
-    function(keyIndx, keyValue) {
-      $.each(Object.keys(standaloneElements[keyValue]),
-        function(keyIndex, elemKey) {
-          const standaloneElem = standaloneElements[keyValue][elemKey];
-
-          // Load element functions
-          self.loadElementFunctions(standaloneElem, {});
-
-          (standaloneElem.hbs) && $content.append(
-            PlayerHelper.renderElement(
-              standaloneElem.hbs,
-              standaloneElem.templateData,
-              true,
-            ),
-          );
-
-          const itemID =
-            standaloneElem.uniqueID || standaloneElem.templateData?.uniqueID;
-          const grpCln = `${keyValue}_page-${elemKey}`;
-          const $itemContainer = $(`<div class="${grpCln}"></div>`);
-
-          // Call onTemplateRender
-          // Handle the rendering of the template
-          (standaloneElem.onTemplateRender() !== undefined) &&
-          standaloneElem.onTemplateRender()(
-            standaloneElem.elementId,
-            $itemContainer.find(`.${itemID}--item`),
-            $content.find(`.${itemID}--item`),
-            {standaloneElem, ...standaloneElem.templateData, data: {}},
-            meta,
-          );
-        });
+      }
     });
+  }
 
   // Check if we are visible
   if (xiboIC.checkVisible()) {
@@ -1234,28 +1316,37 @@ XiboPlayer.prototype.renderModule = function(currentWidget) {
  * @param {Object} dataItem Data item
  */
 XiboPlayer.prototype.loadElementFunctions = function(element, dataItem) {
-  element.onElementParseData = function() {
+  element.onElementParseData = function(elemData) {
+    const newDataItem = elemData ?? dataItem;
     const extendDataWith = transformer
       .getExtendedDataKey(element.dataOverrideWith);
 
     if (extendDataWith !== null &&
-      dataItem.hasOwnProperty(extendDataWith)
+      newDataItem.hasOwnProperty(extendDataWith)
     ) {
-      dataItem[element.dataOverride] = dataItem[extendDataWith];
+      newDataItem[element.dataOverride] = newDataItem[extendDataWith];
     }
 
     // Handle special case for setting data for the player
-    if (element.type === 'dataset' && Object.keys(dataItem).length > 0) {
+    if (element.type === 'dataset' && Object.keys(newDataItem).length > 0) {
       if (element.dataOverride !== null &&
         element.templateData?.datasetField !== undefined
       ) {
-        element[element.dataOverride] =
-          dataItem[element.templateData.datasetField];
+        const datasetField = element.templateData.datasetField;
+        // Check if there are dates that needs formatting
+        // before assigning value
+        let tempVal = newDataItem[datasetField];
+
+        if (element.dataOverride === 'date') {
+          const dateFormat = element.templateData.dateFormat;
+          tempVal = DateFormatHelper.formatDate(tempVal, dateFormat);
+        }
+
+        element[element.dataOverride] = tempVal;
 
         // Change value in templateData if exists
         if (element.templateData.hasOwnProperty(element.dataOverride)) {
-          element.templateData[element.dataOverride] =
-            dataItem[element.templateData.datasetField];
+          element.templateData[element.dataOverride] = tempVal;
         }
       }
     }
@@ -1263,15 +1354,15 @@ XiboPlayer.prototype.loadElementFunctions = function(element, dataItem) {
     if (typeof window[
       `onElementParseData_${element.templateData.id}`
     ] === 'function') {
-      dataItem[element.dataOverride] =
+      newDataItem[element.dataOverride] =
         window[`onElementParseData_${element.templateData.id}`](
-          dataItem[extendDataWith],
-          {...element.templateData, data: dataItem},
+          newDataItem[extendDataWith],
+          {...element.templateData, data: newDataItem},
         );
     }
 
     console.log('Called onElementParseData for element >', element.elementId);
-    return dataItem;
+    return newDataItem;
   };
   element.onTemplateRender = function() {
     let onTemplateRender;
