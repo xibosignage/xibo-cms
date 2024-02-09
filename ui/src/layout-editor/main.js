@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -1715,7 +1715,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
             false,
           ).then((res) => {
             // Create new temporary widget for the elements
-            newWidget = new Widget(
+            const newWidget = new Widget(
               res.data.widgetId,
               res.data,
               canvas.regionId,
@@ -3748,7 +3748,7 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
 
         elementsIds.push(elId);
 
-        element = lD.getObjectByTypeAndId(
+        const element = lD.getObjectByTypeAndId(
           'element',
           elId,
           'widget_' + elData.regionId + '_' + elData.widgetId,
@@ -3916,7 +3916,7 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
         const elData = $(el).data();
         const elId = $(el).attr('id');
 
-        element = lD.getObjectByTypeAndId(
+        const element = lD.getObjectByTypeAndId(
           'element',
           elId,
           'widget_' + elData.regionId + '_' + elData.widgetId,
@@ -3927,7 +3927,7 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
         element.group = targetGroup;
 
         // Element widget
-        elementsWidget = lD.getObjectByTypeAndId(
+        const elementsWidget = lD.getObjectByTypeAndId(
           'widget',
           'widget_' + elData.regionId + '_' + elData.widgetId,
           'canvas',
