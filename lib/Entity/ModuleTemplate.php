@@ -130,12 +130,6 @@ class ModuleTemplate implements \JsonSerializable
      */
     public $assets;
 
-    /**
-     * @SWG\Property(description="A load function to run when the template first fetches data")
-     * @var string
-     */
-    public $onTemplateDataLoad;
-
     /** @var string A Renderer to run if custom rendering is required. */
     public $onTemplateRender;
 

@@ -232,15 +232,10 @@ class ModuleTemplateFactory extends BaseFactory
         $template->startHeight = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'startHeight'));
         $template->hasDimensions = $this->getFirstValueOrDefaultFromXmlNode($xml, 'hasDimensions', 'true') === 'true';
         $template->canRotate = $this->getFirstValueOrDefaultFromXmlNode($xml, 'canRotate', 'false') === 'true';
-        $template->onTemplateDataLoad = $this->getFirstValueOrDefaultFromXmlNode($xml, 'onTemplateDataLoad');
         $template->onTemplateRender = $this->getFirstValueOrDefaultFromXmlNode($xml, 'onTemplateRender');
         $template->onTemplateVisible = $this->getFirstValueOrDefaultFromXmlNode($xml, 'onTemplateVisible');
         $template->onElementParseData = $this->getFirstValueOrDefaultFromXmlNode($xml, 'onElementParseData');
         $template->showIn = $this->getFirstValueOrDefaultFromXmlNode($xml, 'showIn') ?? 'both';
-
-        if (!empty($template->onTemplateDataLoad)) {
-            $template->onTemplateDataLoad = trim($template->onTemplateDataLoad);
-        }
 
         if (!empty($template->onTemplateRender)) {
             $template->onTemplateRender = trim($template->onTemplateRender);

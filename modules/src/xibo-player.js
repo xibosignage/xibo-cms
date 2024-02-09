@@ -104,29 +104,14 @@ const XiboPlayer = function() {
     this.loadWidgetFunctions(playerWidget, widgetDataItems);
 
     if (isDataWidget) {
-      const templateDataState =
-        playerWidget.onTemplateDataLoad(widgetDataItems);
+      const dataLoadState = playerWidget.onDataLoad(widgetDataItems);
+      console.log('onDataLoad::handled = ', dataLoadState.handled);
 
-      widgetDataItems = templateDataState.dataItems;
-      console.log('onTemplateDataLoad::widgetDataItems ', widgetDataItems);
+      widgetDataItems = dataLoadState.dataItems;
 
-      if (!templateDataState.handled) {
-        const dataLoadState = playerWidget.onDataLoad(widgetDataItems);
-        console.log(
-          'onTemplateDataLoad::handled = ', templateDataState.handled);
-
-        widgetDataItems = dataLoadState.dataItems;
-        console.log('dataLoadState::widgetDataItems ', widgetDataItems);
-
-        if (!dataLoadState.handled) {
-          console.log('onDataLoad::handled = ', dataLoadState.handled);
-          widgetDataItems = playerWidget.onParseData(widgetDataItems);
-          console.log('onParseData::widgetDataItems ', widgetDataItems);
-        }
-      } else {
-        console.log(
-          'onTemplateDataLoad::handled = ', templateDataState.handled);
-        widgetDataItems = playerWidget.onParseData();
+      if (!dataLoadState.handled) {
+        widgetDataItems = playerWidget.onParseData(widgetDataItems);
+        console.log('onParseData::widgetDataItems ', widgetDataItems);
       }
     }
 
@@ -203,15 +188,6 @@ const XiboPlayer = function() {
       globalOptions,
     );
 
-    playerWidget.onTemplateDataLoad = function(widgetDataItems) {
-      return self.onTemplateDataLoad({
-        widgetId: playerWidget.widgetId,
-        dataItems: widgetDataItems,
-        meta: playerWidget.meta,
-        properties: playerWidget.properties,
-        isDataReady: playerWidget.isDataReady,
-      });
-    };
     playerWidget.onDataLoad = function(widgetDataItems) {
       return self.onDataLoad({
         widgetId: playerWidget.widgetId,
@@ -1421,53 +1397,6 @@ XiboPlayer.prototype.isStaticWidget = function(playerWidget) {
 XiboPlayer.prototype.isModule = function(currentWidget) {
   return (!currentWidget.isDataExpected && $('#hbs-module').length > 0) ||
     (!currentWidget.isDataExpected && this.inputElements.length === 0);
-};
-
-/**
- * Caller function for onTemplateDataLoad
- * @param {Object} params
- * @return {Object} State to determine next step. E.g. {handled: false}
- */
-XiboPlayer.prototype.onTemplateDataLoad = function(params) {
-  let onTemplateDataLoad = null;
-  // onTemplateDataLoad function should be checked and run first before
-  if (typeof window['onTemplateDataLoad_' + params.widgetId] ===
-    'function') {
-    onTemplateDataLoad =
-      window['onTemplateDataLoad_' + params.widgetId];
-  }
-
-  let onTemplateDataLoadResponse =
-    {handled: false, dataItems: params.dataItems ?? []};
-
-  if (onTemplateDataLoad) {
-    const onTemplateDataLoadResult = onTemplateDataLoad(
-      params.dataItems,
-      params.meta,
-      params.properties,
-      params.isDataReady,
-    );
-
-    if (onTemplateDataLoadResult !== undefined &&
-      Object.keys(onTemplateDataLoadResult).length > 0
-    ) {
-      if ((onTemplateDataLoadResult ?? {}).hasOwnProperty('handled')) {
-        onTemplateDataLoadResponse = {
-          ...onTemplateDataLoadResponse,
-          handled: onTemplateDataLoadResult.handled,
-        };
-      }
-
-      if ((onTemplateDataLoadResult ?? {}).hasOwnProperty('dataItems')) {
-        onTemplateDataLoadResponse = {
-          ...onTemplateDataLoadResponse,
-          dataItems: onTemplateDataLoadResult.dataItems,
-        };
-      }
-    }
-  }
-
-  return onTemplateDataLoadResponse;
 };
 
 /**

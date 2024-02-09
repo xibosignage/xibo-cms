@@ -398,7 +398,6 @@ class WidgetHtmlRenderer
         $twig['onParseData'] = [];
         $twig['onDataLoad'] = [];
         $twig['onElementParseData'] = [];
-        $twig['onTemplateDataLoad'] = [];
         $twig['onTemplateRender'] = [];
         $twig['onTemplateVisible'] = [];
         $twig['onInitialize'] = [];
@@ -728,10 +727,6 @@ class WidgetHtmlRenderer
                 && $moduleTemplate->type === 'element'
             ) {
                 $twig['style'][] = $moduleTemplate->stencil->style;
-            }
-
-            if ($moduleTemplate->onTemplateDataLoad !== null) {
-                $twig['onTemplateDataLoad'][$moduleTemplate->templateId] = $moduleTemplate->onTemplateDataLoad;
             }
 
             if ($moduleTemplate->onTemplateRender !== null) {
