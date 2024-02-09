@@ -893,9 +893,12 @@ XiboPlayer.prototype.renderStaticWidget = function(staticWidget) {
   }
 
   // Expire if the data is not ready
+  // TODO: once we have a mechanism to refresh widget data in 4.1,
+  //  we won't need this anymore
   if (!staticWidget.isDataReady) {
-    console.error('static widget where data is not ready, expiring');
-    xiboIC.expireNow({targetId: xiboICTargetId});
+    // eslint-disable-next-line max-len
+    console.error('renderStaticWidget: static widget where isDataReady:false, expiring in 1500ms');
+    setTimeout(() => xiboIC.expireNow({targetId: xiboICTargetId}), 1500);
   }
 
   // Add meta to the widget if it exists
