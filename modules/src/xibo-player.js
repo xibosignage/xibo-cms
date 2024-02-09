@@ -590,6 +590,8 @@ const XiboPlayer = function() {
       }
     }
 
+    // Duration
+    elemCopy.duration = currentWidget.duration;
     if (elemCopy?.renderData?.hasOwnProperty('durationIsPerItem')) {
       elemCopy.durationIsPerItem = elemCopy.renderData.durationIsPerItem;
     }
@@ -700,6 +702,9 @@ XiboPlayer.prototype.init = function(widgetData, elements) {
         }
       }
     });
+
+    // Lock all interactions
+    xiboIC.lockAllInteractions();
   }
 };
 
@@ -993,9 +998,6 @@ XiboPlayer.prototype.renderStaticWidget = function(staticWidget) {
   } else {
     xiboIC.addToQueue(onVisibleMethods);
   }
-
-  // Lock all interactions
-  xiboIC.lockAllInteractions();
 
   console.log(
     '<<<END>>> renderStaticWidget for widget >', staticWidget.widgetId);
