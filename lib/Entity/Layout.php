@@ -1389,7 +1389,11 @@ class Layout implements \JsonSerializable
 
             // Work out if we have any "lead regions", those are Widgets with a duration
             foreach ($widgets as $widget) {
-                if ($widget->useDuration == 1 || $countWidgets > 1 || $regionLoop == 1 || $widget->type == 'video') {
+                if (($widget->useDuration == 1 && $widget->type !== 'global')
+                    || $countWidgets > 1
+                    || $regionLoop == 1
+                    || $widget->type == 'video'
+                ) {
                     $layoutCountRegionsWithDuration++;
                 }
             }
