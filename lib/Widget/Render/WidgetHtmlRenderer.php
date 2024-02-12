@@ -215,24 +215,37 @@ class WidgetHtmlRenderer
             . $region->regionId
             . '.html';
 
+        // Changes to the Playlist should also invalidate Widget HTML caches
+        try {
+            $playlistModifiedDt = Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $region->getPlaylist([
+                'loadPermissions' => false,
+                'loadWidgets' => false,
+                'loadTags' => false,
+                'loadActions' => false,
+            ])->modifiedDt);
+        } catch (\Exception) {
+            $this->getLog()->error('renderOrCache: cannot find playlist modifiedDt, using now');
+            $playlistModifiedDt = Carbon::now();
+        }
+
         // Have we changed since we last cached this widget
-        $modifiedDt = Carbon::createFromTimestamp($widgetModifiedDt);
+        $modifiedDt = max(Carbon::createFromTimestamp($widgetModifiedDt), $playlistModifiedDt);
         $cachedDt = Carbon::createFromTimestamp(file_exists($cachePath) ? filemtime($cachePath) : 0);
 
-        $this->getLog()->debug('Cache details - modifiedDt: '
+        $this->getLog()->debug('renderOrCache: Cache details - modifiedDt: '
             . $modifiedDt->format(DateFormatHelper::getSystemFormat())
             . ', cachedDt: ' . $cachedDt->format(DateFormatHelper::getSystemFormat())
             . ', cachePath: ' . $cachePath);
 
         if ($modifiedDt->greaterThan($cachedDt) || !file_get_contents($cachePath)) {
-            $this->getLog()->debug('We will need to regenerate');
+            $this->getLog()->debug('renderOrCache: We will need to regenerate');
 
             // Are we worried about concurrent requests here?
             // these aren't providing any data anymore, so in theory it shouldn't be possible to
             // get locked up here
             // We don't clear cached media here, as that comes along with data.
             if (file_exists($cachePath)) {
-                $this->getLog()->debug('Deleting cache file ' . $cachePath . ' which already existed');
+                $this->getLog()->debug('renderOrCache: Deleting cache file ' . $cachePath . ' which already existed');
                 unlink($cachePath);
             }
 
@@ -242,11 +255,11 @@ class WidgetHtmlRenderer
             // Cache to the library
             file_put_contents($cachePath, $output);
 
-            $this->getLog()->debug('Generate complete');
+            $this->getLog()->debug('renderOrCache: Generate complete');
 
             return $output;
         } else {
-            $this->getLog()->debug('Serving from cache');
+            $this->getLog()->debug('renderOrCache: Serving from cache');
             return file_get_contents($cachePath);
         }
     }
