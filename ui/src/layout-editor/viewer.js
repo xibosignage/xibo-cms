@@ -1515,9 +1515,28 @@ Viewer.prototype.renderElement = function(
     if (
       $canvasRegionContainer.find(`#${element.groupId}`).length == 0
     ) {
+      // Get element group type
+      const groupElements = Object.values(element.group.elements);
+      let elementGroupType = 'global';
+
+      groupElements.every((el) => {
+        // If we found a type other than global
+        // save it and stop
+        if (el.elementType != 'global') {
+          elementGroupType = el.elementType;
+          // Break the loop
+          return false;
+        }
+
+        // Keep going
+        return true;
+      });
+
+      element.group.element
       $canvasRegionContainer.append(
         viewerElementGroupTemplate({
           element: element,
+          elementGroupType: elementGroupType,
           trans: viewerTrans,
         }),
       );
