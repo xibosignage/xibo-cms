@@ -1532,7 +1532,6 @@ Viewer.prototype.renderElement = function(
         return true;
       });
 
-      element.group.element
       $canvasRegionContainer.append(
         viewerElementGroupTemplate({
           element: element,
