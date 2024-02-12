@@ -3289,7 +3289,7 @@ $(target).xiboLayoutAnimate(properties);
                     </test>
                 </visibility>
             </property>
-            <property id="noDataMessage" type="code" allowLibraryRefs="true" variant="html">
+            <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
                 <title>No data message</title>
                 <helpText>A message to display when no data is returned from the source</helpText>
                 <visibility>
