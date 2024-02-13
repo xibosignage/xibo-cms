@@ -431,7 +431,8 @@ const XiboPlayer = function() {
     if (minCount < maxCount) {
       const nonPinnedDataKeys =
           Object.values(groupSlotsData).reduce((a, b) => {
-            return [...a, ...(b.dataKeys)];
+            if (!b.hasPinnedSlot) return [...a, ...(b.dataKeys)];
+            return a;
           }, []).sort((a, b) => {
             if (a < b) return -1;
             if (a > b) return 1;
