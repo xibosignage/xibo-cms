@@ -26,7 +26,7 @@ const PlayerHelper = function() {
     return Object.keys(dataSlots)
       .reduce(function(a, b) {
         const dataSlot = dataSlots[b];
-        if (dataSlot.isPinnedSlot) return [...a, dataSlot.slot];
+        if (dataSlot.hasPinnedSlot) return [...a, dataSlot.slot];
         return a;
       }, []);
   };
