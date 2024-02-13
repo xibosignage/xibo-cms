@@ -248,6 +248,9 @@ const XiboPlayer = function() {
             slot: widgetElement.slot ?? undefined,
             dataKeys: [],
             items: [],
+            duration: currentWidget.duration,
+            durationIsPerItem:
+              Boolean(currentWidget.properties.durationIsPerItem),
           };
         }
 
@@ -415,7 +418,7 @@ const XiboPlayer = function() {
    * @param {Object} currentWidget
    */
   this.composeRNRData = function(currentWidget) {
-    const {dataElements, isRepeatData} = currentWidget;
+    const {dataElements, pinnedSlots, isRepeatData} = currentWidget;
     // Copy data elements slots
     const groupSlotsData = {...dataElements};
 
@@ -431,7 +434,18 @@ const XiboPlayer = function() {
     if (minCount < maxCount) {
       const nonPinnedDataKeys =
           Object.values(groupSlotsData).reduce((a, b) => {
-            if (!b.hasPinnedSlot) return [...a, ...(b.dataKeys)];
+            if (!b.hasPinnedSlot) {
+              a = [...a, ...(b.dataKeys)];
+            } else {
+              if (b.dataKeys.length > 1) {
+                b.dataKeys.forEach(function(dataKey) {
+                  if (!pinnedSlots.includes(dataKey)) {
+                    a = [...a, dataKey];
+                  }
+                });
+              }
+            }
+
             return a;
           }, []).sort((a, b) => {
             if (a < b) return -1;
