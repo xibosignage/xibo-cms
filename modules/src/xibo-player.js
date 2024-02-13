@@ -161,10 +161,11 @@ const XiboPlayer = function() {
           PlayerHelper.getMinAndMaxSlot(Object.values(transformedElems));
       // Compose data elements slots
       currentWidget.maxSlot = maxSlot;
+      currentWidget.elements = transformedElems;
       currentWidget.dataElements =
           this.initSlots(transformedElems, minSlot, maxSlot);
       currentWidget.pinnedSlots =
-          PlayerHelper.getPinnedSlots(currentWidget.dataElements);
+        PlayerHelper.getPinnedSlots(currentWidget.dataElements);
 
       this.composeDataSlots(currentWidget);
       this.composeRNRData(currentWidget);
@@ -245,6 +246,7 @@ const XiboPlayer = function() {
             groupId: widgetElement.groupId,
             groupScale: widgetElement.groupScale,
             slot: widgetElement.slot ?? undefined,
+            dataKeys: [],
             items: [],
           };
         }
@@ -284,7 +286,7 @@ const XiboPlayer = function() {
       [...Array(maxSlot).keys()].reduce(function(slots, slot) {
         slots[slot + 1] = {
           items: {},
-          isPinnedSlot: false,
+          hasPinnedSlot: false,
           dataKeys: [],
           slot: slot + 1,
         };
@@ -301,7 +303,7 @@ const XiboPlayer = function() {
         if (Boolean(dataSlots[currentSlot])) {
           dataSlots[currentSlot].items[itemKey] = currentItem;
           dataSlots[currentSlot].hasGroup = Boolean(currentItem.groupId);
-          dataSlots[currentSlot].isPinnedSlot =
+          dataSlots[currentSlot].hasPinnedSlot =
             Object.keys(dataSlots[currentSlot].items).filter(function(k) {
               return dataSlots[currentSlot].items[k].pinSlot === true;
             }).length > 0;
@@ -335,73 +337,65 @@ const XiboPlayer = function() {
         // Stop iteration through data when all pinned slots are filled
         // and maxSlot = pinnedSlots.length
         if (lastSlotFilled === null &&
-            pinnedSlots.length === maxSlot &&
-            currentKey > maxSlot
+          pinnedSlots.length === maxSlot &&
+          currentKey > maxSlot
         ) {
           break;
         }
 
         for (const [, itemValue] of Object.entries(currCollection)) {
           const itemObj = dataElements[itemValue];
-          const isPinnedSlot = itemObj.isPinnedSlot;
+          const slotItems = itemObj.items;
           const currentSlot = itemObj.slot;
 
           // Skip if currentKey is less than the currentSlot
+          // This occurs when a data slot has been skipped
+          // E.g. dataSlots = [2, 3]
           if (currentKey < currentSlot) {
             continue dataLoop;
           }
 
-          if (!isPinnedSlot && !pinnedSlots.includes(currentKey)) {
-            // If lastSlotFilled is filled and is <= to currentSlot
-            // Then, move to next slot
-            if (lastSlotFilled !== null &&
-                currentSlot <= lastSlotFilled
-            ) {
-              continue;
-            }
-
-            itemObj.dataKeys = [
-              ...itemObj.dataKeys,
-              currentKey,
-            ];
-
-            hasSlotFilled = true;
-            lastSlotFilled = currentSlot;
-          } else if (!isPinnedSlot && pinnedSlots.includes(currentKey)) {
-            if (lastSlotFilled !== null &&
-                currentSlot <= lastSlotFilled
-            ) {
-              continue;
-            }
-          } else if (isPinnedSlot &&
-              currentSlot === currentKey &&
-              pinnedSlots.includes(currentSlot)
+          // If lastSlotFilled is filled and is <= to currentSlot
+          // Then, move to next slot
+          if (lastSlotFilled !== null &&
+            currentSlot <= lastSlotFilled
           ) {
-            itemObj.dataKeys = [
-              ...itemObj.dataKeys,
-              currentKey,
-            ];
-
-            hasSlotFilled = true;
-            lastSlotFilled = currentSlot;
-          } else if (isPinnedSlot && pinnedSlots.length > 0 &&
-              Math.max(...pinnedSlots) === maxSlot &&
-              currentSlot !== currentKey
-          ) {
-            if (lastSlotFilled !== null &&
-                currentSlot <= lastSlotFilled
-            ) {
-              continue;
-            }
-
-            itemObj.dataKeys = [
-              ...itemObj.dataKeys,
-              currentKey,
-            ];
-
-            hasSlotFilled = true;
-            lastSlotFilled = 1;
+            continue;
           }
+
+          // Loop through data slot items (elements or groups)
+          for (const [dataSlotItemKey] of Object.entries(slotItems)) {
+            const dataSlotItem = itemObj.items[dataSlotItemKey];
+            const isPinnedSlot = dataSlotItem.pinSlot;
+
+            if (isPinnedSlot) {
+              if (currentKey !== currentSlot) {
+                hasSlotFilled = true;
+                lastSlotFilled = currentSlot;
+                continue;
+              }
+
+              if (!dataSlotItem.dataKeys.includes(currentKey)) {
+                dataSlotItem.dataKeys = [
+                  ...dataSlotItem.dataKeys,
+                  currentKey,
+                ];
+              }
+            } else {
+              dataSlotItem.dataKeys = [
+                ...dataSlotItem.dataKeys,
+                currentKey,
+              ];
+            }
+
+            hasSlotFilled = true;
+            lastSlotFilled = currentSlot;
+          }
+
+          itemObj.dataKeys = [
+            ...itemObj.dataKeys,
+            currentKey,
+          ];
 
           if (hasSlotFilled) {
             hasSlotFilled = false;
@@ -421,17 +415,9 @@ const XiboPlayer = function() {
    * @param {Object} currentWidget
    */
   this.composeRNRData = function(currentWidget) {
-    const {dataElements, pinnedSlots, isRepeatData} = currentWidget;
+    const {dataElements, isRepeatData} = currentWidget;
     // Copy data elements slots
     const groupSlotsData = {...dataElements};
-    // Remove pinnedSlot from the object
-    if (pinnedSlots.length > 0) {
-      pinnedSlots.forEach(function(pinnedSlot) {
-        if (Boolean(dataElements[pinnedSlot])) {
-          delete groupSlotsData[pinnedSlot];
-        }
-      });
-    }
 
     const dataCounts = Object.keys(groupSlotsData).reduce((a, b) => {
       a[b] = groupSlotsData[b].dataKeys.length;
@@ -460,6 +446,16 @@ const XiboPlayer = function() {
             const poppedKey = nonPinnedDataKeys.shift();
             dataElements[slotIndex].dataKeys.push(
               isRepeatData ? poppedKey : 'empty');
+
+            // Update data keys of each data slot items
+            if (Object.keys(dataElements[slotIndex].items).length > 0) {
+              Object.keys(dataElements[slotIndex].items).forEach(function(k) {
+                if (!dataElements[slotIndex].items[k].pinSlot) {
+                  dataElements[slotIndex].items[k].dataKeys.push(
+                    isRepeatData ? poppedKey : 'empty');
+                }
+              });
+            }
           }
         }
       });
@@ -477,6 +473,9 @@ const XiboPlayer = function() {
   this.decorateElement = function(element, currentWidget) {
     const elemCopy = JSON.parse(JSON.stringify(element));
     const elemProps = elemCopy?.properties || {};
+
+    // Initialize element data keys
+    elemCopy.dataKeys = [];
 
     elemProps.circleRadius = 0;
     // Calculate circle radius based on outlineWidth
@@ -1041,7 +1040,13 @@ XiboPlayer.prototype.renderDataElements = function(currentWidget) {
           const $slotItemContent = $(`<div class="${itemKey}"></div>`);
           const isMarquee = PlayerHelper.isMarquee(slotObjItem?.efffect);
 
-          dataKeys.forEach(function(dataKey) {
+          for (const [, dataKey] of Object.entries(dataKeys)) {
+            // If currentKey(dataKey) does not belong to current item
+            // Then, skip it
+            if (!slotObjItem.dataKeys.includes(dataKey)) {
+              continue;
+            }
+
             if (isGroup) {
               // Check group items
               if (slotObjItem.items.length > 0) {
@@ -1093,7 +1098,7 @@ XiboPlayer.prototype.renderDataElements = function(currentWidget) {
                 $content,
               );
             }
-          });
+          }
 
           $slotItemContent.css({
             width: slotObjItem.width,
