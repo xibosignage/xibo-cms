@@ -241,7 +241,7 @@
 }
 
 // Data set column selector
-.dataset-column-selector, .ticker-tag-selector {
+.dataset-column-selector, .ticker-tag-selector, .dataset-column-style-selector {
     display: flex;
     gap: 6px;
 
@@ -266,23 +266,23 @@
 }
 
 // Ticker tag selector
-.ticker-tag-selector {
+.ticker-tag-selector, .dataset-column-style-selector {
     flex-wrap: wrap;
 
-    .ticker-tag-styles {
+    .ticker-tag-styles, .dataset-column-styles {
         width: 100%;
 
-        .ticker-tag-style-title {
+        .ticker-tag-style-title, .dataset-col-style-title {
             writing-mode: vertical-lr;
             font-size: 1.2rem;
             color: $xibo-color-secondary;
         }
 
-        .ticker-tag-style {
+        .ticker-tag-style, .dataset-col-style {
             display: flex;
         }
 
-        .ticker-tag-style-properties {
+        .ticker-tag-style-properties, .dataset-col-style-properties {
             border-left: 6px solid $xibo-color-primary-l60;
             padding-left: 12px;
             margin-left: 6px;
@@ -428,12 +428,12 @@
     text-align: center;
     padding: 6px;
     background-color: $xibo-color-primary-l60;
+    color: $xibo-color-primary-l5;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 
     .widget-info-name {
-        color: $xibo-color-primary-l5;
         font-weight: bold;
     }
 }

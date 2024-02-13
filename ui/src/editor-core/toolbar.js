@@ -95,9 +95,6 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
   // Modules to be used in Widgets
   let moduleListFiltered = [];
 
-  // Create user list
-  const usersListFiltered = [];
-
   // Modules to be used in other option
   const moduleListOtherFiltered = [];
 
@@ -224,13 +221,6 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
     return (a.name < b.name) ? -1 : 1;
   });
 
-  usersList.forEach((user) => {
-    usersListFiltered.push({
-      userId: user.userId.toString(),
-      name: user.userName,
-    });
-  });
-
   // Actions
   this.interactiveList = [
     {
@@ -355,7 +345,9 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
         },
         owner: {
           value: '',
-          values: usersListFiltered,
+          key: 'users',
+          dataRole: 'usersList',
+          searchUrl: urlsForApi.user.get.url,
         },
         orientation: {
           value: '',
@@ -402,7 +394,9 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
         },
         owner: {
           value: '',
-          values: usersListFiltered,
+          key: 'users',
+          dataRole: 'usersList',
+          searchUrl: urlsForApi.user.get.url,
         },
         provider: {
           value: 'both',
@@ -443,7 +437,9 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
         },
         owner: {
           value: '',
-          values: usersListFiltered,
+          key: 'users',
+          dataRole: 'usersList',
+          searchUrl: urlsForApi.user.get.url,
         },
         orientation: {
           value: '',
@@ -490,7 +486,9 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
         },
         owner: {
           value: '',
-          values: usersListFiltered,
+          key: 'users',
+          dataRole: 'usersList',
+          searchUrl: urlsForApi.user.get.url,
         },
         provider: {
           value: 'both',
@@ -1161,7 +1159,7 @@ Toolbar.prototype.openMenu = function(
 
     if (app.mainObjectType != 'playlist') {
       // Refresh main containers
-      app.viewer.render(true);
+      app.viewer.update();
     }
   }
 
@@ -1769,6 +1767,18 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
     .on('click', '#tagDiv .btn-tag', function(e) {
       // Add text to form
       $tags.tagsinput('add', $(e.target).text(), {allowDuplicates: false});
+    });
+
+  // Initialize user list input
+  const $userListInput = $mediaContainer
+    .find('.media-search-form select[name="ownerId"]');
+  makePagedSelect($userListInput);
+
+  // Initialize other select inputs
+  $mediaContainer
+    .find('.media-search-form select:not([name="ownerId"]):not(.input-sort)')
+    .select2({
+      minimumResultsForSearch: -1, // Hide search box
     });
 
   // Load data

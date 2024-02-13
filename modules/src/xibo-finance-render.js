@@ -26,7 +26,7 @@ jQuery.fn.extend({
       pauseEffectOnStart: true,
       speed: '2',
       duration: '30',
-      durationIsPerPage: false,
+      durationIsPerItem: false,
       numItems: items.length,
       maxItemsPerPage: 5,
       previewWidth: 0,
@@ -108,7 +108,7 @@ jQuery.fn.extend({
       $mainContainer.append($mainHTML);
 
       const duration =
-        (options.durationIsPerPage) ?
+        (options.durationIsPerItem) ?
           options.duration :
           options.duration / numberOfPages;
 

@@ -13,6 +13,9 @@ const ElementGroup = function(data, widgetId, regionId, parentWidget) {
   this.regionId = regionId;
   this.type = 'element-group';
 
+  // Name
+  this.elementGroupName = (data.elementGroupName) ? data.elementGroupName : '';
+
   this.id = data.id;
   this.left = data.left;
   this.top = data.top;
@@ -33,6 +36,8 @@ const ElementGroup = function(data, widgetId, regionId, parentWidget) {
 
   // Expanded on layer manager
   this.expanded = false;
+
+  this.selected = false;
 };
 
 ElementGroup.prototype.updateSlot = function(

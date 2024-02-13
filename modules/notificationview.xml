@@ -59,8 +59,4 @@
         </property>
     </properties>
     <preview></preview>
-    <onVisible><![CDATA[
-// Start effects for this widget
-$(target).xiboLayoutAnimate(properties);
-    ]]></onVisible>
 </module>

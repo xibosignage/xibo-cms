@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -247,19 +247,21 @@ class WidgetSyncTask implements TaskInterface
                 }
 
                 // Do we have images?
-                $media = $dataProvider->getImages();
-                if (count($media) > 0) {
+                // They could be library images (i.e. they already exist) or downloads
+                $mediaIds = $dataProvider->getImageIds();
+                if (count($mediaIds) > 0) {
                     // Process the downloads.
-                    $this->mediaFactory->processDownloads(function ($media) use ($widget, &$mediaIds) {
+                    $this->mediaFactory->processDownloads(function ($media) {
                         /** @var \Xibo\Entity\Media $media */
                         // Success
                         // We don't need to do anything else, references to mediaId will be built when we decorate
                         // the HTML.
                         $this->getLogger()->debug('cache: Successfully downloaded ' . $media->mediaId);
-
-                        if (!in_array($media->mediaId, $mediaIds)) {
-                            $mediaIds[] = $media->mediaId;
-                        }
+                    }, function ($media) use (&$mediaIds) {
+                        /** @var \Xibo\Entity\Media $media */
+                        // Error
+                        // Remove it
+                        unset($mediaIds[$media->mediaId]);
                     });
                 }
 

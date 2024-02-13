@@ -166,7 +166,7 @@
                             {% set title %}{% trans "Only show schedules which appear on all filtered displays/groups?" %}{% endset %}
                             {% set label %}{% trans "Shared Schedule?" %}{% endset %}
                             <div class="form-group mr-1 mb-1">
-                                <label class="control-label mr-1" title="{{ title }}" for="directSchedule" accesskey="">{{ label }}</label>
+                                <label class="control-label mr-1" title="{{ title }}" for="sharedSchedule" accesskey="">{{ label }}</label>
                                 <div>
                                     <div class="input-group" style="height: 34px">
                                         <div class="input-group-append input-group-addon">
@@ -1483,7 +1483,7 @@
             responsivePriority: 4,
             data: function (data) {
               if (data.recurringEvent) {
-                if (data.recurrenceType === 'Week') {
+                if (data.recurrenceType === 'Week' && data.recurrenceRepeatsOn) {
                   const daysOfTheWeek = [
                     '{% trans "Monday" %}',
                     '{% trans "Tuesday" %}',

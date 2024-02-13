@@ -83,6 +83,7 @@ Canvas.prototype.changeLayer = function(newLayer, saveToHistory = true) {
       },
       {
         upload: true, // options.upload
+        targetSubType: 'canvas',
       },
     ).catch((error) => {
       toastr.error(errorMessagesTrans.transformRegionFailed);
@@ -314,6 +315,152 @@ Canvas.prototype.removeFromCanvasWidget = function(
   } else {
     delete lD.layout.canvas.widgets[widgetId].elements[objectToRemoveId];
   }
+};
+
+
+/**
+ * Edit property by type
+ * @param {string} property - property to edit
+ */
+Canvas.prototype.editPropertyForm = function(property) {
+  const self = this;
+  const app = lD;
+
+  // Load form the API
+  const linkToAPI = urlsForApi.region['get' + property];
+
+  let requestPath = linkToAPI.url;
+
+  // Replace widget id
+  requestPath = requestPath.replace(':id', this.regionId);
+
+  // Create dialog
+  const calculatedId = new Date().getTime();
+
+  // Create dialog
+  const dialog = bootbox.dialog({
+    className: 'second-dialog',
+    title: editorsTrans.loadPropertyForObject
+      .replace('%prop%', property)
+      .replace('%obj%', 'region'),
+    message:
+        '<p><i class="fa fa-spin fa-spinner"></i>' +
+        editorsTrans.loading +
+        '...</p>',
+    size: 'large',
+    buttons: {
+      cancel: {
+        label: translations.cancel,
+        className: 'btn-white btn-bb-cancel',
+      },
+      done: {
+        label: translations.done,
+        className: 'btn-primary test btn-bb-done',
+        callback: function(res) {
+          app.common.showLoadingScreen();
+
+          let dataToSave = '';
+          const options = {
+            addToHistory: false, // options.addToHistory
+          };
+
+          // Get data to save
+          if (property === 'Permissions') {
+            dataToSave = formHelpers.permissionsFormBeforeSubmit(dialog);
+            options.customRequestPath = {
+              url: dialog.find('.permissionsGrid').data('url'),
+              type: 'POST',
+            };
+          } else {
+            dataToSave = form.serialize();
+          }
+
+          app.historyManager.addChange(
+            'save' + property,
+            'widget', // targetType
+            self.regionId, // targetId
+            null, // oldValues
+            dataToSave, // newValues
+            options,
+          ).then((res) => { // Success
+            app.common.hideLoadingScreen();
+
+            dialog.modal('hide');
+
+            app.reloadData(app.layout);
+          }).catch((error) => { // Fail/error
+            app.common.hideLoadingScreen();
+
+            // Show error returned or custom message to the user
+            let errorMessage = '';
+
+            if (typeof error == 'string') {
+              errorMessage += error;
+            } else {
+              errorMessage += error.errorThrown;
+            }
+
+            // Display message in form
+            formHelpers.displayErrorMessage(
+              dialog.find('form'),
+              errorMessage,
+              'danger',
+            );
+
+            // Show toast message
+            toastr.error(errorMessage);
+          });
+        },
+
+      },
+    },
+  }).attr('id', calculatedId).attr('data-test', 'region' + property + 'Form');
+
+  // Request and load property form
+  $.ajax({
+    url: requestPath,
+    type: linkToAPI.type,
+  }).done(function(res) {
+    if (res.success) {
+      // Add title
+      dialog.find('.modal-title').html(res.dialogTitle);
+
+      // Add body main content
+      dialog.find('.bootbox-body').html(res.html);
+
+      dialog.data('extra', res.extra);
+
+      if (property == 'Permissions') {
+        formHelpers.permissionsFormAfterOpen(dialog);
+      }
+
+      // Call Xibo Init for this form
+      // eslint-disable-next-line new-cap
+      XiboInitialise('#' + dialog.attr('id'));
+    } else {
+      // Login Form needed?
+      if (res.login) {
+        window.location.href = window.location.href;
+        location.reload();
+      } else {
+        toastr.error(errorMessagesTrans.formLoadFailed);
+
+        // Just an error we dont know about
+        if (res.message == undefined) {
+          console.error(res);
+        } else {
+          console.error(res.message);
+        }
+
+        dialog.modal('hide');
+      }
+    }
+  }).catch(function(jqXHR, textStatus, errorThrown) {
+    console.error(jqXHR, textStatus, errorThrown);
+    toastr.error(errorMessagesTrans.formLoadFailed);
+
+    dialog.modal('hide');
+  });
 };
 
 module.exports = Canvas;

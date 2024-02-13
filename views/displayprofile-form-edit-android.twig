@@ -148,6 +148,9 @@
                     ] %}
                     {{ forms.dropdown("dayPartId", "single", title, displayProfile.getSetting("dayPartId"), [{dayPartId:null, name:""}]|merge(dayParts), "dayPartId", "name", helpText, "pagedSelect", "", "", "", attributes) }}
 
+                    {% set title = "Restart Wifi on connection failure?"|trans %}
+                    {% set helpText = "If an attempted connection to the CMS fails 10 times in a row, restart the Wifi adaptor."|trans %}
+                    {{ forms.checkbox("restartWifiOnConnectionFailure", title, displayProfile.getSetting("restartWifiOnConnectionFailure"), helpText) }}
                 </div>
 
                 <div class="tab-pane" id="location">

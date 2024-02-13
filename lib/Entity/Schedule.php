@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -1877,7 +1877,9 @@ class Schedule implements \JsonSerializable
             }
 
             if (in_array($key, $this->datesToFormat)) {
-                $objectAsJson[$key] = Carbon::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat());
+                $objectAsJson[$key] = !empty($value)
+                    ? Carbon::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat())
+                    : $value;
             }
 
             if ($key === 'campaignId' && isset($this->campaignFactory)) {

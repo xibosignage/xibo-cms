@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -562,7 +562,7 @@ $(document).ready(function() {
                 if (this.options.view == 'agenda') {
                     // When agenda panel is ready, turn tables into datatables with paging
                     $('.agenda-panel').ready(function () {
-                        $('.agenda-table-layouts').dataTable({
+                        $('.agenda-table-layouts').DataTable({
                             "searching": false
                         });
                     });
@@ -637,7 +637,7 @@ $(document).ready(function() {
  * Callback for the schedule form
  */
 var setupScheduleForm = function(dialog) {
-    console.log("Setup schedule form");
+    //console.log("Setup schedule form");
 
     // geo schedule
     var $geoAware = $('#isGeoAware');
@@ -961,7 +961,7 @@ var processScheduleFormElements = function(el) {
             break;
 
         case 'eventTypeId':
-            console.log('Process: eventTypeId, val = ' + fieldVal);
+            //console.log('Process: eventTypeId, val = ' + fieldVal);
 
             var layoutControlDisplay =
               (fieldVal == 2 || fieldVal == 6 || fieldVal == 7 || fieldVal == 8) ? 'none' : '';
@@ -1010,7 +1010,7 @@ var processScheduleFormElements = function(el) {
                     }
                 });
 
-                console.log('Setting dayPartId to custom: ' + customDayPartId);
+                //console.log('Setting dayPartId to custom: ' + customDayPartId);
                 $dayPartId.val(customDayPartId);
 
                 var $startTime = $(".starttime-control");
@@ -1054,7 +1054,7 @@ var processScheduleFormElements = function(el) {
             break;
 
         case 'dayPartId':
-            console.log('Process: dayPartId, val = ' + fieldVal + ', visibility = ' + el.is(":visible"));
+            //console.log('Process: dayPartId, val = ' + fieldVal + ', visibility = ' + el.is(":visible"));
 
             if (!el.is(":visible"))
                 return;
@@ -1098,7 +1098,7 @@ var processScheduleFormElements = function(el) {
 
         case 'campaignId':
         case 'fullScreenCampaignId':
-            console.log('Process: campaignId, val = ' + fieldVal + ', visibility = ' + el.is(":visible"));
+            //console.log('Process: campaignId, val = ' + fieldVal + ', visibility = ' + el.is(":visible"));
 
             // Update the preview button URL
             var $previewButton = $("#previewButton");
@@ -1113,7 +1113,11 @@ var processScheduleFormElements = function(el) {
             break;
 
         case 'actionType' :
-            console.log('Action type changed');
+            //console.log('Action type changed, val = ' + fieldVal+ ', visibility = ' + el.is(":visible"));
+            if (!el.is(":visible")) {
+                return;
+            }
+
             var layoutCodeControl = (fieldVal == 'navLayout' && el.is(":visible")) ? "" : "none";
             commandControlDisplay = (fieldVal == 'command') ? "" : "none";
 

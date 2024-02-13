@@ -66,6 +66,8 @@ class IcsProvider implements WidgetProviderInterface
         // $iCal->eventsFromInterval only works for future events
         $excludeAllDay = $dataProvider->getProperty('excludeAllDay', 0) == 1;
 
+        $excludePastEvents = $dataProvider->getProperty('excludePast', 0) == 1;
+
         $startOfDay = match ($dataProvider->getProperty('startIntervalFrom')) {
             'month' => Carbon::now()->startOfMonth(),
             'week' => Carbon::now()->startOfWeek(),
@@ -145,6 +147,10 @@ class IcsProvider implements WidgetProviderInterface
                         . $entry->startDate->format('c') . ' / ' . $entry->endDate->format('c'));
 
                     if ($excludeAllDay && ($entry->endDate->diff($entry->startDate)->days >= 1)) {
+                        continue;
+                    }
+
+                    if ($excludePastEvents && $entry->endDate->isPast()) {
                         continue;
                     }
 

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -30,7 +30,7 @@ use Phinx\Wrapper\TextWrapper;
  */
 class Environment
 {
-    public static $WEBSITE_VERSION_NAME = '4.0.6';
+    public static $WEBSITE_VERSION_NAME = '4.0.7';
     public static $XMDS_VERSION = '7';
     public static $XLF_VERSION = 4;
     public static $VERSION_REQUIRED = '8.1.0';

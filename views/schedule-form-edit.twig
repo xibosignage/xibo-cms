@@ -164,13 +164,24 @@
                             { name: "data-search-url", value: url_for("layout.code.search") },
                             { name: "data-search-term", value: "code" },
                             { name: "data-id-property", value: "code" },
-                            { name: "data-text-property", value: "code" }
+                            { name: "data-text-property", value: "code" },
+                            { name: "data-initial-key", value: "code" },
+                            { name: "data-initial-value", value: event.actionLayoutCode },
                         ] %}
-                        {{ forms.dropdown("actionLayoutCode", "single", title, event.actionLayoutCode, layoutCodes, "code", "code", helpText, "pagedSelect action-control layout-code-control", "", "", "", attributes) }}
+                        {{ forms.dropdown("actionLayoutCode", "single", title, "", null, "code", "code", helpText, "pagedSelect action-control layout-code-control", "", "", "", attributes) }}
 
                         {% set title %}{% trans "Command" %}{% endset %}
                         {% set helpText %}{% trans "Please select a command for this Event." %}{% endset %}
-                        {{ forms.dropdown("commandId", "single", title, event.commandId, [{commandId: "", command: ""}]|merge(commands), "commandId", "command", helpText, "command-control") }}
+                        {% set attributes = [
+                            { name: "data-width", value: "100%" },
+                            { name: "data-search-url", value: url_for("command.search") },
+                            { name: "data-search-term", value: "command" },
+                            { name: "data-id-property", value: "commandId" },
+                            { name: "data-text-property", value: "command" },
+                            { name: "data-initial-key", value: "commandId" },
+                            { name: "data-initial-value", value: event.commandId },
+                        ] %}
+                        {{ forms.dropdown("commandId", "single", title, "", null, "commandId", "command", helpText, "pagedSelect command-control", "", "", "", attributes) }}
 
                         {% set title %}{% trans "Display Order" %}{% endset %}
                         {% set helpText %}{% trans "Please select the order this event should appear in relation to others when there is more than one event scheduled" %}{% endset %}

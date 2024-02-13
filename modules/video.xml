@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2023 Xibo Signage Ltd
+  ~ Copyright (C) 2024 Xibo Signage Ltd
   ~
   ~ Xibo - Digital Signage - https://xibosignage.com
   ~
@@ -56,7 +56,7 @@
         </property>
     </settings>
     <properties>
-        <property id="message-duration" type="message">
+        <property id="message-duration" type="message" includeInXlf="false">
             <title>This video will play for %media.duration% seconds. Cut the video short by setting a shorter duration in the Advanced tab. Wait on the last frame or set to Loop by setting a higher duration in the Advanced tab.</title>
         </property>
         <property id="loop" type="checkbox">

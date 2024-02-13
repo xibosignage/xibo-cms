@@ -22,6 +22,7 @@
                     {{/eq}}
                 </div>
                 <div class="tab-pane" id="positioningTab">
+                    {{> button id="bringToViewButton" type="btn-block btn-outline-success inline-btn d-none mb-2" name=trans.region.bringRegionToView customClass="position-input" }}
                     {{> inputs/number value=region.zIndex id="zIndex" title=trans.region.layer helpText=trans.region.layerHelpText customClass="position-input" }}
                     {{> inputs/number value=region.top id="top" title=trans.region.top helpText=trans.region.topHelpText customClass="position-input" }}
                     {{> inputs/number value=region.left id="left" title=trans.region.left helpText=trans.region.leftHelpText customClass="position-input" }}

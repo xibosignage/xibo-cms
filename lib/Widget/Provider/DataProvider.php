@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -364,7 +364,7 @@ class DataProvider implements DataProviderInterface
     }
 
     /**
-     * @return \Xibo\Entity\Media[]
+     * @return int[]
      */
     public function getImageIds(): array
     {

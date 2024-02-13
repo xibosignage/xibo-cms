@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -177,7 +177,12 @@ class Schedule extends Base
                         }
                     }
                 } catch (NotFoundException $e) {
-                    $this->getLog()->debug('Saved filter option for displayGroupId that no longer exists.');
+                    $this->getLog()->debug(
+                        sprintf(
+                            'Saved filter option for displayGroupId %d that no longer exists.',
+                            $displayGroupId
+                        )
+                    );
                 }
             }
         }
@@ -825,10 +830,19 @@ class Schedule extends Base
                     continue;
                 }
 
-                $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
+                try {
+                    $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
 
-                if ($this->getUser()->checkViewable($displayGroup)) {
-                    $displayGroups[] = $displayGroup;
+                    if ($this->getUser()->checkViewable($displayGroup)) {
+                        $displayGroups[] = $displayGroup;
+                    }
+                } catch (NotFoundException $e) {
+                    $this->getLog()->debug(
+                        sprintf(
+                            'Saved filter option for displayGroupId %d that no longer exists.',
+                            $displayGroupId
+                        )
+                    );
                 }
             }
         }
@@ -838,9 +852,7 @@ class Schedule extends Base
         $defaultLong = (float)$this->getConfig()->getSetting('DEFAULT_LONG');
 
         $addFormData = [
-            'commands' => $this->commandFactory->query(),
             'dayParts' => $this->dayPartFactory->allWithSystem(),
-            'layoutCodes' => $this->layoutFactory->getLayoutCodes(),
             'displayGroupIds' => $displayGroupIds,
             'displayGroups' => $displayGroups,
             'reminders' => [],
@@ -860,8 +872,8 @@ class Schedule extends Base
                     ? $this->campaignFactory->getById($id)
                     : null
                 ),
-                'displayGroup' => (($from == 'DisplayGroup') ? [$this->displayGroupFactory->getById($id)] : null),
-                'displayGroupId' => (($from == 'DisplayGroup') ? (int)$id : 0),
+                'displayGroups' => (($from == 'DisplayGroup') ? [$this->displayGroupFactory->getById($id)] : null),
+                'displayGroupIds' => (($from == 'DisplayGroup') ? [$id] : [0]),
                 'mediaId' => (($from === 'Library') ? $id : null),
                 'playlistId' => (($from === 'Playlist') ? $id : null),
                 'readonlySelect' => !($from == 'DisplayGroup'),
@@ -1398,18 +1410,12 @@ class Schedule extends Base
         $this->getState()->template = 'schedule-form-edit';
         $this->getState()->setData([
             'event' => $schedule,
-            'campaigns' => $this->campaignFactory->query(
-                null,
-                ['isLayoutSpecific' => -1, 'retired' => 0, 'includeCampaignId' => $schedule->campaignId]
-            ),
-            'commands' => $this->commandFactory->query(),
             'dayParts' => $this->dayPartFactory->allWithSystem(),
             'displayGroups' => $schedule->displayGroups,
-            'campaign' => ($schedule->campaignId != '') ? $this->campaignFactory->getById($schedule->campaignId) : null,
+            'campaign' => !empty($schedule->campaignId) ? $this->campaignFactory->getById($schedule->campaignId) : null,
             'displayGroupIds' => array_map(function ($element) {
                 return $element->displayGroupId;
             }, $schedule->displayGroups),
-            'layoutCodes' => $this->layoutFactory->getLayoutCodes(),
             'reminders' => $scheduleReminders,
             'defaultLat' => $defaultLat,
             'defaultLong' => $defaultLong,
@@ -1770,6 +1776,20 @@ class Schedule extends Base
                     );
                 }
             ]);
+
+            // if this was originally Campaign event, now changed to interrupt,
+            // check if the selected Campaign is Layout specific
+            // set parentCampaignId to null, otherwise the event will not be editable.
+            if ($schedule->getOriginalValue('eventTypeId') === \Xibo\Entity\Schedule::$CAMPAIGN_EVENT) {
+                $campaign = $this->campaignFactory->getById($schedule->campaignId);
+                if ($campaign->isLayoutSpecific === 0) {
+                    throw new InvalidArgumentException(
+                        __('Cannot schedule campaign as an interrupt, please select a Layout instead.'),
+                        'campaignId'
+                    );
+                }
+                $schedule->parentCampaignId = null;
+            }
         } else {
             $schedule->shareOfVoice = null;
         }
@@ -2290,7 +2310,7 @@ class Schedule extends Base
                 $repeatsOn = '';
                 $repeatsUntil = '';
 
-                if ($event->recurrenceType === 'Week') {
+                if ($event->recurrenceType === 'Week' && !empty($event->recurrenceRepeatsOn)) {
                     $weekdays = Carbon::getDays();
                     $repeatDays = explode(',', $event->recurrenceRepeatsOn);
                     $i = 0;

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -132,6 +132,9 @@ class ModuleTemplate implements \JsonSerializable
 
     /** @var string A Renderer to run if custom rendering is required. */
     public $onTemplateRender;
+
+    /** @var string JavaScript function run when the template becomes visible. */
+    public $onTemplateVisible;
 
     /** @var string A data parser for elements */
     public $onElementParseData;

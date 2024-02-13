@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -1585,6 +1585,8 @@ class Library extends Base
      */
     public function download(Request $request, Response $response, $id)
     {
+        $this->setNoOutput();
+
         // We can download by mediaId or by mediaName.
         if (is_numeric($id)) {
             $media = $this->mediaFactory->getById($id);
@@ -1592,16 +1594,10 @@ class Library extends Base
             $media = $this->mediaFactory->getByName($id);
         }
 
-        $this->getLog()->debug('Download request for mediaId ' . $id
+        $this->getLog()->debug('download: Download request for mediaId ' . $id
             . '. Media is a ' . $media->mediaType . ', is system file:' . $media->moduleSystemFile);
 
-        // TODO: Permissions check
-        //  decide how we grant permissions to module files.
-        if ($media->mediaType !== 'module' && !$this->getUser()->checkViewable($media)) {
-            throw new AccessDeniedException();
-        }
-
-        // Make a module
+        // Create the appropriate module
         if ($media->mediaType === 'module') {
             $module = $this->moduleFactory->getByType('image');
         } else {
@@ -1616,35 +1612,50 @@ class Library extends Base
         // Hand over to the widget downloader
         $downloader = new WidgetDownloader(
             $this->getConfig()->getSetting('LIBRARY_LOCATION'),
-            $this->getConfig()->getSetting('SENDFILE_MODE')
+            $this->getConfig()->getSetting('SENDFILE_MODE'),
+            $this->getConfig()->getSetting('DEFAULT_RESIZE_LIMIT', 6000)
         );
         $downloader->useLogger($this->getLog()->getLoggerInterface());
 
         $params = $this->getSanitizer($request->getParams());
         if ($params->getCheckbox('preview') == 1) {
+            $this->getLog()->debug('download: preview mode, seeing if we can output an image/video');
+
+            // Output a 1px image if we're not allowed to see the media.
+            if (!$this->getUser()->checkViewable($media)) {
+                echo Img::make($this->getConfig()->uri('img/1x1.png', true))->encode();
+                return $this->render($request, $response);
+            }
+
             // Various different behaviours for the different types of file.
             if ($module->type === 'image') {
                 $response = $downloader->imagePreview(
                     $params,
                     $media->storedAs,
                     $response,
-                    $this->getConfig()->uri('img/error.png', true)
+                    $this->getUser()->checkViewable($media),
                 );
             } else if ($module->type === 'video') {
                 $response = $downloader->imagePreview(
                     $params,
                     $media->mediaId . '_videocover.png',
                     $response,
-                    $this->getConfig()->uri('img/1x1.png', true)
+                    $this->getUser()->checkViewable($media),
                 );
             } else {
                 $response = $downloader->download($media, $response, $media->getMimeType());
             }
         } else {
+            $this->getLog()->debug('download: not preview mode, expect a full download');
+
+            // We are not a preview, and therefore we ought to check sharing before we download
+            if (!$this->getUser()->checkViewable($media)) {
+                throw new AccessDeniedException();
+            }
+
             $response = $downloader->download($media, $response, null, $params->getString('attachment'));
         }
 
-        $this->setNoOutput(true);
         return $this->render($request, $response);
     }
 
@@ -1706,7 +1717,8 @@ class Library extends Base
         // Hand over to the widget downloader
         $downloader = new WidgetDownloader(
             $this->getConfig()->getSetting('LIBRARY_LOCATION'),
-            $this->getConfig()->getSetting('SENDFILE_MODE')
+            $this->getConfig()->getSetting('SENDFILE_MODE'),
+            $this->getConfig()->getSetting('DEFAULT_RESIZE_LIMIT', 6000)
         );
         $downloader->useLogger($this->getLog()->getLoggerInterface());
         $response = $downloader->thumbnail($media, $response, $this->getConfig()->uri('img/error.png', true));

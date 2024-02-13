@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -908,6 +908,8 @@ class Widget implements \JsonSerializable
             'notifyPlaylists' => true,
             'notifyDisplays' => false,
             'audit' => true,
+            'auditWidgetOptions' => true,
+            'auditMessage' => 'Saved',
             'alwaysUpdate' => false,
             'import' => false,
             'upgrade' => false,
@@ -1016,22 +1018,25 @@ class Widget implements \JsonSerializable
                     ]);
                 }
             } else {
-                $changedProperties = $this->getChangedProperties();
+                // For elements, do not try to look up changed properties.
+                $changedProperties = $options['auditWidgetOptions'] ? $this->getChangedProperties() : [];
                 $changedItems = [];
 
-                foreach ($this->widgetOptions as $widgetOption) {
-                    $itemsProperties = $widgetOption->getChangedProperties();
+                if ($options['auditWidgetOptions']) {
+                    foreach ($this->widgetOptions as $widgetOption) {
+                        $itemsProperties = $widgetOption->getChangedProperties();
 
-                    // for widget options what we get from getChangedProperities is an array with value as key and
-                    // changed value as value we want to override the key in the returned array, so that we get a
-                    // clear option name that was changed
-                    if (array_key_exists('value', $itemsProperties)) {
-                        $itemsProperties[$widgetOption->option] = $itemsProperties['value'];
-                        unset($itemsProperties['value']);
-                    }
+                        // for widget options what we get from getChangedProperities is an array with value as key and
+                        // changed value as value we want to override the key in the returned array, so that we get a
+                        // clear option name that was changed
+                        if (array_key_exists('value', $itemsProperties)) {
+                            $itemsProperties[$widgetOption->option] = $itemsProperties['value'];
+                            unset($itemsProperties['value']);
+                        }
 
-                    if (count($itemsProperties) > 0) {
-                        $changedItems[] = $itemsProperties;
+                        if (count($itemsProperties) > 0) {
+                            $changedItems[] = $itemsProperties;
+                        }
                     }
                 }
 
@@ -1046,7 +1051,7 @@ class Widget implements \JsonSerializable
                     $changedProperties['layoutId'][] = $layoutId;
                 }
 
-                $this->audit($this->widgetId, 'Saved', $changedProperties);
+                $this->audit($this->widgetId, $options['auditMessage'], $changedProperties);
             }
         }
     }

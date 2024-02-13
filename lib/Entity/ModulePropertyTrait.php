@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -126,10 +126,12 @@ trait ModulePropertyTrait
                 // Does this property have library references?
                 if ($property->allowLibraryRefs && !empty($value)) {
                     // Parse them out and replace for our special syntax.
+                    // TODO: Can we improve this regex to ignore things we suspect are JavaScript array access?
                     $matches = [];
                     preg_match_all('/\[(.*?)\]/', $value, $matches);
                     foreach ($matches[1] as $match) {
-                        if (is_numeric($match)) {
+                        // We ignore non-numbers and zero/negative integers
+                        if (is_numeric($match) && intval($match) <= 0) {
                             $value = str_replace(
                                 '[' . $match . ']',
                                 '[[mediaId=' . $match . ']]',

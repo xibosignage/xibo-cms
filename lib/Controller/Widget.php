@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -1212,6 +1212,22 @@ class Widget extends Base
             $this->getLog()->debug('getData: Returning cache');
         }
 
+        // Add permissions needed to see linked media
+        $media = $widgetDataProviderCache->getCachedMediaIds();
+        $this->getLog()->debug('getData: linking ' . count($media) . ' images');
+
+        foreach ($media as $mediaId) {
+            // We link these module images to the user.
+            foreach ($this->permissionFactory->getAllByObjectId(
+                $this->getUser(),
+                'Xibo\Entity\Media',
+                $mediaId,
+            ) as $permission) {
+                $permission->view = 1;
+                $permission->save();
+            }
+        }
+
         // Decorate for output.
         $data = $widgetDataProviderCache->decorateForPreview(
             $dataProvider->getData(),
@@ -1268,7 +1284,8 @@ class Widget extends Base
             // Create a downloader to deal with this.
             $downloader = new WidgetDownloader(
                 $this->getConfig()->getSetting('LIBRARY_LOCATION'),
-                $this->getConfig()->getSetting('SENDFILE_MODE')
+                $this->getConfig()->getSetting('SENDFILE_MODE'),
+                $this->getConfig()->getSetting('DEFAULT_RESIZE_LIMIT', 6000)
             );
             $downloader->useLogger($this->getLog()->getLoggerInterface());
             return $this->render($request, $downloader->download($media, $response));
@@ -1680,13 +1697,15 @@ class Widget extends Base
             }
         }
 
-        // Save
+        // Save, without auditing widget options.
         $widget->save([
             'saveWidgetOptions' => true,
             'saveWidgetAudio' => false,
             'saveWidgetMedia' => true,
             'notifyDisplays' => false,
-            'audit' => true
+            'audit' => true,
+            'auditWidgetOptions' => false,
+            'auditMessage' => 'Elements Updated',
         ]);
 
         // Successful

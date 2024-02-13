@@ -667,6 +667,12 @@ Widget.prototype.saveElements = function(
     forceRequest = false,
   } = {},
 ) {
+  // If widget isn't editable, throw an error
+  if (this.isEditable === false) {
+    toastr.error(errorMessagesTrans.canvasWidgetNotShared);
+    return;
+  }
+
   const self = this;
   const app = this.editorObject;
   const widgetId = this.widgetId;
@@ -828,6 +834,7 @@ Widget.prototype.saveElements = function(
 
     const elementObject = {
       id: element.id,
+      elementName: element.elementName,
       elementId: element.elementId,
       type: element.elementType,
       left: element.left,
@@ -843,6 +850,7 @@ Widget.prototype.saveElements = function(
     if (element.group) {
       elementObject.groupId = element.group.id;
       elementObject.groupProperties = {
+        elementGroupName: element.group.elementGroupName,
         top: element.group.top,
         left: element.group.left,
         width: element.group.width,
@@ -1176,8 +1184,12 @@ Widget.prototype.removeElementGroup = function(
   // If object is selected, remove it from selection
   if (this.editorObject.selectedObject.id == groupId) {
     this.editorObject.selectObject({
-      reloadViewer: true,
+      reloadViewer: false,
     });
+
+    // Update viewer moveable
+    (this.editorObject.viewer) &&
+      this.editorObject.viewer.updateMoveable();
   }
 
   // Remove element from the DOM
@@ -1304,6 +1316,11 @@ Widget.prototype.getData = function() {
               )();
 
               data.data = onDataLoad(data.data, data.meta, properties);
+
+              // Check for dataItems on onDataLoad response
+              if (data.data && data.data.hasOwnProperty('dataItems')) {
+                data.data = data.data.dataItems;
+              }
             }
 
             if (modulesList[item].onParseData) {

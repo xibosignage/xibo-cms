@@ -253,6 +253,10 @@
     cursor: grabbing;
 }
 
+.cal-event-time-bar .tooltip {
+    z-index: 1040;
+}
+
 .cal-event-agenda-filter {
     margin-top: 30px;
     padding: 0 30px;

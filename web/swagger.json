@@ -13083,10 +13083,6 @@
                     "description": "A load function to run when the widget first fetches data",
                     "type": "string"
                 },
-                "onDataError": {
-                    "description": "An error function to run when the widget is unable to fetch data",
-                    "type": "string"
-                },
                 "onRender": {
                     "description": "JavaScript function run when a module is rendered, after data has been returned",
                     "type": "string"

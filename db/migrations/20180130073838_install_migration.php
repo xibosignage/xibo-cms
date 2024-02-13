@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -411,6 +411,7 @@ class InstallMigration extends AbstractMigration
             ->addColumn('zIndex', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_SMALL])
             ->addColumn('duration', 'integer', ['default' => 0])
             ->addForeignKey('ownerId', 'user', 'userId')
+            ->addForeignKey('layoutId', 'layout', 'layoutId')
             ->save();
 
         $regionOption = $this->table('regionoption', ['id' => false, 'primary_key' => ['regionId', 'option']]);

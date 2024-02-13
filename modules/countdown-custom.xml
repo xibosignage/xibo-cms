@@ -172,10 +172,10 @@
 <div class="countdown-container">
 {{mainTemplate|raw}}
 </div>
-<style>
-{{styleSheet|raw}}
-</style>
         ]]></twig>
+        <style><![CDATA[
+{{styleSheet|raw}}
+        ]]></style>
     </stencil>
     <onRender><![CDATA[
 // Make replacements on render for all templates
@@ -242,9 +242,6 @@ $(target).xiboLayoutScaler(properties);
 
 // Render the countdown
 var $contentContainer = $(target).find('#content');
-$contentContainer.xiboCountdownRender(
-    properties,
-    $contentContainer.html(),
-);
-    ]]></onRender>
+$contentContainer.xiboCountdownRender(properties, $contentContainer.html());
+]]></onRender>
 </module>
