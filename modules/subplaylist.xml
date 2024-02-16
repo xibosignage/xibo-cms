@@ -26,7 +26,7 @@
     <icon>fa fa-list-ol</icon>
     <class></class>
     <compatibilityClass>\Xibo\Widget\Compatibility\SubPlaylistWidgetCompatibility</compatibilityClass>
-    <showIn>playlist</showIn>
+    <showIn>none</showIn>
     <dataCacheKey></dataCacheKey>
     <type>subplaylist</type>
     <dataType></dataType>

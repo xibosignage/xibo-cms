@@ -28,6 +28,19 @@
                     data-text-property="userName">
                 </select>
             </div>
+        {{else eq @key "user"}}
+            <div class="form-group">
+                <label for="input-user" class="mb-0">{{../trans.searchFilters.user}}</label>
+                <select id="input-user" name="userId" class="form-control mr-1 input-user"
+                    {{#if searchUrl}}data-search-url="{{searchUrl}}"{{/if}}
+                    data-id-property="userId"
+                    data-search-term="userName"
+                    data-allow-clear="true"
+                    data-placeholder--id= "null"
+                    data-placeholder--value= ""
+                    data-text-property="userName">
+                </select>
+            </div>
         {{else eq @key "orientation"}}
             <div class="form-group">
                 <label for="input-orientation" class="mb-0">{{../trans.searchFilters.orientation}}</label>
