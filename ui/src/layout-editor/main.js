@@ -2219,21 +2219,75 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
             false,
           );
         } else {
-          // Save zone or playlist to a temp object
-          // so it can be selected after refreshing
-          lD.viewer.saveTemporaryObject(
-            'region_' + res.data.regionId,
-            'region',
-            {
-              type: 'region',
-            },
-          );
+          const reloadRegion = function() {
+            // Save zone or playlist to a temp object
+            // so it can be selected after refreshing
+            lD.viewer.saveTemporaryObject(
+              'region_' + res.data.regionId,
+              'region',
+              {
+                type: 'region',
+              },
+            );
 
-          // Reload data ( and viewer )
-          lD.reloadData(lD.layout,
-            {
-              refreshEditor: true,
+            // Reload data ( and viewer )
+            lD.reloadData(lD.layout,
+              {
+                refreshEditor: true,
+              });
+          };
+
+          // If we're adding a specific playlist, we need to create a
+          // subplaylist inside the new playlist
+          if (draggableData.subPlaylistId) {
+            lD.addModuleToPlaylist(
+              res.data.regionId,
+              res.data.regionPlaylist.playlistId,
+              'subplaylist',
+              draggableData,
+              null,
+              false,
+              false,
+              true,
+              false,
+              false,
+            ).then((res) => {
+              // Update playlist values in the new widget
+              lD.historyManager.addChange(
+                'saveForm',
+                'widget', // targetType
+                res.data.widgetId, // targetId
+                null, // oldValues
+                {
+                  subPlaylists: JSON.stringify([
+                    {
+                      rowNo: 1,
+                      playlistId: draggableData.subPlaylistId,
+                      spots: '',
+                      spotLength: '',
+                      spotFill: 'repeat',
+                    },
+                  ]),
+                }, // newValues
+                {
+                  addToHistory: false,
+                },
+              ).then((_res) => {
+                console.log(_res);
+                reloadRegion();
+              }).catch((_error) => {
+                toastr.error(_error);
+
+                // Delete new region
+                lD.layout.deleteObject(
+                  'region',
+                  res.data.regionPlaylist.regionId,
+                );
+              });
             });
+          } else {
+            reloadRegion();
+          }
         }
       });
     }
@@ -2386,7 +2440,6 @@ lD.addModuleToPlaylist = function(
       }
 
       // Save the new widget as temporary
-
       if (selectNewWidget) {
         lD.viewer.saveTemporaryObject(
           'widget_' + regionId + '_' + res.data.widgetId,

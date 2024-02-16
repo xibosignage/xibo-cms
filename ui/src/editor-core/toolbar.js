@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -27,6 +27,10 @@ const ToolbarCardMediaUploadTemplate =
   require('../templates/toolbar-card-media-upload.hbs');
 const ToolbarCardLayoutTemplateTemplate =
   require('../templates/toolbar-card-layout-template.hbs');
+const ToolbarCardPlaylistTemplate =
+  require('../templates/toolbar-card-playlist-template.hbs');
+const ToolbarCardNewPlaylistTemplate =
+  require('../templates/toolbar-card-playlist-new-template.hbs');
 const ToolbarContentTemplate = require('../templates/toolbar-content.hbs');
 const ToolbarSearchFormTemplate =
 require('../templates/toolbar-search-form.hbs');
@@ -156,19 +160,6 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
     }
   });
 
-  // Add playlist to modules
-  if (!isPlaylist) {
-    moduleListFiltered.push({
-      moduleId: 'playlist',
-      name: toolbarTrans.playlist,
-      type: 'playlist',
-      icon: 'fa fa-list-ol',
-      dataType: '',
-      regionSpecific: 1,
-      group: [],
-    });
-  }
-
   // Add zone to template edit mode
   if (
     !isPlaylist &&
@@ -271,6 +262,9 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
     name: {
       value: '',
     },
+    user: {
+      value: '',
+    },
     tag: {
       value: '',
     },
@@ -306,6 +300,32 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
       state: '',
       itemCount: 0,
       favouriteModules: [],
+    },
+    {
+      name: 'playlists',
+      itemName: toolbarTrans.menuItems.playlistsName,
+      itemIcon: 'list',
+      itemTitle: toolbarTrans.menuItems.playlistsTitle,
+      contentType: 'playlists',
+      filters: {
+        name: {
+          value: '',
+          key: 'name',
+        },
+        tag: {
+          value: '',
+          key: 'tags',
+          dataRole: 'tagsinput',
+        },
+        user: {
+          value: '',
+          key: 'users',
+          dataRole: 'usersList',
+          searchUrl: urlsForApi.user.get.url,
+        },
+      },
+      state: '',
+      itemCount: 0,
     },
     {
       name: 'global',
@@ -1040,6 +1060,7 @@ Toolbar.prototype.createContent = function(
   if (
     !forceReload &&
     this.menuItems[menu].contentType != 'modules' &&
+    this.menuItems[menu].contentType != 'playlists' &&
     this.menuItems[menu].contentType != 'actions' &&
     self.DOMObject
       .find(
@@ -1069,6 +1090,8 @@ Toolbar.prototype.createContent = function(
     this.elementsContentCreateWindow(menu, savePrefs);
   } else if (content.contentType === 'layout_templates') {
     this.layoutTemplatesContentCreateWindow(menu);
+  } else if (content.contentType === 'playlists') {
+    this.playlistsContentCreateWindow(menu);
   } else {
     this.handleCardsBehaviour();
 
@@ -1398,7 +1421,6 @@ Toolbar.prototype.mediaContentCreateWindow = function(menu) {
 Toolbar.prototype.mediaContentPopulate = function(menu) {
   const self = this;
   const app = this.parent;
-  const filters = self.menuItems[menu].filters;
   const $mediaContainer = self.DOMObject.find('#media-container-' + menu);
 
   // Request elements based on filters
@@ -1469,41 +1491,6 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
         provider: 'both',
       }, filter),
     }).done(function(res) {
-      // Add upload card
-      const showUploadCard = function() {
-        // Add card to content
-        const addUploadCard = function(module) {
-          if (module) {
-            module.trans = toolbarTrans;
-
-            module.trans.upload =
-              module.trans.uploadType.replace('%obj%', module.name);
-
-            const $uploadCard = $(ToolbarCardMediaUploadTemplate(
-              Object.assign(
-                {},
-                module,
-                {
-                  editingPlaylist: self.isPlaylist,
-                })),
-            );
-            $mediaContent.append($uploadCard).masonry('appended', $uploadCard);
-          }
-        };
-
-        if ($mediaContent.find('.upload-card').length == 0) {
-          // If we have a specific module type
-          if (filter.type != '') {
-            addUploadCard(app.common.getModuleByType(filter.type));
-          } else {
-            // Show one upload card for each media type
-            self.moduleListOtherTypes.forEach((moduleType) => {
-              addUploadCard(app.common.getModuleByType(moduleType));
-            });
-          }
-        }
-      };
-
       // Remove loading
       $mediaContent.parent().find('.loading-container-toolbar').remove();
 
@@ -1522,12 +1509,42 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
         gutter: 8,
       });
 
+      // Show upload card
+      const addUploadCard = function(module) {
+        if (module) {
+          module.trans = toolbarTrans;
+
+          module.trans.upload =
+            module.trans.uploadType.replace('%obj%', module.name);
+
+          const $uploadCard = $(ToolbarCardMediaUploadTemplate(
+            Object.assign(
+              {},
+              module,
+              {
+                editingPlaylist: self.isPlaylist,
+              })),
+          );
+          $mediaContent.append($uploadCard).masonry('appended', $uploadCard);
+        }
+      };
+
+      if ($mediaContent.find('.upload-card').length == 0) {
+        // If we have a specific module type
+        if (filter.type != '') {
+          addUploadCard(app.common.getModuleByType(filter.type));
+        } else {
+          // Show one upload card for each media type
+          self.moduleListOtherTypes.forEach((moduleType) => {
+            addUploadCard(app.common.getModuleByType(moduleType));
+          });
+        }
+      }
+
       if (
         (!res.data || res.data.length == 0) &&
         $mediaContent.find('.toolbar-card').length == 0
       ) {
-        showUploadCard();
-
         // Handle card behaviour
         self.handleCardsBehaviour();
 
@@ -1537,8 +1554,6 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
           toolbarTrans.noMediaToShow +
           '</div>');
       } else {
-        showUploadCard();
-
         for (let index = 0; index < res.data.length; index++) {
           const element = Object.assign({}, res.data[index]);
           element.trans = toolbarTrans;
@@ -1631,10 +1646,14 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
         }
       }
     });
+
+    // Initialise tooltips
+    app.common.reloadTooltips($mediaContent);
   };
 
   // Refresh the table results
-  const filterRefresh = function(filters) {
+  const filterRefresh = function() {
+    const filters = self.menuItems[menu].filters;
     // Save filter options
     for (const filter in filters) {
       if (filters.hasOwnProperty(filter)) {
@@ -1749,20 +1768,19 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
     '.media-search-form select, ' +
     '.media-search-form input[type="text"].input-tag',
   ).change(_.debounce(function() {
-    filterRefresh(filters);
+    filterRefresh();
   }, 200));
 
   // Bind tags change to refresh the results
   $mediaContainer.find('.media-search-form input[type="text"]')
     .on('input', _.debounce(function() {
-      filterRefresh(filters);
+      filterRefresh();
     }, 500));
 
   // Initialize tagsinput
   const $tags = $mediaContainer
     .find('.media-search-form input[data-role="tagsinput"]');
   $tags.tagsinput();
-
   $mediaContainer.find('#media-' + menu).off('click')
     .on('click', '#tagDiv .btn-tag', function(e) {
       // Add text to form
@@ -1845,12 +1863,37 @@ Toolbar.prototype.layoutTemplatesContentCreateWindow = function(menu) {
 };
 
 /**
+ * Create playlists window
+ * @param {number} menu - menu index
+ */
+Toolbar.prototype.playlistsContentCreateWindow = function(menu) {
+  const self = this;
+
+  // Deselect previous selections
+  self.deselectCardsAndDropZones();
+
+  // Render template
+  const html = ToolbarContentMediaTemplate({
+    menuIndex: menu,
+    filters: this.menuItems[menu].filters,
+    trans: toolbarTrans,
+    formClass: 'playlists-search-form media-search-form',
+  });
+
+  // Append template to the search main div
+  self.DOMObject.find('#playlists-container-' + menu).html(html);
+
+  // Load content
+  this.playlistsContentPopulate(menu);
+};
+
+/**
  * Create content for layout templates
  * @param {number} menu - menu index
  */
 Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
+  const app = this.parent;
   const self = this;
-  const filters = self.menuItems[menu].filters;
   const $container = self.DOMObject.find('#layout_templates-container-' + menu);
   const $content = self.DOMObject.find('#media-content-' + menu);
   const $searchForm = $container.parent().find('.toolbar-search-form');
@@ -1990,6 +2033,9 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
             toolbarTrans.noMediaToShow +
             '</div>');
         }
+
+        // Initialise tooltips
+        app.common.reloadTooltips($container);
       },
       error: function(jqXHR, textStatus, errorThrown) {
         $container.parent().find('.loading-container-toolbar').remove();
@@ -1999,7 +2045,8 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
   };
 
   // Refresh the results
-  const filterRefresh = function(filters) {
+  const filterRefresh = function() {
+    const filters = self.menuItems[menu].filters;
     // Save filter options
     for (const filter in filters) {
       if (filters.hasOwnProperty(filter)) {
@@ -2007,7 +2054,7 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
           self.DOMObject.find(
             '#content-' +
             menu +
-            ' .template-search-form #input-' + filter,
+            ' .layout_tempates-search-form #input-' + filter,
           ).val();
       }
     }
@@ -2026,8 +2073,235 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
 
   // Bind search action to refresh the results
   $searchForm.find('select, input[type="text"]').change(_.debounce(function() {
-    filterRefresh(filters);
+    filterRefresh();
   }, 200));
+
+  // Initialize other select inputs
+  $container
+    .find('.media-search-form select:not([name="ownerId"]):not(.input-sort)')
+    .select2({
+      minimumResultsForSearch: -1, // Hide search box
+    });
+
+  loadData();
+};
+
+/**
+ * Create content for playlists
+ * @param {number} menu - menu index
+ */
+Toolbar.prototype.playlistsContentPopulate = function(menu) {
+  const self = this;
+  const app = this.parent;
+  const $container = self.DOMObject.find('#playlists-container-' + menu);
+  const $content = self.DOMObject.find('#media-content-' + menu);
+  const $searchForm = $container.parent().find('.toolbar-search-form');
+
+  // Load playlists
+  const loadData = function(clear = true) {
+    // Remove show more button
+    $container.find('.show-more').remove();
+
+    // Empty content and reset item count
+    if (clear) {
+      // Clear selection
+      self.deselectCardsAndDropZones();
+
+      // Empty content
+      $content.empty();
+      self.menuItems[menu].itemCount = 0;
+    }
+
+    // Show loading
+    $content.before(
+      `<div class="loading-container-toolbar w-100 text-center">
+        <span class="loading fa fa-cog fa-spin"></span>
+      </div>`);
+
+    // Remove no media message if exists
+    $searchForm.find('.no-results-message').remove();
+
+    // Manage request length
+    const requestLength = 15;
+
+    // Filter start
+    const start = self.menuItems[menu].itemCount;
+
+    $.ajax({
+      method: 'GET',
+      url: urlsForApi.playlist.get.url,
+      data: $.extend({
+        start: start,
+        length: requestLength,
+        provider: 'both',
+      }, $searchForm.serializeObject()),
+      success: function(response) {
+        $container.parent().find('.loading-container-toolbar').remove();
+
+        // Send translation with module object
+        module.trans = toolbarTrans;
+
+        // Show new playlist card
+        if ($container.find('.new-playlist-card').length == 0) {
+          const $playlistCard = $(ToolbarCardNewPlaylistTemplate(
+            Object.assign(
+              {},
+              module,
+              {
+                editingPlaylist: self.isPlaylist,
+              })),
+          );
+          $content.append($playlistCard);
+        }
+
+        if (response && response.data && response.data.length > 0) {
+          // Process each row returned
+          $.each(response.data, function(index, el) {
+            // Enhance with some properties
+            el.trans = toolbarTrans;
+            el.showFooter = el.orientation ||
+              (el.provider && el.provider.logoUrl) ||
+              (el.tags && el.tags.length > 0);
+            el.thumbnail = el.thumbnail || defaultThumbnailUrl;
+
+            // Provider logos do not have the root uri
+            if (el.provider && el.provider.logoUrl) {
+              el.provider.logoUrl = $('meta[name=public-path]')
+                .attr('content') + el.provider.logoUrl;
+            }
+
+            if (el.provider && !el.provider.link) {
+              el.provider.link = '#';
+            }
+
+            // Editing playlist?
+            el.editingPlaylist = self.isPlaylist;
+
+            // Format duration
+            if (typeof el.duration === 'number') {
+              el.playlistDuration =
+                app.common.timeFormat(el.duration);
+            }
+
+            // Get template and add
+            const $card = $(ToolbarCardPlaylistTemplate(el));
+
+            // Add data object to card
+            if ($card.hasClass('from-provider')) {
+              $card.data('providerData', response.data[index]);
+            }
+
+            // Append to container
+            $content.append($card);
+
+            self.menuItems[menu].itemCount++;
+          });
+
+          // Show content in widgets
+          $content.find('.toolbar-card').removeClass('hide-content');
+
+          // Show more button
+          if (response.data.length > 0) {
+            if ($content.parent().find('.show-more').length == 0) {
+              const $showMoreBtn =
+                $('<button class="btn btn-block btn-white show-more">' +
+                  toolbarTrans.showMore +
+                  '</button>');
+              $content.after($showMoreBtn);
+
+              $showMoreBtn.off('click').on('click', function() {
+                loadData(false);
+              });
+            }
+          } else {
+            toastr.info(
+              toolbarTrans.noShowMore,
+              null,
+              {positionClass: 'toast-bottom-center'},
+            );
+          }
+
+          // Fix for scrollbar
+          const $parent = $content.parent();
+          $parent.toggleClass(
+            'scroll',
+            ($parent.width() < $parent[0].scrollHeight),
+          );
+
+          self.handleCardsBehaviour();
+        } else if (response.login) {
+          window.location.href = window.location.href;
+          location.reload();
+        } else if ($content.find('.toolbar-card').length === 0) {
+          $searchForm.append(
+            '<div class="no-results-message">' +
+            toolbarTrans.noMediaToShow +
+            '</div>');
+        }
+
+        // Initialise tooltips
+        app.common.reloadTooltips($container);
+      },
+      error: function(jqXHR, textStatus, errorThrown) {
+        $container.parent().find('.loading-container-toolbar').remove();
+        console.error(jqXHR);
+      },
+    });
+  };
+
+  // Refresh the results
+  const filterRefresh = function() {
+    const filters = self.menuItems[menu].filters;
+    // Save filter options
+    for (const filter in filters) {
+      if (filters.hasOwnProperty(filter)) {
+        filters[filter].value =
+          self.DOMObject.find(
+            '#content-' +
+            menu +
+            ' .playlists-search-form #input-' + filter,
+          ).val();
+      }
+    }
+
+    // Reload data
+    loadData();
+
+    self.savePrefs();
+  };
+
+  // Prevent filter form submit and bind the change event to reload the table
+  $searchForm.on('submit', function(e) {
+    e.preventDefault();
+    return false;
+  });
+
+  // Bind search action to refresh the results
+  $searchForm.find('select, input[type="text"]').change(_.debounce(function() {
+    filterRefresh();
+  }, 200));
+
+  // Initialize tagsinput
+  const $tags = $container
+    .find('.media-search-form input[data-role="tagsinput"]');
+  $tags.tagsinput();
+  $container.find('#media-' + menu).off('click')
+    .on('click', '#tagDiv .btn-tag', function(e) {
+      // Add text to form
+      $tags.tagsinput('add', $(e.target).text(), {allowDuplicates: false});
+    });
+
+  // Initialize user list input
+  const $userListInput = $container
+    .find('.media-search-form select[name="userId"]');
+  makePagedSelect($userListInput);
+
+  // Initialize other select inputs
+  $container
+    .find('.media-search-form select:not([name="userId"]):not(.input-sort)')
+    .select2({
+      minimumResultsForSearch: -1, // Hide search box
+    });
 
   loadData();
 };
