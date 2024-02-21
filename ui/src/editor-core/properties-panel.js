@@ -164,15 +164,19 @@ PropertiesPanel.prototype.save = function(
   formFieldsToSave =
     formFieldsToSave.filter('.tab-pane:not(#positionTab) [name]');
 
+  // Get form old data
+  const formOldData = this.formSerializedLoadData[target.type];
+
+  // Get form data
+  // if we're saving an element, don't include the element properties
+  const formNewData = formFieldsToSave.serialize();
+
   // If form is valid, submit it ( add change )
   if (
     formFieldsToSave.length > 0 &&
-    formFieldsToSave.valid()
+    formFieldsToSave.valid() &&
+    formOldData != formNewData // if form data is the same, don't save
   ) {
-    // Get form data
-    // if we're saving an element, don't include the element properties
-    const formNewData = formFieldsToSave.serialize();
-
     app.common.showLoadingScreen();
 
     // Save content tab
@@ -188,7 +192,7 @@ PropertiesPanel.prototype.save = function(
       'saveForm',
       target.type, // targetType
       target[target.type + 'Id'], // targetId
-      this.formSerializedLoadData[target.type], // oldValues
+      formOldData, // oldValues
       formNewData, // newValues
       {
         customRequestPath: requestPath,
@@ -1716,7 +1720,9 @@ PropertiesPanel.prototype.initFields = function(
 
     // Save for this type
     self.formSerializedLoadData[target.type] =
-      self.DOMObject.find('form [name]:not(.element-property)').serialize();
+      self.DOMObject.find('form [name]:not(.element-property)')
+        .filter('.tab-pane:not(#positionTab) [name]')
+        .serialize();
   }
 
   // If we're not in read only mode
@@ -1858,7 +1864,7 @@ PropertiesPanel.prototype.initFields = function(
       ':not([data-tag-style-input])';
     $(self.DOMObject).find('form').off()
       .on({
-        'change inputChange xiboInputChange': function(_ev, options) {
+        'change blur inputChange xiboInputChange': function(_ev, options) {
           // Check if we skip this field
           if (skipSave(_ev.currentTarget, _ev)) {
             return;
