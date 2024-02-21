@@ -481,7 +481,6 @@ const formHelpers = function() {
       }
     };
 
-
     // Function to switch off all the bootstrapSwitch
     const forceBootstrapSwitchesOff = function() {
       // If one of the targets is a boostrap switch, switch it off

@@ -176,7 +176,6 @@ Canvas.prototype.getActiveWidgetOfType = function(
   return targetWidget;
 };
 
-
 /**
  * Move elements between widgets
  * @param {object} sourceWidgetId - Old widget id
@@ -297,7 +296,6 @@ Canvas.prototype.moveElementsBetweenWidgets = function(
   });
 };
 
-
 /**
  * Remove elements or group from canvas widget
  * @param {object} widgetId - Old widget
@@ -316,7 +314,6 @@ Canvas.prototype.removeFromCanvasWidget = function(
     delete lD.layout.canvas.widgets[widgetId].elements[objectToRemoveId];
   }
 };
-
 
 /**
  * Edit property by type

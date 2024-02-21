@@ -761,17 +761,10 @@ pE.showLocalLoadingScreen = function() {
 
 /**
  * Clear Temporary Data ( Cleaning cached variables )
- * @param {Boolean} destroyRichTextEditor Destroy existing Rich text editors
  */
-pE.clearTemporaryData = function(destroyRichTextEditor = false) {
-  // Fix for remaining ckeditor elements or colorpickers
-  destroyColorPicker(pE.editorContainer.find('.colorpicker-element'));
-
+pE.clearTemporaryData = function() {
   // Hide open tooltips
   pE.editorContainer.find('.tooltip').remove();
-
-  // Remove text callback editor structure variables
-  (destroyRichTextEditor) && formHelpers.destroyCKEditor();
 };
 
 /**

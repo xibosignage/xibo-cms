@@ -1150,7 +1150,6 @@ lD.undoLastAction = function() {
   });
 };
 
-
 /**
  * Delete selected object
  */
@@ -2643,22 +2642,8 @@ lD.addMediaToPlaylist = function(
  * Clear Temporary Data ( Cleaning cached variables )
  */
 lD.clearTemporaryData = function() {
-  // Fix for remaining ckeditor elements or colorpickers
-  $('.colorpicker').remove();
-  $('.cke').remove();
-
-  // Fix for remaining ckeditor elements or colorpickers
-  destroyColorPicker(lD.editorContainer.find('.colorpicker-element'));
-
   // Hide open tooltips
   lD.editorContainer.find('.tooltip').remove();
-
-  // Destroy select2 opened dropdowns
-  lD.propertiesPanel.DOMObject.find('select[data-select2-id]')
-    .select2('destroy');
-
-  // Remove text callback editor structure variables
-  formHelpers.destroyCKEditor();
 
   // Clear action highlights on the viewer
   // if we don't have an action form open
@@ -4612,7 +4597,6 @@ lD.addAction = function(options) {
 
   return true;
 };
-
 
 /**
  * Save action
