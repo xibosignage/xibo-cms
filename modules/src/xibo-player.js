@@ -241,7 +241,7 @@ const XiboPlayer = function() {
       if (hasGroup) {
         const grpWidgetId = grpId + '_' + currentWidget.widgetId;
         if (!Boolean(collection[grpWidgetId])) {
-          collection[grpWidgetId] = {
+          const groupProps = {
             ...widgetElement.groupProperties,
             groupId: widgetElement.groupId,
             groupScale: widgetElement.groupScale,
@@ -251,6 +251,11 @@ const XiboPlayer = function() {
             duration: currentWidget.duration,
             durationIsPerItem:
               Boolean(currentWidget.properties.durationIsPerItem),
+          };
+          collection[grpWidgetId] = groupProps;
+          collection[grpWidgetId].onTemplateVisible = function($target) {
+            self.runLayoutAnimate($target, groupProps);
+            console.log('Called onTemplateVisible for group > ', grpWidgetId);
           };
         }
 
@@ -500,8 +505,10 @@ const XiboPlayer = function() {
    * @return {Object} element
    */
   this.decorateElement = function(element, currentWidget) {
+    const self = this;
     const elemCopy = JSON.parse(JSON.stringify(element));
     const elemProps = elemCopy?.properties || {};
+    const hasGroup = Boolean(elemCopy.groupId);
 
     // Initialize element data keys
     elemCopy.dataKeys = [];
@@ -618,6 +625,15 @@ const XiboPlayer = function() {
     if (elemCopy.isExtended && elemCopy.dataOverrideWith !== null &&
         elemCopy.dataOverrideWith.includes('meta')) {
       elemCopy.dataInMeta = true;
+    }
+
+    // Add onTemplateVisible if element does not belong to a group
+    if (!hasGroup) {
+      elemCopy.onTemplateVisible = function($target) {
+        self.runLayoutAnimate($target, elemCopy);
+        console.log('Called onTemplateVisible for element > ',
+          elemCopy.elementId);
+      };
     }
 
     return elemCopy;
@@ -1192,6 +1208,17 @@ XiboPlayer.prototype.renderDataElements = function(currentWidget) {
               $slotItemContent.find(`.${itemKey}--item`),
             );
 
+            const runOnTemplateVisible = function() {
+              slotObjItem.onTemplateVisible($slotItemContent);
+            };
+
+            // Run onTemplateVisible by default if visible
+            if (xiboIC.checkVisible()) {
+              runOnTemplateVisible();
+            } else {
+              xiboIC.addToQueue(runOnTemplateVisible);
+            }
+
             currentWidget.items.push($slotItemContent);
           });
         });
@@ -1708,6 +1735,15 @@ XiboPlayer.prototype.runLayoutScaler = function(currentWidget) {
     globalOptions,
     {duration: currentWidget.duration},
   ));
+};
+
+/**
+ * Run xiboLayoutAnimate to start animations
+ * @param {Object} $target HTML target element
+ * @param {Object} properties Widget or Group or Element properties
+ */
+XiboPlayer.prototype.runLayoutAnimate = function($target, properties) {
+  $target.xiboLayoutAnimate(properties);
 };
 
 const xiboPlayer = new XiboPlayer();
