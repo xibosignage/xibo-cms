@@ -508,7 +508,6 @@ const XiboPlayer = function() {
     const self = this;
     const elemCopy = JSON.parse(JSON.stringify(element));
     const elemProps = elemCopy?.properties || {};
-    const hasGroup = Boolean(elemCopy.groupId);
 
     // Initialize element data keys
     elemCopy.dataKeys = [];
@@ -628,7 +627,7 @@ const XiboPlayer = function() {
     }
 
     // Add onTemplateVisible if element does not belong to a group
-    if (!hasGroup) {
+    if (!self.isGroup(elemCopy)) {
       elemCopy.onTemplateVisible = function($target) {
         self.runLayoutAnimate($target, elemCopy);
         console.log('Called onTemplateVisible for element > ',
