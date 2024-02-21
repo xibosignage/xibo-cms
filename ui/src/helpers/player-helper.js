@@ -31,6 +31,22 @@ const PlayerHelper = function() {
       }, []);
   };
 
+  this.getPinnedItems = function(dataSlotItems) {
+    if (Object.values(dataSlotItems).length === 0) {
+      return dataSlotItems;
+    }
+
+    return Object.keys(dataSlotItems).reduce(function(items, itemKey) {
+      const item = dataSlotItems[itemKey];
+
+      if (item.pinSlot) {
+        items[itemKey] = item;
+      }
+
+      return items;
+    }, {});
+  };
+
   /**
    * Get items by Key
    * @param {Object} items
