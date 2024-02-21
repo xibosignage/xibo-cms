@@ -104,7 +104,6 @@ Playlist.prototype.createDataStructure = function(data) {
   this.duration = playlistDuration;
 };
 
-
 /**
  * Calculate timeline values ( duration, loops )
  * based on widget and region duration

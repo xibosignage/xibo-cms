@@ -500,6 +500,9 @@ PropertiesPanel.prototype.render = function(
   // Reset inline editor to false on each refresh
   this.inlineEditor = false;
 
+  // Clear temp data
+  app.common.clearContainer(this.DOMObject);
+
   // Show loading template
   this.DOMObject.html(loadingTemplate());
 

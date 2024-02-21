@@ -253,7 +253,6 @@ HistoryManager.prototype.uploadChange = function(
   });
 };
 
-
 /**
  * Revert change by ID or the last one in the history array
  * @return {Promise} - Promise that resolves when the change is reverted
@@ -454,7 +453,6 @@ HistoryManager.prototype.removeAllChanges = function(targetType, targetId) {
     resolve('All Changes Removed');
   });
 };
-
 
 /**
  * Remove last change

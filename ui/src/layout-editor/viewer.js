@@ -186,7 +186,6 @@ Viewer.prototype.getLayoutOrientation = function(width, height) {
   }
 };
 
-
 /**
  * Render viewer
  * @param {object} forceReload - Force reload
@@ -284,16 +283,15 @@ Viewer.prototype.render = function(forceReload = false, target = {}) {
     }
   } else {
     // Render full layout
-
-    // Render the viewer
-    this.DOMObject.html(viewerTemplate());
-
     const $viewerContainer = this.DOMObject;
 
     // If preview is playing, refresh the bottombar
     if (this.previewPlaying && this.parent.selectedObject.type == 'layout') {
       this.parent.bottombar.render(this.parent.selectedObject);
     }
+
+    // Clear temp data
+    lD.common.clearContainer($viewerContainer);
 
     // Show loading template
     $viewerContainer.html(loadingTemplate());
@@ -1166,6 +1164,9 @@ Viewer.prototype.renderRegion = function(
     // Replace container html
     const html = viewerWidgetTemplate(options);
 
+    // Clear temp data
+    lD.common.clearContainer($container);
+
     // Append layout html to the container div
     $container.html(html);
 
@@ -1441,7 +1442,6 @@ Viewer.prototype.updateRegion = function(
     lD.bottombar.render(region);
   }
 };
-
 
 /**
  * Render canvas in the viewer
@@ -2123,6 +2123,9 @@ Viewer.prototype.playPreview = function(url, dimensions) {
     width: dimensions.width,
     height: dimensions.height,
   });
+
+  // Clear temp data
+  lD.common.clearContainer(this.DOMObject.find('.layout-player'));
 
   // Append layout html to the main div
   this.DOMObject.find('.layout-player').html(html);
