@@ -310,6 +310,8 @@ const XiboPlayer = function() {
             Object.keys(dataSlots[currentSlot].items).filter(function(k) {
               return dataSlots[currentSlot].items[k].pinSlot === true;
             }).length > 0;
+          dataSlots[currentSlot].pinnedItems =
+            PlayerHelper.getPinnedItems(dataSlots[currentSlot].items);
         }
       });
     }
@@ -346,9 +348,11 @@ const XiboPlayer = function() {
           break;
         }
 
+        // Slots loop
         for (const [, itemValue] of Object.entries(currCollection)) {
           const itemObj = dataElements[itemValue];
           const slotItems = itemObj.items;
+          const pinnedItems = itemObj.pinnedItems;
           const currentSlot = itemObj.slot;
 
           // Skip if currentKey is less than the currentSlot
@@ -362,6 +366,16 @@ const XiboPlayer = function() {
           // Then, move to next slot
           if (lastSlotFilled !== null &&
             currentSlot <= lastSlotFilled
+          ) {
+            continue;
+          }
+
+          // Skip slot if all slot items are pinned and
+          // currentKey is more than the maxSlot and
+          // currentSlot is a pinned slot
+          if (lastSlotFilled === null &&
+            currentKey > maxSlot && itemObj.hasPinnedSlot &&
+            Object.keys(pinnedItems).length === Object.keys(slotItems).length
           ) {
             continue;
           }
