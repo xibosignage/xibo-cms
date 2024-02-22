@@ -75,7 +75,7 @@ describe('Campaigns', function() {
     cy.wait('@scheduleAddForm');
 
     // Fill in Add form
-    cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection > .select2-selection > .select2-selection__rendered')
+    cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection .select2-search__field')
       .type(display1);
     cy.wait('@loadDisplaygroupAfterSearch');
     cy.get('.select2-container--open').contains(display1);
@@ -108,7 +108,7 @@ describe('Campaigns', function() {
 
     cy.get('#DisplayList + span .select2-selection').click();
     // Type the display name
-    cy.get('.select2-container--open input[type="search"]').type(display1);
+    cy.get('.select2-container--open textarea[type="search"]').type(display1);
 
     // Wait for Display to load
     cy.wait('@loadDisplayAfterSearch');
@@ -145,7 +145,7 @@ describe('Campaigns', function() {
     cy.wait('@scheduleAddForm');
 
     // display
-    cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection > .select2-selection > .select2-selection__rendered')
+    cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection .select2-search__field')
       .type(display1);
     cy.wait('@loadDisplaygroupAfterSearch');
     cy.get('.select2-container--open').contains(display1);
@@ -200,7 +200,7 @@ describe('Campaigns', function() {
     cy.wait('@scheduleAddForm');
 
     // display
-    cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection > .select2-selection > .select2-selection__rendered')
+    cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection .select2-search__field')
       .type(display1);
     cy.wait('@loadDisplaygroupAfterSearch');
     cy.get('.select2-container--open').contains(display1);
@@ -235,8 +235,8 @@ describe('Campaigns', function() {
     cy.get('.select2-container--open .select2-results > ul > li:first').contains(layoutSchedule1).click();
 
     // display
-    cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection > .select2-selection > .select2-selection__rendered')
-        .type(display1);
+    cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection .select2-search__field')
+      .type(display1);
     cy.wait('@loadDisplaygroupAfterSearch');
     cy.get('.select2-container--open').contains(display1);
     cy.get('.select2-container--open .select2-dropdown .select2-results > ul > li').should('have.length', 2);
@@ -268,7 +268,7 @@ describe('Campaigns', function() {
     // ---------
     // Edit a schedule - add another display
     cy.get('#campaignIdFilter + span .select2-selection').click();
-    cy.get('.select2-container--open input[type="search"]').type(layoutSchedule1); // Type the layout name
+    cy.get('.select2-container--open textarea[type="search"]').type(layoutSchedule1); // Type the layout name
     cy.wait('@loadLayoutSpecificCampaign');
     cy.selectOption(layoutSchedule1);
 
@@ -278,7 +278,7 @@ describe('Campaigns', function() {
     cy.get('#schedule-grid tr:first-child .schedule_button_edit').click({force: true});
 
     // display
-    cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection > .select2-selection > .select2-selection__rendered')
+    cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection .select2-search__field')
       .type(display2);
     cy.wait('@loadDisplaygroupAfterSearch');
     cy.get('.select2-container--open .select2-results > ul > li')

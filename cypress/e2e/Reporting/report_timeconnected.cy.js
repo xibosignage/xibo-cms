@@ -32,7 +32,7 @@ describe('Time Connected', function() {
     cy.get('.select2-search__field').click();
 
     // Type the display name
-    cy.get('.select2-container--open input[type="search"]').type('POP Display Group');
+    cy.get('.select2-container--open textarea[type="search"]').type('POP Display Group');
     cy.get('.select2-container--open .select2-results > ul').contains('POP Display Group').click();
 
     // Click on the Apply button
