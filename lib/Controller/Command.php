@@ -120,7 +120,8 @@ class Command extends Base
      *  @SWG\Parameter(
      *      name="logicalOperatorCode",
      *      in="query",
-     *      description="When filtering by multiple codes in code filter, which logical operator should be used? AND|OR",
+     *      description="When filtering by multiple codes in code filter,
+     * which logical operator should be used? AND|OR",
      *      type="string",
      *      required=false
      *  ),
