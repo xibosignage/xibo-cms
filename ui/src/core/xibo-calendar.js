@@ -768,7 +768,7 @@ var setupScheduleForm = function(dialog) {
             .attr("id", "scheduleDuplateButton")
             .html(translations.duplicate)
             .on("click", function() {
-                duplicateScheduledEvent();
+                duplicateScheduledEvent($scheduleEditForm);
             });
 
         $(dialog).find('.modal-footer').prepend($button);
@@ -1161,9 +1161,8 @@ var processScheduleFormElements = function(el) {
     }
 };
 
-var duplicateScheduledEvent = function() {
+var duplicateScheduledEvent = function($scheduleForm) {
     // Set the edit form URL to that of the add form
-    var $scheduleForm = $("#scheduleEditForm");
     $scheduleForm.attr("action", $scheduleForm.data().addUrl).attr("method", "post");
 
     // Remove the duplicate button
