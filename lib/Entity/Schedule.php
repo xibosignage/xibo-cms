@@ -1908,9 +1908,15 @@ class Schedule implements \JsonSerializable
                 && $this->hasPropertyChanged($key)
             ) {
                 if (in_array($key, $this->datesToFormat)) {
-                    $changedProperties[$key] = Carbon::createFromTimestamp($this->getOriginalValue($key))
-                            ->format(DateFormatHelper::getSystemFormat())
-                        . ' > ' . Carbon::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat());
+                    $original = empty($this->getOriginalValue($key))
+                        ? $this->getOriginalValue($key)
+                        : Carbon::createFromTimestamp($this->getOriginalValue($key))
+                            ->format(DateFormatHelper::getSystemFormat());
+                    $new = empty($value)
+                        ? $value
+                        : Carbon::createFromTimestamp($value)
+                            ->format(DateFormatHelper::getSystemFormat());
+                    $changedProperties[$key] = $original . ' > ' . $new;
                 } else {
                     $changedProperties[$key] = $this->getOriginalValue($key) . ' > ' . $value;
 
