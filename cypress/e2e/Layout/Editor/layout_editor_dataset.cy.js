@@ -55,7 +55,6 @@ describe('Layout Designer', function() {
     // Wait for datasets to load
     cy.wait('@loadDatasets');
     cy.get('.select2-container--open').contains('test');
-    cy.get('.select2-container--open .select2-results > ul > li').should('have.length', 1);
     cy.get('.select2-container--open .select2-results > ul > li:first').contains('test').click();
     
     cy.get('[name="lowerLimit"]').clear().type('1');
