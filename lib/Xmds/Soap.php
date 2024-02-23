@@ -827,7 +827,12 @@ class Soap
                 }
 
                 // Get the Layout Modified Date
-                $layoutModifiedDt = Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $layout->modifiedDt);
+                // To cover for instances where modifiedDt isn't correctly recorded
+                // use the createdDt instead.
+                $layoutModifiedDt = Carbon::createFromFormat(
+                    DateFormatHelper::getSystemFormat(),
+                    $layout->modifiedDt ?? $layout->createdDt
+                );
 
                 // merge regions and drawers
                 /** @var Region[] $allRegions */
