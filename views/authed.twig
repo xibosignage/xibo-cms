@@ -1,8 +1,8 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2020-2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -837,12 +837,12 @@
         }
 
         function sendCommandMultiSelectFormOpen(dialog) {
-          // Inject a list of layouts into the form, in a drop down.
+          // Inject a list of commands into the form, in a drop down.
           const $commandSelect = $(
             '<div class="form-group form-horizontal row mt-4">' +
             '<label class="col-sm-2 control-label" for="commandId" accesskey="">{% trans "Command" %}</label>' +
             '<div class="col-sm-10">' +
-            '<select name="commandId" class="form-control" data-search-url="{{ url_for("command.search") }}" data-search-term="commandLike" data-id-property="commandId" data-text-property="command">' +
+            '<select name="commandId" class="form-control" data-search-url="{{ url_for("command.search") }}" data-search-term="command" data-id-property="commandId" data-text-property="command">' +
             '<span class="help-block">{% trans "Pick a command to send to the Player. If the CMS has XMR enabled this will be sent immediately, otherwise it will show an error."%}</span>' +
             '</div>' +
             '</div>'

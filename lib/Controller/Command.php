@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -84,17 +84,10 @@ class Command extends Base
      *  @SWG\Parameter(
      *      name="command",
      *      in="query",
-     *      description="Filter by Command Name, exact match",
+     *      description="Filter by Command Name",
      *      type="string",
      *      required=false
      *   ),
-    @SWG\Parameter(
-     *       name="commandLike",
-     *       in="query",
-     *       description="Filter by Command Name, LIKE match",
-     *       type="string",
-     *       required=false
-     *    ),
      *  @SWG\Parameter(
      *      name="code",
      *      in="query",
@@ -102,6 +95,35 @@ class Command extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="useRegexForName",
+     *      in="query",
+     *      description="Flag (0,1). When filtering by multiple commands in command filter, should we use regex?,
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *    name="useRegexForCode",
+     *     in="query",
+     *     description="Flag (0,1). When filtering by multiple codes in code filter, should we use regex?",
+     *     type="integer",
+     *     required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="logicalOperatorName",
+     *      in="query",
+     *      description="When filtering by multiple commands in command filter,
+     * which logical operator should be used? AND|OR",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="logicalOperatorCode",
+     *      in="query",
+     *      description="When filtering by multiple codes in code filter, which logical operator should be used? AND|OR",
+     *      type="string",
+     *      required=false
+     *  ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -126,7 +148,10 @@ class Command extends Base
             'commandId' => $sanitizedParams->getInt('commandId'),
             'command' => $sanitizedParams->getString('command'),
             'code' => $sanitizedParams->getString('code'),
-            'commandLike' => $sanitizedParams->getString('commandLike'),
+            'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
+            'useRegexForCode' => $sanitizedParams->getCheckbox('useRegexForCode'),
+            'logicalOperatorName' => $sanitizedParams->getString('logicalOperatorName'),
+            'logicalOperatorCode' => $sanitizedParams->getString('logicalOperatorCode'),
         ];
 
         $commands = $this->commandFactory->query(
