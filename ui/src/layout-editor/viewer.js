@@ -83,9 +83,6 @@ const Viewer = function(parent, container) {
   // Layout orientation
   this.orientation = null;
 
-  // Initialise moveable
-  this.initMoveable();
-
   // Fullscreen mode flag
   this.fullscreenMode = false;
 
@@ -223,10 +220,16 @@ Viewer.prototype.render = function(forceReload = false, target = {}) {
     return;
   }
 
+  // Clear moveable before replacing html to avoid memory leaks
+  this.destroyMoveable();
+
   // Set reload to false
   this.reload = false;
 
   if (renderSingleObject) {
+    // Initialise moveable
+    this.initMoveable();
+
     const self = this;
     const createCanvas = function() {
       if (
@@ -331,6 +334,9 @@ Viewer.prototype.render = function(forceReload = false, target = {}) {
 
     // Replace container html
     $viewerContainer.html(html);
+
+    // Initialise moveable
+    this.initMoveable();
 
     // Render background image or color to the preview
     if (lD.layout.backgroundImage === null) {
@@ -3028,6 +3034,16 @@ Viewer.prototype.updateMoveable = function(
 
     // Hide snap controls
     this.DOMObject.parent().find('.snap-controls').hide();
+  }
+};
+
+/**
+ * Destroy moveable to avoid memory leaks
+ */
+Viewer.prototype.destroyMoveable = function() {
+  if (this.moveable != null) {
+    this.moveable.destroy();
+    this.moveable = null;
   }
 };
 
