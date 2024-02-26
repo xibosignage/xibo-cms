@@ -14,6 +14,9 @@ const Element = function(data, widgetId, regionId, parentWidget) {
   this.regionId = regionId;
   this.groupId = data.groupId;
 
+  // Name
+  this.elementName = (data.elementName) ? data.elementName : '';
+
   // If group id is set, grab group properties
   if (this.groupId) {
     this.groupProperties = data.groupProperties;
@@ -63,6 +66,8 @@ const Element = function(data, widgetId, regionId, parentWidget) {
 
   // Media
   this.mediaId = data.mediaId;
+
+  this.selected = false;
 };
 
 /**

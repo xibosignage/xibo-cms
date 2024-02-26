@@ -41,7 +41,6 @@ jQuery.fn.extend({
       seamless: true,
       gap: 50,
     };
-    let isGroup = false;
     const $content = $('#content');
     const isAndroid = navigator.userAgent.indexOf('Android') > -1;
 
@@ -58,40 +57,10 @@ jQuery.fn.extend({
 
     options = $.extend({}, defaults, options);
 
-    const elementWrapper = $('<div class="element-wrapper"></div>');
-
     if (!isMarquee) {
       options.speed = 1000;
     } else {
       options.speed = 1;
-    }
-
-    if (String(options.parentId).length > 0) {
-      if (options.parentId === options.id) {
-        isGroup = true;
-      }
-
-      if (!isGroup) {
-        elementWrapper
-          .addClass(`element-wrapper--${options.parentId}`)
-          .css({
-            width: options.width,
-            height: options.height,
-            position: 'absolute',
-            top: options.top,
-            left: options.left,
-            'z-index': options.layer,
-          });
-      }
-    }
-
-    if (!isGroup && items?.length > 0) {
-      elementWrapper.append(items);
-    }
-
-    if (!isGroup && $this.find(`.element-wrapper--${options.parentId}`)
-      .length === 0) {
-      $this.prepend(elementWrapper);
     }
 
     const cycleElement = `.${options.id}`;
@@ -120,12 +89,13 @@ jQuery.fn.extend({
           options.effect === 'noTransition' || options.effect === 'none'
         ) ? noTransitionSpeed : options.speed,
         'data-cycle-timeout': timeout,
-        'data-cycle-slides': `> .${options.parentId}--item`,
+        'data-cycle-slides': `> .${options.id}--item`,
         'data-cycle-auto-height': false,
+        'data-cycle-paused': options.pauseEffectOnStart,
       };
 
       if (options.effect === 'scrollHorz') {
-        $(cycleElement).find(`> .${options.parentId}--item`)
+        $(cycleElement).find(`> .${options.id}--item`)
           .each(function(idx, elem) {
             $(elem).css({width: '-webkit-fill-available'});
           });
@@ -136,7 +106,8 @@ jQuery.fn.extend({
         };
       }
 
-      $(cycleElement).addClass('cycle-slideshow').attr(cycle2Config).cycle();
+      $(cycleElement).addClass('cycle-slideshow anim-cycle')
+        .attr(cycle2Config).cycle();
 
       // Add some margin for each slide when options.effect === scrollHorz
       if (options.effect === 'scrollHorz') {

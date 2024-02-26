@@ -2,37 +2,37 @@
     <div class="viewer-navbar-info">
         {{! Element Info }}
         {{#eq object.type "widget"}}
-            <div class="info d-inline">
+            <div class="info">
                 {{#ifCond object.widgetName '||' object.moduleName}}
-                    <span class="label-name align-middle d-inline-block">
-                        <strong>{{objectTypeName}}</strong> <span title="{{trans.widgetName}}">{{#if object.widgetName}}"{{object.widgetName}}"{{/if}}</span>
-                    </span>
+                    <div class="label-name">
+                        <strong>{{objectTypeName}}</strong> <div class="name" title="{{trans.widgetName}} {{object.widgetName}}">{{#if object.widgetName}}"{{object.widgetName}}"{{/if}}</div>
+                    </div>
                 {{/ifCond}}
             </div>
         {{else eq object.type "element"}}
-            <div class="info d-inline">
-                <span class="label-name align-middle">
-                    <strong>{{objectTypeName}}</strong> | <span title="{{trans.templateName}}">{{object.template.title}}</span> - <span title="{{trans.widgetName}}">{{#if widget.widgetName}}"{{widget.widgetName}}"{{/if}}</span>
-                </span>
+            <div class="info">
+                <div class="label-name">
+                    <strong>{{objectTypeName}}</strong> | <div title="{{trans.templateName}}">{{object.template.title}}</div>{{#if object.elementName}} - <div class="name" title="{{trans.elementName}}">"{{object.elementName}}"</div>{{/if}}
+                </div>
             </div>
         {{else eq object.type "element-group"}}
-            <div class="info d-inline">
-                <span class="label-name align-middle">
-                    <strong>{{objectTypeName}}</strong> - <span title="{{trans.widgetName}}">{{#if widget.widgetName}}"{{widget.widgetName}}"{{/if}}</span>
-                </span>
+            <div class="info">
+                <div class="label-name">
+                    <strong>{{objectTypeName}}</strong>{{#if object.elementGroupName}} - <div class="name" title="{{trans.elementGroupName}}">"{{object.elementGroupName}}"</div>{{/if}}
+                </div>
             </div>
         {{else}}
-            <div class="info d-inline">
-                <span class="label-name align-middle">
-                    <strong>{{objectTypeName}}</strong> <span title="{{trans.regionName}}">{{#if object.name}}"{{object.name}}"{{/if}}</span>
-                </span>
+            <div class="info">
+                <div class="label-name">
+                    <strong>{{objectTypeName}}</strong> <div class="name" title="{{trans.regionName}}">{{#if object.name}}"{{object.name}}"{{/if}}</div>
+                </div>
             </div>
         {{/eq}}
     </div>
 
     <div class="viewer-navbar-controls">
-        {{! Left region }}
-        <div class="pull-left">
+        {{! Left area }}
+        <div class="area-right">
             {{#if renderLayout}}
                 <button type="button" id="play-btn" class="btn btn-sm" data-toggle="tooltip" data-container=".editor-bottom-bar" data-placement="top" data-title="{{ trans.playPreviewLayout }}">
                     <i class="fa fa-play-circle" data-toggle="popover" title="{{ trans.playPreviewLayoutPOTitle }}" data-content="{{ trans.playPreviewLayoutPOMessage }}" data-placement="top"></i>
@@ -80,11 +80,11 @@
             {{/unless}}
         </div>
 
-        {{! Right region }}
-        <div class="pull-right">
+        {{! Right area }}
+        <div class="area-left">
             {{#unless readOnlyModeOn}}
                 {{#if undoActive}}
-                    <button type="button" id="undo-btn" class="btn btn-sm" data-toggle="tooltip" data-container=".editor-bottom-bar" data-placement="top"
+                    <button type="button" id="undo-btn" class="btn btn-sm tooltip-always-on" data-toggle="tooltip" data-container=".editor-bottom-bar" data-placement="top"
                         data-title="{{trans.undoActiveTitle}}">
                         <i class="fa fa-undo"></i>
                     </button>

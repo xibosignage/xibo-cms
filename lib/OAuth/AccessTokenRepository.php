@@ -130,27 +130,38 @@ class AccessTokenRepository implements AccessTokenRepositoryInterface
     /** @inheritDoc */
     public function persistNewAccessToken(AccessTokenEntityInterface $accessTokenEntity)
     {
+        $date = clone $accessTokenEntity->getExpiryDateTime();
+        // since stash cache sets expiresAt at up to provided date
+        // with up to 15% less than the provided date
+        // add more time to normal token expire, to ensure cache does not expire before the token.
+        $date = $date->add(new \DateInterval('PT30M'));
+
         // cache with token identifier
         $cache = $this->pool->getItem('C_' . $accessTokenEntity->getIdentifier());
+
         $cache->set(
             [
                 'userIdentifier' => $accessTokenEntity->getUserIdentifier(),
                 'client' => $accessTokenEntity->getClient()->getIdentifier()
             ]
         );
-        $cache->expiresAt($accessTokenEntity->getExpiryDateTime());
+        $cache->expiresAt($date);
         $this->pool->saveDeferred($cache);
 
         // double cache with client identifier and user identifier
         // this will allow us to revoke access to client or for specific client/user combination in the backend
-        $cache2 = $this->pool->getItem('C_' . $accessTokenEntity->getClient()->getIdentifier() . '/' . $accessTokenEntity->getUserIdentifier());
+        $cache2 = $this->pool->getItem(
+            'C_' . $accessTokenEntity->getClient()->getIdentifier() . '/' . $accessTokenEntity->getUserIdentifier()
+        );
+
         $cache2->set(
             [
                 'userIdentifier' => $accessTokenEntity->getUserIdentifier(),
                 'client' => $accessTokenEntity->getClient()->getIdentifier()
             ]
         );
-        $cache2->expiresAt($accessTokenEntity->getExpiryDateTime());
+
+        $cache2->expiresAt($date);
         $this->pool->saveDeferred($cache2);
     }
 

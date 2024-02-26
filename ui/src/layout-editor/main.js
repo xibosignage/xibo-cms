@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -25,6 +25,9 @@ require('../../public_path');
 
 window.Handlebars = require('handlebars/dist/handlebars.min.js');
 require('../../../modules/src/handlebars-helpers.js');
+
+// Add image render lib
+import '/modules/src/xibo-image-render.js';
 
 // Include handlebars templates
 const designerMainTemplate = require('../templates/layout-editor.hbs');
@@ -382,6 +385,7 @@ $(() => {
  * @param {bool=} refreshEditor - Force refresh of the editor
  * @param {bool=} reloadViewer - Force viewer reload
  * @param {bool=} reloadPropertiesPanel - Force properties panel reload
+ * @param {bool=} reloadLayerManager - Force layer manager reload
  */
 lD.selectObject =
   function({
@@ -391,6 +395,7 @@ lD.selectObject =
     refreshEditor = true,
     reloadViewer = false,
     reloadPropertiesPanel = true,
+    reloadLayerManager = false,
   } = {}) {
     // Clear rogue tooltips
     lD.common.clearTooltips();
@@ -611,6 +616,11 @@ lD.selectObject =
           reloadViewer: reloadViewer,
           reloadPropertiesPanel: reloadPropertiesPanel,
         });
+      } else {
+        // Still reload layer manager
+        // even if we're not refreshing the whole editor
+        (reloadLayerManager) &&
+          lD.viewer.layerManager.render();
       }
     }
   };
@@ -914,8 +924,7 @@ lD.showPublishScreen = function() {
       "#publishNow",
       "",
       ".publish-date-control"
-    );
-    lD.uploadThumbnail($("#layoutPublishForm #publishPreview"));`,
+    );`,
     'lD.layout.publish();',
   );
 };
@@ -1029,7 +1038,12 @@ lD.loadFormFromAPI = function(
               generatedButtons[button] = {
                 label: button,
                 className: buttonType + ' btn-bb-' + button,
-                callback: function() {
+                callback: function(ev) {
+                  // Show loading cog
+                  $(ev.currentTarget).append(
+                    '&nbsp;<i class="fa fa-cog fa-spin"></i>',
+                  );
+
                   // Call global function by the function name
                   if (mainActionCallback != null && mainButtonAction) {
                     eval(mainActionCallback);
@@ -1127,23 +1141,38 @@ lD.undoLastAction = function() {
       errorMessage = error.errorThrown;
     }
 
+    // Remove last change
+    lD.historyManager.removeLastChange();
+
     toastr.error(
       errorMessagesTrans.revertFailed.replace('%error%', errorMessage),
     );
   });
 };
 
-
 /**
  * Delete selected object
  */
 lD.deleteSelectedObject = function() {
+  // Prevent delete if it doesn't have permissions
+  if (lD.selectedObject.isDeletable === false) {
+    return;
+  }
+
   // For now, we always delete the region
   if (lD.selectedObject.type === 'region') {
+    // Check if it's playlist and it has at least one object in it
+    const needsConfirmationModal = (
+      lD.selectedObject.isPlaylist &&
+      Object.values(lD.selectedObject.widgets).length > 0
+    );
+
     lD.deleteObject(
       lD.selectedObject.type,
       lD.selectedObject[lD.selectedObject.type + 'Id'],
       null,
+      false,
+      needsConfirmationModal,
     );
   } else if (lD.selectedObject.type === 'widget') {
     // Drawer widget
@@ -1191,13 +1220,53 @@ lD.deleteSelectedObject = function() {
  * @param {string} objectId - Object id
  * @param {*} objectAuxId - Auxiliary object id (f.e.region for a widget)
  * @param {boolean=} drawerWidget - If we're deleting a drawer widget
+ * @param {boolean=} showConfirmationModal
+ *   - If we need to show a confirmation modal
  */
 lD.deleteObject = function(
   objectType,
   objectId,
   objectAuxId = null,
   drawerWidget = false,
+  showConfirmationModal = false,
 ) {
+  // Create modal before delete element
+  const createDeleteModal = function() {
+    bootbox.hideAll();
+
+    bootbox.dialog({
+      title: deleteModalTrans.playlist.title, // For playlist only for now
+      message: deleteModalTrans.playlist.message, // For playlist only for now
+      size: 'large',
+      buttons: {
+        cancel: {
+          label: editorsTrans.no,
+          className: 'btn-white btn-bb-cancel',
+        },
+        confirm: {
+          label: editorsTrans.yes,
+          className: 'btn-danger btn-bb-confirm',
+          callback: function() {
+            // Delete without modal
+            lD.deleteObject(
+              objectType,
+              objectId,
+              objectAuxId,
+              drawerWidget,
+              false,
+            );
+          },
+        },
+      },
+    }).attr('data-test', 'deleteObjectModal');
+  };
+
+  // Show confirmation modal if needed
+  if (showConfirmationModal) {
+    createDeleteModal();
+    return;
+  }
+
   // For elements, we just delete from the widget
   if (objectType === 'element') {
     // Get parent widget
@@ -1645,7 +1714,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
             false,
           ).then((res) => {
             // Create new temporary widget for the elements
-            newWidget = new Widget(
+            const newWidget = new Widget(
               res.data.widgetId,
               res.data,
               canvas.regionId,
@@ -1859,7 +1928,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
                 draggableData.templateId = 'global_library_image';
                 draggableData.dataType = 'global';
                 draggableData.subType = 'global';
-                draggableData.extendsTemplate = 'global-image';
+                draggableData.extendsTemplate = 'global_image';
                 draggableData.extendsOverride = 'url';
                 draggableData.templateStartWidth = template.startWidth;
                 draggableData.templateStartHeight = template.startHeight;
@@ -2141,6 +2210,12 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
             res.data.regionPlaylist.playlistId,
             draggableSubType,
             draggableData,
+            null,
+            false,
+            false,
+            true,
+            true,
+            false,
           );
         } else {
           // Save zone or playlist to a temp object
@@ -2183,6 +2258,7 @@ lD.getUploadDialogClassName = function() {
  * @param {boolean} zoneWidget If the widget is in a zone
  * @param {boolean} reloadData If the layout should be reloaded
  * @param {boolean} selectNewWidget Select the new widget after being added
+ * @param {boolean} addToHistory Add change to history?
  * @return {Promise} Promise
  */
 lD.addModuleToPlaylist = function(
@@ -2195,6 +2271,7 @@ lD.addModuleToPlaylist = function(
   zoneWidget = false,
   reloadData = true,
   selectNewWidget = true,
+  addToHistory = true,
 ) {
   if (moduleData.regionSpecific == 0) { // Upload form if not region specific
     // On hide callback
@@ -2295,6 +2372,7 @@ lD.addModuleToPlaylist = function(
           url: requestPath,
           type: linkToAPI.type,
         },
+        addToHistory: addToHistory,
       },
     ).then((res) => { // Success
       // Check if we added a element
@@ -2564,22 +2642,8 @@ lD.addMediaToPlaylist = function(
  * Clear Temporary Data ( Cleaning cached variables )
  */
 lD.clearTemporaryData = function() {
-  // Fix for remaining ckeditor elements or colorpickers
-  $('.colorpicker').remove();
-  $('.cke').remove();
-
-  // Fix for remaining ckeditor elements or colorpickers
-  destroyColorPicker(lD.editorContainer.find('.colorpicker-element'));
-
   // Hide open tooltips
   lD.editorContainer.find('.tooltip').remove();
-
-  // Destroy select2 opened dropdowns
-  lD.propertiesPanel.DOMObject.find('select[data-select2-id]')
-    .select2('destroy');
-
-  // Remove text callback editor structure variables
-  formHelpers.destroyCKEditor();
 
   // Clear action highlights on the viewer
   // if we don't have an action form open
@@ -2870,9 +2934,13 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
     const elementWidget = lD.getObjectByTypeAndId('widget', objAuxId, 'canvas');
 
     // Check if the element or group can have a new config
-    if (objType == 'element') {
+    if (elementWidget.subType === 'global') {
+      // Global elements or groups can't get a new config
+      canHaveNewConfig = false;
+    } else if (objType == 'element') {
       // We just need to have more than 1 element
-      canHaveNewConfig = (Object.values(elementWidget.elements).length > 1);
+      canHaveNewConfig =
+        (Object.values(elementWidget.elements).length > 1);
     } else if (objType == 'element-group') {
       // We need to have either another group
       canHaveNewConfig =
@@ -2912,6 +2980,18 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
     layoutObject.type === 'element-group'
   );
 
+  // If target is a frame, send single widget info
+  const singleWidget = (
+    layoutObject.type === 'region' &&
+    layoutObject.subType === 'frame'
+  ) ? Object.values(layoutObject.widgets)[0] : {};
+
+  // If target is group or element group, send parent widget
+  const elementWidget = (
+    layoutObject.type === 'element' ||
+    layoutObject.type === 'element-group'
+  ) ? lD.getObjectByTypeAndId('widget', objAuxId, 'canvas') : {};
+
   // Create menu and append to the designer div
   // ( using the object extended with translations )
   lD.editorContainer.append(
@@ -2921,6 +3001,13 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
       canHaveNewConfig: canHaveNewConfig,
       canChangeLayer: canChangeLayer,
       canUngroup: canUngroup,
+      widget: singleWidget,
+      isElementBased: (
+        layoutObject.type === 'element' ||
+        layoutObject.type === 'element-group'
+      ),
+      elementWidget: elementWidget,
+      canvas: lD.getObjectByTypeAndId('canvas'),
     })),
   );
 
@@ -2971,10 +3058,19 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
       // If layoutObject[objType + 'Id'] is null, use objId
       const newObjId = layoutObject[objType + 'Id'] || objId;
 
+      // Check if it's playlist and it has at least one object in it
+      const needsConfirmationModal = (
+        layoutObject.type === 'region' &&
+        layoutObject.isPlaylist &&
+        Object.values(layoutObject.widgets).length > 0
+      );
+
       lD.deleteObject(
         objType,
         newObjId,
         auxId,
+        false,
+        needsConfirmationModal,
       );
     } else if (target.data('action') == 'Move') {
       // Move widget in the timeline
@@ -3007,6 +3103,8 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
         groupElements,
       );
 
+      let updateLayerAbove = false;
+      let updateLayerAboveTarget = 0;
       switch (actionType) {
         case 'bringToFront':
           // Only update layer if original isn't the top one
@@ -3028,6 +3126,10 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
             // Find below layer and get 1 under it
             newLayer = calculatedLayers.availableDown;
           }
+          // Still update layers
+          updateLayerAboveTarget =
+            (newLayer != null) ? newLayer : originalLayer;
+          updateLayerAbove = true;
           break;
         case 'sendToBack':
           // Only update layer if original isn't the bottom one
@@ -3035,50 +3137,24 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
             // Find bottom layer and add 1 under it
             newLayer = calculatedLayers.availableBottom;
           }
+
+          // Still update layers
+          updateLayerAboveTarget =
+            (newLayer != null) ? newLayer : originalLayer;
+          updateLayerAbove = true;
           break;
       }
 
-      // Only update if we have a new layer
-      if (newLayer != null) {
-        if (layoutObject.type === 'region') {
-          // Transform region
-          layoutObject.transform({
-            zIndex: newLayer,
-          });
-
-          // Update on viewer
-          lD.viewer.updateRegion(layoutObject);
-        } else if (
-          layoutObject.type === 'element' ||
-          layoutObject.type === 'element-group'
-        ) {
-          layoutObject.layer = newLayer;
-
-          // Get widget
-          const elementWidget =
-            lD.getObjectByTypeAndId('widget', objAuxId, 'canvas');
-
-          // Update element or element group in the viewer
-          if (layoutObject.type === 'element') {
-            lD.viewer.updateElement(layoutObject, true);
-          } else {
-            lD.viewer.updateElementGroupLayer(layoutObject);
-          }
-
-          // Save elements to the widget
-          elementWidget.saveElements();
-        }
-
-        // If object is selected, update position form with new layer
-        if (layoutObject.selected) {
-          lD.propertiesPanel.updatePositionForm({
-            zIndex: newLayer,
-          });
-        }
-
-        // Update layer manager
-        lD.viewer.layerManager.render();
-      }
+      // Update layer manager
+      lD.viewer.layerManager.updateObjectLayer(
+        layoutObject,
+        newLayer,
+        {
+          widgetId: objAuxId,
+          updateObjectsInFront: updateLayerAbove,
+          updateObjectsInFrontTargetLayer: updateLayerAboveTarget,
+        },
+      );
     } else if (target.data('action') == 'Copy') {
       // For now, use an offset value to position the new element
       const offsetMove = 20;
@@ -3295,9 +3371,48 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
         });
       });
     } else {
-      layoutObject.editPropertyForm(
-        target.data('property'), target.data('propertyType'),
-      );
+      const property = target.data('property');
+      const propertyType = target.data('propertyType');
+
+      // If we're editing permissions and it's a frame
+      // edit the widget's permissions instead
+      if (
+        property === 'PermissionsWidget' &&
+        layoutObject.type === 'region' &&
+        layoutObject.subType === 'frame'
+      ) {
+        // Call edit for widget instead
+        const regionWidget = Object.values(layoutObject.widgets)[0];
+        regionWidget.editPropertyForm('Permissions');
+      } else if (
+        property === 'PermissionsCanvasWidget' &&
+        (
+          layoutObject.type === 'element' ||
+          layoutObject.type === 'element-group'
+        )
+      ) {
+        // Call edit for canvas widget instead
+        const canvasWidget =
+          lD.getObjectByTypeAndId('widget', objAuxId, 'canvas');
+        canvasWidget.editPropertyForm('Permissions');
+      } else if (
+        property === 'PermissionsCanvas' &&
+        (
+          layoutObject.type === 'element' ||
+          layoutObject.type === 'element-group'
+        )
+      ) {
+        // Call edit for canvas widget instead
+        const canvas =
+          lD.getObjectByTypeAndId('canvas');
+        canvas.editPropertyForm('Permissions');
+      } else {
+        // Call normal edit form
+        layoutObject.editPropertyForm(
+          property,
+          propertyType,
+        );
+      }
     }
 
     // Remove context menu
@@ -3618,7 +3733,7 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
 
         elementsIds.push(elId);
 
-        element = lD.getObjectByTypeAndId(
+        const element = lD.getObjectByTypeAndId(
           'element',
           elId,
           'widget_' + elData.regionId + '_' + elData.widgetId,
@@ -3786,7 +3901,7 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
         const elData = $(el).data();
         const elId = $(el).attr('id');
 
-        element = lD.getObjectByTypeAndId(
+        const element = lD.getObjectByTypeAndId(
           'element',
           elId,
           'widget_' + elData.regionId + '_' + elData.widgetId,
@@ -3797,7 +3912,7 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
         element.group = targetGroup;
 
         // Element widget
-        elementsWidget = lD.getObjectByTypeAndId(
+        const elementsWidget = lD.getObjectByTypeAndId(
           'widget',
           'widget_' + elData.regionId + '_' + elData.widgetId,
           'canvas',
@@ -4056,9 +4171,14 @@ lD.checkHistory = function() {
       typeof historyManagerTrans != 'undefined' &&
       historyManagerTrans.revert[lastAction.type] != undefined
     ) {
+      const actionTargetType =
+        (lastAction.target.subType) ?
+          lastAction.target.subType :
+          lastAction.target.type;
+
       undoActiveTitle =
         historyManagerTrans.revert[lastAction.type]
-          .replace('%target%', lastAction.target.type);
+          .replace('%target%', historyManagerTrans.target[actionTargetType]);
     } else {
       undoActiveTitle =
         '[' + lastAction.target.type + '] ' + lastAction.type;
@@ -4169,6 +4289,7 @@ lD.importFromProvider = function(items) {
 /**
  * Take and upload a thumbnail
  * @param {object} targetToAttach DOM object to attach the thumbnail to
+ * @return {Promise}
  */
 lD.uploadThumbnail = function(targetToAttach) {
   if ($(targetToAttach).length > 0) {
@@ -4179,19 +4300,27 @@ lD.uploadThumbnail = function(targetToAttach) {
     );
     $(targetToAttach).removeClass('d-none');
   }
-  const linkToAPI = urlsForApi.layout.addThumbnail;
-  const requestPath = linkToAPI.url.replace(':id', lD.layout.layoutId);
-  $.ajax({
-    url: requestPath,
-    type: 'POST',
-    success: function() {
-      // Attach to target
-      if ($(targetToAttach).length > 0) {
-        $(targetToAttach).find('.thumb-preview')
-          .replaceWith($('<img style="max-width: 150px; max-height: 100%;">')
-            .attr('src', requestPath));
-      }
-    },
+
+  return new Promise(function(resolve, reject) {
+    const linkToAPI = urlsForApi.layout.addThumbnail;
+    const requestPath = linkToAPI.url.replace(':id', lD.layout.layoutId);
+    $.ajax({
+      url: requestPath,
+      type: 'POST',
+      success: function() {
+        // Attach to target
+        if ($(targetToAttach).length > 0) {
+          $(targetToAttach).find('.thumb-preview')
+            .replaceWith($('<img style="max-width: 150px; max-height: 100%;">')
+              .attr('src', requestPath));
+        }
+
+        resolve();
+      },
+      fail: function() {
+        reject();
+      },
+    });
   });
 };
 
@@ -4468,7 +4597,6 @@ lD.addAction = function(options) {
 
   return true;
 };
-
 
 /**
  * Save action
@@ -5086,10 +5214,8 @@ lD.addElementsToWidget = function(
         // Recalculate required elements
         widgetAux.validateRequiredElements();
 
-        // Validate other widget elements on the viewer
-        Object.values(widgetAux.elements).forEach((el) => {
-          lD.viewer.validateElement(el);
-        });
+        // Update viewer to revalidate all elements
+        lD.viewer.update();
       });
     });
   });
@@ -5284,16 +5410,30 @@ lD.calculateLayers = function(
  * Handle inputs
  */
 lD.handleInputs = function() {
+  const allowInputs = (
+    lD.readOnlyMode == false &&
+    lD.playlistEditorOpened === false
+  );
+
   // Handle keyboard keys
   $('body').off('keydown.editor')
     .on('keydown.editor', function(handler) {
       if ($(handler.target).is($('body'))) {
+        // Delete
         if (
           handler.key == 'Delete' &&
-          lD.readOnlyMode == false &&
-          lD.playlistEditorOpened === false
+          allowInputs
         ) {
           lD.deleteSelectedObject();
+        }
+
+        // Undo
+        if (
+          handler.key == 'z' &&
+          handler.ctrlKey &&
+          allowInputs
+        ) {
+          lD.undoLastAction();
         }
       }
     });

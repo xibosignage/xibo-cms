@@ -1,0 +1,19 @@
+<div class="xibo-form-input dataset-column-style-selector pb-2"
+    data-select-id="{{id}}"
+>
+    <div class="connectedlist w-50">
+        <p class="text-info text-center col-out-title mb-1">{{trans.colAvailable}}1</p>
+        <ul id="colsOut" class="connectedSortable m-auto text-center">
+        </ul>
+    </div>
+    <div class="connectedlist w-50">
+        <p class="text-info text-center col-in-title mb-1">{{trans.colSelected}}2</p>
+        <ul id="colsIn" class="connectedSortable m-auto text-center">
+        </ul>
+    </div>
+    {{> hidden id=id name=name value=value }}
+
+    <div class="dataset-column-styles">
+        <!-- COL STYLES -->
+    </div>
+</div>

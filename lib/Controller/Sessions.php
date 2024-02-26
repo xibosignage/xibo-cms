@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -77,7 +77,7 @@ class Sessions extends Base
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    function grid(Request $request, Response $response)
+    public function grid(Request $request, Response $response): Response|\Psr\Http\Message\ResponseInterface
     {
         $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
 
@@ -90,18 +90,29 @@ class Sessions extends Base
             /* @var \Xibo\Entity\Session $row */
 
             // Normalise the date
-            $row->lastAccessed = Carbon::createFromTimeString($row->lastAccessed)->format(DateFormatHelper::getSystemFormat());
+            $row->lastAccessed =
+                Carbon::createFromTimeString($row->lastAccessed)?->format(DateFormatHelper::getSystemFormat());
 
             if (!$this->isApi($request) && $this->getUser()->isSuperAdmin()) {
-
                 $row->includeProperty('buttons');
 
-                // Edit
-                $row->buttons[] = array(
+                // logout, current user/session
+                if ($row->userId === $this->getUser()->userId && session_id() === $row->sessionId) {
+                    $url = $this->urlFor($request, 'logout');
+                } else {
+                    // logout, different user/session
+                    $url = $this->urlFor(
+                        $request,
+                        'sessions.confirm.logout.form',
+                        ['id' => $row->sessionId]
+                    );
+                }
+
+                $row->buttons[] = [
                     'id' => 'sessions_button_logout',
-                    'url' => $this->urlFor($request,'sessions.confirm.logout.form', ['id' => $row->sessionId]),
+                    'url' => $url,
                     'text' => __('Logout')
-                );
+                ];
             }
         }
 
@@ -160,13 +171,6 @@ class Sessions extends Base
                 'UPDATE `session` SET IsExpired = 1 WHERE userID = :userId ',
                 ['userId' => $session->userId]
             );
-
-            // if it is self logout from sessions, unset userid from php session as well.
-            if ($this->getUser()->userId === $session->userId) {
-                unset($_SESSION['userid']);
-                // redirect home
-                return $response->withRedirect($this->urlFor($request, 'home'));
-            }
         } else {
             $this->store->update(
                 'UPDATE `session` SET IsExpired = 1 WHERE session_id = :session_id ',

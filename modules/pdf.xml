@@ -47,10 +47,15 @@
     </properties>
     <stencil>
         <twig><![CDATA[
-<div class="pdf-container" style="text-align: center">
-    <canvas id="the-canvas"></canvas>
+<div class="pdf-container">
+  <canvas id="the-canvas"></canvas>
 </div>
         ]]></twig>
+        <style><![CDATA[
+.pdf-container {
+  text-align: center;
+}
+        ]]></style>
     </stencil>
 <onInitialize><![CDATA[
 // Get widgetData from xic
@@ -66,6 +71,8 @@ var pdfDoc = null,
   width,
   height,
   interval;
+
+var pdfLoaded = false;
 
 var canvas = document.getElementById('the-canvas');
 var ctx = canvas.getContext('2d');
@@ -85,8 +92,8 @@ function renderPage(num) {
   // Using promise to fetch the page
   pdfDoc.getPage(num).then(function(page) {
     // Get new window size
-    width = $('body').width();
-    height = $('body').height();
+    width = $(window).width();
+    height = $(window).height();
     
     var unscaledViewport = page.getViewport({scale: 1});
     var scale = Math.min((height / unscaledViewport.height), (width / unscaledViewport.width));
@@ -162,6 +169,7 @@ function onFirstPage() {
 */
 pdfjsLib.getDocument(url).promise.then(function(pdfDoc_) {
   pdfDoc = pdfDoc_;
+  pdfLoaded = true;
 
   var startInterval = function(interval) {
     // Set a timer
@@ -196,7 +204,9 @@ pdfjsLib.getDocument(url).promise.then(function(pdfDoc_) {
 
 // Render page on window resize
 window.addEventListener('resize', function(event) {
-  onFirstPage();
+  if(pdfLoaded) {
+    onFirstPage();
+  }
 }, true);
     ]]></onInitialize>
     <assets>

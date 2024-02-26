@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -28,6 +28,7 @@ describe('Campaigns', function() {
 
   const display1 = 'List Campaign Display 1';
   const display2 = 'List Campaign Display 2';
+  const command1 = 'Set Timezone';
 
   beforeEach(function() {
     cy.login();
@@ -74,7 +75,7 @@ describe('Campaigns', function() {
     cy.wait('@scheduleAddForm');
 
     // Fill in Add form
-    cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection > .select2-selection > .select2-selection__rendered')
+    cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection .select2-search__field')
       .type(display1);
     cy.wait('@loadDisplaygroupAfterSearch');
     cy.get('.select2-container--open').contains(display1);
@@ -107,7 +108,7 @@ describe('Campaigns', function() {
 
     cy.get('#DisplayList + span .select2-selection').click();
     // Type the display name
-    cy.get('.select2-container--open input[type="search"]').type(display1);
+    cy.get('.select2-container--open textarea[type="search"]').type(display1);
 
     // Wait for Display to load
     cy.wait('@loadDisplayAfterSearch');
@@ -144,7 +145,7 @@ describe('Campaigns', function() {
     cy.wait('@scheduleAddForm');
 
     // display
-    cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection > .select2-selection > .select2-selection__rendered')
+    cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection .select2-search__field')
       .type(display1);
     cy.wait('@loadDisplaygroupAfterSearch');
     cy.get('.select2-container--open').contains(display1);
@@ -181,6 +182,11 @@ describe('Campaigns', function() {
     }).as('loadDisplaygroupAfterSearch');
 
     cy.intercept({
+      url: '/command?*',
+      query: {command: command1},
+    }).as('loadCommandAfterSearch');
+
+    cy.intercept({
       url: '/campaign?type=list*',
       query: {name: layoutSchedule1},
     }).as('loadListCampaignsAfterSearch');
@@ -194,15 +200,21 @@ describe('Campaigns', function() {
     cy.wait('@scheduleAddForm');
 
     // display
-    cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection > .select2-selection > .select2-selection__rendered')
+    cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection .select2-search__field')
       .type(display1);
     cy.wait('@loadDisplaygroupAfterSearch');
     cy.get('.select2-container--open').contains(display1);
     cy.get('.select2-container--open .select2-dropdown .select2-results > ul > li').should('have.length', 2);
     cy.get('#select2-displayGroupIds-results > li > ul > li:first').contains(display1).click();
 
+    // command
     cy.get('.modal-content #eventTypeId').select('Command');
-    cy.get('.modal-content [name="commandId"]').select('Set Timezone');
+    cy.get('.command-control > .col-sm-10 > .select2 > .selection > .select2-selection')
+      .type(command1);
+    cy.wait('@loadCommandAfterSearch');
+    cy.get('.select2-container--open').contains(command1);
+    cy.get('.select2-container--open .select2-results > ul > li').should('have.length', 1);
+    cy.get('.select2-container--open .select2-results > ul > li:first').contains(command1).click();
 
     cy.get('.starttime-control > .col-sm-10 > .input-group > .datePickerHelper').click();
     cy.get('.open > .flatpickr-innerContainer > .flatpickr-rContainer > .flatpickr-days > .dayContainer > .today').click();
@@ -223,8 +235,8 @@ describe('Campaigns', function() {
     cy.get('.select2-container--open .select2-results > ul > li:first').contains(layoutSchedule1).click();
 
     // display
-    cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection > .select2-selection > .select2-selection__rendered')
-        .type(display1);
+    cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection .select2-search__field')
+      .type(display1);
     cy.wait('@loadDisplaygroupAfterSearch');
     cy.get('.select2-container--open').contains(display1);
     cy.get('.select2-container--open .select2-dropdown .select2-results > ul > li').should('have.length', 2);
@@ -256,7 +268,7 @@ describe('Campaigns', function() {
     // ---------
     // Edit a schedule - add another display
     cy.get('#campaignIdFilter + span .select2-selection').click();
-    cy.get('.select2-container--open input[type="search"]').type(layoutSchedule1); // Type the layout name
+    cy.get('.select2-container--open textarea[type="search"]').type(layoutSchedule1); // Type the layout name
     cy.wait('@loadLayoutSpecificCampaign');
     cy.selectOption(layoutSchedule1);
 
@@ -266,7 +278,7 @@ describe('Campaigns', function() {
     cy.get('#schedule-grid tr:first-child .schedule_button_edit').click({force: true});
 
     // display
-    cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection > .select2-selection > .select2-selection__rendered')
+    cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection .select2-search__field')
       .type(display2);
     cy.wait('@loadDisplaygroupAfterSearch');
     cy.get('.select2-container--open .select2-results > ul > li')

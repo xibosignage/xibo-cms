@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -47,8 +47,14 @@ class ClockWidgetCompatibility implements WidgetCompatibilityInterface
             default => 'clock-analogue',
         };
 
-        // We don't need the old option anymore
+        // in v3 this option used to ba called theme, now it is themeId
+        if ($widget->type === 'clock-analogue') {
+            $widget->setOptionValue('themeId', 'attrib', $widget->getOptionValue('theme', 1));
+        }
+
+        // We don't need the old options anymore
         $widget->removeOption('clockTypeId');
+        $widget->removeOption('theme');
 
         return true;
     }

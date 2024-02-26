@@ -79,6 +79,7 @@ class MediaManager extends Base
     {
         // Set up some suffixes
         $suffixes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
+        $params = [];
 
         // Library Size in Bytes
         $sql = '
@@ -100,7 +101,7 @@ class MediaManager extends Base
         $sql .= ' GROUP BY type ';
         $sql .= ' ORDER BY 2 ';
 
-        $results = $this->store->select($sql, []);
+        $results = $this->store->select($sql, $params);
 
         $libraryUsage = [];
         $totalCount = 0;

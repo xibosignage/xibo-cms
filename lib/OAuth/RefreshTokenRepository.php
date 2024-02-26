@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2022 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -52,6 +52,12 @@ class RefreshTokenRepository implements RefreshTokenRepositoryInterface
      */
     public function persistNewRefreshToken(RefreshTokenEntityInterface $refreshTokenEntity)
     {
+        $date = clone $refreshTokenEntity->getExpiryDateTime();
+        // since stash cache sets expiresAt at up to provided date
+        // with up to 15% less than the provided date
+        // add more time to normal refresh token expire, to ensure cache does not expire before the token.
+        $date = $date->add(new \DateInterval('P15D'));
+
         // cache with refresh token identifier
         $cache = $this->pool->getItem('R_' . $refreshTokenEntity->getIdentifier());
         $cache->set(
@@ -59,7 +65,7 @@ class RefreshTokenRepository implements RefreshTokenRepositoryInterface
                 'accessToken' => $refreshTokenEntity->getAccessToken()->getIdentifier(),
             ]
         );
-        $cache->expiresAt($refreshTokenEntity->getExpiryDateTime());
+        $cache->expiresAt($date);
         $this->pool->saveDeferred($cache);
     }
 
@@ -88,13 +94,18 @@ class RefreshTokenRepository implements RefreshTokenRepositoryInterface
         $tokenCache = $this->pool->getItem('C_' . $refreshTokenData['accessToken']);
         $tokenCacheData = $tokenCache->get();
 
-        // check access token cache by client and user identifiers
-        // (see if application got changed secret/revoked access)
-        $cache2 = $this->pool->getItem('C_' . $tokenCacheData['client'] . '/' . $tokenCacheData['userIdentifier']);
-        $data2 = $cache2->get();
+        // if the token itself not expired yet
+        // check if it was unauthorised by the specific user
+        // we cannot always check this as it would revoke refresh token if the access token already expired.
+        if (!$tokenCache->isMiss() && !empty($tokenCacheData)) {
+            // check access token cache by client and user identifiers
+            // (see if application got changed secret/revoked access)
+            $cache2 = $this->pool->getItem('C_' . $tokenCacheData['client'] . '/' . $tokenCacheData['userIdentifier']);
+            $data2 = $cache2->get();
 
-        if ($cache2->isMiss() || empty($data2)) {
-            return true;
+            if ($cache2->isMiss() || empty($data2)) {
+                return true;
+            }
         }
 
         return false; // The refresh token has not been revoked

@@ -52,6 +52,9 @@ class StocksWidgetCompatibility implements WidgetCompatibilityInterface
             $widget->changeOption('widgetOriginalHeight', 'widgetDesignHeight');
         }
 
+        // We need to change duration per page to duration per item
+        $widget->changeOption('durationIsPerPage', 'durationIsPerItem');
+
         return $upgraded;
     }
 

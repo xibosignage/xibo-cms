@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -254,6 +254,7 @@ class DisplayProfileFactory extends BaseFactory
                 ['name' => 'updateStartWindow', 'default' => '00:00'],
                 ['name' => 'updateEndWindow', 'default' => '00:00'],
                 ['name' => 'dayPartId', 'default' => null],
+                ['name' => 'restartWifiOnConnectionFailure', 'default' => 0, 'type' => 'checkbox'],
                 ['name' => 'webViewPluginState', 'default' => 'DEMAND'],
                 ['name' => 'hardwareAccelerateWebViewMode', 'default' => '2'],
                 ['name' => 'timeSyncFromCms', 'default' => 0, 'type' => 'checkbox'],

@@ -2,7 +2,7 @@
 /*
  * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -232,7 +232,7 @@ class CampaignSchedulerTask implements TaskInterface
                 // cost/impressions/displays are sums.
                 if ($campaign->targetType === 'budget') {
                     $playsNeededPerLayout = $targetNeededPerLayout / $costPerPlay;
-                } else if ($campaign->targetType === 'impressions') {
+                } else if ($campaign->targetType === 'imp') {
                     $playsNeededPerLayout = $targetNeededPerLayout / $impressionsPerPlay;
                 } else {
                     $playsNeededPerLayout = $targetNeededPerLayout / $countDisplays;

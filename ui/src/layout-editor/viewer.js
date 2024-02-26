@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -41,6 +41,7 @@ const viewerElementContentTemplate =
 const viewerPlaylistControlsTemplate =
   require('../templates/viewer-playlist-controls.hbs');
 const drawThrottle = 60;
+const drawElementThrottle = 30;
 
 /**
  * Viewer contructor
@@ -185,7 +186,6 @@ Viewer.prototype.getLayoutOrientation = function(width, height) {
   }
 };
 
-
 /**
  * Render viewer
  * @param {object} forceReload - Force reload
@@ -283,16 +283,15 @@ Viewer.prototype.render = function(forceReload = false, target = {}) {
     }
   } else {
     // Render full layout
-
-    // Render the viewer
-    this.DOMObject.html(viewerTemplate());
-
     const $viewerContainer = this.DOMObject;
 
     // If preview is playing, refresh the bottombar
     if (this.previewPlaying && this.parent.selectedObject.type == 'layout') {
       this.parent.bottombar.render(this.parent.selectedObject);
     }
+
+    // Clear temp data
+    lD.common.clearContainer($viewerContainer);
 
     // Show loading template
     $viewerContainer.html(loadingTemplate());
@@ -390,9 +389,9 @@ Viewer.prototype.render = function(forceReload = false, target = {}) {
   }
 
   // Refresh on window resize
-  $(window).on('resize', function() {
-    this.update();
-  }.bind(this));
+  $(window).on('resize', _.debounce(function() {
+    lD.viewer.update();
+  }, drawThrottle));
 
   // Update moveable
   this.updateMoveable(true);
@@ -730,7 +729,9 @@ Viewer.prototype.handleInteractions = function() {
             ) {
               // If we're multi selecting, deselect all
               if (shiftIsPressed) {
-                lD.selectObject();
+                lD.selectObject({
+                  reloadLayerManager: true,
+                });
               } else {
                 // Select region
                 lD.selectObject({
@@ -746,7 +747,9 @@ Viewer.prototype.handleInteractions = function() {
             ) {
               // If we're multi selecting, deselect all
               if (shiftIsPressed) {
-                lD.selectObject();
+                lD.selectObject({
+                  reloadLayerManager: true,
+                });
               } else {
                 // Select widget if exists
                 lD.selectObject({
@@ -768,7 +771,9 @@ Viewer.prototype.handleInteractions = function() {
             ) {
               // If we're multi selecting, deselect all
               if (shiftIsPressed) {
-                lD.selectObject();
+                lD.selectObject({
+                  reloadLayerManager: true,
+                });
               } else {
                 // Select zone
                 lD.selectObject({
@@ -782,7 +787,9 @@ Viewer.prototype.handleInteractions = function() {
             ) {
               // If we're multi selecting, deselect all
               if (shiftIsPressed) {
-                lD.selectObject();
+                lD.selectObject({
+                  reloadLayerManager: true,
+                });
               } else {
                 // Select element if exists
                 lD.selectObject({
@@ -797,7 +804,9 @@ Viewer.prototype.handleInteractions = function() {
             ) {
               // If we're multi selecting, deselect all
               if (shiftIsPressed) {
-                lD.selectObject();
+                lD.selectObject({
+                  reloadLayerManager: true,
+                });
               } else {
                 // Select element if exists
                 lD.selectObject({
@@ -814,7 +823,8 @@ Viewer.prototype.handleInteractions = function() {
           clicks = 0;
 
           if (
-            $(e.target).data('subType') === 'playlist'
+            $(e.target).data('subType') === 'playlist' &&
+            $(e.target).hasClass('editable')
           ) {
             // Edit region if it's a playlist
             playlistEditorBtnClick($(e.target).attr('id'));
@@ -889,20 +899,21 @@ Viewer.prototype.handleInteractions = function() {
     }.bind(this));
 
   // Handle snap buttons
-  $viewerContainer.siblings('#snapToGrid').off('click').click(function() {
-    this.moveableOptions.snapToGrid = !this.moveableOptions.snapToGrid;
+  $viewerContainer.parent().find('#snapToGrid')
+    .off('click').click(function() {
+      this.moveableOptions.snapToGrid = !this.moveableOptions.snapToGrid;
 
-    // Turn off snap to element if grid is on
-    if (this.moveableOptions.snapToGrid) {
-      this.moveableOptions.snapToElements = false;
-    }
+      // Turn off snap to element if grid is on
+      if (this.moveableOptions.snapToGrid) {
+        this.moveableOptions.snapToElements = false;
+      }
 
-    // Update moveable options
-    this.updateMoveableOptions();
+      // Update moveable options
+      this.updateMoveableOptions();
 
-    // Update moveable UI
-    this.updateMoveableUI();
-  }.bind(this));
+      // Update moveable UI
+      this.updateMoveableUI();
+    }.bind(this));
 
   $viewerContainer.parent().find('#snapToBorders')
     .off('click').click(function() {
@@ -1153,11 +1164,17 @@ Viewer.prototype.renderRegion = function(
     // Replace container html
     const html = viewerWidgetTemplate(options);
 
+    // Clear temp data
+    lD.common.clearContainer($container);
+
     // Append layout html to the container div
     $container.html(html);
 
-    // If it's playlist add some playlist controls
-    if (isPlaylist) {
+    // If it's (an editable) playlist, add some playlist controls
+    if (
+      isPlaylist &&
+      region.isEditable
+    ) {
       region.playlistCountOfWidgets = res.extra && res.extra.countOfWidgets ?
         res.extra.countOfWidgets : 1;
 
@@ -1209,7 +1226,7 @@ Viewer.prototype.renderRegion = function(
       },
     });
 
-    // Update navbar
+    // Update bottom bar
     lD.bottombar.render(
       (widgetToLoad) ? widgetToLoad : lD.selectedObject,
       res,
@@ -1248,10 +1265,19 @@ Viewer.prototype.renderRegionDebounced = _.debounce(
 );
 
 /**
+ * Update element with throttle
+ */
+Viewer.prototype.updateElementWithThrottle = _.throttle(function(
+  element,
+) {
+  lD.viewer.updateElement(element);
+}, drawElementThrottle);
+
+/**
  * Update element
  * @param {object} element
  */
-Viewer.prototype.updateElement = _.throttle(function(
+Viewer.prototype.updateElement = function(
   element,
 ) {
   const $container = lD.viewer.DOMObject.find(`#${element.elementId}`);
@@ -1273,13 +1299,22 @@ Viewer.prototype.updateElement = _.throttle(function(
   lD.viewer.renderElementContent(
     element,
   );
-}, drawThrottle);
+};
+
+/**
+ * Update element group with throttle
+ */
+Viewer.prototype.updateElementGroupWithThrottle = _.throttle(function(
+  elementGroup,
+) {
+  lD.viewer.updateElementGroup(elementGroup);
+}, drawElementThrottle);
 
 /**
  * Update element group
  * @param {object} elementGroup
  */
-Viewer.prototype.updateElementGroup = _.throttle(function(
+Viewer.prototype.updateElementGroup = function(
   elementGroup,
 ) {
   // Update slot
@@ -1313,7 +1348,7 @@ Viewer.prototype.updateElementGroup = _.throttle(function(
       element,
     );
   });
-}, drawThrottle);
+};
 
 /**
  * Update element group
@@ -1332,11 +1367,21 @@ Viewer.prototype.updateElementGroupLayer = _.throttle(function(
 }, drawThrottle);
 
 /**
+ * Update region with throttle
+ */
+Viewer.prototype.updateRegionWithThrottle = _.throttle(function(
+  region,
+  changed = false,
+) {
+  lD.viewer.updateRegion(region, changed);
+}, drawThrottle);
+
+/**
  * Update Region
  * @param {object} region - region object
  * @param {boolean} changed - if region was changed
  */
-Viewer.prototype.updateRegion = _.throttle(function(
+Viewer.prototype.updateRegion = function(
   region,
   changed = false,
 ) {
@@ -1392,9 +1437,11 @@ Viewer.prototype.updateRegion = _.throttle(function(
   if (region.selected && !$container.hasClass('selected')) {
     lD.viewer.selectObject($container);
     lD.viewer.updateMoveable();
-  }
-}, drawThrottle);
 
+    // Update bottom bar
+    lD.bottombar.render(region);
+  }
+};
 
 /**
  * Render canvas in the viewer
@@ -1468,9 +1515,27 @@ Viewer.prototype.renderElement = function(
     if (
       $canvasRegionContainer.find(`#${element.groupId}`).length == 0
     ) {
+      // Get element group type
+      const groupElements = Object.values(element.group.elements);
+      let elementGroupType = 'global';
+
+      groupElements.every((el) => {
+        // If we found a type other than global
+        // save it and stop
+        if (el.elementType != 'global') {
+          elementGroupType = el.elementType;
+          // Break the loop
+          return false;
+        }
+
+        // Keep going
+        return true;
+      });
+
       $canvasRegionContainer.append(
         viewerElementGroupTemplate({
           element: element,
+          elementGroupType: elementGroupType,
           trans: viewerTrans,
         }),
       );
@@ -1676,6 +1741,7 @@ Viewer.prototype.renderElementContent = function(
     element.getProperties().then((properties) => {
       // Convert properties to object with id and value
       const convertedProperties = {};
+      let hasCircleOutline = false;
       for (const key in properties) {
         if (properties.hasOwnProperty(key)) {
           const property = properties[key];
@@ -1696,6 +1762,18 @@ Viewer.prototype.renderElementContent = function(
               .convertPhpToMomentFormat(String(
                 convertedProperties[property.id],
               ));
+          }
+
+          // Calculate circle radius based on outlineWidth
+          if (element.id === 'circle') {
+            if (property.id === 'outline') {
+              hasCircleOutline = property.value;
+            }
+
+            if (property.id === 'outlineWidth') {
+              convertedProperties.circleRadius = hasCircleOutline ?
+                50 - (property.value / 4) : 50;
+            }
           }
         }
       }
@@ -1791,11 +1869,13 @@ Viewer.prototype.renderElementContent = function(
           }
         }
 
-        if (extendOverrideKey !== null || extendWithDataKey !== null) {
+        if (element.hasDataType &&
+          (extendOverrideKey !== null || extendWithDataKey !== null)
+        ) {
           // Validate element data
           self.validateElementData(
             element,
-            convertedProperties[extendOverrideKey],
+            elData,
           );
         }
 
@@ -1822,7 +1902,8 @@ Viewer.prototype.renderElementContent = function(
         hbsHtml.match(mediaURLRegex)?.forEach((match) => {
           const mediaId = match.split('[[mediaId=')[1].split(']]')[0];
           const mediaUrl =
-            urlsForApi.library.download.url.replace(':id', mediaId);
+            urlsForApi.library.download.url.replace(':id', mediaId) +
+              '?preview=1';
 
           // Replace asset id with asset url
           hbsHtml = hbsHtml.replace(match, mediaUrl);
@@ -1852,6 +1933,11 @@ Viewer.prototype.renderElementContent = function(
         }
       });
     });
+
+    // If elements is selected, update bottom bar
+    if (element.selected) {
+      lD.bottombar.render(element);
+    }
   });
 };
 
@@ -1864,6 +1950,9 @@ Viewer.prototype.validateElement = function(
 ) {
   const $elementContainer =
     this.DOMObject.find(`#${element.elementId}`);
+  const $groupContainer =
+    $elementContainer.parents('.designer-element-group');
+  const hasGroup = Boolean(element.groupId);
 
   // Check if parent widget is not valid
   const parentWidget = lD.getObjectByTypeAndId(
@@ -1872,16 +1961,10 @@ Viewer.prototype.validateElement = function(
     'canvas',
   );
 
-  // Get error message
-  let $messageContainer = $elementContainer.find('.invalid-parent');
-  if ($messageContainer.length === 0) {
-    $messageContainer = $(
-      `<div class="invalid-parent d-none" data-html="true">
-          <i class="fa fa-warning"></i>
-      </div>`);
-
-    $messageContainer.appendTo($elementContainer);
-  }
+  // Get error message ( from element or group )
+  let $messageContainer = (hasGroup) ?
+    $groupContainer.find('> .invalid-parent') :
+    $elementContainer.find('> .invalid-parent');
 
   // Is widget not valid?
   const isNotValid = (
@@ -1895,71 +1978,64 @@ Viewer.prototype.validateElement = function(
   // If parent widget isn't valid, show error message
   if (isNotValid) {
     const errorArray = [];
-    const hasGroup = Boolean(element.groupId);
-    const $groupContainer = (hasGroup) ?
-      $elementContainer.parents('.designer-element-group') : null;
 
-    // Add if elemens has no group or
-    // if has group but the group doesn't have message yet
-    if (
-      !hasGroup ||
-      (
-        hasGroup &&
-        $groupContainer.find('> .invalid-parent').length == 0
-      )
-    ) {
-      // Check required elements
-      const requiredElementsErrorMessage =
-        parentWidget.checkRequiredElements();
+    // Create message container if it doesn't exist
+    if ($messageContainer.length === 0) {
+      $messageContainer = $(
+        `<div class="invalid-parent d-none" data-html="true">
+            <i class="fa fa-warning"></i>
+        </div>`);
 
-      // Default message
-      // show only if we don't have required elements message
-      (!requiredElementsErrorMessage) &&
-        errorArray.push(
-          '<p>' +
-          propertiesPanelTrans.invalidWidget +
-          '</p>');
-
-      // Required elements message
-      (requiredElementsErrorMessage) &&
-        errorArray.push(
-          '<p>' +
-          requiredElementsErrorMessage +
-          '</p>');
-
-      // Request message
-      (parentWidget.validateData.errorMessage) &&
-        errorArray.push(
-          '<p>' +
-          parentWidget.validateData.errorMessage +
-          '</p>');
-
-      // Sample data message
-      (parentWidget.validateData.sampleDataMessage) &&
-        errorArray.push(
-          '<p class="sample-data">( ' +
-          parentWidget.validateData.sampleDataMessage +
-          ' )</p>');
-
-      // If element has group, move error to group
-      (hasGroup) && $messageContainer.appendTo(
-        $elementContainer.parents('.designer-element-group'),
-      );
-
-      // Set title/tooltip
-      $messageContainer.tooltip('dispose')
-        .prop('title', '<div class="custom-tooltip">' +
-        errorArray.join('') + '</div>');
-      $messageContainer.tooltip();
-
-      // Show tooltip
-      $messageContainer.removeClass('d-none');
+      if (hasGroup) {
+        // Remove message from element if we're going to create the group one
+        $elementContainer.find('> .invalid-parent').remove();
+        $messageContainer.appendTo($groupContainer);
+      } else {
+        $messageContainer.appendTo($elementContainer);
+      }
     }
 
-    // Remove message from element if it's in a group
-    if (hasGroup) {
-      $elementContainer.find('.invalid-parent').remove();
-    }
+    // Check required elements
+    const requiredElementsErrorMessage =
+      parentWidget.checkRequiredElements();
+
+    // Default message
+    // show only if we don't have required elements message
+    (!requiredElementsErrorMessage) &&
+      errorArray.push(
+        '<p>' +
+        propertiesPanelTrans.invalidWidget +
+        '</p>');
+
+    // Required elements message
+    (requiredElementsErrorMessage) &&
+      errorArray.push(
+        '<p>' +
+        requiredElementsErrorMessage +
+        '</p>');
+
+    // Request message
+    (parentWidget.validateData.errorMessage) &&
+      errorArray.push(
+        '<p>' +
+        parentWidget.validateData.errorMessage +
+        '</p>');
+
+    // Sample data message
+    (parentWidget.validateData.sampleDataMessage) &&
+      errorArray.push(
+        '<p class="sample-data">( ' +
+        parentWidget.validateData.sampleDataMessage +
+        ' )</p>');
+
+    // Set title/tooltip
+    $messageContainer.tooltip('dispose')
+      .prop('title', '<div class="custom-tooltip">' +
+      errorArray.join('') + '</div>');
+    $messageContainer.tooltip();
+
+    // Show tooltip
+    $messageContainer.removeClass('d-none');
   } else {
     // Remove error message
     $messageContainer.remove();
@@ -1969,75 +2045,68 @@ Viewer.prototype.validateElement = function(
 /**
  * Validate element data
  * @param {Object} element
- * @param {String} data
+ * @param {Object} widgetData
  */
 Viewer.prototype.validateElementData = function(
   element,
-  data,
+  widgetData,
 ) {
   const $elementContainer =
     this.DOMObject.find(`#${element.elementId}`);
+  const $groupContainer =
+    $elementContainer.parents('.designer-element-group');
+  const hasGroup = Boolean(element.groupId);
 
-  // Get error message
-  let $messageContainer = $elementContainer.find('.empty-element-data');
-  if ($messageContainer.length === 0) {
-    $messageContainer = $(
-      `<div class="empty-element-data d-none" data-html="true">
-        <i class="fa fa-warning"></i>
-      </div>`);
+  // Get error message ( from element or group )
+  let $messageContainer = (hasGroup) ?
+    $groupContainer.find('> .empty-element-data') :
+    $elementContainer.find('> .empty-element-data');
 
-    $messageContainer.appendTo($elementContainer);
-  }
-
-  const isNotValid = !data || typeof data === 'undefined' || data === '';
+  const isNotValid =
+    !widgetData || typeof widgetData === 'undefined' || widgetData === '';
 
   if (isNotValid) {
     const errorArray = [];
-    const hasGroup = Boolean(element.groupId);
-    const $groupContainer = (hasGroup) ?
-      $elementContainer.parents('.designer-element-group') : null;
     const elementType = element.elementType;
 
-    // Add if elemens has no group or
-    // if has group but the group doesn't have message yet
-    if (
-      !hasGroup ||
-      (
-        hasGroup &&
-        $groupContainer.find('> .empty-element-data').length === 0
-      )
-    ) {
-      errorArray.push(
-        '<p>' +
-        elementType.charAt(0).toUpperCase() +
-        elementType.substring(1) +
-        ' element' +
-        '</p>');
+    // Create message if doesn't exist
+    if ($messageContainer.length === 0) {
+      $messageContainer = $(
+        `<div class="empty-element-data d-none" data-html="true">
+          <i class="fa fa-warning"></i>
+        </div>`);
 
-      errorArray.push(
-        '<p>' +
-        layoutEditorTrans.emptyElementData +
-        '</p>');
-      // If element has group, move error to group
-      (hasGroup) && $messageContainer.appendTo(
-        $elementContainer.parents('.designer-element-group'),
-      );
-
-      // Set title/tooltip
-      $messageContainer.tooltip('dispose')
-        .prop('title', '<div class="custom-tooltip">' +
-          errorArray.join('') + '</div>');
-      $messageContainer.tooltip();
-
-      // Show tooltip
-      $messageContainer.removeClass('d-none');
+      if (hasGroup) {
+        // Remove message from element if we're going to create the group one
+        $elementContainer.find('> .empty-element-data').remove();
+        $messageContainer.appendTo($groupContainer);
+      } else {
+        $messageContainer.appendTo($elementContainer);
+      }
     }
 
-    // Remove message from element if it's in a group
-    if (hasGroup) {
-      $elementContainer.find('.empty-element-data').remove();
-    }
+    errorArray.push(
+      '<p>' +
+      elementType.charAt(0).toUpperCase() +
+      elementType.substring(1) +
+      ' element' +
+      '</p>');
+
+    errorArray.push(
+      '<p>' +
+      layoutEditorTrans.emptyElementData +
+      '</p>');
+
+    // Set title/tooltip
+    $messageContainer.tooltip('dispose')
+      .prop('title', '<div class="custom-tooltip">' +
+        errorArray.join('') + '</div>');
+    $messageContainer.tooltip();
+
+    // Show tooltip
+    $messageContainer.removeClass('d-none');
   } else {
+    // Remove message
     $messageContainer.remove();
   }
 };
@@ -2054,6 +2123,9 @@ Viewer.prototype.playPreview = function(url, dimensions) {
     width: dimensions.width,
     height: dimensions.height,
   });
+
+  // Clear temp data
+  lD.common.clearContainer(this.DOMObject.find('.layout-player'));
 
   // Append layout html to the main div
   this.DOMObject.find('.layout-player').html(html);
@@ -2081,7 +2153,7 @@ Viewer.prototype.toggleFullscreen = function() {
     $('body').removeAttr('layout-editor-fs');
   }
 
-  this.render(lD.selectedObject, lD.layout);
+  this.update();
 };
 
 /**
@@ -2098,12 +2170,15 @@ Viewer.prototype.initMoveable = function() {
 
   // Const save tranformation
   const saveTransformation = function(target) {
+    const deltaVal = 1;
+
     // Apply transformation to the element
     const transformSplit = (target.style.transform).split(/[(),]+/);
     let hasTranslate = false;
 
     // If the transform has translate
     if (target.style.transform.search('translate') != -1) {
+      // Set values to style
       target.style.left =
         `${parseFloat(target.style.left) + parseFloat(transformSplit[1])}px`;
       target.style.top =
@@ -2121,6 +2196,83 @@ Viewer.prototype.initMoveable = function() {
       target.style.transform = `rotate(${rotateValue})`;
     } else {
       target.style.transform = '';
+    }
+
+    // If snap to borders is active, prevent negative values
+    // Or snap to border if <1px delta
+    if (self.moveableOptions.snapToBorders) {
+      let left = Number(target.style.left.split('px')[0]);
+      let top = Number(target.style.top.split('px')[0]);
+      let width = Number(target.style.width.split('px')[0]);
+      let height = Number(target.style.height.split('px')[0]);
+
+      const boundsWidth =
+        self.moveable.bounds.right -
+        self.moveable.bounds.left;
+
+      const boundsHeight =
+        self.moveable.bounds.bottom -
+        self.moveable.bounds.top;
+
+      // Width
+      // If longer than bound's width
+      const distanceToRightBound =
+        self.moveable.bounds.right - (left + width);
+      if (
+        width > boundsWidth
+      ) {
+        width = boundsWidth;
+      } else if (
+        left + width > self.moveable.bounds.right ||
+        (
+          distanceToRightBound != 0 &&
+          Math.abs(distanceToRightBound) < deltaVal
+        )
+      ) {
+        // If not longer but passes right bound, adjust left value
+        left = left - distanceToRightBound;
+      }
+
+      // Left
+      if (
+        left < self.moveable.bounds.left ||
+        Math.abs(left - self.moveable.bounds.left) < deltaVal
+      ) {
+        left = self.moveable.bounds.left;
+      }
+
+      // Height
+      // If taller than bounds
+      const distanceToBottomBound =
+        self.moveable.bounds.bottom - (top + height);
+      if (
+        height > boundsHeight
+      ) {
+        height = boundsHeight;
+      } else if (
+        top + height > self.moveable.bounds.bottom ||
+        (
+          distanceToBottomBound > 0 &&
+          Math.abs(distanceToBottomBound) < deltaVal
+        )
+      ) {
+        // If not taller but passes bottom bound, adjust top value
+        top = top - distanceToBottomBound;
+      }
+
+      // Top
+      if (
+        top < self.moveable.bounds.top ||
+        Math.abs(top - self.moveable.bounds.top) < deltaVal
+      ) {
+        top = self.moveable.bounds.top;
+      }
+
+      // Set style again
+      target.style.left = `${left}px`;
+      target.style.top = `${top}px`;
+      target.style.width = `${width}px`;
+      target.style.height = `${height}px`;
     }
 
     // Return transform split
@@ -2296,12 +2448,12 @@ Viewer.prototype.initMoveable = function() {
     // Update target object
     if (selectedObject.type == 'region') {
       // Update region
-      self.updateRegion(selectedObject, true);
+      self.updateRegionWithThrottle(selectedObject, true);
     } else if (selectedObject.type == 'element') {
       // Update element
-      self.updateElement(selectedObject);
+      self.updateElementWithThrottle(selectedObject);
     } else if (selectedObject.type == 'element-group') {
-      self.updateElementGroup(selectedObject);
+      self.updateElementGroupWithThrottle(selectedObject);
     }
   }).on('resizeEnd', (e) => {
     // Save transformation
@@ -2713,6 +2865,10 @@ Viewer.prototype.selectObject = function(
     // Also remove select from layer manager from canvas
     self.DOMObject.find('.designer-region-canvas')
       .removeClass('canvas-element-selected-from-layer-manager');
+
+    // Remove all multi select from layer manager
+    self.layerManager.DOMObject.find('.multi-selected')
+      .removeClass('multi-selected');
   }
 
   // Remove all editing from groups
@@ -2779,7 +2935,8 @@ Viewer.prototype.updateMoveable = function(
     (
       $selectedElement &&
       $.contains(document, $selectedElement[0]) &&
-      !$selectedElement.hasClass('drawerWidget')
+      !$selectedElement.hasClass('drawerWidget') &&
+      $selectedElement.hasClass('editable')
     )
   ) {
     if ($selectedElement.hasClass('designer-element-group')) {

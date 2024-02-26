@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -1826,7 +1826,7 @@ class Display extends Base
             $display->languages = implode(',', $languages);
         }
         $display->screenSize = $sanitizedParams->getInt('screenSize');
-        $display->auditingUntil = $sanitizedParams->getDate('auditingUntil');
+        $display->auditingUntil = $sanitizedParams->getDate('auditingUntil')?->format('U');
         $display->defaultLayoutId = $sanitizedParams->getInt('defaultLayoutId');
         $display->licensed = $sanitizedParams->getInt('licensed');
         $display->license = $sanitizedParams->getString('license');
@@ -1875,10 +1875,6 @@ class Display extends Base
             }
 
             $display->tags = $tags;
-        }
-
-        if (!empty($display->auditingUntil)) {
-            $display->auditingUntil = $display->auditingUntil->format('U');
         }
 
         // Should we invalidate this display?

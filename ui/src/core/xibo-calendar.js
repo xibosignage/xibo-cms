@@ -562,7 +562,7 @@ $(document).ready(function() {
                 if (this.options.view == 'agenda') {
                     // When agenda panel is ready, turn tables into datatables with paging
                     $('.agenda-panel').ready(function () {
-                        $('.agenda-table-layouts').dataTable({
+                        $('.agenda-table-layouts').DataTable({
                             "searching": false
                         });
                     });
@@ -637,7 +637,7 @@ $(document).ready(function() {
  * Callback for the schedule form
  */
 var setupScheduleForm = function(dialog) {
-    console.log("Setup schedule form");
+    //console.log("Setup schedule form");
 
     // geo schedule
     var $geoAware = $('#isGeoAware');
@@ -779,7 +779,7 @@ var setupScheduleForm = function(dialog) {
             .attr("id", "scheduleDuplateButton")
             .html(translations.duplicate)
             .on("click", function() {
-                duplicateScheduledEvent();
+                duplicateScheduledEvent($scheduleEditForm);
             });
 
         $(dialog).find('.modal-footer').prepend($button);
@@ -972,7 +972,7 @@ var processScheduleFormElements = function(el) {
             break;
 
         case 'eventTypeId':
-            console.log('Process: eventTypeId, val = ' + fieldVal);
+            //console.log('Process: eventTypeId, val = ' + fieldVal);
 
             var layoutControlDisplay =
               (fieldVal == 2 || fieldVal == 6 || fieldVal == 7 || fieldVal == 8 || fieldVal == 10) ? 'none' : '';
@@ -1021,7 +1021,7 @@ var processScheduleFormElements = function(el) {
                     }
                 });
 
-                console.log('Setting dayPartId to custom: ' + customDayPartId);
+                //console.log('Setting dayPartId to custom: ' + customDayPartId);
                 $dayPartId.val(customDayPartId);
 
                 var $startTime = $(".starttime-control");
@@ -1065,7 +1065,7 @@ var processScheduleFormElements = function(el) {
             break;
 
         case 'dayPartId':
-            console.log('Process: dayPartId, val = ' + fieldVal + ', visibility = ' + el.is(":visible"));
+            //console.log('Process: dayPartId, val = ' + fieldVal + ', visibility = ' + el.is(":visible"));
 
             if (!el.is(":visible"))
                 return;
@@ -1109,7 +1109,7 @@ var processScheduleFormElements = function(el) {
 
         case 'campaignId':
         case 'fullScreenCampaignId':
-            console.log('Process: campaignId, val = ' + fieldVal + ', visibility = ' + el.is(":visible"));
+            //console.log('Process: campaignId, val = ' + fieldVal + ', visibility = ' + el.is(":visible"));
 
             // Update the preview button URL
             var $previewButton = $("#previewButton");
@@ -1124,7 +1124,11 @@ var processScheduleFormElements = function(el) {
             break;
 
         case 'actionType' :
-            console.log('Action type changed');
+            //console.log('Action type changed, val = ' + fieldVal+ ', visibility = ' + el.is(":visible"));
+            if (!el.is(":visible")) {
+                return;
+            }
+
             var layoutCodeControl = (fieldVal == 'navLayout' && el.is(":visible")) ? "" : "none";
             commandControlDisplay = (fieldVal == 'command') ? "" : "none";
 
@@ -1168,9 +1172,8 @@ var processScheduleFormElements = function(el) {
     }
 };
 
-var duplicateScheduledEvent = function() {
+var duplicateScheduledEvent = function($scheduleForm) {
     // Set the edit form URL to that of the add form
-    var $scheduleForm = $("#scheduleEditForm");
     $scheduleForm.attr("action", $scheduleForm.data().addUrl).attr("method", "post");
 
     // Remove the duplicate button
@@ -1491,7 +1494,7 @@ var setupSelectForSchedule = function (dialog) {
     // Select lists
     var $campaignSelect = $('#campaignId', dialog);
     $campaignSelect.select2({
-        dropdownParent: $(dialog),
+        dropdownParent: $(dialog).find('form'),
         ajax: {
             url: $campaignSelect.data('searchUrl'),
             dataType: 'json',
@@ -1554,13 +1557,19 @@ var setupSelectForSchedule = function (dialog) {
         }
     });
 
+    $campaignSelect.on('select2:open', function(event) {
+        setTimeout(function() {
+            $(event.target).data('select2').dropdown.$search.get(0).focus();
+        }, 10);
+    })
+
     var $displaySelect = $('select[name="displayGroupIds[]"]', dialog);
     $displaySelect.select2({
+        dropdownParent: $(dialog).find('form'),
         ajax: {
             url: $displaySelect.data('searchUrl'),
             dataType: 'json',
             delay: 250,
-            dropdownParent: $(dialog),
             data: function(params) {
                 var query = {
                     isDisplaySpecific: -1,

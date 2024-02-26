@@ -44,9 +44,14 @@ jQuery.fn.extend({
         } else {
           $contentDiv.find('.scroll:not(.animating)').marquee();
         }
-      } else if (options.effect !== 'none') { // Cycle effect
+      } else if (options.effect !== 'none' ||
+        options.effect === 'noTransition'
+      ) { // Cycle effect
         // Resume effect
-        $contentDiv.find('.anim-cycle').cycle('resume');
+        const $target = $contentDiv.is('.anim-cycle') ?
+          $contentDiv : $contentDiv.find('.anim-cycle');
+
+        $target.cycle('resume');
       }
     });
 

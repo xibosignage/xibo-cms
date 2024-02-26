@@ -21,6 +21,9 @@
 // Include public path for webpack
 require('../../public_path');
 
+// Add image render lib
+import '/modules/src/xibo-image-render.js';
+
 // Include handlebars templates
 const playlistEditorTemplate =
   require('../templates/playlist-editor.hbs');
@@ -416,6 +419,9 @@ pE.undoLastAction = function() {
       errorMessage = error.errorThrown;
     }
 
+    // Remove last change
+    pE.historyManager.removeLastChange();
+
     toastr.error(errorMessagesTrans.revertFailed
       .replace('%error%', errorMessage));
   });
@@ -755,17 +761,10 @@ pE.showLocalLoadingScreen = function() {
 
 /**
  * Clear Temporary Data ( Cleaning cached variables )
- * @param {Boolean} destroyRichTextEditor Destroy existing Rich text editors
  */
-pE.clearTemporaryData = function(destroyRichTextEditor = false) {
-  // Fix for remaining ckeditor elements or colorpickers
-  destroyColorPicker(pE.editorContainer.find('.colorpicker-element'));
-
+pE.clearTemporaryData = function() {
   // Hide open tooltips
   pE.editorContainer.find('.tooltip').remove();
-
-  // Remove text callback editor structure variables
-  (destroyRichTextEditor) && formHelpers.destroyCKEditor();
 };
 
 /**
@@ -919,8 +918,13 @@ pE.checkHistory = function() {
       typeof historyManagerTrans != 'undefined' &&
     historyManagerTrans.revert[lastAction.type] != undefined
     ) {
+      const actionTargetType =
+        (lastAction.target.subType) ?
+          lastAction.target.subType :
+          lastAction.target.type;
+
       undoActiveTitle = historyManagerTrans.revert[lastAction.type]
-        .replace('%target%', lastAction.target.type);
+        .replace('%target%', historyManagerTrans.target[actionTargetType]);
     } else {
       undoActiveTitle = '[' + lastAction.target.type + '] ' + lastAction.type;
     }
@@ -1035,15 +1039,7 @@ pE.handleInputs = function() {
     },
   }).attr('data-type', 'playlist');
 
-  // Handle keyboard keys
-  $('body').off('keydown.editor')
-    .on('keydown.editor', function(handler) {
-      if ($(handler.target).is($('body'))) {
-        if (handler.key == 'Delete') {
-          pE.deleteSelectedObject();
-        }
-      }
-    });
+  pE.handleKeyInputs();
 
   // Editor container select ( faking drag and drop )
   // to add a object to the playlist
@@ -1205,5 +1201,35 @@ pE.toggleMultiselectMode = function(forceSelect = null) {
     // Reload timeline
     timeline.render();
   }
+};
+
+/**
+ * Handle inputs
+ */
+pE.handleKeyInputs = function() {
+  const allowInputs = !(typeof(lD) != 'undefined' && lD?.readOnlyMode === true);
+
+  // Handle keyboard keys
+  $('body').off('keydown.editor')
+    .on('keydown.editor', function(handler) {
+      if ($(handler.target).is($('body'))) {
+        // Delete
+        if (
+          handler.key == 'Delete' &&
+          allowInputs
+        ) {
+          pE.deleteSelectedObject();
+        }
+
+        // Undo
+        if (
+          handler.key == 'z' &&
+          handler.ctrlKey &&
+          allowInputs
+        ) {
+          pE.undoLastAction();
+        }
+      }
+    });
 };
 

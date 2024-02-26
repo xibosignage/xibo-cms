@@ -1,741 +1,121 @@
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
 const PlayerHelper = function() {
   // Check the query params to see if we're in editor mode
-  const _self = this;
-  const urlParams = new URLSearchParams(window.location.search);
-  let _elements = {standalone: {}, groups: {}};
-  let countWidgetElements = 0;
-  let countWidgetStatic = 0;
+  const self = this;
 
-  this.isPreview = urlParams.get('preview') === '1';
-  this.isEditor = urlParams.get('isEditor') === '1';
-
-  /**
-   * Initialize player with the available widgetData and elements
-   * @param {array} widgetData
-   * @param {array} elements
-   * @return {Promise<object>}
-   */
-  this.init = (widgetData, elements) => new Promise((resolve) => {
-    if (Array.isArray(widgetData)) {
-      const _widgetData = [...widgetData];
-
-      Promise.all(_widgetData.map(function(widget) {
-        return _self.getWidgetData(widget);
-      })).then((values) => {
-        const widgets = {};
-        const widgetHasNoData = values.filter((val) => {
-          return val !== null &&
-            (val.hasOwnProperty('success') ||
-              val.hasOwnProperty('error') ||
-              (val.hasOwnProperty('data') && val?.data?.length === 0)
-            );
-        });
-
-        if (widgetHasNoData.length > 0) {
-          _self.onDataErrorCallback(404, widgetData);
-          resolve({widgets});
-        }
-
-        values.forEach((value, widgetIndex) => {
-          const _widget = _widgetData[widgetIndex];
-
-          if (!_widget.hasOwnProperty('isDataExpected')) {
-            _widget.isDataExpected = _widget.url !== null;
-          }
-
-          const {dataItems, showError, errorMessage} =
-            this.composeFinalData(_widget, value);
-
-          if (elements !== undefined && elements?.length > 0) {
-            elements.forEach(function(elemVal) {
-              if (elemVal?.length > 0) {
-                elemVal.forEach(function(elemObj) {
-                  if (elemObj.widgetId === _widget.widgetId) {
-                    _elements = _self.composeElements(
-                      elemObj?.elements || [], _widget);
-                  }
-                });
-              }
-            });
-
-            if (Object.keys(_elements).length > 0) {
-              _elements =
-                _self.decorateCollectionSlots(_elements, dataItems, _widget);
-            }
-          }
-
-          if (_widget.templateId === 'elements' ||
-              (_widget.templateId === null && (
-                Object.keys(_elements.groups).length > 0 ||
-                Object.keys(_elements.standalone).length > 0
-              ))) {
-            countWidgetElements++;
-          } else {
-            countWidgetStatic++;
-          }
-
-          widgets[_widget.widgetId] = {
-            ..._widget,
-            data: dataItems,
-            meta: value !== null ? value?.meta : {},
-            showError,
-            errorMessage,
-            elements: _elements,
-          };
-        });
-
-        resolve({
-          widgets,
-          countWidgetElements,
-          countWidgetStatic,
-        });
-      });
-    }
-  });
-
-  /**
-   * onDataError callback
-   * @param {string|number} httpStatus
-   * @param {Object} response - Response body|json
-   */
-  this.onDataErrorCallback = (httpStatus, response) => {
-    const onDataError = window[
-      `onDataError_${xiboICTargetId}`
-    ];
-
-    if (typeof onDataError === 'function') {
-      if (onDataError(httpStatus, response) == false) {
-        xiboIC.reportFault({
-          code: '5001',
-          reason: 'No Data',
-        }, {targetId: xiboICTargetId});
-        xiboIC.expireNow({targetId: xiboICTargetId});
-      }
-
-      onDataError(httpStatus, response);
-    } else {
-      xiboIC.reportFault({
-        code: '5001',
-        reason: 'No Data',
-      }, {targetId: xiboICTargetId});
-      xiboIC.expireNow({targetId: xiboICTargetId});
-    }
-  };
-
-  /**
-   * Get widget data
-   * @param {object} widget
-   * @return {Promise}
-   */
-  this.getWidgetData = (widget) => {
-    return new Promise(function(resolve, reject) {
-      // if we have data on the widget (for older players),
-      // or if we are not in preview and have empty data on Widget (like text)
-      // do not run ajax use that data instead
-      // if (!isPreview) {
-      if (widget.data?.data !== undefined) {
-        resolve(widget.data);
-      } else if (widget.url) {
-        // else get data from widget.url,
-        // this will be either getData for preview
-        // or new json file for v4 players
-        $.ajax({
-          method: 'GET',
-          url: widget.url,
-        }).done(function(data) {
-          resolve(data);
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-          _self.onDataErrorCallback(widget, jqXHR.status, jqXHR.responseJSON);
-          console.log(jqXHR, textStatus, errorThrown);
-          resolve({
-            error: jqXHR.status,
-            success: false,
-            data: jqXHR.responseJSON,
-          });
-        });
-      } else {
-        resolve(null);
-      }
-    });
-  };
-
-  /**
-   * Compose final data
-   * @param {object} widget
-   * @param {object|array} data
-   * @return {object}
-   */
-  this.composeFinalData = (widget, data) => {
-    const finalData = {
-      isSampleData: false,
-      dataItems: [],
-      isArray: Array.isArray(data?.data),
-      showError: false,
-      errorMessage: null,
-    };
-    const composeSampleData = () => {
-      finalData.isSampleData = true;
-
-      if (widget.sample === null) {
-        finalData.dataItems = [];
-        return [];
-      }
-
-      // If data is empty, use sample data instead
-      // Add single element or array of elements
-      finalData.dataItems = (Array.isArray(widget.sample)) ?
-        widget.sample.slice(0) : [widget.sample];
-
-      return finalData.dataItems.reduce((data, item) => {
-        Object.keys(item).forEach((itemKey) => {
-          if (String(item[itemKey])
-            .match(DateFormatHelper.macroRegex) !== null) {
-            item[itemKey] = DateFormatHelper
-              .composeUTCDateFromMacro(item[itemKey]);
-          }
-        });
-
-        return [...data, {...item}];
-      }, []);
-    };
-
-    if (widget.isDataExpected) {
-      if (finalData.isArray && data?.data?.length > 0) {
-        finalData.dataItems = data?.data;
-      } else {
-        finalData.dataItems = _self.isEditor ? composeSampleData() : [];
-        if (data?.success === false || !widget.isValid) {
-          finalData.showError = _self.isEditor;
-        }
-      }
-    }
-
-    if (finalData.showError && data?.message) {
-      finalData.errorMessage = data?.message;
-    }
-
-    return finalData;
-  };
-
-  /**
-   * Compose widget elements
-   * @param {array} elements
-   * @param {object} widget
-   * @return {object} {groups, standalone}
-   */
-  this.composeElements = (elements, widget) => {
-    if (!elements || elements.length === 0) {
-      return _elements;
-    }
-
-    return elements.reduce(function(collection, item) {
-      const element = _self.decorateElement(item, widget);
-      const isGroup = _self.isGroup(element);
-      let standaloneKey = element.type === 'dataset' ?
-        element.id + '_' + element.templateData.datasetField :
-        element.id;
-
-      // Allow multiple data source of same element type by widget
-      standaloneKey += '_' + widget.widgetId;
-
-      // Initialize object values
-      if (!isGroup &&
-        !collection.standalone.hasOwnProperty(standaloneKey)
-      ) {
-        collection.standalone[standaloneKey] = [];
-      }
-
-      let groupKey = null;
-      if (isGroup) {
-        groupKey = element.groupId + '_' + widget.widgetId;
-        if (!collection.groups.hasOwnProperty(groupKey)) {
-          collection.groups[groupKey] = {
-            ...globalOptions,
-            ...widget.properties,
-            ...element.groupProperties,
-            id: groupKey,
-            uniqueID: element.groupId,
-            duration: widget.duration,
-            parentId: groupKey,
-            widgetId: widget.widgetId,
-            slot: element.slot,
-            items: [],
-          };
-        }
-      }
-
-      // Fill in objects with items
-      if (!isGroup &&
-        Object.keys(collection.standalone).length > 0
-      ) {
-        collection.standalone[standaloneKey] = [
-          ...collection.standalone[standaloneKey],
-          {
-            ...element,
-            numItems: 1,
-            duration: widget.duration,
-          },
-        ];
-      }
-
-      if (isGroup && Object.keys(collection.groups).length > 0 &&
-        groupKey !== null
-      ) {
-        collection.groups[groupKey] = {
-          ...collection.groups[groupKey],
-          items: [
-            ...collection.groups[groupKey].items,
-            {...element, numItems: 1},
-          ],
-        };
-      }
-
-      return collection;
-    }, {standalone: {}, groups: {}});
-  };
-
-  /**
-   * Decorate element
-   * @param {object} element
-   * @param {object} widget
-   * @return {object} element
-   */
-  this.decorateElement = function(element, widget) {
-    const elemCopy = JSON.parse(JSON.stringify(element));
-    const elemProps = elemCopy?.properties || {};
-
-    if (Object.keys(elemCopy).length > 0 &&
-        elemCopy.hasOwnProperty('properties')) {
-      delete elemCopy.properties;
-    }
-
-    // Check if we have template from templateId or module
-    // and set it as the template
-    let $template = null;
-    const templateSelector = `#hbs-${elemCopy.id}`;
-    if ($(templateSelector).length > 0) {
-      $template = $(templateSelector);
-    }
-
-    elemCopy.hbs = null;
-    elemCopy.dataOverride = null;
-    elemCopy.dataOverrideWith = null;
-    elemCopy.escapeHtml = null;
-    elemCopy.isExtended = false;
-    elemCopy.withData = false;
-    elemCopy.widgetId = widget.widgetId;
-
-    // Compile the template if it exists
-    if ($template && $template.length > 0) {
-      elemCopy.dataOverride =
-          $template?.data('extends-override');
-      elemCopy.dataOverrideWith =
-          $template?.data('extends-with');
-      elemCopy.escapeHtml =
-          $template?.data('escape-html');
-
-      if (String(elemCopy.dataOverride).length > 0 &&
-          String(elemCopy.dataOverrideWith).length > 0) {
-        elemCopy.isExtended = true;
-      }
-
-      elemCopy.hbs = Handlebars.compile($template.html());
-    }
-
-    // Special case for handling weather language
-    if (elemProps.hasOwnProperty('lang') &&
-        widget.properties.hasOwnProperty('lang')) {
-      const elemLang = elemProps.lang;
-      const widgetLang = widget.properties.lang;
-
-      elemProps.lang = (elemLang !== null && String(elemLang).length > 0) ?
-        elemLang : widgetLang;
-    }
-
-    elemCopy.templateData = Object.assign(
-      {}, elemCopy, elemProps, globalOptions,
-      {uniqueID: elemCopy.elementId, prop: {...elemCopy, ...elemProps}},
-    );
-
-    // Get widget info if exists.
-    if (widget.templateId !== null && widget.url !== null) {
-      elemCopy.renderData = Object.assign(
-        {},
-        widget.properties,
-        elemCopy,
-        globalOptions,
-        {
-          duration: widget.duration,
-          marqueeInlineSelector: `.${elemCopy.templateData.id}--item`,
-          parentId: elemCopy.elementId,
-        },
-      );
-      elemCopy.withData = true;
-    } else {
-      // Elements with no data can be extended.
-      // Thus, we have to decorate the element with extended params
-      if (elemCopy.dataOverride !== null &&
-        elemCopy.dataOverrideWith !== null) {
-        const extendWith =
-          transformer.getExtendedDataKey(elemCopy.dataOverrideWith);
-
-        // Check if extendWith exist in elemProps and templateData
-        if (elemProps.hasOwnProperty(extendWith)) {
-          elemCopy[elemCopy.dataOverride] = elemProps[extendWith];
-          elemCopy.templateData[elemCopy.dataOverride] =
-            elemProps[extendWith];
-        }
-      }
-    }
-
-    if (elemCopy?.renderData?.hasOwnProperty('durationIsPerItem')) {
-      elemCopy.durationIsPerItem = elemCopy.renderData.durationIsPerItem;
-    }
-
-    return elemCopy;
-  };
-
-  /**
-   * Decorate slots with data
-   * @param {object} elements
-   * @param {array} dataItems
-   * @param {object} widget
-   * @return {object} elements
-   */
-  this.decorateCollectionSlots = function(elements, dataItems, widget) {
-    _self.getStandaloneSlotsData(elements, dataItems, widget);
-    _self.getGroupSlotsData(elements, dataItems, widget);
-    return elements;
-  };
-
-  this.getStandaloneSlotsData = function(elements, data, widget) {
-    const standalone = elements.standalone;
-    const objKeys = Object.keys(standalone);
-
-    widget.standaloneSlotsData = {};
-
-    if (objKeys.length > 0) {
-      objKeys.forEach(function(objKey) {
-        if (standalone.hasOwnProperty(objKey)) {
-          const itemObj = standalone[objKey];
-
-          if (!widget.standaloneSlotsData.hasOwnProperty(objKey)) {
-            widget.standaloneSlotsData[objKey] = [];
-          }
-
-          if (itemObj.length > 0) {
-            widget.standaloneSlotsData[objKey] =
-              itemObj.reduce(function(a, b, slotKey) {
-                a[slotKey + 1] = [];
-                return {...a};
-              }, {});
-          }
-        }
-
-        const pinnedSlots = standalone[objKey].reduce(function(a, b) {
-          if (b.pinSlot) return [...a, b.slot + 1];
-          return a;
-        }, []);
-
-        _self.composeSlotsData('standalone', data, standalone, widget, {
-          objKey,
-          lastSlotFilled: null,
-        });
-
-        widget.standaloneSlotsData[objKey] = _self.composeRepeatNonRepeatData(
-          widget.standaloneSlotsData[objKey],
-          pinnedSlots,
-          widget.isRepeatData,
-        );
-      });
-    }
-  };
-
-  this.getGroupSlotsData = function(elements, data, widget) {
-    widget.mappedSlotGroup = {};
-    widget.groupSlotsData = {};
-
-    if (Object.keys(elements.groups).length > 0) {
-      const {pinnedSlots} = _self.getGroupData(
-        elements.groups,
-        'items',
-      );
-
-      widget.mappedSlotGroup = _self.mapSlot(
-        Object.values(elements.groups), 'id',
-      );
-      widget.groupSlotsData =
-        Object.keys(widget.mappedSlotGroup).reduce(function(a, b) {
-          a[b] = [];
-          return {...a};
-        }, {});
-
-      _self.composeSlotsData('groups', data, elements.groups, widget, {
-        lastSlotFilled: null,
-      });
-
-      widget.groupSlotsData = _self.composeRepeatNonRepeatData(
-        widget.groupSlotsData,
-        pinnedSlots,
-        widget.isRepeatData,
-      );
-    }
-  };
-
-  /**
-   * Compose slots data
-   * @param {string} type group|standalone
-   * @param {array} dataItems Widget data
-   * @param {object} collection {groups, standalone}
-   * @param {object} widget Widget object
-   * @param {object?} item Optional item object
-   */
-  this.composeSlotsData = function(
-    type,
-    dataItems,
-    collection,
-    widget,
-    item,
-  ) {
-    const isStandalone = type === 'standalone';
-    const groupData = _self.getGroupData(
-      isStandalone ? [collection] : collection,
-      isStandalone ? item.objKey : 'items',
-    );
-    const maxSlot = groupData.maxSlot;
-    let pinnedSlots = groupData.pinnedSlots;
-
-    if (isStandalone) {
-      pinnedSlots = collection[item.objKey].reduce(function(a, b) {
-        if (b.pinSlot) return [...a, b.slot + 1];
+  this.getPinnedSlots = function(dataSlots) {
+    return Object.keys(dataSlots)
+      .reduce(function(a, b) {
+        const dataSlot = dataSlots[b];
+        if (dataSlot.hasPinnedSlot) return [...a, dataSlot.slot];
         return a;
       }, []);
+  };
+
+  this.getPinnedItems = function(dataSlotItems) {
+    if (Object.values(dataSlotItems).length === 0) {
+      return dataSlotItems;
     }
 
-    if (dataItems.length > 0) {
-      const lastSlotFilled = {};
+    return Object.keys(dataSlotItems).reduce(function(items, itemKey) {
+      const item = dataSlotItems[itemKey];
 
-      lastSlotFilled[type] = null;
-
-      for (const [dataItemKey] of Object.entries(dataItems)) {
-        const hasSlotFilled = {};
-        const currentKey = parseInt(dataItemKey) + 1;
-        const currCollection = isStandalone ?
-          collection[item.objKey] : Object.keys(collection);
-
-        hasSlotFilled[type] = false;
-
-        // Stop iteration through dataItems when all pinned slots are filled
-        // and maxSlot = pinnedSlots.length
-        if (lastSlotFilled[type] === null &&
-          pinnedSlots.length === maxSlot &&
-          currentKey > maxSlot
-        ) {
-          break;
-        }
-
-        for (const [, itemValue] of Object.entries(currCollection)) {
-          const itemObj = isStandalone ?
-            itemValue : collection[itemValue];
-          const isPinnedSlot = itemObj.pinSlot;
-          const currentSlot = itemObj.slot + 1;
-
-          if (!isPinnedSlot && !pinnedSlots.includes(currentKey)) {
-            // If lastSlotFilled is filled and is <= to currentSlot
-            // Then, move to next slot
-            if (lastSlotFilled[type] !== null &&
-                currentSlot <= lastSlotFilled[type]) {
-              continue;
-            }
-
-            if (isStandalone) {
-              const currentSlotItem =
-                  widget.standaloneSlotsData[item.objKey];
-
-              if (Object.keys(currentSlotItem).length > 0 &&
-                  currentSlotItem.hasOwnProperty(currentSlot)
-              ) {
-                currentSlotItem[currentSlot] = [
-                  ...currentSlotItem[currentSlot],
-                  currentKey,
-                ];
-              }
-
-              widget.standaloneSlotsData[item.objKey] = {
-                ...currentSlotItem,
-              };
-            } else {
-              widget.groupSlotsData[currentSlot] = [
-                ...widget.groupSlotsData[currentSlot],
-                currentKey,
-              ];
-            }
-
-            hasSlotFilled[type] = true;
-            lastSlotFilled[type] = currentSlot;
-          } else if (!isPinnedSlot && pinnedSlots.includes(currentKey)) {
-            if (lastSlotFilled[type] !== null &&
-              currentSlot <= lastSlotFilled[type]
-            ) {
-              continue;
-            }
-          } else if (isPinnedSlot &&
-              currentSlot === currentKey &&
-              pinnedSlots.includes(currentSlot)
-          ) {
-            if (isStandalone) {
-              widget.standaloneSlotsData[item.objKey][currentSlot] =
-                  [currentKey];
-            } else {
-              widget.groupSlotsData[currentSlot] = [currentKey];
-            }
-
-            hasSlotFilled[type] = true;
-            lastSlotFilled[type] = currentSlot;
-          } else if (isPinnedSlot && pinnedSlots.length > 0 &&
-              Math.max(...pinnedSlots) === maxSlot &&
-              currentSlot !== currentKey
-          ) {
-            if (lastSlotFilled[type] !== null &&
-              currentSlot <= lastSlotFilled[type]
-            ) {
-              continue;
-            }
-
-            if (isStandalone) {
-              widget.standaloneSlotsData[item.objKey][1] = [
-                ...widget.standaloneSlotsData[item.objKey][1],
-                currentKey,
-              ];
-            } else {
-              widget.groupSlotsData[1] = [
-                ...widget.groupSlotsData[1],
-                currentKey,
-              ];
-            }
-
-            hasSlotFilled[type] = true;
-            lastSlotFilled[type] = 1;
-          }
-
-          if (hasSlotFilled[type]) {
-            hasSlotFilled[type] = false;
-            if (lastSlotFilled[type] % maxSlot === 0) {
-              lastSlotFilled[type] = null;
-            }
-
-            break;
-          }
-        }
+      if (item.pinSlot) {
+        items[itemKey] = item;
       }
-    }
+
+      return items;
+    }, {});
   };
 
   /**
-   * Re-compose slotsData for repeat/non-repeat data widget
-   * @param {object} slotsData
-   * @param {array} pinnedSlots
-   * @param {boolean} isRepeat
-   * @return {object} slotsData
+   * Get items by Key
+   * @param {Object} items
+   * @param {String} itemsKey
+   * @param {Boolean} isStandalone
+   *
+   * @return {Array}
    */
-  this.composeRepeatNonRepeatData = function(
-    slotsData,
-    pinnedSlots,
-    isRepeat,
-  ) {
-    // Copy slotsData
-    const groupSlotsData = {...slotsData};
-    // Remove pinnedSlot from the object
-    if (pinnedSlots.length > 0) {
-      pinnedSlots.forEach(function(pinnedSlot) {
-        if (slotsData.hasOwnProperty(pinnedSlot)) {
-          delete groupSlotsData[pinnedSlot];
-        }
-      });
+  this.getItemsByKey = (items, itemsKey, isStandalone) => {
+    if (isStandalone && items.hasOwnProperty(itemsKey) &&
+        Object.keys(items[itemsKey]).length > 0
+    ) {
+      return Object.keys(items[itemsKey]).reduce(function(a, itemKey) {
+        return [...a, items[itemsKey][itemKey]];
+      }, []);
     }
 
-    const dataCounts = Object.keys(groupSlotsData).reduce((a, b) => {
-      a[b] = groupSlotsData[b].length;
-      return a;
-    }, {});
-    const maxCount = Math.max(
-      ...(Object.values(dataCounts).map((count) => Number(count))));
-    const minCount = Math.min(
-      ...(Object.values(dataCounts).map((count) => Number(count))));
-
-    if (minCount < maxCount) {
-      const nonPinnedDataKeys =
-          Object.values(groupSlotsData).reduce((a, b) => {
-            return [...a, ...b];
-          }, []).sort((a, b) => {
-            if (a < b) return -1;
-            if (a > b) return 1;
-            return 0;
-          });
-
-      Object.keys(groupSlotsData).forEach(
-        function(slotIndex, slotKey) {
-          const dataCount = dataCounts[slotIndex];
-          if (dataCount < maxCount) {
-            const countDiff = maxCount - dataCount;
-            if (countDiff === 1) {
-              const poppedKey = nonPinnedDataKeys.shift();
-              slotsData[slotIndex].push(isRepeat ? poppedKey : 'empty');
-            }
-          }
-        });
+    if (items.hasOwnProperty(itemsKey)) {
+      return items[itemsKey];
     }
 
-    return slotsData;
+    return [];
   };
 
-  this.getMaxSlot = (objectsArray, itemsKey, minValue) => {
-    const groupItems = objectsArray?.length > 0 ?
-      objectsArray.reduce(
-        (a, b) => [...a, ...b[itemsKey]], []) : null;
-
-    return groupItems === null ?
+  /**
+   * Gets minimum and maximum slot
+   * If minSlot is zero, it means it's not a data slot
+   * @param {Array} collection
+   * @return {{minSlot: (number|number), maxSlot: (number|number)}}
+   */
+  this.getMinAndMaxSlot = function(collection) {
+    const minValue = 1;
+    const getSlots = (items) => items.map(function(elem) {
+      return elem?.slot + 1 || 0;
+    });
+    const minSlot = collection === null ?
       minValue :
-      Math.max(...groupItems.map(function(elem) {
-        return elem?.slot || 0;
-      })) + 1;
-  };
-
-  this.getGroupData = function(
-    groupsData,
-    slotItemsKey,
-    isStandalone,
-  ) {
-    const groupValues = Object.values(groupsData);
-    const maxSlot = _self.getMaxSlot(groupValues, slotItemsKey, 1);
-    let pinnedSlots = [];
-
-    if (!isStandalone) {
-      pinnedSlots = groupValues.reduce(
-        function(a, b) {
-          if (b.pinSlot) return [...a, b.slot + 1];
-          return a;
-        }, []);
-    }
+      Math.min(...getSlots(collection));
+    const maxSlot = collection === null ?
+      minValue :
+      Math.max(...getSlots(collection));
 
     return {
-      groupValues,
+      minSlot,
       maxSlot,
-      pinnedSlots,
     };
   };
 
-  this.mapSlot = function(items, key) {
-    if (items?.length > 0) {
-      const mappedSlots = {};
-      items.forEach(function(item) {
-        if (!mappedSlots.hasOwnProperty(item.slot + 1)) {
-          mappedSlots[item.slot + 1] = item[key];
-        }
-      });
+  this.getMaxMinSlot = (objectsArray, itemsKey, isStandalone) => {
+    const minValue = 1;
+    const groupItems = objectsArray?.length > 0 ?
+      objectsArray.reduce(
+        (a, b) => {
+          return [...a, ...self.getItemsByKey(b, itemsKey, isStandalone)];
+        }, []) : null;
+    const getSlots = (items) => items.map(function(elem) {
+      return elem?.slot || 0;
+    });
+    const minSlot = groupItems === null ?
+      minValue :
+      Math.min(...getSlots(groupItems)) + 1;
+    const maxSlot = groupItems === null ?
+      minValue :
+      Math.max(...getSlots(groupItems)) + 1;
 
-      return mappedSlots;
-    }
+    return {
+      minSlot,
+      maxSlot,
+    };
   };
 
   this.isGroup = function(element) {
@@ -747,6 +127,190 @@ const PlayerHelper = function() {
       effect === 'marqueeRight' ||
       effect === 'marqueeUp' ||
       effect === 'marqueeDown';
+  };
+
+  this.renderElement = function(hbs, props, isStatic) {
+    const hbsTemplate = hbs(Object.assign(props, globalOptions));
+    let topPos = props.top;
+    let leftPos = props.left;
+
+    if (props.group) {
+      if (props.group.isMarquee) {
+        topPos = (props.top - props.group.top);
+        leftPos = (props.left - props.group.left);
+      } else {
+        if (props.top >= props.group.top) {
+          topPos = (props.top - props.group.top);
+        }
+        if (props.left >= props.group.left) {
+          leftPos = (props.left - props.group.left);
+        }
+      }
+    }
+
+    let cssStyles = {
+      height: props.height,
+      width: props.width,
+      position: 'absolute',
+      top: topPos,
+      left: leftPos,
+      zIndex: props.layer,
+      transform: `rotate(${props?.rotation || 0}deg)`,
+    };
+
+    if (isStatic) {
+      cssStyles = {
+        ...cssStyles,
+        top: props.top,
+        left: props.left,
+        zIndex: props.layer,
+      };
+    }
+
+    if (!props.isGroup && props.dataOverride === 'text' &&
+      (props.group && props.group.isMarquee) &&
+      (props.effect === 'marqueeLeft' || props.effect === 'marqueeRight')
+    ) {
+      cssStyles = {
+        ...cssStyles,
+        position: 'static',
+        top: 'unset',
+        left: 'unset',
+        width: props?.textWrap ? props.width : 'initial',
+        display: 'flex',
+        flexShrink: '0',
+        wordWrap: 'break-word',
+      };
+    }
+
+    const $renderedElem = $(hbsTemplate).first()
+      .attr('id', props.elementId)
+      .addClass(`${props.uniqueID}--item`)
+      .css(cssStyles);
+
+    if (!props.isGroup && props.dataOverride === 'text' &&
+      (props.group && props.group.isMarquee) &&
+      (props.effect === 'marqueeLeft' || props.effect === 'marqueeRight')
+    ) {
+      $renderedElem.get(0).style.removeProperty('white-space');
+      $renderedElem.get(0).style.setProperty(
+        'white-space',
+        props?.textWrap ? 'unset' : 'nowrap',
+        'important',
+      );
+    }
+
+    return $renderedElem.prop('outerHTML');
+  };
+
+  this.renderDataItem = function(
+    isGroup,
+    dataItemKey,
+    dataItem,
+    item,
+    slot,
+    maxSlot,
+    isPinSlot,
+    pinnedSlots,
+    groupId,
+    $groupContent,
+    groupObj,
+    meta,
+    $content,
+  ) {
+    const $groupContentItem = $(`<div class="${groupId}--item"
+      data-group-key="${dataItemKey}"></div>`);
+    const groupKey = '.' + groupId + '--item[data-group-key=%key%]';
+
+    // For each data item, parse it and add it to the content;
+    if (item.hasOwnProperty('hbs') &&
+      typeof item.hbs === 'function' && dataItemKey !== 'empty'
+    ) {
+      let groupItemStyles = {
+        width: groupObj.width,
+        height: groupObj.height,
+      };
+
+      if (groupObj && groupObj.isMarquee) {
+        groupItemStyles = {
+          ...groupItemStyles,
+          position: 'relative',
+          display: 'flex',
+          flexShrink: '0',
+        };
+      }
+
+      $groupContentItem.css(groupItemStyles);
+
+      if ($groupContent &&
+        $groupContent.find(
+          groupKey.replace('%key%', dataItemKey),
+        ).length === 0
+      ) {
+        $groupContent.append($groupContentItem);
+      }
+
+      let isSingleElement = false;
+
+      if (!isGroup && item.dataOverride === 'text' && groupObj.isMarquee) {
+        if (item.effect === 'marqueeLeft' || item.effect === 'marqueeRight') {
+          if ($groupContent.find(
+            groupKey.replace('%key%', dataItemKey)).length === 1
+          ) {
+            $groupContent.find(
+              groupKey.replace('%key%', dataItemKey),
+            ).remove();
+          }
+          isSingleElement = true;
+        } else if (item.effect === 'marqueeDown' ||
+            item.effect === 'marqueeUp') {
+          isSingleElement = false;
+        }
+      }
+
+      const $itemContainer = isSingleElement ?
+        $groupContent : $groupContent.find(
+          groupKey.replace('%key%', dataItemKey),
+        );
+      const props = Object.assign(
+        item.templateData,
+        {isGroup},
+        (String(item.dataOverride).length > 0 &&
+        String(item.dataOverrideWith).length > 0) ?
+          dataItem : {data: dataItem},
+        {group: groupObj},
+      );
+
+      $itemContainer.append(
+        self.renderElement(
+          item.hbs,
+          props,
+        ),
+      );
+
+      const itemID = item.uniqueID || item.templateData?.uniqueID;
+      // Handle the rendering of the template
+      (item.onTemplateRender() !== undefined) && item.onTemplateRender()(
+        item.elementId,
+        $itemContainer.find(`.${itemID}--item`),
+        $content.find(`.${itemID}--item`),
+        {item, ...item.templateData, data: dataItem},
+        meta,
+      );
+    } else {
+      if ($groupContent &&
+        $groupContent.find(
+          groupKey.replace('%key%', dataItemKey)).length === 0
+      ) {
+        $groupContent.append($groupContentItem);
+      }
+
+      const $itemContainer = $groupContent.find(
+        groupKey.replace('%key%', dataItemKey),
+      );
+
+      $itemContainer.append('');
+    }
   };
 
   return this;

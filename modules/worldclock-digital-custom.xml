@@ -144,10 +144,10 @@
 <div class="custom-clock-template" style="display: none;">
     {{template_html|raw}}
 </div>
-<style>
-    {{template_style|raw}}
-</style>
         ]]></twig>
+        <style><![CDATA[
+{{template_style|raw}}
+        ]]></style>
     </stencil>
     <onInitialize><![CDATA[
 // Set moment locale

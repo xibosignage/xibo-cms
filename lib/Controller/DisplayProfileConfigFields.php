@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -193,6 +193,24 @@ trait DisplayProfileConfigFields
                 if ($sanitizedParams->hasParam('dayPartId')) {
                     $this->handleChangedSettings('dayPartId', ($ownConfig) ? $displayProfile->getSetting('dayPartId') : $display->getSetting('dayPartId'), $sanitizedParams->getInt('dayPartId'), $changedSettings);
                     $displayProfile->setSetting('dayPartId', $sanitizedParams->getInt('dayPartId'), $ownConfig, $config);
+                }
+
+                if ($sanitizedParams->hasParam('restartWifiOnConnectionFailure')) {
+                    $this->handleChangedSettings(
+                        'restartWifiOnConnectionFailure',
+                        ($ownConfig)
+                            ? $displayProfile->getSetting('restartWifiOnConnectionFailure')
+                            : $display->getSetting('restartWifiOnConnectionFailure'),
+                        $sanitizedParams->getCheckbox('restartWifiOnConnectionFailure'),
+                        $changedSettings
+                    );
+
+                    $displayProfile->setSetting(
+                        'restartWifiOnConnectionFailure',
+                        $sanitizedParams->getCheckbox('restartWifiOnConnectionFailure'),
+                        $ownConfig,
+                        $config
+                    );
                 }
 
                 if ($sanitizedParams->hasParam('webViewPluginState')) {

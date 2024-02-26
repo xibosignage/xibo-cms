@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -160,14 +160,18 @@ function XiboInitialise(scope, options) {
 
         // Append button to tabs or container (if we don't have tabs)
         if ($(this).find(".XiboFilter .nav-tabs").length > 0) {
-            $(this).find(".XiboFilter .nav-tabs").append(buttonTemplate);
+            if ($(this).find(".XiboFilter .nav-tabs .clear-filter-btn-container").length === 0) {
+                $(this).find(".XiboFilter .nav-tabs").append(buttonTemplate);
+            }
         } else {
-            $(this).find(".XiboFilter").prepend(buttonTemplate);
-            $(this).find(".XiboFilter .FilterDiv").addClass("pt-0");
+            if ($(this).find(".XiboFilter .clear-filter-btn-container").length === 0) {
+                $(this).find(".XiboFilter").prepend(buttonTemplate);
+                $(this).find(".XiboFilter .FilterDiv").addClass("pt-0");
+            }
         }
 
         // Prevent enter key to submit form
-        $(this).find(".XiboFilter .clear-filter-btn").on('click', function(event) {
+        $(this).find(".XiboFilter .clear-filter-btn").off().on('click', function(event) {
             // Reset fields
             form[0].reset();
 
@@ -454,65 +458,6 @@ function XiboInitialise(scope, options) {
             }
         });
     });
-
-  // Initialize tags input for properties panel with connectorProperties field
-  $(scope + ' input[data-role=panelTagsInput]').each(function() {
-    // eslint-disable-next-line no-invalid-this
-    const self = $(this);
-    const autoCompleteUrl = self.data('autoCompleteUrl');
-    const termKey = self.data('searchTermKey');
-
-    if (autoCompleteUrl !== undefined && autoCompleteUrl !== '') {
-      // Tags input with autocomplete
-      const tags = new Bloodhound({
-        datumTokenizer: Bloodhound.tokenizers.whitespace,
-        queryTokenizer: Bloodhound.tokenizers.whitespace,
-        initialize: false,
-        remote: {
-          url: autoCompleteUrl,
-          prepare: function(query, settings) {
-            settings.data = {tag: query};
-
-            if (termKey !== undefined && termKey !== '') {
-              settings.data[termKey] = query;
-            }
-
-            return settings;
-          },
-          transform: function(list) {
-            return list.data.length > 0 ? $.map(list.data, function(tagObj) {
-              return tagObj.type;
-            }) : [];
-          },
-        },
-      });
-
-      const promise = tags.initialize();
-
-      promise
-        .done(function() {
-          // Destroy tagsinput instance
-          if (typeof self.tagsinput === 'function') {
-            self.tagsinput('destroy');
-          }
-
-          // Initialise tagsinput with autocomplete
-          self.tagsinput({
-            typeaheadjs: [{
-              hint: true,
-              highlight: true,
-            }, {
-              name: 'tags',
-              source: tags.ttAdapter(),
-            }],
-          });
-        })
-        .fail(function() {
-          console.info('Auto-complete for tag failed! Using default...');
-          self.tagsinput();
-        });
-    }
-  });
 
     // Initialize tag with values function from xibo-forms.js
     // this needs to be initialised only once, otherwise some functions in it will be executed multiple times.
@@ -1490,10 +1435,13 @@ function XiboInitialise(scope, options) {
  * @param processing
  */
 function dataTableProcessing(e, settings, processing) {
-    if (processing)
-        $(e.target).closest('.widget').children(".widget-title").append('<span class="saving fa fa-cog fa-spin p-1"></span>');
-    else
+    if (processing) {
+        if ($(e.target).closest('.widget').closest(".widget").find(".saving").length === 0) {
+            $(e.target).closest('.widget').children(".widget-title").append('<span class="saving fa fa-cog fa-spin p-1"></span>');
+        }
+    } else {
         $(e.target).closest('.widget').closest(".widget").find(".saving").remove();
+    }
 }
 
 /**
@@ -1992,9 +1940,6 @@ function XiboFormRender(sourceObj, data = null) {
         return false;
     }
 
-    // Currently only support one of these at once.
-    bootbox.hideAll();
-
     lastForm = formUrl;
 
     // Call with AJAX
@@ -2061,6 +2006,12 @@ function XiboFormRender(sourceObj, data = null) {
                 if (sourceObj && typeof sourceObj === 'object') {
                   size = sourceObj.data().modalSize || 'large';
                 }
+
+                // Currently only support one of these at once.
+                // We have to move this here before calling bootbox.dialog
+                // to avoid multiple modal being opened
+                bootbox.hideAll();
+
                 var dialog = bootbox.dialog({
                         message: response.html,
                         title: dialogTitle,
@@ -3071,8 +3022,14 @@ function XiboRefreshAllGrids() {
     $(" .XiboGrid table.dataTable").each(function() {
         const refresh = $(this).closest('.XiboGrid').data('refreshOnFormSubmit');
         if (refresh === undefined || refresh === null || refresh) {
-            // Render
-            $(this).DataTable().ajax.reload(null, false);
+            const table = $(this).DataTable();
+            const tableOptions = table.init();
+
+            // Only refresh if we have ajax enabled
+            if(tableOptions.serverSide) {
+                // Reload
+                table.ajax.reload(null, false);
+            }
         }
     });
 }
@@ -3304,7 +3261,7 @@ function makePagedSelect(element, parent) {
 
     element.on('select2:open', function(event) {
         setTimeout(function() {
-            $(event.target).data('select2').dropdown?.$search.get(0).focus();
+            $(event.target).data('select2').dropdown?.$search?.get(0).focus();
         }, 10);
     });
 
@@ -3443,7 +3400,7 @@ function makeLocalSelect(element, parent) {
 
     element.on('select2:open', function(event) {
         setTimeout(function() {
-            $(event.target).data('select2').dropdown?.$search.get(0).focus();
+            $(event.target).data('select2').dropdown?.$search?.get(0).focus();
         }, 10);
     });
 }

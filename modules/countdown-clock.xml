@@ -140,6 +140,30 @@
                 <option name="bottom">Bottom</option>
             </options>
         </property>
+        <property id="innerBackgroundColor" type="color">
+            <title>Inner Background Colour</title>
+            <default>#00816A</default>
+        </property>
+        <property id="innerFontFamily" type="fontSelector">
+            <title>Inner Text Font</title>
+            <helpText>Select a custom font - leave empty to use the default font.</helpText>
+        </property>
+        <property id="innerTextColor" type="color">
+            <title>Inner Text Colour</title>
+            <default>#fff</default>
+        </property>
+        <property id="outerBackgroundColor" type="color">
+            <title>Outer Background Colour</title>
+            <default>#00BF96</default>
+        </property>
+        <property id="labelFontFamily" type="fontSelector">
+            <title>Label Text Font</title>
+            <helpText>Select a custom font - leave empty to use the default font.</helpText>
+        </property>
+        <property id="labelTextColor" type="color">
+            <title>Label Text Colour</title>
+            <default>#fff</default>
+        </property>
     </properties>
     <preview></preview>
     <stencil>
@@ -157,8 +181,7 @@
     </div>
 </div>
         ]]></hbs>
-        <twig><![CDATA[
-<style>
+        <style><![CDATA[
 body {
     width: 640px !important;
     height: 360px !important;
@@ -206,8 +229,14 @@ body {
 .warning>#clockdiv>div>span {
     background: red;
 }
-</style>
-        ]]></twig>
+
+{% if innerFontFamily %}#clockdiv > div > span { font-family: {{innerFontFamily}}; }{% endif %}
+{% if innerBackgroundColor %}#clockdiv > div > span { background: {{innerBackgroundColor}}; }{% endif %}
+{% if innerTextColor %}#clockdiv > div > span { color: {{innerTextColor}}; }{% endif %}
+{% if outerBackgroundColor %}#clockdiv > div { background: {{outerBackgroundColor}}; }{% endif %}
+{% if labelFontFamily %}#clockdiv .smalltext { font-family: {{labelFontFamily}}; }{% endif %}
+{% if labelTextColor %}#clockdiv > div { color: {{labelTextColor}}; }{% endif %}
+        ]]></style>
     </stencil>
     <onRender><![CDATA[
 // Make replacements on render for all templates
@@ -271,11 +300,8 @@ $(target).xiboLayoutScaler(properties);
 
 // Render the countdown
 var $contentContainer = $(target).find('#content');
-$contentContainer.xiboCountdownRender(
-    properties,
-    $contentContainer.html(),
-);
-    ]]></onRender>
+$contentContainer.xiboCountdownRender(properties,$contentContainer.html());
+]]></onRender>
     <assets>
         <asset id="countdown-clock-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/countdown/countdown-clock-thumb.png" />
     </assets>

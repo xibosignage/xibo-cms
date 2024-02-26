@@ -527,7 +527,7 @@ class Campaign extends Base
      *  @SWG\Parameter(
      *      name="targetType",
      *      in="formData",
-     *      description="For ad campaigns, how do we measure the target? plays|budget",
+     *      description="For ad campaigns, how do we measure the target? plays|budget|imp",
      *      type="string",
      *      required=false
      *   ),
@@ -774,7 +774,7 @@ class Campaign extends Base
      *  @SWG\Parameter(
      *      name="targetType",
      *      in="formData",
-     *      description="For ad campaigns, how do we measure the target? plays|budget",
+     *      description="For ad campaigns, how do we measure the target? plays|budget|imp",
      *      type="string",
      *      required=false
      *   ),

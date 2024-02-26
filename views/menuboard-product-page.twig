@@ -111,8 +111,14 @@
                         responsivePriority: 2
                     },
                     {
-                        "data": "price",
-                        responsivePriority: 2
+                      data: 'price',
+                      responsivePriority: 2,
+                      render: function (data, type) {
+                        if (type !== 'display' || data === null || data === '') {
+                          return data;
+                        }
+                        return new Intl.NumberFormat(undefined, {minimumFractionDigits: 2}).format(data);
+                      },
                     },
                     {
                         responsivePriority: 3,

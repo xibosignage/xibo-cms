@@ -3,7 +3,6 @@ const DateFormatHelper = function(options) {
   this.systemFormat = 'Y-m-d H:i:s';
   this.macroRegex = /^%(\+|\-)[0-9]([0-9])?(d|h|m|s)%$/gi;
 
-
   this.convertPhpToMomentFormat = function(format) {
     if (String(format).length === 0) {
       return '';
@@ -86,6 +85,10 @@ const DateFormatHelper = function(options) {
     } else if (dateOffsetStr.match(subtractRegex) !== null) {
       return dateNow.subtract(...params(subtractRegex)).format(utcFormat);
     }
+  };
+
+  this.formatDate = function(dateStr, format) {
+    return moment(dateStr).format(format ? format : this.systemFormat);
   };
 
   return this;

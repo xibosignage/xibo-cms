@@ -82,6 +82,9 @@ body.editor-opened {
 .main-panel, .playlist-panel {
     flex: 1;
 
+    /* Prevent growing more than the allocated space, a fix for overlay in the viewer toolbar */
+    max-width: calc(100% - 320px);
+
     .main-panel-wrapper {
         position: relative;
         height: 100%;
@@ -195,7 +198,7 @@ body.editor-opened {
     background-color: $xibo-color-neutral-100;
 
     /* SCROLLBAR */
-    scrollbar-color: $xibo-color-primary-d60 $xibo-color-primary;
+    scrollbar-color: $xibo-color-primary lighten($xibo-color-primary, 40%);
     /* For firefox */
     scrollbar-width: thin;
     /* For firefox */
@@ -736,11 +739,8 @@ body.editor-opened {
         color: $xibo-color-primary-l5;
         padding: 30px;
         background-color: $xibo-color-semantic-error;
-
-        &.invalid-region-message {
-            margin: 16px;
-            border-radius: 3px;
-        }
+        border-radius: 4px;
+        margin: 16px 16px 0 0;
     }
 
     .loading-container {
@@ -1489,7 +1489,6 @@ body.editor-opened {
 
 /* Locked mode */
 #layout-editor #lockedOverlay {
-    z-index: 1;
     display: block;
     position: absolute;
 }
@@ -1703,6 +1702,10 @@ div#bg_media_name {
             justify-content: center;
         }
 
+        .label {
+            flex: 1;
+        }
+
         .name {
             white-space: nowrap;
             overflow: hidden;
@@ -1715,7 +1718,7 @@ div#bg_media_name {
             text-align: center;
         }
 
-        &.selected {
+        &.selected, &.multi-selected {
             color: $xibo-color-neutral-0;
             background-color: $xibo-color-accent !important;
             

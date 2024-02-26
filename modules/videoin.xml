@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2023 Xibo Signage Ltd
+  ~ Copyright (C) 2024 Xibo Signage Ltd
   ~
   ~ Xibo - Digital Signage - https://xibosignage.com
   ~
@@ -51,7 +51,7 @@
             <helpText>Should the video expand over the top of existing content and show in full screen?</helpText>
             <default>0</default>
         </property>
-        <property id="message" type="message">
+        <property id="message" type="message" includeInXlf="false">
             <title>This Module is compatible with webOS, Tizen and Philips SOC Players only</title>
         </property>
     </properties>

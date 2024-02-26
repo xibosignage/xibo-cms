@@ -137,11 +137,9 @@
         <hbs><![CDATA[
 <iframe id="iframe" scrolling="no" frameborder="0" src=" {{ uri  }}"></iframe>
          ]]></hbs>
-        <twig><![CDATA[
-<style>
+        <style><![CDATA[
 #iframe { border:0; }
-</style>
-        ]]></twig>
+        ]]></style>
     </stencil>
     <onRender><![CDATA[
 // Scale the layout
