@@ -237,6 +237,9 @@ $app->get('/playlist/form/usage/{id}', ['\Xibo\Controller\Playlist','usageForm']
 $app->get('/library/search', ['\Xibo\Controller\Library','search'])
     ->setName('library.search.all');
 
+$app->get('/library/connector/list', ['\Xibo\Controller\Library','providersList'])
+    ->setName('library.search.providers');
+
 $app->get('/library/view', ['\Xibo\Controller\Library','displayPage'])
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['library.view']))
     ->setName('library.view');

@@ -25,6 +25,7 @@ use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Illuminate\Support\Str;
 use Intervention\Image\ImageManagerStatic as Img;
+use Psr\Http\Message\ResponseInterface;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
@@ -36,6 +37,7 @@ use Xibo\Entity\SearchResult;
 use Xibo\Entity\SearchResults;
 use Xibo\Event\LibraryProviderEvent;
 use Xibo\Event\LibraryProviderImportEvent;
+use Xibo\Event\LibraryProviderListEvent;
 use Xibo\Event\MediaDeleteEvent;
 use Xibo\Event\MediaFullLoadEvent;
 use Xibo\Factory\DisplayFactory;
@@ -816,10 +818,10 @@ class Library extends Base
     public function search(Request $request, Response $response): Response
     {
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
-        $provider = $parsedQueryParams->getString('provider', ['default' => 'both']);
+        $provider = $parsedQueryParams->getString('provider', ['default' => 'local']);
 
         $searchResults = new SearchResults();
-        if ($provider === 'both' || $provider === 'local') {
+        if ($provider === 'local') {
             // Sorting options.
             // only allow from a preset list
             $sortCol = match ($parsedQueryParams->getString('sortCol')) {
@@ -876,37 +878,64 @@ class Library extends Base
                 // Add the result
                 $searchResults->data[] = $searchResult;
             }
-        }
+        } else {
+            // Dispatch event to get Providers and their details.
+            $eventList = new LibraryProviderListEvent();
+            $this->getDispatcher()->dispatch($eventList, $eventList->getName());
+            $availableProviders = $eventList->getProviders();
 
-        if ($provider === 'both' || $provider === 'remote') {
-            $this->getLog()->debug('Dispatching event.');
+            // Go through available providers
+            // see if any availableProviders matches requested provider
+            foreach ($availableProviders as $availableProvider) {
+                if ($availableProvider->id === $provider) {
+                    $this->getLog()->debug('Dispatching event, for provider ' . $provider);
 
-            // Do we have a type filter
-            $types = $parsedQueryParams->getArray('types');
-            $type = $parsedQueryParams->getString('type');
-            if ($type !== null) {
-                $types[] = $type;
-            }
+                    // Do we have a type filter
+                    $types = $parsedQueryParams->getArray('types');
+                    $type = $parsedQueryParams->getString('type');
+                    if ($type !== null) {
+                        $types[] = $type;
+                    }
 
-            // Hand off to any other providers that may want to provide results.
-            $event = new LibraryProviderEvent(
-                $searchResults,
-                $parsedQueryParams->getInt('start', ['default' => 0]),
-                $parsedQueryParams->getInt('length', ['default' => 10]),
-                $parsedQueryParams->getString('media'),
-                $types,
-                $parsedQueryParams->getString('orientation')
-            );
+                    // Hand off to any other providers that may want to provide results.
+                    $event = new LibraryProviderEvent(
+                        $searchResults,
+                        $parsedQueryParams->getInt('start', ['default' => 0]),
+                        $parsedQueryParams->getInt('length', ['default' => 10]),
+                        $parsedQueryParams->getString('media'),
+                        $types,
+                        $parsedQueryParams->getString('orientation'),
+                        $provider
+                    );
 
-            try {
-                $this->getDispatcher()->dispatch($event->getName(), $event);
-            } catch (\Exception $exception) {
-                $this->getLog()->error('Library search: Exception in dispatched event: ' . $exception->getMessage());
-                $this->getLog()->debug($exception->getTraceAsString());
+                    try {
+                        $this->getDispatcher()->dispatch($event, $event->getName());
+                    } catch (\Exception $exception) {
+                        $this->getLog()->error('Library search: Exception in dispatched event: ' . $exception->getMessage());
+                        $this->getLog()->debug($exception->getTraceAsString());
+                    }
+                }
             }
         }
 
         return $response->withJson($searchResults);
+    }
+
+    /**
+     * Get list of Library providers with their details.
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return Response|ResponseInterface
+     */
+    public function providersList(Request $request, Response $response): Response|\Psr\Http\Message\ResponseInterface
+    {
+        $event = new LibraryProviderListEvent();
+        $this->getDispatcher()->dispatch($event, $event->getName());
+
+        $providers = $event->getProviders();
+
+        return $response->withJson($providers);
     }
 
     /**
