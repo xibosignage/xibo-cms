@@ -879,42 +879,31 @@ class Library extends Base
                 $searchResults->data[] = $searchResult;
             }
         } else {
-            // Dispatch event to get Providers and their details.
-            $eventList = new LibraryProviderListEvent();
-            $this->getDispatcher()->dispatch($eventList, $eventList->getName());
-            $availableProviders = $eventList->getProviders();
+            $this->getLog()->debug('Dispatching event, for provider ' . $provider);
 
-            // Go through available providers
-            // see if any availableProviders matches requested provider
-            foreach ($availableProviders as $availableProvider) {
-                if ($availableProvider->id === $provider) {
-                    $this->getLog()->debug('Dispatching event, for provider ' . $provider);
+            // Do we have a type filter
+            $types = $parsedQueryParams->getArray('types');
+            $type = $parsedQueryParams->getString('type');
+            if ($type !== null) {
+                $types[] = $type;
+            }
 
-                    // Do we have a type filter
-                    $types = $parsedQueryParams->getArray('types');
-                    $type = $parsedQueryParams->getString('type');
-                    if ($type !== null) {
-                        $types[] = $type;
-                    }
+            // Hand off to any other providers that may want to provide results.
+            $event = new LibraryProviderEvent(
+                $searchResults,
+                $parsedQueryParams->getInt('start', ['default' => 0]),
+                $parsedQueryParams->getInt('length', ['default' => 10]),
+                $parsedQueryParams->getString('media'),
+                $types,
+                $parsedQueryParams->getString('orientation'),
+                $provider
+            );
 
-                    // Hand off to any other providers that may want to provide results.
-                    $event = new LibraryProviderEvent(
-                        $searchResults,
-                        $parsedQueryParams->getInt('start', ['default' => 0]),
-                        $parsedQueryParams->getInt('length', ['default' => 10]),
-                        $parsedQueryParams->getString('media'),
-                        $types,
-                        $parsedQueryParams->getString('orientation'),
-                        $provider
-                    );
-
-                    try {
-                        $this->getDispatcher()->dispatch($event, $event->getName());
-                    } catch (\Exception $exception) {
-                        $this->getLog()->error('Library search: Exception in dispatched event: ' . $exception->getMessage());
-                        $this->getLog()->debug($exception->getTraceAsString());
-                    }
-                }
+            try {
+                $this->getDispatcher()->dispatch($event, $event->getName());
+            } catch (\Exception $exception) {
+                $this->getLog()->error('Library search: Exception in dispatched event: ' . $exception->getMessage());
+                $this->getLog()->debug($exception->getTraceAsString());
             }
         }
 
