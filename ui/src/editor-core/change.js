@@ -9,17 +9,22 @@
  * @param  {string} type -Type of change ( tranform, properties,... )
  * @param  {string} targetType
  *  - Target object Type ( widget, region, layout, ... )
+ * @param  {string} targetSubType
+ *  - Target object Sub Type ( canvas, playlist, ... )
  * @param  {string} targetID - Target object ID
  *  - Target object ( widget, region, layout, ...
  * @param {object} oldState - Previous change properties
  * @param {object} newState - Change properties, to be saved
 */
-const Change = function(id, type, targetType, targetID, oldState, newState) {
+const Change = function(
+  id, type, targetType, targetSubType, targetID, oldState, newState,
+) {
   this.id = id;
   this.type = type;
   this.target = {
     id: targetID,
     type: targetType,
+    subType: targetSubType,
   };
   this.oldState = oldState;
   this.newState = newState;

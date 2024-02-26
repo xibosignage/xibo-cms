@@ -109,22 +109,6 @@
         <twig><![CDATA[
 <script async defer src="https://maps.googleapis.com/maps/api/js?key={{ settings.apiKey }}&callback=init"></script>
 
-<style>
-body {
-    margin: 0;
-    overflow: hidden;
-}
-h1, h2, h3, h4, p {
-    margin-top: 0;
-}
-#iframe {
-    border: 0;
-}
-#map {
-    height: 100%;
-}
-</style>
-
 <script type="text/javascript">
     function init() {
         var lat = {{ latitude }};
@@ -166,6 +150,21 @@ h1, h2, h3, h4, p {
 
  <div id="map"></div>
         ]]></twig>
+        <style><![CDATA[
+body {
+    margin: 0;
+    overflow: hidden;
+}
+h1, h2, h3, h4, p {
+    margin-top: 0;
+}
+#iframe {
+    border: 0;
+}
+#map {
+    height: 100%;
+}
+        ]]></style>
     </stencil>
     <onRender><![CDATA[
 $(target).find('#map').height($(window).height());

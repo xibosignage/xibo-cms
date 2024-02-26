@@ -82,16 +82,14 @@
         </properties>
         <stencil>
             <twig><![CDATA[
-{% if javaScript %}<script type="text/javascript">{{javaScript}}</script>{% endif %}
-{% if styleSheet or itemsSideBySide or backgroundColor or textDirection == "rtl" %}
-<style>
+{% if javaScript %}<script type="text/javascript">{{javaScript|raw}}</script>{% endif %}
+            ]]></twig>
+            <style><![CDATA[
 {% if itemsSideBySide %}.item, .page { float: left; }{% endif %}
 {% if textDirection == "rtl" %}#content { direction: rtl; }{% endif %}
 {% if backgroundColor %}body { background-color: {{backgroundColor}}; }{% endif %}
-{{styleSheet}}
-</style>
-{% endif %}
-            ]]></twig>
+{{styleSheet|raw}}
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // id: The id of the widget
@@ -115,7 +113,7 @@ $(target).find('#content').empty();
 
 // Add items to container
 // If we have numItems, send only that number
-let numItems =
+var numItems =
   properties.numItems && properties.numItems < items.length ?
   properties.numItems :
   items.length;
@@ -126,11 +124,14 @@ for (var index = 0; index < numItems; index++) {
 }
 
 // Render
-$(target).find('img').xiboImageRender(properties);
-
 $(target).xiboLayoutScaler(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .event'));
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
+    <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+    ]]></onTemplateVisible>
     </template>
     <!-- End of Custom Calendar -->
 
@@ -282,8 +283,8 @@ $(target).xiboTextRender(properties, $(target).find('#content > .event'));
     <ol class="day-title"></ol>
     <ol class="day-container"></ol>
 </div>
-
-<style>
+            ]]></twig>
+            <style><![CDATA[
 :root {
   --grid-color: #dadada;
   --grid-text-color: #505050;
@@ -560,8 +561,7 @@ ol, li {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
 }
-</style>
-          ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Template renderer options
@@ -571,7 +571,6 @@ ol, li {
 // properties: The properties for the widget
 moment.locale(properties.lang || globalOptions.locale);
 
-$(target).find("img").xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
 
 // Add the calendar type to options
@@ -579,6 +578,7 @@ properties.calendarType = 2;
 
 // Run calendar render
 $(target).xiboCalendarRender(properties, items);
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <assets>
             <asset id="daily_light" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/event/daily_light.png" />
@@ -731,8 +731,8 @@ $(target).xiboCalendarRender(properties, items);
     <ol class="day-title"></ol>
     <ol class="day-container"></ol>
 </div>
-
-<style>
+            ]]></twig>
+            <style><![CDATA[
 :root {
   --grid-color: #545454;
   --grid-text-color: #bbbbbb;
@@ -1009,8 +1009,7 @@ ol, li {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
 }
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Template renderer options
@@ -1020,7 +1019,6 @@ ol, li {
 // properties: The properties for the widget
 moment.locale(properties.lang || globalOptions.locale);
 
-$(target).find("img").xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
 
 // Add the calendar type to options
@@ -1028,6 +1026,7 @@ properties.calendarType = 2;
 
 // Run calendar render
 $(target).xiboCalendarRender(properties, items);
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <assets>
             <asset id="daily_dark" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/event/daily_dark.png" />
@@ -1198,8 +1197,8 @@ $(target).xiboCalendarRender(properties, items);
   <ol class="day-of-week"></ol>
   <ol class="days-row"></ol>
 </div>
-
-<style>
+            ]]></twig>
+            <style><![CDATA[
 :root {
   --grid-color: #dadada;
   --grid-text-color: #505050;
@@ -1481,8 +1480,7 @@ ol, li {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
 }
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Template renderer options
@@ -1491,8 +1489,6 @@ ol, li {
 // items: The items to render
 // properties: The properties for the widget
 moment.locale(properties.lang || globalOptions.locale);
-
-$(target).find("img").xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
 
 // Add the calendar type to options
@@ -1500,6 +1496,7 @@ properties.calendarType = 3;
 
 // Run calendar render
 $(target).xiboCalendarRender(properties, items);
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <assets>
             <asset id="weekly_light" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/event/weekly_light.png" />
@@ -1667,8 +1664,8 @@ $(target).xiboCalendarRender(properties, items);
   <ol class="day-of-week"></ol>
   <ol class="days-row"></ol>
 </div>
-
-<style>
+            ]]></twig>
+            <style><![CDATA[
 :root {
   --grid-color: #545454;
   --grid-text-color: #bbbbbb;
@@ -1950,8 +1947,7 @@ ol, li {
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
 }
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Template renderer options
@@ -1961,7 +1957,6 @@ ol, li {
 // properties: The properties for the widget
 moment.locale(properties.lang || globalOptions.locale);
 
-$(target).find("img").xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
 
 // Add the calendar type to options
@@ -1969,6 +1964,7 @@ properties.calendarType = 3;
 
 // Run calendar render
 $(target).xiboCalendarRender(properties, items);
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <assets>
             <asset id="weekly_dark" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/event/weekly_dark.png" />
@@ -2140,8 +2136,8 @@ $(target).xiboCalendarRender(properties, items);
   <ol id="daysOfWeek" class="day-of-week"></ol>
   <ol id="calendarDays" class="days-grid"></ol>
 </div>
-
-<style>
+            ]]></twig>
+            <style><![CDATA[
 :root {
   --grid-color: #dadada;
   --today-text-color: #fb8100;
@@ -2347,8 +2343,7 @@ li {
 .calendar-day--not-current .calendar-event {
   opacity: 0.8;
 }
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Template renderer options
@@ -2358,7 +2353,6 @@ li {
 // properties: The properties for the widget
 moment.locale(properties.lang || globalOptions.locale);
 
-$(target).find("img").xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
 
 // Add the calendar type to options
@@ -2366,6 +2360,7 @@ properties.calendarType = 4;
 
 // Run calendar render
 $(target).xiboCalendarRender(properties, items);
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <assets>
             <asset id="monthly_light" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/event/monthly_light.png" />
@@ -2534,8 +2529,8 @@ $(target).xiboCalendarRender(properties, items);
   <ol id="daysOfWeek" class="day-of-week"></ol>
   <ol id="calendarDays" class="days-grid"></ol>
 </div>
-
-<style>
+            ]]></twig>
+            <style><![CDATA[
 :root {
   --grid-color: #dddddd;
   --today-text-color: #ff9922;
@@ -2741,8 +2736,7 @@ li {
 .calendar-day--not-current .calendar-event {
   opacity: 0.8;
 }
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Template renderer options
@@ -2752,7 +2746,6 @@ li {
 // properties: The properties for the widget
 moment.locale(properties.lang || globalOptions.locale);
 
-$(target).find("img").xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
 
 // Add the calendar type to options
@@ -2760,6 +2753,7 @@ properties.calendarType = 4;
 
 // Run calendar render
 $(target).xiboCalendarRender(properties, items);
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <assets>
             <asset id="monthly_dark" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/event/monthly_dark.png" />
@@ -2893,8 +2887,8 @@ $(target).xiboCalendarRender(properties, items);
         <stencil>
             <twig><![CDATA[
 <div class="calendar-schedule calendar-container"></div>
-
-<style>
+            ]]></twig>
+            <style><![CDATA[
 :root {
   --grid-color: #6e6e6e;
   --weekdays-bg-color: #ffffff;
@@ -3046,8 +3040,7 @@ ol, li {
   color: var(--no-events-text-color);
   border-bottom: 0.5rem solid var(--no-events-text-color);
 }
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Template renderer options
@@ -3057,7 +3050,6 @@ ol, li {
 // properties: The properties for the widget
 moment.locale(properties.lang || globalOptions.locale);
 
-$(target).find("img").xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
 
 // Add the calendar type to options
@@ -3065,6 +3057,7 @@ properties.calendarType = 1;
 
 // Run calendar render
 $(target).xiboCalendarRender(properties, items);
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <assets>
             <asset id="schedule_light" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/event/schedule_light.png" />
@@ -3195,8 +3188,8 @@ $(target).xiboCalendarRender(properties, items);
         <stencil>
             <twig><![CDATA[
 <div class="calendar-schedule calendar-container"></div>
-
-<style>
+            ]]></twig>
+            <style><![CDATA[
 :root {
   --grid-color: #1b1b1b;
   --weekdays-bg-color: #606060;
@@ -3348,8 +3341,7 @@ ol, li {
   color: var(--no-events-text-color);
   border-bottom: 0.5rem solid var(--no-events-text-color);
 }
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Template renderer options
@@ -3359,7 +3351,6 @@ ol, li {
 // properties: The properties for the widget
 moment.locale(properties.lang || globalOptions.locale);
 
-$(target).find("img").xiboImageRender(properties);
 $(target).xiboLayoutScaler(properties);
 
 // Add the calendar type to options
@@ -3367,6 +3358,7 @@ properties.calendarType = 1;
 
 // Run calendar render
 $(target).xiboCalendarRender(properties, items);
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <assets>
             <asset id="schedule_dark" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/event/schedule_dark.png" />

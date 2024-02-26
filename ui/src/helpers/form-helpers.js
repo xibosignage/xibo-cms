@@ -481,7 +481,6 @@ const formHelpers = function() {
       }
     };
 
-
     // Function to switch off all the bootstrapSwitch
     const forceBootstrapSwitchesOff = function() {
       // If one of the targets is a boostrap switch, switch it off
@@ -777,6 +776,21 @@ const formHelpers = function() {
           if (CKEDITOR.instances[textAreaId] === undefined) {
             return;
           }
+
+          // Fix paste not enabled
+          ev.editor.on('beforeCommandExec', function(event) {
+            // Show the paste dialog for the paste buttons and right-click paste
+            if (event.data.name == 'paste') {
+              event.editor._.forcePasteDialog = true;
+            }
+            // Don't show the paste dialog for Ctrl+Shift+V
+            if (
+              event.data.name == 'pastetext' &&
+              event.data.commandData.from == 'keystrokeHandler'
+            ) {
+              event.cancel();
+            }
+          });
 
           // Trigger focus on textarea on editor focus
           ev.editor.on('focus', function(evt) {

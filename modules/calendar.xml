@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2023 Xibo Signage Ltd
+  ~ Copyright (C) 2024 Xibo Signage Ltd
   ~
   ~ Xibo - Digital Signage - https://xibosignage.com
   ~
@@ -112,6 +112,16 @@
             <helpText>When all day events are excluded they are removed from the list of events in the feed and wont be shown</helpText>
             <default></default>
         </property>
+        <property id="excludePast" type="checkbox">
+            <title>Exclude past events?</title>
+            <helpText>When past events are excluded they are removed from the list of events in the feed and wont be shown.</helpText>
+            <default></default>
+        </property>
+        <property id="showOnlyCurrent" type="checkbox">
+            <title>Show only current events?</title>
+            <helpText>Show current events and hide all other events from the feed.</helpText>
+            <default></default>
+        </property>
         <property id="excludeCurrent" type="checkbox">
             <title>Exclude current events?</title>
             <helpText>When current events are excluded they are removed from the list of events in the feed and wont be shown.</helpText>
@@ -169,44 +179,54 @@
             <default></default>
         </property>
     </properties>
-    <onDataError><![CDATA[
-    if (typeof httpStatus === 'undefined' || typeof response === 'undefined') {
-        return false;
-    }
+    <onDataLoad><![CDATA[
+// items: The items to render
+// meta: Metadata
+// properties: The properties for the widget
 
-    var hasSucceed = response.hasOwnProperty('success') && response.success === true;
-
-    if (!hasSucceed) {
-        return false;
-    }
-]]></onDataError>
-    <onParseData><![CDATA[
-// item - element to be parsed
-// properties - object containing the values to be evaluated/used
 var now = moment();
-var startDate = moment(item.startDate);
-var endDate = moment(item.endDate);
 
-// Check if there is an event ongoing and change it if the variable isn't set or is false
-if ((typeof ongoingEvent != 'undefined' || !window.ongoingEvent) && startDate.isBefore(now) && endDate.isAfter(now)) {
-    window.ongoingEvent = true;
-}
+for(var idx = 0; idx < items.length; idx++) {
+    var item = items[idx];
 
-if (endDate.isAfter(now)) {
-    if (moment(item.startDate).isBefore(now)) {
-        item.currentEvent = true;
+    var startDate = moment(item.startDate);
+    var endDate = moment(item.endDate);
+
+    // Check if there is an event ongoing and change it if the variable isn't set or is false
+    if ((typeof ongoingEvent != 'undefined' || !window.ongoingEvent) && startDate.isBefore(now) && endDate.isAfter(now)) {
+        window.ongoingEvent = true;
+    }
+
+    if (endDate.isAfter(now)) {
+        if (moment(items[idx].startDate).isBefore(now)) {
+            items[idx].currentEvent = true;
+        } else {
+            items[idx].currentEvent = false;
+        }
+    }
+
+    if(endDate.isBefore(now)) {
+        items[idx].pastEvent = true;
     } else {
-        item.currentEvent = false;
+        items[idx].pastEvent = false;
+    }
+
+    // Filter items based on properties
+    if (
+        // If it's current event and we need to exclude it
+        (properties.excludeCurrent == 1 && items[idx].currentEvent) ||
+        // If it's not current event, and we only want to show current events
+        (properties.showOnlyCurrent == 1 && !item.currentEvent) ||
+        // If it's a past event and we need to exclude it
+        (properties.excludePast == 1 && item.pastEvent)
+    ) {
+        items.splice(idx, 1);
+        idx--;
     }
 }
 
-// Return element
-if (properties.excludeCurrent == 1 && item.currentEvent) {
-    return null;
-}
-
-return item;
-    ]]></onParseData>
+return {dataItems: items};
+    ]]></onDataLoad>
     <onRender>
         <![CDATA[
 // Module renderer options
@@ -221,10 +241,6 @@ if(typeof ongoingEvent != 'undefined' && ongoingEvent && properties.currentEvent
     xiboIC.trigger(properties.noEventTrigger);
 }
     ]]></onRender>
-    <onVisible><![CDATA[
-// Start effects for this widget
-$(target).xiboLayoutAnimate(properties);
-    ]]></onVisible>
     <sampleData><![CDATA[
 [{
     "summary": "Sample Event 1",

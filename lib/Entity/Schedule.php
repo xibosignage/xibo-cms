@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -1988,7 +1988,9 @@ class Schedule implements \JsonSerializable
             }
 
             if (in_array($key, $this->datesToFormat)) {
-                $objectAsJson[$key] = Carbon::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat());
+                $objectAsJson[$key] = !empty($value)
+                    ? Carbon::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat())
+                    : $value;
             }
 
             if ($key === 'campaignId' && isset($this->campaignFactory)) {
@@ -2017,9 +2019,15 @@ class Schedule implements \JsonSerializable
                 && $this->hasPropertyChanged($key)
             ) {
                 if (in_array($key, $this->datesToFormat)) {
-                    $changedProperties[$key] = Carbon::createFromTimestamp($this->getOriginalValue($key))
-                            ->format(DateFormatHelper::getSystemFormat())
-                        . ' > ' . Carbon::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat());
+                    $original = empty($this->getOriginalValue($key))
+                        ? $this->getOriginalValue($key)
+                        : Carbon::createFromTimestamp($this->getOriginalValue($key))
+                            ->format(DateFormatHelper::getSystemFormat());
+                    $new = empty($value)
+                        ? $value
+                        : Carbon::createFromTimestamp($value)
+                            ->format(DateFormatHelper::getSystemFormat());
+                    $changedProperties[$key] = $original . ' > ' . $new;
                 } else {
                     $changedProperties[$key] = $this->getOriginalValue($key) . ' > ' . $value;
 

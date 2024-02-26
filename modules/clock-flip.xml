@@ -69,14 +69,37 @@
             <helpText>The offset in minutes that should be applied to the current time, or if a counter then date/time to run from in the format Y-m-d H:i:s.</helpText>
             <default></default>
         </property>
+        <property id="backgroundColor" type="color">
+            <title>Background Colour</title>
+        </property>
+        <property id="flipCardTextColor" type="color">
+            <title>Flip Card Text Colour</title>
+            <default>#ccc</default>
+        </property>
+        <property id="flipCardBackgroundColor" type="color">
+            <title>Flip Card Background Colour</title>
+            <default>#333</default>
+        </property>
+        <property id="dividerColor" type="color">
+            <title>Divider Colour</title>
+            <default>#323434</default>
+        </property>
+        <property id="ampmColor" type="color">
+            <title>AM/PM Colour</title>
+            <default>#313333</default>
+            <visibility>
+                <test>
+                    <condition field="clockFace" type="eq">TwelveHourClock</condition>
+                </test>
+            </visibility>
+        </property>
     </properties>
     <preview></preview>
     <stencil>
         <hbs><![CDATA[
 <div id="clock"></div>
         ]]></hbs>
-<twig><![CDATA[
-<style>
+        <style><![CDATA[
 body {
     margin: 0;
     overflow: hidden;
@@ -90,10 +113,16 @@ h1, h2, h3, h4, p {
 .flip-clock-wrapper {
     text-align: center;
     position: relative;
-    margin: 0;
+    margin: 0 !important;
 }
-</style>
-        ]]></twig>
+
+{% if backgroundColor %}body { background: {{backgroundColor}} !important; }{% endif %}
+{% if dividerColor %}.flip-clock-dot { background: {{dividerColor}} !important; }{% endif %}
+{% if ampmColor %}.flip-clock-meridium a { color: {{ampmColor}} !important; }{% endif %}
+
+{% if flipCardTextColor %}.flip-clock-wrapper ul li a div div.inn { color: {{flipCardTextColor}} !important; }{% endif %}
+{% if flipCardBackgroundColor %}.flip-clock-wrapper ul li a div div.inn { background-color: {{flipCardBackgroundColor}} !important; }{% endif %}
+        ]]></style>
     </stencil>
     <onInitialize><![CDATA[
 // Set moment locale
@@ -119,13 +148,8 @@ xiboIC.set(id, 'getTimeRemaining', function getTimeRemaining(endtime) {
 });
     ]]></onInitialize>
     <onRender><![CDATA[
-var width = properties.originalWidth;
-var height = properties.originalHeight;
-
-if (width == 0 || height == 0) {
-    width = $(window).width();
-    height = $(window).height();
-}
+var width = $(window).width();
+var height = $(window).height();
 
 var clock_width = 300;
 var clock_seconds_width = 160;
@@ -203,11 +227,10 @@ if (properties.clockFace === "TwelveHourClock" || properties.clockFace === "Twen
         countdown: true
     });
 }
-
-// Scale the element
-$(target).xiboLayoutScaler(properties);
     ]]></onRender>
     <assets>
+        <asset id="flipclock.js" type="path" mimeType="text/javascript" path="/modules/assets/flipclock/flipclock.min.js"></asset>
+        <asset id="flipclock.css" type="path" mimeType="text/css" path="/modules/assets/flipclock/flipclock.css"></asset>
         <asset id="clock-flip-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/clock/clock-flip-thumb.png" />
     </assets>
 </module>

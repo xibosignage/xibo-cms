@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -158,18 +158,31 @@ class CommandFactory extends BaseFactory
         }
 
         if ($sanitizedFilter->getString('command') != null) {
-            $body .= ' AND `command`.command = :command ';
-            $params['command'] = $sanitizedFilter->getString('command');
-        }
-
-        if ($sanitizedFilter->getString('commandLike') != null) {
-            $body .= ' AND `command`.command LIKE :commandLike ';
-            $params['commandLike'] = '%' . $sanitizedFilter->getString('commandLike') . '%';
+            $terms = explode(',', $sanitizedFilter->getString('command'));
+            $logicalOperator = $sanitizedFilter->getString('logicalOperatorName', ['default' => 'OR']);
+            $this->nameFilter(
+                'command',
+                'command',
+                $terms,
+                $body,
+                $params,
+                ($sanitizedFilter->getCheckbox('useRegexForName') == 1),
+                $logicalOperator
+            );
         }
 
         if ($sanitizedFilter->getString('code') != null) {
-            $body .= ' AND `command`.code = :code ';
-            $params['code'] = $sanitizedFilter->getString('code');
+            $terms = explode(',', $sanitizedFilter->getString('code'));
+            $logicalOperator = $sanitizedFilter->getString('logicalOperatorCode', ['default' => 'OR']);
+            $this->nameFilter(
+                'command',
+                'code',
+                $terms,
+                $body,
+                $params,
+                ($sanitizedFilter->getCheckbox('useRegexForCode') == 1),
+                $logicalOperator
+            );
         }
 
         if ($sanitizedFilter->getString('type') != null) {

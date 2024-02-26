@@ -296,10 +296,11 @@ class AlphaVantageConnector implements ConnectorInterface
     protected function getStockQuote(string $symbol, ?int $isPaidPlan): array
     {
         try {
-            $cache = $this->getPool()->getItem('/widget/stock/'.md5($symbol));
+            $cache = $this->getPool()->getItem('/widget/stock/api_'.md5($symbol));
             $cache->setInvalidationMethod(Invalidation::SLEEP, 5000, 15);
 
             $data = $cache->get();
+
             if ($cache->isMiss()) {
                 $this->getLogger()->debug('AlphaVantage Connector : getStockQuote is served from the API.');
 

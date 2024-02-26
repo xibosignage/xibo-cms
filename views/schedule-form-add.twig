@@ -196,7 +196,14 @@
 
                         {% set title %}{% trans "Command" %}{% endset %}
                         {% set helpText %}{% trans "Please select a command for this Event." %}{% endset %}
-                        {{ forms.dropdown("commandId", "single", title, "", [{commandId: "", command: ""}]|merge(commands), "commandId", "command", helpText, "command-control") }}
+                        {% set attributes = [
+                            { name: "data-width", value: "100%" },
+                            { name: "data-search-url", value: url_for("command.search") },
+                            { name: "data-search-term", value: "command" },
+                            { name: "data-id-property", value: "commandId" },
+                            { name: "data-text-property", value: "command" }
+                        ] %}
+                        {{ forms.dropdown("commandId", "single", title, "", null, "commandId", "command", helpText, "pagedSelect command-control", "", "", "", attributes) }}
 
                         {% set title %}{% trans "DataSet" %}{% endset %}
                         {% set helpText %}{% trans "Please select the real time DataSet related to this Data Connector event" %}{% endset %}

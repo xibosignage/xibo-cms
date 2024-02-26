@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -842,7 +842,12 @@ class Soap
                 }
 
                 // Get the Layout Modified Date
-                $layoutModifiedDt = Carbon::createFromTimestamp($layout->modifiedDt);
+                // To cover for instances where modifiedDt isn't correctly recorded
+                // use the createdDt instead.
+                $layoutModifiedDt = Carbon::createFromFormat(
+                    DateFormatHelper::getSystemFormat(),
+                    $layout->modifiedDt ?? $layout->createdDt
+                );
 
                 // merge regions and drawers
                 /** @var Region[] $allRegions */
@@ -2471,7 +2476,7 @@ class Soap
                                 throw new NotFoundException('Cache not ready');
                             }
 
-                            $data = $widgetDataProviderCache->decorateForPlayer($dataProvider->getData(), $media);
+                            $widgetData = $widgetDataProviderCache->decorateForPlayer($dataProvider->getData(), $media);
                         } catch (GeneralException $exception) {
                             // No data cached yet, exception
                             $this->getLog()->error('getResource: Failed to get data cache for widgetId '
@@ -2480,7 +2485,7 @@ class Soap
                         }
 
                         $data[$widget->widgetId] = [
-                            'data' => $data,
+                            'data' => $widgetData,
                             'meta' => $dataProvider->getMeta()
                         ];
                     }

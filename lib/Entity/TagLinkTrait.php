@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -122,9 +122,6 @@ trait TagLinkTrait
      */
     public function updateTagLinks($tags = [])
     {
-        $this->getLog()->debug('debug: linked ' . json_encode($this->tags));
-        $this->getLog()->debug('debug: tags ' . json_encode($tags));
-
         if ($this->tags != $tags) {
             $this->unlinkTags = array_udiff($this->tags, $tags, function ($a, $b) {
                 /* @var TagLink $a */

@@ -451,10 +451,13 @@ Layout.prototype.publish = function() {
 
       toastr.success(res.message);
 
-      // Redirect to the new published layout ( read only mode )
-      window.location.href =
-        urlsForApi.layout.designer.url.replace(
-          ':id', res.data.layoutId) + '?vM=1';
+      // Update the thumbnail
+      lD.uploadThumbnail().finally(() => {
+        // Redirect to the new published layout ( read only mode )
+        window.location.href =
+          urlsForApi.layout.designer.url.replace(
+            ':id', res.data.layoutId) + '?vM=1';
+      });
     } else {
       lD.common.hideLoadingScreen();
 
@@ -465,8 +468,11 @@ Layout.prototype.publish = function() {
       } else {
         toastr.error(res.message);
 
-        // Close dialog
-        bootbox.hideAll();
+        // Remove loading icon from publish dialog
+        $(
+          '[data-test="publishFormLayoutForm"] ' +
+          '.btn-bb-Publish i.fa-cog',
+        ).remove();
       }
     }
   }).fail(function(jqXHR, textStatus, errorThrown) {
@@ -514,8 +520,11 @@ Layout.prototype.discard = function() {
       } else {
         toastr.error(res.message);
 
-        // Close dialog
-        bootbox.hideAll();
+        // Remove loading icon from publish dialog
+        $(
+          '[data-test="discardFormLayoutForm"] ' +
+          '.btn-bb-Discard i.fa-cog',
+        ).remove();
       }
     }
 
@@ -565,8 +574,11 @@ Layout.prototype.delete = function() {
       } else {
         toastr.error(res.message);
 
-        // Close dialog
-        bootbox.hideAll();
+        // Remove loading icon from publish dialog
+        $(
+          '[data-test="deleteFormLayoutForm"] ' +
+          '.btn-bb-Yes i.fa-cog',
+        ).remove();
       }
     }
 
@@ -624,7 +636,10 @@ Layout.prototype.addObject = function(
     null, // oldValues
     newValues, // newValues
     {
-      updateTargetId: true, // options.updateTargetId
+      updateTargetId: true,
+      // Don't add to history manager if it's a canvas
+      addToHistory: (objectSubtype != 'canvas'),
+      targetSubType: (objectSubtype) ? objectSubtype : null,
     },
   );
 };
@@ -770,7 +785,6 @@ Layout.prototype.updateStatus = function(
   // Update layout status
   lD.topbar.updateLayoutStatus();
 };
-
 
 /**
  * Calculate layout values for the layout based on the scale of this container
@@ -1088,6 +1102,44 @@ Layout.prototype.isEmpty = function() {
   }
 
   return true;
+};
+
+/**
+ * Save multiple regions at once
+ * @param {Object[]} regions Array of regions to be saved
+ * @return {Promise} - Promise that resolves when the regions are saved
+ */
+Layout.prototype.saveMultipleRegions = function(regions) {
+  const self = this;
+  return new Promise(function(resolve, reject) {
+    const requestPath =
+      urlsForApi.region.transform.url.replace(':id', self.layoutId);
+
+    const requestData = [];
+    regions.forEach((region) => {
+      requestData.push({
+        width: region.dimensions.width,
+        height: region.dimensions.height,
+        top: region.dimensions.top,
+        left: region.dimensions.left,
+        zIndex: region.zIndex,
+        regionid: region.regionId,
+      });
+    });
+
+    $.ajax({
+      url: requestPath,
+      type: urlsForApi.region.transform.type,
+      data: {
+        regions: JSON.stringify(requestData),
+      },
+    }).done(function(data) {
+      resolve(data);
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+      // Reject promise and return an object with all values
+      reject(new Error({jqXHR, textStatus, errorThrown}));
+    });
+  });
 };
 
 module.exports = Layout;

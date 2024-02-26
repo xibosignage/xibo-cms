@@ -43,7 +43,7 @@
     </template>
     <template>
         <id>product_category_photo</id>
-        <extends override="url" with="data.image">global-image</extends>
+        <extends override="url" with="data.image">global_image</extends>
         <type>element</type>
         <dataType>product-category</dataType>
         <icon>fas fa-image</icon>

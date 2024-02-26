@@ -33,12 +33,6 @@
             modulesList.push({{ module|json_encode|raw }});
         {% endfor %}
 
-        // USERS LIST
-        var usersList = [];
-        {% for user in users %}
-            usersList.push({{ user|json_encode|raw }});
-        {% endfor %}
-
         // Structure with API URLs
         var urlsForApi = {
             layout: {
@@ -280,6 +274,10 @@
                 }
             },
             user: {
+                get: {
+                    url: "{{ url_for("user.search") }}",
+                    type: 'GET'
+                },
                 getPref: {
                     url: "{{ url_for("user.pref") }}",
                     type: 'GET'
@@ -457,6 +455,9 @@
                 editTransIn: "{{ "Edit Transition In"|trans }}",
                 editTransOut: "{{ "Edit Transition Out" |trans }}",
                 editPermissions: "{{ "Edit Sharing" |trans }}",
+                editRegionPermissions: "{{ "Edit Region Sharing" |trans }}",
+                editWidgetPermissions: "{{ "Edit Widget Sharing" |trans }}",
+                editCanvasPermissions: "{{ "Edit Canvas Sharing" |trans }}",
                 editPlaylist: "{{ "Edit Playlist" |trans }}",
                 options: "{% trans "Options" %}",
                 moveLeft: "{{ "Move one step left" |trans }}",
@@ -511,6 +512,7 @@
                     bottomRight: "{{ "Bottom/Right" |trans }}",
                 },
                 somethingWentWrong: "{{ "Something went wrong!"|trans }}",
+                somethingWentWrongEditPermissions: "{{ "Selected item is not shared with you with edit permission!"|trans }}",
                 actions: {
                     noActionsToShow: "{{ "No actions to show"|trans }}",
                     otherActions: "{{ "Other Actions" |trans }}",
@@ -569,6 +571,7 @@
                     height: "{{ "Height" |trans }}",
                     rotation: "{{ "Rotation" |trans }}",
                     setFullscreen: "{{ "Make this full screen, dimensions will be set to %layout.width% by %layout.height%." |trans }}",
+                    bringToView: "{{ "Bring selected object back to the Layout view." |trans }}",
                 },
                 layout: {
                     backgroundColor: "{{ "Background Colour" |trans }}",
@@ -606,6 +609,7 @@
                     height: "{{ "Height" |trans }}",
                     heightHelpText: "{{ "The height of the %regionType%" |trans }}",
                     makeRegionFullScreen: "{{ "Make this %regionType% full screen, dimensions will be set to %layout.width% by %layout.height%." |trans }}",
+                    bringRegionToView: "{{ "Bring selected %regionType% back to the Layout view." |trans }}",
                 },
                 widget: {
                     name: "{{ "Widget Name" |trans }}",
@@ -632,7 +636,11 @@
                 },
                 widgetInfo: {
                     widgetName: "{{ "Widget Name" |trans }}",
-                }
+                },
+                elementName: "{{ "Element Name" |trans }}",
+                elementNameHelpText: "{{ "An optional name for this element" |trans }}",
+                elementGroupName: "{{ "Element Group Name" |trans }}",
+                elementGroupNameHelpText: "{{ "An optional name for this group of elements" |trans }}",
             };
 
             var toolbarTrans = {
@@ -759,12 +767,20 @@
 
             var historyManagerTrans = {
                 revert: {
-                    saveForm: "{{ "Revert %target% form save" |trans }}",
+                    saveForm: "{{ "Revert %target% save" |trans }}",
                     order: "{{ "Revert %target% order" |trans }}",
                     transform: "{{ "Revert %target% transformation" |trans }}",
                     addWidget: "{{ "Revert %target% creation" |trans }}",
                     addMedia: "{{ "Revert %target% assignment" |trans }}",
                     create: "{{ "Revert %target% creation"|trans }}"
+                },
+                target: {
+                    widget: "{{ "Widget" |trans }}",
+                    region: "{{ "Region" |trans }}",
+                    canvas: "{{ "Canvas" |trans }}",
+                    frame: "{{ "Frame" |trans }}",
+                    zone: "{{ "Zone" |trans }}",
+                    playlist: "{{ "Playlist" |trans }}",
                 }
             };
 
@@ -775,6 +791,7 @@
                 group: "{{ "Group" |trans }}",
                 inGroup: "{{ "In %groupId%" |trans }}",
                 name: "{{ "Name" |trans }}",
+                template: "{{ "Template" |trans }}",
                 duration: "{{ "Duration" |trans }}",
                 emptyLayout: "{{ "Empty layout" |trans }}",
                 expand: "{{ "Expand" |trans }}",
@@ -837,6 +854,7 @@
                 unknown: "{{ "Unknown Error"|trans }}",
                 invalidRegion: "{{ "Region is invalid: Please delete it to validate the Layout!"|trans }}",
                 failedToImportMedia: "{{ "Failed to import media!"|trans }}",
+                canvasWidgetNotShared: "{{ "This Canvas is not shared with you with edit permission!"|trans }}",
             };
 
             var widgetStatusTrans = {
@@ -945,6 +963,32 @@
                 }
             };
 
+            var datasetColStyleSelectorTranslations = {
+                colAvailable: "{{ "Columns Available"|trans }}",
+                colSelected: "{{ "Columns Selected"|trans }}",
+                title: "{{ "Title"|trans }}",
+                summary: "{{ "Summary"|trans }}",
+                content: "{{ "Content"|trans }}",
+                author: "{{ "Author"|trans }}",
+                permalink: "{{ "Permalink"|trans }}",
+                link: "{{ "Link"|trans }}",
+                date: "{{ "Date"|trans }}",
+                publishedDate: "{{ "Published Date"|trans }}",
+                image: "{{ "Image"|trans }}",
+                form: {
+                    fontFamily: "{{ "Font Family"|trans }}",
+                    fontColor: "{{ "Font Colour"|trans }}",
+                    fontSize: "{{ "Font Size"|trans }}",
+                    bold: "{{ "Bold"|trans }}",
+                    italics: "{{ "Italics"|trans }}",
+                    underline: "{{ "Underline"|trans }}",
+                    dateFormat: "{{ "Date Format"|trans }}",
+                    opacity: "{{ "Opacity"|trans }}",
+                    width: "{{ "Width"|trans }}",
+                    height: "{{ "Height"|trans }}",
+                }
+            };
+
             var actionsTranslations = {
                 tableHeaders: {
                     name: "{{ "Actions" |trans }}",
@@ -999,6 +1043,13 @@
                     default: "{{ "Default zoom"|trans }}",
                     scaleMode: "{{ "Change scale mode"|trans }}",
                 },
+            };
+
+            var deleteModalTrans = {
+                playlist: {
+                    title: "{{ "Delete Playlist"|trans }}",
+                    message: "{{ "Are you sure you want to delete a non-empty Playlist?"|trans }}",
+                }
             };
 
             var momentLocalesTrans = {

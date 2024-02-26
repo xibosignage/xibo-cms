@@ -188,7 +188,7 @@ describe('Displays', function() {
 
     // Set the default layout
     cy.get('.modal .select2-container--bootstrap').click();
-    cy.get('.modal .select2-container--open input[type="search"]').type('disp4_default_layout');
+    cy.get('.modal .select2-container--open textarea[type="search"]').type('disp4_default_layout');
 
     cy.wait('@loadLayoutAfterSearch');
     cy.get('.select2-results__option').contains('disp4_default_layout').click();

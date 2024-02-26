@@ -13,6 +13,9 @@ const ElementGroup = function(data, widgetId, regionId, parentWidget) {
   this.regionId = regionId;
   this.type = 'element-group';
 
+  // Name
+  this.elementGroupName = (data.elementGroupName) ? data.elementGroupName : '';
+
   this.id = data.id;
   this.left = data.left;
   this.top = data.top;
@@ -33,6 +36,8 @@ const ElementGroup = function(data, widgetId, regionId, parentWidget) {
 
   // Expanded on layer manager
   this.expanded = false;
+
+  this.selected = false;
 };
 
 ElementGroup.prototype.updateSlot = function(
@@ -150,7 +155,7 @@ ElementGroup.prototype.updateGroupDimensions = function(
     // First we need to find the top/left position
     // left needs to adjust to the elements more to the left of the group
     if (
-      !self.left ||
+      self.left === null ||
       elTempProperties.left < self.left
     ) {
       self.left = elTempProperties.left;
@@ -158,7 +163,7 @@ ElementGroup.prototype.updateGroupDimensions = function(
 
     // top needs to adjust to the element more to the top
     if (
-      !self.top ||
+      self.top === null ||
       elTempProperties.top < self.top
     ) {
       self.top = elTempProperties.top;
@@ -180,7 +185,7 @@ ElementGroup.prototype.updateGroupDimensions = function(
     }
 
     if (
-      !self.width ||
+      self.width === null ||
       elTempProperties.left + elTempProperties.width >
       self.left + self.width
     ) {
@@ -189,7 +194,7 @@ ElementGroup.prototype.updateGroupDimensions = function(
     }
 
     if (
-      !self.height ||
+      self.height === null ||
       elTempProperties.top + elTempProperties.height >
       self.top + self.height
     ) {

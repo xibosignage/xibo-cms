@@ -164,15 +164,19 @@ PropertiesPanel.prototype.save = function(
   formFieldsToSave =
     formFieldsToSave.filter('.tab-pane:not(#positionTab) [name]');
 
+  // Get form old data
+  const formOldData = this.formSerializedLoadData[target.type];
+
+  // Get form data
+  // if we're saving an element, don't include the element properties
+  const formNewData = formFieldsToSave.serialize();
+
   // If form is valid, submit it ( add change )
   if (
     formFieldsToSave.length > 0 &&
-    formFieldsToSave.valid()
+    formFieldsToSave.valid() &&
+    formOldData != formNewData // if form data is the same, don't save
   ) {
-    // Get form data
-    // if we're saving an element, don't include the element properties
-    const formNewData = formFieldsToSave.serialize();
-
     app.common.showLoadingScreen();
 
     // Save content tab
@@ -188,7 +192,7 @@ PropertiesPanel.prototype.save = function(
       'saveForm',
       target.type, // targetType
       target[target.type + 'Id'], // targetId
-      this.formSerializedLoadData[target.type], // oldValues
+      formOldData, // oldValues
       formNewData, // newValues
       {
         customRequestPath: requestPath,
@@ -196,6 +200,9 @@ PropertiesPanel.prototype.save = function(
     ).then((_res) => {
       // Success
       app.common.hideLoadingScreen();
+
+      // Updated saved form data
+      self.formSerializedLoadData[target.type] = formNewData;
 
       // Clear error message
       formHelpers.clearErrorMessage(form);
@@ -272,6 +279,18 @@ PropertiesPanel.prototype.save = function(
                   app.viewer.renderElementContent(target.elements[element]);
                 }
               }
+
+              // If we're saving an element group, update bottom bar
+              (savingElementGroup) &&
+                app.bottombar.render(originalTarget);
+            }
+
+            // If we're saving a region, update bottom bar
+            // update bottom bar
+            if (originalTarget.type === 'region') {
+              app.bottombar.render(
+                app.getObjectByTypeAndId('region', originalTarget.regionId),
+              );
             }
           });
         }
@@ -359,6 +378,9 @@ PropertiesPanel.prototype.saveElement = function(
 
         return propertyObject;
       }).get();
+
+    // Make sure we copy current target to widget elements
+    parentWidget.elements[target.elementId] = target;
 
     // Add to the element properties
     if (parentWidget.elements[target.elementId]) {
@@ -452,6 +474,12 @@ PropertiesPanel.prototype.render = function(
 
     // Get element from the widget
     targetAux = target.elementGroups[groupId];
+
+    // If element group is already deleted, stop rendering
+    if (targetAux == undefined) {
+      return;
+    }
+
     targetAux.selected = isSelected;
 
     isElementGroup = true;
@@ -476,6 +504,9 @@ PropertiesPanel.prototype.render = function(
   // Reset inline editor to false on each refresh
   this.inlineEditor = false;
 
+  // Clear temp data
+  app.common.clearContainer(this.DOMObject);
+
   // Show loading template
   this.DOMObject.html(loadingTemplate());
 
@@ -497,11 +528,16 @@ PropertiesPanel.prototype.render = function(
 
     // Show uncussess request message
     if (res.success === false) {
+      const errorMessage = (target.isEditable) ?
+        propertiesPanelTrans.somethingWentWrong :
+        propertiesPanelTrans.somethingWentWrongEditPermissions;
+
       self.DOMObject.html('<div class="unsuccessMessage">' +
-        (res.message) ?
-        res.message :
-        propertiesPanelTrans.somethingWentWrong +
-        '</div>');
+        (
+          (res.message) ?
+            res.message :
+            errorMessage
+        ) + '</div>');
       return false;
     }
 
@@ -754,6 +790,43 @@ PropertiesPanel.prototype.render = function(
             });
         }
 
+        // Add name field to advanced tab
+        forms.createFields(
+          [{
+            id: 'elementGroupName',
+            title: propertiesPanelTrans.elementGroupName,
+            helpText: propertiesPanelTrans.elementGroupNameHelpText,
+            customClass: 'element-group-name-input',
+            value: targetAux.elementGroupName,
+            type: 'text',
+            visibility: [],
+          }],
+          self.DOMObject.find('#advancedTab'),
+          targetAux.elementId,
+          null,
+          null,
+          'element-group-property',
+          true, // Prepend
+        );
+
+        // Trigger save on name change
+        self.DOMObject.find('[name="elementGroupName"]')
+          .on('change', function(ev, options) {
+            if (!options?.skipSave) {
+              // Update name for the group
+              targetAux.elementGroupName = $(ev.currentTarget).val();
+
+              // Save elements
+              target.saveElements().then((_res) => {
+                // Update bottom bar
+                app.bottombar.render(targetAux);
+
+                // Update layer manager
+                app.viewer.layerManager.render();
+              });
+            }
+          });
+
         showAppearanceTab();
       }
 
@@ -909,6 +982,37 @@ PropertiesPanel.prototype.render = function(
             'element-property',
           );
 
+          // Add name field to advanced tab
+          forms.createFields(
+            [{
+              id: 'elementName',
+              title: propertiesPanelTrans.elementName,
+              helpText: propertiesPanelTrans.elementNameHelpText,
+              customClass: 'element-name-input',
+              value: targetAux.elementName,
+              type: 'text',
+              visibility: [],
+            }],
+            self.DOMObject.find('#advancedTab'),
+            targetAux.elementId,
+            null,
+            null,
+            'element-property element-common-property',
+            true, // Prepend
+          );
+
+          // Trigger save on name change
+          self.DOMObject.find('[name="elementName"]')
+            .on('change', function(ev, options) {
+              if (!options?.skipSave) {
+                // Update name for the group
+                targetAux.elementName = $(ev.currentTarget).val();
+
+                // Update layer manager
+                app.viewer.layerManager.render();
+              }
+            });
+
           // Show the appearance tab
           // and select it if element isn't the only one on the widget
           // or it's a global element
@@ -998,12 +1102,14 @@ PropertiesPanel.prototype.render = function(
               }
             },
             focus: function(_ev) {
-              // Skip slot inputs
+              // Skip slot and widget name inputs
               // those are saved with elements
               if (
                 $(_ev.currentTarget)
-                  .parents('.xibo-form-input.element-slot-input')
-                  .length === 0
+                  .parents(
+                    '.xibo-form-input.element-slot-input,' +
+                    '.xibo-form-input.element-name-input',
+                  ).length === 0
               ) {
                 self.toSave = true;
               }
@@ -1151,6 +1257,19 @@ PropertiesPanel.prototype.render = function(
         self.DOMObject.find('#positionTab #setFullScreen').hide();
       }
 
+      // Check if we should show the bring to view button
+      const checkBringToView = function(pos) {
+        const notInView = (
+          pos.left > lD.layout.width ||
+          (pos.left + pos.width) < 0 ||
+          pos.top > lD.layout.height ||
+          (pos.top + pos.height) < 0
+        );
+        self.DOMObject.find('#positionTab #bringToView')
+          .toggleClass('d-none', !notInView);
+      };
+      checkBringToView(positionProperties);
+
       // If we change any input, update the target position
       self.DOMObject.find('#positionTab [name]').on(
         'change', _.debounce(function(ev) {
@@ -1202,14 +1321,18 @@ PropertiesPanel.prototype.render = function(
           if (targetAux == undefined) {
             // Widget
             const regionId = target.parent.id;
-
-            lD.layout.regions[regionId].transform({
+            const positions = {
               width: form.find('[name="width"]').val(),
               height: form.find('[name="height"]').val(),
               top: form.find('[name="top"]').val(),
               left: form.find('[name="left"]').val(),
               zIndex: zIndexVal,
-            }, true);
+            };
+
+            lD.layout.regions[regionId].transform(positions, true);
+
+            // Check bring to view button
+            checkBringToView(positions);
 
             lD.viewer.updateRegion(lD.layout.regions[regionId]);
 
@@ -1226,6 +1349,14 @@ PropertiesPanel.prototype.render = function(
               top: form.find('[name="top"]').val() * viewerScale,
               left: form.find('[name="left"]').val() * viewerScale,
               zIndex: zIndexVal,
+            });
+
+            // Check bring to view button
+            checkBringToView({
+              width: form.find('[name="width"]').val(),
+              height: form.find('[name="height"]').val(),
+              top: form.find('[name="top"]').val(),
+              left: form.find('[name="left"]').val(),
             });
 
             // Rotate element
@@ -1271,6 +1402,14 @@ PropertiesPanel.prototype.render = function(
 
             // Save layer
             targetAux.layer = zIndexVal;
+
+            // Check bring to view button
+            checkBringToView({
+              width: form.find('[name="width"]').val(),
+              height: form.find('[name="height"]').val(),
+              top: form.find('[name="top"]').val(),
+              left: form.find('[name="left"]').val(),
+            });
 
             // Scale group
             // Update element dimension properties
@@ -1342,6 +1481,129 @@ PropertiesPanel.prototype.render = function(
           form.find('[name="height"]').val(lD.layout.height);
           form.find('[name="top"]').val(0);
           form.find('[name="left"]').val(0);
+
+          // Check bring to view button
+          checkBringToView({
+            width: lD.layout.width,
+            height: lD.layout.height,
+            top: 0,
+            left: 0,
+          });
+
+          // Update moveable
+          lD.viewer.updateMoveable();
+        });
+
+      // Handle bring to view button
+      self.DOMObject.find('#positionTab #bringToView').off().on(
+        'click',
+        function(ev) {
+          const form = $(ev.currentTarget).parents('#positionTab');
+          const viewerScale = lD.viewer.containerObjectDimensions.scale;
+
+          // Get position to fix the item being outside of the layout
+          const calculateNewPosition = function(positions) {
+            if (Number(positions.left) > app.layout.width) {
+              positions.left = app.layout.width - positions.width;
+            }
+            if (Number(positions.left) + positions.width < 0) {
+              positions.left = 0;
+            }
+            if (Number(positions.top) > app.layout.height) {
+              positions.top = app.layout.height - positions.height;
+            }
+            if (Number(positions.top) + Number(positions.height) < 0) {
+              positions.top = 0;
+            }
+            return positions;
+          };
+
+          let newPosition = {};
+
+          if (targetAux == undefined) {
+            // Widget
+            const regionId = target.parent.id;
+
+            newPosition =
+              calculateNewPosition(lD.layout.regions[regionId].dimensions);
+
+            lD.layout.regions[regionId].transform(
+              newPosition,
+              true,
+            );
+
+            lD.viewer.updateRegion(lD.layout.regions[regionId], true);
+          } else if (targetAux?.type == 'element') {
+            // Element
+            const $targetElement = $('#' + targetAux.elementId);
+
+            newPosition =
+              calculateNewPosition({
+                width: targetAux.width,
+                height: targetAux.height,
+                top: targetAux.top,
+                left: targetAux.left,
+              });
+
+            // Move element
+            $targetElement.css({
+              width: newPosition.width * viewerScale,
+              height: newPosition.height * viewerScale,
+              top: newPosition.top * viewerScale,
+              left: newPosition.left * viewerScale,
+            });
+
+            // Save properties
+            lD.viewer.saveElementProperties($targetElement, true);
+
+            // Update element
+            lD.viewer.updateElement(targetAux, true);
+          } else if (targetAux?.type == 'element-group') {
+            const $targetElementGroup = $('#' + targetAux.id);
+
+            newPosition =
+              calculateNewPosition({
+                width: targetAux.width,
+                height: targetAux.height,
+                top: targetAux.top,
+                left: targetAux.left,
+              });
+
+            // Move element group
+            $targetElementGroup.css({
+              width: newPosition.width * viewerScale,
+              height: newPosition.height * viewerScale,
+              top: newPosition.top * viewerScale,
+              left: newPosition.left * viewerScale,
+            });
+
+            // Scale group
+            // Update element dimension properties
+            targetAux.transform({
+              width: newPosition.width,
+              height: newPosition.height,
+              top: newPosition.top,
+              left: newPosition.left,
+            });
+
+            lD.viewer.updateElementGroup(targetAux);
+
+            // Save properties
+            lD.viewer.saveElementGroupProperties(
+              $targetElementGroup,
+              true,
+              true,
+            );
+
+            // Update moveable
+            lD.viewer.updateMoveable();
+          }
+
+          // Change position tab values
+          form.find('[name="width"]').val(newPosition.width);
+          form.find('[name="height"]').val(newPosition.height);
+          form.find('[name="top"]').val(newPosition.top);
+          form.find('[name="left"]').val(newPosition.left);
 
           // Update moveable
           lD.viewer.updateMoveable();
@@ -1458,7 +1720,9 @@ PropertiesPanel.prototype.initFields = function(
 
     // Save for this type
     self.formSerializedLoadData[target.type] =
-      self.DOMObject.find('form [name]:not(.element-property)').serialize();
+      self.DOMObject.find('form [name]:not(.element-property)')
+        .filter('.tab-pane:not(#positionTab) [name]')
+        .serialize();
   }
 
   // If we're not in read only mode
@@ -1569,6 +1833,13 @@ PropertiesPanel.prototype.initFields = function(
         return true;
       }
 
+      // If field is canvas layer, skip
+      if (
+        $(target).is('[name="zIndexCanvas"]')
+      ) {
+        return true;
+      }
+
       // For rich text, check if CKEditor has changed
       if (
         $(target).hasClass('rich-text') &&
@@ -1587,10 +1858,13 @@ PropertiesPanel.prototype.initFields = function(
       ':not(.snippet-selector):not(.element-slot-input)' +
       ':not(.ticker-tag-style-property)' +
       ':not(.canvas-widget-control-dropdown)';
-    const skipFormInput = ':not(.element-property):not([data-tag-style-input])';
+    const skipFormInput =
+      ':not(.element-property)' +
+      ':not(.element-group-property)' +
+      ':not([data-tag-style-input])';
     $(self.DOMObject).find('form').off()
       .on({
-        'change inputChange xiboInputChange': function(_ev, options) {
+        'change blur inputChange xiboInputChange': function(_ev, options) {
           // Check if we skip this field
           if (skipSave(_ev.currentTarget, _ev)) {
             return;
@@ -1635,22 +1909,24 @@ PropertiesPanel.prototype.saveRegion = function(
     return false;
   }
 
-  const element = (savePositionForm) ?
+  const region = (savePositionForm) ?
     app.selectedObject.parent :
     app.selectedObject;
   const formNewData = form.serialize();
   const requestPath =
-    urlsForApi.region.saveForm.url.replace(':id', element[element.type + 'Id']);
+    urlsForApi.region.saveForm.url.replace(':id', region[region.type + 'Id']);
+
+  const formOldData = self.formSerializedLoadData[app.selectedObject.type];
 
   // If form is valid, and it changed, submit it ( add change )
-  if (form.valid() && self.formSerializedLoadData.region != formNewData) {
+  if (form.valid() && formOldData != formNewData) {
     // Add a save form change to the history array
     // with previous form state and the new state
     app.historyManager.addChange(
       'saveForm',
-      element.type, // targetType
-      element[element.type + 'Id'], // targetId
-      self.formSerializedLoadData.region, // oldValues
+      region.type, // targetType
+      region[region.type + 'Id'], // targetId
+      formOldData, // oldValues
       formNewData, // newValues
       {
         customRequestPath: {
@@ -1658,10 +1934,14 @@ PropertiesPanel.prototype.saveRegion = function(
           type: urlsForApi.region.saveForm.type,
         },
         upload: true, // options.upload
+        targetSubType: region.subType,
       },
     ).then((res) => { // Success
       // Clear error message
       formHelpers.clearErrorMessage(form);
+
+      // Update saved form data
+      self.formSerializedLoadData[app.selectedObject.type] = formNewData;
     }).catch((error) => { // Fail/error
       // Show error returned or custom message to the user
       let errorMessage = '';
@@ -2133,6 +2413,7 @@ PropertiesPanel.prototype.attachActionsForm = function() {
  * @param {object} properties
  */
 PropertiesPanel.prototype.updatePositionForm = function(properties) {
+  const app = this.parent;
   const $positionTab =
     this.DOMObject.find('form #positionTab, form.region-form #positioningTab');
 
@@ -2146,6 +2427,16 @@ PropertiesPanel.prototype.updatePositionForm = function(properties) {
     // Change value in the form field
     $positionTab.find('[name="' + key + '"]').val(value);
   });
+
+  // Check if we should show the bring to view button
+  const notInView = (
+    properties.left > app.layout.width ||
+    (properties.left + properties.width) < 0 ||
+    properties.top > app.layout.height ||
+    (properties.top + properties.height) < 0
+  );
+  $positionTab.find('#bringToView')
+    .toggleClass('d-none', !notInView);
 };
 
 /**
@@ -2154,6 +2445,7 @@ PropertiesPanel.prototype.updatePositionForm = function(properties) {
  */
 PropertiesPanel.prototype.showWidgetInfo = function(widget) {
   const self = this;
+  const moduleName = widget.moduleName;
 
   // Show widget info for statics
   const $widgetInfo = $(templates.forms.widgetInfo({
@@ -2176,8 +2468,13 @@ PropertiesPanel.prototype.showWidgetInfo = function(widget) {
   // Also update on the widget info
   self.DOMObject.find('.form-control[name="name"]')
     .on('change', function(ev) {
+      // If name field is empty, use the module name
+      const name = ($(ev.currentTarget).val() != '') ?
+        $(ev.currentTarget).val() :
+        moduleName;
+
       // Update info
-      $widgetInfo.find('span').html($(ev.currentTarget).val());
+      $widgetInfo.find('span').html(name);
     });
 };
 

@@ -95,9 +95,6 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
   // Modules to be used in Widgets
   let moduleListFiltered = [];
 
-  // Create user list
-  const usersListFiltered = [];
-
   // Modules to be used in other option
   const moduleListOtherFiltered = [];
 
@@ -224,13 +221,6 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
     return (a.name < b.name) ? -1 : 1;
   });
 
-  usersList.forEach((user) => {
-    usersListFiltered.push({
-      userId: user.userId.toString(),
-      name: user.userName,
-    });
-  });
-
   // Actions
   this.interactiveList = [
     {
@@ -355,7 +345,9 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
         },
         owner: {
           value: '',
-          values: usersListFiltered,
+          key: 'users',
+          dataRole: 'usersList',
+          searchUrl: urlsForApi.user.get.url,
         },
         orientation: {
           value: '',
@@ -402,7 +394,9 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
         },
         owner: {
           value: '',
-          values: usersListFiltered,
+          key: 'users',
+          dataRole: 'usersList',
+          searchUrl: urlsForApi.user.get.url,
         },
         provider: {
           value: 'both',
@@ -443,7 +437,9 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
         },
         owner: {
           value: '',
-          values: usersListFiltered,
+          key: 'users',
+          dataRole: 'usersList',
+          searchUrl: urlsForApi.user.get.url,
         },
         orientation: {
           value: '',
@@ -490,7 +486,9 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
         },
         owner: {
           value: '',
-          values: usersListFiltered,
+          key: 'users',
+          dataRole: 'usersList',
+          searchUrl: urlsForApi.user.get.url,
         },
         provider: {
           value: 'both',
@@ -854,6 +852,9 @@ Toolbar.prototype.render = function({savePrefs = true} = {}) {
     ),
   });
 
+  // Clear temp data
+  app.common.clearContainer(this.DOMObject);
+
   // Append toolbar html to the main div
   this.DOMObject.html(html);
 
@@ -1161,7 +1162,7 @@ Toolbar.prototype.openMenu = function(
 
     if (app.mainObjectType != 'playlist') {
       // Refresh main containers
-      app.viewer.render(true);
+      app.viewer.update();
     }
   }
 
@@ -1370,6 +1371,7 @@ Toolbar.prototype.deselectCardsAndDropZones = function() {
  */
 Toolbar.prototype.mediaContentCreateWindow = function(menu) {
   const self = this;
+  const app = this.parent;
 
   // Deselect previous selections
   self.deselectCardsAndDropZones();
@@ -1385,6 +1387,9 @@ Toolbar.prototype.mediaContentCreateWindow = function(menu) {
     formClass: 'media-search-form',
     showSort: true,
   });
+
+  // Clear temp data
+  app.common.clearContainer(self.DOMObject.find('#media-container-' + menu));
 
   // Append template to the search main div
   self.DOMObject.find('#media-container-' + menu).html(html);
@@ -1522,7 +1527,7 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
         columnWidth: '.toolbar-card-sizer',
         percentPosition: true,
         gutter: 8,
-      });
+      }).addClass('masonry-container');
 
       if (
         (!res.data || res.data.length == 0) &&
@@ -1771,6 +1776,18 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
       $tags.tagsinput('add', $(e.target).text(), {allowDuplicates: false});
     });
 
+  // Initialize user list input
+  const $userListInput = $mediaContainer
+    .find('.media-search-form select[name="ownerId"]');
+  makePagedSelect($userListInput);
+
+  // Initialize other select inputs
+  $mediaContainer
+    .find('.media-search-form select:not([name="ownerId"]):not(.input-sort)')
+    .select2({
+      minimumResultsForSearch: -1, // Hide search box
+    });
+
   // Load data
   loadData();
 };
@@ -1814,6 +1831,7 @@ Toolbar.prototype.elementsContentCreateWindow = function(
  */
 Toolbar.prototype.layoutTemplatesContentCreateWindow = function(menu) {
   const self = this;
+  const app = this.parent;
 
   // Deselect previous selections
   self.deselectCardsAndDropZones();
@@ -1826,6 +1844,11 @@ Toolbar.prototype.layoutTemplatesContentCreateWindow = function(menu) {
     formClass: 'layout_tempates-search-form',
     headerMessage: toolbarTrans.layoutTemplatesMessage,
   });
+
+  // Clear temp data
+  app.common.clearContainer(
+    self.DOMObject.find('#layout_templates-container-' + menu),
+  );
 
   // Append template to the search main div
   self.DOMObject.find('#layout_templates-container-' + menu).html(html);
@@ -1880,7 +1903,7 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
       columnWidth: '.toolbar-card-sizer',
       percentPosition: true,
       gutter: 8,
-    });
+    }).addClass('masonry-container');
 
     // Manage request length
     const requestLength = 15;
@@ -2128,20 +2151,29 @@ Toolbar.prototype.handleCardsBehaviour = function() {
   if (!readOnlyModeOn) {
     this.DOMObject.find('.toolbar-card:not(.toolbar-card-menu)')
       .each(function(idx, el) {
-        $(el).draggable({
-          appendTo: $(el).parents('.toolbar-pane:first'),
+        const $card = $(el);
+        $card.draggable({
+          appendTo: $card.parents('.toolbar-pane:first'),
           cursorAt: {
             top:
             (
-              $(el).height() + ($(el).outerWidth(true) - $(el).outerWidth()) / 2
+              $card.height() + ($card.outerWidth(true) - $card.outerWidth()) / 2
             ) / 2,
             left:
             (
-              $(el).width() + ($(el).outerWidth(true) - $(el).outerWidth()) / 2
+              $card.width() + ($card.outerWidth(true) - $card.outerWidth()) / 2
             ) / 2,
           },
           opacity: 0.7,
-          helper: 'clone',
+          helper: function(ev) {
+            const $clone = $(ev.currentTarget).clone();
+
+            // Remove events
+            $clone.tooltip('dispose');
+            $clone.find('[data-toggle="tooltip"]').tooltip('dispose');
+
+            return $clone;
+          },
           start: function() {
           // Deselect previous selections
             self.deselectCardsAndDropZones();
@@ -2150,28 +2182,22 @@ Toolbar.prototype.handleCardsBehaviour = function() {
             $('.custom-overlay').show();
 
             // Mark card as being dragged
-            $(this).addClass('card-dragged');
+            $card.addClass('card-dragged');
 
             // Mark content as selected
-            $(this).parents('.toolbar-pane-content').addClass('selected');
-            $(this).parents('nav.navbar').addClass('card-selected');
-
-            // Reload tooltips to avoid floating detached elements
-            app.common.reloadTooltips(self.DOMObject);
+            $card.parents('.toolbar-pane-content').addClass('selected');
+            $card.parents('nav.navbar').addClass('card-selected');
           },
           stop: function() {
           // Hide overlay
             $('.custom-overlay').hide();
 
             // Remove card class as being dragged
-            $(this).removeClass('card-dragged');
+            $card.removeClass('card-dragged');
 
             // Mark content as unselected
-            $(this).parents('.toolbar-pane-content').removeClass('selected');
-            $(this).parents('nav.navbar').removeClass('card-selected');
-
-            // Reload tooltips to avoid floating detached elements
-            app.common.reloadTooltips(self.DOMObject);
+            $card.parents('.toolbar-pane-content').removeClass('selected');
+            $card.parents('nav.navbar').removeClass('card-selected');
           },
         });
       });
@@ -2313,7 +2339,9 @@ Toolbar.prototype.createMediaPreview = function(media) {
   };
 
   // Clean all selected elements
+  app.common.clearContainer($mediaPreviewContent);
   $mediaPreviewContent.html('').removeData('mediaId');
+  app.common.clearContainer($mediaPreviewInfo);
   $mediaPreviewInfo.html('');
 
   const mediaData = media.data();
@@ -2338,6 +2366,7 @@ Toolbar.prototype.createMediaPreview = function(media) {
 
   $mediaPreview.find('#closeBtn').off('click').on('click', function() {
     // Close preview and empty content
+    app.common.clearContainer($mediaPreview.find('#content'));
     $mediaPreview.find('#content').html('');
     $mediaPreview.removeClass('show');
     $mediaPreview.remove();
@@ -2423,6 +2452,7 @@ Toolbar.prototype.openSubMenu = function(
   savePrefs = true,
 ) {
   const self = this;
+  const app = this.parent;
   const openedMenu = self.openedMenu;
   const $submenuContainer = self.DOMObject.find('#content-' + openedMenu);
   const cardData = data ? data : $card.data();
@@ -2439,6 +2469,7 @@ Toolbar.prototype.openSubMenu = function(
 
   // Append HTML
   $submenuContainer.addClass('toolbar-cards-pane');
+  app.common.clearContainer($submenuContainer);
   $submenuContainer.html(
     ToolbarContentSubmenuTemplate({
       data: cardData,
@@ -2495,6 +2526,7 @@ Toolbar.prototype.openGroupMenu = function(
   savePrefs = true,
 ) {
   const self = this;
+  const app = this.parent;
   const openedMenu = self.openedMenu;
   const $submenuContainer = self.DOMObject.find('#content-' + openedMenu);
   const cardData = data ? data : $card.data();
@@ -2517,6 +2549,7 @@ Toolbar.prototype.openGroupMenu = function(
 
   // Append HTML
   $submenuContainer.addClass('toolbar-group-pane');
+  app.common.clearContainer($submenuContainer);
   $submenuContainer.html(
     ToolbarContentGroupTemplate({
       data: cardData,
@@ -2648,6 +2681,11 @@ Toolbar.prototype.loadTemplates = function(
         // Remove loading
         $container.find('.loading-container-toolbar')
           .remove();
+
+        // Clear temp data
+        app.common.clearContainer(
+          $container.find('.toolbar-pane-container'),
+        );
 
         $container.find('.toolbar-pane-container').html(
           ToolbarContentSubmenuCardsTemplate({

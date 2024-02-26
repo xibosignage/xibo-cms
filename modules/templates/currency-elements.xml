@@ -140,7 +140,7 @@ if (elementData !== null && elementData.hasOwnProperty('ChangeStyle')) {
     </template>
     <template>
         <id>currency_logo</id>
-        <extends override="url" with="data.NameShort">global-image</extends>
+        <extends override="url" with="data.NameShort">global_image</extends>
         <title>Currency Logo</title>
         <type>element</type>
         <dataType>currency</dataType>

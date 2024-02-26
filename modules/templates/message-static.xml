@@ -72,13 +72,10 @@
     {{javaScript|raw}}
 </script>
 {% endif %}
-
-{% if embedStyle %}
-<style type="text/css">
-    {{embedStyle|raw}}
-</style>
-{% endif %}
         ]]></twig>
+        <style><![CDATA[
+{{embedStyle|raw}}
+        ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // id: The id of the widget
@@ -116,10 +113,13 @@ for (var index = 0; index < items.length; index++) {
 }
 
 // Render
-$(target).find('img').xiboImageRender(properties);
-
 $(target).xiboLayoutScaler(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > *'));
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
     </template>
 </templates>

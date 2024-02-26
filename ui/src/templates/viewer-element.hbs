@@ -1,5 +1,5 @@
 <div id="{{element.elementId}}" 
-    class="designer-element viewer-object-select {{#if element.selected}}selected{{/if}} deletable"
+    class="designer-element viewer-object-select {{#if element.selected}}selected{{/if}} {{#if element.isEditable}}editable{{/if}} {{#if element.isDeletable}}deletable{{/if}} "
     data-type="element"
     data-element-type="{{#if element.elementType}}{{element.elementType}}{{else}}global{{/if}}"
     data-sub-type="{{element.id}}"

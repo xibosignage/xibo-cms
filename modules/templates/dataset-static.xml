@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2023 Xibo Signage Ltd
+  ~ Copyright (C) 2024 Xibo Signage Ltd
   ~
   ~ Xibo - Digital Signage - https://xibosignage.com
   ~
@@ -145,10 +145,10 @@
 {% if javaScript %}<script type="text/javascript">{{javaScript|raw}}</script>{% endif %}
 
 <div id="DataSetTableContainer"></div>
-<style>
-{{styleSheet|raw}}
-</style>
             ]]></twig>
+            <style><![CDATA[
+{{styleSheet|raw}}
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Show no data message
@@ -254,11 +254,11 @@ $datasetTableContainer.appendTo($(target).find('#content'));
 // Scale the layout
 $(target).xiboLayoutScaler(properties);
 
-// Image render
-$datasetTableContainer.find('img').xiboImageRender(properties);
-
 // Call render
 $datasetTableContainer.dataSetRender(properties);
+
+// Image render
+$datasetTableContainer.find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <assets>
             <asset id="empty" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/dataset/0-empty.png" />
@@ -383,14 +383,14 @@ $datasetTableContainer.dataSetRender(properties);
         </properties>
         <preview></preview>
         <stencil>
-        <twig><![CDATA[
+            <twig><![CDATA[
 {% if javaScript %}
 <script type="text/javascript">
     {{javaScript|raw}}
 </script>
 {% endif %}
-
-<style>
+        ]]></twig>
+            <style><![CDATA[
 {% if itemsSideBySide %}
 .item, .page {
     float: left;
@@ -402,14 +402,9 @@ body {
     background-color: {{ backgroundColor }};
 }
 {% endif %}
-</style>
 
-{% if styleSheet %}
-<style>
-    {{styleSheet|raw}}
-</style>
-{% endif %}
-        ]]></twig>
+{{styleSheet|raw}}
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Module renderer options
@@ -482,7 +477,14 @@ for (var i = 0; i < items.length; i++) {
 $('body').xiboLayoutScaler(properties);
 
 $(target).xiboTextRender(Object.assign(properties, globalOptions), $(target).find('#content > *'));
+
+// Image render
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
     </template>
     <template>
         <id>dataset_table_1</id>
@@ -575,6 +577,16 @@ $(target).xiboTextRender(Object.assign(properties, globalOptions), $(target).fin
                     </test>
                 </visibility>
             </property>
+                <property id="fontColor" type="color">
+                    <title>Font Colour</title>
+                    <helpText>Use the colour picker to select the font colour</helpText>
+                    <default>#111</default>
+                    <visibility>
+                        <test>
+                            <condition field="dataSetId" type="neq"></condition>
+                        </test>
+                    </visibility>
+                </property>
                 <property id="backgroundColor" type="color">
                     <title>Background Colour</title>
                     <helpText>Use the colour picker to select the background colour</helpText>
@@ -593,9 +605,19 @@ $(target).xiboTextRender(Object.assign(properties, globalOptions), $(target).fin
                         </test>
                     </visibility>
                 </property>
-                <property id="fontColor" type="color">
-                    <title>Font Colour</title>
-                    <helpText>Use the colour picker to select the font colour</helpText>
+                <property id="headerFontColor" type="color">
+                    <title>Header Font Colour</title>
+                    <helpText>Use the colour picker to select the header font colour</helpText>
+                    <default>#111</default>
+                    <visibility>
+                        <test>
+                            <condition field="dataSetId" type="neq"></condition>
+                        </test>
+                    </visibility>
+                </property>
+                <property id="headerBackgroundColor" type="color">
+                    <title>Header Background Colour</title>
+                    <helpText>Use the colour picker to select the header background colour</helpText>
                     <visibility>
                         <test>
                             <condition field="dataSetId" type="neq"></condition>
@@ -606,7 +628,8 @@ $(target).xiboTextRender(Object.assign(properties, globalOptions), $(target).fin
             <stencil>
             <twig><![CDATA[
 <div class="DataSetTableContainer"></div>
-<style>
+            ]]></twig>
+            <style><![CDATA[
 /* Template Styles */
 table.DataSetTable {
     width: 100%;
@@ -638,6 +661,18 @@ table.DataSetTable {
 }
 {% endif %}
 
+{% if headerFontColor %}
+table.DataSetTable .HeaderRow {
+    color: {{headerFontColor}};
+}
+{% endif %}
+
+{% if headerBackgroundColor %}
+table.DataSetTable .HeaderRow {
+    background-color: {{headerBackgroundColor}};
+}
+{% endif %}
+
 {% if fontFamily %}
 table.DataSetTable {
     font-family: {{fontFamily}};
@@ -659,8 +694,7 @@ table.DataSetTable.cycle-slide {
 {% if rowsPerPage > 0 %}
 table.DataSetTable {visibility:hidden;}
 {% endif %}
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Show no data message
@@ -766,11 +800,11 @@ $datasetTableContainer.appendTo($(target).find('#content'));
 // Scale the layout
 $(target).xiboLayoutScaler(properties);
 
-// Image render
-$datasetTableContainer.find('img').xiboImageRender(properties);
-
 // Call render
 $datasetTableContainer.dataSetRender(properties);
+
+// Image render
+$datasetTableContainer.find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <assets>
             <asset id="empty" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/dataset/0-empty.png" />
@@ -860,9 +894,10 @@ $datasetTableContainer.dataSetRender(properties);
             </property>
         </properties>
         <stencil>
-        <twig><![CDATA[
+            <twig><![CDATA[
 <div class="DataSetTableContainer"></div>
-<style>
+            ]]></twig>
+            <style><![CDATA[
 /* Template Styles */
 table.DataSetTable {
     font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
@@ -941,8 +976,7 @@ table.DataSetTable.cycle-slide {
 {% if rowsPerPage > 0 %}
 table.DataSetTable {visibility:hidden;}
 {% endif %}
-</style>
-        ]]></twig>
+            ]]></style>   
         </stencil>
         <onTemplateRender><![CDATA[
 // Show no data message
@@ -1048,11 +1082,11 @@ $datasetTableContainer.appendTo($(target).find('#content'));
 // Scale the layout
 $(target).xiboLayoutScaler(properties);
 
-// Image render
-$datasetTableContainer.find('img').xiboImageRender(properties);
-
 // Call render
 $datasetTableContainer.dataSetRender(properties);
+
+// Image render
+$datasetTableContainer.find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <assets>
             <asset id="light-green" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/dataset/1-light-green.png" />
@@ -1142,9 +1176,10 @@ $datasetTableContainer.dataSetRender(properties);
             </property>
         </properties>
         <stencil>
-        <twig><![CDATA[
+            <twig><![CDATA[
 <div class="DataSetTableContainer"></div>
-<style>
+            ]]></twig>
+            <style><![CDATA[
 /* Template Styles */
 table.DataSetTable {
     font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
@@ -1214,8 +1249,7 @@ table.DataSetTable.cycle-slide {
 {% if rowsPerPage > 0 %}
 table.DataSetTable {visibility:hidden;}
 {% endif %}
-</style>
-        ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Show no data message
@@ -1321,11 +1355,11 @@ $datasetTableContainer.appendTo($(target).find('#content'));
 // Scale the layout
 $(target).xiboLayoutScaler(properties);
 
-// Image render
-$datasetTableContainer.find('img').xiboImageRender(properties);
-
 // Call render
 $datasetTableContainer.dataSetRender(properties);
+
+// Image render
+$datasetTableContainer.find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <assets>
             <asset id="simple-round-table" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/dataset/2-simple-round-table.png" />
@@ -1415,9 +1449,10 @@ $datasetTableContainer.dataSetRender(properties);
             </property>
         </properties>
         <stencil>
-        <twig><![CDATA[
+            <twig><![CDATA[
 <div class="DataSetTableContainer"></div>
-<style>
+            ]]></twig>
+            <style><![CDATA[
 /* Template Styles */
 table.DataSetTable {
     font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
@@ -1485,8 +1520,7 @@ table.DataSetTable.cycle-slide {
 {% if rowsPerPage > 0 %}
 table.DataSetTable {visibility:hidden;}
 {% endif %}
-</style>
-        ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Show no data message
@@ -1592,11 +1626,11 @@ $datasetTableContainer.appendTo($(target).find('#content'));
 // Scale the layout
 $(target).xiboLayoutScaler(properties);
 
-// Image render
-$datasetTableContainer.find('img').xiboImageRender(properties);
-
 // Call render
 $datasetTableContainer.dataSetRender(properties);
+
+// Image render
+$datasetTableContainer.find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <assets>
             <asset id="transparent-blue" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/dataset/3-transparent-blue.png" />
@@ -1686,9 +1720,10 @@ $datasetTableContainer.dataSetRender(properties);
             </property>
         </properties>
         <stencil>
-        <twig><![CDATA[
+            <twig><![CDATA[
 <div class="DataSetTableContainer"></div>
-<style>
+            ]]></twig>
+            <style><![CDATA[
 /* Template Styles */
 table.DataSetTable {
     font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
@@ -1754,8 +1789,7 @@ table.DataSetTable.cycle-slide {
 {% if rowsPerPage > 0 %}
 table.DataSetTable {visibility:hidden;}
 {% endif %}
-</style>
-        ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Show no data message
@@ -1861,11 +1895,11 @@ $datasetTableContainer.appendTo($(target).find('#content'));
 // Scale the layout
 $(target).xiboLayoutScaler(properties);
 
-// Image render
-$datasetTableContainer.find('img').xiboImageRender(properties);
-
 // Call render
 $datasetTableContainer.dataSetRender(properties);
+
+// Image render
+$datasetTableContainer.find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <assets>
             <asset id="orange-grey-striped" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/dataset/4-orange-grey-striped.png" />
@@ -1955,9 +1989,10 @@ $datasetTableContainer.dataSetRender(properties);
             </property>
         </properties>
         <stencil>
-        <twig><![CDATA[
+            <twig><![CDATA[
 <div class="DataSetTableContainer"></div>
-<style>
+            ]]></twig>
+            <style><![CDATA[
 /* Template Styles */
 table.DataSetTable {
     font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
@@ -2021,8 +2056,7 @@ table.DataSetTable.cycle-slide {
 {% if rowsPerPage > 0 %}
 table.DataSetTable {visibility:hidden;}
 {% endif %}
-</style>
-        ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Show no data message
@@ -2128,11 +2162,11 @@ $datasetTableContainer.appendTo($(target).find('#content'));
 // Scale the layout
 $(target).xiboLayoutScaler(properties);
 
-// Image render
-$datasetTableContainer.find('img').xiboImageRender(properties);
-
 // Call render
 $datasetTableContainer.dataSetRender(properties);
+
+// Image render
+$datasetTableContainer.find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <assets>
             <asset id="split-rows-" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/dataset/5-split-rows-.png" />
@@ -2222,9 +2256,10 @@ $datasetTableContainer.dataSetRender(properties);
             </property>
         </properties>
         <stencil>
-        <twig><![CDATA[
+            <twig><![CDATA[
 <div class="DataSetTableContainer"></div>
-<style>
+            ]]></twig>
+            <style><![CDATA[
 /* Template Styles */
 table.DataSetTable {
     font-family: Montserrat, sans-serif;
@@ -2283,8 +2318,7 @@ table.DataSetTable.cycle-slide {
 {% if rowsPerPage > 0 %}
 table.DataSetTable {visibility:hidden;}
 {% endif %}
-</style>
-        ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Show no data message
@@ -2390,11 +2424,11 @@ $datasetTableContainer.appendTo($(target).find('#content'));
 // Scale the layout
 $(target).xiboLayoutScaler(properties);
 
-// Image render
-$datasetTableContainer.find('img').xiboImageRender(properties);
-
 // Call render
 $datasetTableContainer.dataSetRender(properties);
+
+// Image render
+$datasetTableContainer.find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <assets>
             <asset id="dark-round" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/dataset/6-dark-round.png" />
@@ -2484,9 +2518,11 @@ $datasetTableContainer.dataSetRender(properties);
             </property>
         </properties>
         <stencil>
-        <twig><![CDATA[
+            <twig><![CDATA[
 <div class="DataSetTableContainer"></div>
-<style>
+            ]]></twig>
+            <style><![CDATA[
+
 /* Template Styles */
 table.DataSetTable {
     font-family: "Trebuchet MS", Arial, Helvetica, sans-serif;
@@ -2586,8 +2622,7 @@ table.DataSetTable.cycle-slide {
 {% if rowsPerPage > 0 %}
 table.DataSetTable {visibility:hidden;}
 {% endif %}
-</style>
-        ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Show no data message
@@ -2693,11 +2728,11 @@ $datasetTableContainer.appendTo($(target).find('#content'));
 // Scale the layout
 $(target).xiboLayoutScaler(properties);
 
-// Image render
-$datasetTableContainer.find('img').xiboImageRender(properties);
-
 // Call render
 $datasetTableContainer.dataSetRender(properties);
+
+// Image render
+$datasetTableContainer.find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
         <assets>
             <asset id="pill-colored" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/dataset/7-pill-colored.png" />
@@ -2822,7 +2857,14 @@ for (var i = 0; i < items.length; i++) {
 $('body').xiboLayoutScaler(properties);
 
 $(target).xiboTextRender(Object.assign(properties, globalOptions), $(target).find('#content > *'));
+
+// Image render
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
     </template>
     <template>
         <id>dataset_string_template</id>
@@ -2928,8 +2970,7 @@ $(target).xiboTextRender(Object.assign(properties, globalOptions), $(target).fin
         </properties>
         <preview></preview>
         <stencil>
-            <twig><![CDATA[
-<style>
+            <style><![CDATA[
 {% if itemsSideBySide %}
 .item, .page {
     float: left;
@@ -2941,8 +2982,7 @@ body {
     background-color: {{ backgroundColor }};
 }
 {% endif %}
-</style>
-        ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Module renderer options
@@ -3015,6 +3055,445 @@ for (var i = 0; i < items.length; i++) {
 $('body').xiboLayoutScaler(properties);
 
 $(target).xiboTextRender(Object.assign(properties, globalOptions), $(target).find('#content > *'));
+
+// Image render
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
+    </template>
+    <template>
+        <id>dataset_marquee</id>
+        <type>static</type>
+        <dataType>dataset</dataType>
+        <title>Dataset shown in a marquee</title>
+        <startWidth>1200</startWidth>
+        <startHeight>80</startHeight>
+        <properties>
+            <property type="message">
+                <title>Select a dataset to display appearance options.</title>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="eq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property type="message">
+                <title>Below you can select the columns to be shown in the table - drag and drop to reorder and to move between lists.</title>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="selectedColumns" type="datasetColStyleSelector">
+                <dependsOn>dataSetId</dependsOn>
+                <title>Item Template</title>
+                <helpText>Enter text in the box below, used to display each article.</helpText>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="effect" type="effectSelector" variant="showAll">
+                <title>Effect</title>
+                <helpText>Please select the effect that will be used to transition between items.</helpText>
+                <default>marqueeLeft</default>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="speed" type="number">
+                <title>Speed</title>
+                <helpText>Marquee Speed in a low to high scale (normal = 1)</helpText>
+                <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="dateFormat" type="text" variant="dateFormat">
+                <title>Date Format</title>
+                <helpText>The format to apply to all dates returned by the Widget.</helpText>
+                <default>#DATE_FORMAT#</default>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="gapTags" type="number">
+                <title>Gap between tags</title>
+                <helpText>Value (in pixels) to set a gap between each item's tags.</helpText>
+                <default>6</default>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="gapItems" type="number">
+                <title>Gap between items</title>
+                <helpText>Value (in pixels) to set a gap between each item.</helpText>
+                <default>6</default>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="backgroundColor" type="color">
+                <title>Background Colour</title>
+                <helpText>The selected effect works best with a background colour. Optionally add one here.</helpText>
+                <default></default>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="textDirection" type="dropdown" mode="single">
+                <title>Text direction</title>
+                <helpText>Which direction does the text in the feed use?</helpText>
+                <default>ltr</default>
+                <options>
+                    <option name="ltr">Left to Right (LTR)</option>
+                    <option name="rtl">Right to Left (RTL)</option>
+                </options>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="showSeparator" type="checkbox">
+                <title>Show a separator between items?</title>
+                <default>0</default>
+                <visibility>
+                    <test type="and">
+                        <condition field="effect" type="neq">none</condition>
+                        <condition field="effect" type="neq">noTransition</condition>
+                        <condition field="effect" type="neq">fade</condition>
+                        <condition field="effect" type="neq">fadeout</condition>
+                        <condition field="effect" type="neq">scrollHorz</condition>
+                        <condition field="effect" type="neq">scrollVert</condition>
+                        <condition field="effect" type="neq">flipHorz</condition>
+                        <condition field="effect" type="neq">flipVert</condition>
+                        <condition field="effect" type="neq">shuffle</condition>
+                        <condition field="effect" type="neq">tileSlide</condition>
+                        <condition field="effect" type="neq">tileBlind</condition>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="separator" type="richText" allowLibraryRefs="false" variant="html">
+                <title>Separator</title>
+                <helpText>A separator to show between marquee items</helpText>
+                <default>
+                <![CDATA[
+                    <p><span style="font-size: 16px;">/</span></p>
+                ]]></default>
+                <visibility>
+                    <test type="and">
+                        <condition field="effect" type="neq">none</condition>
+                        <condition field="effect" type="neq">noTransition</condition>
+                        <condition field="effect" type="neq">fade</condition>
+                        <condition field="effect" type="neq">fadeout</condition>
+                        <condition field="effect" type="neq">scrollHorz</condition>
+                        <condition field="effect" type="neq">scrollVert</condition>
+                        <condition field="effect" type="neq">flipHorz</condition>
+                        <condition field="effect" type="neq">flipVert</condition>
+                        <condition field="effect" type="neq">shuffle</condition>
+                        <condition field="effect" type="neq">tileSlide</condition>
+                        <condition field="effect" type="neq">tileBlind</condition>
+                        <condition field="showSeparator" type="eq">1</condition>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="copyright" type="text">
+                <title>Copyright</title>
+                <helpText>Copyright information to display as the last item in this feed.</helpText>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="copyrightFontFamily" type="fontSelector">
+                <title>Copyright Font Family</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+                <visibility>
+                    <test type="and">
+                        <condition field="copyright" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="copyrightFontColor" type="color">
+                <title>Copyright Font Colour</title>
+                <default></default>
+                <visibility>
+                    <test type="and">
+                        <condition field="copyright" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="copyrightFontSize" type="number">
+                <title>Copyright Font Size</title>
+                <default></default>
+                <visibility>
+                    <test type="and">
+                        <condition field="copyright" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="copyrightBold" type="checkbox">
+                <title>Bold</title>
+                <helpText>Should the copyright text be bold?</helpText>
+                <default>0</default>
+                <visibility>
+                    <test type="and">
+                        <condition field="copyright" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="copyrightItalics" type="checkbox">
+                <title>Italics</title>
+                <helpText>Should the copyright text be italicised?</helpText>
+                <default>0</default>
+                <visibility>
+                    <test type="and">
+                        <condition field="copyright" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="copyrightUnderline" type="checkbox">
+                <title>Underline</title>
+                <helpText>Should the copyright text be underlined?</helpText>
+                <default>0</default>
+                <visibility>
+                    <test type="and">
+                        <condition field="copyright" type="neq"></condition>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
+                <title>No data message</title>
+                <helpText>A message to display when no data is returned from the source</helpText>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <stencil>
+            <twig><![CDATA[
+{% if javaScript %}<script type="text/javascript">{{javaScript|raw}}</script>{% endif %}
+            ]]></twig>
+            <style><![CDATA[
+{% if textDirection == "rtl" %}#content { direction: rtl; }{% endif %}
+{% if backgroundColor %}body { background-color: {{backgroundColor}}; }{% endif %}
+{% if (effect == "marqueeLeft") or (effect == "marqueeRight") %}
+    {% if gapTags %}.marquee-item { margin-right: {{gapTags}}px; }{% endif %}
+    {% if gapItems %}.item.text-render-item, .separator { margin-right: {{gapItems}}px; }{% endif %}
+    .is-media-item { display: inline-block; }
+    .marquee-item { vertical-align: middle; }
+{% endif %}
+
+{% if (effect == "marqueeUp") or (effect == "marqueeDown") %}
+    {% if gapTags %}.marquee-item { margin-bottom: {{gapTags}}px; }{% endif %}
+    {% if gapItems %}.item.text-render-item, .separator { margin-bottom: {{gapItems}}px; }{% endif %}
+    .marquee-item { display: block; }
+{% endif %}
+            ]]></style>
+        </stencil>
+        <onTemplateRender><![CDATA[
+// id: The id of the widget
+// target: The target element to render
+// items: The items to render
+// properties: The properties for the widget
+// -------------------------------------------
+
+// Get selected columns
+var selectedColumns = (properties.selectedColumns) ? JSON.parse(properties.selectedColumns) : [];
+
+// Convert to array and sort by play order
+selectedColumns = Object.values(selectedColumns);
+selectedColumns.sort(function(a, b) {return a.playOrder - b.playOrder;});
+
+// Get dataset columns from meta.mapping
+var columnInfo = {};
+if (meta) {
+    for (var i = 0; i < meta.mapping.length; i++) {
+        var column = meta.mapping[i];
+        columnInfo[column.dataSetColumnId] = {
+            name: column.heading,
+            type: column.dataTypeId
+        };
+    }
+}
+
+// Generate template from chosen fields
+properties.template = '';
+for (var col in selectedColumns) {
+    var column = selectedColumns[col];
+    var isMedia = (columnInfo[column.colId].type == 5 || columnInfo[column.colId].type === 4);
+
+    properties.template += '<span class="marquee-item marquee-' + column.colId;
+
+    if (isMedia) {
+        properties.template += ' is-media-item';
+    }
+
+    properties.template += '" style="';
+
+    for (var style in selectedColumns[col]) {
+        if (style === 'fontSize' && selectedColumns[col][style]) {
+            properties.template += 'font-size:' + selectedColumns[col][style] + 'px;';
+        }
+        if (style === 'fontColor' && selectedColumns[col][style]) {
+            properties.template += 'color:' + selectedColumns[col][style] + ';';
+        }
+        if (style === 'fontFamily' && selectedColumns[col][style]) {
+            properties.template += 'font-family:' + selectedColumns[col][style] + ';';
+        }
+        if (style === 'bold' && selectedColumns[col][style]) {
+            properties.template += 'font-weight: bold;';
+        }
+        if (style === 'italics' && selectedColumns[col][style]) {
+            properties.template += 'font-style: italic;';
+        }
+        if (style === 'underline' && selectedColumns[col][style]) {
+            properties.template += 'text-decoration: underline;';
+        }
+        if (style === 'width' && selectedColumns[col][style]) {
+            properties.template += 'width:' + selectedColumns[col][style] + 'px;';
+        }
+        if (style === 'height' && selectedColumns[col][style]) {
+            properties.template += 'height:' + selectedColumns[col][style] + 'px;';
+        }
+        if (style === 'opacity' && selectedColumns[col][style]) {
+            properties.template += 'opacity:' + selectedColumns[col][style] + ';';
+        }
+    }
+
+    properties.template += '">[' + columnInfo[column.colId].name + '|' + column.colId + ']</span>';
+}
+
+
+// Clear containers
+$(target).find('#content').empty();
+$(target).find('.no-data-message').remove();
+
+var hasAddedItems = false;
+if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !== '') {
+    // No data message
+    // Add message to the target content
+    $(target).find('#content').after(
+        $('<div>')
+            .addClass('no-data-message')
+            .append(properties.noDataMessage)
+    );
+} else {
+    // Add items to container
+    for (var i = 0; i < items.length; i++) {
+        var item = items[i];
+
+        // Replace the template with the item content
+        var content = properties.template.replace(/\[(.*?)\]/g, function(match, column) {
+            var itemId = column.split('|')[0];
+            var itemCol = column.split('|')[1];
+            var itemType = (itemCol) ? columnInfo[itemCol].type : '';
+            var itemValue = item[itemId];
+
+            // If this is an image column, wrap it in an image tag
+            if (itemType === 4 || itemType === 5) {
+                itemValue = itemValue ? '<img style="width: 100%; height: 100%;" src="' + itemValue + '" />' : '';
+            }
+
+            return itemValue ? itemValue : '';
+        });
+
+        // Add the content to the target
+        if(content != "") {
+            hasAddedItems = true;
+            $(target).find('#content').append(
+                $('<div>')
+                    .addClass('item')
+                    .append(content)
+            );
+        }
+    }
+}
+
+// Copyright
+if (hasAddedItems && properties.copyright) {
+    var copyrightTemplate = '<span class="marquee-item marquee-copyright" style="';
+
+    if (properties.copyrightFontFamily) {
+        copyrightTemplate += 'font-family:' + properties.copyrightFontFamily + ';';
+    }
+    if (properties.copyrightFontColor) {
+        copyrightTemplate += 'color:' + properties.copyrightFontColor + ';';
+    }
+    if (properties.copyrightFontSize) {
+        copyrightTemplate += 'font-size:' + properties.copyrightFontSize + 'px;';
+    }
+    if (properties.copyrightBold) {
+        copyrightTemplate += 'font-weight: bold;';
+    }
+    if (properties.copyrightItalics) {
+        copyrightTemplate += 'font-style: italic;';
+    }
+    if (properties.copyrightUnderline) {
+        copyrightTemplate += 'text-decoration: underline;';
+    }
+
+    copyrightTemplate += '">' + properties.copyright + '</span>';
+
+    $(target).find('#content').append(
+        $('<div>')
+            .addClass('item')
+            .append(copyrightTemplate)
+    );
+}
+
+// Add separator
+if (
+    (
+        properties.effect == 'marqueeLeft' ||
+        properties.effect == 'marqueeRight' ||
+        properties.effect == 'marqueeUp' ||
+        properties.effect == 'marqueeDown'
+    ) && properties.showSeparator == 1 &&
+    properties.separator != ''
+) {
+    var $separator = $(properties.separator);
+    $separator.addClass('separator');
+    $(target).find('.item').after($separator);
+}
+
+// Render
+$(target).xiboLayoutScaler(properties);
+$(target).xiboTextRender(properties, $(target).find('#content > *'));
+$(target).find('img').xiboImageRender(properties);
+        ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
     </template>
 </templates>

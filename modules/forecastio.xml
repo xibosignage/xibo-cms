@@ -102,10 +102,18 @@
     <preview></preview>
     <stencil>
         <twig><![CDATA[
-<div class="error-message" style="display: none; padding: 8px; background-color: #f9f9f9; color: #333;">
+<div class="error-message">
     <strong>{% trans "No results returned, please configure Open Weather Map connector!" %}</strong>
 </div>
     ]]></twig>
+    <style><![CDATA[
+.error-message {
+    display: none;
+    padding: 8px;
+    background-color: #f9f9f9;
+    color: #333;
+}
+    ]]></style>
     </stencil>
     <onRender><![CDATA[
 // If we don't get any results, then we should show an error message
@@ -114,8 +122,10 @@ if (items.length === 0) {
     // Set the body dimensions to window dimensions
     $(target).css('cssText', 'width: 100% !important; height: 100% !important;');
 
-    // Show the error message
-    $(target).find('.error-message').show();
+    // Show the error message if it's in the layout editor
+    if (properties && properties.isEditor) {
+        $(target).find('.error-message').show();
+    }
     return;
 }
 
@@ -209,8 +219,8 @@ if (daysNum > 0) {
 }
 
 // Handle images and scaling
-$(target).find("img").xiboImageRender(properties);
 $content.xiboLayoutScaler(properties);
+$(target).find("img").xiboImageRender(properties);
     ]]></onRender>
     <assets>
         <asset id="animate" type="path" mimeType="text/css" path="/modules/assets/forecastio/animate.css"></asset>

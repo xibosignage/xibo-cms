@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -264,7 +264,6 @@ class Layout extends Base
             'zoom' => $sanitizedParams->getDouble('zoom', [
                 'default' => $this->getUser()->getOptionValue('defaultDesignerZoom', 1)
             ]),
-            'users' => $this->userFactory->query(),
             'modules' => $moduleFactory->getAssignableModules(),
             'timeZones' => $timeZones,
         ];
@@ -677,12 +676,8 @@ class Layout extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @return \Slim\Http\Response
+     * @throws \Xibo\Support\Exception\GeneralException
      * @SWG\Put(
      *  path="/layout/background/{layoutId}",
      *  operationId="layoutEditBackground",
@@ -730,7 +725,7 @@ class Layout extends Base
      *  )
      * )
      */
-    function editBackground(Request $request, Response $response, $id)
+    public function editBackground(Request $request, Response $response, $id): Response
     {
         $layout = $this->layoutFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -755,9 +750,28 @@ class Layout extends Base
         $resolution = $this->resolutionFactory->getById($sanitizedParams->getInt('resolutionId'));
 
         if ($layout->width != $resolution->width || $layout->height != $resolution->height) {
-            $saveRegions = true;
+            $this->getLog()->debug('editBackground: resolution dimensions have changed, updating layout');
+
+            $layout->load([
+                'loadPlaylists' => false,
+                'loadPermissions' => false,
+                'loadCampaigns' => false,
+                'loadActions' => false,
+            ]);
             $layout->width = $resolution->width;
             $layout->height = $resolution->height;
+            $layout->orientation = ($layout->width >= $layout->height) ? 'landscape' : 'portrait';
+
+            // Update the canvas region with its new width/height.
+            foreach ($layout->regions as $region) {
+                if ($region->type === 'canvas') {
+                    $this->getLog()->debug('editBackground: canvas region needs changing too');
+
+                    $region->width = $layout->width;
+                    $region->height = $layout->height;
+                    $saveRegions = true;
+                }
+            }
         }
 
         // Save
@@ -1941,7 +1955,7 @@ class Layout extends Base
         if (!$this->getUser()->checkEditable($layout)) {
             throw new AccessDeniedException();
         }
-        
+
         // Edits always happen on Drafts, get the draft Layout using the Parent Layout ID
         if ($layout->schemaVersion < 2) {
             $resolution = $this->resolutionFactory->getByDesignerDimensions($layout->width, $layout->height);
@@ -2596,14 +2610,19 @@ class Layout extends Base
         // Hand over to the widget downloader
         $downloader = new WidgetDownloader(
             $this->getConfig()->getSetting('LIBRARY_LOCATION'),
-            $this->getConfig()->getSetting('SENDFILE_MODE')
+            $this->getConfig()->getSetting('SENDFILE_MODE'),
+            $this->getConfig()->getSetting('DEFAULT_RESIZE_LIMIT', 6000)
         );
         $downloader->useLogger($this->getLog()->getLoggerInterface());
-        $response = $downloader->imagePreview($this->getSanitizer([
-            'width' => $layout->width,
-            'height' => $layout->height,
-            'proportional' => 0
-        ]), $media->storedAs, $response);
+        $response = $downloader->imagePreview(
+            $this->getSanitizer([
+                'width' => $layout->width,
+                'height' => $layout->height,
+                'proportional' => 0,
+            ]),
+            $media->storedAs,
+            $response,
+        );
 
         $this->setNoOutput(true);
         return $this->render($request, $response);
@@ -3055,9 +3074,16 @@ class Layout extends Base
                 $image = Img::canvas($layout->width, $layout->height, $layout->backgroundColor);
             }
 
+            $countRegions = count($layout->regions);
+
             // Draw some regions on it.
             foreach ($layout->regions as $region) {
                 try {
+                    // We don't do this for the canvas region.
+                    if ($countRegions > 1 && $region->type === 'canvas') {
+                        continue;
+                    }
+
                     // Get widgets in this region
                     $playlist = $region->getPlaylist()->setModuleFactory($this->moduleFactory);
                     $widgets = $playlist->expandWidgets();

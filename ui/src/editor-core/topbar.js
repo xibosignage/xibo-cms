@@ -73,6 +73,9 @@ Topbar.prototype.render = function() {
   // Get topbar trans
   const newTopbarTrans = $.extend({}, toolbarTrans, topbarTrans, editorsTrans);
 
+  // Clear temp data
+  app.common.clearContainer(this.DOMObject);
+
   // Compile layout template with data
   const html = topbarTemplate({
     customDropdownOptions: this.customDropdownOptions,
@@ -121,6 +124,22 @@ Topbar.prototype.render = function() {
       ':id',
       self.parent.layout.parentLayoutId || self.parent.layout.layoutId),
     );
+
+    /**
+     * Wait for name field to show and select it
+     * so it can be easier to replace
+     */
+    function selectField() {
+      const $field = $('#layoutEditForm input#name');
+      // If field doesn't exist, wait and call method again
+      if ($field.length === 0) {
+        setTimeout(selectField, 200);
+      } else {
+        // Select name
+        $field.trigger('select');
+      }
+    }
+    selectField();
   });
 
   // Handle custom dropwdown buttons
@@ -141,8 +160,11 @@ Topbar.prototype.render = function() {
   }
 
   // Set layout jumpList if exists
-  if (!$.isEmptyObject(this.jumpList) && $('#layoutJumpList').length == 0) {
-    this.setupJumpList($('#layoutJumpListContainer'));
+  if (
+    !$.isEmptyObject(this.jumpList) &&
+    self.DOMObject.find('#layoutJumpList').length == 0
+  ) {
+    self.setupJumpList();
   }
 
   // Options menu
@@ -171,9 +193,11 @@ Topbar.prototype.render = function() {
 
 /**
 * Setup layout jumplist
-* @param {object} jumpListContainer
 */
-Topbar.prototype.setupJumpList = function(jumpListContainer) {
+Topbar.prototype.setupJumpList = function() {
+  const app = this.parent;
+  const $jumpListContainer = $('#layoutJumpListContainer');
+
   // If we are in template edit mode, don't show
   if (
     this.parent.templateEditMode != undefined &&
@@ -184,13 +208,14 @@ Topbar.prototype.setupJumpList = function(jumpListContainer) {
 
   const html = topbarLayoutJumpList(this.jumpList);
 
+  // Clear temp data
+  app.common.clearContainer($jumpListContainer);
+
   // Append layout html to the main div
-  jumpListContainer.html(html);
+  $jumpListContainer.html(html);
+  $jumpListContainer.removeClass('d-none');
 
-  jumpListContainer.removeClass('d-none');
-
-  const jumpList = jumpListContainer.find('#layoutJumpList');
-
+  const jumpList = $jumpListContainer.find('#layoutJumpList');
   jumpList.select2({
     ajax: {
       url: jumpList.data().url,
@@ -307,7 +332,6 @@ Topbar.prototype.setupJumpList = function(jumpListContainer) {
     }, 10);
   });
 };
-
 
 /**
  * Update layout status in the info fields

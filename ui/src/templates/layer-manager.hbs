@@ -24,9 +24,9 @@
                                     <div class="layer-manager-layer-item selectable element-group {{#if selected}}selected{{/if}} {{#if expanded}}expanded{{/if}}" data-item-id="{{id}}" data-widget-id="{{widgetId}}">
                                         <div class="layer">{{canvasLayerIdx}}</div>
                                         {{#if moduleIcon}}
-                                            <i class="module-icon {{#if moduleIcon}}{{moduleIcon}}{{else}}fas fa-object-group{{/if}}"></i>
+                                            <i title="{{templateName}}" class="module-icon {{#if moduleIcon}}{{moduleIcon}}{{else}}fas fa-object-group{{/if}}"></i>
                                         {{/if}}
-                                        <span class="label">{{../../../../trans.group}}</span><span class="name" title="{{../../../../trans.id}}">({{id}})</span>
+                                        {{#if name}}<span class="name" title="{{../../../../trans.group}}">"{{name}}"</span>{{else}}<span class="label">{{../../../../trans.group}}</span>{{/if}}
                                         <button class="btn btn-sm expand-group-button">
                                             <i class="fa fa-chevron-down hide-expanded" title="{{../../../../trans.expand}}"></i>
                                             <i class="fa fa-chevron-up show-expanded" title="{{../../../../trans.shrink}}"></i>
@@ -40,9 +40,13 @@
                                                 </div>
                                                 <div class="layer">{{groupLayerIdx}}</div>
                                                 {{#eq type 'element'}}
-                                                    <i class="element-icon {{#if icon}}{{icon}}{{else}}fas fa-atom{{/if}}"></i>
+                                                    <i title="{{templateName}}" class="element-icon {{#if icon}}{{icon}}{{else}}fas fa-atom{{/if}}"></i>
                                                 {{/eq}}
-                                                <span class="name" title="{{../../../../../../trans.name}}">{{name}}</span>
+                                                {{#if name}}
+                                                    <span class="name" title="{{../../../../../../trans.name}}">"{{name}}"</span>
+                                                {{else}}
+                                                    <span class="name" title="{{../../../../../../trans.template}}">{{templateName}}</span>
+                                                {{/if}}
                                                 {{#if duration}}
                                                     <span class="duration" title="{{../../../../../../trans.duration}}">{{duration}}</span>
                                                 {{/if}}
@@ -57,9 +61,13 @@
                                         {{#if moduleIcon}}
                                             <i class="module-icon {{#if moduleIcon}}{{moduleIcon}}{{else}}fas fa-object-group{{/if}}" {{#if hasGroup}}title="{{groupId}}"{{/if}}></i>
                                         {{/if}}
-                                        <i class="element-icon {{#if icon}}{{icon}}{{else}}fas fa-atom{{/if}}"></i>
+                                        <i title="{{templateName}}" class="element-icon {{#if icon}}{{icon}}{{else}}fas fa-atom{{/if}}"></i>
                                     {{/eq}}
-                                    <span class="name" title="{{../../../../trans.name}}">{{name}}</span>
+                                    {{#if name}}
+                                        <span class="name" title="{{../../../../../../trans.name}}">"{{name}}"</span>
+                                    {{else}}
+                                        <span class="name" title="{{../../../../../../trans.template}}">{{templateName}}</span>
+                                    {{/if}}
                                     {{#if duration}}
                                         <span class="duration" title="{{../../../../trans.duration}}">{{duration}}</span>
                                     {{/if}}
@@ -82,7 +90,7 @@
                         <i class="fa fa-window-close" title="{{../../trans.invalidRegionHelp}}"></i>
                     {{/eq}}
                     {{#eq type 'staticWidget'}}
-                        <i class="{{icon}}"></i>
+                        <i title="{{moduleName}}" class="{{icon}}"></i>
                     {{/eq}}
 
                     <span class="name" title="{{../../trans.name}}">

@@ -132,8 +132,8 @@
 
 <div class="twitter-white-logo" data-url="[[assetAlias=providerLogoWhite]]" style="display: none;">
 <div class="twitter-blue-logo" data-url="[[assetAlias=providerLogo]]" style="display: none;">
-
-<style>
+            ]]></twig>
+        <style><![CDATA[
 /* Legacy properties from bootstrap */
 .social-media-item {
     float: left;
@@ -169,14 +169,17 @@ body {
 }
 
 {{styleSheet|raw}}
-</style>
-            ]]></twig>
+        ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
-$(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .social-media-item'));
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="fulltime-np" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/fulltime-np.png" />
         </assets>
@@ -217,6 +220,30 @@ $(target).xiboTextRender(properties, $(target).find('#content > .social-media-it
                         <condition field="itemsPerPage" type="gt">1</condition>
                     </test>
                 </visibility>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+            </property>
+            <property id="postBackground" type="color">
+                <title>Post Background Colour</title>
+                <helpText>The colour of the post background</helpText>
+                <default>#ecf0f1</default>
+            </property>
+            <property id="postTextColor" type="color">
+                <title>Post Text Colour</title>
+                <helpText>The colour of the post text</helpText>
+                <default>#333</default>
+            </property>
+            <property id="postHeaderTextColor" type="color">
+                <title>Post Header Text Colour</title>
+                <helpText>The colour of the post header text</helpText>
+                <default>#95a5a6</default>
+            </property>
+            <property id="profileBorderColor" type="color">
+                <title>Profile Border Colour</title>
+                <helpText>The colour of the profile border</helpText>
+                <default>#ecf0f1</default>
             </property>
             <property id="effect" type="effectSelector" variant="showPaged">
                 <title>Effect</title>
@@ -273,9 +300,7 @@ $(target).xiboTextRender(properties, $(target).find('#content > .social-media-it
     </div>
 </div>
             ]]></hbs>
-            <twig><![CDATA[
-<style>
-
+            <style><![CDATA[
 .item {
     float: left;
 }
@@ -295,7 +320,11 @@ $(target).xiboTextRender(properties, $(target).find('#content > .social-media-it
 .social-container {
     font-size: 24px;
     line-height: 1.25;
-    font-family: lucida sans unicode, lucida grande, sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: lucida sans unicode, lucida grande, sans-serif;
+    {% endif %}
     position: relative;
     top: 8px;
     left: 8px;
@@ -319,7 +348,7 @@ div.profileimage img {
     -ms-border-radius: 50%;
     -o-border-radius: 50%;
     border-radius: 50%;
-    border: 5px solid #ecf0f1;
+    border: 5px solid {{profileBorderColor}};
     position: relative;
 }
 
@@ -329,13 +358,14 @@ div.message-container {
     padding-left: 20px;
     vertical-align: top;
     display: inline-block;
+    color: {{postTextColor}};
 }
 
 .message-container .user {
     height: 30px;
     font-weight: 700;
     display: inline-block;
-    color: #95a5a6;
+    color: {{postHeaderTextColor}};
     padding: 5px;
 }
 
@@ -348,7 +378,7 @@ div.message-container {
 .message {
     width: 100%;
     padding: 10px;
-    background-color: #ecf0f1;
+    background-color: {{postBackground}};
     position: relative;
     -webkit-border-radius: 8px;
     -moz-border-radius: 8px;
@@ -359,14 +389,17 @@ div.message-container {
     display: inline-block;
     max-height: 180px;
 }
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
-$(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="fulltime-np" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/fulltime-np.png" />
         </assets>
@@ -407,6 +440,30 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                         <condition field="itemsPerPage" type="gt">1</condition>
                     </test>
                 </visibility>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+            </property>
+            <property id="postBackground" type="color">
+                <title>Post Background Colour</title>
+                <helpText>The colour of the post background</helpText>
+                <default>#ecf0f1</default>
+            </property>
+            <property id="postTextColor" type="color">
+                <title>Post Text Colour</title>
+                <helpText>The colour of the post text</helpText>
+                <default>#333</default>
+            </property>
+            <property id="postHeaderTextColor" type="color">
+                <title>Post Header Text Colour</title>
+                <helpText>The colour of the post header text</helpText>
+                <default>#95a5a6</default>
+            </property>
+            <property id="profileBorderColor" type="color">
+                <title>Profile Border Colour</title>
+                <helpText>The colour of the profile border</helpText>
+                <default>#ecf0f1</default>
             </property>
             <property id="effect" type="effectSelector" variant="showPaged">
                 <title>Effect</title>
@@ -466,15 +523,12 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
     </div>
 </div>
             ]]></hbs>
-            <twig><![CDATA[
-<style>
-
+            <style><![CDATA[
 .item {
     float: left;
 }
 
 .social {
-    height: 130px;
     padding: 10px;
 }
 
@@ -484,7 +538,11 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
     display: inline-block;
     font-size: 25px;
     line-height: 1.3;
-    font-family: lucida sans unicode, lucida grande, sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: lucida sans unicode, lucida grande, sans-serif;
+    {% endif %}
 }
 
 .social-container {
@@ -511,7 +569,7 @@ div.profileimage img {
     -ms-border-radius: 50%;
     -o-border-radius: 50%;
     border-radius: 50%;
-    border: 5px solid #ecf0f1;
+    border: 5px solid {{profileBorderColor}};
     position: relative;
 }
 
@@ -523,6 +581,7 @@ div.message-container {
     padding-left: 20px;
     vertical-align: top;
     display: inline-block;
+    color: {{postTextColor}};
 }
 
 .message-container .user {
@@ -530,7 +589,7 @@ div.message-container {
     font-weight: 700;
     display: inline-block;
     margin-bottom: .2em;
-    color: #95a5a6;
+    color: {{postHeaderTextColor}};
     padding: 10px;
 }
 
@@ -556,7 +615,7 @@ div.message-container {
 .message {
     width: 100%;
     padding: 10px;
-    background-color: #ecf0f1;
+    background-color: {{postBackground}};
     position: relative;
     -webkit-border-radius: 8px;
     -moz-border-radius: 8px;
@@ -567,14 +626,17 @@ div.message-container {
     display: inline-block;
     max-height: 880px;
 }
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
-$(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="fulltime" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/fulltime.png" />
         </assets>
@@ -615,6 +677,15 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                         <condition field="itemsPerPage" type="gt">1</condition>
                     </test>
                 </visibility>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+            </property>
+            <property id="postTextColor" type="color">
+                <title>Post Text Colour</title>
+                <helpText>The colour of the post text</helpText>
+                <default>#333</default>
             </property>
             <property id="effect" type="effectSelector" variant="showPaged">
                 <title>Effect</title>
@@ -659,18 +730,17 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
 <div class="container main-container">
     <div class="social-container">
         <p>
-            <span style="font-family:lucida sans unicode,lucida grande,sans-serif;"><span>{{text}}</span></span>
+            <span>{{text}}</span>
         </p>
     </div>
 </div>
             ]]></hbs>
-            <twig><![CDATA[
-<style>
-
+            <style><![CDATA[
 .main-container {
     width: 600px !important;
     height: 150px !important;
     display: inline-block;
+    color: {{postTextColor}};
 }
 
 .social-container {
@@ -684,17 +754,28 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
     margin: 10px;
 }
 
+.social-container > p > span {
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: lucida sans unicode, lucida grande, sans-serif;
+    {% endif %}
+}
+
 .item {
     float: left;
 }
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
-$(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="textonly" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/textonly.png" />
         </assets>
@@ -735,6 +816,15 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                         <condition field="itemsPerPage" type="gt">1</condition>
                     </test>
                 </visibility>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+            </property>
+            <property id="postTextColor" type="color">
+                <title>Post Text Colour</title>
+                <helpText>The colour of the post text</helpText>
+                <default>#333</default>
             </property>
             <property id="effect" type="effectSelector" variant="showPaged">
                 <title>Effect</title>
@@ -783,20 +873,23 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
     </div>
 </div>
             ]]></hbs>
-            <twig><![CDATA[
-<style>
-
+            <style><![CDATA[
 .main-container {
     width: 800px !important;
     height: 100px !important;
     display: inline-block;
+    color: {{postTextColor}};
 }
 
 .social-container {
     width: 100%;
     height: 100%;
     font-size: 19px;
-    font-family: lucida sans unicode, lucida grande, sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: lucida sans unicode, lucida grande, sans-serif;
+    {% endif %}
     line-height: 1.1;
     display: table;
     table-layout: fixed;
@@ -825,14 +918,17 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
     width: calc(100% - 16px);
     padding: 8px;
 }
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
-$(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="profileleft" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/profileleft.png" />
         </assets>
@@ -873,6 +969,15 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                         <condition field="itemsPerPage" type="gt">1</condition>
                     </test>
                 </visibility>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+            </property>
+            <property id="postTextColor" type="color">
+                <title>Post Text Colour</title>
+                <helpText>The colour of the post text</helpText>
+                <default>#333</default>
             </property>
             <property id="effect" type="effectSelector" variant="showPaged">
                 <title>Effect</title>
@@ -921,20 +1026,23 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
     </div>
 </div>
             ]]></hbs>
-            <twig><![CDATA[
-<style>
-
+            <style><![CDATA[
 .main-container {
     width: 800px !important;
     height: 100px !important;
     display: inline-block;
+    color: {{postTextColor}};
 }
 
 .social-container {
     width: 100%;
     height: 100%;
     font-size: 19px;
-    font-family: lucida sans unicode, lucida grande, sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: lucida sans unicode, lucida grande, sans-serif;
+    {% endif %}
     line-height: 1.1;
     display: table;
     table-layout: fixed;
@@ -964,14 +1072,17 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
     width: calc(100% - 16px);
     padding: 8px;
 }
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
-$(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="profileright" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/profileright.png" />
         </assets>
@@ -1012,6 +1123,25 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                         <condition field="itemsPerPage" type="gt">1</condition>
                     </test>
                 </visibility>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+            </property>
+            <property id="postBackground" type="color">
+                <title>Post Background Colour</title>
+                <helpText>The colour of the post background</helpText>
+                <default>rgba(255, 255, 255, 0.6)</default>
+            </property>
+            <property id="postTextColor" type="color">
+                <title>Post Text Colour</title>
+                <helpText>The colour of the post text</helpText>
+                <default>#434343</default>
+            </property>
+            <property id="dateTextColor" type="color">
+                <title>Date Text Colour</title>
+                <helpText>The colour of the date text</helpText>
+                <default>#6e6e6e</default>
             </property>
             <property id="effect" type="effectSelector" variant="showPaged">
                 <title>Effect</title>
@@ -1068,14 +1198,17 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
     </div>
 </div>
             ]]></hbs>
-            <twig><![CDATA[
-<style>
+            <style><![CDATA[
 .item {
     float: left;
 }
 
 body {
-    font-family: "Helvetica", "Arial", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     line-height: 1;
 }
 
@@ -1109,8 +1242,7 @@ body {
 
 .social-container {
     border: 1px solid #eee;
-    background-color: rgba(255, 255, 255, 0.6);
-    color: rgba(255, 255, 255, 0.6);
+    background-color: {{postBackground}};
     width: 100%;
     height: 100%;
 }
@@ -1119,7 +1251,7 @@ body {
     font-size: 28px;
     padding: 42px 16px 8px 0px;
     line-height: 120%;
-    color: #434343;
+    color: {{postTextColor}};
     overflow: hidden;
     max-height: 220px;
     width: 100%;
@@ -1129,12 +1261,12 @@ body {
     margin-top: 20px;
     margin-right: 8px;
     font-size: 17px;
-    color: #434343;
+    color: {{postTextColor}};
     font-weight: bold;
 }
 
 .social-date {
-    color: #6e6e6e;
+    color: {{dateTextColor}};
 }
 
 .col-left {
@@ -1155,14 +1287,17 @@ body {
     width: fit-content;
     overflow-y: hidden;
 }
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
-$(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="twitter1" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/twitter1.png" />
         </assets>
@@ -1203,6 +1338,30 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                         <condition field="itemsPerPage" type="gt">1</condition>
                     </test>
                 </visibility>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+            </property>
+            <property id="postBackground" type="color">
+                <title>Post Background Colour</title>
+                <helpText>The colour of the post background</helpText>
+                <default>rgba(255, 255, 255, 0.6)</default>
+            </property>
+            <property id="postTextColor" type="color">
+                <title>Post Text Colour</title>
+                <helpText>The colour of the post text</helpText>
+                <default>#434343</default>
+            </property>
+            <property id="usernameTextColor" type="color">
+                <title>User Name Text Colour</title>
+                <helpText>The colour of the username text</helpText>
+                <default>#434343</default>
+            </property>
+            <property id="dateTextColor" type="color">
+                <title>Date Text Colour</title>
+                <helpText>The colour of the date text</helpText>
+                <default>#434343</default>
             </property>
             <property id="effect" type="effectSelector" variant="showPaged">
                 <title>Effect</title>
@@ -1263,14 +1422,17 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
     </div>
 </div>
             ]]></hbs>
-            <twig><![CDATA[
-<style>
+            <style><![CDATA[
 .item {
     float: left;
 }
 
 body {
-    font-family: "Helvetica", "Arial", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     line-height: 1;
     background-repeat: no-repeat;
     background-size: cover;
@@ -1285,9 +1447,8 @@ body {
 
 .social-container {
     padding: 18px;
-    background-color: rgba(255, 255, 255, 0.6);
-    background: rgba(255, 255, 255, 0.6);
-    color: rgba(255, 255, 255, 0.6);
+    background-color: {{postBackground}};
+    background: {{postBackground}};
     display: inline-block;
 }
 
@@ -1302,14 +1463,14 @@ body {
     padding-top: 12px;
     overflow: hidden;
     line-height: 130%;
-    color: #434343;
+    color: {{postTextColor}};
     height: 270px;
 }
 
 .social-date, .social-location {
     margin-top: 30px;
     font-size: 17px;
-    color: #434343;
+    color: {{dateTextColor}};
     font-weight: bold;
     width: 50%;
 }
@@ -1321,13 +1482,13 @@ body {
 .name {
     font-size: 25px;
     font-weight: bold;
-    color: #434343;
+    color: {{usernameTextColor}};
     margin-top: 5px;
 }
 
 .username {
     margin-top: 5px;
-    color: #434343;
+    color: {{usernameTextColor}};
 }
 
 .avatar {
@@ -1356,14 +1517,17 @@ body {
     width: fit-content;
     overflow-y: hidden;
 }
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
-$(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="twitter2" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/twitter2.png" />
         </assets>
@@ -1405,6 +1569,36 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                     </test>
                 </visibility>
             </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+            </property>
+            <property id="postBackground" type="color">
+                <title>Post Background Colour</title>
+                <helpText>The colour of the post background</helpText>
+                <default>rgba(255, 255, 255, 0.6)</default>
+            </property>
+            <property id="postInnerBackground" type="color">
+                <title>Inner Post Background Colour</title>
+                <helpText>The colour of the inner post background</helpText>
+                <default>#fff</default>
+            </property>
+            <property id="postInnerBorder" type="color">
+                <title>Inner Post Border Colour</title>
+                <helpText>The colour of the inner post border</helpText>
+                <default>#eee</default>
+            </property>
+            <property id="postTextColor" type="color">
+                <title>Post Text Colour</title>
+                <helpText>The colour of the post text</helpText>
+                <default>#434343</default>
+            </property>
+            <property id="usernameTextColor" type="color">
+                <title>User Name Text Colour</title>
+                <helpText>The colour of the username text</helpText>
+                <default>#434343</default>
+            </property>
+            
             <property id="effect" type="effectSelector" variant="showPaged">
                 <title>Effect</title>
                 <helpText>Please select the effect that will be used to transition between items.</helpText>
@@ -1463,14 +1657,17 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
     </div>
 </div>
             ]]></hbs>
-            <twig><![CDATA[
-<style>
+            <style><![CDATA[
 .item {
     float: left;
 }
 
 body {
-    font-family: "Helvetica", "Arial", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     line-height: 1;
     background-image: url('../clouds.jpg');
     background-repeat: no-repeat;
@@ -1495,43 +1692,42 @@ body {
 
 .social-container {
     padding: 10px;
-    background-color: rgba(255, 255, 255, 0.6);
-    background: rgba(255, 255, 255, 0.6);
-    color: rgba(255, 255, 255, 0.6);
+    background-color: {{postBackground}};
+    background: {{postBackground}};
 }
 
 .main-text {
     font-size: 14px;
     padding: 8px 0px;
     line-height: 120%;
-    color: #434343;
+    color: {{postTextColor}};
 }
 
 .mini-widget {
     height: 162px;
     padding: 8px;
-    border: 1px solid #eee;
-    background-color: #fff;
+    border: 1px solid {{postInnerBorder}};
+    background-color: {{postInnerBackground}};
     overflow: hidden;
 }
 
 .social-date, .social-location {
     margin-top: 30px;
     font-size: 17px;
-    color: #434343;
+    color: {{postTextColor}};
     font-weight: bold;
 }
 
 .name {
     font-size: 20px;
     font-weight: bold;
-    color: #434343;
+    color: {{usernameTextColor}};
     margin-top: 5px;
 }
 
 .username {
     margin-top: 4px;
-    color: #434343;
+    color: {{usernameTextColor}};
 }
 
 .avatar {
@@ -1562,14 +1758,17 @@ body {
     width: fit-content;
     overflow-y: hidden;
 }
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
-$(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="twitter4" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/twitter4.png" />
         </assets>
@@ -1610,6 +1809,35 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                         <condition field="itemsPerPage" type="gt">1</condition>
                     </test>
                 </visibility>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+            </property>
+            <property id="postTextColor" type="color">
+                <title>Post Text Colour</title>
+                <helpText>The colour of the post text</helpText>
+                <default>#434343</default>
+            </property>
+            <property id="postBackground" type="color">
+                <title>Post Background Colour</title>
+                <helpText>The colour of the post background</helpText>
+                <default>#fff</default>
+            </property>
+            <property id="footerTextColor" type="color">
+                <title>Footer Text Colour</title>
+                <helpText>The colour of the footer text</helpText>
+                <default>#fff</default>
+            </property>
+            <property id="footerBackground" type="color">
+                <title>Footer Background Colour</title>
+                <helpText>The colour of the footer background</helpText>
+                <default>#1da1f2</default>
+            </property>
+            <property id="borderColor" type="color">
+                <title>Border Colour</title>
+                <helpText>The colour of the border</helpText>
+                <default>#ddd</default>
             </property>
             <property id="effect" type="effectSelector" variant="showPaged">
                 <title>Effect</title>
@@ -1667,14 +1895,17 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
     </div>
 </div>
             ]]></hbs>
-            <twig><![CDATA[
-<style>
+            <style><![CDATA[
 .item {
     float: left;
 }
 
 body {
-    font-family: "Helvetica", "Arial", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     line-height: 1;
 }
 
@@ -1685,9 +1916,8 @@ body {
 }
 
 .post {
-    float: left;
-    border: 1px solid #ddd;
-    background: #FFF;
+    border: 1px solid {{borderColor}};
+    background: {{postBackground}};
     width: 100%;
 }
 
@@ -1695,7 +1925,7 @@ body {
     font-size: 14px;
     padding: 10px 15px;
     line-height: 130%;
-    color: #434343;
+    color: {{postTextColor}};
     height: 100px;
     text-align: justify;
 }
@@ -1706,7 +1936,7 @@ body {
 }
 
 .footer {
-    background: #1da1f2;
+    background: {{footerBackground}};
     width: 100%;
     height: 38px;
 }
@@ -1714,7 +1944,7 @@ body {
 .user {
     font-size: 14px;
     font-weight: bold;
-    color: #fff;
+    color: {{footerTextColor}};
     margin-top: 9px;
     letter-spacing: 1px;
     padding-left: 0px;
@@ -1755,14 +1985,17 @@ body {
     width: fit-content;
     overflow-y: hidden;
 }
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
-$(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="twitter6np" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/twitter6np.png" />
         </assets>
@@ -1803,6 +2036,30 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                         <condition field="itemsPerPage" type="gt">1</condition>
                     </test>
                 </visibility>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+            </property>
+            <property id="postTextColor" type="color">
+                <title>Post Text Colour</title>
+                <helpText>The colour of the post text</helpText>
+                <default>#434343</default>
+            </property>
+            <property id="postBackground" type="color">
+                <title>Post Background Colour</title>
+                <helpText>The colour of the post background</helpText>
+                <default>#fff</default>
+            </property>
+            <property id="footerTextColor" type="color">
+                <title>Footer Text Colour</title>
+                <helpText>The colour of the footer text</helpText>
+                <default>#fff</default>
+            </property>
+            <property id="footerBackground" type="color">
+                <title>Footer Background Colour</title>
+                <helpText>The colour of the footer background</helpText>
+                <default>#1da1f2</default>
             </property>
             <property id="effect" type="effectSelector" variant="showPaged">
                 <title>Effect</title>
@@ -1859,14 +2116,17 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
     </div>
 </div>
             ]]></hbs>
-            <twig><![CDATA[
-<style>
+            <style><![CDATA[
 .item {
     float: left;
 }
 
 body {
-    font-family: "Helvetica", "Arial", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     line-height: 1;
 }
 
@@ -1880,14 +2140,14 @@ body {
     width: 398px !important;
     height: 448px !important;
     border: 1px solid #ddd;
-    background: #FFF;
+    background: {{postBackground}};
 }
 
 .main-text {
     font-size: 14px;
     padding: 12px 14px;
     line-height: 130%;
-    color: #434343;
+    color: {{postTextColor}};
     height: 88px;
     text-align: justify;
     overflow: hidden;
@@ -1906,7 +2166,7 @@ body {
 }
 
 .footer {
-    background: #1da1f2;
+    background: {{footerBackground}};
     width: 100%;
     height: 37px;
 }
@@ -1914,7 +2174,7 @@ body {
 .user {
     font-size: 14px;
     font-weight: bold;
-    color: #fff;
+    color: {{footerTextColor}};
     margin-top: 9px;
     letter-spacing: 1px;
     padding-left: 0px;
@@ -1957,14 +2217,17 @@ body {
     max-width: 100%;
     height: auto;
 }
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
-$(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="twitter6pl" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/twitter6pl.png" />
         </assets>
@@ -2005,6 +2268,30 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                         <condition field="itemsPerPage" type="gt">1</condition>
                     </test>
                 </visibility>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+            </property>
+            <property id="postTextColor" type="color">
+                <title>Post Text Colour</title>
+                <helpText>The colour of the post text</helpText>
+                <default>#434343</default>
+            </property>
+            <property id="postBackground" type="color">
+                <title>Post Background Colour</title>
+                <helpText>The colour of the post background</helpText>
+                <default>#fff</default>
+            </property>
+            <property id="headerTextColor" type="color">
+                <title>Header Text Colour</title>
+                <helpText>The colour of the header text</helpText>
+                <default>#fff</default>
+            </property>
+            <property id="headerBackground" type="color">
+                <title>Header Background Colour</title>
+                <helpText>The colour of the header background</helpText>
+                <default>#1da1f2</default>
             </property>
             <property id="effect" type="effectSelector" variant="showPaged">
                 <title>Effect</title>
@@ -2061,14 +2348,17 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
     </div>
 </div>
             ]]></hbs>
-            <twig><![CDATA[
-<style>
+            <style><![CDATA[
 .item {
     float: left;
 }
 
 body {
-    font-family: "Helvetica", "Arial", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     line-height: 1;
 }
 
@@ -2083,7 +2373,7 @@ body {
     height: 100%;
     float: left;
     border: 1px solid #ddd;
-    background: #FFF;
+    background: {{postBackground}};
     width: 100%;
 }
 
@@ -2091,7 +2381,7 @@ body {
     font-size: 14px;
     padding: 20px 10px 8px 10px;
     line-height: 120%;
-    color: #434343;
+    color: {{postTextColor}};
     height: 88px;
 }
 
@@ -2101,7 +2391,7 @@ body {
 }
 
 .header {
-    background: #1da1f2;
+    background: {{headerBackground}};
     width: 100%;
     height: 40px;
 }
@@ -2109,7 +2399,7 @@ body {
 .user {
     font-size: 14px;
     font-weight: bold;
-    color: #fff;
+    color: {{headerTextColor}};
     margin-top: 12px;
     letter-spacing: 1px;
     padding-left: 0px;
@@ -2118,7 +2408,7 @@ body {
 .arrow_box {
     height: 6px;
     position: relative;
-    background: #1da1f2;
+    background: {{headerBackground}};
 }
 
 .arrow_box:after, .arrow_box:before {
@@ -2134,16 +2424,16 @@ body {
 
 .arrow_box:after {
     border-color: rgba(136, 183, 213, 0);
-    border-top-color: #1da1f2;
+    border-top-color: {{headerBackground}};
     border-width: 16px;
     margin-left: -16px;
 }
 
 .arrow_box:before {
     border-color: rgba(0, 0, 0, 0);
-    border-top-color: #;
-    border-width: 26px;
-    margin-left: -26px;
+    border-top-color: {{headerBackground}};
+    border-width: 16px;
+    margin-left: -16px;
 }
 
 .social-col {
@@ -2154,6 +2444,7 @@ body {
     width: 320px;
     margin-left: 10px;
 }
+
 .social-col.icon {
     text-align: right;
     height: 38px;
@@ -2161,18 +2452,22 @@ body {
     padding: 4px 0;
     margin-right: 10px;
 }
+
 .img-responsive {
     max-width: 100%;
     height: 100%;
 }
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
-$(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="twitter7" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/twitter7.png" />
         </assets>
@@ -2213,6 +2508,40 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                         <condition field="itemsPerPage" type="gt">1</condition>
                     </test>
                 </visibility>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+            </property>
+            <property id="postTextColor" type="color">
+                <title>Post Text Colour</title>
+                <helpText>The colour of the post text</helpText>
+                <default>#4d4d4d</default>
+            </property>
+            <property id="dateTextColor" type="color">
+                <title>Date Text Colour</title>
+                <helpText>The colour of the date text</helpText>
+                <default>#4d4d4d</default>
+            </property>
+            <property id="postBackground" type="color">
+                <title>Post Background Colour</title>
+                <helpText>The colour of the post background</helpText>
+                <default>#fff</default>
+            </property>
+            <property id="headerTextColor" type="color">
+                <title>Header Text Colour</title>
+                <helpText>The colour of the header text</helpText>
+                <default>#fff</default>
+            </property>
+            <property id="headerBackground" type="color">
+                <title>Header Background Colour</title>
+                <helpText>The colour of the header background</helpText>
+                <default>#1da1f2</default>
+            </property>
+            <property id="profileBorderColor" type="color">
+                <title>Profile Border Colour</title>
+                <helpText>The colour of the profile border</helpText>
+                <default>#fff</default>
             </property>
             <property id="effect" type="effectSelector" variant="showPaged">
                 <title>Effect</title>
@@ -2269,10 +2598,13 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
     </div>
 </div>
             ]]></hbs>
-            <twig><![CDATA[
-<style>
+            <style><![CDATA[
 body {
-    font-family: "Helvetica", "Arial", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     line-height: 1;
 }
 
@@ -2302,7 +2634,7 @@ body {
 
 .header {
     font-size: 1rem;
-    background: #1da1f2;
+    background: {{headerBackground}};
     width: 100%;
     height: 110px;
 }
@@ -2316,7 +2648,7 @@ body {
 .user {
     font-size: 20px;
     font-weight: bold;
-    color: #fff;
+    color: {{headerTextColor}};
     margin-top: 35px;
     letter-spacing: 1px;
     width: 64%;
@@ -2333,12 +2665,12 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%,-50%);
--webkit-transform: translate(-50%, -50%);
-    border: 3px solid #FFF;
+    -webkit-transform: translate(-50%, -50%);
+    border: 3px solid {{profileBorderColor}};
 }
 
 .body {
-    background: #FFF;
+    background: {{postBackground}};
     height: 530px;
     position: relative;
 }
@@ -2347,7 +2679,7 @@ body {
     font-size: 24px;
     padding: 24px 16px;
     line-height: 150%;
-    color: #4d4d4d;
+    color: {{postTextColor}};
     height: 450px;
 }
 
@@ -2355,6 +2687,7 @@ body {
     width: 240px;
     padding: 0 16px;
     font-size: 14px;
+    color: {{dateTextColor}}
 }
 
 .logo {
@@ -2370,14 +2703,17 @@ body {
     max-width: 100%;
     max-height: 100%;
 }
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 $(target).xiboLayoutScaler(properties);
-$(target).find('img').xiboImageRender(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
+$(target).find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="twitter8" type="path" mimeType="image/png" cmsOnly="true" path="/modules/assets/template-thumbnails/social-media/twitter8.png" />
         </assets>
@@ -2402,6 +2738,10 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                 <helpText>The format to apply to all dates returned by the Widget.</helpText>
                 <default>#DATE_FORMAT#</default>
             </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+            </property>
             <property id="colorTemplateId" type="dropdown" mode="single">
                 <title>Colours Template</title>
                 <helpText>Select the template colours you would like to apply values to the colours below.</helpText>
@@ -2417,35 +2757,35 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
                 </options>
             </property>
             <property id="color1" name="color" type="color" propertyGroupId="colors">
-                <title>Color 1</title>
+                <title>Colour 1</title>
                 <dependsOn>colorTemplateId[0]</dependsOn>
             </property>
             <property id="color2" name="color" type="color" propertyGroupId="colors">
-                <title>Color 2</title>
+                <title>Colour 2</title>
                 <dependsOn>colorTemplateId[1]</dependsOn>
             </property>
             <property id="color3" name="color" type="color" propertyGroupId="colors">
-                <title>Color 3</title>
+                <title>Colour 3</title>
                 <dependsOn>colorTemplateId[2]</dependsOn>
             </property>
             <property id="color4" name="color" type="color" propertyGroupId="colors">
-                <title>Color 4</title>
+                <title>Colour 4</title>
                 <dependsOn>colorTemplateId[3]</dependsOn>
             </property>
             <property id="color5" name="color" type="color" propertyGroupId="colors">
-                <title>Color 5</title>
+                <title>Colour 5</title>
                 <dependsOn>colorTemplateId[4]</dependsOn>
             </property>
             <property id="color6" name="color" type="color" propertyGroupId="colors">
-                <title>Color 6</title>
+                <title>Colour 6</title>
                 <dependsOn>colorTemplateId[5]</dependsOn>
             </property>
             <property id="color7" name="color" type="color" propertyGroupId="colors">
-                <title>Color 7</title>
+                <title>Colour 7</title>
                 <dependsOn>colorTemplateId[6]</dependsOn>
             </property>
             <property id="color8" name="color" type="color" propertyGroupId="colors">
-                <title>Color 8</title>
+                <title>Colour 8</title>
                 <dependsOn>colorTemplateId[7]</dependsOn>
             </property>
             <property id="effect" type="effectSelector" variant="showPaged">
@@ -2504,7 +2844,8 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
             ]]></hbs>
             <twig><![CDATA[
 <div class="metro-render-container"></div>
-<style>
+            ]]></twig>
+            <style><![CDATA[
 * {
     -webkit-box-sizing: border-box;
     -moz-box-sizing: border-box;
@@ -2512,7 +2853,11 @@ $(target).xiboTextRender(properties, $(target).find('#content > .main-container'
 }
 
 body {
-    font-family: "Helvetica", "Arial", sans-serif;
+    {% if fontFamily %}
+        font-family: {{fontFamily}};
+    {% else %}
+        font-family: "Helvetica", "Arial", sans-serif;
+    {% endif %}
     line-height: 1;
     margin: 0;
 }
@@ -2678,8 +3023,7 @@ body {
 small {
     font-size: 70%;
 }
-</style>
-            ]]></twig>
+            ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
 // Set widget design width and height based on the window orientation
@@ -2721,8 +3065,12 @@ for (var i = 1; i <= 8; i++) {
 $metroRenderContainer.xiboMetroRender(properties, itemsHTML, colors);
 
 // Render the images
-$metroRenderContainer.find('.cell').xiboImageRender(properties);
+$metroRenderContainer.find('img').xiboImageRender(properties);
         ]]></onTemplateRender>
+        <onTemplateVisible><![CDATA[
+// Start effects for this template
+$(target).xiboLayoutAnimate(properties);
+        ]]></onTemplateVisible>
         <assets>
             <asset id="colors1" type="path" mime="image/png" path="/modules/assets/metro-colors/colors1.png" cmsOnly="true"></asset>
             <asset id="colors2" type="path" mime="image/png" path="/modules/assets/metro-colors/colors2.png" cmsOnly="true"></asset>

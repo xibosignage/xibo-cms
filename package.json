@@ -117,11 +117,11 @@
     "persian-date": "^0.3.1-b",
     "persian-datepicker": "^1.2.0",
     "popper.js": "^1.16.1",
-    "select2": "^4.0.13",
+    "select2": "4.1.0-rc.0",
     "select2-bootstrap-theme": "0.1.0-beta.10",
     "serialize-javascript": "^3.1.0",
     "toastr": "~2.1.4",
     "underscore": "^1.12.1",
-    "xibo-interactive-control": "git+https://github.com/xibosignage/xibo-interactive-control.git#6bd108730ed670616c89356769f36a05fd605518"
+    "xibo-interactive-control": "git+https://github.com/xibosignage/xibo-interactive-control.git#d911da8da056c12060e198c1b8da6fae8bf186fe"
   }
 }

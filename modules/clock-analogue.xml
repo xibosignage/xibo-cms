@@ -86,8 +86,7 @@
     </div>
 </div>
         ]]></hbs>
-        <twig><![CDATA[
-<style>
+        <style><![CDATA[
 body {
     margin: 0;
     overflow: hidden;
@@ -169,8 +168,7 @@ h1, h2, h3, h4, p {
 .hero-minute{width:0;height:0;position:absolute;top:50%;left:50%;margin:-40% -3px 0;padding:40% 3px 0;-webkit-transform-origin:50% 100%;-ms-transform-origin:50% 100%;transform-origin:50% 100%;border-radius:3px 3px 0 0;}
 
 .hero-second{width:0;height:0;position:absolute;top:50%;left:50%;margin:-40% -1px 0 0;padding:40% 1px 0;-webkit-transform-origin:50% 100%;-ms-transform-origin:50% 100%;transform-origin:50% 100%;}
-</style>
-        ]]></twig>
+        ]]></style>
     </stencil>
     <onInitialize><![CDATA[
 // Set moment locale
@@ -181,7 +179,7 @@ xiboIC.set(
     id,
     'updateClock', 
     function updateClock(){
-        var now = moment().add(' + offset + ', "m"),
+        var now = moment().add(properties.offset, "m"),
                 second = now.seconds() * 6,
                 minute = now.minutes() * 6 + second / 60,
                 hour = ((now.hours() % 12) / 12) * 360 + 90 + minute / 12;
@@ -208,8 +206,17 @@ if (typeof updateClock === 'function') {
 }
     ]]></onVisible>
     <onRender><![CDATA[
-      // Scale the content
-      $(target).xiboLayoutScaler(properties);
+var width = $(window).width();
+var height = $(window).height();
+
+// Clock size
+// Shrink by 2px to get a bit of space to the side.
+var size = Math.min(width, height) - 2;
+
+$(target).find('.hero-circle').css({
+    width: size + "px",
+    height: size + "px"
+});
 ]]></onRender>
     <assets>
         <asset id="clock-analogue-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/clock/clock-analogue-thumb.png" />

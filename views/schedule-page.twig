@@ -154,10 +154,8 @@
                                 <label class="control-label mr-1" title="{{ title }}" for="directSchedule" accesskey="">{{ label }}</label>
                                 <div>
                                     <div class="input-group" style="height: 34px">
-                                        <div class="input-group-append input-group-addon">
-                                            <div class="input-group-text">
-                                                <input title="{{ title }}" type="checkbox" id="directSchedule" name="directSchedule">
-                                            </div>
+                                        <div class="input-group-text h-100">
+                                            <input title="{{ title }}" type="checkbox" id="directSchedule" name="directSchedule">
                                         </div>
                                     </div>
                                 </div>
@@ -166,13 +164,11 @@
                             {% set title %}{% trans "Only show schedules which appear on all filtered displays/groups?" %}{% endset %}
                             {% set label %}{% trans "Shared Schedule?" %}{% endset %}
                             <div class="form-group mr-1 mb-1">
-                                <label class="control-label mr-1" title="{{ title }}" for="directSchedule" accesskey="">{{ label }}</label>
+                                <label class="control-label mr-1" title="{{ title }}" for="sharedSchedule" accesskey="">{{ label }}</label>
                                 <div>
                                     <div class="input-group" style="height: 34px">
-                                        <div class="input-group-append input-group-addon">
-                                            <div class="input-group-text">
-                                                <input title="{{ title }}" type="checkbox" id="sharedSchedule" name="sharedSchedule">
-                                            </div>
+                                        <div class="input-group-text h-100">
+                                            <input title="{{ title }}" type="checkbox" id="sharedSchedule" name="sharedSchedule">
                                         </div>
                                     </div>
                                 </div>
@@ -1261,7 +1257,12 @@
           .on('change', function (e) {
             // Refresh the calendar view
             setTimeout(calendar.view(), 1000);
-          });
+          })
+          .on('select2:open', function(event) {
+            setTimeout(function() {
+              $(event.target).data('select2').dropdown.$search.get(0).focus();
+            }, 10);
+          })
 
         // Set up our show all selector control
         $('#showAll, #eventTypeId, #recurring, #geoAware,' +
@@ -1478,7 +1479,7 @@
             responsivePriority: 4,
             data: function (data) {
               if (data.recurringEvent) {
-                if (data.recurrenceType === 'Week') {
+                if (data.recurrenceType === 'Week' && data.recurrenceRepeatsOn) {
                   const daysOfTheWeek = [
                     '{% trans "Monday" %}',
                     '{% trans "Tuesday" %}',

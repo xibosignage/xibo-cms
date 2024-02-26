@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -122,11 +122,19 @@ trait ModuleXmlTrait
                 $property->allowLibraryRefs = $node->getAttribute('allowLibraryRefs') === 'true';
                 $property->allowAssetRefs = $node->getAttribute('allowAssetRefs') === 'true';
                 $property->parseTranslations = $node->getAttribute('parseTranslations') === 'true';
-                $property->includeInXlf = $node->getAttribute('includeInXlf') === 'true';
                 $property->title = __($this->getFirstValueOrDefaultFromXmlNode($node, 'title'));
                 $property->helpText = __($this->getFirstValueOrDefaultFromXmlNode($node, 'helpText'));
                 $property->value = $this->getFirstValueOrDefaultFromXmlNode($node, 'value');
                 $property->dependsOn = $this->getFirstValueOrDefaultFromXmlNode($node, 'dependsOn');
+
+                // How should we default includeInXlf?
+                if ($module?->renderAs === 'native') {
+                    // Include by default
+                    $property->includeInXlf = $node->getAttribute('includeInXlf') !== 'false';
+                } else {
+                    // Exclude by default
+                    $property->includeInXlf = $node->getAttribute('includeInXlf') === 'true';
+                }
 
                 // Default value
                 $defaultValue = $this->getFirstValueOrDefaultFromXmlNode($node, 'default');

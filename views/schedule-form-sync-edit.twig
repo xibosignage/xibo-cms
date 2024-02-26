@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -49,6 +49,8 @@
                   data-full-screen-url="{{ url_for('layout.add.full.screen.schedule') }}" data-fetch-sync-displays="{{ url_for('syncgroup.fetch.displays', {id:':id'}) }}"
                   data-event-sync-group-id="{{ event.syncGroupId }}" data-event-id="{{ event.eventId }}" data-daypart-message="{{ dayPartMessage }}" data-not-daypart-message="{{ notDayPartMessage }}" data-default-lat="{{ defaultLat }}"
                   data-default-long = "{{ defaultLong }}" data-event-start="{{ eventStart }}" data-event-end="{{ eventEnd }}"
+                  data-add-url="{{ url_for("schedule.add") }}"
+                  data-duplicated-message="{% trans "Duplicate form loaded, make adjustments and press save." %}"
             >
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">

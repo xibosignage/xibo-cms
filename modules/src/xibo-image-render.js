@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -58,7 +58,7 @@ jQuery.fn.extend({
         setTimeout(function() {
           // Try to change source to the original
           $self.attr('src', $self.data('original-src'))
-            .off('error', handleImageError);
+            .on('error', handleImageError);
 
           // Increase the control var and set it to the element
           reloadTimes++;

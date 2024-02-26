@@ -126,7 +126,7 @@ class Campaign implements \JsonSerializable
     public $listPlayOrder;
 
     /**
-     * @SWG\Property(description="For an ad campaign, what's the target type, plays|budget")
+     * @SWG\Property(description="For an ad campaign, what's the target type, plays|budget|imp")
      * @var string
      */
     public $targetType;
@@ -397,7 +397,7 @@ class Campaign implements \JsonSerializable
 
             if ($this->targetType === 'budget') {
                 $progress->progressTarget = ($this->spend / $this->target) * 100;
-            } else if ($this->targetType === 'impressions') {
+            } else if ($this->targetType === 'imp') {
                 $progress->progressTarget = ($this->impressions / $this->target) * 100;
             } else {
                 $progress->progressTarget = ($this->plays / $this->target) * 100;
@@ -485,7 +485,7 @@ class Campaign implements \JsonSerializable
         }
 
         if ($this->type === 'ad') {
-            if (!in_array($this->targetType, ['plays', 'budget', 'impressions'])) {
+            if (!in_array($this->targetType, ['plays', 'budget', 'imp'])) {
                 throw new InvalidArgumentException(__('Invalid target type'), 'targetType');
             }
 

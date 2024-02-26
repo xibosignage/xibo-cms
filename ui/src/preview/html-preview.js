@@ -643,6 +643,8 @@ function media(parent, id, xml, options, preload) {
     self.timeoutId = undefined;
     self.ready = true;
     self.checkIframeStatus = false;
+    self.loadIframeOnRun = false;
+    self.tempSrc = '';
 
     if (self.render == undefined)
         self.render = "module";
@@ -654,6 +656,10 @@ function media(parent, id, xml, options, preload) {
                 var iframeDOM = $("#" + self.containerName + ' #' + self.iframeName);
                 iframeDOM.css({visibility: 'hidden'});
                 iframeDOM[0].src = iframeDOM[0].src;
+            } else if(self.loadIframeOnRun) {
+                var iframe = self.iframe;
+                iframe[0].src = self.tempSrc;
+                $("#" + self.containerName).empty().append(iframe)
             } else {
                 $("#" + self.containerName).empty().append(self.iframe);
             }
@@ -783,11 +789,49 @@ function media(parent, id, xml, options, preload) {
         self.options['loop'] == '1' ||
         (self.region.options['loop'] == '1' && self.region.totalMediaObjects == 1);
 
-    if (self.render == "html" || self.mediaType == "ticker") {
+    if (self.mediaType == "webpage" || self.mediaType == "embedded") {
+        self.loadIframeOnRun = true;
+        self.iframe = $('<iframe scrolling="no" id="' + self.iframeName + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
+        self.tempSrc = tmpUrl + '&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px';
+    } else if (self.mediaType === "image") {
+        preload.addFiles(tmpUrl);
+        media.css("background-image", "url('" + tmpUrl + "')");
+        if (self.options['scaletype'] === 'stretch') {
+          media.css('background-size', '100% 100%');
+        } else if (self.options['scaletype'] === 'fit') {
+          media.css('background-size', 'cover');
+        } else {
+            // Center scale type, do we have align or valign?
+            var align = (self.options['align'] == "") ? "center" : self.options['align'];
+            var valign = (self.options['valign'] == "" || self.options['valign'] == "middle") ? "center" : self.options['valign'];
+            media.css("background-position", align + " " + valign);
+        }
+    } else if (self.mediaType == "text" || self.mediaType == "datasetview") {
+        self.checkIframeStatus = true;
+        self.iframe = $('<iframe scrolling="no" id="' + self.iframeName + '" src="' + tmpUrl + '&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0; visibility: hidden;"></iframe>');
+    } else if (self.mediaType == "video") {
+        preload.addFiles(tmpUrl);
+        
+        self.iframe = $('<video id="' + self.containerName + '-vid" preload="auto" ' + ((self.options["mute"] == 1) ? 'muted' : '') + ' ' + (loop ? 'loop' : '') + '><source src="' + tmpUrl + '">Unsupported Video</video>');
+
+        // Stretch video?
+        if(self.options['scaletype'] == 'stretch') {
+            self.iframe.css("object-fit", "fill");
+        }
+    } else if(self.mediaType == "audio") {
+        preload.addFiles(tmpUrl);
+        
+        media.append('<audio id="' + self.containerName + '-aud" preload="auto" ' + (loop ? 'loop' : '') + ' ' + ((self.options["mute"] == 1) ? 'muted' : '') + '><source src="' + tmpUrl + '">Unsupported Audio</audio>');
+    } else if (self.mediaType == "flash") {
+        var embedCode = '<OBJECT classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,0,0" WIDTH="100%" HEIGHT="100%" id="Yourfilename" ALIGN="">';
+        embedCode = embedCode + '<PARAM NAME=movie VALUE="' + tmpUrl + '"> <PARAM NAME=quality VALUE=high> <param name="wmode" value="transparent"> <EMBED src="' + tmpUrl + '" quality="high" wmode="transparent" WIDTH="100%" HEIGHT="100%" NAME="Yourfilename" ALIGN="" TYPE="application/x-shockwave-flash" PLUGINSPAGE="http://www.macromedia.com/go/getflashplayer"></EMBED> </OBJECT>';
+        preload.addFiles(tmpUrl);
+        self.iframe = $(embedCode);
+    } else if (self.render == "html" || self.mediaType == "ticker") {
         self.checkIframeStatus = true;
         self.iframe = $('<iframe scrolling="no" id="' + self.iframeName + '" src="' + tmpUrl + '&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0; visibility: hidden;"></iframe>');
         /* Check if the ticker duration is based on the number of items in the feed */
-        if(self.options['durationisperitem'] == '1' || self.options['durationisperpage'] == '1') {
+        if(self.options['durationisperitem'] == '1') {
             var regex =  new RegExp("<!-- NUMITEMS=(.*?) -->"); 
             jQuery.ajax({
                 url: tmpUrl + '&width=' + self.divWidth + '&height=' + self.divHeight,
@@ -802,47 +846,7 @@ function media(parent, id, xml, options, preload) {
                 async:false
             });
         }
-    }
-    else if (self.mediaType === "image") {
-        preload.addFiles(tmpUrl);
-        media.css("background-image", "url('" + tmpUrl + "')");
-        if (self.options['scaletype'] === 'stretch') {
-          media.css('background-size', '100% 100%');
-        } else if (self.options['scaletype'] === 'fit') {
-          media.css('background-size', 'cover');
-        } else {
-            // Center scale type, do we have align or valign?
-            var align = (self.options['align'] == "") ? "center" : self.options['align'];
-            var valign = (self.options['valign'] == "" || self.options['valign'] == "middle") ? "center" : self.options['valign'];
-            media.css("background-position", align + " " + valign);
-        }
-    }
-    else if (self.mediaType == "text" || self.mediaType == "datasetview" || self.mediaType == "webpage" || self.mediaType == "embedded") {
-        self.checkIframeStatus = true;
-        self.iframe = $('<iframe scrolling="no" id="' + self.iframeName + '" src="' + tmpUrl + '&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0; visibility: hidden;"></iframe>');
-    }
-    else if (self.mediaType == "video") {
-        preload.addFiles(tmpUrl);
-        
-        self.iframe = $('<video id="' + self.containerName + '-vid" preload="auto" ' + ((self.options["mute"] == 1) ? 'muted' : '') + ' ' + (loop ? 'loop' : '') + '><source src="' + tmpUrl + '">Unsupported Video</video>');
-
-        // Stretch video?
-        if(self.options['scaletype'] == 'stretch') {
-            self.iframe.css("object-fit", "fill");
-        }
-    }
-     else if(self.mediaType == "audio") {
-        preload.addFiles(tmpUrl);
-        
-        media.append('<audio id="' + self.containerName + '-aud" preload="auto" ' + (loop ? 'loop' : '') + ' ' + ((self.options["mute"] == 1) ? 'muted' : '') + '><source src="' + tmpUrl + '">Unsupported Audio</audio>');
-    }
-    else if (self.mediaType == "flash") {
-        var embedCode = '<OBJECT classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,0,0" WIDTH="100%" HEIGHT="100%" id="Yourfilename" ALIGN="">';
-        embedCode = embedCode + '<PARAM NAME=movie VALUE="' + tmpUrl + '"> <PARAM NAME=quality VALUE=high> <param name="wmode" value="transparent"> <EMBED src="' + tmpUrl + '" quality="high" wmode="transparent" WIDTH="100%" HEIGHT="100%" NAME="Yourfilename" ALIGN="" TYPE="application/x-shockwave-flash" PLUGINSPAGE="http://www.macromedia.com/go/getflashplayer"></EMBED> </OBJECT>';
-        preload.addFiles(tmpUrl);
-        self.iframe = $(embedCode);
-    }
-    else {
+    } else {
         media.css("outline", "red solid thin");
     }
 
