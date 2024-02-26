@@ -261,7 +261,40 @@ Playlist.prototype.addObject = function(
         pE.selectedObject.id = 'widget_' + res.data.widgetId;
         pE.selectedObject.type = 'widget';
 
-        pE.reloadData();
+        // If we're adding a specific playlist, we need to
+        // update playlist values in the new widget
+        const subPlaylistId = $(draggable).data('subPlaylistId');
+        if (subPlaylistId) {
+          pE.historyManager.addChange(
+            'saveForm',
+            'widget', // targetType
+            res.data.widgetId, // targetId
+            null, // oldValues
+            {
+              subPlaylists: JSON.stringify([
+                {
+                  rowNo: 1,
+                  playlistId: subPlaylistId,
+                  spots: '',
+                  spotLength: '',
+                  spotFill: 'repeat',
+                },
+              ]),
+            }, // newValues
+            {
+              addToHistory: false,
+            },
+          ).then((_res) => {
+            pE.reloadData();
+          }).catch((_error) => {
+            toastr.error(_error);
+
+            // Delete newly added widget
+            pE.deleteObject('widget', res.data.widgetId);
+          });
+        } else {
+          pE.reloadData();
+        }
       }).catch((error) => { // Fail/error
         pE.common.hideLoadingScreen('addModuleToPlaylist');
 

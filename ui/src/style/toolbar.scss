@@ -427,6 +427,7 @@
                         animation: animateBg 1.5s linear infinite;
                         background-image: linear-gradient(0deg, $xibo-color-primary,lighten($xibo-color-primary, 10%),$xibo-color-primary);
                         background-size: 100% 1100%;
+                        border-radius: 4px;
 
                         & > * {
                             opacity: 0;
@@ -437,7 +438,7 @@
                         100% { background-position: 0% 100%; }
                     }
 
-                    &.no-thumbnail, &.upload-card {
+                    &.no-thumbnail, &.upload-card, &.new-playlist-card {
                         min-height: 85px;
 
                         .toolbar-card-preview {
@@ -448,8 +449,10 @@
                         }
                     }
 
-                    &.upload-card .toolbar-card-preview {
-                        background: $xibo-color-primary-d60;
+                    &.upload-card, &.new-playlist-card {
+                        .toolbar-card-preview {
+                            background: $xibo-color-primary-d60;
+                        }
                     }
 
                     .toolbar-card-preview {
@@ -555,18 +558,93 @@
                     .toolbar-card:not(.has-thumb):hover .media-title {
                         overflow: visible;
                         white-space: normal;
+                        @include set-transparent-color(background-color, $xibo-color-primary-l5, 0.75);
+                        position: relative;
+                        z-index: calc(#{$toolbar-card-z-index} + 1);
                     }
-                    
-                    .toolbar-card:not(.has-thumb):hover .badges {
+
+                    .badges {
                         display: flex;
+                        padding-bottom: 4px;
+                    }
+
+                    .toolbar-card:not(.has-thumb):hover .badges {
                         position: absolute;
                         width: 100%;
                         flex-wrap: wrap;
                         z-index: calc(#{$toolbar-card-z-index} + 1);
                         gap: 3px;
-                        padding: 4px 0;
                         @include set-transparent-color(background-color, $xibo-color-primary-l5, 0.75);
                         border-radius: 0 0 4px 4px;
+                    }
+                    
+                    .toolbar-card:not(.has-thumb):hover {
+                        @include set-transparent-color(background-color, $xibo-color-primary-l5, 0.75);
+                        overflow: visible;
+                    }
+                }
+
+                &.toolbar-playlists-pane {
+                    .new-playlist-card {
+                        min-height: initial;
+
+                        .card-icon {
+                            margin: 5px 0;
+                        }
+
+                        .media-title {
+                            color: $xibo-color-primary-l10;
+                            text-align: center;
+                            font-weight: normal;
+                        }
+                    }
+
+                    .toolbar-card {
+                        margin-bottom: 2px;
+                        padding-bottom: 6px;
+                        border-radius: 4px;
+                    }
+
+                    .toolbar-card-preview {
+                        .media-title {
+                            font-weight: normal;
+                        }
+
+                        .dynamic-logo {
+                            position: absolute;
+                            font-size: 0.85rem;
+                            bottom: 0;
+                            right: 0;
+                            background: $xibo-color-primary;
+                            color: $xibo-color-primary-l10;
+                            padding: 0px 4px;
+                            @include border-radius(4px 0 0 0);
+                            opacity: 0.9;
+                            line-height: 20px;
+                        }
+
+                        min-height: $toolbar-widgets-card-height;
+                        height: $toolbar-widgets-card-height;
+                        background: $xibo-color-primary-l20;
+                        color: $xibo-color-primary-d60;
+                        border: 1px solid $xibo-color-primary-l30;
+                        padding: 4px;
+                        margin-bottom: 2px;
+                    }
+
+                    .badges {
+                        padding-bottom: 4px;
+                        display: flex;
+                        position: absolute;
+                        width: 100%;
+                        gap: 3px;
+                        @include set-transparent-color(background-color, $xibo-color-primary-l5, 0.75);
+                        border-radius: 0 0 4px 4px;
+                    }
+
+                    .toolbar-card:not(.has-thumb):hover .badges {
+                        flex-wrap: wrap;
+                        z-index: calc(#{$toolbar-card-z-index} + 1);
                     }
                     
                     .toolbar-card:not(.has-thumb):hover {
