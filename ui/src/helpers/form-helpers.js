@@ -1661,7 +1661,7 @@ const formHelpers = function() {
       });
 
       // Get button container
-      $buttonContainer =
+      const $buttonContainer =
         $(el).parents('.xibo-form-input').find('.text-area-buttons');
 
       // Add button to the button container for the text area
@@ -1947,7 +1947,7 @@ const formHelpers = function() {
       $editorContainer.parent().css('background-color', backgroundColor);
 
       // Get button container
-      $buttonContainer =
+      const $buttonContainer =
         $(el).parents('.xibo-form-input').find('.text-area-buttons');
 
       // View source button
