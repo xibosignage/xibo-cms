@@ -33,7 +33,7 @@ class MissingIndexesMigration extends AbstractMigration
         $region = $this->table('region');
         if (!$region->hasForeignKey('layoutId')) {
             $region
-                ->addForeignKey('layoutId', 'layout')
+                ->addForeignKey('layoutId', 'layout', 'layoutId')
                 ->save();
         }
 
