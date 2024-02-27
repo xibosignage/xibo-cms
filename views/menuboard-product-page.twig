@@ -92,23 +92,23 @@
                 filter: false,
                 searchDelay: 3000,
                 dataType: 'json',
-                "order": [[5, "asc"]],
+                order: [[5, 'asc']],
                 ajax: {
                     url: "{{ url_for("menuBoard.product.search", {id: menuBoardCategory.menuCategoryId}) }}",
-                    "data": function (d) {
+                    data: function (d) {
                         $.extend(d, $("#menuBoardProducts").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                     }
                 },
-                "columns": [
-                    {"data": "menuProductId", responsivePriority: 2},
+                columns: [
+                    {data: 'menuProductId', responsivePriority: 2},
                     {
-                        "data": "name",
+                        data: 'name',
                         responsivePriority: 2,
-                        "render": dataTableSpacingPreformatted
+                        render: dataTableSpacingPreformatted,
                     },
                     {
-                        "data": "description",
-                        responsivePriority: 2
+                        data: 'description',
+                        responsivePriority: 3,
                     },
                     {
                       data: 'price',
@@ -131,49 +131,50 @@
                           if (row.thumbnail && row.thumbnail !== '') {
                             return '<a class="img-replace" data-toggle="lightbox" data-type="image"' +
                               ' href="' + row.thumbnail + '">' +
-                              '<img src="' + row.thumbnail + '&isThumb=1" alt="Thumbnail" />';
+                              '<img src="' + row.thumbnail + '&isThumb=1" alt="Thumbnail" /></a>';
                           } else {
                             return '';
                           }
-                        }
+                        },
                     },
                     {
                         data: 'displayOrder',
                         responsivePriority: 2,
                     },
                     {
-                        "data": "availability",
-                        "render": function (data, type, row) {
-                            if (type != "display")
-                                return data;
-
-                            var icon = "";
-                            if (data == 1) {
-                                icon = "fa-check";
-                            }
-                            else if (data == 0) {
-                                icon = "fa-times";
-                            }
-
-                            return '<span class="fa ' + icon + '"></span>';
+                      data: 'availability',
+                      responsivePriority: 2,
+                      render: function (data, type, row) {
+                        if (type !== 'display') {
+                          return data;
                         }
+
+                        let icon = '';
+                        if (data === 1) {
+                          icon = 'fa-check';
+                        } else if (data === 0) {
+                          icon = 'fa-times';
+                        }
+
+                        return '<span class="fa ' + icon + '"></span>';
+                      },
                     },
                     {
-                        "data": "allergyInfo",
-                        responsivePriority: 2
+                        data: 'allergyInfo',
+                        responsivePriority: 3,
                     },
                     {
                         data: 'calories',
-                        responsivePriority: 2
+                        responsivePriority: 2,
                     },
                     {
-                        "data": "code",
-                        responsivePriority: 3
+                        data: 'code',
+                        responsivePriority: 2,
                     },
                     {
-                        "orderable": false,
+                        orderable: false,
                         responsivePriority: 1,
-                        "data": dataTableButtonsColumn
+                        data: dataTableButtonsColumn,
                     }
                 ]
             });
