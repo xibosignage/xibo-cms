@@ -32,10 +32,15 @@ class Sql
         'INSERT',
         'UPDATE',
         'SELECT',
+        'FROM',
+        'WHERE',
         'DELETE',
         'TRUNCATE',
         'TABLE',
-        'FROM',
-        'WHERE'
+        'ALTER',
+        'GRANT',
+        'REVOKE',
+        'CREATE',
+        'DROP',
     ];
 }
