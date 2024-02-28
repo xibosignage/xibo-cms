@@ -32,6 +32,10 @@ class MissingIndexesMigration extends AbstractMigration
     {
         $region = $this->table('region');
         if (!$region->hasForeignKey('layoutId')) {
+            // Take care of orphaned regions
+            $this->execute('DELETE FROM `region` WHERE `layoutId` NOT IN (SELECT `layoutId` FROM `layout`)');
+
+            // Add the FK
             $region
                 ->addForeignKey('layoutId', 'layout', 'layoutId')
                 ->save();
