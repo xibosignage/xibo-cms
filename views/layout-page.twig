@@ -134,6 +134,9 @@
 
                                     {% set title %}{% trans "Layout ID" %}{% endset %}
                                     {{ inline.number("layoutId", title) }}
+
+                                    {% set title %}{% trans "Modified Since" %}{% endset %}
+                                    {{ inline.date("modifiedSinceDt", title) }}
                                 </div>
                             </div>
                         </form>
