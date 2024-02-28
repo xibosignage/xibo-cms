@@ -1453,6 +1453,7 @@ class Layout extends Base
             'logicalOperator' => $parsedQueryParams->getString('logicalOperator'),
             'logicalOperatorName' => $parsedQueryParams->getString('logicalOperatorName'),
             'campaignType' => 'list',
+            'modifiedSinceDt' => $parsedQueryParams->getDate('modifiedSinceDt'),
         ], $parsedQueryParams));
 
         foreach ($layouts as $layout) {
