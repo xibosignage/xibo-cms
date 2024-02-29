@@ -41,8 +41,6 @@ jQuery.fn.extend({
       displayDirection: 0,
       seamless: true,
     };
-    const urlParams = new URLSearchParams(window.location.search);
-    const isEditor = urlParams.get('isEditor') === '1';
 
     options = $.extend({}, defaults, options);
 
@@ -132,6 +130,7 @@ jQuery.fn.extend({
     }
 
     const isAndroid = navigator.userAgent.indexOf('Android') > -1;
+    const isEditor = xiboIC.checkIsEditor();
 
     // For each matched element
     this.each(function(_key, element) {

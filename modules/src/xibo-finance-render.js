@@ -33,8 +33,6 @@ jQuery.fn.extend({
       previewHeight: 0,
       scaleOverride: 0,
     };
-    const urlParams = new URLSearchParams(window.location.search);
-    const isEditor = urlParams.get('isEditor') === '1';
 
     options = $.extend({}, defaults, options);
 
@@ -61,6 +59,8 @@ jQuery.fn.extend({
       height = options.widgetDesignHeight;
     }
 
+    const isEditor = xiboIC.checkIsEditor();
+
     // For each matched element
     this.each(function(_idx, _elem) {
       // How many pages to we need?
@@ -77,7 +77,7 @@ jQuery.fn.extend({
       $mainContainer.find('.container-main:not(.template-container)').remove();
 
       // Clone the main HTML
-      // and remove template-container class when isEditor = true
+      // and remove template-container class when we are on the editor
       const $mainHTML = isEditor ? $(body).clone()
         .removeClass('template-container')
         .show() : $(body);
