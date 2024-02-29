@@ -7,7 +7,9 @@
                     {{#if this.locked}}
                         <option value="{{this.value}}" selected>{{this.value}}</option>
                     {{else}}
-                        <option value=""></option>
+                        {{#unless hideDefault}}
+                            <option value=""></option>
+                        {{/unless}}
 
                         {{#each this.values}}
                             <option value="{{type}}" class="{{#if disabled}}disabled{{/if}}" {{#eq ../this.value type}}selected{{/eq}}>{{name}}</option>

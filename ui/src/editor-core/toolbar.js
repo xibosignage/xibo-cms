@@ -66,6 +66,9 @@ const Toolbar = function(
 
   this.selectedCard = {};
 
+  // Flag to mark if toolbar is properly initialized
+  this.initalized = false;
+
   // Flag to mark if the toolbar has been rendered at least one time
   this.firstRun = true;
 
@@ -83,11 +86,6 @@ const Toolbar = function(
 
   // Is the toolbar a playlist toolbar?
   this.isPlaylist = isPlaylist;
-
-  // Initialize toolbar
-  this.init({
-    isPlaylist: isPlaylist,
-  });
 };
 
 /**
@@ -96,6 +94,8 @@ const Toolbar = function(
  * @param {boolean=} [options.isPlaylist] - is it a playlist toolbar?
  */
 Toolbar.prototype.init = function({isPlaylist = false} = {}) {
+  const self = this;
+
   // Modules to be used in Widgets
   let moduleListFiltered = [];
 
@@ -302,32 +302,6 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
       favouriteModules: [],
     },
     {
-      name: 'playlists',
-      itemName: toolbarTrans.menuItems.playlistsName,
-      itemIcon: 'list',
-      itemTitle: toolbarTrans.menuItems.playlistsTitle,
-      contentType: 'playlists',
-      filters: {
-        name: {
-          value: '',
-          key: 'name',
-        },
-        tag: {
-          value: '',
-          key: 'tags',
-          dataRole: 'tagsinput',
-        },
-        user: {
-          value: '',
-          key: 'users',
-          dataRole: 'usersList',
-          searchUrl: urlsForApi.user.get.url,
-        },
-      },
-      state: '',
-      itemCount: 0,
-    },
-    {
       name: 'global',
       disabled: isPlaylist ? true : false,
       itemName: toolbarTrans.menuItems.globalElementsName,
@@ -372,9 +346,6 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
         orientation: {
           value: '',
         },
-        provider: {
-          value: 'both',
-        },
       },
       sort: {
         mediaId: 'numeric',
@@ -417,9 +388,6 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
           key: 'users',
           dataRole: 'usersList',
           searchUrl: urlsForApi.user.get.url,
-        },
-        provider: {
-          value: 'both',
         },
       },
       sort: {
@@ -464,9 +432,6 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
         orientation: {
           value: '',
         },
-        provider: {
-          value: 'both',
-        },
       },
       sort: {
         mediaId: 'numeric',
@@ -510,9 +475,6 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
           dataRole: 'usersList',
           searchUrl: urlsForApi.user.get.url,
         },
-        provider: {
-          value: 'both',
-        },
       },
       sort: {
         mediaId: 'numeric',
@@ -524,6 +486,32 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
       },
       sortCol: '',
       sortDir: 'asc',
+      state: '',
+      itemCount: 0,
+    },
+    {
+      name: 'playlists',
+      itemName: toolbarTrans.menuItems.playlistsName,
+      itemIcon: 'list',
+      itemTitle: toolbarTrans.menuItems.playlistsTitle,
+      contentType: 'playlists',
+      filters: {
+        name: {
+          value: '',
+          key: 'name',
+        },
+        tag: {
+          value: '',
+          key: 'tags',
+          dataRole: 'tagsinput',
+        },
+        user: {
+          value: '',
+          key: 'users',
+          dataRole: 'usersList',
+          searchUrl: urlsForApi.user.get.url,
+        },
+      },
       state: '',
       itemCount: 0,
     },
@@ -594,6 +582,81 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
   this.moduleListOtherFiltered = moduleListOtherFiltered;
   this.moduleListOtherTypes = moduleListOtherTypes;
   this.moduleGroups = moduleGroups;
+
+  // Get providers
+  $.ajax(urlsForApi.media.getProviders).done(function(res) {
+    if (
+      Array.isArray(res)
+    ) {
+      res.forEach((provider) => {
+        // Add provider to menu items
+        self.menuItems.push(
+          {
+            name: provider.id,
+            provider: provider.id,
+            itemName: provider.id,
+            link: provider.link,
+            customIcon: true,
+            itemTitle: toolbarTrans.menuItems
+              .providerTitle.replace('%obj%', provider.id),
+            itemIcon: provider.iconUrl,
+            contentType: 'media',
+            filters: {
+              name: {
+                value: '',
+                key: 'media',
+              },
+              type: {
+                value: '',
+                hideDefault: true,
+                // TODO Hardcoded for now, we need to get list from provider
+                values: [
+                  {
+                    name: 'Image',
+                    type: 'image',
+                    disabled: false,
+                  },
+                  {
+                    name: 'Video',
+                    type: 'video',
+                    disabled: false,
+                  },
+                ],
+              },
+              orientation: {
+                value: '',
+              },
+            },
+            state: '',
+            itemCount: 0,
+          });
+      });
+    } else {
+      // Login Form needed?
+      if (res.login) {
+        window.location.href = window.location.href;
+        location.reload();
+      } else {
+        // Just an error we dont know about
+        if (res.message == undefined) {
+          console.error(res);
+        } else {
+          console.error(res.message);
+        }
+      }
+    }
+
+    // Mark as init and render
+    self.initalized = true;
+    self.render();
+  }).catch(function(jqXHR, textStatus, errorThrown) {
+    console.error(jqXHR, textStatus, errorThrown);
+    console.error(errorMessagesTrans.getProvidersFailed);
+
+    // Mark as init and render
+    self.initalized = true;
+    self.render();
+  });
 };
 
 /**
@@ -602,8 +665,18 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
 Toolbar.prototype.loadPrefs = function() {
   // Load using the API
   const linkToAPI = urlsForApi.user.getPref;
-
   const app = this.parent;
+
+  const renderBars = function () {
+    // Render toolbar and topbar if exists
+    self.render({
+      savePrefs: false,
+    });
+
+    if (app.topbar) {
+      app.topbar.render();
+    }
+  };
 
   // Request items based on filters
   const self = this;
@@ -657,10 +730,12 @@ Toolbar.prototype.loadPrefs = function() {
         for (const filter in loadedData.filters) {
           if (loadedData.filters.hasOwnProperty(filter)) {
             const menuIdx = findMenuIndexByName(filter);
-            for (const filterValue in loadedData.filters[filter]) {
-              if (loadedData.filters[filter].hasOwnProperty(filterValue)) {
-                self.menuItems[menuIdx].filters[filterValue].value =
-                  loadedData.filters[filter][filterValue];
+            if (menuIdx != -1) {
+              for (const filterValue in loadedData.filters[filter]) {
+                if (loadedData.filters[filter].hasOwnProperty(filterValue)) {
+                  self.menuItems[menuIdx].filters[filterValue].value =
+                    loadedData.filters[filter][filterValue];
+                }
               }
             }
           }
@@ -672,10 +747,12 @@ Toolbar.prototype.loadPrefs = function() {
         for (const sortItem in loadedData.sort) {
           if (loadedData.sort.hasOwnProperty(sortItem)) {
             const menuIdx = findMenuIndexByName(sortItem);
-            self.menuItems[menuIdx].sortCol =
-              (loadedData.sort[sortItem].sortCol) || '';
-            self.menuItems[menuIdx].sortDir =
-              loadedData.sort[sortItem].sortDir || 'asc';
+            if (menuIdx != -1) {
+              self.menuItems[menuIdx].sortCol =
+                (loadedData.sort[sortItem].sortCol) || '';
+              self.menuItems[menuIdx].sortDir =
+                loadedData.sort[sortItem].sortDir || 'asc';
+            }
           }
         }
       }
@@ -688,13 +765,8 @@ Toolbar.prototype.loadPrefs = function() {
       // Reload tooltips
       app.common.reloadTooltips(self.DOMObject);
 
-      // Render toolbar and topbar if exists
-      self.render({
-        savePrefs: false,
-      });
-      if (app.topbar) {
-        app.topbar.render();
-      }
+      // Render bars
+      renderBars();
     } else {
       // Login Form needed?
       if (res.login) {
@@ -707,11 +779,17 @@ Toolbar.prototype.loadPrefs = function() {
         } else {
           console.error(res.message);
         }
+
+        // Still render bars
+        renderBars();
       }
     }
   }).catch(function(jqXHR, textStatus, errorThrown) {
     console.error(jqXHR, textStatus, errorThrown);
     toastr.error(errorMessagesTrans.userLoadPreferencesFailed);
+
+    // Still render bars
+    renderBars();
   });
 };
 
@@ -836,12 +914,26 @@ Toolbar.prototype.savePrefs = _.debounce(function(clearPrefs = false) {
  * @param {bool=} savePrefs - Save preferences
  */
 Toolbar.prototype.render = function({savePrefs = true} = {}) {
+  // If toolbar isn't initialized, do it
+  if (this.initalized === false) {
+    // Initialize toolbar
+    this.init({
+      isPlaylist: this.isPlaylist,
+    });
+
+    // Stop running
+    return;
+  }
+
   // Load preferences when the toolbar is rendered for the first time
   if (this.firstRun) {
     this.firstRun = false;
 
     // Load user preferences
     this.loadPrefs();
+
+    // Stop running
+    return;
   }
 
   const self = this;
@@ -906,13 +998,15 @@ Toolbar.prototype.render = function({savePrefs = true} = {}) {
     this.DOMObject.show();
 
     // Handle menus
-    for (let i = 0; i < this.menuItems.length; i++) {
-      const toolbar = self;
-      const index = i;
+    if (Array.isArray(this.menuItems)) {
+      for (let i = 0; i < this.menuItems.length; i++) {
+        const toolbar = self;
+        const index = i;
 
-      this.DOMObject.find('#btn-menu-' + index).click(function() {
-        toolbar.openMenu(index);
-      });
+        this.DOMObject.find('#btn-menu-' + index).click(function() {
+          toolbar.openMenu(index);
+        });
+      }
     }
   }
 
@@ -1408,7 +1502,8 @@ Toolbar.prototype.mediaContentCreateWindow = function(menu) {
     sortDir: this.menuItems[menu].sortDir,
     trans: toolbarTrans,
     formClass: 'media-search-form',
-    showSort: true,
+    // Hide sort for providers
+    showSort: !this.menuItems[menu].provider,
   });
 
   // Clear temp data
@@ -1481,12 +1576,17 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
 
     // Get sort if exists
     const $sort = $form.find('#input-sort');
-    if (self.menuItems[menu].sortCol != '') {
+    if ($sort.length > 0 && self.menuItems[menu].sortCol != '') {
       filter.sortCol = self.menuItems[menu].sortCol;
 
       const sortDir = ($sort.siblings('.sort-button-container')
         .data('dir')).toUpperCase();
       filter.sortDir = (sortDir) || 'DESC';
+    }
+
+    // Filter by provider if exists
+    if (self.menuItems[menu].provider) {
+      filter.provider = self.menuItems[menu].provider;
     }
 
     $.ajax({
@@ -1495,7 +1595,6 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
       data: $.extend({
         start: start,
         length: requestLength,
-        provider: 'both',
       }, filter),
     }).done(function(res) {
       // Remove loading
@@ -1536,7 +1635,11 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
         }
       };
 
-      if ($mediaContent.find('.upload-card').length == 0) {
+      // Add upload card only if we don't have provider
+      if (
+        $mediaContent.find('.upload-card').length == 0 &&
+        !self.menuItems[menu].provider
+      ) {
         // If we have a specific module type
         if (filter.type != '') {
           addUploadCard(app.common.getModuleByType(filter.type));

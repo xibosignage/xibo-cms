@@ -177,6 +177,7 @@ class PixabayConnector implements ConnectorInterface
             $providerDetails->id = 'pixabay';
             $providerDetails->link = 'https://pixabay.com';
             $providerDetails->logoUrl = '/theme/default/img/connectors/pixabay_logo.svg';
+            $providerDetails->iconUrl = '/theme/default/img/connectors/pixabay_logo_square.svg';
             $providerDetails->backgroundColor = '';
 
             // Process each hit into a search result and add it to the overall results we've been given.
@@ -253,6 +254,7 @@ class PixabayConnector implements ConnectorInterface
         $providerDetails->id = 'pixabay';
         $providerDetails->link = 'https://pixabay.com';
         $providerDetails->logoUrl = '/theme/default/img/connectors/pixabay_logo.svg';
+        $providerDetails->iconUrl = '/theme/default/img/connectors/pixabay_logo_square.svg';
         $providerDetails->backgroundColor = '';
 
         $event->addProvider($providerDetails);

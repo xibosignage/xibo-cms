@@ -831,11 +831,21 @@
         font-size: 1.5rem;
         padding: 10px;
         line-height: 30px;
-        max-height: $toolbar-width;
+        height: $toolbar-tab-menu-height;
 
         .material-icons {
             font-size: 1.85rem;
             line-height: 30px;
+        }
+
+        &.btn-menu-option-custom-icon {
+            padding: 8px;
+        }
+
+        .btn-menu-custom-icon {
+            width: 100%;
+            height: calc($toolbar-tab-menu-height - 16px);
+            margin: 0;
         }
 
         &:hover {

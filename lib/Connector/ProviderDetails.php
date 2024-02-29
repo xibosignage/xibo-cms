@@ -31,6 +31,7 @@ class ProviderDetails implements \JsonSerializable
     public $message;
     public $link;
     public $logoUrl;
+    public $iconUrl;
     public $backgroundColor;
 
     public function jsonSerialize(): array
@@ -40,6 +41,7 @@ class ProviderDetails implements \JsonSerializable
             'message' => $this->message,
             'link' => $this->link,
             'logoUrl' => $this->logoUrl,
+            'iconUrl' => $this->iconUrl,
             'backgroundColor' => $this->backgroundColor
         ];
     }
