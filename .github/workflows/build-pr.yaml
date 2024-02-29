@@ -1,15 +1,13 @@
 name: Build PR
 
 on:
-  pull_request:
-#  pull_request_review:
-#    types: [submitted]
+  pull_request_review:
+    types: [submitted]
 
 jobs:
   build:
     name: Build PR container
-    if: github.repository == 'xibosignage/xibo-cms'
-    #    if: github.repository == 'xibosignage/xibo-cms' && github.event.review.state == 'APPROVED'
+    if: github.repository == 'xibosignage/xibo-cms' && github.event.review.state == 'APPROVED'
     runs-on: ubuntu-22.04
 
     permissions:
@@ -37,7 +35,7 @@ jobs:
           context: .
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          tags: ghcr.io/xibosignage/xibo-cms:test-pr
+          tags: ghcr.io/xibosignage/xibo-cms:test-${{ github.event.pull_request.number }}
           build-args: GIT_COMMIT=${{ github.event.head.sha }}
           push: true
           load: false
