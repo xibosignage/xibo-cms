@@ -55,28 +55,17 @@ jobs:
             echo "Comment does not match the expected format."
             exit 1
           fi
-      - name: Configure Build X
-        uses: docker/setup-buildx-action@v1
-      - name: Build
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: Dockerfile.ci
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          tags: cms-web
-          build-args: GIT_COMMIT=${{ github.sha }}
-          push: false
-          load: true
       - name: Pull
         run: |
           docker pull mysql:8
           docker pull ghcr.io/xibosignage/xibo-xmr:latest
+          docker pull ghcr.io/xibosignage/xibo-cms:test-${{ github.event.issue.number }}
       - name: Run
         run: |
           docker run --name cms-db -e MYSQL_RANDOM_ROOT_PASSWORD=yes -e MYSQL_DATABASE=cms -e MYSQL_USER=cms -e MYSQL_PASSWORD=jenkins -d mysql:8
           docker run --name cms-xmr -d ghcr.io/xibosignage/xibo-xmr:latest
-          docker run --name cms-web -e MYSQL_USER=cms -e MYSQL_PASSWORD=jenkins -e XIBO_DEV_MODE=true -e XMR_HOST=cms-xmr --link cms-db:db --link cms-xmr:50001 -d cms-web
+          # Run the CMS container, adjusting env for CI and copying back in PHP Unit
+          docker run --name cms-web -e MYSQL_USER=cms -e MYSQL_PASSWORD=jenkins -e XIBO_DEV_MODE=true -e XMR_HOST=cms-xmr -e CMS_USAGE_REPORT=false -e INSTALL_TYPE=ci -e MYSQL_BACKUP_ENABLED=false -v $(pwd)/tests:/var/www/cms/tests --link cms-db:db --link cms-xmr:50001 -d ghcr.io/xibosignage/xibo-cms:test-${{ github.event.issue.number }}
       - name: Wait for CMS
         run: |
           docker exec -t cms-web /bin/bash -c "/usr/local/bin/wait-for-command.sh -q -t 300 -c \"nc -z localhost 80\""
@@ -123,7 +112,7 @@ jobs:
         if: always()
         with:
           script: |
-            const name = '${{ github.workflow	}}';
+            const name = '${{ github.workflow }}';
             const url = '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}';
             const success = '${{ job.status }}' === 'success';
             const body = `${name}: ${success ? 'succeeded ✅' : 'failed ❌'}\n${url}`;
