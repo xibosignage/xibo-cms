@@ -41,6 +41,8 @@ jQuery.fn.extend({
       displayDirection: 0,
       seamless: true,
     };
+    const urlParams = new URLSearchParams(window.location.search);
+    const isEditor = urlParams.get('isEditor') === '1';
 
     options = $.extend({}, defaults, options);
 
@@ -202,7 +204,7 @@ jQuery.fn.extend({
           // hide the original and show the clone
           let $newItem;
           let $oldItem;
-          if ($.contains(element, items[i])) {
+          if (isEditor && $.contains(element, items[i])) {
             $oldItem = $(items[i]);
             $newItem = $oldItem.clone();
           } else {
