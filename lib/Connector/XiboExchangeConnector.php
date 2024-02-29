@@ -132,6 +132,7 @@ class XiboExchangeConnector implements ConnectorInterface
         $providerDetails = new ProviderDetails();
         $providerDetails->id = $this->getSourceName();
         $providerDetails->logoUrl = $this->getThumbnail();
+        $providerDetails->iconUrl = $this->getThumbnail();
         $providerDetails->message = $this->getTitle();
         $providerDetails->backgroundColor = '';
 

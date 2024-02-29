@@ -295,6 +295,10 @@
                 isUsed: {
                     url: "{{ url_for("library.isused", {id: ':id'}) }}",
                     type: 'GET'
+                },
+                getProviders: {
+                    url: "{{ url_for("library.search.providers") }}",
+                    type: 'GET'
                 }
             },
             module: {
@@ -711,6 +715,7 @@
                     layoutTemplateTitle: "{{ "Search for Layout Templates"|trans }}",
                     playlistsName: "{{ "Playlists" |trans }}",
                     playlistsTitle: "{{ "Add Playlists"|trans }}",
+                    providerTitle: "{{ "Provider: %obj%"|trans }}",
                 },
                 window: {
                     drag: "{{ "Move Window" |trans }}",
@@ -860,6 +865,7 @@
                 invalidRegion: "{{ "Region is invalid: Please delete it to validate the Layout!"|trans }}",
                 failedToImportMedia: "{{ "Failed to import media!"|trans }}",
                 canvasWidgetNotShared: "{{ "This Canvas is not shared with you with edit permission!"|trans }}",
+                getProvidersFailed: "{{ "Failed to load media providers!"|trans }}",
             };
 
             var widgetStatusTrans = {

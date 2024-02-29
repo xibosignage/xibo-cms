@@ -49,6 +49,8 @@ class LibraryProviderEvent extends Event
 
     /** @var string landspace|portrait or empty */
     private $orientation;
+    /** @var string provider name */
+    private $provider;
 
     /**
      * @param \Xibo\Entity\SearchResults $results
@@ -57,8 +59,9 @@ class LibraryProviderEvent extends Event
      * @param $search
      * @param $types
      * @param $orientation
+     * @param $provider
      */
-    public function __construct(SearchResults $results, $start, $length, $search, $types, $orientation)
+    public function __construct(SearchResults $results, $start, $length, $search, $types, $orientation, $provider)
     {
         $this->results = $results;
         $this->start = $start;
@@ -66,6 +69,7 @@ class LibraryProviderEvent extends Event
         $this->search = $search;
         $this->types = $types;
         $this->orientation = $orientation;
+        $this->provider = $provider;
     }
 
     public function addResult(SearchResult $result): LibraryProviderEvent
@@ -119,5 +123,10 @@ class LibraryProviderEvent extends Event
     public function getOrientation()
     {
         return $this->orientation;
+    }
+
+    public function getProviderName()
+    {
+        return $this->provider;
     }
 }
