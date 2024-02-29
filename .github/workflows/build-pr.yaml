@@ -31,7 +31,7 @@ jobs:
           context: .
           cache-from: type=gha
           cache-to: type=gha,mode=max
-          tags: ghcr.io/xibosignage/xibo-cms:test-${{ github.event.number }}
-          build-args: GIT_COMMIT=${{ github.ref_name }}
+          tags: ghcr.io/xibosignage/xibo-cms:test-${{ github.event.pull_request.number }}
+          build-args: GIT_COMMIT=${{ github.event.head.sha }}
           push: true
           load: false
