@@ -1667,7 +1667,7 @@ class Layout implements \JsonSerializable
                         // We have something to output
                         $optionNode = $document->createElement($property->id);
 
-                        if ($property->isCData()) {
+                        if ($property->isCData() && $property->value) {
                             $cdata = $document->createCDATASection($property->value);
                             $optionNode->appendChild($cdata);
 

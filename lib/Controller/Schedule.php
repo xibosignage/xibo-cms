@@ -1720,7 +1720,6 @@ class Schedule extends Base
             'loadScheduleReminders' => in_array('scheduleReminders', $embed),
         ]);
 
-
         if (!$this->isEventEditable($schedule)) {
             throw new AccessDeniedException();
         }
@@ -1729,7 +1728,6 @@ class Schedule extends Base
         $schedule->campaignId = $this->isFullScreenSchedule($schedule->eventTypeId)
             ? $sanitizedParams->getInt('fullScreenCampaignId')
             : $sanitizedParams->getInt('campaignId');
-        $schedule->commandId = $sanitizedParams->getInt('commandId');
         $schedule->displayOrder = $sanitizedParams->getInt('displayOrder', ['default' => $schedule->displayOrder]);
         $schedule->isPriority = $sanitizedParams->getInt('isPriority', ['default' => $schedule->isPriority]);
         $schedule->dayPartId = $sanitizedParams->getInt('dayPartId', ['default' => $schedule->dayPartId]);
@@ -1745,14 +1743,35 @@ class Schedule extends Base
         );
         $schedule->displayGroups = [];
         $schedule->isGeoAware = $sanitizedParams->getCheckbox('isGeoAware');
-        $schedule->actionType = $sanitizedParams->getString('actionType');
-        $schedule->actionTriggerCode = $sanitizedParams->getString('actionTriggerCode');
-        $schedule->actionLayoutCode = $sanitizedParams->getString('actionLayoutCode');
         $schedule->maxPlaysPerHour = $sanitizedParams->getInt('maxPlaysPerHour', ['default' => 0]);
         $schedule->name = $sanitizedParams->getString('name');
         $schedule->modifiedBy = $this->getUser()->getId();
 
+        // collect action event relevant properties only on action event
+        // null these properties otherwise
+        if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$ACTION_EVENT) {
+            $schedule->actionType = $sanitizedParams->getString('actionType');
+            $schedule->actionTriggerCode = $sanitizedParams->getString('actionTriggerCode');
+            $schedule->actionLayoutCode = $sanitizedParams->getString('actionLayoutCode');
+            $schedule->campaignId = null;
+        } else {
+            $schedule->actionType = null;
+            $schedule->actionTriggerCode = null;
+            $schedule->actionLayoutCode = null;
+        }
+
+        // collect commandId only on Command event
+        // null commandId otherwise
+        if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$COMMAND_EVENT) {
+            $schedule->commandId = $sanitizedParams->getInt('commandId');
+            $schedule->campaignId = null;
+        } else {
+            $schedule->commandId = null;
+        }
+
         // Set the parentCampaignId for campaign events
+        // null parentCampaignId on other events
+        // make sure correct Layout/Campaign is selected for relevant event.
         if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$CAMPAIGN_EVENT) {
             $schedule->parentCampaignId = $schedule->campaignId;
 
@@ -1763,6 +1782,24 @@ class Schedule extends Base
                     __('Direct scheduling of an Ad Campaign is not allowed'),
                     'campaignId'
                 );
+            }
+
+            if ($campaign->isLayoutSpecific === 1) {
+                throw new InvalidArgumentException(
+                    __('Cannot schedule Layout as a Campaign, please select a Campaign instead.'),
+                    'campaignId'
+                );
+            }
+        } else {
+            $schedule->parentCampaignId = null;
+            if (!empty($schedule->campaignId)) {
+                $campaign = $this->campaignFactory->getById($schedule->campaignId);
+                if ($campaign->isLayoutSpecific === 0) {
+                    throw new InvalidArgumentException(
+                        __('Cannot schedule Campaign in selected event type, please select a Layout instead.'),
+                        'campaignId'
+                    );
+                }
             }
         }
 
@@ -1776,20 +1813,6 @@ class Schedule extends Base
                     );
                 }
             ]);
-
-            // if this was originally Campaign event, now changed to interrupt,
-            // check if the selected Campaign is Layout specific
-            // set parentCampaignId to null, otherwise the event will not be editable.
-            if ($schedule->getOriginalValue('eventTypeId') === \Xibo\Entity\Schedule::$CAMPAIGN_EVENT) {
-                $campaign = $this->campaignFactory->getById($schedule->campaignId);
-                if ($campaign->isLayoutSpecific === 0) {
-                    throw new InvalidArgumentException(
-                        __('Cannot schedule campaign as an interrupt, please select a Layout instead.'),
-                        'campaignId'
-                    );
-                }
-                $schedule->parentCampaignId = null;
-            }
         } else {
             $schedule->shareOfVoice = null;
         }

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -40,6 +40,7 @@ use Xibo\Support\Exception\DuplicateEntityException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Widget\Definition\Sql;
 
 /**
  * Class DataSet
@@ -265,9 +266,6 @@ class DataSet implements \JsonSerializable
 
     private $countLast = 0;
 
-    /** @var array Blacklist for SQL */
-    private $blackList = array(';', 'INSERT', 'UPDATE', 'SELECT', 'DELETE', 'TRUNCATE', 'TABLE', 'FROM', 'WHERE');
-
     /** @var  \Xibo\Helper\SanitizerService */
     private $sanitizerService;
 
@@ -442,9 +440,12 @@ class DataSet implements \JsonSerializable
                 if ($column->heading == $heading) {
                     // Formula column?
                     if ($column->dataSetColumnTypeId == 2) {
-                        $select .= str_replace($this->blackList, '', htmlspecialchars_decode($column->formula, ENT_QUOTES)) . ' AS `' . $column->heading . '`,';
-                    }
-                    else {
+                        $select .= str_replace(
+                            Sql::DISALLOWED_KEYWORDS,
+                            '',
+                            htmlspecialchars_decode($column->formula, ENT_QUOTES)
+                        ) . ' AS `' . $column->heading . '`,';
+                    } else {
                         $select .= '`' . $column->heading . '`,';
                     }
                     $found = true;
@@ -520,15 +521,20 @@ class DataSet implements \JsonSerializable
             // Formula column?
             if ($column->dataSetColumnTypeId == 2) {
                 // Is this a client side column?
-                if (substr($column->formula, 0, 1) === '$') {
+                if (str_starts_with($column->formula, '$')) {
                     $clientSideFormula[] = $column;
                     continue;
                 }
 
-                $formula = str_ireplace($this->blackList, '', htmlspecialchars_decode($column->formula, ENT_QUOTES));
+                $formula = str_ireplace(
+                    Sql::DISALLOWED_KEYWORDS,
+                    '',
+                    htmlspecialchars_decode($column->formula, ENT_QUOTES)
+                );
                 $formula = str_replace('[DisplayId]', $displayId, $formula);
 
-                $heading = str_replace('[DisplayGeoLocation]', $displayGeoLocation, $formula) . ' AS `' . $column->heading . '`';
+                $heading = str_replace('[DisplayGeoLocation]', $displayGeoLocation, $formula)
+                    . ' AS `' . $column->heading . '`';
             } else {
                 $heading = '`' . $column->heading . '`';
             }
@@ -544,7 +550,7 @@ class DataSet implements \JsonSerializable
         if ($filter != '') {
             // Support display filtering.
             $filter = str_replace('[DisplayId]', $displayId, $filter);
-            $filter = str_ireplace($this->blackList, '', $filter);
+            $filter = str_ireplace(Sql::DISALLOWED_KEYWORDS, '', $filter);
 
             $body .= ' AND ' . $filter;
         }

@@ -243,7 +243,7 @@
     </div>
 {% endmacro %}
 
-{% macro inputNameGrid(name, title, groupClass) %}
+{% macro inputNameGrid(name, title, groupClass, useRegexName, logicalOperatorName) %}
     <div class="form-group mr-1 mb-1 {{ groupClass }}">
         <label class="control-label mr-1" title="" for="{{ name }}" accesskey="">{{ title }}</label>
         <div>
@@ -251,9 +251,10 @@
                 <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="">
                 <div class="input-group-append input-group-addon">
                     <div class="input-group-text">
-                        <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
+                        <input title="{% trans "Use Regex?" %}" type="checkbox" {% if useRegexName %} id="{{ useRegexName }}" name="{{ useRegexName }}" {% else %} id="useRegexForName" name="useRegexForName"{% endif %}>
                     </div>
-                    <select class="custom-select" id="logicalOperatorName" name="logicalOperatorName" title="{% trans "When filtering by multiple names, which logical operator should be used?" %}" style="min-width:auto!important">
+                    <select class="custom-select" {% if logicalOperatorName %} id="{{ logicalOperatorName }}" name="{{ logicalOperatorName }}" {% else %} id="logicalOperatorName" name="logicalOperatorName"{% endif %}
+                            title="{% trans "When filtering by multiple names, which logical operator should be used?" %}" style="min-width:auto!important">
                         <option value="OR" selected>OR</option>
                         <option value="AND">AND</option>
                     </select>

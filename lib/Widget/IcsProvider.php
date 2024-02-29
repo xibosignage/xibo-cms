@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -58,7 +58,6 @@ class IcsProvider implements WidgetProviderInterface
         $iCalConfig = [
             'replaceWindowsTimeZoneIds' => ($dataProvider->getProperty('replaceWindowsTimeZoneIds', 0) == 1),
             'defaultSpan' => 1,
-            'filterDaysBefore' => 5
         ];
 
         // What event range are we interested in?
@@ -99,8 +98,10 @@ class IcsProvider implements WidgetProviderInterface
         $this->getLog()->debug('fetchData: final range, start=' . $rangeStart->toAtomString()
             . ', end=' . $rangeEnd->toAtomString());
 
-        // Get the difference between now and the end range.
-        $iCalConfig['filterDaysAfter'] = $startOfDay->diffInDays($rangeEnd) + 2;
+        // Set up fuzzy filtering supported by the ICal library. This is included for performance.
+        // https://github.com/u01jmg3/ics-parser?tab=readme-ov-file#variables
+        $iCalConfig['filterDaysBefore'] = $rangeStart->diffInDays(Carbon::now(), false) + 2;
+        $iCalConfig['filterDaysAfter'] = $rangeEnd->diffInDays(Carbon::now()) + 2;
 
         $this->getLog()->debug('Range start: ' . $rangeStart->toDateTimeString()
             . ', range end: ' . $rangeEnd->toDateTimeString()

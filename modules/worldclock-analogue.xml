@@ -423,6 +423,7 @@ body {
         position: relative;
         left: 50%;
         width: 70px;
+        font-size: 16px;
         -webkit-transform: translateX(-50%);
         transform: translateX(-50%);
         line-height: 22px;
