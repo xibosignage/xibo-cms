@@ -224,6 +224,13 @@
                                     table.ajax.reload();
                                     XiboDialogClose();
                                 }
+                            },
+                            help: {
+                                label: "{% trans "Help" %}",
+                                className: "default btn-bb-help",
+                                callback: function() {
+                                    XiboHelpRender("{{ helpService.link("dataset") }}#Importing_from_CSV_file");
+                                }
                             }
                         }
                     }).on('shown.bs.modal', function() {
@@ -354,16 +361,39 @@
             var authentication = $(dialog).find("#authentication").val();
             var $authFieldUserName = $(dialog).find(".auth-field-username");
             var $authFieldPassword = $(dialog).find(".auth-field-password");
+            var $oauth2FieldUrl = $(dialog).find(".auth-field-oauth2-url");
+            var $oauth2FieldClientId = $(dialog).find(".auth-field-oauth2-client-id");
+            var $oauth2FieldClientSecret = $(dialog).find(".auth-field-oauth2-client-secret");
+            var $oauth2FieldGrantType = $(dialog).find(".auth-field-oauth2-grant-type");
 
             if (authentication === "none") {
                 $authFieldUserName.addClass("d-none");
                 $authFieldPassword.addClass("d-none");
+                $oauth2FieldUrl.addClass("d-none");
+                $oauth2FieldClientId.addClass("d-none");
+                $oauth2FieldClientSecret.addClass("d-none");
+                $oauth2FieldGrantType.addClass("d-none");
             } else if (authentication === "bearer") {
                 $authFieldUserName.addClass("d-none");
+                $oauth2FieldUrl.addClass("d-none");
+                $oauth2FieldClientId.addClass("d-none");
+                $oauth2FieldClientSecret.addClass("d-none");
+                $oauth2FieldGrantType.addClass("d-none");
                 $authFieldPassword.removeClass("d-none");
+            } else if (authentication === "oauth2") {
+                $authFieldUserName.addClass("d-none");
+                $authFieldPassword.addClass("d-none");
+                $oauth2FieldUrl.removeClass("d-none");
+                $oauth2FieldClientId.removeClass("d-none");
+                $oauth2FieldClientSecret.removeClass("d-none");
+                $oauth2FieldGrantType.removeClass("d-none");
             } else {
                 $authFieldUserName.removeClass("d-none");
                 $authFieldPassword.removeClass("d-none");
+                $oauth2FieldUrl.addClass("d-none");
+                $oauth2FieldClientId.addClass("d-none");
+                $oauth2FieldClientSecret.addClass("d-none");
+                $oauth2FieldGrantType.addClass("d-none");
             }
         }
 
