@@ -527,26 +527,49 @@ lD.selectObject =
         (
           oldSelectedId != newSelectedId ||
           oldSelectedType != newSelectedType
-        ) && this.propertiesPanel.toSave
+        ) && (
+          this.propertiesPanel.toSave ||
+          this.propertiesPanel.toSaveElementCallback != null
+        )
       ) {
-        // Set flag back to false
-        this.propertiesPanel.toSave = false;
+        // Select previous object
+        const selectPrevious = function() {
+          // Select object again, with the same params
+          lD.selectObject({
+            target: target,
+            forceSelect: forceSelect,
+            clickPosition: clickPosition,
+            refreshEditor: refreshEditor,
+            reloadViewer: reloadViewer,
+            reloadPropertiesPanel: reloadPropertiesPanel,
+          });
+        };
 
-        // Save previous element
-        this.propertiesPanel.save({
-          target: this.selectedObject, // Save previous object
-          callbackNoWait: function() {
-            // Select object again, with the same params
-            lD.selectObject({
-              target: target,
-              forceSelect: forceSelect,
-              clickPosition: clickPosition,
-              refreshEditor: refreshEditor,
-              reloadViewer: reloadViewer,
-              reloadPropertiesPanel: reloadPropertiesPanel,
-            });
-          },
-        });
+        // Save elements
+        if (this.propertiesPanel.toSaveElementCallback != null) {
+          // Set flag back to false
+          this.propertiesPanel.toSaveElement = false;
+
+          // Run callback to save element property
+          this.propertiesPanel.toSaveElementCallback();
+
+          // Set callback back to null
+          this.propertiesPanel.toSaveElementCallback = null;
+
+          // Select object again
+          selectPrevious();
+        } else if (this.propertiesPanel.toSave) {
+          // Save normal form fields
+
+          // Set flag back to false
+          this.propertiesPanel.toSave = false;
+
+          // Save previous object
+          this.propertiesPanel.save({
+            target: this.selectedObject, // Save previous object
+            callbackNoWait: selectPrevious,
+          });
+        }
 
         // Prevent select to continue
         return;

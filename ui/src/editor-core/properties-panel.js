@@ -63,6 +63,7 @@ const PropertiesPanel = function(parent, container) {
   this.actionForm = {};
 
   this.toSave = false;
+  this.toSaveElementCallback = null;
 };
 
 /**
@@ -387,6 +388,9 @@ PropertiesPanel.prototype.saveElement = function(
       parentWidget.elements[target.elementId].properties = elementProperties;
     }
   }
+
+  // Mark to save as false
+  this.toSaveElementCallback = null;
 
   // Save elements to the widget
   return parentWidget.saveElements().then((_res) => {
@@ -1031,7 +1035,7 @@ PropertiesPanel.prototype.render = function(
           );
 
           // Save element
-          const saveElement = function(target) {
+          const saveElementProperty = function(target) {
             const $target = $(target);
             let containerChanged = false;
             // If the property is common, save it to the element
@@ -1073,18 +1077,26 @@ PropertiesPanel.prototype.render = function(
             }
 
             // Save the element
-            self.saveElement(
-              targetAux,
-              self.DOMObject.find(
-                '[name].element-property:not(.element-common-property)',
-              ),
-              containerChanged,
+            // only if we have form properties
+            const formProperties = self.DOMObject.find(
+              '[name].element-property:not(.element-common-property)',
             );
+            if (formProperties.length > 0) {
+              self.saveElement(
+                targetAux,
+                self.DOMObject.find(
+                  '[name].element-property:not(.element-common-property)',
+                ),
+                containerChanged,
+              );
+            }
           };
 
           const saveDebounced = _.wrap(
             _.memoize(
-              () => _.debounce(saveElement.bind(self), 250), _.property('id'),
+              () => _.debounce(
+                saveElementProperty.bind(self), 250,
+              ), _.property('id'),
             ),
             (getMemoizedFunc, obj) => getMemoizedFunc(obj)(obj),
           );
@@ -1111,7 +1123,9 @@ PropertiesPanel.prototype.render = function(
                     '.xibo-form-input.element-name-input',
                   ).length === 0
               ) {
-                self.toSave = true;
+                self.toSaveElementCallback = function() {
+                  saveElementProperty(_ev.currentTarget);
+                };
               }
             },
           });
