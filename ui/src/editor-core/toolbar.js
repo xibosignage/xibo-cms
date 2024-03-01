@@ -667,7 +667,7 @@ Toolbar.prototype.loadPrefs = function() {
   const linkToAPI = urlsForApi.user.getPref;
   const app = this.parent;
 
-  const renderBars = function () {
+  const renderBars = function() {
     // Render toolbar and topbar if exists
     self.render({
       savePrefs: false,
@@ -732,7 +732,10 @@ Toolbar.prototype.loadPrefs = function() {
             const menuIdx = findMenuIndexByName(filter);
             if (menuIdx != -1) {
               for (const filterValue in loadedData.filters[filter]) {
-                if (loadedData.filters[filter].hasOwnProperty(filterValue)) {
+                if (
+                  loadedData.filters[filter].hasOwnProperty(filterValue) &&
+                  self.menuItems[menuIdx].filters[filterValue] != undefined
+                ) {
                   self.menuItems[menuIdx].filters[filterValue].value =
                     loadedData.filters[filter][filterValue];
                 }
