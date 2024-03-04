@@ -33,6 +33,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: Dockerfile.ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
           tags: ghcr.io/xibosignage/xibo-cms:test-${{ github.event.pull_request.number }}
