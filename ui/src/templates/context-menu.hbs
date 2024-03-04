@@ -85,12 +85,6 @@
                         <i class="tool-icon-permissions"></i><span>{{trans.editWidgetPermissions}}</span>
                     </div>
                 {{/if}}
-
-                {{#if canvas.isPermissionsModifiable}}
-                    <div class="context-menu-btn permissionsBtn" data-title="{{trans.editCanvasPermissions}}" data-property="PermissionsCanvas" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
-                        <i class="tool-icon-permissions"></i><span>{{trans.editCanvasPermissions}}</span>
-                    </div>
-                {{/if}}
             {{else}}
                 {{#if isPermissionsModifiable}}
                     <div class="context-menu-btn permissionsBtn" data-title="{{trans.editPermissions}}" data-property="Permissions" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
