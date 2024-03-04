@@ -93,7 +93,7 @@ jobs:
 
       - name: Run PHP Unit
         run: |
-          docker exec --user www-data -t cms-web /bin/bash -c "cd /var/www/cms; curl -O https://phar.phpunit.de/phpunit-10.0.phar && chmod +x vendor/bin/phpunit && php vendor/bin/phpunit --log-junit results.xml"
+          docker exec --user www-data -t cms-web /bin/bash -c "cd /var/www/cms; curl https://phar.phpunit.de/phpunit-10.0.phar -o vendor/bin/phpunit && chmod +x vendor/bin/phpunit && php vendor/bin/phpunit --log-junit results.xml"
 
       - name: Run Cypress
         id: cypress
