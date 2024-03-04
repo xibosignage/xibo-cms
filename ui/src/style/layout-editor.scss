@@ -342,7 +342,7 @@ body.editor-opened {
     }
 
     &.inline-edit-mode {
-        .custom-overlay {
+        .custom-overlay, .custom-overlay-clone {
             display: block !important;
             opacity: 0.3;
             z-index: $inline-editing-z-index;
