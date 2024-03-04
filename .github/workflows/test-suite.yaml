@@ -68,6 +68,9 @@ jobs:
           docker pull mysql:8
           docker pull ghcr.io/xibosignage/xibo-xmr:latest
 
+      - name: Configure Build X
+        uses: docker/setup-buildx-action@v3
+
       - name: Build
         uses: docker/build-push-action@v5
         with:
