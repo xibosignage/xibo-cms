@@ -63,7 +63,6 @@ docker run --name test-pr-web \
   -e MYSQL_BACKUP_ENABLED=false \
   --link test-pr-db \
   --link test-pr-xmr \
-  -v "$(pwd)"/tests:/var/www/cms/tests \
   -d \
   ghcr.io/xibosignage/xibo-cms:test-"$PR_NUMBER"
 
