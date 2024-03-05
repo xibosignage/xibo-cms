@@ -405,7 +405,8 @@ PropertiesPanel.prototype.saveElement = function(
  * @param {object} element - the element that the form relates to
  */
 PropertiesPanel.prototype.delete = function(element) {
-  lD.deleteSelectedObject();
+  const app = this.parent;
+  app.deleteSelectedObject();
 };
 
 /**
