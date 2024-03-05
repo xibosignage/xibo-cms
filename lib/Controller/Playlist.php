@@ -323,6 +323,9 @@ class Playlist extends Base
                         // Augment with deletable flag
                         $widget->setUnmatchedProperty('isDeletable', $this->getUser()->checkDeleteable($widget));
 
+                        // Augment with viewable flag
+                        $widget->setUnmatchedProperty('isViewable', $this->getUser()->checkViewable($widget));
+
                         // Augment with permissions flag
                         $widget->setUnmatchedProperty(
                             'isPermissionsModifiable',

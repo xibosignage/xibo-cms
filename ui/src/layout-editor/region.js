@@ -31,6 +31,7 @@ const Region = function(id, data, {backgroundColor = '#aaa'} = {}) {
   // Permissions
   this.isEditable = data.isEditable;
   this.isDeletable = data.isDeletable;
+  this.isViewable = data.isViewable;
   this.isPermissionsModifiable = data.isPermissionsModifiable;
   this.isPlaylist = data.type === 'playlist';
   this.isFrame = data.type === 'frame';

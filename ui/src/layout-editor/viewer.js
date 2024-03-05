@@ -367,7 +367,10 @@ Viewer.prototype.render = function(forceReload = false, target = {}) {
 
     // Render viewer regions/widgets
     for (const regionIndex in lD.layout.regions) {
-      if (lD.layout.regions.hasOwnProperty(regionIndex)) {
+      if (
+        lD.layout.regions.hasOwnProperty(regionIndex) &&
+        lD.layout.regions[regionIndex].isViewable
+      ) {
         this.renderRegion(lD.layout.regions[regionIndex]);
       }
     }
@@ -1484,6 +1487,12 @@ Viewer.prototype.renderElement = function(
   canvas,
 ) {
   const self = this;
+
+  // If element is not viewable, don't render
+  if (!element.isViewable) {
+    return;
+  }
+
   // Get canvas region container
   const $canvasRegionContainer = this.DOMObject.find(`#${canvas.id}`);
 
@@ -2936,13 +2945,15 @@ Viewer.prototype.updateMoveable = function(
   const multipleSelected = ($selectedElement.length > 1);
 
   // Update moveable if we have a selected element, and is not a drawerWidget
+  // If we're selecting a widget with no edit permissions don't update moveable
   if (
     multipleSelected ||
     (
       $selectedElement &&
       $.contains(document, $selectedElement[0]) &&
       !$selectedElement.hasClass('drawerWidget') &&
-      $selectedElement.hasClass('editable')
+      $selectedElement.hasClass('editable') &&
+      lD.selectedObject.isEditable
     )
   ) {
     if ($selectedElement.hasClass('designer-element-group')) {
