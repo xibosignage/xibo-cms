@@ -7,6 +7,8 @@ RUN npm install --save-dev --slient cypress@10.1.0
 
 RUN $(npm bin)/cypress verify
 
+RUN npm install --no-save @testmo/testmo-cli
+
 RUN mkdir /app/results
 
 # Create this file so that we can volume mount it
