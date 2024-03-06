@@ -1758,6 +1758,9 @@ window.forms = {
       $(el).colorpicker({
         container: $(el).find('.picker-container'),
         align: 'left',
+        format: ($(el).data('colorFormat') !== undefined) ?
+          $(el).data('colorFormat') :
+          false,
       });
 
       const $inputElement = $(el).find('input');
