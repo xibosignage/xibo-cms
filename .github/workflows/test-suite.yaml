@@ -1,11 +1,13 @@
 name: Test Suite
 
 on:
-  pull_request:
+  issue_comment:
+    types: [created]
 
 jobs:
   test-suite:
     name: Build Containers and Run Tests
+    if: github.event.issue.pull_request && contains(github.event.comment.body, 'TEST:')
     runs-on: ubuntu-22.04
     steps:
       # Step 1: Determine the correct branch associated with the PR
