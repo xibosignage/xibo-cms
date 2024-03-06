@@ -137,6 +137,7 @@ $fa-font-path: "~font-awesome/fonts";
 
 // Overlay and loading
 .custom-overlay,
+.custom-overlay-clone,
 .loading-overlay {
     display: none;
     position: fixed;
@@ -149,7 +150,7 @@ $fa-font-path: "~font-awesome/fonts";
     z-index: $loading-overlay-z-index;
 }
 
-.custom-overlay {
+.custom-overlay, .custom-overlay-clone {
     z-index: $custom-overlay-z-index;
 }
 

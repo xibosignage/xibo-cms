@@ -4048,7 +4048,9 @@ lD.toggleLockedMode = function(enable = true, expiryDate = '') {
 
     if ($customOverlay.length == 0) {
       $customOverlay = $('.custom-overlay').clone();
-      $customOverlay.attr('id', 'lockedOverlay').addClass('locked').show();
+      $customOverlay.attr('id', 'lockedOverlay')
+        .removeClass('custom-overlay')
+        .addClass('custom-overlay-clone locked').show();
       $customOverlay.appendTo(lD.editorContainer);
 
       // Create the read only alert message
