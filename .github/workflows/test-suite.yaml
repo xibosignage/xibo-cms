@@ -122,7 +122,7 @@ jobs:
           if [[ "$test_all" == true ]]; then
             npx testmo automation:run:submit \
               --instance "$TESTMO_URL" \
-              --project-id 1 \
+              --project-id 3 \
               --name "Cypress Tests" \
               --source "github-action" \
               --resources resources.json \
@@ -131,7 +131,7 @@ jobs:
           else
             npx testmo automation:run:submit \
               --instance "$TESTMO_URL" \
-              --project-id 1 \
+              --project-id 3 \
               --name "Cypress Tests" \
               --source "github-action" \
               --resources resources.json \
