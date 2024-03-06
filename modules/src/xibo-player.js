@@ -616,9 +616,8 @@ const XiboPlayer = function() {
 
     // Duration
     elemCopy.duration = currentWidget.duration;
-    if (elemCopy?.renderData?.hasOwnProperty('durationIsPerItem')) {
-      elemCopy.durationIsPerItem = elemCopy.renderData.durationIsPerItem;
-    }
+    elemCopy.durationIsPerItem =
+      Boolean(currentWidget.properties.durationIsPerItem);
 
     // Check if element is extended and data is coming from meta
     if (elemCopy.isExtended && elemCopy.dataOverrideWith !== null &&
