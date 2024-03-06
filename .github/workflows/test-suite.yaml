@@ -97,7 +97,7 @@ jobs:
       # Remove our own package.json/lock files so that they don't get installed along with testmo.
       - run: |
           rm package.json
-          rm package.lock
+          rm package-lock.json
 
       - name: Configure Testmo
         uses: actions/setup-node@v3
