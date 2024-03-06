@@ -234,6 +234,7 @@
                                     <th>{% trans 'Recurrence Repeats On' %}</th>
                                     <th>{% trans 'Recurrence End' %}</th>
                                     <th>{% trans 'Priority?' %}</th>
+                                    <th>{% trans 'Criteria?' %}</th>
                                     <th>{% trans 'Created On' %}</th>
                                     <th>{% trans 'Updated On' %}</th>
                                     <th>{% trans 'Modified By' %}</th>
@@ -1533,6 +1534,18 @@
             data: 'isPriority',
             className: 'align-middle',
             responsivePriority: 2,
+          },
+          {
+            data: 'criteria',
+            className: 'align-middle',
+            responsivePriority: 2,
+            data: function (data, type, row) {
+              if (data.criteria && data.criteria.length > 0) {
+                return dataTableTickCrossColumn(1, type, row);
+              } else {
+                return '';
+              }
+            }
           },
           {
             data: 'createdOn',
