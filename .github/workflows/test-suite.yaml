@@ -94,6 +94,11 @@ jobs:
         run: |
           docker exec --user www-data -t cms-web /bin/bash -c "cd /var/www/cms; php vendor/bin/phpunit --log-junit results.xml"
 
+      # Remove our own package.json/lock files so that they don't get installed along with testmo.
+      - run: |
+          rm package.json
+          rm package.lock
+
       - name: Configure Testmo
         uses: actions/setup-node@v3
         with:
