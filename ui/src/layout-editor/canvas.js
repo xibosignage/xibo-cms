@@ -25,6 +25,7 @@ const Canvas = function(id, data, layoutDimensions) {
   // Permissions
   this.isEditable = data.isEditable;
   this.isDeletable = data.isDeletable;
+  this.isViewable = data.isViewable;
   this.isPermissionsModifiable = data.isPermissionsModifiable;
 
   // Interactive actions
