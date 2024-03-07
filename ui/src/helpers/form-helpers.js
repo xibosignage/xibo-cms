@@ -2152,13 +2152,6 @@ const formHelpers = function() {
       action: 'delete',
     };
 
-    // Add back button
-    buttons.back = {
-      name: editorsTrans.back,
-      type: 'btn-white',
-      action: 'back',
-    };
-
     // Add save button
     buttons.save = {
       name: translations.save,
