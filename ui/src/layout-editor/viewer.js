@@ -601,7 +601,24 @@ Viewer.prototype.handleInteractions = function() {
         // Open playlist editor
         lD.openPlaylistEditor(
           regionObject.playlists.playlistId,
-          regionObject);
+          regionObject,
+        );
+      };
+
+      const playlistInlineEditorBtnClick = function(
+        childPlaylistId,
+        regionId,
+      ) {
+        const regionObject =
+          lD.getObjectByTypeAndId('region', regionId);
+        lD.openPlaylistEditor(
+          childPlaylistId,
+          regionObject,
+          false,
+          true,
+          true,
+          regionObject.playlists.playlistId,
+        );
       };
 
       const playlistPreviewBtnClick = function(playlistId, direction) {
@@ -697,9 +714,19 @@ Viewer.prototype.handleInteractions = function() {
       } else if (
         $(e.target).hasClass('playlist-edit-btn')
       ) {
-        // Edit region if it's a playlist
-        playlistEditorBtnClick($(e.target)
-          .parents('.designer-region-playlist').attr('id'));
+        // Edit subplaylist inside playlist
+        if ($(e.target).hasClass('subplaylist-inline-edit-btn')) {
+          // Edit subplaylist inside playlist
+          playlistInlineEditorBtnClick(
+            $(e.target).data('childPlaylistId'),
+            $(e.target).parents('.designer-region-playlist').attr('id'),
+          );
+        } else {
+          // Edit region if it's a playlist
+          playlistEditorBtnClick(
+            $(e.target).parents('.designer-region-playlist').attr('id'),
+          );
+        }
       } else if (
         $(e.target).hasClass('playlist-preview-paging-prev')
       ) {
@@ -1178,13 +1205,62 @@ Viewer.prototype.renderRegion = function(
       region.playlistCountOfWidgets = res.extra && res.extra.countOfWidgets ?
         res.extra.countOfWidgets : 1;
 
-      $container.append(viewerPlaylistControlsTemplate({
+      const appendOptions = {
         titleEdit: viewerTrans.editPlaylist,
         seq: region.playlistSeq,
         countOfWidgets: region.playlistCountOfWidgets,
         isEmpty: res.extra && res.extra.empty,
         trans: viewerTrans,
-      }));
+        canEditPlaylist: false,
+      };
+
+      // Append playlist controls using appendOptions
+      const appendPlaylistControls = function() {
+        $container.append(viewerPlaylistControlsTemplate(appendOptions));
+      };
+
+      // If it's playslist with a single subplaylist widget
+      if (
+        Object.keys(region.widgets).length === 1 &&
+        Object.values(region.widgets)[0].subType === 'subplaylist'
+      ) {
+        // Get assigned subplaylists
+        const subplaylists =
+          JSON.parse(
+            Object.values(region.widgets)[0].getOptions().subPlaylists,
+          );
+
+        // If there's only one playlist, get permissions
+        if (subplaylists.length === 1) {
+          const subPlaylistId = subplaylists[0].playlistId;
+          $.ajax({
+            method: 'GET',
+            url: urlsForApi.playlist.get.url +
+              '?playlistId=' + subplaylists[0].playlistId,
+            success: function(_res) {
+              // User has permissions
+              if (_res.data && _res.data.length > 0) {
+                appendOptions.canEditPlaylist = true;
+                appendOptions.canEditPlaylistId = subPlaylistId;
+              }
+
+              // Append playlist controls
+              appendPlaylistControls();
+            },
+            error: function(_res) {
+              console.error(_res);
+              // Still append playlist controls
+              appendPlaylistControls();
+            },
+          });
+        } else {
+          // Append playlist controls
+          appendPlaylistControls();
+        }
+      } else {
+        // Append playlist controls
+        appendPlaylistControls();
+      }
     }
 
     // If widget is selected, update moveable for the region

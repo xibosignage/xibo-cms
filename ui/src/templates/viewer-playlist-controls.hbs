@@ -1,5 +1,6 @@
-<div class="playlist-edit-btn viewer-object-select"
-     title="{{trans.editTitle}}">
+<div class="playlist-edit-btn viewer-object-select {{#if canEditPlaylist}}subplaylist-inline-edit-btn{{/if}}"
+    data-child-playlist-id="{{canEditPlaylistId}}"
+    title="{{trans.editPlaylistTitle}}">
     <i class="fa fa-list-ol" aria-hidden="true"></i>
 </div>
 {{#if isEmpty}}
@@ -9,19 +10,19 @@
         <p>{{ trans.empty }}</p>
     </div>
 {{else}}
-<div class="playlist-preview-paging text-right">
-    <i class="fa fa-arrow-circle-o-left widget-arrow widget-left playlist-preview-paging-prev"
-       data-toggle="tooltip"
-       data-container="#layout-viewer-container"
-       data-placement="bottom"
-       data-title="{{trans.prev}}"></i>
+    <div class="playlist-preview-paging text-right">
+        <i class="fa fa-arrow-circle-o-left widget-arrow widget-left playlist-preview-paging-prev"
+        data-toggle="tooltip"
+        data-container="#layout-viewer-container"
+        data-placement="bottom"
+        data-title="{{trans.prev}}"></i>
 
-    <span class="preview-paging-message">{{seq}}/{{countOfWidgets}}</span>
+        <span class="preview-paging-message">{{seq}}/{{countOfWidgets}}</span>
 
-    <i class="fa fa-arrow-circle-o-right widget-arrow widget-right playlist-preview-paging-next"
-       data-toggle="tooltip"
-       data-container="#layout-viewer-container"
-       data-placement="bottom"
-       data-title="{{trans.next}}"></i>
-</div>
+        <i class="fa fa-arrow-circle-o-right widget-arrow widget-right playlist-preview-paging-next"
+        data-toggle="tooltip"
+        data-container="#layout-viewer-container"
+        data-placement="bottom"
+        data-title="{{trans.next}}"></i>
+    </div>
 {{/if}}
