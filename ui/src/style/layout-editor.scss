@@ -463,7 +463,11 @@ body.editor-opened {
             }
 
             &:hover > .playlist-edit-btn {
-                opacity: 0.8;
+                opacity: 0.7;
+
+                &:hover {
+                    opacity: 0.9;
+                }
             }
 
             &:hover > .playlist-preview-paging {

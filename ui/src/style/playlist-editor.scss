@@ -759,4 +759,25 @@ $timeline-step-height: 22px;
             }
         }
     }
+
+    &.playlist-switch-on {
+        height: calc(100% - 40px);
+    }
+}
+
+.playlist-switch-container {
+    background-color: $xibo-color-primary-l10;
+    height: 40px;
+    padding: 6px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    line-height: 14px;
+    align-items: center;
+    gap: 8px;
+    border-radius: 4px 4px 0 0;
+
+    .bootstrap-switch-container > * {
+        line-height: 16px;
+    }
 }

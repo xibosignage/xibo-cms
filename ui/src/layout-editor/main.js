@@ -2893,8 +2893,19 @@ lD.checkLayoutStatus = function() {
  * New open playlist editor
  * @param {string} playlistId - Id of the playlist
  * @param {object} region - Region related to the playlist
+ * @param {boolean} regionSpecific
+ * @param {boolean} showPlaylistSwitch
+ * @param {boolean} switchStatus
+ * @param {string} auxPlaylistId - Id of the parent/child playlist
  */
-lD.openPlaylistEditor = function(playlistId, region) {
+lD.openPlaylistEditor = function(
+  playlistId,
+  region,
+  regionSpecific = true,
+  showPlaylistSwitch = false,
+  switchStatus = false,
+  auxPlaylistId,
+) {
   // Deselect previous selected object
   lD.selectObject();
 
@@ -2937,7 +2948,38 @@ lD.openPlaylistEditor = function(playlistId, region) {
   $playlistEditorPanel.removeClass('hidden');
 
   // Load playlist editor
-  pE.loadEditor(true);
+  pE.loadEditor(
+    true,
+    regionSpecific, // Region specific?
+    showPlaylistSwitch, // Show playlist switch?
+    switchStatus, // Show switch as on?
+    {
+      on: function() { // Switch ON callback
+        $playlistEditorPanel.find('#playlist-editor')
+          .attr('playlist-id', auxPlaylistId);
+        lD.openPlaylistEditor(
+          auxPlaylistId,
+          region,
+          false,
+          true,
+          true,
+          playlistId,
+        );
+      },
+      off: function() { // Switch OFF callback
+        $playlistEditorPanel.find('#playlist-editor')
+          .attr('playlist-id', auxPlaylistId);
+        lD.openPlaylistEditor(
+          auxPlaylistId,
+          region,
+          true,
+          true,
+          false,
+          playlistId,
+        );
+      },
+    },
+  );
 
   // Mark as opened
   lD.playlistEditorOpened = true;
