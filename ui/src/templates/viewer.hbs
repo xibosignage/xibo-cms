@@ -21,7 +21,9 @@
         {{/if}}
         <div id="regions">
             {{#each layout.regions}}
-                {{> viewer-region}}
+                {{#if isViewable}}
+                    {{> viewer-region}}
+                {{/if}}
             {{/each}}
         </div>
     </div>

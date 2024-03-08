@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -517,5 +517,33 @@ class CampaignFactory extends BaseFactory
         }
 
         return $layouts;
+    }
+
+    /**
+     * Get the campaignId for a Layout
+     * @param int $layoutId
+     * @return int
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function getCampaignIdForLayout(int $layoutId): int
+    {
+        $results = $this->getStore()->select('
+                SELECT campaign.campaignId
+                  FROM layout
+                    INNER JOIN lkcampaignlayout
+                    ON layout.layoutId = lkcampaignlayout.layoutId
+                    INNER JOIN campaign
+                    ON campaign.campaignId = lkcampaignlayout.campaignId
+                 WHERE campaign.isLayoutSpecific = 1
+                   AND layout.layoutId = :layoutId
+            ', [
+            'layoutId' => $layoutId
+        ]);
+
+        if (count($results) <= 0) {
+            throw new NotFoundException();
+        }
+
+        return intval($results[0]['campaignId']);
     }
 }

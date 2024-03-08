@@ -1658,6 +1658,14 @@ class Widget extends Base
             throw new InvalidArgumentException(__('Invalid element JSON'), 'body');
         }
 
+        // Validate that we have elements remaining.
+        if (count($elementJson) <= 0) {
+            throw new InvalidArgumentException(
+                __('At least one element is required for this Widget. Please delete it if you no longer need it.'),
+                'body',
+            );
+        }
+
         // Parse the element JSON to see if we need to set `itemsPerPage`
         $slots = [];
         $uniqueSlots = 0;

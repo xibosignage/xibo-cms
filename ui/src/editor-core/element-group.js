@@ -32,6 +32,7 @@ const ElementGroup = function(data, widgetId, regionId, parentWidget) {
   // Set element to have same properties for edit and delete as parent widget
   this.isEditable = (parentWidget) ? parentWidget.isEditable : true;
   this.isDeletable = (parentWidget) ? parentWidget.isDeletable : true;
+  this.isViewable = (parentWidget) ? parentWidget.isViewable : true;
   this.effect = data.effect || 'noTransition';
 
   // Expanded on layer manager
