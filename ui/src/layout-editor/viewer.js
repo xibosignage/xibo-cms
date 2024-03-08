@@ -83,9 +83,6 @@ const Viewer = function(parent, container) {
   // Layout orientation
   this.orientation = null;
 
-  // Initialise moveable
-  this.initMoveable();
-
   // Fullscreen mode flag
   this.fullscreenMode = false;
 
@@ -223,10 +220,16 @@ Viewer.prototype.render = function(forceReload = false, target = {}) {
     return;
   }
 
+  // Clear moveable before replacing html to avoid memory leaks
+  this.destroyMoveable();
+
   // Set reload to false
   this.reload = false;
 
   if (renderSingleObject) {
+    // Initialise moveable
+    this.initMoveable();
+
     const self = this;
     const createCanvas = function() {
       if (
@@ -332,6 +335,9 @@ Viewer.prototype.render = function(forceReload = false, target = {}) {
     // Replace container html
     $viewerContainer.html(html);
 
+    // Initialise moveable
+    this.initMoveable();
+
     // Render background image or color to the preview
     if (lD.layout.backgroundImage === null) {
       $viewerContainer.find('.viewer-object')
@@ -361,7 +367,10 @@ Viewer.prototype.render = function(forceReload = false, target = {}) {
 
     // Render viewer regions/widgets
     for (const regionIndex in lD.layout.regions) {
-      if (lD.layout.regions.hasOwnProperty(regionIndex)) {
+      if (
+        lD.layout.regions.hasOwnProperty(regionIndex) &&
+        lD.layout.regions[regionIndex].isViewable
+      ) {
         this.renderRegion(lD.layout.regions[regionIndex]);
       }
     }
@@ -1478,6 +1487,12 @@ Viewer.prototype.renderElement = function(
   canvas,
 ) {
   const self = this;
+
+  // If element is not viewable, don't render
+  if (!element.isViewable) {
+    return;
+  }
+
   // Get canvas region container
   const $canvasRegionContainer = this.DOMObject.find(`#${canvas.id}`);
 
@@ -2930,13 +2945,15 @@ Viewer.prototype.updateMoveable = function(
   const multipleSelected = ($selectedElement.length > 1);
 
   // Update moveable if we have a selected element, and is not a drawerWidget
+  // If we're selecting a widget with no edit permissions don't update moveable
   if (
     multipleSelected ||
     (
       $selectedElement &&
       $.contains(document, $selectedElement[0]) &&
       !$selectedElement.hasClass('drawerWidget') &&
-      $selectedElement.hasClass('editable')
+      $selectedElement.hasClass('editable') &&
+      lD.selectedObject.isEditable
     )
   ) {
     if ($selectedElement.hasClass('designer-element-group')) {
@@ -3028,6 +3045,16 @@ Viewer.prototype.updateMoveable = function(
 
     // Hide snap controls
     this.DOMObject.parent().find('.snap-controls').hide();
+  }
+};
+
+/**
+ * Destroy moveable to avoid memory leaks
+ */
+Viewer.prototype.destroyMoveable = function() {
+  if (this.moveable != null) {
+    this.moveable.destroy();
+    this.moveable = null;
   }
 };
 

@@ -755,55 +755,6 @@
             }
         },
         "/command": {
-            "get": {
-                "tags": [
-                    "command"
-                ],
-                "summary": "Command Search",
-                "description": "Search this users Commands",
-                "operationId": "commandSearch",
-                "parameters": [
-                    {
-                        "name": "commandId",
-                        "in": "query",
-                        "description": "Filter by Command Id",
-                        "required": false,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "command",
-                        "in": "query",
-                        "description": "Filter by Command Name, exact match",
-                        "required": false,
-                        "type": "string"
-                    },
-                    {
-                        "name": "commandLike",
-                        "in": "query",
-                        "description": "Filter by Command Name, LIKE match",
-                        "required": false,
-                        "type": "string"
-                    },
-                    {
-                        "name": "code",
-                        "in": "query",
-                        "description": "Filter by Command Code",
-                        "required": false,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "successful operation",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/Command"
-                            }
-                        }
-                    }
-                }
-            },
             "post": {
                 "tags": [
                     "command"

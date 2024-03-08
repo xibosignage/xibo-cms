@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -24,14 +24,18 @@ namespace Xibo\Listener;
 
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Layout;
+use Xibo\Entity\Region;
 use Xibo\Event\DisplayGroupLoadEvent;
 use Xibo\Event\LayoutOwnerChangeEvent;
+use Xibo\Event\LayoutSharingChangeEvent;
 use Xibo\Event\MediaDeleteEvent;
 use Xibo\Event\MediaFullLoadEvent;
 use Xibo\Event\PlaylistDeleteEvent;
+use Xibo\Event\RegionAddedEvent;
 use Xibo\Event\TagDeleteEvent;
 use Xibo\Event\UserDeleteEvent;
 use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\PermissionFactory;
 use Xibo\Storage\StorageServiceInterface;
 
 /**
@@ -42,24 +46,15 @@ class LayoutListener
     use ListenerLoggerTrait;
 
     /**
-     * @var LayoutFactory
-     */
-    private $layoutFactory;
-    /**
-     * @var StorageServiceInterface
-     */
-    private $storageService;
-
-    /**
      * @param LayoutFactory $layoutFactory
      * @param StorageServiceInterface $storageService
+     * @param \Xibo\Factory\PermissionFactory $permissionFactory
      */
     public function __construct(
-        LayoutFactory $layoutFactory,
-        StorageServiceInterface $storageService
+        private readonly LayoutFactory $layoutFactory,
+        private readonly StorageServiceInterface $storageService,
+        private readonly PermissionFactory $permissionFactory
     ) {
-        $this->layoutFactory = $layoutFactory;
-        $this->storageService = $storageService;
     }
 
     /**
@@ -75,6 +70,8 @@ class LayoutListener
         $dispatcher->addListener(LayoutOwnerChangeEvent::$NAME, [$this, 'onOwnerChange']);
         $dispatcher->addListener(TagDeleteEvent::$NAME, [$this, 'onTagDelete']);
         $dispatcher->addListener(PlaylistDeleteEvent::$NAME, [$this, 'onPlaylistDelete']);
+        $dispatcher->addListener(LayoutSharingChangeEvent::$NAME, [$this, 'onLayoutSharingChange']);
+        $dispatcher->addListener(RegionAddedEvent::$NAME, [$this, 'onRegionAdded']);
         return $this;
     }
 
@@ -224,6 +221,50 @@ class LayoutListener
 
         if (!empty($layout)) {
             $layout->delete();
+        }
+    }
+
+    /**
+     * @param \Xibo\Event\LayoutSharingChangeEvent $event
+     * @return void
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function onLayoutSharingChange(LayoutSharingChangeEvent $event): void
+    {
+        // Check to see if this Campaign has any Canvas regions
+        $layouts = $this->layoutFactory->getByCampaignId($event->getCampaignId(), false, true);
+        foreach ($layouts as $layout) {
+            $layout->load([
+                'loadPlaylists' => false,
+                'loadPermissions' => false,
+                'loadCampaigns' => false,
+                'loadActions' => false,
+            ]);
+
+            foreach ($layout->regions as $region) {
+                if ($region->type === 'canvas') {
+                    $event->addCanvasRegionId($region->getId());
+                }
+            }
+        }
+    }
+
+    /**
+     * @param \Xibo\Event\RegionAddedEvent $event
+     * @return void
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     */
+    public function onRegionAdded(RegionAddedEvent $event): void
+    {
+        if ($event->getRegion()->type === 'canvas') {
+            // Set this layout's permissions on the canvas region
+            $entityId = $this->permissionFactory->getEntityId(Region::class);
+            foreach ($event->getLayout()->permissions as $permission) {
+                $new = clone $permission;
+                $new->entityId = $entityId;
+                $new->objectId = $event->getRegion()->getId();
+                $new->save();
+            }
         }
     }
 }

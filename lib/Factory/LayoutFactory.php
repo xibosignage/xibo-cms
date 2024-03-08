@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -33,6 +33,7 @@ use Xibo\Entity\Playlist;
 use Xibo\Entity\Region;
 use Xibo\Entity\User;
 use Xibo\Entity\Widget;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\MediaServiceInterface;
 use Xibo\Support\Exception\ConfigurationException;
@@ -2398,6 +2399,13 @@ class LayoutFactory extends BaseFactory
         if ($parsedFilter->getInt('retired', ['default' => -1]) != -1) {
             $body .= " AND layout.retired = :retired ";
             $params['retired'] = $parsedFilter->getInt('retired',['default' => 0]);
+        }
+
+        // Modified Since?
+        if ($parsedFilter->getDate('modifiedSinceDt') != null) {
+            $body .= ' AND layout.modifiedDt > :modifiedSinceDt ';
+            $params['modifiedSinceDt'] = $parsedFilter->getDate('modifiedSinceDt')
+                ->format(DateFormatHelper::getSystemFormat());
         }
 
         if ($parsedFilter->getInt('ownerCampaignId') !== null) {

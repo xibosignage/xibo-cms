@@ -26,6 +26,7 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Permission;
 use Xibo\Event\LayoutOwnerChangeEvent;
+use Xibo\Event\LayoutSharingChangeEvent;
 use Xibo\Event\ParsePermissionEntityEvent;
 use Xibo\Event\UserDeleteEvent;
 use Xibo\Factory\ApplicationFactory;
@@ -1874,6 +1875,13 @@ class User extends Base
             throw new InvalidArgumentException(__('You cannot share the root folder'), 'id');
         }
 
+        if ($object->permissionsClass() === 'Xibo\Entity\Region' && $object->type === 'canvas') {
+            throw new InvalidArgumentException(
+                __('You cannot share the Canvas on a Layout, share the layout instead.'),
+                'type',
+            );
+        }
+
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Get all current permissions
@@ -1918,6 +1926,20 @@ class User extends Base
         if ($object->permissionsClass() === 'Xibo\Entity\Folder') {
             /** @var $object \Xibo\Entity\Folder */
             $object->managePermissions();
+        } else if ($object->permissionsClass() === 'Xibo\Entity\Campaign') {
+            // Update any Canvas Regions to have the same permissions.
+            $event = new LayoutSharingChangeEvent($object->getId());
+            $this->getDispatcher()->dispatch($event, LayoutSharingChangeEvent::$NAME);
+
+            foreach ($event->getCanvasRegionIds() as $canvasRegionId) {
+                $this->getLog()->debug('permissions: canvas region detected, cascading permissions');
+                $permissions = $this->permissionFactory->getAllByObjectId(
+                    $this->getUser(),
+                    'Xibo\Entity\Region',
+                    $canvasRegionId,
+                );
+                $this->updatePermissions($permissions, $groupIds);
+            }
         } else if ($object->permissionsClass() === 'Xibo\Entity\Region') {
             /** @var $object \Xibo\Entity\Region */
             // The regions own playlist should always have the same permissions.

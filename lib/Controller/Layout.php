@@ -1453,6 +1453,7 @@ class Layout extends Base
             'logicalOperator' => $parsedQueryParams->getString('logicalOperator'),
             'logicalOperatorName' => $parsedQueryParams->getString('logicalOperatorName'),
             'campaignType' => 'list',
+            'modifiedSinceDt' => $parsedQueryParams->getDate('modifiedSinceDt'),
         ], $parsedQueryParams));
 
         foreach ($layouts as $layout) {
@@ -1541,6 +1542,9 @@ class Layout extends Base
                         // Augment with deletable flag
                         $widget->setUnmatchedProperty('isDeletable', $this->getUser()->checkDeleteable($widget));
 
+                        // Augment with viewable flag
+                        $widget->setUnmatchedProperty('isViewable', $this->getUser()->checkViewable($widget));
+
                         // Augment with permissions flag
                         $widget->setUnmatchedProperty(
                             'isPermissionsModifiable',
@@ -1560,6 +1564,9 @@ class Layout extends Base
 
                          // Augment with deletable flag
                         $region->setUnmatchedProperty('isDeletable', $this->getUser()->checkDeleteable($region));
+
+                        // Augment with viewable flag
+                       $region->setUnmatchedProperty('isViewable', $this->getUser()->checkViewable($region));
 
                         // Augment with permissions flag
                         $region->setUnmatchedProperty(
