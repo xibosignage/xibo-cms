@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -49,6 +49,23 @@ class PermissionFactory extends BaseFactory
     }
 
     /**
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     */
+    public function getEntityId(string $entity): int
+    {
+        // Lookup the entityId
+        $results = $this->getStore()->select('SELECT `entityId` FROM `permissionentity` WHERE `entity` = :entity', [
+            'entity' => $entity,
+        ]);
+
+        if (count($results) <= 0) {
+            throw new InvalidArgumentException(__('Entity not found: ') . $entity);
+        }
+
+        return intval($results[0]['entityId']);
+    }
+
+    /**
      * Create a new Permission
      * @param int $groupId
      * @param string $entity
@@ -61,16 +78,9 @@ class PermissionFactory extends BaseFactory
      */
     public function create($groupId, $entity, $objectId, $view, $edit, $delete)
     {
-        // Lookup the entityId
-        $results = $this->getStore()->select('SELECT entityId FROM permissionentity WHERE entity = :entity', ['entity' => $entity]);
-
-        if (count($results) <= 0) {
-            throw new InvalidArgumentException(__('Entity not found: ') . $entity);
-        }
-
         $permission = $this->createEmpty();
         $permission->groupId = $groupId;
-        $permission->entityId = $results[0]['entityId'];
+        $permission->entityId = $this->getEntityId($entity);
         $permission->objectId = $objectId;
         $permission->view  =$view;
         $permission->edit = $edit;

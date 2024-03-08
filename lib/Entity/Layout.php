@@ -290,7 +290,11 @@ class Layout implements \JsonSerializable
 
     /** @var Action[] */
     public $actions = [];
+
+    /** @var \Xibo\Entity\Permission[] */
     public $permissions = [];
+
+    /** @var \Xibo\Entity\Campaign[] */
     public $campaigns = [];
 
     // Read only properties
