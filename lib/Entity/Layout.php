@@ -290,7 +290,11 @@ class Layout implements \JsonSerializable
 
     /** @var Action[] */
     public $actions = [];
+
+    /** @var \Xibo\Entity\Permission[] */
     public $permissions = [];
+
+    /** @var \Xibo\Entity\Campaign[] */
     public $campaigns = [];
 
     // Read only properties
@@ -1667,7 +1671,7 @@ class Layout implements \JsonSerializable
                         // We have something to output
                         $optionNode = $document->createElement($property->id);
 
-                        if ($property->isCData()) {
+                        if ($property->isCData() && $property->value) {
                             $cdata = $document->createCDATASection($property->value);
                             $optionNode->appendChild($cdata);
 

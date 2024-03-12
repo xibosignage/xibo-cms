@@ -481,7 +481,6 @@ const formHelpers = function() {
       }
     };
 
-
     // Function to switch off all the bootstrapSwitch
     const forceBootstrapSwitchesOff = function() {
       // If one of the targets is a boostrap switch, switch it off
@@ -1662,7 +1661,7 @@ const formHelpers = function() {
       });
 
       // Get button container
-      $buttonContainer =
+      const $buttonContainer =
         $(el).parents('.xibo-form-input').find('.text-area-buttons');
 
       // Add button to the button container for the text area
@@ -1948,7 +1947,7 @@ const formHelpers = function() {
       $editorContainer.parent().css('background-color', backgroundColor);
 
       // Get button container
-      $buttonContainer =
+      const $buttonContainer =
         $(el).parents('.xibo-form-input').find('.text-area-buttons');
 
       // View source button
@@ -2151,13 +2150,6 @@ const formHelpers = function() {
       name: editorsTrans.delete,
       type: 'btn-danger',
       action: 'delete',
-    };
-
-    // Add back button
-    buttons.back = {
-      name: editorsTrans.back,
-      type: 'btn-white',
-      action: 'back',
     };
 
     // Add save button

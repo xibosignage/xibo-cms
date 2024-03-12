@@ -59,6 +59,8 @@ jQuery.fn.extend({
       height = options.widgetDesignHeight;
     }
 
+    const isEditor = xiboIC.checkIsEditor();
+
     // For each matched element
     this.each(function(_idx, _elem) {
       // How many pages to we need?
@@ -75,13 +77,15 @@ jQuery.fn.extend({
       $mainContainer.find('.container-main:not(.template-container)').remove();
 
       // Clone the main HTML
-      // and remove template-container class
-      const $mainHTML = $(body).clone()
+      // and remove template-container class when we are on the editor
+      const $mainHTML = isEditor ? $(body).clone()
         .removeClass('template-container')
-        .show();
+        .show() : $(body);
 
-      // Hide main HTML
-      $(body).hide();
+      // Hide main HTML if isEditor = true
+      if (isEditor) {
+        $(body).hide();
+      }
 
       // Create the pages
       for (let i = 0; i < numberOfPages; i++) {
@@ -91,12 +95,14 @@ jQuery.fn.extend({
           if (((i * options.maxItemsPerPage) + j) < options.numItems) {
             const $item = $(items[(i * options.maxItemsPerPage) + j]);
             // Clone and append the item to the page
-            // and remove template-item class
-            $item.clone().appendTo($itemsHTML)
+            // and remove template-item class when isEditor = true
+            (isEditor ? $item.clone() : $item).appendTo($itemsHTML)
               .show().removeClass('template-item');
 
-            // Hide the original item
-            $item.hide();
+            // Hide the original item when isEditor = true
+            if (isEditor) {
+              $item.hide();
+            }
           }
         }
 

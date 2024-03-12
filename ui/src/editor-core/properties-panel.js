@@ -63,6 +63,7 @@ const PropertiesPanel = function(parent, container) {
   this.actionForm = {};
 
   this.toSave = false;
+  this.toSaveElementCallback = null;
 };
 
 /**
@@ -164,15 +165,19 @@ PropertiesPanel.prototype.save = function(
   formFieldsToSave =
     formFieldsToSave.filter('.tab-pane:not(#positionTab) [name]');
 
+  // Get form old data
+  const formOldData = this.formSerializedLoadData[target.type];
+
+  // Get form data
+  // if we're saving an element, don't include the element properties
+  const formNewData = formFieldsToSave.serialize();
+
   // If form is valid, submit it ( add change )
   if (
     formFieldsToSave.length > 0 &&
-    formFieldsToSave.valid()
+    formFieldsToSave.valid() &&
+    formOldData != formNewData // if form data is the same, don't save
   ) {
-    // Get form data
-    // if we're saving an element, don't include the element properties
-    const formNewData = formFieldsToSave.serialize();
-
     app.common.showLoadingScreen();
 
     // Save content tab
@@ -188,7 +193,7 @@ PropertiesPanel.prototype.save = function(
       'saveForm',
       target.type, // targetType
       target[target.type + 'Id'], // targetId
-      this.formSerializedLoadData[target.type], // oldValues
+      formOldData, // oldValues
       formNewData, // newValues
       {
         customRequestPath: requestPath,
@@ -384,6 +389,9 @@ PropertiesPanel.prototype.saveElement = function(
     }
   }
 
+  // Mark to save as false
+  this.toSaveElementCallback = null;
+
   // Save elements to the widget
   return parentWidget.saveElements().then((_res) => {
     // Update element position
@@ -401,7 +409,8 @@ PropertiesPanel.prototype.saveElement = function(
  * @param {object} element - the element that the form relates to
  */
 PropertiesPanel.prototype.delete = function(element) {
-  lD.deleteSelectedObject();
+  const app = this.parent;
+  app.deleteSelectedObject();
 };
 
 /**
@@ -499,6 +508,9 @@ PropertiesPanel.prototype.render = function(
 
   // Reset inline editor to false on each refresh
   this.inlineEditor = false;
+
+  // Clear temp data
+  app.common.clearContainer(this.DOMObject);
 
   // Show loading template
   this.DOMObject.html(loadingTemplate());
@@ -1024,7 +1036,7 @@ PropertiesPanel.prototype.render = function(
           );
 
           // Save element
-          const saveElement = function(target) {
+          const saveElementProperty = function(target) {
             const $target = $(target);
             let containerChanged = false;
             // If the property is common, save it to the element
@@ -1066,18 +1078,26 @@ PropertiesPanel.prototype.render = function(
             }
 
             // Save the element
-            self.saveElement(
-              targetAux,
-              self.DOMObject.find(
-                '[name].element-property:not(.element-common-property)',
-              ),
-              containerChanged,
+            // only if we have form properties
+            const formProperties = self.DOMObject.find(
+              '[name].element-property:not(.element-common-property)',
             );
+            if (formProperties.length > 0) {
+              self.saveElement(
+                targetAux,
+                self.DOMObject.find(
+                  '[name].element-property:not(.element-common-property)',
+                ),
+                containerChanged,
+              );
+            }
           };
 
           const saveDebounced = _.wrap(
             _.memoize(
-              () => _.debounce(saveElement.bind(self), 250), _.property('id'),
+              () => _.debounce(
+                saveElementProperty.bind(self), 250,
+              ), _.property('id'),
             ),
             (getMemoizedFunc, obj) => getMemoizedFunc(obj)(obj),
           );
@@ -1104,7 +1124,9 @@ PropertiesPanel.prototype.render = function(
                     '.xibo-form-input.element-name-input',
                   ).length === 0
               ) {
-                self.toSave = true;
+                self.toSaveElementCallback = function() {
+                  saveElementProperty(_ev.currentTarget);
+                };
               }
             },
           });
@@ -1713,7 +1735,9 @@ PropertiesPanel.prototype.initFields = function(
 
     // Save for this type
     self.formSerializedLoadData[target.type] =
-      self.DOMObject.find('form [name]:not(.element-property)').serialize();
+      self.DOMObject.find('form [name]:not(.element-property)')
+        .filter('.tab-pane:not(#positionTab) [name]')
+        .serialize();
   }
 
   // If we're not in read only mode
@@ -1855,7 +1879,7 @@ PropertiesPanel.prototype.initFields = function(
       ':not([data-tag-style-input])';
     $(self.DOMObject).find('form').off()
       .on({
-        'change inputChange xiboInputChange': function(_ev, options) {
+        'change blur inputChange xiboInputChange': function(_ev, options) {
           // Check if we skip this field
           if (skipSave(_ev.currentTarget, _ev)) {
             return;

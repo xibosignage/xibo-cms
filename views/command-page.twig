@@ -1,8 +1,8 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2020-2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -43,10 +43,10 @@
                     <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
                             {% set title %}{% trans "Command" %}{% endset %}
-                            {{ inline.input("command", title) }}
+                            {{ inline.inputNameGrid('command', title) }}
 
                             {% set title %}{% trans "Code" %}{% endset %}
-                            {{ inline.input("code", title) }}
+                            {{ inline.inputNameGrid('code', title, null, 'useRegexForCode', 'logicalOperatorCode') }}
                         </form>
                     </div>
                 </div>

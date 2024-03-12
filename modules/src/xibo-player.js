@@ -19,8 +19,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 const XiboPlayer = function() {
-  this.inputWidgetData = [];
-  this.inputElements = [];
   this.playerWidgets = {};
   this.countWidgetElements = 0;
   this.countWidgetStatic = 0;
@@ -101,7 +99,7 @@ const XiboPlayer = function() {
     playerWidget.items = [];
 
     // Decorate this widget with all applicable functions
-    this.loadWidgetFunctions(playerWidget, widgetDataItems);
+    this.loadWidgetFunctions(playerWidget);
 
     if (isDataWidget) {
       const dataLoadState = playerWidget.onDataLoad(widgetDataItems);
@@ -125,7 +123,6 @@ const XiboPlayer = function() {
     if (!isStaticWidget && !self.isModule(playerWidget)) {
       const tempElements = this.getElementsByWidgetId(
         playerWidget.widgetId,
-        this.inputElements,
       );
 
       this.prepareWidgetElements(tempElements, playerWidget);
@@ -241,7 +238,7 @@ const XiboPlayer = function() {
       if (hasGroup) {
         const grpWidgetId = grpId + '_' + currentWidget.widgetId;
         if (!Boolean(collection[grpWidgetId])) {
-          collection[grpWidgetId] = {
+          const groupProps = {
             ...widgetElement.groupProperties,
             groupId: widgetElement.groupId,
             groupScale: widgetElement.groupScale,
@@ -251,6 +248,11 @@ const XiboPlayer = function() {
             duration: currentWidget.duration,
             durationIsPerItem:
               Boolean(currentWidget.properties.durationIsPerItem),
+          };
+          collection[grpWidgetId] = groupProps;
+          collection[grpWidgetId].onTemplateVisible = function($target) {
+            self.runLayoutAnimate($target, groupProps);
+            console.log('Called onTemplateVisible for group > ', grpWidgetId);
           };
         }
 
@@ -310,6 +312,8 @@ const XiboPlayer = function() {
             Object.keys(dataSlots[currentSlot].items).filter(function(k) {
               return dataSlots[currentSlot].items[k].pinSlot === true;
             }).length > 0;
+          dataSlots[currentSlot].pinnedItems =
+            PlayerHelper.getPinnedItems(dataSlots[currentSlot].items);
         }
       });
     }
@@ -346,9 +350,11 @@ const XiboPlayer = function() {
           break;
         }
 
+        // Slots loop
         for (const [, itemValue] of Object.entries(currCollection)) {
           const itemObj = dataElements[itemValue];
           const slotItems = itemObj.items;
+          const pinnedItems = itemObj.pinnedItems;
           const currentSlot = itemObj.slot;
 
           // Skip if currentKey is less than the currentSlot
@@ -362,6 +368,16 @@ const XiboPlayer = function() {
           // Then, move to next slot
           if (lastSlotFilled !== null &&
             currentSlot <= lastSlotFilled
+          ) {
+            continue;
+          }
+
+          // Skip slot if all slot items are pinned and
+          // currentKey is more than the maxSlot and
+          // currentSlot is a pinned slot
+          if (lastSlotFilled === null &&
+            currentKey > maxSlot && itemObj.hasPinnedSlot &&
+            Object.keys(pinnedItems).length === Object.keys(slotItems).length
           ) {
             continue;
           }
@@ -486,6 +502,7 @@ const XiboPlayer = function() {
    * @return {Object} element
    */
   this.decorateElement = function(element, currentWidget) {
+    const self = this;
     const elemCopy = JSON.parse(JSON.stringify(element));
     const elemProps = elemCopy?.properties || {};
 
@@ -596,14 +613,22 @@ const XiboPlayer = function() {
 
     // Duration
     elemCopy.duration = currentWidget.duration;
-    if (elemCopy?.renderData?.hasOwnProperty('durationIsPerItem')) {
-      elemCopy.durationIsPerItem = elemCopy.renderData.durationIsPerItem;
-    }
+    elemCopy.durationIsPerItem =
+      Boolean(currentWidget.properties.durationIsPerItem);
 
     // Check if element is extended and data is coming from meta
     if (elemCopy.isExtended && elemCopy.dataOverrideWith !== null &&
         elemCopy.dataOverrideWith.includes('meta')) {
       elemCopy.dataInMeta = true;
+    }
+
+    // Add onTemplateVisible if element does not belong to a group
+    if (!self.isGroup(elemCopy)) {
+      elemCopy.onTemplateVisible = function($target) {
+        self.runLayoutAnimate($target, elemCopy);
+        console.log('Called onTemplateVisible for element > ',
+          elemCopy.elementId);
+      };
     }
 
     return elemCopy;
@@ -616,22 +641,17 @@ const XiboPlayer = function() {
 
 /**
  * Initializes player widgets, accepting inputs from HTML output
- * @param {Array} widgetData Input widgetData from HTML
- * @param {Array} elements Input elements from HTML
  */
-XiboPlayer.prototype.init = function(widgetData, elements) {
+XiboPlayer.prototype.init = function() {
   const self = this;
   let calledXiboScaler = false;
-
-  self.inputWidgetData = widgetData;
-  self.inputElements = elements;
 
   // Create global render array of functions
   window.renders = [];
 
   // Loop through each widget from widgetData
-  if (self.inputWidgetData.length > 0) {
-    self.inputWidgetData.forEach(function(inputWidget) {
+  if (widgetData.length > 0) {
+    widgetData.forEach(function(inputWidget, widgetIndex) {
       // Save widgetData to xic
       xiboIC.set(inputWidget.widgetId, 'widgetData', inputWidget);
 
@@ -724,11 +744,11 @@ XiboPlayer.prototype.isEditor = function() {
  * Show sample data or an error if in the editor.
  * @param {Object} currentWidget Widget object
  * @param {Object|Array} data Widget data from data provider
- * @return {Object} widgetData
+ * @return {Object} widgetLoadedData
  */
 XiboPlayer.prototype.loadData = function(currentWidget, data) {
   const self = this;
-  const widgetData = {
+  const widgetLoadedData = {
     isSampleData: false,
     dataItems: [],
     isArray: Array.isArray(data?.data),
@@ -736,20 +756,20 @@ XiboPlayer.prototype.loadData = function(currentWidget, data) {
     errorMessage: null,
   };
   const composeSampleData = () => {
-    widgetData.isSampleData = true;
+    widgetLoadedData.isSampleData = true;
 
     if (currentWidget.sample === null) {
-      widgetData.dataItems = [];
+      widgetLoadedData.dataItems = [];
       return [];
     }
 
     // If data is empty, use sample data instead
     // Add single element or array of elements
-    widgetData.dataItems = (Array.isArray(currentWidget.sample)) ?
+    widgetLoadedData.dataItems = (Array.isArray(currentWidget.sample)) ?
       currentWidget.sample.slice(0) :
       [currentWidget.sample];
 
-    return widgetData.dataItems.reduce(function(data, item) {
+    return widgetLoadedData.dataItems.reduce(function(data, item) {
       Object.keys(item).forEach(function(itemKey) {
         if (String(item[itemKey]).match(DateFormatHelper.macroRegex) !== null) {
           item[itemKey] =
@@ -762,31 +782,26 @@ XiboPlayer.prototype.loadData = function(currentWidget, data) {
   };
 
   if (currentWidget.isDataExpected) {
-    if (widgetData.isArray && data?.data?.length > 0) {
-      widgetData.dataItems = data?.data;
+    if (widgetLoadedData.isArray && data?.data?.length > 0) {
+      widgetLoadedData.dataItems = data?.data;
     } else {
-      widgetData.dataItems = self.isEditor() ? composeSampleData() : [];
+      widgetLoadedData.dataItems = self.isEditor() ? composeSampleData() : [];
       if (data?.success === false || !currentWidget.isValid) {
-        widgetData.showError = self.isEditor();
+        widgetLoadedData.showError = self.isEditor();
       }
     }
   }
 
-  if (widgetData.showError && data?.message) {
-    widgetData.errorMessage = data?.message;
+  if (widgetLoadedData.showError && data?.message) {
+    widgetLoadedData.errorMessage = data?.message;
   }
 
-  return widgetData;
+  return widgetLoadedData;
 };
 
-XiboPlayer.prototype.getElementsByWidgetId = function(widgetId, inputElements) {
-  const self = this;
+XiboPlayer.prototype.getElementsByWidgetId = function(widgetId) {
   let widgetElements = [];
-  let _inputElements = inputElements;
-
-  if (!_inputElements) {
-    _inputElements = self.inputElements;
-  }
+  const _inputElements = elements;
 
   if (_inputElements !== undefined && _inputElements?.length > 0) {
     _inputElements.forEach(function(elemVal) {
@@ -1178,6 +1193,17 @@ XiboPlayer.prototype.renderDataElements = function(currentWidget) {
               $slotItemContent.find(`.${itemKey}--item`),
             );
 
+            const runOnTemplateVisible = function() {
+              slotObjItem.onTemplateVisible($slotItemContent);
+            };
+
+            // Run onTemplateVisible by default if visible
+            if (xiboIC.checkVisible()) {
+              runOnTemplateVisible();
+            } else {
+              xiboIC.addToQueue(runOnTemplateVisible);
+            }
+
             currentWidget.items.push($slotItemContent);
           });
         });
@@ -1420,12 +1446,12 @@ XiboPlayer.prototype.loadElementFunctions = function(element, dataItem) {
 XiboPlayer.prototype.isStaticWidget = function(playerWidget) {
   return playerWidget !== undefined && playerWidget !== null &&
     playerWidget.templateId !== 'elements' &&
-    this.inputElements.length === 0;
+    elements.length === 0;
 };
 
 XiboPlayer.prototype.isModule = function(currentWidget) {
   return (!currentWidget.isDataExpected && $('#hbs-module').length > 0) ||
-    (!currentWidget.isDataExpected && this.inputElements.length === 0);
+    (!currentWidget.isDataExpected && elements.length === 0);
 };
 
 /**
@@ -1696,10 +1722,19 @@ XiboPlayer.prototype.runLayoutScaler = function(currentWidget) {
   ));
 };
 
+/**
+ * Run xiboLayoutAnimate to start animations
+ * @param {Object} $target HTML target element
+ * @param {Object} properties Widget or Group or Element properties
+ */
+XiboPlayer.prototype.runLayoutAnimate = function($target, properties) {
+  $target.xiboLayoutAnimate(properties);
+};
+
 const xiboPlayer = new XiboPlayer();
 
 module.exports = xiboPlayer;
 
 $(function() {
-  xiboPlayer.init(widgetData, elements);
+  xiboPlayer.init();
 });

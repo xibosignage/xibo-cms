@@ -91,6 +91,7 @@ jQuery.fn.extend({
         'data-cycle-timeout': timeout,
         'data-cycle-slides': `> .${options.id}--item`,
         'data-cycle-auto-height': false,
+        'data-cycle-paused': options.pauseEffectOnStart,
       };
 
       if (options.effect === 'scrollHorz') {
@@ -105,7 +106,8 @@ jQuery.fn.extend({
         };
       }
 
-      $(cycleElement).addClass('cycle-slideshow').attr(cycle2Config).cycle();
+      $(cycleElement).addClass('cycle-slideshow anim-cycle')
+        .attr(cycle2Config).cycle();
 
       // Add some margin for each slide when options.effect === scrollHorz
       if (options.effect === 'scrollHorz') {

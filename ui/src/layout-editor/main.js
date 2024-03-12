@@ -527,26 +527,49 @@ lD.selectObject =
         (
           oldSelectedId != newSelectedId ||
           oldSelectedType != newSelectedType
-        ) && this.propertiesPanel.toSave
+        ) && (
+          this.propertiesPanel.toSave ||
+          this.propertiesPanel.toSaveElementCallback != null
+        )
       ) {
-        // Set flag back to false
-        this.propertiesPanel.toSave = false;
+        // Select previous object
+        const selectPrevious = function() {
+          // Select object again, with the same params
+          lD.selectObject({
+            target: target,
+            forceSelect: forceSelect,
+            clickPosition: clickPosition,
+            refreshEditor: refreshEditor,
+            reloadViewer: reloadViewer,
+            reloadPropertiesPanel: reloadPropertiesPanel,
+          });
+        };
 
-        // Save previous element
-        this.propertiesPanel.save({
-          target: this.selectedObject, // Save previous object
-          callbackNoWait: function() {
-            // Select object again, with the same params
-            lD.selectObject({
-              target: target,
-              forceSelect: forceSelect,
-              clickPosition: clickPosition,
-              refreshEditor: refreshEditor,
-              reloadViewer: reloadViewer,
-              reloadPropertiesPanel: reloadPropertiesPanel,
-            });
-          },
-        });
+        // Save elements
+        if (this.propertiesPanel.toSaveElementCallback != null) {
+          // Set flag back to false
+          this.propertiesPanel.toSaveElement = false;
+
+          // Run callback to save element property
+          this.propertiesPanel.toSaveElementCallback();
+
+          // Set callback back to null
+          this.propertiesPanel.toSaveElementCallback = null;
+
+          // Select object again
+          selectPrevious();
+        } else if (this.propertiesPanel.toSave) {
+          // Save normal form fields
+
+          // Set flag back to false
+          this.propertiesPanel.toSave = false;
+
+          // Save previous object
+          this.propertiesPanel.save({
+            target: this.selectedObject, // Save previous object
+            callbackNoWait: selectPrevious,
+          });
+        }
 
         // Prevent select to continue
         return;
@@ -1149,7 +1172,6 @@ lD.undoLastAction = function() {
     );
   });
 };
-
 
 /**
  * Delete selected object
@@ -2643,22 +2665,8 @@ lD.addMediaToPlaylist = function(
  * Clear Temporary Data ( Cleaning cached variables )
  */
 lD.clearTemporaryData = function() {
-  // Fix for remaining ckeditor elements or colorpickers
-  $('.colorpicker').remove();
-  $('.cke').remove();
-
-  // Fix for remaining ckeditor elements or colorpickers
-  destroyColorPicker(lD.editorContainer.find('.colorpicker-element'));
-
   // Hide open tooltips
   lD.editorContainer.find('.tooltip').remove();
-
-  // Destroy select2 opened dropdowns
-  lD.propertiesPanel.DOMObject.find('select[data-select2-id]')
-    .select2('destroy');
-
-  // Remove text callback editor structure variables
-  formHelpers.destroyCKEditor();
 
   // Clear action highlights on the viewer
   // if we don't have an action form open
@@ -3410,17 +3418,6 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
         const canvasWidget =
           lD.getObjectByTypeAndId('widget', objAuxId, 'canvas');
         canvasWidget.editPropertyForm('Permissions');
-      } else if (
-        property === 'PermissionsCanvas' &&
-        (
-          layoutObject.type === 'element' ||
-          layoutObject.type === 'element-group'
-        )
-      ) {
-        // Call edit for canvas widget instead
-        const canvas =
-          lD.getObjectByTypeAndId('canvas');
-        canvas.editPropertyForm('Permissions');
       } else {
         // Call normal edit form
         layoutObject.editPropertyForm(
@@ -4063,7 +4060,9 @@ lD.toggleLockedMode = function(enable = true, expiryDate = '') {
 
     if ($customOverlay.length == 0) {
       $customOverlay = $('.custom-overlay').clone();
-      $customOverlay.attr('id', 'lockedOverlay').addClass('locked').show();
+      $customOverlay.attr('id', 'lockedOverlay')
+        .removeClass('custom-overlay')
+        .addClass('custom-overlay-clone locked').show();
       $customOverlay.appendTo(lD.editorContainer);
 
       // Create the read only alert message
@@ -4612,7 +4611,6 @@ lD.addAction = function(options) {
 
   return true;
 };
-
 
 /**
  * Save action

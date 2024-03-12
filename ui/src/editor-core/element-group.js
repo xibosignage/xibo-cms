@@ -32,6 +32,7 @@ const ElementGroup = function(data, widgetId, regionId, parentWidget) {
   // Set element to have same properties for edit and delete as parent widget
   this.isEditable = (parentWidget) ? parentWidget.isEditable : true;
   this.isDeletable = (parentWidget) ? parentWidget.isDeletable : true;
+  this.isViewable = (parentWidget) ? parentWidget.isViewable : true;
   this.effect = data.effect || 'noTransition';
 
   // Expanded on layer manager
@@ -155,7 +156,7 @@ ElementGroup.prototype.updateGroupDimensions = function(
     // First we need to find the top/left position
     // left needs to adjust to the elements more to the left of the group
     if (
-      !self.left ||
+      self.left === null ||
       elTempProperties.left < self.left
     ) {
       self.left = elTempProperties.left;
@@ -163,7 +164,7 @@ ElementGroup.prototype.updateGroupDimensions = function(
 
     // top needs to adjust to the element more to the top
     if (
-      !self.top ||
+      self.top === null ||
       elTempProperties.top < self.top
     ) {
       self.top = elTempProperties.top;
@@ -185,7 +186,7 @@ ElementGroup.prototype.updateGroupDimensions = function(
     }
 
     if (
-      !self.width ||
+      self.width === null ||
       elTempProperties.left + elTempProperties.width >
       self.left + self.width
     ) {
@@ -194,7 +195,7 @@ ElementGroup.prototype.updateGroupDimensions = function(
     }
 
     if (
-      !self.height ||
+      self.height === null ||
       elTempProperties.top + elTempProperties.height >
       self.top + self.height
     ) {

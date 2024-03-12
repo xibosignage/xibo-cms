@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -373,8 +373,6 @@ class BaseFactory
         });
 
         foreach ($filteredNames as $searchName) {
-            $i++;
-
             // Trim/Sanitise
             $searchName = trim($searchName);
 
@@ -389,8 +387,11 @@ class BaseFactory
                 return;
             }
 
+            // increase here, after we expect additional sql to be added.
+            $i++;
+
             // Not like, or like?
-            if (substr($searchName, 0, 1) == '-') {
+            if (str_starts_with($searchName, '-')) {
                 if ($i === 1) {
                     $body .= ' AND ( '.$tableAndColumn.' NOT RLIKE (:search'.$i.') ';
                 } else {
@@ -407,7 +408,8 @@ class BaseFactory
             }
         }
 
-        if (!empty($filteredNames)) {
+        // append closing parenthesis only if we added any sql.
+        if (!empty($filteredNames) && $i > 0) {
             $body .= ' ) ';
         }
     }

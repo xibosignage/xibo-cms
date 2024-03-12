@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -444,22 +444,7 @@ class Region implements \JsonSerializable
 
         if ($options['audit']) {
             // get the layout specific campaignId
-            $campaignId = 0;
-            $results = $this->store->select('
-                SELECT campaign.campaignId
-                  FROM layout
-                    INNER JOIN lkcampaignlayout
-                    ON layout.layoutId = lkcampaignlayout.layoutId
-                    INNER JOIN campaign
-                    ON campaign.campaignId = lkcampaignlayout.campaignId
-                 WHERE campaign.isLayoutSpecific = 1
-                   AND layout.layoutId = :layoutId
-            ', [
-                'layoutId' => $this->layoutId
-            ]);
-            foreach ($results as $row) {
-                $campaignId = $row['campaignId'];
-            }
+            $campaignId = $this->campaignFactory->getCampaignIdForLayout($this->layoutId);
         }
 
         if ($this->regionId == null || $this->regionId == 0) {
@@ -475,6 +460,7 @@ class Region implements \JsonSerializable
                 $this->regionPlaylist->setOwner($this->ownerId);
             }
 
+            // TODO: this is strange, campaignId will only be set if we are configured to Audit.
             if (isset($campaignId)) {
                 $campaign = $this->campaignFactory->getById($campaignId);
                 $this->regionPlaylist->folderId = $campaign->folderId;

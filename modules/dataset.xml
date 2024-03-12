@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2023 Xibo Signage Ltd
+  ~ Copyright (C) 2024 Xibo Signage Ltd
   ~
   ~ Xibo - Digital Signage - https://xibosignage.com
   ~
@@ -153,7 +153,7 @@
                 </test>
             </visibility>
         </property>
-        <property id="ordering" type="text">
+        <property id="ordering" type="text" variant="sql">
             <title>Order</title>
             <helpText>Please enter a SQL clause for how this dataset should be ordered</helpText>
             <default></default>
@@ -200,7 +200,7 @@
                 </test>
             </visibility>
         </property>
-        <property id="filter" type="text">
+        <property id="filter" type="text" variant="sql">
             <title>Filter</title>
             <helpText>Please enter a SQL clause to filter this DataSet.</helpText>
             <default></default>

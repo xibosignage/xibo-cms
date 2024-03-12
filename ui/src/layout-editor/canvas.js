@@ -25,6 +25,7 @@ const Canvas = function(id, data, layoutDimensions) {
   // Permissions
   this.isEditable = data.isEditable;
   this.isDeletable = data.isDeletable;
+  this.isViewable = data.isViewable;
   this.isPermissionsModifiable = data.isPermissionsModifiable;
 
   // Interactive actions
@@ -176,7 +177,6 @@ Canvas.prototype.getActiveWidgetOfType = function(
   return targetWidget;
 };
 
-
 /**
  * Move elements between widgets
  * @param {object} sourceWidgetId - Old widget id
@@ -297,7 +297,6 @@ Canvas.prototype.moveElementsBetweenWidgets = function(
   });
 };
 
-
 /**
  * Remove elements or group from canvas widget
  * @param {object} widgetId - Old widget
@@ -316,7 +315,6 @@ Canvas.prototype.removeFromCanvasWidget = function(
     delete lD.layout.canvas.widgets[widgetId].elements[objectToRemoveId];
   }
 };
-
 
 /**
  * Edit property by type

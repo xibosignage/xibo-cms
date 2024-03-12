@@ -1075,6 +1075,9 @@ jQuery.fn.extend({
         const month = INITIAL_MONTH;
         const $daysOfWeek = $('#daysOfWeek');
 
+        // Clear week days container
+        $daysOfWeek.empty();
+
         weekdaysNames.forEach((weekday) => {
           const $weekDay = $('<li>');
           $daysOfWeek.append($weekDay);

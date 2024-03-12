@@ -45,7 +45,7 @@
     "imports-loader": "^0.7.1",
     "less": "^3.11.1",
     "less-loader": "^4.1.0",
-    "monaco-editor-webpack-plugin": "^6.0.0",
+    "monaco-editor-webpack-plugin": "^7.1.0",
     "postcss-loader": "^3.0.0",
     "precss": "^4.0.0",
     "sass": "^1.49.7",
@@ -54,7 +54,7 @@
     "style-loader": "^1.3.0",
     "uglifyjs-webpack-plugin": "^2.2.0",
     "url-loader": "^1.1.2",
-    "webpack": "^5.26.1",
+    "webpack": "^5.90.3",
     "webpack-bundle-analyzer": "^3.6.1",
     "webpack-cli": "^4.5.0",
     "webpack-merge": "^4.2.2"
@@ -111,17 +111,17 @@
     "moment": "~2.29.4",
     "moment-jalaali": "~0.7.2",
     "moment-timezone": "^0.5.35",
-    "monaco-editor": "~0.30.0",
+    "monaco-editor": "^0.46.0",
     "moveable": "^0.48.0",
     "pdfjs-dist": "2.4.456",
     "persian-date": "^0.3.1-b",
     "persian-datepicker": "^1.2.0",
     "popper.js": "^1.16.1",
-    "select2": "^4.0.13",
+    "select2": "4.1.0-rc.0",
     "select2-bootstrap-theme": "0.1.0-beta.10",
     "serialize-javascript": "^3.1.0",
     "toastr": "~2.1.4",
     "underscore": "^1.12.1",
-    "xibo-interactive-control": "git+https://github.com/xibosignage/xibo-interactive-control.git#d911da8da056c12060e198c1b8da6fae8bf186fe"
+    "xibo-interactive-control": "git+https://github.com/xibosignage/xibo-interactive-control.git#44ad744a5a2a0af9e7fcdb828dbdbeff45cc40f0"
   }
 }

@@ -786,7 +786,6 @@ Layout.prototype.updateStatus = function(
   lD.topbar.updateLayoutStatus();
 };
 
-
 /**
  * Calculate layout values for the layout based on the scale of this container
  * @param {object} container - Container DOM object

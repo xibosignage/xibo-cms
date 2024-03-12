@@ -166,4 +166,60 @@ module.exports = {
     }
     return false;
   },
+
+  /**
+     * Clear UI elements from container
+     * @param {object} $container
+      */
+  clearContainer: function($container) {
+    // Flatpickr
+    $container.find('.flatpickr-input').each((_idx, fp) => {
+      if (fp._flatpickr) {
+        fp._flatpickr.destroy();
+      }
+    });
+
+    // Select2
+    $container.find('select[data-select2-id]')
+      .select2('destroy');
+
+    // Colorpicker
+    $container.find('.colorpicker-element').colorpicker('destroy');
+
+    // JqueryUI
+    $container.is('.ui-droppable') && $container.droppable('destroy');
+    $container.find('.ui-droppable').droppable('destroy');
+    $container.find('.ui-draggable').draggable('destroy');
+    $container.find('.ui-sortable').sortable('destroy');
+
+    // Masonry
+    $container.find('.masonry-container').masonry('destroy');
+
+    // Monaco code editor
+    $container.find('.xibo-code-input .code-input').each((_idx, fp) => {
+      const codeInputId = $(fp).attr('id');
+      // Unset events from text area
+      $(fp).off('change');
+
+      if (window.codeEditors[codeInputId]) {
+        // Dispose of model
+        window.codeEditors[codeInputId].getModel().dispose();
+
+        // Dispose of editor
+        window.codeEditors[codeInputId].dispose();
+
+        // Remove array element
+        window.codeEditors[codeInputId] = null;
+        delete window.codeEditors[codeInputId];
+      }
+    });
+
+    // CKEditor
+    $container.find('.rich-text').each((_idx, fp) => {
+      const richTextId = $(fp).attr('id');
+      if (CKEDITOR.instances[richTextId]) {
+        CKEDITOR.instances[richTextId].destroy();
+      }
+    });
+  },
 };
