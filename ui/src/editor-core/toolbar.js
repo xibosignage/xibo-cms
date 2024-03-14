@@ -592,8 +592,7 @@ Toolbar.prototype.loadPrefs = function() {
     type: linkToAPI.type,
   }).done(function(res) {
     if (res.success) {
-      const loadedData = JSON.parse(res.data.value);
-
+      const loadedData = JSON.parse(res.data.value ?? '{}');
       const findMenuIndexByName = function(name) {
         let foundMenu = -1;
 
