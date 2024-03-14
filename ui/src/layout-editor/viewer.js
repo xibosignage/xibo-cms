@@ -1231,7 +1231,8 @@ Viewer.prototype.renderRegion = function(
       // If it's playslist with a single subplaylist widget
       if (
         Object.keys(region.widgets).length === 1 &&
-        Object.values(region.widgets)[0].subType === 'subplaylist'
+        Object.values(region.widgets)[0].subType === 'subplaylist' &&
+        Object.values(region.widgets)[0].getOptions().subPlaylists
       ) {
         // Get assigned subplaylists
         const subplaylists =
@@ -1521,11 +1522,13 @@ Viewer.prototype.updateRegion = function(
   // If region is selected, but not on the container, do it
   if (region.selected && !$container.hasClass('selected')) {
     lD.viewer.selectObject($container);
-    lD.viewer.updateMoveable();
 
     // Update bottom bar
     lD.bottombar.render(region);
   }
+
+  // Always update moveable
+  lD.viewer.updateMoveable();
 };
 
 /**
