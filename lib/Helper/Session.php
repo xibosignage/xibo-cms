@@ -1,14 +1,15 @@
 <?php
 /*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2018 Spring Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
- * any later version. 
+ * any later version.
  *
  * Xibo is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -171,7 +172,7 @@ class Session implements \SessionHandlerInterface
         $data = '';
         $this->key = $key;
 
-        $userAgent = substr($_SERVER['HTTP_USER_AGENT'], 0, 253);
+        $userAgent = substr(htmlspecialchars($_SERVER['HTTP_USER_AGENT']), 0, 253);
 
         try {
             $dbh = $this->getDb();
@@ -421,7 +422,7 @@ class Session implements \SessionHandlerInterface
             'lastAccessed' => Carbon::createFromTimestamp($lastAccessed)->format(DateFormatHelper::getSystemFormat()),
             'userId' => $this->userId,
             'expired' => ($this->expired) ? 1 : 0,
-            'useragent' => substr($_SERVER['HTTP_USER_AGENT'], 0, 253),
+            'useragent' => substr(htmlspecialchars($_SERVER['HTTP_USER_AGENT']), 0, 253),
             'remoteaddr' => $this->getIp()
         ];
 
@@ -470,7 +471,7 @@ class Session implements \SessionHandlerInterface
         $clientIp = '';
         $keys = array('X_FORWARDED_FOR', 'HTTP_X_FORWARDED_FOR', 'CLIENT_IP', 'REMOTE_ADDR');
         foreach ($keys as $key) {
-            if (isset($_SERVER[$key])) {
+            if (isset($_SERVER[$key]) && filter_var($_SERVER[$key], FILTER_VALIDATE_IP) !== false) {
                 $clientIp = $_SERVER[$key];
                 break;
             }
