@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -31,6 +31,14 @@ define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
 
 error_reporting(0);
 ini_set('display_errors', 0);
+
+header('Access-Control-Allow-Origin: http://localhost:5173');
+header('Access-Control-Allow-Headers: *');
+
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    // The request is using the OPTIONS method
+    die();
+}
 
 require PROJECT_ROOT . '/vendor/autoload.php';
 
