@@ -88,11 +88,11 @@ class Sessions extends Base
                 $row->includeProperty('buttons');
 
                 // Edit
-                $row->buttons[] = array(
+                /*$row->buttons[] = array(
                     'id' => 'sessions_button_logout',
                     'url' => $this->urlFor('sessions.confirm.logout.form', ['id' => $row->sessionId]),
                     'text' => __('Logout')
-                );
+                );*/
             }
         }
 

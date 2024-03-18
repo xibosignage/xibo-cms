@@ -170,7 +170,7 @@ class Session implements \SessionHandlerInterface
         $data = '';
         $this->key = $key;
 
-        $userAgent = substr($_SERVER['HTTP_USER_AGENT'], 0, 253);
+        $userAgent = substr(htmlspecialchars($_SERVER['HTTP_USER_AGENT']), 0, 253);
 
         try {
             $dbh = $this->getDb();
@@ -420,7 +420,7 @@ class Session implements \SessionHandlerInterface
             'lastAccessed' => date('Y-m-d H:i:s', $lastAccessed),
             'userId' => $this->userId,
             'expired' => ($this->expired) ? 1 : 0,
-            'useragent' => substr($_SERVER['HTTP_USER_AGENT'], 0, 253),
+            'useragent' => substr(htmlspecialchars($_SERVER['HTTP_USER_AGENT']), 0, 253),
             'remoteaddr' => $this->getIp()
         ];
 
@@ -469,7 +469,7 @@ class Session implements \SessionHandlerInterface
         $clientIp = '';
         $keys = array('X_FORWARDED_FOR', 'HTTP_X_FORWARDED_FOR', 'CLIENT_IP', 'REMOTE_ADDR');
         foreach ($keys as $key) {
-            if (isset($_SERVER[$key])) {
+            if (isset($_SERVER[$key]) && filter_var($_SERVER[$key], FILTER_VALIDATE_IP) !== false) {
                 $clientIp = $_SERVER[$key];
                 break;
             }

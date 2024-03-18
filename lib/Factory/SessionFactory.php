@@ -150,7 +150,14 @@ class SessionFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row, ['stringProperties' => ['sessionId']]);
+            $session = $this->createEmpty()->hydrate($row, [
+                'stringProperties' => ['sessionId'],
+                'intProperties' => ['isExpired']
+            ]);
+            $session->userAgent = htmlspecialchars($session->userAgent);
+            $session->remoteAddress = filter_var($session->remoteAddress, FILTER_VALIDATE_IP);
+            $session->excludeProperty('sessionId');
+            $entries[] = $session;
         }
 
         // Paging
