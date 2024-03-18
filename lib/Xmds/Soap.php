@@ -2068,7 +2068,7 @@ class Soap
 
         $keys = array('X_FORWARDED_FOR', 'HTTP_X_FORWARDED_FOR', 'CLIENT_IP', 'REMOTE_ADDR');
         foreach ($keys as $key) {
-            if (isset($_SERVER[$key])) {
+            if (isset($_SERVER[$key]) && filter_var($_SERVER[$key], FILTER_VALIDATE_IP) !== false) {
                 $clientIp = $_SERVER[$key];
                 break;
             }
