@@ -323,7 +323,7 @@
 
 
     {% block javaScript %}
-        <script type="text/javascript">
+        <script type="text/javascript" nonce="{{ cspNonce }}">
             // Fault Page List switcher
             $(function () {
                 $('a[title]').tooltip();
@@ -347,7 +347,7 @@
         </script>
 
 
-        <script type="text/javascript">
+        <script type="text/javascript" nonce="{{ cspNonce }}">
 
             $(function () {
                 $('[data-toggle="popover"]').popover()

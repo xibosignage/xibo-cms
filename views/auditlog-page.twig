@@ -110,7 +110,7 @@
         </table>
     </script>
     {% endverbatim %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
 
         $(document).ready(function() {
             var arrayViewer = Handlebars.compile($("#table-array-viewer").html());

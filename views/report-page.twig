@@ -70,7 +70,7 @@
 
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         function statsExportFormSelect(dialog) {
             var fromDtLink;
             var toDtLink;

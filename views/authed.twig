@@ -139,7 +139,7 @@
 {% block javaScriptTemplates %}
     {% include 'schedule-form-templates.twig' %}
 
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         var userPreferencesUrl = "{{ url_for("user.pref") }}";
 
         // TODO: Change this to a call to all route permissions ( something like currentUser.getRoutePermissions() )
@@ -796,7 +796,7 @@
         </div>
     </script>
 
-    <script  type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         function moveFolderMultiSelectFormOpen(dialog) {
             // make bootstrap happy.
             if ($('#folder-tree-form-modal').length != 0) {

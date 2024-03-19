@@ -10,7 +10,7 @@
         <link rel="shortcut icon" href="{{ theme.uri("img/favicon.ico") }}" />
 
         {# Import CSS bundle from dist #}
-        <script src="{{ theme.rootUri() }}dist/style.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
+        <script src="{{ theme.rootUri() }}dist/style.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
         <link href="{{ theme.uri("css/xibo.css") }}?v={{ version }}&rev={{revision}}" rel="stylesheet" media="screen">
         <link href="{{ theme.uri("css/install.css") }}" rel="stylesheet" media="screen">
     </head>
@@ -50,7 +50,7 @@
             </div>
         </div>
 
-        <script src="{{ theme.rootUri() }}dist/vendor.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
-        <script src="{{ theme.rootUri() }}dist/core/install.js?v={{ version }}&rev={{revision}}"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+        <script src="{{ theme.rootUri() }}dist/core/install.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
     </body>
 </html>

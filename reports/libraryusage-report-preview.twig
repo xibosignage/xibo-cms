@@ -97,7 +97,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
 
         var outputData = {{ table|json_encode|raw }};
 

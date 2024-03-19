@@ -102,7 +102,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
       let syncGroupTable;
 
       $(document).ready(function() {

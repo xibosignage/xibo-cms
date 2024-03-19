@@ -89,7 +89,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
 
         {% autoescape "js" %}
             var copyToClipboardTrans = "{{ "Copy to Clipboard"|trans }}";
