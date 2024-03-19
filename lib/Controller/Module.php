@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -330,6 +330,13 @@ class Module extends Base
      *      type="string",
      *      required=true
      *   ),
+     *  @SWG\Parameter(
+     *      name="type",
+     *      in="query",
+     *      description="Type to return templates for",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="An array of module templates for the provided datatype",
@@ -348,9 +355,16 @@ class Module extends Base
             throw new InvalidArgumentException(__('Please provide a datatype'), 'dataType');
         }
 
+        $params = $this->getSanitizer($request->getParams());
+        $type = $params->getString('type');
+
+        $templates = !empty($type)
+            ? $this->moduleTemplateFactory->getByTypeAndDataType($type, $dataType)
+            : $this->moduleTemplateFactory->getByDataType($dataType);
+
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = 0;
-        $this->getState()->setData($this->moduleTemplateFactory->getByDataType($dataType));
+        $this->getState()->setData($templates);
         return $this->render($request, $response);
     }
 

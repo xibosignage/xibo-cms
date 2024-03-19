@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -47,6 +47,14 @@ class UserModuleTemplatesMigration extends AbstractMigration
                 'limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY,
                 'null' => false,
                 'default' => 1,
+            ])
+            ->addColumn('ownerId', 'integer')
+            ->addForeignKey('ownerId', 'user', 'userId')
+            ->save();
+
+        $this->table('permissionentity')
+            ->insert([
+                ['entity' => 'Xibo\Entity\ModuleTemplate']
             ])
             ->save();
     }

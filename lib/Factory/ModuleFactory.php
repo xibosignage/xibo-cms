@@ -49,6 +49,16 @@ class ModuleFactory extends BaseFactory
 {
     use ModuleXmlTrait;
 
+    public static $systemDataTypes = [
+        'Article',
+        'Event',
+        'Forecast',
+        'Product',
+        'ProductCategory',
+        'SocialMedia',
+        'dataset'
+    ];
+
     /** @var Module[] all modules */
     private $modules = null;
 
@@ -431,6 +441,51 @@ class ModuleFactory extends BaseFactory
         }
 
         throw new NotFoundException(__('DataType not found'));
+    }
+
+    /**
+     * @return DataType[]
+     */
+    public function getAllDataTypes()
+    {
+        $dataTypes = [];
+
+        // get system data types
+        foreach (self::$systemDataTypes as $dataTypeId) {
+            $className = '\\Xibo\\Widget\\DataType\\' . ucfirst($dataTypeId);
+            if (class_exists($className)) {
+                $class = new $className();
+                if ($class instanceof DataTypeInterface) {
+                    $dataTypes[] = $class->getDefinition();
+                }
+            }
+
+            // special handling for dataset
+            if ($dataTypeId === 'dataset') {
+                $dataType = new DataType();
+                $dataType->id  = $dataTypeId;
+                $dataType->name = 'DataSet';
+                $dataTypes[] = $dataType;
+            }
+        }
+
+        // get data types from xml
+        $files = array_merge(
+            glob(PROJECT_ROOT . '/modules/datatypes/*.xml'),
+            glob(PROJECT_ROOT . '/custom/modules/datatypes/*.xml')
+        );
+
+        foreach ($files as $file) {
+            $xml = new \DOMDocument();
+            $xml->load($file);
+            $dataType = new DataType();
+            $dataType->id = $this->getFirstValueOrDefaultFromXmlNode($xml, 'id');
+            $dataType->name = $this->getFirstValueOrDefaultFromXmlNode($xml, 'name');
+            $dataTypes[] = $dataType;
+        }
+
+        sort($dataTypes);
+        return $dataTypes;
     }
 
     /**
