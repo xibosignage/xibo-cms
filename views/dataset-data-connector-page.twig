@@ -153,7 +153,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+     <script type="text/javascript" nonce="{{ cspNonce }}">
         $(function() {
           const $script = $('#dataconnector-script');
           const $scriptParams = $('#dataSetRealtimeTestParams');

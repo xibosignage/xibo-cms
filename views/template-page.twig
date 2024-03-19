@@ -103,7 +103,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+     <script type="text/javascript" nonce="{{ cspNonce }}">
         {% if not currentUser.featureEnabled("folder.view") %}
             disableFolders();
         {% endif %}

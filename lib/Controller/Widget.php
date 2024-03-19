@@ -1322,7 +1322,8 @@ class Widget extends Base
                     $resource,
                     function (string $route, array $data, array $params = []) use ($request) {
                         return $this->urlFor($request, $route, $data, $params);
-                    }
+                    },
+                    $request,
                 );
 
                 $response->getBody()->write($resource);
