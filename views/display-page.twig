@@ -318,7 +318,7 @@
 {% endblock %}
 
 {% block javaScript %}
-     <script type="text/javascript" nonce="{{ cspNonce }}">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         var mapConfig = {{ mapConfig|json_encode|raw }};
 
         {% if not currentUser.featureEnabled("folder.view") %}

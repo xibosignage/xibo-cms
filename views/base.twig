@@ -26,7 +26,7 @@
     </head>
     <body>
         {% block content %}{% endblock %}
-         <script type="text/javascript" nonce="{{ cspNonce }}">
+        <script type="text/javascript" nonce="{{ cspNonce }}">
             var CALENDAR_TYPE = "{{ settings.CALENDAR_TYPE }}";
             var jsLocale = "{{ translate.jsLocale }}";
             var jsShortLocale = "{{ translate.jsShortLocale }}";
@@ -55,7 +55,7 @@
         {# Dates #}
         {% if settings.CALENDAR_TYPE == "Jalali" %}
             <script src="{{ theme.rootUri() }}dist/vendor/calendar/js/calendar-jalali.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
-             <script type="text/javascript" nonce="{{ cspNonce }}">
+            <script type="text/javascript" nonce="{{ cspNonce }}">
                 moment.loadPersian();
             </script>
         {% else %}
@@ -68,7 +68,7 @@
             <script src="{{ theme.rootUri() }}{{ calendarTranslation }}" nonce="{{ cspNonce }}"></script>
         {% endif %}
 
-         <script type="text/javascript" nonce="{{ cspNonce }}">
+        <script type="text/javascript" nonce="{{ cspNonce }}">
 
             var translations = {{ translations|raw }};
             // Translations we want always available

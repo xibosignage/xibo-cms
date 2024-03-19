@@ -72,7 +72,7 @@
 {% block javaScript %}
     <script src="{{ theme.rootUri() }}dist/vendor/html5preloader/html5Preloader.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
     <script src="{{ theme.rootUri() }}dist/preview/html-preview.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
-     <script type="text/javascript" nonce="{{ cspNonce }}">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         var previewTranslations = {};
         // Translations we want always available
         {% autoescape "js" %}

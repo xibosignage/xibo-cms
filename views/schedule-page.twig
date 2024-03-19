@@ -1143,7 +1143,7 @@
 {% endblock %}
 
 {% block javaScript %}
-     <script type="text/javascript" nonce="{{ cspNonce }}">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
       // We are using this variable in xibo-calendar.js
       var scheduleRecurrenceDeleteUrl = "{{ url_for("schedule.recurrence.delete.form", {id:':id'}) }}";
       var layoutPreviewUrl = "{{ url_for("layout.preview", {id: ':id'}) }}";

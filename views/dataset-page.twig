@@ -119,7 +119,7 @@
 {% endblock %}
 
 {% block javaScript %}
-     <script type="text/javascript" nonce="{{ cspNonce }}">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         var table;
         $(document).ready(function() {
             {% if not currentUser.featureEnabled("folder.view") %}
