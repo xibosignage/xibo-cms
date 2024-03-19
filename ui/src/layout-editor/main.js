@@ -4519,7 +4519,7 @@ lD.loadPrefs = function() {
     type: linkToAPI.type,
   }).done(function(res) {
     if (res.success) {
-      const loadedData = JSON.parse(res.data.value);
+      const loadedData = JSON.parse(res.data.value ?? '{}');
       if (loadedData.snapOptions) {
         self.viewer.moveableOptions = loadedData.snapOptions;
 

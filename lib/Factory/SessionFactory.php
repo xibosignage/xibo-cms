@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -26,7 +26,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Session;
 use Xibo\Helper\DateFormatHelper;
-use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class SessionFactory
@@ -43,18 +42,14 @@ class SessionFactory extends BaseFactory
     }
 
     /**
-     * @param $sessionId
-     * @return Session
-     * @throws NotFoundException
+     * @param int $userId
      */
-    public function getById($sessionId)
+    public function expireByUserId(int $userId): void
     {
-        $session = $this->query(null, ['sessionId' => $sessionId]);
-
-        if (count($session) <= 0)
-            throw new NotFoundException();
-
-        return $session[0];
+        $this->getStore()->update(
+            'UPDATE `session` SET IsExpired = 1 WHERE userID = :userId ',
+            ['userId' => $userId]
+        );
     }
 
     /**
@@ -143,7 +138,14 @@ class SessionFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row, ['stringProperties' => ['sessionId']]);
+            $session = $this->createEmpty()->hydrate($row, [
+                'stringProperties' => ['sessionId'],
+                'intProperties' => ['isExpired'],
+            ]);
+            $session->userAgent = htmlspecialchars($session->userAgent);
+            $session->remoteAddress = filter_var($session->remoteAddress, FILTER_VALIDATE_IP);
+            $session->excludeProperty('sessionId');
+            $entries[] = $session;
         }
 
         // Paging

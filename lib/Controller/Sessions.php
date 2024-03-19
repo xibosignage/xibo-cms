@@ -96,6 +96,11 @@ class Sessions extends Base
             if (!$this->isApi($request) && $this->getUser()->isSuperAdmin()) {
                 $row->includeProperty('buttons');
 
+                // No buttons on expired sessions
+                if ($row->isExpired == 1) {
+                    continue;
+                }
+
                 // logout, current user/session
                 if ($row->userId === $this->getUser()->userId && session_id() === $row->sessionId) {
                     $url = $this->urlFor($request, 'logout');
@@ -104,7 +109,7 @@ class Sessions extends Base
                     $url = $this->urlFor(
                         $request,
                         'sessions.confirm.logout.form',
-                        ['id' => $row->sessionId]
+                        ['id' => $row->userId]
                     );
                 }
 
@@ -127,13 +132,13 @@ class Sessions extends Base
      * Confirm Logout Form
      * @param Request $request
      * @param Response $response
-     * @param $id
+     * @param int $id The UserID
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    function confirmLogoutForm(Request $request, Response $response, $id)
+    public function confirmLogoutForm(Request $request, Response $response, $id)
     {
         if ($this->getUser()->userTypeId != 1) {
             throw new AccessDeniedException();
@@ -141,7 +146,7 @@ class Sessions extends Base
 
         $this->getState()->template = 'sessions-form-confirm-logout';
         $this->getState()->setData([
-            'sessionId' => $id,
+            'userId' => $id,
         ]);
 
         return $this->render($request, $response);
@@ -158,25 +163,14 @@ class Sessions extends Base
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    function logout(Request $request, Response $response, $id)
+    public function logout(Request $request, Response $response, $id)
     {
         if ($this->getUser()->userTypeId != 1) {
             throw new AccessDeniedException();
         }
 
-        $session = $this->sessionFactory->getById($id);
-
-        if ($session->userId != 0) {
-            $this->store->update(
-                'UPDATE `session` SET IsExpired = 1 WHERE userID = :userId ',
-                ['userId' => $session->userId]
-            );
-        } else {
-            $this->store->update(
-                'UPDATE `session` SET IsExpired = 1 WHERE session_id = :session_id ',
-                ['session_id' => $id]
-            );
-        }
+        // We log out all of this user's sessions.
+        $this->sessionFactory->expireByUserId($id);
 
         // Return
         $this->getState()->hydrate([
