@@ -1063,7 +1063,9 @@ Viewer.prototype.update = function() {
   this.updateMoveable(true);
 
   // Update moveable options
-  this.updateMoveableOptions();
+  this.updateMoveableOptions({
+    savePreferences: false,
+  });
 };
 
 /**
