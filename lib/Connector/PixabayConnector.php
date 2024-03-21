@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2021 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -256,6 +256,7 @@ class PixabayConnector implements ConnectorInterface
         $providerDetails->logoUrl = '/theme/default/img/connectors/pixabay_logo.svg';
         $providerDetails->iconUrl = '/theme/default/img/connectors/pixabay_logo_square.svg';
         $providerDetails->backgroundColor = '';
+        $providerDetails->mediaTypes = ['image', 'video'];
 
         $event->addProvider($providerDetails);
     }
