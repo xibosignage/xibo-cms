@@ -582,7 +582,7 @@ pE.refreshEditor = function(
 
   // Render containers
   (reloadToolbar) && this.toolbar.render();
-  this.historyManager.render();
+  this.historyManager.render(false);
 
   // Render timeline
   this.timeline.render();

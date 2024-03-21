@@ -288,18 +288,13 @@ Viewer.prototype.render = function(forceReload = false, target = {}) {
     // Render full layout
     const $viewerContainer = this.DOMObject;
 
-    // If preview is playing, refresh the bottombar
-    if (this.previewPlaying && this.parent.selectedObject.type == 'layout') {
-      this.parent.bottombar.render(this.parent.selectedObject);
-    }
-
     // Clear temp data
     lD.common.clearContainer($viewerContainer);
 
     // Show loading template
     $viewerContainer.html(loadingTemplate());
 
-    // Set preview play as false
+    // When rendering, preview is always set to false
     this.previewPlaying = false;
 
     // Reset container properties
@@ -1235,12 +1230,6 @@ Viewer.prototype.renderRegion = function(
       },
     });
 
-    // Update bottom bar
-    lD.bottombar.render(
-      (widgetToLoad) ? widgetToLoad : lD.selectedObject,
-      res,
-    );
-
     // If inline editor is on, show the controls for it
     // ( fixing asyc load problem )
     if (lD.propertiesPanel.inlineEditor) {
@@ -2128,38 +2117,79 @@ Viewer.prototype.validateElementData = function(
 
 /**
  * Play preview
- * @param {string} url - Preview url
- * @param {object} dimensions - Preview dimensions
+ * @param {object=} dimensions - Preview dimensions
  */
-Viewer.prototype.playPreview = function(url, dimensions) {
+Viewer.prototype.playPreview = function(dimensions) {
+  const app = this.parent;
+
+  // Preview request path
+  const requestPath = urlsForApi.layout.preview.url
+    .replace(':id', app.layout.layoutId);
+
+  // If dimensions aren't set, use main container
+  if (!dimensions) {
+    dimensions = this.containerObjectDimensions;
+  }
+
   // Compile layout template with data
   const html = viewerLayoutPreview({
-    url: url,
+    url: requestPath,
     width: dimensions.width,
     height: dimensions.height,
   });
 
   // Clear temp data
-  lD.common.clearContainer(this.DOMObject.find('.layout-player'));
+  app.common.clearContainer(this.DOMObject.find('.layout-player'));
 
   // Append layout html to the main div
   this.DOMObject.find('.layout-player').html(html);
+
+  // Update playing button on bottombar
+  app.bottombar.DOMObject.find('#play-btn i')
+    .removeClass('fa-play-circle')
+    .addClass('fa-stop-circle')
+    .attr('title', bottombarTrans.stopPreviewLayout);
+
+  // Mark as playing
+  this.previewPlaying = true;
+};
+
+/**
+ * Stop preview
+ */
+Viewer.prototype.stopPreview = function() {
+  const app = this.parent;
+
+  // Reload bottombar to original state
+  app.bottombar.render(app.selectedObject);
+
+  // Reload viewer ( which stops preview )
+  this.render(true);
 };
 
 /**
  * Toggle fullscreen
  */
 Viewer.prototype.toggleFullscreen = function() {
+  const app = this.parent;
+
   // If inline editor is opened, needs to be saved/closed
   if (this.inlineEditorState == 2) {
     // Close editor content
     this.closeInlineEditorContent();
   }
+  // Was preview playing?
+  const previewWasPlaying = this.previewPlaying;
+
+  // Is preview playing? Stop preview
+  if (previewWasPlaying) {
+    this.stopPreview();
+  }
 
   this.DOMObject.parents('#layout-viewer-container').toggleClass('fullscreen');
-  this.parent.editorContainer.toggleClass('fullscreen-mode');
+  app.editorContainer.toggleClass('fullscreen-mode');
 
-  this.fullscreenMode = this.parent.editorContainer.hasClass('fullscreen-mode');
+  this.fullscreenMode = app.editorContainer.hasClass('fullscreen-mode');
 
   // Add attribute to body for editor fullscreen to be used by the moveable
   if (this.fullscreenMode) {
@@ -2169,6 +2199,11 @@ Viewer.prototype.toggleFullscreen = function() {
   }
 
   this.update();
+
+  // Is preview playing? Restart
+  if (previewWasPlaying) {
+    this.playPreview();
+  }
 };
 
 /**
