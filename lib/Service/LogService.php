@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -147,14 +147,17 @@ class LogService implements LogServiceInterface
     /**
      * @inheritdoc
      */
-    public function sql($sql, $params)
+    public function sql($sql, $params, $logAsError = false)
     {
-        if (strtolower($this->mode) == 'test') {
+        if (strtolower($this->mode) == 'test' || $logAsError) {
             $paramSql = '';
             foreach ($params as $key => $param) {
                 $paramSql .= 'SET @' . $key . '=\'' . $param . '\';' . PHP_EOL;
             }
-            $this->log->debug($paramSql . str_replace(':', '@', $sql));
+
+            ($logAsError)
+                ? $this->log->error($paramSql . str_replace(':', '@', $sql))
+                : $this->log->debug($paramSql . str_replace(':', '@', $sql));
         }
     }
 
