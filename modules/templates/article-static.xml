@@ -102,7 +102,7 @@
 {% if css or itemsSideBySide or backgroundColor or textDirection == "rtl" %}
     {% if itemsSideBySide %}.text-render-item, .page { float: left; }{% endif %}
     {% if textDirection == "rtl" %}#content { direction: rtl; }{% endif %}
-    {% if backgroundColor %}body { background-color: {{backgroundColor}}; }{% endif %}
+    {% if backgroundColor %}body { background-color: {{backgroundColor}} !important; }{% endif %}
     {{css|raw}}
 {% endif %}
             ]]></style>  
@@ -207,7 +207,7 @@ $(target).xiboLayoutAnimate(properties);
 }
 {% if backgroundColor %}
 body {
-    background-color: {{backgroundColor}};
+    background-color: {{backgroundColor}} !important;
 }
 {% endif %}
 {% if copyright %}
@@ -382,7 +382,7 @@ html {
 
 {% if backgroundColor %}
 body {
-    background-color: {{backgroundColor}};
+    background-color: {{backgroundColor}} !important;
 }
 {% endif %}
 
@@ -591,7 +591,7 @@ html {
 
 {% if backgroundColor %}
 body {
-    background-color: {{backgroundColor}};
+    background-color: {{backgroundColor}} !important;
 }
 {% endif %}
 
@@ -827,7 +827,7 @@ html {
 
 {% if backgroundColor %}
 body {
-    background-color: {{backgroundColor}};
+    background-color: {{backgroundColor}} !important;
 }
 {% endif %}
 
@@ -1043,7 +1043,7 @@ html {
 
 {% if backgroundColor %}
 body {
-    background-color: {{backgroundColor}};
+    background-color: {{backgroundColor}} !important;
 }
 {% endif %}
 
@@ -1296,7 +1296,7 @@ $(target).xiboLayoutAnimate(properties);
             ]]></twig>
             <style><![CDATA[
 {% if textDirection == "rtl" %}#content { direction: rtl; }{% endif %}
-{% if backgroundColor %}body { background-color: {{backgroundColor}}; }{% endif %}
+{% if backgroundColor %}body { background-color: {{backgroundColor}} !important; }{% endif %}
 {% if (effect == "marqueeLeft") or (effect == "marqueeRight") %}
     {% if gapTags %}.marquee-item { margin-right: {{gapTags}}px; }{% endif %}
     {% if gapItems %}.item.text-render-item, .separator { margin-right: {{gapItems}}px; }{% endif %}
