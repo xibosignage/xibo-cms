@@ -3163,6 +3163,7 @@ function ToggleFilterView(div) {
 function makePagedSelect(element, parent) {
     element.select2({
         dropdownParent: ((parent == null) ? $("body") : $(parent)),
+        minimumResultsForSearch: (element.data('hideSearch')) ? Infinity : 5,
         ajax: {
             url: element.data("searchUrl"),
             dataType: "json",

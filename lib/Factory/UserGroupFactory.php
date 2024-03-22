@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -807,6 +807,11 @@ class UserGroupFactory extends BaseFactory
                     'feature' => 'developer.edit',
                     'group' => 'system',
                     'title' => __('Add/Edit custom modules and templates'),
+                ],
+                'developer.delete' => [
+                    'feature' => 'developer.delete',
+                    'group' => 'system',
+                    'title' => __('Delete custom modules and templates'),
                 ],
                 'transition.view' => [
                     'feature' => 'transition.view',

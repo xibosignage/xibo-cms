@@ -95,10 +95,10 @@ $pool = new \Stash\Pool();
 $sanitizerService = new \Xibo\Helper\SanitizerService();
 
 // Create a new base dependency service
-$baseDepenencyService = new \Xibo\Service\BaseDependenciesService();
-$baseDepenencyService->setConfig(new MockConfigService());
-$baseDepenencyService->setStore(new MockPdoStorageServiceForModuleFactory());
-$baseDepenencyService->setSanitizer($sanitizerService);
+$baseDependencyService = new \Xibo\Service\BaseDependenciesService();
+$baseDependencyService->setConfig(new MockConfigService());
+$baseDependencyService->setStore(new MockPdoStorageServiceForModuleFactory());
+$baseDependencyService->setSanitizer($sanitizerService);
 
 $moduleFactory = new \Xibo\Factory\ModuleFactory(
     '',
@@ -106,7 +106,7 @@ $moduleFactory = new \Xibo\Factory\ModuleFactory(
     $view,
     new MockConfigService(),
 );
-$moduleFactory->useBaseDependenciesService($baseDepenencyService);
+$moduleFactory->useBaseDependenciesService($baseDependencyService);
 // Get all module
 $modules = $moduleFactory->getAll();
 
@@ -114,9 +114,9 @@ $moduleTemplateFactory = new \Xibo\Factory\ModuleTemplateFactory(
     $pool,
     $view,
 );
-$moduleTemplateFactory->useBaseDependenciesService($baseDepenencyService);
+$moduleTemplateFactory->useBaseDependenciesService($baseDependencyService);
 // Get all module templates
-$moduleTemplates = $moduleTemplateFactory->getAll();
+$moduleTemplates = $moduleTemplateFactory->getAll(null, false);
 
 // --------------
 // Create translation file

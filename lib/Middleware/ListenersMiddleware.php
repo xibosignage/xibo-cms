@@ -43,6 +43,7 @@ use Xibo\Listener\DisplayGroupListener;
 use Xibo\Listener\LayoutListener;
 use Xibo\Listener\MediaListener;
 use Xibo\Listener\MenuBoardProviderListener;
+use Xibo\Listener\ModuleTemplateListener;
 use Xibo\Listener\NotificationDataProviderListener;
 use Xibo\Listener\PlaylistListener;
 use Xibo\Listener\SyncGroupListener;
@@ -124,6 +125,13 @@ class ListenersMiddleware implements MiddlewareInterface
         (new MediaListener(
             $c->get('mediaFactory'),
             $c->get('store')
+        ))
+            ->useLogger($c->get('logger'))
+            ->registerWithDispatcher($dispatcher);
+
+        // Listen for events that affect ModuleTemplates
+        (new ModuleTemplateListener(
+            $c->get('moduleTemplateFactory'),
         ))
             ->useLogger($c->get('logger'))
             ->registerWithDispatcher($dispatcher);

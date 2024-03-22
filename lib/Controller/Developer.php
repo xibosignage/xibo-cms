@@ -21,12 +21,20 @@
  */
 namespace Xibo\Controller;
 
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\ModuleTemplateFactory;
+use Xibo\Helper\SendFile;
+use Xibo\Helper\UploadHandler;
+use Xibo\Service\MediaService;
+use Xibo\Service\UploadService;
 use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ControllerNotImplemented;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Module
@@ -62,7 +70,13 @@ class Developer extends Base
      */
     public function templateGrid(Request $request, Response $response): Response
     {
-        $templates = $this->moduleTemplateFactory->loadUserTemplates();
+        $params = $this->getSanitizer($request->getParams());
+
+        $templates = $this->moduleTemplateFactory->loadUserTemplates($this->gridRenderSort($params), $this->gridRenderFilter([
+            'id' => $params->getInt('id'),
+            'templateId' => $params->getString('templateId'),
+            'dataType' => $params->getString('dataType'),
+        ], $params));
 
         foreach ($templates as $template) {
             if ($this->isApi($request)) {
@@ -71,17 +85,88 @@ class Developer extends Base
 
             $template->includeProperty('buttons');
 
-            // Edit button
-            $template->buttons[] = [
-                'id' => 'template_button_edit',
-                'url' => $this->urlFor($request, 'developer.templates.view.edit', ['id' => $template->id]),
-                'text' => __('Edit'),
-                'class' => 'XiboRedirectButton',
-            ];
+            if ($this->getUser()->checkEditable($template) &&
+                $this->getUser()->featureEnabled('developer.edit')
+            ) {
+                // Edit button
+                $template->buttons[] = [
+                    'id' => 'template_button_edit',
+                    'url' => $this->urlFor($request, 'developer.templates.view.edit', ['id' => $template->id]),
+                    'text' => __('Edit'),
+                    'class' => 'XiboRedirectButton',
+                ];
+
+                $template->buttons[] = [
+                    'id' => 'template_button_export',
+                    'linkType' => '_self', 'external' => true,
+                    'url' => $this->urlFor($request, 'developer.templates.export', ['id' => $template->id]),
+                    'text' => __('Export XML'),
+                ];
+
+                $template->buttons[] = [
+                    'id' => 'template_button_copy',
+                    'url' => $this->urlFor($request, 'developer.templates.form.copy', ['id' => $template->id]),
+                    'text' => __('Copy'),
+                ];
+            }
+
+            if ($this->getUser()->featureEnabled('developer.edit') &&
+                $this->getUser()->checkPermissionsModifyable($template)
+            ) {
+                $template->buttons[] = ['divider' => true];
+                // Permissions for Campaign
+                $template->buttons[] = [
+                    'id' => 'template_button_permissions',
+                    'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'ModuleTemplate', 'id' => $template->id]),
+                    'text' => __('Share'),
+                    'multi-select' => true,
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'ModuleTemplate', 'id' => $template->id])],
+                        ['name' => 'commit-method', 'value' => 'post'],
+                        ['name' => 'id', 'value' => 'template_button_permissions'],
+                        ['name' => 'text', 'value' => __('Share')],
+                        ['name' => 'rowtitle', 'value' => $template->templateId],
+                        ['name' => 'sort-group', 'value' => 2],
+                        ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
+                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'ModuleTemplate'])],
+                        ['name' => 'content-id-name', 'value' => 'id']
+                    ]
+                ];
+            }
+
+            if ($this->getUser()->checkDeleteable($template) &&
+                $this->getUser()->featureEnabled('developer.delete')
+            ) {
+                $template->buttons[] = ['divider' => true];
+                // Delete button
+                $template->buttons[] = [
+                    'id' => 'template_button_delete',
+                    'url' => $this->urlFor($request, 'developer.templates.form.delete', ['id' => $template->id]),
+                    'text' => __('Delete'),
+                    'multi-select' => true,
+                    'dataAttributes' => [
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'developer.templates.delete',
+                                ['id' => $template->id]
+                            )
+                        ],
+                        ['name' => 'commit-method', 'value' => 'delete'],
+                        ['name' => 'id', 'value' => 'template_button_delete'],
+                        ['name' => 'text', 'value' => __('Delete')],
+                        ['name' => 'sort-group', 'value' => 1],
+                        ['name' => 'rowtitle', 'value' => $template->templateId]
+                    ]
+                ];
+            }
+
+
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = 0;
+        $this->getState()->recordsTotal = $this->moduleTemplateFactory->countLast();
         $this->getState()->setData($templates);
 
         return $this->render($request, $response);
@@ -115,18 +200,10 @@ class Developer extends Base
             throw new AccessDeniedException();
         }
 
-        //TODO: temporary extraction of properties XML (should be a form field per property instead)
-        $doc = $template->getDocument();
-        /** @var \DOMElement $properties */
-        $properties = $doc->getElementsByTagName('properties')[0];
-
         $this->getState()->template = 'developer-template-edit-page';
         $this->getState()->setData([
             'template' => $template,
-            'properties' => $doc->saveXML($properties),
-            // TODO: hardcoded for now
-            'propertiesJSON' => '[]',
-            // 'propertiesJSON' => '[{"id":"","value":null,"type":"message","variant":"","format":"","title":"Select a dataset to display appearance options.","mode":"","target":"","propertyGroupId":"","helpText":null,"validation":null,"default":null,"options":null,"customPopOver":null,"playerCompatibility":{"windows":"v3 R303","linux":"TBC","android":"v3 R304","webos":"TBC","tizen":"TBC","message":"Fit supported from:"},"rule":[{"type":"and","message":"234","conditions":[{"field":"dataSetId","type":"gt","value":"hey"},{"field":"dataSetId3","type":"egt","value":"hey2"}]}], "visibility":[{"type":"or","message":"111","conditions":[{"field":"something","type":"eq","value":""}]}, {"type":"and","message":"222","conditions":[{"field":"something","type":"eq","value":"222"}]}],"allowLibraryRefs":false,"allowAssetRefs":false,"parseTranslations":true,"dependsOn":null},{"id":"columns","value":null,"type":"datasetColumnSelector","variant":"","format":"","title":"Item Template","mode":"","target":"","propertyGroupId":"","helpText":"Enter text in the box below, used to display each article.","validation":null,"default":null,"options":null,"customPopOver":null,"playerCompatibility":null,"visibility":[{"type":"and","message":"","conditions":[{"field":"dataSetId","type":"neq","value":""}]}],"allowLibraryRefs":false,"allowAssetRefs":false,"parseTranslations":false,"dependsOn":"dataSetId"},{"id":"noDataMessage","value":null,"type":"richText","variant":"html","format":"","title":"No data message","mode":"","target":"","propertyGroupId":"","helpText":"A message to display when no data is returned from the source","validation":null,"default":null,"options":null,"customPopOver":null,"playerCompatibility":null,"visibility":[{"type":"and","message":"","conditions":[{"field":"dataSetId","type":"neq","value":""}]}],"allowLibraryRefs":true,"allowAssetRefs":false,"parseTranslations":false,"dependsOn":null},{"id":"showHeadings","value":null,"type":"checkbox","variant":"","format":"","title":"Show the table headings?","mode":"","target":"","propertyGroupId":"","helpText":"Should the Table headings be shown?","validation":null,"default":1,"options":null,"customPopOver":null,"playerCompatibility":null,"visibility":[{"type":"and","message":"","conditions":[{"field":"dataSetId","type":"neq","value":""}]}],"allowLibraryRefs":false,"allowAssetRefs":false,"parseTranslations":false,"dependsOn":null},{"id":"rowsPerPage","value":null,"type":"number","variant":"","format":"","title":"Rows per page","mode":"","target":"","propertyGroupId":"","helpText":"Please enter the number of rows per page. 0 for no pages.","validation":null,"default":0,"options":null,"customPopOver":null,"playerCompatibility":null,"visibility":[{"type":"and","message":"","conditions":[{"field":"dataSetId","type":"neq","value":""}]}],"allowLibraryRefs":false,"allowAssetRefs":false,"parseTranslations":false,"dependsOn":null},{"id":"fontFamily","value":null,"type":"fontSelector","variant":"","format":"","title":"Font","mode":"","target":"","propertyGroupId":"","helpText":"Select a custom font - leave empty to use the default font.","validation":null,"default":null,"options":null,"customPopOver":null,"playerCompatibility":null,"visibility":[{"type":"and","message":"","conditions":[{"field":"dataSetId","type":"neq","value":""}]}],"allowLibraryRefs":false,"allowAssetRefs":false,"parseTranslations":false,"dependsOn":null},{"id":"","value":null,"type":"header","variant":"main","format":"","title":"Colours","mode":"","target":"","propertyGroupId":"","helpText":null,"validation":null,"default":null,"options":null,"customPopOver":null,"playerCompatibility":null,"visibility":[{"type":"and","message":"","conditions":[{"field":"dataSetId","type":"neq","value":""}]}],"allowLibraryRefs":false,"allowAssetRefs":false,"parseTranslations":false,"dependsOn":null},{"id":"fontColor","value":null,"type":"color","variant":"","format":"","title":"Font Colour","mode":"","target":"","propertyGroupId":"","helpText":"Use the colour picker to select the font colour","validation":null,"default":"#111","options":null,"customPopOver":null,"playerCompatibility":null,"visibility":[{"type":"and","message":"","conditions":[{"field":"dataSetId","type":"neq","value":""}]}],"allowLibraryRefs":false,"allowAssetRefs":false,"parseTranslations":false,"dependsOn":null},{"id":"text","value":null,"type":"textArea","variant":"","format":"","title":"Text","mode":"","target":"","propertyGroupId":"","helpText":null,"validation":null,"default":"Text","options":null,"customPopOver":null,"playerCompatibility":null,"visibility":[],"allowLibraryRefs":false,"allowAssetRefs":false,"parseTranslations":false,"dependsOn":null},{"id":"fontFamily","value":null,"type":"fontSelector","variant":"","format":"","title":"Font Family","mode":"","target":"","propertyGroupId":"","helpText":"Select a custom font - leave empty to use the default font.","validation":null,"default":null,"options":null,"customPopOver":null,"playerCompatibility":null,"visibility":[],"allowLibraryRefs":false,"allowAssetRefs":false,"parseTranslations":false,"dependsOn":null},{"id":"fontColor","value":null,"type":"color","variant":"","format":"","title":"Font Colour","mode":"","target":"","propertyGroupId":"","helpText":null,"validation":null,"default":"%THEME_COLOR%","options":null,"customPopOver":null,"playerCompatibility":null,"visibility":[],"allowLibraryRefs":false,"allowAssetRefs":false,"parseTranslations":false,"dependsOn":null},{"id":"verticalAlign","value":null,"type":"dropdown","variant":"","format":"","title":"Vertical Align","mode":"","target":"","propertyGroupId":"","helpText":null,"validation":null,"default":"center","options":[{"name":"flex-start","image":"","set":[],"title":"Top"},{"name":"center","image":"","set":[],"title":"Middle"},{"name":"flex-end","image":"","set":[],"title":"Bottom"}],"customPopOver":null,"playerCompatibility":null,"visibility":[],"allowLibraryRefs":false,"allowAssetRefs":false,"parseTranslations":false,"dependsOn":null}]',
+            'propertiesJSON' => json_encode($template->properties),
         ]);
 
         return $this->render($request, $response);
@@ -150,8 +227,21 @@ class Developer extends Base
             throw new InvalidArgumentException(__('Please supply a data type'), 'dataType');
         }]);
 
-        // The most basic template possible.
-        $template = $this->moduleTemplateFactory->createUserTemplate('<?xml version="1.0"?>
+        // do we have a template selected?
+        if (!empty($params->getString('copyTemplateId'))) {
+            $copyTemplate = $this->moduleTemplateFactory->getByDataTypeAndId($dataType, $params->getString('copyTemplateId'));
+            $xml = new \DOMDocument();
+            $xml->loadXML($copyTemplate->getXml());
+            $templateNode = $xml->getElementsByTagName('template')[0];
+            $this->setNode($xml, 'id', $templateId, false, $templateNode);
+
+            $template = $this->moduleTemplateFactory->createUserTemplate(
+                '<?xml version="1.0"?>' .
+                $xml->saveXML($templateNode)
+            );
+        } else {
+            // The most basic template possible.
+            $template = $this->moduleTemplateFactory->createUserTemplate('<?xml version="1.0"?>
         <template>
             <id>' . $templateId . '</id>
             <title>' . $templateId . '</title>
@@ -160,7 +250,9 @@ class Developer extends Base
             <showIn>layout</showIn>
             <properties></properties>
         </template>');
+        }
 
+        $template->ownerId = $this->getUser()->userId;
         $template->save();
 
         $this->getState()->hydrate([
@@ -207,6 +299,9 @@ class Developer extends Base
         $document = $template->getDocument();
 
         // Root nodes
+        $this->setNode($document, 'id', $templateId, false);
+        $template->templateId = $templateId;
+        $this->setNode($document, 'dataType', $dataType, false);
         $this->setNode($document, 'onTemplateRender', $onTemplateRender);
         $this->setNode($document, 'onTemplateVisible', $onTemplateVisible);
 
@@ -214,7 +309,7 @@ class Developer extends Base
         $stencilNodes = $document->getElementsByTagName('stencil');
         if ($stencilNodes->count() <= 0) {
             $stencilNode = $document->createElement('stencil');
-            $document->appendChild($stencilNode);
+            $document->documentElement->appendChild($stencilNode);
         } else {
             $stencilNode = $stencilNodes[0];
         }
@@ -225,23 +320,22 @@ class Developer extends Base
         $this->setNode($document, 'head', $head, true, $stencilNode);
 
         // Properties.
-        // TODO: this is temporary pending a properties UI
         // this is different because we want to replace the properties node with a new one.
         if (!empty($properties)) {
-            $newProperties = new \DOMDocument();
-            $newProperties->loadXML($properties);
+            // parse json and create a new properties node
+            $newPropertiesXml = $this->moduleTemplateFactory->parseJsonPropertiesToXml($properties);
 
-            // Do we have new nodes to import?
-            if ($newProperties->childNodes->count() > 0) {
-                $importedPropteries = $document->importNode($newProperties->documentElement, true);
-                if ($importedPropteries !== false) {
-                    $propertiesNodes = $document->getElementsByTagName('properties');
-                    if ($propertiesNodes->count() <= 0) {
-                        $document->appendChild($importedPropteries);
-                    } else {
-                        $document->documentElement->replaceChild($importedPropteries, $propertiesNodes[0]);
-                    }
-                }
+            $propertiesNodes = $document->getElementsByTagName('properties');
+
+            if ($propertiesNodes->count() <= 0) {
+                $document->documentElement->appendChild(
+                    $document->importNode($newPropertiesXml->documentElement, true)
+                );
+            } else {
+                $document->documentElement->replaceChild(
+                    $document->importNode($newPropertiesXml->documentElement, true),
+                    $propertiesNodes[0]
+                );
             }
         }
 
@@ -308,5 +402,189 @@ class Developer extends Base
                 $element->textContent = $value;
             }
         }
+    }
+
+    public function getAvailableDataTypes(Request $request, Response $response)
+    {
+        $params = $this->getSanitizer($request->getParams());
+        $dataTypes = $this->moduleFactory->getAllDataTypes();
+
+        if ($params->getString('dataType') !== null) {
+            foreach ($dataTypes as $dataType) {
+                if ($dataType->id === $params->getString('dataType')) {
+                    $dataTypes = [$dataType];
+                }
+            }
+        }
+
+        $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = 0;
+        $this->getState()->setData($dataTypes);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws NotFoundException
+     */
+    public function templateExport(Request $request, Response $response, $id): Response|ResponseInterface
+    {
+        $template = $this->moduleTemplateFactory->getUserTemplateById($id);
+
+        if ($template->ownership !== 'user') {
+            throw new AccessDeniedException();
+        }
+
+        $tempFileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/' . $template->templateId . '.xml';
+
+        $template->getDocument()->save($tempFileName);
+
+        $this->setNoOutput(true);
+
+        return $this->render($request, SendFile::decorateResponse(
+            $response,
+            $this->getConfig()->getSetting('SENDFILE_MODE'),
+            $tempFileName,
+            $template->templateId . '.xml'
+        )->withHeader('Content-Type', 'text/xml;charset=utf-8'));
+    }
+
+    public function templateImport(Request $request, Response $response)
+    {
+        $this->getLog()->debug('Import Module Template');
+
+        $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+
+        // Make sure the library exists
+        MediaService::ensureLibraryExists($libraryFolder);
+
+        $options = [
+            'upload_dir' => $libraryFolder . 'temp/',
+            'script_url' => $this->urlFor($request,'developer.templates.import'),
+            'upload_url' => $this->urlFor($request,'developer.templates.import'),
+            'accept_file_types' => '/\.xml/i',
+            'libraryQuotaFull' => false,
+        ];
+
+        $this->getLog()->debug('Hand off to Upload Handler with options: ' . json_encode($options));
+
+        // Hand off to the Upload Handler provided by jquery-file-upload
+        $uploadService = new UploadService($options, $this->getLog(), $this->getState());
+        $uploadHandler = $uploadService->createUploadHandler();
+
+        $uploadHandler->setPostProcessor(function ($file, $uploadHandler) {
+            // Return right away if the file already has an error.
+            if (!empty($file->error)) {
+                return $file;
+            }
+
+            $this->getUser()->isQuotaFullByUser(true);
+
+            /** @var UploadHandler $uploadHandler */
+            $filePath = $uploadHandler->getUploadPath() . $file->fileName;
+
+            // load the xml from uploaded file
+            $xml = new \DOMDocument();
+            $xml->load($filePath);
+
+            // Add the Template
+            $moduleTemplate = $this->moduleTemplateFactory->createUserTemplate($xml->saveXML());
+            $moduleTemplate->ownerId = $this->getUser()->userId;
+            $moduleTemplate->save();
+
+            // Tidy up the temporary file
+            @unlink($filePath);
+
+            return $file;
+        });
+
+        $uploadHandler->post();
+
+        $this->setNoOutput(true);
+
+        return $this->render($request, $response);
+    }
+
+    public function templateCopyForm(Request $request, Response $response, $id)
+    {
+        $moduleTemplate = $this->moduleTemplateFactory->getUserTemplateById($id);
+
+        if (!$this->getUser()->checkViewable($moduleTemplate)) {
+            throw new AccessDeniedException();
+        }
+
+        $this->getState()->template = 'developer-template-form-copy';
+        $this->getState()->setData([
+            'template' => $moduleTemplate,
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    public function templateCopy(Request $request, Response $response, $id)
+    {
+        $moduleTemplate = $this->moduleTemplateFactory->getUserTemplateById($id);
+
+        if (!$this->getUser()->checkViewable($moduleTemplate)) {
+            throw new AccessDeniedException();
+        }
+
+        $params = $this->getSanitizer($request->getParams());
+
+        $newTemplate = clone $moduleTemplate;
+        $newTemplate->templateId = $params->getString('templateId');
+        $newTemplate->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 201,
+            'message' => sprintf(__('Copied as %s'), $newTemplate->templateId),
+            'id' => $newTemplate->id,
+            'data' => $newTemplate
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    public function templateDeleteForm(Request $request, Response $response, $id)
+    {
+        $moduleTemplate = $this->moduleTemplateFactory->getUserTemplateById($id);
+
+        if (!$this->getUser()->checkDeleteable($moduleTemplate)) {
+            throw new AccessDeniedException();
+        }
+
+        $this->getState()->template = 'developer-template-form-delete';
+        $this->getState()->setData([
+            'template' => $moduleTemplate,
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    public function templateDelete(Request $request, Response $response, $id)
+    {
+        $moduleTemplate = $this->moduleTemplateFactory->getUserTemplateById($id);
+
+        if (!$this->getUser()->checkDeleteable($moduleTemplate)) {
+            throw new AccessDeniedException();
+        }
+
+        $moduleTemplate->delete();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Deleted %s'), $moduleTemplate->templateId)
+        ]);
+
+        return $this->render($request, $response);
     }
 }
