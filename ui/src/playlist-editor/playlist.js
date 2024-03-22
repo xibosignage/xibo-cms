@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -167,7 +167,12 @@ Playlist.prototype.addObject = function(
   if (draggableType == 'media') { // Adding media from search tab to a region
     if ($(draggable).hasClass('from-provider')) {
       pE.importFromProvider([$(draggable).data('providerData')]).then((res) => {
-        this.addMedia(res, addToPosition);
+        // If res is empty, it means that the import failed
+        if (res.length === 0) {
+          console.error(errorMessagesTrans.failedToImportMedia);
+        } else {
+          this.addMedia(res, addToPosition);
+        }
       }).catch(function() {
         toastr.error(errorMessagesTrans.importingMediaFailed);
       });
