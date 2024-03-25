@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -262,6 +262,7 @@ class DisplayGroup extends Base
 
         $filter = [
             'displayGroupId' => $parsedQueryParams->getInt('displayGroupId'),
+            'displayGroupIds' => $parsedQueryParams->getIntArray('displayGroupIds'),
             'displayGroup' => $parsedQueryParams->getString('displayGroup'),
             'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
             'displayId' => $parsedQueryParams->getInt('displayId'),

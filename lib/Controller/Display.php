@@ -504,6 +504,7 @@ class Display extends Base
             'syncGroupIdMembers' => $parsedQueryParams->getInt('syncGroupIdMembers'),
             'xmrRegistered' => $parsedQueryParams->getInt('xmrRegistered'),
             'isPlayerSupported' => $parsedQueryParams->getInt('isPlayerSupported'),
+            'displayGroupIds' => $parsedQueryParams->getIntArray('displayGroupIds'),
         ];
     }
 

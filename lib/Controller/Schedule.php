@@ -147,57 +147,11 @@ class Schedule extends Base
      */
     function displayPage(Request $request, Response $response)
     {
-        // We need to provide a list of displays
-        $displayGroupIds = $this->session->get('displayGroupIds');
-
-        if (!is_array($displayGroupIds)) {
-            $displayGroupIds = [];
-        }
-
-        $displayGroups = [];
-        $displaySpecificDisplayGroups = [];
-
-        // Boolean to check if the option show all was saved in session
-        $displayGroupsShowAll = false;
-
-        if (count($displayGroupIds) > 0) {
-            foreach ($displayGroupIds as $displayGroupId) {
-                if ($displayGroupId == -1) {
-                    // If we have the show all option selected, go no further.
-                    $displayGroupsShowAll = true;
-                    break;
-                }
-
-                try {
-                    $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
-
-                    if ($this->getUser()->checkViewable($displayGroup)) {
-                        if ($displayGroup->isDisplaySpecific === 1) {
-                            $displaySpecificDisplayGroups[] = $displayGroup;
-                        } else {
-                            $displayGroups[] = $displayGroup;
-                        }
-                    }
-                } catch (NotFoundException $e) {
-                    $this->getLog()->debug(
-                        sprintf(
-                            'Saved filter option for displayGroupId %d that no longer exists.',
-                            $displayGroupId
-                        )
-                    );
-                }
-            }
-        }
-
         // get the default longitude and latitude from CMS options
         $defaultLat = (float)$this->getConfig()->getSetting('DEFAULT_LAT');
         $defaultLong = (float)$this->getConfig()->getSetting('DEFAULT_LONG');
 
         $data = [
-            'displayGroupIds' => $displayGroupIds,
-            'displayGroups' => $displayGroups,
-            'displaySpecificDisplayGroups' => $displaySpecificDisplayGroups,
-            'displayGroupsShowAll' => $displayGroupsShowAll,
             'defaultLat' => $defaultLat,
             'defaultLong' => $defaultLong,
             'eventTypes' => \Xibo\Entity\Schedule::getEventTypesGrid(),
@@ -263,16 +217,14 @@ class Schedule extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         $displayGroupIds = $sanitizedParams->getIntArray('displayGroupIds', ['default' => []]);
+        $displaySpecificDisplayGroupIds = $sanitizedParams->getIntArray('displaySpecificGroupIds', ['default' => []]);
+        $originalDisplayGroupIds = array_merge($displayGroupIds, $displaySpecificDisplayGroupIds);
         $campaignId = $sanitizedParams->getInt('campaignId');
-        $originalDisplayGroupIds = $displayGroupIds;
 
         $start = $sanitizedParams->getDate('from', ['default' => Carbon::now()->startOfMonth()]);
         $end = $sanitizedParams->getDate('to', ['default' => Carbon::now()->addMonth()->startOfMonth()]);
 
-        // if we have some displayGroupIds then add them to the session info so we can default everything else.
-        $this->session->set('displayGroupIds', $displayGroupIds);
-
-        if (count($displayGroupIds) <= 0) {
+        if (count($originalDisplayGroupIds) <= 0) {
             return $response->withJson(['success' => 1, 'result' => []]);
         }
 
@@ -280,7 +232,7 @@ class Schedule extends Base
         $showLayoutName = ($this->getConfig()->getSetting('SCHEDULE_SHOW_LAYOUT_NAME') == 1);
 
         // Permissions check the list of display groups with the user accessible list of display groups
-        $displayGroupIds = array_diff($displayGroupIds, [-1]);
+        $resolvedDisplayGroupIds = array_diff($originalDisplayGroupIds, [-1]);
 
         if (!$this->getUser()->isSuperAdmin()) {
             $userDisplayGroupIds = array_map(function ($element) {
@@ -290,15 +242,15 @@ class Schedule extends Base
 
             // Reset the list to only those display groups that intersect and if 0 have been provided, only those from
             // the user list
-            $displayGroupIds = (count($displayGroupIds) > 0) ? array_intersect($displayGroupIds, $userDisplayGroupIds) : $userDisplayGroupIds;
+            $resolvedDisplayGroupIds = (count($originalDisplayGroupIds) > 0) ? array_intersect($originalDisplayGroupIds, $userDisplayGroupIds) : $userDisplayGroupIds;
 
             $this->getLog()->debug('Resolved list of display groups ['
-                . json_encode($displayGroupIds) . '] from provided list ['
+                . json_encode($resolvedDisplayGroupIds) . '] from provided list ['
                 . json_encode($originalDisplayGroupIds) . '] and user list ['
                 . json_encode($userDisplayGroupIds) . ']');
 
             // If we have none, then we do not return any events.
-            if (count($displayGroupIds) <= 0) {
+            if (count($resolvedDisplayGroupIds) <= 0) {
                 return $response->withJson(['success' => 1, 'result' => []]);
             }
         }
@@ -307,7 +259,7 @@ class Schedule extends Base
         $filter = [
             'futureSchedulesFrom' => $start->format('U'),
             'futureSchedulesTo' => $end->format('U'),
-            'displayGroupIds' => $displayGroupIds,
+            'displayGroupIds' => $resolvedDisplayGroupIds,
             'geoAware' => $sanitizedParams->getInt('geoAware'),
             'recurring' => $sanitizedParams->getInt('recurring'),
             'eventTypeId' => $sanitizedParams->getInt('eventTypeId'),
@@ -817,52 +769,19 @@ class Schedule extends Base
      */
     public function addForm(Request $request, Response $response, ?string $from, ?int $id): Response|ResponseInterface
     {
-        // Get the display groups added to the session (if there are some)
-        $displayGroupIds = $this->session->get('displayGroupIds');
-
-        if (!is_array($displayGroupIds)) {
-            $displayGroupIds = [];
-        }
-
-        $displayGroups = [];
-
-        if (count($displayGroupIds) > 0) {
-            foreach ($displayGroupIds as $displayGroupId) {
-                if ($displayGroupId == -1) {
-                    continue;
-                }
-
-                try {
-                    $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
-
-                    if ($this->getUser()->checkViewable($displayGroup)) {
-                        $displayGroups[] = $displayGroup;
-                    }
-                } catch (NotFoundException $e) {
-                    $this->getLog()->debug(
-                        sprintf(
-                            'Saved filter option for displayGroupId %d that no longer exists.',
-                            $displayGroupId
-                        )
-                    );
-                }
-            }
-        }
-
         // get the default longitude and latitude from CMS options
         $defaultLat = (float)$this->getConfig()->getSetting('DEFAULT_LAT');
         $defaultLong = (float)$this->getConfig()->getSetting('DEFAULT_LONG');
 
         $addFormData = [
             'dayParts' => $this->dayPartFactory->allWithSystem(),
-            'displayGroupIds' => $displayGroupIds,
-            'displayGroups' => $displayGroups,
             'reminders' => [],
             'defaultLat' => $defaultLat,
             'defaultLong' => $defaultLong,
             'eventTypes' => \Xibo\Entity\Schedule::getEventTypesForm(),
             'isScheduleNow' => false,
             'relativeTime' => 0,
+            'setDisplaysFromFilter' => true,
         ];
         $formNowData = [];
 
@@ -881,6 +800,7 @@ class Schedule extends Base
                 'readonlySelect' => !($from == 'DisplayGroup'),
                 'isScheduleNow' => true,
                 'relativeTime' => 1,
+                'setDisplaysFromFilter' => false,
             ];
         }
 
@@ -2321,7 +2241,8 @@ class Schedule extends Base
         $params = $this->getSanitizer($request->getParams());
 
         $displayGroupIds = $params->getIntArray('displayGroupIds', ['default' => []]);
-        $originalDisplayGroupIds = $displayGroupIds;
+        $displaySpecificDisplayGroupIds = $params->getIntArray('displaySpecificGroupIds', ['default' => []]);
+        $originalDisplayGroupIds = array_merge($displayGroupIds, $displaySpecificDisplayGroupIds);
 
         if (!$this->getUser()->isSuperAdmin()) {
             $userDisplayGroupIds = array_map(function ($element) {
@@ -2331,8 +2252,8 @@ class Schedule extends Base
 
             // Reset the list to only those display groups that intersect and if 0 have been provided, only those from
             // the user list
-            $displayGroupIds = (count($displayGroupIds) > 0)
-                    ? array_intersect($displayGroupIds, $userDisplayGroupIds)
+            $resolvedDisplayGroupIds = (count($originalDisplayGroupIds) > 0)
+                    ? array_intersect($originalDisplayGroupIds, $userDisplayGroupIds)
                     : $userDisplayGroupIds;
 
             $this->getLog()->debug('Resolved list of display groups ['
@@ -2341,13 +2262,15 @@ class Schedule extends Base
                 . json_encode($userDisplayGroupIds) . ']');
 
             // If we have none, then we do not return any events.
-            if (count($displayGroupIds) <= 0) {
+            if (count($resolvedDisplayGroupIds) <= 0) {
                 $this->getState()->template = 'grid';
                 $this->getState()->recordsTotal = $this->scheduleFactory->countLast();
                 $this->getState()->setData([]);
 
                 return $this->render($request, $response);
             }
+        } else {
+            $resolvedDisplayGroupIds = $originalDisplayGroupIds;
         }
 
         $events = $this->scheduleFactory->query(
@@ -2359,7 +2282,7 @@ class Schedule extends Base
                 'geoAware' => $params->getInt('geoAware'),
                 'recurring' => $params->getInt('recurring'),
                 'campaignId' => $params->getInt('campaignId'),
-                'displayGroupIds' => $displayGroupIds,
+                'displayGroupIds' => $resolvedDisplayGroupIds,
                 'name' => $params->getString('name'),
                 'useRegexForName' => $params->getCheckbox('useRegexForName'),
                 'logicalOperatorName' => $params->getString('logicalOperatorName'),
