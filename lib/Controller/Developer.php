@@ -187,8 +187,6 @@ class Developer extends Base
                     ]
                 ];
             }
-
-
         }
 
         $this->getState()->template = 'grid';
@@ -532,8 +530,8 @@ class Developer extends Base
 
         $options = [
             'upload_dir' => $libraryFolder . 'temp/',
-            'script_url' => $this->urlFor($request,'developer.templates.import'),
-            'upload_url' => $this->urlFor($request,'developer.templates.import'),
+            'script_url' => $this->urlFor($request, 'developer.templates.import'),
+            'upload_url' => $this->urlFor($request, 'developer.templates.import'),
             'accept_file_types' => '/\.xml/i',
             'libraryQuotaFull' => false,
         ];

@@ -245,13 +245,13 @@ class ModuleTemplate implements \JsonSerializable
             foreach ($xml->getElementsByTagName('template') as $templateXml) {
                 if ($templateXml instanceof \DOMElement) {
                     foreach ($templateXml->childNodes as $childNode) {
-                       if ($childNode instanceof \DOMElement) {
-                           // match the template to what was requested
-                           // set the xml and return it.
-                           if ($childNode->nodeName === 'id' && $childNode->nodeValue == $this->templateId) {
-                               $this->setXml($xml->saveXML($templateXml));
-                           }
-                       }
+                        if ($childNode instanceof \DOMElement) {
+                            // match the template to what was requested
+                            // set the xml and return it.
+                            if ($childNode->nodeName === 'id' && $childNode->nodeValue == $this->templateId) {
+                                $this->setXml($xml->saveXML($templateXml));
+                            }
+                        }
                     }
                 }
             }
