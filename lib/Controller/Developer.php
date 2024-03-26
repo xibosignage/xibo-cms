@@ -31,6 +31,7 @@ use Xibo\Helper\UploadHandler;
 use Xibo\Service\MediaService;
 use Xibo\Service\UploadService;
 use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -49,7 +50,7 @@ class Developer extends Base
     }
 
     /**
-     * Display the module page
+     * Display the module templates page
      * @param Request $request
      * @param Response $response
      * @return \Slim\Http\Response
@@ -63,6 +64,7 @@ class Developer extends Base
     }
 
     /**
+     * Show Module templates in a grid
      * @param \Slim\Http\ServerRequest $request
      * @param \Slim\Http\Response $response
      * @return \Slim\Http\Response
@@ -220,34 +222,52 @@ class Developer extends Base
     {
         // When adding a template we just save the XML
         $params = $this->getSanitizer($request->getParams());
+
         $templateId = $params->getString('templateId', ['throw' => function () {
             throw new InvalidArgumentException(__('Please supply a unique template ID'), 'templateId');
+        }]);
+        $title = $params->getString('title', ['throw' => function () {
+            throw new InvalidArgumentException(__('Please supply a title'), 'title');
         }]);
         $dataType = $params->getString('dataType', ['throw' => function () {
             throw new InvalidArgumentException(__('Please supply a data type'), 'dataType');
         }]);
+        $showIn = $params->getString('showIn', ['throw' => function () {
+            throw new InvalidArgumentException(
+                __('Please select relevant editor which should show this Template'),
+                'showIn'
+            );
+        }]);
 
         // do we have a template selected?
         if (!empty($params->getString('copyTemplateId'))) {
-            $copyTemplate = $this->moduleTemplateFactory->getByDataTypeAndId($dataType, $params->getString('copyTemplateId'));
+            // get the selected template
+            $copyTemplate = $this->moduleTemplateFactory->getByDataTypeAndId(
+                $dataType,
+                $params->getString('copyTemplateId')
+            );
+
+            // get the template xml and load to document.
             $xml = new \DOMDocument();
             $xml->loadXML($copyTemplate->getXml());
+
+            // get template node, make adjustments from the form
             $templateNode = $xml->getElementsByTagName('template')[0];
             $this->setNode($xml, 'id', $templateId, false, $templateNode);
+            $this->setNode($xml, 'title', $title, false, $templateNode);
+            $this->setNode($xml, 'showIn', $showIn, false, $templateNode);
 
-            $template = $this->moduleTemplateFactory->createUserTemplate(
-                '<?xml version="1.0"?>' .
-                $xml->saveXML($templateNode)
-            );
+            // create template with updated xml.
+            $template = $this->moduleTemplateFactory->createUserTemplate($xml->saveXML());
         } else {
             // The most basic template possible.
             $template = $this->moduleTemplateFactory->createUserTemplate('<?xml version="1.0"?>
         <template>
             <id>' . $templateId . '</id>
-            <title>' . $templateId . '</title>
+            <title>' . $title . '</title>
             <type>static</type>
             <dataType>' . $dataType . '</dataType>
-            <showIn>layout</showIn>
+            <showIn>'. $showIn . '</showIn>
             <properties></properties>
         </template>');
         }
@@ -280,8 +300,17 @@ class Developer extends Base
         $templateId = $params->getString('templateId', ['throw' => function () {
             throw new InvalidArgumentException(__('Please supply a unique template ID'), 'templateId');
         }]);
+        $title = $params->getString('title', ['throw' => function () {
+            throw new InvalidArgumentException(__('Please supply a title'), 'title');
+        }]);
         $dataType = $params->getString('dataType', ['throw' => function () {
             throw new InvalidArgumentException(__('Please supply a data type'), 'dataType');
+        }]);
+        $showIn = $params->getString('showIn', ['throw' => function () {
+            throw new InvalidArgumentException(
+                __('Please select relevant editor which should show this Template'),
+                'showIn'
+            );
         }]);
 
         $template->isEnabled = $params->getCheckbox('enabled');
@@ -299,8 +328,10 @@ class Developer extends Base
         $document = $template->getDocument();
 
         // Root nodes
-        $this->setNode($document, 'id', $templateId, false);
         $template->templateId = $templateId;
+        $this->setNode($document, 'id', $templateId, false);
+        $this->setNode($document, 'title', $title, false);
+        $this->setNode($document, 'showIn', $showIn, false);
         $this->setNode($document, 'dataType', $dataType, false);
         $this->setNode($document, 'onTemplateRender', $onTemplateRender);
         $this->setNode($document, 'onTemplateVisible', $onTemplateVisible);
@@ -425,6 +456,7 @@ class Developer extends Base
     }
 
     /**
+     * Export module template
      * @param Request $request
      * @param Response $response
      * @param $id
@@ -456,7 +488,16 @@ class Developer extends Base
         )->withHeader('Content-Type', 'text/xml;charset=utf-8'));
     }
 
-    public function templateImport(Request $request, Response $response)
+    /**
+     * Import xml file and create module template
+     * @param Request $request
+     * @param Response $response
+     * @return ResponseInterface|Response
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws ConfigurationException
+     */
+    public function templateImport(Request $request, Response $response): Response|ResponseInterface
     {
         $this->getLog()->debug('Import Module Template');
 
@@ -512,7 +553,19 @@ class Developer extends Base
         return $this->render($request, $response);
     }
 
-    public function templateCopyForm(Request $request, Response $response, $id)
+    /**
+     * Show module template copy form
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return Response|ResponseInterface
+     * @throws AccessDeniedException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function templateCopyForm(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $moduleTemplate = $this->moduleTemplateFactory->getUserTemplateById($id);
 
@@ -528,7 +581,19 @@ class Developer extends Base
         return $this->render($request, $response);
     }
 
-    public function templateCopy(Request $request, Response $response, $id)
+    /**
+     * Copy module template
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return Response|ResponseInterface
+     * @throws AccessDeniedException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function templateCopy(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $moduleTemplate = $this->moduleTemplateFactory->getUserTemplateById($id);
 
@@ -553,7 +618,19 @@ class Developer extends Base
         return $this->render($request, $response);
     }
 
-    public function templateDeleteForm(Request $request, Response $response, $id)
+    /**
+     * Show module template delete form
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return Response|ResponseInterface
+     * @throws AccessDeniedException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function templateDeleteForm(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $moduleTemplate = $this->moduleTemplateFactory->getUserTemplateById($id);
 
@@ -569,7 +646,19 @@ class Developer extends Base
         return $this->render($request, $response);
     }
 
-    public function templateDelete(Request $request, Response $response, $id)
+    /**
+     * Delete module template
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return Response|ResponseInterface
+     * @throws AccessDeniedException
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function templateDelete(Request $request, Response $response, $id): Response|ResponseInterface
     {
         $moduleTemplate = $this->moduleTemplateFactory->getUserTemplateById($id);
 

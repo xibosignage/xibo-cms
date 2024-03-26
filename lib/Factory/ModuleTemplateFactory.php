@@ -285,7 +285,7 @@ class ModuleTemplateFactory extends BaseFactory
                             ON `permissionentity`.entityId = permission.entityId
                             INNER JOIN `group`
                             ON `group`.groupId = `permission`.groupId
-                         WHERE entity = :permissionEntity
+                         WHERE entity = :permissionEntityGroups
                             AND objectId = `module_templates`.id
                             AND view = 1
                 ) AS groupsWithPermissions';
@@ -308,7 +308,7 @@ class ModuleTemplateFactory extends BaseFactory
             $params['dataType'] = $filter->getString('dataType') ;
         }
 
-        $params['permissionEntity'] = 'Xibo\\Entity\\ModuleTemplate';
+        $params['permissionEntityGroups'] = 'Xibo\\Entity\\ModuleTemplate';
 
         $this->viewPermissionSql(
             'Xibo\Entity\ModuleTemplate',
@@ -347,7 +347,7 @@ class ModuleTemplateFactory extends BaseFactory
 
         // Paging
         if (!empty($limit) && count($templates) > 0) {
-            unset($params['permissionEntity']);
+            unset($params['permissionEntityGroups']);
             $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
             $this->_countLast = intval($results[0]['total']);
         }
@@ -588,20 +588,26 @@ class ModuleTemplateFactory extends BaseFactory
             }
 
             // do we have validation rules?
-            if (!empty($property['rule'])) {
-                $validation = $property['rule'];
+            if (!empty($property['validation'])) {
+                $validation = $property['validation'];
                 if (!is_array($validation)) {
-                    $validation = json_decode($property['rule'], true);
+                    $validation = json_decode($property['validation'], true);
                 }
 
+                // xml uses rule node for this.
                 $ruleNode = $newPropertiesXml->createElement('rule');
 
-                foreach ($validation as $ruleTest) {
-                    $ruleTestNode = $newPropertiesXml->createElement('test');
-                    $ruleTestNode->setAttribute('type', $ruleTest['type']);
-                    $ruleTestNode->setAttribute('message', $ruleTest['message']);
+                // attributes on rule node;
+                $ruleNode->setAttribute('onSave',   $validation['onSave'] ? 'true' : 'false');
+                $ruleNode->setAttribute('onStatus', $validation['onStatus'] ? 'true' : 'false');
 
-                    foreach($ruleTest['conditions'] as $condition) {
+                // validation property has an array on tests in it
+                foreach ($validation['tests'] as $validationTest) {
+                    $ruleTestNode = $newPropertiesXml->createElement('test');
+                    $ruleTestNode->setAttribute('type', $validationTest['type']);
+                    $ruleTestNode->setAttribute('message', $validationTest['message']);
+
+                    foreach($validationTest['conditions'] as $condition) {
                         $conditionNode = $newPropertiesXml->createElement('condition', $condition['value']);
                         $conditionNode->setAttribute('field', $condition['field']);
                         $conditionNode->setAttribute('type', $condition['type']);
