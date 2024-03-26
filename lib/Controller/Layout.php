@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -1515,7 +1515,7 @@ class Layout extends Base
             if ($layout->description != '') {
                 if ($showDescriptionId == 1) {
                     // Parse down for description
-                    $layout->descriptionFormatted = Parsedown::instance()->text($layout->description);
+                    $layout->descriptionFormatted = Parsedown::instance()->setSafeMode(true)->text($layout->description);
                 } else if ($showDescriptionId == 2) {
                     $layout->descriptionFormatted = strtok($layout->description, "\n");
                 }

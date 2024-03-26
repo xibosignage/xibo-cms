@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -2411,7 +2411,7 @@ class Library extends Base
         }
 
         // if we were provided with optional Media name set it here, otherwise get it from download info
-        $name = empty($optionalName) ? $downloadInfo['filename'] : $optionalName;
+        $name = empty($optionalName) ? htmlspecialchars($downloadInfo['filename']) : $optionalName;
 
         // double check that provided Module Type and Extension are valid
         $moduleCheck = $this->getModuleFactory()->query(null, [
