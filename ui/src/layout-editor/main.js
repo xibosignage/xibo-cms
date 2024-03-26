@@ -674,7 +674,7 @@ lD.refreshEditor = function(
   this.bottombar.render(this.selectedObject);
 
   // Manager ( hidden )
-  this.historyManager.render();
+  this.historyManager.render(false);
 
   // Properties panel and viewer
   (reloadPropertiesPanel) && this.propertiesPanel.render(this.selectedObject);
