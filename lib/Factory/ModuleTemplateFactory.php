@@ -564,7 +564,7 @@ class ModuleTemplateFactory extends BaseFactory
             }
 
             // do we have visibility?
-            if(!empty($property['visibility'])) {
+            if (!empty($property['visibility'])) {
                 $visibility = $property['visibility'];
                 if (!is_array($visibility)) {
                     $visibility = json_decode($visibility, true);
@@ -576,7 +576,7 @@ class ModuleTemplateFactory extends BaseFactory
                     $testNode = $newPropertiesXml->createElement('test');
                     $testNode->setAttribute('type', $testElement['type']);
                     $testNode->setAttribute('message', $testElement['message']);
-                    foreach($testElement['conditions'] as $condition) {
+                    foreach ($testElement['conditions'] as $condition) {
                         $conditionNode = $newPropertiesXml->createElement('condition', $condition['value']);
                         $conditionNode->setAttribute('field', $condition['field']);
                         $conditionNode->setAttribute('type', $condition['type']);
@@ -598,7 +598,7 @@ class ModuleTemplateFactory extends BaseFactory
                 $ruleNode = $newPropertiesXml->createElement('rule');
 
                 // attributes on rule node;
-                $ruleNode->setAttribute('onSave',   $validation['onSave'] ? 'true' : 'false');
+                $ruleNode->setAttribute('onSave', $validation['onSave'] ? 'true' : 'false');
                 $ruleNode->setAttribute('onStatus', $validation['onStatus'] ? 'true' : 'false');
 
                 // validation property has an array on tests in it
@@ -607,7 +607,7 @@ class ModuleTemplateFactory extends BaseFactory
                     $ruleTestNode->setAttribute('type', $validationTest['type']);
                     $ruleTestNode->setAttribute('message', $validationTest['message']);
 
-                    foreach($validationTest['conditions'] as $condition) {
+                    foreach ($validationTest['conditions'] as $condition) {
                         $conditionNode = $newPropertiesXml->createElement('condition', $condition['value']);
                         $conditionNode->setAttribute('field', $condition['field']);
                         $conditionNode->setAttribute('type', $condition['type']);
