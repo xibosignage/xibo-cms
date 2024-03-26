@@ -252,7 +252,7 @@
         </script>
 
         <script type="text/x-handlebars-template" id="developer-template-control-options">
-            <div class="developer-template-control-options">
+            <div class="developer-template-control-options control-container">
                 <div>
                     <strong class="float-left">options</strong>
                     {{#if helpText}}
@@ -267,7 +267,7 @@
                 </div>
 
                 <div class="xibo-form-input" data-control-title="options" data-control-type="options">
-                    <input type="hidden"  name="options" value="{{originalValue}}">
+                    <input type="hidden" class="jsonField"  name="options" value="{{originalValue}}">
                 </div>
 
                 <div class="options-items">
@@ -293,7 +293,7 @@
         </script>
 
         <script type="text/x-handlebars-template" id="developer-template-control-playerCompatibility">
-            <div class="developer-template-control-playerCompatibility">
+            <div class="developer-template-control-playerCompatibility control-container">
                 <div>
                     <strong class="float-left">playerCompatibility</strong>
                     {{#if helpText}}
@@ -308,7 +308,7 @@
                 </div>
 
                 <div class="xibo-form-input" data-control-title="playerCompatibility" data-control-type="playerCompatibility">
-                    <input type="hidden"  name="playerCompatibility" value="{{originalValue}}">
+                    <input type="hidden" class="jsonField"  name="playerCompatibility" value="{{originalValue}}">
                 </div>
                 
                 <div class="player-compat-items float-left">
@@ -331,7 +331,7 @@
         </script>
 
         <script type="text/x-handlebars-template" id="developer-template-control-visibility">
-            <div class="developer-template-control-visibility">
+            <div class="developer-template-control-visibility control-container">
                 <div>
                     <strong class="float-left">visibility</strong>
                     {{#if helpText}}
@@ -346,7 +346,7 @@
                 </div>
 
                 <div class="xibo-form-input" data-control-title="visibility" data-control-type="visibility">
-                    <input type="hidden"  name="visibility" value="{{originalValue}}">
+                    <input type="hidden" class="jsonField"  name="visibility" value="{{originalValue}}">
                 </div>
 
                 <div class="visibility-tests test-container float-left w-100"></div>
@@ -357,10 +357,10 @@
             </div>
         </script>
 
-        <script type="text/x-handlebars-template" id="developer-template-control-rule">
-            <div class="developer-template-control-rule">
+        <script type="text/x-handlebars-template" id="developer-template-control-validation">
+            <div class="developer-template-control-validation control-container">
                 <div>
-                    <strong class="float-left">rule</strong>
+                    <strong class="float-left">validation</strong>
                     {{#if helpText}}
                         <div class="input-info-container pt-0 float-left">
                             <i class="fa fa-question-circle input-info tooltip-always-on xibo-help-text"
@@ -372,11 +372,22 @@
                     {{/if}}
                 </div>
 
-                <div class="xibo-form-input" data-control-title="rule" data-control-type="rule">
-                    <input type="hidden"  name="rule" value="{{originalValue}}">
+                <div class="xibo-form-input" data-control-title="validation" data-control-type="validation">
+                    <input type="hidden" class="jsonField"  name="validation" value="{{originalValue}}">
                 </div>
 
-                <div class="rule-tests test-container float-left w-100"></div>
+                <div class="validation-options float-left w-100">
+                    <div class="form-check float-right pb-1">
+                        <input type="checkbox" class="form-check-input" id="onSave" name="onSave">
+                        <label for="onSave" class="form-check-label"><strong>onSave</strong></label>
+                    </div>
+                    <div class="form-check float-right pb-1 pr-2">
+                        <input type="checkbox" class="form-check-input" id="onStatus" name="onStatus">
+                        <label for="onStatus" class="form-check-label"><strong>onStatus</strong></label>
+                    </div>
+                </div>
+
+                <div class="validation-tests test-container float-left w-100"></div>
 
                 <button type="button" class="add-test-btn btn btn-block btn-outline-primary btn-sm">
                     <i class="fa fa-plus"></i> {% endverbatim %}{{ "Add test"|trans }}{% verbatim %}
@@ -491,7 +502,7 @@
             },
             propertyGroupId: {
                 type: 'text',
-                helpText: "{{ "Explain how this works!"|trans }}",
+                helpText: '',
             },
             dependsOn: {
                 type: 'text',
@@ -503,7 +514,7 @@
             },
             allowLibraryRefs: {
                 type: 'checkbox',
-                helpText: "{{ "Explain how this works!"|trans }}",
+                helpText: '',
             },
             allowAssetRefs: {
                 type: 'checkbox',
@@ -526,15 +537,15 @@
             },
             visibility: {
                 type: 'visibility',
-                helpText: "{{ "Explain how this works!"|trans }}",
+                helpText: '',
             },
-            rule: {
-                type: 'rule',
-                helpText: "{{ "Explain how this works!"|trans }}",
+            validation: {
+                type: 'validation',
+                helpText: '',
             },
             playerCompatibility: {
                 type: 'playerCompatibility',
-                helpText: "{{ "Explain how this works!"|trans }}",
+                helpText: '',
             },
         };
 
@@ -612,7 +623,7 @@
             function addControl(control) {
                 var $control = $(controlTemplate);
 
-                    for (const ptm in propertiesMap) {
+                    for (var ptm in propertiesMap) {
                         if (propertiesMap.hasOwnProperty(ptm)) {
                             var propertyFromMap = propertiesMap[ptm].type;
                             if (templates.forms[propertyFromMap]) {
@@ -650,6 +661,91 @@
                                         )
                                     ));
 
+                                    var saveSubControl = function($target) {
+                                        var $subControlAux = $target;
+                                        var controlType = $target.find('.xibo-form-input').data('controlType');
+                                        var valToSave = {};
+
+                                        // Save to hidden input
+                                        if (controlType === 'playerCompatibility') {
+                                            $subControlAux.find('.subcontrol-input').each((_key, sub) => {
+                                                var subValue = $(sub).val();
+                                                if(subValue) {
+                                                    valToSave[$(sub).data('player')] = $(sub).val();
+                                                }
+                                            });
+                                        } else if (controlType === 'options') {
+                                            valToSave = [];
+                                            $subControlAux.find('.option-item').each((_key, option) => {
+                                                var optionTitle = $(option).find('[name="control_option_title"]').val();
+                                                var optionName = $(option).find('[name="control_option_name"]').val();
+                                                if(optionTitle && optionName) {
+                                                    valToSave.push({
+                                                        title: optionTitle,
+                                                        name: optionName,
+                                                    });
+                                                }
+                                            });
+                                        } else if(controlType === 'visibility') {
+                                            valToSave = [];
+                                            $subControlAux.find('.test-item').each((_key, test) => {
+                                                var testConditions = [];
+                                                var testType = $(test).find('[name="test_type"]').val();
+                                                var testMessage = $(test).find('[name="test_message"]').val();
+
+                                                $(test).find('.condition-item').each((_key, cond) => {
+                                                    testConditions.push({
+                                                        field: $(cond).find('[name="condition_field"]').val(),
+                                                        type: $(cond).find('[name="condition_type"]').val(),
+                                                        value: $(cond).find('[name="condition_value"]').val(),
+                                                    });
+                                                });
+
+                                                valToSave.push({
+                                                    type: testType,
+                                                    message: testMessage,
+                                                    conditions: testConditions,
+                                                });
+                                            });
+                                        } else if(controlType === 'validation') {
+                                            valToSave = {
+                                                tests: [],
+                                            };
+                                            $subControlAux.find('.validation-options input').each((_key, option) => {
+                                                var $optionInput = $(option);
+                                                valToSave[$optionInput.attr('name')] = $optionInput.is(':checked')
+                                            });
+
+                                            $subControlAux.find('.test-item').each((_key, test) => {
+                                                var testConditions = [];
+                                                var testType = $(test).find('[name="test_type"]').val();
+                                                var testMessage = $(test).find('[name="test_message"]').val();
+
+                                                $(test).find('.condition-item').each((_key, cond) => {
+                                                    testConditions.push({
+                                                        field: $(cond).find('[name="condition_field"]').val(),
+                                                        type: $(cond).find('[name="condition_type"]').val(),
+                                                        value: $(cond).find('[name="condition_value"]').val(),
+                                                    });
+                                                });
+
+                                                valToSave.tests.push({
+                                                    type: testType,
+                                                    message: testMessage,
+                                                    conditions: testConditions,
+                                                });
+                                            });
+                                        }
+
+                                        // Save values to hidden field
+                                        $subControlAux.find('[name="' + controlType + '"]').val(
+                                            $.isEmptyObject(valToSave) ? '' : JSON.stringify(valToSave)
+                                        );
+
+                                        // Save all controls
+                                        saveTemplateControlsToHiddenField();
+                                    };
+
                                     // Options control
                                     if(controlType === 'options') {
                                         var controlSubOptionTemplate = Handlebars.compile($("#developer-template-control-option-item").html());
@@ -668,10 +764,17 @@
 
                                         // Handle delete
                                         $subcontrol.on('click', '.del-option-btn', (ev) => {
+                                            var $parentContainer = $(ev.currentTarget).parents('.control-container');
+                                            // Remove option
                                             $(ev.currentTarget).parents('.option-item').remove();
+
+                                            // Save control
+                                            saveSubControl($parentContainer);
+
+                                            // Save all controls
                                             saveTemplateControlsToHiddenField();
                                         });
-                                    } else if(controlType === 'visibility' || controlType === 'rule') {
+                                    } else if(controlType === 'visibility') {
                                         var controlTestTemplate = Handlebars.compile($("#developer-template-control-test").html());
                                         var controlConditionTemplate = Handlebars.compile($("#developer-template-control-condition").html());
 
@@ -697,7 +800,14 @@
 
                                         // Handle delete condition
                                         $subcontrol.on('click', '.del-condition-btn', (ev) => {
+                                            var $parentContainer = $(ev.currentTarget).parents('.control-container');
+                                            // Remove condition
                                             $(ev.currentTarget).parents('.condition-item').remove();
+
+                                            // Save control
+                                            saveSubControl($parentContainer);
+
+                                            // Save all controls
                                             saveTemplateControlsToHiddenField();
                                         });
 
@@ -709,67 +819,99 @@
 
                                         // Handle delete test
                                         $subcontrol.on('click', '.del-test-btn', (ev) => {
+                                            var $parentContainer = $(ev.currentTarget).parents('.control-container');
+                                            // Remove test
                                             $(ev.currentTarget).parents('.test-item').remove();
+
+                                            // Save control
+                                            saveSubControl($parentContainer);
+
+                                            // Save all controls
                                             saveTemplateControlsToHiddenField();
                                         });
+                                    } else if (controlType === 'validation') {
+                                        var controlTestTemplate = Handlebars.compile($("#developer-template-control-test").html());
+                                        var controlConditionTemplate = Handlebars.compile($("#developer-template-control-condition").html());
+                                        var $subControlContainer = $subcontrol;
+
+                                        var updateCheckboxes = function() {
+                                            var hasTests = $subControlContainer.find('.validation-tests .test-item').length > 0;
+
+                                            // Show options if we have any test
+                                            $subControlContainer.find('.validation-options').toggle(hasTests)
+                                                .toggleClass('toSave', hasTests);
+
+                                            // Handle checkbox change
+                                            $subControlContainer.find('.validation-options input').off().on('change', function() {
+                                                saveSubControl($subControlContainer);
+                                            });
+                                        };
+
+                                        (subControlValue && subControlValue.tests) && subControlValue.tests.forEach((test) => {
+                                            var $newTest = $(controlTestTemplate(test));
+                                            var $testContainer = $subControlContainer.find('.' + controlType + '-tests');
+
+                                            test.conditions.forEach((condition) => {
+                                                var $newCondition = $(controlConditionTemplate(condition));
+
+                                                $newTest.find('.test-conditions').append($newCondition);
+                                            });
+
+                                            // Add to container
+                                            $testContainer.append($newTest);
+                                        });
+
+                                        // Handle add condition button
+                                        $subControlContainer.on('click', '.add-condition-btn', (ev) => {
+                                            // Add to container
+                                            $(ev.currentTarget).siblings('.test-conditions').append($(controlConditionTemplate()));
+                                        });
+
+                                        // Handle delete condition
+                                        $subControlContainer.on('click', '.del-condition-btn', (ev) => {
+                                            var $parentContainer = $(ev.currentTarget).parents('.control-container');
+                                            // Remove condition
+                                            $(ev.currentTarget).parents('.condition-item').remove();
+
+                                            // Save control
+                                            saveSubControl($parentContainer);
+
+                                            // Save all controls
+                                            saveTemplateControlsToHiddenField();
+                                        });
+
+                                        // Handle add test button
+                                        $subControlContainer.on('click', '.add-test-btn', (ev) => {
+                                            // Add to container
+                                            $(ev.currentTarget).siblings('.test-container').append($(controlTestTemplate()));
+
+                                            // Update checkboxes
+                                            updateCheckboxes();
+                                        });
+
+                                        // Handle delete test
+                                        $subControlContainer.on('click', '.del-test-btn', (ev) => {
+                                            var $parentContainer = $(ev.currentTarget).parents('.control-container');
+                                            // Remove test
+                                            $(ev.currentTarget).parents('.test-item').remove();
+
+                                            // Update checkboxes
+                                            updateCheckboxes();
+
+                                            // Save control
+                                            saveSubControl($parentContainer);
+
+                                            // Save all controls
+                                            saveTemplateControlsToHiddenField();
+                                        });
+
+                                        // Update checkboxes on first load
+                                        updateCheckboxes();
                                     }
 
                                     // Handle change to update values
                                     $subcontrol.on('change', '.subcontrol-input', (ev) => {
-                                        var $subControlAux = $(ev.delegateTarget);
-                                        var controlType = $(ev.delegateTarget).find('.xibo-form-input').data('controlType');
-                                        var valToSave = {};
-
-                                        // Save to hidden input
-                                        if (controlType === 'playerCompatibility') {
-                                            $subControlAux.find('.subcontrol-input').each((_key, sub) => {
-                                                var subValue = $(sub).val();
-                                                if(subValue) {
-                                                    valToSave[$(sub).data('player')] = $(sub).val();
-                                                }
-                                            });
-                                        } else if (controlType === 'options') {
-                                            valToSave = [];
-                                            $subControlAux.find('.option-item').each((_key, option) => {
-                                                var optionTitle = $(option).find('[name="control_option_title"]').val();
-                                                var optionName = $(option).find('[name="control_option_name"]').val();
-                                                if(optionTitle && optionName) {
-                                                    valToSave.push({
-                                                        title: optionTitle,
-                                                        name: optionName,
-                                                    });
-                                                }
-                                            });
-                                        } else if(controlType === 'visibility' || controlType === 'rule') {
-                                            valToSave = [];
-                                            $subControlAux.find('.test-item').each((_key, test) => {
-                                                var testConditions = [];
-                                                var testType = $(test).find('[name="test_type"]').val();
-                                                var testMessage = $(test).find('[name="test_message"]').val();
-
-                                                $(test).find('.condition-item').each((_key, cond) => {
-                                                    testConditions.push({
-                                                        field: $(cond).find('[name="condition_field"]').val(),
-                                                        type: $(cond).find('[name="condition_type"]').val(),
-                                                        value: $(cond).find('[name="condition_value"]').val(),
-                                                    });
-                                                });
-
-                                                valToSave.push({
-                                                    type: testType,
-                                                    message: testMessage,
-                                                    conditions: testConditions,
-                                                });
-                                            });
-                                        }
-
-                                        // Save values to hidden field
-                                        $subControlAux.find('[name="' + controlType + '"]').val(
-                                            $.isEmptyObject(valToSave) ? '' : JSON.stringify(valToSave)
-                                        );
-
-                                        // Save all controls
-                                        saveTemplateControlsToHiddenField();
+                                        saveSubControl($(ev.delegateTarget));
                                     });
 
                                     $subcontrol.appendTo($control.find('.developer-template-control-form'));
@@ -826,9 +968,14 @@
                         var controlValue = $(property).find('select, input').val(); 
 
                         if(controlType === 'checkbox') {
+                            // If checkbox, get boolean from input
                             controlValue = $(property).find('input').is(':checked');
-                        } else {
-                            controlValue = $(property).find('select, input').val();
+                        } else if(
+                            $(property).find('select, input').hasClass('jsonField') &&
+                            controlValue != ''
+                        ) {
+                            // If property was saved as json, parse it here
+                            controlValue = JSON.parse(controlValue);
                         }
 
                         newControl[controlTitle] = controlValue;
