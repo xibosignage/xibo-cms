@@ -618,19 +618,13 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
               type: {
                 value: '',
                 hideDefault: true,
-                // TODO Hardcoded for now, we need to get list from provider
-                values: [
-                  {
-                    name: 'Image',
-                    type: 'image',
+                values: provider.mediaTypes.map((media) => {
+                  return {
+                    name: toolbarTrans.libraryTypes[media],
+                    type: media,
                     disabled: false,
-                  },
-                  {
-                    name: 'Video',
-                    type: 'video',
-                    disabled: false,
-                  },
-                ],
+                  };
+                }),
               },
               orientation: {
                 value: '',
