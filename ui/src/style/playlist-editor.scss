@@ -211,6 +211,14 @@ $timeline-step-height: 22px;
 
 .playlist-editor-inline-container {
     padding: 16px;
+
+    #playlist-timeline {
+        position: relative;
+
+        .loading-container {
+            height: calc(100vh - 140px);
+        }
+    }
 }
 
 #playlist-editor {

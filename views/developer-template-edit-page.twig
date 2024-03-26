@@ -97,9 +97,18 @@
                                     {% set helpText %}{% trans "A unique ID for the module template" %}{% endset %}
                                     {{ forms.input("templateId", title, template.templateId, helpText) }}
 
+                                    {% set attributes = [
+                                        { name: "data-search-url", value:  url_for("developer.templates.datatypes.search") },
+                                        { name: "data-search-term", value: "name" },
+                                        { name: "data-id-property", value: "id" },
+                                        { name: "data-text-property", value: "name" },
+                                        { name: "data-initial-key", value: "dataType" },
+                                        { name: "data-initial-value", value: template.dataType },
+                                        { name: "data-hide-search", value: 1}
+                                    ] %}
                                     {% set title %}{% trans "Data Type" %}{% endset %}
                                     {% set helpText %}{% trans "Which data type does this template need?" %}{% endset %}
-                                    {{ forms.input("dataType", title, template.dataType, helpText) }}
+                                    {{ forms.dropdown("dataType", "single", title, null, null, "id", "id", helpText, "pagedSelect", "", "", "", attributes) }}
 
                                     {% set title %}{% trans "Enabled?" %}{% endset %}
                                     {% set helpText %}{% trans "Is this template enabled?" %}{% endset %}
@@ -720,11 +729,15 @@
                                                 }
                                             });
                                         } else if (controlType === 'options') {
+                                            valToSave = [];
                                             $subControlAux.find('.option-item').each((_key, option) => {
                                                 var optionTitle = $(option).find('[name="control_option_title"]').val();
                                                 var optionName = $(option).find('[name="control_option_name"]').val();
                                                 if(optionTitle && optionName) {
-                                                    valToSave[optionName] = optionTitle;
+                                                    valToSave.push({
+                                                        title: optionTitle,
+                                                        name: optionName,
+                                                    });
                                                 }
                                             });
                                         } else if(controlType === 'visibility' || controlType === 'rule') {

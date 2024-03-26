@@ -78,7 +78,7 @@ class ModuleTemplateFactory extends BaseFactory
      */
     public function getUserTemplateById(int $id): ModuleTemplate
     {
-        $templates = $this->loadUserTemplates($id);
+        $templates = $this->loadUserTemplates(null, ['id' => $id]);
         if (count($templates) !== 1) {
             throw new NotFoundException(sprintf(__('Template not found for %s'), $id));
         }
@@ -111,6 +111,22 @@ class ModuleTemplateFactory extends BaseFactory
         $templates = [];
         foreach ($this->load() as $template) {
             if ($template->dataType === $dataType) {
+                $templates[] = $template;
+            }
+        }
+        return $templates;
+    }
+
+    /**
+     * @param string $type
+     * @param string $dataType
+     * @return ModuleTemplate[]
+     */
+    public function getByTypeAndDataType(string $type, string $dataType, bool $includeUserTemplates = true): array
+    {
+        $templates = [];
+        foreach ($this->load($includeUserTemplates) as $template) {
+            if ($template->dataType === $dataType && $template->type === $type) {
                 $templates[] = $template;
             }
         }
@@ -155,11 +171,13 @@ class ModuleTemplateFactory extends BaseFactory
 
     /**
      * Get an array of all modules
-     * @return \Xibo\Entity\ModuleTemplate[]
+     * @param string|null $ownership
+     * @param bool $includeUserTemplates
+     * @return ModuleTemplate[]
      */
-    public function getAll(?string $ownership = null): array
+    public function getAll(?string $ownership = null, bool $includeUserTemplates = true): array
     {
-        $templates = $this->load();
+        $templates = $this->load($includeUserTemplates);
 
         if ($ownership === null) {
             return $templates;
@@ -191,9 +209,10 @@ class ModuleTemplateFactory extends BaseFactory
 
     /**
      * Load templates
-     * @return \Xibo\Entity\ModuleTemplate[]
+     * @param bool $includeUserTemplates
+     * @return ModuleTemplate[]
      */
-    private function load(): array
+    private function load(bool $includeUserTemplates = true): array
     {
         if ($this->templates === null) {
             $this->getLog()->debug('load: Loading templates');
@@ -207,8 +226,14 @@ class ModuleTemplateFactory extends BaseFactory
                     PROJECT_ROOT . '/custom/modules/templates/*.xml',
                     'custom'
                 ),
-                $this->loadUserTemplates(),
             );
+
+            if ($includeUserTemplates) {
+                $this->templates = array_merge(
+                    $this->templates,
+                    $this->loadUserTemplates()
+                );
+            }
         }
 
         return $this->templates;
@@ -240,18 +265,74 @@ class ModuleTemplateFactory extends BaseFactory
      * Load user templates from the database.
      * @return ModuleTemplate[]
      */
-    public function loadUserTemplates($id = null): array
+    public function loadUserTemplates($sortOrder = [], $filterBy = []): array
     {
         $this->getLog()->debug('load: Loading user templates');
+
+        if (empty($sortOrder)) {
+            $sortOrder = ['id'];
+        }
 
         $templates = [];
         $params = [];
 
-        $sql = 'SELECT * FROM `module_templates`';
-        if ($id !== null) {
-            $sql .= ' WHERE `id` = :id ';
-            $params['id'] = $id;
+        $filter = $this->getSanitizer($filterBy);
+
+        $select = 'SELECT *,
+                (SELECT GROUP_CONCAT(DISTINCT `group`.group)
+                          FROM `permission`
+                            INNER JOIN `permissionentity`
+                            ON `permissionentity`.entityId = permission.entityId
+                            INNER JOIN `group`
+                            ON `group`.groupId = `permission`.groupId
+                         WHERE entity = :permissionEntity
+                            AND objectId = `module_templates`.id
+                            AND view = 1
+                ) AS groupsWithPermissions';
+
+        $body = ' FROM `module_templates`
+                WHERE 1 = 1 ';
+
+        if ($filter->getInt('id') !== null) {
+            $body .= ' AND `id` = :id ';
+            $params['id'] = $filter->getInt('id');
         }
+
+        if (!empty($filter->getString('templateId'))) {
+            $body .= ' AND `templateId` LIKE :templateId ';
+            $params['templateId'] = '%' . $filter->getString('templateId') . '%';
+        }
+
+        if (!empty($filter->getString('dataType'))) {
+            $body .= ' AND `dataType` = :dataType ';
+            $params['dataType'] = $filter->getString('dataType') ;
+        }
+
+        $params['permissionEntity'] = 'Xibo\\Entity\\ModuleTemplate';
+
+        $this->viewPermissionSql(
+            'Xibo\Entity\ModuleTemplate',
+            $body,
+            $params,
+            'module_templates.id',
+            'module_templates.ownerId',
+            $filterBy,
+        );
+
+        $order = '';
+        if (is_array($sortOrder) && !empty($sortOrder)) {
+            $order .= ' ORDER BY ' . implode(',', $sortOrder);
+        }
+
+        // Paging
+        $limit = '';
+        if ($filterBy !== null && $filter->getInt('start') !== null && $filter->getInt('length') !== null) {
+            $limit .= ' LIMIT ' .
+                $filter->getInt('start', ['default' => 0]) . ', ' .
+                $filter->getInt('length', ['default' => 10]);
+        }
+
+        $sql = $select . $body . $order. $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $template = $this->createUserTemplate($row['xml']);
@@ -259,8 +340,18 @@ class ModuleTemplateFactory extends BaseFactory
             $template->templateId = $row['templateId'];
             $template->dataType = $row['dataType'];
             $template->isEnabled = $row['enabled'] == 1;
+            $template->ownerId = intval($row['ownerId']);
+            $template->groupsWithPermissions = $row['groupsWithPermissions'];
             $templates[] = $template;
         }
+
+        // Paging
+        if (!empty($limit) && count($templates) > 0) {
+            unset($params['permissionEntity']);
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
+            $this->_countLast = intval($results[0]['total']);
+        }
+
         return $templates;
     }
 
@@ -396,5 +487,151 @@ class ModuleTemplateFactory extends BaseFactory
         }
 
         return $template;
+    }
+
+    /**
+     * Parse properties json into xml node.
+     *
+     * @param string $properties
+     * @return \DOMDocument
+     * @throws \DOMException
+     */
+    public function parseJsonPropertiesToXml(string $properties): \DOMDocument
+    {
+        $newPropertiesXml = new \DOMDocument();
+        $newPropertiesNode = $newPropertiesXml->createElement('properties');
+        $attributes = [
+            'id',
+            'type',
+            'variant',
+            'format',
+            'mode',
+            'target',
+            'propertyGroupId',
+            'allowLibraryRefs',
+            'allowAssetRefs',
+            'parseTranslations',
+            'includeInXlf'
+        ];
+
+        $commonNodes = [
+            'title',
+            'helpText',
+            'default',
+            'dependsOn',
+            'customPopOver'
+        ];
+
+        $newProperties = json_decode($properties, true);
+        foreach ($newProperties as $property) {
+            // create property node
+            $propertyNode = $newPropertiesXml->createElement('property');
+
+            // go through possible attributes on the property node.
+            foreach ($attributes as $attribute) {
+                if (!empty($property[$attribute])) {
+                    $propertyNode->setAttribute($attribute, $property[$attribute]);
+                }
+            }
+
+            // go through common nodes on property add them if not empty
+            foreach ($commonNodes as $commonNode) {
+                if (!empty($property[$commonNode])) {
+                    $propertyNode->appendChild($newPropertiesXml->createElement($commonNode, $property[$commonNode]));
+                }
+            }
+
+            // do we have options?
+            if (!empty($property['options'])) {
+                $options = $property['options'];
+                if (!is_array($options)) {
+                    $options = json_decode($options, true);
+                }
+
+                $optionsNode = $newPropertiesXml->createElement('options');
+                foreach ($options as $option) {
+                    $optionNode = $newPropertiesXml->createElement('option', $option['title']);
+                    $optionNode->setAttribute('name', $option['name']);
+                    if (!empty($option['set'])) {
+                        $optionNode->setAttribute('set', $option['set']);
+                    }
+                    if (!empty($option['image'])) {
+                        $optionNode->setAttribute('image', $option['image']);
+                    }
+                    $optionsNode->appendChild($optionNode);
+                }
+                $propertyNode->appendChild($optionsNode);
+            }
+
+            // do we have visibility?
+            if(!empty($property['visibility'])) {
+                $visibility = $property['visibility'];
+                if (!is_array($visibility)) {
+                    $visibility = json_decode($visibility, true);
+                }
+
+                $visibilityNode = $newPropertiesXml->createElement('visibility');
+
+                foreach ($visibility as $testElement) {
+                    $testNode = $newPropertiesXml->createElement('test');
+                    $testNode->setAttribute('type', $testElement['type']);
+                    $testNode->setAttribute('message', $testElement['message']);
+                    foreach($testElement['conditions'] as $condition) {
+                        $conditionNode = $newPropertiesXml->createElement('condition', $condition['value']);
+                        $conditionNode->setAttribute('field', $condition['field']);
+                        $conditionNode->setAttribute('type', $condition['type']);
+                        $testNode->appendChild($conditionNode);
+                    }
+                    $visibilityNode->appendChild($testNode);
+                }
+                $propertyNode->appendChild($visibilityNode);
+            }
+
+            // do we have validation rules?
+            if (!empty($property['rule'])) {
+                $validation = $property['rule'];
+                if (!is_array($validation)) {
+                    $validation = json_decode($property['rule'], true);
+                }
+
+                $ruleNode = $newPropertiesXml->createElement('rule');
+
+                foreach ($validation as $ruleTest) {
+                    $ruleTestNode = $newPropertiesXml->createElement('test');
+                    $ruleTestNode->setAttribute('type', $ruleTest['type']);
+                    $ruleTestNode->setAttribute('message', $ruleTest['message']);
+
+                    foreach($ruleTest['conditions'] as $condition) {
+                        $conditionNode = $newPropertiesXml->createElement('condition', $condition['value']);
+                        $conditionNode->setAttribute('field', $condition['field']);
+                        $conditionNode->setAttribute('type', $condition['type']);
+                        $ruleTestNode->appendChild($conditionNode);
+                    }
+                    $ruleNode->appendChild($ruleTestNode);
+                }
+                $propertyNode->appendChild($ruleNode);
+            }
+
+            // do we have player compatibility?
+            if (!empty($property['playerCompatibility'])) {
+                $playerCompat = $property['playerCompatibility'];
+                if (!is_array($playerCompat)) {
+                    $playerCompat = json_decode($property['playerCompatibility'], true);
+                }
+
+                $playerCompatibilityNode = $newPropertiesXml->createElement('playerCompatibility');
+                foreach ($playerCompat as $player => $value) {
+                    $playerCompatibilityNode->setAttribute($player, $value);
+                }
+
+                $propertyNode->appendChild($playerCompatibilityNode);
+            }
+
+            $newPropertiesNode->appendChild($propertyNode);
+        }
+
+        $newPropertiesXml->appendChild($newPropertiesNode);
+
+        return $newPropertiesXml;
     }
 }

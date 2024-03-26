@@ -33,6 +33,8 @@
     {% trans "Save" %}, $("#form-module-template").submit();
 {% endblock %}
 
+{% block callBack %}moduleTemplateAddFormOpen{% endblock %}
+
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
@@ -45,9 +47,27 @@
                 {% set helpText %}{% trans "A unique ID for the module template" %}{% endset %}
                 {{ forms.input("templateId", title, "custom_", helpText) }}
 
+                {% set attributes = [
+                    { name: "data-search-url", value:  url_for("developer.templates.datatypes.search") },
+                    { name: "data-search-term", value: "name" },
+                    { name: "data-id-property", value: "id" },
+                    { name: "data-text-property", value: "name" },
+                    { name: "data-hide-search", value: 1},
+                ] %}
                 {% set title %}{% trans "Data Type" %}{% endset %}
                 {% set helpText %}{% trans "Which data type does this template need?" %}{% endset %}
-                {{ forms.input("dataType", title, "", helpText) }}
+                {{ forms.dropdown("dataType", "single", title, null, null, "id", "id", helpText, "pagedSelect", "", "", "", attributes) }}
+
+                {% set attributes = [
+                    { name: "data-search-term", value: "title" },
+                    { name: "data-id-property", value: "templateId" },
+                    { name: "data-text-property", value: "title" },
+                    { name: "data-hide-search", value: 1},
+                    { name: "data-filter-options", value: '{"type":"static"}' },
+                ] %}
+                {% set title %}{% trans "Template" %}{% endset %}
+                {% set helpText %}{% trans "Optionally select existing template to use as a base for this Template" %}{% endset %}
+                {{ forms.dropdown("copyTemplateId", "single", title, null, null, "templateId", "title", helpText, "d-none", "", "", "", attributes) }}
             </form>
         </div>
     </div>

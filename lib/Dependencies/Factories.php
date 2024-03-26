@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -289,9 +289,14 @@ class Factories
             'moduleTemplateFactory' => function (ContainerInterface $c) {
                 $repository = new \Xibo\Factory\ModuleTemplateFactory(
                     $c->get('pool'),
-                    $c->get('view')
+                    $c->get('view'),
                 );
-                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                $repository
+                    ->setAclDependencies(
+                        $c->get('user'),
+                        $c->get('userFactory')
+                    )
+                    ->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;
             },
             'notificationFactory' => function (ContainerInterface $c) {
