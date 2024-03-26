@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -87,7 +87,7 @@ class HelpService implements HelpServiceInterface
                     $helpLink->url = $this->helpBase . $helpLink->url;
                 }
                 if (!empty($helpLink->summary)) {
-                    $helpLink->summary = \Parsedown::instance()->line($helpLink->summary);
+                    $helpLink->summary = \Parsedown::instance()->setSafeMode(true)->line($helpLink->summary);
                 }
 
                 $this->links[$pageName][] = $helpLink;

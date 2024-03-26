@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -327,16 +327,21 @@ class Login extends Base
             if (!$mail->send()) {
                 throw new ConfigurationException('Unable to send password reminder to ' . $user->email);
             } else {
-                $this->getFlash()->addMessage('login_message', __('Reminder email has been sent to your email address'));
+                $this->getFlash()->addMessage(
+                    'login_message',
+                    __('A reminder email will been sent to this user if they exist'),
+                );
             }
 
             // Audit Log
             $this->getLog()->audit('User', $user->userId, 'Password Reset Link Granted', [
                 'UserAgent' => $request->getHeader('User-Agent')
             ]);
-        } catch (GeneralException $xiboException) {
-            $this->getLog()->debug($xiboException->getMessage());
-            $this->getFlash()->addMessage('login_message', __('User not found'));
+        } catch (GeneralException) {
+            $this->getFlash()->addMessage(
+                'login_message',
+                __('A reminder email will been sent to this user if they exist'),
+            );
         }
 
         $this->setNoOutput(true);

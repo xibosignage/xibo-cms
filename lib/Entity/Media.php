@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -574,6 +574,9 @@ class Media implements \JsonSerializable
         if (strpos(basename($fileName), '?')) {
             $fileName = substr(basename($fileName), 0, strpos(basename($fileName), '?'));
         }
+
+        // Sanitize what we have left.
+        $fileName = htmlspecialchars($fileName);
 
         $this->mediaId = $this->getStore()->insert('
             INSERT INTO `media` (`name`, `type`, duration, originalFilename, userID, retired, moduleSystemFile, released, apiRef, valid, `createdDt`, `modifiedDt`, `enableStat`, `folderId`, `permissionsFolderId`, `orientation`, `width`, `height`)

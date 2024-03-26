@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -60,9 +60,9 @@ class LayoutUploadHandler extends BlueImpUploadHandler
             $params = $sanitizerService->getSanitizer($_REQUEST);
 
             // Parse parameters
-            $name = $params->getArray('name')[$index];
+            $name = htmlspecialchars($params->getArray('name')[$index]);
             $tags = $controller->getUser()->featureEnabled('tag.tagging')
-                ? $params->getArray('tags')[$index]
+                ? htmlspecialchars($params->getArray('tags')[$index])
                 : '';
             $template = $params->getCheckbox('template', ['default' => 0]);
             $replaceExisting = $params->getCheckbox('replaceExisting', ['default' => 0]);

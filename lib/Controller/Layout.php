@@ -1600,7 +1600,7 @@ class Layout extends Base
                     // Parse down for description
                     $layout->setUnmatchedProperty(
                         'descriptionFormatted',
-                        Parsedown::instance()->text($layout->description)
+                        Parsedown::instance()->setSafeMode(true)->text($layout->description)
                     );
                 } else if ($showDescriptionId == 2) {
                     $layout->setUnmatchedProperty('descriptionFormatted', strtok($layout->description, "\n"));
