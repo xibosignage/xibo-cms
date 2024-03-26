@@ -147,12 +147,12 @@ Playlist.prototype.calculateTimeValues = function() {
 
 /**
  * Add action to take after dropping a draggable item
- * @param {object} droppable - Target drop object
+ * @param {object} _droppable - Target drop object
  * @param {object} draggable - Dragged object
  * @param {number=} addToPosition - Add to specific position in the widget list
  */
 Playlist.prototype.addObject = function(
-  droppable,
+  _droppable,
   draggable,
   addToPosition = null,
 ) {
