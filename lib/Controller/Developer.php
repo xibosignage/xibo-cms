@@ -74,11 +74,17 @@ class Developer extends Base
     {
         $params = $this->getSanitizer($request->getParams());
 
-        $templates = $this->moduleTemplateFactory->loadUserTemplates($this->gridRenderSort($params), $this->gridRenderFilter([
-            'id' => $params->getInt('id'),
-            'templateId' => $params->getString('templateId'),
-            'dataType' => $params->getString('dataType'),
-        ], $params));
+        $templates = $this->moduleTemplateFactory->loadUserTemplates(
+            $this->gridRenderSort($params),
+            $this->gridRenderFilter(
+                [
+                    'id' => $params->getInt('id'),
+                    'templateId' => $params->getString('templateId'),
+                    'dataType' => $params->getString('dataType'),
+                ],
+                $params
+            )
+        );
 
         foreach ($templates as $template) {
             if ($this->isApi($request)) {
@@ -116,21 +122,39 @@ class Developer extends Base
                 $this->getUser()->checkPermissionsModifyable($template)
             ) {
                 $template->buttons[] = ['divider' => true];
-                // Permissions for Campaign
+                // Permissions for Module Template
                 $template->buttons[] = [
                     'id' => 'template_button_permissions',
-                    'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'ModuleTemplate', 'id' => $template->id]),
+                    'url' => $this->urlFor(
+                        $request,
+                        'user.permissions.form',
+                        ['entity' => 'ModuleTemplate', 'id' => $template->id]
+                    ),
                     'text' => __('Share'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'ModuleTemplate', 'id' => $template->id])],
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'user.permissions.multi',
+                                ['entity' => 'ModuleTemplate', 'id' => $template->id]
+                            )
+                        ],
                         ['name' => 'commit-method', 'value' => 'post'],
                         ['name' => 'id', 'value' => 'template_button_permissions'],
                         ['name' => 'text', 'value' => __('Share')],
                         ['name' => 'rowtitle', 'value' => $template->templateId],
                         ['name' => 'sort-group', 'value' => 2],
                         ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'ModuleTemplate'])],
+                        [
+                            'name' => 'custom-handler-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'user.permissions.multi.form',
+                                ['entity' => 'ModuleTemplate']
+                            )
+                        ],
                         ['name' => 'content-id-name', 'value' => 'id']
                     ]
                 ];
