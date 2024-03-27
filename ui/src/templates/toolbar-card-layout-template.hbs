@@ -11,9 +11,15 @@
         <img class="thumb" src="{{thumbnail}}" alt="{{title}}">
 
         {{#if provider}}
-            <a class="provider" href="{{provider.link}}" target="_blank" rel="noopener noreferrer">
-                <img class="provider-image" src="{{provider.logoUrl}}" alt="{{provider.message}}"></img>
-            </a>
+            {{#neq provider.link "#"}}
+                <a class="provider" href="{{provider.link}}" target="_blank" rel="noopener noreferrer">
+                    <img src="{{provider.logoUrl}}"></img>
+                </a>
+            {{else}}
+                <div class="provider">
+                    <img src="{{provider.logoUrl}}"></img>
+                </div>
+            {{/neq}}
         {{/if}}
 
         {{#if duration}}
