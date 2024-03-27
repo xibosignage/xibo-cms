@@ -11,6 +11,10 @@
                     {{> inputs/message variant="danger" customClass="mt-2 mb-2" title=errorMessage}}
                 {{/if}}
 
+                {{#if showWarningMessage}}
+                    {{> inputs/message variant="warning" customClass="mt-2 mb-2" title=warningMessage}}
+                {{/if}}
+
                 <div class="tab-pane active" id="configureTab"></div>
 
                 <div class="tab-pane" id="appearanceTab"></div>
