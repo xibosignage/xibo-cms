@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -72,7 +72,7 @@ class Soap3 extends Soap
                 $display->licensed = 0;
             }
 
-            $this->logProcessor->setDisplay($display->displayId, ($display->isAuditing()));
+            $this->logProcessor->setDisplay($display->displayId, $display->getLogLevel());
 
             if ($display->licensed == 0) {
                 $active = 'Display is awaiting licensing approval from an Administrator.';

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -102,7 +102,7 @@ class Soap4 extends Soap
             $display = $this->displayFactory->getByLicence($hardwareKey);
             $this->display = $display;
 
-            $this->logProcessor->setDisplay($display->displayId, ($display->isAuditing()));
+            $this->logProcessor->setDisplay($display->displayId, $display->getLogLevel());
 
             // Audit in
             $this->getLog()->debug('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName . ', macAddress: ' . $macAddress);

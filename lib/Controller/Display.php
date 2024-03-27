@@ -1377,9 +1377,18 @@ class Display extends Base
             : null;
         $display->setUnmatchedProperty('auditingUntilIso', $auditingUntilIso);
 
+        // display profile dates
+        $displayProfile = $display->getDisplayProfile();
+
         // Get the settings from the profile
         $profile = $display->getSettings();
         $displayTypes = $this->displayTypeFactory->query();
+
+        $elevateLogsUntil = $displayProfile->getSetting('elevateLogsUntil');
+        $elevateLogsUntilIso = !empty($elevateLogsUntil)
+            ? Carbon::createFromTimestamp($elevateLogsUntil)->format(DateFormatHelper::getSystemFormat())
+            : null;
+        $displayProfile->setUnmatchedProperty('elevateLogsUntilIso', $elevateLogsUntilIso);
 
         // Get a list of timezones
         $timeZones = [];
@@ -1450,7 +1459,7 @@ class Display extends Base
         $this->getState()->template = 'display-form-edit';
         $this->getState()->setData([
             'display' => $display,
-            'displayProfile' => $display->getDisplayProfile(),
+            'displayProfile' => $displayProfile,
             'lockOptions' => json_decode($display->getDisplayProfile()->getSetting('lockOptions', '[]'), true),
             'layouts' => $layouts,
             'profiles' => $this->displayProfileFactory->query(null, array('type' => $display->clientType)),
