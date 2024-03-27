@@ -32,9 +32,15 @@
         {{/eq}}
 
         {{#if provider}}
-            <a class="provider" href="{{provider.link}}" target="_blank" rel="noopener noreferrer">
-                <img src="{{provider.logoUrl}}"></img>
-            </a>
+            {{#neq provider.link "#"}}
+                <a class="provider" href="{{provider.link}}" target="_blank" rel="noopener noreferrer">
+                    <img src="{{provider.logoUrl}}"></img>
+                </a>
+            {{else}}
+                <div class="provider">
+                    <img src="{{provider.logoUrl}}"></img>
+                </div>
+            {{/neq}}
         {{/if}}
 
         {{#if mediaDuration}}
