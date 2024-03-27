@@ -97,6 +97,10 @@
                                     {% set helpText %}{% trans "A unique ID for the module template" %}{% endset %}
                                     {{ forms.input("templateId", title, template.templateId, helpText) }}
 
+                                    {% set title %}{% trans "Title" %}{% endset %}
+                                    {% set helpText %}{% trans "A title for the module template" %}{% endset %}
+                                    {{ forms.input("title", title, template.title, helpText) }}
+
                                     {% set attributes = [
                                         { name: "data-search-url", value:  url_for("developer.templates.datatypes.search") },
                                         { name: "data-search-term", value: "name" },
@@ -109,6 +113,16 @@
                                     {% set title %}{% trans "Data Type" %}{% endset %}
                                     {% set helpText %}{% trans "Which data type does this template need?" %}{% endset %}
                                     {{ forms.dropdown("dataType", "single", title, null, null, "id", "id", helpText, "pagedSelect", "", "", "", attributes) }}
+
+                                    {% set title %}{% trans "Show In" %}{% endset %}
+                                    {% set helpText %}{% trans "Which Editor should this template be available in?" %}{% endset %}
+                                    {% set options = [
+                                        { id: "none", name: "None"|trans },
+                                        { id: "layout", name: "Layout Editor"|trans },
+                                        { id: "playlist", name: "Playlist Editor"|trans },
+                                        { id: "both", name: "Both"|trans },
+                                    ] %}
+                                    {{ forms.dropdown("showIn", "single", title, template.showIn, options, "id", "name", helpText) }}
 
                                     {% set title %}{% trans "Enabled?" %}{% endset %}
                                     {% set helpText %}{% trans "Is this template enabled?" %}{% endset %}
