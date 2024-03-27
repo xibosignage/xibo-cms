@@ -103,7 +103,7 @@
 </script>
         ]]></twig>
         <style><![CDATA[
-{% if backgroundColor %}body { background-color: {{backgroundColor}}; }{% endif %}
+{% if backgroundColor %}body { background-color: {{backgroundColor}} !important; }{% endif %}
 {{styleSheet|raw}}
         ]]></style>
     </stencil>

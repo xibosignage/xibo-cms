@@ -216,7 +216,7 @@ body {
  height: 420px !important;
 }
 
-{% if backgroundColor %}body { background-color: {{backgroundColor}}; }{% endif %}
+{% if backgroundColor %}body { background-color: {{backgroundColor}} !important; }{% endif %}
 
 .text-right {
     text-align: right;
@@ -539,7 +539,7 @@ body {
     line-height: 1;
 }
 
-{% if backgroundColor %}body { background-color: {{backgroundColor}}; }{% endif %}
+{% if backgroundColor %}body { background-color: {{backgroundColor}} !important; }{% endif %}
 
 .text-right {
     text-align: right;

@@ -399,7 +399,7 @@ $datasetTableContainer.find('img').xiboImageRender(properties);
 
 {% if backgroundColor != '' %}
 body {
-    background-color: {{ backgroundColor }};
+    background-color: {{ backgroundColor }} !important;
 }
 {% endif %}
 
@@ -2979,7 +2979,7 @@ $(target).xiboLayoutAnimate(properties);
 
 {% if backgroundColor != '' %}
 body {
-    background-color: {{ backgroundColor }};
+    background-color: {{ backgroundColor }} !important;
 }
 {% endif %}
             ]]></style>
@@ -3305,7 +3305,7 @@ $(target).xiboLayoutAnimate(properties);
             ]]></twig>
             <style><![CDATA[
 {% if textDirection == "rtl" %}#content { direction: rtl; }{% endif %}
-{% if backgroundColor %}body { background-color: {{backgroundColor}}; }{% endif %}
+{% if backgroundColor %}body { background-color: {{backgroundColor}} !important; }{% endif %}
 {% if (effect == "marqueeLeft") or (effect == "marqueeRight") %}
     {% if gapTags %}.marquee-item { margin-right: {{gapTags}}px; }{% endif %}
     {% if gapItems %}.item.text-render-item, .separator { margin-right: {{gapItems}}px; }{% endif %}

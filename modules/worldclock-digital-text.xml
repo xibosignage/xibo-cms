@@ -149,7 +149,7 @@
 {% if labelColor %}.world-clock-label { color: {{labelColor}}; }{% endif %}
 {% if fontFamily %}.hourText { font-family: {{fontFamily}}; }{% endif %}
 {% if dateTimeColor %}.hourText { color: {{dateTimeColor}}; }{% endif %}
-{% if backgroundColor %}body { background: {{backgroundColor}}; }{% endif %}
+{% if backgroundColor %}body { background-color: {{backgroundColor}} !important; }{% endif %}
         ]]></style>
     </stencil>
     <onInitialize><![CDATA[
