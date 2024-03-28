@@ -1182,11 +1182,9 @@ lD.deleteSelectedObject = function() {
     return;
   }
 
-  // For now, we always delete the region
   if (lD.selectedObject.type === 'region') {
-    // Check if it's playlist and it has at least one object in it
+    // Check if region or playlist has at least one object in it
     const needsConfirmationModal = (
-      lD.selectedObject.isPlaylist &&
       Object.values(lD.selectedObject.widgets).length > 0
     );
 
@@ -1196,6 +1194,7 @@ lD.deleteSelectedObject = function() {
       null,
       false,
       needsConfirmationModal,
+      lD.selectedObject.isPlaylist ? 'playlist' : 'region',
     );
   } else if (lD.selectedObject.type === 'widget') {
     // Drawer widget
@@ -1218,21 +1217,58 @@ lD.deleteSelectedObject = function() {
         'region',
         regionId,
         null,
+        false,
+        true,
+        'widget',
       );
     }
   } else if (lD.selectedObject.type === 'element') {
+    // Get element's widget
+    const widget = lD.getObjectByTypeAndId(
+      'widget',
+      lD.selectedObject.widgetId,
+      'canvas',
+    );
+
+    // Check if element is not global and is the last one on widget
+    const showConfirmationModal = (
+      widget.subType != 'global' &&
+      Object.values(widget.elements).length === 1
+    );
+
     // Delete element
     lD.deleteObject(
       lD.selectedObject.type,
       lD.selectedObject[lD.selectedObject.type + 'Id'],
       'widget_' + lD.selectedObject.regionId + '_' + lD.selectedObject.widgetId,
+      false,
+      showConfirmationModal,
+      'element',
     );
   } else if (lD.selectedObject.type === 'element-group') {
+    // Get element's widget
+    const widget = lD.getObjectByTypeAndId(
+      'widget',
+      lD.selectedObject.widgetId,
+      'canvas',
+    );
+
+    // Check if element group is not global and
+    // the widget only has the elements from the group
+    const showConfirmationModal = (
+      widget.subType != 'global' &&
+      Object.values(widget.elements).length ===
+        Object.values(lD.selectedObject.elements).length
+    );
+
     // Delete element group
     lD.deleteObject(
       lD.selectedObject.type,
       lD.selectedObject.id,
       'widget_' + lD.selectedObject.regionId + '_' + lD.selectedObject.widgetId,
+      false,
+      showConfirmationModal,
+      'elementGroup',
     );
   }
 };
@@ -1245,6 +1281,8 @@ lD.deleteSelectedObject = function() {
  * @param {boolean=} drawerWidget - If we're deleting a drawer widget
  * @param {boolean=} showConfirmationModal
  *   - If we need to show a confirmation modal
+ * @param {string} confirmationModalType
+ *   - Type of object to be deleted (playlist, widget, element)
  */
 lD.deleteObject = function(
   objectType,
@@ -1252,14 +1290,15 @@ lD.deleteObject = function(
   objectAuxId = null,
   drawerWidget = false,
   showConfirmationModal = false,
+  confirmationModalType,
 ) {
   // Create modal before delete element
   const createDeleteModal = function() {
     bootbox.hideAll();
 
     bootbox.dialog({
-      title: deleteModalTrans.playlist.title, // For playlist only for now
-      message: deleteModalTrans.playlist.message, // For playlist only for now
+      title: deleteModalTrans[confirmationModalType].title,
+      message: deleteModalTrans[confirmationModalType].message,
       size: 'large',
       buttons: {
         cancel: {
@@ -1270,7 +1309,7 @@ lD.deleteObject = function(
           label: editorsTrans.yes,
           className: 'btn-danger btn-bb-confirm',
           callback: function() {
-            // Delete without modal
+            // Delete
             lD.deleteObject(
               objectType,
               objectId,
@@ -3176,19 +3215,50 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
       // If layoutObject[objType + 'Id'] is null, use objId
       const newObjId = layoutObject[objType + 'Id'] || objId;
 
-      // Check if it's playlist and it has at least one object in it
-      const needsConfirmationModal = (
+      // Check if we need confirmation modal
+      let showConfirmationModal = false;
+      let deleteObjectType;
+
+      if (
         layoutObject.type === 'region' &&
-        layoutObject.isPlaylist &&
         Object.values(layoutObject.widgets).length > 0
-      );
+      ) {
+        // Check if region or playlist has at least one object in it
+        showConfirmationModal = true;
+        deleteObjectType = (layoutObject.isPlaylist) ?
+          'playlist' :
+          'widget';
+      } else if (objType === 'element') {
+        const elementWidget =
+          lD.getObjectByTypeAndId('widget', objAuxId, 'canvas');
+
+        // Check if element is not global and is the last one on widget
+        showConfirmationModal = (
+          elementWidget.subType != 'global' &&
+          Object.values(elementWidget.elements).length === 1
+        );
+        deleteObjectType = 'element';
+      } else if (objType === 'element-group') {
+        const elementGroupWidget =
+          lD.getObjectByTypeAndId('widget', objAuxId, 'canvas');
+
+        // Check if element group is not global and
+        // the widget only has the elements from the group
+        showConfirmationModal = (
+          elementGroupWidget.subType != 'global' &&
+          Object.values(elementGroupWidget.elements).length ===
+            Object.values(layoutObject.elements).length
+        );
+        deleteObjectType = 'elementGroup';
+      }
 
       lD.deleteObject(
         objType,
         newObjId,
         auxId,
         false,
-        needsConfirmationModal,
+        showConfirmationModal,
+        deleteObjectType,
       );
     } else if (target.data('action') == 'Move') {
       // Move widget in the timeline
