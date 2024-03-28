@@ -259,6 +259,13 @@
 // meta: Metadata
 // properties: The properties for the widget
 
+// Do we have a freshnessTimeout?
+if (properties.freshnessTimeout > 0
+    && moment(meta.cacheDt).add(properties.freshnessTimeout, 'minutes').isBefore(moment())
+  ) {
+  return {dataItems: []};
+}
+
 // Filter the items array we have been given
 if (parseInt(properties.randomiseItems) === 1) {
     // Sort the items in a random order (considering the entire list)
@@ -319,13 +326,14 @@ return {dataItems: items};
     <onVisible><![CDATA[
 // Do we have a freshnessTimeout?
 if (properties.freshnessTimeout > 0) {
-    // Get the now moment time
-    var now = moment();
-    // Set up an interval to check whether or not we have exceeded our freshness
-    var timer = setInterval(function() {
+    // Set up an interval to check whether we have exceeded our freshness
+    if (window.freshnessTimer) {
+        clearInterval(window.freshnessTimer);
+    }
+    window.freshnessTimer = setInterval(function() {
         if (moment(meta.cacheDt).add(properties.freshnessTimeout, 'minutes').isBefore(moment())) {
-            $("#content").empty().append(properties.noDataMessage);
-            clearInterval(timer);
+            // Reload the widget data.
+            XiboPlayer.playerWidgets[id].render();
         }
     }, 10000);
 }
