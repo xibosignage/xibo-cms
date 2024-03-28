@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -117,7 +117,11 @@ class AlphaVantageConnector implements ConnectorInterface
                 $event->getDataProvider()->setCacheTtl($this->getSetting('cachePeriod', 3600));
             } catch (\Exception $exception) {
                 $this->getLogger()->error('onDataRequest: Failed to get results. e = ' . $exception->getMessage());
-                $dataProvider->addError(__('Unable to contact the AlphaVantage API'));
+                if ($exception instanceof InvalidArgumentException) {
+                    $dataProvider->addError($exception->getMessage());
+                } else {
+                    $dataProvider->addError(__('Unable to contact the AlphaVantage API'));
+                }
             }
         }
     }
@@ -231,7 +235,7 @@ class AlphaVantageConnector implements ConnectorInterface
 
         if ($items == '') {
             $this->getLogger()->error('Missing Items for Stocks Module with WidgetId ' . $dataProvider->getWidgetId());
-            throw new InvalidArgumentException(__('Missing Items for Stocks Module'), 'items');
+            throw new InvalidArgumentException(__('Add some stock symbols'), 'items');
         }
 
         // Parse items out into an array
