@@ -193,13 +193,12 @@
         <title>Date</title>
         <type>element</type>
         <dataType>global</dataType>
-        <showIn>none</showIn>
         <canRotate>true</canRotate>
         <thumbnail>date-thumb</thumbnail>
-        <startWidth>300</startWidth>
+        <startWidth>380</startWidth>
         <startHeight>80</startHeight>
         <properties>
-            <property id="date" type="date" format="d/m/Y H:i:s" variant="dateTime">
+            <property id="date" type="date" format="DD/MM/Y HH:mm:ss" variant="dateTime">
                 <title>Date</title>
                 <default></default>
             </property>
