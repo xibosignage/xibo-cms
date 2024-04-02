@@ -465,6 +465,7 @@ pE.deleteSelectedObject = function() {
     pE.deleteObject(
       pE.selectedObject.type,
       pE.selectedObject[pE.selectedObject.type + 'Id'],
+      true, // Show confirmation modal for all static widgets
     );
   }
 };
@@ -473,8 +474,49 @@ pE.deleteSelectedObject = function() {
  * Delete object
  * @param {string} objectType
  * @param {number} objectId
+ * @param {boolean=} showConfirmationModal
+ *   - If we need to show a confirmation modal
  */
-pE.deleteObject = function(objectType, objectId) {
+pE.deleteObject = function(
+  objectType,
+  objectId,
+  showConfirmationModal = false,
+) {
+  // Create modal before delete element
+  const createDeleteModal = function() {
+    bootbox.hideAll();
+
+    bootbox.dialog({
+      title: deleteModalTrans.widget.title,
+      message: deleteModalTrans.widget.message,
+      size: 'large',
+      buttons: {
+        cancel: {
+          label: editorsTrans.no,
+          className: 'btn-white btn-bb-cancel',
+        },
+        confirm: {
+          label: editorsTrans.yes,
+          className: 'btn-danger btn-bb-confirm',
+          callback: function() {
+            // Delete
+            pE.deleteObject(
+              objectType,
+              objectId,
+              false,
+            );
+          },
+        },
+      },
+    }).attr('data-test', 'deleteObjectModal');
+  };
+
+  // Show confirmation modal if needed
+  if (showConfirmationModal) {
+    createDeleteModal();
+    return;
+  }
+
   pE.common.showLoadingScreen('deleteObject');
 
   // Delete object from the layout
@@ -875,7 +917,7 @@ pE.openContextMenu = function(obj, position = {x: 0, y: 0}) {
     const target = $(ev.currentTarget);
 
     if (target.data('action') == 'Delete') {
-      pE.deleteObject(objType, playlistObject[objType + 'Id']);
+      pE.deleteObject(objType, playlistObject[objType + 'Id'], true);
     } else {
       playlistObject.editPropertyForm(
         target.data('property'),
@@ -1150,7 +1192,11 @@ pE.updateObjects = function() {
   pE.editorContainer.find('#playlist-timeline .playlist-widget .widgetDelete')
     .click(function(e) {
       e.stopPropagation();
-      pE.deleteObject('widget', $(e.currentTarget).parent().data('widgetId'));
+      pE.deleteObject(
+        'widget',
+        $(e.currentTarget).parent().data('widgetId'),
+        true,
+      );
     });
 };
 
