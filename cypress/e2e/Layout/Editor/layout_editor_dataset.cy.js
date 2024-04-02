@@ -29,6 +29,11 @@ describe('Layout Designer', function() {
     // Create and alias for load dataset
     cy.intercept('/dataset?start=*').as('loadDatasets');
 
+    cy.intercept({
+      method: 'DELETE',
+      url: '/region/*',
+    }).as('deleteWidget');
+
     cy.visit('/layout/view');
 
     cy.get('button[href="/layout"]').click();
@@ -50,13 +55,13 @@ describe('Layout Designer', function() {
     cy.wait('@loadDatasets');
 
     // Type the dataset name
-    cy.get('.select2-container--open input[type="search"]').type('test');
+    cy.get('.select2-container--open input[type="search"]').type('8 items');
 
     // Wait for datasets to load
     cy.wait('@loadDatasets');
-    cy.get('.select2-container--open').contains('test');
-    cy.get('.select2-container--open .select2-results > ul > li:first').contains('test').click();
-    
+    cy.get('.select2-container--open').contains('8 items');
+    cy.get('.select2-container--open .select2-results > ul > li:first').contains('8 items').click();
+
     cy.get('[name="lowerLimit"]').clear().type('1');
     cy.get('[name="upperLimit"]').clear().type('10');
     cy.get('.order-clause-row > :nth-child(2) > .form-control').select('Text', {force: true});
@@ -99,6 +104,10 @@ describe('Layout Designer', function() {
 
     cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_dataset"]').parents('.designer-region').rightclick();
     cy.get('[data-title="Delete"]').click();
+    cy.contains('Yes').click();
+
+    // Wait until the widget has been deleted
+    cy.wait('@deleteWidget');
     cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_dataset"]').should('not.exist');
   });
 });
