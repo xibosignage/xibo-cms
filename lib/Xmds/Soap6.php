@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -44,7 +44,7 @@ class Soap6 extends Soap5
     public function reportFaults(string $serverKey, string $hardwareKey, string $fault): bool
     {
         $this->logProcessor->setRoute('ReportFault');
-        //$this->logProcessor->setDisplay(0, 1);
+        //$this->logProcessor->setDisplay(0, 'debug');
 
         $sanitizer = $this->getSanitizer([
             'serverKey' => $serverKey,

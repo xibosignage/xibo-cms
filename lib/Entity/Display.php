@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -674,6 +674,37 @@ class Display implements \JsonSerializable
 
         // Test $this->auditingUntil against the current date.
         return (!empty($this->auditingUntil) && $this->auditingUntil >= Carbon::now()->format('U'));
+    }
+
+    /**
+     * Does this display has elevated log level?
+     * @return bool
+     * @throws NotFoundException
+     */
+    public function isElevatedLogging(): bool
+    {
+        $elevatedUntil = $this->getSetting('elevateLogsUntil', 0);
+
+        $this->getLog()->debug(sprintf(
+            'Testing whether this display has elevated log level. %d vs %d.',
+            $elevatedUntil,
+            Carbon::now()->format('U')
+        ));
+
+        return (!empty($elevatedUntil) && $elevatedUntil >= Carbon::now()->format('U'));
+    }
+
+    /**
+     * Get current log level for this Display
+     * @return string
+     * @throws NotFoundException
+     */
+    public function getLogLevel(): string
+    {
+        $restingLogLevel = $this->getSetting('logLevel', 'error');
+        $isElevated = $this->isElevatedLogging();
+
+        return $isElevated ? 'debug' : $restingLogLevel;
     }
 
     /**

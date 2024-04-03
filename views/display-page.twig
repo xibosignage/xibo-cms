@@ -1273,6 +1273,11 @@
                         override.push({name: name, value: value})
                     });
                 }
+
+                // format the date field for elevating log level.
+                if(field.name === 'elevateLogsUntil') {
+                  override[index] = {name: field.name, value: moment(field.value, 'X').format(systemDateFormat)}
+                }
             });
 
             // Method to create a new input field based on the hidden form
