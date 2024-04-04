@@ -555,7 +555,28 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
           key: 'template',
         },
         provider: {
-          value: 'both',
+          value: 'local',
+          locked: true,
+        },
+      },
+      state: '',
+      itemCount: 0,
+    },
+    {
+      name: 'layout_exchange',
+      disabled: isPlaylist,
+      itemName: toolbarTrans.menuItems.layoutExchangeName,
+      itemIcon: 'exchange-alt', // TODO: Change icon!
+      itemTitle: toolbarTrans.menuItems.layoutExchangeTitle,
+      contentType: 'layout_exchange',
+      filters: {
+        name: {
+          value: '',
+          key: 'template',
+        },
+        provider: {
+          value: 'remote',
+          locked: true,
         },
       },
       state: '',
@@ -1226,7 +1247,10 @@ Toolbar.prototype.createContent = function(
     this.mediaContentCreateWindow(menu);
   } else if (content.contentType == 'elements') {
     this.elementsContentCreateWindow(menu, savePrefs);
-  } else if (content.contentType === 'layout_templates') {
+  } else if (
+    content.contentType === 'layout_templates' ||
+    content.contentType === 'layout_exchange'
+  ) {
     this.layoutTemplatesContentCreateWindow(menu);
   } else if (content.contentType === 'playlists') {
     this.playlistsContentCreateWindow(menu);
@@ -2213,6 +2237,7 @@ Toolbar.prototype.elementsContentCreateWindow = function(
 Toolbar.prototype.layoutTemplatesContentCreateWindow = function(menu) {
   const self = this;
   const app = this.parent;
+  const tabContentName = this.menuItems[menu].name;
 
   // Deselect previous selections
   self.deselectCardsAndDropZones();
@@ -2223,16 +2248,18 @@ Toolbar.prototype.layoutTemplatesContentCreateWindow = function(menu) {
     filters: this.menuItems[menu].filters,
     trans: toolbarTrans,
     formClass: 'layout_tempates-search-form',
-    headerMessage: toolbarTrans.layoutTemplatesMessage,
+    headerMessage: (tabContentName == 'layout_exchange') ?
+      toolbarTrans.layoutExchangeTemplatesMessage :
+      toolbarTrans.layoutTemplatesMessage,
   });
 
   // Clear temp data
   app.common.clearContainer(
-    self.DOMObject.find('#layout_templates-container-' + menu),
+    self.DOMObject.find('#' + tabContentName + '-container-' + menu),
   );
 
   // Append template to the search main div
-  self.DOMObject.find('#layout_templates-container-' + menu).html(html);
+  self.DOMObject.find('#' + tabContentName + '-container-' + menu).html(html);
 
   // Load content
   this.layoutTemplatesContentPopulate(menu);
@@ -2270,7 +2297,10 @@ Toolbar.prototype.playlistsContentCreateWindow = function(menu) {
 Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
   const app = this.parent;
   const self = this;
-  const $container = self.DOMObject.find('#layout_templates-container-' + menu);
+  const tabContentName = this.menuItems[menu].name;
+  const $container = self.DOMObject.find(
+    '#' + tabContentName + '-container-' + menu,
+  );
   const $content = self.DOMObject.find('#media-content-' + menu);
   const $searchForm = $container.parent().find('.toolbar-search-form');
 
