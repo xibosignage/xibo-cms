@@ -15,9 +15,10 @@
  *  - Target object ( widget, region, layout, ...
  * @param {object} oldState - Previous change properties
  * @param {object} newState - Change properties, to be saved
+ * @param {object} auxTarget - Target to use as comparison as well, (id, type)
 */
 const Change = function(
-  id, type, targetType, targetSubType, targetID, oldState, newState,
+  id, type, targetType, targetSubType, targetID, oldState, newState, auxTarget,
 ) {
   this.id = id;
   this.type = type;
@@ -35,6 +36,13 @@ const Change = function(
 
   // Flag to check if the change was already marked for upload
   this.uploading = false;
+
+  // Skip upload
+  this.skipUpload = false;
+
+  // Aux target - to be used to delete change
+  // using more than just the Change.target
+  this.auxTarget = auxTarget;
 };
 
 module.exports = Change;

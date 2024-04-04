@@ -592,10 +592,13 @@ lD.selectObject =
         oldSelectedType != newSelectedType ||
         forceSelect
       ) {
+        let newObjectSelected = false;
+
         // Save the new selected object
         if (newSelectedType === 'region') {
           this.layout.regions[newSelectedId].selected = true;
           this.selectedObject = this.layout.regions[newSelectedId];
+          newObjectSelected = true;
         } else if (newSelectedType === 'widget') {
           if (isInDrawer(target)) {
             this.layout.drawer.widgets[newSelectedId].selected = true;
@@ -608,6 +611,8 @@ lD.selectObject =
             this.selectedObject =
               this.layout.regions[target.data('widgetRegion')]
                 .widgets[newSelectedId];
+
+            newObjectSelected = true;
           }
         } else if (newSelectedType === 'element') {
           const parentRegion = target.data('regionId');
@@ -617,21 +622,29 @@ lD.selectObject =
             'widget_' + parentRegion + '_' + parentWidget
           ].elements[newSelectedId];
 
-          element.selected = true;
-          this.selectedObject = element;
+          if (element) {
+            element.selected = true;
+            this.selectedObject = element;
+            newObjectSelected = true;
+          }
         } else if (newSelectedType === 'element-group') {
           const parentRegion = target.data('regionId');
           const parentWidget = target.data('widgetId');
 
-          const element = this.layout.canvas.widgets[
+          const elementGroup = this.layout.canvas.widgets[
             'widget_' + parentRegion + '_' + parentWidget
           ].elementGroups[newSelectedId];
 
-          element.selected = true;
-          this.selectedObject = element;
+          if (elementGroup) {
+            elementGroup.selected = true;
+            this.selectedObject = elementGroup;
+            newObjectSelected = true;
+          }
         }
 
-        this.selectedObject.type = newSelectedType;
+        if (newObjectSelected) {
+          this.selectedObject.type = newSelectedType;
+        }
 
         // Refresh the designer containers
         (refreshEditor) && lD.refreshEditor({
@@ -1134,7 +1147,7 @@ lD.loadFormFromAPI = function(
  * Revert last action
  */
 lD.undoLastAction = function() {
-  lD.common.showLoadingScreen('undoLastAction');
+  lD.common.showLoadingScreen();
 
   lD.historyManager.revertChange().then((res) => { // Success
     // Refresh designer according to local or API revert
@@ -1151,9 +1164,9 @@ lD.undoLastAction = function() {
         });
     }
 
-    lD.common.hideLoadingScreen('undoLastAction');
+    lD.common.hideLoadingScreen();
   }).catch((error) => { // Fail/error
-    lD.common.hideLoadingScreen('undoLastAction');
+    lD.common.hideLoadingScreen();
 
     // Show error returned or custom message to the user
     let errorMessage = '';
@@ -1360,7 +1373,7 @@ lD.deleteObject = function(
         reload: false,
       });
   } else {
-    lD.common.showLoadingScreen('deleteObject');
+    lD.common.showLoadingScreen();
 
     // Hide in viewer
     lD.viewer.toggleObject(
@@ -1437,9 +1450,9 @@ lD.deleteObject = function(
           });
       }
 
-      lD.common.hideLoadingScreen('deleteObject');
+      lD.common.hideLoadingScreen();
     }).catch((error) => { // Fail/error
-      lD.common.hideLoadingScreen('deleteObject');
+      lD.common.hideLoadingScreen();
 
       // Show error returned or custom message to the user
       let errorMessage = '';
@@ -1774,6 +1787,8 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
             false,
             false,
             false,
+            true,
+            false, // don't save to history
           ).then((res) => {
             // Create new temporary widget for the elements
             const newWidget = new Widget(
@@ -2110,7 +2125,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
   } else if (draggableType === 'layout_template') {
     const addTemplateToLayout = function() {
       // Show loading screen
-      lD.common.showLoadingScreen('addLayoutTemplate');
+      lD.common.showLoadingScreen();
 
       // Call the replace function and reload on success.
       $.ajax({
@@ -2126,7 +2141,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
         },
         success: function(response) {
           // Hide loading screen
-          lD.common.hideLoadingScreen('addLayoutTemplate');
+          lD.common.hideLoadingScreen();
 
           if (response.success && response.id) {
             // Deselect previous object
@@ -2147,7 +2162,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
         },
         error: function(xhr) {
           // Hide loading screen
-          lD.common.hideLoadingScreen('addLayoutTemplate');
+          lD.common.hideLoadingScreen();
 
           console.error(xhr);
         },
@@ -2441,7 +2456,7 @@ lD.addModuleToPlaylist = function(
       onUploadDone: onUploadDone,
     });
   } else { // Add widget to a region
-    lD.common.showLoadingScreen('addModuleToPlaylist');
+    lD.common.showLoadingScreen();
 
     const linkToAPI = urlsForApi.playlist.addWidget;
 
@@ -2494,7 +2509,7 @@ lD.addModuleToPlaylist = function(
       // Check if we added a element
       if (moduleData.type === 'element') {
         // Hide loading screen
-        lD.common.hideLoadingScreen('addModuleToPlaylist');
+        lD.common.hideLoadingScreen();
 
         // Return the promise with the data
         return res;
@@ -2543,12 +2558,12 @@ lD.addModuleToPlaylist = function(
         );
       }
 
-      lD.common.hideLoadingScreen('addModuleToPlaylist');
+      lD.common.hideLoadingScreen();
 
       // Return the promise with the data
       return res;
     }).catch((error) => { // Fail/error
-      lD.common.hideLoadingScreen('addModuleToPlaylist');
+      lD.common.hideLoadingScreen();
 
       // Show error returned or custom message to the user
       let errorMessage = '';
@@ -2671,7 +2686,7 @@ lD.addMediaToPlaylist = function(
     mediaToAdd.useDuration = (lD.useLibraryDuration == '1');
   }
 
-  lD.common.showLoadingScreen('addMediaToPlaylist');
+  lD.common.showLoadingScreen();
 
   // Set position to add if selected
   if (addToPosition != null) {
@@ -2733,9 +2748,9 @@ lD.addMediaToPlaylist = function(
       );
     }
 
-    lD.common.hideLoadingScreen('addMediaToPlaylist');
+    lD.common.hideLoadingScreen();
   }).catch((error) => { // Fail/error
-    lD.common.hideLoadingScreen('addMediaToPlaylist');
+    lD.common.hideLoadingScreen();
 
     // Show error returned or custom message to the user
     let errorMessage = '';
@@ -3818,7 +3833,7 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
       if ($regionsToBeDeleted.length > 0) {
         let deletedIndex = 0;
 
-        lD.common.showLoadingScreen('deleteMultiObject');
+        lD.common.showLoadingScreen();
 
         // Delete all selected objects
         const deleteNext = function() {
@@ -3840,7 +3855,7 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
               lD.viewer.selectObject();
 
               // Hide loader
-              lD.common.hideLoadingScreen('deleteMultiObject');
+              lD.common.hideLoadingScreen();
 
               // Reload data and select element when data reloads
               lD.reloadData(lD.layout,

@@ -517,13 +517,13 @@ pE.deleteObject = function(
     return;
   }
 
-  pE.common.showLoadingScreen('deleteObject');
+  pE.common.showLoadingScreen();
 
   // Delete object from the layout
   pE.playlist.deleteObject(objectType, objectId)
     .then((_res) => {
       // Success
-      pE.common.hideLoadingScreen('deleteObject');
+      pE.common.hideLoadingScreen();
 
       // Remove selected object if the deleted was selected
       if (pE.selectedObject.widgetId === objectId) {
@@ -533,7 +533,7 @@ pE.deleteObject = function(
       // Reload data
       pE.reloadData();
     }).catch((error) => { // Fail/error
-      pE.common.hideLoadingScreen('deleteObject');
+      pE.common.hideLoadingScreen();
 
       // Show error returned or custom message to the user
       let errorMessage = '';
@@ -556,7 +556,7 @@ pE.deleteObject = function(
  */
 pE.deleteMultipleObjects = function(objectsType, objectIds) {
   if (objectsType === 'widget') {
-    pE.common.showLoadingScreen('deleteObjects');
+    pE.common.showLoadingScreen();
 
     let deletedIndex = 0;
 
@@ -573,7 +573,7 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
 
           if (deletedIndex == objectIds.length) {
             // Hide loading screen
-            pE.common.hideLoadingScreen('deleteObjects');
+            pE.common.hideLoadingScreen();
 
             // Remove selected object if it's one in the objectIds
             if (
@@ -591,7 +591,7 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
             deleteNext();
           }
         }).catch((error) => { // Fail/error
-          pE.common.hideLoadingScreen('deleteObjects');
+          pE.common.hideLoadingScreen();
 
           // Show error returned or custom message to the user
           let errorMessage = '';
@@ -753,19 +753,19 @@ pE.showErrorMessage = function() {
 pE.saveOrder = function() {
   const self = this;
 
-  pE.common.showLoadingScreen('saveOrder');
+  pE.common.showLoadingScreen();
 
   this.playlist.saveOrder(
     this.editorContainer.find('#timeline-container').find('.playlist-widget'),
   ).then((res) => { // Success
-    pE.common.hideLoadingScreen('saveOrder');
+    pE.common.hideLoadingScreen();
 
     self.reloadData({
       reloadToolbar: false,
       reloadPropertiesPanel: false,
     });
   }).catch((error) => { // Fail/error
-    pE.common.hideLoadingScreen('saveOrder');
+    pE.common.hideLoadingScreen();
 
     // Show error returned or custom message to the user
     let errorMessage = '';
