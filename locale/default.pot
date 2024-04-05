@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-01-08 13:19+0000\n"
+"POT-Creation-Date: 2024-04-05 17:01+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,11 +17,11 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: locale/dbtranslate.php:26
+#: locale/dbtranslate.php:27
 msgid "Fade In"
 msgstr ""
 
-#: locale/dbtranslate.php:27
+#: locale/dbtranslate.php:28
 #: cache/7e/7e70f016ae27b700942d6611fd27869e4e8ff993b91d5dae14ba061bc3a5349d.php:223
 #: cache/68/6804cbeb9f56f03142ec4c42fb8507a1210854d8706c95ab17a5df99927ad5cc.php:537
 #: cache/44/44cc4f58c2b5b0c36b6be95f32c7ef48cadc148b7d157770be0f8f996ae827e6.php:504
@@ -34,19 +34,19 @@ msgstr ""
 msgid "Fade Out"
 msgstr ""
 
-#: locale/dbtranslate.php:28
+#: locale/dbtranslate.php:29
 msgid "Fly"
 msgstr ""
 
-#: locale/dbtranslate.php:31
+#: locale/dbtranslate.php:32
 msgid "String"
 msgstr ""
 
-#: locale/dbtranslate.php:32
+#: locale/dbtranslate.php:33
 msgid "Number"
 msgstr ""
 
-#: locale/dbtranslate.php:33
+#: locale/dbtranslate.php:34
 #: cache/16/166b10944e8b35c9668a27103933041649157712c439a8d6dabb342e2e830465.php:184
 #: cache/ba/ba8b5007d85901d70d555cefce66e0fffd6ccf1c1a645ce3fb3445d09ae95f4a.php:111
 #: cache/b1/b19ea9bbe44b6ed9904afda938cb51ecf849f891c4ab15c756192a46dce379fc.php:350
@@ -54,15 +54,15 @@ msgstr ""
 msgid "Date"
 msgstr ""
 
-#: locale/dbtranslate.php:34
+#: locale/dbtranslate.php:35
 msgid "External Image"
 msgstr ""
 
-#: locale/dbtranslate.php:35
+#: locale/dbtranslate.php:36
 msgid "Library Image"
 msgstr ""
 
-#: locale/dbtranslate.php:37
+#: locale/dbtranslate.php:38
 #: cache/16/166b10944e8b35c9668a27103933041649157712c439a8d6dabb342e2e830465.php:305
 #: cache/e3/e333fffa2148be59d86f436dde20c91ba45ca948bc7c36e5e9b653f75b23f196.php:530
 #: cache/e3/e333fffa2148be59d86f436dde20c91ba45ca948bc7c36e5e9b653f75b23f196.php:672
@@ -72,416 +72,416 @@ msgstr ""
 msgid "Value"
 msgstr ""
 
-#: locale/dbtranslate.php:38
+#: locale/dbtranslate.php:39
 #: cache/16/16cf709531fd6c5219b29642a7ee656a9f79cf07ae0b8a37bd9f262d1b89d4ed.php:259
 #: cache/7a/7af8313798f87380777669625c85a084bff925ba49dcbff43d5dee3f23796515.php:259
 msgid "Formula"
 msgstr ""
 
-#: locale/dbtranslate.php:41
+#: locale/dbtranslate.php:42
 msgid "Data Set"
 msgstr ""
 
-#: locale/dbtranslate.php:42
+#: locale/dbtranslate.php:43
 msgid "DataSet View"
 msgstr ""
 
-#: locale/dbtranslate.php:43
+#: locale/dbtranslate.php:44
 msgid "A view on a DataSet"
 msgstr ""
 
-#: locale/dbtranslate.php:44
+#: locale/dbtranslate.php:45
 msgid "DataSet Ticker"
 msgstr ""
 
-#: locale/dbtranslate.php:45
+#: locale/dbtranslate.php:46
 msgid "Ticker with a DataSet providing the items"
 msgstr ""
 
-#: locale/dbtranslate.php:46
+#: locale/dbtranslate.php:47
 msgid "Ticker"
 msgstr ""
 
-#: locale/dbtranslate.php:47
+#: locale/dbtranslate.php:48
 msgid "RSS Ticker."
 msgstr ""
 
-#: locale/dbtranslate.php:48
+#: locale/dbtranslate.php:49
 #: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:577
 msgid "Text"
 msgstr ""
 
-#: locale/dbtranslate.php:49
+#: locale/dbtranslate.php:50
 msgid "Text. With Directional Controls."
 msgstr ""
 
-#: locale/dbtranslate.php:50
+#: locale/dbtranslate.php:51
 msgid "Embedded"
 msgstr ""
 
-#: locale/dbtranslate.php:51
+#: locale/dbtranslate.php:52
 msgid "Embedded HTML"
 msgstr ""
 
-#: locale/dbtranslate.php:52
+#: locale/dbtranslate.php:53
 #: cache/fe/fe822a6f5712d67080516d8204b7a7194da01937a981ba4814d089ca458ae973.php:1053
 msgid "Image"
 msgstr ""
 
-#: locale/dbtranslate.php:53
+#: locale/dbtranslate.php:54
 msgid "Images. PNG, JPG, BMP, GIF"
 msgstr ""
 
-#: locale/dbtranslate.php:54
+#: locale/dbtranslate.php:55
 #: cache/fe/fe822a6f5712d67080516d8204b7a7194da01937a981ba4814d089ca458ae973.php:1069
 msgid "Video"
 msgstr ""
 
-#: locale/dbtranslate.php:55
+#: locale/dbtranslate.php:56
 msgid "Videos - support varies depending on the client hardware you are using."
 msgstr ""
 
-#: locale/dbtranslate.php:56
+#: locale/dbtranslate.php:57
 msgid "Video In"
 msgstr ""
 
-#: locale/dbtranslate.php:57
+#: locale/dbtranslate.php:58
 msgid "A module for displaying Video and Audio from an external source"
 msgstr ""
 
-#: locale/dbtranslate.php:58
+#: locale/dbtranslate.php:59
 msgid "Flash"
 msgstr ""
 
-#: locale/dbtranslate.php:59
+#: locale/dbtranslate.php:60
 msgid "PowerPoint"
 msgstr ""
 
-#: locale/dbtranslate.php:60
+#: locale/dbtranslate.php:61
 msgid "Powerpoint. PPT, PPS"
 msgstr ""
 
-#: locale/dbtranslate.php:61
+#: locale/dbtranslate.php:62
 msgid "Webpage"
 msgstr ""
 
-#: locale/dbtranslate.php:62
+#: locale/dbtranslate.php:63
 msgid "Webpages."
 msgstr ""
 
-#: locale/dbtranslate.php:63
+#: locale/dbtranslate.php:64
 msgid "Counter"
 msgstr ""
 
-#: locale/dbtranslate.php:64
+#: locale/dbtranslate.php:65
 msgid "Shell Command"
 msgstr ""
 
-#: locale/dbtranslate.php:65
+#: locale/dbtranslate.php:66
 msgid "Execute a shell command on the client"
 msgstr ""
 
-#: locale/dbtranslate.php:66
+#: locale/dbtranslate.php:67
 msgid "Local Video"
 msgstr ""
 
-#: locale/dbtranslate.php:67
+#: locale/dbtranslate.php:68
 msgid "Play a video locally stored on the client"
 msgstr ""
 
-#: locale/dbtranslate.php:68
+#: locale/dbtranslate.php:69
 msgid "Clock"
 msgstr ""
 
-#: locale/dbtranslate.php:69
+#: locale/dbtranslate.php:70
 #: cache/14/14a88857244c38ea50f08f80c35958212272f14402f24b4fee8a73e2210388bf.php:214
 #: cache/f6/f66b85674447fb7bce97141c15d3431d029a83fc327291d8c2d736471405fdd6.php:452
 msgid "Font"
 msgstr ""
 
-#: locale/dbtranslate.php:70
+#: locale/dbtranslate.php:71
 msgid "A font to use in other Modules"
 msgstr ""
 
-#: locale/dbtranslate.php:71
+#: locale/dbtranslate.php:72
 msgid "Generic File"
 msgstr ""
 
-#: locale/dbtranslate.php:72
+#: locale/dbtranslate.php:73
 msgid "A generic file to be stored in the library"
 msgstr ""
 
-#: locale/dbtranslate.php:73
+#: locale/dbtranslate.php:74
 #: cache/fe/fe822a6f5712d67080516d8204b7a7194da01937a981ba4814d089ca458ae973.php:1061
 #: cache/e9/e98e723d2d5e526971352df586c052e9948b62812cd4b2b431d9ec5fed7558f5.php:384
 msgid "Audio"
 msgstr ""
 
-#: locale/dbtranslate.php:74
+#: locale/dbtranslate.php:75
 msgid "Audio - support varies depending on the client hardware"
 msgstr ""
 
-#: locale/dbtranslate.php:75
+#: locale/dbtranslate.php:76
 msgid "PDF"
 msgstr ""
 
-#: locale/dbtranslate.php:76
+#: locale/dbtranslate.php:77
 msgid "PDF document viewer"
 msgstr ""
 
-#: locale/dbtranslate.php:77
+#: locale/dbtranslate.php:78
 msgid "Notification"
 msgstr ""
 
-#: locale/dbtranslate.php:78
+#: locale/dbtranslate.php:79
 msgid "Display Notifications from the Notification Centre"
 msgstr ""
 
-#: locale/dbtranslate.php:80
+#: locale/dbtranslate.php:81
 msgid "Stocks Module"
 msgstr ""
 
-#: locale/dbtranslate.php:81
+#: locale/dbtranslate.php:82
 msgid "A module for showing Stock quotes"
 msgstr ""
 
-#: locale/dbtranslate.php:82
+#: locale/dbtranslate.php:83
 msgid "Currencies Module"
 msgstr ""
 
-#: locale/dbtranslate.php:83
+#: locale/dbtranslate.php:84
 msgid "A module for showing Currency pairs and exchange rates"
 msgstr ""
 
-#: locale/dbtranslate.php:85
+#: locale/dbtranslate.php:86
 msgid "Stocks"
 msgstr ""
 
-#: locale/dbtranslate.php:86
+#: locale/dbtranslate.php:87
 msgid "Yahoo Stocks"
 msgstr ""
 
-#: locale/dbtranslate.php:87
+#: locale/dbtranslate.php:88
 #: cache/72/723c7ff450dc89cbc31817e8139084a908459b1129d9b3750d69831e35967859.php:248
 msgid "Currencies"
 msgstr ""
 
-#: locale/dbtranslate.php:88
+#: locale/dbtranslate.php:89
 msgid "Yahoo Currencies"
 msgstr ""
 
-#: locale/dbtranslate.php:89
+#: locale/dbtranslate.php:90
 msgid "Finance"
 msgstr ""
 
-#: locale/dbtranslate.php:90
+#: locale/dbtranslate.php:91
 msgid "Yahoo Finance"
 msgstr ""
 
-#: locale/dbtranslate.php:91
+#: locale/dbtranslate.php:92
 #: cache/f7/f7aaca156d5c404c150886a91ceccbb2de1ca3d9646f03b1c90dfdeae68bd7d4.php:55
 msgid "Google Traffic"
 msgstr ""
 
-#: locale/dbtranslate.php:92
+#: locale/dbtranslate.php:93
 msgid "Google Traffic Map"
 msgstr ""
 
-#: locale/dbtranslate.php:93
+#: locale/dbtranslate.php:94
 msgid "HLS"
 msgstr ""
 
-#: locale/dbtranslate.php:94
+#: locale/dbtranslate.php:95
 msgid "HLS Video Stream"
 msgstr ""
 
-#: locale/dbtranslate.php:95
+#: locale/dbtranslate.php:96
 msgid "Twitter"
 msgstr ""
 
-#: locale/dbtranslate.php:96
+#: locale/dbtranslate.php:97
 msgid "Twitter Search Module"
 msgstr ""
 
-#: locale/dbtranslate.php:97
+#: locale/dbtranslate.php:98
 msgid "Twitter Metro"
 msgstr ""
 
-#: locale/dbtranslate.php:98
+#: locale/dbtranslate.php:99
 msgid "Twitter Metro Search Module"
 msgstr ""
 
-#: locale/dbtranslate.php:99
+#: locale/dbtranslate.php:100
 #: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:57
 msgid "Weather"
 msgstr ""
 
-#: locale/dbtranslate.php:100
+#: locale/dbtranslate.php:101
 msgid "Weather module showing Current and Daily forecasts."
 msgstr ""
 
-#: locale/dbtranslate.php:101
+#: locale/dbtranslate.php:102
 msgid "Sub-Playlist"
 msgstr ""
 
-#: locale/dbtranslate.php:102
+#: locale/dbtranslate.php:103
 msgid "Embed a Sub-Playlist"
 msgstr ""
 
-#: locale/dbtranslate.php:103
+#: locale/dbtranslate.php:104
 msgid "Countdown"
 msgstr ""
 
-#: locale/dbtranslate.php:105
+#: locale/dbtranslate.php:106
 msgid "January"
 msgstr ""
 
-#: locale/dbtranslate.php:106
+#: locale/dbtranslate.php:107
 msgid "February"
 msgstr ""
 
-#: locale/dbtranslate.php:107
+#: locale/dbtranslate.php:108
 msgid "March"
 msgstr ""
 
-#: locale/dbtranslate.php:108
+#: locale/dbtranslate.php:109
 msgid "April"
 msgstr ""
 
-#: locale/dbtranslate.php:109
+#: locale/dbtranslate.php:110
 msgid "May"
 msgstr ""
 
-#: locale/dbtranslate.php:110
+#: locale/dbtranslate.php:111
 msgid "June"
 msgstr ""
 
-#: locale/dbtranslate.php:111
+#: locale/dbtranslate.php:112
 msgid "July"
 msgstr ""
 
-#: locale/dbtranslate.php:112
+#: locale/dbtranslate.php:113
 msgid "August"
 msgstr ""
 
-#: locale/dbtranslate.php:113
+#: locale/dbtranslate.php:114
 msgid "September"
 msgstr ""
 
-#: locale/dbtranslate.php:114
+#: locale/dbtranslate.php:115
 msgid "October"
 msgstr ""
 
-#: locale/dbtranslate.php:115
+#: locale/dbtranslate.php:116
 msgid "November"
 msgstr ""
 
-#: locale/dbtranslate.php:116
+#: locale/dbtranslate.php:117
 msgid "December"
 msgstr ""
 
-#: locale/dbtranslate.php:119 lib/Factory/UserGroupFactory.php:854
+#: locale/dbtranslate.php:120 lib/Factory/UserGroupFactory.php:854
 msgid "Icon Dashboard"
 msgstr ""
 
-#: locale/dbtranslate.php:120 lib/Factory/UserGroupFactory.php:848
+#: locale/dbtranslate.php:121 lib/Factory/UserGroupFactory.php:848
 msgid "Status Dashboard"
 msgstr ""
 
-#: locale/dbtranslate.php:121
+#: locale/dbtranslate.php:122
 msgid "Media Dashboard"
 msgstr ""
 
-#: locale/dbtranslate.php:124
+#: locale/dbtranslate.php:125
 msgid "Full account access"
 msgstr ""
 
-#: locale/dbtranslate.php:125
+#: locale/dbtranslate.php:126
 msgid "Access to DataSets"
 msgstr ""
 
-#: locale/dbtranslate.php:126
+#: locale/dbtranslate.php:127
 msgid "Access to deleting DataSets"
 msgstr ""
 
-#: locale/dbtranslate.php:127
+#: locale/dbtranslate.php:128
 msgid "Access to Library, Layouts, Playlists, Widgets and Resolutions"
 msgstr ""
 
-#: locale/dbtranslate.php:128
+#: locale/dbtranslate.php:129
 msgid ""
 "Access to deleting content from Library, Layouts, Playlists, Widgets and "
 "Resolutions"
 msgstr ""
 
-#: locale/dbtranslate.php:129
+#: locale/dbtranslate.php:130
 msgid "Access to Displays and Display Groups"
 msgstr ""
 
-#: locale/dbtranslate.php:130
+#: locale/dbtranslate.php:131
 msgid "Access to deleting Displays and Display Groups"
 msgstr ""
 
-#: locale/dbtranslate.php:131
+#: locale/dbtranslate.php:132
 msgid "Media Conversion as a Service"
 msgstr ""
 
-#: locale/dbtranslate.php:132
+#: locale/dbtranslate.php:133
 msgid "Access to Scheduling"
 msgstr ""
 
-#: locale/dbtranslate.php:133
+#: locale/dbtranslate.php:134
 msgid "Access to deleting Scheduled Events"
 msgstr ""
 
-#: locale/dbtranslate.php:136
+#: locale/dbtranslate.php:137
 msgid "Primary"
 msgstr ""
 
-#: locale/dbtranslate.php:137
+#: locale/dbtranslate.php:138
 msgid "Secondary"
 msgstr ""
 
-#: locale/dbtranslate.php:138
+#: locale/dbtranslate.php:139
 #: cache/bd/bde129d28695379ce2be7672e02e10d630ac008b2064e122a335825f1a412ae8.php:597
 #: cache/68/6804cbeb9f56f03142ec4c42fb8507a1210854d8706c95ab17a5df99927ad5cc.php:724
 msgid "Background"
 msgstr ""
 
-#: locale/dbtranslate.php:139
+#: locale/dbtranslate.php:140
 msgid "Header color"
 msgstr ""
 
-#: locale/dbtranslate.php:140
+#: locale/dbtranslate.php:141
 msgid "Header text"
 msgstr ""
 
-#: locale/dbtranslate.php:141
+#: locale/dbtranslate.php:142
 msgid "Disabled item text"
 msgstr ""
 
-#: locale/dbtranslate.php:142
+#: locale/dbtranslate.php:143
 msgid "Highlighted item text"
 msgstr ""
 
-#: locale/dbtranslate.php:143
+#: locale/dbtranslate.php:144
 msgid "Show product images?"
 msgstr ""
 
-#: locale/dbtranslate.php:144
+#: locale/dbtranslate.php:145
 msgid "Show category images?"
 msgstr ""
 
-#: locale/dbtranslate.php:145
+#: locale/dbtranslate.php:146
 #: cache/66/66ef7f1426d972019d384924c2a684a6759aa800912132b04d7db13a685058a1.php:461
 msgid "Show header?"
 msgstr ""
 
-#: locale/dbtranslate.php:146
+#: locale/dbtranslate.php:147
 msgid "Product border colour"
 msgstr ""
 
-#: locale/dbtranslate.php:147
+#: locale/dbtranslate.php:148
 #: cache/a2/a2d0b026772c3068019d6d0fd7a57ca9bd5ddc1db5186f459e831a084ee9c524.php:314
 #: cache/68/6804cbeb9f56f03142ec4c42fb8507a1210854d8706c95ab17a5df99927ad5cc.php:734
 #: cache/71/71da29201f985155a4216fe2c0352ab37a68c524e52634bcff8f0dae91351603.php:116
@@ -491,7 +491,7 @@ msgstr ""
 msgid "Title"
 msgstr ""
 
-#: locale/dbtranslate.php:148
+#: locale/dbtranslate.php:149
 #: cache/39/39c77ae752987cdf6bae59ef064888b828a0d9aa31401496c403205433372fcb.php:139
 #: cache/39/399d1559ef7ab8b9075086a0da3ad062fb5533e5a98559bd801180fc35f99a9c.php:104
 #: cache/39/399d1559ef7ab8b9075086a0da3ad062fb5533e5a98559bd801180fc35f99a9c.php:182
@@ -546,75 +546,75 @@ msgstr ""
 msgid "Description"
 msgstr ""
 
-#: locale/dbtranslate.php:151
+#: locale/dbtranslate.php:152
 msgid "Billboard"
 msgstr ""
 
-#: locale/dbtranslate.php:152
+#: locale/dbtranslate.php:153
 msgid "Kiosk"
 msgstr ""
 
-#: locale/dbtranslate.php:153
+#: locale/dbtranslate.php:154
 msgid "LED Matrix / LED Video Wall"
 msgstr ""
 
-#: locale/dbtranslate.php:154
+#: locale/dbtranslate.php:155
 msgid "Monitor / Other"
 msgstr ""
 
-#: locale/dbtranslate.php:155
+#: locale/dbtranslate.php:156
 msgid "Projector"
 msgstr ""
 
-#: locale/dbtranslate.php:156
+#: locale/dbtranslate.php:157
 msgid "Shelf-edge Display"
 msgstr ""
 
-#: locale/dbtranslate.php:157
+#: locale/dbtranslate.php:158
 msgid "Smart Mirror"
 msgstr ""
 
-#: locale/dbtranslate.php:158
+#: locale/dbtranslate.php:159
 msgid "TV / Panel"
 msgstr ""
 
-#: locale/dbtranslate.php:159
+#: locale/dbtranslate.php:160
 msgid "Tablet"
 msgstr ""
 
-#: locale/dbtranslate.php:160
+#: locale/dbtranslate.php:161
 msgid "Totem"
 msgstr ""
 
-#: locale/dbtranslate.php:163
+#: locale/dbtranslate.php:164
 msgid "Wind"
 msgstr ""
 
-#: locale/dbtranslate.php:164
+#: locale/dbtranslate.php:165
 msgid "Humidity"
 msgstr ""
 
-#: locale/dbtranslate.php:165
+#: locale/dbtranslate.php:166
 msgid "Feels Like"
 msgstr ""
 
-#: locale/dbtranslate.php:166
+#: locale/dbtranslate.php:167
 msgid "Right now"
 msgstr ""
 
-#: locale/dbtranslate.php:167
+#: locale/dbtranslate.php:168
 msgid "Pressure"
 msgstr ""
 
-#: locale/dbtranslate.php:168
+#: locale/dbtranslate.php:169
 msgid "Visibility"
 msgstr ""
 
-#: locale/dbtranslate.php:169
+#: locale/dbtranslate.php:170
 msgid "TODAY"
 msgstr ""
 
-#: locale/dbtranslate.php:170
+#: locale/dbtranslate.php:171
 msgid "RIGHT NOW"
 msgstr ""
 
@@ -9674,7 +9674,7 @@ msgid "The Email Address for this user."
 msgstr ""
 
 #: cache/bf/bfd9f5d179245e397af5764d0b29c852b54bd99a0b7031632532c07c4595376c.php:180
-#: lib/Controller/Login.php:536
+#: lib/Controller/Login.php:542
 msgid "Two Factor Authentication"
 msgstr ""
 
@@ -10864,7 +10864,7 @@ msgstr ""
 
 #: cache/30/30af699d6072adc235d1a0076f4a84df3426170acdb38606b565be655ab68187.php:121
 #: cache/30/30af699d6072adc235d1a0076f4a84df3426170acdb38606b565be655ab68187.php:125
-#: lib/Controller/Sessions.php:104
+#: lib/Controller/Sessions.php:106
 msgid "Logout"
 msgstr ""
 
@@ -19975,9 +19975,9 @@ msgid ""
 "web portal."
 msgstr ""
 
-#: lib/Controller/Login.php:233 lib/Controller/Login.php:351
-#: lib/Entity/User.php:606 lib/Factory/UserFactory.php:98
-#: lib/Factory/UserFactory.php:132 lib/Factory/UserFactory.php:148
+#: lib/Controller/Login.php:233 lib/Entity/User.php:606
+#: lib/Factory/UserFactory.php:98 lib/Factory/UserFactory.php:132
+#: lib/Factory/UserFactory.php:148
 msgid "User not found"
 msgstr ""
 
@@ -19989,7 +19989,7 @@ msgstr ""
 msgid "This feature has been disabled by your administrator"
 msgstr ""
 
-#: lib/Controller/Login.php:295 lib/Controller/Login.php:486
+#: lib/Controller/Login.php:295 lib/Controller/Login.php:492
 msgid "No email"
 msgstr ""
 
@@ -20008,35 +20008,35 @@ msgstr ""
 msgid "Reset Password"
 msgstr ""
 
-#: lib/Controller/Login.php:342
-msgid "Reminder email has been sent to your email address"
+#: lib/Controller/Login.php:344 lib/Controller/Login.php:356
+msgid "A reminder email will been sent to this user if they exist"
 msgstr ""
 
-#: lib/Controller/Login.php:475
+#: lib/Controller/Login.php:481
 msgid "Session has expired, please log in again"
 msgstr ""
 
-#: lib/Controller/Login.php:500
+#: lib/Controller/Login.php:506
 msgid "Sending email address in CMS Settings is not configured"
 msgstr ""
 
-#: lib/Controller/Login.php:542
+#: lib/Controller/Login.php:548
 msgid ""
 "You are receiving this email because two factor email authorisation is "
 "enabled in your CMS user account. If you did not make this request, please "
 "report this email to your administrator immediately."
 msgstr ""
 
-#: lib/Controller/Login.php:545
+#: lib/Controller/Login.php:551
 msgid ""
 "Unable to send two factor code to email address associated with this user"
 msgstr ""
 
-#: lib/Controller/Login.php:547
+#: lib/Controller/Login.php:553
 msgid "Two factor code email has been sent to your email address"
 msgstr ""
 
-#: lib/Controller/Login.php:632
+#: lib/Controller/Login.php:638
 msgid "Authentication code incorrect"
 msgstr ""
 
@@ -20476,7 +20476,7 @@ msgstr ""
 msgid "File available only for SSSP displays"
 msgstr ""
 
-#: lib/Controller/Sessions.php:170
+#: lib/Controller/Sessions.php:164
 msgid "User Logged Out."
 msgstr ""
 
@@ -20509,32 +20509,32 @@ msgstr ""
 msgid ", Repeats every %s %s"
 msgstr ""
 
-#: lib/Controller/Schedule.php:1008 lib/Controller/Schedule.php:1578
+#: lib/Controller/Schedule.php:1023 lib/Controller/Schedule.php:1593
 msgid "Direct scheduling of an Ad Campaign is not allowed"
 msgstr ""
 
-#: lib/Controller/Schedule.php:1019 lib/Controller/Schedule.php:1589
+#: lib/Controller/Schedule.php:1034 lib/Controller/Schedule.php:1604
 #: lib/Entity/Schedule.php:565
 msgid "Share of Voice must be a whole number between 0 and 3600"
 msgstr ""
 
-#: lib/Controller/Schedule.php:1068 lib/Controller/Schedule.php:1632
+#: lib/Controller/Schedule.php:1083 lib/Controller/Schedule.php:1647
 msgid "Please enter a from date"
 msgstr ""
 
-#: lib/Controller/Schedule.php:1179
+#: lib/Controller/Schedule.php:1194
 msgid "Added Event"
 msgstr ""
 
-#: lib/Controller/Schedule.php:1341 lib/Controller/Schedule.php:1871
+#: lib/Controller/Schedule.php:1356 lib/Controller/Schedule.php:1886
 msgid "Deleted Event"
 msgstr ""
 
-#: lib/Controller/Schedule.php:1789
+#: lib/Controller/Schedule.php:1804
 msgid "Edited Event"
 msgstr ""
 
-#: lib/Controller/Schedule.php:1976 web/xmds.php:154
+#: lib/Controller/Schedule.php:1991 web/xmds.php:154
 msgid "Unknown type"
 msgstr ""
 
@@ -20899,19 +20899,19 @@ msgstr ""
 msgid "Media you own already has this name. Please choose another."
 msgstr ""
 
-#: lib/Entity/Media.php:765
+#: lib/Entity/Media.php:768
 msgid "Problem copying file in the Library Folder"
 msgstr ""
 
-#: lib/Entity/Media.php:771
+#: lib/Entity/Media.php:774
 msgid "Problem moving uploaded file into the Library Folder"
 msgstr ""
 
-#: lib/Entity/Media.php:789
+#: lib/Entity/Media.php:792
 msgid "Problem moving downloaded file into the Library Folder"
 msgstr ""
 
-#: lib/Entity/Media.php:796
+#: lib/Entity/Media.php:799
 msgid "Problem copying provided file into the Library Folder"
 msgstr ""
 
@@ -22280,12 +22280,12 @@ msgstr ""
 msgid "Entity not found"
 msgstr ""
 
-#: lib/Widget/Image.php:327
+#: lib/Widget/Image.php:334
 #, php-format
 msgid "%s is pending conversion"
 msgstr ""
 
-#: lib/Widget/Image.php:331 lib/Widget/Image.php:332
+#: lib/Widget/Image.php:338 lib/Widget/Image.php:339
 #, php-format
 msgid ""
 "%s is too large. Please ensure that none of the images in your layout are "
@@ -22293,7 +22293,7 @@ msgid ""
 "Limit in Administration -> Settings"
 msgstr ""
 
-#: lib/Widget/Image.php:336 lib/Widget/MenuBoard.php:241
+#: lib/Widget/Image.php:343 lib/Widget/MenuBoard.php:241
 #: lib/Widget/Chart.php:988 lib/Widget/LocalVideo.php:155
 #: lib/Widget/HtmlPackage.php:103 lib/Widget/WebPage.php:267
 #: lib/Widget/Pdf.php:136 lib/Widget/Text.php:323 lib/Widget/VideoIn.php:157
