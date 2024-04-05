@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -40,7 +40,11 @@ jQuery.fn.extend({
 
       if (options.rowsPerPage > 0) {
         // Cycle handles this for us
-        $(el).cycle({
+        if ($(el).prop('isCycle')) {
+          $(el).cycle('destroy');
+        }
+
+        $(el).prop('isCycle', true).cycle({
           fx: options.transition,
           timeout: duration * 1000,
           slides: '> table',

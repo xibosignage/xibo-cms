@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -53,9 +53,7 @@ class DataSetProvider implements WidgetProviderInterface
             $this->getLog()->debug('fetchDuration: duration is per item');
 
             // Count of rows
-            $lowerLimit = $durationProvider->getWidget()->getOptionValue('lowerLimit', 0);
-            $upperLimit = $durationProvider->getWidget()->getOptionValue('upperLimit', 15);
-            $numItems = $upperLimit - $lowerLimit;
+            $numItems = $durationProvider->getWidget()->getOptionValue('numItems', 0);
 
             // Workaround: dataset static (from v3 dataset view) has rowsPerPage instead.
             $rowsPerPage = $durationProvider->getWidget()->getOptionValue('rowsPerPage', 0);
