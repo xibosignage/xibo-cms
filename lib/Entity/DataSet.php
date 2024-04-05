@@ -1098,7 +1098,7 @@ class DataSet implements \JsonSerializable
           CREATE TABLE `dataset_' . $this->dataSetId . '` (
             `id` int(11) NOT NULL AUTO_INCREMENT,
             PRIMARY KEY (`id`)
-          ) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1
+          ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 AUTO_INCREMENT=1
         ', []);
     }
 
