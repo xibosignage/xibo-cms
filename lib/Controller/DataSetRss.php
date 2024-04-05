@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -29,15 +29,11 @@ use PicoFeed\Syndication\Rss20FeedBuilder;
 use PicoFeed\Syndication\Rss20ItemBuilder;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DataSetRssFactory;
 use Xibo\Helper\DateFormatHelper;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
@@ -664,6 +660,8 @@ class DataSetRss extends Base
     }
 
     /**
+     * Output feed
+     *  this is a public route (no authentication requried)
      * @param Request $request
      * @param Response $response
      * @param $psk
@@ -683,7 +681,9 @@ class DataSetRss extends Base
             $dataSet = $this->dataSetFactory->getById($feed->dataSetId);
 
             // What is the edit date of this data set
-            $dataSetEditDate = ($dataSet->lastDataEdit == 0) ? Carbon::now()->subMonths(2) : Carbon::createFromTimestamp($dataSet->lastDataEdit);
+            $dataSetEditDate = ($dataSet->lastDataEdit == 0)
+                ? Carbon::now()->subMonths(2)
+                : Carbon::createFromTimestamp($dataSet->lastDataEdit);
 
             // Do we have this feed in the cache?
             $cache = $this->pool->getItem('/dataset/rss/' . $feed->id);
@@ -692,7 +692,10 @@ class DataSetRss extends Base
 
             if ($cache->isMiss() || $cache->getCreation() < $dataSetEditDate) {
                 // We need to recache
-                $this->getLog()->debug('Generating RSS feed and saving to cache. Created on ' . (($cache->getCreation() !== false) ? $cache->getCreation()->format(DateFormatHelper::getSystemFormat()) : 'never'));
+                $this->getLog()->debug('Generating RSS feed and saving to cache. Created on '
+                    . ($cache->getCreation()
+                        ? $cache->getCreation()->format(DateFormatHelper::getSystemFormat())
+                        : 'never'));
 
                 $output = $this->generateFeed($feed, $dataSetEditDate, $dataSet);
 
@@ -705,10 +708,10 @@ class DataSetRss extends Base
 
             $response->withHeader('Content-Type', 'application/rss+xml');
             echo $output;
-
-        } catch (NotFoundException $notFoundException) {
+        } catch (NotFoundException) {
             $this->getState()->httpStatus = 404;
         }
+        return $response;
     }
 
     /**
@@ -718,12 +721,14 @@ class DataSetRss extends Base
      * @return string
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    private function generateFeed($feed, $dataSetEditDate, $dataSet)
+    private function generateFeed($feed, $dataSetEditDate, $dataSet): string
     {
         // Create the start of our feed, its description, etc.
         $builder = Rss20FeedBuilder::create()
             ->withTitle($feed->title)
             ->withAuthor($feed->author)
+            ->withFeedUrl('')
+            ->withSiteUrl('')
             ->withDate($dataSetEditDate);
 
         $sort = $feed->getSort();
@@ -860,6 +865,7 @@ class DataSetRss extends Base
 
         foreach ($dataSetResults as $row) {
             $item = Rss20ItemBuilder::create($builder);
+            $item->withUrl('');
 
             $hasContent = false;
             $hasDate = false;
@@ -880,7 +886,7 @@ class DataSetRss extends Base
                     } else if ($mappings[$key]['dataSetColumnId'] === $feed->publishedDateColumnId) {
                         try {
                             $date = Carbon::createFromTimestamp($value);
-                        } catch (InvalidDateException $dateException) {
+                        } catch (InvalidDateException) {
                             $date = $dataSetEditDate;
                         }
 
@@ -892,11 +898,13 @@ class DataSetRss extends Base
                 }
             }
 
-            if (!$hasDate)
+            if (!$hasDate) {
                 $item->withPublishedDate($dataSetEditDate);
+            }
 
-            if ($hasContent)
+            if ($hasContent) {
                 $builder->withItem($item);
+            }
         }
 
         // Found, do things
