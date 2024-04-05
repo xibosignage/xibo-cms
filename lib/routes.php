@@ -458,6 +458,7 @@ $app->get('/dataset', ['\Xibo\Controller\DataSet','grid'])->setName('dataSet.sea
 $app->post('/dataset', ['\Xibo\Controller\DataSet','add'])
     ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dataset.add']))
     ->setName('dataSet.add');
+$app->get('/rss/{psk}', ['\Xibo\Controller\DataSetRss','feed'])->setName('dataSet.rss.feed');
 
 $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/dataset/{id}', ['\Xibo\Controller\DataSet','edit'])->setName('dataSet.edit');
@@ -478,10 +479,10 @@ $app->group('', function (RouteCollectorProxy $group) {
     // RSS
     $group->get('/dataset/{id}/rss', ['\Xibo\Controller\DataSetRss','grid'])->setName('dataSet.rss.search');
     $group->post('/dataset/{id}/rss', ['\Xibo\Controller\DataSetRss','add'])->setName('dataSet.rss.add');
-    $group->put('/dataset/{id}/rss/{rssId}', ['\Xibo\Controller\DataSetRss','edit'])->setName('dataSet.rss.edit');
-    $group->delete('/dataset/{id}/rss/{rssId}', ['\Xibo\Controller\DataSetRss','delete'])->setName('dataSet.rss.delete');
-    $group->get('/rss/{psk}', ['\Xibo\Controller\DataSetRss','feed'])->setName('dataSet.rss.feed');
-
+    $group->put('/dataset/{id}/rss/{rssId}', ['\Xibo\Controller\DataSetRss','edit'])
+        ->setName('dataSet.rss.edit');
+    $group->delete('/dataset/{id}/rss/{rssId}', ['\Xibo\Controller\DataSetRss','delete'])
+        ->setName('dataSet.rss.delete');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dataset.modify']));
 
 // Data
