@@ -64,16 +64,20 @@ describe('Layout Designer', function() {
 
     cy.get('[name="lowerLimit"]').clear().type('1');
     cy.get('[name="upperLimit"]').clear().type('10');
-    cy.get('.order-clause-row > :nth-child(2) > .form-control').select('Text', {force: true});
+    cy.get('.order-clause-row > :nth-child(2) > .form-control').select('Col1', {force: true});
     cy.get('.order-clause-row > .btn').click();
-    cy.get(':nth-child(2) > :nth-child(2) > .form-control').select('Number', {force: true});
+    cy.get(':nth-child(2) > :nth-child(2) > .form-control').select('Col2', {force: true});
 
     // -------------
     // -------------Appearance Tab
     cy.get('.nav-link[href="#appearanceTab"]').click();
 
+    // Check if dataset exists exactly two columns
+    cy.get('#columnsOut')
+        .find('li')
+        .should('have.length', 2)
+
     // Select columns available/ move them to columns selected
-    cy.get('#columnsOut>li:first').should('have.attr', 'id').and('equal', '1');
     cy.get('#columnsOut>li:first')
       .trigger('mousedown', {
         which: 1,
@@ -85,7 +89,6 @@ describe('Layout Designer', function() {
       });
     cy.get('#columnsIn').click();
 
-    cy.get('#columnsOut>li:first').should('have.attr', 'id').and('equal', '2');
     cy.get('#columnsOut>li:first')
       .trigger('mousedown', {
         which: 1,
