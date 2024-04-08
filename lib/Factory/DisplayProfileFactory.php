@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -233,8 +233,8 @@ class DisplayProfileFactory extends BaseFactory
                 ['name' => 'dayPartId', 'default' => null],
                 ['name' => 'webViewPluginState', 'default' => 'DEMAND'],
                 ['name' => 'hardwareAccelerateWebViewMode', 'default' => '2'],
-                ['name' => 'timeSyncFromCms', 'default' => 0],
-                ['name' => 'webCacheEnabled', 'default' => 0],
+                ['name' => 'timeSyncFromCms', 'default' => 0, 'type' => 'checkbox'],
+                ['name' => 'webCacheEnabled', 'default' => 0, 'type' => 'checkbox'],
                 ['name' => 'serverPort', 'default' => 9696],
                 ['name' => 'installWithLoadedLinkLibraries', 'default' => 1, 'type' => 'checkbox'],
                 ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox'],
