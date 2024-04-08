@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-03-08 09:24+0000\n"
+"POT-Creation-Date: 2024-04-05 13:49+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -11454,7 +11454,7 @@ msgstr ""
 
 #: cache/9f/9f9a142004ca4a1c914a4395fe586017.php:125
 #: cache/a4/a4b5f52b1992bb349e8a30b19ff24645.php:80
-#: lib/Controller/Playlist.php:1702 lib/Controller/Library.php:2114
+#: lib/Controller/Playlist.php:1703 lib/Controller/Library.php:2114
 #: lib/Controller/Layout.php:1656
 msgid "Design"
 msgstr ""
@@ -12461,7 +12461,7 @@ msgid "Report an application fault"
 msgstr ""
 
 #: cache/04/0499f0242d314e52ef2aed46b4a0b1e9.php:113
-#: lib/Middleware/Actions.php:102
+#: lib/Middleware/Actions.php:104
 msgid ""
 "CMS configuration warning, it is very unlikely that /web/ should be in the "
 "URL. This usually means that the DocumentRoot of the web server is wrong and "
@@ -17918,7 +17918,7 @@ msgstr ""
 
 #: cache/71/71725d40a3089432630feea639ab8751.php:112
 #: cache/71/71725d40a3089432630feea639ab8751.php:116
-#: lib/Controller/Sessions.php:114
+#: lib/Controller/Sessions.php:119
 msgid "Logout"
 msgstr ""
 
@@ -18167,8 +18167,8 @@ msgstr ""
 
 #: cache/2c/2c268905994cc74a86fb2ebd71265416.php:137
 msgid ""
-"Assign all Media items based on their Library duration, and make it sticky "
-"so that changes in the library are not pulled into Layouts."
+"Assign all Media items to Playlists based on their Library duration, and "
+"make it sticky so that changes in the library are not pulled into Layouts."
 msgstr ""
 
 #: cache/2c/2c268905994cc74a86fb2ebd71265416.php:147
@@ -20809,7 +20809,7 @@ msgstr ""
 #: lib/Controller/Widget.php:988 lib/Controller/Widget.php:1077
 #: lib/Controller/Widget.php:1444 lib/Controller/Widget.php:1553
 #: lib/Controller/Widget.php:1635 lib/Controller/Playlist.php:1311
-#: lib/Controller/Playlist.php:1475 lib/Controller/Layout.php:740
+#: lib/Controller/Playlist.php:1476 lib/Controller/Layout.php:740
 #: lib/Controller/Layout.php:843 lib/Controller/Region.php:229
 #: lib/Controller/Region.php:376 lib/Controller/Region.php:462
 #: lib/Controller/Region.php:527 lib/Controller/Region.php:748
@@ -21488,7 +21488,7 @@ msgstr ""
 msgid "Please provide an assetId"
 msgstr ""
 
-#: lib/Controller/Fault.php:109 lib/Entity/Layout.php:1936
+#: lib/Controller/Fault.php:109 lib/Entity/Layout.php:1910
 msgid "Can't create ZIP. Error Code: "
 msgstr ""
 
@@ -21623,42 +21623,42 @@ msgstr ""
 msgid "Please provide Media to Assign"
 msgstr ""
 
-#: lib/Controller/Playlist.php:1335
+#: lib/Controller/Playlist.php:1336
 msgid "You do not have permissions to use this media"
 msgstr ""
 
-#: lib/Controller/Playlist.php:1340
+#: lib/Controller/Playlist.php:1341
 #, php-format
 msgid "You cannot assign file type %s to a playlist"
 msgstr ""
 
-#: lib/Controller/Playlist.php:1400
+#: lib/Controller/Playlist.php:1401
 msgid "Media Assigned"
 msgstr ""
 
-#: lib/Controller/Playlist.php:1485
+#: lib/Controller/Playlist.php:1486
 msgid "Cannot Save empty region playlist. Please add widgets"
 msgstr ""
 
-#: lib/Controller/Playlist.php:1504
+#: lib/Controller/Playlist.php:1505
 msgid "Order Changed"
 msgstr ""
 
-#: lib/Controller/Playlist.php:1642 lib/Controller/Playlist.php:1719
+#: lib/Controller/Playlist.php:1643 lib/Controller/Playlist.php:1720
 msgid "Specified Playlist item is not in use."
 msgstr ""
 
-#: lib/Controller/Playlist.php:1712 lib/Controller/Library.php:2124
+#: lib/Controller/Playlist.php:1713 lib/Controller/Library.php:2124
 #: lib/Controller/Layout.php:1702
 msgid "Preview Layout"
 msgstr ""
 
-#: lib/Controller/Playlist.php:1787
+#: lib/Controller/Playlist.php:1788
 #, php-format
 msgid "For Playlist %s Enable Stats Collection is set to %s"
 msgstr ""
 
-#: lib/Controller/Playlist.php:1920
+#: lib/Controller/Playlist.php:1921
 #, php-format
 msgid "Playlist %s moved to Folder %s"
 msgstr ""
@@ -22001,7 +22001,7 @@ msgid ""
 "This function is available only to User who originally locked this Layout."
 msgstr ""
 
-#: lib/Controller/Layout.php:3111 lib/Entity/Layout.php:2275
+#: lib/Controller/Layout.php:3111 lib/Entity/Layout.php:2249
 msgid "Empty Region"
 msgstr ""
 
@@ -22587,7 +22587,7 @@ msgstr ""
 msgid "File available only for SSSP displays"
 msgstr ""
 
-#: lib/Controller/Sessions.php:183
+#: lib/Controller/Sessions.php:177
 msgid "User Logged Out."
 msgstr ""
 
@@ -22745,9 +22745,10 @@ msgstr ""
 msgid "Layout ID %d is locked by another User! Lock expires on: %s"
 msgstr ""
 
-#: lib/Middleware/Actions.php:93
+#: lib/Middleware/Actions.php:94
 msgid ""
-"There is a problem with this installation. \"install.php\" should be deleted."
+"There is a problem with this installation, the web/install folder should be "
+"deleted."
 msgstr ""
 
 #: lib/Middleware/SAMLAuthentication.php:102
@@ -23190,40 +23191,36 @@ msgid ""
 "edge. Please check the allowed Resize Limit in Administration -> Settings"
 msgstr ""
 
-#: lib/Entity/Layout.php:1837
-msgid "Missing one or more required elements"
-msgstr ""
-
-#: lib/Entity/Layout.php:1853
+#: lib/Entity/Layout.php:1827
 #, php-format
 msgid "%s is pending conversion"
 msgstr ""
 
-#: lib/Entity/Layout.php:1858
+#: lib/Entity/Layout.php:1832
 #, php-format
 msgid ""
 "%s is too large. Please ensure that none of the images in your layout are "
 "larger than your Resize Limit on their longest edge."
 msgstr ""
 
-#: lib/Entity/Layout.php:1870
+#: lib/Entity/Layout.php:1844
 msgid "Misconfigured Playlist"
 msgstr ""
 
-#: lib/Entity/Layout.php:2264
+#: lib/Entity/Layout.php:2238
 #, php-format
 msgid "There is an error with this Layout: %s"
 msgstr ""
 
-#: lib/Entity/Layout.php:2343 lib/Entity/Layout.php:2472
+#: lib/Entity/Layout.php:2317 lib/Entity/Layout.php:2446
 msgid "Not a Draft"
 msgstr ""
 
-#: lib/Entity/Layout.php:2558
+#: lib/Entity/Layout.php:2532
 msgid "Draft Layouts must have a parent"
 msgstr ""
 
-#: lib/Entity/Layout.php:2693 lib/Listener/WidgetListener.php:199
+#: lib/Entity/Layout.php:2667 lib/Listener/WidgetListener.php:199
 msgid "Cannot add the same SubPlaylist twice."
 msgstr ""
 
@@ -25116,33 +25113,33 @@ msgstr ""
 msgid "There was a problem processing your request, please try again"
 msgstr ""
 
-#: lib/Connector/AlphaVantageConnector.php:120
+#: lib/Connector/AlphaVantageConnector.php:123
 msgid "Unable to contact the AlphaVantage API"
 msgstr ""
 
-#: lib/Connector/AlphaVantageConnector.php:234
-msgid "Missing Items for Stocks Module"
+#: lib/Connector/AlphaVantageConnector.php:238
+msgid "Add some stock symbols"
 msgstr ""
 
-#: lib/Connector/AlphaVantageConnector.php:282
+#: lib/Connector/AlphaVantageConnector.php:286
 msgid "Invalid symbol "
 msgstr ""
 
-#: lib/Connector/AlphaVantageConnector.php:319
+#: lib/Connector/AlphaVantageConnector.php:323
 msgid "Stocks data invalid"
 msgstr ""
 
-#: lib/Connector/AlphaVantageConnector.php:395
+#: lib/Connector/AlphaVantageConnector.php:399
 msgid ""
 "Missing Items for Currencies Module. Please provide items in order to "
 "proceed."
 msgstr ""
 
-#: lib/Connector/AlphaVantageConnector.php:537
-#: lib/Connector/AlphaVantageConnector.php:544
-#: lib/Connector/AlphaVantageConnector.php:549
-#: lib/Connector/AlphaVantageConnector.php:614
-#: lib/Connector/AlphaVantageConnector.php:619
+#: lib/Connector/AlphaVantageConnector.php:541
+#: lib/Connector/AlphaVantageConnector.php:548
+#: lib/Connector/AlphaVantageConnector.php:553
+#: lib/Connector/AlphaVantageConnector.php:618
+#: lib/Connector/AlphaVantageConnector.php:623
 msgid "Currency data invalid"
 msgstr ""
 
@@ -25473,7 +25470,7 @@ msgid ""
 "please consult your administrator"
 msgstr ""
 
-#: lib/Storage/PdoStorageService.php:412
+#: lib/Storage/PdoStorageService.php:417
 #, php-format
 msgid "Failed to write to database after %d retries. Please try again later."
 msgstr ""
