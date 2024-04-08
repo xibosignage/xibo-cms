@@ -68,15 +68,6 @@
             &.media-search-form, &.layout_tempates-search-form {
                 padding: 0;
                 padding-bottom: 1rem;
-                display: flex;
-                flex-direction: row;
-                flex-wrap: wrap;
-                align-items: center;
-                justify-content: space-between;
-
-                .form-group {
-                    width: calc(50% - 4px);
-                }
             }
         }
     }
@@ -621,7 +612,7 @@
                     }
                 }
 
-                &.toolbar-layout_templates-pane {
+                &.toolbar-layout_templates-pane, &.toolbar-layout_exchange-pane {
                     .toolbar-card:not(.has-thumb):hover .media-title {
                         overflow: visible;
                         white-space: normal;
