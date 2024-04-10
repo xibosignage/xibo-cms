@@ -29,12 +29,10 @@ $(function() {
       globalOptions.originalWidth = e.data.options.originalWidth;
       globalOptions.originalHeight = e.data.options.originalHeight;
 
-      // Used in case we are on the editor to set pauseEffectOnStart
-      const isEditor = xiboIC.checkIsEditor();
       // Set the pause state for animation to false
       // To start right after the render effects are generated
       globalOptions.pauseEffectOnStart =
-        e.data.options.pauseEffectOnStart ?? !isEditor;
+        e.data.options.pauseEffectOnStart ?? false;
 
       // Arguments for both reRender
       const args = (typeof widget != 'undefined') ? [
