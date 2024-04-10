@@ -369,7 +369,7 @@ jQuery.fn.extend({
             .css({'white-space': 'normal', float: 'none'});
         }
 
-        if (isEditor && !options.pauseEffectOnStart) {
+        if (!options.pauseEffectOnStart) {
           // Set some options on the extra DIV and make it a marquee
           if (isUseNewMarquee) {
             $contentDiv.find('.scroll').marquee();

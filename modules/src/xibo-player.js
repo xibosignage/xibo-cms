@@ -1711,7 +1711,8 @@ XiboPlayer.prototype.renderOptions = function(currentWidget, globalOptions) {
     globalOptions,
     {
       duration: currentWidget.duration,
-      pauseEffectOnStart: globalOptions.pauseEffectOnStart ?? false,
+      pauseEffectOnStart:
+        globalOptions.pauseEffectOnStart ?? true,
       isPreview: currentWidget.isPreview,
       isEditor: currentWidget.isEditor,
     },
