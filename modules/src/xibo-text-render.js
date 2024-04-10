@@ -368,19 +368,6 @@ jQuery.fn.extend({
           $contentDiv.find('.scroll').css('height', '100%').children()
             .css({'white-space': 'normal', float: 'none'});
         }
-
-
-        if (!options.pauseEffectOnStart) {
-          // Set some options on the extra DIV and make it a marquee
-          if (isUseNewMarquee) {
-            $contentDiv.find('.scroll').marquee();
-          } else {
-            $contentDiv.find('.scroll').overflowMarquee();
-          }
-
-          // Add animating class to prevent multiple inits
-          $contentDiv.find('.scroll').addClass('animating');
-        }
       }
 
       // Add aditional padding to the items
