@@ -122,6 +122,7 @@ trait ModuleXmlTrait
                 $property->allowLibraryRefs = $node->getAttribute('allowLibraryRefs') === 'true';
                 $property->allowAssetRefs = $node->getAttribute('allowAssetRefs') === 'true';
                 $property->parseTranslations = $node->getAttribute('parseTranslations') === 'true';
+                $property->sendToElements = $node->getAttribute('sendToElements') === 'true';
                 $property->title = __($this->getFirstValueOrDefaultFromXmlNode($node, 'title'));
                 $property->helpText = __($this->getFirstValueOrDefaultFromXmlNode($node, 'helpText'));
                 $property->value = $this->getFirstValueOrDefaultFromXmlNode($node, 'value');
