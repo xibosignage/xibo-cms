@@ -375,7 +375,6 @@ $(target).find('.date').each(function(_idx, dateEl){
             <property id="url" type="text">
                 <title>Image URL</title>
                 <helpText>Enter the URL of the image you want to use.</helpText>
-                <default>https://xibosignage.com/dist/img/header-logo.svg</default>
             </property>
             <property id="opacity" type="number">
                 <title>Opacity</title>
@@ -447,15 +446,13 @@ $(target).find('.date').each(function(_idx, dateEl){
             <hbs><![CDATA[
 <div class="global-elements-image img-container" style="width:100%; height: 100%; overflow: hidden; position: relative;
     {{#if roundBorder}}border-radius: {{borderRadius}}px;{{/if}}">
-    {{#if url}}
-        <img src="{{{url}}}" style="
-            width:100%; height: 100%;
-            object-fit: {{objectFit}};
-            object-position: {{alignId}} {{valignId}};
-            opacity: {{opacity}}%;
-            position: absolute; top: 0; left: 0;"
-        />
-    {{/if}}
+    <img src="{{{url}}}" style="
+        width:100%; height: 100%;
+        object-fit: {{objectFit}};
+        object-position: {{alignId}} {{valignId}};
+        opacity: {{opacity}}%;
+        position: absolute; top: 0; left: 0;"
+    />
 </div>
             ]]></hbs>
         </stencil>

@@ -415,11 +415,12 @@ class Layout extends Base
 
             // Empty template so we create a blank layout with the provided resolution
             if (empty($resolutionId)) {
-                // Pick landscape
-                $resolution = $this->resolutionFactory->getByDimensions(1920, 1080);
-                $resolutionId = $resolution->resolutionId;
+                // Get the nearest landscape resolution we can
+                $resolution = $this->resolutionFactory->getClosestMatchingResolution(1920, 1080);
 
-                $this->getLog()->debug('add: no resolution resolved: ' . $resolutionId);
+                // Get the ID
+                $resolutionId = $resolution->resolutionId;
+                $this->getLog()->debug('add: resolution resolved: ' . $resolutionId);
             }
 
             $layout = $this->layoutFactory->createFromResolution(
@@ -1600,7 +1601,7 @@ class Layout extends Base
                     // Parse down for description
                     $layout->setUnmatchedProperty(
                         'descriptionFormatted',
-                        Parsedown::instance()->text($layout->description)
+                        Parsedown::instance()->setSafeMode(true)->text($layout->description)
                     );
                 } else if ($showDescriptionId == 2) {
                     $layout->setUnmatchedProperty('descriptionFormatted', strtok($layout->description, "\n"));
@@ -3363,7 +3364,7 @@ class Layout extends Base
                     $media->height
                 )->resolutionId;
             } else if ($type === 'playlist') {
-                $resolutionId = $this->resolutionFactory->getByDimensions(
+                $resolutionId = $this->resolutionFactory->getClosestMatchingResolution(
                     1920,
                     1080
                 )->resolutionId;

@@ -288,18 +288,13 @@ Viewer.prototype.render = function(forceReload = false, target = {}) {
     // Render full layout
     const $viewerContainer = this.DOMObject;
 
-    // If preview is playing, refresh the bottombar
-    if (this.previewPlaying && this.parent.selectedObject.type == 'layout') {
-      this.parent.bottombar.render(this.parent.selectedObject);
-    }
-
     // Clear temp data
     lD.common.clearContainer($viewerContainer);
 
     // Show loading template
     $viewerContainer.html(loadingTemplate());
 
-    // Set preview play as false
+    // When rendering, preview is always set to false
     this.previewPlaying = false;
 
     // Reset container properties
@@ -1235,12 +1230,6 @@ Viewer.prototype.renderRegion = function(
       },
     });
 
-    // Update bottom bar
-    lD.bottombar.render(
-      (widgetToLoad) ? widgetToLoad : lD.selectedObject,
-      res,
-    );
-
     // If inline editor is on, show the controls for it
     // ( fixing asyc load problem )
     if (lD.propertiesPanel.inlineEditor) {
@@ -1661,7 +1650,7 @@ Viewer.prototype.renderElementContent = function(
       template.stencil : template.parent.stencil;
     let hbsTemplate = Handlebars.compile(
       (stencil?.hbs) ?
-        stencil.hbs:
+        stencil.hbs :
         '',
     );
 
@@ -1672,7 +1661,7 @@ Viewer.prototype.renderElementContent = function(
     ) {
       const styleTemplate = Handlebars.compile(
         (stencil?.style) ?
-          stencil.style:
+          stencil.style :
           '',
       );
 
@@ -1864,7 +1853,7 @@ Viewer.prototype.renderElementContent = function(
         }
 
         if (element.elementType === 'dataset' && elData) {
-          if (extendOverrideKey !==null) {
+          if (extendOverrideKey !== null) {
             convertedProperties[extendOverrideKey] =
               elData.hasOwnProperty(convertedProperties.datasetField) ?
                 elData[convertedProperties.datasetField] : '';
@@ -1976,18 +1965,28 @@ Viewer.prototype.validateElement = function(
     'canvas',
   );
 
-  // Get error message ( from element or group )
+  // Get error message container
   let $messageContainer = (hasGroup) ?
-    $groupContainer.find('> .invalid-parent') :
-    $elementContainer.find('> .invalid-parent');
+    $groupContainer.find('> .message-container') :
+    $elementContainer.find('> .message-container');
+
+  // If there's no message container, add it
+  if ($messageContainer.length === 0) {
+    $messageContainer = $('<div class="message-container"></div>');
+
+    if (hasGroup) {
+      $messageContainer.appendTo($groupContainer);
+    } else {
+      $messageContainer.appendTo($elementContainer);
+    }
+  }
+
+  // Get error message
+  let $errorMessage = $messageContainer.find('.error-message');
 
   // Is widget not valid?
   const isNotValid = (
-    !$.isEmptyObject(parentWidget.validateData) ||
-    (
-      parentWidget.requiredElements &&
-      parentWidget.requiredElements.valid === false
-    )
+    !$.isEmptyObject(parentWidget.validateData)
   );
 
   // If parent widget isn't valid, show error message
@@ -1995,19 +1994,75 @@ Viewer.prototype.validateElement = function(
     const errorArray = [];
 
     // Create message container if it doesn't exist
-    if ($messageContainer.length === 0) {
-      $messageContainer = $(
-        `<div class="invalid-parent d-none" data-html="true">
+    if ($errorMessage.length === 0) {
+      $errorMessage = $(
+        `<div class="error-message d-none" data-html="true">
+            <i class="fa fa-exclamation-circle"></i>
+        </div>`);
+
+      if (hasGroup) {
+        // Remove message from element if we're going to create the group one
+        $elementContainer.find('.error-message').remove();
+      }
+
+      $errorMessage.appendTo($messageContainer);
+    }
+
+    // Request message
+    (parentWidget.validateData.errorMessage) &&
+      errorArray.push(
+        '<p>' +
+        parentWidget.validateData.errorMessage +
+        '</p>');
+
+    // Sample data message
+    (parentWidget.validateData.sampleDataMessage) &&
+      errorArray.push(
+        '<p class="sample-data">( ' +
+        parentWidget.validateData.sampleDataMessage +
+        ' )</p>');
+
+    // Set title/tooltip
+    $errorMessage.tooltip('dispose')
+      .prop('title', '<div class="custom-tooltip">' +
+        errorArray.join('') + '</div>');
+    $errorMessage.tooltip();
+
+    // Show tooltip
+    $errorMessage.removeClass('d-none');
+  } else {
+    // Remove error message
+    $errorMessage.remove();
+  }
+
+  // Get warning message ( from element or group )
+  let $warningMessage = (hasGroup) ?
+    $groupContainer.find('.warning-message') :
+    $elementContainer.find('.warning-message');
+
+  // Needs warning message?
+  const needsWarningMessage = (
+    parentWidget.requiredElements &&
+    parentWidget.requiredElements.valid === false
+  );
+
+  // Warning message needed
+  if (needsWarningMessage) {
+    const errorArray = [];
+
+    // Create message container if it doesn't exist
+    if ($warningMessage.length === 0) {
+      $warningMessage = $(
+        `<div class="warning-message d-none" data-html="true">
             <i class="fa fa-warning"></i>
         </div>`);
 
       if (hasGroup) {
         // Remove message from element if we're going to create the group one
-        $elementContainer.find('> .invalid-parent').remove();
-        $messageContainer.appendTo($groupContainer);
-      } else {
-        $messageContainer.appendTo($elementContainer);
+        $elementContainer.find('.warning-message').remove();
       }
+
+      $warningMessage.appendTo($messageContainer);
     }
 
     // Check required elements
@@ -2029,31 +2084,17 @@ Viewer.prototype.validateElement = function(
         requiredElementsErrorMessage +
         '</p>');
 
-    // Request message
-    (parentWidget.validateData.errorMessage) &&
-      errorArray.push(
-        '<p>' +
-        parentWidget.validateData.errorMessage +
-        '</p>');
-
-    // Sample data message
-    (parentWidget.validateData.sampleDataMessage) &&
-      errorArray.push(
-        '<p class="sample-data">( ' +
-        parentWidget.validateData.sampleDataMessage +
-        ' )</p>');
-
     // Set title/tooltip
-    $messageContainer.tooltip('dispose')
+    $warningMessage.tooltip('dispose')
       .prop('title', '<div class="custom-tooltip">' +
-      errorArray.join('') + '</div>');
-    $messageContainer.tooltip();
+        errorArray.join('') + '</div>');
+    $warningMessage.tooltip();
 
     // Show tooltip
-    $messageContainer.removeClass('d-none');
+    $warningMessage.removeClass('d-none');
   } else {
     // Remove error message
-    $messageContainer.remove();
+    $warningMessage.remove();
   }
 };
 
@@ -2072,10 +2113,26 @@ Viewer.prototype.validateElementData = function(
     $elementContainer.parents('.designer-element-group');
   const hasGroup = Boolean(element.groupId);
 
-  // Get error message ( from element or group )
+  // Get error message container
   let $messageContainer = (hasGroup) ?
-    $groupContainer.find('> .empty-element-data') :
-    $elementContainer.find('> .empty-element-data');
+    $groupContainer.find('> .message-container') :
+    $elementContainer.find('> .message-container');
+
+  // If there's no message container, add it
+  if ($messageContainer.length === 0) {
+    $messageContainer = $('<div class="message-container"></div>');
+
+    if (hasGroup) {
+      $messageContainer.appendTo($groupContainer);
+    } else {
+      $messageContainer.appendTo($elementContainer);
+    }
+  }
+
+  // Get error message ( from element or group )
+  let $message = (hasGroup) ?
+    $groupContainer.find('.empty-element-data') :
+    $elementContainer.find('.empty-element-data');
 
   const isNotValid =
     !widgetData || typeof widgetData === 'undefined' || widgetData === '';
@@ -2085,19 +2142,18 @@ Viewer.prototype.validateElementData = function(
     const elementType = element.elementType;
 
     // Create message if doesn't exist
-    if ($messageContainer.length === 0) {
-      $messageContainer = $(
+    if ($message.length === 0) {
+      $message = $(
         `<div class="empty-element-data d-none" data-html="true">
-          <i class="fa fa-warning"></i>
+          <i class="fa fa-info-circle"></i>
         </div>`);
 
       if (hasGroup) {
         // Remove message from element if we're going to create the group one
-        $elementContainer.find('> .empty-element-data').remove();
-        $messageContainer.appendTo($groupContainer);
-      } else {
-        $messageContainer.appendTo($elementContainer);
+        $elementContainer.find('.empty-element-data').remove();
       }
+
+      $message.appendTo($messageContainer);
     }
 
     errorArray.push(
@@ -2113,53 +2169,94 @@ Viewer.prototype.validateElementData = function(
       '</p>');
 
     // Set title/tooltip
-    $messageContainer.tooltip('dispose')
+    $message.tooltip('dispose')
       .prop('title', '<div class="custom-tooltip">' +
         errorArray.join('') + '</div>');
-    $messageContainer.tooltip();
+    $message.tooltip();
 
     // Show tooltip
-    $messageContainer.removeClass('d-none');
+    $message.removeClass('d-none');
   } else {
     // Remove message
-    $messageContainer.remove();
+    $message.remove();
   }
 };
 
 /**
  * Play preview
- * @param {string} url - Preview url
- * @param {object} dimensions - Preview dimensions
+ * @param {object=} dimensions - Preview dimensions
  */
-Viewer.prototype.playPreview = function(url, dimensions) {
+Viewer.prototype.playPreview = function(dimensions) {
+  const app = this.parent;
+
+  // Preview request path
+  const requestPath = urlsForApi.layout.preview.url
+    .replace(':id', app.layout.layoutId);
+
+  // If dimensions aren't set, use main container
+  if (!dimensions) {
+    dimensions = this.containerObjectDimensions;
+  }
+
   // Compile layout template with data
   const html = viewerLayoutPreview({
-    url: url,
+    url: requestPath,
     width: dimensions.width,
     height: dimensions.height,
   });
 
   // Clear temp data
-  lD.common.clearContainer(this.DOMObject.find('.layout-player'));
+  app.common.clearContainer(this.DOMObject.find('.layout-player'));
 
   // Append layout html to the main div
   this.DOMObject.find('.layout-player').html(html);
+
+  // Update playing button on bottombar
+  app.bottombar.DOMObject.find('#play-btn i')
+    .removeClass('fa-play-circle')
+    .addClass('fa-stop-circle')
+    .attr('title', bottombarTrans.stopPreviewLayout);
+
+  // Mark as playing
+  this.previewPlaying = true;
+};
+
+/**
+ * Stop preview
+ */
+Viewer.prototype.stopPreview = function() {
+  const app = this.parent;
+
+  // Reload bottombar to original state
+  app.bottombar.render(app.selectedObject);
+
+  // Reload viewer ( which stops preview )
+  this.render(true);
 };
 
 /**
  * Toggle fullscreen
  */
 Viewer.prototype.toggleFullscreen = function() {
+  const app = this.parent;
+
   // If inline editor is opened, needs to be saved/closed
   if (this.inlineEditorState == 2) {
     // Close editor content
     this.closeInlineEditorContent();
   }
+  // Was preview playing?
+  const previewWasPlaying = this.previewPlaying;
+
+  // Is preview playing? Stop preview
+  if (previewWasPlaying) {
+    this.stopPreview();
+  }
 
   this.DOMObject.parents('#layout-viewer-container').toggleClass('fullscreen');
-  this.parent.editorContainer.toggleClass('fullscreen-mode');
+  app.editorContainer.toggleClass('fullscreen-mode');
 
-  this.fullscreenMode = this.parent.editorContainer.hasClass('fullscreen-mode');
+  this.fullscreenMode = app.editorContainer.hasClass('fullscreen-mode');
 
   // Add attribute to body for editor fullscreen to be used by the moveable
   if (this.fullscreenMode) {
@@ -2169,6 +2266,11 @@ Viewer.prototype.toggleFullscreen = function() {
   }
 
   this.update();
+
+  // Is preview playing? Restart
+  if (previewWasPlaying) {
+    this.playPreview();
+  }
 };
 
 /**

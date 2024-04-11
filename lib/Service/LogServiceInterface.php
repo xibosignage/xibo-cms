@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -23,7 +23,6 @@
 
 namespace Xibo\Service;
 
-use Monolog\Logger;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -77,9 +76,10 @@ interface LogServiceInterface
     /**
      * @param $sql
      * @param $params
+     * @param bool $logAsError
      * @return mixed
      */
-    public function sql($sql, $params);
+    public function sql($sql, $params, $logAsError = false);
 
     /**
      * @param string
