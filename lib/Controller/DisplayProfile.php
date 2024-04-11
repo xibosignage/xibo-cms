@@ -466,6 +466,7 @@ class DisplayProfile extends Base
                 // Set and assign the command
                 $command->commandString = $parsedParams->getString('commandString_' . $command->commandId);
                 $command->validationString = $parsedParams->getString('validationString_' . $command->commandId);
+                $command->createAlertOn = $parsedParams->getString('createAlertOn_' . $command->commandId);
 
                 $displayProfile->assignCommand($command);
             } else {
