@@ -30,7 +30,20 @@ const XiboPlayer = function() {
    * @param {Object} currentWidget Widget object
    * @return {Promise<unknown>}
    */
-  this.getWidgetData = function(currentWidget) {
+  this.getWidgetData = async function(currentWidget) {
+    // if we are a dataset type, then first check to see if there
+    // is realtime data.
+    console.log('getWidgetData: ' + currentWidget.widgetId);
+
+    let localData;
+    if (currentWidget.properties?.dataSetId) {
+      await xiboIC.getData(currentWidget.properties?.dataSetId, {
+        done: (status, data) => {
+          localData = JSON.parse(data);
+        },
+      });
+    }
+
     return new Promise(function(resolve) {
       // if we have data on the widget (for older players),
       // or if we are not in preview and have empty data on Widget (like text)
@@ -44,6 +57,11 @@ const XiboPlayer = function() {
           url: currentWidget.url,
         }).done(function(data) {
           // The contents of the JSON file will be an object with data and meta
+          // add in local data.
+          if (localData) {
+            data.data = localData;
+          }
+
           resolve({
             ...data,
             isDataReady: true,
@@ -60,6 +78,9 @@ const XiboPlayer = function() {
       } else if (currentWidget.data?.data !== undefined) {
         // This happens for v3 players where the data is already
         // added to the HTML
+        if (localData) {
+          currentWidget.data.data = localData;
+        }
         resolve({
           ...currentWidget.data,
           isDataReady: true,
@@ -698,6 +719,16 @@ XiboPlayer.prototype.init = function() {
             calledXiboScaler = true;
           }
         });
+
+        // Handle real-time data/dataset
+        if (inputWidget.properties?.dataSetId) {
+          xiboIC.registerNotifyDataListener((dataKey) => {
+            // Loose match.
+            if (dataKey == inputWidget.properties?.dataSetId) {
+              inputWidget.render();
+            }
+          });
+        }
       } else if (self.isModule(inputWidget)) { // It's a module
         console.log('Non-data Widget::Module');
         const currentWidget = self.playerWidget(
