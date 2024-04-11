@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -281,7 +281,8 @@ class TimeDisconnectedSummary implements ReportInterface
                 ON display.displayId = `displayevent`.displayId 
                 WHERE `start` <= :end
                   AND IFNULL(`end`, :end) >= :start
-                  AND :end <= UNIX_TIMESTAMP(NOW()) ';
+                  AND :end <= UNIX_TIMESTAMP(NOW()) 
+                  AND `displayevent`.eventTypeId = 1';
 
         if (count($displayIds) > 0) {
             $body .= 'AND display.displayId IN (' . implode(',', $displayIds) . ') ';
