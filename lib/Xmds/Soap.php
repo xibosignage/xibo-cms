@@ -43,6 +43,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\NotificationFactory;
+use Xibo\Factory\PlayerFaultFactory;
 use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\RequiredFileFactory;
@@ -167,6 +168,9 @@ class Soap
     /** @var \Xibo\Factory\CampaignFactory */
     private $campaignFactory;
 
+    /** @var PlayerFaultFactory */
+    protected $playerFaultFactory;
+
     /**
      * Soap constructor.
      * @param LogProcessor $logProcessor
@@ -220,7 +224,8 @@ class Soap
         $playerVersionFactory,
         $dispatcher,
         $campaignFactory,
-        $syncGroupFactory
+        $syncGroupFactory,
+        $playerFaultFactory
     ) {
         $this->logProcessor = $logProcessor;
         $this->pool = $pool;
@@ -247,6 +252,7 @@ class Soap
         $this->dispatcher = $dispatcher;
         $this->campaignFactory = $campaignFactory;
         $this->syncGroupFactory = $syncGroupFactory;
+        $this->playerFaultFactory = $playerFaultFactory;
     }
 
     /**
@@ -1737,6 +1743,14 @@ class Soap
                 continue;
             }
 
+            // special handling for event
+            // this will create record in displayevent table
+            // and is not added to the logs.
+            if ($cat == 'event') {
+                $this->createDisplayAlert($node);
+                continue;
+            }
+
             // Does this meet the current log level?
             if ($cat == 'error') {
                 $recordLogLevel = Logger::ERROR;
@@ -1758,25 +1772,7 @@ class Soap
             }
 
             // Adjust the date according to the display timezone
-            try {
-                $date = ($this->display->timeZone != null)
-                    ? Carbon::createFromFormat(
-                        DateFormatHelper::getSystemFormat(),
-                        $date,
-                        $this->display->timeZone
-                    )->tz($defaultTimeZone)
-                    : Carbon::createFromFormat(
-                        DateFormatHelper::getSystemFormat(),
-                        $date
-                    );
-                $date = $date->format(DateFormatHelper::getSystemFormat());
-            } catch (\Exception $e) {
-                // Protect against the date format being unreadable
-                $this->getLog()->debug('Date format unreadable on log message: ' . $date);
-
-                // Use now instead
-                $date = Carbon::now()->format(DateFormatHelper::getSystemFormat());
-            }
+            $date = $this->adjustDisplayLogDate($date);
 
             // Get the date and the message (all log types have these)
             foreach ($node->childNodes as $nodeElements) {
@@ -2662,7 +2658,7 @@ class Soap
             $this->getLog()->info(sprintf('Display %s was down, now its up.', $this->display->display));
 
             // Log display up
-            $this->displayEventFactory->createEmpty()->displayUp($this->display->displayId);
+            $this->displayEventFactory->createEmpty()->eventEnd($this->display->displayId);
 
             $dayPartId = $this->display->getSetting('dayPartId', null,['displayOverride' => true]);
 
@@ -3040,5 +3036,86 @@ class Soap
         $this->toFilter = Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $toFilter);
 
         $this->getLog()->debug(sprintf('FromDT = %s [%d]. ToDt = %s [%d]', $fromFilter->toRssString(), $fromFilter->format('U'), $toFilter->toRssString(), $toFilter->format('U')));
+    }
+
+    /**
+     * Adjust the log date according to the Display timezone.
+     * Return current date if we fail.
+     * @param string $date
+     * @return string
+     */
+    protected function adjustDisplayLogDate(string $date): string
+    {
+        // Get the display timezone to use when adjusting log dates.
+        $defaultTimeZone = $this->getConfig()->getSetting('defaultTimezone');
+        
+        // Adjust the date according to the display timezone
+        try {
+            $date = ($this->display->timeZone != null)
+                ? Carbon::createFromFormat(
+                    DateFormatHelper::getSystemFormat(),
+                    $date,
+                    $this->display->timeZone
+                )->tz($defaultTimeZone)
+                : Carbon::createFromFormat(
+                    DateFormatHelper::getSystemFormat(),
+                    $date
+                );
+            $date = $date->format('U');
+        } catch (\Exception $e) {
+            // Protect against the date format being unreadable
+            $this->getLog()->debug('Date format unreadable on log message: ' . $date);
+
+            // Use now instead
+            $date = Carbon::now()->format('U');
+        }
+        
+        return $date;
+    }
+
+    private function createDisplayAlert(\DomElement $alertNode)
+    {
+        $date = $this->adjustDisplayLogDate($alertNode->getAttribute('date'));
+        $eventType = '';
+        $refId = '';
+        $detail = '';
+        $alertType = '';
+
+        // Get the nodes we are expecting
+        foreach ($alertNode->childNodes as $nodeElements) {
+            if ($nodeElements->nodeName == 'eventType') {
+                $eventType = $nodeElements->textContent;
+            } else if ($nodeElements->nodeName == 'refId') {
+                $refId = $nodeElements->textContent;
+            } else if ($nodeElements->nodeName == 'message') {
+                $detail = $nodeElements->textContent;
+            } else if ($nodeElements->nodeName == 'alertType') {
+                $alertType = $nodeElements->textContent;
+            }
+        }
+
+        // if alerts should provide both start and end or just start
+        if ($alertType == 'both' || $alertType == 'start') {
+            $displayEvent = $this->displayEventFactory->createEmpty();
+
+            // new record populated from the submitLog xml.
+            $displayEvent->displayId = $this->display->displayId;
+            $displayEvent->eventTypeId = $displayEvent->getEventIdFromString($eventType);
+            $displayEvent->eventDate = $date;
+            $displayEvent->start = $date;
+            $displayEvent->end = $alertType == 'both' ? $date : null;
+            $displayEvent->refId = empty($refId) ? null : $refId;
+            $displayEvent->detail = $detail;
+
+            $displayEvent->save();
+        } else if ($alertType == 'end') {
+            // if this event pertain only to end date for an existing event record,
+            // then set the end date for this display and the specified eventType
+            $displayEvent = $this->displayEventFactory->createEmpty();
+            $eventTypeId = $displayEvent->getEventIdFromString($eventType);
+            empty($refId)
+                ? $displayEvent->eventEnd($this->display->displayId, $eventTypeId, $date)
+                : $displayEvent->eventEndByReference($this->display->displayId, $eventTypeId, $refId);
+        }
     }
 }
