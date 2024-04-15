@@ -984,7 +984,7 @@ PropertiesPanel.prototype.render = function(
             self.DOMObject.find('#appearanceTab'),
             targetAux.elementId,
             null,
-            null,
+            targetAux.template.propertyGroups,
             'element-property',
           );
 

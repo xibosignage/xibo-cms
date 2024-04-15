@@ -234,6 +234,11 @@ const XiboPlayer = function() {
       const grpId = widgetElement.groupId;
       const hasGroup = Boolean(grpId);
 
+      // If element isn't visible, skip
+      if (widgetElement.isVisible === false) {
+        return collection;
+      }
+
       // Check for group
       if (hasGroup) {
         const grpWidgetId = grpId + '_' + currentWidget.widgetId;

@@ -1139,6 +1139,7 @@ body.editor-opened {
         &.ui-droppable-active {
             @include z-index-set($designer-select-z-index);
             background: $xibo-color-accent !important;
+            outline: 3px solid $xibo-color-accent;
 
             &.ui-droppable-hover,
             &:hover {
@@ -1258,6 +1259,7 @@ body.editor-opened {
         &.ui-droppable-active {
             @include z-index-set($designer-select-z-index);
             background: $xibo-color-accent !important;
+            outline: 3px solid $xibo-color-accent;
 
             .group-select-overlay {
                 display: initial;
@@ -1306,6 +1308,7 @@ body.editor-opened {
         .designer-region.ui-droppable-active {
             @include z-index-set($designer-select-z-index);
             background: $xibo-color-region-hover !important;
+            outline: 3px solid $xibo-color-region-hover;
 
             &.ui-droppable-hover,
             &:hover {

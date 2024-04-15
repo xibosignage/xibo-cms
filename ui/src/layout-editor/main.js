@@ -438,6 +438,17 @@ lD.selectObject =
         lD.common.hasTarget(card, 'element')
       );
 
+      const dropToImagePlaceholder = (
+        target &&
+        (
+          target.is('.designer-element[data-sub-type="image_placeholder"]')
+        ) &&
+        (
+          $(card).data('type') === 'media' &&
+          $(card).data('subType') === 'image'
+        )
+      );
+
       // Deselect cards and drop zones
       this.toolbar.deselectCardsAndDropZones();
 
@@ -448,7 +459,8 @@ lD.selectObject =
           dropToDrawerOrZone ||
           dropToWidget ||
           dropToActionTarget ||
-          dropToElementAndElGroup
+          dropToElementAndElGroup ||
+          dropToImagePlaceholder
         )
       ) {
         // Send click position if we're adding to elements and element groups
@@ -1493,6 +1505,8 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
   const droppableIsPlaylist = ($(droppable).data('subType') === 'playlist');
   const droppableIsWidget = $(droppable).hasClass('designer-widget');
   let droppableIsElement = $(droppable).hasClass('designer-element');
+  const droppableIsImagePlaceholder =
+    $(droppable).is('.designer-element[data-sub-type="image_placeholder"]');
   const droppableIsElementGroup =
     $(droppable).hasClass('designer-element-group');
   let getTemplateBeforeAdding = '';
@@ -1670,6 +1684,15 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
     let addToGroupId = null;
     let addToGroupWidgetId = null;
     let addToExistingElementId = null;
+    let placeholderElement = {};
+
+    if (droppableIsImagePlaceholder) {
+      placeholderElement = {
+        id: $(droppable).attr('id'),
+        widgetId: $(droppable).data('widgetId'),
+        regionId: $(droppable).data('regionId'),
+      };
+    }
 
     // If target is type global ( and being edited )
     // if draggable is type global or if both are the same type
@@ -1723,6 +1746,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
         properties,
         groupProperties,
         mediaId,
+        isVisible,
       } = {},
       ) {
         // Create element object
@@ -1738,6 +1762,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           layer: layer,
           rotation: rotation,
           mediaId: mediaId,
+          isVisible: isVisible,
         };
 
         // Add group id if it belongs to a group
@@ -1861,6 +1886,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
                   left: (dropPosition) ? dropPosition.left : 0,
                 },
                 mediaId: draggableData.mediaId,
+                isVisible: draggableData.isVisible,
               });
 
               // Add element to elements array
@@ -1890,6 +1916,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
             extendsOverride: draggableData.extendsOverride,
             extendsOverrideId: draggableData.extendsOverrideId,
             mediaId: draggableData.mediaId,
+            isVisible: draggableData.isVisible,
           };
 
           let addToGroup = false;
@@ -1977,6 +2004,62 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
               .elements[previousElement.elementId] = previousElement;
 
             addToGroup = true;
+          }
+
+          // If we have a placeholder, change new element
+          // dimensions to match it
+          if (!$.isEmptyObject(placeholderElement)) {
+            const widgetId =
+              'widget_' +
+              placeholderElement.regionId +
+              '_' +
+              placeholderElement.widgetId;
+
+            const placeholder = lD.getObjectByTypeAndId(
+              'element',
+              placeholderElement.id,
+              widgetId,
+            );
+
+            const widget = lD.getObjectByTypeAndId(
+              'widget',
+              widgetId,
+              'canvas',
+            );
+
+            // Position options
+            elementOptions.top = placeholder.top;
+            elementOptions.left = placeholder.left;
+            elementOptions.width = placeholder.width;
+            elementOptions.height = placeholder.height;
+            elementOptions.layer = placeholder.layer;
+
+            // Properties
+            elementOptions.properties = placeholder.properties;
+
+            // If placeholder was in a group, add to same
+            if (
+              placeholder.groupId != '' &&
+              placeholder.groupId != undefined
+            ) {
+              // Set group type as the same as the target widget
+              addToGroupType = widget.subType;
+
+              // Add group object
+              elementOptions.groupId = placeholder.groupId;
+
+              addToGroup = true;
+            }
+
+            // Remove placeholder
+            widget.removeElement(
+              placeholderElement.id,
+              {
+                save: (elementOptions.type != 'global'),
+                reloadLayerManager: false,
+                reload: false,
+              },
+            );
           }
 
           // Create element

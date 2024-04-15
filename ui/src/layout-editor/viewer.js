@@ -394,6 +394,7 @@ Viewer.prototype.render = function(forceReload = false, target = {}) {
         this.parent.selectedObject.groupId,
       ),
       this.parent.selectedObject.elementId,
+      true,
     );
   }
 
@@ -587,6 +588,26 @@ Viewer.prototype.handleInteractions = function() {
     });
   });
 
+  // Handle droppable - image placeholder
+  this.DOMObject.find(
+    '.designer-element[data-sub-type="image_placeholder"]',
+  ).each((_idx, element) => {
+    const $el = $(element);
+
+    $el.droppable({
+      greedy: true,
+      tolerance: 'pointer',
+      accept: (draggable) => {
+        return (
+          $(draggable).data('type') === 'media' &&
+          $(draggable).data('subType') === 'image'
+        );
+      },
+      drop: _.debounce(function(event, ui) {
+        lD.dropItemAdd(event.target, ui.draggable[0]);
+      }, 200),
+    });
+  });
 
   // Handle click and double click
   let clicks = 0;
@@ -1058,6 +1079,22 @@ Viewer.prototype.update = function() {
       ($viewElement.data('target') == 'layout'),
     );
   }.bind(this));
+
+  // If we are selecting an element in a group,
+  // we need to put the group in edit mode
+  if (
+    self.parent.selectedObject.type == 'element' &&
+    self.parent.selectedObject.groupId != undefined
+  ) {
+    self.editGroup(
+      self.DOMObject.find(
+        '.designer-element-group#' +
+        self.parent.selectedObject.groupId,
+      ),
+      self.parent.selectedObject.elementId,
+      true,
+    );
+  }
 
   // Update moveable
   this.updateMoveable(true);
@@ -3728,6 +3765,7 @@ Viewer.prototype.saveTemporaryObject = function(objectId, objectType, data) {
 Viewer.prototype.editGroup = function(
   groupDOMObject,
   elementToSelectOnLoad = null,
+  forceEditOn = false,
 ) {
   const self = this;
   const editing = $(groupDOMObject).hasClass('editing');
@@ -3747,7 +3785,7 @@ Viewer.prototype.editGroup = function(
   }
 
   // If we're not editing yet, start
-  if (!editing) {
+  if (!editing || forceEditOn) {
     // Get group object from structure
     const groupId = $(groupDOMObject).attr('id');
     const groupObj = lD.getObjectByTypeAndId(

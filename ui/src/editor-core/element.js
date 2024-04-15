@@ -43,6 +43,9 @@ const Element = function(data, widgetId, regionId, parentWidget) {
   this.isDeletable = (parentWidget) ? parentWidget.isDeletable : true;
   this.isViewable = (parentWidget) ? parentWidget.isViewable : true;
 
+  // Check if the element is visible on rendering ( true by default )
+  this.isVisible = (data.isVisible === undefined) ? true : data.isVisible;
+
   // Element data from the linked widget/module
   this.data = {};
 
