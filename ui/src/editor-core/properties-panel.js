@@ -54,6 +54,7 @@ const PropertiesPanel = function(parent, container) {
     layout: '',
     region: '',
     widget: '',
+    position: '',
   };
 
   this.inlineEditor = false;
@@ -1731,6 +1732,7 @@ PropertiesPanel.prototype.initFields = function(
       layout: '',
       region: '',
       widget: '',
+      position: '',
     };
 
     // Save for this type
@@ -1738,6 +1740,13 @@ PropertiesPanel.prototype.initFields = function(
       self.DOMObject.find('form [name]:not(.element-property)')
         .filter('.tab-pane:not(#positionTab) [name]')
         .serialize();
+
+    // If widget, also save position form
+    if (target.type === 'widget') {
+      self.formSerializedLoadData.position =
+        self.DOMObject.find('form #positionTab [name]')
+          .serialize();
+    }
   }
 
   // If we're not in read only mode
@@ -1931,7 +1940,9 @@ PropertiesPanel.prototype.saveRegion = function(
   const requestPath =
     urlsForApi.region.saveForm.url.replace(':id', region[region.type + 'Id']);
 
-  const formOldData = self.formSerializedLoadData[app.selectedObject.type];
+  const formOldData = (savePositionForm) ?
+    self.formSerializedLoadData.position :
+    self.formSerializedLoadData[app.selectedObject.type];
 
   // If form is valid, and it changed, submit it ( add change )
   if (form.valid() && formOldData != formNewData) {

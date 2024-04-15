@@ -8,7 +8,7 @@ module.exports = {
      * Show loading screen
      * @param {string} cloneName - Screen tag
      */
-  showLoadingScreen: function(cloneName = 'genericLoadingScreen') {
+  showLoadingScreen: function() {
     let bumpVal = $('.loading-overlay.loading').data('bump') || 0;
     bumpVal++;
 
@@ -26,7 +26,7 @@ module.exports = {
      * Hide loading screen
      * @param {string} cloneName - Screen tag
      */
-  hideLoadingScreen: function(cloneName = 'genericLoadingScreen') {
+  hideLoadingScreen: function() {
     let bumpVal = $('.loading-overlay.loading').data('bump') || 1;
     bumpVal--;
 
