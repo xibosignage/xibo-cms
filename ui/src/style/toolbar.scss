@@ -850,6 +850,11 @@
         cursor: pointer;
     }
 
+    .navbar-buttons {
+        width: $toolbar-width;
+        overflow: auto;
+    }
+
     .navbar-buttons a.active {
         background: $xibo-color-primary-l5;
         color: $xibo-color-primary;
@@ -880,7 +885,7 @@
     .btn-menu-option {
         display: block;
         color: $xibo-color-primary-l5;
-        width: $toolbar-width;
+        width: 100%;
         text-align: center;
         font-size: 1.5rem;
         padding: 10px;
@@ -995,6 +1000,7 @@
         flex-direction: column;
         align-items: center;
         gap: 6px;
+        padding-top: 14px;
 
         .toolbar-level-control, .toolbar-help-control {
             display: block;
