@@ -3384,11 +3384,21 @@ Viewer.prototype.updateRegionContent = function(
     }
   }
 
-  // Process image
+  // Process image and video/playlist thumbs
   const $imageContainer = $container
-    .find('[data-type="widget_image"], [data-type="widget_video"]');
+    .find(
+      '[data-type="widget_image"], ' +
+      '[data-type="widget_video"], ' +
+      '[data-type="playlist"]',
+    );
   if ($imageContainer.length) {
     const $image = $imageContainer.find('img');
+
+    // If there's no image container, skip
+    if ($image.length === 0) {
+      return;
+    }
+
     const $imageParent = $image.parent();
     const $imageParentContainer = $image.parents('.img-container');
     const urlSplit = $image.attr('src').split('&proportional=');
