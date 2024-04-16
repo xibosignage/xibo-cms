@@ -2653,8 +2653,7 @@ class Soap
     {
         $maintenanceEnabled = $this->getConfig()->getSetting('MAINTENANCE_ENABLED');
 
-        if ($this->display->loggedIn == 0) {
-
+        if ($this->display->loggedIn == 0 && !empty($this->display->displayId)) {
             $this->getLog()->info(sprintf('Display %s was down, now its up.', $this->display->display));
 
             // Log display up
