@@ -140,6 +140,7 @@ class Property implements \JsonSerializable
             'allowAssetRefs' => $this->allowAssetRefs,
             'parseTranslations' => $this->parseTranslations,
             'dependsOn' => $this->dependsOn,
+            'sendToElements' => $this->sendToElements,
         ];
     }
 

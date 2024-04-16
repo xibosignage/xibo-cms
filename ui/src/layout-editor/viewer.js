@@ -1734,6 +1734,13 @@ Viewer.prototype.renderElementContent = function(
   const $assetContainer =
     this.parent.editorContainer.find('#asset-container');
 
+  // Get parent widget
+  const parentWidget = lD.getObjectByTypeAndId(
+    'widget',
+    'widget_' + element.regionId + '_' + element.widgetId,
+    'canvas',
+  );
+
   // Get element template ( most of the time
   // template will be already loaded/cached )
   element.getTemplate().then((template) => {
@@ -1835,12 +1842,22 @@ Viewer.prototype.renderElementContent = function(
 
     // Get element properties
     element.getProperties().then((properties) => {
+      // Parent widget sendToElement properties
+      const sendToElementProperties =
+        parentWidget.getSendToElementProperties();
+
       // Convert properties to object with id and value
       const convertedProperties = {};
       let hasCircleOutline = false;
       for (const key in properties) {
         if (properties.hasOwnProperty(key)) {
           const property = properties[key];
+
+          // If the widget is sending the property
+          // to the element, use that value instead
+          if (sendToElementProperties[property.id] != undefined) {
+            property.value = sendToElementProperties[property.id];
+          }
 
           // Convert checkbox values to boolean
           if (property.type === 'checkbox') {

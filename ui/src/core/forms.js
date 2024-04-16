@@ -83,6 +83,11 @@ window.forms = {
       if (properties.hasOwnProperty(key)) {
         const property = properties[key];
 
+        // If element is marked as skip
+        if (property.skip === true) {
+          continue;
+        }
+
         // Handle default value
         if (property.value === null && property.default !== undefined) {
           property.value = property.default;

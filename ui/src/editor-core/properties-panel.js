@@ -978,6 +978,19 @@ PropertiesPanel.prototype.render = function(
             'element-property element-common-property',
           );
 
+          // Check if we have sendToElements properties from the widget
+          // if so, we need to skip the element property
+          const widgetProperties = res.data.module.properties;
+          widgetProperties.forEach((wPpt) => {
+            if (
+              wPpt.sendToElements === true
+            ) {
+              properties.forEach((ePpt) => {
+                ePpt.skip = (ePpt.id === wPpt.name);
+              });
+            }
+          });
+
           // Create element fields
           forms.createFields(
             properties,
