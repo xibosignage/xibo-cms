@@ -127,7 +127,7 @@ class DisplayEvent implements \JsonSerializable
     {
         $this->getLog()->debug(
             sprintf(
-                'displayEvent : end display alert for eventTypeId %d and displayId %d',
+                'displayEvent : end display alert for eventType %s and displayId %d',
                 $this->getEventNameFromId($eventTypeId),
                 $displayId
             )
@@ -158,7 +158,7 @@ class DisplayEvent implements \JsonSerializable
     {
         $this->getLog()->debug(
             sprintf(
-                'displayEvent : end display alert for refId %d, displayId %d and eventTypeId %d',
+                'displayEvent : end display alert for refId %d, displayId %d and eventType %s',
                 $refId,
                 $displayId,
                 $this->getEventNameFromId($eventTypeId),
