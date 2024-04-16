@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -61,7 +61,10 @@ class RegisterDisplayTest extends XmdsTestCase
         $innerDocument->loadXML($result);
 
         $this->assertSame('READY', $innerDocument->documentElement->getAttribute('code'));
-        $this->assertSame('Display is active and ready to start.', $innerDocument->documentElement->getAttribute('message'));
+        $this->assertSame(
+            'Display is active and ready to start.',
+            $innerDocument->documentElement->getAttribute('message')
+        );
     }
 
     public function testRegisterDisplayNoAuth()
@@ -98,5 +101,34 @@ class RegisterDisplayTest extends XmdsTestCase
                 $this->assertSame('trial', $value);
             }
         }
+    }
+
+    public function testRegisterNewDisplay()
+    {
+        $request = $this->sendRequest(
+            'POST',
+            $this->register(
+                'PHPUnitAddedTest' . mt_rand(1, 10),
+                'phpunitaddedtest',
+                'android'
+            ),
+            7
+        );
+
+        $response = $request->getBody()->getContents();
+
+        $document = new DOMDocument();
+        $document->loadXML($response);
+
+        $xpath = new DOMXpath($document);
+        $result = $xpath->evaluate('string(//ActivationMessage)');
+        $innerDocument = new DOMDocument();
+        $innerDocument->loadXML($result);
+
+        $this->assertSame('ADDED', $innerDocument->documentElement->getAttribute('code'));
+        $this->assertSame(
+            'Display is now Registered and awaiting Authorisation from an Administrator in the CMS',
+            $innerDocument->documentElement->getAttribute('message')
+        );
     }
 }
