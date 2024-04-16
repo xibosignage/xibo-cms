@@ -94,7 +94,7 @@ trait XmdsHelperTrait
             <tns:ReportFaults>
               <serverKey xsi:type="xsd:string">6v4RduQhaw5Q</serverKey>
               <hardwareKey xsi:type="xsd:string">PHPUnit'.$version.'</hardwareKey>
-              <fault xsi:type="xsd:string">[{date:"2023-04-20 17:03:52",expires:"2023-04-21 17:03:52",code:00001,reason:"Test",scheduleId:0,layoutId:0,regionId:0,mediaId:0,widgetId:0}]</fault>
+              <fault xsi:type="xsd:string">[{"date":"2023-04-20 17:03:52","expires":"2023-04-21 17:03:52","code":"10001","reason":"Test","scheduleId":"0","layoutId":0,"regionId":"0","mediaId":"0","widgetId":"0"}]</fault>
             </tns:ReportFaults>
           </soap:Body>
         </soap:Envelope>';
