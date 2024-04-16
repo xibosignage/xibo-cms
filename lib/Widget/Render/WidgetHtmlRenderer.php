@@ -491,6 +491,9 @@ class WidgetHtmlRenderer
                 }
             }
 
+            // Get an array of the modules property values.
+            $modulePropertyValues = $module->getPropertyValues();
+
             // Configure a translator for the module
             // Note: We are using the language defined against the module and not from the module template
             $translator = null;
@@ -503,7 +506,7 @@ class WidgetHtmlRenderer
                 'widgetId' => $widget->widgetId,
                 'templateId' => $templateId,
                 'sample' => $module->sampleData,
-                'properties' => $module->getPropertyValues(),
+                'properties' => $modulePropertyValues,
                 'isValid' => $widget->isValid === 1,
                 'isRepeatData' => $widget->getOptionValue('isRepeatData', 1) === 1,
                 'duration' => $widget->useDuration ? $widget->duration : $module->defaultDuration,
@@ -590,8 +593,6 @@ class WidgetHtmlRenderer
             // What does our module have
             if ($module->stencil !== null) {
                 // Stencils have access to any module properties
-                $modulePropertyValues = $module->getPropertyValues();
-
                 if ($module->stencil->twig !== null) {
                     $twig['twig'][] = $this->twig->fetchFromString(
                         $this->decorateTranslations($module->stencil->twig, null),
@@ -628,6 +629,16 @@ class WidgetHtmlRenderer
                 // Elements will be JSON
                 $widgetElements = json_decode($widgetElements, true);
 
+                // Are any of the module properties marked for sending to elements?
+                $modulePropertiesToSend = [];
+                if (count($widgetElements) > 0) {
+                    foreach ($module->properties as $property) {
+                        if ($property->sendToElements) {
+                            $modulePropertiesToSend[$property->id] = $modulePropertyValues[$property->id] ?? null;
+                        }
+                    }
+                }
+
                 // Join together the template properties for this element, and the element properties
                 foreach ($widgetElements as $widgetIndex => $widgetElement) {
                     // Assert the widgetId
@@ -651,6 +662,12 @@ class WidgetHtmlRenderer
                                             true
                                         )
                                     );
+
+                                // Update any properties which match on the element
+                                foreach ($modulePropertiesToSend as $propertyToSend => $valueToSend) {
+                                    $widgetElements[$widgetIndex]['elements']
+                                        [$elementIndex]['properties'][$propertyToSend] = $valueToSend;
+                                }
                             }
                         }
 

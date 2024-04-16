@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2023 Xibo Signage Ltd
+  ~ Copyright (C) 2024 Xibo Signage Ltd
   ~
   ~ Xibo - Digital Signage - https://xibosignage.com
   ~
@@ -68,7 +68,7 @@
             <helpText>Select the units you would like to use.</helpText>
             <default>auto</default>
         </property>
-        <property id="lang" type="languageSelector" variant="momentLocales">
+        <property id="lang" type="languageSelector" variant="momentLocales" sendToElements="true">
             <title>Language</title>
             <helpText>Select the language you would like to use.</helpText>
             <default>en</default>

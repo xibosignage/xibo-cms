@@ -556,17 +556,6 @@ const XiboPlayer = function() {
       elemCopy.hbs = Handlebars.compile($template.html());
     }
 
-    // Special case for handling weather language
-    if (elemProps.hasOwnProperty('lang') &&
-      currentWidget.properties.hasOwnProperty('lang')
-    ) {
-      const elemLang = elemProps.lang;
-      const widgetLang = currentWidget.properties.lang;
-
-      elemProps.lang = (elemLang !== null && String(elemLang).length > 0) ?
-        elemLang : widgetLang;
-    }
-
     elemCopy.templateData = Object.assign(
       {}, elemCopy, elemProps, globalOptions,
       {uniqueID: elemCopy.elementId, prop: {...elemCopy, ...elemProps}},
