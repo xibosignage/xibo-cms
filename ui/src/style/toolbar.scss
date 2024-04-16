@@ -1138,6 +1138,7 @@
     top: 50px;
     left: 0;
     bottom: 0;
+    height: calc(100% - 50px);
 
     .navbar-submenu > a.option-container {
         text-align: center;
