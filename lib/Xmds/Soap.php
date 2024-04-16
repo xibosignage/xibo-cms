@@ -1772,7 +1772,7 @@ class Soap
             }
 
             // Adjust the date according to the display timezone
-            $date = $this->adjustDisplayLogDate($date);
+            $date = $this->adjustDisplayLogDate($date, DateFormatHelper::getSystemFormat());
 
             // Get the date and the message (all log types have these)
             foreach ($node->childNodes as $nodeElements) {
@@ -3042,9 +3042,10 @@ class Soap
      * Adjust the log date according to the Display timezone.
      * Return current date if we fail.
      * @param string $date
+     * @param string $format
      * @return string
      */
-    protected function adjustDisplayLogDate(string $date): string
+    protected function adjustDisplayLogDate(string $date, string $format): string
     {
         // Get the display timezone to use when adjusting log dates.
         $defaultTimeZone = $this->getConfig()->getSetting('defaultTimezone');
@@ -3061,13 +3062,13 @@ class Soap
                     DateFormatHelper::getSystemFormat(),
                     $date
                 );
-            $date = $date->format('U');
+            $date = $date->format($format);
         } catch (\Exception $e) {
             // Protect against the date format being unreadable
             $this->getLog()->debug('Date format unreadable on log message: ' . $date);
 
             // Use now instead
-            $date = Carbon::now()->format('U');
+            $date = Carbon::now()->format($format);
         }
         
         return $date;
@@ -3075,7 +3076,7 @@ class Soap
 
     private function createDisplayAlert(\DomElement $alertNode)
     {
-        $date = $this->adjustDisplayLogDate($alertNode->getAttribute('date'));
+        $date = $this->adjustDisplayLogDate($alertNode->getAttribute('date'), 'U');
         $eventType = '';
         $refId = '';
         $detail = '';
