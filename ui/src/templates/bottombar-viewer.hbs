@@ -5,7 +5,7 @@
             <div class="info">
                 {{#ifCond object.widgetName '||' object.moduleName}}
                     <div class="label-name">
-                        <strong>{{objectTypeName}}</strong> <div class="name" title="{{trans.widgetName}} {{object.widgetName}}">{{#if object.widgetName}}"{{object.widgetName}}"{{/if}}</div>
+                        <strong title="{{trans.widgetType}}">{{objectTypeName}}</strong> <div class="name" title="{{trans.widgetName}}">{{#if object.widgetName}}"{{object.widgetName}}"{{/if}}{{#if moduleTemplateTitle}}<span class="template-name" title="{{trans.widgetTemplate}}"> | "{{moduleTemplateTitle}}"</span>{{/if}}</div>
                     </div>
                 {{/ifCond}}
             </div>
