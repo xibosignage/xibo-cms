@@ -684,6 +684,18 @@ PropertiesPanel.prototype.render = function(
         }
       };
 
+      // If it's an element of type global
+      // hide widget name input
+      if (
+        (isElement || isElementGroup) &&
+        targetAux.elementType === 'global'
+      ) {
+        self.DOMObject.find('#advancedTab input[name="name"]')
+          .each(function(_dx, el) {
+            $(el).parent().hide();
+          });
+      }
+
       if (isElementGroup) {
         const groupProperties = [];
         // if it's an element group and we have a slot
