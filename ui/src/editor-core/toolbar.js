@@ -1388,6 +1388,9 @@ Toolbar.prototype.selectCard = function(card) {
     // Save selected card data
     this.selectedCard = card;
 
+    // Mark editor container to show overlay is on
+    this.parent.editorContainer.addClass('overlay-on');
+
     // Show designer overlay
     $('.custom-overlay').show().off('click').on('click', () => {
       this.deselectCardsAndDropZones();
@@ -1501,10 +1504,11 @@ Toolbar.prototype.handleDroppables = function(draggable, customClasses = '') {
       (customClasses != '') ? customClasses : 'ui-droppable-active');
   }
 
-  // Show layout background overlay if exists
-  app.propertiesPanel.DOMObject.find('.background-image-add').toggleClass(
-    'ui-droppable-active',
-    (draggableType == 'image' && !draggable.hasClass('upload-card')));
+  // Show layout background overlay or image replace area if exists
+  app.propertiesPanel.DOMObject
+    .find('.background-image-add, .image-replace-control-area').toggleClass(
+      'ui-droppable-active',
+      (draggableType == 'image' && !draggable.hasClass('upload-card')));
 };
 
 /**
@@ -1524,6 +1528,9 @@ Toolbar.prototype.deselectCardsAndDropZones = function() {
   this.DOMObject.find('.toolbar-pane-content.selected')
     .removeClass('selected');
   this.DOMObject.find('nav.navbar').removeClass('card-selected');
+
+  // Remove overlay on class from editor container
+  app.editorContainer.removeClass('overlay-on');
 
   // Remove media queue data
   this.DOMObject.find('.toolbar-pane-content').removeData('mediaQueue');
@@ -2849,6 +2856,9 @@ Toolbar.prototype.handleCardsBehaviour = function() {
             // Show overlay
             $('.custom-overlay').show();
 
+            // Mark editor container to show overlay is on
+            self.parent.editorContainer.addClass('overlay-on');
+
             // Mark card as being dragged
             $card.addClass('card-dragged');
 
@@ -2859,6 +2869,9 @@ Toolbar.prototype.handleCardsBehaviour = function() {
           stop: function() {
             // Hide overlay
             $('.custom-overlay').hide();
+
+            // Remove overlay on class from editor container
+            self.parent.editorContainer.removeClass('overlay-on');
 
             // Remove card class as being dragged
             $card.removeClass('card-dragged');

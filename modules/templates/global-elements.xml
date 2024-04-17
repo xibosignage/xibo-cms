@@ -666,17 +666,61 @@ if (useCurrentDate) {
                     </test>
                 </visibility>
             </property>
+            <property id="imageShadow" type="checkbox">
+                <title>Image Shadow</title>
+                <default>0</default>
+                <helpText>Should the image have a shadow?</helpText>
+            </property>
+            <property id="imageShadowColor" type="color">
+                <title>Image Shadow Colour</title>
+                <visibility>
+                    <test>
+                        <condition field="imageShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="shadowX" type="number">
+                <title>Shadow X Offset</title>
+                <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="imageShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="shadowY" type="number">
+                <title>Shadow Y Offset</title>
+                <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="imageShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="shadowBlur" type="number">
+                <title>Shadow Blur</title>
+                <default>2</default>
+                <visibility>
+                    <test>
+                        <condition field="imageShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
         </properties>
         <stencil>
             <hbs><![CDATA[
-<div class="global-elements-image img-container" style="width:100%; height: 100%; overflow: hidden; position: relative;
-    {{#if roundBorder}}border-radius: {{borderRadius}}px;{{/if}}">
+<div class="global-elements-image img-container"
+    style="width:100%; height: 100%; position: relative;">
     {{#if url}}
         <img src="{{{url}}}" style="
             width:100%; height: 100%;
             object-fit: {{objectFit}};
             object-position: {{alignId}} {{valignId}};
             opacity: {{opacity}}%;
+            {{#if imageShadow}}
+                filter: drop-shadow({{shadowX}}px {{shadowY}}px {{shadowBlur}}px {{imageShadowColor}});
+            {{/if}}
+            {{#if roundBorder}}border-radius: {{borderRadius}}px;{{/if}}
             position: absolute; top: 0; left: 0;"
         />
     {{/if}}
@@ -700,6 +744,12 @@ $(target).find('img').xiboImageRender(properties);
         <canRotate>true</canRotate>
         <startWidth>250</startWidth>
         <startHeight>250</startHeight>
+        <properties>
+            <property id="imageReplace" type="imageReplaceControl">
+                <title>Replace Image</title>
+                <helpText>Add an image from the Toolbar to replace this element.</helpText>
+            </property>
+        </properties>
     </template>
     <template>
         <id>line</id>
