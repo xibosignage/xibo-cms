@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -302,13 +302,15 @@ class DisplayProfile implements \JsonSerializable
             if ($alreadyAssigned->getId() == $command->getId()) {
                 $alreadyAssigned->commandString = $command->commandString;
                 $alreadyAssigned->validationString = $command->validationString;
+                $alreadyAssigned->createAlertOn = $command->createAlertOn;
                 $assigned = true;
                 break;
             }
         }
 
-        if (!$assigned)
+        if (!$assigned) {
             $this->commands[] = $command;
+        }
     }
 
     /**
@@ -481,22 +483,41 @@ class DisplayProfile implements \JsonSerializable
         foreach ($this->commands as $command) {
             /* @var Command $command */
             $this->getStore()->update('
-              INSERT INTO `lkcommanddisplayprofile` (`commandId`, `displayProfileId`, `commandString`, `validationString`) VALUES
-                (:commandId, :displayProfileId, :commandString, :validationString) ON DUPLICATE KEY UPDATE commandString = :commandString2, validationString = :validationString2
+              INSERT INTO `lkcommanddisplayprofile` (
+                  `commandId`,
+                  `displayProfileId`,
+                  `commandString`,
+                  `validationString`,
+                  `createAlertOn`
+              )
+              VALUES (
+                  :commandId,
+                  :displayProfileId,
+                  :commandString,
+                  :validationString,
+                  :createAlertOn    
+              )
+              ON DUPLICATE KEY UPDATE 
+                  commandString = :commandString2,
+                  validationString = :validationString2,
+                  createAlertOn = :createAlertOn2
             ', [
                 'commandId' => $command->commandId,
                 'displayProfileId' => $this->displayProfileId,
                 'commandString' => $command->commandString,
                 'validationString' => $command->validationString,
+                'createAlertOn' => $command->createAlertOn,
                 'commandString2' => $command->commandString,
-                'validationString2' => $command->validationString
+                'validationString2' => $command->validationString,
+                'createAlertOn2' => $command->createAlertOn
             ]);
         }
 
         // Unlink
         $params = ['displayProfileId' => $this->displayProfileId];
 
-        $sql = 'DELETE FROM `lkcommanddisplayprofile` WHERE `displayProfileId` = :displayProfileId AND `commandId` NOT IN (0';
+        $sql = 'DELETE FROM `lkcommanddisplayprofile`
+                WHERE `displayProfileId` = :displayProfileId AND `commandId` NOT IN (0';
 
         $i = 0;
         foreach ($this->commands as $command) {
@@ -554,7 +575,10 @@ class DisplayProfile implements \JsonSerializable
         if ($this->isCustom()) {
             return $this->displayProfileFactory->getCustomEditTemplate($this->getClientType());
         } else {
-            $this->getLog()->error('Attempting to get Custom Edit template for Display Profile ' . $this->getClientType() . ' that is not custom');
+            $this->getLog()->error(
+                'Attempting to get Custom Edit template for Display Profile ' .
+                $this->getClientType() . ' that is not custom'
+            );
             return null;
         }
     }

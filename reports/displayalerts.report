@@ -1,0 +1,14 @@
+{
+  "name": "displayalerts",
+  "description": "Display Alerts",
+  "class": "\\Xibo\\Report\\DisplayAlerts",
+  "type": "Report",
+  "output_type": "table",
+  "color":"orange",
+  "fa_icon": "fa-bell",
+  "sort_order": 5,
+  "hidden": 0,
+  "category": "Display",
+  "feature": "displays.reporting",
+  "adminOnly": 0
+}

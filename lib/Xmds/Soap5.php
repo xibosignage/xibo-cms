@@ -329,6 +329,7 @@ class Soap5 extends Soap4
                             }
 
                             $node = $return->createElement($command->code);
+                            $node->setAttribute('createAlertOn', $command->getCreateAlertOn());
                             $commandString = $return->createElement('commandString');
                             $commandStringCData = $return->createCDATASection($command->getCommandString());
                             $commandString->appendChild($commandStringCData);

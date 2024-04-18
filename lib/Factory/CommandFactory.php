@@ -117,16 +117,19 @@ class CommandFactory extends BaseFactory
             `command`.userId, 
             `command`.availableOn, 
             `command`.commandString, 
-            `command`.validationString ';
+            `command`.validationString,
+            `command`.createAlertOn 
+        ';
 
         if ($sanitizedFilter->getInt('displayProfileId') !== null) {
             $select .= ', 
                 :displayProfileId AS displayProfileId, 
                 `lkcommanddisplayprofile`.commandString AS commandStringDisplayProfile, 
-                `lkcommanddisplayprofile`.validationString AS validationStringDisplayProfile ';
+                `lkcommanddisplayprofile`.validationString AS validationStringDisplayProfile,
+                `lkcommanddisplayprofile`.createAlertOn AS createAlertOnDisplayProfile ';
         }
 
-        $select .= " , (SELECT GROUP_CONCAT(DISTINCT `group`.group)
+        $select .= ' , (SELECT GROUP_CONCAT(DISTINCT `group`.group)
                           FROM `permission`
                             INNER JOIN `permissionentity`
                             ON `permissionentity`.entityId = permission.entityId
@@ -135,7 +138,7 @@ class CommandFactory extends BaseFactory
                          WHERE entity = :permissionEntityForGroup
                             AND objectId = command.commandId
                             AND view = 1
-                        ) AS groupsWithPermissions ";
+                        ) AS groupsWithPermissions ';
         $params['permissionEntityForGroup'] = 'Xibo\\Entity\\Command';
 
         $body = ' FROM `command` ';
@@ -195,7 +198,14 @@ class CommandFactory extends BaseFactory
             $params['userId'] = $sanitizedFilter->getInt('userId');
         }
 
-        $this->viewPermissionSql('Xibo\Entity\Command', $body, $params, 'command.commandId', 'command.userId', $filterBy);
+        $this->viewPermissionSql(
+            'Xibo\Entity\Command',
+            $body,
+            $params,
+            'command.commandId',
+            'command.userId',
+            $filterBy
+        );
 
         // Sorting?
         $order = '';

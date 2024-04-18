@@ -2474,6 +2474,8 @@ class Display extends Base
                     $event = $this->displayEventFactory->createEmpty();
                     $event->displayId = $display->displayId;
                     $event->start = $display->lastAccessed;
+                    // eventTypeId 1 is for Display up/down events.
+                    $event->eventTypeId = 1;
                     $event->save();
                 }
 

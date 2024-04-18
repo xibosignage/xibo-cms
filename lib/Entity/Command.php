@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -127,6 +127,21 @@ class Command implements \JsonSerializable
     public $availableOn;
 
     /**
+     * @SWG\Property(
+     *  description="Define if execution of this command should create an alert on success, failure, always or never."
+     * )
+     * @var string
+     */
+    public $createAlertOn;
+
+    /**
+     * @SWG\Property(
+     *     description="Create Alert On specific to the provided DisplayProfile."
+     * )
+     */
+    public $createAlertOnDisplayProfile;
+
+    /**
      * @SWG\Property(description="A comma separated list of groups/users with permissions to this Command")
      * @var string
      */
@@ -174,7 +189,19 @@ class Command implements \JsonSerializable
      */
     public function getValidationString()
     {
-        return empty($this->validationStringDisplayProfile) ? $this->validationString : $this->validationStringDisplayProfile;
+        return empty($this->validationStringDisplayProfile)
+            ? $this->validationString
+            : $this->validationStringDisplayProfile;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCreateAlertOn(): string
+    {
+        return empty($this->createAlertOnDisplayProfile)
+            ? $this->createAlertOn
+            : $this->createAlertOnDisplayProfile;
     }
 
     /**
@@ -210,18 +237,24 @@ class Command implements \JsonSerializable
     public function validate()
     {
         if (!v::stringType()->notEmpty()->length(1, 254)->validate($this->command)) {
-            throw new InvalidArgumentException(__('Please enter a command name between 1 and 254 characters'),
-                'command');
+            throw new InvalidArgumentException(
+                __('Please enter a command name between 1 and 254 characters'),
+                'command'
+            );
         }
 
         if (!v::alpha('_')->NoWhitespace()->notEmpty()->length(1, 50)->validate($this->code)) {
-            throw new InvalidArgumentException(__('Please enter a code between 1 and 50 characters containing only alpha characters and no spaces'),
-                'code');
+            throw new InvalidArgumentException(
+                __('Please enter a code between 1 and 50 characters containing only alpha characters and no spaces'),
+                'code'
+            );
         }
 
         if (!v::stringType()->length(0, 1000)->validate($this->description)) {
-            throw new InvalidArgumentException(__('Please enter a description between 1 and 1000 characters'),
-                'description');
+            throw new InvalidArgumentException(
+                __('Please enter a description between 1 and 1000 characters'),
+                'description'
+            );
         }
     }
 
@@ -251,14 +284,35 @@ class Command implements \JsonSerializable
      */
     public function delete()
     {
-        $this->getStore()->update('DELETE FROM `command` WHERE `commandId` = :commandId', ['commandId' => $this->commandId]);
+        $this->getStore()->update(
+            'DELETE FROM `command` WHERE `commandId` = :commandId',
+            ['commandId' => $this->commandId]
+        );
     }
 
     private function add()
     {
         $this->commandId = $this->getStore()->insert('
-            INSERT INTO `command` (`command`, `code`, `description`, `userId`, `commandString`, `validationString`, `availableOn`) 
-            VALUES (:command, :code, :description, :userId, :commandString, :validationString, :availableOn)
+            INSERT INTO `command` (
+                `command`,
+                `code`,
+                `description`,
+                `userId`,
+                `commandString`,
+                `validationString`,
+                `availableOn`,
+                `createAlertOn`
+            ) 
+            VALUES (
+                :command,
+                :code,
+                :description,
+                :userId,
+                :commandString,
+                :validationString,
+                :availableOn,
+                :createAlertOn
+            )
         ', [
             'command' => $this->command,
             'code' => $this->code,
@@ -266,7 +320,8 @@ class Command implements \JsonSerializable
             'userId' => $this->userId,
             'commandString' => $this->commandString,
             'validationString' => $this->validationString,
-            'availableOn' => $this->availableOn
+            'availableOn' => $this->availableOn,
+            'createAlertOn' => $this->createAlertOn
         ]);
     }
 
@@ -280,7 +335,8 @@ class Command implements \JsonSerializable
               `userId` = :userId,
               `commandString` = :commandString, 
               `validationString` = :validationString,
-              `availableOn` = :availableOn
+              `availableOn` = :availableOn,
+              `createAlertOn` = :createAlertOn
              WHERE `commandId` = :commandId
         ', [
             'command' => $this->command,
@@ -290,7 +346,8 @@ class Command implements \JsonSerializable
             'commandId' => $this->commandId,
             'commandString' => $this->commandString,
             'validationString' => $this->validationString,
-            'availableOn' => $this->availableOn
+            'availableOn' => $this->availableOn,
+            'createAlertOn' => $this->createAlertOn
         ]);
     }
 }
