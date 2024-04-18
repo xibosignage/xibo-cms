@@ -1348,6 +1348,10 @@ Toolbar.prototype.openMenu = function(
     }
   }
 
+  // Add toolbar level to the playlist editor modal
+  this.DOMObject.parents('.editor-modal')
+    .attr('toolbar-level', this.level);
+
   // if menu was closed, save preferences and clean content
   if (!this.opened) {
     // Save user preferences
