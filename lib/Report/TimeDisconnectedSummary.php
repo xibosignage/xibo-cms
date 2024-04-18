@@ -282,7 +282,7 @@ class TimeDisconnectedSummary implements ReportInterface
                 WHERE `start` <= :end
                   AND IFNULL(`end`, :end) >= :start
                   AND :end <= UNIX_TIMESTAMP(NOW()) 
-                  AND `displayevent`.eventTypeId = 1';
+                  AND `displayevent`.eventTypeId = 1 ';
 
         if (count($displayIds) > 0) {
             $body .= 'AND display.displayId IN (' . implode(',', $displayIds) . ') ';
