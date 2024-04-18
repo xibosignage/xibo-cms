@@ -378,6 +378,27 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
   };
 
   /**
+     * Get properties that are to be sent to the widget elements
+     * @return {boolean}
+     */
+  this.getSendToElementProperties = function() {
+    const self = this;
+    const sendToElement = {};
+
+    Object.keys(modulesList).forEach(function(item) {
+      if (modulesList[item].type == self.subType) {
+        modulesList[item].properties.forEach((ppt) => {
+          if (ppt.sendToElements === true) {
+            sendToElement[ppt.id] = self.getOptions()[ppt.id];
+          }
+        });
+      }
+    });
+
+    return sendToElement;
+  };
+
+  /**
    * Get icon from module
    * @return {string}
    */
