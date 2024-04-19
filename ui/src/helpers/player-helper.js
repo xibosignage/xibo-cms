@@ -281,6 +281,25 @@ const PlayerHelper = function() {
         {group: groupObj},
       );
 
+      // Handle special cases where data field name for override
+      // that's the same as template variable
+      // E.g. When a dataset column is "text" and the element is using
+      // text element, extended or not
+      if (props.isExtended) {
+        if (props.type === 'dataset' &&
+          props.hasOwnProperty('datasetField') &&
+          dataItem.hasOwnProperty(props.datasetField)
+        ) {
+          props[props.dataOverride] = dataItem[props.datasetField];
+        } else {
+          const extendWith =
+            transformer.getExtendedDataKey(props.dataOverrideWith);
+          if (props.dataOverride === extendWith && dataItem.hasOwnProperty(extendWith)) {
+            props[props.dataOverride] = dataItem[extendWith];
+          }
+        }
+      } 
+
       $itemContainer.append(
         self.renderElement(
           item.hbs,
