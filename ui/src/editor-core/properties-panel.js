@@ -1819,6 +1819,60 @@ PropertiesPanel.prototype.initFields = function(
     xiboInitOptions.readOnlyMode = true;
   }
 
+  // Handle image replace droppable area
+  const replaceImageInElement = function(element, card) {
+    const fromProvider = $(card).hasClass('from-provider');
+
+    // Replace in element, save and reload
+    const replaceInElement = function(mediaId) {
+      element.replaceMedia(mediaId).then(() => {
+        self.parent.viewer.renderElementContent(element);
+      });
+    };
+
+    // Import from provider or add from library
+    if (fromProvider) {
+      lD.importFromProvider(
+        [$(card).data('providerData')],
+      ).then((res) => {
+        // If res is empty, it means that the import failed
+        if (res.length === 0) {
+          console.error('Replace from provider failed!');
+        } else {
+          replaceInElement(res[0]);
+        }
+      });
+    } else {
+      replaceInElement($(card).data('mediaId'));
+    }
+  };
+
+  self.DOMObject.find('.image-replace-control-area').droppable({
+    greedy: true,
+    tolerance: 'pointer',
+    accept: function(el) {
+      return (
+        $(el).data('type') === 'media' &&
+        $(el).data('subType') === 'image'
+      );
+    },
+    drop: _.debounce(function(event, ui) {
+      replaceImageInElement(self.parent.selectedObject, ui.draggable);
+    }, 200),
+  });
+
+  self.DOMObject.find('.image-replace-control-area')
+    .on('click', function(event) {
+      if ($(event.currentTarget).hasClass('ui-droppable-active')) {
+        replaceImageInElement(
+          self.parent.selectedObject,
+          self.parent.toolbar.selectedCard,
+        );
+
+        self.parent.toolbar.deselectCardsAndDropZones();
+      }
+    });
+
   // Call Xibo Init for this form
   XiboInitialise(
     '#' + self.DOMObject.attr('id'),

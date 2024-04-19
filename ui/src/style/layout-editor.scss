@@ -96,6 +96,12 @@ body.editor-opened {
     }
 }
 
+#layout-editor.overlay-on, #playlist-editor.overlay-on {
+    .properties-panel-container {
+        z-index: auto;
+    }
+}
+
 .properties-panel-container {
     flex: 0;
     width: auto;
@@ -1540,6 +1546,7 @@ body.editor-opened {
     padding: 4px 0 7px 0;
     background-color: $xibo-color-primary-l5;
     border-radius: 4px 4px 0 0;
+    border: 2px solid darken($xibo-color-primary-l5, 10%);
     display: flex;
     align-content: center;
     flex-direction: column;
@@ -1585,7 +1592,7 @@ body.editor-opened {
 .background-image-add.ui-droppable-active {
     .background-image-drop {
         display: block;
-        z-index: 3;
+        z-index: $designer-select-z-index;
     }
     &.ui-droppable-hover {
         .background-image-drop {

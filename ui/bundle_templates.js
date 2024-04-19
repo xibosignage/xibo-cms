@@ -68,5 +68,7 @@ window.templates = {
       require('./src/templates/forms/inputs/datasetColStyleSelector.hbs'),
     datasetColStyle:
       require('./src/templates/forms/inputs/datasetColStyle.hbs'),
+    imageReplaceControl:
+        require('./src/templates/forms/inputs/imageReplace.hbs'),
   },
 };

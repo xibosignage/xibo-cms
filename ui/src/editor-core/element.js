@@ -280,4 +280,23 @@ Element.prototype.getData = function() {
   });
 };
 
+/**
+ * Replace media in element
+ * @param {string} mediaId
+ * @return {Promise} - Promise with widget data
+ */
+Element.prototype.replaceMedia = function(mediaId) {
+  const self = this;
+  const parentWidget = lD.getObjectByTypeAndId(
+    'widget',
+    'widget_' + this.regionId + '_' + this.widgetId,
+    'canvas',
+  );
+
+  // Replace media id
+  self.mediaId = mediaId;
+
+  return parentWidget.saveElements();
+};
+
 module.exports = Element;
