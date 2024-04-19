@@ -75,6 +75,7 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
   this.type = 'widget';
   this.subType = data.type;
   this.moduleName = data.moduleName;
+  this.moduleDataType = data.moduleDataType;
 
   // Permissions
   this.isEditable = data.isEditable;
