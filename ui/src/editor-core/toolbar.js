@@ -1228,9 +1228,6 @@ Toolbar.prototype.createContent = function(
         ' .toolbar-pane-container .toolbar-card',
       ).length > 0
   ) {
-    // Recalculate masonry layout to refresh the card positions
-    self.DOMObject.find('#media-content-' + menu).masonry('layout');
-
     // Adapt card behaviour to current tab
     self.handleCardsBehaviour();
 
@@ -2124,6 +2121,9 @@ Toolbar.prototype.mediaContentPopulateTable = function(menu) {
         self.selectCard($target.closest('tr'), data);
       }
     });
+
+    // Handle card behaviour
+    self.handleCardsBehaviour();
   });
 
   mediaTable.on('processing.dt', dataTableProcessing);
@@ -2826,8 +2826,8 @@ Toolbar.prototype.handleCardsBehaviour = function() {
 
   // If in edit mode
   if (!readOnlyModeOn) {
-    this.DOMObject.find('.toolbar-card:not(.toolbar-card-menu):not(tr)')
-      .each(function(idx, el) {
+    this.DOMObject.find('.toolbar-card:not(.toolbar-card-menu)')
+      .each(function(_idx, el) {
         const $card = $(el);
         $card.draggable({
           appendTo: $card.parents('.toolbar-pane:first'),

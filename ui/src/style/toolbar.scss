@@ -118,6 +118,97 @@
                 }
             }
 
+            // Table toolbar card
+            tr.toolbar-card {
+                cursor: inherit;
+                height: 50px;
+
+                .dt-col {
+                    padding: 6px;
+                }
+
+                .id-col {
+                    width: 10% !important;
+                }
+
+                .name-col {
+                    min-width: 30%;
+                    max-width: 45%;
+
+                    & > div {
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                    }
+                }
+
+                .type-col {
+                    width: 15% !important;
+                }
+
+                .tags-col {
+                    width: 20%;
+
+                    #tagDiv {
+                        display: flex;
+                        flex-wrap: wrap;
+                    }
+                }
+
+                .thumb-col {
+                    width: 20%;
+
+                    img {
+                        max-height: 50px;
+                        max-width: 100%;
+                    }
+
+                    &:hover {
+                        max-height: 100px;
+                    }
+                }
+
+                .action-col {
+                    width: 5%;
+
+                    .assign-item-container {
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        height: 100%;
+
+                        .assignItem {
+                            font-size: 1.2rem;
+                            background-color: $xibo-color-primary;
+                            padding: 6px;
+                            border-radius: 6px;
+
+                            &:hover {
+                                background-color: darken($xibo-color-primary, 5%);
+                            }
+                        }
+                    }
+                }
+
+                &.card-selected {
+                    background-color: $xibo-color-primary-l10;
+
+                    .assign-item-container {
+                        display: none;
+                    }
+                }
+
+                &.ui-draggable-dragging {
+                    width: 557px !important;
+                    height: 63px;
+                    background-color: $xibo-color-primary-l10;
+
+                    .action-col {
+                        display: none;
+                    }
+                }
+            }
+
             .toolbar-pane-container {
                 float: left;
                 scroll-behavior: smooth;
@@ -180,88 +271,8 @@
                     .dataTables_wrapper {
                         margin: 0 -15px;
 
-                        .toolbar-card {
-                            cursor: inherit;
-                            height: 50px;
-
-                            &.card-selected {
-                                background-color: $xibo-color-primary-l10;
-
-                                .assign-item-container {
-                                    display: none;
-                                }
-                            }
-                        }
-
                         .table {
                             table-layout: fixed;
-                        }
-
-                        .dt-col {
-                            padding: 6px;
-                        }
-
-                        .id-col {
-                            width: 10% !important;
-                        }
-
-                        .name-col {
-                            min-width: 30%;
-                            max-width: 45%;
-
-                            & > div {
-                                white-space: nowrap;
-                                overflow: hidden;
-                                text-overflow: ellipsis;
-                            }
-                        }
-
-                        .type-col {
-                            width: 15% !important;
-                        }
-
-                        .tags-col {
-                            width: 20%;
-
-                            #tagDiv {
-                                display: flex;
-                                flex-wrap: wrap;
-                            }
-                        }
-
-                        .thumb-col {
-                            width: 20%;
-
-                            img {
-                                max-height: 50px;
-                                max-width: 100%;
-                            }
-
-                            &:hover {
-                                max-height: 100px;
-                            }
-                        }
-
-                        .action-col {
-                            width: 5%;
-
-                            .assign-item-container {
-                                display: flex;
-                                justify-content: center;
-                                align-items: center;
-                                height: 100%;
-
-                                .assignItem {
-                                    font-size: 1.2rem;
-                                    background-color: $xibo-color-primary;
-                                    padding: 6px;
-                                    border-radius: 6px;
-
-                                    &:hover {
-                                        background-color: darken($xibo-color-primary, 5%);
-                                    }
-                                }
-                            }
                         }
                     }
                 }
@@ -1075,7 +1086,7 @@
             .toolbar-menu-content .toolbar-pane {
                 width: $toolbar-content-level-1-width;
 
-                .toolbar-card, .toolbar-card-sizer {
+                .toolbar-card:not(tr), .toolbar-card-sizer {
                     width: 100% !important;
                 }
 
@@ -1095,11 +1106,9 @@
             .toolbar-menu-content .toolbar-pane {
                 width: $toolbar-content-level-2-width;
 
-                .toolbar-card, .toolbar-card-sizer {
+                .toolbar-card:not(tr), .toolbar-card-sizer {
                     width: calc(calc(100%/2) - 3px) !important;
                 }
-
-                
             }
         }
 
@@ -1109,13 +1118,8 @@
             .toolbar-menu-content .toolbar-pane {
                 width: $toolbar-content-level-3-width;
 
-                .toolbar-card {
+                .toolbar-card:not(tr), .toolbar-card-sizer {
                     width: calc(calc(100%/3) - 4px) !important;
-                }
-
-                // Card sizer for masonry layout ( 2 columns )
-                .toolbar-card-sizer, .masonry-container .toolbar-card {
-                    width: calc(calc(100%/2) - 3px) !important;
                 }
             }
         }
@@ -1126,12 +1130,8 @@
             .toolbar-menu-content .toolbar-pane {
                 width: $toolbar-content-level-4-width;
 
-                .toolbar-card {
+                .toolbar-card:not(tr), .toolbar-card-sizer {
                     width: calc(calc(100%/4) - 4.5px) !important;
-                }
-
-                .toolbar-card-sizer, .masonry-container .toolbar-card {
-                    width: calc(calc(100%/3) - 4px) !important;
                 }
             }
         }

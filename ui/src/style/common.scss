@@ -83,6 +83,10 @@ $fa-font-path: "~font-awesome/fonts";
     }
 }
 
+.no-user-select {
+    @include user-select-none();
+}
+
 /* Layout Manager */
 #layout-manager {
     left: 10px;

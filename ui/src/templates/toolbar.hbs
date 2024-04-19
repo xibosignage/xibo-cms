@@ -4,7 +4,7 @@
         <ul class="navbar-nav navbar-buttons flex-column toolbar-menu-left hide-on-read-only hide-on-lock">
             {{#each menuItems}}
                 <li>
-                    <a id="btn-menu-{{@index}}" class="btn-menu-option {{#if customIcon}}btn-menu-option-custom-icon tooltip-always-on{{/if}} {{#if disabled}}d-none{{/if}} {{state}}" data-container=".editor-side-bar"
+                    <a id="btn-menu-{{@index}}" class="btn-menu-option {{#if customIcon}}btn-menu-option-custom-icon no-user-select tooltip-always-on{{/if}} {{#if disabled}}d-none{{/if}} {{state}}" data-container=".editor-side-bar"
                         data-toggle="tooltip" data-title="{{itemTitle}}" data-test="toolbarTabs">
                         {{#if customIcon}}
                             <div class="btn-menu-custom-icon" style="background: no-repeat url('{{itemIcon}}') center / contain;"></div>
