@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -1067,9 +1067,12 @@ class User implements \JsonSerializable, UserEntityInterface
      * @param object $object
      * @throws InvalidArgumentException
      */
-    private function checkObjectCompatibility($object)
+    private function checkObjectCompatibility($object): void
     {
-        if (!method_exists($object, 'getId') || !method_exists($object, 'getOwnerId') || !method_exists($object, 'permissionsClass')) {
+        if (!method_exists($object, 'getId')
+            || !method_exists($object, 'getOwnerId')
+            || !method_exists($object, 'permissionsClass')
+        ) {
             throw new InvalidArgumentException(__('Provided Object not under permission management'), 'object');
         }
     }

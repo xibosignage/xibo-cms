@@ -19,8 +19,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 const XiboPlayer = function() {
-  this.inputWidgetData = [];
-  this.inputElements = [];
   this.playerWidgets = {};
   this.countWidgetElements = 0;
   this.countWidgetStatic = 0;
@@ -101,7 +99,7 @@ const XiboPlayer = function() {
     playerWidget.items = [];
 
     // Decorate this widget with all applicable functions
-    this.loadWidgetFunctions(playerWidget, widgetDataItems);
+    this.loadWidgetFunctions(playerWidget);
 
     if (isDataWidget) {
       const dataLoadState = playerWidget.onDataLoad(widgetDataItems);
@@ -125,7 +123,6 @@ const XiboPlayer = function() {
     if (!isStaticWidget && !self.isModule(playerWidget)) {
       const tempElements = this.getElementsByWidgetId(
         playerWidget.widgetId,
-        this.inputElements,
       );
 
       this.prepareWidgetElements(tempElements, playerWidget);
@@ -338,6 +335,7 @@ const XiboPlayer = function() {
 
     if (data.length > 0) {
       let lastSlotFilled = null;
+      const filledPinnedSlot = [];
 
       dataLoop: for (const [dataItemKey] of Object.entries(data)) {
         let hasSlotFilled = false;
@@ -359,6 +357,11 @@ const XiboPlayer = function() {
           const slotItems = itemObj.items;
           const pinnedItems = itemObj.pinnedItems;
           const currentSlot = itemObj.slot;
+          let nextSlot = currentSlot + 1;
+
+          if (nextSlot > maxSlot) {
+            nextSlot = currentSlot;
+          }
 
           // Skip if currentKey is less than the currentSlot
           // This occurs when a data slot has been skipped
@@ -414,6 +417,13 @@ const XiboPlayer = function() {
             lastSlotFilled = currentSlot;
           }
 
+          if (pinnedSlots.includes(currentSlot) &&
+            lastSlotFilled === currentSlot &&
+            !filledPinnedSlot.includes(currentSlot)
+          ) {
+            filledPinnedSlot.push(currentSlot);
+          }
+
           itemObj.dataKeys = [
             ...itemObj.dataKeys,
             currentKey,
@@ -423,6 +433,18 @@ const XiboPlayer = function() {
             hasSlotFilled = false;
             if (lastSlotFilled % maxSlot === 0) {
               lastSlotFilled = null;
+            } else if (currentKey > maxSlot &&
+                nextSlot !== currentSlot &&
+                pinnedSlots.includes(nextSlot) &&
+                filledPinnedSlot.includes(nextSlot)
+            ) {
+              // Next slot is a pinned slot and has been filled
+              // So, current item must be passed to next non-pinned slot
+              if (nextSlot === maxSlot) {
+                lastSlotFilled = null;
+              } else {
+                lastSlotFilled = nextSlot;
+              }
             }
 
             break;
@@ -616,9 +638,8 @@ const XiboPlayer = function() {
 
     // Duration
     elemCopy.duration = currentWidget.duration;
-    if (elemCopy?.renderData?.hasOwnProperty('durationIsPerItem')) {
-      elemCopy.durationIsPerItem = elemCopy.renderData.durationIsPerItem;
-    }
+    elemCopy.durationIsPerItem =
+      Boolean(currentWidget.properties.durationIsPerItem);
 
     // Check if element is extended and data is coming from meta
     if (elemCopy.isExtended && elemCopy.dataOverrideWith !== null &&
@@ -645,22 +666,17 @@ const XiboPlayer = function() {
 
 /**
  * Initializes player widgets, accepting inputs from HTML output
- * @param {Array} widgetData Input widgetData from HTML
- * @param {Array} elements Input elements from HTML
  */
-XiboPlayer.prototype.init = function(widgetData, elements) {
+XiboPlayer.prototype.init = function() {
   const self = this;
   let calledXiboScaler = false;
-
-  self.inputWidgetData = widgetData;
-  self.inputElements = elements;
 
   // Create global render array of functions
   window.renders = [];
 
   // Loop through each widget from widgetData
-  if (self.inputWidgetData.length > 0) {
-    self.inputWidgetData.forEach(function(inputWidget) {
+  if (widgetData.length > 0) {
+    widgetData.forEach(function(inputWidget, widgetIndex) {
       // Save widgetData to xic
       xiboIC.set(inputWidget.widgetId, 'widgetData', inputWidget);
 
@@ -753,11 +769,11 @@ XiboPlayer.prototype.isEditor = function() {
  * Show sample data or an error if in the editor.
  * @param {Object} currentWidget Widget object
  * @param {Object|Array} data Widget data from data provider
- * @return {Object} widgetData
+ * @return {Object} widgetLoadedData
  */
 XiboPlayer.prototype.loadData = function(currentWidget, data) {
   const self = this;
-  const widgetData = {
+  const widgetLoadedData = {
     isSampleData: false,
     dataItems: [],
     isArray: Array.isArray(data?.data),
@@ -765,20 +781,20 @@ XiboPlayer.prototype.loadData = function(currentWidget, data) {
     errorMessage: null,
   };
   const composeSampleData = () => {
-    widgetData.isSampleData = true;
+    widgetLoadedData.isSampleData = true;
 
     if (currentWidget.sample === null) {
-      widgetData.dataItems = [];
+      widgetLoadedData.dataItems = [];
       return [];
     }
 
     // If data is empty, use sample data instead
     // Add single element or array of elements
-    widgetData.dataItems = (Array.isArray(currentWidget.sample)) ?
+    widgetLoadedData.dataItems = (Array.isArray(currentWidget.sample)) ?
       currentWidget.sample.slice(0) :
       [currentWidget.sample];
 
-    return widgetData.dataItems.reduce(function(data, item) {
+    return widgetLoadedData.dataItems.reduce(function(data, item) {
       Object.keys(item).forEach(function(itemKey) {
         if (String(item[itemKey]).match(DateFormatHelper.macroRegex) !== null) {
           item[itemKey] =
@@ -791,31 +807,26 @@ XiboPlayer.prototype.loadData = function(currentWidget, data) {
   };
 
   if (currentWidget.isDataExpected) {
-    if (widgetData.isArray && data?.data?.length > 0) {
-      widgetData.dataItems = data?.data;
+    if (widgetLoadedData.isArray && data?.data?.length > 0) {
+      widgetLoadedData.dataItems = data?.data;
     } else {
-      widgetData.dataItems = self.isEditor() ? composeSampleData() : [];
+      widgetLoadedData.dataItems = self.isEditor() ? composeSampleData() : [];
       if (data?.success === false || !currentWidget.isValid) {
-        widgetData.showError = self.isEditor();
+        widgetLoadedData.showError = self.isEditor();
       }
     }
   }
 
-  if (widgetData.showError && data?.message) {
-    widgetData.errorMessage = data?.message;
+  if (widgetLoadedData.showError && data?.message) {
+    widgetLoadedData.errorMessage = data?.message;
   }
 
-  return widgetData;
+  return widgetLoadedData;
 };
 
-XiboPlayer.prototype.getElementsByWidgetId = function(widgetId, inputElements) {
-  const self = this;
+XiboPlayer.prototype.getElementsByWidgetId = function(widgetId) {
   let widgetElements = [];
-  let _inputElements = inputElements;
-
-  if (!_inputElements) {
-    _inputElements = self.inputElements;
-  }
+  const _inputElements = elements;
 
   if (_inputElements !== undefined && _inputElements?.length > 0) {
     _inputElements.forEach(function(elemVal) {
@@ -1460,12 +1471,12 @@ XiboPlayer.prototype.loadElementFunctions = function(element, dataItem) {
 XiboPlayer.prototype.isStaticWidget = function(playerWidget) {
   return playerWidget !== undefined && playerWidget !== null &&
     playerWidget.templateId !== 'elements' &&
-    this.inputElements.length === 0;
+    elements.length === 0;
 };
 
 XiboPlayer.prototype.isModule = function(currentWidget) {
   return (!currentWidget.isDataExpected && $('#hbs-module').length > 0) ||
-    (!currentWidget.isDataExpected && this.inputElements.length === 0);
+    (!currentWidget.isDataExpected && elements.length === 0);
 };
 
 /**
@@ -1700,7 +1711,8 @@ XiboPlayer.prototype.renderOptions = function(currentWidget, globalOptions) {
     globalOptions,
     {
       duration: currentWidget.duration,
-      pauseEffectOnStart: globalOptions.pauseEffectOnStart ?? false,
+      pauseEffectOnStart:
+        globalOptions.pauseEffectOnStart ?? true,
       isPreview: currentWidget.isPreview,
       isEditor: currentWidget.isEditor,
     },
@@ -1750,5 +1762,5 @@ const xiboPlayer = new XiboPlayer();
 module.exports = xiboPlayer;
 
 $(function() {
-  xiboPlayer.init(widgetData, elements);
+  xiboPlayer.init();
 });

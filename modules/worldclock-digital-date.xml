@@ -123,8 +123,8 @@
         ]]></hbs>
         <style><![CDATA[
 body {
-   background: #222;
- }
+   background: #222 !important;
+}
 
 .world-clock {
   color: #f9f9f9;
@@ -155,7 +155,7 @@ body {
 {% if labelColor %}.world-clock-label { color: {{labelColor}}; }{% endif %}
 {% if fontFamily %}.world-clock { font-family: {{fontFamily}}; }{% endif %}
 {% if dateTimeColor %}.world-clock { color: {{dateTimeColor}}; }{% endif %}
-{% if backgroundColor %}body { background: {{backgroundColor}}; }{% endif %}
+{% if backgroundColor %}body { background: {{backgroundColor}} !important; }{% endif %}
         ]]></style>
     </stencil>
     <onInitialize><![CDATA[

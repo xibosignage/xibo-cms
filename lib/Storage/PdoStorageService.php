@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -334,12 +334,17 @@ class PdoStorageService implements StorageServiceInterface
             }
             return $records;
         } catch (\PDOException $PDOException) {
+            $errorCode = $PDOException->errorInfo[1] ?? $PDOException->getCode();
+
+            // syntax error, log the sql and params in error level.
+            if ($errorCode == 1064 && $this->log != null) {
+                $this->log->sql($sql, $params, true);
+            }
+
             // Throw if we're not expected to reconnect.
             if (!$reconnect) {
                 throw $PDOException;
             }
-
-            $errorCode = $PDOException->errorInfo[1] ?? $PDOException->getCode();
 
             if ($errorCode != 2006) {
                 throw $PDOException;

@@ -527,26 +527,49 @@ lD.selectObject =
         (
           oldSelectedId != newSelectedId ||
           oldSelectedType != newSelectedType
-        ) && this.propertiesPanel.toSave
+        ) && (
+          this.propertiesPanel.toSave ||
+          this.propertiesPanel.toSaveElementCallback != null
+        )
       ) {
-        // Set flag back to false
-        this.propertiesPanel.toSave = false;
+        // Select previous object
+        const selectPrevious = function() {
+          // Select object again, with the same params
+          lD.selectObject({
+            target: target,
+            forceSelect: forceSelect,
+            clickPosition: clickPosition,
+            refreshEditor: refreshEditor,
+            reloadViewer: reloadViewer,
+            reloadPropertiesPanel: reloadPropertiesPanel,
+          });
+        };
 
-        // Save previous element
-        this.propertiesPanel.save({
-          target: this.selectedObject, // Save previous object
-          callbackNoWait: function() {
-            // Select object again, with the same params
-            lD.selectObject({
-              target: target,
-              forceSelect: forceSelect,
-              clickPosition: clickPosition,
-              refreshEditor: refreshEditor,
-              reloadViewer: reloadViewer,
-              reloadPropertiesPanel: reloadPropertiesPanel,
-            });
-          },
-        });
+        // Save elements
+        if (this.propertiesPanel.toSaveElementCallback != null) {
+          // Set flag back to false
+          this.propertiesPanel.toSaveElement = false;
+
+          // Run callback to save element property
+          this.propertiesPanel.toSaveElementCallback();
+
+          // Set callback back to null
+          this.propertiesPanel.toSaveElementCallback = null;
+
+          // Select object again
+          selectPrevious();
+        } else if (this.propertiesPanel.toSave) {
+          // Save normal form fields
+
+          // Set flag back to false
+          this.propertiesPanel.toSave = false;
+
+          // Save previous object
+          this.propertiesPanel.save({
+            target: this.selectedObject, // Save previous object
+            callbackNoWait: selectPrevious,
+          });
+        }
 
         // Prevent select to continue
         return;
@@ -651,7 +674,7 @@ lD.refreshEditor = function(
   this.bottombar.render(this.selectedObject);
 
   // Manager ( hidden )
-  this.historyManager.render();
+  this.historyManager.render(false);
 
   // Properties panel and viewer
   (reloadPropertiesPanel) && this.propertiesPanel.render(this.selectedObject);
@@ -2980,10 +3003,13 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
     layoutObject.type === 'element-group'
   );
 
-  // If target is a frame, send single widget info
+  // If target is a frame or zone, send single widget info
   const singleWidget = (
     layoutObject.type === 'region' &&
-    layoutObject.subType === 'frame'
+    (
+      layoutObject.subType === 'frame' ||
+      layoutObject.subType === 'zone'
+    )
   ) ? Object.values(layoutObject.widgets)[0] : {};
 
   // If target is group or element group, send parent widget
@@ -3374,12 +3400,15 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
       const property = target.data('property');
       const propertyType = target.data('propertyType');
 
-      // If we're editing permissions and it's a frame
+      // If we're editing permissions and it's a frame ( or zone )
       // edit the widget's permissions instead
       if (
         property === 'PermissionsWidget' &&
         layoutObject.type === 'region' &&
-        layoutObject.subType === 'frame'
+        (
+          layoutObject.subType === 'frame' ||
+          layoutObject.subType === 'zone'
+        )
       ) {
         // Call edit for widget instead
         const regionWidget = Object.values(layoutObject.widgets)[0];
@@ -3395,17 +3424,6 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
         const canvasWidget =
           lD.getObjectByTypeAndId('widget', objAuxId, 'canvas');
         canvasWidget.editPropertyForm('Permissions');
-      } else if (
-        property === 'PermissionsCanvas' &&
-        (
-          layoutObject.type === 'element' ||
-          layoutObject.type === 'element-group'
-        )
-      ) {
-        // Call edit for canvas widget instead
-        const canvas =
-          lD.getObjectByTypeAndId('canvas');
-        canvas.editPropertyForm('Permissions');
       } else {
         // Call normal edit form
         layoutObject.editPropertyForm(
@@ -4048,7 +4066,9 @@ lD.toggleLockedMode = function(enable = true, expiryDate = '') {
 
     if ($customOverlay.length == 0) {
       $customOverlay = $('.custom-overlay').clone();
-      $customOverlay.attr('id', 'lockedOverlay').addClass('locked').show();
+      $customOverlay.attr('id', 'lockedOverlay')
+        .removeClass('custom-overlay')
+        .addClass('custom-overlay-clone locked').show();
       $customOverlay.appendTo(lD.editorContainer);
 
       // Create the read only alert message
@@ -4410,7 +4430,7 @@ lD.loadPrefs = function() {
     type: linkToAPI.type,
   }).done(function(res) {
     if (res.success) {
-      const loadedData = JSON.parse(res.data.value);
+      const loadedData = JSON.parse(res.data.value ?? '{}');
       if (loadedData.snapOptions) {
         self.viewer.moveableOptions = loadedData.snapOptions;
 

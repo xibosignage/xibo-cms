@@ -87,7 +87,7 @@
             <style><![CDATA[
 {% if itemsSideBySide %}.item, .page { float: left; }{% endif %}
 {% if textDirection == "rtl" %}#content { direction: rtl; }{% endif %}
-{% if backgroundColor %}body { background-color: {{backgroundColor}}; }{% endif %}
+{% if backgroundColor %}body { background-color: {{backgroundColor}} !important; }{% endif %}
 {{styleSheet|raw}}
             ]]></style>
         </stencil>

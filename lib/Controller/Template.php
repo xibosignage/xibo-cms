@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -155,7 +155,10 @@ class Template extends Base
             }
 
             // Parse down for description
-            $template->setUnmatchedProperty('descriptionWithMarkup', Parsedown::instance()->text($template->description));
+            $template->setUnmatchedProperty(
+                'descriptionWithMarkup',
+                Parsedown::instance()->setSafeMode(true)->text($template->description),
+            );
 
             if ($this->getUser()->featureEnabled('template.modify')
                 && $this->getUser()->checkEditable($template)
@@ -347,7 +350,7 @@ class Template extends Base
                 // Handle the description
                 $searchResult->description = '';
                 if (!empty($template->description)) {
-                    $searchResult->description = Parsedown::instance()->line($template->description);
+                    $searchResult->description = Parsedown::instance()->setSafeMode(true)->line($template->description);
                 }
                 $searchResult->orientation = $template->orientation;
                 $searchResult->width = $template->width;

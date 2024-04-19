@@ -193,7 +193,7 @@ class XiboExchangeConnector implements ConnectorInterface
         $searchResult->title = $template->title;
         $searchResult->description = empty($template->description)
             ? null
-            : Parsedown::instance()->line($template->description);
+            : Parsedown::instance()->setSafeMode(true)->line($template->description);
 
         // Optional data
         if (property_exists($template, 'tags') && count($template->tags) > 0) {

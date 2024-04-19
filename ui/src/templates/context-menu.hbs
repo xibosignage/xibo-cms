@@ -67,7 +67,7 @@
                 </div>
             {{/if}}
 
-            {{#if isFrame}}
+            {{#if isFrameOrZone}}
                 {{#if widget.isPermissionsModifiable}}
                     <div class="context-menu-btn permissionsBtn" data-title="{{trans.editPermissions}}" data-property="PermissionsWidget" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
                         <i class="tool-icon-permissions"></i><span>{{trans.editPermissions}}</span>
@@ -83,12 +83,6 @@
                 {{#if elementWidget.isPermissionsModifiable}}
                     <div class="context-menu-btn permissionsBtn" data-title="{{trans.editWidgetPermissions}}" data-property="PermissionsCanvasWidget" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
                         <i class="tool-icon-permissions"></i><span>{{trans.editWidgetPermissions}}</span>
-                    </div>
-                {{/if}}
-
-                {{#if canvas.isPermissionsModifiable}}
-                    <div class="context-menu-btn permissionsBtn" data-title="{{trans.editCanvasPermissions}}" data-property="PermissionsCanvas" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
-                        <i class="tool-icon-permissions"></i><span>{{trans.editCanvasPermissions}}</span>
                     </div>
                 {{/if}}
             {{else}}

@@ -539,14 +539,24 @@ const formHelpers = function() {
 
       // COLORS
       // Background color for the editor
-      const backgroundColor =
-        (
-          this.mainObject != undefined &&
-          typeof this.mainObject.backgroundColor != 'undefined' &&
-          this.mainObject.backgroundColor != null
-        ) ?
-          this.mainObject.backgroundColor :
-          this.defaultBackgroundColor;
+      let backgroundColor = this.defaultBackgroundColor;
+
+      // From layout editor
+      if (
+        this.mainObject != undefined &&
+        typeof this.mainObject.backgroundColor != 'undefined' &&
+        this.mainObject.backgroundColor != null
+      ) {
+        backgroundColor = this.mainObject.backgroundColor;
+      }
+
+      // From inline playlist editor
+      if (
+        this.namespace.inline &&
+        lD && lD.layout && lD.layout.backgroundColor
+      ) {
+        backgroundColor = lD.layout.backgroundColor;
+      }
 
       // Choose a complementary color
       const color = $c.complement(backgroundColor);
@@ -1936,14 +1946,25 @@ const formHelpers = function() {
       });
 
       // Add same background colour to editor container as the layout's
-      const backgroundColor =
-      (
+      let backgroundColor = self.defaultBackgroundColor;
+
+      // From layout editor
+      if (
         self.mainObject != undefined &&
         typeof self.mainObject.backgroundColor != 'undefined' &&
         self.mainObject.backgroundColor != null
-      ) ?
-        self.mainObject.backgroundColor :
-        self.defaultBackgroundColor;
+      ) {
+        backgroundColor = self.mainObject.backgroundColor;
+      }
+
+      // From inline playlist editor
+      if (
+        self.namespace.inline &&
+        lD && lD.layout && lD.layout.backgroundColor
+      ) {
+        backgroundColor = lD.layout.backgroundColor;
+      }
+
       $editorContainer.parent().css('background-color', backgroundColor);
 
       // Get button container
@@ -2150,13 +2171,6 @@ const formHelpers = function() {
       name: editorsTrans.delete,
       type: 'btn-danger',
       action: 'delete',
-    };
-
-    // Add back button
-    buttons.back = {
-      name: editorsTrans.back,
-      type: 'btn-white',
-      action: 'back',
     };
 
     // Add save button

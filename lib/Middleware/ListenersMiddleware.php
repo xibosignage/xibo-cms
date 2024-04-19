@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -105,7 +105,8 @@ class ListenersMiddleware implements MiddlewareInterface
         // Listen for events that affect Layouts
         (new LayoutListener(
             $c->get('layoutFactory'),
-            $c->get('store')
+            $c->get('store'),
+            $c->get('permissionFactory'),
         ))
             ->useLogger($c->get('logger'))
             ->registerWithDispatcher($dispatcher);

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -98,14 +98,17 @@ class ResolutionFactory extends BaseFactory
      * @return Resolution
      * @throws NotFoundException
      */
-    public function getClosestMatchingResolution($width, $height)
+    public function getClosestMatchingResolution($width, $height): Resolution
     {
+        $area = $width * $height;
+        $sort = ['ABS(' . $area . ' - (`intended_width` * `intended_height`))'];
+        $sort[] = $width > $height ? '`intended_width` DESC' : '`intended_height` DESC';
+
         $resolutions = $this->query(
-            ['intended_width'],
+            $sort,
             [
                 'disableUserCheck' => 1,
-                'widthGe' => $width,
-                'heightGe' => $height,
+                'enabled' => 1,
                 'start' => 0,
                 'length' => 1
             ]
@@ -203,19 +206,9 @@ class ResolutionFactory extends BaseFactory
             $params['width'] = $parsedFilter->getDouble('width');
         }
 
-        if ($parsedFilter->getDouble('widthGe') !== null) {
-            $body .= ' AND intended_width >= :widthGe ';
-            $params['widthGe'] = $parsedFilter->getDouble('widthGe');
-        }
-
         if ($parsedFilter->getDouble('height') !== null) {
             $body .= ' AND intended_height = :height ';
             $params['height'] = $parsedFilter->getDouble('height');
-        }
-
-        if ($parsedFilter->getDouble('heightGe') !== null) {
-            $body .= ' AND intended_height >= :heightGe ';
-            $params['heightGe'] = $parsedFilter->getDouble('heightGe');
         }
 
         if ($parsedFilter->getDouble('designerWidth') !== null) {

@@ -5560,13 +5560,16 @@ h1 {
 }
 
 body {
-    background-color: #000;
     {% if fontFamily %}
         font-family: {{fontFamily}};
     {% else %}
         font-family: "Helvetica", "Arial", sans-serif;
     {% endif %}
     line-height: 1;
+}
+
+#content > div {
+    background-color: #000;
 }
 
 .container {
@@ -5909,13 +5912,16 @@ h1 {
 }
 
 body {
-    background-color: #000;
     {% if fontFamily %}
         font-family: {{fontFamily}};
     {% else %}
         font-family: "Helvetica", "Arial", sans-serif;
     {% endif %}
     line-height: 1;
+}
+
+#content > div {
+    background-color: #000;
 }
 
 .container {

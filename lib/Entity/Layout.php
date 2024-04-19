@@ -290,7 +290,11 @@ class Layout implements \JsonSerializable
 
     /** @var Action[] */
     public $actions = [];
+
+    /** @var \Xibo\Entity\Permission[] */
     public $permissions = [];
+
+    /** @var \Xibo\Entity\Campaign[] */
     public $campaigns = [];
 
     // Read only properties
@@ -1808,32 +1812,6 @@ class Layout implements \JsonSerializable
                 $template
                     ->decorateProperties($widget)
                     ->validateProperties('status');
-            } else if ($templateId === 'elements' && $module->hasRequiredElements()) {
-                // Make sure our required element is present.
-                $providedElements = [];
-
-                $widgetElements = $widget->getOptionValue('elements', null);
-                if (!empty($widgetElements)) {
-                    // Elements will be JSON
-                    $widgetElements = json_decode($widgetElements, true);
-
-                    // go through the arrays to get properties array inside of elements
-                    // find fontFamily property, add it to fonts array if we do not already have it there
-                    foreach (($widgetElements ?? []) as $widgetElement) {
-                        foreach (($widgetElement['elements'] ?? []) as $element) {
-                            $providedElements[] = $element['id'];
-                        }
-                    }
-                }
-
-                $missingElements = array_diff($module->requiredElements, $providedElements);
-
-                if (count($missingElements) > 0) {
-                    throw new NotFoundException(
-                        __('Missing one or more required elements'),
-                        implode(',', $missingElements),
-                    );
-                }
             }
 
             // If we have validator interfaces, then use it now
