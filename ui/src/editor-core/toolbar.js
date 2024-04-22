@@ -1735,7 +1735,8 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
 
       if (
         (!res.data || res.data.length == 0) &&
-        $mediaContent.find('.toolbar-card').length == 0
+        $mediaContent.find('.toolbar-card:not(.toolbar-card-special)')
+          .length == 0
       ) {
         // Handle card behaviour
         self.handleCardsBehaviour();
@@ -2443,7 +2444,9 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
         } else if (response.login) {
           window.location.href = window.location.href;
           location.reload();
-        } else if ($content.find('.toolbar-card').length === 0) {
+        } else if (
+          $content.find('.toolbar-card:not(.toolbar-card-special)').length === 0
+        ) {
           $searchForm.append(
             '<div class="no-results-message">' +
             toolbarTrans.noMediaToShow +
@@ -2648,10 +2651,14 @@ Toolbar.prototype.playlistsContentPopulate = function(menu) {
         } else if (response.login) {
           window.location.href = window.location.href;
           location.reload();
-        } else if ($content.find('.toolbar-card').length === 0) {
+        } else if (
+          $content.find('.toolbar-card:not(.toolbar-card-special)').length === 0
+        ) {
+          self.handleCardsBehaviour();
+
           $searchForm.append(
             '<div class="no-results-message">' +
-            toolbarTrans.noMediaToShow +
+            toolbarTrans.noPlaylistsToShow +
             '</div>');
         }
 
