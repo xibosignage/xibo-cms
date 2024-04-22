@@ -77,7 +77,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
       var fontsTable;
       $(document).ready(function() {
         fontsTable = $("#fonts").DataTable({

@@ -22,7 +22,7 @@
 #}
 {% import "inline.twig" as inline %}
 {% set gridId = random() %}
-<script type="text/javascript">
+<script type="text/javascript" nonce="{{ cspNonce }}">
   $(function() {
     $('#connectors').on('connectors.loaded', function() {
       var $sspConnector = $('#connectors').find('div[data-connector-class-name-last="XiboSspConnector"]');

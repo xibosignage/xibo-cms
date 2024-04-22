@@ -91,7 +91,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
       var table = $('#templates').DataTable({
         language: dataTablesLanguage,
         dom: dataTablesTemplate,

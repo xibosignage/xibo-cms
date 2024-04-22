@@ -67,8 +67,8 @@
 {% block javaScript %}
     {# Add common file #}
     {% include "common.twig" %}
-    <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
-    <script type="text/javascript">
+    <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         // Define some global variables to keep hold of
         var template;
         var uploadUrl;

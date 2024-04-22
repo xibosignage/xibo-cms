@@ -129,7 +129,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         var userChart = null;
 
         var table = $("#libraryUsage").DataTable({

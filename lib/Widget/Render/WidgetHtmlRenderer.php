@@ -25,6 +25,7 @@ namespace Xibo\Widget\Render;
 use Carbon\Carbon;
 use FilesystemIterator;
 use Illuminate\Support\Str;
+use Psr\Http\Message\RequestInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Slim\Views\Twig;
@@ -269,10 +270,15 @@ class WidgetHtmlRenderer
      * @param \Xibo\Entity\Region $region
      * @param string $output
      * @param callable $urlFor
+     * @param \Psr\Http\Message\ServerRequestInterface $request
      * @return string
      */
-    public function decorateForPreview(Region $region, string $output, callable $urlFor): string
-    {
+    public function decorateForPreview(
+        Region $region,
+        string $output,
+        callable $urlFor,
+        RequestInterface $request
+    ): string {
         $matches = [];
         preg_match_all('/\[\[(.*?)\]\]/', $output, $matches);
         foreach ($matches[1] as $match) {
@@ -319,7 +325,18 @@ class WidgetHtmlRenderer
                 );
             }
         }
-        return $output;
+
+        // Handle CSP in preview
+        $html = new \DOMDocument();
+        $html->loadHTML($output);
+        foreach ($html->getElementsByTagName('script') as $node) {
+            // We add this requests cspNonce to every script tag
+            if ($node instanceof \DOMElement) {
+                $node->setAttribute('nonce', $request->getAttribute('cspNonce'));
+            }
+        }
+
+        return $html->saveHTML();
     }
 
     /**

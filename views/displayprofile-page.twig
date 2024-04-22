@@ -71,7 +71,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         var table = $("#displayProfiles").DataTable({ "language": dataTablesLanguage,
             dom: dataTablesTemplate,
             serverSide: true,

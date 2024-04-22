@@ -43,9 +43,9 @@
         {# Add common file #}
         {% include "common.twig" %}
 
-        <script src="{{ theme.rootUri() }}dist/layoutEditor.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
-        <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
-        <script type="text/javascript">
+        <script src="{{ theme.rootUri() }}dist/layoutEditor.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+        <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+        <script type="text/javascript" nonce="{{ cspNonce }}">
 
             {# Custom translations #}
             {% autoescape "js" %}
@@ -179,7 +179,7 @@
                 };
             {% endautoescape %}
         </script>
-        <script type="text/javascript">
+        <script type="text/javascript" nonce="{{ cspNonce }}">
             /**
              * Setup the background form.
              */

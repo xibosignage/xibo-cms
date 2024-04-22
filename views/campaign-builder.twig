@@ -250,8 +250,8 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script src="{{ theme.rootUri() }}dist/campaignBuilder.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
-    <script type="text/javascript">
+    <script src="{{ theme.rootUri() }}dist/campaignBuilder.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         {# Custom translations #}
         {% autoescape "js" %}
             {# Insert custom translations here #}

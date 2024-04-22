@@ -150,7 +150,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         var table;
         // Configure the DataTable
         $(document).ready(function() {

@@ -33,7 +33,7 @@
         <link rel="shortcut icon" href="{{ theme.uri("img/favicon.ico") }}" />
     </head>
     <body>
-        <script type="text/javascript">
+        <script type="text/javascript" nonce="{{ cspNonce }}">
           window.xiboDC = (function() {
             'use strict';
 
@@ -131,7 +131,7 @@
             window.parent.receiveData('loaded', null);
           }
         </script>
-        <script type="text/javascript">
+        <script type="text/javascript" nonce="{{ cspNonce }}">
           {{ script|raw }}
         </script>
     </body>

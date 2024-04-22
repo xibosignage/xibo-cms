@@ -206,7 +206,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         $(document).ready(function() {
             let $dataTable = $('#stats'); // Datatable
             let chart = null; // Chart
