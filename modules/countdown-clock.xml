@@ -164,6 +164,22 @@
             <title>Label Text Colour</title>
             <default>#fff</default>
         </property>
+        <property id="warningBackgroundColor1" type="color">
+            <title>Warning Background Colour 1</title>
+            <default>darkorange</default>
+        </property>
+        <property id="warningBackgroundColor2" type="color">
+            <title>Warning Background Colour 2</title>
+            <default>orange</default>
+        </property>
+        <property id="finishedBackgroundColor1" type="color">
+            <title>Finished Background Colour 1</title>
+            <default>darkred</default>
+        </property>
+        <property id="finishedBackgroundColor2" type="color">
+            <title>Finished Background Colour 2</title>
+            <default>red</default>
+        </property>
     </properties>
     <preview></preview>
     <stencil>
@@ -222,20 +238,16 @@ body {
     font-size: 64px;
 }
 
-.warning>#clockdiv>div {
-    background: darkred;
-}
-
-.warning>#clockdiv>div>span {
-    background: red;
-}
-
 {% if innerFontFamily %}#clockdiv > div > span { font-family: {{innerFontFamily}}; }{% endif %}
 {% if innerBackgroundColor %}#clockdiv > div > span { background: {{innerBackgroundColor}}; }{% endif %}
 {% if innerTextColor %}#clockdiv > div > span { color: {{innerTextColor}}; }{% endif %}
 {% if outerBackgroundColor %}#clockdiv > div { background: {{outerBackgroundColor}}; }{% endif %}
 {% if labelFontFamily %}#clockdiv .smalltext { font-family: {{labelFontFamily}}; }{% endif %}
 {% if labelTextColor %}#clockdiv > div { color: {{labelTextColor}}; }{% endif %}
+{% if warningBackgroundColor1 %}.warning #clockdiv > div {background: {{warningBackgroundColor1}};}{% endif %}
+{% if warningBackgroundColor2 %}.warning #clockdiv > div > span {background: {{warningBackgroundColor2}};}{% endif %}
+{% if finishedBackgroundColor1 %}.finished #clockdiv > div {background: {{finishedBackgroundColor1}};}{% endif %}
+{% if finishedBackgroundColor1 %}.finished #clockdiv > div > span {background: {{finishedBackgroundColor2}};}{% endif %}
         ]]></style>
     </stencil>
     <onRender><![CDATA[
