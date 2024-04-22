@@ -250,6 +250,10 @@ $timeline-step-height: 22px;
             height: calc(100vh - 140px);
         }
     }
+
+    #playlist-editor.multi-select #playlist-timeline {
+        position: initial;
+    }
 }
 
 #playlist-editor {
@@ -714,7 +718,6 @@ $timeline-step-height: 22px;
             .footer-info {
                 position: relative;
                 z-index: $playlist-editor-z-index-select;
-                width: 100%;
             }
 
             .footer-actions {
@@ -726,6 +729,10 @@ $timeline-step-height: 22px;
                     display: inline-block !important;
                 }
             }
+        }
+
+        .editor-side-bar nav.opened {
+            z-index: calc($playlist-editor-z-index-select - 2) !important; 
         }
 
         #timeline-container {
