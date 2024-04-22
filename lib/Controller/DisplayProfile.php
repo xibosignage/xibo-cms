@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -21,6 +21,7 @@
  */
 namespace Xibo\Controller;
 
+use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Stash\Interfaces\PoolInterface;
@@ -28,6 +29,7 @@ use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Factory\PlayerVersionFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -369,6 +371,13 @@ class DisplayProfile extends Base
             }
         }
 
+        // elevated logs
+        $elevateLogsUntil = $displayProfile->getSetting('elevateLogsUntil');
+        $elevateLogsUntilIso = !empty($elevateLogsUntil)
+            ? Carbon::createFromTimestamp($elevateLogsUntil)->format(DateFormatHelper::getSystemFormat())
+            : null;
+        $displayProfile->setUnmatchedProperty('elevateLogsUntilIso', $elevateLogsUntilIso);
+
         $this->getState()->template = 'displayprofile-form-edit';
         $this->getState()->setData([
             'displayProfile' => $displayProfile,
@@ -457,6 +466,7 @@ class DisplayProfile extends Base
                 // Set and assign the command
                 $command->commandString = $parsedParams->getString('commandString_' . $command->commandId);
                 $command->validationString = $parsedParams->getString('validationString_' . $command->commandId);
+                $command->createAlertOn = $parsedParams->getString('createAlertOn_' . $command->commandId);
 
                 $displayProfile->assignCommand($command);
             } else {

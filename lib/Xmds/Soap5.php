@@ -108,12 +108,18 @@ class Soap5 extends Soap4
 
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
-            throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
+            throw new \SoapFault(
+                'Sender',
+                'The Server key you entered does not match with the server key at this address'
+            );
         }
 
         // Check the Length of the hardwareKey
         if (strlen($hardwareKey) > 40) {
-            throw new \SoapFault('Sender', 'The Hardware Key you sent was too long. Only 40 characters are allowed (SHA1).');
+            throw new \SoapFault(
+                'Sender',
+                'The Hardware Key you sent was too long. Only 40 characters are allowed (SHA1).'
+            );
         }
 
         // Return an XML formatted string
@@ -122,17 +128,20 @@ class Soap5 extends Soap4
         $return->appendChild($displayElement);
 
         // Uncomment this if we want additional logging in register.
-        //$this->logProcessor->setDisplay(0, 1);
+        //$this->logProcessor->setDisplay(0, 'debug');
 
         // Check in the database for this hardwareKey
         try {
             $display = $this->displayFactory->getByLicence($hardwareKey);
             $this->display = $display;
 
-            $this->logProcessor->setDisplay($display->displayId, ($display->isAuditing()));
+            $this->logProcessor->setDisplay($display->displayId, $display->getLogLevel());
 
             // Audit in
-            $this->getLog()->debug('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName . ', macAddress: ' . $macAddress);
+            $this->getLog()->debug(
+                'serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey .
+                ', displayName: ' . $displayName . ', macAddress: ' . $macAddress
+            );
 
             // Now
             $dateNow = Carbon::now();
@@ -146,7 +155,10 @@ class Soap5 extends Soap4
                 // It is not authorised
                 $displayElement->setAttribute('status', 2);
                 $displayElement->setAttribute('code', 'WAITING');
-                $displayElement->setAttribute('message', 'Display is Registered and awaiting Authorisation from an Administrator in the CMS');
+                $displayElement->setAttribute(
+                    'message',
+                    'Display is Registered and awaiting Authorisation from an Administrator in the CMS'
+                );
             } else {
                 // It is licensed
                 $displayElement->setAttribute('status', 0);
@@ -167,11 +179,20 @@ class Soap5 extends Soap4
                     }
                   
                     // Override the XMR address if empty
-                    if (strtolower($settingName) == 'xmrnetworkaddress' && (!isset($arrayItem['value']) || $arrayItem['value'] == '')) {
+                    if (strtolower($settingName) == 'xmrnetworkaddress' &&
+                        (!isset($arrayItem['value']) || $arrayItem['value'] == '')
+                    ) {
                         $arrayItem['value'] = $this->getConfig()->getSetting('XMR_PUB_ADDRESS');
                     }
 
-                    $value = (isset($arrayItem['value']) ? $arrayItem['value'] : $arrayItem['default']);
+                    // logLevels
+                    if (strtolower($settingName) == 'loglevel') {
+                        // return resting log level
+                        // unless it is currently elevated, in which case return debug
+                        $arrayItem['value'] = $this->display->getLogLevel();
+                    }
+
+                    $value = ($arrayItem['value'] ?? $arrayItem['default']);
 
                     // Patch download and update windows to make sure they are only 00:00
                     // https://github.com/xibosignage/xibo/issues/1791
@@ -308,6 +329,7 @@ class Soap5 extends Soap4
                             }
 
                             $node = $return->createElement($command->code);
+                            $node->setAttribute('createAlertOn', $command->getCreateAlertOn());
                             $commandString = $return->createElement('commandString');
                             $commandStringCData = $return->createCDATASection($command->getCommandString());
                             $commandString->appendChild($commandStringCData);
@@ -320,7 +342,10 @@ class Soap5 extends Soap4
 
                             $commandElement->appendChild($node);
                         } catch (\DOMException $DOMException) {
-                            $this->getLog()->error('Cannot add command to settings for displayId ' . $this->display->displayId . ', ' . $DOMException->getMessage());
+                            $this->getLog()->error(
+                                'Cannot add command to settings for displayId ' .
+                                $this->display->displayId . ', ' . $DOMException->getMessage()
+                            );
                         }
                     }
                 }
@@ -459,11 +484,14 @@ class Soap5 extends Soap4
         // cache checks
         $cacheSchedule = $this->getPool()->getItem($this->display->getCacheKey() . '/schedule');
         $cacheSchedule->setInvalidationMethod(Invalidation::OLD);
-        $displayElement->setAttribute('checkSchedule', ($cacheSchedule->isHit() ? crc32($cacheSchedule->get()) : ""));
+        $displayElement->setAttribute(
+            'checkSchedule',
+            ($cacheSchedule->isHit() ? crc32($cacheSchedule->get()) : '')
+        );
 
         $cacheRF = $this->getPool()->getItem($this->display->getCacheKey() . '/requiredFiles');
         $cacheRF->setInvalidationMethod(Invalidation::OLD);
-        $displayElement->setAttribute('checkRf', ($cacheRF->isHit() ? crc32($cacheRF->get()) : ""));
+        $displayElement->setAttribute('checkRf', ($cacheRF->isHit() ? crc32($cacheRF->get()) : ''));
 
         // Log Bandwidth
         $returnXml = $return->saveXML();

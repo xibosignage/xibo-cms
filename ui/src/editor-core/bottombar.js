@@ -46,17 +46,23 @@ Bottombar.prototype.render = function(object) {
       '';
 
   if (object.type == 'widget') {
-    // Render widget toolbar
-    this.DOMObject.html(bottomBarViewerTemplate(
-      {
-        trans: newBottomBarTrans,
-        readOnlyModeOn: readOnlyModeOn,
-        object: object,
-        objectTypeName: newBottomBarTrans.objectType.widget,
-        undoActive: checkHistory.undoActive,
-        trashActive: trashBinActive,
-      },
-    ));
+    lD.templateManager.getTemplateById(
+      object.getOptions().templateId,
+      object.moduleDataType,
+    ).then((template) => {
+      // Render widget toolbar
+      this.DOMObject.html(bottomBarViewerTemplate(
+        {
+          trans: newBottomBarTrans,
+          readOnlyModeOn: readOnlyModeOn,
+          object: object,
+          objectTypeName: newBottomBarTrans.objectType.widget,
+          moduleTemplateTitle: template.title,
+          undoActive: checkHistory.undoActive,
+          trashActive: trashBinActive,
+        },
+      ));
+    });
   } else if (object.type == 'layout') {
     // Render layout  toolbar
     this.DOMObject.html(bottomBarViewerTemplate(

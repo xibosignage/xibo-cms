@@ -394,6 +394,7 @@ Viewer.prototype.render = function(forceReload = false, target = {}) {
         this.parent.selectedObject.groupId,
       ),
       this.parent.selectedObject.elementId,
+      true,
     );
   }
 
@@ -587,6 +588,26 @@ Viewer.prototype.handleInteractions = function() {
     });
   });
 
+  // Handle droppable - image placeholder
+  this.DOMObject.find(
+    '.designer-element[data-sub-type="image_placeholder"]',
+  ).each((_idx, element) => {
+    const $el = $(element);
+
+    $el.droppable({
+      greedy: true,
+      tolerance: 'pointer',
+      accept: (draggable) => {
+        return (
+          $(draggable).data('type') === 'media' &&
+          $(draggable).data('subType') === 'image'
+        );
+      },
+      drop: _.debounce(function(event, ui) {
+        lD.dropItemAdd(event.target, ui.draggable[0]);
+      }, 200),
+    });
+  });
 
   // Handle click and double click
   let clicks = 0;
@@ -1059,11 +1080,29 @@ Viewer.prototype.update = function() {
     );
   }.bind(this));
 
+  // If we are selecting an element in a group,
+  // we need to put the group in edit mode
+  if (
+    self.parent.selectedObject.type == 'element' &&
+    self.parent.selectedObject.groupId != undefined
+  ) {
+    self.editGroup(
+      self.DOMObject.find(
+        '.designer-element-group#' +
+        self.parent.selectedObject.groupId,
+      ),
+      self.parent.selectedObject.elementId,
+      true,
+    );
+  }
+
   // Update moveable
   this.updateMoveable(true);
 
   // Update moveable options
-  this.updateMoveableOptions();
+  this.updateMoveableOptions({
+    savePreferences: false,
+  });
 };
 
 /**
@@ -1732,6 +1771,13 @@ Viewer.prototype.renderElementContent = function(
   const $assetContainer =
     this.parent.editorContainer.find('#asset-container');
 
+  // Get parent widget
+  const parentWidget = lD.getObjectByTypeAndId(
+    'widget',
+    'widget_' + element.regionId + '_' + element.widgetId,
+    'canvas',
+  );
+
   // Get element template ( most of the time
   // template will be already loaded/cached )
   element.getTemplate().then((template) => {
@@ -1833,12 +1879,22 @@ Viewer.prototype.renderElementContent = function(
 
     // Get element properties
     element.getProperties().then((properties) => {
+      // Parent widget sendToElement properties
+      const sendToElementProperties =
+        parentWidget.getSendToElementProperties();
+
       // Convert properties to object with id and value
       const convertedProperties = {};
       let hasCircleOutline = false;
       for (const key in properties) {
         if (properties.hasOwnProperty(key)) {
           const property = properties[key];
+
+          // If the widget is sending the property
+          // to the element, use that value instead
+          if (sendToElementProperties[property.id] != undefined) {
+            property.value = sendToElementProperties[property.id];
+          }
 
           // Convert checkbox values to boolean
           if (property.type === 'checkbox') {
@@ -3726,6 +3782,7 @@ Viewer.prototype.saveTemporaryObject = function(objectId, objectType, data) {
 Viewer.prototype.editGroup = function(
   groupDOMObject,
   elementToSelectOnLoad = null,
+  forceEditOn = false,
 ) {
   const self = this;
   const editing = $(groupDOMObject).hasClass('editing');
@@ -3745,7 +3802,7 @@ Viewer.prototype.editGroup = function(
   }
 
   // If we're not editing yet, start
-  if (!editing) {
+  if (!editing || forceEditOn) {
     // Get group object from structure
     const groupId = $(groupDOMObject).attr('id');
     const groupObj = lD.getObjectByTypeAndId(

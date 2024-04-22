@@ -438,6 +438,17 @@ lD.selectObject =
         lD.common.hasTarget(card, 'element')
       );
 
+      const dropToImagePlaceholder = (
+        target &&
+        (
+          target.is('.designer-element[data-sub-type="image_placeholder"]')
+        ) &&
+        (
+          $(card).data('type') === 'media' &&
+          $(card).data('subType') === 'image'
+        )
+      );
+
       // Deselect cards and drop zones
       this.toolbar.deselectCardsAndDropZones();
 
@@ -448,7 +459,8 @@ lD.selectObject =
           dropToDrawerOrZone ||
           dropToWidget ||
           dropToActionTarget ||
-          dropToElementAndElGroup
+          dropToElementAndElGroup ||
+          dropToImagePlaceholder
         )
       ) {
         // Send click position if we're adding to elements and element groups
@@ -592,10 +604,13 @@ lD.selectObject =
         oldSelectedType != newSelectedType ||
         forceSelect
       ) {
+        let newObjectSelected = false;
+
         // Save the new selected object
         if (newSelectedType === 'region') {
           this.layout.regions[newSelectedId].selected = true;
           this.selectedObject = this.layout.regions[newSelectedId];
+          newObjectSelected = true;
         } else if (newSelectedType === 'widget') {
           if (isInDrawer(target)) {
             this.layout.drawer.widgets[newSelectedId].selected = true;
@@ -608,6 +623,8 @@ lD.selectObject =
             this.selectedObject =
               this.layout.regions[target.data('widgetRegion')]
                 .widgets[newSelectedId];
+
+            newObjectSelected = true;
           }
         } else if (newSelectedType === 'element') {
           const parentRegion = target.data('regionId');
@@ -617,21 +634,29 @@ lD.selectObject =
             'widget_' + parentRegion + '_' + parentWidget
           ].elements[newSelectedId];
 
-          element.selected = true;
-          this.selectedObject = element;
+          if (element) {
+            element.selected = true;
+            this.selectedObject = element;
+            newObjectSelected = true;
+          }
         } else if (newSelectedType === 'element-group') {
           const parentRegion = target.data('regionId');
           const parentWidget = target.data('widgetId');
 
-          const element = this.layout.canvas.widgets[
+          const elementGroup = this.layout.canvas.widgets[
             'widget_' + parentRegion + '_' + parentWidget
           ].elementGroups[newSelectedId];
 
-          element.selected = true;
-          this.selectedObject = element;
+          if (elementGroup) {
+            elementGroup.selected = true;
+            this.selectedObject = elementGroup;
+            newObjectSelected = true;
+          }
         }
 
-        this.selectedObject.type = newSelectedType;
+        if (newObjectSelected) {
+          this.selectedObject.type = newSelectedType;
+        }
 
         // Refresh the designer containers
         (refreshEditor) && lD.refreshEditor({
@@ -1134,7 +1159,7 @@ lD.loadFormFromAPI = function(
  * Revert last action
  */
 lD.undoLastAction = function() {
-  lD.common.showLoadingScreen('undoLastAction');
+  lD.common.showLoadingScreen();
 
   lD.historyManager.revertChange().then((res) => { // Success
     // Refresh designer according to local or API revert
@@ -1151,9 +1176,9 @@ lD.undoLastAction = function() {
         });
     }
 
-    lD.common.hideLoadingScreen('undoLastAction');
+    lD.common.hideLoadingScreen();
   }).catch((error) => { // Fail/error
-    lD.common.hideLoadingScreen('undoLastAction');
+    lD.common.hideLoadingScreen();
 
     // Show error returned or custom message to the user
     let errorMessage = '';
@@ -1182,11 +1207,9 @@ lD.deleteSelectedObject = function() {
     return;
   }
 
-  // For now, we always delete the region
   if (lD.selectedObject.type === 'region') {
-    // Check if it's playlist and it has at least one object in it
+    // Check if region or playlist has at least one object in it
     const needsConfirmationModal = (
-      lD.selectedObject.isPlaylist &&
       Object.values(lD.selectedObject.widgets).length > 0
     );
 
@@ -1196,6 +1219,7 @@ lD.deleteSelectedObject = function() {
       null,
       false,
       needsConfirmationModal,
+      lD.selectedObject.isPlaylist ? 'playlist' : 'region',
     );
   } else if (lD.selectedObject.type === 'widget') {
     // Drawer widget
@@ -1218,21 +1242,58 @@ lD.deleteSelectedObject = function() {
         'region',
         regionId,
         null,
+        false,
+        true,
+        'widget',
       );
     }
   } else if (lD.selectedObject.type === 'element') {
+    // Get element's widget
+    const widget = lD.getObjectByTypeAndId(
+      'widget',
+      lD.selectedObject.widgetId,
+      'canvas',
+    );
+
+    // Check if element is not global and is the last one on widget
+    const showConfirmationModal = (
+      widget.subType != 'global' &&
+      Object.values(widget.elements).length === 1
+    );
+
     // Delete element
     lD.deleteObject(
       lD.selectedObject.type,
       lD.selectedObject[lD.selectedObject.type + 'Id'],
       'widget_' + lD.selectedObject.regionId + '_' + lD.selectedObject.widgetId,
+      false,
+      showConfirmationModal,
+      'element',
     );
   } else if (lD.selectedObject.type === 'element-group') {
+    // Get element's widget
+    const widget = lD.getObjectByTypeAndId(
+      'widget',
+      lD.selectedObject.widgetId,
+      'canvas',
+    );
+
+    // Check if element group is not global and
+    // the widget only has the elements from the group
+    const showConfirmationModal = (
+      widget.subType != 'global' &&
+      Object.values(widget.elements).length ===
+        Object.values(lD.selectedObject.elements).length
+    );
+
     // Delete element group
     lD.deleteObject(
       lD.selectedObject.type,
       lD.selectedObject.id,
       'widget_' + lD.selectedObject.regionId + '_' + lD.selectedObject.widgetId,
+      false,
+      showConfirmationModal,
+      'elementGroup',
     );
   }
 };
@@ -1245,6 +1306,8 @@ lD.deleteSelectedObject = function() {
  * @param {boolean=} drawerWidget - If we're deleting a drawer widget
  * @param {boolean=} showConfirmationModal
  *   - If we need to show a confirmation modal
+ * @param {string} confirmationModalType
+ *   - Type of object to be deleted (playlist, widget, element)
  */
 lD.deleteObject = function(
   objectType,
@@ -1252,14 +1315,15 @@ lD.deleteObject = function(
   objectAuxId = null,
   drawerWidget = false,
   showConfirmationModal = false,
+  confirmationModalType,
 ) {
   // Create modal before delete element
   const createDeleteModal = function() {
     bootbox.hideAll();
 
     bootbox.dialog({
-      title: deleteModalTrans.playlist.title, // For playlist only for now
-      message: deleteModalTrans.playlist.message, // For playlist only for now
+      title: deleteModalTrans[confirmationModalType].title,
+      message: deleteModalTrans[confirmationModalType].message,
       size: 'large',
       buttons: {
         cancel: {
@@ -1270,7 +1334,7 @@ lD.deleteObject = function(
           label: editorsTrans.yes,
           className: 'btn-danger btn-bb-confirm',
           callback: function() {
-            // Delete without modal
+            // Delete
             lD.deleteObject(
               objectType,
               objectId,
@@ -1321,7 +1385,7 @@ lD.deleteObject = function(
         reload: false,
       });
   } else {
-    lD.common.showLoadingScreen('deleteObject');
+    lD.common.showLoadingScreen();
 
     // Hide in viewer
     lD.viewer.toggleObject(
@@ -1398,9 +1462,9 @@ lD.deleteObject = function(
           });
       }
 
-      lD.common.hideLoadingScreen('deleteObject');
+      lD.common.hideLoadingScreen();
     }).catch((error) => { // Fail/error
-      lD.common.hideLoadingScreen('deleteObject');
+      lD.common.hideLoadingScreen();
 
       // Show error returned or custom message to the user
       let errorMessage = '';
@@ -1441,6 +1505,8 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
   const droppableIsPlaylist = ($(droppable).data('subType') === 'playlist');
   const droppableIsWidget = $(droppable).hasClass('designer-widget');
   let droppableIsElement = $(droppable).hasClass('designer-element');
+  const droppableIsImagePlaceholder =
+    $(droppable).is('.designer-element[data-sub-type="image_placeholder"]');
   const droppableIsElementGroup =
     $(droppable).hasClass('designer-element-group');
   let getTemplateBeforeAdding = '';
@@ -1618,6 +1684,15 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
     let addToGroupId = null;
     let addToGroupWidgetId = null;
     let addToExistingElementId = null;
+    let placeholderElement = {};
+
+    if (droppableIsImagePlaceholder) {
+      placeholderElement = {
+        id: $(droppable).attr('id'),
+        widgetId: $(droppable).data('widgetId'),
+        regionId: $(droppable).data('regionId'),
+      };
+    }
 
     // If target is type global ( and being edited )
     // if draggable is type global or if both are the same type
@@ -1671,6 +1746,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
         properties,
         groupProperties,
         mediaId,
+        isVisible,
       } = {},
       ) {
         // Create element object
@@ -1686,6 +1762,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           layer: layer,
           rotation: rotation,
           mediaId: mediaId,
+          isVisible: isVisible,
         };
 
         // Add group id if it belongs to a group
@@ -1735,6 +1812,8 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
             false,
             false,
             false,
+            true,
+            false, // don't save to history
           ).then((res) => {
             // Create new temporary widget for the elements
             const newWidget = new Widget(
@@ -1807,6 +1886,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
                   left: (dropPosition) ? dropPosition.left : 0,
                 },
                 mediaId: draggableData.mediaId,
+                isVisible: draggableData.isVisible,
               });
 
               // Add element to elements array
@@ -1836,6 +1916,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
             extendsOverride: draggableData.extendsOverride,
             extendsOverrideId: draggableData.extendsOverrideId,
             mediaId: draggableData.mediaId,
+            isVisible: draggableData.isVisible,
           };
 
           let addToGroup = false;
@@ -1923,6 +2004,62 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
               .elements[previousElement.elementId] = previousElement;
 
             addToGroup = true;
+          }
+
+          // If we have a placeholder, change new element
+          // dimensions to match it
+          if (!$.isEmptyObject(placeholderElement)) {
+            const widgetId =
+              'widget_' +
+              placeholderElement.regionId +
+              '_' +
+              placeholderElement.widgetId;
+
+            const placeholder = lD.getObjectByTypeAndId(
+              'element',
+              placeholderElement.id,
+              widgetId,
+            );
+
+            const widget = lD.getObjectByTypeAndId(
+              'widget',
+              widgetId,
+              'canvas',
+            );
+
+            // Position options
+            elementOptions.top = placeholder.top;
+            elementOptions.left = placeholder.left;
+            elementOptions.width = placeholder.width;
+            elementOptions.height = placeholder.height;
+            elementOptions.layer = placeholder.layer;
+
+            // Properties
+            elementOptions.properties = placeholder.properties;
+
+            // If placeholder was in a group, add to same
+            if (
+              placeholder.groupId != '' &&
+              placeholder.groupId != undefined
+            ) {
+              // Set group type as the same as the target widget
+              addToGroupType = widget.subType;
+
+              // Add group object
+              elementOptions.groupId = placeholder.groupId;
+
+              addToGroup = true;
+            }
+
+            // Remove placeholder
+            widget.removeElement(
+              placeholderElement.id,
+              {
+                save: (elementOptions.type != 'global'),
+                reloadLayerManager: false,
+                reload: false,
+              },
+            );
           }
 
           // Create element
@@ -2071,7 +2208,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
   } else if (draggableType === 'layout_template') {
     const addTemplateToLayout = function() {
       // Show loading screen
-      lD.common.showLoadingScreen('addLayoutTemplate');
+      lD.common.showLoadingScreen();
 
       // Call the replace function and reload on success.
       $.ajax({
@@ -2087,7 +2224,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
         },
         success: function(response) {
           // Hide loading screen
-          lD.common.hideLoadingScreen('addLayoutTemplate');
+          lD.common.hideLoadingScreen();
 
           if (response.success && response.id) {
             // Deselect previous object
@@ -2108,7 +2245,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
         },
         error: function(xhr) {
           // Hide loading screen
-          lD.common.hideLoadingScreen('addLayoutTemplate');
+          lD.common.hideLoadingScreen();
 
           console.error(xhr);
         },
@@ -2402,7 +2539,7 @@ lD.addModuleToPlaylist = function(
       onUploadDone: onUploadDone,
     });
   } else { // Add widget to a region
-    lD.common.showLoadingScreen('addModuleToPlaylist');
+    lD.common.showLoadingScreen();
 
     const linkToAPI = urlsForApi.playlist.addWidget;
 
@@ -2455,7 +2592,7 @@ lD.addModuleToPlaylist = function(
       // Check if we added a element
       if (moduleData.type === 'element') {
         // Hide loading screen
-        lD.common.hideLoadingScreen('addModuleToPlaylist');
+        lD.common.hideLoadingScreen();
 
         // Return the promise with the data
         return res;
@@ -2504,12 +2641,12 @@ lD.addModuleToPlaylist = function(
         );
       }
 
-      lD.common.hideLoadingScreen('addModuleToPlaylist');
+      lD.common.hideLoadingScreen();
 
       // Return the promise with the data
       return res;
     }).catch((error) => { // Fail/error
-      lD.common.hideLoadingScreen('addModuleToPlaylist');
+      lD.common.hideLoadingScreen();
 
       // Show error returned or custom message to the user
       let errorMessage = '';
@@ -2632,7 +2769,7 @@ lD.addMediaToPlaylist = function(
     mediaToAdd.useDuration = (lD.useLibraryDuration == '1');
   }
 
-  lD.common.showLoadingScreen('addMediaToPlaylist');
+  lD.common.showLoadingScreen();
 
   // Set position to add if selected
   if (addToPosition != null) {
@@ -2694,9 +2831,9 @@ lD.addMediaToPlaylist = function(
       );
     }
 
-    lD.common.hideLoadingScreen('addMediaToPlaylist');
+    lD.common.hideLoadingScreen();
   }).catch((error) => { // Fail/error
-    lD.common.hideLoadingScreen('addMediaToPlaylist');
+    lD.common.hideLoadingScreen();
 
     // Show error returned or custom message to the user
     let errorMessage = '';
@@ -3176,19 +3313,50 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
       // If layoutObject[objType + 'Id'] is null, use objId
       const newObjId = layoutObject[objType + 'Id'] || objId;
 
-      // Check if it's playlist and it has at least one object in it
-      const needsConfirmationModal = (
+      // Check if we need confirmation modal
+      let showConfirmationModal = false;
+      let deleteObjectType;
+
+      if (
         layoutObject.type === 'region' &&
-        layoutObject.isPlaylist &&
         Object.values(layoutObject.widgets).length > 0
-      );
+      ) {
+        // Check if region or playlist has at least one object in it
+        showConfirmationModal = true;
+        deleteObjectType = (layoutObject.isPlaylist) ?
+          'playlist' :
+          'widget';
+      } else if (objType === 'element') {
+        const elementWidget =
+          lD.getObjectByTypeAndId('widget', objAuxId, 'canvas');
+
+        // Check if element is not global and is the last one on widget
+        showConfirmationModal = (
+          elementWidget.subType != 'global' &&
+          Object.values(elementWidget.elements).length === 1
+        );
+        deleteObjectType = 'element';
+      } else if (objType === 'element-group') {
+        const elementGroupWidget =
+          lD.getObjectByTypeAndId('widget', objAuxId, 'canvas');
+
+        // Check if element group is not global and
+        // the widget only has the elements from the group
+        showConfirmationModal = (
+          elementGroupWidget.subType != 'global' &&
+          Object.values(elementGroupWidget.elements).length ===
+            Object.values(layoutObject.elements).length
+        );
+        deleteObjectType = 'elementGroup';
+      }
 
       lD.deleteObject(
         objType,
         newObjId,
         auxId,
         false,
-        needsConfirmationModal,
+        showConfirmationModal,
+        deleteObjectType,
       );
     } else if (target.data('action') == 'Move') {
       // Move widget in the timeline
@@ -3748,7 +3916,7 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
       if ($regionsToBeDeleted.length > 0) {
         let deletedIndex = 0;
 
-        lD.common.showLoadingScreen('deleteMultiObject');
+        lD.common.showLoadingScreen();
 
         // Delete all selected objects
         const deleteNext = function() {
@@ -3770,7 +3938,7 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
               lD.viewer.selectObject();
 
               // Hide loader
-              lD.common.hideLoadingScreen('deleteMultiObject');
+              lD.common.hideLoadingScreen();
 
               // Reload data and select element when data reloads
               lD.reloadData(lD.layout,

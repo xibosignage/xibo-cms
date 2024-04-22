@@ -363,6 +363,230 @@ $(target).find('.date').each(function(_idx, dateEl){
         </assets>
     </template>
     <template>
+        <id>date_advanced</id>
+        <title>Date</title>
+        <type>element</type>
+        <dataType>global</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>date-thumb</thumbnail>
+        <startWidth>380</startWidth>
+        <startHeight>80</startHeight>
+        <properties>
+            <property id="currentDate" type="checkbox">
+                <title>Current date?</title>
+                <helpText>Use the current date to be displayed.</helpText>
+                <default>1</default>
+            </property>
+            <property id="offset" type="number">
+                <title>Offset</title>
+                <helpText>The offset in minutes that should be applied to the current date.</helpText>
+                <default></default>
+                <visibility>
+                    <test>
+                        <condition field="currentDate" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="date" type="date" format="DD/MM/Y HH:mm:ss" variant="dateTime">
+                <title>Custom Date</title>
+                <helpText>Insert date to be displayed.</helpText>
+                <default></default>
+                <visibility>
+                    <test>
+                        <condition field="currentDate" type="eq">0</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="dateFormat" type="text" variant="dateFormat">
+                <title>Date Format</title>
+                <default>d/m/Y H:i:s</default>
+            </property>
+            <property id="lang" type="languageSelector" variant="momentLocales">
+                <title>Language</title>
+                <helpText>Select the language you would like to use.</helpText>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font Family</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+            </property>
+            <property id="fontColor" type="color">
+                <title>Font Colour</title>
+                <default>%THEME_COLOR%</default>
+            </property>
+            <property id="fontSize" type="number">
+                <title>Font Size</title>
+                <default>40</default>
+            </property>
+            <property id="lineHeight" type="number">
+                <title>Line Height</title>
+                <default>1.2</default>
+            </property>
+            <property id="bold" type="checkbox">
+                <title>Bold</title>
+                <helpText>Should the text be bold?</helpText>
+                <default>0</default>
+            </property>
+            <property id="italics" type="checkbox">
+                <title>Italics</title>
+                <helpText>Should the text be italicised?</helpText>
+                <default>0</default>
+            </property>
+            <property id="underline" type="checkbox">
+                <title>Underline</title>
+                <helpText>Should the text be underlined?</helpText>
+                <default>0</default>
+            </property>
+            <property id="textWrap" type="checkbox">
+                <title>Text Wrap</title>
+                <helpText>Should the text wrap to the next line?</helpText>
+                <default>1</default>
+            </property>
+            <property id="showOverflow" type="checkbox">
+                <title>Show Overflow</title>
+                <helpText>Should the widget overflow the region?</helpText>
+                <default>1</default>
+            </property>
+            <property id="textShadow" type="checkbox">
+                <title>Text Shadow</title>
+                <default>0</default>
+                <helpText>Should the text have a shadow?</helpText>
+            </property>
+            <property id="textShadowColor" type="color">
+                <title>Text Shadow Colour</title>
+                <visibility>
+                    <test>
+                        <condition field="textShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="shadowX" type="number">
+                <title>Shadow X Offset</title>
+                <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="textShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="shadowY" type="number">
+                <title>Shadow Y Offset</title>
+                <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="textShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="shadowBlur" type="number">
+                <title>Shadow Blur</title>
+                <default>2</default>
+                <visibility>
+                    <test>
+                        <condition field="textShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="horizontalAlign" type="dropdown">
+                <title>Horizontal Align</title>
+                <default>center</default>
+                <options>
+                    <option name="flex-start">Left</option>
+                    <option name="center">Center</option>
+                    <option name="flex-end">Right</option>
+                </options>
+            </property>
+            <property id="verticalAlign" type="dropdown">
+                <title>Vertical Align</title>
+                <default>center</default>
+                <options>
+                    <option name="flex-start">Top</option>
+                    <option name="center">Middle</option>
+                    <option name="flex-end">Bottom</option>
+                </options>
+            </property>
+        </properties>
+        <stencil>
+            <hbs><![CDATA[
+<div class="global-elements-date-advanced"
+    style="
+    display: flex;
+    {{#if fontFamily}}font-family: {{fontFamily}};{{/if}}
+    {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
+    {{#if lineHeight}}line-height: {{lineHeight}};{{/if}}
+    {{#if fontColor}}color: {{fontColor}};{{/if}}
+    {{#if bold}}font-weight: bold;{{/if}}
+    {{#if italics}}font-style: italic;{{/if}}
+    {{#if underline}}text-decoration: underline;{{/if}}
+    {{#if showOverflow}}overflow: visible;{{else}}overflow: hidden;{{/if}}
+    {{#if horizontalAlign}}justify-content: {{horizontalAlign}};{{/if}}
+    {{#if verticalAlign}}align-items: {{verticalAlign}};{{/if}}
+    {{#if textWrap}}white-space: break-spaces;{{else}}white-space: nowrap;{{/if}}
+    {{#if textShadow}}text-shadow: {{shadowX}}px {{shadowY}}px {{shadowBlur}}px {{textShadowColor}};{{/if}}
+    width: 100%; height: 100%;"
+>
+<div class="date-advanced"></div>
+</div>
+            ]]></hbs>
+        </stencil>
+        <onTemplateRender><![CDATA[
+var $dateEl = $(target).find('.date-advanced');
+var useCurrentDate = (properties.currentDate == 1);
+
+if (useCurrentDate) {
+    // Use current date
+
+    var offset = properties.offset || 0;
+    // Clear previous interval if exists
+    if (window['updateInterval_' + id]) {
+        clearInterval(window['updateInterval_' + id]);
+    }
+
+    // Update every second
+    window['updateInterval_' + id] = setInterval(function() {
+        // If element was removed, clear interval
+        if(!$dateEl.is(':visible')) {
+            clearInterval(window['updateInterval_' + id]);
+            return;
+        }
+
+        // Update date value
+        var currentDate = moment().add(offset, "m");
+
+        // Check for lang config
+        if (properties.lang !== null && String(properties.lang).length > 0) {
+            currentDate.locale(properties.lang);
+        }
+
+        $dateEl.html(currentDate.format(properties.dateFormat));
+    }, 1000);
+} else {
+    // Use custom date
+
+    // If date is not defined, don't render
+    if (String(properties.date).length === 0) {
+        $dateEl.html('');
+        return;
+    }
+
+    var customDate = moment(properties.date);
+
+    // Check for lang config
+    if (properties.lang !== null && String(properties.lang).length > 0) {
+        customDate.locale(properties.lang);
+    }
+
+    // Format the date with the dateFormat property
+    var formattedDate = customDate.format(properties.dateFormat);
+
+    // Set the date div value to the formatted date
+    $dateEl.html(formattedDate);
+}
+        ]]></onTemplateRender>
+        <assets>
+            <asset id="date-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/date.png" />
+        </assets>
+    </template>
+    <template>
         <id>global_image</id>
         <type>element</type>
         <dataType>global</dataType>
@@ -442,17 +666,61 @@ $(target).find('.date').each(function(_idx, dateEl){
                     </test>
                 </visibility>
             </property>
+            <property id="imageShadow" type="checkbox">
+                <title>Image Shadow</title>
+                <default>0</default>
+                <helpText>Should the image have a shadow?</helpText>
+            </property>
+            <property id="imageShadowColor" type="color">
+                <title>Image Shadow Colour</title>
+                <visibility>
+                    <test>
+                        <condition field="imageShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="shadowX" type="number">
+                <title>Shadow X Offset</title>
+                <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="imageShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="shadowY" type="number">
+                <title>Shadow Y Offset</title>
+                <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="imageShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="shadowBlur" type="number">
+                <title>Shadow Blur</title>
+                <default>2</default>
+                <visibility>
+                    <test>
+                        <condition field="imageShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
         </properties>
         <stencil>
             <hbs><![CDATA[
-<div class="global-elements-image img-container" style="width:100%; height: 100%; overflow: hidden; position: relative;
-    {{#if roundBorder}}border-radius: {{borderRadius}}px;{{/if}}">
+<div class="global-elements-image img-container"
+    style="width:100%; height: 100%; position: relative;">
     {{#if url}}
         <img src="{{{url}}}" style="
             width:100%; height: 100%;
             object-fit: {{objectFit}};
             object-position: {{alignId}} {{valignId}};
             opacity: {{opacity}}%;
+            {{#if imageShadow}}
+                filter: drop-shadow({{shadowX}}px {{shadowY}}px {{shadowBlur}}px {{imageShadowColor}});
+            {{/if}}
+            {{#if roundBorder}}border-radius: {{borderRadius}}px;{{/if}}
             position: absolute; top: 0; left: 0;"
         />
     {{/if}}
@@ -476,6 +744,12 @@ $(target).find('img').xiboImageRender(properties);
         <canRotate>true</canRotate>
         <startWidth>250</startWidth>
         <startHeight>250</startHeight>
+        <properties>
+            <property id="imageReplace" type="imageReplaceControl">
+                <title>Replace Image</title>
+                <helpText>Add an image from the Toolbar to replace this element.</helpText>
+            </property>
+        </properties>
     </template>
     <template>
         <id>line</id>
@@ -1007,5 +1281,128 @@ $(target).find('img').xiboImageRender(properties);
         <assets>
             <asset id="hexagon-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/hexagon.png" />
         </assets>
+    </template>
+    <template>
+        <id>placeholder</id>
+        <title>Placeholder</title>
+        <type>element</type>
+        <dataType>global</dataType>
+        <showIn>none</showIn>
+        <isVisible>false</isVisible>
+        <thumbnail>placeholder-thumb</thumbnail>
+        <startWidth>200</startWidth>
+        <startHeight>100</startHeight>
+        <properties>
+            <property id="placeholderType" type="dropdown" mode="single">
+                <title>Placeholder type</title>
+                <helpText>Please select the type of placeholder to use as target.</helpText>
+                <default>all</default>
+                <options>
+                    <option name="all">All</option>
+                    <option name="image">Image</option>
+                    <option name="global">Global</option>
+                </options>
+            </property>
+        </properties>
+        <stencil>
+            <hbs><![CDATA[
+<div data-placeholder-type="{{placeholderType}}">
+<span>Placeholder: {{placeholderType}}</span>
+</div>
+            ]]></hbs>
+            <style><![CDATA[
+div[data-placeholder-type] {
+    color: grey;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+            ]]></style>
+        </stencil>
+        <assets>
+            <asset id="placeholder-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/placeholder.png" />
+        </assets>
+    </template>
+    <template>
+        <id>image_placeholder</id>
+        <title>Image Placeholder</title>
+        <canRotate>true</canRotate>
+        <extends override="url">global_image</extends>
+        <type>element</type>
+        <dataType>global</dataType>
+        <showIn>none</showIn>
+        <isVisible>false</isVisible>
+        <startWidth>200</startWidth>
+        <startHeight>100</startHeight>
+        <propertyGroups>
+            <propertyGroup id="placeholderOptions" expanded="true">
+                <title>Placeholder options</title>
+                <helpText></helpText>
+            </propertyGroup>
+        </propertyGroups>
+        <properties>
+            <property id="placeholderMessage" type="text" propertyGroupId="placeholderOptions">
+                <title>Placeholder message</title>
+                <helpText></helpText>
+                <default>Image Placeholder</default>
+            </property>
+            <property id="placeholderMessageColor" type="color" propertyGroupId="placeholderOptions">
+                <title>Placeholder message colour</title>
+                <helpText></helpText>
+                <default>#333</default>
+            </property>
+            <property id="fontFamily" type="fontSelector" propertyGroupId="placeholderOptions">
+                <title>Font Family</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+            </property>
+            <property id="fontSize" type="number" propertyGroupId="placeholderOptions">
+                <title>Font Size</title>
+                <default>22</default>
+            </property>
+            <property id="placeholderBackgroundColor" type="color" propertyGroupId="placeholderOptions">
+                <title>Placeholder background colour</title>
+                <helpText></helpText>
+                <default>#f9f9f9</default>
+            </property>
+        </properties>
+        <stencil>
+            <hbs><![CDATA[
+<div class="global-elements-image img-container" style="width:100%; height: 100%; overflow: hidden; position: relative;
+    {{#if roundBorder}}border-radius: {{borderRadius}}px;{{/if}}">
+    <img src="" style="
+        width:100%; height: 100%;
+        object-fit: {{objectFit}};
+        object-position: {{alignId}} {{valignId}};
+        opacity: {{opacity}}%;
+        position: absolute; top: 0; left: 0;
+        background-color: {{placeholderBackgroundColor}};
+        "
+    />
+    <div data-placeholder-type="image">
+        <span style="color: {{placeholderMessageColor}};
+        {{#if fontFamily}}font-family: {{fontFamily}};{{/if}}
+        {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
+        ">
+            {{placeholderMessage}}</span>
+    </div>
+</div>
+            ]]></hbs>
+            <style><![CDATA[
+div[data-placeholder-type] {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    z-index: 2;
+}
+            ]]></style>
+        </stencil>
+        <onTemplateRender><![CDATA[
+$(target).find('img').xiboImageRender(properties);
+        ]]></onTemplateRender>
     </template>
 </templates>

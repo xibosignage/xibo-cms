@@ -93,6 +93,9 @@ class Property implements \JsonSerializable
     /** @var bool Should the prooperty be included in the XLF? */
     public $includeInXlf = false;
 
+    /** @var bool Should the property be sent into Elements */
+    public $sendToElements = false;
+
     /** @var \Xibo\Widget\Definition\PlayerCompatibility */
     public $playerCompatibility;
 
@@ -137,6 +140,7 @@ class Property implements \JsonSerializable
             'allowAssetRefs' => $this->allowAssetRefs,
             'parseTranslations' => $this->parseTranslations,
             'dependsOn' => $this->dependsOn,
+            'sendToElements' => $this->sendToElements,
         ];
     }
 

@@ -1,0 +1,48 @@
+{#
+/*
+ * Copyright (C) 2024 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% set name = template.templateId %}
+    {% trans %}Copy {{ name }}{% endtrans %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Copy" %}, $("#form-module-template-copy").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="form-module-template-copy" class="XiboForm form-horizontal" method="post" action="{{ url_for("developer.templates.copy", {id: template.id}) }}")>
+                {% set title %}{% trans "ID" %}{% endset %}
+                {% set helpText %}{% trans "A unique ID for the module template" %}{% endset %}
+                {% set copyName %}{{ template.templateId }}_copy{% endset %}
+                {{ forms.input("templateId", title, copyName , helpText) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

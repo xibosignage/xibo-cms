@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -33,6 +33,7 @@ class ProviderDetails implements \JsonSerializable
     public $logoUrl;
     public $iconUrl;
     public $backgroundColor;
+    public $mediaTypes;
 
     public function jsonSerialize(): array
     {
@@ -42,7 +43,8 @@ class ProviderDetails implements \JsonSerializable
             'link' => $this->link,
             'logoUrl' => $this->logoUrl,
             'iconUrl' => $this->iconUrl,
-            'backgroundColor' => $this->backgroundColor
+            'backgroundColor' => $this->backgroundColor,
+            'mediaTypes' => $this->mediaTypes
         ];
     }
 }

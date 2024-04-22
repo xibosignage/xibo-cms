@@ -465,6 +465,7 @@ pE.deleteSelectedObject = function() {
     pE.deleteObject(
       pE.selectedObject.type,
       pE.selectedObject[pE.selectedObject.type + 'Id'],
+      true, // Show confirmation modal for all static widgets
     );
   }
 };
@@ -473,15 +474,56 @@ pE.deleteSelectedObject = function() {
  * Delete object
  * @param {string} objectType
  * @param {number} objectId
+ * @param {boolean=} showConfirmationModal
+ *   - If we need to show a confirmation modal
  */
-pE.deleteObject = function(objectType, objectId) {
-  pE.common.showLoadingScreen('deleteObject');
+pE.deleteObject = function(
+  objectType,
+  objectId,
+  showConfirmationModal = false,
+) {
+  // Create modal before delete element
+  const createDeleteModal = function() {
+    bootbox.hideAll();
+
+    bootbox.dialog({
+      title: deleteModalTrans.widget.title,
+      message: deleteModalTrans.widget.message,
+      size: 'large',
+      buttons: {
+        cancel: {
+          label: editorsTrans.no,
+          className: 'btn-white btn-bb-cancel',
+        },
+        confirm: {
+          label: editorsTrans.yes,
+          className: 'btn-danger btn-bb-confirm',
+          callback: function() {
+            // Delete
+            pE.deleteObject(
+              objectType,
+              objectId,
+              false,
+            );
+          },
+        },
+      },
+    }).attr('data-test', 'deleteObjectModal');
+  };
+
+  // Show confirmation modal if needed
+  if (showConfirmationModal) {
+    createDeleteModal();
+    return;
+  }
+
+  pE.common.showLoadingScreen();
 
   // Delete object from the layout
   pE.playlist.deleteObject(objectType, objectId)
     .then((_res) => {
       // Success
-      pE.common.hideLoadingScreen('deleteObject');
+      pE.common.hideLoadingScreen();
 
       // Remove selected object if the deleted was selected
       if (pE.selectedObject.widgetId === objectId) {
@@ -491,7 +533,7 @@ pE.deleteObject = function(objectType, objectId) {
       // Reload data
       pE.reloadData();
     }).catch((error) => { // Fail/error
-      pE.common.hideLoadingScreen('deleteObject');
+      pE.common.hideLoadingScreen();
 
       // Show error returned or custom message to the user
       let errorMessage = '';
@@ -514,7 +556,7 @@ pE.deleteObject = function(objectType, objectId) {
  */
 pE.deleteMultipleObjects = function(objectsType, objectIds) {
   if (objectsType === 'widget') {
-    pE.common.showLoadingScreen('deleteObjects');
+    pE.common.showLoadingScreen();
 
     let deletedIndex = 0;
 
@@ -531,7 +573,7 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
 
           if (deletedIndex == objectIds.length) {
             // Hide loading screen
-            pE.common.hideLoadingScreen('deleteObjects');
+            pE.common.hideLoadingScreen();
 
             // Remove selected object if it's one in the objectIds
             if (
@@ -549,7 +591,7 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
             deleteNext();
           }
         }).catch((error) => { // Fail/error
-          pE.common.hideLoadingScreen('deleteObjects');
+          pE.common.hideLoadingScreen();
 
           // Show error returned or custom message to the user
           let errorMessage = '';
@@ -711,19 +753,19 @@ pE.showErrorMessage = function() {
 pE.saveOrder = function() {
   const self = this;
 
-  pE.common.showLoadingScreen('saveOrder');
+  pE.common.showLoadingScreen();
 
   this.playlist.saveOrder(
     this.editorContainer.find('#timeline-container').find('.playlist-widget'),
   ).then((res) => { // Success
-    pE.common.hideLoadingScreen('saveOrder');
+    pE.common.hideLoadingScreen();
 
     self.reloadData({
       reloadToolbar: false,
       reloadPropertiesPanel: false,
     });
   }).catch((error) => { // Fail/error
-    pE.common.hideLoadingScreen('saveOrder');
+    pE.common.hideLoadingScreen();
 
     // Show error returned or custom message to the user
     let errorMessage = '';
@@ -875,7 +917,7 @@ pE.openContextMenu = function(obj, position = {x: 0, y: 0}) {
     const target = $(ev.currentTarget);
 
     if (target.data('action') == 'Delete') {
-      pE.deleteObject(objType, playlistObject[objType + 'Id']);
+      pE.deleteObject(objType, playlistObject[objType + 'Id'], true);
     } else {
       playlistObject.editPropertyForm(
         target.data('property'),
@@ -1150,7 +1192,11 @@ pE.updateObjects = function() {
   pE.editorContainer.find('#playlist-timeline .playlist-widget .widgetDelete')
     .click(function(e) {
       e.stopPropagation();
-      pE.deleteObject('widget', $(e.currentTarget).parent().data('widgetId'));
+      pE.deleteObject(
+        'widget',
+        $(e.currentTarget).parent().data('widgetId'),
+        true,
+      );
     });
 };
 

@@ -654,3 +654,27 @@ select[readonly].select2-hidden-accessible + .select2-container .select2-selecti
         }
     }
 }
+
+// Image replace control
+.image-replace-control .image-replace-control-area {
+    height: 80px;
+    border-radius: 4px;
+    text-align: center;
+    color: $xibo-color-neutral-1000;
+    background-color: $xibo-color-primary-l5;
+    padding: 18px;
+    border: 2px solid darken($xibo-color-primary-l5, 10%);
+
+    &.ui-droppable-active {
+        @include user-select-none();
+
+        cursor: pointer;
+        position: relative;
+        z-index: $designer-select-z-index;
+
+        &.ui-droppable-hover,
+        &:hover {
+            background-color: lighten($xibo-color-primary-l5, 10%);
+        }
+    }
+}

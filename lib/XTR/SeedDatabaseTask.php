@@ -312,6 +312,7 @@ class SeedDatabaseTask implements TaskInterface
         // all layouts name and file name
         $layoutNames = [
             'dataset test ' => 'export-dataset-test.zip',
+            'layout_with_8_items_dataset' => 'export-layout-with-8-items-dataset.zip',
             'Image test' => 'export-image-test.zip',
             'Layout for Schedule 1' => 'export-layout-for-schedule-1.zip',
             'List Campaign Layout 1' => 'export-list-campaign-layout-1.zip',

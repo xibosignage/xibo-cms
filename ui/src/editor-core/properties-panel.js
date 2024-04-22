@@ -54,6 +54,7 @@ const PropertiesPanel = function(parent, container) {
     layout: '',
     region: '',
     widget: '',
+    position: '',
   };
 
   this.inlineEditor = false;
@@ -683,6 +684,18 @@ PropertiesPanel.prototype.render = function(
         }
       };
 
+      // If it's an element of type global
+      // hide widget name input
+      if (
+        (isElement || isElementGroup) &&
+        targetAux.elementType === 'global'
+      ) {
+        self.DOMObject.find('#advancedTab input[name="name"]')
+          .each(function(_dx, el) {
+            $(el).parent().hide();
+          });
+      }
+
       if (isElementGroup) {
         const groupProperties = [];
         // if it's an element group and we have a slot
@@ -977,13 +990,26 @@ PropertiesPanel.prototype.render = function(
             'element-property element-common-property',
           );
 
+          // Check if we have sendToElements properties from the widget
+          // if so, we need to skip the element property
+          const widgetProperties = res.data.module.properties;
+          widgetProperties.forEach((wPpt) => {
+            if (
+              wPpt.sendToElements === true
+            ) {
+              properties.forEach((ePpt) => {
+                ePpt.skip = (ePpt.id === wPpt.name);
+              });
+            }
+          });
+
           // Create element fields
           forms.createFields(
             properties,
             self.DOMObject.find('#appearanceTab'),
             targetAux.elementId,
             null,
-            null,
+            targetAux.template.propertyGroups,
             'element-property',
           );
 
@@ -1731,6 +1757,7 @@ PropertiesPanel.prototype.initFields = function(
       layout: '',
       region: '',
       widget: '',
+      position: '',
     };
 
     // Save for this type
@@ -1738,6 +1765,13 @@ PropertiesPanel.prototype.initFields = function(
       self.DOMObject.find('form [name]:not(.element-property)')
         .filter('.tab-pane:not(#positionTab) [name]')
         .serialize();
+
+    // If widget, also save position form
+    if (target.type === 'widget') {
+      self.formSerializedLoadData.position =
+        self.DOMObject.find('form #positionTab [name]')
+          .serialize();
+    }
   }
 
   // If we're not in read only mode
@@ -1784,6 +1818,60 @@ PropertiesPanel.prototype.initFields = function(
 
     xiboInitOptions.readOnlyMode = true;
   }
+
+  // Handle image replace droppable area
+  const replaceImageInElement = function(element, card) {
+    const fromProvider = $(card).hasClass('from-provider');
+
+    // Replace in element, save and reload
+    const replaceInElement = function(mediaId) {
+      element.replaceMedia(mediaId).then(() => {
+        self.parent.viewer.renderElementContent(element);
+      });
+    };
+
+    // Import from provider or add from library
+    if (fromProvider) {
+      lD.importFromProvider(
+        [$(card).data('providerData')],
+      ).then((res) => {
+        // If res is empty, it means that the import failed
+        if (res.length === 0) {
+          console.error('Replace from provider failed!');
+        } else {
+          replaceInElement(res[0]);
+        }
+      });
+    } else {
+      replaceInElement($(card).data('mediaId'));
+    }
+  };
+
+  self.DOMObject.find('.image-replace-control-area').droppable({
+    greedy: true,
+    tolerance: 'pointer',
+    accept: function(el) {
+      return (
+        $(el).data('type') === 'media' &&
+        $(el).data('subType') === 'image'
+      );
+    },
+    drop: _.debounce(function(event, ui) {
+      replaceImageInElement(self.parent.selectedObject, ui.draggable);
+    }, 200),
+  });
+
+  self.DOMObject.find('.image-replace-control-area')
+    .on('click', function(event) {
+      if ($(event.currentTarget).hasClass('ui-droppable-active')) {
+        replaceImageInElement(
+          self.parent.selectedObject,
+          self.parent.toolbar.selectedCard,
+        );
+
+        self.parent.toolbar.deselectCardsAndDropZones();
+      }
+    });
 
   // Call Xibo Init for this form
   XiboInitialise(
@@ -1931,7 +2019,9 @@ PropertiesPanel.prototype.saveRegion = function(
   const requestPath =
     urlsForApi.region.saveForm.url.replace(':id', region[region.type + 'Id']);
 
-  const formOldData = self.formSerializedLoadData[app.selectedObject.type];
+  const formOldData = (savePositionForm) ?
+    self.formSerializedLoadData.position :
+    self.formSerializedLoadData[app.selectedObject.type];
 
   // If form is valid, and it changed, submit it ( add change )
   if (form.valid() && formOldData != formNewData) {

@@ -62,6 +62,9 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
   this.elementGroups = {};
   this.elementTypeMap = {};
 
+  // Elements previous state
+  this.elementsLastState = '';
+
   this.widgetName = data.name;
 
   this.layoutObject = layoutObject;
@@ -72,6 +75,7 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
   this.type = 'widget';
   this.subType = data.type;
   this.moduleName = data.moduleName;
+  this.moduleDataType = data.moduleDataType;
 
   // Permissions
   this.isEditable = data.isEditable;
@@ -375,6 +379,27 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
   };
 
   /**
+     * Get properties that are to be sent to the widget elements
+     * @return {boolean}
+     */
+  this.getSendToElementProperties = function() {
+    const self = this;
+    const sendToElement = {};
+
+    Object.keys(modulesList).forEach(function(item) {
+      if (modulesList[item].type == self.subType) {
+        modulesList[item].properties.forEach((ppt) => {
+          if (ppt.sendToElements === true) {
+            sendToElement[ppt.id] = self.getOptions()[ppt.id];
+          }
+        });
+      }
+    });
+
+    return sendToElement;
+  };
+
+  /**
    * Get icon from module
    * @return {string}
    */
@@ -412,6 +437,99 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
    */
   this.getFullId = function() {
     return 'widget_' + this.regionId.split('region_')[1] + '_' + this.widgetId;
+  };
+
+  /**
+   * Save current element state to be used for history manager
+   */
+  this.updateElementPreviousState = function() {
+    this.elementsLastState =
+      JSON.stringify([
+        {
+          elements: this.processElementsToSave(this.elements),
+        },
+      ]);
+  };
+
+  /**
+   * Process elements to be saved
+   * @param {object} elements
+   * @return {object} elements to save
+   */
+  this.processElementsToSave = function(elements) {
+    const elementsToParse = (elements) ? elements : this.elements;
+
+    return Object.values(elementsToParse).map((element) => {
+      // Save only id and value for element properties if they are not empty
+      if (element.properties != undefined) {
+        element.properties =
+          Object.values(element.properties).map((property) => {
+            return {
+              id: property.id,
+              value: property.value,
+            };
+          });
+      }
+
+      const elementObject = {
+        id: element.id,
+        elementName: element.elementName,
+        elementId: element.elementId,
+        type: element.elementType,
+        left: element.left,
+        top: element.top,
+        width: element.width,
+        height: element.height,
+        layer: element.layer,
+        rotation: element.rotation,
+        properties: element.properties,
+        isVisible: element.isVisible,
+      };
+
+      // If we have group, add group properties
+      if (element.group) {
+        elementObject.groupId = element.group.id;
+        elementObject.groupProperties = {
+          elementGroupName: element.group.elementGroupName,
+          top: element.group.top,
+          left: element.group.left,
+          width: element.group.width,
+          height: element.group.height,
+          effect: element.group.effect,
+          layer: element.group.layer,
+          pinSlot: element.group.pinSlot,
+        };
+
+        // Save group scale type if exists
+        if (element.groupScale) {
+          elementObject.groupScale = 1;
+        } else if (element.groupScaleType) {
+          elementObject.groupScale = 0;
+          elementObject.groupScaleType = element.groupScaleType;
+        }
+      } else {
+        // Save effect if exists
+        if (element.effect !== undefined) {
+          elementObject.effect = element.effect;
+        }
+      }
+
+      // Save media id if exists
+      if (element.mediaId !== undefined) {
+        elementObject.mediaId = element.mediaId;
+      }
+
+      // Save slot if exists
+      if (element.slot != undefined) {
+        elementObject.slot = Number(element.slot);
+
+        // Save pin slot option
+        (element.pinSlot != undefined) &&
+          (elementObject.pinSlot = element.pinSlot);
+      }
+
+      return elementObject;
+    });
   };
 };
 
@@ -659,6 +777,8 @@ Widget.prototype.getNextWidget = function(reverse = false) {
  * @param {boolean} reload - reload layout
  * @param {boolean} forceRequest
  *  - always make request even another one is happening
+ * @param {boolean} addToHistory
+ *  - save state to history so it can be reverted
  * @return {Promise} - Promise
  */
 Widget.prototype.saveElements = function(
@@ -666,6 +786,7 @@ Widget.prototype.saveElements = function(
     elements = null,
     reload = false,
     forceRequest = false,
+    addToHistory = true,
   } = {},
 ) {
   // If widget isn't editable, throw an error
@@ -788,6 +909,16 @@ Widget.prototype.saveElements = function(
             'canvas',
           );
 
+          // If selected object is an element or group with the canvas region id
+          // unselect it
+          if (
+            app.selectedObject.regionId === canvas.regionId
+          ) {
+            app.selectedObject = app.layout;
+            app.selectedObject.type = 'layout';
+            app.viewer.selectObject();
+          }
+
           // Refresh layer manager
           app.viewer.layerManager.render();
 
@@ -805,6 +936,16 @@ Widget.prototype.saveElements = function(
             'canvas',
           );
 
+          // If selected object is an element or group with the widget id
+          // unselect it
+          if (
+            app.selectedObject.widgetId === this.widgetId
+          ) {
+            app.selectedObject = app.layout;
+            app.selectedObject.type = 'layout';
+            app.viewer.selectObject();
+          }
+
           // Refresh layer manager
           app.viewer.layerManager.render();
         });
@@ -820,87 +961,57 @@ Widget.prototype.saveElements = function(
     }
   }
 
-  // Convert element to the correct type
-  elementsToSave = Object.values(elementsToSave).map((element) => {
-    // Save only id and value for element properties if they are not empty
-    if (element.properties != undefined) {
-      element.properties =
-        Object.values(element.properties).map((property) => {
-          return {
-            id: property.id,
-            value: property.value,
-          };
-        });
-    }
-
-    const elementObject = {
-      id: element.id,
-      elementName: element.elementName,
-      elementId: element.elementId,
-      type: element.elementType,
-      left: element.left,
-      top: element.top,
-      width: element.width,
-      height: element.height,
-      layer: element.layer,
-      rotation: element.rotation,
-      properties: element.properties,
-    };
-
-    // If we have group, add group properties
-    if (element.group) {
-      elementObject.groupId = element.group.id;
-      elementObject.groupProperties = {
-        elementGroupName: element.group.elementGroupName,
-        top: element.group.top,
-        left: element.group.left,
-        width: element.group.width,
-        height: element.group.height,
-        effect: element.group.effect,
-        layer: element.group.layer,
-        pinSlot: element.group.pinSlot,
-      };
-
-      // Save group scale type if exists
-      if (element.groupScale) {
-        elementObject.groupScale = 1;
-      } else if (element.groupScaleType) {
-        elementObject.groupScale = 0;
-        elementObject.groupScaleType = element.groupScaleType;
-      }
-    } else {
-      // Save effect if exists
-      if (element.effect !== undefined) {
-        elementObject.effect = element.effect;
-      }
-    }
-
-    // Save media id if exists
-    if (element.mediaId !== undefined) {
-      elementObject.mediaId = element.mediaId;
-    }
-
-    // Save slot if exists
-    if (element.slot != undefined) {
-      elementObject.slot = Number(element.slot);
-
-      // Save pin slot option
-      (element.pinSlot != undefined) &&
-        (elementObject.pinSlot = element.pinSlot);
-    }
-
-    return elementObject;
-  });
-
   // Update element map
   this.updateElementMap();
 
-  // check if it's valid JSON
+  // Process elements to save
+  elementsToSave = Array.isArray(elementsToSave) ?
+    elementsToSave :
+    this.processElementsToSave(elementsToSave);
+
+  // Check if it's valid JSON
   try {
     JSON.parse(JSON.stringify(elementsToSave));
   } catch (e) {
     console.error('saveElementsToWidget', e);
     return;
+  }
+
+  // Check previously saved elements
+  let previousElements = '';
+  if (this.elementsLastState != '') {
+    previousElements = this.elementsLastState;
+  }
+
+  // Save current as previous to be used for undo next time
+  this.elementsLastState = JSON.stringify([
+    {
+      elements: elementsToSave,
+    },
+  ]);
+
+  // Save to history if it has previous state to be reverted to
+  if (addToHistory) {
+    lD.historyManager.addChange(
+      'saveElements',
+      'widget',
+      this.widgetId,
+      previousElements,
+      JSON.stringify([
+        {
+          elements: elementsToSave,
+        },
+      ]),
+      {
+        upload: false, // options.upload
+        skipUpload: true,
+        uploaded: true,
+        auxTarget: {
+          type: 'region',
+          id: lD.layout.canvas.regionId,
+        },
+      },
+    );
   }
 
   lD.common.showLoadingScreen();
@@ -910,6 +1021,8 @@ Widget.prototype.saveElements = function(
       self.saveElementsRequest == 'force' &&
       forceRequest === false
     ) {
+      lD.common.hideLoadingScreen();
+
       // If the previous request was forced, cancel current
       return Promise.resolve('Cancelled due to previous force request!');
     } else if (

@@ -615,7 +615,7 @@
                     bringRegionToView: "{{ "Bring selected %regionType% back to the Layout view." |trans }}",
                 },
                 widget: {
-                    name: "{{ "Widget Name" |trans }}",
+                    name: "{{ "Configuration Name" |trans }}",
                     nameHelpText: "{{ "An optional name for this widget" |trans }}",
                     useDuration: "{{ "Set a duration?" |trans }}",
                     useDurationHelpText: "{{ "Select to provide a specific duration for this Widget" |trans }}",
@@ -712,6 +712,8 @@
                     actionsTitle: "{{ "Interactive actions"|trans }}",
                     layoutTemplateName: "{{ "Layout Templates" |trans }}",
                     layoutTemplateTitle: "{{ "Search for Layout Templates"|trans }}",
+                    layoutExchangeName: "{{ "Xibo Layout Exchange" |trans }}",
+                    layoutExchangeTitle: "{{ "Search for templates available from the Xibo Exchange."|trans }}",
                     playlistsName: "{{ "Playlists" |trans }}",
                     playlistsTitle: "{{ "Add Playlists"|trans }}",
                     providerTitle: "{{ "Provider: %obj%"|trans }}",
@@ -760,7 +762,30 @@
                 layout: "{{ "Layout"|trans }}",
                 region: "{{ "Zone"|trans }}",
                 layoutTemplatesMessage: "{{ "Replace your Layout with a template?"|trans }}",
+                layoutExchangeTemplatesMessage: "{{ "Replace your Layout with a Xibo Exchange template?"|trans }}",
                 isRequired: "{{ "Required"|trans }}",
+                libraryTypes: {
+                    image: "{{ "Image" |trans }}",
+                    video: "{{ "Video" |trans }}",
+                    audio: "{{ "Audio" |trans }}",
+                    flash: "{{ "Flash" |trans }}",
+                    htmlpackage: "{{ "HTML Package" |trans }}",
+                    pdf: "{{ "PDF" |trans }}",
+                    powerpoint: "{{ "PowerPoint" |trans }}",
+                },
+                mediaTable: {
+                    mediaId: "{{ "ID" |trans }}",
+                    mediaName: "{{ "Name" |trans }}",
+                    mediaType: "{{ "Type" |trans }}",
+                    mediaTags: "{{ "Tags" |trans }}",
+                    mediaThumb: "{{ "Thumbnail" |trans }}",
+                },
+                placeholder: {
+                    image: {
+                        title: "{{ "Placeholder" |trans }}",
+                        description: "{{ "Use this item to be used as a placeholder to add images." |trans }}",
+                    }
+                }
             };
 
             var topbarTrans = {
@@ -781,7 +806,8 @@
                     transform: "{{ "Revert %target% transformation" |trans }}",
                     addWidget: "{{ "Revert %target% creation" |trans }}",
                     addMedia: "{{ "Revert %target% assignment" |trans }}",
-                    create: "{{ "Revert %target% creation"|trans }}"
+                    create: "{{ "Revert %target% creation"|trans }}",
+                    saveElements: "{{ "Revert %target% elements change"|trans }}"
                 },
                 target: {
                     widget: "{{ "Widget" |trans }}",
@@ -1066,7 +1092,19 @@
                 playlist: {
                     title: "{{ "Delete Playlist"|trans }}",
                     message: "{{ "Are you sure you want to delete a non-empty Playlist?"|trans }}",
-                }
+                },
+                widget: {
+                    title: "{{ "Delete Widget"|trans }}",
+                    message: "{{ "Are you sure you want to delete this widget?"|trans }}",
+                },
+                element: {
+                    title: "{{ "Delete Element"|trans }}",
+                    message: "{{ "Are you sure you want to delete this element? Widget will also be deleted and configuration will be lost."|trans }}",
+                },
+                elementGroup: {
+                    title: "{{ "Delete Element Group"|trans }}",
+                    message: "{{ "Are you sure you want to delete this element group? Widget will also be deleted and configuration will be lost."|trans }}",
+                },
             };
 
             var momentLocalesTrans = {

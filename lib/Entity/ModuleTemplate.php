@@ -157,7 +157,16 @@ class ModuleTemplate implements \JsonSerializable
     /** @var string $ownership Who owns this file? system|custom|user */
     public $ownership;
 
+    /** @var int $ownerId User ID of the owner of this template */
+    public $ownerId;
+
+    /**
+     * @SWG\Property(description="A comma separated list of groups/users with permissions to this template")
+     * @var string
+     */
+    public $groupsWithPermissions;
     /** @var string $xml The XML used to build this template */
+    
     private $xml;
 
     /** @var \DOMDocument The DOM Document for this templates XML */
@@ -182,7 +191,24 @@ class ModuleTemplate implements \JsonSerializable
         private readonly string $file
     ) {
         $this->setCommonDependencies($store, $log, $dispatcher);
+        $this->setPermissionsClass('Xibo\Entity\ModuleTemplate');
         $this->moduleTemplateFactory = $moduleTemplateFactory;
+    }
+
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    public function getOwnerId()
+    {
+        return $this->ownerId;
+    }
+
+    public function __clone()
+    {
+        $this->id = null;
+        $this->templateId = null;
     }
 
     /**
@@ -210,8 +236,25 @@ class ModuleTemplate implements \JsonSerializable
      */
     public function getXml(): string
     {
+        // for system templates
         if ($this->file !== 'database') {
-            $this->xml = file_get_contents($this->file);
+            $xml = new \DOMDocument();
+            // load whole file to document
+            $xml->loadXML(file_get_contents($this->file));
+            // go through template tags
+            foreach ($xml->getElementsByTagName('template') as $templateXml) {
+                if ($templateXml instanceof \DOMElement) {
+                    foreach ($templateXml->childNodes as $childNode) {
+                        if ($childNode instanceof \DOMElement) {
+                            // match the template to what was requested
+                            // set the xml and return it.
+                            if ($childNode->nodeName === 'id' && $childNode->nodeValue == $this->templateId) {
+                                $this->setXml($xml->saveXML($templateXml));
+                            }
+                        }
+                    }
+                }
+            }
         }
         return $this->xml;
     }
@@ -295,12 +338,13 @@ class ModuleTemplate implements \JsonSerializable
     private function add(): void
     {
         $this->id = $this->getStore()->insert('
-            INSERT INTO `module_templates` (`templateId`, `dataType`, `xml`)
-                VALUES (:templateId, :dataType, :xml)
+            INSERT INTO `module_templates` (`templateId`, `dataType`, `xml`, `ownerId`)
+                VALUES (:templateId, :dataType, :xml, :ownerId)
         ', [
             'templateId' => $this->templateId,
             'dataType' => $this->dataType,
             'xml' => $this->xml,
+            'ownerId' => $this->ownerId,
         ]);
     }
 
@@ -315,13 +359,15 @@ class ModuleTemplate implements \JsonSerializable
                 `templateId` = :templateId,
                 `dataType`= :dataType,
                 `enabled` = :enabled,
-                `xml` = :xml
+                `xml` = :xml,
+                `ownerId` = :ownerId
              WHERE `id` = :id
         ', [
             'templateId' => $this->templateId,
             'dataType' => $this->dataType,
             'xml' => $this->xml,
             'enabled' => $this->isEnabled ? 1 : 0,
+            'ownerId' => $this->ownerId,
             'id' => $this->id,
         ]);
     }

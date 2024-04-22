@@ -43,6 +43,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\NotificationFactory;
+use Xibo\Factory\PlayerFaultFactory;
 use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\RequiredFileFactory;
@@ -167,6 +168,9 @@ class Soap
     /** @var \Xibo\Factory\CampaignFactory */
     private $campaignFactory;
 
+    /** @var PlayerFaultFactory */
+    protected $playerFaultFactory;
+
     /**
      * Soap constructor.
      * @param LogProcessor $logProcessor
@@ -220,7 +224,8 @@ class Soap
         $playerVersionFactory,
         $dispatcher,
         $campaignFactory,
-        $syncGroupFactory
+        $syncGroupFactory,
+        $playerFaultFactory
     ) {
         $this->logProcessor = $logProcessor;
         $this->pool = $pool;
@@ -247,6 +252,7 @@ class Soap
         $this->dispatcher = $dispatcher;
         $this->campaignFactory = $campaignFactory;
         $this->syncGroupFactory = $syncGroupFactory;
+        $this->playerFaultFactory = $playerFaultFactory;
     }
 
     /**
@@ -1674,7 +1680,10 @@ class Soap
 
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
-            throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
+            throw new \SoapFault(
+                'Sender',
+                'The Server key you entered does not match with the server key at this address'
+            );
         }
 
         // Auth this request...
@@ -1684,14 +1693,16 @@ class Soap
 
         // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
         if (!$this->checkBandwidth($this->display->displayId)) {
-            throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
+            throw new \SoapFault('Receiver', 'Bandwidth Limit exceeded');
         }
 
         // Load the XML into a DOMDocument
-        $document = new \DOMDocument("1.0");
+        $document = new \DOMDocument('1.0');
 
         if (!$document->loadXML($logXml)) {
-            $this->getLog()->error('Malformed XML from Player, this will be discarded. The Raw XML String provided is: ' . $logXml);
+            $this->getLog()->error(
+                'Malformed XML from Player, this will be discarded. The Raw XML String provided is: ' . $logXml
+            );
             $this->getLog()->debug('XML log: ' . $logXml);
             return true;
         }
@@ -1709,13 +1720,13 @@ class Soap
         foreach ($document->documentElement->childNodes as $node) {
             /* @var \DOMElement $node */
             // Make sure we don't consider any text nodes
-            if ($node->nodeType == XML_TEXT_NODE)
+            if ($node->nodeType == XML_TEXT_NODE) {
                 continue;
-
+            }
             // Zero out the common vars
-            $scheduleId = "";
-            $layoutId = "";
-            $mediaId = "";
+            $scheduleId = '';
+            $layoutId = '';
+            $mediaId = '';
             $method = '';
             $thread = '';
             $type = '';
@@ -1729,6 +1740,14 @@ class Soap
 
             if ($date == '' || $cat == '') {
                 $this->getLog()->error('Log submitted without a date or category attribute');
+                continue;
+            }
+
+            // special handling for event
+            // this will create record in displayevent table
+            // and is not added to the logs.
+            if ($cat == 'event') {
+                $this->createDisplayAlert($node);
                 continue;
             }
 
@@ -1753,20 +1772,10 @@ class Soap
             }
 
             // Adjust the date according to the display timezone
-            try {
-                $date = ($this->display->timeZone != null) ? Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $date, $this->display->timeZone)->tz($defaultTimeZone) : Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $date);
-                $date = $date->format(DateFormatHelper::getSystemFormat());
-            } catch (\Exception $e) {
-                // Protect against the date format being inreadable
-                $this->getLog()->debug('Date format unreadable on log message: ' . $date);
-
-                // Use now instead
-                $date = Carbon::now()->format(DateFormatHelper::getSystemFormat());
-            }
+            $date = $this->adjustDisplayLogDate($date, DateFormatHelper::getSystemFormat());
 
             // Get the date and the message (all log types have these)
             foreach ($node->childNodes as $nodeElements) {
-
                 if ($nodeElements->nodeName == 'scheduleID') {
                     $scheduleId = $nodeElements->textContent;
                 } else if ($nodeElements->nodeName == 'layoutID') {
@@ -1780,30 +1789,32 @@ class Soap
                 } else if ($nodeElements->nodeName == 'message') {
                     $message = $nodeElements->textContent;
                 } else if ($nodeElements->nodeName == 'thread') {
-                    if ($nodeElements->textContent != '')
+                    if ($nodeElements->textContent != '') {
                         $thread = '[' . $nodeElements->textContent . '] ';
+                    }
                 }
             }
 
             // If the message is still empty, take the entire node content
-            if ($message == '')
+            if ($message == '') {
                 $message = $node->textContent;
-
+            }
             // Add the IDs to the message
-            if ($scheduleId != '')
+            if ($scheduleId != '') {
                 $message .= ' scheduleId: ' . $scheduleId;
-
-            if ($layoutId != '')
-                $message .= ' layoutId: '. $layoutId;
-
-            if ($mediaId != '')
+            }
+            if ($layoutId != '') {
+                $message .= ' layoutId: ' . $layoutId;
+            }
+            if ($mediaId != '') {
                 $message .= ' mediaId: ' . $mediaId;
-
+            }
             // Trim the page if it is over 50 characters.
             $page = $thread . $method . $type;
 
-            if (strlen($page) >= 50)
+            if (strlen($page) >= 50) {
                 $page = substr($page, 0, 49);
+            }
 
             $logs[] = [
                 $this->logProcessor->getUid(),
@@ -1851,8 +1862,12 @@ class Soap
             $this->getLog()->info('0 logs resolved from log package');
         }
 
-        if ($discardedLogs > 0)
-            $this->getLog()->info('Discarded ' . $discardedLogs . ' logs. Consider adjusting your display profile log level. Resolved level is ' . $logLevel);
+        if ($discardedLogs > 0) {
+            $this->getLog()->info(
+                'Discarded ' . $discardedLogs . ' logs.
+                 Consider adjusting your display profile log level. Resolved level is ' . $logLevel
+            );
+        }
 
         $this->logBandwidth($this->display->displayId, Bandwidth::$SUBMITLOG, strlen($logXml));
 
@@ -2619,7 +2634,7 @@ class Soap
             }
 
             // Configure our log processor
-            $this->logProcessor->setDisplay($this->display->displayId, ($this->display->isAuditing()));
+            $this->logProcessor->setDisplay($this->display->displayId, $this->display->getLogLevel());
 
             return true;
 
@@ -2638,12 +2653,11 @@ class Soap
     {
         $maintenanceEnabled = $this->getConfig()->getSetting('MAINTENANCE_ENABLED');
 
-        if ($this->display->loggedIn == 0) {
-
+        if ($this->display->loggedIn == 0 && !empty($this->display->displayId)) {
             $this->getLog()->info(sprintf('Display %s was down, now its up.', $this->display->display));
 
             // Log display up
-            $this->displayEventFactory->createEmpty()->displayUp($this->display->displayId);
+            $this->displayEventFactory->createEmpty()->eventEnd($this->display->displayId);
 
             $dayPartId = $this->display->getSetting('dayPartId', null,['displayOverride' => true]);
 
@@ -2751,7 +2765,7 @@ class Soap
     protected function checkBandwidth($displayId)
     {
         // Uncomment to enable auditing.
-        //$this->logProcessor->setDisplay(0, true);
+        //$this->logProcessor->setDisplay(0, 'debug');
 
         $this->display = $this->displayFactory->getById($displayId);
 
@@ -3021,5 +3035,87 @@ class Soap
         $this->toFilter = Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $toFilter);
 
         $this->getLog()->debug(sprintf('FromDT = %s [%d]. ToDt = %s [%d]', $fromFilter->toRssString(), $fromFilter->format('U'), $toFilter->toRssString(), $toFilter->format('U')));
+    }
+
+    /**
+     * Adjust the log date according to the Display timezone.
+     * Return current date if we fail.
+     * @param string $date
+     * @param string $format
+     * @return string
+     */
+    protected function adjustDisplayLogDate(string $date, string $format): string
+    {
+        // Get the display timezone to use when adjusting log dates.
+        $defaultTimeZone = $this->getConfig()->getSetting('defaultTimezone');
+        
+        // Adjust the date according to the display timezone
+        try {
+            $date = ($this->display->timeZone != null)
+                ? Carbon::createFromFormat(
+                    DateFormatHelper::getSystemFormat(),
+                    $date,
+                    $this->display->timeZone
+                )->tz($defaultTimeZone)
+                : Carbon::createFromFormat(
+                    DateFormatHelper::getSystemFormat(),
+                    $date
+                );
+            $date = $date->format($format);
+        } catch (\Exception $e) {
+            // Protect against the date format being unreadable
+            $this->getLog()->debug('Date format unreadable on log message: ' . $date);
+
+            // Use now instead
+            $date = Carbon::now()->format($format);
+        }
+        
+        return $date;
+    }
+
+    private function createDisplayAlert(\DomElement $alertNode)
+    {
+        $date = $this->adjustDisplayLogDate($alertNode->getAttribute('date'), 'U');
+        $eventType = '';
+        $refId = '';
+        $detail = '';
+        $alertType = '';
+
+        // Get the nodes we are expecting
+        foreach ($alertNode->childNodes as $nodeElements) {
+            if ($nodeElements->nodeName == 'eventType') {
+                $eventType = $nodeElements->textContent;
+            } else if ($nodeElements->nodeName == 'refId') {
+                $refId = $nodeElements->textContent;
+            } else if ($nodeElements->nodeName == 'message') {
+                $detail = $nodeElements->textContent;
+            } else if ($nodeElements->nodeName == 'alertType') {
+                $alertType = $nodeElements->textContent;
+            }
+        }
+
+        // if alerts should provide both start and end or just start
+        if ($alertType == 'both' || $alertType == 'start') {
+            $displayEvent = $this->displayEventFactory->createEmpty();
+
+            // new record populated from the submitLog xml.
+            $displayEvent->displayId = $this->display->displayId;
+            $displayEvent->eventTypeId = $displayEvent->getEventIdFromString($eventType);
+            $displayEvent->eventDate = $date;
+            $displayEvent->start = $date;
+            $displayEvent->end = $alertType == 'both' ? $date : null;
+            $displayEvent->refId = empty($refId) ? null : $refId;
+            $displayEvent->detail = $detail;
+
+            $displayEvent->save();
+        } else if ($alertType == 'end') {
+            // if this event pertain only to end date for an existing event record,
+            // then set the end date for this display and the specified eventType
+            $displayEvent = $this->displayEventFactory->createEmpty();
+            $eventTypeId = $displayEvent->getEventIdFromString($eventType);
+            empty($refId)
+                ? $displayEvent->eventEnd($this->display->displayId, $eventTypeId, $date)
+                : $displayEvent->eventEndByReference($this->display->displayId, $eventTypeId, $refId);
+        }
     }
 }

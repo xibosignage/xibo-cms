@@ -256,6 +256,7 @@ $(document).ready(function() {
 
                     // Serialise
                     let displayGroups = $('select[name="displayGroupIds[]"').serialize();
+                    let displaySpecificGroups = $('select[name="displaySpecificGroupIds[]"').serialize();
                     let displayLayouts = $('#campaignIdFilter').serialize();
                     let eventTypes = $('#eventTypeId').serialize();
                     let geoAware = $('#geoAware').serialize();
@@ -264,7 +265,9 @@ $(document).ready(function() {
                     let nameRegEx = 'useRegexForName=' + $('#useRegexForName').is('checked');
                     let nameLogicalOperator = $('#logicalOperatorName').serialize();
 
-                    !displayGroups && !displayLayouts ? $calendarErrorMessage.show() : $calendarErrorMessage.hide()
+                    !displayGroups && !displayLayouts && !displaySpecificGroups
+                      ? $calendarErrorMessage.show()
+                      : $calendarErrorMessage.hide()
 
                     var url = calendarOptions.eventSource;
 
@@ -274,12 +277,12 @@ $(document).ready(function() {
                       '&' + nameRegEx + '&' + nameLogicalOperator;
 
                     // Should we append displays?
-                    if (!displayGroups && displayLayouts !== '') {
+                    if (!displayGroups && !displaySpecificGroups && displayLayouts !== '') {
                         // Ignore the display list
                         url += '&' + 'displayGroupIds[]=-1';
-                    } else if (displayGroups !== '') {
+                    } else if (displayGroups !== '' || displaySpecificGroups !== '') {
                         // Append display list
-                        url += '&' + displayGroups;
+                        url += '&' + displayGroups + '&' + displaySpecificGroups;
                     }
 
                     events = [];
@@ -406,28 +409,28 @@ $(document).ready(function() {
                         $('#DisplayList, #DisplayGroupList').prop('disabled', false);
 
                         // Find selected display group and create a display group list used to create tabs
-                        $('select[name="displayGroupIds[]"] option').each(function () {
-                            var $self = $(this);
+                        $('select[name="displayGroupIds[]"] option, select[name="displaySpecificGroupIds[]"] option')
+                          .each(function () {
+                              var $self = $(this);
 
-                            // If the all option is selected
-                            if ($self.val() == -1 && $self.is(':selected')) {
-                                chooseAllDisplays = true;
-                                return true;
-                            }
+                              // If the all option is selected
+                              if ($self.val() == -1 && $self.is(':selected')) {
+                                  chooseAllDisplays = true;
+                                  return true;
+                              }
 
-                            if ($self.is(':selected') || chooseAllDisplays) {
+                              if ($self.is(':selected') || chooseAllDisplays) {
+                                  displayGroupsList.push({
+                                      id: $self.val(),
+                                      name: $self.html(),
+                                      isDisplaySpecific: $self.attr('type')
+                                  });
 
-                                displayGroupsList.push({
-                                    id: $self.val(),
-                                    name: $self.html(),
-                                    isDisplaySpecific: $self.attr('type')
-                                });
-
-                                if (typeof selectedDisplayGroup == 'undefined') {
-                                    selectedDisplayGroup = $self.val();
-                                }
-                            }
-                        });
+                                  if (typeof selectedDisplayGroup == 'undefined') {
+                                      selectedDisplayGroup = $self.val();
+                                  }
+                              }
+                          });
                     }
 
                     // Sort display group list by name
@@ -1642,6 +1645,61 @@ var setupSelectForSchedule = function (dialog) {
             }
         }
     });
+
+    // set initial displays on add form.
+    if(
+      [undefined, ''].indexOf($displaySelect.data('initialKey')) == -1 &&
+      $(dialog).find('form').data('setDisplaysFromGridFilters')
+    ) {
+        // filter from the Schedule grid
+        let displaySpecificGroups = $('#DisplayList').val() ?? [];
+        let displayGroups = $('#DisplayGroupList').val() ?? [];
+        // add values to one array
+        let addFormDisplayGroup = displaySpecificGroups.concat(displayGroups);
+        // set array of displayGroups as initial value
+        $displaySelect.data('initial-value', addFormDisplayGroup);
+
+        // query displayGroups and add all relevant options.
+        var initialValue = $displaySelect.data('initialValue');
+        var initialKey = $displaySelect.data('initialKey');
+        var dataObj = {};
+        dataObj[initialKey] = initialValue;
+        dataObj['isDisplaySpecific'] = -1;
+        dataObj['forSchedule'] = 1;
+
+        $.ajax({
+            url: $displaySelect.data('searchUrl'),
+            type: 'GET',
+            data: dataObj
+        }).then(function(data) {
+            // create the option and append to Select2
+            data.data.forEach(object => {
+                var option = new Option(
+                  object[$displaySelect.data('textProperty')],
+                  object[$displaySelect.data('idProperty')],
+                  true,
+                  true
+                );
+                $displaySelect.append(option)
+            });
+
+            // Trigger change but skip auto save
+            $displaySelect.trigger(
+              'change',
+              [{
+                  skipSave: true,
+              }]
+            );
+
+            // manually trigger the `select2:select` event
+            $displaySelect.trigger({
+                type: 'select2:select',
+                params: {
+                    data: data
+                }
+            });
+        });
+    }
 
     $('#mediaId, #playlistId', dialog).on('select2:select', function(event) {
         let hasFullScreenLayout = false;

@@ -147,12 +147,12 @@ Playlist.prototype.calculateTimeValues = function() {
 
 /**
  * Add action to take after dropping a draggable item
- * @param {object} droppable - Target drop object
+ * @param {object} _droppable - Target drop object
  * @param {object} draggable - Dragged object
  * @param {number=} addToPosition - Add to specific position in the widget list
  */
 Playlist.prototype.addObject = function(
-  droppable,
+  _droppable,
   draggable,
   addToPosition = null,
 ) {
@@ -218,7 +218,7 @@ Playlist.prototype.addObject = function(
 
       let requestPath = linkToAPI.url;
 
-      pE.common.showLoadingScreen('addModuleToPlaylist');
+      pE.common.showLoadingScreen();
 
       // Replace type
       requestPath = requestPath.replace(':type', draggableSubType);
@@ -255,7 +255,7 @@ Playlist.prototype.addObject = function(
           },
         },
       ).then((res) => { // Success
-        pE.common.hideLoadingScreen('addModuleToPlaylist');
+        pE.common.hideLoadingScreen();
 
         // The new selected object
         pE.selectedObject.id = 'widget_' + res.data.widgetId;
@@ -296,7 +296,7 @@ Playlist.prototype.addObject = function(
           pE.reloadData();
         }
       }).catch((error) => { // Fail/error
-        pE.common.hideLoadingScreen('addModuleToPlaylist');
+        pE.common.hideLoadingScreen();
 
         // Show error returned or custom message to the user
         let errorMessage = '';

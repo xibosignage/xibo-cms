@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -25,6 +25,7 @@ namespace Xibo\Xmds;
 use Carbon\Carbon;
 use Xibo\Entity\Bandwidth;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Class Soap6
@@ -44,7 +45,7 @@ class Soap6 extends Soap5
     public function reportFaults(string $serverKey, string $hardwareKey, string $fault): bool
     {
         $this->logProcessor->setRoute('ReportFault');
-        //$this->logProcessor->setDisplay(0, 1);
+        //$this->logProcessor->setDisplay(0, 'debug');
 
         $sanitizer = $this->getSanitizer([
             'serverKey' => $serverKey,
@@ -57,7 +58,10 @@ class Soap6 extends Soap5
 
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
-            throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
+            throw new \SoapFault(
+                'Sender',
+                'The Server key you entered does not match with the server key at this address'
+            );
         }
 
         // Auth this request...
@@ -70,17 +74,23 @@ class Soap6 extends Soap5
             throw new \SoapFault('Receiver', 'Bandwidth Limit exceeded');
         }
 
+        $faultDecoded = json_decode($fault, true);
+
+        // check if we should record or update any display events.
+        $this->manageDisplayAlerts($faultDecoded);
+
         // clear existing records from player_faults table
         $this->getStore()->update('DELETE FROM `player_faults` WHERE displayId = :displayId', [
             'displayId' => $this->display->displayId
         ]);
 
-        $faultDecoded = json_decode($fault, true);
-
         foreach ($faultDecoded as $faultAlert) {
             $sanitizedFaultAlert = $this->getSanitizer($faultAlert);
 
-            $incidentDt = $sanitizedFaultAlert->getDate('date', ['default' => Carbon::now()])->format(DateFormatHelper::getSystemFormat());
+            $incidentDt = $sanitizedFaultAlert->getDate(
+                'date',
+                ['default' => Carbon::now()]
+            )->format(DateFormatHelper::getSystemFormat());
             $expires = $sanitizedFaultAlert->getDate('expires', ['default' => null]);
             $code = $sanitizedFaultAlert->getInt('code');
             $reason = $sanitizedFaultAlert->getString('reason');
@@ -124,5 +134,100 @@ class Soap6 extends Soap5
         $this->logBandwidth($this->display->displayId, Bandwidth::$REPORTFAULT, strlen($fault));
 
         return true;
+    }
+
+    private function manageDisplayAlerts(array $newPlayerFaults)
+    {
+        // check current faults for player
+        $currentFaults = $this->playerFaultFactory->getByDisplayId($this->display->displayId);
+
+        // if we had faults and now we no longer have any to add
+        // set end date for any existing fault events
+        // add display event for cleared all faults
+        if (!empty($currentFaults) && empty($newPlayerFaults)) {
+            $displayEvent = $this->displayEventFactory->createEmpty();
+            $displayEvent->eventTypeId = $displayEvent->getEventIdFromString('Player Fault');
+            $displayEvent->displayId = $this->display->displayId;
+            // clear any open player fault events for this display
+            $displayEvent->eventEnd($displayEvent->displayId, $displayEvent->eventTypeId);
+
+            // log new event for all faults cleared.
+            $displayEvent->start = Carbon::now()->format('U');
+            $displayEvent->end = Carbon::now()->format('U');
+            $displayEvent->detail = __('All Player faults cleared');
+            $displayEvent->save();
+        } else if (empty($currentFaults) && !empty($newPlayerFaults)) {
+            $codesAdded = [];
+            // we do not have any faults currently, but new ones will be added
+            foreach ($newPlayerFaults as $newPlayerFault) {
+                $sanitizedFaultAlert = $this->getSanitizer($newPlayerFault);
+                // if we do not have an alert for the specific code yet, add it
+                if (!in_array($sanitizedFaultAlert->getInt('code'), $codesAdded)) {
+                    $this->addDisplayEvent($sanitizedFaultAlert);
+                    // keep track of added codes, we want a single alert per code
+                    $codesAdded[] = $sanitizedFaultAlert->getInt('code');
+                }
+            }
+        } else if (!empty($newPlayerFaults) && !empty($currentFaults)) {
+            // we have both existing faults and new faults
+            $existingFaultsCodes = [];
+            $newFaultCodes = [];
+            $codesAdded = [];
+
+            // keep track of existing fault codes.
+            foreach ($currentFaults as $currentFault) {
+                $existingFaultsCodes[] = $currentFault->code;
+            }
+
+            // go through new faults
+            foreach ($newPlayerFaults as $newPlayerFault) {
+                $sanitizedFaultAlert = $this->getSanitizer($newPlayerFault);
+                $newFaultCodes[] = $sanitizedFaultAlert->getInt('code');
+                // if it already exists, we do not do anything with alerts
+                // if it is a new code and was not added already
+                // add it now
+                if (!in_array($sanitizedFaultAlert->getInt('code'), $existingFaultsCodes)
+                    && !in_array($sanitizedFaultAlert->getInt('code'), $codesAdded)
+                ) {
+                    $this->addDisplayEvent($sanitizedFaultAlert);
+                    // keep track of added codes, we want a single alert per code
+                    $codesAdded[] = $sanitizedFaultAlert->getInt('code');
+                }
+            }
+
+            // go through any existing codes that are no longer reported
+            // update the end date on all of them.
+            foreach (array_diff($existingFaultsCodes, $newFaultCodes) as $code) {
+                $displayEvent = $this->displayEventFactory->createEmpty();
+                $displayEvent->eventEndByReference(
+                    $this->display->displayId,
+                    $displayEvent->getEventIdFromString('Player Fault'),
+                    $code
+                );
+            }
+        }
+    }
+
+    private function addDisplayEvent(SanitizerInterface $sanitizedFaultAlert)
+    {
+        $this->getLog()->debug(
+            sprintf(
+                'displayEvent : add new display alert for player fault code %d and displayId %d',
+                $sanitizedFaultAlert->getInt('code'),
+                $this->display->displayId
+            )
+        );
+
+        $displayEvent = $this->displayEventFactory->createEmpty();
+        $displayEvent->eventTypeId = $displayEvent->getEventIdFromString('Player Fault');
+        $displayEvent->displayId = $this->display->displayId;
+        $displayEvent->start = $sanitizedFaultAlert->getDate(
+            'date',
+            ['default' => Carbon::now()]
+        )->format('U');
+        $displayEvent->end = null;
+        $displayEvent->detail = $sanitizedFaultAlert->getString('reason');
+        $displayEvent->refId = $sanitizedFaultAlert->getInt('code');
+        $displayEvent->save();
     }
 }

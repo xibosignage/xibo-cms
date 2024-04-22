@@ -43,6 +43,9 @@ const Element = function(data, widgetId, regionId, parentWidget) {
   this.isDeletable = (parentWidget) ? parentWidget.isDeletable : true;
   this.isViewable = (parentWidget) ? parentWidget.isViewable : true;
 
+  // Check if the element is visible on rendering ( true by default )
+  this.isVisible = (data.isVisible === undefined) ? true : data.isVisible;
+
   // Element data from the linked widget/module
   this.data = {};
 
@@ -278,6 +281,25 @@ Element.prototype.getData = function() {
       });
     }
   });
+};
+
+/**
+ * Replace media in element
+ * @param {string} mediaId
+ * @return {Promise} - Promise with widget data
+ */
+Element.prototype.replaceMedia = function(mediaId) {
+  const self = this;
+  const parentWidget = lD.getObjectByTypeAndId(
+    'widget',
+    'widget_' + this.regionId + '_' + this.widgetId,
+    'canvas',
+  );
+
+  // Replace media id
+  self.mediaId = mediaId;
+
+  return parentWidget.saveElements();
 };
 
 module.exports = Element;

@@ -98,7 +98,6 @@ function XiboInitialise(scope, options) {
 
     // Search for any grids on the page and render them
     $(scope + " .XiboGrid").each(function() {
-
         var gridName = $(this).data().gridName;
         var form = $(this).find(".XiboFilter form");
 
@@ -117,15 +116,25 @@ function XiboInitialise(scope, options) {
                 formValues = [];
             }
 
+            // flatten the array
+            // if we have multiple items with the same name.
+            let formValuesUpdated = [];
+            formValues.forEach(element => {
+                if (element.name in formValuesUpdated) {
+                    formValuesUpdated[element.name].value = [element.value, formValuesUpdated[element.name].value]
+                } else {
+                    formValuesUpdated[element.name] = element
+                }
+            })
+
             const url = new URL(window.location.href);
             var params = new URLSearchParams(url.search.slice(1));
 
-
-            $.each(formValues, function(key, element) {
+            $.each(Object.values(formValuesUpdated), function(key, element) {
                 // Does this field exist in the form
                 var fieldName = element.name.replace(/\[\]/, '\\\\[\\\\]');
                 try {
-                    var field = form.find("input[name=" + fieldName + "], select[name=" + fieldName + "]");
+                    var field = form.find('input[name="' + fieldName + '"], select[name="' + fieldName + '"], select[name="' + element.name + '"]');
 
                     if (params.get(fieldName) !== null) {
                         field.val(params.get(fieldName))
@@ -3163,6 +3172,7 @@ function ToggleFilterView(div) {
 function makePagedSelect(element, parent) {
     element.select2({
         dropdownParent: ((parent == null) ? $("body") : $(parent)),
+        minimumResultsForSearch: (element.data('hideSearch')) ? Infinity : 1,
         ajax: {
             url: element.data("searchUrl"),
             dataType: "json",
@@ -3287,9 +3297,18 @@ function makePagedSelect(element, parent) {
             data: dataObj
         }).then(function(data) {
             // create the option and append to Select2
-            var option = new Option(data.data[0][element.data("textProperty")], data.data[0][element.data("idProperty")], true, true);
+            data.data.forEach(object => {
+                var option = new Option(
+                    object[element.data("textProperty")],
+                    object[element.data("idProperty")],
+                    true,
+                    true
+                );
+                element.append(option)
+            });
+
             // Trigger change but skip auto save
-            element.append(option).trigger(
+            element.trigger(
                 'change',
                 [{
                     skipSave: true,

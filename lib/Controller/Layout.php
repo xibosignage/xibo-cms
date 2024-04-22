@@ -1492,6 +1492,7 @@ class Layout extends Base
                     }
 
                     $widget->setUnmatchedProperty('moduleName', $module->name);
+                    $widget->setUnmatchedProperty('moduleDataType', $module->dataType);
 
                     if ($module->regionSpecific == 0) {
                         // Use the media assigned to this widget
