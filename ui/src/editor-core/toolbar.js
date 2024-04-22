@@ -25,6 +25,8 @@ const ToolbarTemplate = require('../templates/toolbar.hbs');
 const ToolbarCardMediaTemplate = require('../templates/toolbar-card-media.hbs');
 const ToolbarCardMediaUploadTemplate =
   require('../templates/toolbar-card-media-upload.hbs');
+const ToolbarCardMediaPlaceholderTemplate =
+  require('../templates/toolbar-card-media-placeholder.hbs');
 const ToolbarCardLayoutTemplateTemplate =
   require('../templates/toolbar-card-layout-template.hbs');
 const ToolbarCardPlaylistTemplate =
@@ -1495,6 +1497,16 @@ Toolbar.prototype.handleDroppables = function(draggable, customClasses = '') {
         ['.designer-region-drawer[data-action-edit-type="create"]'];
     }
 
+    // Image placeholder
+    if (
+      $(draggable).data('type') === 'media' &&
+      $(draggable).data('subType') === 'image'
+    ) {
+      selectorBuild.push(
+        '.designer-element[data-sub-type="image_placeholder"]',
+      );
+    }
+
     // Add droppable class to all selectors
     selectorBuild = selectorBuild.map((selector) => {
       return selector + selectorAppend;
@@ -1731,6 +1743,31 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
             addUploadCard(app.common.getModuleByType(moduleType));
           });
         }
+      }
+
+      // Add placeholder for images if we're in template editing mode
+      if (
+        app.templateEditMode &&
+        self.menuItems[menu].contentType === 'media' &&
+        self.menuItems[menu].name === 'image'
+      ) {
+        const $placeholderCard = $(ToolbarCardMediaPlaceholderTemplate(
+          {
+            template: 'image_placeholder',
+            title: toolbarTrans.placeholder.image.title,
+            description: toolbarTrans.placeholder.image.description,
+            startWidth: 300,
+            startHeight: 150,
+            extends: {
+              template: 'global_image',
+              override: 'url',
+              with: '',
+            },
+          }),
+        );
+
+        $mediaContent.append($placeholderCard)
+          .masonry('appended', $placeholderCard);
       }
 
       if (
@@ -3336,6 +3373,7 @@ Toolbar.prototype.loadTemplates = function(
           if (
             el.showIn == 'playlist' && !self.isPlaylist ||
             el.showIn == 'layout' && self.isPlaylist ||
+            el.showIn == 'templateEditor' && !app.templateEditMode ||
             el.showIn == 'none' ||
             el.type === 'element' && self.isPlaylist ||
             el.type === 'element-group' && self.isPlaylist

@@ -483,6 +483,7 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
         layer: element.layer,
         rotation: element.rotation,
         properties: element.properties,
+        isVisible: element.isVisible,
       };
 
       // If we have group, add group properties

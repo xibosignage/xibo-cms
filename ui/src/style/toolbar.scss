@@ -506,7 +506,7 @@
                         100% { background-position: 0% 100%; }
                     }
 
-                    &.no-thumbnail, &.upload-card, &.new-playlist-card {
+                    &.no-thumbnail, &.upload-card, &.placeholder-card, &.new-playlist-card {
                         min-height: 85px;
 
                         .toolbar-card-preview {
@@ -517,7 +517,7 @@
                         }
                     }
 
-                    &.upload-card, &.new-playlist-card {
+                    &.upload-card, &.placeholder-card, &.new-playlist-card {
                         .toolbar-card-preview {
                             background: $xibo-color-primary-d60;
                         }
