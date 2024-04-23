@@ -17,6 +17,7 @@ const Bottombar = function(parent, container) {
  */
 Bottombar.prototype.render = function(object) {
   const app = this.parent;
+  const self = this;
   const readOnlyModeOn = (app?.readOnlyMode === true);
 
   if (typeof object === 'undefined') {
@@ -46,25 +47,35 @@ Bottombar.prototype.render = function(object) {
       '';
 
   if (object.type == 'widget') {
-    lD.templateManager.getTemplateById(
-      object.getOptions().templateId,
-      object.moduleDataType,
-    ).then((template) => {
-      // Render widget toolbar
-      this.DOMObject.html(bottomBarViewerTemplate(
+    // Render widget toolbar
+    const renderBottomBar = function(templateTitle) {
+      self.DOMObject.html(bottomBarViewerTemplate(
         {
           trans: newBottomBarTrans,
           readOnlyModeOn: readOnlyModeOn,
           object: object,
           objectTypeName: newBottomBarTrans.objectType.widget,
-          moduleTemplateTitle: template.title,
+          moduleTemplateTitle: templateTitle,
           undoActive: checkHistory.undoActive,
           trashActive: trashBinActive,
         },
       ));
-    });
+    };
+
+    // Check if we have datatype
+    if (object.moduleDataType != '') {
+      // Get template
+      lD.templateManager.getTemplateById(
+        object.getOptions().templateId,
+        object.moduleDataType,
+      ).then((template) => {
+        renderBottomBar(template.title);
+      });
+    } else {
+      renderBottomBar();
+    }
   } else if (object.type == 'layout') {
-    // Render layout  toolbar
+    // Render layout toolbar
     this.DOMObject.html(bottomBarViewerTemplate(
       {
         trans: newBottomBarTrans,
