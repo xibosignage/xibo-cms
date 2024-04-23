@@ -1090,9 +1090,8 @@
                     width: 100% !important;
                 }
 
-
                 /* Filter form */
-                form.media-search-form, form.layout_tempates-search-form {
+                form.toolbar-search-form {
                     .form-group {
                         width: 100%;
                     }
@@ -1109,6 +1108,18 @@
                 .toolbar-card:not(tr), .toolbar-card-sizer {
                     width: calc(calc(100%/2) - 3px) !important;
                 }
+
+                /* Filter form */
+                form.toolbar-search-form {
+                    display: flex;
+                    gap: 6px;
+                    flex-wrap: wrap;
+
+                    .form-group {
+                        flex: 1 1 calc(50% - 3px);
+                        min-width: calc(50% - 3px);
+                    }
+                }
             }
         }
 
@@ -1121,6 +1132,18 @@
                 .toolbar-card:not(tr), .toolbar-card-sizer {
                     width: calc(calc(100%/3) - 4px) !important;
                 }
+
+                /* Filter form */
+                form.toolbar-search-form {
+                    display: flex;
+                    gap: 6px;
+                    flex-wrap: wrap;
+
+                    .form-group {
+                        flex: 1 1 calc(50% - 3px);
+                        min-width: calc(50% - 3px);
+                    }
+                }
             }
         }
 
@@ -1132,6 +1155,18 @@
 
                 .toolbar-card:not(tr), .toolbar-card-sizer {
                     width: calc(calc(100%/4) - 4.5px) !important;
+                }
+
+                /* Filter form */
+                form.toolbar-search-form {
+                    display: flex;
+                    gap: 6px;
+                    flex-wrap: wrap;
+
+                    .form-group {
+                        flex: 1 1 calc(25% - 4.5px);
+                        min-width: calc(25% - 4.5px);
+                    }
                 }
             }
         }
