@@ -514,13 +514,6 @@ const XiboPlayer = function() {
     // Initialize element data keys
     elemCopy.dataKeys = [];
 
-    elemProps.circleRadius = 0;
-    // Calculate circle radius based on outlineWidth
-    if (element.id === 'circle') {
-      elemProps.circleRadius = elemProps.outline === 1 ?
-        50 - (elemProps.outlineWidth / 4) : 50;
-    }
-
     if (Object.keys(elemCopy).length > 0 &&
         elemCopy.hasOwnProperty('properties')) {
       delete elemCopy.properties;
@@ -565,11 +558,6 @@ const XiboPlayer = function() {
       {}, elemCopy, elemProps, globalOptions,
       {uniqueID: elemCopy.elementId, prop: {...elemCopy, ...elemProps}},
     );
-
-    // Make a copy of circleRadius to templateData if exists
-    if (elemProps.hasOwnProperty('circleRadius')) {
-      elemCopy.templateData.circleRadius = elemProps.circleRadius;
-    }
 
     // Get widget info if exists.
     if (currentWidget.templateId !== null &&

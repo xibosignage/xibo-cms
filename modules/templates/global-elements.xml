@@ -1004,6 +1004,11 @@ $(target).find('img').xiboImageRender(properties);
                 <title>Background Colour</title>
                 <default>#1775F6</default>
             </property>
+            <property id="fit" type="checkbox">
+                <title>Fit to area</title>
+                <default>0</default>
+                <helpText>Should the shape scale to fit the element area?</helpText>
+            </property>
             <property id="outline" type="checkbox">
                 <title>Show Outline</title>
                 <default>1</default>
@@ -1038,13 +1043,8 @@ $(target).find('img').xiboImageRender(properties);
     height: 100%;"
 ><svg version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
     <defs>
-        <symbol id="circle_{{uniqueID}}" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+        <symbol id="circle_{{uniqueID}}" viewBox="0 0 100 100" preserveAspectRatio="{{# if fit }}none{{else}}xMidYMid meet{{/if}}">
             <circle
-                {{#if circleRadius}}
-                    r="{{circleRadius}}"
-                {{else}}
-                    r="50"
-                {{/if}}
                 {{# if backgroundColor }}
                     fill="{{backgroundColor}}"
                 {{else}}
@@ -1064,6 +1064,12 @@ $(target).find('img').xiboImageRender(properties);
 </svg></div>
             ]]></hbs>
         </stencil>
+        <onTemplateRender><![CDATA[
+// Calculate circle radius based on outlineWidth
+var circleRadius = properties.outline == 1 ?
+    50 - (properties.outlineWidth / 4) : 50;
+$(target).find('.global-elements-circle svg symbol circle').attr('r', circleRadius);
+        ]]></onTemplateRender>
         <assets>
             <asset id="circle-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/circle.png" />
         </assets>
@@ -1081,6 +1087,11 @@ $(target).find('img').xiboImageRender(properties);
             <property id="backgroundColor" type="color">
                 <title>Background Colour</title>
                 <default>#1775F6</default>
+            </property>
+            <property id="fit" type="checkbox">
+                <title>Fit to area</title>
+                <default>0</default>
+                <helpText>Should the shape scale to fit the element area?</helpText>
             </property>
             <property id="outline" type="checkbox">
                 <title>Show Outline</title>
@@ -1116,8 +1127,8 @@ $(target).find('img').xiboImageRender(properties);
     height: 100%;"
 ><svg version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
     <defs>
-        <symbol id="triangle_{{uniqueID}}" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
-            <polygon points="1,99 50,1 99,99"
+        <symbol id="triangle_{{uniqueID}}" viewBox="0 0 100 100" preserveAspectRatio="{{# if fit }}none{{else}}xMidYMid meet{{/if}}">
+            <polygon points="0,100 50,0 100,100"
                 {{#if backgroundColor }}
                     fill="{{backgroundColor}}"
                 {{else}}
@@ -1136,6 +1147,18 @@ $(target).find('img').xiboImageRender(properties);
 </svg></div>
             ]]></hbs>
         </stencil>
+        <onTemplateRender><![CDATA[
+// Calculate points based on outlineWidth
+if(properties.outline == 1) {
+    var outlineDeltaX = properties.outlineWidth / 4;
+    var outlineDeltaY = properties.outlineWidth / 3;
+
+    var calcPoints = outlineDeltaX + ',' + (100 - outlineDeltaY) + ' ' +
+        '50,' + outlineDeltaY + ' ' +
+        (100 - outlineDeltaX) + ',' + (100-outlineDeltaY);
+    $(target).find('.global-elements-triangle svg symbol polygon').attr('points', calcPoints);
+}
+        ]]></onTemplateRender>
         <assets>
             <asset id="triangle-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/triangle.png" />
         </assets>
@@ -1153,6 +1176,11 @@ $(target).find('img').xiboImageRender(properties);
             <property id="backgroundColor" type="color">
                 <title>Background Colour</title>
                 <default>#1775F6</default>
+            </property>
+            <property id="fit" type="checkbox">
+                <title>Fit to area</title>
+                <default>0</default>
+                <helpText>Should the shape scale to fit the element area?</helpText>
             </property>
             <property id="outline" type="checkbox">
                 <title>Show Outline</title>
@@ -1188,8 +1216,8 @@ $(target).find('img').xiboImageRender(properties);
     height: 100%;"
 ><svg version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
     <defs>
-        <symbol id="pentagon_{{uniqueID}}" viewBox="0 0 100 93" preserveAspectRatio="xMidYMid meet">
-            <polygon points="50,1 99,36 83.33,93 16.67,93 1,36"
+        <symbol id="pentagon_{{uniqueID}}" viewBox="0 0 100 100" preserveAspectRatio="{{# if fit }}none{{else}}xMidYMid meet{{/if}}">
+            <polygon points="50,0 100,36 83.33,100 16.67,100 0,36"
                 {{#if backgroundColor }}
                     fill="{{backgroundColor}}"
                 {{else}}
@@ -1207,6 +1235,18 @@ $(target).find('img').xiboImageRender(properties);
 </svg></div>
             ]]></hbs>
         </stencil>
+        <onTemplateRender><![CDATA[
+// Calculate points based on outlineWidth
+if(properties.outline == 1) {
+    var outlineDelta = properties.outlineWidth / 4;
+    var calcPoints = '50,' + outlineDelta + ' ' +
+        (100 - outlineDelta) + ',36 ' +
+        '83.33,' + (100 - outlineDelta) + ' ' +
+        '16.67,' + (100 - outlineDelta) + ' ' +
+        outlineDelta + ',36';
+    $(target).find('.global-elements-pentagon svg symbol polygon').attr('points', calcPoints);
+}
+        ]]></onTemplateRender>
         <assets>
             <asset id="pentagon-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/pentagon.png" />
         </assets>
@@ -1224,6 +1264,11 @@ $(target).find('img').xiboImageRender(properties);
             <property id="backgroundColor" type="color">
                 <title>Background Colour</title>
                 <default>#1775F6</default>
+            </property>
+            <property id="fit" type="checkbox">
+                <title>Fit to area</title>
+                <default>0</default>
+                <helpText>Should the shape scale to fit the element area?</helpText>
             </property>
             <property id="outline" type="checkbox">
                 <title>Show Outline</title>
@@ -1259,8 +1304,8 @@ $(target).find('img').xiboImageRender(properties);
     height: 100%;"
 ><svg version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
     <defs>
-        <symbol id="hexagon_{{uniqueID}}" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
-            <polygon points="50,1 99,24.5 99,73.5 50,99 1,73.5 1,24.5"
+        <symbol id="hexagon_{{uniqueID}}" viewBox="0 0 100 100" preserveAspectRatio="{{# if fit }}none{{else}}xMidYMid meet{{/if}}">
+            <polygon points="50,0 100,24.5 100,73.5 50,100 0,73.5 0,24.5"
                 {{#if backgroundColor }}
                     fill="{{backgroundColor}}"
                 {{else}}
@@ -1278,6 +1323,19 @@ $(target).find('img').xiboImageRender(properties);
 </svg></div>
             ]]></hbs>
         </stencil>
+        <onTemplateRender><![CDATA[
+// Calculate points based on outlineWidth
+if(properties.outline == 1) {
+    var outlineDelta = properties.outlineWidth / 4;
+    var calcPoints = '50,' + outlineDelta + ' ' +
+        (100 - outlineDelta) + ',24.5 ' +
+        (100 - outlineDelta) + ',73.5 ' +
+        '50,' + (100 - outlineDelta) + ' ' +
+        outlineDelta + ',73.5' + ' ' +
+        outlineDelta + ',24.5';
+    $(target).find('.global-elements-hexagon svg symbol polygon').attr('points', calcPoints);
+}
+        ]]></onTemplateRender>
         <assets>
             <asset id="hexagon-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/hexagon.png" />
         </assets>
