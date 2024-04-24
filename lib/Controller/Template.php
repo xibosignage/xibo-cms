@@ -335,6 +335,7 @@ class Template extends Base
                 'excludeTemplates' => 0,
                 'layout' => $sanitizedQueryParams->getString('template'),
                 'folderId' => $sanitizedQueryParams->getInt('folderId'),
+                'orientation' => $sanitizedQueryParams->getString('orientation', ['defaultOnEmptyString' => true]),
                 'publishedStatusId' => 1
             ], $sanitizedQueryParams));
 
@@ -382,7 +383,8 @@ class Template extends Base
                 $searchResults,
                 $sanitizedQueryParams->getInt('start', ['default' => 0]),
                 $sanitizedQueryParams->getInt('length', ['default' => 15]),
-                $sanitizedQueryParams->getString('template')
+                $sanitizedQueryParams->getString('template'),
+                $sanitizedQueryParams->getString('orientation'),
             );
 
             $this->getLog()->debug('Dispatching event. ' . $event->getName());
