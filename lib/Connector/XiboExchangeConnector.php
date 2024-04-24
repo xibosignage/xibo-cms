@@ -177,7 +177,7 @@ class XiboExchangeConnector implements ConnectorInterface
         }
 
         // sort, featured first, otherwise alphabetically.
-        usort($filtered, function($a, $b) {
+        usort($filtered, function ($a, $b) {
             if (property_exists($a, 'isFeatured') && property_exists($b, 'isFeatured')) {
                 return $b->isFeatured <=> $a->isFeatured;
             } else {
