@@ -34,8 +34,8 @@ const loadingTemplate = require('../templates/loading.hbs');
 const contextMenuTemplate = require('../templates/context-menu.hbs');
 const topbarTemplatePlaylistEditor =
   require('../templates/topbar-playlist-editor.hbs');
-const switchPlaylistsTemplate =
-  require('../templates/topbar-playlist-switch.hbs');
+const externalPlaylistMessageTemplate =
+  require('../templates/topbar-external-playlist-message.hbs');
 
 // Include modules
 const Playlist = require('../playlist-editor/playlist.js');
@@ -104,17 +104,13 @@ window.pE = {
  * Load Playlist and build app structure
  * @param {string} inline - Is this an inline playlist editor?
  * @param {boolean} regionSpecific - Is this region specific?
- * @param {boolean} showPlaylistSwitch - Are we editing a child playlist?
- * @param {boolean} playlistSwitchStatus - true: child, false: parent
- * @param {object} switchContainerCallbacks - on and off callbacks
- *  - aux parent playlist id if we're editing child playlist
+ * @param {boolean} showExternalPlaylistMessage
+ *  - Are we editing a child playlist?
  */
 pE.loadEditor = function(
   inline = false,
   regionSpecific = true,
-  showPlaylistSwitch = false,
-  playlistSwitchStatus = false,
-  switchContainerCallbacks,
+  showExternalPlaylistMessage = false,
 ) {
   // Add class to body so we can use CSS specifically on it
   (!inline) && $('body').addClass('editor-opened');
@@ -252,11 +248,8 @@ pE.loadEditor = function(
             pE.close();
           });
 
-        if (showPlaylistSwitch) {
-          pE.createPlaylistSwitch(
-            playlistSwitchStatus,
-            switchContainerCallbacks,
-          );
+        if (showExternalPlaylistMessage) {
+          pE.showExternalPlaylistMessage();
         }
       } else {
         // Login Form needed?
@@ -640,12 +633,12 @@ pE.refreshEditor = function(
   }
 
   // If we have more than one widget in the playlist
-  // and the playlist switch is off, remove switch
+  // and the external playlist message is shown, remove it
   if (
-    this.playlistSwitchOn === false &&
+    this.externalPlaylistMessageOn === false &&
     Object.values(this.playlist.widgets).length != 1
   ) {
-    this.removePlaylistSwitch();
+    this.removeExternalPlaylistMessage();
   }
 
   // Remove temporary data
@@ -1309,71 +1302,43 @@ pE.handleKeyInputs = function() {
 };
 
 /**
- * Playlist switch between parent and child playlist
- * @param {boolean} status - Is switch starting as on?
- * @param {object} callbacks - on and off switch callbacks
+ * Show message to warn user that we're editing en extenal playlist
  */
-pE.createPlaylistSwitch = function(
-  status,
-  callbacks,
-) {
+pE.showExternalPlaylistMessage = function() {
   const $topContainer =
     pE.editorContainer.parents('#editor-container');
 
   // Get switch container
-  let $switchContainer =
-    $topContainer.find('.playlist-switch-container');
+  let $messageContainer =
+    $topContainer.find('.external-playlist-message-container');
 
   // If container doesn't exist, create it
-  if ($switchContainer.length === 0) {
-    $switchContainer = $(switchPlaylistsTemplate(playlistEditorTrans));
-    $switchContainer.prependTo($topContainer);
+  if ($messageContainer.length === 0) {
+    $messageContainer = $(externalPlaylistMessageTemplate(playlistEditorTrans));
+    $messageContainer.prependTo($topContainer);
   }
 
   // Add class to playlist editor container
   // to adjust its height
-  $topContainer.find('#playlist-editor').addClass('playlist-switch-on');
+  $topContainer.find('#playlist-editor')
+    .addClass('external-playlist-message-on');
 
-  // Create switch and handle callbacks
-  $switchContainer.find('[name="playlist-switch-input"]').bootstrapSwitch({
-    state: status,
-    onText: playlistEditorTrans.playlistSwitch.on,
-    offText: playlistEditorTrans.playlistSwitch.off,
-    onSwitchChange: function(_e, state) {
-      setTimeout(() => {
-        if (state) {
-          callbacks.on();
-          // Set flag as on
-          this.playlistSwitchOn = true;
-        } else {
-          callbacks.off();
-          // Set flag as off
-          this.playlistSwitchOn = false;
-        }
-      }, 600);
-    },
-  });
 
-  // Set flag as off
-  this.playlistSwitchOn = status;
+  this.externalPlaylistMessageOn = true;
 };
 
 /**
  * Remove playlist switch
  */
-pE.removePlaylistSwitch = function() {
+pE.removeExternalPlaylistMessage = function() {
   // Get switch container
   const $switchContainer =
     pE.editorContainer.parents('#editor-container')
-      .find('.playlist-switch-container');
-
-  // Destroy switch
-  $switchContainer.find('[name="playlist-switch-input"]')
-    .bootstrapSwitch('destroy');
+      .find('.external-playlist-message-container');
 
   // Remove container
   $switchContainer.remove();
 
   // Set flag as off
-  this.playlistSwitchOn = false;
+  this.externalPlaylistMessageOn = false;
 };

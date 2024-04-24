@@ -3031,7 +3031,7 @@ lD.checkLayoutStatus = function() {
  * @param {string} playlistId - Id of the playlist
  * @param {object} region - Region related to the playlist
  * @param {boolean} regionSpecific
- * @param {boolean} showPlaylistSwitch
+ * @param {boolean} showExternalPlaylistMessage
  * @param {boolean} switchStatus
  * @param {string} auxPlaylistId - Id of the parent/child playlist
  */
@@ -3039,7 +3039,7 @@ lD.openPlaylistEditor = function(
   playlistId,
   region,
   regionSpecific = true,
-  showPlaylistSwitch = false,
+  showExternalPlaylistMessage = false,
   switchStatus = false,
   auxPlaylistId,
 ) {
@@ -3088,34 +3088,7 @@ lD.openPlaylistEditor = function(
   pE.loadEditor(
     true,
     regionSpecific, // Region specific?
-    showPlaylistSwitch, // Show playlist switch?
-    switchStatus, // Show switch as on?
-    {
-      on: function() { // Switch ON callback
-        $playlistEditorPanel.find('#playlist-editor')
-          .attr('playlist-id', auxPlaylistId);
-        lD.openPlaylistEditor(
-          auxPlaylistId,
-          region,
-          false,
-          true,
-          true,
-          playlistId,
-        );
-      },
-      off: function() { // Switch OFF callback
-        $playlistEditorPanel.find('#playlist-editor')
-          .attr('playlist-id', auxPlaylistId);
-        lD.openPlaylistEditor(
-          auxPlaylistId,
-          region,
-          true,
-          true,
-          false,
-          playlistId,
-        );
-      },
-    },
+    showExternalPlaylistMessage, // Show external playlist message?
   );
 
   // Mark as opened

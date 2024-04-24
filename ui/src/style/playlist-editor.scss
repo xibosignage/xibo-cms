@@ -806,24 +806,21 @@ $timeline-step-height: 22px;
         }
     }
 
-    &.playlist-switch-on {
-        height: calc(100% - 40px);
+    &.external-playlist-message-on {
+        height: calc(100% - 46px);
     }
 }
 
-.playlist-switch-container {
-    background-color: $xibo-color-primary-l10;
-    height: 40px;
-    padding: 6px;
+.external-playlist-message-container {
+    background-color: lighten($xibo-color-semantic-warning, 10%);
+    border: 2px solid $xibo-color-semantic-warning;
+    font-weight: bold;
+    height: 50px;
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
-    line-height: 14px;
     align-items: center;
-    gap: 8px;
     border-radius: 4px 4px 0 0;
-
-    .bootstrap-switch-container > * {
-        line-height: 16px;
-    }
+    margin-bottom: -4px;
+    justify-content: center;
 }
