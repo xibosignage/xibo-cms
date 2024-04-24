@@ -81,50 +81,6 @@
                 </test>
             </rule>
         </property>
-        <property id="countdownWarningDuration" type="number">
-            <title>Warning Duration</title>
-            <helpText>The countdown will show in a warning mode from the end duration entered.</helpText>
-            <default></default>
-            <visibility>
-                <test type="or">
-                    <condition field="countdownType" type="eq">1</condition>
-                    <condition field="countdownType" type="eq">2</condition>
-                </test>
-            </visibility>
-            <rule onStatus="false">
-                <test type="or" message="Warning duration needs to be lower than the countdown main duration.">
-                    <condition type="eq"></condition>
-                    <condition field="countdownType" type="neq">2</condition>
-                    <condition field="countdownDuration" type="lt"></condition>
-                </test>
-                <test type="or" message="Warning duration needs to be lower than the widget duration.">
-                    <condition field="countdownType" type="neq">1</condition>
-                    <condition field="duration" type="lt"></condition>
-                    <condition type="eq"></condition>
-                </test>
-                <test type="or" message="Please enter a positive warning duration">
-                    <condition type="gt">0</condition>
-                    <condition type="eq"></condition>
-                </test>
-            </rule>
-        </property>
-        <property id="countdownWarningDate" type="date" format="DD/MM/YYYY HH:mm:ss" variant="dateTime">
-            <title>Warning Date</title>
-            <helpText>The countdown will show in a warning mode from the warning date entered.</helpText>
-            <default></default>
-            <visibility>
-                <test type="or">
-                    <condition field="countdownType" type="eq">3</condition>
-                </test>
-            </visibility>
-            <rule>
-                <test type="or" message="Warning date needs to be before countdown date.">
-                    <condition field="countdownType" type="neq">3</condition>
-                    <condition field="countdownDate" type="lt"></condition>
-                    <condition type="eq"></condition>
-                </test>
-            </rule>
-        </property>
         <property id="alignmentH" type="dropdown" mode="single">
             <title>Horizontal Align</title>
             <helpText>How should this widget be horizontally aligned?</helpText>
