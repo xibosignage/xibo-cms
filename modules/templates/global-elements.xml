@@ -40,6 +40,24 @@
             <property id="fontColor" type="color">
                 <title>Font Colour</title>
                 <default>%THEME_COLOR%</default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">0</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="useGradient" type="checkbox">
+                <title>Use gradient for the text?</title>
+                <default>0</default>
+            </property>
+            <property id="gradient" type="colorGradient">
+                <title>Gradient</title>
+                <default></default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">1</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="fontSize" type="number">
                 <title>Font Size</title>
@@ -150,7 +168,18 @@
     display: flex;
     {{#if fontFamily}}font-family: {{fontFamily}};{{/if}}
     {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
-    {{#if fontColor}}color: {{fontColor}};{{/if}}
+    {{#if useGradient}}
+        {{parseJSON "gb" gradient}}
+        background-clip: text;
+        color: transparent;
+        {{#eq gb.type 'linear'}}
+            background-image: linear-gradient({{gb.angle}}deg, {{gb.color1}}, {{gb.color2}});
+        {{else}}
+            background-image: radial-gradient(circle, {{gb.color1}}, {{gb.color2}});
+        {{/eq}}
+    {{else}}
+        {{#if fontColor}}color: {{fontColor}};{{/if}}
+    {{/if}}
     {{#if bold}}font-weight: bold;{{/if}}
     {{#if italics}}font-style: italic;{{/if}}
     {{#if underline}}text-decoration: underline;{{/if}}
@@ -218,6 +247,24 @@
             <property id="fontColor" type="color">
                 <title>Font Colour</title>
                 <default>%THEME_COLOR%</default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">0</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="useGradient" type="checkbox">
+                <title>Use gradient for the text?</title>
+                <default>0</default>
+            </property>
+            <property id="gradient" type="colorGradient">
+                <title>Gradient</title>
+                <default></default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">1</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="fontSize" type="number">
                 <title>Font Size</title>
@@ -319,7 +366,18 @@
     {{#if fontFamily}}font-family: {{fontFamily}};{{/if}}
     {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
     {{#if lineHeight}}line-height: {{lineHeight}};{{/if}}
-    {{#if fontColor}}color: {{fontColor}};{{/if}}
+    {{#if useGradient}}
+        {{parseJSON "gb" gradient}}
+        background-clip: text;
+        color: transparent;
+        {{#eq gb.type 'linear'}}
+            background-image: linear-gradient({{gb.angle}}deg, {{gb.color1}}, {{gb.color2}});
+        {{else}}
+            background-image: radial-gradient(circle, {{gb.color1}}, {{gb.color2}});
+        {{/eq}}
+    {{else}}
+        {{#if fontColor}}color: {{fontColor}};{{/if}}
+    {{/if}}
     {{#if bold}}font-weight: bold;{{/if}}
     {{#if italics}}font-style: italic;{{/if}}
     {{#if underline}}text-decoration: underline;{{/if}}
@@ -412,6 +470,24 @@ $(target).find('.date').each(function(_idx, dateEl){
             <property id="fontColor" type="color">
                 <title>Font Colour</title>
                 <default>%THEME_COLOR%</default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">0</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="useGradient" type="checkbox">
+                <title>Use gradient for the text?</title>
+                <default>0</default>
+            </property>
+            <property id="gradient" type="colorGradient">
+                <title>Gradient</title>
+                <default></default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">1</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="fontSize" type="number">
                 <title>Font Size</title>
@@ -513,7 +589,18 @@ $(target).find('.date').each(function(_idx, dateEl){
     {{#if fontFamily}}font-family: {{fontFamily}};{{/if}}
     {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
     {{#if lineHeight}}line-height: {{lineHeight}};{{/if}}
-    {{#if fontColor}}color: {{fontColor}};{{/if}}
+    {{#if useGradient}}
+        {{parseJSON "gb" gradient}}
+        background-clip: text;
+        color: transparent;
+        {{#eq gb.type 'linear'}}
+            background-image: linear-gradient({{gb.angle}}deg, {{gb.color1}}, {{gb.color2}});
+        {{else}}
+            background-image: radial-gradient(circle, {{gb.color1}}, {{gb.color2}});
+        {{/eq}}
+    {{else}}
+        {{#if fontColor}}color: {{fontColor}};{{/if}}
+    {{/if}}
     {{#if bold}}font-weight: bold;{{/if}}
     {{#if italics}}font-style: italic;{{/if}}
     {{#if underline}}text-decoration: underline;{{/if}}
@@ -937,6 +1024,24 @@ $(target).find('img').xiboImageRender(properties);
             <property id="backgroundColor" type="color">
                 <title>Background Colour</title>
                 <default>#1775F6</default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">0</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="useGradient" type="checkbox">
+                <title>Use gradient as background?</title>
+                <default>0</default>
+            </property>
+            <property id="gradient" type="colorGradient">
+                <title>Gradient</title>
+                <default></default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">1</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="roundBorder" type="checkbox">
                 <title>Round Border</title>
@@ -979,7 +1084,17 @@ $(target).find('img').xiboImageRender(properties);
         <stencil>
             <hbs><![CDATA[
 <div class="rectangle-container"
-    style="background-color: {{backgroundColor}};
+    style="
+    {{#if useGradient}}
+        {{parseJSON "gb" gradient}}
+        {{#eq gb.type 'linear'}}
+            background: linear-gradient({{gb.angle}}deg, {{gb.color1}}, {{gb.color2}});
+        {{else}}
+            background: radial-gradient(circle, {{gb.color1}}, {{gb.color2}});
+        {{/eq}}
+    {{else}}
+        background-color: {{backgroundColor}};
+    {{/if}}
     {{#if outline}}border: {{outlineWidth}}px solid {{outlineColor}};{{/if}}
     {{#if roundBorder}}border-radius: {{borderRadius}}px;{{/if}}
     width: 100%; height: 100%; box-sizing: border-box;"
@@ -1003,6 +1118,24 @@ $(target).find('img').xiboImageRender(properties);
             <property id="backgroundColor" type="color">
                 <title>Background Colour</title>
                 <default>#1775F6</default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">0</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="useGradient" type="checkbox">
+                <title>Use gradient as background?</title>
+                <default>0</default>
+            </property>
+            <property id="gradient" type="colorGradient">
+                <title>Gradient</title>
+                <default></default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">1</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="fit" type="checkbox">
                 <title>Fit to area</title>
@@ -1043,9 +1176,18 @@ $(target).find('img').xiboImageRender(properties);
     height: 100%;"
 ><svg version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
     <defs>
+        {{{createGradientInSVG gradient uniqueID}}}
+
         <symbol id="circle_{{uniqueID}}" viewBox="0 0 100 100" preserveAspectRatio="{{# if fit }}none{{else}}xMidYMid meet{{/if}}">
             <circle
-                {{# if backgroundColor }}
+                {{# if useGradient }}
+                    {{parseJSON "gb" gradient}}
+                    {{# eq gb.type 'linear'}}
+                        fill="url(#gradLinear_{{uniqueID}})"
+                    {{else}}
+                        fill="url(#gradRadial_{{uniqueID}})"
+                    {{/eq}}
+                {{else if backgroundColor }}
                     fill="{{backgroundColor}}"
                 {{else}}
                     fill="none"
@@ -1087,6 +1229,24 @@ $(target).find('.global-elements-circle svg symbol circle').attr('r', circleRadi
             <property id="backgroundColor" type="color">
                 <title>Background Colour</title>
                 <default>#1775F6</default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">0</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="useGradient" type="checkbox">
+                <title>Use gradient as background?</title>
+                <default>0</default>
+            </property>
+            <property id="gradient" type="colorGradient">
+                <title>Gradient</title>
+                <default></default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">1</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="fit" type="checkbox">
                 <title>Fit to area</title>
@@ -1127,9 +1287,18 @@ $(target).find('.global-elements-circle svg symbol circle').attr('r', circleRadi
     height: 100%;"
 ><svg version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
     <defs>
+        {{{createGradientInSVG gradient uniqueID}}}
+
         <symbol id="triangle_{{uniqueID}}" viewBox="0 0 100 100" preserveAspectRatio="{{# if fit }}none{{else}}xMidYMid meet{{/if}}">
             <polygon points="0,100 50,0 100,100"
-                {{#if backgroundColor }}
+                {{# if useGradient }}
+                    {{parseJSON "gb" gradient}}
+                    {{# eq gb.type 'linear'}}
+                        fill="url(#gradLinear_{{uniqueID}})"
+                    {{else}}
+                        fill="url(#gradRadial_{{uniqueID}})"
+                    {{/eq}}
+                {{else if backgroundColor }}
                     fill="{{backgroundColor}}"
                 {{else}}
                     fill="none"
@@ -1176,6 +1345,24 @@ if(properties.outline == 1) {
             <property id="backgroundColor" type="color">
                 <title>Background Colour</title>
                 <default>#1775F6</default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">0</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="useGradient" type="checkbox">
+                <title>Use gradient as background?</title>
+                <default>0</default>
+            </property>
+            <property id="gradient" type="colorGradient">
+                <title>Gradient</title>
+                <default></default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">1</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="fit" type="checkbox">
                 <title>Fit to area</title>
@@ -1216,9 +1403,18 @@ if(properties.outline == 1) {
     height: 100%;"
 ><svg version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
     <defs>
+        {{{createGradientInSVG gradient uniqueID}}}
+
         <symbol id="pentagon_{{uniqueID}}" viewBox="0 0 100 100" preserveAspectRatio="{{# if fit }}none{{else}}xMidYMid meet{{/if}}">
             <polygon points="50,0 100,36 83.33,100 16.67,100 0,36"
-                {{#if backgroundColor }}
+                {{# if useGradient }}
+                    {{parseJSON "gb" gradient}}
+                    {{# eq gb.type 'linear'}}
+                        fill="url(#gradLinear_{{uniqueID}})"
+                    {{else}}
+                        fill="url(#gradRadial_{{uniqueID}})"
+                    {{/eq}}
+                {{else if backgroundColor }}
                     fill="{{backgroundColor}}"
                 {{else}}
                     fill="none"
@@ -1264,6 +1460,24 @@ if(properties.outline == 1) {
             <property id="backgroundColor" type="color">
                 <title>Background Colour</title>
                 <default>#1775F6</default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">0</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="useGradient" type="checkbox">
+                <title>Use gradient as background?</title>
+                <default>0</default>
+            </property>
+            <property id="gradient" type="colorGradient">
+                <title>Gradient</title>
+                <default></default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">1</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="fit" type="checkbox">
                 <title>Fit to area</title>
@@ -1304,9 +1518,18 @@ if(properties.outline == 1) {
     height: 100%;"
 ><svg version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
     <defs>
+        {{{createGradientInSVG gradient uniqueID}}}
+
         <symbol id="hexagon_{{uniqueID}}" viewBox="0 0 100 100" preserveAspectRatio="{{# if fit }}none{{else}}xMidYMid meet{{/if}}">
             <polygon points="50,0 100,24.5 100,73.5 50,100 0,73.5 0,24.5"
-                {{#if backgroundColor }}
+                {{# if useGradient }}
+                    {{parseJSON "gb" gradient}}
+                    {{# eq gb.type 'linear'}}
+                        fill="url(#gradLinear_{{uniqueID}})"
+                    {{else}}
+                        fill="url(#gradRadial_{{uniqueID}})"
+                    {{/eq}}
+                {{else if backgroundColor }}
                     fill="{{backgroundColor}}"
                 {{else}}
                     fill="none"
