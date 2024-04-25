@@ -347,7 +347,7 @@ if (meta && meta.hasOwnProperty('Attribution')) {
 <div class="global-elements-image img-container forecast-elements-background-image weather-bg--{{data.icon}}"
     style="width:100%; height: 100%; overflow: hidden; position: relative;">
     {{set 'bgImg' (weatherBackgroundImage data.icon cloudyImage dayCloudyImage dayClearImage fogImage hailImage nightClearImage nightPartlyCloudyImage rainImage snowImage windImage)}}
-    <img src="{{#if @root.bgImg}}/library/download/{{@root.bgImg}}?preview=1{{else}}[[assetId=bg-{{data.icon}}]]{{/if}}"
+    <img src="{{#if @root.bgImg}}{{@root.bgImg}}{{else}}[[assetId=bg-{{data.icon}}]]{{/if}}"
         style="width:100%; height: 100%;
         object-fit: {{objectFit}};
         object-position: {{alignId}} {{valignId}};
