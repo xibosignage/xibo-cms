@@ -364,7 +364,7 @@ $(target).find('.date').each(function(_idx, dateEl){
     </template>
     <template>
         <id>date_advanced</id>
-        <title>Date</title>
+        <title>Date / Time</title>
         <type>element</type>
         <dataType>global</dataType>
         <canRotate>true</canRotate>
