@@ -42,6 +42,7 @@ class SearchResult implements \JsonSerializable
     public $duration;
     public $videoThumbnailUrl;
     public $tags = [];
+    public $isFeatured = 0;
 
     /** @var ProviderDetails */
     public $provider;
@@ -63,7 +64,8 @@ class SearchResult implements \JsonSerializable
             'orientation' => $this->orientation,
             'fileSize' => $this->fileSize,
             'videoThumbnailUrl' => $this->videoThumbnailUrl,
-            'tags' => $this->tags
+            'tags' => $this->tags,
+            'isFeatured' => $this->isFeatured
         ];
     }
 }

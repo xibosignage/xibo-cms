@@ -136,16 +136,32 @@ class XiboExchangeConnector implements ConnectorInterface
         $providerDetails->message = $this->getTitle();
         $providerDetails->backgroundColor = '';
 
+        // parse the templates based on orientation filter.
+        if (!empty($event->getOrientation())) {
+            $templates = [];
+            foreach ($body as $template) {
+                if (!empty($template->orientation) &&
+                    Str::contains($template->orientation, $event->getOrientation(), true)
+                ) {
+                    $templates[] = $template;
+                }
+            }
+        } else {
+            $templates = $body;
+        }
+
         // Filter the body based on search param.
         if (!empty($event->getSearch())) {
             $filtered = [];
-            foreach ($body as $template) {
-                if (Str::contains($template->title, $event->getSearch())) {
+            foreach ($templates as $template) {
+                if (Str::contains($template->title, $event->getSearch(), true)) {
                     $filtered[] = $template;
                     continue;
                 }
 
-                if (!empty($template->description) && Str::contains($template->description, $event->getSearch())) {
+                if (!empty($template->description) &&
+                    Str::contains($template->description, $event->getSearch(), true)
+                ) {
                     $filtered[] = $template;
                     continue;
                 }
@@ -157,8 +173,17 @@ class XiboExchangeConnector implements ConnectorInterface
                 }
             }
         } else {
-            $filtered = $body;
+            $filtered = $templates;
         }
+
+        // sort, featured first, otherwise alphabetically.
+        usort($filtered, function ($a, $b) {
+            if (property_exists($a, 'isFeatured') && property_exists($b, 'isFeatured')) {
+                return $b->isFeatured <=> $a->isFeatured;
+            } else {
+                return $a->title <=> $b->title;
+            }
+        });
 
         for ($i = $start; $i < ($start + $perPage - 1) && $i < count($filtered); $i++) {
             $searchResult = $this->createSearchResult($filtered[$i]);
@@ -203,6 +228,10 @@ class XiboExchangeConnector implements ConnectorInterface
 
         if (property_exists($template, 'orientation')) {
             $searchResult->orientation = $template->orientation;
+        }
+
+        if (property_exists($template, 'isFeatured')) {
+            $searchResult->isFeatured = $template->isFeatured;
         }
 
         // Thumbnail

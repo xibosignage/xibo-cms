@@ -560,6 +560,9 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
           value: 'local',
           locked: true,
         },
+        orientation: {
+          value: '',
+        },
       },
       state: '',
       itemCount: 0,
@@ -579,6 +582,9 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
         provider: {
           value: 'remote',
           locked: true,
+        },
+        orientation: {
+          value: '',
         },
       },
       state: '',

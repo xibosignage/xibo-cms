@@ -48,17 +48,21 @@ class TemplateProviderEvent extends Event
     /** @var string|null */
     private $search;
 
+    /** @var string|null */
+    private $orientation;
+
     /**
      * @param \Xibo\Entity\SearchResults $results
      * @param int $start
      * @param int $length
      */
-    public function __construct(SearchResults $results, int $start, int $length, ?string $search)
+    public function __construct(SearchResults $results, int $start, int $length, ?string $search, ?string $orientation)
     {
         $this->results = $results;
         $this->start = $start;
         $this->length = $length;
         $this->search = $search;
+        $this->orientation = $orientation;
     }
 
     /**
@@ -103,5 +107,13 @@ class TemplateProviderEvent extends Event
     public function getSearch(): ?string
     {
         return $this->search;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getOrientation(): ?string
+    {
+        return $this->orientation;
     }
 }
