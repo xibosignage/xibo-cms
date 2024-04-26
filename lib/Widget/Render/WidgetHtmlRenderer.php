@@ -328,7 +328,7 @@ class WidgetHtmlRenderer
 
         // Handle CSP in preview
         $html = new \DOMDocument();
-        $html->loadHTML($output);
+        $html->loadHTML($output, LIBXML_NOERROR | LIBXML_NOWARNING);
         foreach ($html->getElementsByTagName('script') as $node) {
             // We add this requests cspNonce to every script tag
             if ($node instanceof \DOMElement) {
