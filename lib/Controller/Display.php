@@ -2547,7 +2547,8 @@ class Display extends Base
                         $notification = $this->notificationFactory->createSystemNotification(
                             $subject,
                             $body,
-                            Carbon::now()
+                            Carbon::now(),
+                            'display'
                         );
 
                         // Add in any displayNotificationGroups, with permissions

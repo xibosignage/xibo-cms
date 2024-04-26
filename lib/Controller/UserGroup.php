@@ -311,10 +311,53 @@ class UserGroup extends Base
      *  @SWG\Parameter(
      *      name="isDisplayNotification",
      *      in="formData",
-     *      description="Flag (0, 1), should members of this Group receive Display notifications for Displays they have permissions to see",
+     *      description="Flag (0, 1), should members of this Group receive Display notifications
+     * for Displays they have permissions to see",
      *      type="integer",
      *      required=false
      *   ),
+     * @SWG\Parameter(
+     *        name="isDataSetNotification",
+     *        in="formData",
+     *        description="Flag (0, 1), should members of this Group receive DataSet notification emails?",
+     *        type="integer",
+     *        required=false
+     *     ),
+     * @SWG\Parameter(
+     *        name="isLayoutNotification",
+     *        in="formData",
+     *        description="Flag (0, 1), should members of this Group receive Layout notification emails?",
+     *        type="integer",
+     *        required=false
+     *     ),
+     * @SWG\Parameter(
+     *        name="isLibraryNotification",
+     *        in="formData",
+     *        description="Flag (0, 1), should members of this Group receive Library notification emails?",
+     *        type="integer",
+     *        required=false
+     *     ),
+     * @SWG\Parameter(
+     *        name="isReportNotification",
+     *        in="formData",
+     *        description="Flag (0, 1), should members of this Group receive Report notification emails?",
+     *        type="integer",
+     *        required=false
+     *     ),
+     * @SWG\Parameter(
+     *         name="isScheduleNotification",
+     *         in="formData",
+     *         description="Flag (0, 1), should members of this Group receive Schedule notification emails?",
+     *         type="integer",
+     *         required=false
+     *      ),
+     * @SWG\Parameter(
+     *         name="isCustomNotification",
+     *         in="formData",
+     *         description="Flag (0, 1), should members of this Group receive Custom notification emails?",
+     *         type="integer",
+     *         required=false
+     *      ),
      *  @SWG\Parameter(
      *      name="isShownForAddUser",
      *      in="formData",
@@ -347,7 +390,7 @@ class UserGroup extends Base
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
-    function add(Request $request, Response $response)
+    public function add(Request $request, Response $response)
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -365,6 +408,12 @@ class UserGroup extends Base
         if ($this->getUser()->userTypeId == 1) {
             $group->isSystemNotification = $sanitizedParams->getCheckbox('isSystemNotification');
             $group->isDisplayNotification = $sanitizedParams->getCheckbox('isDisplayNotification');
+            $group->isDataSetNotification = $sanitizedParams->getCheckbox('isDataSetNotification');
+            $group->isCustomNotification = $sanitizedParams->getCheckbox('isCustomNotification');
+            $group->isLayoutNotification = $sanitizedParams->getCheckbox('isLayoutNotification');
+            $group->isLibraryNotification = $sanitizedParams->getCheckbox('isLibraryNotification');
+            $group->isReportNotification = $sanitizedParams->getCheckbox('isReportNotification');
+            $group->isScheduleNotification = $sanitizedParams->getCheckbox('isScheduleNotification');
             $group->isShownForAddUser = $sanitizedParams->getCheckbox('isShownForAddUser');
             $group->defaultHomepageId = $sanitizedParams->getString('defaultHomepageId');
         }
@@ -434,10 +483,53 @@ class UserGroup extends Base
      *  @SWG\Parameter(
      *      name="isDisplayNotification",
      *      in="formData",
-     *      description="Flag (0, 1), should members of this Group receive Display notifications for Displays they have permissions to see",
+     *      description="Flag (0, 1), should members of this Group receive Display notifications
+     * for Displays they have permissions to see",
      *      type="integer",
      *      required=false
      *   ),
+     * @SWG\Parameter(
+     *       name="isDataSetNotification",
+     *       in="formData",
+     *       description="Flag (0, 1), should members of this Group receive DataSet notification emails?",
+     *       type="integer",
+     *       required=false
+     *    ),
+     * @SWG\Parameter(
+     *       name="isLayoutNotification",
+     *       in="formData",
+     *       description="Flag (0, 1), should members of this Group receive Layout notification emails?",
+     *       type="integer",
+     *       required=false
+     *    ),
+     * @SWG\Parameter(
+     *       name="isLibraryNotification",
+     *       in="formData",
+     *       description="Flag (0, 1), should members of this Group receive Library notification emails?",
+     *       type="integer",
+     *       required=false
+     *    ),
+     * @SWG\Parameter(
+     *       name="isReportNotification",
+     *       in="formData",
+     *       description="Flag (0, 1), should members of this Group receive Report notification emails?",
+     *       type="integer",
+     *       required=false
+     *    ),
+     * @SWG\Parameter(
+     *        name="isScheduleNotification",
+     *        in="formData",
+     *        description="Flag (0, 1), should members of this Group receive Schedule notification emails?",
+     *        type="integer",
+     *        required=false
+     *     ),
+     * @SWG\Parameter(
+     *        name="isCustomNotification",
+     *        in="formData",
+     *        description="Flag (0, 1), should members of this Group receive Custom notification emails?",
+     *        type="integer",
+     *        required=false
+     *     ),
      *  @SWG\Parameter(
      *      name="isShownForAddUser",
      *      in="formData",
@@ -472,7 +564,7 @@ class UserGroup extends Base
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    function edit(Request $request, Response $response, $id)
+    public function edit(Request $request, Response $response, $id)
     {
         // Check permissions
         if (!$this->getUser()->isSuperAdmin() && !$this->getUser()->isGroupAdmin()) {
@@ -496,12 +588,21 @@ class UserGroup extends Base
         if ($this->getUser()->userTypeId == 1) {
             $group->isSystemNotification = $sanitizedParams->getCheckbox('isSystemNotification');
             $group->isDisplayNotification = $sanitizedParams->getCheckbox('isDisplayNotification');
+            $group->isDataSetNotification = $sanitizedParams->getCheckbox('isDataSetNotification');
+            $group->isCustomNotification = $sanitizedParams->getCheckbox('isCustomNotification');
+            $group->isLayoutNotification = $sanitizedParams->getCheckbox('isLayoutNotification');
+            $group->isLibraryNotification = $sanitizedParams->getCheckbox('isLibraryNotification');
+            $group->isReportNotification = $sanitizedParams->getCheckbox('isReportNotification');
+            $group->isScheduleNotification = $sanitizedParams->getCheckbox('isScheduleNotification');
             $group->isShownForAddUser = $sanitizedParams->getCheckbox('isShownForAddUser');
             $group->defaultHomepageId = $sanitizedParams->getString('defaultHomepageId');
 
             // if we have homepage set assign matching feature if it does not already exist
             if (!empty($group->defaultHomepageId)
-                && !in_array($this->userGroupFactory->getHomepageByName($group->defaultHomepageId)->feature, $group->features)
+                && !in_array(
+                    $this->userGroupFactory->getHomepageByName($group->defaultHomepageId)->feature,
+                    $group->features
+                )
                 && $group->defaultHomepageId !== 'icondashboard.view'
             ) {
                 $group->features[] = $this->userGroupFactory->getHomepageByName($group->defaultHomepageId)->feature;
@@ -551,7 +652,7 @@ class UserGroup extends Base
      *  )
      * )
      */
-    function delete(Request $request, Response $response, $id)
+    public function delete(Request $request, Response $response, $id)
     {
         // Check permissions
         if (!$this->getUser()->isSuperAdmin()) {

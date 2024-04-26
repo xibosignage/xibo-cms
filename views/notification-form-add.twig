@@ -1,8 +1,8 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -54,10 +54,6 @@
                         {% set title %}{% trans "Release Date" %}{% endset %}
                         {% set helpText %}{% trans "The date when this notification will be published" %}{% endset %}
                         {{ forms.dateTime("releaseDt", title, "", helpText, "starttime-control", "required") }}
-
-                        {% set title %}{% trans "Email?" %}{% endset %}
-                        {% set helpText %}{% trans "Should the notification be emailed?" %}{% endset %}
-                        {{ forms.checkBox("isEmail", title, "", helpText) }}
 
                         {% set title %}{% trans "Interrupt?" %}{% endset %}
                         {% set helpText %}{% trans "Should the notification interrupt nagivation in the Web Portal? Including Login." %}{% endset %}

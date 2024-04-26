@@ -136,6 +136,11 @@ class UserNotification implements \JsonSerializable
     public $nonusers;
 
     /**
+     * @var string
+     */
+    public $type;
+
+    /**
      * Command constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
@@ -154,8 +159,9 @@ class UserNotification implements \JsonSerializable
     {
         $this->read = 1;
 
-        if ($this->readDt == 0)
+        if ($this->readDt == 0) {
             $this->readDt = $readDt;
+        }
     }
 
     /**
@@ -172,8 +178,9 @@ class UserNotification implements \JsonSerializable
      */
     public function setEmailed($emailDt)
     {
-        if ($this->emailDt == 0)
+        if ($this->emailDt == 0) {
             $this->emailDt = $emailDt;
+        }
     }
 
     /**
@@ -181,12 +188,35 @@ class UserNotification implements \JsonSerializable
      */
     public function save()
     {
-        $this->getStore()->update('UPDATE `lknotificationuser` SET `read` = :read, readDt = :readDt, emailDt = :emailDt WHERE notificationId = :notificationId AND userId = :userId', [
+        $this->getStore()->update('
+            UPDATE `lknotificationuser` 
+               SET `read` = :read,
+                   `readDt` = :readDt,
+                   `emailDt` = :emailDt
+            WHERE notificationId = :notificationId
+                AND userId = :userId
+        ', [
             'read' => $this->read,
             'readDt' => $this->readDt,
             'emailDt' => $this->emailDt,
             'notificationId' => $this->notificationId,
             'userId' => $this->userId
         ]);
+    }
+
+    /**
+     * @return string
+     */
+    public function getTypeForGroup(): string
+    {
+        return  match ($this->type) {
+            'dataset' => 'isDataSetNotification',
+            'display' => 'isDisplayNotification',
+            'layout' => 'isLayoutNotification',
+            'library' => 'isLibraryNotification',
+            'report' => 'isReportNotification',
+            'schedule' => 'isScheduleNotification',
+            default => 'isCustomNotification',
+        };
     }
 }

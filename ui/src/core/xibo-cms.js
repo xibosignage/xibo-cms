@@ -3005,8 +3005,14 @@ function XiboHoverRender(url, x, y)
 /**
  * Closes the dialog window
  */
-function XiboDialogClose() {
+function XiboDialogClose(refreshTable) {
+    refreshTable = refreshTable !== undefined;
+
     bootbox.hideAll();
+
+    if (refreshTable) {
+        XiboRefreshAllGrids();
+    }
 }
 
 /**

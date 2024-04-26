@@ -164,7 +164,10 @@ class UserGroupFactory extends BaseFactory
      */
     public function getByNotificationId($notificationId)
     {
-        return $this->query(null, ['disableUserCheck' => 1, 'notificationId' => $notificationId, 'isUserSpecific' => -1]);
+        return $this->query(
+            null,
+            ['disableUserCheck' => 1, 'notificationId' => $notificationId, 'isUserSpecific' => -1]
+        );
     }
 
     /**
@@ -175,6 +178,18 @@ class UserGroupFactory extends BaseFactory
     public function getByDisplayGroupId($displayGroupId)
     {
         return $this->query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId]);
+    }
+
+    /**
+     * @param int $userId
+     * @param string $type
+     * @return bool
+     */
+    public function checkNotificationEmailPreferences(int $userId, string $type): bool
+    {
+        $groups = $this->query(null, ['disableUserCheck' => 1, 'userId' => $userId, 'notificationType' => $type]);
+
+        return count($groups) > 0;
     }
 
     /**
@@ -201,6 +216,12 @@ class UserGroupFactory extends BaseFactory
             `group`.libraryQuota,
             `group`.isSystemNotification,
             `group`.isDisplayNotification,
+            `group`.isDataSetNotification,
+            `group`.isLayoutNotification,
+            `group`.isLibraryNotification,
+            `group`.isReportNotification,
+            `group`.isScheduleNotification,
+            `group`.isCustomNotification,
             `group`.isShownForAddUser,
             `group`.defaultHomepageId,
             `group`.features
@@ -295,8 +316,14 @@ class UserGroupFactory extends BaseFactory
             $params['isDisplayNotification'] = $parsedFilter->getInt('isDisplayNotification');
         }
 
+        if (!empty($parsedFilter->getString('notificationType'))) {
+            $body .= ' AND ' . $parsedFilter->getString('notificationType') . ' = 1 ';
+        }
+
         if ($parsedFilter->getInt('notificationId') !== null) {
-            $body .= ' AND `group`.groupId IN (SELECT groupId FROM `lknotificationgroup` WHERE notificationId = :notificationId) ';
+            $body .= ' AND `group`.groupId IN (
+                            SELECT groupId FROM `lknotificationgroup` WHERE notificationId = :notificationId
+                        ) ';
             $params['notificationId'] = $parsedFilter->getInt('notificationId');
         }
 
@@ -376,7 +403,17 @@ class UserGroupFactory extends BaseFactory
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $group = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
-                    'isUserSpecific', 'isEveryone', 'libraryQuota', 'isSystemNotification', 'isDisplayNotification', 'isShownForAddUser'
+                    'isUserSpecific',
+                    'isEveryone',
+                    'libraryQuota',
+                    'isSystemNotification',
+                    'isDisplayNotification',
+                    'isDataSetNotification',
+                    'isLayoutNotification',
+                    'isReportNotification',
+                    'isScheduleNotification',
+                    'isCustomNotification',
+                    'isShownForAddUser'
                 ],
                 'stringProperties' => [
                     'defaultHomepageId'

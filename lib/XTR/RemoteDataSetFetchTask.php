@@ -193,9 +193,9 @@ class RemoteDataSetFetchTask implements TaskInterface
                 $notification->body = 'The error is: ' . $e->getMessage();
                 $notification->createDt = Carbon::now()->format('U');
                 $notification->releaseDt = $notification->createDt;
-                $notification->isEmail = 0;
                 $notification->isInterrupt = 0;
                 $notification->userId = $this->user->userId;
+                $notification->type = 'dataset';
 
                 // Assign me
                 $dataSetUser = $this->userFactory->getById($dataSet->userId);

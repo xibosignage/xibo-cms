@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -311,8 +311,9 @@ class MaintenanceRegularTask implements TaskInterface
     {
         $libraryLimit = $this->config->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
 
-        if ($libraryLimit <= 0)
+        if ($libraryLimit <= 0) {
             return;
+        }
 
         $results = $this->store->select('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', []);
 
@@ -324,15 +325,26 @@ class MaintenanceRegularTask implements TaskInterface
             // Create a notification if we don't already have one today for this display.
             $subject = __('Library allowance exceeded');
             $date = Carbon::now();
+            $notifications = $this->notificationFactory->getBySubjectAndDate(
+                $subject,
+                $date->startOfDay()->format('U'),
+                $date->addDay()->startOfDay()->format('U')
+            );
 
-            if (count($this->notificationFactory->getBySubjectAndDate($subject, $date->startOfDay()->format('U'), $date->addDay()->startOfDay()->format('U'))) <= 0) {
-
-                $body = __(sprintf('Library allowance of %s exceeded. Used %s', ByteFormatter::format($libraryLimit), ByteFormatter::format($size)));
+            if (count($notifications) <= 0) {
+                $body = __(
+                    sprintf(
+                        'Library allowance of %s exceeded. Used %s',
+                        ByteFormatter::format($libraryLimit),
+                        ByteFormatter::format($size)
+                    )
+                );
 
                 $notification = $this->notificationFactory->createSystemNotification(
                     $subject,
                     $body,
-                    Carbon::now()
+                    Carbon::now(),
+                    'library'
                 );
 
                 $notification->save();
@@ -370,17 +382,29 @@ class MaintenanceRegularTask implements TaskInterface
         foreach ($items as $item) {
             $sanitizedItem = $this->getSanitizer($item);
             // Create a notification if we don't already have one today for this display.
-            $subject = sprintf(__('%s is downloading %d files too many times'), $sanitizedItem->getString('display'), $sanitizedItem->getInt('countFiles'));
+            $subject = sprintf(
+                __('%s is downloading %d files too many times'),
+                $sanitizedItem->getString('display'),
+                $sanitizedItem->getInt('countFiles')
+            );
             $date = Carbon::now();
+            $notifications = $this->notificationFactory->getBySubjectAndDate(
+                $subject,
+                $date->startOfDay()->format('U'),
+                $date->addDay()->startOfDay()->format('U')
+            );
 
-            if (count($this->notificationFactory->getBySubjectAndDate($subject, $date->startOfDay()->format('U'),$date->addDay()->startOfDay()->format('U'))) <= 0) {
-
-                $body = sprintf(__('Please check the bandwidth graphs and display status for %s to investigate the issue.'), $sanitizedItem->getString('display'));
+            if (count($notifications) <= 0) {
+                $body = sprintf(
+                    __('Please check the bandwidth graphs and display status for %s to investigate the issue.'),
+                    $sanitizedItem->getString('display')
+                );
 
                 $notification = $this->notificationFactory->createSystemNotification(
                     $subject,
                     $body,
-                    Carbon::now()
+                    Carbon::now(),
+                    'display'
                 );
 
                 $display = $this->displayFactory->getById($item['displayId']);
@@ -410,7 +434,10 @@ class MaintenanceRegularTask implements TaskInterface
                 $playlist->setModuleFactory($this->moduleFactory);
                 $playlist->updateDuration();
             } catch (GeneralException $xiboException) {
-                $this->log->error('Maintenance cannot update Playlist ' . $playlist->playlistId . ', ' . $xiboException->getMessage());
+                $this->log->error(
+                    'Maintenance cannot update Playlist ' . $playlist->playlistId .
+                    ', ' . $xiboException->getMessage()
+                );
             }
         }
 
@@ -425,7 +452,10 @@ class MaintenanceRegularTask implements TaskInterface
     {
         $this->runMessage .= '## ' . __('Publishing layouts with set publish dates') . PHP_EOL;
 
-        $layouts = $this->layoutFactory->query(null, ['havePublishDate' => 1, 'disableUserCheck' => 1, 'excludeTemplates' => -1]);
+        $layouts = $this->layoutFactory->query(
+            null,
+            ['havePublishDate' => 1, 'disableUserCheck' => 1, 'excludeTemplates' => -1]
+        );
 
         // check if we have any layouts with set publish date
         if (count($layouts) > 0) {
@@ -441,7 +471,11 @@ class MaintenanceRegularTask implements TaskInterface
                             $draft = $this->layoutFactory->getByParentId($layout->layoutId);
                             if ($draft->status === Status::$STATUS_INVALID
                                 && isset($draft->statusMessage)
-                                && (count($draft->getStatusMessage()) > 1 || count($draft->getStatusMessage()) === 1 && !$draft->checkForEmptyRegion())
+                                && (
+                                    count($draft->getStatusMessage()) > 1 ||
+                                    count($draft->getStatusMessage()) === 1 &&
+                                    !$draft->checkForEmptyRegion()
+                                )
                             ) {
                                 throw new GeneralException(json_encode($draft->statusMessage));
                             }
@@ -455,24 +489,40 @@ class MaintenanceRegularTask implements TaskInterface
                         } finally {
                             $this->layoutFactory->concurrentRequestRelease($layout, true);
                         }
-                        $this->log->info('Published layout ID ' . $layout->layoutId . ' new layout id is ' . $draft->layoutId);
+                        $this->log->info(
+                            'Published layout ID ' . $layout->layoutId . ' new layout id is ' . $draft->layoutId
+                        );
                     } catch (GeneralException $e) {
-                        $this->log->error('Error publishing layout ID ' . $layout->layoutId . ' with name ' . $layout->layout . ' Failed with message: ' . $e->getMessage());
+                        $this->log->error(
+                            'Error publishing layout ID ' . $layout->layoutId .
+                            ' with name ' . $layout->layout . ' Failed with message: ' . $e->getMessage()
+                        );
 
                         // create a notification
                         $subject = __(sprintf('Error publishing layout ID %d', $layout->layoutId));
                         $date = Carbon::now();
 
-                        if (count($this->notificationFactory->getBySubjectAndDate($subject,
-                                $date->startOfDay()->format('U'),
-                                $date->addDay()->startOfDay()->format('U'))) <= 0) {
+                        $notifications = $this->notificationFactory->getBySubjectAndDate(
+                            $subject,
+                            $date->startOfDay()->format('U'),
+                            $date->addDay()->startOfDay()->format('U')
+                        );
 
-                            $body = __(sprintf('Publishing layout ID %d with name %s failed. With message %s', $layout->layoutId, $layout->layout, $e->getMessage()));
+                        if (count($notifications) <= 0) {
+                            $body = __(
+                                sprintf(
+                                    'Publishing layout ID %d with name %s failed. With message %s',
+                                    $layout->layoutId,
+                                    $layout->layout,
+                                    $e->getMessage()
+                                )
+                            );
 
                             $notification = $this->notificationFactory->createSystemNotification(
                                 $subject,
                                 $body,
-                                Carbon::now()
+                                Carbon::now(),
+                                'layout'
                             );
                             $notification->save();
 
@@ -480,7 +530,9 @@ class MaintenanceRegularTask implements TaskInterface
                         }
                     }
                 } else {
-                    $this->log->debug('Layouts with published date were found, they are set to publish later than current time');
+                    $this->log->debug(
+                        'Layouts with published date were found, they are set to publish later than current time'
+                    );
                 }
             }
         } else {

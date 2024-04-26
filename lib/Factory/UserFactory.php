@@ -230,7 +230,13 @@ class UserFactory extends BaseFactory
                 `user`.ref5,
                 IFNULL(group.libraryQuota, 0) AS libraryQuota,
                 `group`.isSystemNotification,
-                `group`.isDisplayNotification, 
+                `group`.isDisplayNotification,
+                `group`.isDataSetNotification,
+                `group`.isLayoutNotification,
+                `group`.isLibraryNotification,
+                `group`.isReportNotification,
+                `group`.isScheduleNotification,
+                `group`.isCustomNotification,
                 `user`.isPasswordChangeRequired,
                 `user`.twoFactorTypeId,
                 `user`.twoFactorSecret,
@@ -402,7 +408,18 @@ class UserFactory extends BaseFactory
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $this->create()->hydrate($row, [
-                'intProperties' => ['libraryQuota', 'isPasswordChangeRequired', 'retired'],
+                'intProperties' => [
+                    'libraryQuota',
+                    'isPasswordChangeRequired',
+                    'retired',
+                    'isSystemNotification',
+                    'isDisplayNotification',
+                    'isDataSetNotification',
+                    'isLayoutNotification',
+                    'isReportNotification',
+                    'isScheduleNotification',
+                    'isCustomNotification',
+                ],
                 'stringProperties' => ['homePageId']
             ]);
         }

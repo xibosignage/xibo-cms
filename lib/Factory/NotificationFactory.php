@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -73,12 +73,12 @@ class NotificationFactory extends BaseFactory
      * @param string $subject
      * @param string $body
      * @param Carbon $date
-     * @param bool $isEmail
+     * @param string $type
      * @param bool $addGroups
      * @return Notification
      * @throws NotFoundException
      */
-    public function createSystemNotification($subject, $body, $date, $isEmail = true, $addGroups = true)
+    public function createSystemNotification($subject, $body, $date, $type, $addGroups = true)
     {
         $userId = $this->getUser()->userId;
 
@@ -87,10 +87,10 @@ class NotificationFactory extends BaseFactory
         $notification->body = $body;
         $notification->createDt = $date->format('U');
         $notification->releaseDt = $date->format('U');
-        $notification->isEmail = ($isEmail) ? 1 : 0;
         $notification->isInterrupt = 0;
         $notification->userId = $userId;
         $notification->isSystem = 1;
+        $notification->type = $type;
 
         if ($addGroups) {
             // Add the system notifications group - if there is one.
@@ -142,21 +142,22 @@ class NotificationFactory extends BaseFactory
      * @return Notification[]
      * @throws NotFoundException
      */
-    public function query($sortOrder = null, $filterBy = [])
+    public function query($sortOrder = null, array $filterBy = [])
     {
         $entries = [];
         $sanitizedFilter = $this->getSanitizer($filterBy);
 
-        if ($sortOrder == null)
+        if (empty($sortOrder)) {
             $sortOrder = ['subject'];
+        }
 
-        $params = array();
+        $params = [];
         $select = 'SELECT `notification`.notificationId,
             `notification`.subject,
             `notification`.createDt,
             `notification`.releaseDt,
             `notification`.body,
-            `notification`.isEmail,
+            `notification`.type,
             `notification`.isInterrupt,
             `notification`.isSystem,
             `notification`.filename,
@@ -227,24 +228,45 @@ class NotificationFactory extends BaseFactory
             $params['displayId'] = $sanitizedFilter->getInt('displayId');
         }
 
-        self::viewPermissionSql('Xibo\Entity\Notification', $body, $params, '`notification`.notificationId', '`notification`.userId', $filterBy);
+        // Read
+        if ($sanitizedFilter->getInt('read') !== null) {
+            $body .= ' AND `notification`.notificationId IN (
+                    SELECT notificationId
+                      FROM `lknotificationuser`
+                        WHERE userId = :userId
+                        AND `read` = :read
+                )';
+            $params['read'] = $sanitizedFilter->getInt('read');
+            $params['userId'] = $this->getUser()->userId;
+        }
+
+        // Type
+        if (!empty($sanitizedFilter->getString('type'))) {
+            $body .= ' AND `notification`.type = :type ';
+            $params['type'] = $sanitizedFilter->getString('type');
+        }
 
         // Sorting?
         $order = '';
-        if (is_array($sortOrder))
+        if (is_array($sortOrder)) {
             $order .= 'ORDER BY ' . implode(',', $sortOrder);
+        }
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
+        if ($filterBy !== null &&
+            $sanitizedFilter->getInt('start') !== null &&
+            $sanitizedFilter->getInt('length') !== null
+        ) {
+            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) .
+                ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $this->createEmpty()->hydrate($row, [
-                'intProperties' => ['isEmail', 'isInterrupt', 'isSystem']
+                'intProperties' => ['isInterrupt', 'isSystem']
             ]);
         }
 
