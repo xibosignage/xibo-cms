@@ -238,7 +238,7 @@ if (meta && meta.hasOwnProperty('Attribution')) {
     </template>
     <template>
         <id>weather_condition_background_image</id>
-        <title>Background Image</title>
+        <title>Image</title>
         <type>element</type>
         <dataType>forecast</dataType>
         <canRotate>true</canRotate>
@@ -301,7 +301,7 @@ if (meta && meta.hasOwnProperty('Attribution')) {
                 </visibility>
             </property>
             <property type="header" variant="main">
-                <title>Backgrounds</title>
+                <title>Images</title>
                 <visibility>
                     <test>
                         <condition field="backgroundImage" type="neq">none</condition>
@@ -309,7 +309,7 @@ if (meta && meta.hasOwnProperty('Attribution')) {
                 </visibility>
             </property>
             <property type="message">
-                <title>Select images from the media library to replace the default weather backgrounds.</title>
+                <title>Select images from the media library to replace the default weather images.</title>
             </property>
             <property id="cloudyImage" type="mediaSelector">
                 <title>Cloudy</title>
