@@ -1,0 +1,35 @@
+<div class="form-group color-gradient {{customClass}} xibo-form-input"
+    {{#if default}}data-default="{{default}}"{{/if}}
+    {{#if visibility}}data-visibility="{{visibility}}"{{/if}}
+    {{#if isRequired}}data-is-required="{{isRequired}}"{{/if}}
+    {{#if colorFormat}}data-color-format="{{colorFormat}}"{{/if}}
+>
+    {{#if title}}
+        <label for="input_{{id}}" class="control-label"><strong>{{title}}</strong></label>
+    {{/if}}
+    <div class="input-info-container">
+        {{#if helpText}}
+            {{>add-ons/helpText helpText=helpText}}
+        {{/if}}
+    </div>
+
+    <div class="color-gradient-colours">
+        {{> color id='gradientColor1' name="" title=trans.colorGradient.gradientColor1}}
+        {{> color id='gradientColor2' name="" title=trans.colorGradient.gradientColor2}}
+    </div>
+
+    {{> dropdown id='gradientType' name="" title=trans.colorGradient.gradientType
+        optionsTitle="title" optionsValue="name"
+        options=(arr
+            (obj name='linear' title=trans.colorGradient.gradientTypeLinear)
+            (obj name='radial' title=trans.colorGradient.gradientTypeRadial)
+        )
+        helpText=helpText
+    }}
+
+    <div class="color-gradient-angle">
+        {{> number id='gradientAngle' name="" title=trans.colorGradient.gradientAngle}}
+    </div>
+
+    {{> hidden name=name customClass="color-gradient-hidden" value=value }}
+</div>

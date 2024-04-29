@@ -678,3 +678,19 @@ select[readonly].select2-hidden-accessible + .select2-container .select2-selecti
         }
     }
 }
+
+// Colour gradient
+.color-gradient {
+    background-color: $xibo-color-primary-l5;
+    padding: 6px;
+    border-left: 8px solid $xibo-color-primary;
+
+    .color-gradient-colours {
+        display: flex;
+        gap: 6px;
+
+        .picker-container.colorpicker.colorpicker-with-alpha {
+            min-width: 150px;
+        }
+    }
+}

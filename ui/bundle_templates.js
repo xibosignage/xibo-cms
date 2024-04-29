@@ -21,6 +21,7 @@ window.templates = {
     number: require('./src/templates/forms/inputs/number.hbs'),
     dropdown: require('./src/templates/forms/inputs/dropdown.hbs'),
     color: require('./src/templates/forms/inputs/color.hbs'),
+    colorGradient: require('./src/templates/forms/inputs/colorGradient.hbs'),
     code: require('./src/templates/forms/inputs/code.hbs'),
     message: require('./src/templates/forms/inputs/message.hbs'),
     hidden: require('./src/templates/forms/inputs/hidden.hbs'),

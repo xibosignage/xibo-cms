@@ -1106,13 +1106,15 @@ PropertiesPanel.prototype.render = function(
             // Save the element
             // only if we have form properties
             const formProperties = self.DOMObject.find(
-              '[name].element-property:not(.element-common-property)',
+              '[name].element-property:not(.element-common-property)' +
+              ':not(.skip-save)',
             );
             if (formProperties.length > 0) {
               self.saveElement(
                 targetAux,
                 self.DOMObject.find(
-                  '[name].element-property:not(.element-common-property)',
+                  '[name].element-property:not(.element-common-property)' +
+                  ':not(.skip-save)',
                 ),
                 containerChanged,
               );
@@ -1130,7 +1132,7 @@ PropertiesPanel.prototype.render = function(
 
           // When we change the element fields, save them
           self.DOMObject.find(
-            '[name].element-property',
+            '[name].element-property:not(.skip-save)',
           ).on({
             change: function(_ev, options) {
               if (!options?.skipSave) {

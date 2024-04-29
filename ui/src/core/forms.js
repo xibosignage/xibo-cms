@@ -247,7 +247,9 @@ window.forms = {
         // Append the property to the target container
         if (templates.forms.hasOwnProperty(property.type)) {
           // New field
-          const $newField = $(templates.forms[property.type](property));
+          const $newField = $(templates.forms[property.type](
+            Object.assign({}, property, {trans: propertiesPanelTrans}),
+          ));
 
           // Target to append to
           let $targetContainer = $(targetContainer);
@@ -1783,6 +1785,99 @@ window.forms = {
           }
         }
       });
+    });
+
+    // Colour gradient
+    findElements(
+      '.color-gradient',
+      target,
+    ).each(function(_k, el) {
+      // Init the colour pickers
+      $(el).find('.colorpicker-input.colorpicker-element').colorpicker({
+        container: $(el).find('.picker-container'),
+        align: 'left',
+        format: ($(el).data('colorFormat') !== undefined) ?
+          $(el).data('colorFormat') :
+          false,
+      });
+      // Defaults
+      const defaults = {
+        color1: '#222',
+        color2: '#eee',
+        angle: 0,
+      };
+
+      const $inputElements =
+        $(el).find('[name]:not(.color-gradient-hidden).element-property');
+      const $hiddenInput =
+        $(el).find('.color-gradient-hidden.element-property');
+      const $gradientType =
+          $inputElements.filter('[name="gradientType"]');
+      const $gradientAngle =
+          $inputElements.filter('[name="gradientAngle"]');
+      const $gradientColor1 =
+          $inputElements.filter('[name="gradientColor1"]');
+      const $gradientColor2 =
+          $inputElements.filter('[name="gradientColor2"]');
+
+      // Load values into inputs
+      if ($hiddenInput.val() != '') {
+        const initialValue =
+          JSON.parse($hiddenInput.val());
+
+        $gradientType.val(initialValue.type).trigger('change');
+        $gradientColor1.parents('.colorpicker-input')
+          .colorpicker('setValue', initialValue.color1);
+        $gradientColor2.parents('.colorpicker-input')
+          .colorpicker('setValue', initialValue.color2);
+        $gradientAngle.val(initialValue.angle);
+      }
+
+      // Update fields visibility and default values
+      const updateFields = function() {
+        if ($gradientColor1.val() == '') {
+          $gradientColor1.parents('.colorpicker-input')
+            .colorpicker('setValue', defaults.color1);
+        }
+        if ($gradientColor2.val() == '') {
+          $gradientColor2.parents('.colorpicker-input')
+            .colorpicker('setValue', defaults.color2);
+        }
+        if ($gradientAngle.val() == '') {
+          $gradientAngle.val(defaults.angle);
+        }
+        $gradientAngle.parent().toggle($gradientType.val() === 'linear');
+      };
+
+      // Mark inputs to skip saving in properties panel
+      $inputElements.addClass('skip-save');
+
+      // When changing the inputs, save to hidden input
+      $inputElements.on('change', function() {
+        const gradientType = $gradientType.val();
+        const color1Val = $gradientColor1.val();
+        const color2Val = $gradientColor2.val();
+        const angleVal = $gradientAngle.val();
+
+        // Gradient object to be saved
+        const gradient = {
+          type: gradientType,
+          color1: (color1Val != '') ? color1Val : defaults.color1,
+          color2: (color2Val != '') ? color2Val : defaults.color2,
+        };
+
+        // If gradient type is linear, save angle
+        if (gradientType === 'linear') {
+          gradient.angle = (angleVal != '') ? angleVal : defaults.angle;
+        }
+
+        updateFields();
+
+        // Save value to hidden input
+        $hiddenInput.val(JSON.stringify(gradient)).trigger('change');
+      });
+
+      updateFields();
     });
 
     // Date picker - date only
