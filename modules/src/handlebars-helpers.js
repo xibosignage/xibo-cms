@@ -122,5 +122,10 @@ Handlebars.registerHelper('weatherBackgroundImage', function(
     bgImage = windImage;
   }
 
+  // If it's the media id, replace with path to be rendered
+  if (bgImage && !isNaN(bgImage) && imageDownloadUrl) {
+    bgImage = imageDownloadUrl.replace(':id', bgImage);
+  }
+
   return bgImage;
 });
