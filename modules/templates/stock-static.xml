@@ -216,7 +216,7 @@ body {
  height: 420px !important;
 }
 
-{% if backgroundColor %}body { background-color: {{backgroundColor}}; }{% endif %}
+{% if backgroundColor %}body { background-color: {{backgroundColor}} !important; }{% endif %}
 
 .text-right {
     text-align: right;
@@ -495,9 +495,7 @@ $(target).xiboLayoutAnimate(properties);
                 <helpText>The format to apply to all dates returned by the Widget.</helpText>
                 <default>#DATE_FORMAT#</default>
             </property>
-            <property id="maxItemsPerPage" type="number">
-                <title>Items per Page</title>
-                <helpText>This is the intended number of items on each page.</helpText>
+            <property id="maxItemsPerPage" type="hidden">
                 <default>1</default>
             </property>
         </properties>
@@ -541,7 +539,7 @@ body {
     line-height: 1;
 }
 
-{% if backgroundColor %}body { background-color: {{backgroundColor}}; }{% endif %}
+{% if backgroundColor %}body { background-color: {{backgroundColor}} !important; }{% endif %}
 
 .text-right {
     text-align: right;

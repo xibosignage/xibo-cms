@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -90,7 +90,9 @@ class Actions implements Middleware
                     if ($user->userTypeId == 1 && file_exists(PROJECT_ROOT . '/web/install/index.php')) {
                         $container->get('logger')->notice('Install.php exists and shouldn\'t');
 
-                        $notifications[] = $factory->create(__('There is a problem with this installation. "install.php" should be deleted.'));
+                        $notifications[] = $factory->create(
+                            __('There is a problem with this installation, the web/install folder should be deleted.')
+                        );
                         $extraNotifications++;
 
                         // Test for web in the URL.

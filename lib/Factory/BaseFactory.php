@@ -362,8 +362,15 @@ class BaseFactory
      * @param array $params Array of parameters passed by reference
      * @param bool $useRegex flag to match against a regex pattern
      */
-    public function nameFilter($tableName, $tableColumn, $terms, &$body, &$params, $useRegex = false, $logicalOperator = 'OR')
-    {
+    public function nameFilter(
+        $tableName,
+        $tableColumn,
+        $terms,
+        &$body,
+        &$params,
+        $useRegex = false,
+        $logicalOperator = 'OR'
+    ) {
         $i = 0;
 
         $tableAndColumn = $tableName . '.' . $tableColumn;
@@ -377,7 +384,7 @@ class BaseFactory
             $searchName = trim($searchName);
 
             // Discard any incompatible
-            if ($searchName === '-' || empty($searchName)) {
+            if (empty(ltrim($searchName, '-')) || empty($searchName)) {
                 continue;
             }
 

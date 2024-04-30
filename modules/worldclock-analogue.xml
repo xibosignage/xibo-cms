@@ -316,7 +316,7 @@
         <style><![CDATA[
 body {
     {% if bgColor %}
-        background: {{bgColor}};
+        background: {{bgColor}} !important;
     {% endif %}
 }
 

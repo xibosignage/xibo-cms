@@ -686,7 +686,6 @@ if (useCurrentDate) {
             <property id="url" type="text">
                 <title>Image URL</title>
                 <helpText>Enter the URL of the image you want to use.</helpText>
-                <default>https://xibosignage.com/dist/img/header-logo.svg</default>
             </property>
             <property id="opacity" type="number">
                 <title>Opacity</title>

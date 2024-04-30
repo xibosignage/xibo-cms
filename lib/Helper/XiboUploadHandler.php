@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -74,9 +74,9 @@ class XiboUploadHandler extends BlueImpUploadHandler
             $controller->getUser()->isQuotaFullByUser(true);
 
             // Get some parameters
-            $name = $this->getParam($index, 'name', $fileName);
+            $name = htmlspecialchars($this->getParam($index, 'name', $fileName));
             $tags = $controller->getUser()->featureEnabled('tag.tagging')
-                ? $this->getParam($index, 'tags', '')
+                ? htmlspecialchars($this->getParam($index, 'tags', ''))
                 : '';
 
             // Guess the type

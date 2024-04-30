@@ -1254,7 +1254,7 @@ body.editor-opened {
             opacity: 0.3;
         }
 
-        & > .invalid-parent, & > .empty-element-data {
+        & > .message-container {
             z-index: $viewer-object-group-bts-z-index !important;
         }
 
@@ -1283,24 +1283,43 @@ body.editor-opened {
     }
 
     .designer-element, .designer-element-group {
-        .invalid-parent, .empty-element-data {
+        .message-container {
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 4px;
             position: absolute;
-            padding: 2px 5px;
-            border-radius: 4px;
-            font-weight: bold;
-            z-index: 100;
             left: auto;
             top: auto;
             right: 2px;
             bottom: 2px;
+            z-index: 100;
+        }
+
+        .error-message, .empty-element-data, .warning-message {
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-weight: bold;
             background-color: $xibo-color-semantic-error;
             color: $xibo-color-neutral-0;
             opacity: 0.6;
         }
 
+        .warning-message {
+            color: $xibo-color-neutral-1000;
+            background-color: $xibo-color-semantic-warning;
+        }
+
+        .empty-element-data {
+            background-color: $xibo-color-semantic-info;
+        }
+
         &:hover {
-            .invalid-parent, .empty-element-data {
+            .error-message, .empty-element-data, .warning-message {
                 opacity: 0.8;
+
+                &:hover {
+                    opacity: 1;
+                }
             }
         }
     }
@@ -2006,7 +2025,7 @@ div#bg_media_name {
             }
         }
 
-        .error-message {
+        .error-message, .warning-message {
             display: none;
         }
     }

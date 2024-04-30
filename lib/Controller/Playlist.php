@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -1316,8 +1316,9 @@ class Playlist extends Base
         // Expect a list of mediaIds
         $media = $sanitizedParams->getIntArray('media');
 
-        if (count($media) <= 0)
+        if (empty($media)) {
             throw new InvalidArgumentException(__('Please provide Media to Assign'), 'media');
+        }
 
         // Optional Duration
         $duration = ($sanitizedParams->getInt('duration'));

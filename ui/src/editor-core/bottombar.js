@@ -88,30 +88,14 @@ Bottombar.prototype.render = function(object) {
       },
     ));
 
-    // Preview request path
-    let requestPath = urlsForApi.layout.preview.url;
-    requestPath = requestPath.replace(':id', lD.layout.layoutId);
-
     // Handle play button ( play or pause )
     this.DOMObject.find('#play-btn').click(function() {
       if (lD.viewer.previewPlaying) {
-        this.DOMObject.find('#play-btn i')
-          .removeClass('fa-stop-circle')
-          .addClass('fa-play-circle')
-          .attr('title', bottombarTrans.playPreviewLayout);
-        app.viewer.render(true);
+        app.viewer.stopPreview();
       } else {
-        lD.viewer.playPreview(
-          requestPath,
-          lD.viewer.containerObjectDimensions,
-        );
-        this.DOMObject.find('#play-btn i')
-          .removeClass('fa-play-circle')
-          .addClass('fa-stop-circle')
-          .attr('title', bottombarTrans.stopPreviewLayout);
-        lD.viewer.previewPlaying = true;
+        app.viewer.playPreview();
       }
-    }.bind(this));
+    });
   } else if (object.type == 'region') {
     // Render region toolbar
     this.DOMObject.html(bottomBarViewerTemplate(
