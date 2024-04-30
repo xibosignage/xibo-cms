@@ -361,6 +361,7 @@ const XiboPlayer = function() {
 
     if (data.length > 0) {
       let lastSlotFilled = null;
+      const filledPinnedSlot = [];
 
       dataLoop: for (const [dataItemKey] of Object.entries(data)) {
         let hasSlotFilled = false;
@@ -382,6 +383,11 @@ const XiboPlayer = function() {
           const slotItems = itemObj.items;
           const pinnedItems = itemObj.pinnedItems;
           const currentSlot = itemObj.slot;
+          let nextSlot = currentSlot + 1;
+
+          if (nextSlot > maxSlot) {
+            nextSlot = currentSlot;
+          }
 
           // Skip if currentKey is less than the currentSlot
           // This occurs when a data slot has been skipped
@@ -437,6 +443,13 @@ const XiboPlayer = function() {
             lastSlotFilled = currentSlot;
           }
 
+          if (pinnedSlots.includes(currentSlot) &&
+            lastSlotFilled === currentSlot &&
+            !filledPinnedSlot.includes(currentSlot)
+          ) {
+            filledPinnedSlot.push(currentSlot);
+          }
+
           itemObj.dataKeys = [
             ...itemObj.dataKeys,
             currentKey,
@@ -446,6 +459,18 @@ const XiboPlayer = function() {
             hasSlotFilled = false;
             if (lastSlotFilled % maxSlot === 0) {
               lastSlotFilled = null;
+            } else if (currentKey > maxSlot &&
+                nextSlot !== currentSlot &&
+                pinnedSlots.includes(nextSlot) &&
+                filledPinnedSlot.includes(nextSlot)
+            ) {
+              // Next slot is a pinned slot and has been filled
+              // So, current item must be passed to next non-pinned slot
+              if (nextSlot === maxSlot) {
+                lastSlotFilled = null;
+              } else {
+                lastSlotFilled = nextSlot;
+              }
             }
 
             break;
@@ -1699,7 +1724,8 @@ XiboPlayer.prototype.renderOptions = function(currentWidget, globalOptions) {
     globalOptions,
     {
       duration: currentWidget.duration,
-      pauseEffectOnStart: globalOptions.pauseEffectOnStart ?? false,
+      pauseEffectOnStart:
+        globalOptions.pauseEffectOnStart ?? true,
       isPreview: currentWidget.isPreview,
       isEditor: currentWidget.isEditor,
     },

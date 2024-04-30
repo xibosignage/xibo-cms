@@ -522,10 +522,13 @@ HistoryManager.prototype.removeLastChange = function() {
 
 /**
  * Render Manager
+ * @param {boolean} reloadToolbar - force render toolbar?
  */
-HistoryManager.prototype.render = function() {
+HistoryManager.prototype.render = function(
+  reloadToolbar = true,
+) {
   // Upload bottom bar if exists
-  if (this.parent.bottombar) {
+  if (this.parent.bottombar && reloadToolbar) {
     this.parent.bottombar.render();
   }
 

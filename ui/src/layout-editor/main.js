@@ -699,7 +699,7 @@ lD.refreshEditor = function(
   this.bottombar.render(this.selectedObject);
 
   // Manager ( hidden )
-  this.historyManager.render();
+  this.historyManager.render(false);
 
   // Properties panel and viewer
   (reloadPropertiesPanel) && this.propertiesPanel.render(this.selectedObject);
@@ -3208,10 +3208,13 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
     layoutObject.type === 'element-group'
   );
 
-  // If target is a frame, send single widget info
+  // If target is a frame or zone, send single widget info
   const singleWidget = (
     layoutObject.type === 'region' &&
-    layoutObject.subType === 'frame'
+    (
+      layoutObject.subType === 'frame' ||
+      layoutObject.subType === 'zone'
+    )
   ) ? Object.values(layoutObject.widgets)[0] : {};
 
   // If target is group or element group, send parent widget
@@ -3633,12 +3636,15 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
       const property = target.data('property');
       const propertyType = target.data('propertyType');
 
-      // If we're editing permissions and it's a frame
+      // If we're editing permissions and it's a frame ( or zone )
       // edit the widget's permissions instead
       if (
         property === 'PermissionsWidget' &&
         layoutObject.type === 'region' &&
-        layoutObject.subType === 'frame'
+        (
+          layoutObject.subType === 'frame' ||
+          layoutObject.subType === 'zone'
+        )
       ) {
         // Call edit for widget instead
         const regionWidget = Object.values(layoutObject.widgets)[0];

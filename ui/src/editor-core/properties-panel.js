@@ -576,11 +576,11 @@ PropertiesPanel.prototype.render = function(
       dataToRender.repeatDataActive = hasData;
 
       // Check required elements
-      const errorMessage = target.checkRequiredElements();
+      const warningMessage = target.checkRequiredElements();
 
-      if (errorMessage != '') {
-        dataToRender.showErrorMessage = true;
-        dataToRender.errorMessage = errorMessage;
+      if (warningMessage != '') {
+        dataToRender.showWarningMessage = true;
+        dataToRender.warningMessage = warningMessage;
       }
     }
 

@@ -2507,7 +2507,7 @@ class Library extends Base
         }
 
         // if we were provided with optional Media name set it here, otherwise get it from download info
-        $name = empty($optionalName) ? $downloadInfo['filename'] : $optionalName;
+        $name = empty($optionalName) ? htmlspecialchars($downloadInfo['filename']) : $optionalName;
 
         // double check that provided Module Type and Extension are valid
         if (!Str::contains($module->getSetting('validExtensions'), $ext)) {

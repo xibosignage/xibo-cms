@@ -565,20 +565,25 @@
                     }
 
                     .provider {
-                        background-color: $xibo-color-neutral-0;
                         position: absolute;
                         opacity: 0.6;
                         bottom: 0;
                         right: 0;
-                        width: 60%;
+                        width: 60px;
+                        height: 40px;
+                        display: flex;
+                        justify-content: flex-end;
+                        align-items: flex-end;
 
                         &:hover {
                             opacity: 0.8;
                         }
 
                         img {
-                            width: 100%;
+                            max-width: 100%;
+                            max-height: 100%;
                             padding: 2px 6px;
+                            background-color: $xibo-color-neutral-0;
                         }
                     }
 
