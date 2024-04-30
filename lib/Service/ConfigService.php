@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022-2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -450,7 +450,7 @@ class ConfigService implements ConfigServiceInterface
     }
 
     /** @inheritdoc */
-    public function changeSetting($setting, $value)
+    public function changeSetting($setting, $value, $userChange = 0)
     {
         $settings = $this->getSettings();
 
@@ -472,9 +472,11 @@ class ConfigService implements ConfigServiceInterface
         } else {
             // A new setting we've not seen before.
             // record it in the settings table.
-            $this->getStore()->insert('INSERT INTO `setting` (`value`, setting) VALUES (:value, :setting);', [
-                'setting' => $setting,
-                'value' => ($value === null) ? '' : $value
+            $this->getStore()->insert('
+                INSERT INTO `setting` (`value`, setting, `userChange`) VALUES (:value, :setting, :userChange);', [
+                    'setting' => $setting,
+                    'value' => ($value === null) ? '' : $value,
+                    'userChange' => $userChange
             ]);
         }
 

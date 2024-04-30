@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -70,8 +70,9 @@ interface ConfigServiceInterface
      * Change Setting
      * @param string $setting
      * @param mixed $value
+     * @param int $userChange
      */
-    public function changeSetting($setting, $value);
+    public function changeSetting($setting, $value, $userChange = 0);
 
     /**
      * Is the provided setting visible
