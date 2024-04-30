@@ -98,6 +98,9 @@ window.pE = {
 
   // inline playlist editor?
   inline: false,
+
+  // Show minimum dimensions message
+  showMinDimensionsMessage: false,
 };
 
 /**
@@ -251,6 +254,9 @@ pE.loadEditor = function(
         if (showExternalPlaylistMessage) {
           pE.showExternalPlaylistMessage();
         }
+
+        // Handle editor minimum dimensions when resizing
+        pE.common.handleEditorMinimumDimensions(pE);
       } else {
         // Login Form needed?
         if (res.login) {

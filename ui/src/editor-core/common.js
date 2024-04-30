@@ -222,4 +222,72 @@ module.exports = {
       }
     });
   },
+
+  /**
+   * Handle minimum dimensions for the editor
+   * @param {object} editor
+    */
+  handleEditorMinimumDimensions: function(editor) {
+    const resizeThrottle = 60;
+    const minWindowWidth = 1200;
+    const minWindowHeight = 600;
+    const toolbarLevelLimiter = 1600;
+
+    const updateEditor = function() {
+      const currentWidth = $(window).width();
+      const currentHeight = $(window).height();
+      const editorInitalState = editor.showMinDimensionsMessage;
+      const toolbarInitalState = editor.toolbar.levelLimiter;
+
+      // If editor container is empty object
+      // stop and detach event handler
+      if ($.isEmptyObject(editor.editorContainer)) {
+        $(window).off('resize.' + editor.mainObjectType);
+        return;
+      }
+
+      // Show editor or message?
+      editor.showMinDimensionsMessage = (
+        currentWidth < minWindowWidth ||
+        currentHeight < minWindowHeight
+      );
+
+      // Limit toolbar
+      editor.toolbar.levelLimiter = (currentWidth < toolbarLevelLimiter);
+
+      // If status changed, refresh editor
+      if (editorInitalState != editor.showMinDimensionsMessage) {
+        // Show the minimum dimensions message instead
+        if (editor.showMinDimensionsMessage) {
+          editor.editorContainer.append(`<div class="min-res-message">
+            <div>
+              <strong>${editorsTrans.minDimensionsMessageHeader}</strong>
+              <div>${editorsTrans.minDimensionsMessageBody}</div>
+            </div>
+          </div>`);
+
+          // Hide other containers
+          editor.editorContainer.find('> *:not(.min-res-message)')
+            .hide();
+        } else {
+          // Hide message container
+          editor.editorContainer.find('.min-res-message').remove();
+
+          // Re-show all other containers
+          editor.editorContainer.find('> *:not(.custom-overlay)')
+            .show();
+        }
+      } else if (toolbarInitalState != editor.toolbar.levelLimiter) {
+        // If toolbar changed, and we didn't refresh editor, reload it
+        editor.toolbar.render();
+      }
+    };
+
+    // Calculate on window resize
+    $(window).on('resize.' + editor.mainObjectType,
+      _.debounce(updateEditor, resizeThrottle));
+
+    // Calculate on first run
+    updateEditor();
+  },
 };
