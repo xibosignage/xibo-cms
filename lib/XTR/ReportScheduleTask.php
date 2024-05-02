@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -318,7 +318,7 @@ class ReportScheduleTask implements TaskInterface
                     $notification->filename = 'filename-'.$savedReport->savedReportId.'.pdf';
                     $notification->originalFileName = 'saved_report.pdf';
                     $notification->nonusers = $nonusers;
-                    $notification->type = 'reports';
+                    $notification->type = 'report';
 
                     // Get user group to create user notification
                     $notificationUser = $this->userFactory->getById($savedReport->userId);
