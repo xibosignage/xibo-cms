@@ -126,7 +126,7 @@ trait DisplayProfileConfigFields
                         ($ownConfig)
                             ? $displayProfile->getSetting('elevateLogsUntil')
                             : $display->getSetting('elevateLogsUntil'),
-                        $sanitizedParams->getDate('elevateLogsUntil'),
+                        $sanitizedParams->getDate('elevateLogsUntil')?->format('U'),
                         $changedSettings
                     );
                     $displayProfile->setSetting(
@@ -379,7 +379,7 @@ trait DisplayProfileConfigFields
                         ($ownConfig)
                             ? $displayProfile->getSetting('elevateLogsUntil')
                             : $display->getSetting('elevateLogsUntil'),
-                        $sanitizedParams->getDate('elevateLogsUntil'),
+                        $sanitizedParams->getDate('elevateLogsUntil')?->format('U'),
                         $changedSettings
                     );
                     $displayProfile->setSetting(
@@ -564,7 +564,7 @@ trait DisplayProfileConfigFields
                         ($ownConfig)
                             ? $displayProfile->getSetting('elevateLogsUntil')
                             : $display->getSetting('elevateLogsUntil'),
-                        $sanitizedParams->getDate('elevateLogsUntil'),
+                        $sanitizedParams->getDate('elevateLogsUntil')?->format('U'),
                         $changedSettings
                     );
                     $displayProfile->setSetting(
@@ -706,7 +706,7 @@ trait DisplayProfileConfigFields
                         ($ownConfig)
                             ? $displayProfile->getSetting('elevateLogsUntil')
                             : $display->getSetting('elevateLogsUntil'),
-                        $sanitizedParams->getDate('elevateLogsUntil'),
+                        $sanitizedParams->getDate('elevateLogsUntil')?->format('U'),
                         $changedSettings
                     );
                     $displayProfile->setSetting(
