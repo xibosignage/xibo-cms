@@ -62,13 +62,15 @@ class LogProcessor
 
     /**
      * @param int $displayId
-     * @param string $logLevel
+     * @param bool $isAuditing
      */
-    public function setDisplay($displayId, $logLevel)
+    public function setDisplay($displayId, $isAuditing)
     {
-        foreach ($this->log->getHandlers() as $handler) {
-            if ($handler instanceof DatabaseLogHandler) {
-                $handler->setLevel(\Xibo\Service\LogService::resolveLogLevel($logLevel));
+        if ($isAuditing) {
+            foreach ($this->log->getHandlers() as $handler) {
+                if ($handler instanceof DatabaseLogHandler) {
+                    $handler->setLevel(\Xibo\Service\LogService::resolveLogLevel('debug'));
+                }
             }
         }
 

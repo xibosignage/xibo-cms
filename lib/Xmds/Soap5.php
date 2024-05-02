@@ -135,7 +135,7 @@ class Soap5 extends Soap4
             $display = $this->displayFactory->getByLicence($hardwareKey);
             $this->display = $display;
 
-            $this->logProcessor->setDisplay($display->displayId, $display->getLogLevel());
+            $this->logProcessor->setDisplay($display->displayId, $display->isAuditing());
 
             // Audit in
             $this->getLog()->debug(
@@ -377,9 +377,7 @@ class Soap5 extends Soap4
                 }
 
                 // Check to see if the channel/pubKey are already entered
-                if ($display->isAuditing()) {
-                    $this->getLog()->debug('xmrChannel: [' . $xmrChannel . ']. xmrPublicKey: [' . $xmrPubKey . ']');
-                }
+                $this->getLog()->debug('xmrChannel: [' . $xmrChannel . ']. xmrPublicKey: [' . $xmrPubKey . ']');
 
                 // Update the Channel
                 $display->xmrChannel = $xmrChannel;
