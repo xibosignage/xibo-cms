@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -313,12 +313,12 @@ class ReportScheduleTask implements TaskInterface
                     $notification->body = __('Attached please find the report for %s', $savedReport->saveAs);
                     $notification->createDt = Carbon::now()->format('U');
                     $notification->releaseDt = Carbon::now()->format('U');
-                    $notification->isEmail = 1;
                     $notification->isInterrupt = 0;
                     $notification->userId = $savedReport->userId; // event owner
                     $notification->filename = 'filename-'.$savedReport->savedReportId.'.pdf';
                     $notification->originalFileName = 'saved_report.pdf';
                     $notification->nonusers = $nonusers;
+                    $notification->type = 'report';
 
                     // Get user group to create user notification
                     $notificationUser = $this->userFactory->getById($savedReport->userId);

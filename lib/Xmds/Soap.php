@@ -2659,7 +2659,7 @@ class Soap
             // Log display up
             $this->displayEventFactory->createEmpty()->eventEnd($this->display->displayId);
 
-            $dayPartId = $this->display->getSetting('dayPartId', null,['displayOverride' => true]);
+            $dayPartId = $this->display->getSetting('dayPartId', null, ['displayOverride' => true]);
 
             $operatingHours = true;
 
@@ -2677,18 +2677,24 @@ class Soap
 
                     // exceptions
                     foreach ($dayPart->exceptions as $exception) {
-
                         // check if we are on exception day and if so override the startTime and endTime accordingly
                         if ($exception['day'] == Carbon::now()->format('D')) {
                             $exceptionsStartTime = explode(':', $exception['start']);
-                            $startTime = Carbon::now()->setTime(intval($exceptionsStartTime[0]), intval($exceptionsStartTime[1]));
+                            $startTime = Carbon::now()->setTime(
+                                intval($exceptionsStartTime[0]),
+                                intval($exceptionsStartTime[1])
+                            );
 
                             $exceptionsEndTime = explode(':', $exception['end']);
-                            $endTime = Carbon::now()->setTime(intval($exceptionsEndTime[0]), intval($exceptionsEndTime[1]));
+                            $endTime = Carbon::now()->setTime(
+                                intval($exceptionsEndTime[0]),
+                                intval($exceptionsEndTime[1])
+                            );
                         }
                     }
 
-                    // check if we are inside the operating hours for this display - we use that flag to decide if we need to create a notification and send an email.
+                    // check if we are inside the operating hours for this display -
+                    // we use that flag to decide if we need to create a notification and send an email.
                     if (($now >= $startTime && $now <= $endTime)) {
                         $operatingHours = true;
                     } else {
@@ -2696,41 +2702,70 @@ class Soap
                     }
 
                 } catch (NotFoundException $e) {
-                    $this->getLog()->debug('Unknown dayPartId set on Display Profile for displayId ' . $this->display->displayId);
+                    $this->getLog()->debug(
+                        'Unknown dayPartId set on Display Profile for displayId ' . $this->display->displayId
+                    );
                 }
             }
 
             // Do we need to email?
             if ($this->display->emailAlert == 1 && ($maintenanceEnabled == 'On' || $maintenanceEnabled == 'Protected')
                 && $this->getConfig()->getSetting('MAINTENANCE_EMAIL_ALERTS') == 1) {
-
-                // for displays without dayPartId set, this is always true, otherwise we check if we are inside the operating hours set for this display
+                // for displays without dayPartId set, this is always true,
+                // otherwise we check if we are inside the operating hours set for this display
                 if ($operatingHours) {
-                    $subject = sprintf(__("Recovery for Display %s"), $this->display->display);
-                    $body = sprintf(__("Display ID %d is now back online %s"), $this->display->displayId,
-                        Carbon::now()->format(DateFormatHelper::getSystemFormat()));
+                    $subject = sprintf(__('Recovery for Display %s'), $this->display->display);
+                    $body = sprintf(
+                        __('Display ID %d is now back online %s'),
+                        $this->display->displayId,
+                        Carbon::now()->format(DateFormatHelper::getSystemFormat())
+                    );
 
                     // Create a notification assigned to system wide user groups
                     try {
-                        $notification = $this->notificationFactory->createSystemNotification($subject, $body,
-                            Carbon::now());
+                        $notification = $this->notificationFactory->createSystemNotification(
+                            $subject,
+                            $body,
+                            Carbon::now(),
+                            'display'
+                        );
 
                         // Add in any displayNotificationGroups, with permissions
-                        foreach ($this->userGroupFactory->getDisplayNotificationGroups($this->display->displayGroupId) as $group) {
+                        $displayNotificationGroups = $this->userGroupFactory->getDisplayNotificationGroups(
+                            $this->display->displayGroupId
+                        );
+
+                        foreach ($displayNotificationGroups as $group) {
                             $notification->assignUserGroup($group);
                         }
 
                         $notification->save();
 
                     } catch (\Exception $e) {
-                        $this->getLog()->error(sprintf('Unable to send email alert for display %s with subject %s and body %s',
-                            $this->display->display, $subject, $body));
+                        $this->getLog()->error(
+                            sprintf(
+                                'Unable to send email alert for display %s with subject %s and body %s',
+                                $this->display->display,
+                                $subject,
+                                $body
+                            )
+                        );
                     }
                 } else {
-                    $this->getLog()->info('Not sending recovery email for Display - ' . $this->display->display . ' we are outside of its operating hours');
+                    $this->getLog()->info(
+                        'Not sending recovery email for Display - ' . $this->display->display .
+                        ' we are outside of its operating hours'
+                    );
                 }
             } else {
-                $this->getLog()->debug(sprintf('No email required. Email Alert: %d, Enabled: %s, Email Enabled: %s.', $this->display->emailAlert, $maintenanceEnabled, $this->getConfig()->getSetting('MAINTENANCE_EMAIL_ALERTS')));
+                $this->getLog()->debug(
+                    sprintf(
+                        'No email required. Email Alert: %d, Enabled: %s, Email Enabled: %s.',
+                        $this->display->emailAlert,
+                        $maintenanceEnabled,
+                        $this->getConfig()->getSetting('MAINTENANCE_EMAIL_ALERTS')
+                    )
+                );
             }
         }
     }
@@ -2780,15 +2815,26 @@ class Soap
                 // Create a notification if we don't already have one today for this display.
                 $subject = __('Bandwidth allowance exceeded');
                 $date = Carbon::now();
+                $notifications = $this->notificationFactory->getBySubjectAndDate(
+                    $subject,
+                    $date->startOfDay()->format('U'),
+                    $date->addDay()->startOfDay()->format('U')
+                );
 
-                if (count($this->notificationFactory->getBySubjectAndDate($subject, $date->startOfDay()->format('U'), $date->addDay()->startOfDay()->format('U'))) <= 0) {
-
-                    $body = __(sprintf('Bandwidth allowance of %s exceeded. Used %s', ByteFormatter::format($xmdsLimit * 1024), ByteFormatter::format($bandwidthUsage)));
+                if (count($notifications) <= 0) {
+                    $body = __(
+                        sprintf(
+                            'Bandwidth allowance of %s exceeded. Used %s',
+                            ByteFormatter::format($xmdsLimit * 1024),
+                            ByteFormatter::format($bandwidthUsage)
+                        )
+                    );
 
                     $notification = $this->notificationFactory->createSystemNotification(
                         $subject,
                         $body,
-                        Carbon::now()
+                        Carbon::now(),
+                        'library'
                     );
 
                     $notification->save();
@@ -2798,21 +2844,45 @@ class Soap
 
                 return false;
 
-            } elseif ($this->bandwidthFactory->isBandwidthExceeded($displayBandwidthLimit, $bandwidthUsage, $displayId)) {
+            } elseif ($this->bandwidthFactory->isBandwidthExceeded(
+                $displayBandwidthLimit,
+                $bandwidthUsage,
+                $displayId
+            )
+            ) {
                 // Bandwidth Exceeded
                 // Create a notification if we don't already have one today for this display.
                 $subject = __(sprintf('Display ID %d exceeded the bandwidth limit', $this->display->displayId));
                 $date = Carbon::now();
 
-                if (count($this->notificationFactory->getBySubjectAndDate($subject, $date->startOfDay()->format('U'), $date->addDay()->startOfDay()->format('U'))) <= 0) {
-
-                    $body = __(sprintf('Display bandwidth limit %s exceeded. Used %s for Display Id %d', ByteFormatter::format($displayBandwidthLimit * 1024), ByteFormatter::format($bandwidthUsage), $this->display->displayId));
+                $notifications = $this->notificationFactory->getBySubjectAndDate(
+                    $subject,
+                    $date->startOfDay()->format('U'),
+                    $date->addDay()->startOfDay()->format('U')
+                );
+                if (count($notifications) <= 0) {
+                    $body = __(
+                        sprintf(
+                            'Display bandwidth limit %s exceeded. Used %s for Display Id %d',
+                            ByteFormatter::format($displayBandwidthLimit * 1024),
+                            ByteFormatter::format($bandwidthUsage),
+                            $this->display->displayId
+                        )
+                    );
 
                     $notification = $this->notificationFactory->createSystemNotification(
                         $subject,
                         $body,
-                        Carbon::now()
+                        Carbon::now(),
+                        'display'
                     );
+
+                    // Add in any displayNotificationGroups, with permissions
+                    foreach ($this->userGroupFactory->getDisplayNotificationGroups(
+                        $this->display->displayGroupId
+                    ) as $group) {
+                        $notification->assignUserGroup($group);
+                    }
 
                     $notification->save();
 
@@ -3034,7 +3104,15 @@ class Soap
         $this->fromFilter = Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $fromFilter);
         $this->toFilter = Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $toFilter);
 
-        $this->getLog()->debug(sprintf('FromDT = %s [%d]. ToDt = %s [%d]', $fromFilter->toRssString(), $fromFilter->format('U'), $toFilter->toRssString(), $toFilter->format('U')));
+        $this->getLog()->debug(
+            sprintf(
+                'FromDT = %s [%d]. ToDt = %s [%d]',
+                $fromFilter->toRssString(),
+                $fromFilter->format('U'),
+                $toFilter->toRssString(),
+                $toFilter->format('U')
+            )
+        );
     }
 
     /**

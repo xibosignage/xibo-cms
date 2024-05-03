@@ -101,7 +101,7 @@ class UserNotificationFactory extends BaseFactory
      */
     public function getEmailQueue()
     {
-        return $this->query(null, ['isEmail' => 1, 'isEmailed' => 0, 'checkRetired' => 1]);
+        return $this->query(null, ['isEmailed' => 0, 'checkRetired' => 1]);
     }
 
     /**
@@ -152,6 +152,7 @@ class UserNotificationFactory extends BaseFactory
              `notification`.filename,
              `notification`.originalFileName,
              `notification`.nonusers,
+             `notification`.type,
              `user`.email,
              `user`.retired
         ';
@@ -180,16 +181,12 @@ class UserNotificationFactory extends BaseFactory
             $params['read'] = $parsedBody->getInt('read');
         }
 
-        if ($parsedBody->getInt('isEmail') !== null) {
-            $body .= ' AND `notification`.isEmail = :isEmail  ';
-            $params['isEmail'] = $parsedBody->getInt('isEmail');
-        }
-
         if ($parsedBody->getInt('isEmailed') !== null) {
-            if ($parsedBody->getInt('isEmailed') == 0)
+            if ($parsedBody->getInt('isEmailed') == 0) {
                 $body .= ' AND `lknotificationuser`.emailDt = 0 ';
-            else
+            } else {
                 $body .= ' AND `lknotificationuser`.emailDt <> 0 ';
+            }
         }
 
         if ($parsedBody->getInt('checkRetired') === 1) {
@@ -198,8 +195,9 @@ class UserNotificationFactory extends BaseFactory
 
         // Sorting?
         $order = '';
-        if (is_array($sortOrder))
+        if (is_array($sortOrder)) {
             $order .= 'ORDER BY ' . implode(',', $sortOrder);
+        }
 
         $limit = '';
         // Paging

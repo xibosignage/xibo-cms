@@ -228,9 +228,9 @@ class ScheduleReminderTask implements TaskInterface
         $notification->body = $body;
         $notification->createDt = Carbon::now()->format('U');
         $notification->releaseDt = $releaseDt;
-        $notification->isEmail = $reminder->isEmail;
         $notification->isInterrupt = 0;
         $notification->userId = $schedule->userId; // event owner
+        $notification->type = 'schedule';
 
         // Get user group to create user notification
         $notificationUser = $this->userFactory->getById($schedule->userId);
