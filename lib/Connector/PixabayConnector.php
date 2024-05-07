@@ -188,7 +188,6 @@ class PixabayConnector implements ConnectorInterface
                 $searchResult->type = 'video';
                 $searchResult->thumbnail = $result->videos->tiny->url;
                 $searchResult->duration = $result->duration;
-                $searchResult->videoThumbnailUrl = str_replace('pictureId', $result->picture_id, 'https://i.vimeocdn.com/video/pictureId_960x540.png');
                 if (!empty($result->videos->large)) {
                     $searchResult->download = $result->videos->large->url;
                     $searchResult->width = $result->videos->large->width;
@@ -209,6 +208,19 @@ class PixabayConnector implements ConnectorInterface
                     $searchResult->width = $result->videos->tiny->width;
                     $searchResult->height = $result->videos->tiny->height;
                     $searchResult->fileSize = $result->videos->tiny->size;
+                }
+
+                if (!empty($result->picture_id ?? null)) {
+                    // Try the old way (at some point this stopped working and went to the thumbnail approach above
+                    $searchResult->videoThumbnailUrl = str_replace(
+                        'pictureId',
+                        $result->picture_id,
+                        'https://i.vimeocdn.com/video/pictureId_960x540.png'
+                    );
+                } else {
+                    // Use the medium thumbnail if we have it, otherwise the tiny one.
+                    $searchResult->videoThumbnailUrl = $result->videos->medium->thumbnail
+                        ?? $result->videos->tiny->thumbnail;
                 }
             } else {
                 $searchResult->type = 'image';
