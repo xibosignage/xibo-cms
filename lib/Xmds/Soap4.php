@@ -102,10 +102,13 @@ class Soap4 extends Soap
             $display = $this->displayFactory->getByLicence($hardwareKey);
             $this->display = $display;
 
-            $this->logProcessor->setDisplay($display->displayId, $display->getLogLevel());
+            $this->logProcessor->setDisplay($display->displayId, $display->isAuditing());
 
             // Audit in
-            $this->getLog()->debug('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName . ', macAddress: ' . $macAddress);
+            $this->getLog()->debug(
+                'serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey .
+                ', displayName: ' . $displayName . ', macAddress: ' . $macAddress
+            );
 
             // Now
             $dateNow = Carbon::now();
@@ -357,10 +360,12 @@ class Soap4 extends Soap
             throw new \SoapFault('Receiver', 'Bandwidth Limit exceeded');
         }
 
-        if ($this->display->isAuditing()) {
-            $this->getLog()->debug('hardwareKey: ' . $hardwareKey . ', fileId: ' . $fileId . ', fileType: '
-                . $fileType . ', chunkOffset: ' . $chunkOffset . ', chunkSize: ' . $chunkSize);
-        }
+
+        $this->getLog()->debug(
+            'hardwareKey: ' . $hardwareKey . ', fileId: ' . $fileId . ', fileType: ' . $fileType .
+            ', chunkOffset: ' . $chunkOffset . ', chunkSize: ' . $chunkSize
+        );
+
 
         try {
             if ($isDependency || ($fileType == 'media' && $fileId < 0)) {
@@ -598,9 +603,7 @@ class Soap4 extends Soap
         }
 
         // Important to keep this logging in place (status screen notification gets logged)
-        if ($this->display->isAuditing()) {
-            $this->getLog()->debug($status);
-        }
+        $this->getLog()->debug($status);
 
         $this->logBandwidth($this->display->displayId, Bandwidth::$NOTIFYSTATUS, strlen($status));
 
@@ -756,9 +759,7 @@ class Soap4 extends Soap
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
         }
 
-        if ($this->display->isAuditing()) {
-            $this->getLog()->debug('Received Screen shot');
-        }
+        $this->getLog()->debug('Received Screen shot');
 
         // Open this displays screen shot file and save this.
         $location = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'screenshots/' . $this->display->displayId . '_screenshot.' . $screenShotFmt;
@@ -768,14 +769,10 @@ class Soap4 extends Soap
             try {
                 $screenShotImg = Img::make($screenShot);
             } catch (\Exception $e) {
-                if ($this->display->isAuditing()) {
-                    $this->getLog()->debug($imgDriver . " - " . $e->getMessage());
-                }
+                $this->getLog()->debug($imgDriver . ' - ' . $e->getMessage());
             }
             if ($screenShotImg !== false) {
-                if ($this->display->isAuditing()) {
-                    $this->getLog()->debug("Use " . $imgDriver);
-                }
+                $this->getLog()->debug('Use ' . $imgDriver);
                 break;
             }
         }
@@ -786,15 +783,11 @@ class Soap4 extends Soap
             if ($imgMime != $screenShotMime) {
                 $needConversion = true;
                 try {
-                    if ($this->display->isAuditing()) {
-                        $this->getLog()->debug("converting: '" . $imgMime . "' to '" . $screenShotMime . "'");
-                    }
+                    $this->getLog()->debug("converting: '" . $imgMime . "' to '" . $screenShotMime . "'");
                     $screenShot = (string) $screenShotImg->encode($screenShotFmt);
                     $converted = true;
                 } catch (\Exception $e) {
-                    if ($this->display->isAuditing()) {
-                        $this->getLog()->debug($e->getMessage());
-                    }
+                    $this->getLog()->debug($e->getMessage());
                 }
             }
         }

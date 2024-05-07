@@ -21,6 +21,7 @@
  */
 namespace Xibo\Entity;
 
+use Carbon\Carbon;
 use Respect\Validation\Validator as v;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DisplayProfileFactory;
@@ -28,6 +29,7 @@ use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 
 /**
@@ -586,5 +588,23 @@ class DisplayProfile implements \JsonSerializable
     public function handleCustomFields($sanitizedParams, $config = null, $display = null)
     {
         return $this->displayProfileFactory->handleCustomFields($this, $sanitizedParams, $config, $display);
+    }
+
+    /**
+     * Does this display profile has elevated log level?
+     * @return bool
+     * @throws NotFoundException
+     */
+    public function isElevatedLogging(): bool
+    {
+        $elevatedUntil = $this->getSetting('elevateLogsUntil', 0);
+
+        $this->getLog()->debug(sprintf(
+            'Testing whether this display profile has elevated log level. %d vs %d.',
+            $elevatedUntil,
+            Carbon::now()->format('U')
+        ));
+
+        return (!empty($elevatedUntil) && $elevatedUntil >= Carbon::now()->format('U'));
     }
 }

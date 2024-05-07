@@ -1275,8 +1275,14 @@
                 }
 
                 // format the date field for elevating log level.
+                // set to null if the date is in the past.
                 if(field.name === 'elevateLogsUntil') {
-                  override[index] = {name: field.name, value: moment(field.value, 'X').format(systemDateFormat)}
+                  let value = null;
+                  if (moment(field.value, 'X').isAfter(moment())) {
+                    value = moment(field.value, 'X').format(systemDateFormat)
+                  }
+
+                  override[index] = {name: field.name, value: value}
                 }
             });
 

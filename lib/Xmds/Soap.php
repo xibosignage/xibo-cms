@@ -507,9 +507,7 @@ class Soap
                 'displayId' => $this->display->displayId
             ];
 
-            if ($this->display->isAuditing()) {
-                $this->getLog()->sql($SQL, $params);
-            }
+            $this->getLog()->sql($SQL, $params);
 
             $sth = $dbh->prepare($SQL);
             $sth->execute($params);
@@ -698,9 +696,7 @@ class Soap
             // Sub layoutId list
             $SQL = sprintf($SQL, $layoutIdList, $layoutIdList);
 
-            if ($this->display->isAuditing()) {
-                $this->getLog()->sql($SQL, $params);
-            }
+            $this->getLog()->sql($SQL, $params);
 
             $sth = $dbh->prepare($SQL);
             $sth->execute($params);
@@ -812,9 +808,7 @@ class Soap
                 $fileName = basename($path);
 
                 // Log
-                if ($this->display->isAuditing()) {
-                    $this->getLog()->debug('MD5 for layoutid ' . $layoutId . ' is: [' . $md5 . ']');
-                }
+                $this->getLog()->debug('MD5 for layoutid ' . $layoutId . ' is: [' . $md5 . ']');
 
                 // Add nonce
                 $layoutNonce = $this->requiredFileFactory
@@ -1093,9 +1087,7 @@ class Soap
             return new \SoapFault('Sender', 'Unable to get purge list files');
         }
 
-        if ($this->display->isAuditing()) {
-            $this->getLog()->debug($requiredFilesXml->saveXML());
-        }
+        $this->getLog()->debug($requiredFilesXml->saveXML());
 
         // Return the results of requiredFiles()
         $requiredFilesXml->formatOutput = true;
@@ -1615,10 +1607,10 @@ class Soap
         }
 
         // Add on a list of global dependants
-        $globalDependents = $scheduleXml->createElement("dependants");
+        $globalDependents = $scheduleXml->createElement('dependants');
 
         foreach ($moduleDependents as $dep) {
-            $dependent = $scheduleXml->createElement("file", $dep);
+            $dependent = $scheduleXml->createElement('file', $dep);
             $globalDependents->appendChild($dependent);
         }
         $layoutElements->appendChild($globalDependents);
@@ -1626,8 +1618,7 @@ class Soap
         // Format the output
         $scheduleXml->formatOutput = true;
 
-        if ($this->display->isAuditing())
-            $this->getLog()->debug($scheduleXml->saveXML());
+        $this->getLog()->debug($scheduleXml->saveXML());
 
         $output = $scheduleXml->saveXML();
 
@@ -1708,11 +1699,8 @@ class Soap
         }
 
         // Current log level
-        $logLevel = $this->logProcessor->getLevel();
+        $logLevel = \Xibo\Service\LogService::resolveLogLevel($this->display->getLogLevel());
         $discardedLogs = 0;
-
-        // Get the display timezone to use when adjusting log dates.
-        $defaultTimeZone = $this->getConfig()->getSetting('defaultTimezone');
 
         // Store processed logs in an array
         $logs = [];
@@ -1911,9 +1899,7 @@ class Soap
             throw new \SoapFault('Receiver', 'Bandwidth Limit exceeded');
         }
 
-        if ($this->display->isAuditing()) {
-            $this->getLog()->debug('Received XML. ' . $statXml);
-        }
+        $this->getLog()->debug('Received XML. ' . $statXml);
 
         if ($statXml == '') {
             throw new \SoapFault('Receiver', 'Stat XML is empty.');
@@ -2244,9 +2230,7 @@ class Soap
             throw new \SoapFault('Receiver', 'Bandwidth Limit exceeded');
         }
 
-        if ($this->display->isAuditing()) {
-            $this->getLog()->debug($inventory);
-        }
+        $this->getLog()->debug($inventory);
 
         // Check that the $inventory contains something
         if ($inventory == '') {
@@ -2551,9 +2535,7 @@ class Soap
             // If it's been > 1 week since last PHONE_HOME then send a new report
             $oneWeekAgo = Carbon::now()->subWeek()->format('U');
             if ($this->getConfig()->getSetting('PHONE_HOME_DATE') < $oneWeekAgo) {
-                if ($this->display->isAuditing()) {
-                    $this->getLog()->debug('Phone Home required for displayId ' . $this->display->displayId);
-                }
+                $this->getLog()->debug('Phone Home required for displayId ' . $this->display->displayId);
 
                 try {
                     // What type of install are we?
@@ -2634,7 +2616,7 @@ class Soap
             }
 
             // Configure our log processor
-            $this->logProcessor->setDisplay($this->display->displayId, $this->display->getLogLevel());
+            $this->logProcessor->setDisplay($this->display->displayId, $this->display->isAuditing());
 
             return true;
 
