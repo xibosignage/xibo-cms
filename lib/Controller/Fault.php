@@ -69,7 +69,7 @@ class Fault extends Base
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    function displayPage(Request $request, Response $response)
+    public function displayPage(Request $request, Response $response)
     {
         $url = $request->getUri() . $request->getUri()->getPath();
 
@@ -85,7 +85,7 @@ class Fault extends Base
         $this->getState()->template = 'fault-page';
         $this->getState()->setData($data);
 
-        return $this->render($request,$response);
+        return $this->render($request, $response);
     }
 
     /**
@@ -142,7 +142,21 @@ class Fault extends Base
         if ($outputLog) {
             $tempLogFile = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/log_' . Random::generateString();
             $out = fopen($tempLogFile, 'w');
-            fputcsv($out, ['logId', 'runNo', 'logDate', 'channel', 'page', 'function', 'message', 'display.display', 'type']);
+            fputcsv(
+                $out,
+                [
+                    'logId',
+                    'runNo',
+                    'logDate',
+                    'channel',
+                    'page',
+                    'function',
+                    'message',
+                    'display.display',
+                    'type',
+                    'sessionHistoryId'
+                ]
+            );
 
             $fromDt = Carbon::now()->subSeconds(60 * 10)->format('U');
             // Do some post processing
@@ -193,10 +207,10 @@ class Fault extends Base
             if ($outputDisplayProfile) {
                 foreach ($displays as $display) {
                     /** @var \Xibo\Entity\Display $display */
-                    $display->settingProfile = array_map(function ($element) {
+                    $display->setUnmatchedProperty('settingProfile', array_map(function ($element) {
                         unset($element['helpText']);
                         return $element;
-                    }, $display->getSettings());
+                    }, $display->getSettings()));
                 }
             }
 
