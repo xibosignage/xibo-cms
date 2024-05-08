@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -47,13 +47,11 @@ class Log implements Middleware
      */
     public function process(Request $request, RequestHandler $handler): Response
     {
-        $user = $this->app->getContainer()->get('user');
-        $userId = (isset($user)) ? $user->userId : null;
-
         self::addLogProcessorToLogger(
             $this->app->getContainer()->get('logger'),
             $request,
-            $userId
+            $this->app->getContainer()->get('logService')->getUserId(),
+            $this->app->getContainer()->get('logService')->getSessionHistoryId()
         );
 
         return $handler->handle($request);
@@ -62,11 +60,16 @@ class Log implements Middleware
     /**
      * @param LoggerInterface $logger
      * @param \Psr\Http\Message\ServerRequestInterface $request
-     * @param int|null $userId
+     * @param ?int $userId
+     * @param ?int $sessionHistoryId
      */
-    public static function addLogProcessorToLogger(LoggerInterface $logger, Request $request, $userId = null)
-    {
-        $logHelper = new LogProcessor($request->getUri()->getPath(), $request->getMethod(), $userId);
+    public static function addLogProcessorToLogger(
+        LoggerInterface $logger,
+        Request $request,
+        ?int $userId = null,
+        ?int $sessionHistoryId = null
+    ) {
+        $logHelper = new LogProcessor($request->getUri()->getPath(), $request->getMethod(), $userId, $sessionHistoryId);
         $logger->pushProcessor($logHelper);
     }
 }

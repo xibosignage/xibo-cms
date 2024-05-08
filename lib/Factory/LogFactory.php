@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -53,12 +53,14 @@ class LogFactory extends BaseFactory
     {
         $parsedFilter = $this->getSanitizer($filterBy);
 
-        if ($sortOrder == null)
+        if ($sortOrder == null) {
             $sortOrder = ['logId DESC'];
+        }
 
         $entries = [];
         $params = [];
-        $order = ''; $limit = '';
+        $order = '';
+        $limit = '';
 
         $select = '
             SELECT `logId`,
@@ -70,7 +72,9 @@ class LogFactory extends BaseFactory
                 `message`,
                 `display`.`displayId`,
                 `display`.`display`,
-                `type`
+                `type`,
+                `userId`,
+                `sessionHistoryId`
         ';
 
         $body = '
@@ -88,12 +92,16 @@ class LogFactory extends BaseFactory
 
         if ($parsedFilter->getInt('fromDt') !== null) {
             $body .= ' AND `logdate` > :fromDt ';
-            $params['fromDt'] = Carbon::createFromTimestamp( $parsedFilter->getInt('fromDt'))->format(DateFormatHelper::getSystemFormat());
+            $params['fromDt'] = Carbon::createFromTimestamp(
+                $parsedFilter->getInt('fromDt')
+            )->format(DateFormatHelper::getSystemFormat());
         }
 
         if ($parsedFilter->getInt('toDt') !== null) {
             $body .= ' AND `logdate` <= :toDt ';
-            $params['toDt'] = Carbon::createFromTimestamp( $parsedFilter->getInt('toDt'))->format(DateFormatHelper::getSystemFormat());
+            $params['toDt'] = Carbon::createFromTimestamp(
+                $parsedFilter->getInt('toDt')
+            )->format(DateFormatHelper::getSystemFormat());
         }
 
         if ($parsedFilter->getString('runNo') != null) {
@@ -138,7 +146,7 @@ class LogFactory extends BaseFactory
 
         if ($parsedFilter->getCheckbox('excludeLog') == 1) {
             $body .= ' AND (`log`.`page` NOT LIKE \'/log%\' OR `log`.`page` = \'/login\') ';
-            $body .= ' AND `log`.`page` NOT IN(\'/user/pref\', \'/clock\', \'/library/fontcss\') ';
+            $body .= ' AND `log`.`page` NOT IN(\'/user/pref\', \'/clock\', \'/fonts/fontcss\') ';
         }
 
         // Filter by Display Name?
@@ -157,6 +165,11 @@ class LogFactory extends BaseFactory
         if ($parsedFilter->getInt('displayGroupId') !== null) {
             $body .= ' AND `lkdisplaydg`.`displaygroupid` = :displayGroupId ';
             $params['displayGroupId'] = $parsedFilter->getInt('displayGroupId');
+        }
+
+        if ($parsedFilter->getInt('sessionHistoryId') !== null) {
+            $body .= ' AND `log`.`sessionHistoryId` = :sessionHistoryId ';
+            $params['sessionHistoryId'] = $parsedFilter->getInt('sessionHistoryId');
         }
 
         // Sorting?

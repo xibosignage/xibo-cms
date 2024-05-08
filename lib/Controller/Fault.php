@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -117,7 +117,13 @@ class Fault extends Base
         $outputDisplays = $sanitizedParams->getCheckbox('outputDisplays') == 1;
         $outputDisplayProfile = $sanitizedParams->getCheckbox('outputDisplayProfile') == 1;
 
-        if (!$outputVersion && !$outputLog && !$outputEnvCheck && !$outputSettings && !$outputDisplays && !$outputDisplayProfile) {
+        if (!$outputVersion &&
+            !$outputLog &&
+            !$outputEnvCheck &&
+            !$outputSettings &&
+            !$outputDisplays &&
+            !$outputDisplayProfile
+        ) {
             throw new InvalidArgumentException(__('Please select at least one option'));
         }
 
@@ -138,10 +144,25 @@ class Fault extends Base
             $out = fopen($tempLogFile, 'w');
             fputcsv($out, ['logId', 'runNo', 'logDate', 'channel', 'page', 'function', 'message', 'display.display', 'type']);
 
+            $fromDt = Carbon::now()->subSeconds(60 * 10)->format('U');
             // Do some post processing
-            foreach ($this->logFactory->query(['logId'], ['fromDt' => (Carbon::now()->subSeconds(60 * 10)->format('U'))]) as $row) {
+            foreach ($this->logFactory->query(['logId'], ['fromDt' => $fromDt]) as $row) {
                 /* @var \Xibo\Entity\LogEntry $row */
-                fputcsv($out, [$row->logId, $row->runNo, $row->logDate, $row->channel, $row->page, $row->function, $row->message, $row->display, $row->type]);
+                fputcsv(
+                    $out,
+                    [
+                        $row->logId,
+                        $row->runNo,
+                        $row->logDate,
+                        $row->channel,
+                        $row->page,
+                        $row->function,
+                        $row->message,
+                        $row->display,
+                        $row->type,
+                        $row->sessionHistoryId
+                    ]
+                );
             }
 
             fclose($out);
@@ -159,14 +180,13 @@ class Fault extends Base
 
         // Output Settings
         if ($outputSettings) {
-            $zip->addFromString('settings.json', json_encode(array_map(function($element) {
+            $zip->addFromString('settings.json', json_encode(array_map(function ($element) {
                 return [$element['setting'] => $element['value']];
             }, $this->store->select('SELECT setting, `value` FROM `setting`', [])), JSON_PRETTY_PRINT));
         }
 
         // Output Displays
         if ($outputDisplays) {
-
             $displays = $this->displayFactory->query(['display']);
 
             // Output Profiles

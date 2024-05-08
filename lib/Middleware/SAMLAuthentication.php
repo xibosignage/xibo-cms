@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -198,9 +198,17 @@ class SAMLAuthentication extends AuthenticationBase
                         // Home page
                         if (isset($samlSettings['workflow']['homePage'])) {
                             try {
-                                $user->homePageId = $this->getUserGroupFactory()->getHomepageByName($samlSettings['workflow']['homePage'])->homepage;
+                                $user->homePageId = $this->getUserGroupFactory()->getHomepageByName(
+                                    $samlSettings['workflow']['homePage']
+                                )->homepage;
                             } catch (NotFoundException $exception) {
-                                $this->getLog()->info(sprintf('Provided homepage %s, does not exist, setting the icondashboard.view as homepage', $samlSettings['workflow']['homePage']));
+                                $this->getLog()->info(
+                                    sprintf(
+                                        'Provided homepage %s, does not exist,
+                                         setting the icondashboard.view as homepage',
+                                        $samlSettings['workflow']['homePage']
+                                    )
+                                );
                                 $user->homePageId = 'icondashboard.view';
                             }
                         } else {
@@ -259,7 +267,11 @@ class SAMLAuthentication extends AuthenticationBase
 
                 if (isset($user) && $user->userId > 0) {
                     // Load User
-                    $this->getUser($user->userId, $request->getAttribute('ip_address'));
+                    $this->getUser(
+                        $user->userId,
+                        $request->getAttribute('ip_address'),
+                        $this->getSession()->get('sessionHistoryId')
+                    );
 
                     // Overwrite our stored user with this new object.
                     $this->setUserForRequest($user);
@@ -297,6 +309,7 @@ class SAMLAuthentication extends AuthenticationBase
                 $auth->processSLO(false, null, false, function () use ($request) {
                     // Audit that the IDP has completed this request.
                     $this->getLog()->setIpAddress($request->getAttribute('ip_address'));
+                    $this->getLog()->setSessionHistoryId($this->getSession()->get('sessionHistoryId'));
                     $this->getLog()->audit('User', 0, 'Idp SLO completed', [
                         'UserAgent' => $request->getHeader('User-Agent')
                     ]);
@@ -333,7 +346,11 @@ class SAMLAuthentication extends AuthenticationBase
         ) {
             // Complete our own logout flow
             $this->completeLogoutFlow(
-                $this->getUser($_SESSION['userid'], $request->getAttribute('ip_address')),
+                $this->getUser(
+                    $_SESSION['userid'],
+                    $request->getAttribute('ip_address'),
+                    $_SESSION['sessionHistoryId']
+                ),
                 $this->getSession(),
                 $this->getLog(),
                 $request

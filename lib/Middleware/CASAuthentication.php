@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -24,6 +24,8 @@
 namespace Xibo\Middleware;
 
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Http\Response;
+use Slim\Http\ServerRequest;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\LogoutTrait;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -49,8 +51,7 @@ class CASAuthentication extends AuthenticationBase
         $app = $this->app;
         $app->getContainer()->set('logoutRoute', 'cas.logout');
 
-        $app->map(['GET', 'POST'], '/cas/login', function (\Slim\Http\ServerRequest $request, \Slim\Http\Response $response) {
-
+        $app->map(['GET', 'POST'], '/cas/login', function (ServerRequest $request, Response $response) {
             // Initiate CAS SSO
             $this->initCasClient();
             \phpCAS::setNoCasServerValidation();
@@ -72,7 +73,11 @@ class CASAuthentication extends AuthenticationBase
 
             if (isset($user) && $user->userId > 0) {
                 // Load User
-                $this->getUser($user->userId, $request->getAttribute('ip_address'));
+                $this->getUser(
+                    $user->userId,
+                    $request->getAttribute('ip_address'),
+                    $this->getSession()->get('sessionHistoryId')
+                );
 
                 // Overwrite our stored user with this new object.
                 $this->setUserForRequest($user);
@@ -96,10 +101,19 @@ class CASAuthentication extends AuthenticationBase
 
         // Service for the logout of the user.
         // End the CAS session and the application session
-        $app->get('/cas/logout', function (\Slim\Http\ServerRequest $request, \Slim\Http\Response $response) {
+        $app->get('/cas/logout', function (ServerRequest $request, Response $response) {
             // The order is first: local session to destroy, second the cas session
             // because phpCAS::logout() redirects to CAS server
-            $this->completeLogoutFlow($this->getUser($_SESSION['userid'], $request->getAttribute('ip_address')), $this->getSession(), $this->getLog(), $request);
+            $this->completeLogoutFlow(
+                $this->getUser(
+                    $_SESSION['userid'],
+                    $request->getAttribute('ip_address'),
+                    $_SESSION['sessionHistoryId']
+                ),
+                $this->getSession(),
+                $this->getLog(),
+                $request
+            );
 
             $this->initCasClient();
             \phpCAS::logout();
@@ -153,6 +167,9 @@ class CASAuthentication extends AuthenticationBase
     /** @inheritDoc */
     public function addToRequest(Request $request)
     {
-        return $request->withAttribute('excludedCsrfRoutes', array_merge($request->getAttribute('excludedCsrfRoutes', []), ['/cas/login', '/cas/logout']));
+        return $request->withAttribute(
+            'excludedCsrfRoutes',
+            array_merge($request->getAttribute('excludedCsrfRoutes', []), ['/cas/login', '/cas/logout'])
+        );
     }
 }

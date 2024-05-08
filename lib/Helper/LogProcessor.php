@@ -1,9 +1,10 @@
 <?php
 /*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * This file (RouteProcessor.php) is part of Xibo.
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -31,6 +32,7 @@ class LogProcessor
     private $route;
     private $method;
     private $userId;
+    private $sessionHistoryId;
 
     /**
      * Log Processor
@@ -38,11 +40,12 @@ class LogProcessor
      * @param $method
      * @param $userId
      */
-    public function __construct($route, $method, $userId)
+    public function __construct($route, $method, $userId, $sessionHistoryId)
     {
         $this->route = $route;
         $this->method = $method;
         $this->userId = $userId;
+        $this->sessionHistoryId = $sessionHistoryId;
     }
 
     /**
@@ -56,6 +59,10 @@ class LogProcessor
 
         if ($this->userId != null) {
             $record['extra']['userId'] = $this->userId;
+        }
+        
+        if ($this->sessionHistoryId != null) {
+            $record['extra']['sessionHistoryId'] = $this->sessionHistoryId;
         }
 
         return $record;

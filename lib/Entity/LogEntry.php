@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -31,7 +31,7 @@ use Xibo\Storage\StorageServiceInterface;
  *
  * @SWG\Definition()
  */
-class LogEntry
+class LogEntry implements \JsonSerializable
 {
     use EntityTrait;
 
@@ -94,6 +94,18 @@ class LogEntry
      * @var string
      */
     public $display;
+
+    /**
+     * @SWG\Property(description="Session history id.")
+     * @var int
+     */
+    public $sessionHistoryId;
+
+    /**
+     * @SWG\Property(description="User id.")
+     * @var int
+     */
+    public $userId;
 
     /**
      * Entity constructor.
