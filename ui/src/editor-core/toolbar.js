@@ -96,6 +96,9 @@ const Toolbar = function(
 
   // Toolbar zoom level (1-4 : 2 default)
   this.level = 2;
+
+  // Level limiter ( show only 1 and 2 )
+  this.levelLimiter = false;
 };
 
 /**
@@ -114,6 +117,9 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
 
   // Module media types (other than the 3 main types)
   const moduleListOtherTypes = [];
+
+  // Mark as initialized
+  self.initalized = true;
 
   // Filter module list to create the types for the filter
   modulesList.forEach((el) => {
@@ -678,15 +684,13 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
       }
     }
 
-    // Mark as init and render
-    self.initalized = true;
+    // Render
     self.render();
   }).catch(function(jqXHR, textStatus, errorThrown) {
     console.error(jqXHR, textStatus, errorThrown);
     console.error(errorMessagesTrans.getProvidersFailed);
 
-    // Mark as init and render
-    self.initalized = true;
+    // Render
     self.render();
   });
 };
@@ -992,6 +996,12 @@ Toolbar.prototype.render = function({savePrefs = true} = {}) {
     (this.openedMenu != -1) &&
     (!readOnlyModeOn);
 
+  // If we have a level limiter and we're over level 2
+  // set level at 2
+  if (this.levelLimiter && this.level > 2) {
+    this.level = 2;
+  }
+
   // Compile toolbar template with data
   const html = ToolbarTemplate({
     opened: toolbarOpened,
@@ -1003,6 +1013,7 @@ Toolbar.prototype.render = function({savePrefs = true} = {}) {
         layoutEditorHelpLink : null
     ),
     toolbarLevel: this.level,
+    levelLimiter: this.levelLimiter,
   });
 
   // Clear temp data

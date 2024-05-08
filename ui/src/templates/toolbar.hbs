@@ -34,8 +34,10 @@
                     <div class="toolbar-level-control-select">
                         <i class="toolbar-level-control toolbar-level-icon toolbar-level-control-1" data-level="1"></i>
                         <i class="toolbar-level-control toolbar-level-icon toolbar-level-control-2" data-level="2"></i>
-                        <i class="toolbar-level-control toolbar-level-icon toolbar-level-control-3" data-level="3"></i>
-                        <i class="toolbar-level-control toolbar-level-icon toolbar-level-control-4" data-level="4"></i>
+                        {{#unless levelLimiter}}
+                            <i class="toolbar-level-control toolbar-level-icon toolbar-level-control-3" data-level="3"></i>
+                            <i class="toolbar-level-control toolbar-level-icon toolbar-level-control-4" data-level="4"></i>
+                        {{/unless}}
                     </div>
                 </div>
             {{/if}}

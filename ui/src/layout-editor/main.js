@@ -114,6 +114,9 @@ window.lD = {
 
   // Is the playlist editor opened
   playlistEditorOpened: false,
+
+  // Show minimum dimensions message
+  showMinDimensionsMessage: false,
 };
 
 // Load Layout and build app structure
@@ -346,6 +349,9 @@ $(() => {
 
       // Initialise tooltips on main container
       lD.common.reloadTooltips(lD.editorContainer);
+
+      // Handle editor minimum dimensions when resizing
+      lD.common.handleEditorMinimumDimensions(lD);
 
       // Load preferences
       lD.loadPrefs();
