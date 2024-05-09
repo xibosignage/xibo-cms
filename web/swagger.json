@@ -4327,6 +4327,36 @@
                 "summary": "Search Folders",
                 "description": "Returns JSON representation of the Folder tree",
                 "operationId": "folderSearch",
+                "parameters": [
+                    {
+                        "name": "folderId",
+                        "in": "path",
+                        "description": "Show usage details for the specified Folder Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "gridView",
+                        "in": "query",
+                        "description": "Flag (0, 1), Show Folders in a standard grid response",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "query",
+                        "description": "Use with gridView, Filter by Folder Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "folderName",
+                        "in": "query",
+                        "description": "Use with gridView, Filter by Folder name",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "successful operation",
