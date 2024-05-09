@@ -23,6 +23,7 @@
         <id>stocks_custom_html</id>
         <type>static</type>
         <dataType>stock</dataType>
+        <showIn>none</showIn>
         <title>Stocks Custom HTML</title>
         <properties>
             <property id="effect" type="effectSelector" variant="showPaged">
@@ -178,11 +179,6 @@ $(target).xiboLayoutAnimate(properties);
             <property id="fontFamily" type="fontSelector">
                 <title>Font</title>
                 <helpText>Select a custom font - leave empty to use the default font.</helpText>
-            </property>
-            <property id="dateFormat" type="text" variant="dateFormat">
-                <title>Date Format</title>
-                <helpText>The format to apply to all dates returned by the Widget.</helpText>
-                <default>#DATE_FORMAT#</default>
             </property>
             <property id="maxItemsPerPage" type="number">
                 <title>Items per Page</title>
@@ -489,11 +485,6 @@ $(target).xiboLayoutAnimate(properties);
             <property id="fontFamily" type="fontSelector">
                 <title>Font</title>
                 <helpText>Select a custom font - leave empty to use the default font.</helpText>
-            </property>
-            <property id="dateFormat" type="text" variant="dateFormat">
-                <title>Date Format</title>
-                <helpText>The format to apply to all dates returned by the Widget.</helpText>
-                <default>#DATE_FORMAT#</default>
             </property>
             <property id="maxItemsPerPage" type="hidden">
                 <default>1</default>

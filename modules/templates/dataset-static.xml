@@ -66,6 +66,16 @@
                     </test>
                 </visibility>
             </property>
+            <property id="dateFormat" type="text" variant="dateFormat">
+                <title>Date Format</title>
+                <helpText>The format to apply to all dates returned by the Widget.</helpText>
+                <default>#DATE_FORMAT#</default>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
             <property id="showHeadings" type="checkbox">
                 <title>Show the table headings?</title>
                 <helpText>Should the Table headings be shown?</helpText>
@@ -226,6 +236,11 @@ for (var i = 0; i < items.length; i++) {
     // Build the row content based on the columns
     var rowContent = columns.map(function (column, colIdx) {
         var value = items[i][column.heading];
+
+        // If it's a date and we have date format
+        if (column.dataTypeId === 3 && properties.dateFormat) {
+            value = moment(value).format(properties.dateFormat);
+        }
 
         // If this is an image column, wrap it in an image tag
         if (column.dataTypeId === 4 || column.dataTypeId === 5) {
@@ -530,6 +545,16 @@ $(target).xiboLayoutAnimate(properties);
                     </test>
                 </visibility>
             </property>
+            <property id="dateFormat" type="text" variant="dateFormat">
+                <title>Date Format</title>
+                <helpText>The format to apply to all dates returned by the Widget.</helpText>
+                <default>#DATE_FORMAT#</default>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
             <property id="showHeadings" type="checkbox">
                 <title>Show the table headings?</title>
                 <helpText>Should the Table headings be shown?</helpText>
@@ -773,6 +798,11 @@ for (var i = 0; i < items.length; i++) {
     var rowContent = columns.map(function (column, colIdx) {
         var value = items[i][column.heading];
 
+        // If it's a date and we have date format
+        if (column.dataTypeId === 3 && properties.dateFormat) {
+            value = moment(value).format(properties.dateFormat);
+        }
+
         // If this is an image column, wrap it in an image tag
         if (column.dataTypeId === 4 || column.dataTypeId === 5) {
             value = value ? '<img src="' + value + '" />' : '';
@@ -848,6 +878,16 @@ $datasetTableContainer.find('img').xiboImageRender(properties);
             <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
                 <title>No data message</title>
                 <helpText>A message to display when no data is returned from the source</helpText>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="dateFormat" type="text" variant="dateFormat">
+                <title>Date Format</title>
+                <helpText>The format to apply to all dates returned by the Widget.</helpText>
+                <default>#DATE_FORMAT#</default>
                 <visibility>
                     <test>
                         <condition field="dataSetId" type="neq"></condition>
@@ -1055,6 +1095,11 @@ for (var i = 0; i < items.length; i++) {
     var rowContent = columns.map(function (column, colIdx) {
         var value = items[i][column.heading];
 
+        // If it's a date and we have date format
+        if (column.dataTypeId === 3 && properties.dateFormat) {
+            value = moment(value).format(properties.dateFormat);
+        }
+
         // If this is an image column, wrap it in an image tag
         if (column.dataTypeId === 4 || column.dataTypeId === 5) {
             value = value ? '<img src="' + value + '" />' : '';
@@ -1130,6 +1175,16 @@ $datasetTableContainer.find('img').xiboImageRender(properties);
             <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
                 <title>No data message</title>
                 <helpText>A message to display when no data is returned from the source</helpText>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="dateFormat" type="text" variant="dateFormat">
+                <title>Date Format</title>
+                <helpText>The format to apply to all dates returned by the Widget.</helpText>
+                <default>#DATE_FORMAT#</default>
                 <visibility>
                     <test>
                         <condition field="dataSetId" type="neq"></condition>
@@ -1328,6 +1383,11 @@ for (var i = 0; i < items.length; i++) {
     var rowContent = columns.map(function (column, colIdx) {
         var value = items[i][column.heading];
 
+        // If it's a date and we have date format
+        if (column.dataTypeId === 3 && properties.dateFormat) {
+            value = moment(value).format(properties.dateFormat);
+        }
+
         // If this is an image column, wrap it in an image tag
         if (column.dataTypeId === 4 || column.dataTypeId === 5) {
             value = value ? '<img src="' + value + '" />' : '';
@@ -1403,6 +1463,16 @@ $datasetTableContainer.find('img').xiboImageRender(properties);
             <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
                 <title>No data message</title>
                 <helpText>A message to display when no data is returned from the source</helpText>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="dateFormat" type="text" variant="dateFormat">
+                <title>Date Format</title>
+                <helpText>The format to apply to all dates returned by the Widget.</helpText>
+                <default>#DATE_FORMAT#</default>
                 <visibility>
                     <test>
                         <condition field="dataSetId" type="neq"></condition>
@@ -1599,6 +1669,11 @@ for (var i = 0; i < items.length; i++) {
     var rowContent = columns.map(function (column, colIdx) {
         var value = items[i][column.heading];
 
+        // If it's a date and we have date format
+        if (column.dataTypeId === 3 && properties.dateFormat) {
+            value = moment(value).format(properties.dateFormat);
+        }
+
         // If this is an image column, wrap it in an image tag
         if (column.dataTypeId === 4 || column.dataTypeId === 5) {
             value = value ? '<img src="' + value + '" />' : '';
@@ -1674,6 +1749,16 @@ $datasetTableContainer.find('img').xiboImageRender(properties);
             <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
                 <title>No data message</title>
                 <helpText>A message to display when no data is returned from the source</helpText>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="dateFormat" type="text" variant="dateFormat">
+                <title>Date Format</title>
+                <helpText>The format to apply to all dates returned by the Widget.</helpText>
+                <default>#DATE_FORMAT#</default>
                 <visibility>
                     <test>
                         <condition field="dataSetId" type="neq"></condition>
@@ -1868,6 +1953,11 @@ for (var i = 0; i < items.length; i++) {
     var rowContent = columns.map(function (column, colIdx) {
         var value = items[i][column.heading];
 
+        // If it's a date and we have date format
+        if (column.dataTypeId === 3 && properties.dateFormat) {
+            value = moment(value).format(properties.dateFormat);
+        }
+
         // If this is an image column, wrap it in an image tag
         if (column.dataTypeId === 4 || column.dataTypeId === 5) {
             value = value ? '<img src="' + value + '" />' : '';
@@ -1943,6 +2033,16 @@ $datasetTableContainer.find('img').xiboImageRender(properties);
             <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
                 <title>No data message</title>
                 <helpText>A message to display when no data is returned from the source</helpText>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="dateFormat" type="text" variant="dateFormat">
+                <title>Date Format</title>
+                <helpText>The format to apply to all dates returned by the Widget.</helpText>
+                <default>#DATE_FORMAT#</default>
                 <visibility>
                     <test>
                         <condition field="dataSetId" type="neq"></condition>
@@ -2135,6 +2235,11 @@ for (var i = 0; i < items.length; i++) {
     var rowContent = columns.map(function (column, colIdx) {
         var value = items[i][column.heading];
 
+        // If it's a date and we have date format
+        if (column.dataTypeId === 3 && properties.dateFormat) {
+            value = moment(value).format(properties.dateFormat);
+        }
+
         // If this is an image column, wrap it in an image tag
         if (column.dataTypeId === 4 || column.dataTypeId === 5) {
             value = value ? '<img src="' + value + '" />' : '';
@@ -2210,6 +2315,16 @@ $datasetTableContainer.find('img').xiboImageRender(properties);
             <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
                 <title>No data message</title>
                 <helpText>A message to display when no data is returned from the source</helpText>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="dateFormat" type="text" variant="dateFormat">
+                <title>Date Format</title>
+                <helpText>The format to apply to all dates returned by the Widget.</helpText>
+                <default>#DATE_FORMAT#</default>
                 <visibility>
                     <test>
                         <condition field="dataSetId" type="neq"></condition>
@@ -2397,6 +2512,11 @@ for (var i = 0; i < items.length; i++) {
     var rowContent = columns.map(function (column, colIdx) {
         var value = items[i][column.heading];
 
+        // If it's a date and we have date format
+        if (column.dataTypeId === 3 && properties.dateFormat) {
+            value = moment(value).format(properties.dateFormat);
+        }
+
         // If this is an image column, wrap it in an image tag
         if (column.dataTypeId === 4 || column.dataTypeId === 5) {
             value = value ? '<img src="' + value + '" />' : '';
@@ -2472,6 +2592,16 @@ $datasetTableContainer.find('img').xiboImageRender(properties);
             <property id="noDataMessage" type="richText" allowLibraryRefs="true" variant="html">
                 <title>No data message</title>
                 <helpText>A message to display when no data is returned from the source</helpText>
+                <visibility>
+                    <test>
+                        <condition field="dataSetId" type="neq"></condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="dateFormat" type="text" variant="dateFormat">
+                <title>Date Format</title>
+                <helpText>The format to apply to all dates returned by the Widget.</helpText>
+                <default>#DATE_FORMAT#</default>
                 <visibility>
                     <test>
                         <condition field="dataSetId" type="neq"></condition>
@@ -2700,6 +2830,11 @@ for (var i = 0; i < items.length; i++) {
     // Build the row content based on the columns
     var rowContent = columns.map(function (column, colIdx) {
         var value = items[i][column.heading];
+
+        // If it's a date and we have date format
+        if (column.dataTypeId === 3 && properties.dateFormat) {
+            value = moment(value).format(properties.dateFormat);
+        }
 
         // If this is an image column, wrap it in an image tag
         if (column.dataTypeId === 4 || column.dataTypeId === 5) {
@@ -3418,6 +3553,11 @@ if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !=
             var itemCol = column.split('|')[1];
             var itemType = (itemCol) ? columnInfo[itemCol].type : '';
             var itemValue = item[itemId];
+
+            // If it's a date and we have date format
+            if (itemType === 3 && properties.dateFormat) {
+                itemValue = moment(itemValue).format(properties.dateFormat);
+            }
 
             // If this is an image column, wrap it in an image tag
             if (itemType === 4 || itemType === 5) {
