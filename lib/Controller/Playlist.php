@@ -1944,8 +1944,9 @@ class Playlist extends Base
      *   path="/playlist/{id}/convert",
      *   operationId="convert",
      *   tags={"playlist"},
-     *   summary="Playlist Select folder",
-     *   description="Create a global playlist from inline editor playlist.",
+     *   summary="Playlist Convert",
+     *   description="Create a global playlist from inline editor Playlist.
+     * Assign created Playlist via sub-playlist Widget to region Playlist.",
      *   @SWG\Parameter(
      *       name="playlistId",
      *       in="path",
@@ -1961,7 +1962,7 @@ class Playlist extends Base
      *       required=false
      *    ),
      *   @SWG\Response(
-     *       response=204,
+     *       response=201,
      *       description="successful operation"
      *   )
      *  )
@@ -2076,6 +2077,12 @@ class Playlist extends Base
 
         // build Layout xlf
         $layout->xlfToDisk(['notify' => true, 'exceptionOnError' => true, 'exceptionOnEmptyRegion' => false]);
+
+        // Success
+        $this->getState()->hydrate([
+            'httpStatus' => 201,
+            'message' => __('Conversion Successful'),
+        ]);
 
         return $this->render($request, $response);
     }
