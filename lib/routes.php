@@ -211,8 +211,18 @@ $app->group('', function (RouteCollectorProxy $group) use ($app) {
     $group->put('/playlist/{id}', ['\Xibo\Controller\Playlist','edit'])->setName('playlist.edit');
     $group->delete('/playlist/{id}', ['\Xibo\Controller\Playlist','delete'])->setName('playlist.delete');
     $group->post('/playlist/copy/{id}', ['\Xibo\Controller\Playlist','copy'])->setName('playlist.copy');
-    $group->put('/playlist/setenablestat/{id}', ['\Xibo\Controller\Playlist','setEnableStat'])->setName('playlist.setenablestat');
-    $group->put('/playlist/{id}/selectfolder', ['\Xibo\Controller\Playlist','selectFolder'])->setName('playlist.selectfolder');
+    $group->put(
+        '/playlist/setenablestat/{id}',
+        ['\Xibo\Controller\Playlist','setEnableStat']
+    )->setName('playlist.setenablestat');
+    $group->put(
+        '/playlist/{id}/selectfolder',
+        ['\Xibo\Controller\Playlist','selectFolder']
+    )->setName('playlist.selectfolder');
+    $group->post(
+        '/playlist/{id}/convert',
+        ['\Xibo\Controller\Playlist','convert']
+    )->setName('playlist.convert');
 
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['playlist.modify']));
 
