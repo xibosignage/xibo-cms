@@ -80,6 +80,7 @@ Topbar.prototype.render = function() {
   const html = topbarTemplate({
     customDropdownOptions: this.customDropdownOptions,
     displayTooltips: app.common.displayTooltips,
+    deleteConfirmation: app.common.deleteConfirmation,
     trans: newTopbarTrans,
     mainObject: mainObject,
     showOptions: self.showOptions,
@@ -181,6 +182,12 @@ Topbar.prototype.render = function() {
       app.toolbar.savePrefs();
 
       app.common.reloadTooltips(app.editorContainer);
+    });
+
+    // Show delete confirmation modals
+    self.DOMObject.find('#deleteConfirmation').off().click(function() {
+      app.common.deleteConfirmation = $('#deleteConfirmation').prop('checked');
+      app.toolbar.savePrefs();
     });
   }
 

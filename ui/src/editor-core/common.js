@@ -4,6 +4,9 @@ module.exports = {
   // Tooltips flag
   displayTooltips: true,
 
+  // Show delete confirmation modals
+  deleteConfirmation: true,
+
   /**
      * Show loading screen
      * @param {string} cloneName - Screen tag
