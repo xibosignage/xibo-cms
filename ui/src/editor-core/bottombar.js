@@ -18,6 +18,8 @@ const Bottombar = function(parent, container) {
 Bottombar.prototype.render = function(object) {
   const app = this.parent;
   const readOnlyModeOn = (app?.readOnlyMode === true);
+  let trashBinActive = false;
+  let multipleSelected = false;
 
   if (typeof object === 'undefined') {
     object = this.parent.selectedObject;
@@ -31,21 +33,45 @@ Bottombar.prototype.render = function(object) {
   newBottomBarTrans.undoActiveTitle =
     (checkHistory) ? checkHistory.undoActiveTitle : '';
 
-  // Check if trash bin is active
-  const trashBinActive =
-    app.selectedObject.isDeletable &&
-    (app?.readOnlyMode === false);
+  // Do we have multiple objects selected
+  const selectedInViewer = lD.viewer.getMultipleSelected();
+  if (
+    selectedInViewer.multiple === true
+  ) {
+    multipleSelected = true;
+    trashBinActive = selectedInViewer.canBeDeleted;
 
-  // Get text for bin tooltip
-  newBottomBarTrans.trashBinActiveTitle =
+    newBottomBarTrans.trashBinActiveTitle =
     (trashBinActive) ?
-      newBottomBarTrans.deleteObject.replace(
-        '%object%',
-        app.selectedObject.type,
-      ) :
+      newBottomBarTrans.deleteMultipleObjects :
       '';
+  } else {
+    // Check if trash bin is active
+    trashBinActive =
+      app.selectedObject.isDeletable &&
+      (app?.readOnlyMode === false);
 
-  if (object.type == 'widget') {
+    // Get text for bin tooltip
+    newBottomBarTrans.trashBinActiveTitle =
+      (trashBinActive) ?
+        newBottomBarTrans.deleteObject.replace(
+          '%object%',
+          app.selectedObject.type,
+        ) :
+        '';
+  }
+
+  if (multipleSelected) {
+    // Render toolbar for multiple
+    this.DOMObject.html(bottomBarViewerTemplate(
+      {
+        trans: newBottomBarTrans,
+        readOnlyModeOn: readOnlyModeOn,
+        undoActive: checkHistory.undoActive,
+        trashActive: trashBinActive,
+      },
+    ));
+  } else if (object.type == 'widget') {
     // Render widget toolbar
     this.DOMObject.html(bottomBarViewerTemplate(
       {
@@ -132,9 +158,7 @@ Bottombar.prototype.render = function(object) {
 
   // Button handlers
   this.DOMObject.find('#delete-btn').click(function() {
-    if (object.isDeletable) {
-      lD.deleteSelectedObject();
-    }
+    lD.deleteSelectedObject();
   });
 
   this.DOMObject.find('#undo-btn').click(function() {

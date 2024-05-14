@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -129,8 +129,17 @@ class FolderFactory extends BaseFactory
         }
 
         if ($sanitizedFilter->getString('folderName') != null) {
-            $body .= ' AND folder.folderName = :folderName ';
-            $params['folderName'] = $sanitizedFilter->getString('folderName');
+            $terms = explode(',', $sanitizedFilter->getString('folderName'));
+            $logicalOperator = $sanitizedFilter->getString('logicalOperatorName', ['default' => 'OR']);
+            $this->nameFilter(
+                'folder',
+                'folderName',
+                $terms,
+                $body,
+                $params,
+                ($sanitizedFilter->getCheckbox('useRegexForName') == 1),
+                $logicalOperator
+            );
         }
 
         if ($sanitizedFilter->getInt('isRoot') !== null) {
@@ -144,16 +153,29 @@ class FolderFactory extends BaseFactory
         }
 
         // View Permissions (home folder included in here)
-        $this->viewPermissionSql('Xibo\Entity\Folder', $body, $params, '`folder`.folderId', null, $filterBy, 'folder.permissionsFolderId');
+        $this->viewPermissionSql(
+            'Xibo\Entity\Folder',
+            $body,
+            $params,
+            '`folder`.folderId',
+            null,
+            $filterBy,
+            'folder.permissionsFolderId'
+        );
 
         // Sorting?
         $order = '';
-        if (is_array($sortOrder))
+        if (is_array($sortOrder)) {
             $order .= ' ORDER BY ' . implode(',', $sortOrder);
+        }
 
         $limit = '';
-        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
-            $limit .= ' LIMIT ' . intval($sanitizedFilter->getInt('start')) . ', ' . $sanitizedFilter->getInt('length',['default' => 10]);
+        if ($filterBy !== null &&
+            $sanitizedFilter->getInt('start') !== null &&
+            $sanitizedFilter->getInt('length') !== null
+        ) {
+            $limit .= ' LIMIT ' . $sanitizedFilter->getInt('start') .
+                ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;

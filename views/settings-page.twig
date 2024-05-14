@@ -499,6 +499,27 @@
                                     {% set helpText %}{% trans "If checked all new Displays registering with the CMS using the correct CMS key will automatically be set to authorised and display the Default Layout." %}{% endset %}
                                     {{ forms.checkbox("DISPLAY_AUTO_AUTH", title, theme.getSetting("DISPLAY_AUTO_AUTH", 0), helpText, "", "", not theme.isSettingEditable("DISPLAY_AUTO_AUTH")) }}
                                 {% endif %}
+
+                                {% if theme.isSettingVisible("DISPLAY_DEFAULT_FOLDER") %}
+                                    {% set title %}{% trans "Default Folder for new Displays" %}{% endset %}
+                                    {% set helpText %}{% trans "Set default folder for new Displays, by default the Root folder will be used" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("DISPLAY_DEFAULT_FOLDER") %}
+                                        {% set attributes = [
+                                            { name: "data-width", value: "100%" },
+                                            { name: "data-search-url", value: url_for("folders.search") },
+                                            { name: "data-filter-options", value: '{"gridView":1}' },
+                                            { name: "data-search-term", value: "folderName" },
+                                            { name: "data-id-property", value: "folderId" },
+                                            { name: "data-text-property", value: "text" },
+                                            { name: "data-initial-key", value: "folderId" },
+                                            { name: "data-initial-value", value: theme.getSetting("DISPLAY_DEFAULT_FOLDER", 1) }
+                                        ] %}
+                                        {{ forms.dropdown("DISPLAY_DEFAULT_FOLDER", "single", title, theme.getSetting("DISPLAY_DEFAULT_FOLDER", 1), null, "", "", helpText, "pagedSelect", "", "", "", attributes) }}
+                                    {% else %}
+                                        {{ forms.disabled("DISPLAY_DEFAULT_FOLDER", title, theme.getSetting("DISPLAY_DEFAULT_FOLDER"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
                             </div>
                             <div class="tab-pane" id="tab_general">
                                 <h3 class="section-heading">{% trans "General" %}</h3>

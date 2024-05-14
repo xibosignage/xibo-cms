@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -87,7 +87,13 @@ class Theme implements Middleware
 
         // Does this theme provide an alternative view path?
         if ($container->get('configService')->getThemeConfig('view_path') != '') {
-            $twig->prependPath(Str::replaceFirst('..', PROJECT_ROOT, $container->get('configService')->getThemeConfig('view_path')));
+            $twig->prependPath(
+                Str::replaceFirst(
+                    '..',
+                    PROJECT_ROOT,
+                    $container->get('configService')->getThemeConfig('view_path')
+                )
+            );
         }
 
         $settings =  $container->get('configService')->getSettings();
@@ -99,9 +105,13 @@ class Theme implements Middleware
         $settings['TIME_FORMAT_JS'] = DateFormatHelper::convertPhpToMomentFormat($settings['TIME_FORMAT']);
         $settings['DATE_ONLY_FORMAT'] = DateFormatHelper::extractDateOnlyFormat($settings['DATE_FORMAT']);
         $settings['DATE_ONLY_FORMAT_JS'] = DateFormatHelper::convertPhpToMomentFormat($settings['DATE_ONLY_FORMAT']);
-        $settings['DATE_ONLY_FORMAT_JALALI_JS'] = DateFormatHelper::convertMomentToJalaliFormat($settings['DATE_ONLY_FORMAT_JS']);
+        $settings['DATE_ONLY_FORMAT_JALALI_JS'] = DateFormatHelper::convertMomentToJalaliFormat(
+            $settings['DATE_ONLY_FORMAT_JS']
+        );
         $settings['systemDateFormat'] = DateFormatHelper::convertPhpToMomentFormat(DateFormatHelper::getSystemFormat());
-        $settings['systemTimeFormat'] = DateFormatHelper::convertPhpToMomentFormat(DateFormatHelper::extractTimeFormat(DateFormatHelper::getSystemFormat()));
+        $settings['systemTimeFormat'] = DateFormatHelper::convertPhpToMomentFormat(
+            DateFormatHelper::extractTimeFormat(DateFormatHelper::getSystemFormat())
+        );
 
         $routeContext = RouteContext::fromRequest($request);
         $route = $routeContext->getRoute();
@@ -109,7 +119,14 @@ class Theme implements Middleware
         // Resolve the current route name
         $routeName = ($route == null) ? 'notfound' : $route->getName();
         $view['baseUrl'] = $routeParser->urlFor('home');
-        $view['logoutUrl'] = $routeParser->urlFor((empty($container->logoutRoute)) ? 'logout' : $container->logoutRoute);
+
+        try {
+            $logoutRoute = empty($container->get('logoutRoute')) ? 'logout' : $container->get('logoutRoute');
+            $view['logoutUrl'] = $routeParser->urlFor($logoutRoute);
+        } catch (\Exception $e) {
+            $view['logoutUrl'] = $routeParser->urlFor('logout');
+        }
+
         $view['route'] = $routeName;
         $view['theme'] = $container->get('configService');
         $view['settings'] = $settings;
@@ -122,7 +139,10 @@ class Theme implements Middleware
         $view['translations'] ='{}';
         $view['libraryUpload'] = [
             'maxSize' => ByteFormatter::toBytes(Environment::getMaxUploadSize()),
-            'maxSizeMessage' => sprintf(__('This form accepts files up to a maximum size of %s'), Environment::getMaxUploadSize()),
+            'maxSizeMessage' => sprintf(
+                __('This form accepts files up to a maximum size of %s'),
+                Environment::getMaxUploadSize()
+            ),
             'validExt' => implode('|', $container->get('moduleFactory')->getValidExtensions()),
             'validImageExt' => implode('|', $container->get('moduleFactory')->getValidExtensions(['type' => 'image']))
         ];
