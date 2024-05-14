@@ -1291,10 +1291,17 @@ pE.handleKeyInputs = function() {
   // Handle keyboard keys
   $('body').off('keydown.editor')
     .on('keydown.editor', function(handler) {
+      const controlOrCommandPressed = (
+        handler.ctrlKey ||
+        handler.metaKey
+      );
+
       if ($(handler.target).is($('body'))) {
         // Delete
         if (
-          handler.key == 'Delete' &&
+          (
+            handler.key == 'Delete' ||
+            handler.key == 'Backspace') &&
           allowInputs
         ) {
           pE.deleteSelectedObject();
@@ -1302,8 +1309,8 @@ pE.handleKeyInputs = function() {
 
         // Undo
         if (
-          handler.key == 'z' &&
-          handler.ctrlKey &&
+          handler.code == 'KeyZ' &&
+          controlOrCommandPressed &&
           allowInputs
         ) {
           pE.undoLastAction();

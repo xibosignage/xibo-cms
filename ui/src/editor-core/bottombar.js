@@ -89,7 +89,7 @@ Bottombar.prototype.render = function(object) {
     };
 
     // Check if we have datatype
-    if (object.moduleDataType != '') {
+    if (object.moduleDataType != '' && object.moduleDataType != undefined) {
       // Get template
       lD.templateManager.getTemplateById(
         object.getOptions().templateId,
