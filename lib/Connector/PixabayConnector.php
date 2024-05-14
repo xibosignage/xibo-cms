@@ -183,59 +183,59 @@ class PixabayConnector implements ConnectorInterface
             // Process each hit into a search result and add it to the overall results we've been given.
             foreach ($body->hits as $result) {
                 $searchResult = new SearchResult();
-                // TODO: add more info
                 $searchResult->source = $this->getSourceName();
                 $searchResult->id = $result->id;
                 $searchResult->title = $result->tags;
                 $searchResult->provider = $providerDetails;
 
-            if ($type === 'video') {
-                $searchResult->type = 'video';
-                $searchResult->thumbnail = $result->videos->tiny->url;
-                $searchResult->duration = $result->duration;
-                if (!empty($result->videos->large)) {
-                    $searchResult->download = $result->videos->large->url;
-                    $searchResult->width = $result->videos->large->width;
-                    $searchResult->height = $result->videos->large->height;
-                    $searchResult->fileSize = $result->videos->large->size;
-                } else if (!empty($result->videos->medium)) {
-                    $searchResult->download = $result->videos->medium->url;
-                    $searchResult->width = $result->videos->medium->width;
-                    $searchResult->height = $result->videos->medium->height;
-                    $searchResult->fileSize = $result->videos->medium->size;
-                } else if (!empty($result->videos->small)) {
-                    $searchResult->download = $result->videos->small->url;
-                    $searchResult->width = $result->videos->small->width;
-                    $searchResult->height = $result->videos->small->height;
-                    $searchResult->fileSize = $result->videos->small->size;
-                } else {
-                    $searchResult->download = $result->videos->tiny->url;
-                    $searchResult->width = $result->videos->tiny->width;
-                    $searchResult->height = $result->videos->tiny->height;
-                    $searchResult->fileSize = $result->videos->tiny->size;
-                }
+                if ($type === 'video') {
+                    $searchResult->type = 'video';
+                    $searchResult->thumbnail = $result->videos->tiny->url;
+                    $searchResult->duration = $result->duration;
+                    if (!empty($result->videos->large)) {
+                        $searchResult->download = $result->videos->large->url;
+                        $searchResult->width = $result->videos->large->width;
+                        $searchResult->height = $result->videos->large->height;
+                        $searchResult->fileSize = $result->videos->large->size;
+                    } else if (!empty($result->videos->medium)) {
+                        $searchResult->download = $result->videos->medium->url;
+                        $searchResult->width = $result->videos->medium->width;
+                        $searchResult->height = $result->videos->medium->height;
+                        $searchResult->fileSize = $result->videos->medium->size;
+                    } else if (!empty($result->videos->small)) {
+                        $searchResult->download = $result->videos->small->url;
+                        $searchResult->width = $result->videos->small->width;
+                        $searchResult->height = $result->videos->small->height;
+                        $searchResult->fileSize = $result->videos->small->size;
+                    } else {
+                        $searchResult->download = $result->videos->tiny->url;
+                        $searchResult->width = $result->videos->tiny->width;
+                        $searchResult->height = $result->videos->tiny->height;
+                        $searchResult->fileSize = $result->videos->tiny->size;
+                    }
 
-                if (!empty($result->picture_id ?? null)) {
-                    // Try the old way (at some point this stopped working and went to the thumbnail approach above
-                    $searchResult->videoThumbnailUrl = str_replace(
-                        'pictureId',
-                        $result->picture_id,
-                        'https://i.vimeocdn.com/video/pictureId_960x540.png'
-                    );
+                    if (!empty($result->picture_id ?? null)) {
+                        // Try the old way (at some point this stopped working and went to the thumbnail approach above
+                        $searchResult->videoThumbnailUrl = str_replace(
+                            'pictureId',
+                            $result->picture_id,
+                            'https://i.vimeocdn.com/video/pictureId_960x540.png'
+                        );
+                    } else {
+                        // Use the medium thumbnail if we have it, otherwise the tiny one.
+                        $searchResult->videoThumbnailUrl = $result->videos->medium->thumbnail
+                            ?? $result->videos->tiny->thumbnail;
+                    }
                 } else {
-                    // Use the medium thumbnail if we have it, otherwise the tiny one.
-                    $searchResult->videoThumbnailUrl = $result->videos->medium->thumbnail
-                        ?? $result->videos->tiny->thumbnail;
+                    $searchResult->type = 'image';
+                    $searchResult->thumbnail = $result->previewURL;
+                    $searchResult->download = $result->fullHDURL ?? $result->largeImageURL;
+                    $searchResult->width = $result->imageWidth;
+                    $searchResult->height = $result->imageHeight;
+                    $searchResult->fileSize = $result->imageSize;
                 }
-            } else {
-                $searchResult->type = 'image';
-                $searchResult->thumbnail = $result->previewURL;
-                $searchResult->download = $result->fullHDURL ?? $result->largeImageURL;
-                $searchResult->width = $result->imageWidth;
-                $searchResult->height = $result->imageHeight;
-                $searchResult->fileSize = $result->imageSize;
+                $event->addResult($searchResult);
             }
-            $event->addResult($searchResult);
         }
     }
 
