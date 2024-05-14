@@ -402,6 +402,7 @@ class Soap5 extends Soap4
                 $display->clientAddress = $this->getIp();
                 $display->xmrChannel = $xmrChannel;
                 $display->xmrPubKey = $xmrPubKey;
+                $display->folderId = $this->getConfig()->getSetting('DISPLAY_DEFAULT_FOLDER', 1);
 
                 if (!$display->isDisplaySlotAvailable()) {
                     $display->licensed = 0;

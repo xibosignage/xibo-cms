@@ -169,11 +169,11 @@ function XiboInitialise(scope, options) {
 
         // Append button to tabs or container (if we don't have tabs)
         if ($(this).find(".XiboFilter .nav-tabs").length > 0) {
-            if ($(this).find(".XiboFilter .nav-tabs .clear-filter-btn-container").length === 0) {
+            if ($(this).find(".XiboFilter .nav-tabs .clear-filter-btn-container").length === 0 && form.length > 0) {
                 $(this).find(".XiboFilter .nav-tabs").append(buttonTemplate);
             }
         } else {
-            if ($(this).find(".XiboFilter .clear-filter-btn-container").length === 0) {
+            if ($(this).find(".XiboFilter .clear-filter-btn-container").length === 0 && form.length > 0) {
                 $(this).find(".XiboFilter").prepend(buttonTemplate);
                 $(this).find(".XiboFilter .FilterDiv").addClass("pt-0");
             }

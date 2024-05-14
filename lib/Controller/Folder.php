@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -69,6 +69,34 @@ class Folder extends Base
      *  tags={"folder"},
      *  summary="Search Folders",
      *  description="Returns JSON representation of the Folder tree",
+     *  @SWG\Parameter(
+     *         name="folderId",
+     *         in="path",
+     *         description="Show usage details for the specified Folder Id",
+     *         type="integer",
+     *         required=false
+     *     ),
+     *  @SWG\Parameter(
+     *        name="gridView",
+     *        in="query",
+     *        description="Flag (0, 1), Show Folders in a standard grid response",
+     *        type="integer",
+     *        required=false
+     *     ),
+     *  @SWG\Parameter(
+     *       name="folderId",
+     *       in="query",
+     *       description="Use with gridView, Filter by Folder Id",
+     *       type="integer",
+     *       required=false
+     *    ),
+     *   @SWG\Parameter(
+     *       name="folderName",
+     *       in="query",
+     *       description="Use with gridView, Filter by Folder name",
+     *       type="string",
+     *       required=false
+     *    ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -86,8 +114,19 @@ class Folder extends Base
     public function grid(Request $request, Response $response, $folderId = null)
     {
         $params = $this->getSanitizer($request->getParams());
-        // Should we return information for a specific folder?
-        if ($folderId !== null) {
+        if ($params->getInt('gridView') === 1) {
+            $folders = $this->folderFactory->query($this->gridRenderSort($params), $this->gridRenderFilter([
+                'folderName' => $params->getString('folderName'),
+                'folderId' => $params->getInt('folderId'),
+            ], $params));
+
+            $this->getState()->template = 'grid';
+            $this->getState()->recordsTotal = $this->folderFactory->countLast();
+            $this->getState()->setData($folders);
+
+            return $this->render($request, $response);
+        } else if ($folderId !== null) {
+            // Should we return information for a specific folder?
             $folder = $this->folderFactory->getById($folderId);
 
             $this->decorateWithButtons($folder);
@@ -339,6 +378,14 @@ class Folder extends Base
                 __('Cannot remove Folder set as home Folder for a user'),
                 'folderId',
                 __('Change home Folder for Users using this Folder before deleting')
+            );
+        }
+
+        if ($folder->id == $this->getConfig()->getSetting('DISPLAY_DEFAULT_FOLDER')) {
+            throw new InvalidArgumentException(
+                __('Cannot remove Folder set as default Folder for new Displays'),
+                'folderId',
+                __('Change Default Folder for new Displays before deleting')
             );
         }
 

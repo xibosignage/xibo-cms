@@ -3178,24 +3178,24 @@ Viewer.prototype.updateMoveable = function(
   }
 
   // Get selected element
-  const $selectedElement = this.DOMObject.find('.selected');
-  const multipleSelected = ($selectedElement.length > 1);
+  const $selectedObject = this.DOMObject.find('.selected');
+  const multipleSelected = ($selectedObject.length > 1);
 
   // Update moveable if we have a selected element, and is not a drawerWidget
   // If we're selecting a widget with no edit permissions don't update moveable
   if (
     multipleSelected ||
     (
-      $selectedElement &&
-      $.contains(document, $selectedElement[0]) &&
-      !$selectedElement.hasClass('drawerWidget') &&
-      $selectedElement.hasClass('editable') &&
+      $selectedObject &&
+      $.contains(document, $selectedObject[0]) &&
+      !$selectedObject.hasClass('drawerWidget') &&
+      $selectedObject.hasClass('editable') &&
       lD.selectedObject.isEditable
     )
   ) {
-    if ($selectedElement.hasClass('designer-element-group')) {
+    if ($selectedObject.hasClass('designer-element-group')) {
       this.moveable.dragTarget =
-        $selectedElement.find('.group-select-overlay')[0];
+        $selectedObject.find('.group-select-overlay')[0];
     } else {
       this.moveable.dragTarget = undefined;
     }
@@ -3203,7 +3203,7 @@ Viewer.prototype.updateMoveable = function(
     // Set rotatable
     if (
       !multipleSelected &&
-      $selectedElement.data('canRotate')
+      $selectedObject.data('canRotate')
     ) {
       this.moveable.rotatable = true;
       this.moveable.throttleRotate = 1;
@@ -3216,7 +3216,7 @@ Viewer.prototype.updateMoveable = function(
       updateTarget &&
       this.moveableOptions.snapToElements
     ) {
-      const elementInGroup = $selectedElement.parent()
+      const elementInGroup = $selectedObject.parent()
         .is('.designer-element-group');
       let $elementsToSnapTo;
 
@@ -3233,8 +3233,8 @@ Viewer.prototype.updateMoveable = function(
         // If element is in a group, match with element
         // in the group and parent group
         $elementsToSnapTo = $.merge(
-          $selectedElement.siblings('.designer-element:not(.selected)'),
-          $selectedElement.parent('.designer-element-group:not(.selected)'),
+          $selectedObject.siblings('.designer-element:not(.selected)'),
+          $selectedObject.parent('.designer-element-group:not(.selected)'),
         );
       }
 
@@ -3248,9 +3248,9 @@ Viewer.prototype.updateMoveable = function(
     // Update target only when needed
     if (updateTarget) {
       if (multipleSelected) {
-        this.moveable.target = $selectedElement;
+        this.moveable.target = $selectedObject;
       } else {
-        this.moveable.target = $selectedElement[0];
+        this.moveable.target = $selectedObject[0];
 
         // Show snap controls
         this.DOMObject.parent().find('.snap-controls').show();
@@ -3263,6 +3263,9 @@ Viewer.prototype.updateMoveable = function(
     // Don't resize when selecting multiple items
     if (multipleSelected) {
       this.moveable.resizable = false;
+
+      // Update bottombar with the selected objects
+      lD.bottombar.render($selectedObject);
     } else {
       this.moveable.resizable = true;
     }
@@ -3973,6 +3976,46 @@ Viewer.prototype.editGroup = function(
     // Remove background color
     $(groupDOMObject).css('background-color', '');
   }
+};
+
+/**
+ * Get multiple selected objects
+ * @return {object} Object containing dimensions for the object
+ */
+Viewer.prototype.getMultipleSelected = function() {
+  const $selected = this.DOMObject.find('.selected');
+  let canBeDeleted = true;
+  let multiple = false;
+  if ($selected.length > 1) {
+    multiple = true;
+    // Check if all selected can be deleted
+    $selected.each((_i, obj) => {
+      const objData = $(obj).data();
+      const objId = $(obj).attr('id');
+      const auxObj = (
+        objData.type == 'element' ||
+        objData.type == 'element-group'
+      ) ?
+        lD.getObjectByTypeAndId(
+          objData.type,
+          objId,
+          'widget_' + objData.regionId + '_' + objData.widgetId,
+        ) :
+        lD.getObjectByTypeAndId(objData.type, objId);
+
+      // Can't be deleted, mark flag as false and break loop
+      if (auxObj.isDeletable === false) {
+        canBeDeleted = false;
+        return false;
+      }
+    });
+  }
+
+  return {
+    multiple: multiple,
+    objects: $selected,
+    canBeDeleted: canBeDeleted,
+  };
 };
 
 module.exports = Viewer;

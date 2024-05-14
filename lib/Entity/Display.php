@@ -1008,8 +1008,29 @@ class Display implements \JsonSerializable
         $displayGroup->tags = $this->tags;
 
         // this is added from xmds, by default new displays will end up in root folder.
-        $displayGroup->folderId = 1;
-        $displayGroup->permissionsFolderId = 1;
+        // Can be overridden per DISPLAY_DEFAULT_FOLDER setting
+        $folderId = $this->folderId ?? 1;
+
+        // If folderId is not set to Root Folder
+        // We need to check what permissionsFolderId should be set on the Display Group
+        if ($folderId !== 1) {
+            // just in case protect against no longer existing Folder.
+            try {
+                $folder = $this->folderFactory->getById($folderId, 0);
+
+                $displayGroup->folderId = $folder->getId();
+                $displayGroup->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
+            } catch (NotFoundException $e) {
+                $this->getLog()->error('Display Default Folder no longer exists');
+
+                // if the Folder from settings no longer exists, default to Root Folder.
+                $displayGroup->folderId = 1;
+                $displayGroup->permissionsFolderId = 1;
+            }
+        } else {
+            $displayGroup->folderId = 1;
+            $displayGroup->permissionsFolderId = 1;
+        }
 
         $displayGroup->setDisplaySpecificDisplay($this);
 

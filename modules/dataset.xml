@@ -41,6 +41,11 @@
         <property id="dataSetId" type="datasetSelector">
             <title>DataSet</title>
             <helpText>Please select the DataSet to use as a source of data for this template.</helpText>
+            <rule>
+                <test type="and">
+                    <condition type="required"></condition>
+                </test>
+            </rule>
         </property>
         <property type="header" variant="main">
             <title>Configuration</title>

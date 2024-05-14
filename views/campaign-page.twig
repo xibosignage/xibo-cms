@@ -349,8 +349,10 @@
             // Layout element template
             var layoutElementTemplate = Handlebars.compile($("#campaign-assign-layout").html());
 
-            // Convert our filter form tags inputs into actual tag inputs
-            $(dialog).find("#tags").tagsinput();
+            const layoutAssignFilter = $(dialog).find('.layoutAssignFilterOptions');
+
+            // Change input id of the tags filter on Layout assignment tab.
+            layoutAssignFilter.find('input#tags').attr('id', 'tagsFilter');
 
             // Hold a container for the layouts we have assigned already
             var container = $("#LayoutAssign");
@@ -484,22 +486,26 @@
             });
 
             // Bind the filter form
-            $(".layoutAssignFilterOptions").find("input, select").change(function() {
+            layoutAssignFilter.find('input, select').change(function() {
                 layoutTable.ajax.reload();
             });
 
           // Adjust the datatable width once we've activated the tab
           $(dialog).find('.nav-tabs a').on('shown.bs.tab', function(event) {
             if ($(event.target).attr('href') === '#tab-layouts') {
+              layoutAssignFilter.find('input, select').prop('disabled', false);
               layoutTable.columns.adjust().draw();
             }
           });
         }
 
         function campaignFormSubmit($form) {
-
             // Process layouts to add
             layoutAssignSubmit($form);
+
+            // disable inputs from layout assignment filter
+            // we do not want to submit them.
+            $('.layoutAssignFilterOptions').find('input, select').prop('disabled', true);
 
             // Submit form
             $form.submit();
