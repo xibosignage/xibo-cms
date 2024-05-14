@@ -1208,13 +1208,29 @@ lD.undoLastAction = function() {
  * Delete selected object
  */
 lD.deleteSelectedObject = function() {
+  // Check if we have multiple objects selected
+  const selectedInViewer = lD.viewer.getMultipleSelected();
+
   // Prevent delete if it doesn't have permissions
-  if (lD.selectedObject.isDeletable === false) {
+  if (
+    (
+      lD.selectedObject.isDeletable === false &&
+      selectedInViewer.multiple === false
+    ) ||
+    (
+      selectedInViewer.multiple === true &&
+      selectedInViewer.canBeDeleted == false
+    )
+  ) {
     return;
   }
 
-  if (lD.selectedObject.type === 'region') {
-    // Check if region or playlist has at least one object in it
+  if (selectedInViewer.multiple) {
+    // Delete multiple objects
+    lD.deleteMultipleObjects();
+  } else if (lD.selectedObject.type === 'region') {
+    // For now, we always delete the region
+    // Check if region or playlist and it has at least one object in it
     const needsConfirmationModal = (
       Object.values(lD.selectedObject.widgets).length > 0
     );
@@ -1493,6 +1509,142 @@ lD.deleteObject = function(
           .replace('%error%', errorMessage),
       );
     });
+  }
+};
+
+/**
+ * Delete multiple selected objects
+ */
+lD.deleteMultipleObjects = function() {
+  const deleteElementsOrGroupElements = function(
+    itemsArray,
+    type = 'elements',
+  ) {
+    let auxWidget = null;
+    itemsArray.each((idx, item) => {
+      const itemId = $(item).attr('id');
+      const widgetId = $(item).data('widgetId');
+      const widgetFullId =
+        'widget_' + $(item).data('regionId') +
+        '_' + $(item).data('widgetId');
+
+      // If it's the last element
+      // or the next element has another widget ID, save
+      const save = (
+        idx == itemsArray.length ||
+        (
+          idx < itemsArray.length &&
+          widgetId != $(itemsArray[idx + 1]).data('widgetId')
+        )
+      );
+
+      // Get parent widget if doesn't exist or we need to save
+      if (
+        !auxWidget ||
+        save
+      ) {
+        auxWidget = lD.getObjectByTypeAndId(
+          'widget',
+          widgetFullId,
+          'canvas',
+        );
+      }
+
+      // Delete element from widget
+      if (type === 'elements') {
+        auxWidget.removeElement(
+          itemId,
+          {
+            save: save,
+            reload: false,
+          },
+        );
+      } else {
+        auxWidget.removeElementGroup(
+          itemId,
+          {
+            save: save,
+            reload: false,
+          },
+        );
+      }
+    });
+  };
+
+  // First delete elements if they exist
+  const $elementsToBeDeleted =
+    lD.viewer.DOMObject.find('.selected.designer-element').sort((a, b) => {
+      return Number($(b).data('widgetId')) - Number($(a).data('widgetId'));
+    });
+
+  if ($elementsToBeDeleted.length > 0) {
+    deleteElementsOrGroupElements($elementsToBeDeleted);
+  }
+
+  // Then delete element groups
+  const $elementGroupsToBeDeleted =
+    lD.viewer.DOMObject.find('.selected.designer-element-group')
+      .sort((a, b) => {
+        return (
+          Number($(b).data('widgetId')) -
+          Number($(a).data('widgetId'))
+        );
+      });
+
+  if ($elementGroupsToBeDeleted.length > 0) {
+    deleteElementsOrGroupElements(
+      $elementGroupsToBeDeleted,
+      'elementGroups',
+    );
+  }
+
+  // Finally, delete regions one by one
+  const $regionsToBeDeleted =
+    lD.viewer.DOMObject.find('.selected.designer-region');
+
+  if ($regionsToBeDeleted.length > 0) {
+    let deletedIndex = 0;
+
+    lD.common.showLoadingScreen('deleteMultiObject');
+
+    // Delete all selected objects
+    const deleteNext = function() {
+      const $item = $($regionsToBeDeleted[deletedIndex]);
+
+      const objId = $item.data('regionId');
+      const objType = $item.data('type');
+
+      lD.layout.deleteObject(
+        objType,
+        objId,
+        null,
+        false,
+      ).then((_res) => {
+        deletedIndex++;
+
+        if (deletedIndex == $regionsToBeDeleted.length) {
+          // Stop deleting and deselect all elements
+          lD.viewer.selectObject();
+
+          // Hide loader
+          lD.common.hideLoadingScreen('deleteMultiObject');
+
+          // Reload data and select element when data reloads
+          lD.reloadData(lD.layout,
+            {
+              refreshEditor: true,
+            });
+        } else {
+          deleteNext();
+        }
+      });
+    };
+
+    // Start deleting
+    deleteNext();
+  } else {
+    // If we're not deleting any region, deselect elements now
+    lD.viewer.selectObject();
   }
 };
 
@@ -3812,136 +3964,7 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
     const target = $(ev.currentTarget);
 
     if (target.data('action') == 'Delete') {
-      const deleteElementsOrGroupElements = function(
-        itemsArray,
-        type = 'elements',
-      ) {
-        let auxWidget = null;
-        itemsArray.each((idx, item) => {
-          const itemId = $(item).attr('id');
-          const widgetId = $(item).data('widgetId');
-          const widgetFullId =
-            'widget_' + $(item).data('regionId') +
-            '_' + $(item).data('widgetId');
-
-          // If it's the last element
-          // or the next element has another widget ID, save
-          const save = (
-            idx == itemsArray.length ||
-            (
-              idx < itemsArray.length &&
-              widgetId != $(itemsArray[idx + 1]).data('widgetId')
-            )
-          );
-
-          // Get parent widget if doesn't exist or we need to save
-          if (
-            !auxWidget ||
-            save
-          ) {
-            auxWidget = lD.getObjectByTypeAndId(
-              'widget',
-              widgetFullId,
-              'canvas',
-            );
-          }
-
-          // Delete element from widget
-          if (type === 'elements') {
-            auxWidget.removeElement(
-              itemId,
-              {
-                save: save,
-                reload: false,
-              },
-            );
-          } else {
-            auxWidget.removeElementGroup(
-              itemId,
-              {
-                save: save,
-                reload: false,
-              },
-            );
-          }
-        });
-      };
-
-      // First delete elements if they exist
-      const $elementsToBeDeleted =
-        lD.viewer.DOMObject.find('.selected.designer-element').sort((a, b) => {
-          return Number($(b).data('widgetId')) - Number($(a).data('widgetId'));
-        });
-
-      if ($elementsToBeDeleted.length > 0) {
-        deleteElementsOrGroupElements($elementsToBeDeleted);
-      }
-
-      // Then delete element groups
-      const $elementGroupsToBeDeleted =
-        lD.viewer.DOMObject.find('.selected.designer-element-group')
-          .sort((a, b) => {
-            return (
-              Number($(b).data('widgetId')) -
-              Number($(a).data('widgetId'))
-            );
-          });
-
-      if ($elementGroupsToBeDeleted.length > 0) {
-        deleteElementsOrGroupElements(
-          $elementGroupsToBeDeleted,
-          'elementGroups',
-        );
-      }
-
-      // Finally, delete regions one by one
-      const $regionsToBeDeleted =
-        lD.viewer.DOMObject.find('.selected.designer-region');
-
-      if ($regionsToBeDeleted.length > 0) {
-        let deletedIndex = 0;
-
-        lD.common.showLoadingScreen();
-
-        // Delete all selected objects
-        const deleteNext = function() {
-          const $item = $($regionsToBeDeleted[deletedIndex]);
-
-          const objId = $item.data('regionId');
-          const objType = $item.data('type');
-
-          lD.layout.deleteObject(
-            objType,
-            objId,
-            null,
-            false,
-          ).then((_res) => {
-            deletedIndex++;
-
-            if (deletedIndex == $regionsToBeDeleted.length) {
-              // Stop deleting and deselect all elements
-              lD.viewer.selectObject();
-
-              // Hide loader
-              lD.common.hideLoadingScreen();
-
-              // Reload data and select element when data reloads
-              lD.reloadData(lD.layout,
-                {
-                  refreshEditor: true,
-                });
-            } else {
-              deleteNext();
-            }
-          });
-        };
-
-        // Start deleting
-        deleteNext();
-      } else {
-        // If we're not deleting any region, deselect elements now
-        lD.viewer.selectObject();
-      }
+      lD.deleteMultipleObjects();
     } else if (target.data('action') == 'Group') {
       // Group elements
       const $elementsToBeGrouped =

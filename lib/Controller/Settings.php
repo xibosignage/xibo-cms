@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -429,6 +429,20 @@ class Settings extends Base
         if ($this->getConfig()->isSettingEditable('DISPLAY_AUTO_AUTH')) {
             $this->handleChangedSettings('DISPLAY_AUTO_AUTH', $this->getConfig()->getSetting('DISPLAY_AUTO_AUTH'), $sanitizedParams->getCheckbox('DISPLAY_AUTO_AUTH'), $changedSettings);
             $this->getConfig()->changeSetting('DISPLAY_AUTO_AUTH', $sanitizedParams->getCheckbox('DISPLAY_AUTO_AUTH'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('DISPLAY_DEFAULT_FOLDER')) {
+            $this->handleChangedSettings(
+                'DISPLAY_DEFAULT_FOLDER',
+                $this->getConfig()->getSetting('DISPLAY_DEFAULT_FOLDER'),
+                $sanitizedParams->getInt('DISPLAY_DEFAULT_FOLDER'),
+                $changedSettings
+            );
+            $this->getConfig()->changeSetting(
+                'DISPLAY_DEFAULT_FOLDER',
+                $sanitizedParams->getInt('DISPLAY_DEFAULT_FOLDER'),
+                1
+            );
         }
 
         if ($this->getConfig()->isSettingEditable('HELP_BASE')) {
