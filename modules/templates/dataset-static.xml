@@ -167,9 +167,14 @@ if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !=
 
 // Columns to be shown in the table
 var columnIndex = JSON.parse(properties.columns);
-var columns = (meta && meta.mapping) ? meta.mapping.filter(function (column) {
-    return column.dataSetColumnId !== '' && columnIndex.indexOf(column.dataSetColumnId) !== -1;
-}) : [];
+var columns = [];
+if (meta && meta.mapping) {
+    meta.mapping.forEach((column) => {
+        if (column.dataSetColumnId !== '' && columnIndex.indexOf(column.dataSetColumnId) !== -1) {
+            columns[columnIndex.indexOf(column.dataSetColumnId)] = column;
+        }
+    });
+}
 
 // Get table element
 var $datasetTableContainer = $(target).find('#DataSetTableContainer');
@@ -713,9 +718,14 @@ if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !=
 
 // Columns to be shown in the table
 var columnIndex = JSON.parse(properties.columns);
-var columns = (meta && meta.mapping) ? meta.mapping.filter(function (column) {
-    return column.dataSetColumnId !== '' && columnIndex.indexOf(column.dataSetColumnId) !== -1;
-}) : [];
+var columns = [];
+if (meta && meta.mapping) {
+    meta.mapping.forEach((column) => {
+        if (column.dataSetColumnId !== '' && columnIndex.indexOf(column.dataSetColumnId) !== -1) {
+            columns[columnIndex.indexOf(column.dataSetColumnId)] = column;
+        }
+    });
+}
 
 // Get table element
 var $datasetTableContainer = $(target).find('.DataSetTableContainer');
@@ -995,9 +1005,14 @@ if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !=
 
 // Columns to be shown in the table
 var columnIndex = JSON.parse(properties.columns);
-var columns = (meta && meta.mapping) ? meta.mapping.filter(function (column) {
-    return column.dataSetColumnId !== '' && columnIndex.indexOf(column.dataSetColumnId) !== -1;
-}) : [];
+var columns = [];
+if (meta && meta.mapping) {
+    meta.mapping.forEach((column) => {
+        if (column.dataSetColumnId !== '' && columnIndex.indexOf(column.dataSetColumnId) !== -1) {
+            columns[columnIndex.indexOf(column.dataSetColumnId)] = column;
+        }
+    });
+}
 
 // Get table element
 var $datasetTableContainer = $(target).find('.DataSetTableContainer');
@@ -1268,9 +1283,14 @@ if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !=
 
 // Columns to be shown in the table
 var columnIndex = JSON.parse(properties.columns);
-var columns = (meta && meta.mapping) ? meta.mapping.filter(function (column) {
-    return column.dataSetColumnId !== '' && columnIndex.indexOf(column.dataSetColumnId) !== -1;
-}) : [];
+var columns = [];
+if (meta && meta.mapping) {
+    meta.mapping.forEach((column) => {
+        if (column.dataSetColumnId !== '' && columnIndex.indexOf(column.dataSetColumnId) !== -1) {
+            columns[columnIndex.indexOf(column.dataSetColumnId)] = column;
+        }
+    });
+}
 
 // Get table element
 var $datasetTableContainer = $(target).find('.DataSetTableContainer');
@@ -1539,9 +1559,14 @@ if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !=
 
 // Columns to be shown in the table
 var columnIndex = JSON.parse(properties.columns);
-var columns = (meta && meta.mapping) ? meta.mapping.filter(function (column) {
-    return column.dataSetColumnId !== '' && columnIndex.indexOf(column.dataSetColumnId) !== -1;
-}) : [];
+var columns = [];
+if (meta && meta.mapping) {
+    meta.mapping.forEach((column) => {
+        if (column.dataSetColumnId !== '' && columnIndex.indexOf(column.dataSetColumnId) !== -1) {
+            columns[columnIndex.indexOf(column.dataSetColumnId)] = column;
+        }
+    });
+}
 
 // Get table element
 var $datasetTableContainer = $(target).find('.DataSetTableContainer');
@@ -1808,9 +1833,14 @@ if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !=
 
 // Columns to be shown in the table
 var columnIndex = JSON.parse(properties.columns);
-var columns = (meta && meta.mapping) ? meta.mapping.filter(function (column) {
-    return column.dataSetColumnId !== '' && columnIndex.indexOf(column.dataSetColumnId) !== -1;
-}) : [];
+var columns = [];
+if (meta && meta.mapping) {
+    meta.mapping.forEach((column) => {
+        if (column.dataSetColumnId !== '' && columnIndex.indexOf(column.dataSetColumnId) !== -1) {
+            columns[columnIndex.indexOf(column.dataSetColumnId)] = column;
+        }
+    });
+}
 
 // Get table element
 var $datasetTableContainer = $(target).find('.DataSetTableContainer');
@@ -2075,9 +2105,14 @@ if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !=
 
 // Columns to be shown in the table
 var columnIndex = JSON.parse(properties.columns);
-var columns = (meta && meta.mapping) ? meta.mapping.filter(function (column) {
-    return column.dataSetColumnId !== '' && columnIndex.indexOf(column.dataSetColumnId) !== -1;
-}) : [];
+var columns = [];
+if (meta && meta.mapping) {
+    meta.mapping.forEach((column) => {
+        if (column.dataSetColumnId !== '' && columnIndex.indexOf(column.dataSetColumnId) !== -1) {
+            columns[columnIndex.indexOf(column.dataSetColumnId)] = column;
+        }
+    });
+}
 
 // Get table element
 var $datasetTableContainer = $(target).find('.DataSetTableContainer');
@@ -2337,9 +2372,14 @@ if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !=
 
 // Columns to be shown in the table
 var columnIndex = JSON.parse(properties.columns);
-var columns = (meta && meta.mapping) ? meta.mapping.filter(function (column) {
-    return column.dataSetColumnId !== '' && columnIndex.indexOf(column.dataSetColumnId) !== -1;
-}) : [];
+var columns = [];
+if (meta && meta.mapping) {
+    meta.mapping.forEach((column) => {
+        if (column.dataSetColumnId !== '' && columnIndex.indexOf(column.dataSetColumnId) !== -1) {
+            columns[columnIndex.indexOf(column.dataSetColumnId)] = column;
+        }
+    });
+}
 
 // Get table element
 var $datasetTableContainer = $(target).find('.DataSetTableContainer');
@@ -2641,9 +2681,14 @@ if (items.length <= 0 && properties.noDataMessage && properties.noDataMessage !=
 
 // Columns to be shown in the table
 var columnIndex = JSON.parse(properties.columns);
-var columns = (meta && meta.mapping) ? meta.mapping.filter(function (column) {
-    return column.dataSetColumnId !== '' && columnIndex.indexOf(column.dataSetColumnId) !== -1;
-}) : [];
+var columns = [];
+if (meta && meta.mapping) {
+    meta.mapping.forEach((column) => {
+        if (column.dataSetColumnId !== '' && columnIndex.indexOf(column.dataSetColumnId) !== -1) {
+            columns[columnIndex.indexOf(column.dataSetColumnId)] = column;
+        }
+    });
+}
 
 // Get table element
 var $datasetTableContainer = $(target).find('.DataSetTableContainer');
