@@ -441,12 +441,13 @@ $(target).find('.date').each(function(_idx, dateEl){
                     </test>
                 </visibility>
             </property>
+            <property id="assetId" type="hidden"></property>
         </properties>
         <stencil>
             <hbs><![CDATA[
 <div class="global-elements-image img-container" style="width:100%; height: 100%; overflow: hidden; position: relative;
     {{#if roundBorder}}border-radius: {{borderRadius}}px;{{/if}}">
-    <img src="{{{url}}}" style="
+    <img src="{{#if assetId}}[[assetId={{assetId}}]]{{else}}{{{url}}}{{/if}}" style="
         width:100%; height: 100%;
         object-fit: {{objectFit}};
         object-position: {{alignId}} {{valignId}};
