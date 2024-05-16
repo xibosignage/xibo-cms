@@ -40,11 +40,6 @@
                 <helpText>The selected effect works best with a background colour. Optionally add one here.</helpText>
                 <default></default>
             </property>
-            <property id="dateFormat" type="text" variant="dateFormat">
-                <title>Date Format</title>
-                <helpText>The format to apply to all dates returned by the Widget.</helpText>
-                <default>#DATE_FORMAT#</default>
-            </property>
             <property id="maxItemsPerPage" type="number">
                 <title>Items per Page</title>
                 <helpText>This is the intended number of items on each page.</helpText>

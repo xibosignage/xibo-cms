@@ -392,6 +392,12 @@ div.message-container {
             ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
+if (properties.dateFormat) {
+    $(target).find('.date > span').each((_idx, el)=> {
+        $(el).html(moment($(el).html()).format(properties.dateFormat));
+    });
+}
+
 $(target).xiboLayoutScaler(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
 $(target).find('img').xiboImageRender(properties);
@@ -629,6 +635,12 @@ div.message-container {
             ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
+if (properties.dateFormat) {
+    $(target).find('.date > span').each((_idx, el)=> {
+        $(el).html(moment($(el).html()).format(properties.dateFormat));
+    });
+}
+
 $(target).xiboLayoutScaler(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
 $(target).find('img').xiboImageRender(properties);
@@ -652,11 +664,6 @@ $(target).xiboLayoutAnimate(properties);
         <properties>
             <property id="resultContent" type="hidden">
                 <default>1</default>
-            </property>
-            <property id="dateFormat" type="text" variant="dateFormat">
-                <title>Date Format</title>
-                <helpText>The format to apply to all dates returned by the Widget.</helpText>
-                <default>#DATE_FORMAT#</default>
             </property>
             <property id="itemsPerPage" type="number">
                 <title>Items Per Page</title>
@@ -791,11 +798,6 @@ $(target).xiboLayoutAnimate(properties);
         <properties>
             <property id="resultContent" type="hidden">
                 <default>1</default>
-            </property>
-            <property id="dateFormat" type="text" variant="dateFormat">
-                <title>Date Format</title>
-                <helpText>The format to apply to all dates returned by the Widget.</helpText>
-                <default>#DATE_FORMAT#</default>
             </property>
             <property id="itemsPerPage" type="number">
                 <title>Items Per Page</title>
@@ -944,11 +946,6 @@ $(target).xiboLayoutAnimate(properties);
         <properties>
             <property id="resultContent" type="hidden">
                 <default>1</default>
-            </property>
-            <property id="dateFormat" type="text" variant="dateFormat">
-                <title>Date Format</title>
-                <helpText>The format to apply to all dates returned by the Widget.</helpText>
-                <default>#DATE_FORMAT#</default>
             </property>
             <property id="itemsPerPage" type="number">
                 <title>Items Per Page</title>
@@ -1290,6 +1287,12 @@ body {
             ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
+if (properties.dateFormat) {
+    $(target).find('.social-date').each((_idx, el)=> {
+        $(el).html(moment($(el).html()).format(properties.dateFormat));
+    });
+}
+
 $(target).xiboLayoutScaler(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
 $(target).find('img').xiboImageRender(properties);
@@ -1520,6 +1523,12 @@ body {
             ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
+if (properties.dateFormat) {
+    $(target).find('.social-date').each((_idx, el)=> {
+        $(el).html(moment($(el).html()).format(properties.dateFormat));
+    });
+}
+
 $(target).xiboLayoutScaler(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
 $(target).find('img').xiboImageRender(properties);
@@ -1543,11 +1552,6 @@ $(target).xiboLayoutAnimate(properties);
         <properties>
             <property id="resultContent" type="hidden">
                 <default>1</default>
-            </property>
-            <property id="dateFormat" type="text" variant="dateFormat">
-                <title>Date Format</title>
-                <helpText>The format to apply to all dates returned by the Widget.</helpText>
-                <default>#DATE_FORMAT#</default>
             </property>
             <property id="itemsPerPage" type="number">
                 <title>Items Per Page</title>
@@ -1785,11 +1789,6 @@ $(target).xiboLayoutAnimate(properties);
             <property id="resultContent" type="hidden">
                 <default>1</default>
             </property>
-            <property id="dateFormat" type="text" variant="dateFormat">
-                <title>Date Format</title>
-                <helpText>The format to apply to all dates returned by the Widget.</helpText>
-                <default>#DATE_FORMAT#</default>
-            </property>
             <property id="itemsPerPage" type="number">
                 <title>Items Per Page</title>
                 <helpText>The number of items to show per page (default = 5).</helpText>
@@ -2011,11 +2010,6 @@ $(target).xiboLayoutAnimate(properties);
         <properties>
             <property id="resultContent" type="hidden">
                 <default>2</default>
-            </property>
-            <property id="dateFormat" type="text" variant="dateFormat">
-                <title>Date Format</title>
-                <helpText>The format to apply to all dates returned by the Widget.</helpText>
-                <default>#DATE_FORMAT#</default>
             </property>
             <property id="itemsPerPage" type="number">
                 <title>Items Per Page</title>
@@ -2243,11 +2237,6 @@ $(target).xiboLayoutAnimate(properties);
         <properties>
             <property id="resultContent" type="hidden">
                 <default>1</default>
-            </property>
-            <property id="dateFormat" type="text" variant="dateFormat">
-                <title>Date Format</title>
-                <helpText>The format to apply to all dates returned by the Widget.</helpText>
-                <default>#DATE_FORMAT#</default>
             </property>
             <property id="itemsPerPage" type="number">
                 <title>Items Per Page</title>
@@ -2706,6 +2695,12 @@ body {
             ]]></style>
         </stencil>
         <onTemplateRender><![CDATA[
+if (properties.dateFormat) {
+    $(target).find('.date').each((_idx, el)=> {
+        $(el).html(moment($(el).html()).format(properties.dateFormat));
+    });
+}
+
 $(target).xiboLayoutScaler(properties);
 $(target).xiboTextRender(properties, $(target).find('#content > .main-container'));
 $(target).find('img').xiboImageRender(properties);
@@ -3042,6 +3037,11 @@ $(target).xiboLayoutScaler(properties);
 
 // Get an array of items from the templates generated
 var itemsHTML = $(target).find('.metro-cell-template').map(function(_k, el) {
+    if (properties.dateFormat) {
+        var date = $(el).find('.post-userData > small').html();
+        $(el).find('.post-userData > small').html(moment(date).format(properties.dateFormat));
+    }
+
     return $(el).html();
 });
 
