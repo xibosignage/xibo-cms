@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -229,6 +229,7 @@ class OpenWeatherMapConnector implements ConnectorInterface
         $this->currentDay->temperatureUnit = $unit['tempUnit'] ?: 'C';
         $this->currentDay->windSpeedUnit = $unit['windUnit'] ?: 'KPH';
         $this->currentDay->visibilityDistanceUnit = $unit['visibilityUnit'] ?: 'km';
+        $this->currentDay->location = $data['name'] ?? '';
         $this->processItemIntoDay($this->currentDay, $data['current'], $units, true);
 
         $countForecast = 0;
@@ -243,6 +244,7 @@ class OpenWeatherMapConnector implements ConnectorInterface
             $day->temperatureUnit = $this->currentDay->temperatureUnit;
             $day->windSpeedUnit = $this->currentDay->windSpeedUnit;
             $day->visibilityDistanceUnit = $this->currentDay->visibilityDistanceUnit;
+            $day->location = $this->currentDay->location;
             $this->processItemIntoDay($day, $dayItem, $units);
 
             $forecasts[] = $day;

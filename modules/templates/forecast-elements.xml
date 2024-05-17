@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2023 Xibo Signage Ltd
+  ~ Copyright (C) 2024 Xibo Signage Ltd
   ~
   ~ Xibo - Digital Signage - https://xibosignage.com
   ~
@@ -27,6 +27,17 @@
         <dataType>forecast</dataType>
         <canRotate>true</canRotate>
         <icon>fa fa-font</icon>
+        <startWidth>360</startWidth>
+        <startHeight>100</startHeight>
+    </template>
+    <template>
+        <id>weather_location</id>
+        <extends override="text" with="data.location">text</extends>
+        <title>Location</title>
+        <type>element</type>
+        <dataType>forecast</dataType>
+        <canRotate>true</canRotate>
+        <icon>fa fa-map</icon>
         <startWidth>360</startWidth>
         <startHeight>100</startHeight>
     </template>

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -63,6 +63,7 @@ class Forecast implements \JsonSerializable, DataTypeInterface
     public $uvIndex;
     public $visibility;
     public $ozone;
+    public $location;
 
     public $temperatureUnit;
     public $windSpeedUnit;
@@ -105,6 +106,7 @@ class Forecast implements \JsonSerializable, DataTypeInterface
             'uvIndex' => $this->uvIndex,
             'visibility' => $this->visibility,
             'ozone' => $this->ozone,
+            'location' => $this->location,
             'temperatureUnit' => $this->temperatureUnit,
             'windSpeedUnit' => $this->windSpeedUnit,
             'visibilityDistanceUnit' => $this->visibilityDistanceUnit
@@ -150,6 +152,7 @@ class Forecast implements \JsonSerializable, DataTypeInterface
             ->addField('uvIndex', 'Uv Index', 'number')
             ->addField('visibility', 'Visibility', 'number')
             ->addField('ozone', 'Ozone', 'number')
+            ->addField('location', 'Location', 'text')
             ->addField('temperatureUnit', 'Temperature Unit', 'text')
             ->addField('windSpeedUnit', 'WindSpeed Unit', 'text')
             ->addField('visibilityDistanceUnit', 'VisibilityDistance Unit', 'text');
