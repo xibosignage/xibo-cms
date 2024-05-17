@@ -1649,6 +1649,107 @@ lD.deleteMultipleObjects = function() {
 };
 
 /**
+ * Duplicate selected object
+ */
+lD.duplicateSelectedObject = function() {
+  // Only duplicate for now if it's an element or element group
+  if (
+    lD.selectedObject.type === 'element' ||
+    lD.selectedObject.type === 'element-group'
+  ) {
+    lD.duplicateObject(lD.selectedObject);
+  }
+};
+
+/**
+ * Duplicate object ( element or element group )
+ * @param {object} objectToDuplicate
+ */
+lD.duplicateObject = function(objectToDuplicate) {
+  // For now, use an offset value to position the new element
+  const offsetMove = 20;
+
+  // Get widget
+  const objectParentWidget =
+    lD.getObjectByTypeAndId('widget', objectToDuplicate.widgetId, 'canvas');
+
+  // Element array to add
+  const elementArray = [];
+
+  const createNewElementFromCopy = function(element, groupId = null) {
+    // Create temporary copy element
+    const elementCopy = Object.assign(
+      {},
+      element,
+    );
+
+    // Set type as element type before adding
+    elementCopy.type = elementCopy.elementType;
+
+    // Get new random id
+    elementCopy.elementId =
+      'element_' + element.id + '_' +
+      Math.floor(Math.random() * 1000000);
+
+    // If it's in a group
+    if (groupId) {
+      // Add group id
+      elementCopy.groupId = groupId;
+
+      // If group doesn't exist, create it and add it to the elementGroup
+      if (!objectParentWidget[groupId]) {
+        // Create copy of previous group
+        elementCopy.group = Object.assign(
+          {},
+          elementCopy.group,
+        );
+
+        // Addign new id and position
+        elementCopy.group.id = groupId;
+        elementCopy.group.top += offsetMove;
+        elementCopy.group.left += offsetMove;
+
+        // Add group to widget element groups
+        objectParentWidget[groupId] = elementCopy.group;
+
+        // Clear elements from group and add new
+        objectParentWidget[groupId] = {};
+        objectParentWidget[groupId][elementCopy.elementId] = elementCopy;
+      } else {
+        // Assign group to new element
+        elementCopy.group = objectParentWidget[groupId];
+        objectParentWidget[groupId][elementCopy.elementId] = elementCopy;
+      }
+    }
+
+    // Also add offset to each element, even in groups
+    // the top/left position is globally based in the editor
+    elementCopy.top += offsetMove;
+    elementCopy.left += offsetMove;
+
+    return elementCopy;
+  };
+
+  if (objectToDuplicate.type == 'element') {
+    elementArray.push(createNewElementFromCopy(objectToDuplicate));
+  } else if (objectToDuplicate.type == 'element-group') {
+    // Generate a random group id
+    const groupId = 'group_' + Math.floor(Math.random() * 1000000);
+
+    Object.values(objectToDuplicate.elements).forEach((el) => {
+      elementArray.push(createNewElementFromCopy(el, groupId));
+    });
+  }
+
+  // Add element to widget
+  lD.addElementsToWidget(
+    elementArray,
+    objectParentWidget,
+    (objectToDuplicate.type == 'element-group'),
+  );
+};
+
+/**
  * Add action to take after dropping a draggable item
  * @param {object} droppable - Target drop object
  * @param {object} draggable - Dragged object
@@ -3576,87 +3677,7 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
         },
       );
     } else if (target.data('action') == 'Copy') {
-      // For now, use an offset value to position the new element
-      const offsetMove = 20;
-
-      // Get widget
-      const elementWidget =
-        lD.getObjectByTypeAndId('widget', objAuxId, 'canvas');
-
-      // Element array to add
-      const elementArray = [];
-
-      const createNewElementFromCopy = function(element, groupId = null) {
-        // Create temporary copy element
-        const elementCopy = Object.assign(
-          {},
-          element,
-        );
-
-        // Set type as element type before adding
-        elementCopy.type = elementCopy.elementType;
-
-        // Get new random id
-        elementCopy.elementId =
-          'element_' + element.id + '_' +
-          Math.floor(Math.random() * 1000000);
-
-        // If it's in a group
-        if (groupId) {
-          // Add group id
-          elementCopy.groupId = groupId;
-
-          // If group doesn't exist, create it and add it to the elementGroup
-          if (!elementWidget[groupId]) {
-            // Create copy of previous group
-            elementCopy.group = Object.assign(
-              {},
-              elementCopy.group,
-            );
-
-            // Addign new id and position
-            elementCopy.group.id = groupId;
-            elementCopy.group.top += offsetMove;
-            elementCopy.group.left += offsetMove;
-
-            // Add group to widget element groups
-            elementWidget[groupId] = elementCopy.group;
-
-            // Clear elements from group and add new
-            elementWidget[groupId] = {};
-            elementWidget[groupId][elementCopy.elementId] = elementCopy;
-          } else {
-            // Assign group to new element
-            elementCopy.group = elementWidget[groupId];
-            elementWidget[groupId][elementCopy.elementId] = elementCopy;
-          }
-        }
-
-        // Also add offset to each element, even in groups
-        // the top/left position is globally based in the editor
-        elementCopy.top += offsetMove;
-        elementCopy.left += offsetMove;
-
-        return elementCopy;
-      };
-
-      if (layoutObject.type == 'element') {
-        elementArray.push(createNewElementFromCopy(layoutObject));
-      } else if (layoutObject.type == 'element-group') {
-        // Generate a random group id
-        const groupId = 'group_' + Math.floor(Math.random() * 1000000);
-
-        Object.values(layoutObject.elements).forEach((el) => {
-          elementArray.push(createNewElementFromCopy(el, groupId));
-        });
-      }
-
-      // Add element to widget
-      lD.addElementsToWidget(
-        elementArray,
-        elementWidget,
-        (layoutObject.type == 'element-group'),
-      );
+      lD.duplicateObject(layoutObject);
     } else if (target.data('action') == 'editPlaylist') {
       // Open playlist editor
       lD.openPlaylistEditor(layoutObject.playlists.playlistId, layoutObject);
@@ -5703,22 +5724,39 @@ lD.handleInputs = function() {
   // Handle keyboard keys
   $('body').off('keydown.editor')
     .on('keydown.editor', function(handler) {
+      const controlOrCommandPressed = (
+        handler.ctrlKey ||
+        handler.metaKey
+      );
+
       if ($(handler.target).is($('body'))) {
-        // Delete
+        // Delete ( Del or Backspace )
         if (
-          handler.key == 'Delete' &&
+          (
+            handler.key == 'Delete' ||
+            handler.key == 'Backspace'
+          ) &&
           allowInputs
         ) {
           lD.deleteSelectedObject();
         }
 
-        // Undo
+        // Undo ( Ctrl + Z )
         if (
-          handler.key == 'z' &&
-          handler.ctrlKey &&
+          handler.code == 'KeyZ' &&
+          controlOrCommandPressed &&
           allowInputs
         ) {
           lD.undoLastAction();
+        }
+
+        // Duplicate selected object ( Shift + D )
+        if (
+          handler.code == 'KeyD' &&
+          handler.shiftKey &&
+          allowInputs
+        ) {
+          lD.duplicateSelectedObject();
         }
       }
     });
