@@ -1371,7 +1371,7 @@ lD.deleteObject = function(
   };
 
   // Show confirmation modal if needed
-  if (showConfirmationModal) {
+  if (showConfirmationModal && lD.common.deleteConfirmation) {
     createDeleteModal();
     return;
   }
@@ -1514,8 +1514,9 @@ lD.deleteObject = function(
 
 /**
  * Delete multiple selected objects
+ * @param {boolean=} showConfirmationModal
  */
-lD.deleteMultipleObjects = function() {
+lD.deleteMultipleObjects = function(showConfirmationModal = true) {
   const deleteElementsOrGroupElements = function(
     itemsArray,
     type = 'elements',
@@ -1570,6 +1571,37 @@ lD.deleteMultipleObjects = function() {
       }
     });
   };
+
+  // Create modal before delete elements
+  const createDeleteMultipleModal = function() {
+    bootbox.hideAll();
+
+    bootbox.dialog({
+      title: deleteModalTrans.multiple.title,
+      message: deleteModalTrans.multiple.message,
+      size: 'large',
+      buttons: {
+        cancel: {
+          label: editorsTrans.no,
+          className: 'btn-white btn-bb-cancel',
+        },
+        confirm: {
+          label: editorsTrans.yes,
+          className: 'btn-danger btn-bb-confirm',
+          callback: function() {
+            // Delete
+            lD.deleteMultipleObjects(false);
+          },
+        },
+      },
+    }).attr('data-test', 'deleteMultipleObjectModal');
+  };
+
+  // Show confirmation modal
+  if (showConfirmationModal && lD.common.deleteConfirmation) {
+    createDeleteMultipleModal();
+    return;
+  }
 
   // First delete elements if they exist
   const $elementsToBeDeleted =

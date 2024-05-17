@@ -800,6 +800,11 @@ Toolbar.prototype.loadPrefs = function() {
         (loadedData.displayTooltips == 1 ||
           loadedData.displayTooltips == undefined);
 
+      // Show delete confirmation modals
+      app.common.deleteConfirmation =
+        (loadedData.deleteConfirmation == 1 ||
+          loadedData.deleteConfirmation == undefined);
+
       // Toolbar level
       self.level = loadedData.level ?? 2;
 
@@ -859,6 +864,7 @@ Toolbar.prototype.savePrefs = _.debounce(function(clearPrefs = false) {
   }
 
   let displayTooltips = (app.common.displayTooltips) ? 1 : 0;
+  let deleteConfirmation = (app.common.deleteConfirmation) ? 1 : 0;
   let level = self.level;
   let favouriteModules = [];
   const filters = {};
@@ -877,6 +883,7 @@ Toolbar.prototype.savePrefs = _.debounce(function(clearPrefs = false) {
     openedMenu = -1;
     openedSubMenu = -1;
     displayTooltips = 1;
+    deleteConfirmation = 1;
     level = 2;
   } else {
     // Save favourite modules
@@ -915,6 +922,7 @@ Toolbar.prototype.savePrefs = _.debounce(function(clearPrefs = false) {
           openedMenu: openedMenu,
           openedSubMenu: openedSubMenu,
           displayTooltips: displayTooltips,
+          deleteConfirmation: deleteConfirmation,
           favouriteModules: favouriteModules,
           level: level,
         }),
