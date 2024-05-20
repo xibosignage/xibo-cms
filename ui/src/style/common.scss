@@ -87,6 +87,35 @@ $fa-font-path: "~font-awesome/fonts";
     @include user-select-none();
 }
 
+// Minimum resolution message
+.min-res-message {
+    height: calc(100vh - 50px);
+    align-content: center;
+    margin-left: 10vw;
+    width: 80vw;
+
+    &>div {
+        text-align: center;
+        height: 60%;
+        width: 100%;
+        color: $xibo-color-neutral-900;
+        background-color: $xibo-color-primary-l10;
+        padding: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-content: center;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 768px) {
+    .min-res-message {
+        height: calc(100vh - 150px);
+    }
+}
+
 /* Layout Manager */
 #layout-manager {
     left: 10px;

@@ -96,6 +96,9 @@ const Toolbar = function(
 
   // Toolbar zoom level (1-4 : 2 default)
   this.level = 2;
+
+  // Level limiter ( show only 1 and 2 )
+  this.levelLimiter = false;
 };
 
 /**
@@ -114,6 +117,9 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
 
   // Module media types (other than the 3 main types)
   const moduleListOtherTypes = [];
+
+  // Mark as initialized
+  self.initalized = true;
 
   // Filter module list to create the types for the filter
   modulesList.forEach((el) => {
@@ -678,15 +684,13 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
       }
     }
 
-    // Mark as init and render
-    self.initalized = true;
+    // Render
     self.render();
   }).catch(function(jqXHR, textStatus, errorThrown) {
     console.error(jqXHR, textStatus, errorThrown);
     console.error(errorMessagesTrans.getProvidersFailed);
 
-    // Mark as init and render
-    self.initalized = true;
+    // Render
     self.render();
   });
 };
@@ -796,6 +800,11 @@ Toolbar.prototype.loadPrefs = function() {
         (loadedData.displayTooltips == 1 ||
           loadedData.displayTooltips == undefined);
 
+      // Show delete confirmation modals
+      app.common.deleteConfirmation =
+        (loadedData.deleteConfirmation == 1 ||
+          loadedData.deleteConfirmation == undefined);
+
       // Toolbar level
       self.level = loadedData.level ?? 2;
 
@@ -855,6 +864,7 @@ Toolbar.prototype.savePrefs = _.debounce(function(clearPrefs = false) {
   }
 
   let displayTooltips = (app.common.displayTooltips) ? 1 : 0;
+  let deleteConfirmation = (app.common.deleteConfirmation) ? 1 : 0;
   let level = self.level;
   let favouriteModules = [];
   const filters = {};
@@ -873,6 +883,7 @@ Toolbar.prototype.savePrefs = _.debounce(function(clearPrefs = false) {
     openedMenu = -1;
     openedSubMenu = -1;
     displayTooltips = 1;
+    deleteConfirmation = 1;
     level = 2;
   } else {
     // Save favourite modules
@@ -911,6 +922,7 @@ Toolbar.prototype.savePrefs = _.debounce(function(clearPrefs = false) {
           openedMenu: openedMenu,
           openedSubMenu: openedSubMenu,
           displayTooltips: displayTooltips,
+          deleteConfirmation: deleteConfirmation,
           favouriteModules: favouriteModules,
           level: level,
         }),
@@ -992,6 +1004,12 @@ Toolbar.prototype.render = function({savePrefs = true} = {}) {
     (this.openedMenu != -1) &&
     (!readOnlyModeOn);
 
+  // If we have a level limiter and we're over level 2
+  // set level at 2
+  if (this.levelLimiter && this.level > 2) {
+    this.level = 2;
+  }
+
   // Compile toolbar template with data
   const html = ToolbarTemplate({
     opened: toolbarOpened,
@@ -1003,6 +1021,7 @@ Toolbar.prototype.render = function({savePrefs = true} = {}) {
         layoutEditorHelpLink : null
     ),
     toolbarLevel: this.level,
+    levelLimiter: this.levelLimiter,
   });
 
   // Clear temp data

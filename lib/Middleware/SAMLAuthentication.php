@@ -141,6 +141,10 @@ class SAMLAuthentication extends AuthenticationBase
                     }
                 }
 
+                // Are we going to try and match our Xibo groups to our Idp groups?
+                $isMatchGroupFromIdp = ($samlSettings['workflow']['matchGroups']['enabled'] ?? false) === true
+                    && ($samlSettings['workflow']['matchGroups']['attribute'] ?? null) !== null;
+
                 // Try and get the user record.
                 $user = null;
 
@@ -247,7 +251,7 @@ class SAMLAuthentication extends AuthenticationBase
                         $user->save();
 
                         // Assign the initial group
-                        if (isset($samlSettings['workflow']['group'])) {
+                        if (isset($samlSettings['workflow']['group']) && !$isMatchGroupFromIdp) {
                             $group = $this->getUserGroupFactory()->getByName($samlSettings['workflow']['group']);
                         } else {
                             $group = $this->getUserGroupFactory()->getByName('Users');
@@ -267,7 +271,7 @@ class SAMLAuthentication extends AuthenticationBase
 
                 if (isset($user) && $user->userId > 0) {
                     // Load User
-                    $this->getUser(
+                    $user = $this->getUser(
                         $user->userId,
                         $request->getAttribute('ip_address'),
                         $this->getSession()->get('sessionHistoryId')
@@ -289,6 +293,77 @@ class SAMLAuthentication extends AuthenticationBase
                     ]);
                 }
 
+                // Match groups from IdP?
+                if ($isMatchGroupFromIdp) {
+                    $this->getLog()->debug('group matching enabled');
+
+                    // Match groups is enabled, and we have an attribute to get groups from.
+                    $idpGroups = [];
+                    $extractionRegEx = $samlSettings['workflow']['matchGroups']['extractionRegEx'] ?? null;
+
+                    // Get groups.
+                    foreach ($samlAttrs[$samlSettings['workflow']['matchGroups']['attribute']] as $groupAttr) {
+                        // Regex?
+                        if (!empty($extractionRegEx)) {
+                            $matches = [];
+                            preg_match_all($extractionRegEx, $groupAttr, $matches);
+
+                            if (count($matches[1]) > 0) {
+                                $groupAttr = $matches[1][0];
+                            }
+                        }
+
+                        $this->getLog()->debug('checking for group ' . $groupAttr);
+
+                        // Does this group exist?
+                        try {
+                            $idpGroups[$groupAttr] = $this->getUserGroupFactory()->getByName($groupAttr);
+                        } catch (NotFoundException) {
+                            $this->getLog()->debug('group ' . $groupAttr . ' does not exist');
+                        }
+                    }
+
+                    // Go through the users groups
+                    $usersGroups = [];
+                    foreach ($user->groups as $userGroup) {
+                        $usersGroups[$userGroup->group] = $userGroup;
+                    }
+
+                    foreach ($user->groups as $userGroup) {
+                        // Does this group exist in the Idp? If not, remove.
+                        if (!array_key_exists($userGroup->group, $idpGroups)) {
+                            // Group exists in Xibo, does not exist in the response, so remove.
+                            $userGroup->unassignUser($user);
+                            $userGroup->save(['validate' => false]);
+
+                            $this->getLog()->debug($userGroup->group
+                                . ' not matched to any IdP groups linked, removing');
+
+                            unset($usersGroups[$userGroup->group]);
+                        } else {
+                            // Matched, so remove from idpGroups
+                            unset($idpGroups[$userGroup->group]);
+
+                            $this->getLog()->debug($userGroup->group . ' already linked.');
+                        }
+                    }
+
+                    // Go through remaining groups and assign the user to them.
+                    foreach ($idpGroups as $idpGroup) {
+                        $this->getLog()->debug($idpGroup->group . ' already linked.');
+
+                        $idpGroup->assignUser($user);
+                        $idpGroup->save(['validate' => false]);
+                    }
+
+                    // Does this user still not have any groups?
+                    if (count($usersGroups) <= 0) {
+                        $group = $this->getUserGroupFactory()->getByName($samlSettings['workflow']['group'] ?? 'Users');
+                        $group->assignUser($user);
+                        $group->save(['validate' => false]);
+                    }
+                }
+
                 // Redirect back to the originally-requested url, if provided
                 // it is not clear why basename is used here, it seems to be something to do with a logout loop
                 $params =  $request->getParams();
@@ -296,6 +371,8 @@ class SAMLAuthentication extends AuthenticationBase
                 $redirect = empty($relayState) || basename($relayState) === 'login'
                     ? $this->getRouteParser()->urlFor('home')
                     : $relayState;
+
+                $this->getLog()->debug('redirecting to ' . $redirect);
 
                 return $response->withRedirect($redirect);
             }

@@ -374,6 +374,8 @@
             var editorsTrans = {
                 deleteTitle: "{{ "Delete %obj%" |trans }}",
                 onbeforeunload: "{{ "Changes that you have made may not be saved!" |trans }}",
+                minDimensionsMessageHeader: "{{ "Please increase your resolution to use the editing tools" |trans }}",
+                minDimensionsMessageBody: "{{ "Layout and Playlist editing requires a minimum width of 1200 pixels and height of 600 pixels" |trans }}",
                 yes: "{{ "Yes" |trans }}",
                 no: "{{ "No" |trans }}",
                 selectAll: "{{ "Select All" |trans }}",
@@ -656,10 +658,13 @@
 
             var toolbarTrans = {
                 deleteObject: "{{ "Delete selected %object%" |trans }}",
+                deleteMultipleObjects: "{{ "Delete selected objects" |trans }}",
                 changeLayout: "{{ "Change Layout" |trans }}",
                 options: "{{ "Options" |trans }}",
                 displayTooltipsName: "{{ "Tooltips?" |trans }}",
                 displayTooltipsTitle: "{{ "Show/Hide tooltips which provide help; informational tooltips will remain." |trans }}",
+                deleteConfirmationName: "{{ "Delete confirmation?" |trans }}",
+                deleteConfirmationTitle: "{{ "Do we want to show confirmation modals when deleting critical Layout content?" |trans }}",
                 search: "{{ "Search" |trans }}",
                 select: "{{ "Select" |trans }}",
                 deselect: "{{ "Deselect" |trans }}",
@@ -1108,6 +1113,10 @@
                 elementGroup: {
                     title: "{{ "Delete Element Group"|trans }}",
                     message: "{{ "Are you sure you want to delete this element group? Widget will also be deleted and configuration will be lost."|trans }}",
+                },
+                multiple: {
+                    title: "{{ "Delete all selected objects?"|trans }}",
+                    message: "{{ "Are you sure you want to delete all selected objects? Widgets might also be deleted and configuration will be lost."|trans }}",
                 },
             };
 

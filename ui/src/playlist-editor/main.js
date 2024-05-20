@@ -98,6 +98,9 @@ window.pE = {
 
   // inline playlist editor?
   inline: false,
+
+  // Show minimum dimensions message
+  showMinDimensionsMessage: false,
 };
 
 /**
@@ -251,6 +254,9 @@ pE.loadEditor = function(
         if (showExternalPlaylistMessage) {
           pE.showExternalPlaylistMessage();
         }
+
+        // Handle editor minimum dimensions when resizing
+        pE.common.handleEditorMinimumDimensions(pE);
       } else {
         // Login Form needed?
         if (res.login) {
@@ -1285,10 +1291,17 @@ pE.handleKeyInputs = function() {
   // Handle keyboard keys
   $('body').off('keydown.editor')
     .on('keydown.editor', function(handler) {
+      const controlOrCommandPressed = (
+        handler.ctrlKey ||
+        handler.metaKey
+      );
+
       if ($(handler.target).is($('body'))) {
         // Delete
         if (
-          handler.key == 'Delete' &&
+          (
+            handler.key == 'Delete' ||
+            handler.key == 'Backspace') &&
           allowInputs
         ) {
           pE.deleteSelectedObject();
@@ -1296,8 +1309,8 @@ pE.handleKeyInputs = function() {
 
         // Undo
         if (
-          handler.key == 'z' &&
-          handler.ctrlKey &&
+          handler.code == 'KeyZ' &&
+          controlOrCommandPressed &&
           allowInputs
         ) {
           pE.undoLastAction();

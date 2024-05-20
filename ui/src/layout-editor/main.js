@@ -114,6 +114,9 @@ window.lD = {
 
   // Is the playlist editor opened
   playlistEditorOpened: false,
+
+  // Show minimum dimensions message
+  showMinDimensionsMessage: false,
 };
 
 // Load Layout and build app structure
@@ -346,6 +349,9 @@ $(() => {
 
       // Initialise tooltips on main container
       lD.common.reloadTooltips(lD.editorContainer);
+
+      // Handle editor minimum dimensions when resizing
+      lD.common.handleEditorMinimumDimensions(lD);
 
       // Load preferences
       lD.loadPrefs();
@@ -1202,13 +1208,29 @@ lD.undoLastAction = function() {
  * Delete selected object
  */
 lD.deleteSelectedObject = function() {
+  // Check if we have multiple objects selected
+  const selectedInViewer = lD.viewer.getMultipleSelected();
+
   // Prevent delete if it doesn't have permissions
-  if (lD.selectedObject.isDeletable === false) {
+  if (
+    (
+      lD.selectedObject.isDeletable === false &&
+      selectedInViewer.multiple === false
+    ) ||
+    (
+      selectedInViewer.multiple === true &&
+      selectedInViewer.canBeDeleted == false
+    )
+  ) {
     return;
   }
 
-  if (lD.selectedObject.type === 'region') {
-    // Check if region or playlist has at least one object in it
+  if (selectedInViewer.multiple) {
+    // Delete multiple objects
+    lD.deleteMultipleObjects();
+  } else if (lD.selectedObject.type === 'region') {
+    // For now, we always delete the region
+    // Check if region or playlist and it has at least one object in it
     const needsConfirmationModal = (
       Object.values(lD.selectedObject.widgets).length > 0
     );
@@ -1349,7 +1371,7 @@ lD.deleteObject = function(
   };
 
   // Show confirmation modal if needed
-  if (showConfirmationModal) {
+  if (showConfirmationModal && lD.common.deleteConfirmation) {
     createDeleteModal();
     return;
   }
@@ -1488,6 +1510,275 @@ lD.deleteObject = function(
       );
     });
   }
+};
+
+/**
+ * Delete multiple selected objects
+ * @param {boolean=} showConfirmationModal
+ */
+lD.deleteMultipleObjects = function(showConfirmationModal = true) {
+  const deleteElementsOrGroupElements = function(
+    itemsArray,
+    type = 'elements',
+  ) {
+    let auxWidget = null;
+    itemsArray.each((idx, item) => {
+      const itemId = $(item).attr('id');
+      const widgetId = $(item).data('widgetId');
+      const widgetFullId =
+        'widget_' + $(item).data('regionId') +
+        '_' + $(item).data('widgetId');
+
+      // If it's the last element
+      // or the next element has another widget ID, save
+      const save = (
+        idx == itemsArray.length ||
+        (
+          idx < itemsArray.length &&
+          widgetId != $(itemsArray[idx + 1]).data('widgetId')
+        )
+      );
+
+      // Get parent widget if doesn't exist or we need to save
+      if (
+        !auxWidget ||
+        save
+      ) {
+        auxWidget = lD.getObjectByTypeAndId(
+          'widget',
+          widgetFullId,
+          'canvas',
+        );
+      }
+
+      // Delete element from widget
+      if (type === 'elements') {
+        auxWidget.removeElement(
+          itemId,
+          {
+            save: save,
+            reload: false,
+          },
+        );
+      } else {
+        auxWidget.removeElementGroup(
+          itemId,
+          {
+            save: save,
+            reload: false,
+          },
+        );
+      }
+    });
+  };
+
+  // Create modal before delete elements
+  const createDeleteMultipleModal = function() {
+    bootbox.hideAll();
+
+    bootbox.dialog({
+      title: deleteModalTrans.multiple.title,
+      message: deleteModalTrans.multiple.message,
+      size: 'large',
+      buttons: {
+        cancel: {
+          label: editorsTrans.no,
+          className: 'btn-white btn-bb-cancel',
+        },
+        confirm: {
+          label: editorsTrans.yes,
+          className: 'btn-danger btn-bb-confirm',
+          callback: function() {
+            // Delete
+            lD.deleteMultipleObjects(false);
+          },
+        },
+      },
+    }).attr('data-test', 'deleteMultipleObjectModal');
+  };
+
+  // Show confirmation modal
+  if (showConfirmationModal && lD.common.deleteConfirmation) {
+    createDeleteMultipleModal();
+    return;
+  }
+
+  // First delete elements if they exist
+  const $elementsToBeDeleted =
+    lD.viewer.DOMObject.find('.selected.designer-element').sort((a, b) => {
+      return Number($(b).data('widgetId')) - Number($(a).data('widgetId'));
+    });
+
+  if ($elementsToBeDeleted.length > 0) {
+    deleteElementsOrGroupElements($elementsToBeDeleted);
+  }
+
+  // Then delete element groups
+  const $elementGroupsToBeDeleted =
+    lD.viewer.DOMObject.find('.selected.designer-element-group')
+      .sort((a, b) => {
+        return (
+          Number($(b).data('widgetId')) -
+          Number($(a).data('widgetId'))
+        );
+      });
+
+  if ($elementGroupsToBeDeleted.length > 0) {
+    deleteElementsOrGroupElements(
+      $elementGroupsToBeDeleted,
+      'elementGroups',
+    );
+  }
+
+  // Finally, delete regions one by one
+  const $regionsToBeDeleted =
+    lD.viewer.DOMObject.find('.selected.designer-region');
+
+  if ($regionsToBeDeleted.length > 0) {
+    let deletedIndex = 0;
+
+    lD.common.showLoadingScreen('deleteMultiObject');
+
+    // Delete all selected objects
+    const deleteNext = function() {
+      const $item = $($regionsToBeDeleted[deletedIndex]);
+
+      const objId = $item.data('regionId');
+      const objType = $item.data('type');
+
+      lD.layout.deleteObject(
+        objType,
+        objId,
+        null,
+        false,
+      ).then((_res) => {
+        deletedIndex++;
+
+        if (deletedIndex == $regionsToBeDeleted.length) {
+          // Stop deleting and deselect all elements
+          lD.viewer.selectObject();
+
+          // Hide loader
+          lD.common.hideLoadingScreen('deleteMultiObject');
+
+          // Reload data and select element when data reloads
+          lD.reloadData(lD.layout,
+            {
+              refreshEditor: true,
+            });
+        } else {
+          deleteNext();
+        }
+      });
+    };
+
+    // Start deleting
+    deleteNext();
+  } else {
+    // If we're not deleting any region, deselect elements now
+    lD.viewer.selectObject();
+  }
+};
+
+/**
+ * Duplicate selected object
+ */
+lD.duplicateSelectedObject = function() {
+  // Only duplicate for now if it's an element or element group
+  if (
+    lD.selectedObject.type === 'element' ||
+    lD.selectedObject.type === 'element-group'
+  ) {
+    lD.duplicateObject(lD.selectedObject);
+  }
+};
+
+/**
+ * Duplicate object ( element or element group )
+ * @param {object} objectToDuplicate
+ */
+lD.duplicateObject = function(objectToDuplicate) {
+  // For now, use an offset value to position the new element
+  const offsetMove = 20;
+
+  // Get widget
+  const objectParentWidget =
+    lD.getObjectByTypeAndId('widget', objectToDuplicate.widgetId, 'canvas');
+
+  // Element array to add
+  const elementArray = [];
+
+  const createNewElementFromCopy = function(element, groupId = null) {
+    // Create temporary copy element
+    const elementCopy = Object.assign(
+      {},
+      element,
+    );
+
+    // Set type as element type before adding
+    elementCopy.type = elementCopy.elementType;
+
+    // Get new random id
+    elementCopy.elementId =
+      'element_' + element.id + '_' +
+      Math.floor(Math.random() * 1000000);
+
+    // If it's in a group
+    if (groupId) {
+      // Add group id
+      elementCopy.groupId = groupId;
+
+      // If group doesn't exist, create it and add it to the elementGroup
+      if (!objectParentWidget[groupId]) {
+        // Create copy of previous group
+        elementCopy.group = Object.assign(
+          {},
+          elementCopy.group,
+        );
+
+        // Addign new id and position
+        elementCopy.group.id = groupId;
+        elementCopy.group.top += offsetMove;
+        elementCopy.group.left += offsetMove;
+
+        // Add group to widget element groups
+        objectParentWidget[groupId] = elementCopy.group;
+
+        // Clear elements from group and add new
+        objectParentWidget[groupId] = {};
+        objectParentWidget[groupId][elementCopy.elementId] = elementCopy;
+      } else {
+        // Assign group to new element
+        elementCopy.group = objectParentWidget[groupId];
+        objectParentWidget[groupId][elementCopy.elementId] = elementCopy;
+      }
+    }
+
+    // Also add offset to each element, even in groups
+    // the top/left position is globally based in the editor
+    elementCopy.top += offsetMove;
+    elementCopy.left += offsetMove;
+
+    return elementCopy;
+  };
+
+  if (objectToDuplicate.type == 'element') {
+    elementArray.push(createNewElementFromCopy(objectToDuplicate));
+  } else if (objectToDuplicate.type == 'element-group') {
+    // Generate a random group id
+    const groupId = 'group_' + Math.floor(Math.random() * 1000000);
+
+    Object.values(objectToDuplicate.elements).forEach((el) => {
+      elementArray.push(createNewElementFromCopy(el, groupId));
+    });
+  }
+
+  // Add element to widget
+  lD.addElementsToWidget(
+    elementArray,
+    objectParentWidget,
+    (objectToDuplicate.type == 'element-group'),
+  );
 };
 
 /**
@@ -3418,87 +3709,7 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
         },
       );
     } else if (target.data('action') == 'Copy') {
-      // For now, use an offset value to position the new element
-      const offsetMove = 20;
-
-      // Get widget
-      const elementWidget =
-        lD.getObjectByTypeAndId('widget', objAuxId, 'canvas');
-
-      // Element array to add
-      const elementArray = [];
-
-      const createNewElementFromCopy = function(element, groupId = null) {
-        // Create temporary copy element
-        const elementCopy = Object.assign(
-          {},
-          element,
-        );
-
-        // Set type as element type before adding
-        elementCopy.type = elementCopy.elementType;
-
-        // Get new random id
-        elementCopy.elementId =
-          'element_' + element.id + '_' +
-          Math.floor(Math.random() * 1000000);
-
-        // If it's in a group
-        if (groupId) {
-          // Add group id
-          elementCopy.groupId = groupId;
-
-          // If group doesn't exist, create it and add it to the elementGroup
-          if (!elementWidget[groupId]) {
-            // Create copy of previous group
-            elementCopy.group = Object.assign(
-              {},
-              elementCopy.group,
-            );
-
-            // Addign new id and position
-            elementCopy.group.id = groupId;
-            elementCopy.group.top += offsetMove;
-            elementCopy.group.left += offsetMove;
-
-            // Add group to widget element groups
-            elementWidget[groupId] = elementCopy.group;
-
-            // Clear elements from group and add new
-            elementWidget[groupId] = {};
-            elementWidget[groupId][elementCopy.elementId] = elementCopy;
-          } else {
-            // Assign group to new element
-            elementCopy.group = elementWidget[groupId];
-            elementWidget[groupId][elementCopy.elementId] = elementCopy;
-          }
-        }
-
-        // Also add offset to each element, even in groups
-        // the top/left position is globally based in the editor
-        elementCopy.top += offsetMove;
-        elementCopy.left += offsetMove;
-
-        return elementCopy;
-      };
-
-      if (layoutObject.type == 'element') {
-        elementArray.push(createNewElementFromCopy(layoutObject));
-      } else if (layoutObject.type == 'element-group') {
-        // Generate a random group id
-        const groupId = 'group_' + Math.floor(Math.random() * 1000000);
-
-        Object.values(layoutObject.elements).forEach((el) => {
-          elementArray.push(createNewElementFromCopy(el, groupId));
-        });
-      }
-
-      // Add element to widget
-      lD.addElementsToWidget(
-        elementArray,
-        elementWidget,
-        (layoutObject.type == 'element-group'),
-      );
+      lD.duplicateObject(layoutObject);
     } else if (target.data('action') == 'editPlaylist') {
       // Open playlist editor
       lD.openPlaylistEditor(layoutObject.playlists.playlistId, layoutObject);
@@ -3806,136 +4017,7 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
     const target = $(ev.currentTarget);
 
     if (target.data('action') == 'Delete') {
-      const deleteElementsOrGroupElements = function(
-        itemsArray,
-        type = 'elements',
-      ) {
-        let auxWidget = null;
-        itemsArray.each((idx, item) => {
-          const itemId = $(item).attr('id');
-          const widgetId = $(item).data('widgetId');
-          const widgetFullId =
-            'widget_' + $(item).data('regionId') +
-            '_' + $(item).data('widgetId');
-
-          // If it's the last element
-          // or the next element has another widget ID, save
-          const save = (
-            idx == itemsArray.length ||
-            (
-              idx < itemsArray.length &&
-              widgetId != $(itemsArray[idx + 1]).data('widgetId')
-            )
-          );
-
-          // Get parent widget if doesn't exist or we need to save
-          if (
-            !auxWidget ||
-            save
-          ) {
-            auxWidget = lD.getObjectByTypeAndId(
-              'widget',
-              widgetFullId,
-              'canvas',
-            );
-          }
-
-          // Delete element from widget
-          if (type === 'elements') {
-            auxWidget.removeElement(
-              itemId,
-              {
-                save: save,
-                reload: false,
-              },
-            );
-          } else {
-            auxWidget.removeElementGroup(
-              itemId,
-              {
-                save: save,
-                reload: false,
-              },
-            );
-          }
-        });
-      };
-
-      // First delete elements if they exist
-      const $elementsToBeDeleted =
-        lD.viewer.DOMObject.find('.selected.designer-element').sort((a, b) => {
-          return Number($(b).data('widgetId')) - Number($(a).data('widgetId'));
-        });
-
-      if ($elementsToBeDeleted.length > 0) {
-        deleteElementsOrGroupElements($elementsToBeDeleted);
-      }
-
-      // Then delete element groups
-      const $elementGroupsToBeDeleted =
-        lD.viewer.DOMObject.find('.selected.designer-element-group')
-          .sort((a, b) => {
-            return (
-              Number($(b).data('widgetId')) -
-              Number($(a).data('widgetId'))
-            );
-          });
-
-      if ($elementGroupsToBeDeleted.length > 0) {
-        deleteElementsOrGroupElements(
-          $elementGroupsToBeDeleted,
-          'elementGroups',
-        );
-      }
-
-      // Finally, delete regions one by one
-      const $regionsToBeDeleted =
-        lD.viewer.DOMObject.find('.selected.designer-region');
-
-      if ($regionsToBeDeleted.length > 0) {
-        let deletedIndex = 0;
-
-        lD.common.showLoadingScreen();
-
-        // Delete all selected objects
-        const deleteNext = function() {
-          const $item = $($regionsToBeDeleted[deletedIndex]);
-
-          const objId = $item.data('regionId');
-          const objType = $item.data('type');
-
-          lD.layout.deleteObject(
-            objType,
-            objId,
-            null,
-            false,
-          ).then((_res) => {
-            deletedIndex++;
-
-            if (deletedIndex == $regionsToBeDeleted.length) {
-              // Stop deleting and deselect all elements
-              lD.viewer.selectObject();
-
-              // Hide loader
-              lD.common.hideLoadingScreen();
-
-              // Reload data and select element when data reloads
-              lD.reloadData(lD.layout,
-                {
-                  refreshEditor: true,
-                });
-            } else {
-              deleteNext();
-            }
-          });
-        };
-
-        // Start deleting
-        deleteNext();
-      } else {
-        // If we're not deleting any region, deselect elements now
-        lD.viewer.selectObject();
-      }
+      lD.deleteMultipleObjects();
     } else if (target.data('action') == 'Group') {
       // Group elements
       const $elementsToBeGrouped =
@@ -5674,22 +5756,39 @@ lD.handleInputs = function() {
   // Handle keyboard keys
   $('body').off('keydown.editor')
     .on('keydown.editor', function(handler) {
+      const controlOrCommandPressed = (
+        handler.ctrlKey ||
+        handler.metaKey
+      );
+
       if ($(handler.target).is($('body'))) {
-        // Delete
+        // Delete ( Del or Backspace )
         if (
-          handler.key == 'Delete' &&
+          (
+            handler.key == 'Delete' ||
+            handler.key == 'Backspace'
+          ) &&
           allowInputs
         ) {
           lD.deleteSelectedObject();
         }
 
-        // Undo
+        // Undo ( Ctrl + Z )
         if (
-          handler.key == 'z' &&
-          handler.ctrlKey &&
+          handler.code == 'KeyZ' &&
+          controlOrCommandPressed &&
           allowInputs
         ) {
           lD.undoLastAction();
+        }
+
+        // Duplicate selected object ( Shift + D )
+        if (
+          handler.code == 'KeyD' &&
+          handler.shiftKey &&
+          allowInputs
+        ) {
+          lD.duplicateSelectedObject();
         }
       }
     });

@@ -96,6 +96,16 @@
                                 <span>{{trans.displayTooltipsName}}</span>
                             </label>
                         </a>
+
+                        <a class="dropdown-item">
+                            <label class="navbar-submenu-item navbar-submenu-item-options deleteConfirmation-container tooltip-always-on"
+                                for="deleteConfirmation" data-toggle="tooltip" data-container=".editor-top-bar" data-placement="left" data-title="{{trans.deleteConfirmationTitle}}"
+                                accesskey="">
+                                <input type="checkbox" id="deleteConfirmation" name="deleteConfirmation"
+                                    {{#if deleteConfirmation}}checked{{/if}}>
+                                <span>{{trans.deleteConfirmationName}}</span>
+                            </label>
+                        </a>
                     </div>
                 </li>
             {{/if}}
