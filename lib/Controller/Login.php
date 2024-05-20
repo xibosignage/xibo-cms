@@ -147,6 +147,7 @@ class Login extends Base
                     $session->setIsExpired(0);
                     $session->regenerateSessionId();
                     $session->setUser($user->userId);
+                    $this->getLog()->setSessionHistoryId($session->get('sessionHistoryId'));
 
                     // Audit Log
                     $this->getLog()->audit('User', $user->userId, 'Login Granted via token', [
@@ -646,6 +647,8 @@ class Login extends Base
         $session->setIsExpired(0);
         $session->regenerateSessionId();
         $session->setUser($user->userId);
+
+        $this->getLog()->setSessionHistoryId($session->get('sessionHistoryId'));
 
         // Audit Log
         $this->getLog()->audit('User', $user->userId, 'Login Granted', [

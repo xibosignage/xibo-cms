@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -83,8 +83,6 @@ class AuditLog extends Base
         $filterMessage = $sanitizedParams->getString('message');
         $filterIpAddress = $sanitizedParams->getString('ipAddress');
 
-        $search = [];
-
         if ($filterFromDt != null && $filterFromDt == $filterToDt) {
             $filterToDt->addDay();
         }
@@ -98,30 +96,21 @@ class AuditLog extends Base
             $filterToDt = Carbon::now();
         }
 
-        $search['fromTimeStamp'] = $filterFromDt->format('U');
-        $search['toTimeStamp'] = $filterToDt->format('U');
+        $search = [
+            'fromTimeStamp' => $filterFromDt->format('U'),
+            'toTimeStamp' => $filterToDt->format('U'),
+            'userName' => $filterUser,
+            'entity' => $filterEntity,
+            'entityId' => $filterEntityId,
+            'message' => $filterMessage,
+            'ipAddress' => $filterIpAddress,
+            'sessionHistoryId' => $sanitizedParams->getInt('sessionHistoryId')
+        ];
 
-        if ($filterUser != '') {
-            $search['userName'] = $filterUser;
-        }
-
-        if ($filterEntity != '') {
-            $search['entity'] = $filterEntity;
-        }
-
-        if ($filterEntityId != null) {
-            $search['entityId'] = $filterEntityId;
-        }
-
-        if ($filterMessage != '') {
-            $search['message'] = $filterMessage;
-        }
-
-        if ($filterIpAddress != '') {
-            $search['ipAddress'] = $filterIpAddress;
-        }
-
-        $rows = $this->auditLogFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter($search, $sanitizedParams));
+        $rows = $this->auditLogFactory->query(
+            $this->gridRenderSort($sanitizedParams),
+            $this->gridRenderFilter($search, $sanitizedParams)
+        );
 
         // Do some post processing
         foreach ($rows as $row) {

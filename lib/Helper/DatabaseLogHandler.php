@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -83,9 +83,29 @@ class DatabaseLogHandler extends AbstractProcessingHandler
             self::$pdo = PdoStorageService::newConnection('log');
 
             $SQL = '
-                INSERT INTO `log` 
-                        (`runNo`, `logdate`, `channel`, `type`, `page`, `function`, `message`, `userid`, `displayid`)
-                      VALUES (:runNo, :logdate, :channel, :type, :page, :function, :message, :userid, :displayid)
+                INSERT INTO `log` (
+                  `runNo`,
+                  `logdate`,
+                  `channel`,
+                  `type`,
+                  `page`,
+                  `function`,
+                  `message`,
+                  `userid`,
+                  `displayid`,
+                  `sessionHistoryId`
+                ) VALUES (
+                  :runNo,
+                  :logdate,
+                  :channel,
+                  :type,
+                  :page,
+                  :function,
+                  :message,
+                  :userid,
+                  :displayid,
+                  :sessionHistoryId
+                )
             ';
 
             self::$statement = self::$pdo->prepare($SQL);
@@ -100,7 +120,8 @@ class DatabaseLogHandler extends AbstractProcessingHandler
             'function' => $record['extra']['method'] ?? '',
             'message' => $record['message'],
             'userid' => $record['extra']['userId'] ?? 0,
-            'displayid' => $record['extra']['displayId'] ?? 0
+            'displayid' => $record['extra']['displayId'] ?? 0,
+            'sessionHistoryId' => $record['extra']['sessionHistoryId'] ?? 0
         ];
 
         try {

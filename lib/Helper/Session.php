@@ -410,6 +410,8 @@ class Session implements \SessionHandlerInterface
     {
         //$this->log->debug('Session insert');
 
+        $this->insertSessionHistory();
+
         $sql = '
           INSERT INTO `session` (session_id, session_data, session_expiration, lastaccessed, userid, isexpired, useragent, remoteaddr)
             VALUES (:session_id, :session_data, :session_expiration, :lastAccessed, :userId, :expired, :useragent, :remoteaddr)
@@ -427,6 +429,25 @@ class Session implements \SessionHandlerInterface
         ];
 
         $this->getDb()->update($sql, $params);
+    }
+
+    private function insertSessionHistory()
+    {
+        $sql = '
+        INSERT INTO `session_history` (`ipAddress`, `userAgent`, `startTime`, `userId`)
+            VALUES (:ipAddress, :userAgent, :startTime, :userId)
+        ';
+
+        $params = [
+            'ipAddress' => $this->getIp(),
+            'userAgent' => substr(htmlspecialchars($_SERVER['HTTP_USER_AGENT']), 0, 253),
+            'startTime' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
+            'userId' => $this->userId,
+        ];
+
+        $id = $this->getDb()->insert($sql, $params);
+
+        $this->set('sessionHistoryId', $id);
     }
 
     /**

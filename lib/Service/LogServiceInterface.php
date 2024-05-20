@@ -59,6 +59,13 @@ interface LogServiceInterface
     public function setIpAddress($ip);
 
     /**
+     * Set history session id
+     * @param $sessionHistoryId
+     * @return mixed
+     */
+    public function setSessionHistoryId($sessionHistoryId);
+
+    /**
      * @param $mode
      * @return mixed
      */
