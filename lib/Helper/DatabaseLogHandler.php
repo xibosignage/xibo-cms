@@ -145,17 +145,11 @@ class DatabaseLogHandler extends AbstractProcessingHandler
             $statement = self::$pdo->prepare('DELETE FROM `log` WHERE logdate < :maxage LIMIT 10000');
 
             do {
-                // start transaction
-                self::$pdo->beginTransaction();
-
                 // Execute statement
                 $statement->execute(['maxage' => $cutOff]);
 
                 // initialize number of rows deleted
                 $rowsDeleted = $statement->rowCount();
-
-                // commit the transaction
-                self::$pdo->commit();
 
                 PdoStorageService::incrementStat('log', 'delete');
 
