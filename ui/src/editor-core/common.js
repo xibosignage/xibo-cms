@@ -217,9 +217,7 @@ module.exports = {
     // CKEditor
     $container.find('.rich-text').each((_idx, fp) => {
       const richTextId = $(fp).attr('id');
-      if (CKEDITOR.instances[richTextId]) {
-        CKEDITOR.instances[richTextId].destroy();
-      }
+      formHelpers.destroyCKEditor(richTextId);
     });
   },
 

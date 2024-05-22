@@ -1946,12 +1946,21 @@ PropertiesPanel.prototype.initFields = function(
       }
 
       // For rich text, check if CKEditor has changed
-      if (
-        $(target).hasClass('rich-text') &&
-        CKEDITOR.instances[$(target).attr('id')] &&
-        !CKEDITOR.instances[$(target).attr('id')].checkDirty()
-      ) {
-        return true;
+      if ($(target).hasClass('rich-text')) {
+        const ckEditorInstance =
+          formHelpers.getCKEditorInstance($(target).attr('id'));
+
+        if (ckEditorInstance) {
+          const initialValue =
+            $(ckEditorInstance.sourceElement).data('initialValue');
+
+          // If value is the same as initial, skip
+          if (
+            initialValue === ckEditorInstance.getData()
+          ) {
+            return true;
+          }
+        }
       }
 
       return false;

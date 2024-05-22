@@ -2260,12 +2260,15 @@ window.forms = {
             const text = '[' + value + ']';
 
             // Check if there is a CKEditor instance
-            const ckeditorInstance =
-              CKEDITOR.instances['input_' + targetId + '_' + targetFieldId];
+            const ckeditorInstance = formHelpers
+              .getCKEditorInstance('input_' + targetId + '_' + targetFieldId);
 
             if (ckeditorInstance) {
               // CKEditor
-              ckeditorInstance.insertText(text);
+              formHelpers.insertToCKEditor(
+                'input_' + targetId + '_' + targetFieldId,
+                text,
+              );
             } else if ($targetField.hasClass('code-input')) {
               // Monaco editor
               const editor =
@@ -2330,12 +2333,15 @@ window.forms = {
             const text = '<img alt="" src="' + textURL + '?preview=1" />';
 
             // Check if there is a CKEditor instance
-            const ckeditorInstance =
-              CKEDITOR.instances['input_' + targetId + '_' + targetFieldId];
+            const ckeditorInstance = formHelpers
+              .getCKEditorInstance('input_' + targetId + '_' + targetFieldId);
 
             if (ckeditorInstance) {
               // CKEditor
-              ckeditorInstance.insertHtml(text);
+              formHelpers.insertToCKEditor(
+                'input_' + targetId + '_' + targetFieldId,
+                text,
+              );
             } else if ($targetField.length > 0) {
               // Text area
               const cursorPosition = $targetField[0].selectionStart;
@@ -3071,7 +3077,7 @@ window.forms = {
       $parent.addClass('loading');
 
       // Destroy CKEditor
-      CKEDITOR.instances[elId].destroy();
+      formHelpers.destroyCKEditor(elId);
 
       // Reload
       formHelpers.setupCKEditor(

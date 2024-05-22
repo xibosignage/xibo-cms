@@ -42,9 +42,7 @@
         <script src="{{ theme.rootUri() }}dist/templates.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
 
         {# Import libraries copied to dist #}
-        <script src="{{ theme.rootUri() }}dist/vendor/ckeditor/ckeditor.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
-        <script src="{{ theme.rootUri() }}dist/vendor/bootstrap-fix/bootstrap-ckeditor-fix.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
-
+        <script src="{{ theme.rootUri() }}dist/vendor/ckeditor/build/ckeditor.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
         {# Import XIBO js files #}
         <script src="{{ theme.rootUri() }}dist/xibo.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
         <script src="{{ theme.rootUri() }}dist/core/xibo-cms.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
@@ -140,6 +138,22 @@
             var getFontsUrl = "{{ url_for("font.search") }}";
             var libraryFontCSS = "{{ url_for("library.font.css") }}";
             var imageDownloadUrl = "{{ url_for("library.download", {id: ':id'}) }}?preview=1";
+            var CKEDITOR_DEFAULT_CONFIG = {
+                contentsCss: ['styles.css', libraryFontCSS],
+                imageDownloadUrl: imageDownloadUrl,
+                fontFamily: {
+                    options: ['default'],
+                },
+                fontSize: {
+                    options: [
+                    'default',
+                    8, 9, 10, 11, 12, 16, 18, 20,
+                    22, 24, 26, 28, 36, 48, 72, 80,
+                    88, 96, 128, 144, 168, 186, 200,
+                    244, 288, 300,
+                    ],
+                },
+            };
 
             {% autoescape "js" %}
             var dataTablesLanguage = {

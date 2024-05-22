@@ -2795,25 +2795,8 @@ function XiboFormSubmit(form, e, callBack) {
     var $form = $(form);
     var url = $form.attr("action");
 
-    // Pull any text editor instances we have
-    for (var editor in CKEDITOR.instances) {
-
-        //console.log("Name: " + editor);
-        //console.log("Content: " + CKEDITOR.instances[editor].getData());
-
-        // Parse the data for library preview references, and replace those with their original values
-        // /\/library\/download\/(.[0-9]+)\?preview=1/;
-        var regex = new RegExp(CKEDITOR_DEFAULT_CONFIG.imageDownloadUrl.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&").replace(":id", "([0-9]+)"), "g");
-
-        var data = CKEDITOR.instances[editor].getData().replace(regex, function (match, group1) {
-            var replacement = "[" + group1 + "]";
-            //console.log("match = " + match + ". replacement = " + replacement);
-            return replacement;
-        });
-
-        // Set the appropriate text editor field with this data.
-        $("#" + editor).val(data);
-    }
+    // Update any text editor instances we have
+    formHelpers.updateCKEditor();
 
     $.ajax({
         type:$form.attr("method"),

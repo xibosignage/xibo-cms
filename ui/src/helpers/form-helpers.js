@@ -32,6 +32,9 @@ const CKEDITOR_MARGIN = 8;
 const CKEDITOR_SCROLLBAR_MARGIN = 8;
 
 const formHelpers = function() {
+  // Array with CKEditor instances
+  this.ckEditorInstances = [];
+
   // Default params ( might change )
   this.defaultBackgroundColor = '#eee';
 
@@ -48,45 +51,6 @@ const formHelpers = function() {
   this.setup = function(namespace, mainObject) {
     this.namespace = namespace;
     this.mainObject = mainObject;
-  };
-
-  /**
-   * Get CKEditor config
-   * @return {Promise} - Promise
-   */
-  this.getCKEditorConfig = function() {
-    let fontNames = CKEDITOR.config.font_names;
-
-    // Base editor config
-    const editorConfig = {
-      contentsCss: [CKEDITOR.getUrl('contents.css'), libraryFontCSS],
-      imageDownloadUrl: imageDownloadUrl,
-    };
-
-    return new Promise((resolve, reject) => {
-      $.get(getFontsUrl + '?length=10000')
-        .done(function(res) {
-          // Get res.data fonts into the fontNames string
-          res.data.forEach(function(font) {
-            fontNames += `;${font.name}/${font.familyName}`;
-          });
-
-          // Sort the fontNames string
-          fontNames = fontNames.split(';').sort().join(';');
-
-          // Set fontNames to the editorConfig
-          editorConfig.font_names = fontNames;
-
-          // Resolve the promise and return the editorConfig
-          resolve(editorConfig);
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-          // Output error to console
-          console.error(jqXHR, textStatus, errorThrown);
-
-          // Reject the promise
-          reject(jqXHR, textStatus, errorThrown);
-        });
-    });
   };
 
   /**
@@ -511,7 +475,69 @@ const formHelpers = function() {
   };
 
   /**
-   * Create a CKEDITOR instance to conjure a text editor
+   * Create a CKEDITOR instance
+   * @param {string} id - new editor id
+   * @param {object} target - target element ( textarea )
+   * @param {object} customConfig - configurations
+   * @param {boolean} inline - Inline?
+   * @return {Promise} - Promise
+   */
+  this.createCKEditor = function(
+    id,
+    target,
+    customConfig,
+    inline = false,
+  ) {
+    const self = this;
+
+    return new Promise((resolve, reject) => {
+      // Get the CKEditor config and then setup the editor
+      self.getCKEditorConfig().then(function(config) {
+        // If target is already a CKEditor, reject creation
+        if (target.hasClass('ck-content')) {
+          return reject(new Error('Editor already created'));
+        }
+
+        // Merge config with custom configurations
+        const newConfig = Object.assign({}, config, customConfig);
+
+        // Inline editor
+        let createEditor;
+        if (inline) {
+          createEditor =
+            CKEDITOR.InlineEditor.create.bind(CKEDITOR.InlineEditor);
+          const $newTarget = $('#' + $(target).data('target'));
+
+          const initialValue = $newTarget.val();
+
+          // If we have initial value, set it
+          if (initialValue) {
+            newConfig.initialData = initialValue;
+          }
+        } else {
+          createEditor =
+            CKEDITOR.ClassicEditor.create.bind(CKEDITOR.ClassicEditor);
+        }
+
+        createEditor(
+          $(target)[0], newConfig,
+        ).then((editor) => {
+          // Add to global instances
+          self.ckEditorInstances.push({
+            id: id,
+            inline: inline,
+            editor: editor,
+          });
+
+          // Return editor
+          resolve(editor);
+        });
+      });
+    });
+  };
+
+  /**
+   * Setup a CKEDITOR instance to conjure a text editor
    * @param {object} dialog
    *   - Dialog object ( the object that contains the replaceable fields )
    * @param {string} textAreaId - Id of the text area to use for the editor
@@ -520,6 +546,7 @@ const formHelpers = function() {
    *   - Custom message to appear when the field is empty
    * @param {boolean} focusOnBuild - Focus on the editor after building
    * @param {boolean} updateOnBlur - Update the field on blur
+   * @param {number} forceScale - Do we want to setup with a given scale (0=no)
    * @return {Promise} - Promise
    */
   this.setupCKEditor = function(
@@ -529,8 +556,14 @@ const formHelpers = function() {
     customNoDataMessage = null,
     focusOnBuild = false,
     updateOnBlur = false,
+    forceScale = 0,
   ) {
     const self = this;
+
+    // Target ( if inline, target needs to be a div )
+    const $target = (inline) ?
+      $(dialog).find('#' + textAreaId).siblings('.rich-text-editor') :
+      $(dialog).find('#' + textAreaId);
 
     // Return promise
     return new Promise((resolve, reject) => {
@@ -652,66 +685,74 @@ const formHelpers = function() {
         regionDimensions = this.defaultRegionDimensions;
 
         // Calculate scale based on defaults
-        scale = scaleToContainer(
-          this.defaultRegionDimensions,
-          $richTextInput,
-          true);
+        if (forceScale > 0) {
+          scale = forceScale;
+        } else {
+          scale = scaleToContainer(
+            this.defaultRegionDimensions,
+            $richTextInput,
+            true);
+        }
       } else {
         // If region dimensions are defined, use them as base for the editor
         regionDimensions = region.dimensions;
 
-        if (inline) {
-          scale = scaleToContainer(
-            regionDimensions,
-            $richTextInput,
-            true);
+        if (forceScale > 0) {
+          scale = forceScale;
         } else {
-          // Calculate scale based on the region previewed in the viewer
-          scale =
-            this.namespace.viewer.DOMObject.find('.viewer-object').width() /
-            regionDimensions.width;
+          if (inline) {
+            scale = scaleToContainer(
+              regionDimensions,
+              $richTextInput,
+              true);
+          } else {
+            // Calculate scale based on the region previewed in the viewer
+            scale =
+              this.namespace.viewer.DOMObject.find('.viewer-object').width() /
+              regionDimensions.width;
+          }
         }
       }
 
       const applyContentsToIframe = function(field) {
-        const $container = $(CKEDITOR.instances[textAreaId].container.$);
+        const $container = $(field);
         const $inputContainer =
           $container.parents('.rich-text-input');
 
         if (inline) {
           // Inline editor div tweaks to make them
           // behave like the iframe rendered content
-          $('.cke_textarea_inline').css('width', regionDimensions.width);
-          $('.cke_textarea_inline').css('height', regionDimensions.height);
+          $container.css('width', regionDimensions.width);
+          $container.css('height', regionDimensions.height);
 
           // Show background colour if there's no background image on the layout
           if (!inlineHideBGColour) {
-            $('.cke_textarea_inline').css('background', backgroundColor);
+            $container.css('background', backgroundColor);
           }
 
-          $('.cke_textarea_inline').css('transform', 'scale(' + scale + ')');
-          $('.cke_textarea_inline').data('originaScale', scale);
-          $('.cke_textarea_inline').data('regionWidth', regionDimensions.width);
-          $('.cke_textarea_inline').data(
+          $container.css('transform', 'scale(' + scale + ')');
+          $container.data('originaScale', scale);
+          $container.data('regionWidth', regionDimensions.width);
+          $container.data(
             'regionHeight',
             regionDimensions.height,
           );
-          $('.cke_textarea_inline').data('currentScale', scale);
-          $('.cke_textarea_inline').css('transform-origin', '0 0');
-          $('.cke_textarea_inline').css('word-wrap', 'inherit');
-          $('.cke_textarea_inline').css('line-height', 'normal');
-          $('.cke_textarea_inline')
+          $container.data('currentScale', scale);
+          $container.css('transform-origin', '0 0');
+          $container.css('word-wrap', 'inherit');
+          $container.css('line-height', 'normal');
+          $container
             .css('outline-width', (CKEDITOR_OVERLAY_WIDTH / scale));
 
           // Save new dimensions to data
-          $('.cke_textarea_inline').data({
+          $container.data({
             width: regionDimensions.width * scale,
             height: regionDimensions.height * scale,
             scale: scale,
           });
 
-          $('.cke_textarea_inline p').css('margin', '0 0 16px');
-          $('.cke_textarea_inline').show();
+          $container.find('p').css('margin', '0 0 16px');
+          $container.show();
         } else {
           $('#cke_' + field + ' iframe').contents().find('head').append(
             '' +
@@ -762,60 +803,34 @@ const formHelpers = function() {
 
       // CKEditor default config and init after config is loaded
       return this.getCKEditorConfig().then(function(config) {
-        CKEDITOR_DEFAULT_CONFIG = config;
+        customConfig = config;
 
         // Set CKEDITOR viewer height based on
         // region height ( plus content default margin + border*2: 40px )
         const newHeight =
           (regionDimensions.height * scale) + (iframeMargin * 2);
-        CKEDITOR.config.height = (newHeight > 500) ? 500 : newHeight;
+        customConfig.height = (newHeight > 500) ? 500 : newHeight;
 
-        // Conjure up a text editor
+        // If it's inline
         if (inline) {
-          CKEDITOR.inline(textAreaId, CKEDITOR_DEFAULT_CONFIG);
           (self.namespace.enableInlineModeEditing) &&
             self.namespace.enableInlineModeEditing();
-        } else {
-          CKEDITOR.replace(textAreaId, CKEDITOR_DEFAULT_CONFIG);
         }
 
-        // Bind to instance ready so that we
-        // can adjust some things about the editor.
-        CKEDITOR.instances[textAreaId].on('instanceReady', function(ev) {
+        // Apply scaling to this editor instance
+        applyContentsToIframe($target);
+
+        // Create editor
+        self.createCKEditor(
+          textAreaId,
+          $target,
+          customConfig,
+          inline,
+        ).then((editorInstance) => {
           // If not defined, cancel instance setup
-          if (CKEDITOR.instances[textAreaId] === undefined) {
+          if (editorInstance === undefined) {
             return;
           }
-
-          // Fix paste not enabled
-          ev.editor.on('beforeCommandExec', function(event) {
-            // Show the paste dialog for the paste buttons and right-click paste
-            if (event.data.name == 'paste') {
-              event.editor._.forcePasteDialog = true;
-            }
-            // Don't show the paste dialog for Ctrl+Shift+V
-            if (
-              event.data.name == 'pastetext' &&
-              event.data.commandData.from == 'keystrokeHandler'
-            ) {
-              event.cancel();
-            }
-          });
-
-          // Trigger focus on textarea on editor focus
-          ev.editor.on('focus', function(evt) {
-            // Trigger focus event on text area
-            $(evt.editor.element.$).trigger('editorFocus');
-          });
-
-          // Apply scaling to this editor instance
-          applyContentsToIframe(textAreaId);
-
-          // Reapply the background style after switching
-          // to source view and back to the normal editing view
-          CKEDITOR.instances[textAreaId].on('contentDom', function() {
-            applyContentsToIframe(textAreaId);
-          });
 
           // Get the template data from the text area field
           let data = $('#' + textAreaId).val();
@@ -844,104 +859,141 @@ const formHelpers = function() {
               '</span></span>';
           }
 
-          // Handle initial template set up
-          data = self.convertLibraryReferences(data);
-
-          CKEDITOR.instances[textAreaId].setData(data);
+          self.setCKEditorData(editorInstance, data);
 
           if (focusOnBuild) {
-            CKEDITOR.instances[textAreaId].focus();
+            editorInstance.focus();
           }
-        });
 
-        // Do we have any snippets selector?
-        const $selectPickerSnippets =
-          $(
-            '.ckeditor_snippets_select[data-linked-to="' + textAreaId + '"]',
-            dialog);
-        // Select2 has been initialized
-        if ($selectPickerSnippets.length > 0) {
-          this.setupSnippetsSelector($selectPickerSnippets, function(e) {
-            const linkedTo = $selectPickerSnippets.data().linkedTo;
-            const value = e.params.data.element.value;
+          // Do we have any snippets selector?
+          const $selectPickerSnippets =
+            $(
+              '.ckeditor_snippets_select[data-linked-to="' +
+              textAreaId + '"]',
+              dialog);
+          // Select2 has been initialized
+          if ($selectPickerSnippets.length > 0) {
+            this.setupSnippetsSelector($selectPickerSnippets, function(e) {
+              const linkedTo = $selectPickerSnippets.data().linkedTo;
+              const value = e.params.data.element.value;
+              const ckeditorInstance = formHelpers
+                .getCKEditorInstance(linkedTo);
 
-            if (CKEDITOR.instances[linkedTo] != undefined &&
-              value !== undefined) {
-              const text = '[' + value + ']';
+              if (
+                ckeditorInstance &&
+                value !== undefined
+              ) {
+                const text = '[' + value + ']';
 
-              CKEDITOR.instances[linkedTo].insertText(text);
-            }
-          });
-        }
-
-        // Do we have a media selector?
-        const $selectPicker =
-          $(
-            '.ckeditor_library_select[data-linked-to="' + textAreaId + '"]',
-            dialog);
-        if ($selectPicker.length > 0) {
-          this.setupMediaSelector($selectPicker, function(e) {
-            const linkedTo = $selectPicker.data().linkedTo;
-            const value = e.params.data.imageUrl;
-
-            if (value !== undefined && value !== '' && linkedTo != null) {
-              if (CKEDITOR.instances[linkedTo] != undefined) {
-                CKEDITOR.instances[linkedTo]
-                  .insertHtml('<img src="' + value + '" />');
+                formHelpers.insertToCKEditor(
+                  'input_' + targetId + '_' + targetFieldId,
+                  text,
+                );
               }
-            }
-          });
-        }
+            });
+          }
 
-        // Update on blur
-        if (updateOnBlur) {
-          CKEDITOR.instances[textAreaId].on('blur', function() {
-            // Update CKEditor, but don't parse data (do that only on save)
-            self.updateCKEditor(textAreaId, false);
-          });
-        }
+          // Do we have a media selector?
+          const $selectPicker =
+            $(
+              '.ckeditor_library_select[data-linked-to="' + textAreaId + '"]',
+              dialog);
+          if ($selectPicker.length > 0) {
+            this.setupMediaSelector($selectPicker, function(e) {
+              const linkedTo = $selectPicker.data().linkedTo;
+              const value = e.params.data.imageUrl;
 
-        return false;
+              if (value !== undefined && value !== '' && linkedTo != null) {
+                if (CKEDITOR.instances[linkedTo] != undefined) {
+                  CKEDITOR.instances[linkedTo]
+                    .insertHtml('<img src="' + value + '" />');
+                }
+              }
+            });
+          }
+
+          // Update on blur
+          if (updateOnBlur) {
+            editorInstance.ui.focusTracker
+              .on('change:isFocused', ( _e, _n, isFocused ) => {
+                if ( !isFocused ) {
+                  // Update CKEditor, but don't parse data
+                  // (do that only on save)
+                  self.updateCKEditor(textAreaId, false);
+                }
+              });
+          }
+
+          return false;
+        });
       });
     });
   };
 
   /**
-   * Restart all CKEDITOR instances
-   * @param {Object} options - The ckeditor options
-   */
-  this.restartCKEditors = function(options) {
-    const self = this;
+   * Get CKEditor config
+   * @return {Promise} - Promise
+  */
+  this.getCKEditorConfig = function() {
+    // Base editor config ( make copy without reference )
+    const editorConfig = JSON.parse(JSON.stringify(CKEDITOR_DEFAULT_CONFIG));
 
-    $.each(CKEDITOR.instances, function(index, value) {
-      CKEDITOR.instances[index].destroy();
+    return new Promise((resolve, reject) => {
+      $.get(getFontsUrl + '?length=10000')
+        .done(function(res) {
+          // Get res.data fonts into the fontNames string
+          res.data.forEach(function(font) {
+            editorConfig.fontFamily.options
+              .push(`${font.name},${font.familyName}`);
+          });
 
-      self.setupCKEditor(options);
+          // Resolve the promise and return the editorConfig
+          resolve(editorConfig);
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+          // Output error to console
+          console.error(jqXHR, textStatus, errorThrown);
+
+          // Reject the promise
+          reject(jqXHR, textStatus, errorThrown);
+        });
     });
   };
 
   /**
+   * Get CKEditor instance
+   * @param {string} instanceID - CKEditor id
+   * @return {object} - CKEditor instance
+  */
+  this.getCKEditorInstance = function(instanceID) {
+    const instance = this.ckEditorInstances
+      .find((inst) => inst.id === instanceID);
+
+    return (instance) ? instance.editor : false;
+  };
+
+  /**
    * Update text callback CKEDITOR instance
-   * @param {Object=} instance - The instance object
+   * @param {string=} instanceID - The instance id
    * @param {boolean=} updateParsedData - Update parsed data on CKEditor
    */
-  this.updateCKEditor = function(instance = null, updateParsedData = true) {
+  this.updateCKEditor = function(instanceID, updateParsedData = true) {
     const self = this;
 
     try {
       // Update specific instance
       if (
-        instance != undefined &&
-        instance != null &&
-        CKEDITOR.instances[instance] != undefined
+        instanceID != undefined
       ) {
+        // Get instance
+        const editor = self.getCKEditorInstance(instanceID);
+
         // Parse editor data and update it
-        self.parseCKEditorData(instance, null, updateParsedData);
+        self.parseCKEditorData(editor, null, updateParsedData);
       } else {
-        $.each(CKEDITOR.instances, function(index, _value) {
+        for (const instance of self.ckEditorInstances) {
           // Parse editor data and update it
-          self.parseCKEditorData(index, null, updateParsedData);
-        });
+          self.parseCKEditorData(instance.editor, null, updateParsedData);
+        }
       }
     } catch (e) {
       console.warn('Unable to update CKEditor instances. ' + e);
@@ -950,50 +1002,105 @@ const formHelpers = function() {
 
   /**
    * Destroy text callback CKEDITOR instance
-   * @param {Object} instance - The instance object
+   * @param {string} instanceID - The instance object
    */
-  this.destroyCKEditor = function(instance) {
+  this.destroyCKEditor = function(instanceID) {
     const self = this;
 
     // Make sure when we close the dialog we also destroy the editor
     try {
-      if (instance === undefined) {
+      for (let i = self.ckEditorInstances.length - 1; i >= 0; i--) {
         // Destroy all instances
-        $.each(CKEDITOR.instances, function(index, value) {
-          CKEDITOR.instances[index].destroy();
-        });
-      } else {
-        // Destroy specific instance
-        if (CKEDITOR.instances[instance] != undefined) {
-          // Parse instance data before destroying
-          self.parseCKEditorData(
-            instance,
-            CKEDITOR.instances[instance].destroy,
-            false,
-          );
-        } else {
-          console.warn('CKEditor instance does not exist.');
+        if (
+          instanceID === undefined
+        ) {
+          self.ckEditorInstances[i].editor.destroy().then(() => {
+            self.ckEditorInstances.splice(i, 1);
+          });
+        } else if (
+          instanceID === self.ckEditorInstances[i].id
+        ) {
+          // Destroy specific instance
+          self.ckEditorInstances[i].editor.destroy().then(() => {
+            self.ckEditorInstances.splice(i, 1);
+          });
+          break;
         }
       }
     } catch (e) {
       console.warn('Unable to remove CKEditor instance. ' + e);
-      CKEDITOR.instances = {};
+    }
+  };
+
+  /**
+   * Insert text to CKEditor instance
+   * @param {string} instanceID - The instance object
+   * @param {string} text - Text to be inserted
+   */
+  this.insertToCKEditor = function(instanceID, text) {
+    const self = this;
+
+    // Make sure when we close the dialog we also destroy the editor
+    try {
+      for (let i = self.ckEditorInstances.length - 1; i >= 0; i--) {
+        // Destroy all instances
+        if (
+          instanceID === self.ckEditorInstances[i].id
+        ) {
+          const editorModel = self.ckEditorInstances[i].editor.model;
+          const editorData = self.ckEditorInstances[i].editor.data;
+
+          editorModel
+            .change(() => {
+              const insertPosition =
+                editorModel.document.selection.getFirstPosition();
+
+              const viewFragment =
+                editorData.processor.toView(text);
+              const modelFragment =
+                editorData.toModel(viewFragment);
+
+              editorModel.insertContent(
+                modelFragment,
+                insertPosition,
+              );
+
+              self.updateCKEditor(instanceID, false);
+            });
+          break;
+        }
+      }
+    } catch (e) {
+      console.warn('Unable to add text to CKEditor instance. ' + e);
     }
   };
 
   /**
    * Parse Editor data to turn media path into library tags
-   * @param {string} instance - CKEditor instance name to update
+   * @param {string} editor - CKEditor instance to update
+   * @param {string} data - A function to run after data update
+   */
+  this.setCKEditorData = function(editor, data) {
+    // Handle initial template set up
+    data = this.convertLibraryReferences(data);
+
+    editor.setData(data);
+  };
+
+  /**
+   * Parse Editor data to turn media path into library tags
+   * @param {string} editor - CKEditor instance to update
    * @param {function=} callback - A function to run after data update
    * @param {boolean=} updateDataAfterParse - Update data after parse
    */
   this.parseCKEditorData = function(
-    instance,
+    editor,
     callback = null,
     updateDataAfterParse = true,
   ) {
+    const self = this;
     // If instance is not set, stop right here
-    if (CKEDITOR.instances[instance] === undefined) {
+    if (editor === undefined) {
       return;
     }
 
@@ -1003,7 +1110,7 @@ const formHelpers = function() {
         .replace(':id', '([0-9]+)'), 'g',
       );
 
-    let data = CKEDITOR.instances[instance].getData();
+    let data = editor.getData();
 
     data = data.replace(regex, function(match, group1) {
       return '[' + group1 + ']';
@@ -1011,19 +1118,28 @@ const formHelpers = function() {
 
     // Update text field with the new data
     // ( to avoid the setData delay on save )
-    $('textarea#' + instance).val(data);
+    let $sourceElement = $(editor.sourceElement);
+    if ($(editor.sourceElement).hasClass('ck-editor__editable_inline')) {
+      $sourceElement = $sourceElement.siblings('textarea');
+    }
+
+    $sourceElement.val(data);
 
     // If we're not saving, trigger change for saving
     if (!updateDataAfterParse) {
-      $('textarea#' + instance).trigger('inputChange');
+      $sourceElement.trigger('inputChange');
     }
 
     // Set the appropriate text editor field with this data
     if (updateDataAfterParse) {
-      if (callback !== null) {
-        CKEDITOR.instances[instance].setData(data, callback);
+      if (
+        callback !== null &&
+        typeof callback === 'function'
+      ) {
+        self.setCKEditorData(editorInstance, data);
+        callback();
       } else {
-        CKEDITOR.instances[instance].setData(data);
+        self.setCKEditorData(editor, data);
       }
     } else {
       // Still call callback
@@ -1686,6 +1802,24 @@ const formHelpers = function() {
       const $editorContainer = $(el).parents('.rich-text-container');
       const $propertiesPanelContainer =
         $container.parents('.properties-panel-container');
+      const textAreaId = $editorMainContainer.find('textarea').attr('id');
+
+      const destroyEditor = function() {
+        self.destroyCKEditor(textAreaId);
+      };
+
+      const reloadEditor = function(newScale = 0) {
+        // Restore text editor
+        self.setupCKEditor(
+          container,
+          textAreaId,
+          true,
+          null,
+          false,
+          true,
+          newScale,
+        );
+      };
 
       const scaleEditorToContainer = function(
         $editor, option = '',
@@ -1696,6 +1830,8 @@ const formHelpers = function() {
         const regionHeight = Number($editor.data('regionHeight'));
         const containerWidth = $containerWrapper[0].clientWidth;
         const containerHeight = $containerWrapper[0].clientHeight;
+
+        destroyEditor();
 
         // Scale to container
         let newScale;
@@ -1712,15 +1848,7 @@ const formHelpers = function() {
           );
         }
 
-        $editor.css('transform', 'scale(' + newScale + ')');
-        $editor.data('currentScale', newScale);
-
-        // Adjust overlay
-        $('.cke_textarea_inline')
-          .css(
-            'outline-width',
-            (CKEDITOR_OVERLAY_WIDTH / newScale),
-          );
+        reloadEditor(newScale);
       };
 
       // Button to view source code
@@ -1732,28 +1860,14 @@ const formHelpers = function() {
         'data-container': '.properties-panel',
         class: 'btn btn-sm mr-auto viewSourceButton',
         click: function() {
-          const textAreaId = $editorMainContainer.find('textarea').attr('id');
-
           // Toggle source class
           $editorMainContainer.toggleClass('source');
 
           // If we turn off source, set value to ckeditor
           if (!$editorMainContainer.hasClass('source')) {
-            // Restore text editor
-            self.setupCKEditor(
-              container,
-              textAreaId,
-              true,
-              null,
-              false,
-              true,
-            ).then(function(res) {
-              const $editor = $editorMainContainer.find('.cke_textarea_inline');
-              scaleEditorToContainer($editor);
-            });
+            reloadEditor();
           } else {
-            // Destroy CKEditor
-            CKEDITOR.instances[textAreaId].destroy();
+            destroyEditor();
           }
         },
       }).tooltip({
@@ -1770,7 +1884,8 @@ const formHelpers = function() {
         click: function() {
           const $detachButton = $container.find('.detachEditorButton');
           const $attachButton = $container.find('.attachEditorButton');
-          const $editor = $editorMainContainer.find('.cke_textarea_inline');
+          const $editor =
+            $editorMainContainer.find('.ck-editor__editable_inline');
 
           // Save properties panel original Z-index to data
           if ($propertiesPanelContainer.length > 0) {
@@ -1814,6 +1929,9 @@ const formHelpers = function() {
           $detachButton.addClass('d-none');
           $attachButton.removeClass('d-none');
 
+          // Add class to body to mark detached
+          $('body').addClass('ck-editor-body-detached');
+
           // Recalculate scale
           if ($editor.length > 0) {
             scaleEditorToContainer($editor);
@@ -1833,7 +1951,8 @@ const formHelpers = function() {
         click: function() {
           const $detachButton = $container.find('.detachEditorButton');
           const $attachButton = $container.find('.attachEditorButton');
-          const $editor = $editorMainContainer.find('.cke_textarea_inline');
+          const $editor =
+            $editorMainContainer.find('.ck-editor__editable_inline');
 
           // Restore properties panel original Z-index from data
           if ($propertiesPanelContainer.length > 0) {
@@ -1859,6 +1978,9 @@ const formHelpers = function() {
           $detachButton.removeClass('d-none');
           $attachButton.addClass('d-none');
 
+          // Remove class to body to mark detached
+          $('body').removeClass('ck-editor-body-detached');
+
           // Recalculate scale
           if ($editor.length > 0) {
             scaleEditorToContainer($editor);
@@ -1876,11 +1998,14 @@ const formHelpers = function() {
         'data-container': '.properties-panel',
         class: 'btn btn-sm zoomButton zoomInEditorButton',
         click: function() {
-          const $editor = $editorMainContainer.find('.cke_textarea_inline');
+          destroyEditor();
+
+          const $editor =
+            $editorMainContainer.find('.rich-text-editor');
           const editorScale = Number($editor.data('currentScale'));
           const newScale = (editorScale * 1.2);
-          $editor.css('transform', 'scale(' + newScale + ')');
-          $editor.data('currentScale', newScale);
+
+          reloadEditor(newScale);
         },
       }).tooltip({
         trigger: 'hover',
@@ -1893,11 +2018,14 @@ const formHelpers = function() {
         'data-container': '.properties-panel',
         class: 'btn btn-sm zoomButton zoomOutEditorButton',
         click: function() {
-          const $editor = $editorMainContainer.find('.cke_textarea_inline');
+          destroyEditor();
+
+          const $editor =
+            $editorMainContainer.find('.rich-text-editor');
           const editorScale = Number($editor.data('currentScale'));
           const newScale = (editorScale / 1.2);
-          $editor.css('transform', 'scale(' + newScale + ')');
-          $editor.data('currentScale', newScale);
+
+          reloadEditor(newScale);
         },
       }).tooltip({
         trigger: 'hover',
@@ -1910,7 +2038,8 @@ const formHelpers = function() {
         'data-container': '.properties-panel',
         class: 'btn btn-sm zoomButton scaleToContainer',
         click: function() {
-          const $editor = $editorMainContainer.find('.cke_textarea_inline');
+          const $editor =
+            $editorMainContainer.find('.rich-text-editor');
           scaleEditorToContainer($editor);
         },
       }).tooltip({
@@ -1924,7 +2053,8 @@ const formHelpers = function() {
         'data-container': '.properties-panel',
         class: 'btn btn-sm zoomButton scaleToWidth',
         click: function() {
-          const $editor = $editorMainContainer.find('.cke_textarea_inline');
+          const $editor =
+            $editorMainContainer.find('.ck-editor__editable_inline');
           scaleEditorToContainer($editor, 'width');
         },
       }).tooltip({
@@ -1938,7 +2068,8 @@ const formHelpers = function() {
         'data-container': '.properties-panel',
         class: 'btn btn-sm zoomButton scaleToHeight',
         click: function() {
-          const $editor = $editorMainContainer.find('.cke_textarea_inline');
+          const $editor =
+            $editorMainContainer.find('.ck-editor__editable_inline');
           scaleEditorToContainer($editor, 'height');
         },
       }).tooltip({
@@ -2006,7 +2137,8 @@ const formHelpers = function() {
 
           // Handle input change
           $dimensionControl.on('focusout', () => {
-            const $editor = $editorMainContainer.find('.cke_textarea_inline');
+            const $editor =
+              $editorMainContainer.find('.ck-editor__editable_inline');
             const dataValue = $editor.data(targetName);
             // If the value was updated
             if (
