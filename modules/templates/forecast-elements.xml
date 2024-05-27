@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2023 Xibo Signage Ltd
+  ~ Copyright (C) 2024 Xibo Signage Ltd
   ~
   ~ Xibo - Digital Signage - https://xibosignage.com
   ~
@@ -218,6 +218,32 @@ return value + '%';
         <icon>fas fa-wind</icon>
         <startWidth>100</startWidth>
         <startHeight>100</startHeight>
+        <properties>
+            <property id="useSlashForUnits" type="checkbox">
+                <title>Use Slash for Units</title>
+                <helpText>Use '/' instead of 'p' to represent units of measure (e.g., m/s instead of mps).</helpText>
+                <default>0</default>
+            </property>
+        </properties>
+        <onElementParseData><![CDATA[
+// return empty string if there's no value
+if (String(value).length === 0) {
+    return '';
+}
+
+// check if useSlashForUnits has been checked
+if (properties.useSlashForUnits && properties.useSlashForUnits == 1) {
+    if (String(value) == 'MPH') {
+        value = value.replace('MPH', 'M/H');
+    } else if (String(value) == 'MPS') {
+        value = value.replace('MPS', 'M/S');
+    } else if (String(value) == 'KPH') {
+        value = value.replace('KPH', 'K/H');
+    }
+}
+
+return value;
+        ]]></onElementParseData>
     </template>
     <template>
         <id>weather_attribution</id>
