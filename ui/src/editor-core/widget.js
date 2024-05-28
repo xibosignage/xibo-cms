@@ -1147,10 +1147,17 @@ Widget.prototype.addElement = function(
       .elements[element.elementId] =
         this.elements[element.elementId];
 
-    // Update slot on group
-    this.elementGroups[element.groupId].updateSlot(
-      newElement.slot,
-    );
+    // Update slot on group ( if not defined )
+    if (this.elementGroups[element.groupId].slot != undefined) {
+      this.elementGroups[element.groupId].updateSlot(
+        this.elementGroups[element.groupId].slot,
+        true,
+      );
+    } else {
+      this.elementGroups[element.groupId].updateSlot(
+        newElement.slot,
+      );
+    }
   }
 
   // Get element properties

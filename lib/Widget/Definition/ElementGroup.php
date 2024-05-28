@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -23,20 +23,20 @@
 namespace Xibo\Widget\Definition;
 
 /**
+ * A class representing an instance of a group of elements
  * @SWG\Definition()
- * A class representing an instance of an element template
  */
-class Element implements \JsonSerializable
+class ElementGroup implements \JsonSerializable
 {
     public $id;
     public $top;
     public $left;
     public $width;
     public $height;
-    public $rotation;
     public $layer;
-    public $elementGroupId;
-    public $properties = [];
+    public $title;
+    public $slot;
+    public $pinSlot;
 
     /** @inheritDoc */
     public function jsonSerialize(): array
@@ -47,10 +47,10 @@ class Element implements \JsonSerializable
             'left' => $this->left,
             'width' => $this->width,
             'height' => $this->height,
-            'rotation' => $this->rotation,
             'layer' => $this->layer,
-            'elementGroupId' => $this->elementGroupId,
-            'properties' => $this->properties
+            'title' => $this->title,
+            'slot' => $this->slot,
+            'pinSlot' => $this->pinSlot
         ];
     }
 }
