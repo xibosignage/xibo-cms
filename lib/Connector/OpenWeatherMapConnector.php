@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -43,7 +43,6 @@ class OpenWeatherMapConnector implements ConnectorInterface
     private $forecastCurrent = '2.5/weather';
     private $forecast3Hourly = '2.5/forecast';
     private $forecastDaily = '2.5/forecast/daily';
-    private $forecastCombined = '2.5/onecall';
     private $forecastCombinedV3 = '3.0/onecall';
     private $forecastUv = 'uvi';
 
@@ -195,14 +194,8 @@ class OpenWeatherMapConnector implements ConnectorInterface
                 $cacheExpire->copy()->addDay()->startOfDay()
             )['list'];
         } else {
-            // We use one call
-            if (($this->getSetting('owmApiVersion') ?? '2.5') === '2.5') {
-                $forecastCombined = $this->forecastCombined;
-            } else {
-                $forecastCombined = $this->forecastCombinedV3;
-            }
-
-            $data = $this->queryApi($this->apiUrl . $forecastCombined . $url, $cacheExpire);
+            // We use one call API 3.0
+            $data = $this->queryApi($this->apiUrl . $this->forecastCombinedV3 . $url, $cacheExpire);
 
             $this->timezone = $data['timezone'];
 
