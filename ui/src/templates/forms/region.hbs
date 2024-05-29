@@ -1,6 +1,9 @@
 <form class="region-form">
     <ul class="nav nav-tabs" role="tablist">
         <li class="nav-item"><a class="nav-link active" href="#generalTab" role="tab" data-toggle="tab"><span>{{trans.general}}</span></a></li>
+        {{#if showExitTransition}}
+            <li class="nav-item"><a class="nav-link" href="#transitionTab" role="tab" data-toggle="tab"><span>{{trans.transition}}</span></a></li>
+        {{/if}}
         <li class="nav-item"><a class="nav-link" href="#positioningTab" role="tab" data-toggle="tab"><i class="fas fa-border-none tooltip-always-on" data-toggle="tooltip" data-title="{{trans.positioning}}"></i></a></li>
     </ul>
     <div class="form-content">
@@ -21,6 +24,13 @@
                         {{> inputs/message messageType="info" title=trans.region.loopMessage3}}
                     {{/eq}}
                 </div>
+
+                {{#if showExitTransition}}
+                    <div class="tab-pane" id="transitionTab">
+                        {{> inputs/dropdown value=(getOption region.regionOptions "transitionType") options=(arrMerge (arr (obj code='' transition='Off')) transitions.out) optionsTitle="transition" optionsValue="code" id="transitionType" title=trans.region.exitTransitionTitle helpText=trans.region.exitTransitionHelpText }}
+                    </div>
+                {{/if}}
+
                 <div class="tab-pane" id="positioningTab">
                     {{> button id="bringToViewButton" type="btn-block btn-outline-success inline-btn d-none mb-2" name=trans.region.bringRegionToView customClass="position-input" }}
                     {{> inputs/number value=region.zIndex id="zIndex" title=trans.region.layer helpText=trans.region.layerHelpText customClass="position-input" }}
