@@ -157,7 +157,9 @@
 
         // Update any text editor instances we have
         for(var editor in formHelpers.ckEditorInstances) {
-          formHelpers.updateCKEditor(editor);
+          formHelpers.updateCKEditor(
+            formHelpers.ckEditorInstances[editor].id,
+          );
         }
 
         // Submit via ajax - change the attachment color on success
