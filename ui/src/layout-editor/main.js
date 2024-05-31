@@ -2103,7 +2103,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
             false,
             false,
             false,
-            true,
+            false,
             false, // don't save to history
           ).then((res) => {
             // Create new temporary widget for the elements
@@ -2152,33 +2152,71 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
         ).then((template) => {
           // Check if we have elements in stencil
           if (template?.stencil?.elements) {
+            let skipSelect = false;
+
             // Loop through elements
             template.stencil.elements.forEach((element) => {
-              // Create element
-              const newElement = createElement({
-                id: element.id,
-                type: draggableData.dataType,
+              let elementGroupId = groupId;
+              const elementGroupProperties = {
+                width: draggableData.templateStartWidth,
+                height: draggableData.templateStartHeight,
+                top: (dropPosition) ? dropPosition.top : 0,
+                left: (dropPosition) ? dropPosition.left : 0,
+              };
+              const elementPositions = {
                 left: (dropPosition) ?
                   dropPosition.left + element.left :
                   element.left,
                 top: (dropPosition) ?
                   dropPosition.top + element.top :
                   element.top,
+              };
+
+              // If element has a subgroup
+              if (
+                element.elementGroupId &&
+                template?.stencil?.elementGroups
+              ) {
+                skipSelect = true;
+                elementGroupId = element.elementGroupId + groupId;
+
+                template?.stencil?.elementGroups.forEach((group) => {
+                  if (group.id === element.elementGroupId) {
+                    elementGroupProperties.top += group.top;
+                    elementGroupProperties.left += group.left;
+                    elementGroupProperties.width = group.width;
+                    elementGroupProperties.height = group.height;
+                    elementGroupProperties.layer = group.layer;
+                    elementGroupProperties.slot = group.slot;
+                    elementGroupProperties.pinSlot = group.pinSlot;
+
+                    elementPositions.top =
+                      elementGroupProperties.top + element.top;
+                    elementPositions.left =
+                      elementGroupProperties.left + element.left;
+                  }
+                });
+              }
+
+              // Create element
+              const newElement = createElement({
+                id: element.id,
+                type: draggableData.dataType,
+                left: elementPositions.left,
+                top: elementPositions.top,
                 width: element.width,
                 height: element.height,
                 layer: element.layer,
                 rotation: element.rotation,
                 properties: element.properties,
-                groupId: groupId,
-                groupProperties: {
-                  width: draggableData.templateStartWidth,
-                  height: draggableData.templateStartHeight,
-                  top: (dropPosition) ? dropPosition.top : 0,
-                  left: (dropPosition) ? dropPosition.left : 0,
-                },
+                groupId: elementGroupId,
+                groupProperties: elementGroupProperties,
                 mediaId: draggableData.mediaId,
                 isVisible: draggableData.isVisible,
               });
+
+              // Mark to skip select after add
+              newElement.skipSelect = skipSelect;
 
               // Add element to elements array
               elements.push(newElement);
@@ -5513,9 +5551,13 @@ lD.addElementsToWidget = function(
     widget.saveElements().then((_res) => {
       const firstElement = elements[0];
 
-      // If it's group with more than one element being added
-      // select group
-      if (isGroup && elements.length > 1) {
+      if (firstElement.skipSelect) {
+        lD.selectedObject = lD.layout;
+        lD.selectedObject.type = 'layout';
+        lD.selectedObject.id = lD.layout.id;
+      } else if (isGroup && elements.length > 1 && !firstElement.skipSelect) {
+        // If it's group with more than one element being added
+        // select group
         lD.viewer.saveTemporaryObject(
           firstElement.groupId,
           'element-group',
