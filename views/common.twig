@@ -271,7 +271,11 @@
                 order: {
                     url: "{{ url_for("playlist.order", {id: ':id'}) }}",
                     type: 'POST'
-                }
+                },
+                convert: {
+                    url: "{{ url_for("playlist.convert", {id: ':id'}) }}",
+                    type: 'POST'
+                },
             },
             user: {
                 get: {
@@ -431,6 +435,7 @@
                     numElGr: "{{ "# of element groups"|trans }}",
                 },
                 exit: "{{ "Exit"|trans }}",
+                convertPlaylistSuccess: "{{ "Playlist converted to global!"|trans }}",
             };
 
             var uploadTrans = {
@@ -617,6 +622,7 @@
                     heightHelpText: "{{ "The height of the %regionType%" |trans }}",
                     makeRegionFullScreen: "{{ "Make this %regionType% full screen, dimensions will be set to %layout.width% by %layout.height%." |trans }}",
                     bringRegionToView: "{{ "Bring selected %regionType% back to the Layout view." |trans }}",
+                    convertPlaylist: "{{ "Convert Layout playlist into a Global playlist." |trans }}",
                 },
                 widget: {
                     name: "{{ "Configuration Name" |trans }}",
@@ -886,6 +892,7 @@
                 userLoadPreferencesFailed: "{{ "User load preferences failed!" |trans }}",
                 libraryLoadFailed: "{{ "Library load failed!" |trans }}",
                 formLoadFailed: "{{ "Form load failed!" |trans }}",
+                convertPlaylistFailed: "{{ "Convert playlist failed!" |trans }}",
                 revertFailed: "{{ "Revert failed: %error%" |trans }}",
                 saveOrderFailed: "{{ "Save order failed: %error%" |trans }}",
                 deleteFailed: "{{ "Delete failed: %error%" |trans }}",

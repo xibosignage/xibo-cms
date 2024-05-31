@@ -23,6 +23,10 @@
                         {{> inputs/message messageType="info" title=trans.region.loopMessage2}}
                         {{> inputs/message messageType="info" title=trans.region.loopMessage3}}
                     {{/eq}}
+
+                    {{#eq region.type 'playlist' }}
+                        {{> button id="convertPlaylistButton" type="btn-block btn-outline-primary inline-btn" name=trans.region.convertPlaylist }}
+                    {{/eq}}
                 </div>
 
                 {{#if showExitTransition}}
