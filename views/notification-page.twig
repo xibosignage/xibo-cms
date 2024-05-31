@@ -26,11 +26,12 @@
 {% block title %}{{ "Notification Centre"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    {% if currentUser.featureEnabled("notification.add") %}
     <div class="widget-action-menu pull-right">
-        <button class="btn btn-success XiboFormButton" href="{{ url_for("notification.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Notification" %}</button>
+        {% if currentUser.featureEnabled("notification.add") %}
+            <button class="btn btn-success XiboFormButton" href="{{ url_for("notification.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Notification" %}</button>
+        {% endif %}
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
     </div>
-    {% endif %}
 {% endblock %}
 
 {% block pageContent %}
@@ -142,6 +143,10 @@
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
         dataTableAddButtons(table, $('#notifications_wrapper').find('.dataTables_buttons'));
+
+        $("#refreshGrid").click(function () {
+            table.ajax.reload();
+        });
 
         const notificationShow = _.debounce(function() {
           const data = table.row($(this)).data();

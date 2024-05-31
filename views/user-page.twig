@@ -35,7 +35,7 @@
             {% endif %}
             <button id="user-add-button" class="btn btn-success XiboFormButton" title="{% trans "Add a new User" %}" href="{{ addUserFormUrl }}"><i class="fa fa-user-plus" aria-hidden="true"></i> {% trans "Add User" %}</button>
         {% endif %}
-        <button class="btn btn-primary refresh-grid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</button>
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
     </div>
 {% endblock %}
 
@@ -186,7 +186,7 @@
             table.on('processing.dt', dataTableProcessing)
             dataTableAddButtons(table, $('#users_wrapper').find('.dataTables_buttons'));
 
-            $(".refresh-grid").click(function() {
+            $("#refreshGrid").click(function () {
                 table.ajax.reload();
             });
         });

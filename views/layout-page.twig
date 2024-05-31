@@ -4,16 +4,17 @@
 {% block title %}{{ "Layouts"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    {% if currentUser.featureEnabled("layout.add") %}
     <div class="widget-action-menu pull-right">
-        <button class="btn btn-success layout-add-button"
-                title="{% trans "Add a new Layout and jump to the layout designer." %}"
-                href="{{ url_for("layout.add") }}">
-            <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Layout" %}
-        </button>
-        <button class="btn btn-info" id="layoutUploadForm" title="{% trans "Import a Layout from a ZIP file." %}" href="#"> <i class="fa fa-cloud-download" aria-hidden="true"></i> {% trans "Import" %}</button>
+        {% if currentUser.featureEnabled("layout.add") %}
+            <button class="btn btn-success layout-add-button"
+                    title="{% trans "Add a new Layout and jump to the layout designer." %}"
+                    href="{{ url_for("layout.add") }}">
+                <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Layout" %}
+            </button>
+            <button class="btn btn-info" id="layoutUploadForm" title="{% trans "Import a Layout from a ZIP file." %}" href="#"> <i class="fa fa-cloud-download" aria-hidden="true"></i> {% trans "Import" %}</button>
+        {% endif %}
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
     </div>
-    {% endif %}
 {% endblock %}
 
 {% block pageContent %}
@@ -383,6 +384,10 @@
             });
             table.on('processing.dt', dataTableProcessing);
             dataTableAddButtons(table, $('#layouts_wrapper').find('.dataTables_buttons'));
+
+            $("#refreshGrid").click(function() {
+                table.ajax.reload();
+            });
 
             // Bind to the layout add button
             $('button.layout-add-button').on('click', function() {
