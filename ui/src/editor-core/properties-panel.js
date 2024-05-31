@@ -597,10 +597,18 @@ PropertiesPanel.prototype.render = function(
     }
 
     // if region, add subtype name
+    // and exit transition
     if (target.type === 'region') {
       const regionType = (target.subType === 'frame') ?
         'widget' : target.subType;
       dataToRender.regionType = propertiesPanelTrans[regionType];
+
+      if (
+        target.subType === 'playlist' ||
+        target.subType === 'zone'
+      ) {
+        dataToRender.showExitTransition = true;
+      }
 
       if (
         target.subType === 'frame' &&
