@@ -32,6 +32,9 @@ use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
+/**
+ * Menu Board Controller
+ */
 class MenuBoard extends Base
 {
     /**
@@ -329,7 +332,7 @@ class MenuBoard extends Base
             $this->checkRootFolderAllowSave();
         }
 
-        if (empty($folderId) || $this->getUser()->featureEnabled('folder.view')) {
+        if (empty($folderId) || !$this->getUser()->featureEnabled('folder.view')) {
             $folderId = $this->getUser()->homeFolderId;
         }
 
