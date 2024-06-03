@@ -1703,6 +1703,10 @@ class Layout implements \JsonSerializable
                             $this->config->getSetting('DEFAULT_TRANSITION_DURATION')
                         )
                     ));
+                    $optionsNode->appendChild($document->createElement(
+                        'transInDirection',
+                        $widget->getOptionValue('transInDirection', 'E')
+                    ));
                 }
 
                 $transOut = $widget->getOptionValue('transOut', null);
@@ -1714,6 +1718,10 @@ class Layout implements \JsonSerializable
                             'transOutDuration',
                             $this->config->getSetting('DEFAULT_TRANSITION_DURATION')
                         )
+                    ));
+                    $optionsNode->appendChild($document->createElement(
+                        'transOutDirection',
+                        $widget->getOptionValue('transOutDirection', 'E')
                     ));
                 }
 
