@@ -1519,9 +1519,31 @@ div.dataTables_wrapper div.dataTables_info {
     color: #0E70F6;
 }
 
+.grid-with-folders-container {
+    display: flex;
+    gap: 12px;
+    flex-wrap: nowrap;
+}
+
+.grid-with-folders-container #datatable-container {
+    flex: 1;
+}
+
 .grid-folder-tree-container {
     border: 1px solid #00000020;
     border-radius: 0.25rem;
+    width: 300px;
+}
+
+.grid-folder-tree-container #jstree-search {
+    margin-bottom: 0.5rem;
+}
+
+.grid-folder-tree-container a.jstree-anchor {
+    white-space: nowrap !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: calc(100% - 20px);
 }
 
 /* Select2 4.1.0-rc.0 fix */
