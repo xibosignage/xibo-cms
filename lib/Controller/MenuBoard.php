@@ -38,34 +38,14 @@ use Xibo\Support\Exception\NotFoundException;
 class MenuBoard extends Base
 {
     /**
-     * @var MenuBoardFactory
-     */
-    private $menuBoardFactory;
-
-    /**
-     * @var UserFactory
-     */
-    private $userFactory;
-
-    /**
-     * @var FolderFactory
-     */
-    private $folderFactory;
-
-    /**
      * Set common dependencies.
      * @param MenuBoardFactory $menuBoardFactory
-     * @param UserFactory $userFactory
      * @param FolderFactory $folderFactory
      */
     public function __construct(
-        $menuBoardFactory,
-        $userFactory,
-        $folderFactory
+        private readonly MenuBoardFactory $menuBoardFactory,
+        private readonly FolderFactory $folderFactory
     ) {
-        $this->menuBoardFactory = $menuBoardFactory;
-        $this->userFactory = $userFactory;
-        $this->folderFactory = $folderFactory;
     }
 
     /**
@@ -336,7 +316,11 @@ class MenuBoard extends Base
             $folderId = $this->getUser()->homeFolderId;
         }
 
-        $menuBoard = $this->menuBoardFactory->create($name, $description, $code, $folderId);
+        $folder = $this->folderFactory->getById($folderId, 0);
+
+        $menuBoard = $this->menuBoardFactory->create($name, $description, $code);
+        $menuBoard->folderId = $folder->getId();
+        $menuBoard->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
         $menuBoard->save();
 
         // Return
