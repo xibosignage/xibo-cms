@@ -37,30 +37,19 @@ use Xibo\Support\Sanitizer\SanitizerInterface;
  */
 class WidgetDownloader
 {
-    /** @var string Library location */
-    private $libraryLocation;
-
-    /** @var string Send file mode */
-    private $sendFileMode;
-
-    /** @var int CMS resize limit */
-    private $resizeLimit;
-
     /** @var LoggerInterface */
-    private $logger;
+    private LoggerInterface $logger;
 
     /**
-     * @param string $libraryLocation
-     * @param string $sendFileMode
+     * @param string $libraryLocation Library location
+     * @param string $sendFileMode Send file mode
+     * @param int $resizeLimit CMS resize limit
      */
     public function __construct(
-        string $libraryLocation,
-        string $sendFileMode,
-        int $resizeLimit
+        private readonly string $libraryLocation,
+        private readonly string $sendFileMode,
+        private readonly int $resizeLimit
     ) {
-        $this->libraryLocation = $libraryLocation;
-        $this->sendFileMode = $sendFileMode;
-        $this->resizeLimit = $resizeLimit;
     }
 
     /**
@@ -190,6 +179,16 @@ class WidgetDownloader
             }
 
             if ($regenerate) {
+                // Check that our source image is not too large
+                $imageInfo = getimagesize($filePath);
+
+                // Make sure none of the sides are greater than allowed
+                if ($this->resizeLimit > 0
+                    && ($imageInfo[0] > $this->resizeLimit || $imageInfo[1] > $this->resizeLimit)
+                ) {
+                    throw new InvalidArgumentException(__('Image too large'));
+                }
+
                 // Get the full image and make a thumbnail
                 $img = Img::make($filePath);
                 $img->resize($width, $height, function ($constraint) {
@@ -202,7 +201,7 @@ class WidgetDownloader
             $response = HttpCacheProvider::withEtag($response, md5_file($thumbnailFilePath));
 
             echo $img->encode();
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             if ($errorThumb !== null) {
                 echo Img::make($errorThumb)->encode();
             }
@@ -217,7 +216,7 @@ class WidgetDownloader
      * @param string $filePath
      * @param \Slim\Http\Response $response
      * @param string|null $errorThumb
-     * @return \Slim\Http\Response|\Psr\Http\Message\ResponseInterface
+     * @return \Slim\Http\Response
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
     public function imagePreview(
@@ -231,6 +230,18 @@ class WidgetDownloader
         // an image widget may be aspect, fit or scale
         try {
             $filePath = $this->libraryLocation . $filePath;
+
+            // Check that our source image is not too large
+            $imageInfo = getimagesize($filePath);
+
+            // Make sure none of the sides are greater than allowed
+            if ($this->resizeLimit > 0
+                && ($imageInfo[0] > $this->resizeLimit || $imageInfo[1] > $this->resizeLimit)
+            ) {
+                throw new InvalidArgumentException(__('Image too large'));
+            }
+
+            // Continue to output at the desired size
             $width = intval($params->getDouble('width'));
             $height = intval($params->getDouble('height'));
             $proportional = !$params->hasParam('proportional')
