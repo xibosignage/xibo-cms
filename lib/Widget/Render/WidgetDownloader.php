@@ -171,7 +171,7 @@ class WidgetDownloader
             $img = null;
             $regenerate = true;
             if (file_exists($thumbnailFilePath)) {
-                $img = Img::make($filePath);
+                $img = Img::make($thumbnailFilePath);
                 if ($img->width() === $width || $img->height() === $height) {
                     // Correct cache
                     $regenerate = false;
