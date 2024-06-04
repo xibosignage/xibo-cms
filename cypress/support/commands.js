@@ -864,3 +864,19 @@ Cypress.Commands.add('openToolbarMenuForPlaylist', function(menuIdx) {
     }
   });
 });
+
+
+/**
+ * Update data on CKEditor instance
+ * @param {string} ckeditorId
+ * @param {string} value
+ */
+Cypress.Commands.add('updateCKEditor', function(ckeditorId, value) {
+  cy.get('textarea[name="' + ckeditorId + '"]').invoke('prop', 'id').then((id) => {
+    cy.window().then((win) => {
+      win.formHelpers.getCKEditorInstance(
+        id,
+      ).setData(value);
+    });
+  });
+});

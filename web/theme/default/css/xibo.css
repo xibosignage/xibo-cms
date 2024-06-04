@@ -1542,3 +1542,17 @@ div.dataTables_wrapper div.dataTables_info {
     float: left;
     width: auto;
 }
+
+/* CKEditor */
+.ck-editor__editable_inline {
+    min-height: 100px;
+}
+
+.ck-fontsize-option span {
+    font-size: 1rem !important;
+}
+
+.ck.ck-dropdown__panel {
+    max-height: 300px;
+    overflow-y: auto;
+}
