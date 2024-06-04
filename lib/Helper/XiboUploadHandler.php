@@ -184,12 +184,16 @@ class XiboUploadHandler extends BlueImpUploadHandler
                     $controller->getLog()->debug('Replace in all Layouts selected. Getting associated widgets');
 
                     foreach ($controller->getWidgetFactory()->getByMediaId($oldMedia->mediaId, 0) as $widget) {
+                        $controller->getLog()->debug('Found widgetId ' . $widget->widgetId
+                                . ' to assess, type is ' . $widget->type);
+
                         if (!$controller->getUser()->checkEditable($widget)) {
                             // Widget that we cannot update,
                             // this means we can't delete the original mediaId when it comes time to do so.
                             $deleteOldRevisions = false;
 
-                            $controller->getLog()->info('Media used on Widget that we cannot edit. Delete Old Revisions has been disabled.');
+                            $controller
+                                ->getLog()->info('Media used on Widget that we cannot edit. Delete Old Revisions has been disabled.'); //phpcs:ignore
                         }
 
                         // If we are replacing an audio media item,
@@ -204,7 +208,45 @@ class XiboUploadHandler extends BlueImpUploadHandler
                             $widget->unassignAudioById($oldMedia->mediaId);
                             $widget->assignAudioById($media->mediaId);
                             $widget->save();
-                        } elseif (count($widget->getPrimaryMedia()) > 0
+                        } else if ($widget->type == 'global') {
+                            // This is a global widget and will have elements which refer to this media id.
+                            $controller->getLog()->debug('This is a global widget, checking for elements.');
+
+                            // We need to load options as that is where we store elements
+                            $widget->load(false);
+
+                            // Parse existing elements.
+                            $mediaFoundInElement = false;
+                            $elements = json_decode($widget->getOptionValue('elements', '[]'), true);
+                            foreach ($elements as $index => $widgetElement) {
+                                foreach ($widgetElement['elements'] ?? [] as $elementIndex => $element) {
+                                    if (!empty($element['mediaId']) && $element['mediaId'] == $oldMedia->mediaId) {
+                                        // We have found an element which uses the mediaId we are replacing
+                                        $elements[$index]['elements'][$elementIndex]['mediaId'] = $media->mediaId;
+
+                                        // Swap the ID on the link record
+                                        $widget->unassignMedia($oldMedia->mediaId);
+                                        $widget->assignMedia($media->mediaId);
+
+                                        $mediaFoundInElement = true;
+                                    }
+                                }
+                            }
+
+                            if ($mediaFoundInElement) {
+                                // Save the new elements
+                                $widget->setOptionValue('elements', 'raw', json_encode($elements));
+
+                                // Raise an event for this media item
+                                $controller->getDispatcher()->dispatch(
+                                    new LibraryReplaceWidgetEvent($module, $widget, $media, $oldMedia),
+                                    LibraryReplaceWidgetEvent::$NAME
+                                );
+
+                                // Save
+                                $widget->save(['alwaysUpdate' => true]);
+                            }
+                        } else if (count($widget->getPrimaryMedia()) > 0
                             && $widget->getPrimaryMediaId() == $oldMedia->mediaId
                         ) {
                             // We're only interested in primary media at this point (no audio)
