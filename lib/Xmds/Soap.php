@@ -927,6 +927,12 @@ class Soap
                                     // TODO: Does this need to be the most recent updated date for all the widgets in
                                     //  this region?
                                     $dataProvider = $dataModule->createDataProvider($widget);
+                                    $dataProvider->setDisplayProperties(
+                                        $this->display->latitude,
+                                        $this->display->longitude,
+                                        $this->display->displayId
+                                    );
+
                                     try {
                                         $widgetDataProviderCache = $this->moduleFactory
                                             ->createWidgetDataProviderCache();
@@ -2368,6 +2374,11 @@ class Soap
                     if ($dataModule->isDataProviderExpected()) {
                         // We only ever return cache.
                         $dataProvider = $dataModule->createDataProvider($widget);
+                        $dataProvider->setDisplayProperties(
+                            $this->display->latitude,
+                            $this->display->longitude,
+                            $this->display->displayId
+                        );
 
                         // Use the cache if we can.
                         try {
