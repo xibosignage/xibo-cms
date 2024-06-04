@@ -46,6 +46,11 @@
                     </test>
                 </visibility>
             </property>
+            <property id="fitToArea" type="checkbox">
+                <title>Fit to selection</title>
+                <helpText>Fit to selected area instead of using the font size?</helpText>
+                <default>0</default>
+            </property>
             <property id="useGradient" type="checkbox">
                 <title>Use gradient for the text?</title>
                 <default>0</default>
@@ -62,10 +67,20 @@
             <property id="fontSize" type="number">
                 <title>Font Size</title>
                 <default>40</default>
+                <visibility>
+                    <test>
+                        <condition field="fitToArea" type="neq">1</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="lineHeight" type="number">
                 <title>Line Height</title>
                 <default>1.2</default>
+                <visibility>
+                    <test>
+                        <condition field="fitToArea" type="neq">1</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="bold" type="checkbox">
                 <title>Bold</title>
@@ -86,14 +101,20 @@
                 <title>Text Wrap</title>
                 <helpText>Should the text wrap to the next line?</helpText>
                 <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="fitToArea" type="neq">1</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="justify" type="checkbox">
                 <title>Justify</title>
                 <helpText>Should the text be justified?</helpText>
                 <default>0</default>
                 <visibility>
-                    <test>
+                    <test type="and">
                         <condition field="textWrap" type="eq">1</condition>
+                        <condition field="fitToArea" type="neq">1</condition>
                     </test>
                 </visibility>
             </property>
@@ -101,6 +122,11 @@
                 <title>Show Overflow</title>
                 <helpText>Should the widget overflow the region?</helpText>
                 <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="fitToArea" type="neq">1</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="textShadow" type="checkbox">
                 <title>Text Shadow</title>
@@ -145,6 +171,11 @@
             <property id="horizontalAlign" type="dropdown">
                 <title>Horizontal Align</title>
                 <default>center</default>
+                <visibility>
+                    <test>
+                        <condition field="fitToArea" type="neq">1</condition>
+                    </test>
+                </visibility>
                 <options>
                     <option name="flex-start">Left</option>
                     <option name="center">Center</option>
@@ -167,7 +198,6 @@
     style="
     display: flex;
     {{#if fontFamily}}font-family: {{fontFamily}};{{/if}}
-    {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
     {{#if useGradient}}
         {{parseJSON "gb" gradient}}
         background-clip: text;
@@ -183,25 +213,29 @@
     {{#if bold}}font-weight: bold;{{/if}}
     {{#if italics}}font-style: italic;{{/if}}
     {{#if underline}}text-decoration: underline;{{/if}}
-    {{#if showOverflow}}overflow: visible;{{else}}overflow: hidden;{{/if}}
-    {{#if horizontalAlign}}
-        justify-content: {{horizontalAlign}};
-    {{/if}}
-    {{#eq horizontalAlign "flex-start"}}text-align: left;{{/eq}}
-    {{#eq horizontalAlign "center"}}text-align: center;{{/eq}}
-    {{#eq horizontalAlign "flex-end"}}text-align: right;{{/eq}}
     {{#if verticalAlign}}align-items: {{verticalAlign}};{{/if}}
-    {{#if textWrap}}
-        white-space: break-spaces;
-        {{#if justify}}
-            text-align: justify;
-        {{/if}}
-    {{else}}
+    {{#if fitToArea}}
         white-space: nowrap;
+    {{else}}
+        {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
+        {{#if showOverflow}}overflow: visible;{{else}}overflow: hidden;{{/if}}
+        {{#if horizontalAlign}}
+            justify-content: {{horizontalAlign}};
+        {{/if}}
+        {{#eq horizontalAlign "flex-start"}}text-align: left;{{/eq}}
+        {{#eq horizontalAlign "center"}}text-align: center;{{/eq}}
+        {{#eq horizontalAlign "flex-end"}}text-align: right;{{/eq}}
+            {{#if lineHeight}}line-height: {{lineHeight}};{{/if}}
+        {{#if textWrap}}
+            white-space: break-spaces;
+            {{#if justify}}
+                text-align: justify;
+            {{/if}}
+        {{else}}
+            white-space: nowrap;
+        {{/if}}
     {{/if}}
-    {{#if lineHeight}}line-height: {{lineHeight}};{{/if}}
     {{#if verticalAlign}}align-items: {{verticalAlign}};{{/if}}
-    {{#if textWrap}}white-space: break-spaces;{{else}}white-space: nowrap;{{/if}}
     {{#if textShadow}}text-shadow: {{shadowX}}px {{shadowY}}px {{shadowBlur}}px {{textShadowColor}};{{/if}}
     width: 100%; height: 100%;"
 >
@@ -212,6 +246,15 @@
 {{/if}}
 </div>
             ]]></hbs>
+        <onTemplateRender><![CDATA[
+if(properties.fitToArea) {
+    // Set target for the text
+    properties.fitTarget = 'div';
+
+    // Scale text to container
+    $(target).find('.global-elements-text').xiboTextScaler(properties);
+}
+        ]]></onTemplateRender>
         </stencil>
         <assets>
             <asset id="text-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/text.png" />
@@ -253,6 +296,11 @@
                     </test>
                 </visibility>
             </property>
+            <property id="fitToArea" type="checkbox">
+                <title>Fit to selection</title>
+                <helpText>Fit to selected area instead of using the font size?</helpText>
+                <default>0</default>
+            </property>
             <property id="useGradient" type="checkbox">
                 <title>Use gradient for the text?</title>
                 <default>0</default>
@@ -269,10 +317,20 @@
             <property id="fontSize" type="number">
                 <title>Font Size</title>
                 <default>40</default>
+                <visibility>
+                    <test>
+                        <condition field="fitToArea" type="neq">1</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="lineHeight" type="number">
                 <title>Line Height</title>
                 <default>1.2</default>
+                <visibility>
+                    <test>
+                        <condition field="fitToArea" type="neq">1</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="bold" type="checkbox">
                 <title>Bold</title>
@@ -293,11 +351,21 @@
                 <title>Text Wrap</title>
                 <helpText>Should the text wrap to the next line?</helpText>
                 <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="fitToArea" type="neq">1</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="showOverflow" type="checkbox">
                 <title>Show Overflow</title>
                 <helpText>Should the widget overflow the region?</helpText>
                 <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="fitToArea" type="neq">1</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="textShadow" type="checkbox">
                 <title>Text Shadow</title>
@@ -342,6 +410,11 @@
             <property id="horizontalAlign" type="dropdown">
                 <title>Horizontal Align</title>
                 <default>center</default>
+                <visibility>
+                    <test>
+                        <condition field="fitToArea" type="neq">1</condition>
+                    </test>
+                </visibility>
                 <options>
                     <option name="flex-start">Left</option>
                     <option name="center">Center</option>
@@ -364,8 +437,6 @@
     style="
     display: flex;
     {{#if fontFamily}}font-family: {{fontFamily}};{{/if}}
-    {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
-    {{#if lineHeight}}line-height: {{lineHeight}};{{/if}}
     {{#if useGradient}}
         {{parseJSON "gb" gradient}}
         background-clip: text;
@@ -382,9 +453,15 @@
     {{#if italics}}font-style: italic;{{/if}}
     {{#if underline}}text-decoration: underline;{{/if}}
     {{#if showOverflow}}overflow: visible;{{else}}overflow: hidden;{{/if}}
-    {{#if horizontalAlign}}justify-content: {{horizontalAlign}};{{/if}}
     {{#if verticalAlign}}align-items: {{verticalAlign}};{{/if}}
+    {{#if fitToArea}}
+        white-space: nowrap;
+    {{else}}
+        {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
+        {{#if lineHeight}}line-height: {{lineHeight}};{{/if}}
+        {{#if horizontalAlign}}justify-content: {{horizontalAlign}};{{/if}}
     {{#if textWrap}}white-space: break-spaces;{{else}}white-space: nowrap;{{/if}}
+    {{/if}}
     {{#if textShadow}}text-shadow: {{shadowX}}px {{shadowY}}px {{shadowBlur}}px {{textShadowColor}};{{/if}}
     width: 100%; height: 100%;"
 >
@@ -414,6 +491,15 @@ $(target).find('.date').each(function(_idx, dateEl){
 
     // Set the date div value to the formatted date
     $(dateEl).html(formattedDate);
+
+
+    if (properties.fitToArea) {
+        // Set target for the text
+        properties.fitTarget = '.date';
+
+        // Scale text to container
+        $(target).find('.global-elements-date').xiboTextScaler(properties);
+    }
 });
         ]]></onTemplateRender>
         <assets>
@@ -476,6 +562,11 @@ $(target).find('.date').each(function(_idx, dateEl){
                     </test>
                 </visibility>
             </property>
+            <property id="fitToArea" type="checkbox">
+                <title>Fit to selection</title>
+                <helpText>Fit to selected area instead of using the font size?</helpText>
+                <default>0</default>
+            </property>
             <property id="useGradient" type="checkbox">
                 <title>Use gradient for the text?</title>
                 <default>0</default>
@@ -492,10 +583,20 @@ $(target).find('.date').each(function(_idx, dateEl){
             <property id="fontSize" type="number">
                 <title>Font Size</title>
                 <default>40</default>
+                <visibility>
+                    <test>
+                        <condition field="fitToArea" type="neq">1</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="lineHeight" type="number">
                 <title>Line Height</title>
                 <default>1.2</default>
+                <visibility>
+                    <test>
+                        <condition field="fitToArea" type="neq">1</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="bold" type="checkbox">
                 <title>Bold</title>
@@ -516,6 +617,11 @@ $(target).find('.date').each(function(_idx, dateEl){
                 <title>Text Wrap</title>
                 <helpText>Should the text wrap to the next line?</helpText>
                 <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="fitToArea" type="neq">1</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="showOverflow" type="checkbox">
                 <title>Show Overflow</title>
@@ -565,6 +671,11 @@ $(target).find('.date').each(function(_idx, dateEl){
             <property id="horizontalAlign" type="dropdown">
                 <title>Horizontal Align</title>
                 <default>center</default>
+                <visibility>
+                    <test>
+                        <condition field="fitToArea" type="neq">1</condition>
+                    </test>
+                </visibility>
                 <options>
                     <option name="flex-start">Left</option>
                     <option name="center">Center</option>
@@ -587,8 +698,6 @@ $(target).find('.date').each(function(_idx, dateEl){
     style="
     display: flex;
     {{#if fontFamily}}font-family: {{fontFamily}};{{/if}}
-    {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
-    {{#if lineHeight}}line-height: {{lineHeight}};{{/if}}
     {{#if useGradient}}
         {{parseJSON "gb" gradient}}
         background-clip: text;
@@ -604,10 +713,16 @@ $(target).find('.date').each(function(_idx, dateEl){
     {{#if bold}}font-weight: bold;{{/if}}
     {{#if italics}}font-style: italic;{{/if}}
     {{#if underline}}text-decoration: underline;{{/if}}
-    {{#if showOverflow}}overflow: visible;{{else}}overflow: hidden;{{/if}}
-    {{#if horizontalAlign}}justify-content: {{horizontalAlign}};{{/if}}
+    {{#if fitToArea}}
+        white-space: nowrap;
+    {{else}}
+        {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
+        {{#if lineHeight}}line-height: {{lineHeight}};{{/if}}
+        {{#if showOverflow}}overflow: visible;{{else}}overflow: hidden;{{/if}}
+        {{#if horizontalAlign}}justify-content: {{horizontalAlign}};{{/if}}
+        {{#if textWrap}}white-space: break-spaces;{{else}}white-space: nowrap;{{/if}}
+    {{/if}}
     {{#if verticalAlign}}align-items: {{verticalAlign}};{{/if}}
-    {{#if textWrap}}white-space: break-spaces;{{else}}white-space: nowrap;{{/if}}
     {{#if textShadow}}text-shadow: {{shadowX}}px {{shadowY}}px {{shadowBlur}}px {{textShadowColor}};{{/if}}
     width: 100%; height: 100%;"
 >
@@ -621,6 +736,8 @@ var useCurrentDate = (properties.currentDate == 1);
 
 if (useCurrentDate) {
     // Use current date
+
+    let firstRun = true;
 
     var offset = properties.offset || 0;
     // Clear previous interval if exists
@@ -645,6 +762,16 @@ if (useCurrentDate) {
         }
 
         $dateEl.html(currentDate.format(properties.dateFormat));
+
+        if (firstRun && properties.fitToArea) {
+            // Set target for the text
+            properties.fitTarget = '.date-advanced';
+
+            // Scale text to container
+            $(target).find('.global-elements-date-advanced').xiboTextScaler(properties);
+
+            firstRun = false;
+        }
     }, 1000);
 } else {
     // Use custom date
@@ -667,6 +794,14 @@ if (useCurrentDate) {
 
     // Set the date div value to the formatted date
     $dateEl.html(formattedDate);
+
+    if (properties.fitToArea) {
+        // Set target for the text
+        properties.fitTarget = '.date-advanced';
+
+        // Scale text to container
+        $(target).find('.global-elements-date-advanced').xiboTextScaler(properties);
+    }
 }
         ]]></onTemplateRender>
         <assets>
