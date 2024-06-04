@@ -1527,6 +1527,7 @@ div.dataTables_wrapper div.dataTables_info {
 
 .grid-with-folders-container #datatable-container {
     flex: 1;
+    min-width: 0;
 }
 
 .grid-folder-tree-container {
