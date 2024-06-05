@@ -1332,6 +1332,9 @@ class Widget extends Base
             throw new ConfigurationException(__('Problem rendering widget'));
         }
 
+        // Explicitly set the Content-Type header to application/json
+        $response = $response->withHeader('Content-Type', 'application/json');
+
         return $this->render($request, $response);
     }
 

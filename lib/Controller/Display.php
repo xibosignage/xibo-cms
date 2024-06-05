@@ -2219,6 +2219,9 @@ class Display extends Base
             ob_end_clean();
         }
 
+        // Explicitly set the Content-Type header to application/json
+        $response = $response->withHeader('Content-Type', 'application/json');
+
         echo $img->encode();
         return $this->render($request, $response);
     }
