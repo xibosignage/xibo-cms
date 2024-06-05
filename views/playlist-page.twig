@@ -114,26 +114,24 @@
                     </div>
                 </div>
 
-                <div class="row">
-                    <div class="col-sm-2 grid-folder-tree-container" id="grid-folder-filter">
-                        <div class="p-3 mr-2">
-                            <input id="jstree-search" class="form-control" type="text" placeholder="{% trans "Search" %}">
-                            <div class="form-check">
-                                <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
-                                <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "All Folders" %}</label>
-                            </div>
-                            <div class="folder-search-no-results d-none">
-                                <p>{% trans 'No Folders matching the search term' %}</p>
-                            </div>
-                            <div id="container-folder-tree"></div>
+                <div class="grid-with-folders-container">
+                    <div class="grid-folder-tree-container p-3" id="grid-folder-filter">
+                        <input id="jstree-search" class="form-control" type="text" placeholder="{% trans "Search" %}">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
+                            <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "All Folders" %}</label>
                         </div>
+                        <div class="folder-search-no-results d-none">
+                            <p>{% trans 'No Folders matching the search term' %}</p>
+                        </div>
+                        <div id="container-folder-tree"></div>
                     </div>
                     <div class="folder-controller d-none">
                         <button type="button" id="folder-tree-select-folder-button" class="btn btn-outline-secondary" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-folder fa-1x"></i></button>
                         <div id="breadcrumbs" class="mt-2 pl-2"></div>
                     </div>
-                    <div id="datatable-container" class="col-sm-10 pr-0">
-                        <div class="XiboData card pt-4 px-2">
+                    <div id="datatable-container">
+                        <div class="XiboData card py-3">
                             <table id="playlists" class="table table-striped" data-content-type="playlist"
                                    data-content-id-name="playlistId" data-state-preference-name="playlistGrid" style="width: 100%;">
                                 <thead>

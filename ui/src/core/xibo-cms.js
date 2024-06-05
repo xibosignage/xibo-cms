@@ -4005,10 +4005,16 @@ function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected =
         $('#jstree-search').on('keyup', folderSearch);
         $('#jstree-search-form').on('keyup', folderSearch)
     }
+
+    // Make container resizable
+    $('#grid-folder-filter').resizable({
+        handles: 'e',
+        minWidth: 200,
+        maxWidth: 500,
+    });
 }
 
 function adjustDatatableSize (reload) {
-
     // Display Map Resize
     function resizeDisplayMap() {
         if (typeof refreshDisplayMap === "function") {
@@ -4019,7 +4025,6 @@ function adjustDatatableSize (reload) {
     reload = (typeof reload == 'undefined') ? true : reload;
     // Shrink table to ease animation
     if($('#grid-folder-filter').is(":hidden")) {
-        $('#datatable-container').addClass('col-sm-10').removeClass('col-sm-12');
         resizeDisplayMap();
     }
 
@@ -4029,12 +4034,9 @@ function adjustDatatableSize (reload) {
                 // if folder tree is hidden and select everywhere is not checked, then show breadcrumbs
                 $("#breadcrumbs").show('slow');
             }
-
-            // if the folder tree is hidden, then make it so datatable can take whole available width
-            $('#datatable-container').addClass('col-sm-12').removeClass('col-sm-10');
             resizeDisplayMap();
         } else {
-            // if the tree folder view is visible, then hide breadcrumbs and adjust col-sm class on datatable
+            // if the tree folder view is visible, then hide breadcrumbs
             $("#breadcrumbs").hide('slow');
         }
 
@@ -4053,7 +4055,6 @@ function disableFolders () {
     $('#folder-tree-select-folder-button').parent().remove();
     $('#container-folder-tree').remove();
     $('#grid-folder-filter').remove();
-    $('#datatable-container').addClass('col-sm-12').removeClass('col-sm-10');
 }
 
 /**
