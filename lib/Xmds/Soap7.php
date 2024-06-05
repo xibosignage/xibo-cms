@@ -128,6 +128,11 @@ class Soap7 extends Soap6
             if ($dataModule->isDataProviderExpected()) {
                 // We only ever return cache.
                 $dataProvider = $module->createDataProvider($widget);
+                $dataProvider->setDisplayProperties(
+                    $this->display->latitude,
+                    $this->display->longitude,
+                    $this->display->displayId
+                );
 
                 // We only __ever__ return cache from XMDS.
                 try {

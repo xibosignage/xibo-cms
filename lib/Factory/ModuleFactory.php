@@ -144,10 +144,7 @@ class ModuleFactory extends BaseFactory
         ?WidgetProviderInterface $widgetInterface
     ): string {
         // Determine the cache key
-        $cacheKey = null;
-        if ($widgetInterface !== null) {
-            $cacheKey = $widgetInterface->getDataCacheKey($dataProvider);
-        }
+        $cacheKey = $widgetInterface?->getDataCacheKey($dataProvider);
 
         if ($cacheKey === null) {
             // Determinthe cache key from the setting in XML.
@@ -165,6 +162,16 @@ class ModuleFactory extends BaseFactory
                 $module->decorateProperties($widget, true);
                 $properties = $module->getPropertyValues(false);
 
+                // Is display location in use?
+                // We should see if the display location property is set (this is a special property), and if it is
+                // update the lat/lng with the details stored on the display
+                $latitude = $properties['latitude'] ?? '';
+                $longitude = $properties['longitude'] ?? '';
+                if ($dataProvider->getProperty('useDisplayLocation') == 1) {
+                    $latitude = $dataProvider->getDisplayLatitude() ?: $latitude;
+                    $longitude = $dataProvider->getDisplayLongitude() ?: $longitude;
+                }
+
                 // Parse the cache key for variables.
                 $matches = [];
                 preg_match_all('/%(.*?)%/', $cacheKey, $matches);
@@ -173,6 +180,10 @@ class ModuleFactory extends BaseFactory
                         $cacheKey = str_replace('%displayId%', $displayId, $cacheKey);
                     } else if ($match === 'widgetId') {
                         $cacheKey = str_replace('%widgetId%', $widget->widgetId, $cacheKey);
+                    } else if ($match === 'latitude') {
+                        $cacheKey = str_replace('%latitude%', $latitude, $cacheKey);
+                    } else if ($match === 'longitude') {
+                        $cacheKey = str_replace('%longitude%', $longitude, $cacheKey);
                     } else {
                         $this->getLog()->debug($match);
                         $cacheKey = str_replace(

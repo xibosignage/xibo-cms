@@ -125,7 +125,8 @@ class WidgetSyncTask implements TaskInterface
                         }
 
                         // Refresh the cache if needed.
-                        $isDisplaySpecific = str_contains($cacheKey, '%displayId%');
+                        $isDisplaySpecific = str_contains($cacheKey, '%displayId%')
+                            || str_contains($cacheKey, '%useDisplayLocation%');
 
                         // We're either assigning all media to all displays, or we're assigning then one by one
                         if ($isDisplaySpecific) {
@@ -188,11 +189,20 @@ class WidgetSyncTask implements TaskInterface
     ): array {
         $this->getLogger()->debug('cache: ' . $widget->widgetId . ' for display: ' . ($display?->displayId ?? 0));
 
-        $mediaIds = [];
-
         // Each time we call this we use a new provider
         $dataProvider = $module->createDataProvider($widget);
         $dataProvider->setMediaFactory($this->mediaFactory);
+
+        // Set our provider up for the display
+        if ($display !== null) {
+            $dataProvider->setDisplayProperties($display->latitude, $display->longitude, $display->displayId);
+        } else {
+            $dataProvider->setDisplayProperties(
+                $this->getConfig()->getSetting('DEFAULT_LAT'),
+                $this->getConfig()->getSetting('DEFAULT_LONG')
+            );
+        }
+
         $widgetDataProviderCache = $this->moduleFactory->createWidgetDataProviderCache();
 
         // Get the cache key
@@ -203,16 +213,6 @@ class WidgetSyncTask implements TaskInterface
             $dataProvider,
             $widgetInterface
         );
-
-        // Set our provider up for the displays
-        if ($display !== null) {
-            $dataProvider->setDisplayProperties($display->latitude, $display->longitude, $display->displayId);
-        } else {
-            $dataProvider->setDisplayProperties(
-                $this->getConfig()->getSetting('DEFAULT_LAT'),
-                $this->getConfig()->getSetting('DEFAULT_LONG')
-            );
-        }
 
         // Get the data modified date
         $dataModifiedDt = null;
