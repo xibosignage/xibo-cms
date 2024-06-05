@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -127,6 +127,10 @@ class Preview extends Base
             // Release lock
             $this->layoutFactory->concurrentRequestRelease($layout);
         }
+
+        // Explicitly set the Content-Type header to application/json
+        $response = $response->withHeader('Content-Type', 'application/json');
+
         return $this->render($request, $response);
     }
 

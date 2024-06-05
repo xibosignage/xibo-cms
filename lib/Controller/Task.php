@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -472,6 +472,10 @@ class Task extends Base
             . Carbon::now()->format(DateFormatHelper::getSystemFormat()));
 
         $this->setNoOutput();
+
+        // Explicitly set the Content-Type header to application/json
+        $response = $response->withHeader('Content-Type', 'application/json');
+
         return $this->render($request, $response);
     }
 
@@ -573,6 +577,10 @@ class Task extends Base
 
         $this->getLog()->debug('XTR poll stopped');
         $this->setNoOutput();
+
+        // Explicitly set the Content-Type header to application/json
+        $response = $response->withHeader('Content-Type', 'application/json');
+
         return $this->render($request, $response);
     }
 
