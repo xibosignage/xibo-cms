@@ -159,6 +159,7 @@ const XiboPlayer = function() {
       // Compose data elements slots
       currentWidget.maxSlot = maxSlot;
       currentWidget.elements = transformedElems;
+      currentWidget.metaElements = this.composeMetaElements(transformedElems);
       currentWidget.dataElements =
           this.initSlots(transformedElems, minSlot, maxSlot);
       currentWidget.pinnedSlots =
@@ -276,6 +277,28 @@ const XiboPlayer = function() {
   };
 
   /**
+   * Compose elements that has data from meta
+   * @param {Object} transformedElems Elements collection
+   * @return {Object} metaElements
+   * */
+  this.composeMetaElements = function(transformedElems) {
+    let metaElements = {};
+
+    if (Object.entries(transformedElems).length > 0) {
+      metaElements = Object.keys(transformedElems).reduce((a, b) => {
+        const metaItem = transformedElems[b];
+        if (metaItem.dataInMeta) {
+          a[b] = metaItem;
+        }
+
+        return a;
+      }, {});
+    }
+
+    return metaElements;
+  };
+
+  /**
    * Initialize slots
    * @param {Object} collection Data elements
    * @param {Number} minSlot
@@ -302,8 +325,12 @@ const XiboPlayer = function() {
     if (Object.values(dataSlots).length > 0 &&
       Object.values(collection).length > 0
     ) {
-      Object.keys(collection).forEach(function(itemKey) {
-        const currentItem = collection[itemKey];
+      for (const [itemKey, currentItem] of Object.entries(collection)) {
+        // Skip item if dataInMeta = true
+        if (currentItem.dataInMeta) {
+          continue;
+        }
+
         const currentSlot = currentItem.slot + 1;
         if (Boolean(dataSlots[currentSlot])) {
           dataSlots[currentSlot].items[itemKey] = currentItem;
@@ -315,7 +342,7 @@ const XiboPlayer = function() {
           dataSlots[currentSlot].pinnedItems =
             PlayerHelper.getPinnedItems(dataSlots[currentSlot].items);
         }
-      });
+      }
     }
 
     return dataSlots;
@@ -1155,87 +1182,61 @@ XiboPlayer.prototype.renderDataElements = function(currentWidget) {
             }
           }
 
-          $slotItemContent.css({
-            width: slotObjItem.width,
-            height: slotObjItem.height,
-            position: 'absolute',
-            top: slotObjItem.top,
-            left: slotObjItem.left,
-            overflow: 'hidden',
-            zIndex: slotObjItem.layer,
-          });
-
-          if (isMarquee) {
-            const $scroller =
-              $(`<div class="${itemKey}--marquee scroll"></div>`);
-
-            $scroller.css({
-              display: 'flex',
-              height: slotObjItem.height,
-            });
-
-            if (slotObjItem?.templateData?.verticalAlign) {
-              $scroller.css({
-                alignItems: slotObjItem?.templateData?.verticalAlign,
-              });
-            }
-
-            $slotItemContent.wrapInner($scroller.prop('outerHTML'));
-          } else {
-            if (!isGroup) {
-              $slotItemContent.css({
-                position: 'absolute',
-                top: slotObjItem.top,
-                left: slotObjItem.left,
-                width: slotObjItem.width,
-                height: slotObjItem.height,
-                zIndex: slotObjItem.layer,
-              });
-            }
-          }
-
-          // Remove data group element if exists to avoid duplicate
-          if ($content.find('.' +
-            itemKey + '.cycle-slideshow').length === 1) {
-            $content.find('.' +
-              itemKey + '.cycle-slideshow').cycle('destroy');
-          }
-          if ($content.find('.' + itemKey).length === 1) {
-            $content.find('.' + itemKey).remove();
-          }
-
-          $content.append($slotItemContent);
-
-          $slotItemContent.promise().done(function() {
-            $slotItemContent.xiboElementsRender(
-              {
-                ...slotObjItem,
-                itemsPerPage: currentWidget?.maxSlot,
-                numItems: data.length,
-                id: itemKey,
-                selector: `.${itemKey}`,
-              },
-              $slotItemContent.find(`.${itemKey}--item`),
-            );
-
-            const runOnTemplateVisible = function() {
-              slotObjItem.onTemplateVisible($slotItemContent);
-            };
-
-            // Run onTemplateVisible by default if visible
-            if (xiboIC.checkVisible()) {
-              runOnTemplateVisible();
-            } else {
-              xiboIC.addToQueue(runOnTemplateVisible);
-            }
-
-            currentWidget.items.push($slotItemContent);
-          });
+          self.postRenderDataElements(
+            $slotItemContent,
+            slotObjItem,
+            isMarquee,
+            itemKey,
+            isGroup,
+            $content,
+            currentWidget,
+            data,
+          );
         });
       }
     });
   }
 
+  // Render data elements from meta data
+  if (currentWidget.metaElements &&
+    Object.entries(currentWidget.metaElements).length > 0
+  ) {
+    Object.keys(currentWidget.metaElements).forEach(function(itemKey, slotKey) {
+      const slotObjItem = currentWidget.metaElements[itemKey];
+      const $slotItemContent = $(`<div class="${itemKey}"></div>`);
+      const isMarquee = PlayerHelper.isMarquee(slotObjItem?.efffect);
+
+      // Load element functions
+      self.loadElementFunctions(slotObjItem, meta);
+
+      PlayerHelper.renderDataItem(
+        false,
+        slotObjItem.id,
+        slotObjItem.onElementParseData(meta),
+        slotObjItem,
+        slotKey,
+        currentWidget.maxSlot,
+        slotObjItem.pinSlot,
+        currentWidget.pinnedSlots,
+        itemKey,
+        $slotItemContent,
+        {...slotObjItem, isMarquee},
+        meta,
+        $content,
+      );
+
+      self.postRenderDataElements(
+        $slotItemContent,
+        slotObjItem,
+        isMarquee,
+        itemKey,
+        false,
+        $content,
+        currentWidget,
+        data,
+      );
+    });
+  }
   // Find and handle any images
   $content.find('img').xiboImageRender();
 
@@ -1248,6 +1249,94 @@ XiboPlayer.prototype.renderDataElements = function(currentWidget) {
 
   console.log(
     '<<<END>>> of renderDataElements for widget >', currentWidget.widgetId);
+};
+
+XiboPlayer.prototype.postRenderDataElements = function(
+  $slotItemContent,
+  slotObjItem,
+  isMarquee,
+  itemKey,
+  isGroup,
+  $content,
+  currentWidget,
+  data,
+) {
+  $slotItemContent.css({
+    width: slotObjItem.width,
+    height: slotObjItem.height,
+    position: 'absolute',
+    top: slotObjItem.top,
+    left: slotObjItem.left,
+    overflow: 'hidden',
+    zIndex: slotObjItem.layer,
+  });
+
+  if (isMarquee) {
+    const $scroller =
+      $(`<div class="${itemKey}--marquee scroll"></div>`);
+
+    $scroller.css({
+      display: 'flex',
+      height: slotObjItem.height,
+    });
+
+    if (slotObjItem?.templateData?.verticalAlign) {
+      $scroller.css({
+        alignItems: slotObjItem?.templateData?.verticalAlign,
+      });
+    }
+
+    $slotItemContent.wrapInner($scroller.prop('outerHTML'));
+  } else {
+    if (!isGroup) {
+      $slotItemContent.css({
+        position: 'absolute',
+        top: slotObjItem.top,
+        left: slotObjItem.left,
+        width: slotObjItem.width,
+        height: slotObjItem.height,
+        zIndex: slotObjItem.layer,
+      });
+    }
+  }
+
+  // Remove data group element if exists to avoid duplicate
+  if ($content.find('.' +
+    itemKey + '.cycle-slideshow').length === 1) {
+    $content.find('.' +
+      itemKey + '.cycle-slideshow').cycle('destroy');
+  }
+  if ($content.find('.' + itemKey).length === 1) {
+    $content.find('.' + itemKey).remove();
+  }
+
+  $content.append($slotItemContent);
+
+  $slotItemContent.promise().done(function() {
+    $slotItemContent.xiboElementsRender(
+      {
+        ...slotObjItem,
+        itemsPerPage: currentWidget?.maxSlot,
+        numItems: data?.length || 0,
+        id: itemKey,
+        selector: `.${itemKey}`,
+      },
+      $slotItemContent.find(`.${itemKey}--item`),
+    );
+
+    const runOnTemplateVisible = function() {
+      slotObjItem.onTemplateVisible($slotItemContent);
+    };
+
+    // Run onTemplateVisible by default if visible
+    if (xiboIC.checkVisible()) {
+      runOnTemplateVisible();
+    } else {
+      xiboIC.addToQueue(runOnTemplateVisible);
+    }
+
+    currentWidget.items.push($slotItemContent);
+  });
 };
 
 /**
