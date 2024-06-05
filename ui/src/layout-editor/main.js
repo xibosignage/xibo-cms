@@ -5601,6 +5601,63 @@ lD.addElementsToWidget = function(
   });
 };
 
+
+/**
+ * Convert playlist into global
+ * @param {string} playlistId
+ */
+lD.convertPlaylist = function(playlistId) {
+  // Load form the API
+  const linkToAPI = urlsForApi.playlist.convert;
+
+  let requestPath = linkToAPI.url;
+
+  // Replace ID
+  if (playlistId != null) {
+    requestPath = requestPath.replace(':id', playlistId);
+  }
+
+  lD.common.showLoadingScreen('convertPlaylist');
+
+  // Request and load element form
+  $.ajax({
+    url: requestPath,
+    type: linkToAPI.type,
+  }).done(function(res) {
+    if (res.success) {
+      // Show success message
+      toastr.info(editorsTrans.convertPlaylistSuccess);
+
+      // Reload editor
+      lD.reloadData(lD.layout,
+        {
+          refreshEditor: true,
+        });
+    } else {
+      // Login Form needed?
+      if (res.login) {
+        window.location.href = window.location.href;
+        location.reload();
+      } else {
+        toastr.error(errorMessagesTrans.convertPlaylistFailed);
+
+        // Just an error we dont know about
+        if (res.message == undefined) {
+          console.error(res);
+        } else {
+          console.error(res.message);
+        }
+      }
+    }
+
+    lD.common.hideLoadingScreen('convertPlaylist');
+  }).catch(function(jqXHR, textStatus, errorThrown) {
+    lD.common.hideLoadingScreen('convertPlaylist');
+    console.error(jqXHR, textStatus, errorThrown);
+    toastr.error(errorMessagesTrans.convertPlaylistFailed);
+  });
+};
+
 /**
  * Calculate top layer
  * @param {number} baseLayer - Base layer to be compared
