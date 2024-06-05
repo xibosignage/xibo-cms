@@ -26,11 +26,12 @@
 {% block title %}{{ "Menu Boards"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    {% if currentUser.featureEnabled("menuBoard.add") %}
-        <div class="widget-action-menu pull-right">
+    <div class="widget-action-menu pull-right">
+        {% if currentUser.featureEnabled("menuBoard.add") %}
             <button class="btn btn-success XiboFormButton" title="{% trans "Add a new Menu Board" %}" href="{{ url_for("menuBoard.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Menu Board" %}</button>
-        </div>
-    {% endif %}
+        {% endif %}
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
+    </div>
 {% endblock %}
 
 {% block pageContent %}
@@ -183,6 +184,10 @@
             table.on('draw', dataTableDraw);
             table.on('processing.dt', dataTableProcessing);
             dataTableAddButtons(table, $('#menuBoards_wrapper').find('.col-md-6').eq(1));
+
+            $("#refreshGrid").click(function () {
+                table.ajax.reload();
+            });
         });
 
     </script>

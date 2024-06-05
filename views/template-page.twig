@@ -26,11 +26,12 @@
 {% block title %}{{ "Templates"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    {% if currentUser.featureEnabled("template.add") %}
-        <div class="widget-action-menu pull-right">
+    <div class="widget-action-menu pull-right">
+        {% if currentUser.featureEnabled("template.add") %}
             <button class="btn btn-success XiboFormButton btns" title="{% trans "Add a new Template and jump to the layout designer." %}" href="{{ url_for("template.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Template" %}</button>
-        </div>
-    {% endif %}
+        {% endif %}
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
+    </div>
 {% endblock %}
 
 {% block pageContent %}
@@ -212,6 +213,10 @@
         });
         table.on('processing.dt', dataTableProcessing);
         dataTableAddButtons(table, $('#templates_wrapper').find('.dataTables_buttons'));
+
+        $("#refreshGrid").click(function () {
+            table.ajax.reload();
+        });
 
         function templateFormOpen() {
             if ($('#folder-tree-form-modal').length === 0) {

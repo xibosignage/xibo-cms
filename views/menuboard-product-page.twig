@@ -4,12 +4,13 @@
 {% block title %}{{ "Products for "|trans }} {{menuBoardCategory.name}} {{ "in Menu Board "|trans }} {{ menuBoard.name }} | {% endblock %}
 
 {% block actionMenu %}
-    {% if currentUser.featureEnabled("menuBoard.modify") %}
-        <div class="widget-action-menu pull-right">
+    <div class="widget-action-menu pull-right">
+        {% if currentUser.featureEnabled("menuBoard.modify") %}
             <button class="btn btn-success XiboFormButton" title="{% trans "Add a new Menu Board Product" %}" href="{{ url_for("menuBoard.product.add.form", {id : menuBoardCategory.menuCategoryId}) }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Product" %}</button>
             <button class="btn btn-info XiboRedirectButton" href="{{ url_for("menuBoard.category.view", {"id": menuBoardCategory.menuId}) }}"><i class="fa fa-columns" aria-hidden="true"></i> {% trans "View Categories" %}</button>
-        </div>
-    {% endif %}
+        {% endif %}
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
+    </div>
 {% endblock %}
 
 {% block pageContent %}
@@ -182,6 +183,10 @@
             table.on('draw', dataTableDraw);
             table.on('processing.dt', dataTableProcessing);
             dataTableAddButtons(table, $('#menuBoardProducts_wrapper').find('.col-md-6').eq(1));
+
+            $("#refreshGrid").click(function () {
+                table.ajax.reload();
+            });
         });
 
     </script>

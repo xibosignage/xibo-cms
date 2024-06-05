@@ -26,11 +26,12 @@
 {% block title %}{{ "Campaigns"|trans }} | {% endblock %}
 
 {% block actionMenu %}
+  <div class="widget-action-menu pull-right">
     {% if currentUser.featureEnabled("campaign.add") %}
-    <div class="widget-action-menu pull-right">
-        <button class="btn btn-success XiboFormButton" title="{% trans "Add a new Campaign" %}" href="{{ url_for("campaign.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i>  {% trans "Add Campaign" %}</button>
-    </div>
+      <button class="btn btn-success XiboFormButton" title="{% trans "Add a new Campaign" %}" href="{{ url_for("campaign.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i>  {% trans "Add Campaign" %}</button>
     {% endif %}
+    <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
+  </div>
 {% endblock %}
 
 
@@ -336,6 +337,10 @@
             table.on('draw', { form: $("#campaigns").closest(".XiboGrid").find(".FilterDiv form") }, dataTableCreateTagEvents);
             table.on('processing.dt', dataTableProcessing);
             dataTableAddButtons(table, $('#campaigns_wrapper').find('.dataTables_buttons'));
+
+            $("#refreshGrid").click(function () {
+                table.ajax.reload();
+            });
         });
 
         // Callback for the media form

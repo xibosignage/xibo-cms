@@ -26,17 +26,18 @@
 {% block title %}{{ "Library"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    {% if currentUser.featureEnabledCount(["library.add", "library.modify"]) > 0 or settings.SETTING_LIBRARY_TIDY_ENABLED == 1 %}
     <div class="widget-action-menu pull-right">
-        {% if currentUser.featureEnabled("library.add") %}
-        <button class="btn btn-success" href="#" id="libraryUploadForm" title="{% trans "Add a new media item to the library" %}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Media" %}</button>
-        <button class="btn btn-success XiboFormButton" title="{% trans "Add a new media item to the library via external URL" %}" href="{{ url_for("library.uploadUrl.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add media (URL)" %}</button>
+        {% if currentUser.featureEnabledCount(["library.add", "library.modify"]) > 0 or settings.SETTING_LIBRARY_TIDY_ENABLED == 1 %}
+            {% if currentUser.featureEnabled("library.add") %}
+                <button class="btn btn-success" href="#" id="libraryUploadForm" title="{% trans "Add a new media item to the library" %}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Media" %}</button>
+                <button class="btn btn-success XiboFormButton" title="{% trans "Add a new media item to the library via external URL" %}" href="{{ url_for("library.uploadUrl.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add media (URL)" %}</button>
+            {% endif %}
+            {% if settings.SETTING_LIBRARY_TIDY_ENABLED == 1 and currentUser.featureEnabled("library.modify") %}
+                <button class="btn btn-danger XiboFormButton" title="{% trans "Run through the library and remove unused and unnecessary files" %}" href="{{ url_for("library.tidy.form") }}"> <i class="fa fa-trash" aria-hidden="true"></i> {% trans "Tidy Library" %}</button>
+            {% endif %}
         {% endif %}
-        {% if settings.SETTING_LIBRARY_TIDY_ENABLED == 1 and currentUser.featureEnabled("library.modify") %}
-            <button class="btn btn-danger XiboFormButton" title="{% trans "Run through the library and remove unused and unnecessary files" %}" href="{{ url_for("library.tidy.form") }}"> <i class="fa fa-trash" aria-hidden="true"></i> {% trans "Tidy Library" %}</button>
-        {% endif %}
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
     </div>
-    {% endif %}
 {% endblock %}
 
 
@@ -347,6 +348,10 @@
             table.on('draw', { form: $("#libraryItems").closest(".XiboGrid").find(".FilterDiv form") } ,dataTableCreateTagEvents);
             table.on('processing.dt', dataTableProcessing);
             dataTableAddButtons(table, $('#libraryItems_wrapper').find('.dataTables_buttons'));
+
+            $("#refreshGrid").click(function () {
+                table.ajax.reload();
+            });
         });
 
         $("#libraryUploadForm").click(function(e) {

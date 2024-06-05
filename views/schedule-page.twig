@@ -27,8 +27,8 @@
 {% block title %}{{ "Schedule"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    {% if currentUser.featureEnabled("schedule.add") %}
-        <div class="widget-action-menu pull-right">
+    <div class="widget-action-menu pull-right">
+        {% if currentUser.featureEnabled("schedule.add") %}
             {% if currentUser.featureEnabled("schedule.sync") %}
                 <button class="btn btn-white XiboFormButton btns" title="{% trans "Add a new Sync event" %}"
                         href="{{ url_for("schedule.add.sync.form") }}"><span
@@ -37,8 +37,9 @@
             <button class="btn btn-success XiboFormButton btns" title="{% trans "Add a new Scheduled event" %}"
                     href="{{ url_for("schedule.add.form") }}"><span class="fa fa-plus"></span> {% trans "Add Event" %}
             </button>
-        </div>
-    {% endif %}
+        {% endif %}
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
+    </div>
 {% endblock %}
 
 {% block pageContent %}
@@ -1569,5 +1570,9 @@
       });
       table.on('processing.dt', dataTableProcessing);
       dataTableAddButtons(table, $('#schedule-grid_wrapper').find('.dataTables_buttons'), true, true);
+
+      $("#refreshGrid").click(function () {
+          table.ajax.reload();
+      });
     </script>
 {% endblock %}

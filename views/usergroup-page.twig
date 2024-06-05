@@ -30,7 +30,7 @@
         {% if currentUser.isSuperAdmin() %}
             <button class="btn btn-success XiboFormButton" title="{% trans "Add a new User Group" %}" href="{{ url_for("group.add.form") }}"><i class="fa fa-users" aria-hidden="true"></i> {% trans "Add User Group" %}</button>
         {% endif %}
-        <button class="btn btn-primary refresh-grid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</button>
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
     </div>
 {% endblock %}
 
@@ -161,7 +161,7 @@
             table.on('processing.dt', dataTableProcessing);
             dataTableAddButtons(table, $('#userGroups_wrapper').find('.dataTables_buttons'));
 
-            $(".refresh-grid").click(function() {
+            $("#refreshGrid").click(function () {
                 table.ajax.reload();
             });
         });

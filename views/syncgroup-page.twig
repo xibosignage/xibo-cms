@@ -26,12 +26,12 @@
 {% block title %}{{ "Sync Groups"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    {% if currentUser.featureEnabled("display.syncAdd") %}
-        <div class="widget-action-menu pull-right">
+    <div class="widget-action-menu pull-right">
+        {% if currentUser.featureEnabled("display.syncAdd") %}
             <button class="btn btn-success XiboFormButton" title="{% trans "Add a new Sync Group" %}" href="{{ url_for("syncgroup.form.add") }}"> <i class="fa fa-desktop" aria-hidden="true"></i> {% trans "Add Sync Group" %}</button>
-            <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</button>
-        </div>
-    {% endif %}
+        {% endif %}
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
+    </div>
 {% endblock %}
 
 {% block pageContent %}
@@ -139,13 +139,13 @@
           ]
         });
 
-        $("#refreshGrid").click(function () {
-          syncGroupTable.ajax.reload();
-        });
-
         syncGroupTable.on('draw', dataTableDraw);
         syncGroupTable.on('processing.dt', dataTableProcessing);
         dataTableAddButtons(syncGroupTable, $('#syncgroups_wrapper').find('.dataTables_buttons'));
+
+        $("#refreshGrid").click(function () {
+            syncGroupTable.ajax.reload();
+        });
       });
     </script>
 {% endblock %}
