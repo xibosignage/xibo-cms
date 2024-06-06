@@ -473,9 +473,6 @@ class Task extends Base
 
         $this->setNoOutput();
 
-        // Explicitly set the Content-Type header to application/json
-        $response = $response->withHeader('Content-Type', 'application/json');
-
         return $this->render($request, $response);
     }
 
@@ -577,9 +574,6 @@ class Task extends Base
 
         $this->getLog()->debug('XTR poll stopped');
         $this->setNoOutput();
-
-        // Explicitly set the Content-Type header to application/json
-        $response = $response->withHeader('Content-Type', 'application/json');
 
         return $this->render($request, $response);
     }
