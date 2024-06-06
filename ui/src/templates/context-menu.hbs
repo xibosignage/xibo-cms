@@ -105,6 +105,12 @@
                 </div>
             {{/if}}
 
+            {{#if canEditText}}
+                <div class="context-menu-btn editText" data-title="{{trans.editText}}" data-action="editText" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
+                    <i class="fa fa-edit"></i><span>{{trans.editText}}</span>
+                </div>
+            {{/if}}
+
             {{#if isFrameOrZone}}
                 <div class="context-menu-btn editFrameBtn" data-title="{{trans.options}}" data-action="editFrame" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
                     <i class="fa fa-cog"></i><span>{{trans.options}}</span>

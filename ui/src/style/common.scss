@@ -171,7 +171,8 @@ $fa-font-path: "~font-awesome/fonts";
 // Overlay and loading
 .custom-overlay,
 .custom-overlay-clone,
-.loading-overlay {
+.loading-overlay,
+.custom-overlay-edit-text {
     display: none;
     position: fixed;
     width: 100%;
@@ -181,6 +182,11 @@ $fa-font-path: "~font-awesome/fonts";
     background: black;
     @include transparent-object(65);
     z-index: $loading-overlay-z-index;
+}
+
+.custom-overlay-edit-text {
+    display: block !important;
+    @include transparent-object(10);
 }
 
 .custom-overlay, .custom-overlay-clone {
