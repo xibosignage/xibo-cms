@@ -151,15 +151,11 @@ class OpenWeatherMapConnector implements ConnectorInterface
         }
 
         // Build the URL
-        $url = '?units=' . $units
+        $url = '?lat=' . $providedLat
+            . '&lon=' . $providedLon
+            . '&units=' . $units
             . '&lang=' . $dataProvider->getProperty('lang', 'en')
             . '&appid=[API_KEY]';
-
-        // If lat/lon is provided
-        if (!empty($providedLat) && !empty($providedLon)) {
-            $url .= '&lat=' . $providedLat
-                . '&lon=' . $providedLon;
-        }
 
         // Cache expiry date
         $cacheExpire = Carbon::now()->addSeconds($this->getSetting('cachePeriod'));
