@@ -151,8 +151,8 @@ class OpenWeatherMapConnector implements ConnectorInterface
         }
 
         // Build the URL
-        $url = '?lat=' . $providedLat
-            . '&lon=' . $providedLon
+        $url = '?lat=' . ($providedLat ?? '')
+            . '&lon=' . ($providedLon ?? '')
             . '&units=' . $units
             . '&lang=' . $dataProvider->getProperty('lang', 'en')
             . '&appid=[API_KEY]';
