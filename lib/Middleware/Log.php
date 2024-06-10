@@ -47,11 +47,14 @@ class Log implements Middleware
      */
     public function process(Request $request, RequestHandler $handler): Response
     {
+        $container = $this->app->getContainer();
+
         self::addLogProcessorToLogger(
-            $this->app->getContainer()->get('logger'),
+            $container->get('logger'),
             $request,
-            $this->app->getContainer()->get('logService')->getUserId(),
-            $this->app->getContainer()->get('logService')->getSessionHistoryId()
+            $container->get('logService')->getUserId(),
+            $container->get('logService')->getSessionHistoryId(),
+            $container->get('logService')->getRequestId(),
         );
 
         return $handler->handle($request);
@@ -67,9 +70,16 @@ class Log implements Middleware
         LoggerInterface $logger,
         Request $request,
         ?int $userId = null,
-        ?int $sessionHistoryId = null
+        ?int $sessionHistoryId = null,
+        ?int $requestId = null
     ) {
-        $logHelper = new LogProcessor($request->getUri()->getPath(), $request->getMethod(), $userId, $sessionHistoryId);
+        $logHelper = new LogProcessor(
+            $request->getUri()->getPath(),
+            $request->getMethod(),
+            $userId,
+            $sessionHistoryId,
+            $requestId
+        );
         $logger->pushProcessor($logHelper);
     }
 }

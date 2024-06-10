@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -69,9 +69,9 @@ $container->set('name', 'API');
 
 $app->add(new \Xibo\Middleware\ConnectorMiddleware($app));
 $app->add(new \Xibo\Middleware\ListenersMiddleware($app));
+$app->add(new \Xibo\Middleware\Log($app));
 $app->add(new \Xibo\Middleware\ApiAuthorization($app));
 $app->add(new \Xibo\Middleware\State($app));
-$app->add(new \Xibo\Middleware\Log($app));
 $app->add(new \Xibo\Middleware\Storage($app));
 $app->add(new \Xibo\Middleware\Xmr($app));
 $app->addRoutingMiddleware();

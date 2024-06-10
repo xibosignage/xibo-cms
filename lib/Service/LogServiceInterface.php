@@ -66,6 +66,13 @@ interface LogServiceInterface
     public function setSessionHistoryId($sessionHistoryId);
 
     /**
+     * Set API requestId
+     * @param $requestId
+     * @return mixed
+     */
+    public function setRequestId($requestId);
+
+    /**
      * @param $mode
      * @return mixed
      */
