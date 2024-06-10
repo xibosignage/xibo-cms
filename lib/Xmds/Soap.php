@@ -928,8 +928,8 @@ class Soap
                                     //  this region?
                                     $dataProvider = $dataModule->createDataProvider($widget);
                                     $dataProvider->setDisplayProperties(
-                                        $this->display->latitude,
-                                        $this->display->longitude,
+                                        $this->display->latitude ?: $this->getConfig()->getSetting('DEFAULT_LAT'),
+                                        $this->display->longitude ?: $this->getConfig()->getSetting('DEFAULT_LONG'),
                                         $this->display->displayId
                                     );
 
@@ -2375,8 +2375,8 @@ class Soap
                         // We only ever return cache.
                         $dataProvider = $dataModule->createDataProvider($widget);
                         $dataProvider->setDisplayProperties(
-                            $this->display->latitude,
-                            $this->display->longitude,
+                            $this->display->latitude ?: $this->getConfig()->getSetting('DEFAULT_LAT'),
+                            $this->display->longitude ?: $this->getConfig()->getSetting('DEFAULT_LONG'),
                             $this->display->displayId
                         );
 
