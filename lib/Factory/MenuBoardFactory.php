@@ -28,6 +28,9 @@ use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
+/**
+ * Menu Board Factory
+ */
 class MenuBoardFactory extends BaseFactory
 {
     /** @var  ConfigServiceInterface */
@@ -97,21 +100,19 @@ class MenuBoardFactory extends BaseFactory
     }
 
     /**
-     * Create a new action
+     * Create a new menuboard
      * @param string $name
-     * @param string $description
-     * @param string $code
-     * @param int $folderId
+     * @param string|null $description
+     * @param string|null $code
      * @return MenuBoard
      */
-    public function create($name, $description, $code, $folderId)
+    public function create(string $name, ?string $description, ?string $code): MenuBoard
     {
         $menuBoard = $this->createEmpty();
         $menuBoard->name = $name;
         $menuBoard->description = $description;
         $menuBoard->code = $code;
         $menuBoard->userId = $this->getUser()->userId;
-        $menuBoard->folderId = $folderId;
 
         return $menuBoard;
     }

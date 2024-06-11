@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2023 Xibo Signage Ltd
+  ~ Copyright (C) 2024 Xibo Signage Ltd
   ~
   ~ Xibo - Digital Signage - https://xibosignage.com
   ~
@@ -218,6 +218,32 @@ return value + '%';
         <icon>fas fa-wind</icon>
         <startWidth>100</startWidth>
         <startHeight>100</startHeight>
+        <properties>
+            <property id="useSlashForUnits" type="checkbox">
+                <title>Use Slash for Units</title>
+                <helpText>Use '/' instead of 'p' to represent units of measure (e.g., m/s instead of mps).</helpText>
+                <default>0</default>
+            </property>
+        </properties>
+        <onElementParseData><![CDATA[
+// return empty string if there's no value
+if (String(value).length === 0) {
+    return '';
+}
+
+// check if useSlashForUnits has been checked
+if (properties.useSlashForUnits && properties.useSlashForUnits == 1) {
+    if (String(value) == 'MPH') {
+        value = value.replace('MPH', 'M/H');
+    } else if (String(value) == 'MPS') {
+        value = value.replace('MPS', 'M/S');
+    } else if (String(value) == 'KPH') {
+        value = value.replace('KPH', 'K/H');
+    }
+}
+
+return value;
+        ]]></onElementParseData>
     </template>
     <template>
         <id>weather_attribution</id>
@@ -341,13 +367,16 @@ if (meta && meta.hasOwnProperty('Attribution')) {
             <property id="windyImage" type="mediaSelector">
                 <title>Windy</title>
             </property>
+            <property id="iconPrefix" type="hidden">
+                <default>bg-</default>
+            </property>
         </properties>
         <stencil>
             <hbs><![CDATA[
 <div class="global-elements-image img-container forecast-elements-background-image weather-bg--{{data.icon}}"
     style="width:100%; height: 100%; overflow: hidden; position: relative;">
     {{set 'bgImg' (weatherBackgroundImage data.icon cloudyImage dayCloudyImage dayClearImage fogImage hailImage nightClearImage nightPartlyCloudyImage rainImage snowImage windImage)}}
-    <img src="{{#if @root.bgImg}}/library/download/{{@root.bgImg}}?preview=1{{else}}[[assetId=bg-{{data.icon}}]]{{/if}}"
+    <img src="{{#if @root.bgImg}}/library/download/{{@root.bgImg}}?preview=1{{else}}[[assetId={{iconPrefix}}{{data.icon}}]]{{/if}}"
         style="width:100%; height: 100%;
         object-fit: {{objectFit}};
         object-position: {{alignId}} {{valignId}};
@@ -408,5 +437,492 @@ $(target).find('.date').each(function(_idx, dateEl){
     $(dateEl).html(formattedDate);
 });
         ]]></onTemplateRender>
+    </template>
+    <template>
+        <id>weather_current_1</id>
+        <type>element-group</type>
+        <dataType>forecast</dataType>
+        <title>Weather 1</title>
+        <thumbnail>forecast-current-1</thumbnail>
+        <stencil>
+            <hbs></hbs>
+            <startWidth>380</startWidth>
+            <startHeight>380</startHeight>
+            <elements>
+                <element id="rectangle">
+                    <title>Background</title>
+                    <top>0</top>
+                    <left>0</left>
+                    <layer>0</layer>
+                    <width>380</width>
+                    <height>380</height>
+                    <defaultProperties>
+                        <property id="backgroundColor">#5ad0ff</property>
+                        <property id="roundBorder">1</property>
+                        <property id="borderRadius">24</property>
+                        <property id="outline">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="rectangle">
+                    <title>Temp area</title>
+                    <top>131</top>
+                    <left>0</left>
+                    <layer>1</layer>
+                    <width>380</width>
+                    <height>126</height>
+                    <defaultProperties>
+                        <property id="backgroundColor">rgba(255,255,255,0.5)</property>
+                        <property id="outline">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="line">
+                    <title>Line top</title>
+                    <top>97</top>
+                    <left>0</left>
+                    <layer>2</layer>
+                    <width>380</width>
+                    <height>68</height>
+                    <defaultProperties>
+                        <property id="lineWidth">2</property>
+                        <property id="lineColor">#f9f9f9</property>
+                        <property id="lineStyle">solid</property>
+                    </defaultProperties>
+                </element>
+                <element id="line">
+                    <title>Line top</title>
+                    <top>223</top>
+                    <left>0</left>
+                    <layer>2</layer>
+                    <width>380</width>
+                    <height>68</height>
+                    <defaultProperties>
+                        <property id="lineWidth">2</property>
+                        <property id="lineColor">#f9f9f9</property>
+                        <property id="lineStyle">solid</property>
+                    </defaultProperties>
+                </element>
+                <element id="weather_icon">
+                    <title>Icon</title>
+                    <top>19</top>
+                    <left>77</left>
+                    <layer>3</layer>
+                    <width>225</width>
+                    <height>90</height>
+                    <defaultProperties>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">78</property>
+                    </defaultProperties>
+                </element>
+                <element id="weather_summary">
+                    <title>Summary</title>
+                    <top>282</top>
+                    <left>20</left>
+                    <layer>3</layer>
+                    <width>340</width>
+                    <height>35</height>
+                    <defaultProperties>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">32</property>
+                        <property id="bold">1</property>
+                    </defaultProperties>
+                </element>
+                <element id="weather_attribution">
+                    <title>Attribution</title>
+                    <top>332</top>
+                    <left>20</left>
+                    <layer>3</layer>
+                    <width>340</width>
+                    <height>28</height>
+                    <defaultProperties>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">16</property>
+                    </defaultProperties>
+                </element>
+                <element id="weather_temperature">
+                    <title>Temperature</title>
+                    <top>153</top>
+                    <left>101</left>
+                    <layer>3</layer>
+                    <width>179</width>
+                    <height>102</height>
+                    <defaultProperties>
+                        <property id="fontFamily">aileron regular</property>
+                        <property id="fontColor">#04b1f5</property>
+                        <property id="fontSize">80</property>
+                        <property id="bold">1</property>
+                    </defaultProperties>
+                </element>
+            </elements>
+        </stencil>
+        <assets>
+            <asset id="forecast-current-1" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/forecast-current-1.png" />
+        </assets>
+    </template>
+    <template>
+        <id>weather_current_2</id>
+        <type>element-group</type>
+        <dataType>forecast</dataType>
+        <title>Weather 2</title>
+        <thumbnail>forecast-current-2</thumbnail>
+        <stencil>
+            <hbs></hbs>
+            <startWidth>900</startWidth>
+            <startHeight>400</startHeight>
+            <elements>
+                <element id="weather_condition_background_image">
+                    <title>Background</title>
+                    <top>0</top>
+                    <left>0</left>
+                    <layer>0</layer>
+                    <width>900</width>
+                    <height>400</height>
+                    <defaultProperties>
+                        <property id="iconPrefix">forecast-current-2-</property>
+                        <property id="roundBorder">1</property>
+                        <property id="borderRadius">24</property>
+                        <property id="outline">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="weather_summary">
+                    <title>Summary</title>
+                    <top>214</top>
+                    <left>49</left>
+                    <layer>3</layer>
+                    <width>360</width>
+                    <height>56</height>
+                    <defaultProperties>
+                        <property id="fontColor">#ffff</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="bold">1</property>
+                    </defaultProperties>
+                </element>
+                <element id="weather_attribution">
+                    <title>Attribution</title>
+                    <top>329</top>
+                    <left>49</left>
+                    <layer>3</layer>
+                    <width>351</width>
+                    <height>50</height>
+                    <defaultProperties>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="fontSize">24</property>
+                    </defaultProperties>
+                </element>
+                <element id="weather_temperature">
+                    <title>Temperature</title>
+                    <top>71</top>
+                    <left>49</left>
+                    <layer>3</layer>
+                    <width>220</width>
+                    <height>126</height>
+                    <defaultProperties>
+                        <property id="fontColor">#fff</property>
+                        <property id="fontSize">120</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="bold">1</property>
+                    </defaultProperties>
+                </element>
+            </elements>
+        </stencil>
+        <assets>
+            <asset id="forecast-current-2" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/forecast-current-2.png" />
+            <asset id="forecast-current-2-cloudy" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/vector_backgrounds/vector-cloudy.png"></asset>
+            <asset id="forecast-current-2-partly-cloudy-day" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/vector_backgrounds/vector-cloudy.png"></asset>
+            <asset id="forecast-current-2-clear-day" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/vector_backgrounds/vector-day-sunny.png"></asset>
+            <asset id="forecast-current-2-fog" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/vector_backgrounds/vector-fog.png"></asset>
+            <asset id="forecast-current-2-sleet" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/vector_backgrounds/vector-hail.png"></asset>
+            <asset id="forecast-current-2-clear-night" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/vector_backgrounds/vector-night-clear.png"></asset>
+            <asset id="forecast-current-2-partly-cloudy-night" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/vector_backgrounds/vector-night-partly-cloudy.png"></asset>
+            <asset id="forecast-current-2-rain" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/vector_backgrounds/vector-rain.png"></asset>
+            <asset id="forecast-current-2-snow" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/vector_backgrounds/vector-snow.png"></asset>
+            <asset id="forecast-current-2-wind" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/vector_backgrounds/vector-windy.png"></asset>
+        </assets>
+    </template>
+    <template>
+        <id>weather_current_3</id>
+        <type>element-group</type>
+        <dataType>forecast</dataType>
+        <title>Weather 3</title>
+        <thumbnail>forecast-current-3</thumbnail>
+        <stencil>
+            <hbs></hbs>
+            <startWidth>400</startWidth>
+            <startHeight>500</startHeight>
+            <elements>
+                <element id="rectangle">
+                    <title>Background</title>
+                    <top>0</top>
+                    <left>0</left>
+                    <layer>0</layer>
+                    <width>400</width>
+                    <height>500</height>
+                    <defaultProperties>
+                        <property id="backgroundColor">#865bff</property>
+                        <property id="roundBorder">1</property>
+                        <property id="borderRadius">24</property>
+                        <property id="outline">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="rectangle">
+                    <title>Temp area</title>
+                    <top>234</top>
+                    <left>0</left>
+                    <layer>1</layer>
+                    <width>400</width>
+                    <height>68</height>
+                    <defaultProperties>
+                        <property id="backgroundColor">rgba(0,0,0,0.12)</property>
+                        <property id="outline">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="line">
+                    <title>Line left</title>
+                    <top>354</top>
+                    <left>100</left>
+                    <layer>2</layer>
+                    <width>44</width>
+                    <height>59</height>
+                    <rotation>90</rotation>
+                    <defaultProperties>
+                        <property id="lineWidth">2</property>
+                        <property id="lineColor">#f9f9f9</property>
+                        <property id="lineStyle">solid</property>
+                    </defaultProperties>
+                </element>
+                <element id="line">
+                    <title>Line right</title>
+                    <top>354</top>
+                    <left>256</left>
+                    <layer>2</layer>
+                    <width>44</width>
+                    <height>59</height>
+                    <rotation>90</rotation>
+                    <defaultProperties>
+                        <property id="lineWidth">2</property>
+                        <property id="lineColor">#f9f9f9</property>
+                        <property id="lineStyle">solid</property>
+                    </defaultProperties>
+                </element>
+                <element id="weather_icon">
+                    <title>Icon</title>
+                    <top>100</top>
+                    <left>80</left>
+                    <layer>3</layer>
+                    <width>237</width>
+                    <height>140</height>
+                    <defaultProperties>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">100</property>
+                    </defaultProperties>
+                </element>
+                <element id="weather_summary">
+                    <title>Summary</title>
+                    <top>250</top>
+                    <left>68</left>
+                    <layer>3</layer>
+                    <width>272</width>
+                    <height>39</height>
+                    <defaultProperties>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">32</property>
+                        <property id="bold">1</property>
+                    </defaultProperties>
+                </element>
+                <element id="weather_attribution">
+                    <title>Attribution</title>
+                    <top>436</top>
+                    <left>51</left>
+                    <layer>3</layer>
+                    <width>296</width>
+                    <height>32</height>
+                    <defaultProperties>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">16</property>
+                    </defaultProperties>
+                </element>
+                <element id="weather_temperature">
+                    <title>Temperature</title>
+                    <top>334</top>
+                    <left>51</left>
+                    <layer>3</layer>
+                    <width>50</width>
+                    <height>99</height>
+                    <defaultProperties>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">24</property>
+                    </defaultProperties>
+                </element>
+                <element id="weather_wind_speed">
+                    <title>Wind Speed</title>
+                    <top>335</top>
+                    <left>136</left>
+                    <layer>3</layer>
+                    <width>61</width>
+                    <height>100</height>
+                    <defaultProperties>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">24</property>
+                    </defaultProperties>
+                </element>
+                <element id="weather_wind_speed_unit">
+                    <title>Wind Speed</title>
+                    <top>335</top>
+                    <left>206</left>
+                    <layer>3</layer>
+                    <width>56</width>
+                    <height>100</height>
+                    <defaultProperties>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">24</property>
+                    </defaultProperties>
+                </element>
+                <element id="weather_humidity_percent">
+                    <title>Humidity</title>
+                    <top>334</top>
+                    <left>297</left>
+                    <layer>3</layer>
+                    <width>50</width>
+                    <height>102</height>
+                    <defaultProperties>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">24</property>
+                    </defaultProperties>
+                </element>
+                <element id="weather_date">
+                    <title>Date</title>
+                    <top>40</top>
+                    <left>68</left>
+                    <layer>3</layer>
+                    <width>272</width>
+                    <height>39</height>
+                    <defaultProperties>
+                        <property id="dateFormat">g:i A</property>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">32</property>
+                    </defaultProperties>
+                </element>
+                <element id="global_image">
+                    <title>Humidity Icon</title>
+                    <top>320</top>
+                    <left>307</left>
+                    <layer>3</layer>
+                    <width>32</width>
+                    <height>33</height>
+                    <defaultProperties>
+                        <property id="assetId">icon-humidity</property>
+                    </defaultProperties>
+                </element>
+                <element id="global_image">
+                    <title>Wind Icon</title>
+                    <top>320</top>
+                    <left>180</left>
+                    <layer>3</layer>
+                    <width>32</width>
+                    <height>32</height>
+                    <defaultProperties>
+                        <property id="assetId">icon-wind</property>
+                    </defaultProperties>
+                </element>
+                <element id="global_image">
+                    <title>Weather Icon</title>
+                    <top>320</top>
+                    <left>61</left>
+                    <layer>3</layer>
+                    <width>32</width>
+                    <height>32</height>
+                    <defaultProperties>
+                        <property id="assetId">icon-weather</property>
+                    </defaultProperties>
+                </element>
+            </elements>
+        </stencil>
+        <assets>
+            <asset id="forecast-current-3" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/forecast-current-3.png" />
+            <asset id="icon-humidity" type="path" mimeType="image/png" path="/modules/assets/forecastio/stencils/icon_humidity.png"></asset>
+            <asset id="icon-weather" type="path" mimeType="image/png" path="/modules/assets/forecastio/stencils/icon_weather.png"></asset>
+            <asset id="icon-wind" type="path" mimeType="image/png" path="/modules/assets/forecastio/stencils/icon_wind.png"></asset>
+        </assets>
+    </template>
+    <template>
+        <id>weather_current_4</id>
+        <type>element-group</type>
+        <dataType>forecast</dataType>
+        <title>Weather 4</title>
+        <thumbnail>forecast-current-4</thumbnail>
+        <stencil>
+            <hbs></hbs>
+            <startWidth>500</startWidth>
+            <startHeight>440</startHeight>
+            <elements>
+                <element id="rectangle">
+                    <title>Background</title>
+                    <top>0</top>
+                    <left>0</left>
+                    <layer>0</layer>
+                    <width>500</width>
+                    <height>440</height>
+                    <defaultProperties>
+                        <property id="backgroundColor">#212121</property>
+                        <property id="roundBorder">1</property>
+                        <property id="borderRadius">24</property>
+                        <property id="outline">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="weather_condition_background_image">
+                    <title>Background</title>
+                    <top>32</top>
+                    <left>125</left>
+                    <layer>0</layer>
+                    <width>250</width>
+                    <height>250</height>
+                    <defaultProperties>
+                        <property id="iconPrefix">forecast-3d-</property>
+                        <property id="roundBorder">1</property>
+                        <property id="borderRadius">24</property>
+                        <property id="outline">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="weather_summary">
+                    <title>Summary</title>
+                    <top>296</top>
+                    <left>49</left>
+                    <layer>3</layer>
+                    <width>407</width>
+                    <height>76</height>
+                    <defaultProperties>
+                        <property id="fontColor">#ffff</property>
+                        <property id="fontSize">40</property>
+                        <property id="bold">1</property>
+                    </defaultProperties>
+                </element>
+                <element id="weather_attribution">
+                    <title>Attribution</title>
+                    <top>358</top>
+                    <left>74</left>
+                    <layer>3</layer>
+                    <width>351</width>
+                    <height>50</height>
+                    <defaultProperties>
+                        <property id="fontColor">rgba(249,249,249,0.34)</property>
+                        <property id="fontSize">20</property>
+                    </defaultProperties>
+                </element>
+            </elements>
+        </stencil>
+        <assets>
+            <asset id="forecast-current-4" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/forecast-current-4.png" />
+            <asset id="forecast-3d-cloudy" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/3d_icons/3d-cloudy.png"></asset>
+            <asset id="forecast-3d-partly-cloudy-day" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/3d_icons/3d-cloudy.png"></asset>
+            <asset id="forecast-3d-clear-day" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/3d_icons/3d-day-sunny.png"></asset>
+            <asset id="forecast-3d-fog" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/3d_icons/3d-fog.png"></asset>
+            <asset id="forecast-3d-sleet" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/3d_icons/3d-hail.png"></asset>
+            <asset id="forecast-3d-clear-night" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/3d_icons/3d-night-clear.png"></asset>
+            <asset id="forecast-3d-partly-cloudy-night" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/3d_icons/3d-night-partly-cloudy.png"></asset>
+            <asset id="forecast-3d-rain" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/3d_icons/3d-rain.png"></asset>
+            <asset id="forecast-3d-snow" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/3d_icons/3d-snow.png"></asset>
+            <asset id="forecast-3d-wind" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/3d_icons/3d-windy.png"></asset>
+        </assets>
     </template>
 </templates>

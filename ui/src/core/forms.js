@@ -720,7 +720,7 @@ window.forms = {
             $el.find('#columnsIn, #columnsOut').sortable({
               connectWith: '.connectedSortable',
               dropOnEmpty: true,
-              receive: function() {
+              update: function() {
                 updateHiddenField();
               },
             }).disableSelection();
