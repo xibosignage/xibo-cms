@@ -115,6 +115,9 @@ class WidgetDataProviderCache
 
         // Get the cache
         $this->cache = $this->pool->getItem($this->key);
+
+        // Invalidation method old means that if this cache key is being regenerated concurrently to this request
+        // we return the old data we have stored already.
         $this->cache->setInvalidationMethod(Invalidation::OLD);
 
         // Get the data (this might be OLD data)
@@ -122,32 +125,43 @@ class WidgetDataProviderCache
         $cacheCreationDt = $this->cache->getCreation();
 
         // Does the cache have data?
+        // we keep data 50% longer than we need to, so that it has a chance to be regenerated out of band
         if ($data === null) {
             $this->getLog()->debug('decorateWithCache: miss, no data');
             $hasData = false;
         } else {
-            // Determine if the cache returned is a miss or older than the modified date
-            $this->isMissOrOld = $this->cache->isMiss() || (
-                $dataModifiedDt !== null && $cacheCreationDt !== false && $dataModifiedDt->isAfter($cacheCreationDt)
-            );
-
-            $this->getLog()->debug('decorateWithCache: cache has data, is miss or old: '
-                . var_export($this->isMissOrOld, true));
+            $hasData = true;
 
             // Clear the data provider and add the cached items back to it.
             $dataProvider->clearData();
             $dataProvider->clearMeta();
             $dataProvider->addItems($data->data ?? []);
 
+            // Record any cached mediaIds
+            $this->cachedMediaIds = $data->media ?? [];
+
+            // Update any meta
             foreach (($data->meta ?? []) as $key => $item) {
                 $dataProvider->addOrUpdateMeta($key, $item);
             }
-            $dataProvider->addOrUpdateMeta('cacheDt', $this->cache->getCreation()->format('c'));
-            $dataProvider->addOrUpdateMeta('expireDt', $this->cache->getExpiration()->format('c'));
 
-            // Record any cached mediaIds
-            $this->cachedMediaIds = $data->media ?? [];
-            $hasData = true;
+            // Determine whether this cache is a miss (i.e. expired and being regenerated, expired, out of date)
+            // Get expire date
+            $expireDt = $dataProvider->getMeta()['expireDt'] ?? null;
+            if ($expireDt !== null) {
+                $expireDt = Carbon::createFromFormat('c', $expireDt);
+            } else {
+                $expireDt = $this->cache->getExpiration();
+            }
+
+            // Determine if the cache returned is a miss or older than the modified/expired dates
+            $this->isMissOrOld = $this->cache->isMiss()
+                || ($dataModifiedDt !== null && $cacheCreationDt !== false && $dataModifiedDt->isAfter($cacheCreationDt)
+                || ($expireDt->isBefore(Carbon::now()))
+            );
+
+            $this->getLog()->debug('decorateWithCache: cache has data, is miss or old: '
+                . var_export($this->isMissOrOld, true));
         }
 
         // If we do not have data/we're old/missed cache, and we have requested a lock, then we will be refreshing
@@ -200,13 +214,15 @@ class WidgetDataProviderCache
             throw new GeneralException('No cache to save');
         }
 
-        // Set our cache from the data provider.
+        // Set some cache dates so that we can track when this data provider was cached and when it should
+        // expire.
         $dataProvider->addOrUpdateMeta('cacheDt', Carbon::now()->format('c'));
         $dataProvider->addOrUpdateMeta(
             'expireDt',
             Carbon::now()->addSeconds($dataProvider->getCacheTtl())->format('c')
         );
 
+        // Set our cache from the data provider.
         $object = new \stdClass();
         $object->data = $dataProvider->getData();
         $object->meta = $dataProvider->getMeta();
@@ -216,7 +232,9 @@ class WidgetDataProviderCache
         if (!$cached) {
             throw new GeneralException('Cache failure');
         }
-        $this->cache->expiresAfter($dataProvider->getCacheTtl());
+
+        // Keep the cache 50% longer than necessary
+        $this->cache->expiresAfter(ceil($dataProvider->getCacheTtl() * 1.5));
 
         // Save to the pool
         $this->pool->save($this->cache);
