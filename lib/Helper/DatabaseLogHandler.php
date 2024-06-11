@@ -162,9 +162,23 @@ class DatabaseLogHandler extends AbstractProcessingHandler
             if (self::$pdo === null) {
                 self::$pdo = PdoStorageService::newConnection('log');
             }
-            $statement = self::$pdo->prepare('DELETE FROM `log` WHERE logdate < :maxage');
-            $statement->execute(['maxage' => $cutOff]);
-            PdoStorageService::incrementStat('log', 'delete');
+
+            $statement = self::$pdo->prepare('DELETE FROM `log` WHERE logdate < :maxage LIMIT 10000');
+
+            do {
+                // Execute statement
+                $statement->execute(['maxage' => $cutOff]);
+
+                // initialize number of rows deleted
+                $rowsDeleted = $statement->rowCount();
+
+                PdoStorageService::incrementStat('log', 'delete');
+
+                // pause for a second
+                sleep(2);
+
+            } while ($rowsDeleted > 0);
+
         } catch (\PDOException $ignored) {}
     }
 }

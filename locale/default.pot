@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-05-09 12:57+0100\n"
+"POT-Creation-Date: 2024-06-05 17:18+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1726,7 +1726,7 @@ msgid ""
 msgstr ""
 
 #: locale/moduletranslate.php:490
-#: cache/e5/e5c3ab4b73473f74411baea5286e8687.php:130
+#: cache/e5/e5c3ab4b73473f74411baea5286e8687.php:122
 #: cache/63/63cb0689ed9b3c5e21eb5af0b40e433a.php:101
 #: cache/4a/4a2f889fbf2991697d3f56cba8939557.php:120
 msgid "Cache Period"
@@ -6723,7 +6723,7 @@ msgstr ""
 #: cache/10/10b7f3b85c460e6ccc00e28eed2bf591.php:647
 #: cache/70/70af2bbd82243291558c9b83caec5b48.php:161
 #: lib/Controller/Template.php:220 lib/Controller/DisplayGroup.php:347
-#: lib/Controller/Campaign.php:348 lib/Controller/MenuBoard.php:187
+#: lib/Controller/Campaign.php:348 lib/Controller/MenuBoard.php:170
 #: lib/Controller/Playlist.php:408 lib/Controller/Library.php:665
 #: lib/Controller/Layout.php:1785 lib/Controller/Display.php:942
 msgid "Select Folder"
@@ -7073,7 +7073,7 @@ msgstr ""
 #: lib/Controller/DisplayGroup.php:329 lib/Controller/DataSet.php:250
 #: lib/Controller/ScheduleReport.php:216 lib/Controller/Notification.php:217
 #: lib/Controller/Campaign.php:327 lib/Controller/Campaign.php:335
-#: lib/Controller/MenuBoard.php:179 lib/Controller/Playlist.php:393
+#: lib/Controller/MenuBoard.php:162 lib/Controller/Playlist.php:393
 #: lib/Controller/Transition.php:94 lib/Controller/Library.php:650
 #: lib/Controller/SyncGroup.php:170 lib/Controller/DataSetColumn.php:173
 #: lib/Controller/Tag.php:230 lib/Controller/Layout.php:1777
@@ -7094,7 +7094,7 @@ msgstr ""
 #: cache/f9/f92fcbc3e5aadf70527c18c1877f9814.php:56
 #: cache/88/880da8bf57750f4e35ce30624c0c6d79.php:170
 #: cache/17/17a063cd6b023f6b3259fc5bb6f3383f.php:68
-#: cache/25/257d7652c0b04ca6e480ad5c9beaa3c2.php:242
+#: cache/25/257d7652c0b04ca6e480ad5c9beaa3c2.php:247
 #: cache/74/746ec3a82f78da39c0d83b4d24c675b3.php:65
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:725
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:818
@@ -7111,7 +7111,7 @@ msgstr ""
 #: lib/Controller/ScheduleReport.php:242 lib/Controller/Notification.php:224
 #: lib/Controller/Campaign.php:393 lib/Controller/Campaign.php:406
 #: lib/Controller/SavedReport.php:177 lib/Controller/SavedReport.php:183
-#: lib/Controller/MenuBoard.php:240 lib/Controller/Playlist.php:458
+#: lib/Controller/MenuBoard.php:223 lib/Controller/Playlist.php:458
 #: lib/Controller/Playlist.php:469 lib/Controller/Library.php:690
 #: lib/Controller/Library.php:696 lib/Controller/SyncGroup.php:184
 #: lib/Controller/DataSetColumn.php:181 lib/Controller/Tag.php:237
@@ -11122,36 +11122,26 @@ msgstr ""
 msgid "Your platform provider has configured this connector for you."
 msgstr ""
 
-#: cache/e5/e5c3ab4b73473f74411baea5286e8687.php:82
+#: cache/e5/e5c3ab4b73473f74411baea5286e8687.php:92
 msgid "Open Weather Map API Key"
 msgstr ""
 
-#: cache/e5/e5c3ab4b73473f74411baea5286e8687.php:87
+#: cache/e5/e5c3ab4b73473f74411baea5286e8687.php:97
 msgid "Enter your API Key from Open Weather Map."
 msgstr ""
 
-#: cache/e5/e5c3ab4b73473f74411baea5286e8687.php:97
+#: cache/e5/e5c3ab4b73473f74411baea5286e8687.php:107
 #: cache/63/63cb0689ed9b3c5e21eb5af0b40e433a.php:86
 msgid "Paid plan?"
 msgstr ""
 
-#: cache/e5/e5c3ab4b73473f74411baea5286e8687.php:102
+#: cache/e5/e5c3ab4b73473f74411baea5286e8687.php:112
 msgid ""
 "Is the above key on an Open Weather Map paid plan? Do NOT tick this if you "
 "have subscribed to One Call API 3.0."
 msgstr ""
 
-#: cache/e5/e5c3ab4b73473f74411baea5286e8687.php:112
-msgid "Open Weather Map Version"
-msgstr ""
-
-#: cache/e5/e5c3ab4b73473f74411baea5286e8687.php:117
-msgid ""
-"Which version of the Open Weather Map did you choose? If you created your "
-"account recently it will be 3.0."
-msgstr ""
-
-#: cache/e5/e5c3ab4b73473f74411baea5286e8687.php:135
+#: cache/e5/e5c3ab4b73473f74411baea5286e8687.php:127
 #: cache/63/63cb0689ed9b3c5e21eb5af0b40e433a.php:106
 msgid ""
 "This module uses 3rd party data. Please enter the number of seconds you "
@@ -11172,6 +11162,23 @@ msgstr ""
 
 #: cache/2d/2d67b2aac34d9a8cd68e4dad8db97260.php:91
 msgid "Menu Board Categories for"
+msgstr ""
+
+#: cache/2d/2d67b2aac34d9a8cd68e4dad8db97260.php:230
+#: cache/09/09fa06e4cbb20e5f65e2075bff1da423.php:566
+#: cache/24/24c5ae3175cea2904ae6bd208e699f50.php:676
+#: cache/04/04b4b8b9bb93bf0580422332c142abff.php:306
+#: cache/25/257d7652c0b04ca6e480ad5c9beaa3c2.php:140
+#: cache/49/49b3c02c876e8a464a75e1682c064115.php:365
+#: cache/49/49b3c02c876e8a464a75e1682c064115.php:371
+#: cache/34/3453edc522f8d2c6d1d154ad55500693.php:334
+#: cache/cb/cbed339b261aade59b9d7cdbdfb46dcc.php:449
+#: cache/cb/cbed339b261aade59b9d7cdbdfb46dcc.php:606
+#: cache/10/10b7f3b85c460e6ccc00e28eed2bf591.php:336
+#: cache/10/10b7f3b85c460e6ccc00e28eed2bf591.php:475
+#: cache/8b/8bc5b04498de39f4571d14d541bd6a91.php:213
+#: cache/8b/8bc5b04498de39f4571d14d541bd6a91.php:323
+msgid "Thumbnail"
 msgstr ""
 
 #: cache/0f/0fbcc8521effd4baecae2fe49cee1b76.php:56
@@ -11463,7 +11470,7 @@ msgstr ""
 
 #: cache/9f/9f9a142004ca4a1c914a4395fe586017.php:125
 #: cache/a4/a4b5f52b1992bb349e8a30b19ff24645.php:80
-#: lib/Controller/Playlist.php:1703 lib/Controller/Library.php:2114
+#: lib/Controller/Playlist.php:1703 lib/Controller/Library.php:2128
 #: lib/Controller/Layout.php:1657
 msgid "Design"
 msgstr ""
@@ -11992,19 +11999,6 @@ msgstr ""
 #: cache/09/09fa06e4cbb20e5f65e2075bff1da423.php:562
 #: cache/24/24c5ae3175cea2904ae6bd208e699f50.php:672
 msgid "Screen shot?"
-msgstr ""
-
-#: cache/09/09fa06e4cbb20e5f65e2075bff1da423.php:566
-#: cache/24/24c5ae3175cea2904ae6bd208e699f50.php:676
-#: cache/49/49b3c02c876e8a464a75e1682c064115.php:365
-#: cache/49/49b3c02c876e8a464a75e1682c064115.php:371
-#: cache/cb/cbed339b261aade59b9d7cdbdfb46dcc.php:449
-#: cache/cb/cbed339b261aade59b9d7cdbdfb46dcc.php:606
-#: cache/10/10b7f3b85c460e6ccc00e28eed2bf591.php:336
-#: cache/10/10b7f3b85c460e6ccc00e28eed2bf591.php:475
-#: cache/8b/8bc5b04498de39f4571d14d541bd6a91.php:213
-#: cache/8b/8bc5b04498de39f4571d14d541bd6a91.php:323
-msgid "Thumbnail"
 msgstr ""
 
 #: cache/09/09fa06e4cbb20e5f65e2075bff1da423.php:570
@@ -12654,7 +12648,7 @@ msgid "Add Product"
 msgstr ""
 
 #: cache/04/04b4b8b9bb93bf0580422332c142abff.php:86
-#: lib/Controller/MenuBoard.php:173
+#: lib/Controller/MenuBoard.php:156
 msgid "View Categories"
 msgstr ""
 
@@ -14151,17 +14145,17 @@ msgstr ""
 msgid "Spots"
 msgstr ""
 
-#: cache/25/257d7652c0b04ca6e480ad5c9beaa3c2.php:230
+#: cache/25/257d7652c0b04ca6e480ad5c9beaa3c2.php:235
 #: cache/1b/1b4d10b8bb67ce8b30ada153b15daf6e.php:196
 msgid "Locked"
 msgstr ""
 
-#: cache/25/257d7652c0b04ca6e480ad5c9beaa3c2.php:325
+#: cache/25/257d7652c0b04ca6e480ad5c9beaa3c2.php:330
 #: cache/1b/1b4d10b8bb67ce8b30ada153b15daf6e.php:357
 msgid "Add"
 msgstr ""
 
-#: cache/25/257d7652c0b04ca6e480ad5c9beaa3c2.php:331
+#: cache/25/257d7652c0b04ca6e480ad5c9beaa3c2.php:336
 #: lib/Controller/StatusDashboard.php:302 lib/Report/LibraryUsage.php:207
 #: lib/Report/LibraryUsage.php:555
 msgid "Empty"
@@ -16172,7 +16166,7 @@ msgid "Are you sure you want to delete a non-empty Playlist?"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2940
-#: lib/Connector/OpenWeatherMapConnector.php:507
+#: lib/Connector/OpenWeatherMapConnector.php:500
 msgid "Afrikaans"
 msgstr ""
 
@@ -16201,12 +16195,12 @@ msgid "Arabic (Tunisia)"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2968
-#: lib/Connector/OpenWeatherMapConnector.php:508
+#: lib/Connector/OpenWeatherMapConnector.php:501
 msgid "Arabic"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2972
-#: lib/Connector/OpenWeatherMapConnector.php:509
+#: lib/Connector/OpenWeatherMapConnector.php:502
 msgid "Azerbaijani"
 msgstr ""
 
@@ -16215,7 +16209,7 @@ msgid "Belarusian"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:2980
-#: lib/Connector/OpenWeatherMapConnector.php:510
+#: lib/Connector/OpenWeatherMapConnector.php:503
 msgid "Bulgarian"
 msgstr ""
 
@@ -16244,12 +16238,12 @@ msgid "Bosnian"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:3008
-#: lib/Connector/OpenWeatherMapConnector.php:511
+#: lib/Connector/OpenWeatherMapConnector.php:504
 msgid "Catalan"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:3012
-#: lib/Connector/OpenWeatherMapConnector.php:514
+#: lib/Connector/OpenWeatherMapConnector.php:507
 msgid "Czech"
 msgstr ""
 
@@ -16262,7 +16256,7 @@ msgid "Welsh"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:3024
-#: lib/Connector/OpenWeatherMapConnector.php:515
+#: lib/Connector/OpenWeatherMapConnector.php:508
 msgid "Danish"
 msgstr ""
 
@@ -16275,7 +16269,7 @@ msgid "German (Switzerland)"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:3036
-#: lib/Connector/OpenWeatherMapConnector.php:516
+#: lib/Connector/OpenWeatherMapConnector.php:509
 msgid "German"
 msgstr ""
 
@@ -16284,12 +16278,12 @@ msgid "Divehi"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:3044
-#: lib/Connector/OpenWeatherMapConnector.php:517
+#: lib/Connector/OpenWeatherMapConnector.php:510
 msgid "Greek"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:3048
-#: lib/Connector/OpenWeatherMapConnector.php:518
+#: lib/Connector/OpenWeatherMapConnector.php:511
 msgid "English"
 msgstr ""
 
@@ -16343,7 +16337,7 @@ msgid "Spanish (United States)"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:3104
-#: lib/Connector/OpenWeatherMapConnector.php:545
+#: lib/Connector/OpenWeatherMapConnector.php:538
 msgid "Spanish"
 msgstr ""
 
@@ -16352,7 +16346,7 @@ msgid "Estonian"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:3112
-#: lib/Connector/OpenWeatherMapConnector.php:519
+#: lib/Connector/OpenWeatherMapConnector.php:512
 msgid "Basque"
 msgstr ""
 
@@ -16361,7 +16355,7 @@ msgid "Persian"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:3120
-#: lib/Connector/OpenWeatherMapConnector.php:521
+#: lib/Connector/OpenWeatherMapConnector.php:514
 msgid "Finnish"
 msgstr ""
 
@@ -16382,7 +16376,7 @@ msgid "French (Switzerland)"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:3140
-#: lib/Connector/OpenWeatherMapConnector.php:522
+#: lib/Connector/OpenWeatherMapConnector.php:515
 msgid "French"
 msgstr ""
 
@@ -16395,7 +16389,7 @@ msgid "Scottish Gaelic"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:3152
-#: lib/Connector/OpenWeatherMapConnector.php:523
+#: lib/Connector/OpenWeatherMapConnector.php:516
 msgid "Galician"
 msgstr ""
 
@@ -16408,22 +16402,22 @@ msgid "Gujarati"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:3164
-#: lib/Connector/OpenWeatherMapConnector.php:524
+#: lib/Connector/OpenWeatherMapConnector.php:517
 msgid "Hebrew"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:3168
-#: lib/Connector/OpenWeatherMapConnector.php:525
+#: lib/Connector/OpenWeatherMapConnector.php:518
 msgid "Hindi"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:3172
-#: lib/Connector/OpenWeatherMapConnector.php:526
+#: lib/Connector/OpenWeatherMapConnector.php:519
 msgid "Croatian"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:3176
-#: lib/Connector/OpenWeatherMapConnector.php:527
+#: lib/Connector/OpenWeatherMapConnector.php:520
 msgid "Hungarian"
 msgstr ""
 
@@ -16432,7 +16426,7 @@ msgid "Armenian (Armenia)"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:3184
-#: lib/Connector/OpenWeatherMapConnector.php:528
+#: lib/Connector/OpenWeatherMapConnector.php:521
 msgid "Indonesian"
 msgstr ""
 
@@ -16445,12 +16439,12 @@ msgid "Italian (Switzerland)"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:3196
-#: lib/Connector/OpenWeatherMapConnector.php:529
+#: lib/Connector/OpenWeatherMapConnector.php:522
 msgid "Italian"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:3200
-#: lib/Connector/OpenWeatherMapConnector.php:530
+#: lib/Connector/OpenWeatherMapConnector.php:523
 msgid "Japanese"
 msgstr ""
 
@@ -16475,7 +16469,7 @@ msgid "Kannada"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:3224
-#: lib/Connector/OpenWeatherMapConnector.php:531
+#: lib/Connector/OpenWeatherMapConnector.php:524
 msgid "Korean"
 msgstr ""
 
@@ -16496,12 +16490,12 @@ msgid "Lao"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:3244
-#: lib/Connector/OpenWeatherMapConnector.php:533
+#: lib/Connector/OpenWeatherMapConnector.php:526
 msgid "Lithuanian"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:3248
-#: lib/Connector/OpenWeatherMapConnector.php:532
+#: lib/Connector/OpenWeatherMapConnector.php:525
 msgid "Latvian"
 msgstr ""
 
@@ -16514,7 +16508,7 @@ msgid "Maori"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:3260
-#: lib/Connector/OpenWeatherMapConnector.php:534
+#: lib/Connector/OpenWeatherMapConnector.php:527
 msgid "Macedonian"
 msgstr ""
 
@@ -16559,7 +16553,7 @@ msgid "Dutch (Belgium)"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:3304
-#: lib/Connector/OpenWeatherMapConnector.php:536
+#: lib/Connector/OpenWeatherMapConnector.php:529
 msgid "Dutch"
 msgstr ""
 
@@ -16572,7 +16566,7 @@ msgid "Punjabi (India)"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:3316
-#: lib/Connector/OpenWeatherMapConnector.php:537
+#: lib/Connector/OpenWeatherMapConnector.php:530
 msgid "Polish"
 msgstr ""
 
@@ -16581,17 +16575,17 @@ msgid "Portuguese (Brazil)"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:3324
-#: lib/Connector/OpenWeatherMapConnector.php:538
+#: lib/Connector/OpenWeatherMapConnector.php:531
 msgid "Portuguese"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:3328
-#: lib/Connector/OpenWeatherMapConnector.php:540
+#: lib/Connector/OpenWeatherMapConnector.php:533
 msgid "Romanian"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:3332
-#: lib/Connector/OpenWeatherMapConnector.php:541
+#: lib/Connector/OpenWeatherMapConnector.php:534
 msgid "Russian"
 msgstr ""
 
@@ -16608,12 +16602,12 @@ msgid "Sinhala"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:3348
-#: lib/Connector/OpenWeatherMapConnector.php:543
+#: lib/Connector/OpenWeatherMapConnector.php:536
 msgid "Slovak"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:3352
-#: lib/Connector/OpenWeatherMapConnector.php:544
+#: lib/Connector/OpenWeatherMapConnector.php:537
 msgid "Slovenian"
 msgstr ""
 
@@ -16626,7 +16620,7 @@ msgid "Serbian (Cyrillic)"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:3364
-#: lib/Connector/OpenWeatherMapConnector.php:546
+#: lib/Connector/OpenWeatherMapConnector.php:539
 msgid "Serbian"
 msgstr ""
 
@@ -16635,7 +16629,7 @@ msgid "Swati"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:3372
-#: lib/Connector/OpenWeatherMapConnector.php:542
+#: lib/Connector/OpenWeatherMapConnector.php:535
 msgid "Swedish"
 msgstr ""
 
@@ -16660,7 +16654,7 @@ msgid "Tajik"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:3396
-#: lib/Connector/OpenWeatherMapConnector.php:547
+#: lib/Connector/OpenWeatherMapConnector.php:540
 msgid "Thai"
 msgstr ""
 
@@ -16677,7 +16671,7 @@ msgid "Klingon"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:3412
-#: lib/Connector/OpenWeatherMapConnector.php:548
+#: lib/Connector/OpenWeatherMapConnector.php:541
 msgid "Turkish"
 msgstr ""
 
@@ -16698,7 +16692,7 @@ msgid "Uyghur (China)"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:3432
-#: lib/Connector/OpenWeatherMapConnector.php:549
+#: lib/Connector/OpenWeatherMapConnector.php:542
 msgid "Ukrainian"
 msgstr ""
 
@@ -16715,7 +16709,7 @@ msgid "Uzbek"
 msgstr ""
 
 #: cache/74/744308e2456d1f83f205ef9ab9fe3022.php:3448
-#: lib/Connector/OpenWeatherMapConnector.php:550
+#: lib/Connector/OpenWeatherMapConnector.php:543
 msgid "Vietnamese"
 msgstr ""
 
@@ -18116,7 +18110,7 @@ msgid ""
 msgstr ""
 
 #: cache/c5/c52b8109558dd3acc604e183177113c8.php:342
-#: lib/Controller/Library.php:1353
+#: lib/Controller/Library.php:1356
 msgid "Sorry, Fonts do not have any editable properties."
 msgstr ""
 
@@ -19240,7 +19234,7 @@ msgstr ""
 #: lib/Controller/DisplayGroup.php:428 lib/Controller/DisplayGroup.php:441
 #: lib/Controller/DataSet.php:302 lib/Controller/DataSet.php:308
 #: lib/Controller/Campaign.php:422 lib/Controller/Campaign.php:428
-#: lib/Controller/MenuBoard.php:211 lib/Controller/MenuBoard.php:219
+#: lib/Controller/MenuBoard.php:194 lib/Controller/MenuBoard.php:202
 #: lib/Controller/Playlist.php:489 lib/Controller/Playlist.php:501
 #: lib/Controller/Library.php:711 lib/Controller/Library.php:717
 #: lib/Controller/Layout.php:1890 lib/Controller/Layout.php:1896
@@ -20742,7 +20736,7 @@ msgstr ""
 #: lib/Controller/Task.php:215 lib/Controller/Widget.php:298
 #: lib/Controller/Template.php:539 lib/Controller/DisplayGroup.php:796
 #: lib/Controller/DisplayGroup.php:2664 lib/Controller/DataSet.php:618
-#: lib/Controller/Notification.php:576 lib/Controller/Campaign.php:649
+#: lib/Controller/Notification.php:579 lib/Controller/Campaign.php:649
 #: lib/Controller/Campaign.php:1385 lib/Controller/Folder.php:255
 #: lib/Controller/Playlist.php:788 lib/Controller/SyncGroup.php:291
 #: lib/Controller/DataSetColumn.php:389 lib/Controller/Tag.php:359
@@ -20758,10 +20752,10 @@ msgstr ""
 
 #: lib/Controller/Task.php:284 lib/Controller/Widget.php:573
 #: lib/Controller/DisplayGroup.php:1025 lib/Controller/DataSet.php:912
-#: lib/Controller/ScheduleReport.php:426 lib/Controller/Notification.php:706
-#: lib/Controller/Campaign.php:959 lib/Controller/MenuBoard.php:459
+#: lib/Controller/ScheduleReport.php:426 lib/Controller/Notification.php:709
+#: lib/Controller/Campaign.php:959 lib/Controller/MenuBoard.php:446
 #: lib/Controller/Folder.php:323 lib/Controller/Playlist.php:979
-#: lib/Controller/Transition.php:158 lib/Controller/Library.php:1408
+#: lib/Controller/Transition.php:158 lib/Controller/Library.php:1411
 #: lib/Controller/SyncGroup.php:557 lib/Controller/DataSetColumn.php:596
 #: lib/Controller/Tag.php:544 lib/Controller/Connector.php:205
 #: lib/Controller/Layout.php:667 lib/Controller/Layout.php:789
@@ -20780,9 +20774,9 @@ msgstr ""
 
 #: lib/Controller/Task.php:331 lib/Controller/Widget.php:692
 #: lib/Controller/DisplayGroup.php:1081 lib/Controller/DataSet.php:1002
-#: lib/Controller/ScheduleReport.php:464 lib/Controller/Notification.php:765
+#: lib/Controller/ScheduleReport.php:464 lib/Controller/Notification.php:768
 #: lib/Controller/Campaign.php:1038 lib/Controller/SavedReport.php:283
-#: lib/Controller/MenuBoard.php:536 lib/Controller/Folder.php:405
+#: lib/Controller/MenuBoard.php:523 lib/Controller/Folder.php:405
 #: lib/Controller/Playlist.php:1060 lib/Controller/Library.php:1016
 #: lib/Controller/SyncGroup.php:635 lib/Controller/DataSetColumn.php:685
 #: lib/Controller/Tag.php:629 lib/Controller/Layout.php:1027
@@ -20820,13 +20814,13 @@ msgstr ""
 #: lib/Controller/Widget.php:191 lib/Controller/Widget.php:456
 #: lib/Controller/Widget.php:665 lib/Controller/Widget.php:823
 #: lib/Controller/Widget.php:988 lib/Controller/Widget.php:1077
-#: lib/Controller/Widget.php:1444 lib/Controller/Widget.php:1553
-#: lib/Controller/Widget.php:1635 lib/Controller/Playlist.php:1311
+#: lib/Controller/Widget.php:1447 lib/Controller/Widget.php:1556
+#: lib/Controller/Widget.php:1638 lib/Controller/Playlist.php:1311
 #: lib/Controller/Playlist.php:1476 lib/Controller/Layout.php:741
 #: lib/Controller/Layout.php:844 lib/Controller/Region.php:229
 #: lib/Controller/Region.php:376 lib/Controller/Region.php:462
 #: lib/Controller/Region.php:527 lib/Controller/Region.php:748
-#: lib/Controller/Region.php:846 lib/Helper/XiboUploadHandler.php:413
+#: lib/Controller/Region.php:846 lib/Helper/XiboUploadHandler.php:455
 msgid "This Layout is not a Draft, please checkout."
 msgstr ""
 
@@ -20857,9 +20851,9 @@ msgstr ""
 #: lib/Controller/Widget.php:321 lib/Controller/Widget.php:448
 #: lib/Controller/Widget.php:720 lib/Controller/Widget.php:815
 #: lib/Controller/Widget.php:884 lib/Controller/Widget.php:980
-#: lib/Controller/Widget.php:1069 lib/Controller/Widget.php:1350
-#: lib/Controller/Widget.php:1436 lib/Controller/Widget.php:1545
-#: lib/Controller/Widget.php:1627
+#: lib/Controller/Widget.php:1069 lib/Controller/Widget.php:1353
+#: lib/Controller/Widget.php:1439 lib/Controller/Widget.php:1548
+#: lib/Controller/Widget.php:1630
 msgid "This Widget is not shared with you with edit permission"
 msgstr ""
 
@@ -20962,41 +20956,41 @@ msgstr ""
 msgid "Problem rendering widget"
 msgstr ""
 
-#: lib/Controller/Widget.php:1496
+#: lib/Controller/Widget.php:1499
 msgid "Edited Expiry"
 msgstr ""
 
-#: lib/Controller/Widget.php:1560
+#: lib/Controller/Widget.php:1563
 msgid "You can only set a target region on a Widget in the drawer."
 msgstr ""
 
-#: lib/Controller/Widget.php:1584
+#: lib/Controller/Widget.php:1587
 msgid "Target region set"
 msgstr ""
 
-#: lib/Controller/Widget.php:1658
+#: lib/Controller/Widget.php:1661
 msgid "Invalid element JSON"
 msgstr ""
 
-#: lib/Controller/Widget.php:1664
+#: lib/Controller/Widget.php:1667
 msgid ""
 "At least one element is required for this Widget. Please delete it if you no "
 "longer need it."
 msgstr ""
 
-#: lib/Controller/Widget.php:1722
+#: lib/Controller/Widget.php:1725
 msgid "Saved elements"
 msgstr ""
 
-#: lib/Controller/Widget.php:1747
+#: lib/Controller/Widget.php:1750
 msgid "Please supply a propertyId"
 msgstr ""
 
-#: lib/Controller/Widget.php:1801
+#: lib/Controller/Widget.php:1804
 msgid "Please provide a widgetId"
 msgstr ""
 
-#: lib/Controller/Widget.php:1820
+#: lib/Controller/Widget.php:1823
 msgid "Widget does not have a data type"
 msgstr ""
 
@@ -21005,7 +20999,7 @@ msgid "Alter Template"
 msgstr ""
 
 #: lib/Controller/Template.php:226 lib/Controller/DisplayGroup.php:360
-#: lib/Controller/Campaign.php:361 lib/Controller/MenuBoard.php:196
+#: lib/Controller/Campaign.php:361 lib/Controller/MenuBoard.php:179
 #: lib/Controller/Playlist.php:419 lib/Controller/Library.php:675
 #: lib/Controller/Layout.php:1791 lib/Controller/Display.php:956
 msgid "Move to Folder"
@@ -21185,34 +21179,34 @@ msgstr ""
 msgid "Copied %s as %s"
 msgstr ""
 
-#: lib/Controller/DataSet.php:1288
+#: lib/Controller/DataSet.php:1291
 msgid "Missing JSON Body"
 msgstr ""
 
-#: lib/Controller/DataSet.php:1295
+#: lib/Controller/DataSet.php:1298
 msgid "Malformed JSON body, rows and uniqueKeys are required"
 msgstr ""
 
-#: lib/Controller/DataSet.php:1335
+#: lib/Controller/DataSet.php:1338
 #, php-format
 msgid "Incorrect date provided %s, expected date format Y-m-d H:i:s "
 msgstr ""
 
-#: lib/Controller/DataSet.php:1384
+#: lib/Controller/DataSet.php:1387
 msgid "No data found in request body"
 msgstr ""
 
-#: lib/Controller/DataSet.php:1388
+#: lib/Controller/DataSet.php:1391
 #, php-format
 msgid "Imported JSON into %s"
 msgstr ""
 
-#: lib/Controller/DataSet.php:1452
+#: lib/Controller/DataSet.php:1455
 #, php-format
 msgid "Run Test-Request for %s"
 msgstr ""
 
-#: lib/Controller/DataSet.php:1567
+#: lib/Controller/DataSet.php:1570
 #, php-format
 msgid "Cache cleared for %s"
 msgstr ""
@@ -21334,7 +21328,7 @@ msgstr ""
 msgid "Delete?"
 msgstr ""
 
-#: lib/Controller/Notification.php:567
+#: lib/Controller/Notification.php:570
 msgid "Problem moving uploaded file into the Attachment Folder"
 msgstr ""
 
@@ -21446,11 +21440,11 @@ msgstr ""
 msgid "Saved Report Converted to Schema Version 2"
 msgstr ""
 
-#: lib/Controller/MenuBoard.php:341
+#: lib/Controller/MenuBoard.php:328
 msgid "Added Menu Board"
 msgstr ""
 
-#: lib/Controller/MenuBoard.php:637
+#: lib/Controller/MenuBoard.php:624
 #, php-format
 msgid "Menu Board %s moved to Folder %s"
 msgstr ""
@@ -21460,7 +21454,7 @@ msgid "Please provide LayoutId"
 msgstr ""
 
 #: lib/Controller/Action.php:348 lib/Controller/Action.php:498
-#: lib/Controller/Action.php:562 lib/Controller/Layout.php:2960
+#: lib/Controller/Action.php:562 lib/Controller/Layout.php:2963
 msgid "Layout is not checked out"
 msgstr ""
 
@@ -21501,7 +21495,7 @@ msgstr ""
 msgid "Please provide an assetId"
 msgstr ""
 
-#: lib/Controller/Fault.php:109 lib/Entity/Layout.php:1910
+#: lib/Controller/Fault.php:109 lib/Entity/Layout.php:1918
 msgid "Can't create ZIP. Error Code: "
 msgstr ""
 
@@ -21629,7 +21623,7 @@ msgid ""
 "tab to define"
 msgstr ""
 
-#: lib/Controller/Playlist.php:1201 lib/Controller/Library.php:2265
+#: lib/Controller/Playlist.php:1201 lib/Controller/Library.php:2279
 #: lib/Controller/Layout.php:2182
 #, php-format
 msgid "Copied as %s"
@@ -21669,7 +21663,7 @@ msgstr ""
 msgid "Specified Playlist item is not in use."
 msgstr ""
 
-#: lib/Controller/Playlist.php:1713 lib/Controller/Library.php:2124
+#: lib/Controller/Playlist.php:1713 lib/Controller/Library.php:2138
 #: lib/Controller/Layout.php:1703
 msgid "Preview Layout"
 msgstr ""
@@ -21733,97 +21727,97 @@ msgstr ""
 msgid "This library item is in use."
 msgstr ""
 
-#: lib/Controller/Library.php:1174 lib/Controller/Library.php:1388
-#: lib/Controller/Library.php:2454
+#: lib/Controller/Library.php:1174 lib/Controller/Library.php:1391
+#: lib/Controller/Library.php:2468
 msgid "Cannot set Expiry date in the past"
 msgstr ""
 
-#: lib/Controller/Library.php:1429 lib/Controller/Library.php:1494
+#: lib/Controller/Library.php:1432 lib/Controller/Library.php:1497
 #: lib/Controller/Maintenance.php:97
 msgid "Sorry this function is disabled."
 msgstr ""
 
-#: lib/Controller/Library.php:1526 lib/Controller/Maintenance.php:269
+#: lib/Controller/Library.php:1529 lib/Controller/Maintenance.php:269
 msgid "Library Tidy Complete"
 msgstr ""
 
-#: lib/Controller/Library.php:1609
+#: lib/Controller/Library.php:1612
 msgid "Cannot download region specific module"
 msgstr ""
 
-#: lib/Controller/Library.php:1746
+#: lib/Controller/Library.php:1760
 msgid "Route is available through the API"
 msgstr ""
 
-#: lib/Controller/Library.php:1815 lib/Controller/Layout.php:2247
+#: lib/Controller/Library.php:1829 lib/Controller/Layout.php:2247
 msgid "No tags to assign"
 msgstr ""
 
-#: lib/Controller/Library.php:1826 lib/Controller/Layout.php:2258
+#: lib/Controller/Library.php:1840 lib/Controller/Layout.php:2258
 #, php-format
 msgid "Tagged %s"
 msgstr ""
 
-#: lib/Controller/Library.php:1889 lib/Controller/Layout.php:2323
+#: lib/Controller/Library.php:1903 lib/Controller/Layout.php:2323
 msgid "No tags to unassign"
 msgstr ""
 
-#: lib/Controller/Library.php:1900 lib/Controller/Layout.php:2333
+#: lib/Controller/Library.php:1914 lib/Controller/Layout.php:2333
 #, php-format
 msgid "Untagged %s"
 msgstr ""
 
-#: lib/Controller/Library.php:2047 lib/Controller/Library.php:2131
+#: lib/Controller/Library.php:2061 lib/Controller/Library.php:2145
 msgid "Specified Media item is not in use."
 msgstr ""
 
-#: lib/Controller/Library.php:2338 lib/Middleware/Theme.php:143
+#: lib/Controller/Library.php:2352 lib/Middleware/Theme.php:143
 #, php-format
 msgid "This form accepts files up to a maximum size of %s"
 msgstr ""
 
-#: lib/Controller/Library.php:2462
+#: lib/Controller/Library.php:2476
 msgid "Provided URL is invalid"
 msgstr ""
 
-#: lib/Controller/Library.php:2498
+#: lib/Controller/Library.php:2512
 #, php-format
 msgid ""
 "Invalid Module type or extension. Module type %s does not allow for %s "
 "extension"
 msgstr ""
 
-#: lib/Controller/Library.php:2531
+#: lib/Controller/Library.php:2545
 msgid "Download rejected for an unknown reason."
 msgstr ""
 
-#: lib/Controller/Library.php:2535
+#: lib/Controller/Library.php:2549
 #, php-format
 msgid "Download rejected due to %s"
 msgstr ""
 
-#: lib/Controller/Library.php:2542
+#: lib/Controller/Library.php:2556
 msgid "Media upload from URL was successful"
 msgstr ""
 
-#: lib/Controller/Library.php:2587
+#: lib/Controller/Library.php:2601
 msgid "Invalid image data"
 msgstr ""
 
-#: lib/Controller/Library.php:2693
+#: lib/Controller/Library.php:2707
 #, php-format
 msgid "Media %s moved to Folder %s"
 msgstr ""
 
-#: lib/Controller/Library.php:2780
+#: lib/Controller/Library.php:2794
 msgid "Not configured by any active connector."
 msgstr ""
 
-#: lib/Controller/Library.php:2830
+#: lib/Controller/Library.php:2844
 msgid "Download failed"
 msgstr ""
 
-#: lib/Controller/Library.php:2839
+#: lib/Controller/Library.php:2853
 msgid "Imported"
 msgstr ""
 
@@ -21891,9 +21885,9 @@ msgstr ""
 #: lib/Controller/Layout.php:966 lib/Controller/Layout.php:1068
 #: lib/Controller/Layout.php:1116 lib/Controller/Layout.php:1165
 #: lib/Controller/Layout.php:1234 lib/Controller/Layout.php:1273
-#: lib/Controller/Layout.php:2686 lib/Controller/Layout.php:2737
-#: lib/Controller/Layout.php:2776 lib/Controller/Layout.php:2845
-#: lib/Controller/Layout.php:2905 lib/Controller/Layout.php:2955
+#: lib/Controller/Layout.php:2689 lib/Controller/Layout.php:2740
+#: lib/Controller/Layout.php:2779 lib/Controller/Layout.php:2848
+#: lib/Controller/Layout.php:2908 lib/Controller/Layout.php:2958
 msgid "You do not have permissions to edit this layout"
 msgstr ""
 
@@ -21989,62 +21983,62 @@ msgstr ""
 msgid "Cannot export Draft Layout"
 msgstr ""
 
-#: lib/Controller/Layout.php:2615
+#: lib/Controller/Layout.php:2618
 msgid "Layout background must be an image"
 msgstr ""
 
-#: lib/Controller/Layout.php:2742
+#: lib/Controller/Layout.php:2745
 msgid "Layout is already checked out"
 msgstr ""
 
-#: lib/Controller/Layout.php:2751
+#: lib/Controller/Layout.php:2754
 #, php-format
 msgid "Checked out %s"
 msgstr ""
 
-#: lib/Controller/Layout.php:2867
+#: lib/Controller/Layout.php:2870
 #, php-format
 msgid "Published %s"
 msgstr ""
 
-#: lib/Controller/Layout.php:2874
+#: lib/Controller/Layout.php:2877
 #, php-format
 msgid "Layout will be published on %s"
 msgstr ""
 
-#: lib/Controller/Layout.php:2972
+#: lib/Controller/Layout.php:2975
 #, php-format
 msgid "Discarded %s"
 msgstr ""
 
-#: lib/Controller/Layout.php:3023
+#: lib/Controller/Layout.php:3026
 msgid ""
 "This function is available only to User who originally locked this Layout."
 msgstr ""
 
-#: lib/Controller/Layout.php:3112 lib/Entity/Layout.php:2249
+#: lib/Controller/Layout.php:3115 lib/Entity/Layout.php:2257
 msgid "Empty Region"
 msgstr ""
 
-#: lib/Controller/Layout.php:3216
+#: lib/Controller/Layout.php:3219
 msgid "Incorrect image data"
 msgstr ""
 
-#: lib/Controller/Layout.php:3241
+#: lib/Controller/Layout.php:3244
 msgid "Thumbnail not found for Layout"
 msgstr ""
 
-#: lib/Controller/Layout.php:3333
+#: lib/Controller/Layout.php:3336
 #, php-format
 msgid "Please select %s"
 msgstr ""
 
-#: lib/Controller/Layout.php:3351
+#: lib/Controller/Layout.php:3354
 #, php-format
 msgid "Fetched %s"
 msgstr ""
 
-#: lib/Controller/Layout.php:3474
+#: lib/Controller/Layout.php:3477
 #, php-format
 msgid "Created %s"
 msgstr ""
@@ -22170,13 +22164,13 @@ msgid "Authentication code incorrect"
 msgstr ""
 
 #: lib/Controller/Font.php:421 lib/Controller/PlayerSoftware.php:630
-#: lib/Helper/XiboUploadHandler.php:398
+#: lib/Helper/XiboUploadHandler.php:440
 msgid ""
 "Sorry this is a corrupted upload, the file size doesn't match what we're "
 "expecting."
 msgstr ""
 
-#: lib/Controller/Font.php:579
+#: lib/Controller/Font.php:582
 msgid "Unable to write to the library"
 msgstr ""
 
@@ -22504,77 +22498,77 @@ msgstr ""
 msgid "%s assigned to Display Groups"
 msgstr ""
 
-#: lib/Controller/Display.php:2247
+#: lib/Controller/Display.php:2250
 msgid "once it has connected for the first time"
 msgstr ""
 
-#: lib/Controller/Display.php:2314 lib/Controller/Display.php:3029
-#: lib/Controller/Display.php:3153
+#: lib/Controller/Display.php:2317 lib/Controller/Display.php:3032
+#: lib/Controller/Display.php:3156
 #, php-format
 msgid "Request sent for %s"
 msgstr ""
 
-#: lib/Controller/Display.php:2342 lib/Controller/Display.php:2394
+#: lib/Controller/Display.php:2345 lib/Controller/Display.php:2397
 msgid ""
 "This display has no mac address recorded against it yet. Make sure the "
 "display is running."
 msgstr ""
 
-#: lib/Controller/Display.php:2417
+#: lib/Controller/Display.php:2420
 #, php-format
 msgid "Wake on Lan sent for %s"
 msgstr ""
 
-#: lib/Controller/Display.php:2526
+#: lib/Controller/Display.php:2529
 #, php-format
 msgid "Alert for Display %s"
 msgstr ""
 
-#: lib/Controller/Display.php:2528
+#: lib/Controller/Display.php:2531
 #, php-format
 msgid "Display ID %d is offline since %s."
 msgstr ""
 
-#: lib/Controller/Display.php:2627
+#: lib/Controller/Display.php:2630
 #, php-format
 msgid "Authorised set to %d for %s"
 msgstr ""
 
-#: lib/Controller/Display.php:2728
+#: lib/Controller/Display.php:2731
 #, php-format
 msgid "Default Layout with name %s set for %s"
 msgstr ""
 
-#: lib/Controller/Display.php:2814
+#: lib/Controller/Display.php:2817
 msgid "Provided CMS URL is invalid"
 msgstr ""
 
-#: lib/Controller/Display.php:2818
+#: lib/Controller/Display.php:2821
 msgid "New CMS URL can have maximum of 1000 characters"
 msgstr ""
 
-#: lib/Controller/Display.php:2822
+#: lib/Controller/Display.php:2825
 msgid "Provided CMS Key is invalid"
 msgstr ""
 
-#: lib/Controller/Display.php:2830
+#: lib/Controller/Display.php:2833
 msgid "Invalid Two Factor Authentication Code"
 msgstr ""
 
-#: lib/Controller/Display.php:2880
+#: lib/Controller/Display.php:2883
 #, php-format
 msgid "Cancelled CMS Transfer for %s"
 msgstr ""
 
-#: lib/Controller/Display.php:2918
+#: lib/Controller/Display.php:2921
 msgid "Code cannot be empty"
 msgstr ""
 
-#: lib/Controller/Display.php:2946
+#: lib/Controller/Display.php:2949
 msgid "Provided user_code does not exist"
 msgstr ""
 
-#: lib/Controller/Display.php:3022 lib/Controller/Display.php:3146
+#: lib/Controller/Display.php:3025 lib/Controller/Display.php:3149
 msgid "XMR is not configured for this Display"
 msgstr ""
 
@@ -23212,36 +23206,36 @@ msgid ""
 "edge. Please check the allowed Resize Limit in Administration -> Settings"
 msgstr ""
 
-#: lib/Entity/Layout.php:1827
+#: lib/Entity/Layout.php:1835
 #, php-format
 msgid "%s is pending conversion"
 msgstr ""
 
-#: lib/Entity/Layout.php:1832
+#: lib/Entity/Layout.php:1840
 #, php-format
 msgid ""
 "%s is too large. Please ensure that none of the images in your layout are "
 "larger than your Resize Limit on their longest edge."
 msgstr ""
 
-#: lib/Entity/Layout.php:1844
+#: lib/Entity/Layout.php:1852
 msgid "Misconfigured Playlist"
 msgstr ""
 
-#: lib/Entity/Layout.php:2238
+#: lib/Entity/Layout.php:2246
 #, php-format
 msgid "There is an error with this Layout: %s"
 msgstr ""
 
-#: lib/Entity/Layout.php:2317 lib/Entity/Layout.php:2446
+#: lib/Entity/Layout.php:2325 lib/Entity/Layout.php:2454
 msgid "Not a Draft"
 msgstr ""
 
-#: lib/Entity/Layout.php:2532
+#: lib/Entity/Layout.php:2540
 msgid "Draft Layouts must have a parent"
 msgstr ""
 
-#: lib/Entity/Layout.php:2667 lib/Listener/WidgetListener.php:199
+#: lib/Entity/Layout.php:2675 lib/Listener/WidgetListener.php:199
 msgid "Cannot add the same SubPlaylist twice."
 msgstr ""
 
@@ -23956,42 +23950,42 @@ msgstr ""
 msgid "Cannot find media"
 msgstr ""
 
-#: lib/Factory/ModuleFactory.php:381
+#: lib/Factory/ModuleFactory.php:392
 #, php-format
 msgid "Extension %s does not match any enabled Module"
 msgstr ""
 
-#: lib/Factory/ModuleFactory.php:433
+#: lib/Factory/ModuleFactory.php:444
 msgid "DataType not found"
 msgstr ""
 
-#: lib/Factory/ModuleFactory.php:452 lib/Factory/ModuleFactory.php:471
-#: lib/Factory/ModuleFactory.php:545 lib/Factory/ModuleTemplateFactory.php:120
+#: lib/Factory/ModuleFactory.php:463 lib/Factory/ModuleFactory.php:482
+#: lib/Factory/ModuleFactory.php:556 lib/Factory/ModuleTemplateFactory.php:120
 #: lib/Factory/ModuleTemplateFactory.php:138
 msgid "Asset not found"
 msgstr ""
 
-#: lib/Factory/ModuleFactory.php:730
+#: lib/Factory/ModuleFactory.php:741
 msgid "Invalid legacyType"
 msgstr ""
 
-#: lib/Factory/ModuleFactory.php:749 lib/Factory/ModuleTemplateFactory.php:295
+#: lib/Factory/ModuleFactory.php:760 lib/Factory/ModuleTemplateFactory.php:295
 msgid "Invalid assets"
 msgstr ""
 
-#: lib/Factory/ModuleFactory.php:765
+#: lib/Factory/ModuleFactory.php:776
 msgid "Invalid settings"
 msgstr ""
 
-#: lib/Factory/ModuleFactory.php:809 lib/Factory/ModuleTemplateFactory.php:268
+#: lib/Factory/ModuleFactory.php:820 lib/Factory/ModuleTemplateFactory.php:268
 msgid "Invalid properties"
 msgstr ""
 
-#: lib/Factory/ModuleFactory.php:817 lib/Factory/ModuleTemplateFactory.php:277
+#: lib/Factory/ModuleFactory.php:828 lib/Factory/ModuleTemplateFactory.php:277
 msgid "Invalid property groups"
 msgstr ""
 
-#: lib/Factory/ModuleFactory.php:833 lib/Factory/ModuleTemplateFactory.php:286
+#: lib/Factory/ModuleFactory.php:844 lib/Factory/ModuleTemplateFactory.php:286
 msgid "Invalid stencils"
 msgstr ""
 
@@ -24023,7 +24017,7 @@ msgstr ""
 msgid "Campaign not found"
 msgstr ""
 
-#: lib/Factory/MenuBoardFactory.php:132 lib/Factory/MenuBoardFactory.php:160
+#: lib/Factory/MenuBoardFactory.php:133 lib/Factory/MenuBoardFactory.php:161
 msgid "Menu Board not found"
 msgstr ""
 
@@ -24617,7 +24611,12 @@ msgstr ""
 msgid "The iCal provided is not valid, please choose a valid feed"
 msgstr ""
 
-#: lib/Widget/Render/WidgetDownloader.php:277
+#: lib/Widget/Render/WidgetDownloader.php:189
+#: lib/Widget/Render/WidgetDownloader.php:241
+msgid "Image too large"
+msgstr ""
+
+#: lib/Widget/Render/WidgetDownloader.php:288
 msgid "Cannot parse image."
 msgstr ""
 
@@ -24776,17 +24775,17 @@ msgid ""
 "Layout code."
 msgstr ""
 
-#: lib/Xmds/Soap.php:2604
+#: lib/Xmds/Soap.php:2615
 #, php-format
 msgid "Recovery for Display %s"
 msgstr ""
 
-#: lib/Xmds/Soap.php:2605
+#: lib/Xmds/Soap.php:2616
 #, php-format
 msgid "Display ID %d is now back online %s"
 msgstr ""
 
-#: lib/Xmds/Soap.php:2676
+#: lib/Xmds/Soap.php:2687
 msgid "Bandwidth allowance exceeded"
 msgstr ""
 
@@ -24987,7 +24986,7 @@ msgstr ""
 msgid "Access denied replacing old media"
 msgstr ""
 
-#: lib/Helper/XiboUploadHandler.php:114 lib/Helper/XiboUploadHandler.php:224
+#: lib/Helper/XiboUploadHandler.php:114 lib/Helper/XiboUploadHandler.php:266
 msgid "You cannot replace this media with an item of a different type"
 msgstr ""
 
@@ -25164,31 +25163,31 @@ msgstr ""
 msgid "Currency data invalid"
 msgstr ""
 
-#: lib/Connector/OpenWeatherMapConnector.php:129
+#: lib/Connector/OpenWeatherMapConnector.php:128
 msgid "Unable to get weather results."
 msgstr ""
 
-#: lib/Connector/OpenWeatherMapConnector.php:512
+#: lib/Connector/OpenWeatherMapConnector.php:505
 msgid "Chinese Simplified"
 msgstr ""
 
-#: lib/Connector/OpenWeatherMapConnector.php:513
+#: lib/Connector/OpenWeatherMapConnector.php:506
 msgid "Chinese Traditional"
 msgstr ""
 
-#: lib/Connector/OpenWeatherMapConnector.php:520
+#: lib/Connector/OpenWeatherMapConnector.php:513
 msgid "Persian (Farsi)"
 msgstr ""
 
-#: lib/Connector/OpenWeatherMapConnector.php:535
+#: lib/Connector/OpenWeatherMapConnector.php:528
 msgid "Norwegian"
 msgstr ""
 
-#: lib/Connector/OpenWeatherMapConnector.php:539
+#: lib/Connector/OpenWeatherMapConnector.php:532
 msgid "Português Brasil"
 msgstr ""
 
-#: lib/Connector/OpenWeatherMapConnector.php:551
+#: lib/Connector/OpenWeatherMapConnector.php:544
 msgid "Zulu"
 msgstr ""
 

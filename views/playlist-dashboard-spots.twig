@@ -53,8 +53,9 @@
                             {% if widget.getUnmatchedProperty("viewble") %}
                                 {% if widget.type == 'image' %}
                                     {% set downloadUrl = url_for("library.download", {id: widget.getPrimaryMediaId()}) %}
+                                    {% set thumbnailUrl = url_for("library.thumbnail", {id: widget.getPrimaryMediaId()}) %}
                                     <a class="img-replace" data-toggle="lightbox" data-type="image" href="{{ downloadUrl }}?preview=1">
-                                        <img src='{{downloadUrl}}?preview=1&isThumb=1' style='max-height: 50px; max-width: 50px;'/>
+                                        <img src='{{thumbnailUrl}}' style='max-height: 50px; max-width: 50px;' alt="{{ "Thumbnail"|trans }}"/>
                                     </a>
                                 {% else %}
                                     <i title="{{ widget.getUnmatchedProperty("name") }}" class="fa-2x {{ widget.getUnmatchedProperty("moduleIcon") }}" style="height: 50px; max-width: 50px;"></i>

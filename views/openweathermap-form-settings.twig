@@ -35,9 +35,15 @@
         <p>{{ "Your platform provider has configured this connector for you."|trans }}</p>
     {% else %}
         {% set title %}
-            Open Weather Map have added a new "One Call API 3.0" option to their suite of products. Unfortunately a credit
-            card is required to activate this service. Older API keys are not compatible with the new API and therefore
-            users will need to choose which API version is required for their key below.
+            OpenWeather Map has added a new 'One Call API 3.0' option to their suite of products. New users must enter
+            credit card details to use a free number of API calls (which resets each day) or opt for a paid subscription.
+            Older API keys are not compatible with the new API.
+        {% endset %}
+        {{ forms.alert(title, "info") }}
+
+        {% set title %}
+            OpenWeather retired One Call API version 2.5 in June 2024. For continued weather data access, please migrate
+            or subscribe to One Call API version 3.0, which is now the only supported version for free tier users.
         {% endset %}
         {{ forms.alert(title, "info") }}
         
@@ -48,14 +54,6 @@
         {% set title %}{% trans "Paid plan?" %}{% endset %}
         {% set helpText %}{% trans "Is the above key on an Open Weather Map paid plan? Do NOT tick this if you have subscribed to One Call API 3.0." %}{% endset %}
         {{ forms.checkbox("owmIsPaidPlan", title, interface.getSetting("owmIsPaidPlan"), helpText) }}
-
-        {% set title %}{% trans "Open Weather Map Version" %}{% endset %}
-        {% set helpText %}{% trans "Which version of the Open Weather Map did you choose? If you created your account recently it will be 3.0." %}{% endset %}
-        {% set options = [
-            { id: "2.5", value: "2.5" },
-            { id: "3.0", value: "3.0" },
-        ] %}
-        {{ forms.dropdown("owmApiVersion", "single", title, interface.getSetting("owmApiVersion", "2.5"), options, "id", "value", helpText) }}
 
         {% set title %}{% trans "Cache Period" %}{% endset %}
         {% set helpText %}{% trans "This module uses 3rd party data. Please enter the number of seconds you would like to cache results." %}{% endset %}

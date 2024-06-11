@@ -2036,15 +2036,13 @@ div#bg_media_name {
     z-index: $viewer-moveable-z-index !important;
 }
 
-body[multi-select-active] {
-    .moveable-control-box {
-        z-index: 0 !important;
-    }
+.moveable-control .moveable-origin {
+    display: none;
+}
 
-    .layout-live-preview {
-        & > .designer-region-canvas, & > #regions > * {
-            z-index: 1 !important;
-        }
+body[multi-select-active] {
+    .moveable-control-box .moveable-area {
+        display: none;
     }
 }
 

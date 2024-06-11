@@ -162,7 +162,7 @@ class DataProvider implements DataProviderInterface
     /**
      * @inheritDoc
      */
-    public function getDisplayLatitude(): float
+    public function getDisplayLatitude(): ?float
     {
         return $this->latitude;
     }
@@ -170,7 +170,7 @@ class DataProvider implements DataProviderInterface
     /**
      * @inheritDoc
      */
-    public function getDisplayLongitude(): float
+    public function getDisplayLongitude(): ?float
     {
         return $this->longitude;
     }

@@ -103,7 +103,6 @@ h1, h2, h3, h4, p {
 }
 
 .hero-circle {
-    margin: 0 auto;
     position: relative;
 }
 
@@ -209,14 +208,34 @@ if (typeof updateClock === 'function') {
 var width = $(window).width();
 var height = $(window).height();
 
+// Set content size as the same as window
+$(target).find('#content').width(width);
+$(target).find('#content').height(height);
+
 // Clock size
 // Shrink by 2px to get a bit of space to the side.
 var size = Math.min(width, height) - 2;
 
-$(target).find('.hero-circle').css({
+// Set dimensions
+var $clock = $(target).find('.hero-circle');
+$clock.css({
     width: size + "px",
     height: size + "px"
 });
+
+//  Horizontal alignment
+if (properties.alignmentH === 'right') {
+    $clock.css('left', width - $clock.width());
+} else if (properties.alignmentH === 'center') {
+    $clock.css('left', (width / 2) - $clock.width() / 2);
+}
+
+//  Vertical alignment
+if (properties.alignmentV === 'bottom') {
+    $clock.css('top', height - $clock.height());
+} else if (properties.alignmentV === 'middle') {
+    $clock.css('top', (height / 2) - $clock.height() / 2);
+}
 ]]></onRender>
     <assets>
         <asset id="clock-analogue-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/clock/clock-analogue-thumb.png" />

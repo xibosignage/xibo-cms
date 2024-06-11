@@ -1343,6 +1343,9 @@ class DataSet extends Base
 
         $this->setNoOutput(true);
 
+        // Explicitly set the Content-Type header to application/json
+        $response = $response->withHeader('Content-Type', 'application/json');
+
         return $this->render($request, $response);
     }
 

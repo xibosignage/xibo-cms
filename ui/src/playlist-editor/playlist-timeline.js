@@ -144,6 +144,12 @@ PlaylistTimeline.prototype.render = function() {
 
   // Save order function with debounce
   const saveOrderFunc = _.debounce(function() {
+    // Check if editor container is
+    // an empty object, if so, cancel
+    if ($.isEmptyObject(pE.editorContainer)) {
+      return;
+    }
+
     pE.saveOrder();
     pE.timeline.DOMObject.find('#unsaved').hide();
     pE.timeline.DOMObject.find('#saved').show();
