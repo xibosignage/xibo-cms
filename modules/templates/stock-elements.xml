@@ -90,6 +90,14 @@ if (elementData !== null && elementData.hasOwnProperty('ChangeStyle')) {
         $changePercent.css({color: changeStyle === 'value-down' ? 'red' : 'green'});
     }
 }
+
+if(properties.fitToArea) {
+    // Set target for the text
+    properties.fitTarget = 'div';
+
+    // Scale text to container
+    $(target).find('.global-elements-text').xiboTextScaler(properties);
+}
         ]]></onTemplateRender>
     </template>
     <template>

@@ -23,6 +23,8 @@ require('../../public_path');
 
 // Add image render lib
 import '/modules/src/xibo-image-render.js';
+// Add text scaler lib
+import '/modules/src/xibo-text-scaler.js';
 
 // Include handlebars templates
 const playlistEditorTemplate =

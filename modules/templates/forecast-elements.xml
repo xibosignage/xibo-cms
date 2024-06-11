@@ -162,6 +162,16 @@ return value + '%';
             <property id="fontSize" type="number">
                 <title>Font Size</title>
                 <default>40</default>
+                <visibility>
+                    <test>
+                        <condition field="fitToArea" type="neq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fitToArea" type="checkbox">
+                <title>Fit to selection</title>
+                <helpText>Fit to selected area instead of using the font size?</helpText>
+                <default>0</default>
             </property>
         </properties>
         <stencil>
@@ -176,6 +186,18 @@ return value + '%';
     "></i>
 </div>
         ]]></hbs>
+        <onTemplateRender><![CDATA[
+if (properties.fitToArea) {
+    // Set target for the text
+    properties.fitTarget = 'i.wi';
+
+    // Set target for the text
+    properties.isIcon = true;
+
+    // Scale text to container
+    $(target).find('.forecast-elements-weather-icon').xiboTextScaler(properties);
+}
+        ]]></onTemplateRender>
         </stencil>
         <assets>
             <asset id="weather-icons" type="path" mimeType="text/css" path="/modules/assets/forecastio/weather-icons.min.css"></asset>
@@ -244,6 +266,14 @@ return value + '%';
 if (meta && meta.hasOwnProperty('Attribution')) {
     var $childElem = $(target).is('.' + id + '--item') ? '> div:first-child' : '.global-elements-text > div:first-child';
     $(target).find($childElem).html(meta.Attribution);
+}
+
+if(properties.fitToArea) {
+    // Set target for the text
+    properties.fitTarget = 'div';
+
+    // Scale text to container
+    $(target).find('.global-elements-text').xiboTextScaler(properties);
 }
         ]]></onTemplateRender>
     </template>
@@ -417,6 +447,14 @@ $(target).find('.date').each(function(_idx, dateEl){
 
     // Set the date div value to the formatted date
     $(dateEl).html(formattedDate);
+
+    if (properties.fitToArea) {
+        // Set target for the text
+        properties.fitTarget = '.date';
+
+        // Scale text to container
+        $(target).find('.global-elements-date').xiboTextScaler(properties);
+    }
 });
         ]]></onTemplateRender>
     </template>

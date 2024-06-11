@@ -79,6 +79,14 @@ if (elementData !== null && elementData.hasOwnProperty('ChangeStyle')) {
         $changePercent.css({color: changeStyle === 'value-down' ? 'red' : 'green'});
     }
 }
+
+if(properties.fitToArea) {
+    // Set target for the text
+    properties.fitTarget = 'div';
+
+    // Scale text to container
+    $(target).find('.global-elements-text').xiboTextScaler(properties);
+}
         ]]></onTemplateRender>
     </template>
     <template>
@@ -94,6 +102,16 @@ if (elementData !== null && elementData.hasOwnProperty('ChangeStyle')) {
             <property id="fontSize" type="number">
                 <title>Font Size</title>
                 <default>40</default>
+                <visibility>
+                    <test>
+                        <condition field="fitToArea" type="neq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fitToArea" type="checkbox">
+                <title>Fit to selection</title>
+                <helpText>Fit to selected area instead of using the font size?</helpText>
+                <default>0</default>
             </property>
         </properties>
         <stencil>
@@ -130,6 +148,18 @@ if (elementData !== null && elementData.hasOwnProperty('ChangeStyle')) {
     color: gray;
 }
             ]]></style>
+        <onTemplateRender><![CDATA[
+if(properties.fitToArea) {
+    // Set target for the text
+    properties.fitTarget = 'div.fa';
+
+    // Set target for the text
+    properties.isIcon = true;
+
+    // Scale text to container
+    $(target).find('.currency-elements-change-icon').xiboTextScaler(properties);
+}
+        ]]></onTemplateRender>
         </stencil>
         <assets>
             <asset id="font-awesome" type="path" mimeType="text/css" path="/modules/assets/common/font-awesome.min.css" />
