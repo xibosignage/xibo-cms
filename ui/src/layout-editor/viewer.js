@@ -896,7 +896,24 @@ Viewer.prototype.handleInteractions = function() {
             self.editGroup(
               $(e.target).parents('.designer-element-group'),
             );
-          } else {
+          } else if (
+            $(e.target).data('type') === 'element' &&
+            $(e.target).data('subType') === 'text' &&
+            $(e.target).hasClass('editable') &&
+            $(e.target).hasClass('selected')
+          ) {
+            const element = lD.getObjectByTypeAndId(
+              'element',
+              $(e.target).attr('id'),
+              'widget_' + $(e.target).data('regionId') +
+                '_' + $(e.target).data('widgetId'),
+            );
+
+            self.editText(element);
+          } else if (
+            $(e.target).data('type') != undefined &&
+            $(e.target).data('subType') != undefined
+          ) {
             // Move out from group editing
             lD.selectObject();
             self.selectObject();
@@ -2418,6 +2435,7 @@ Viewer.prototype.initMoveable = function() {
   this.moveable = new Moveable(document.body, {
     draggable: true,
     resizable: true,
+    origin: false,
   });
 
   // Const save tranformation
@@ -4016,6 +4034,82 @@ Viewer.prototype.getMultipleSelected = function() {
     objects: $selected,
     canBeDeleted: canBeDeleted,
   };
+};
+
+/**
+ * Inline editing for text element
+ * @param {object} textElement - Text Element
+ */
+Viewer.prototype.editText = function(
+  textElement,
+) {
+  // Get element on viewer
+  const $viewerElement =
+    this.DOMObject.find('#' + textElement.elementId);
+  const $canvas =
+    $viewerElement.parents('.designer-region-canvas');
+  const $editable =
+    $viewerElement.find('.element-content .global-elements-text > div');
+  const originalZIndex = $viewerElement.css('z-index');
+  const canvasOriginalZIndex = $canvas.css('z-index');
+  const editTextZIndex = 2000;
+
+  /**
+   * Save on blur method
+   */
+  function saveOnBlur() {
+    // Remove editing class
+    $viewerElement.removeClass('inline-editing');
+
+    // Restore z index
+    $viewerElement.css('z-index', originalZIndex);
+    $canvas.css('z-index', canvasOriginalZIndex);
+
+    // Remove overlay
+    lD.editorContainer.find('.custom-overlay-edit-text')
+      .remove();
+
+    // Get text and set it for the text field
+    const $textArea =
+      lD.propertiesPanel.DOMObject.find('textarea[name=text]');
+    $textArea.val($editable.html());
+
+    // Save property
+    lD.propertiesPanel.saveElement(
+      textElement,
+      lD.propertiesPanel.DOMObject.find('[name].element-property'),
+    );
+
+    // Remove listener
+    $editable[0].removeEventListener('blur', saveOnBlur);
+  };
+
+  // Enable editing
+  $editable[0].contentEditable = true;
+
+  // Mark element as being edited
+  $viewerElement.addClass('inline-editing');
+
+  // Show overlay
+  const $customOverlay = $('.custom-overlay').clone();
+  $customOverlay.attr('id', 'editTextOverlay')
+    .removeClass('custom-overlay')
+    .on('click', saveOnBlur)
+    .css('z-index', editTextZIndex)
+    .addClass('custom-overlay-edit-text');
+  $customOverlay.appendTo(lD.editorContainer);
+
+  // Set z-index to viewer element
+  $viewerElement.css('z-index', (editTextZIndex + 10));
+  $canvas.css('z-index', 'auto');
+
+  // Focus on field ( Fix - after timeout )
+  setTimeout(function() {
+    $editable[0].focus();
+  }, 20);
+
+  // Add blur event handler
+  $editable[0].addEventListener('blur', saveOnBlur);
 };
 
 module.exports = Viewer;

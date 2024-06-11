@@ -3554,6 +3554,14 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
     layoutObject.type === 'element-group'
   ) ? lD.getObjectByTypeAndId('widget', objAuxId, 'canvas') : {};
 
+  // Check if it's global text to be edited inline
+  const canEditText = (
+    layoutObject.type === 'element' &&
+    layoutObject.selected &&
+    layoutObject.elementType === 'global' &&
+    layoutObject.template.templateId === 'text'
+  );
+
   // Create menu and append to the designer div
   // ( using the object extended with translations )
   lD.editorContainer.append(
@@ -3563,6 +3571,7 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
       canHaveNewConfig: canHaveNewConfig,
       canChangeLayer: canChangeLayer,
       canUngroup: canUngroup,
+      canEditText: canEditText,
       widget: singleWidget,
       isElementBased: (
         layoutObject.type === 'element' ||
@@ -3883,6 +3892,8 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
           );
         });
       });
+    } else if (target.data('action') == 'editText') {
+      lD.viewer.editText(layoutObject);
     } else {
       const property = target.data('property');
       const propertyType = target.data('propertyType');

@@ -1160,6 +1160,12 @@ body.editor-opened {
         .element-content {
             font-family: sans-serif, Arial, Verdana, "Trebuchet MS";
         }
+
+        &.inline-editing {
+            &::after {
+                display: none;
+            }
+        }
     }
 
     .designer-element-group {
