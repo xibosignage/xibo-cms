@@ -130,9 +130,9 @@
                           }
 
                           if (row.thumbnail && row.thumbnail !== '') {
-                            return '<a class="img-replace" data-toggle="lightbox" data-type="image"' +
-                              ' href="' + row.thumbnail + '">' +
-                              '<img src="' + row.thumbnail + '&isThumb=1" alt="Thumbnail" /></a>';
+                            return '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' + row.thumbnail + '">' +
+                              '<img class="img-fluid" src="' + row.thumbnail.replace('download', 'thumbnail') + '" alt="{{ "Thumbnail"|trans }}" />' +
+                              '</a>';
                           } else {
                             return '';
                           }

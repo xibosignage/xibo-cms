@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -472,6 +472,7 @@ class Task extends Base
             . Carbon::now()->format(DateFormatHelper::getSystemFormat()));
 
         $this->setNoOutput();
+
         return $this->render($request, $response);
     }
 
@@ -573,6 +574,7 @@ class Task extends Base
 
         $this->getLog()->debug('XTR poll stopped');
         $this->setNoOutput();
+
         return $this->render($request, $response);
     }
 

@@ -1240,6 +1240,9 @@ class Library extends Base
         // Hand off to the Upload Handler provided by jquery-file-upload
         new XiboUploadHandler($options);
 
+        // Explicitly set the Content-Type header to application/json
+        $response = $response->withHeader('Content-Type', 'application/json');
+
         return $this->render($request, $response);
     }
 
@@ -1678,6 +1681,9 @@ class Library extends Base
     }
 
     /**
+     * Thumbnail for the libary page
+     *  this is called by library-page datatable
+     *
      * @SWG\Get(
      *  path="/library/thumbnail/{mediaId}",
      *  operationId="libraryThumbnail",
@@ -1717,6 +1723,8 @@ class Library extends Base
      */
     public function thumbnail(Request $request, Response $response, $id)
     {
+        $this->setNoOutput();
+
         // We can download by mediaId or by mediaName.
         if (is_numeric($id)) {
             $media = $this->mediaFactory->getById($id);
@@ -1724,12 +1732,14 @@ class Library extends Base
             $media = $this->mediaFactory->getByName($id);
         }
 
-        $this->getLog()->debug('Thumbnail request for mediaId ' . $id
+        $this->getLog()->debug('thumbnail: Thumbnail request for mediaId ' . $id
             . '. Media is a ' . $media->mediaType);
 
         // Permissions.
         if (!$this->getUser()->checkViewable($media)) {
-            throw new AccessDeniedException();
+            // Output a 1px image if we're not allowed to see the media.
+            echo Img::make($this->getConfig()->uri('img/1x1.png', true))->encode();
+            return $this->render($request, $response);
         }
 
         // Hand over to the widget downloader
@@ -1739,9 +1749,13 @@ class Library extends Base
             $this->getConfig()->getSetting('DEFAULT_RESIZE_LIMIT', 6000)
         );
         $downloader->useLogger($this->getLog()->getLoggerInterface());
-        $response = $downloader->thumbnail($media, $response, $this->getConfig()->uri('img/error.png', true));
 
-        $this->setNoOutput(true);
+        $response = $downloader->thumbnail(
+            $media,
+            $response,
+            $this->getConfig()->uri('img/error.png', true)
+        );
+
         return $this->render($request, $response);
     }
 

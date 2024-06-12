@@ -927,24 +927,23 @@ if (useCurrentDate) {
                     </test>
                 </visibility>
             </property>
+            <property id="assetId" type="hidden"></property>
         </properties>
         <stencil>
             <hbs><![CDATA[
 <div class="global-elements-image img-container"
-    style="width:100%; height: 100%; position: relative;">
-    {{#if url}}
-        <img src="{{{url}}}" style="
-            width:100%; height: 100%;
-            object-fit: {{objectFit}};
-            object-position: {{alignId}} {{valignId}};
-            opacity: {{opacity}}%;
-            {{#if imageShadow}}
-                filter: drop-shadow({{shadowX}}px {{shadowY}}px {{shadowBlur}}px {{imageShadowColor}});
-            {{/if}}
-            {{#if roundBorder}}border-radius: {{borderRadius}}px;{{/if}}
-            position: absolute; top: 0; left: 0;"
-        />
-    {{/if}}
+    style="width:100%; height: 100%; overflow: hidden; position: relative;">
+    {{#if roundBorder}}border-radius: {{borderRadius}}px;{{/if}}">
+    <img src="{{#if assetId}}[[assetId={{assetId}}]]{{else}}{{{url}}}{{/if}}" style="
+        width:100%; height: 100%;
+        object-fit: {{objectFit}};
+        object-position: {{alignId}} {{valignId}};
+        opacity: {{opacity}}%;
+        {{#if imageShadow}}
+            filter: drop-shadow({{shadowX}}px {{shadowY}}px {{shadowBlur}}px {{imageShadowColor}});
+        {{/if}}
+        position: absolute; top: 0; left: 0;"
+    />
 </div>
             ]]></hbs>
         </stencil>

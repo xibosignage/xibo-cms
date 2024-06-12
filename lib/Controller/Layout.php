@@ -2579,6 +2579,9 @@ class Layout extends Base
         // Hand off to the Upload Handler provided by jquery-file-upload
         new LayoutUploadHandler($options);
 
+        // Explicitly set the Content-Type header to application/json
+        $response = $response->withHeader('Content-Type', 'application/json');
+
         return $response;
     }
 

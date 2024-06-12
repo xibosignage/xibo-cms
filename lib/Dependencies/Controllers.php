@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -314,7 +314,6 @@ class Controllers
             '\Xibo\Controller\MenuBoard' => function (ContainerInterface $c) {
                 $controller = new \Xibo\Controller\MenuBoard(
                     $c->get('menuBoardFactory'),
-                    $c->get('userFactory'),
                     $c->get('folderFactory')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));

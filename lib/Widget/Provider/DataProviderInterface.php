@@ -61,15 +61,15 @@ interface DataProviderInterface
 
     /**
      * Get the latitude for this display
-     * @return float
+     * @return float|null
      */
-    public function getDisplayLatitude(): float;
+    public function getDisplayLatitude(): ?float;
 
     /**
      * Get the longitude for this display
-     * @return float
+     * @return float|null
      */
-    public function getDisplayLongitude(): float;
+    public function getDisplayLongitude(): ?float;
 
     /**
      * Get the preview flag
