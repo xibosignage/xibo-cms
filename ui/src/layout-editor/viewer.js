@@ -80,6 +80,9 @@ const Viewer = function(parent, container) {
     snapToElements: false,
   };
 
+  // Selecto
+  this.selecto = null;
+
   // Layout orientation
   this.orientation = null;
 
@@ -98,9 +101,11 @@ const Viewer = function(parent, container) {
 
   this.multiSelectActive = false;
 
+  this.editingGroup = false;
+
   // Events for shift key
   addEventListener('keydown', (e) => {
-    if (e.key === 'Shift') {
+    if (e.key === 'Shift' && this.editingGroup === false) {
       this.multiSelectActive = true;
       $('body').attr('multi-select-active', true);
     }
@@ -373,6 +378,9 @@ Viewer.prototype.render = function(forceReload = false, target = {}) {
     // Render viewer canvas if it's not an empty object
     (!$.isEmptyObject(lD.layout.canvas)) && this.renderCanvas(lD.layout.canvas);
   }
+
+  // Initalise selecto
+  this.initSelecto();
 
   // Handle UI interactions
   this.handleInteractions();
@@ -867,6 +875,13 @@ Viewer.prototype.handleInteractions = function() {
                 });
               }
               self.selectObject($(e.target).parent(), shiftIsPressed);
+            } else if (
+              $(e.target).hasClass('designer-element-group') &&
+              $(e.target).hasClass('editing')
+            ) {
+              // If we're editing, and select on group, deselect other elements
+              lD.selectObject();
+              self.selectObject(null, false, false);
             }
           }, 200);
         } else {
@@ -891,7 +906,8 @@ Viewer.prototype.handleInteractions = function() {
             });
             self.selectObject($(e.target), shiftIsPressed);
           } else if (
-            $(e.target).hasClass('group-select-overlay')
+            $(e.target).hasClass('group-select-overlay') &&
+            !$(e.target).hasClass('editing')
           ) {
             self.editGroup(
               $(e.target).parents('.designer-element-group'),
@@ -916,7 +932,7 @@ Viewer.prototype.handleInteractions = function() {
           ) {
             // Move out from group editing
             lD.selectObject();
-            self.selectObject();
+            self.selectObject(null, false, false);
           }
         }
       }
@@ -2805,6 +2821,86 @@ Viewer.prototype.initMoveable = function() {
 };
 
 /**
+ * Initialise Selecto
+ * @param {boolean} groupEditing
+ * @param {object} groupContainer
+ */
+Viewer.prototype.initSelecto = function(groupEditing = false, groupContainer) {
+  const self = this;
+  const app = this.parent;
+
+  const container = (groupEditing) ?
+    groupContainer[0] :
+    lD.viewer.DOMObject[0];
+
+  const dragContainer = (groupEditing) ?
+    [
+      groupContainer[0],
+      lD.viewer.DOMObject.find('.viewer-overlay')[0],
+    ] :
+    [
+      lD.viewer.DOMObject[0],
+      lD.viewer.DOMObject.find('.viewer-object.layout')[0],
+    ];
+
+  const selectableTargets = (groupEditing) ?
+    [
+      // Elements in group
+      '.designer-element-group .viewer-object-select.editable',
+    ] :
+    [
+      // Elements
+      '.designer-region-canvas > ' +
+        '.designer-element.viewer-object-select.editable',
+      // Regions
+      '.designer-region.viewer-object-select.editable',
+      // Element groups
+      '.designer-element-group.viewer-object-select.editable',
+    ];
+
+  // Destroy previous selecto
+  if (this.selecto) {
+    this.selecto.destroy();
+  }
+
+  this.selecto = new Selecto({
+    container: container,
+    dragContainer: dragContainer,
+    selectableTargets: selectableTargets,
+    hitRate: 0,
+    selectByClick: false,
+    selectFromInside: true,
+  });
+
+  this.selecto.on('select', (e) => {
+    $(e.added).addClass('selected-temp');
+    $(e.removed).removeClass('selected-temp');
+  }).on('selectEnd', (e) => {
+    const $selectedObjs = $(e.afterAdded);
+    const multipleSelected = ($selectedObjs.length > 1);
+
+    // Remove all temporary select classes
+    self.DOMObject.find('.selected-temp').removeClass('selected-temp');
+
+    if (multipleSelected) {
+      // Deselect in editor ( only select on viewer with multiple )
+      app.selectObject({
+        reloadLayerManager: true,
+      });
+    } else {
+      // If it's a single object, select it in the editor
+      app.selectObject({
+        target: $selectedObjs,
+        forceSelect: true,
+      });
+    }
+
+    // Select on viewer
+    lD.viewer.selectObject($selectedObjs, multipleSelected, !groupEditing);
+  });
+};
+
+/**
  * Save the new position of the region
  * @param {object} region - Region object
  * @param {object} [options] - options
@@ -3936,6 +4032,8 @@ Viewer.prototype.editGroup = function(
 
   // If we're not editing yet, start
   if (!editing || forceEditOn) {
+    self.editingGroup = true;
+
     // Get group object from structure
     const groupId = $(groupDOMObject).attr('id');
     const groupObj = lD.getObjectByTypeAndId(
@@ -3976,7 +4074,12 @@ Viewer.prototype.editGroup = function(
     // Give group the same background as the layout's
     $(groupDOMObject).css('background-color',
       self.DOMObject.find('> .layout').css('background-color'));
+
+    // Change selecto to edit group
+    self.initSelecto(true, groupDOMObject);
   } else {
+    self.editingGroup = false;
+
     // Hide overlay
     self.DOMObject.find('.viewer-overlay').hide();
 
@@ -3993,6 +4096,9 @@ Viewer.prototype.editGroup = function(
 
     // Remove background color
     $(groupDOMObject).css('background-color', '');
+
+    // Revert selecto to edit global
+    self.initSelecto();
   }
 };
 
