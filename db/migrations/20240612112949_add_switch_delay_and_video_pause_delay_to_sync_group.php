@@ -22,14 +22,12 @@
 
 use Phinx\Migration\AbstractMigration;
 
+/**
+ * Added syncSwitchDelay and syncVideoPauseDelay columns to Sync Groups
+ * @phpcs:disable PSR1.Classes.ClassDeclaration.MissingNamespace
+ */
 class AddSwitchDelayAndVideoPauseDelayToSyncGroup extends AbstractMigration
 {
-
-    /**
-     * Added syncSwitchDelay and syncVideoPauseDelay columns to Sync Groups
-     * @phpcs:disable PSR1.Classes.ClassDeclaration.MissingNamespace
-     */
-
     public function change(): void
     {
         $this->table('syncgroup')
