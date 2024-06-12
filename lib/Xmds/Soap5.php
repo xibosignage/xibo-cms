@@ -476,6 +476,16 @@ class Soap5 extends Soap4
             $value = $return->createTextNode($syncGroup->syncPublisherPort ?? 9590);
             $syncPublisherPortNode->appendChild($value);
             $displayElement->appendChild($syncPublisherPortNode);
+
+            $syncSwitchDelayNode = $return->createElement('syncSwitchDelay');
+            $value = $return->createTextNode($syncGroup->syncSwitchDelay ?? '');
+            $syncSwitchDelayNode->appendChild($value);
+            $displayElement->appendChild($syncSwitchDelayNode);
+
+            $syncVideoPauseDelayNode = $return->createElement('syncVideoPauseDelay');
+            $value = $return->createTextNode($syncGroup->syncVideoPauseDelay ?? '');
+            $syncVideoPauseDelayNode->appendChild($value);
+            $displayElement->appendChild($syncVideoPauseDelayNode);
         }
 
         $display->save(Display::$saveOptionsMinimum);

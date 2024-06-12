@@ -13970,6 +13970,14 @@
                     "description": "The publisher port number",
                     "type": "integer"
                 },
+                "syncSwitchDelay": {
+                    "description": "The delay (in ms) when displaying the changes in content",
+                    "type": "integer"
+                },
+                "syncVideoPauseDelay": {
+                    "description": "The delay (in ms) before unpausing the video on start",
+                    "type": "integer"
+                },
                 "leadDisplayId": {
                     "description": "The ID of the lead Display for this sync group",
                     "type": "integer"
