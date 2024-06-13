@@ -22,33 +22,24 @@
 
 namespace Xibo\Listener;
 
+use Stash\Interfaces\PoolInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Event\TriggerTaskEvent;
 use Xibo\Factory\TaskFactory;
 use Xibo\Service\ConfigServiceInterface;
 
 /**
- * Task events
+ * A listener for events related to tasks
  */
 class TaskListener
 {
     use ListenerLoggerTrait;
 
-    /**
-     * @var TaskFactory
-     */
-    private $taskFactory;
-    /**
-     * @var ConfigServiceInterface
-     */
-    private $configService;
-
     public function __construct(
-        TaskFactory $taskFactory,
-        ConfigServiceInterface $configService
+        private readonly TaskFactory $taskFactory,
+        private readonly ConfigServiceInterface $configService,
+        private readonly PoolInterface $pool
     ) {
-        $this->taskFactory = $taskFactory;
-        $this->configService = $configService;
     }
 
     /**
@@ -68,12 +59,14 @@ class TaskListener
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function onTriggerTask(TriggerTaskEvent $event)
+    public function onTriggerTask(TriggerTaskEvent $event): void
     {
-        if (!empty($event->getSetting()) && !empty($event->getSettingValue())) {
-            $this->configService->changeSetting($event->getSetting(), $event->getSettingValue());
+        if (!empty($event->getKey())) {
+            // Drop this setting from the cache
+            $this->pool->deleteItem($event->getKey());
         }
 
+        // Mark the task to run now
         $task = $this->taskFactory->getByClass($event->getClassName());
         $task->runNow = 1;
         $task->save();
