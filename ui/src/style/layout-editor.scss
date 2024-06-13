@@ -1493,6 +1493,13 @@ body.editor-opened {
         }
     }
 
+    .viewer-object-select.selected-temp {
+        &::after, &.designer-element-group  .group-select-overlay{
+            @include set-transparent-color(background-color, $xibo-color-primary, 0.4);
+            outline: 2px solid $xibo-color-primary;
+        }
+    }
+
     .ui-droppable-active {
         @include box-shadow(inset 0 0 2px $xibo-color-primary-l5);
     }
