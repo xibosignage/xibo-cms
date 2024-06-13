@@ -187,3 +187,6 @@ imagesLoaded.makeJQueryPlugin( window.$ );
 // moveable
 window.Moveable = require('moveable/dist/moveable.min.js');
 window.Selecto = require('selecto/dist/selecto.min.js');
+
+// XLR
+require('xibo-layout-renderer/dist/styles.css');
