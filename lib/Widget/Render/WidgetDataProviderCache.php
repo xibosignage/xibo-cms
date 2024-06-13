@@ -216,11 +216,10 @@ class WidgetDataProviderCache
         }
 
         // Set some cache dates so that we can track when this data provider was cached and when it should expire.
-        // The expireDt must always be 15 minutes to allow plenty of time for the WidgetSyncTask to regenerate.
         $dataProvider->addOrUpdateMeta('cacheDt', Carbon::now()->format('c'));
         $dataProvider->addOrUpdateMeta(
             'expireDt',
-            Carbon::now()->addSeconds(max($dataProvider->getCacheTtl(), 900))->format('c')
+            Carbon::now()->addSeconds($dataProvider->getCacheTtl())->format('c')
         );
 
         // Set our cache from the data provider.
@@ -235,7 +234,8 @@ class WidgetDataProviderCache
         }
 
         // Keep the cache 50% longer than necessary
-        $this->cache->expiresAfter(ceil($dataProvider->getCacheTtl() * 1.5));
+        // The expireDt must always be 15 minutes to allow plenty of time for the WidgetSyncTask to regenerate.
+        $this->cache->expiresAfter(ceil(max($dataProvider->getCacheTtl() * 1.5, 900)));
 
         // Save to the pool
         $this->pool->save($this->cache);
