@@ -158,6 +158,10 @@ const mainConfig = Object.assign({}, config, {
           from: 'ui/src/vendor',
           to: 'vendor',
         },
+        {
+          from: 'node_modules/xibo-layout-renderer/dist',
+          to: 'xlr',
+        },
       ],
     }),
     new MonacoWebpackPlugin({
