@@ -257,16 +257,19 @@ class Notification implements \JsonSerializable
      * Save Notification
      * @throws InvalidArgumentException
      */
-    public function save()
+    public function save(): void
     {
         $this->validate();
 
-        if ($this->notificationId == null)
+        $isNewRecord = false;
+        if ($this->notificationId == null) {
+            $isNewRecord = true;
             $this->add();
-        else
+        } else {
             $this->edit();
+        }
 
-        $this->manageAssignments();
+        $this->manageAssignments($isNewRecord);
     }
 
     /**
@@ -346,13 +349,20 @@ class Notification implements \JsonSerializable
     /**
      * Manage assignements in DB
      */
-    private function manageAssignments()
+    private function manageAssignments(bool $isNewRecord): void
     {
         $this->linkUserGroups();
-        $this->unlinkUserGroups();
+
+        // Only unlink if we're not new (otherwise there is no point as we can't have any links yet)
+        if (!$isNewRecord) {
+            $this->unlinkUserGroups();
+        }
 
         $this->linkDisplayGroups();
-        $this->unlinkDisplayGroups();
+
+        if (!$isNewRecord) {
+            $this->unlinkDisplayGroups();
+        }
 
         $this->manageRealisedUserLinks();
     }
@@ -360,10 +370,11 @@ class Notification implements \JsonSerializable
     /**
      * Manage the links in the User notification table
      */
-    private function manageRealisedUserLinks()
+    private function manageRealisedUserLinks(bool $isNewRecord = false): void
     {
-        // Delete links that no longer exist
-        $this->getStore()->update('
+        if (!$isNewRecord) {
+            // Delete links that no longer exist
+            $this->getStore()->update('
             DELETE FROM `lknotificationuser`
              WHERE `notificationId` = :notificationId AND `userId` NOT IN (
                 SELECT `userId`
@@ -373,9 +384,10 @@ class Notification implements \JsonSerializable
                  WHERE `lknotificationgroup`.notificationId = :notificationId2
               ) AND userId <> 0
         ', [
-            'notificationId' => $this->notificationId,
-            'notificationId2' => $this->notificationId
-        ]);
+                'notificationId' => $this->notificationId,
+                'notificationId2' => $this->notificationId
+            ]);
+        }
 
         // Pop in new links following from this adjustment
         $this->getStore()->update('
