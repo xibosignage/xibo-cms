@@ -29,6 +29,7 @@
 {% endblock %}
 
 {% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
     {% trans "Save" %}, $("#dataSetEditForm").submit()    
 {% endblock %}
@@ -127,12 +128,14 @@
                         {% set auth_digest %}{% trans "Digest" %}{% endset %}
                         {% set auth_ntlm %}{% trans "NTLM" %}{% endset %}
                         {% set auth_bearer %}{% trans "Bearer" %}{% endset %}
+                        {% set auth_oauth2 %}{% trans "Oauth2.0" %}{% endset %}
                         {% set options = [
                             { typeid: "none", type: auth_none },
                             { typeid: "basic", type: auth_basic },
                             { typeid: "digest", type: auth_digest },
                             { typeid: "ntlm", type: auth_ntlm },
-                            { typeid: "bearer", type: auth_bearer }
+                            { typeid: "bearer", type: auth_bearer },
+                            { typeid: "oauth2", type: auth_oauth2 }
                         ] %}
                         {{ forms.dropdown("authentication", "single", title, dataSet.authentication, options, "typeid", "type", helpText) }}
 
@@ -151,6 +154,29 @@
                         {% set title %}{% trans "User Agent" %}{% endset %}
                         {% set helpText %}{% trans "Optionally set specific User Agent for this request, provide only the value, relevant header will be added automatically" %}{% endset %}
                         {{ forms.input("userAgent", title, dataSet.userAgent, helpText) }}
+
+                        {% set title %}{% trans "Oauth2.0 Authentication URL" %}{% endset %}
+                        {% set helpText %}{% trans "This will need to be a url ending in access_token" %}{% endset %}
+                        {{ forms.input("oauth2Url", title, dataSet.oauth2Url, helpText, "auth-field-oauth2-url", "") }}
+
+                        {% set title %}{% trans "Oauth2.0 Grant Type" %}{% endset %}
+                        {% set helpText %}{% trans "Set the grant type requested" %}{% endset %}
+                        {% set oauth2_grant_client_credentials %}{% trans "client_credentials" %}{% endset %}
+                        {% set oauth2_grant_authorization_code %}{% trans "authorization_code" %}{% endset %}
+                        {% set options = [
+                            { typeid: "client_credentials", type: oauth2_grant_client_credentials },
+                            { typeid: "authorization_code", type: oauth2_grant_authorization_code }
+                        ] %}
+                        <div class="auth-field-oauth2-grant-type">
+                            {{ forms.dropdown("oauth2GrantType", "single", title, dataSet.oauth2GrantType, options, "typeid", "type", helpText) }}
+                        </div>
+                        {% set title %}{% trans "Oauth2.0 Client ID" %}{% endset %}
+                        {% set helpText %}{% trans "Please provide the Client ID" %}{% endset %}
+                        {{ forms.input("oauth2Client", title, dataSet.oauth2Client, helpText, "auth-field-oauth2-client-id", "") }}
+
+                        {% set title %}{% trans "Oauth2.0 Client Secret" %}{% endset %}
+                        {% set helpText %}{% trans "Please provide the Client Secret" %}{% endset %}
+                        {{ forms.input("oauth2ClientSecret", title, dataSet.oauth2ClientSecret, helpText, "auth-field-oauth2-client-secret", "") }}
                     </div>
 
                     <div class="tab-pane" id="data">

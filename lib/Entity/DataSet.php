@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -40,7 +40,6 @@ use Xibo\Support\Exception\DuplicateEntityException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
-use Xibo\Widget\Definition\Sql;
 
 /**
  * Class DataSet
@@ -147,6 +146,30 @@ class DataSet implements \JsonSerializable
      * @var string
      */
     public $password;
+
+    /**
+     * @SWG\Property(description="Oauth2.0 Authorization URL")
+     * @var string
+     */
+    public $oauth2Url;
+
+    /**
+     * @SWG\Property(description="Oauth2.0 Client ID")
+     * @var string
+     */
+    public $oauth2Client;
+
+    /**
+     * @SWG\Property(description="Oauth2.0 Client Secret")
+     * @var string
+     */
+    public $oauth2ClientSecret;
+
+    /**
+     * @SWG\Property(description="Oauth2.0 Grant Type")
+     * @var string
+     */
+    public $oauth2GrantType;
 
     /**
      * @SWG\Property(description="Comma separated string of custom HTTP headers")
@@ -265,6 +288,9 @@ class DataSet implements \JsonSerializable
     public $columns = [];
 
     private $countLast = 0;
+
+    /** @var array Blacklist for SQL */
+    private $blackList = array(';', 'INSERT', 'UPDATE', 'SELECT', 'DELETE', 'TRUNCATE', 'TABLE', 'FROM', 'WHERE');
 
     /** @var  \Xibo\Helper\SanitizerService */
     private $sanitizerService;
@@ -440,12 +466,9 @@ class DataSet implements \JsonSerializable
                 if ($column->heading == $heading) {
                     // Formula column?
                     if ($column->dataSetColumnTypeId == 2) {
-                        $select .= str_replace(
-                            Sql::DISALLOWED_KEYWORDS,
-                            '',
-                            htmlspecialchars_decode($column->formula, ENT_QUOTES)
-                        ) . ' AS `' . $column->heading . '`,';
-                    } else {
+                        $select .= str_replace($this->blackList, '', htmlspecialchars_decode($column->formula, ENT_QUOTES)) . ' AS `' . $column->heading . '`,';
+                    }
+                    else {
                         $select .= '`' . $column->heading . '`,';
                     }
                     $found = true;
@@ -521,20 +544,15 @@ class DataSet implements \JsonSerializable
             // Formula column?
             if ($column->dataSetColumnTypeId == 2) {
                 // Is this a client side column?
-                if (str_starts_with($column->formula, '$')) {
+                if (substr($column->formula, 0, 1) === '$') {
                     $clientSideFormula[] = $column;
                     continue;
                 }
 
-                $formula = str_ireplace(
-                    Sql::DISALLOWED_KEYWORDS,
-                    '',
-                    htmlspecialchars_decode($column->formula, ENT_QUOTES)
-                );
+                $formula = str_ireplace($this->blackList, '', htmlspecialchars_decode($column->formula, ENT_QUOTES));
                 $formula = str_replace('[DisplayId]', $displayId, $formula);
 
-                $heading = str_replace('[DisplayGeoLocation]', $displayGeoLocation, $formula)
-                    . ' AS `' . $column->heading . '`';
+                $heading = str_replace('[DisplayGeoLocation]', $displayGeoLocation, $formula) . ' AS `' . $column->heading . '`';
             } else {
                 $heading = '`' . $column->heading . '`';
             }
@@ -550,7 +568,7 @@ class DataSet implements \JsonSerializable
         if ($filter != '') {
             // Support display filtering.
             $filter = str_replace('[DisplayId]', $displayId, $filter);
-            $filter = str_ireplace(Sql::DISALLOWED_KEYWORDS, '', $filter);
+            $filter = str_ireplace($this->blackList, '', $filter);
 
             $body .= ' AND ' . $filter;
         }
@@ -1008,8 +1026,8 @@ class DataSet implements \JsonSerializable
 
         // Insert the extra columns we expect for a remote DataSet
         if ($this->isRemote === 1) {
-            $columns .= ', `method`, `uri`, `postData`, `authentication`, `username`, `password`, `customHeaders`, `userAgent`, `refreshRate`, `clearRate`, `truncateOnEmpty`, `runsAfter`, `dataRoot`, `lastSync`, `summarize`, `summarizeField`, `sourceId`, `ignoreFirstRow`, `rowLimit`, `limitPolicy`, `csvSeparator`';
-            $values .= ', :method, :uri, :postData, :authentication, :username, :password, :customHeaders, :userAgent, :refreshRate, :clearRate, :truncateOnEmpty, :runsAfter, :dataRoot, :lastSync, :summarize, :summarizeField, :sourceId, :ignoreFirstRow, :rowLimit, :limitPolicy, :csvSeparator';
+            $columns .= ', `method`, `uri`, `postData`, `authentication`, `username`, `password`, `oauth2Url`, `oauth2Client`, `oauth2ClientSecret`, `oauth2GrantType`, `customHeaders`, `userAgent`, `refreshRate`, `clearRate`, `truncateOnEmpty`, `runsAfter`, `dataRoot`, `lastSync`, `summarize`, `summarizeField`, `sourceId`, `ignoreFirstRow`, `rowLimit`, `limitPolicy`, `csvSeparator`';
+            $values .= ', :method, :uri, :postData, :authentication, :username, :password, :oauth2Url, :oauth2Client, :oauth2ClientSecret, :oauth2GrantType, :customHeaders, :userAgent, :refreshRate, :clearRate, :truncateOnEmpty, :runsAfter, :dataRoot, :lastSync, :summarize, :summarizeField, :sourceId, :ignoreFirstRow, :rowLimit, :limitPolicy, :csvSeparator';
 
             $params['method'] = $this->method;
             $params['uri'] = $this->uri;
@@ -1017,6 +1035,10 @@ class DataSet implements \JsonSerializable
             $params['authentication'] = $this->authentication;
             $params['username'] = $this->username;
             $params['password'] = $this->password;
+            $params['oauth2Url'] = $this->oauth2Url;
+            $params['oauth2Client'] = $this->oauth2Client;
+            $params['oauth2ClientSecret'] = $this->oauth2ClientSecret;
+            $params['oauth2GrantType'] = $this->oauth2GrantType;
             $params['customHeaders'] = $this->customHeaders;
             $params['userAgent'] = $this->userAgent;
             $params['refreshRate'] = $this->refreshRate;
@@ -1061,7 +1083,7 @@ class DataSet implements \JsonSerializable
         ];
 
         if ($this->isRemote) {
-            $sql .= ', method = :method, uri = :uri, postData = :postData, authentication = :authentication, `username` = :username, `password` = :password, `customHeaders` = :customHeaders, `userAgent` = :userAgent, refreshRate = :refreshRate, clearRate = :clearRate, truncateOnEmpty = :truncateOnEmpty, runsAfter = :runsAfter, `dataRoot` = :dataRoot, `summarize` = :summarize, `summarizeField` = :summarizeField, `sourceId` = :sourceId, `ignoreFirstRow` = :ignoreFirstRow , `rowLimit` = :rowLimit, `limitPolicy` = :limitPolicy, `csvSeparator` = :csvSeparator ';
+            $sql .= ', method = :method, uri = :uri, postData = :postData, authentication = :authentication, `username` = :username, `password` = :password, `oauth2Url` = :oauth2Url, `oauth2Client` = :oauth2Client, `oauth2ClientSecret` = :oauth2ClientSecret, `oauth2GrantType` = :oauth2GrantType, `customHeaders` = :customHeaders, `userAgent` = :userAgent, refreshRate = :refreshRate, clearRate = :clearRate, truncateOnEmpty = :truncateOnEmpty, runsAfter = :runsAfter, `dataRoot` = :dataRoot, `summarize` = :summarize, `summarizeField` = :summarizeField, `sourceId` = :sourceId, `ignoreFirstRow` = :ignoreFirstRow , `rowLimit` = :rowLimit, `limitPolicy` = :limitPolicy, `csvSeparator` = :csvSeparator ';
 
             $params['method'] = $this->method;
             $params['uri'] = $this->uri;
@@ -1069,6 +1091,10 @@ class DataSet implements \JsonSerializable
             $params['authentication'] = $this->authentication;
             $params['username'] = $this->username;
             $params['password'] = $this->password;
+            $params['oauth2Url'] = $this->oauth2Url;
+            $params['oauth2Client'] = $this->oauth2Client;
+            $params['oauth2ClientSecret'] = $this->oauth2ClientSecret;
+            $params['oauth2GrantType'] = $this->oauth2GrantType;
             $params['customHeaders'] = $this->customHeaders;
             $params['userAgent'] = $this->userAgent;
             $params['refreshRate'] = $this->refreshRate;
@@ -1228,3 +1254,4 @@ class DataSet implements \JsonSerializable
         $this->pool->deleteItem('/dataset/cache/' . $this->dataSetId);
     }
 }
+

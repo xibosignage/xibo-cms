@@ -206,6 +206,10 @@ class DataSetFactory extends BaseFactory
             dataset.`uri`,
             dataset.`postData`,
             dataset.`authentication`,
+            dataset.`oauth2Url`,
+            dataset.`oauth2Client`,
+            dataset.`oauth2ClientSecret`,
+            dataset.`oauth2GrantType`,
             dataset.`username`,
             dataset.`password`,
             dataset.`customHeaders`,
@@ -347,7 +351,7 @@ class DataSetFactory extends BaseFactory
         $result->entries = [];
         $result->number = 0;
         $result->isEligibleToTruncate = false;
-
+        
         // Getting all dependant values if needed
         // just an empty array if we don't have a dependent
         $values = [
@@ -359,7 +363,7 @@ class DataSetFactory extends BaseFactory
 
             $values = $dependant->getData();
         }
-
+        
         // Fetching data for every field in the dependant dataSet
         foreach ($values as $options) {
             // Make some request params to provide to the HTTP client
@@ -370,6 +374,32 @@ class DataSetFactory extends BaseFactory
             switch ($dataSet->authentication) {
                 case 'basic':
                     $requestParams['auth'] = [$dataSet->username, $dataSet->password];
+                    break;
+
+                case 'oauth2':
+                    // Check if we have all of the required parameters
+                    if (empty($dataSet->oauth2Url) || empty($dataSet->oauth2Client || empty($dataSet->oauth2ClientSecret) || empty($dataset->oauth2GrantType))) {
+                        throw new InvalidArgumentException('Oauth2.0 configuration for dataset ' . $dataSet->dataSet . ' is incorrect');
+                    }
+                
+                    // Obtain Access Token for OAuth 2.0
+                    $tokenResponse = $client->post($dataSet->oauth2Url, [
+                        'form_params' => [
+                            'grant_type' => $dataSet->oauth2GrantType,
+                            'client_id' => $dataSet->oauth2Client,
+                            'client_secret' => $dataSet->oauth2ClientSecret,
+                        ]
+                    ]);
+                
+                    if ($tokenResponse->getStatusCode() != 200) {
+                        throw new InvalidArgumentException('Failed to obtain access token for ' . $dataSet->dataSet . ' OAuth 2.0 endpoint: ' . $dataSet->oauth2Url);
+                    }
+                
+                    $tokenData = json_decode($tokenResponse->getBody(), true);
+                    $accessToken = $tokenData['access_token'];
+                
+                    // Add the access token to the request headers
+                    $requestParams['headers']['Authorization'] = 'Bearer ' . $accessToken;
                     break;
 
                 case 'digest':
@@ -534,7 +564,7 @@ class DataSetFactory extends BaseFactory
                 throw new InvalidArgumentException(__('Unable to get Data for %s because %s.', $dataSet->dataSet, $requestException->getMessage()), 'dataSetId');
             }
         }
-
+        
         return $result;
     }
 
@@ -888,3 +918,4 @@ class DataSetFactory extends BaseFactory
         }
     }
 }
+

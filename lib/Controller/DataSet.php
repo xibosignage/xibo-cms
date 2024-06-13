@@ -88,6 +88,9 @@ class DataSet extends Base
     public function displayPage(Request $request, Response $response)
     {
         $this->getState()->template = 'dataset-page';
+        $this->getState()->setData([
+            'users' => $this->userFactory->query(),
+        ]);
 
         return $this->render($request, $response);
     }
@@ -423,6 +426,34 @@ class DataSet extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="oauth2Url",
+     *      in="formData",
+     *      description="Oauth2.0 Authorization Token Endpoint",
+     *      type="string",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="oauth2Client",
+     *      in="formData",
+     *      description="Oauth2.0 Client ID",
+     *      type="string",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="oauth2ClientSecret",
+     *      in="formData",
+     *      description="Oauth2.0 Client Secret",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="oauth2GrantType",
+     *      in="formData",
+     *      description="Oauth2.0 Grant Type Requested client_credentials|authorization_code",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="customHeaders",
      *      in="formData",
      *      description="Comma separated string of custom HTTP headers",
@@ -581,6 +612,10 @@ class DataSet extends Base
             $dataSet->username = $sanitizedParams->getString('username');
             $dataSet->password = $sanitizedParams->getString('password');
             $dataSet->customHeaders = $sanitizedParams->getString('customHeaders');
+            $dataSet->oauth2Url = $sanitizedParams->getString('oauth2Url');
+            $dataSet->oauth2Client = $sanitizedParams->getString('oauth2Client');
+            $dataSet->oauth2ClientSecret = $sanitizedParams->getString('oauth2ClientSecret');
+            $dataSet->oauth2GrantType = $sanitizedParams->getString('oauth2GrantType');
             $dataSet->userAgent = $sanitizedParams->getString('userAgent');
             $dataSet->refreshRate = $sanitizedParams->getInt('refreshRate');
             $dataSet->clearRate = $sanitizedParams->getInt('clearRate');
@@ -748,6 +783,34 @@ class DataSet extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="oauth2Url",
+     *      in="formData",
+     *      description="Oauth2.0 Authorization Token Endpoint",
+     *      type="string",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="oauth2Client",
+     *      in="formData",
+     *      description="Oauth2.0 Client ID",
+     *      type="string",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="oauth2ClientSecret",
+     *      in="formData",
+     *      description="Oauth2.0 Client Secret",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="oauth2GrantType",
+     *      in="formData",
+     *      description="Oauth2.0 Grant Type Requested client_credentials|authorization_code",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="customHeaders",
      *      in="formData",
      *      description="Comma separated string of custom HTTP headers",
@@ -890,6 +953,10 @@ class DataSet extends Base
             $dataSet->username = $sanitizedParams->getString('username');
             $dataSet->password = $sanitizedParams->getString('password');
             $dataSet->customHeaders = $sanitizedParams->getString('customHeaders');
+            $dataSet->oauth2Url = $sanitizedParams->getString('oauth2Url');
+            $dataSet->oauth2Client = $sanitizedParams->getString('oauth2Client');
+            $dataSet->oauth2ClientSecret = $sanitizedParams->getString('oauth2ClientSecret');
+            $dataSet->oauth2GrantType = $sanitizedParams->getString('oauth2GrantType');
             $dataSet->userAgent = $sanitizedParams->getString('userAgent');
             $dataSet->refreshRate = $sanitizedParams->getInt('refreshRate');
             $dataSet->clearRate = $sanitizedParams->getInt('clearRate');
@@ -1423,9 +1490,24 @@ class DataSet extends Base
         $dataSet->authentication = $sanitizedParams->getString('authentication');
         $dataSet->username = $sanitizedParams->getString('username');
         $dataSet->password = $sanitizedParams->getString('password');
+        $dataSet->customHeaders = $sanitizedParams->getString('customHeaders');
+        $dataSet->oauth2Url = $sanitizedParams->getString('oauth2Url');
+        $dataSet->oauth2Client = $sanitizedParams->getString('oauth2Client');
+        $dataSet->oauth2ClientSecret = $sanitizedParams->getString('oauth2ClientSecret');
+        $dataSet->oauth2GrantType = $sanitizedParams->getString('oauth2GrantType');
+        $dataSet->userAgent = $sanitizedParams->getString('userAgent');
+        $dataSet->refreshRate = $sanitizedParams->getInt('refreshRate');
+        $dataSet->clearRate = $sanitizedParams->getInt('clearRate');
+        $dataSet->truncateOnEmpty = $sanitizedParams->getCheckbox('truncateOnEmpty');
+        $dataSet->runsAfter = $sanitizedParams->getInt('runsAfter');
         $dataSet->dataRoot = $sanitizedParams->getString('dataRoot');
+        $dataSet->summarize = $sanitizedParams->getString('summarize');
+        $dataSet->summarizeField = $sanitizedParams->getString('summarizeField');
         $dataSet->sourceId = $sanitizedParams->getInt('sourceId');
         $dataSet->ignoreFirstRow = $sanitizedParams->getCheckbox('ignoreFirstRow');
+        $dataSet->rowLimit = $sanitizedParams->getInt('rowLimit');
+        $dataSet->limitPolicy = $sanitizedParams->getString('limitPolicy') ?? 'stop';
+        $dataSet->csvSeparator = ($dataSet->sourceId === 2) ? $sanitizedParams->getString('csvSeparator') ?? ',' : null;
 
         // Set this DataSet as active.
         $dataSet->setActive();
@@ -1574,3 +1656,4 @@ class DataSet extends Base
         return $this->render($request, $response);
     }
 }
+
