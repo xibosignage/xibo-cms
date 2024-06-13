@@ -146,7 +146,8 @@ class WidgetDataProviderCache
             }
 
             // Determine whether this cache is a miss (i.e. expired and being regenerated, expired, out of date)
-            // Get expire date
+            // We use our own expireDt here because Stash will only return expired data with invalidation method OLD
+            // if the data is currently being regenerated and another process has called lock() on it
             $expireDt = $dataProvider->getMeta()['expireDt'] ?? null;
             if ($expireDt !== null) {
                 $expireDt = Carbon::createFromFormat('c', $expireDt);
@@ -214,12 +215,12 @@ class WidgetDataProviderCache
             throw new GeneralException('No cache to save');
         }
 
-        // Set some cache dates so that we can track when this data provider was cached and when it should
-        // expire.
+        // Set some cache dates so that we can track when this data provider was cached and when it should expire.
+        // The expireDt must always be 15 minutes to allow plenty of time for the WidgetSyncTask to regenerate.
         $dataProvider->addOrUpdateMeta('cacheDt', Carbon::now()->format('c'));
         $dataProvider->addOrUpdateMeta(
             'expireDt',
-            Carbon::now()->addSeconds($dataProvider->getCacheTtl())->format('c')
+            Carbon::now()->addSeconds(max($dataProvider->getCacheTtl(), 900))->format('c')
         );
 
         // Set our cache from the data provider.
