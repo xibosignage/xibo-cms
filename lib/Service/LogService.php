@@ -69,6 +69,11 @@ class LogService implements LogServiceInterface
     private $sessionHistoryId = 0;
 
     /**
+     * The API requestId.
+     */
+    private $requestId = 0;
+
+    /**
      * @inheritdoc
      */
     public function __construct($logger, $mode = 'production')
@@ -107,6 +112,11 @@ class LogService implements LogServiceInterface
         $this->sessionHistoryId = $sessionHistoryId;
     }
 
+    public function setRequestId($requestId)
+    {
+        $this->requestId = $requestId;
+    }
+
     public function getUserId(): int
     {
         return $this->userId;
@@ -115,6 +125,11 @@ class LogService implements LogServiceInterface
     public function getSessionHistoryId()
     {
         return $this->sessionHistoryId;
+    }
+
+    public function getRequestId()
+    {
+        return $this->requestId;
     }
 
     /**
@@ -144,8 +159,28 @@ class LogService implements LogServiceInterface
             //  audit log should rollback on failure.
             $dbh = PdoStorageService::newConnection('default');
             $this->_auditLogStatement = $dbh->prepare('
-                INSERT INTO `auditlog` (`logDate`, `userId`, `entity`, `message`, `entityId`, `objectAfter`, `ipAddress`, `sessionHistoryId`)
-                  VALUES (:logDate, :userId, :entity, :message, :entityId, :objectAfter, :ipAddress, :sessionHistoryId)
+                INSERT INTO `auditlog` (
+                    `logDate`,
+                    `userId`,
+                    `entity`,
+                    `message`,
+                    `entityId`,
+                    `objectAfter`,
+                    `ipAddress`,
+                    `sessionHistoryId`,
+                    `requestId`
+                )
+                VALUES (
+                    :logDate,
+                    :userId,
+                    :entity,
+                    :message,
+                    :entityId,
+                    :objectAfter,
+                    :ipAddress,
+                    :sessionHistoryId,
+                    :requestId
+                )
             ');
         }
 
@@ -165,7 +200,8 @@ class LogService implements LogServiceInterface
             'entityId' => $entityId,
             'ipAddress' => $this->ipAddress,
             'objectAfter' => $object,
-            'sessionHistoryId' => $this->sessionHistoryId
+            'sessionHistoryId' => $this->sessionHistoryId,
+            'requestId' => $this->requestId
         ]);
     }
 

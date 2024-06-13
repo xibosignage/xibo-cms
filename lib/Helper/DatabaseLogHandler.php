@@ -93,7 +93,8 @@ class DatabaseLogHandler extends AbstractProcessingHandler
                   `message`,
                   `userid`,
                   `displayid`,
-                  `sessionHistoryId`
+                  `sessionHistoryId`,
+                  `requestId`
                 ) VALUES (
                   :runNo,
                   :logdate,
@@ -104,7 +105,8 @@ class DatabaseLogHandler extends AbstractProcessingHandler
                   :message,
                   :userid,
                   :displayid,
-                  :sessionHistoryId
+                  :sessionHistoryId,
+                  :requestId
                 )
             ';
 
@@ -121,7 +123,8 @@ class DatabaseLogHandler extends AbstractProcessingHandler
             'message' => $record['message'],
             'userid' => $record['extra']['userId'] ?? 0,
             'displayid' => $record['extra']['displayId'] ?? 0,
-            'sessionHistoryId' => $record['extra']['sessionHistoryId'] ?? 0
+            'sessionHistoryId' => $record['extra']['sessionHistoryId'] ?? 0,
+            'requestId' => $record['extra']['requestId'] ?? 0,
         ];
 
         try {
