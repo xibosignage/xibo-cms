@@ -205,12 +205,13 @@ class State implements Middleware
         $mode = $container->get('configService')->getSetting('SERVER_MODE');
         $container->get('logService')->setMode($mode);
 
-
-        if ($container->get('name') == 'web' || $container->get('name') == 'xtr') {
+        // Inject some additional changes on a per-container basis
+        $containerName = $container->get('name');
+        if ($containerName == 'web' || $containerName == 'xtr' || $containerName == 'xmds') {
             /** @var Twig $view */
             $view = $container->get('view');
 
-            if ($container->get('name') == 'web') {
+            if ($containerName == 'web') {
                 $container->set('flash', function () {
                     return new \Slim\Flash\Messages();
                 });
@@ -223,8 +224,11 @@ class State implements Middleware
             $filter = new \Twig\TwigFilter('url_decode', 'urldecode');
             $twigEnvironment->addFilter($filter);
 
-            // set Twig auto reload
-            $twigEnvironment->enableAutoReload();
+            // Set Twig auto reload if needed
+            // XMDS only renders widget html cache, and shouldn't need auto reload.
+            if ($containerName !== 'xmds') {
+                $twigEnvironment->enableAutoReload();
+            }
         }
 
         // Configure logging
