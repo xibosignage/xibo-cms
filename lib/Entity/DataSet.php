@@ -492,6 +492,52 @@ class DataSet implements \JsonSerializable
             'connection' => 'default'
         ], $options);
 
+        // Fetch display tag value/s
+        if ($filter != '' && $displayId != 0) {
+            $displayTags = [];
+
+            // Define the regular expression to match [Tag:tagNameHere]
+            $pattern = '/\[Tag:(\w+)\]/';
+
+            // find all matches
+            preg_match_all($pattern, $filter, $matches);
+
+            // Check if matches were found
+            if (!empty($matches[1])) {
+                // Iterate through the matches and add them to the displayTags array
+                foreach ($matches[1] as $tag) {
+                    $displayTags[] = $tag;
+                }
+            }
+
+            // Loop through each tag and get the actual tag value from the database
+            foreach ($displayTags as $tag) {
+                $query = "
+                SELECT `lktagdisplaygroup`.`value` AS tagValue
+                FROM `lkdisplaydg`
+                INNER JOIN `displaygroup` ON `displaygroup`.displayGroupId = `lkdisplaydg`.displayGroupId AND `displaygroup`.isDisplaySpecific = 1
+                INNER JOIN `lktagdisplaygroup` ON `lktagdisplaygroup`.displayGroupId = `lkdisplaydg`.displayGroupId
+                INNER JOIN `tag` ON `lktagdisplaygroup`.tagId = `tag`.tagId
+                WHERE `lkdisplaydg`.displayId = :displayId
+                  AND `tag`.`tag` = :tag
+                LIMIT 1";
+
+                $params = [
+                    'displayId' => $displayId,
+                    'tag' => $tag
+                ];
+
+                // Execute the query
+                $results = $this->getStore()->select($query, $params);
+
+                // Check if results were found and get the tag value
+                $tagValue = !empty($results) ? $results[0]['tagValue'] : '';
+
+                // Replace [Tag:anyTagNameHere] in the $filter with the actual tag value
+                $filter = preg_replace("/\[Tag:$tag\]/", $tagValue, $filter);
+            }
+        }
+
         // Params
         $params = [];
 

@@ -187,6 +187,15 @@
                 </test>
             </visibility>
         </property>
+        <property type="message">
+            <title>The substitution [Tag:tagName] can also be used in filter clauses. Replace `tagName` with the actual tag name you want to use (e.g: [Tag:region]). At runtime, it will be substituted with the Display's tag value. When shown in the CMS it will be substituted with an empty string.
+            </title>
+            <visibility>
+                <test>
+                    <condition field="dataSetId" type="neq"></condition>
+                </test>
+            </visibility>
+        </property>
         <property id="filterClauses" type="datasetFilter">
             <default>[]</default>
             <dependsOn>dataSetId</dependsOn>
