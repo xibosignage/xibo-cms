@@ -24,6 +24,9 @@ namespace Xibo\Dependencies;
 
 use Psr\Container\ContainerInterface;
 
+/**
+ * Helper class to add controllers to DI
+ */
 class Controllers
 {
     /**
@@ -616,6 +619,14 @@ class Controllers
                     $c->get('transitionFactory'),
                     $c->get('regionFactory'),
                     $c->get('widgetAudioFactory')
+                );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
+            },
+            '\Xibo\Controller\WidgetData' => function (ContainerInterface $c) {
+                $controller = new \Xibo\Controller\WidgetData(
+                    $c->get('widgetDataFactory'),
+                    $c->get('widgetFactory'),
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;

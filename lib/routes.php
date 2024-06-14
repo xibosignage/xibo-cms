@@ -20,6 +20,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+global $app;
+
 use Slim\Routing\RouteCollectorProxy;
 use Xibo\Middleware\FeatureAuth;
 use Xibo\Middleware\LayoutLock;
@@ -258,6 +260,17 @@ $app->group('/playlist/widget', function (RouteCollectorProxy $group) {
 
     // Drawer widgets Region
     $group->put('/{id}/target', ['\Xibo\Controller\Widget','widgetSetRegion'])->setName('module.widget.set.region');
+})
+    ->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify', 'playlist.modify']))
+    ->addMiddleware(new LayoutLock($app));
+
+// Widget Fallback Data APIs
+$app->group('/widgetData', function (RouteCollectorProxy $group) {
+    $group->get('/{widgetId}', ['\Xibo\Controller\WidgetData','add'])->setName('widget.data.add');
+    $group->post('/{widgetId}', ['\Xibo\Controller\WidgetData','add'])->setName('widget.data.add');
+    $group->put('/{id}', ['\Xibo\Controller\WidgetData','edit'])->setName('widget.data.edit');
+    $group->delete('/{id}', ['\Xibo\Controller\WidgetData','delete'])->setName('widget.data.delete');
+    $group->post('/{widgetId}/order', ['\Xibo\Controller\WidgetData','setOrder'])->setName('widget.data.set.order');
 })
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify', 'playlist.modify']))
     ->addMiddleware(new LayoutLock($app));

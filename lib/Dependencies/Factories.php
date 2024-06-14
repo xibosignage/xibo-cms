@@ -24,6 +24,9 @@ namespace Xibo\Dependencies;
 
 use Psr\Container\ContainerInterface;
 
+/**
+ * Helper class to add factories to DI.
+ */
 class Factories
 {
     /**
@@ -511,6 +514,11 @@ class Factories
             },
             'widgetOptionFactory' => function (ContainerInterface $c) {
                 $repository = new \Xibo\Factory\WidgetOptionFactory();
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
+            },
+            'widgetDataFactory' => function (ContainerInterface $c) {
+                $repository = new \Xibo\Factory\WidgetDataFactory();
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;
             },
