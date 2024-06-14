@@ -491,7 +491,8 @@ $(target).find('.date').each(function(_idx, dateEl){
         <id>weather_group_1</id>
         <type>element-group</type>
         <dataType>forecast</dataType>
-        <title>Weather Group Example</title>
+        <title>Forecast 1</title>
+        <thumbnail>forecast-group-1</thumbnail>
         <stencil>
             <hbs></hbs>
             <startWidth>940</startWidth>
@@ -509,41 +510,41 @@ $(target).find('.date').each(function(_idx, dateEl){
                 </elementGroup>
                 <elementGroup id="group_1">
                     <title>Group 1</title>
-                    <top>20</top>
+                    <top>25</top>
                     <left>20</left>
                     <layer>0</layer>
                     <width>300</width>
-                    <height>360</height>
+                    <height>350</height>
                     <slot>0</slot>
                     <pinSlot>1</pinSlot>
                 </elementGroup>
                 <elementGroup id="group_2">
                     <title>Group 2</title>
-                    <top>100</top>
+                    <top>120</top>
                     <left>320</left>
                     <layer>2</layer>
                     <width>200</width>
-                    <height>200</height>
+                    <height>160</height>
                     <slot>1</slot>
                     <pinSlot>1</pinSlot>
                 </elementGroup>
                 <elementGroup id="group_3">
                     <title>Group 3</title>
-                    <top>100</top>
+                    <top>120</top>
                     <left>520</left>
                     <layer>2</layer>
                     <width>200</width>
-                    <height>200</height>
+                    <height>160</height>
                     <slot>2</slot>
                     <pinSlot>1</pinSlot>
                 </elementGroup>
                 <elementGroup id="group_4">
                     <title>Group 4</title>
-                    <top>100</top>
+                    <top>120</top>
                     <left>720</left>
                     <layer>2</layer>
                     <width>200</width>
-                    <height>200</height>
+                    <height>160</height>
                     <slot>3</slot>
                     <pinSlot>1</pinSlot>
                 </elementGroup>
@@ -583,10 +584,13 @@ $(target).find('.date').each(function(_idx, dateEl){
                     <left>0</left>
                     <layer>2</layer>
                     <width>300</width>
-                    <height>80</height>
+                    <height>55</height>
                     <defaultProperties>
                         <property id="fontColor">#f9f9f9</property>
-                        <property id="fontSize">46</property>
+                        <property id="fontSize">60</property>
+                        <property id="bold">1</property>
+                        <property id="lineHeight">1</property>
+                        <property id="verticalAlign">flex-start</property>
                     </defaultProperties>
                 </element>
                 <element id="weather_icon" elementGroupId="group_1">
@@ -603,38 +607,42 @@ $(target).find('.date').each(function(_idx, dateEl){
                 </element>
                 <element id="weather_temperature" elementGroupId="group_1">
                     <title>Temperature</title>
-                    <top>180</top>
+                    <top>175</top>
                     <left>0</left>
                     <layer>2</layer>
                     <width>300</width>
-                    <height>100</height>
+                    <height>80</height>
                     <defaultProperties>
                         <property id="fontFamily">aileron regular</property>
                         <property id="fontColor">#f9f9f9</property>
                         <property id="fontSize">60</property>
                         <property id="bold">1</property>
+                        <property id="lineHeight">0.8</property>
+                        <property id="verticalAlign">flex-end</property>
                     </defaultProperties>
                 </element>
                 <element id="weather_summary" elementGroupId="group_1">
                     <title>Summary</title>
-                    <top>280</top>
-                    <left>0</left>
-                    <layer>2</layer>
-                    <width>300</width>
-                    <height>50</height>
-                    <defaultProperties>
-                        <property id="fontColor">#f9f9f9</property>
-                        <property id="fontSize">32</property>
-                        <property id="bold">1</property>
-                    </defaultProperties>
-                </element>
-                <element id="weather_attribution" elementGroupId="group_1">
-                    <title>Attribution</title>
-                    <top>330</top>
+                    <top>295</top>
                     <left>0</left>
                     <layer>2</layer>
                     <width>300</width>
                     <height>30</height>
+                    <defaultProperties>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">32</property>
+                        <property id="bold">1</property>
+                        <property id="lineHeight">0.8</property>
+                        <property id="verticalAlign">flex-start</property>
+                    </defaultProperties>
+                </element>
+                <element id="weather_attribution" elementGroupId="group_1">
+                    <title>Attribution</title>
+                    <top>325</top>
+                    <left>0</left>
+                    <layer>2</layer>
+                    <width>300</width>
+                    <height>25</height>
                     <defaultProperties>
                         <property id="fontColor">#f9f9f9</property>
                         <property id="fontSize">16</property>
@@ -650,6 +658,8 @@ $(target).find('.date').each(function(_idx, dateEl){
                     <defaultProperties>
                         <property id="fontColor">#f9f9f9</property>
                         <property id="fontSize">32</property>
+                        <property id="lineHeight">1</property>
+                        <property id="verticalAlign">flex-start</property>
                     </defaultProperties>
                 </element>
                 <element id="weather_icon" elementGroupId="group_2">
@@ -658,7 +668,7 @@ $(target).find('.date').each(function(_idx, dateEl){
                     <left>0</left>
                     <layer>2</layer>
                     <width>200</width>
-                    <height>70</height>
+                    <height>50</height>
                     <defaultProperties>
                         <property id="fontColor">#f9f9f9</property>
                         <property id="fontSize">40</property>
@@ -666,16 +676,18 @@ $(target).find('.date').each(function(_idx, dateEl){
                 </element>
                 <element id="weather_temperature" elementGroupId="group_2">
                     <title>Temperature</title>
-                    <top>120</top>
+                    <top>100</top>
                     <left>0</left>
                     <layer>2</layer>
                     <width>200</width>
-                    <height>80</height>
+                    <height>60</height>
                     <defaultProperties>
                         <property id="fontFamily">aileron regular</property>
                         <property id="fontColor">#f9f9f9</property>
                         <property id="fontSize">40</property>
                         <property id="bold">1</property>
+                        <property id="lineHeight">1</property>
+                        <property id="verticalAlign">flex-end</property>
                     </defaultProperties>
                 </element>
                 <element id="weather_date" elementGroupId="group_3">
@@ -688,7 +700,8 @@ $(target).find('.date').each(function(_idx, dateEl){
                     <defaultProperties>
                         <property id="fontColor">#f9f9f9</property>
                         <property id="fontSize">32</property>
-                        <property id="bold">1</property>
+                        <property id="lineHeight">1</property>
+                        <property id="verticalAlign">flex-start</property>
                     </defaultProperties>
                 </element>
                 <element id="weather_icon" elementGroupId="group_3">
@@ -697,7 +710,7 @@ $(target).find('.date').each(function(_idx, dateEl){
                     <left>0</left>
                     <layer>2</layer>
                     <width>200</width>
-                    <height>70</height>
+                    <height>50</height>
                     <defaultProperties>
                         <property id="fontColor">#f9f9f9</property>
                         <property id="fontSize">40</property>
@@ -705,19 +718,20 @@ $(target).find('.date').each(function(_idx, dateEl){
                 </element>
                 <element id="weather_temperature" elementGroupId="group_3">
                     <title>Temperature</title>
-                    <top>120</top>
+                    <top>100</top>
                     <left>0</left>
                     <layer>2</layer>
                     <width>200</width>
-                    <height>80</height>
+                    <height>60</height>
                     <defaultProperties>
                         <property id="fontFamily">aileron regular</property>
                         <property id="fontColor">#f9f9f9</property>
                         <property id="fontSize">40</property>
                         <property id="bold">1</property>
+                        <property id="lineHeight">1</property>
+                        <property id="verticalAlign">flex-end</property>
                     </defaultProperties>
                 </element>
-
                 <element id="weather_date" elementGroupId="group_4">
                     <title>Date</title>
                     <top>0</top>
@@ -728,6 +742,8 @@ $(target).find('.date').each(function(_idx, dateEl){
                     <defaultProperties>
                         <property id="fontColor">#f9f9f9</property>
                         <property id="fontSize">32</property>
+                        <property id="lineHeight">1</property>
+                        <property id="verticalAlign">flex-start</property>
                     </defaultProperties>
                 </element>
                 <element id="weather_icon" elementGroupId="group_4">
@@ -736,7 +752,7 @@ $(target).find('.date').each(function(_idx, dateEl){
                     <left>0</left>
                     <layer>2</layer>
                     <width>200</width>
-                    <height>70</height>
+                    <height>50</height>
                     <defaultProperties>
                         <property id="fontColor">#f9f9f9</property>
                         <property id="fontSize">40</property>
@@ -744,26 +760,31 @@ $(target).find('.date').each(function(_idx, dateEl){
                 </element>
                 <element id="weather_temperature" elementGroupId="group_4">
                     <title>Temperature</title>
-                    <top>120</top>
+                    <top>100</top>
                     <left>0</left>
                     <layer>2</layer>
                     <width>200</width>
-                    <height>80</height>
+                    <height>60</height>
                     <defaultProperties>
                         <property id="fontFamily">aileron regular</property>
                         <property id="fontColor">#f9f9f9</property>
                         <property id="fontSize">40</property>
                         <property id="bold">1</property>
+                        <property id="lineHeight">1</property>
+                        <property id="verticalAlign">flex-end</property>
                     </defaultProperties>
                 </element>
             </elements>
         </stencil>
+        <assets>
+            <asset id="forecast-group-1" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/forecast-group-1.png" />
+        </assets>
     </template>
     <template>
         <id>weather_current_1</id>
         <type>element-group</type>
         <dataType>forecast</dataType>
-        <title>Weather 1</title>
+        <title>Daily 1</title>
         <thumbnail>forecast-current-1</thumbnail>
         <stencil>
             <hbs></hbs>
@@ -883,7 +904,7 @@ $(target).find('.date').each(function(_idx, dateEl){
         <id>weather_current_2</id>
         <type>element-group</type>
         <dataType>forecast</dataType>
-        <title>Weather 2</title>
+        <title>Daily 2</title>
         <thumbnail>forecast-current-2</thumbnail>
         <stencil>
             <hbs></hbs>
@@ -965,7 +986,7 @@ $(target).find('.date').each(function(_idx, dateEl){
         <id>weather_current_3</id>
         <type>element-group</type>
         <dataType>forecast</dataType>
-        <title>Weather 3</title>
+        <title>Daily 3</title>
         <thumbnail>forecast-current-3</thumbnail>
         <stencil>
             <hbs></hbs>
@@ -1170,7 +1191,7 @@ $(target).find('.date').each(function(_idx, dateEl){
         <id>weather_current_4</id>
         <type>element-group</type>
         <dataType>forecast</dataType>
-        <title>Weather 4</title>
+        <title>Daily 4</title>
         <thumbnail>forecast-current-4</thumbnail>
         <stencil>
             <hbs></hbs>
