@@ -436,7 +436,8 @@ class ModuleFactory extends BaseFactory
     public function getDataTypeById(string $dataTypeId): DataType
     {
         // Rely on a class if we have one.
-        $className = '\\Xibo\\Widget\\DataType\\' . ucfirst($dataTypeId);
+        $className = ucfirst(str_replace('-', '', ucwords($dataTypeId, '-')));
+        $className = '\\Xibo\\Widget\\DataType\\' . $className;
         if (class_exists($className)) {
             $class = new $className();
             if ($class instanceof DataTypeInterface) {
