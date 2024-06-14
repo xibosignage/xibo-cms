@@ -252,6 +252,11 @@ pE.loadEditor = function(
           .on('click', function() {
             pE.close();
           });
+        pE.editorContainer.parents('#editor-container')
+          .find('.editor-modal-close')
+          .on('click', function() {
+            pE.close();
+          });
 
         if (showExternalPlaylistMessage) {
           pE.showExternalPlaylistMessage();
