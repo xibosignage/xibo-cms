@@ -2876,6 +2876,11 @@ Viewer.prototype.initSelecto = function(groupEditing = false, groupContainer) {
     $(e.added).addClass('selected-temp');
     $(e.removed).removeClass('selected-temp');
   }).on('selectEnd', (e) => {
+    // If it's click, don't select (only select on drag end)
+    if (e.isClick) {
+      return;
+    }
+
     const $selectedObjs = $(e.afterAdded);
     const multipleSelected = ($selectedObjs.length > 1);
 
