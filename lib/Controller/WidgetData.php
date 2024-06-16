@@ -24,9 +24,12 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\WidgetDataFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Controller for managing Widget Data
@@ -35,117 +38,305 @@ class WidgetData extends Base
 {
     public function __construct(
         private readonly WidgetDataFactory $widgetDataFactory,
-        private readonly WidgetFactory $widgetFactory
+        private readonly WidgetFactory $widgetFactory,
+        private readonly ModuleFactory $moduleFactory
     ) {
     }
 
+    // phpcs:disable
     /**
+     * @SWG\Post(
+     *  path="/playlist/widget/data/{id}",
+     *  operationId="getWidgetData",
+     *  tags={"widget"},
+     *  summary="Get data for Widget",
+     *  description="Return all of the fallback data currently assigned to this Widget",
+     *  @SWG\Parameter(
+     *      name="id",
+     *      in="path",
+     *      description="The Widget ID that this data should be added to",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/WidgetData")
+     *      )
+     *  )
+     * )
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function get(Request $request, Response $response, int $widgetId): Response
+    // phpcs:enable
+    public function get(Request $request, Response $response, int $id): Response
     {
-        $widget = $this->widgetFactory->getById($widgetId);
+        $widget = $this->widgetFactory->getById($id);
         if (!$this->getUser()->checkEditable($widget)) {
             throw new AccessDeniedException(__('This Widget is not shared with you with edit permission'));
         }
 
-
-        $data = [];
-
-
-        return $response->withJson($data);
+        return $response->withJson($this->widgetDataFactory->getByWidgetId($widget->widgetId));
     }
 
+    // phpcs:disable
     /**
+     * @SWG\Post(
+     *  path="/playlist/widget/data/{id}",
+     *  operationId="addWidgetData",
+     *  tags={"widget"},
+     *  summary="Add a data to a Widget",
+     *  description="Add fallback data to a data Widget",
+     *  @SWG\Parameter(
+     *      name="id",
+     *      in="path",
+     *      description="The Widget ID that this data should be added to",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="data",
+     *      in="path",
+     *      description="A JSON formatted string containing a single data item for this widget's data type",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="displayOrder",
+     *      in="formData",
+     *      description="Optional integer to say which position this data should appear if there is more than one data item",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new record",
+     *          type="string"
+     *      )
+     *  )
+     * )
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function add(Request $request, Response $response): Response
+    // phpcs:enable
+    public function add(Request $request, Response $response, int $id): Response
     {
-        $params = $this->getSanitizer($request->getParams());
-        $widgetId = $params->getInt('widgetId');
-
         // Check that we have permission to edit this widget
-        $widget = $this->widgetFactory->getById($widgetId);
+        $widget = $this->widgetFactory->getById($id);
         if (!$this->getUser()->checkEditable($widget)) {
             throw new AccessDeniedException(__('This Widget is not shared with you with edit permission'));
         }
 
         // Get the other params.
-        $data = $this->widgetDataFactory->createEmpty();
-        $data->widgetId = $widgetId;
-        $data->data = $params->getArray('data');
-        $data->displayOrder = $params->getInt('displayOrder');
-        $data->save();
+        $params = $this->getSanitizer($request->getParams());
+        $widgetData = $this->widgetDataFactory->createEmpty();
+        $widgetData->widgetId = $widget->widgetId;
+        $widgetData->data = $this->parseAndValidate($widget, $params->getArray('data'));
+        $widgetData->displayOrder = $params->getInt('displayOrder', ['default' => 1]);
+
+        // Save
+        $widgetData->save();
 
         // Successful
         $this->getState()->hydrate([
             'httpStatus' => 201,
             'message' => __('Added data for Widget'),
-            'id' => $data->id,
-            'data' => $data,
+            'id' => $widgetData->id,
+            'data' => $widgetData,
         ]);
 
         return $this->render($request, $response);
     }
 
+    // phpcs:disable
     /**
+     * @SWG\Put(
+     *  path="/playlist/widget/data/{id}/{dataId}",
+     *  operationId="editWidgetData",
+     *  tags={"widget"},
+     *  summary="Edit data on a Widget",
+     *  description="Edit fallback data on a data Widget",
+     *  @SWG\Parameter(
+     *      name="id",
+     *      in="path",
+     *      description="The Widget ID that this data is attached to",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dataId",
+     *      in="path",
+     *      description="The ID of the data to be edited",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="data",
+     *      in="path",
+     *      description="A JSON formatted string containing a single data item for this widget's data type",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="displayOrder",
+     *      in="formData",
+     *      description="Optional integer to say which position this data should appear if there is more than one data item",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function edit(Request $request, Response $response, int $id): Response
+    // phpcs:enable
+    public function edit(Request $request, Response $response, int $id, int $dataId): Response
     {
-        $data = $this->widgetDataFactory->getById($id);
-
         // Check that we have permission to edit this widget
-        $widget = $this->widgetFactory->getById($data->widgetId);
+        $widget = $this->widgetFactory->getById($id);
         if (!$this->getUser()->checkEditable($widget)) {
             throw new AccessDeniedException(__('This Widget is not shared with you with edit permission'));
+        }
+
+        // Make sure this dataId is for this widget
+        $widgetData = $this->widgetDataFactory->getById($dataId);
+
+        if ($id !== $widgetData->widgetId) {
+            throw new AccessDeniedException(__('This widget data does not belong to this widget'));
         }
 
         // Get params and process the edit
         $params = $this->getSanitizer($request->getParams());
-        $data->data = $params->getArray('data');
-        $data->displayOrder = $params->getInt('displayOrder');
-        $data->save();
+        $widgetData->data = $this->parseAndValidate($widget, $params->getArray('data'));
+        $widgetData->displayOrder = $params->getInt('displayOrder', ['default' => 1]);
+        $widgetData->save();
 
         // Successful
         $this->getState()->hydrate([
             'message' => __('Edited data for Widget'),
-            'id' => $data->id,
-            'data' => $data,
+            'id' => $widgetData->id,
+            'data' => $widgetData,
+            'httpStatus' => 204,
         ]);
 
         return $this->render($request, $response);
     }
 
+    // phpcs:disable
     /**
+     * @SWG\Delete(
+     *  path="/playlist/widget/data/{id}/{dataId}",
+     *  operationId="deleteWidgetData",
+     *  tags={"widget"},
+     *  summary="Delete data on a Widget",
+     *  description="Delete fallback data on a data Widget",
+     *  @SWG\Parameter(
+     *      name="id",
+     *      in="path",
+     *      description="The Widget ID that this data is attached to",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dataId",
+     *      in="path",
+     *      description="The ID of the data to be deleted",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function delete(Request $request, Response $response, int $id): Response
+    // phpcs:enable
+    public function delete(Request $request, Response $response, int $id, int $dataId): Response
     {
-        $data = $this->widgetDataFactory->getById($id);
-
         // Check that we have permission to edit this widget
-        $widget = $this->widgetFactory->getById($data->widgetId);
+        $widget = $this->widgetFactory->getById($id);
         if (!$this->getUser()->checkEditable($widget)) {
             throw new AccessDeniedException(__('This Widget is not shared with you with edit permission'));
         }
 
+        // Make sure this dataId is for this widget
+        $widgetData = $this->widgetDataFactory->getById($dataId);
+
+        if ($id !== $widgetData->widgetId) {
+            throw new AccessDeniedException(__('This widget data does not belong to this widget'));
+        }
+
         // Delete it.
-        $data->delete();
+        $widgetData->delete();
 
         // Successful
-        $this->getState()->hydrate(['message' => __('Deleted')]);
+        $this->getState()->hydrate(['message' => __('Deleted'), 'httpStatus' => 204]);
 
         return $this->render($request, $response);
     }
 
+    // phpcs:disable
     /**
+     * @SWG\Definition(
+     *  definition="WidgetDataOrder",
+     *  @SWG\Property(
+     *      property="dataId",
+     *      type="integer",
+     *      description="Data ID"
+     *  ),
+     *  @SWG\Property(
+     *      property="displayOrder",
+     *      type="integer",
+     *      description="Desired display order"
+     *  )
+     * )
+     *
+     * @SWG\Post(
+     *  path="/playlist/widget/data/{id}/order",
+     *  operationId="orderWidgetData",
+     *  tags={"widget"},
+     *  summary="Update the order of data on a Widget",
+     *  description="Provide all data to be ordered on a widget",
+     *  @SWG\Parameter(
+     *      name="id",
+     *      in="path",
+     *      description="The Widget ID that this data is attached to",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dataId",
+     *      in="path",
+     *      description="The ID of the data to be deleted",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="order",
+     *      in="body",
+     *      description="An array of any widget data records that should be re-ordered",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="WidgetDataOrder")
+     *      ),
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
      * @throws \Xibo\Support\Exception\GeneralException
      */
+    // phpcs:enable
     public function setOrder(Request $request, Response $response, int $widgetId): Response
     {
-        $params = $this->getSanitizer($request->getParams());
-
         // Check that we have permission to edit this widget
         $widget = $this->widgetFactory->getById($widgetId);
         if (!$this->getUser()->checkEditable($widget)) {
@@ -153,13 +344,65 @@ class WidgetData extends Base
         }
 
         // Expect an array of `id` in order.
+        $params = $this->getSanitizer($request->getParams());
+        foreach ($params->getArray('order', ['default' => []]) as $item) {
+            $itemParams = $this->getSanitizer($item);
+
+            // Make sure this dataId is for this widget
+            $widgetData = $this->widgetDataFactory->getById($itemParams->getInt('dataId'));
+            $widgetData->displayOrder = $itemParams->getInt('displayOrder');
+
+            if ($widgetId !== $widgetData->widgetId) {
+                throw new AccessDeniedException(__('This widget data does not belong to this widget'));
+            }
+
+            // Save it
+            $widgetData->save();
+        }
 
         // Successful
         $this->getState()->hydrate([
-            'message' => __('Edited data for Widget'),
+            'message' => __('Updated the display order for data on Widget'),
             'id' => $widget->widgetId,
+            'httpStatus' => 204,
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Parse and validate the data provided in params.
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    private function parseAndValidate(\Xibo\Entity\Widget $widget, array $item): array
+    {
+        // Check that this module is a data widget
+        $module = $this->moduleFactory->getByType($widget->type);
+        if (!$module->isDataProviderExpected()) {
+            throw new InvalidArgumentException(__('This is not a data widget'));
+        }
+
+        // Parse out the data string we've been given and make sure it's valid according to this widget's datatype
+        $data = [];
+        $params = $this->getSanitizer($item);
+
+        $dataType = $this->moduleFactory->getDataTypeById($module->dataType);
+        foreach ($dataType->fields as $field) {
+            if ($field->isRequired && $params->hasParam($field->id)) {
+                throw new InvalidArgumentException(sprintf(
+                    'Data is missing a field called %s',
+                    $field->title
+                ));
+            }
+
+            $value = match ($field->type) {
+                'number' => $params->getDouble($field->id),
+                default => $params->getString($field->id),
+            };
+            $data[$field->id] = $value;
+        }
+
+        return $data;
     }
 }

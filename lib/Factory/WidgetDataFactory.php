@@ -47,7 +47,7 @@ class WidgetDataFactory extends BaseFactory
             throw new InvalidArgumentException(__('Missing ID'), 'id');
         }
 
-        $sql = 'SELECT * FROM `widgetdata` WHERE `id = :id`';
+        $sql = 'SELECT * FROM `widgetdata` WHERE `id` = :id';
         foreach ($this->getStore()->select($sql, ['id' => $id]) as $row) {
             return $this->hydrate($row);
         };
@@ -68,7 +68,7 @@ class WidgetDataFactory extends BaseFactory
         }
 
         $entries = [];
-        $sql = 'SELECT * FROM `widgetdata` WHERE `widgetId = :widgetId`';
+        $sql = 'SELECT * FROM `widgetdata` WHERE `widgetId` = :widgetId';
         foreach ($this->getStore()->select($sql, ['widgetId' => $widgetId]) as $row) {
             $entries[] = $this->hydrate($row);
         };
@@ -83,12 +83,11 @@ class WidgetDataFactory extends BaseFactory
      */
     private function hydrate(array $row): WidgetData
     {
-        $entity = $this->createEmpty()->hydrate($row);
         if (!empty($row['data'])) {
-            $entity->data = json_decode($row['data'], true);
+            $row['data'] = json_decode($row['data'], true);
         } else {
-            $entity->data = [];
+            $row['data'] = [];
         }
-        return $entity;
+        return $this->createEmpty()->hydrate($row);
     }
 }

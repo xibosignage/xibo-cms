@@ -627,6 +627,7 @@ class Controllers
                 $controller = new \Xibo\Controller\WidgetData(
                     $c->get('widgetDataFactory'),
                     $c->get('widgetFactory'),
+                    $c->get('moduleFactory'),
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;

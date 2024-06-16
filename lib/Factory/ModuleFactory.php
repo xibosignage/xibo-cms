@@ -924,7 +924,8 @@ class ModuleFactory extends BaseFactory
                 $dataType->addField(
                     $field->getAttribute('id'),
                     trim($field->textContent),
-                    $field->getAttribute('type')
+                    $field->getAttribute('type'),
+                    $field->getAttribute('isRequired') === 'true',
                 );
             }
         }

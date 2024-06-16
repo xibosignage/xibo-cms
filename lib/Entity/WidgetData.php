@@ -28,31 +28,45 @@ use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class representing widget data
+ * @SWG\Definition()
  */
 class WidgetData implements \JsonSerializable
 {
     use EntityTrait;
 
     /**
-     * @SWG\Property(description="The ID")
+     * @SWG\Property(
+     *     property="id",
+     *     description="The ID"
+     * )
      * @var int|null
      */
-    public ?int $id;
+    public ?int $id = null;
 
     /**
-     * @SWG\Property(description="The Widget ID")
+     * @SWG\Property(
+     *     property="widgetId",
+     *     description="The Widget ID"
+     * )
      * @var int
      */
     public int $widgetId;
 
     /**
-     * @SWG\Property(description="Array of data properties")
+     * @SWG\Property(
+     *     property="data",
+     *     description="Array of data properties depending on the widget data type this data is for",
+     *     @SWG\Items(type="string")
+     * )
      * @var array
      */
     public array $data;
 
     /**
-     * @SWG\Property(description="The Display Order")
+     * @SWG\Property(
+     *     property="displayOrder",
+     *     description="The Display Order"
+     * )
      * @var int
      */
     public int $displayOrder;
@@ -91,7 +105,7 @@ class WidgetData implements \JsonSerializable
      */
     public function delete(): void
     {
-        $this->getStore()->update('DELETE FROM `widgetdata` WHERE `id` = :`id`', ['id' => $this->id]);
+        $this->getStore()->update('DELETE FROM `widgetdata` WHERE `id` = :id', ['id' => $this->id]);
     }
 
     /**
@@ -120,7 +134,7 @@ class WidgetData implements \JsonSerializable
             UPDATE `widgetdata` SET
                 `data` = :data,
                 `displayOrder` = :displayOrder
-             WHERE `id` = :`id`
+             WHERE `id` = :id
         ', [
             'id' => $this->id,
             'data' => $this->data == null ? null : json_encode($this->data),
