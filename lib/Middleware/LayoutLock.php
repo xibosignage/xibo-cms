@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -148,7 +148,7 @@ class LayoutLock implements Middleware
             $objectToCache->userId = $this->userId;
             $objectToCache->entryPoint = $this->entryPoint;
 
-            $this->app->getContainer()->get('logger')->debug('Layout Lock middleware for LayoutId ' . $this->layoutId
+            $this->logger->debug('Layout Lock middleware for LayoutId ' . $this->layoutId
                 . ' userId ' . $this->userId . ' emtrypoint ' . $this->entryPoint);
 
             $this->lock->setInvalidationMethod(Invalidation::OLD);
@@ -156,10 +156,11 @@ class LayoutLock implements Middleware
             // Get the lock
             // other requests will wait here until we're done, or we've timed out
             $locked = $this->lock->get();
-            $this->app->getContainer()->get('logger')->debug('$locked is ' . var_export($locked, true) . ', key = ' . $key);
+            $this->logger->debug('$locked is ' . var_export($locked, true) . ', key = ' . $key);
 
             if ($this->lock->isMiss() || $locked === []) {
-                $this->app->getContainer()->get('logger')->debug('Lock miss or false. Locking for ' . $this->ttl . ' seconds. $locked is ' . var_export($locked, true) . ', key = ' . $key);
+                $this->logger->debug('Lock miss or false. Locking for ' . $this->ttl . ' seconds. $locked is '
+                    . var_export($locked, true) . ', key = ' . $key);
 
                 // so lock now
                 $this->lock->expiresAfter($this->ttl);
@@ -168,7 +169,9 @@ class LayoutLock implements Middleware
                 $this->lock->save();
             } else {
                 // We are a hit - we must be locked
-                $this->app->getContainer()->get('logger')->debug('LOCK hit for ' . $key . ' expires ' . $this->lock->getExpiration()->format(DateFormatHelper::getSystemFormat()) . ', created ' . $this->lock->getCreation()->format(DateFormatHelper::getSystemFormat()));
+                $this->logger->debug('LOCK hit for ' . $key . ' expires '
+                    . $this->lock->getExpiration()->format(DateFormatHelper::getSystemFormat()) . ', created '
+                    . $this->lock->getCreation()->format(DateFormatHelper::getSystemFormat()));
 
                 if ($locked->userId == $this->userId && $locked->entryPoint == $this->entryPoint) {
                     // the same user in the same entry point is editing the same layoutId
@@ -177,11 +180,16 @@ class LayoutLock implements Middleware
                     $this->lock->set($objectToCache);
                     $this->lock->save();
 
-                    $this->app->getContainer()->get('logger')->debug('Lock extended to ' . $this->lock->getExpiration()->format(DateFormatHelper::getSystemFormat()));
+                    $this->logger->debug('Lock extended to '
+                        . $this->lock->getExpiration()->format(DateFormatHelper::getSystemFormat()));
                 } else {
                     // different user or entry point
-                    $this->app->getContainer()->get('logger')->debug('Sorry Layout is locked by another User!');
-                    throw new AccessDeniedException(sprintf(__('Layout ID %d is locked by another User! Lock expires on: %s'), $locked->layoutId, $locked->expires));
+                    $this->logger->debug('Sorry Layout is locked by another User!');
+                    throw new AccessDeniedException(sprintf(
+                        __('Layout ID %d is locked by another User! Lock expires on: %s'),
+                        $locked->layoutId,
+                        $locked->expires
+                    ));
                 }
             }
         }
