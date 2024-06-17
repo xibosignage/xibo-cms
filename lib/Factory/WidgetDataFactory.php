@@ -31,7 +31,19 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class WidgetDataFactory extends BaseFactory
 {
-    public function createEmpty(): WidgetData
+    public function create(
+        int $widgetId,
+        array $data,
+        int $displayOrder
+    ): WidgetData {
+        $widgetData = $this->createEmpty();
+        $widgetData->widgetId = $widgetId;
+        $widgetData->data = $data;
+        $widgetData->displayOrder = $displayOrder;
+        return $widgetData;
+    }
+
+    private function createEmpty(): WidgetData
     {
         return new WidgetData($this->getStore(), $this->getLog(), $this->getDispatcher());
     }

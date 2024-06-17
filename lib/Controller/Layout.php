@@ -45,6 +45,7 @@ use Xibo\Factory\ResolutionFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
+use Xibo\Factory\WidgetDataFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
@@ -154,6 +155,7 @@ class Layout extends Base
         $pool,
         MediaServiceInterface $mediaService,
         WidgetFactory $widgetFactory,
+        private readonly WidgetDataFactory $widgetDataFactory,
         PlaylistFactory $playlistFactory,
     ) {
         $this->session = $session;
@@ -882,6 +884,26 @@ class Layout extends Base
 
             $template->managePlaylistClosureTable();
             $template->manageActions();
+
+            // Handle widget data
+            $fallback = $layout->getUnmatchedProperty('fallback');
+            if ($fallback !== null) {
+                foreach ($layout->getAllWidgets() as $widget) {
+                    // Did this widget have fallback data included in its export?
+                    if (array_key_exists($widget->tempWidgetId, $fallback)) {
+                        foreach ($fallback[$widget->tempWidgetId] as $item) {
+                            // We create the widget data with the new widgetId
+                            $this->widgetDataFactory
+                                ->create(
+                                    $widget->widgetId,
+                                    $item['data'] ?? [],
+                                    intval($item['displayOrder'] ?? 1),
+                                )
+                                ->save();
+                        }
+                    }
+                }
+            }
 
             @unlink($event->getFilePath());
         } else {
@@ -2497,7 +2519,15 @@ class Layout extends Base
         }
 
         $fileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/' . $saveAs . '.zip';
-        $layout->toZip($this->dataSetFactory, $fileName, ['includeData' => ($sanitizedParams->getCheckbox('includeData')== 1)]);
+        $layout->toZip(
+            $this->dataSetFactory,
+            $this->widgetDataFactory,
+            $fileName,
+            [
+                'includeData' => ($sanitizedParams->getCheckbox('includeData') == 1),
+                'includeFallback' => ($sanitizedParams->getCheckbox('includeFallback') == 1),
+            ]
+        );
 
         return $this->render($request, SendFile::decorateResponse(
             $response,
@@ -2531,7 +2561,7 @@ class Layout extends Base
      * @param Request $request
      * @param Response $response
      * @return Response
-     * @throws \Xibo\Support\Exception\ConfigurationException
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function import(Request $request, Response $response)
     {
@@ -2561,6 +2591,7 @@ class Layout extends Base
             'userId' => $this->getUser()->userId,
             'controller' => $this,
             'dataSetFactory' => $this->getDataSetFactory(),
+            'widgetDataFactory' => $this->widgetDataFactory,
             'upload_dir' => $libraryFolder . 'temp/',
             'download_via_php' => true,
             'script_url' => $this->urlFor($request, 'layout.import'),
@@ -2574,15 +2605,13 @@ class Layout extends Base
             'folderId' => $folderId,
         ];
 
-        $this->setNoOutput(true);
+        $this->setNoOutput();
 
         // Hand off to the Upload Handler provided by jquery-file-upload
         new LayoutUploadHandler($options);
 
         // Explicitly set the Content-Type header to application/json
-        $response = $response->withHeader('Content-Type', 'application/json');
-
-        return $response;
+        return $response->withHeader('Content-Type', 'application/json');
     }
 
     /**
