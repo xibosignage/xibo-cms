@@ -717,3 +717,56 @@ select[readonly].select2-hidden-accessible + .select2-container .select2-selecti
         }
     }
 }
+
+// Fallback data
+.fallback-data-content {
+    margin-bottom: 1rem;
+
+    .fallback-data-record {
+        padding: 1rem;
+        background-color: $xibo-color-neutral-0;
+        border: 3px solid $xibo-color-primary-l60;
+        margin-bottom: 0.5rem;
+        border-radius: 0.5rem;
+        cursor: grab;
+
+        .fb-btn-edit, .fallback-data-record-previews {
+            display: block;
+        }
+
+        .fallback-data-record-preview {
+            display: flex;
+            justify-content: space-between;
+
+            .fallback-data-record-preview-title {
+                font-weight: bold;
+            }
+
+            .fallback-data-record-preview-title, .fallback-data-record-preview-value {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            &.hidden {
+                display: none;
+            }
+        }
+
+        .fb-btn-save, .fallback-data-record-fields {
+            display: none;
+        }
+
+        &.editing {
+            border-color: $xibo-color-accent;
+
+            .fb-btn-edit, .fallback-data-record-previews {
+                display: none;
+            }
+
+            .fb-btn-save, .fallback-data-record-fields {
+                display: block;
+            }
+        }
+    }
+}

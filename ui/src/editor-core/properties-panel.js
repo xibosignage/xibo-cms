@@ -1686,6 +1686,27 @@ PropertiesPanel.prototype.render = function(
       formHelpers.mediaEditFormOpen(self.DOMObject);
     }
 
+    // Show fallback tab if widget has datatype
+    if (
+      target.type === 'widget' &&
+      target.moduleDataType != ''
+    ) {
+      // Show fallback tab
+      self.DOMObject.find('.nav-link[href="#fallbackTab"]')
+        .parent().removeClass('d-none');
+
+      // Get datatype
+      target.getDataType().then((dt) => {
+        // Create form
+        forms.createFallbackDataForm(
+          dt,
+          self.DOMObject.find('#fallbackTab'),
+          target.fallbackData,
+          target,
+        );
+      });
+    }
+
     // Init fields
     self.initFields(target, res.data, actionEditMode, false, openActionTab);
   }).fail(function(data) {
@@ -1978,6 +1999,7 @@ PropertiesPanel.prototype.initFields = function(
     const skipXiboFormInput =
       ':not(.position-input):not(.action-form-input)' +
       ':not(.snippet-selector):not(.element-slot-input)' +
+      ':not(.fallback-property)' +
       ':not(.ticker-tag-style-property)' +
       ':not(.canvas-widget-control-dropdown)';
     const skipFormInput =

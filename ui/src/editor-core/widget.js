@@ -1619,4 +1619,34 @@ Widget.prototype.updateElementMap = function(element) {
   }
 };
 
+/**
+ * Get data type structure from widget
+ * @return {Promise} - Promise
+ */
+Widget.prototype.getDataType = function() {
+  // Get request path
+  const requestPath =
+    urlsForApi.widget.getDataType.url.replace(':id', this.widgetId);
+
+  return $.ajax({
+    method: 'GET',
+    url: requestPath,
+    success: function(response) {
+      return Promise.resolve(response);
+    },
+    error: function() {
+      $select.parent().append(
+        '{% trans "An unknown error has occurred. Please refresh" %}',
+      );
+    },
+  });
+};
+
+/**
+ * Save fallback data
+ */
+Widget.prototype.saveFallbackData = function() {
+  console.log('saveFallbackData');
+};
+
 module.exports = Widget;

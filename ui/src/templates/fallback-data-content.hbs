@@ -1,0 +1,20 @@
+<div class="fallback-data-content">
+    {{> forms/inputs/header title=data.name }}
+    {{> forms/inputs/message title=trans.message }}
+
+    {{> forms/inputs/dropdown value=data.fallbackType id="fallbackType"
+        options=(arr 
+            (obj name='append' title=trans.append)
+            (obj name='prepend' title=trans.prepend)
+            (obj name='replace' title=trans.replace)
+        )
+        optionsTitle="title" optionsValue="name"
+        customClass="fallback-property"
+        title=trans.fallbackTypeTitle helpText=trans.fallbackTypeHelpText }}
+
+    {{> forms/button action="add-new-record" type="btn-block btn-primary mb-2" name=trans.addNewRecord }}
+
+    <div class="fallback-data-records">
+        {{! Fallback records }}
+    </div>
+</div>

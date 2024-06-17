@@ -3092,4 +3092,196 @@ window.forms = {
       $parent.removeClass('loading');
     });
   },
+
+  /**
+   * Create form fields for fallback data
+  * @param {object} dataType
+  * @param {object} container
+  * @param {object} fallbackData
+  * @param {object} widget
+   */
+  createFallbackDataForm: function(
+    dataType,
+    container,
+    fallbackData,
+    widget,
+  ) {
+    const dataFields = dataType.fields;
+
+    const createField = function(field, data) {
+      const fieldClone = {...field, ...data};
+
+      // Set date variant
+      if (
+        ['datetime', 'date', 'time', 'month'].indexOf(fieldClone.type) != -1
+      ) {
+        fieldClone.variant = (fieldClone.type === 'datetime')?
+          'dateTime' :
+          fieldClone.type;
+        fieldClone.type = 'date';
+      }
+
+      // Add custom class to prevent auto save
+      fieldClone.customClass = 'fallback-property';
+
+      if (templates.forms.hasOwnProperty(fieldClone.type)) {
+        return templates.forms[fieldClone.type](fieldClone);
+      }
+    };
+
+    const updateRecordPreview = function($record, recordData) {
+      const $previewsContainer =
+        $record.find('.fallback-data-record-previews');
+
+      // Empty container
+      $previewsContainer.empty();
+
+      dataFields.forEach((field) => {
+        if (recordData && recordData[field.id]) {
+          const fieldData = recordData[field.id];
+
+          // New field preview
+          const $recordPreview = $(templates.forms.fallbackDataRecordPreview({
+            trans: fallbackDataTrans,
+            field: field,
+            data: fieldData,
+          }));
+
+          $record.find('.fallback-data-record-previews')
+            .append($recordPreview);
+        }
+      });
+    };
+
+    const saveRecord = function($record) {
+      const recordData = {};
+      let valid = true;
+
+      // Get input fields and build data to be saved
+      dataFields.forEach((field) => {
+        const value = $record.find('[name="' + field.id + '"]').val();
+        const required = $record.hasClass('required');
+
+        if (value == '' && required) {
+          valid = false;
+        } else if (value != '') {
+          recordData[field.id] = value;
+        }
+      });
+
+      // If record data is empty or invalid, thow error and don't save
+      if (
+        $.isEmptyObject(recordData) ||
+        !valid
+      ) {
+        toastr.error(fallbackDataTrans.invalidRecord);
+        return;
+      }
+
+      // Update preview
+      updateRecordPreview($record, recordData);
+
+      console.log('TODOM: Save record!');
+      console.log($record);
+
+      $record.removeClass('editing');
+    };
+
+    const editRecord = function($record) {
+      console.log('TODOM: Save record!');
+      console.log($record);
+
+      $record.addClass('editing');
+    };
+
+    const deleteRecord = function($record) {
+      console.log('TODOM: Delete record!');
+      console.log($record);
+
+      $record.remove();
+    };
+
+    const createRecord = function(recordData = {}) {
+      const $recordContainer = $(templates.forms.fallbackDataRecord({
+        trans: fallbackDataTrans,
+      }));
+
+      // Add properties from data
+      dataFields.forEach((field) => {
+        const fieldData = recordData[field.id];
+        const $newField = createField(field, fieldData);
+
+        // New field input
+        $recordContainer.find('.fallback-data-record-fields')
+          .append($newField);
+
+        // Initialize fields
+        forms.initFields($recordContainer);
+      });
+
+      // Record preview
+      updateRecordPreview($recordContainer, recordData);
+
+      // Mark new field as editing
+      $recordContainer.addClass('editing');
+
+      // Handle buttons
+      $recordContainer.find('button').on('click', function(ev) {
+        const actionType =
+          $(ev.currentTarget).data('action');
+
+        if (actionType == 'save-record') {
+          saveRecord($recordContainer);
+        } else if (actionType == 'delete-record') {
+          deleteRecord($recordContainer);
+        } else if (actionType == 'edit-record') {
+          editRecord($recordContainer);
+        }
+      });
+
+      return $recordContainer;
+    };
+
+    // Create main content
+    $(container).append(templates.forms.fallbackDataContent({
+      data: dataType,
+      trans: fallbackDataTrans,
+    }));
+
+    const $recordsContainer =
+      $(container).find('.fallback-data-records');
+
+    // If we have existing data, add it to the control
+    if (fallbackData) {
+      fallbackData.forEach((data) => {
+        $recordsContainer.append(
+          createRecord(data),
+        );
+      });
+    }
+
+    // Handle create record button
+    $(container).find('[data-action="add-new-record"]').on('click', function() {
+      $recordsContainer.append(
+        createRecord(),
+      );
+    });
+
+    // Init sortable
+    $recordsContainer.sortable({
+      axis: 'y',
+      items: '.fallback-data-record',
+      containment: 'parent',
+      update: function() {
+        console.log('// TODO: Save sort!');
+        console.log(widget);
+      },
+    });
+
+    // Handle data display type dropdown
+    $(container).find('[name="fallbackType"]').on('change', function() {
+      console.log('// TODO: Save type!');
+      console.log(widget);
+    });
+  },
 };
