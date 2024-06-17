@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -83,6 +83,8 @@
                                     <th>{% trans "Owner" %}</th>
                                     <th>{% trans "Modified By" %}</th>
                                     <th>{% trans "Publisher Port" %}</th>
+                                    <th>{% trans "Switch Delay" %}</th>
+                                    <th>{% trans "Video Pause Delay" %}</th>
                                     <th>{% trans "Lead Display" %}</th>
                                     <th class="rowMenu"></th>
                                 </tr>
@@ -130,6 +132,8 @@
             { "data": "owner", responsivePriority: 3 },
             { "data": "modifiedByName", responsivePriority: 4 },
             { "data": "syncPublisherPort", responsivePriority: 3 },
+            { "data": "syncSwitchDelay", responsivePriority: 3 },
+            { "data": "syncVideoPauseDelay", responsivePriority: 3 },
             { "data": "leadDisplay", responsivePriority: 3 },
             {
               "orderable": false,
