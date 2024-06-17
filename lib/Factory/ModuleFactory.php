@@ -436,7 +436,8 @@ class ModuleFactory extends BaseFactory
     public function getDataTypeById(string $dataTypeId): DataType
     {
         // Rely on a class if we have one.
-        $className = '\\Xibo\\Widget\\DataType\\' . ucfirst($dataTypeId);
+        $className = ucfirst(str_replace('-', '', ucwords($dataTypeId, '-')));
+        $className = '\\Xibo\\Widget\\DataType\\' . $className;
         if (class_exists($className)) {
             $class = new $className();
             if ($class instanceof DataTypeInterface) {
@@ -739,6 +740,7 @@ class ModuleFactory extends BaseFactory
         $module->startHeight = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'startHeight'));
         $module->dataType = $this->getFirstValueOrDefaultFromXmlNode($xml, 'dataType');
         $module->dataCacheKey = $this->getFirstValueOrDefaultFromXmlNode($xml, 'dataCacheKey');
+        $module->fallbackData = $this->getFirstValueOrDefaultFromXmlNode($xml, 'fallbackData', 0);
         $module->schemaVersion = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'schemaVersion'));
         $module->compatibilityClass = $this->getFirstValueOrDefaultFromXmlNode($xml, 'compatibilityClass');
         $module->showIn = $this->getFirstValueOrDefaultFromXmlNode($xml, 'showIn') ?? 'both';
@@ -923,7 +925,8 @@ class ModuleFactory extends BaseFactory
                 $dataType->addField(
                     $field->getAttribute('id'),
                     trim($field->textContent),
-                    $field->getAttribute('type')
+                    $field->getAttribute('type'),
+                    $field->getAttribute('isRequired') === 'true',
                 );
             }
         }

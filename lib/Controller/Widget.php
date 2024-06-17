@@ -37,6 +37,7 @@ use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\WidgetAudioFactory;
+use Xibo\Factory\WidgetDataFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -99,7 +100,8 @@ class Widget extends Base
         $widgetFactory,
         $transitionFactory,
         $regionFactory,
-        $widgetAudioFactory
+        $widgetAudioFactory,
+        private readonly WidgetDataFactory $widgetDataFactory
     ) {
         $this->moduleFactory = $moduleFactory;
         $this->moduleTemplateFactory = $moduleTemplateFactory;
@@ -359,6 +361,7 @@ class Widget extends Base
                 'name' => $widget->getOptionValue('name', null),
                 'enableStat' => $widget->getOptionValue('enableStat', null),
                 'isRepeatData' => $widget->getOptionValue('isRepeatData', null),
+                'showFallback' => $widget->getOptionValue('showFallback', null),
                 'duration' => $widget->duration,
                 'useDuration' => $widget->useDuration
             ],
@@ -420,6 +423,13 @@ class Widget extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="showFallback",
+     *      in="formData",
+     *      description="If this widget requires data and allows fallback data how should that data be returned? (never, always, empty, error)",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="properties",
      *      in="formData",
      *      description="Add an additional parameter for each of the properties required this module and its template. Use the moduleProperties and moduleTemplateProperties calls to get a list of properties needed",
@@ -467,6 +477,10 @@ class Widget extends Base
         // Handle special common properties for widgets with data
         if ($module->isDataProviderExpected()) {
             $widget->setOptionValue('isRepeatData', 'attrib', $params->getCheckbox('isRepeatData'));
+
+            if ($module->fallbackData === 1) {
+                $widget->setOptionValue('showFallback', 'attrib', $params->getString('showFallback'));
+            }
         }
 
         // Validate common parameters if we don't have a validator present.
@@ -1179,6 +1193,21 @@ class Widget extends Base
                         new WidgetDataRequestEvent($dataProvider),
                         WidgetDataRequestEvent::$NAME
                     );
+                }
+
+                // Before caching images, check to see if the data provider is handled
+                if ($dataProvider->getFallbackMode() !== 'none'
+                    && (
+                        count($dataProvider->getErrors()) > 0
+                        || count($dataProvider->getData()) <= 0
+                        || $dataProvider->getFallbackMode() === 'always'
+                    )
+                ) {
+                    // Error or no data.
+                    // Pull in the fallback data
+                    foreach ($this->widgetDataFactory->getByWidgetId($dataProvider->getWidgetId()) as $item) {
+                        $dataProvider->addItem($item);
+                    }
                 }
 
                 // Do we have images?

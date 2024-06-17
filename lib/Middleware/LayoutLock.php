@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -26,7 +26,8 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
-use Slim\App as App;
+use Psr\Log\LoggerInterface;
+use Slim\App;
 use Slim\Routing\RouteContext;
 use Stash\Invalidation;
 use Stash\Item;
@@ -35,37 +36,47 @@ use Xibo\Helper\DateFormatHelper;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
 
+/**
+ * This Middleware will Lock the Layout for the specific User and entry point
+ * It is not added on the whole Application stack, instead it's added to selected groups of routes in routes.php
+ *
+ * For a User designing a Layout there will be no change in the way that User interacts with it
+ * However if the same Layout will be accessed by different User or Entry Point then this middleware will throw
+ * an Exception with suitable message.
+ */
 class LayoutLock implements Middleware
 {
-    /* @var App $app */
-    private $app;
-
     /** @var Item */
     private $lock;
 
-    private $ttl = 300;
     private $layoutId;
+
     private $userId;
+
     private $entryPoint;
 
-    public function __construct($app, $ttl = 300)
-    {
-        $this->app = $app;
-        $this->ttl = $ttl;
+    private LoggerInterface $logger;
+
+    /**
+     * @param \Slim\App $app
+     * @param int $ttl
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \Psr\Container\NotFoundExceptionInterface
+     */
+    public function __construct(
+        private readonly App $app,
+        private readonly int $ttl = 300
+    ) {
+        $this->logger = $this->app->getContainer()->get('logService')->getLoggerInterface();
     }
 
     /**
-     * This Middleware will Lock the Layout for the specific User and entry point
-     * It is not added on the whole Application stack, instead it's added to selected groups of routes in routes.php
-     *
-     * For a User designing a Layout there will be no change in the way that User interacts with it
-     * However if the same Layout will be accessed by different User or Entry Point then this middleware will throw an Exception with suitable message.
-     *
-     *
      * @param Request $request
      * @param RequestHandler $handler
      * @return Response
-     * @throws GeneralException
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \Psr\Container\NotFoundExceptionInterface
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function process(Request $request, RequestHandler $handler): Response
     {
@@ -74,26 +85,28 @@ class LayoutLock implements Middleware
 
         // what route are we in?
         $resource = $route->getPattern();
+        $routeName = $route->getName();
 
         // skip for test suite
         if ($request->getAttribute('name') === 'test' && $this->app->getContainer()->get('name') === 'test') {
             return $handler->handle($request);
         }
 
-        if (strpos($resource,'layout') !== false) {
+        $this->logger->debug('layoutLock: testing route ' . $routeName . ', pattern ' . $resource);
+
+        if (str_contains($resource, 'layout') !== false) {
             // Layout route, we can get the Layout id from route argument.
             $this->layoutId = (int)$route->getArgument('id');
-        } elseif (strpos($resource,'region') !== false) {
+        } elseif (str_contains($resource, 'region') !== false) {
             // Region route, we need to get the Layout Id from layoutFactory by Region Id
-
             // if it's POST request or positionAll then id in route is already LayoutId we can use
-            if (strpos($resource, 'position') !== false || $route->getMethods()[0] === 'POST') {
+            if (str_contains($resource, 'position') !== false || $route->getMethods()[0] === 'POST') {
                 $this->layoutId = (int)$route->getArgument('id');
             } else {
                 $regionId = (int)$route->getArgument('id');
                 $this->layoutId = $this->app->getContainer()->get('layoutFactory')->getByRegionId($regionId)->layoutId;
             }
-        } elseif (strpos($route->getName(),'playlist') !== false || $route->getName() === 'module.widget.add') {
+        } else if (str_contains($routeName, 'playlist') !== false || $routeName === 'module.widget.add') {
             // Playlist Route, we need to get to LayoutId, Widget add the same behaviour.
             $playlistId = (int)$route->getArgument('id');
             $regionId = $this->app->getContainer()->get('playlistFactory')->getById($playlistId)->regionId;
@@ -103,7 +116,7 @@ class LayoutLock implements Middleware
             if ($regionId != null) {
                 $this->layoutId = $this->app->getContainer()->get('layoutFactory')->getByRegionId($regionId)->layoutId;
             }
-        } elseif (strpos($route->getName(), 'widget') !== false) {
+        } else if (str_contains($routeName, 'widget') !== false) {
             // Widget route, the id route argument will be Widget Id
             $widgetId = (int)$route->getArgument('id');
 
@@ -117,7 +130,10 @@ class LayoutLock implements Middleware
             }
         } else {
             // this should never happen
-            throw new GeneralException(sprintf(__('Layout Lock Middleware called with incorrect route %s'), $route->getPattern()));
+            throw new GeneralException(sprintf(
+                __('Layout Lock Middleware called with incorrect route %s'),
+                $route->getPattern(),
+            ));
         }
 
         // run only if we have layout id, that will exclude non Region specific Playlist requests.
@@ -132,17 +148,19 @@ class LayoutLock implements Middleware
             $objectToCache->userId = $this->userId;
             $objectToCache->entryPoint = $this->entryPoint;
 
-            $this->app->getContainer()->get('logger')->debug('Layout Lock middleware for LayoutId ' . $this->layoutId . ' userId ' . $this->userId . ' emtrypoint ' . $this->entryPoint);
+            $this->logger->debug('Layout Lock middleware for LayoutId ' . $this->layoutId
+                . ' userId ' . $this->userId . ' emtrypoint ' . $this->entryPoint);
 
             $this->lock->setInvalidationMethod(Invalidation::OLD);
 
             // Get the lock
             // other requests will wait here until we're done, or we've timed out
             $locked = $this->lock->get();
-            $this->app->getContainer()->get('logger')->debug('$locked is ' . var_export($locked, true) . ', key = ' . $key);
+            $this->logger->debug('$locked is ' . var_export($locked, true) . ', key = ' . $key);
 
             if ($this->lock->isMiss() || $locked === []) {
-                $this->app->getContainer()->get('logger')->debug('Lock miss or false. Locking for ' . $this->ttl . ' seconds. $locked is ' . var_export($locked, true) . ', key = ' . $key);
+                $this->logger->debug('Lock miss or false. Locking for ' . $this->ttl . ' seconds. $locked is '
+                    . var_export($locked, true) . ', key = ' . $key);
 
                 // so lock now
                 $this->lock->expiresAfter($this->ttl);
@@ -151,7 +169,9 @@ class LayoutLock implements Middleware
                 $this->lock->save();
             } else {
                 // We are a hit - we must be locked
-                $this->app->getContainer()->get('logger')->debug('LOCK hit for ' . $key . ' expires ' . $this->lock->getExpiration()->format(DateFormatHelper::getSystemFormat()) . ', created ' . $this->lock->getCreation()->format(DateFormatHelper::getSystemFormat()));
+                $this->logger->debug('LOCK hit for ' . $key . ' expires '
+                    . $this->lock->getExpiration()->format(DateFormatHelper::getSystemFormat()) . ', created '
+                    . $this->lock->getCreation()->format(DateFormatHelper::getSystemFormat()));
 
                 if ($locked->userId == $this->userId && $locked->entryPoint == $this->entryPoint) {
                     // the same user in the same entry point is editing the same layoutId
@@ -160,11 +180,16 @@ class LayoutLock implements Middleware
                     $this->lock->set($objectToCache);
                     $this->lock->save();
 
-                    $this->app->getContainer()->get('logger')->debug('Lock extended to ' . $this->lock->getExpiration()->format(DateFormatHelper::getSystemFormat()));
+                    $this->logger->debug('Lock extended to '
+                        . $this->lock->getExpiration()->format(DateFormatHelper::getSystemFormat()));
                 } else {
                     // different user or entry point
-                    $this->app->getContainer()->get('logger')->debug('Sorry Layout is locked by another User!');
-                    throw new AccessDeniedException(sprintf(__('Layout ID %d is locked by another User! Lock expires on: %s'), $locked->layoutId, $locked->expires));
+                    $this->logger->debug('Sorry Layout is locked by another User!');
+                    throw new AccessDeniedException(sprintf(
+                        __('Layout ID %d is locked by another User! Lock expires on: %s'),
+                        $locked->layoutId,
+                        $locked->expires
+                    ));
                 }
             }
         }
@@ -174,12 +199,18 @@ class LayoutLock implements Middleware
 
     /**
      * @return Pool
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \Psr\Container\NotFoundExceptionInterface
      */
     private function getPool()
     {
         return $this->app->getContainer()->get('pool');
     }
 
+    /**
+     * Get the lock key
+     * @return mixed
+     */
     private function getKey()
     {
         return $this->layoutId;

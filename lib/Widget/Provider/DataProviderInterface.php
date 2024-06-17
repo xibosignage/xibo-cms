@@ -81,7 +81,14 @@ interface DataProviderInterface
      * Get the ID for this Widget
      * @return int
      */
-    public function getWidgetId() : int;
+    public function getWidgetId(): int;
+
+    /**
+     * Get the fallback mode for this widget.
+     *  (none, always, empty, error)
+     * @return string
+     */
+    public function getFallbackMode(): string;
 
     /**
      * Get a configured Guzzle client

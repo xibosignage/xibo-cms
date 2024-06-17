@@ -27,6 +27,7 @@ use Xibo\Entity\Display;
 use Xibo\Entity\Module;
 use Xibo\Entity\Widget;
 use Xibo\Event\WidgetDataRequestEvent;
+use Xibo\Factory\WidgetDataFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
@@ -47,6 +48,9 @@ class WidgetSyncTask implements TaskInterface
     /** @var \Xibo\Factory\WidgetFactory */
     private $widgetFactory;
 
+    /** @var \Xibo\Factory\WidgetDataFactory */
+    private WidgetDataFactory $widgetDataFactory;
+
     /** @var \Xibo\Factory\MediaFactory */
     private $mediaFactory;
 
@@ -61,6 +65,7 @@ class WidgetSyncTask implements TaskInterface
     {
         $this->moduleFactory = $container->get('moduleFactory');
         $this->widgetFactory = $container->get('widgetFactory');
+        $this->widgetDataFactory = $container->get('widgetDataFactory');
         $this->mediaFactory = $container->get('mediaFactory');
         $this->displayFactory = $container->get('displayFactory');
         $this->eventDispatcher = $container->get('dispatcher');
@@ -241,6 +246,21 @@ class WidgetSyncTask implements TaskInterface
                         new WidgetDataRequestEvent($dataProvider),
                         WidgetDataRequestEvent::$NAME
                     );
+                }
+
+                // Before caching images, check to see if the data provider is handled
+                if ($dataProvider->getFallbackMode() !== 'none'
+                    && (
+                        count($dataProvider->getErrors()) > 0
+                        || count($dataProvider->getData()) <= 0
+                        || $dataProvider->getFallbackMode() === 'always'
+                    )
+                ) {
+                    // Error or no data.
+                    // Pull in the fallback data
+                    foreach ($this->widgetDataFactory->getByWidgetId($dataProvider->getWidgetId()) as $item) {
+                        $dataProvider->addItem($item);
+                    }
                 }
 
                 // Do we have images?

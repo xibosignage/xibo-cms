@@ -62,7 +62,7 @@ class SocialMedia implements \JsonSerializable, DataTypeInterface
         $dataType->id = self::$NAME;
         $dataType->name = __('Social Media');
         $dataType
-            ->addField('text', __('Text'), 'text')
+            ->addField('text', __('Text'), 'text', true)
             ->addField('user', __('User'), 'text')
             ->addField('userProfileImage', __('Profile Image'), 'image')
             ->addField('userProfileImageMini', __('Mini Profile Image'), 'image')

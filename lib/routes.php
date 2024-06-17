@@ -20,6 +20,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+global $app;
+
 use Slim\Routing\RouteCollectorProxy;
 use Xibo\Middleware\FeatureAuth;
 use Xibo\Middleware\LayoutLock;
@@ -249,7 +251,8 @@ $app->group('/playlist/widget', function (RouteCollectorProxy $group) {
     $group->post('/{type}/{id}', ['\Xibo\Controller\Widget','addWidget'])->setName('module.widget.add');
     $group->put('/{id}', ['\Xibo\Controller\Widget','editWidget'])->setName('module.widget.edit');
     $group->delete('/{id}', ['\Xibo\Controller\Widget','deleteWidget'])->setName('module.widget.delete');
-    $group->put('/transition/{type}/{id}', ['\Xibo\Controller\Widget','editWidgetTransition'])->setName('module.widget.transition.edit');
+    $group->put('/transition/{type}/{id}', ['\Xibo\Controller\Widget','editWidgetTransition'])
+        ->setName('module.widget.transition.edit');
     $group->put('/{id}/audio', ['\Xibo\Controller\Widget','widgetAudio'])->setName('module.widget.audio');
     $group->delete('/{id}/audio', ['\Xibo\Controller\Widget','widgetAudioDelete']);
     $group->put('/{id}/expiry', ['\Xibo\Controller\Widget','widgetExpiry'])->setName('module.widget.expiry');
@@ -258,6 +261,18 @@ $app->group('/playlist/widget', function (RouteCollectorProxy $group) {
 
     // Drawer widgets Region
     $group->put('/{id}/target', ['\Xibo\Controller\Widget','widgetSetRegion'])->setName('module.widget.set.region');
+
+    // Widget Fallback Data APIs
+    $group->get('/fallback/data/{id}', ['\Xibo\Controller\WidgetData','get'])
+        ->setName('module.widget.data.get');
+    $group->post('/fallback/data/{id}', ['\Xibo\Controller\WidgetData','add'])
+        ->setName('module.widget.data.add');
+    $group->put('/fallback/data/{id}/{dataId}', ['\Xibo\Controller\WidgetData','edit'])
+        ->setName('module.widget.data.edit');
+    $group->delete('/fallback/data/{id}/{dataId}', ['\Xibo\Controller\WidgetData','delete'])
+        ->setName('module.widget.data.delete');
+    $group->post('/fallback/data/{id}/order', ['\Xibo\Controller\WidgetData','setOrder'])
+        ->setName('module.widget.data.set.order');
 })
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify', 'playlist.modify']))
     ->addMiddleware(new LayoutLock($app));

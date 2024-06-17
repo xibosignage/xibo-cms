@@ -186,9 +186,17 @@ class DataProvider implements DataProviderInterface
     /**
      * @inheritDoc
      */
-    public function getWidgetId() : int
+    public function getWidgetId(): int
     {
         return $this->widget->widgetId;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getFallbackMode(): string
+    {
+        return $this->getProperty('showFallback', 'none');
     }
 
     /**
