@@ -29,6 +29,7 @@
     <type>currencies</type>
     <dataType>currency</dataType>
     <dataCacheKey>%items%_%base%</dataCacheKey>
+    <fallbackData>1</fallbackData>
     <schemaVersion>2</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>1</regionSpecific>

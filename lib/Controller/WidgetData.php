@@ -29,7 +29,6 @@ use Xibo\Factory\WidgetDataFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\InvalidArgumentException;
-use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Controller for managing Widget Data
@@ -381,6 +380,10 @@ class WidgetData extends Base
         $module = $this->moduleFactory->getByType($widget->type);
         if (!$module->isDataProviderExpected()) {
             throw new InvalidArgumentException(__('This is not a data widget'));
+        }
+
+        if ($module->fallbackData !== 1) {
+            throw new InvalidArgumentException(__('Fallback data is not expected for this Widget'));
         }
 
         // Parse out the data string we've been given and make sure it's valid according to this widget's datatype

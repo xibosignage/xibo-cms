@@ -740,6 +740,7 @@ class ModuleFactory extends BaseFactory
         $module->startHeight = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'startHeight'));
         $module->dataType = $this->getFirstValueOrDefaultFromXmlNode($xml, 'dataType');
         $module->dataCacheKey = $this->getFirstValueOrDefaultFromXmlNode($xml, 'dataCacheKey');
+        $module->fallbackData = $this->getFirstValueOrDefaultFromXmlNode($xml, 'fallbackData', 0);
         $module->schemaVersion = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'schemaVersion'));
         $module->compatibilityClass = $this->getFirstValueOrDefaultFromXmlNode($xml, 'compatibilityClass');
         $module->showIn = $this->getFirstValueOrDefaultFromXmlNode($xml, 'showIn') ?? 'both';
