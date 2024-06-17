@@ -50,17 +50,12 @@ class Soap4 extends Soap
      * @param string $macAddress
      * @param null $xmrChannel
      * @param null $xmrPubKey
-     * @param string $osVersion
-     * @param string $osSdk
-     * @param string $manufacturer
-     * @param string $brand
-     * @param string $model
      * @return string
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \SoapFault
      */
-    public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $clientType, $clientVersion, $clientCode, $operatingSystem, $macAddress, $xmrChannel = null, $xmrPubKey = null, $osVersion, $osSdk, $manufacturer, $brand, $model)
+    public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $clientType, $clientVersion, $clientCode, $operatingSystem, $macAddress, $xmrChannel = null, $xmrPubKey = null)
     {
         $this->logProcessor->setRoute('RegisterDisplay');
 
@@ -75,11 +70,6 @@ class Soap4 extends Soap
             'macAddress' => $macAddress,
             'xmrChannel' => $xmrChannel,
             'xmrPubKey' => $xmrPubKey,
-            'osVersion' => $osVersion,
-            'osSdk' => $osSdk,
-            'manufacturer' => $manufacturer,
-            'brand' => $brand,
-            'model' => $model,
         ]);
 
         // Sanitize
@@ -89,12 +79,9 @@ class Soap4 extends Soap
         $clientType = $sanitized->getString('clientType');
         $clientVersion = $sanitized->getString('clientVersion');
         $clientCode = $sanitized->getInt('clientCode');
-        $osVersion = $sanitized->getString('osVersion');
-        $osSdk = $sanitized->getString('osSdk');
-        $manufacturer = $sanitized->getString('manufacturer');
-        $brand = $sanitized->getString('brand');
-        $model = $sanitized->getString('model');
+        $macAddress = $sanitized->getString('macAddress');
         $clientAddress = $this->getIp();
+        $operatingSystem = $sanitized->getString('operatingSystem');
 
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
@@ -285,12 +272,17 @@ class Soap4 extends Soap
         $display->clientType = $clientType;
         $display->clientVersion = $clientVersion;
         $display->clientCode = $clientCode;
-        $display->osVersion = $osVersion;
-        $display->osSdk = $osSdk;
-        $display->manufacturer = $manufacturer;
-        $display->brand = $brand;
-        $display->model = $model;
         //$display->operatingSystem = $operatingSystem;
+
+        // Parse operatingSystem data
+        $operatingSystem = json_decode($operatingSystem, true);
+
+        $display->osVersion = $operatingSystem->osVersion ?? null;
+        $display->osSdk = $operatingSystem->osSdk ?? null;
+        $display->manufacturer = $operatingSystem->manufacturer ?? null;
+        $display->brand = $operatingSystem->brand ?? null;
+        $display->model = $operatingSystem->model ?? null;
+
         $display->save(['validate' => false, 'audit' => false]);
 
         // Log Bandwidth
