@@ -50,12 +50,17 @@ class Soap4 extends Soap
      * @param string $macAddress
      * @param null $xmrChannel
      * @param null $xmrPubKey
+     * @param string $osVersion
+     * @param string $osSdk
+     * @param string $manufacturer
+     * @param string $brand
+     * @param string $model
      * @return string
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \SoapFault
      */
-    public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $clientType, $clientVersion, $clientCode, $operatingSystem, $macAddress, $xmrChannel = null, $xmrPubKey = null)
+    public function RegisterDisplay($serverKey, $hardwareKey, $displayName, $clientType, $clientVersion, $clientCode, $operatingSystem, $macAddress, $xmrChannel = null, $xmrPubKey = null, $osVersion, $osSdk, $manufacturer, $brand, $model)
     {
         $this->logProcessor->setRoute('RegisterDisplay');
 
@@ -69,7 +74,12 @@ class Soap4 extends Soap
             'operatingSystem' => $operatingSystem,
             'macAddress' => $macAddress,
             'xmrChannel' => $xmrChannel,
-            'xmrPubKey' => $xmrPubKey
+            'xmrPubKey' => $xmrPubKey,
+            'osVersion' => $osVersion,
+            'osSdk' => $osSdk,
+            'manufacturer' => $manufacturer,
+            'brand' => $brand,
+            'model' => $model,
         ]);
 
         // Sanitize
@@ -79,7 +89,11 @@ class Soap4 extends Soap
         $clientType = $sanitized->getString('clientType');
         $clientVersion = $sanitized->getString('clientVersion');
         $clientCode = $sanitized->getInt('clientCode');
-        $macAddress = $sanitized->getString('macAddress');
+        $osVersion = $sanitized->getString('osVersion');
+        $osSdk = $sanitized->getString('osSdk');
+        $manufacturer = $sanitized->getString('manufacturer');
+        $brand = $sanitized->getString('brand');
+        $model = $sanitized->getString('model');
         $clientAddress = $this->getIp();
 
         // Check the serverKey matches
@@ -271,6 +285,11 @@ class Soap4 extends Soap
         $display->clientType = $clientType;
         $display->clientVersion = $clientVersion;
         $display->clientCode = $clientCode;
+        $display->osVersion = $osVersion;
+        $display->osSdk = $osSdk;
+        $display->manufacturer = $manufacturer;
+        $display->brand = $brand;
+        $display->model = $model;
         //$display->operatingSystem = $operatingSystem;
         $display->save(['validate' => false, 'audit' => false]);
 

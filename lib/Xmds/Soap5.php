@@ -54,6 +54,11 @@ class Soap5 extends Soap4
      * @param string $xmrChannel
      * @param string $xmrPubKey
      * @param string $licenceCheck
+     * @param string $osVersion
+     * @param string $osSdk
+     * @param string $manufacturer
+     * @param string $brand
+     * @param string $model
      * @return string
      * @throws NotFoundException
      * @throws \SoapFault
@@ -70,7 +75,12 @@ class Soap5 extends Soap4
         $macAddress,
         $xmrChannel = null,
         $xmrPubKey = null,
-        $licenceResult = null
+        $licenceResult = null,
+        $osVersion,
+        $osSdk,
+        $manufacturer,
+        $brand,
+        $model
     ) {
         $this->logProcessor->setRoute('RegisterDisplay');
 
@@ -85,7 +95,12 @@ class Soap5 extends Soap4
             'macAddress' => $macAddress,
             'xmrChannel' => $xmrChannel,
             'xmrPubKey' => $xmrPubKey,
-            'licenceResult' => $licenceResult
+            'licenceResult' => $licenceResult,
+            'osVersion' => $osVersion,
+            'osSdk' => $osSdk,
+            'manufacturer' => $manufacturer,
+            'brand' => $brand,
+            'model' => $model,
         ]);
 
         // Sanitize
@@ -99,6 +114,11 @@ class Soap5 extends Soap4
         $clientAddress = $this->getIp();
         $xmrChannel = $sanitized->getString('xmrChannel');
         $xmrPubKey = trim($sanitized->getString('xmrPubKey'));
+        $osVersion = $sanitized->getString('osVersion');
+        $osSdk = $sanitized->getString('osSdk');
+        $manufacturer = $sanitized->getString('manufacturer');
+        $brand = $sanitized->getString('brand');
+        $model = $sanitized->getString('model');
         // this is only sent from xmds v7
         $commercialLicenceString = $sanitized->getString('licenceResult');
 
@@ -433,6 +453,11 @@ class Soap5 extends Soap4
         $display->clientType = $clientType;
         $display->clientVersion = $clientVersion;
         $display->clientCode = $clientCode;
+        $display->osVersion = $osVersion;
+        $display->osSdk = $osSdk;
+        $display->manufacturer = $manufacturer;
+        $display->brand = $brand;
+        $display->model = $model;
         //$display->operatingSystem = $operatingSystem;
 
         // Commercial Licence Check,  0 - Not licensed, 1 - licensed, 2 - trial licence, 3 - not applicable
