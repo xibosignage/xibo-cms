@@ -131,13 +131,13 @@ class WidgetData extends Base
 
         // Get the other params.
         $params = $this->getSanitizer($request->getParams());
-        $widgetData = $this->widgetDataFactory->createEmpty();
-        $widgetData->widgetId = $widget->widgetId;
-        $widgetData->data = $this->parseAndValidate($widget, $params->getArray('data'));
-        $widgetData->displayOrder = $params->getInt('displayOrder', ['default' => 1]);
-
-        // Save
-        $widgetData->save();
+        $widgetData = $this->widgetDataFactory
+            ->create(
+                $widget->widgetId,
+                $this->parseAndValidate($widget, $params->getArray('data')),
+                $params->getInt('displayOrder', ['default' => 1]),
+            )
+            ->save();
 
         // Successful
         $this->getState()->hydrate([

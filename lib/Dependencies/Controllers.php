@@ -251,7 +251,8 @@ class Controllers
                     $c->get('pool'),
                     $c->get('mediaService'),
                     $c->get('widgetFactory'),
-                    $c->get('playlistFactory')
+                    $c->get('widgetDataFactory'),
+                    $c->get('playlistFactory'),
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;

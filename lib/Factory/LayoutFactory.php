@@ -1948,6 +1948,12 @@ class LayoutFactory extends BaseFactory
             }
         }
 
+        // Load widget data into an array for processing outside (once the layout has been saved)
+        $fallback = $zip->getFromName('fallback.json');
+        if ($fallback !== false) {
+            $layout->setUnmatchedProperty('fallback', json_decode($fallback, true));
+        }
+
         // Save the thumbnail to a temporary location.
         $image_path = $zip->getFromName('library/thumbs/campaign_thumb.png');
         if ($image_path !== false) {
