@@ -494,47 +494,69 @@ class DataSet implements \JsonSerializable
 
         // Fetch display tag value/s
         if ($filter != '' && $displayId != 0) {
-            $displayTags = [];
 
-            // Define the regular expression to match [Tag:tagNameHere]
-            $pattern = '/\[Tag:(\w+)\]/';
+            // Define the regular expression to match [Tag:...]
+            $pattern = '/\[Tag:[^]]+\]/';
 
-            // find all matches
+            // Find all instances of [Tag:...]
             preg_match_all($pattern, $filter, $matches);
 
             // Check if matches were found
-            if (!empty($matches[1])) {
-                // Iterate through the matches and add them to the displayTags array
-                foreach ($matches[1] as $tag) {
-                    $displayTags[] = $tag;
+            if (!empty($matches[0])) {
+                $displayTags = [];
+
+                // Iterate through the matches and process each tag
+                foreach ($matches[0] as $tagString) {
+                    // Remove the enclosing [Tag:] brackets
+                    $tagContent = substr($tagString, 5, -1);
+
+                    // Explode the tag content by ":" to separate tagName and defaultValue (if present)
+                    $parts = explode(':', $tagContent);
+                    $tagName = $parts[0];
+                    $defaultTagValue = $parts[1] ?? '';
+
+                    $displayTags[] = [
+                        'tagString' => $tagString,
+                        'tagName' => $tagName,
+                        'defaultValue' => $defaultTagValue
+                    ];
                 }
-            }
 
-            // Loop through each tag and get the actual tag value from the database
-            foreach ($displayTags as $tag) {
-                $query = "
-                SELECT `lktagdisplaygroup`.`value` AS tagValue
-                FROM `lkdisplaydg`
-                INNER JOIN `displaygroup` ON `displaygroup`.displayGroupId = `lkdisplaydg`.displayGroupId AND `displaygroup`.isDisplaySpecific = 1
-                INNER JOIN `lktagdisplaygroup` ON `lktagdisplaygroup`.displayGroupId = `lkdisplaydg`.displayGroupId
-                INNER JOIN `tag` ON `lktagdisplaygroup`.tagId = `tag`.tagId
-                WHERE `lkdisplaydg`.displayId = :displayId
-                  AND `tag`.`tag` = :tag
-                LIMIT 1";
+                // Loop through each tag and get the actual tag value from the database
+                foreach ($displayTags as $tag) {
+                    $tagName = $tag['tagName'];
+                    $defaultTagValue = $tag['defaultValue'];
+                    $tagString = $tag['tagString'];
 
-                $params = [
-                    'displayId' => $displayId,
-                    'tag' => $tag
-                ];
+                    $query = 'SELECT `lktagdisplaygroup`.`value` AS tagValue
+                                FROM `lkdisplaydg`
+                                INNER JOIN `displaygroup` ON `displaygroup`.displayGroupId = `lkdisplaydg`.displayGroupId 
+                                    AND `displaygroup`.isDisplaySpecific = 1
+                                INNER JOIN `lktagdisplaygroup` ON `lktagdisplaygroup`.displayGroupId = `lkdisplaydg`.displayGroupId
+                                INNER JOIN `tag` ON `lktagdisplaygroup`.tagId = `tag`.tagId
+                                WHERE `lkdisplaydg`.displayId = :displayId
+                                    AND `tag`.`tag` = :tagName
+                                LIMIT 1';
 
-                // Execute the query
-                $results = $this->getStore()->select($query, $params);
+                    $params = [
+                        'displayId' => $displayId,
+                        'tagName' => $tagName
+                    ];
 
-                // Check if results were found and get the tag value
-                $tagValue = !empty($results) ? $results[0]['tagValue'] : '';
+                    // Execute the query
+                    $results = $this->getStore()->select($query, $params);
 
-                // Replace [Tag:anyTagNameHere] in the $filter with the actual tag value
-                $filter = preg_replace("/\[Tag:$tag\]/", $tagValue, $filter);
+                    // Determine the tag value
+                    if (!empty($results)) {
+                        $tagValue = !empty($results[0]['tagValue']) ? $results[0]['tagValue'] : '';
+                    } else {
+                        // Use default tag value if no tag is found
+                        $tagValue = $defaultTagValue;
+                    }
+
+                    // Replace the tag string in the filter with the actual tag value or default value
+                    $filter = str_replace($tagString, $tagValue, $filter);
+                }
             }
         }
 
