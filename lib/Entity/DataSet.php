@@ -524,8 +524,10 @@ class DataSet implements \JsonSerializable
 
                 // Loop through each tag and get the actual tag value from the database
                 foreach ($displayTags as $tag) {
-                    $tagName = $tag['tagName'];
-                    $defaultTagValue = $tag['defaultValue'];
+                    $tagSanitizer = $this->getSanitizer($tag);
+
+                    $tagName = $tagSanitizer->getString('tagName');
+                    $defaultTagValue = $tagSanitizer->getString('defaultValue');
                     $tagString = $tag['tagString'];
 
                     $query = 'SELECT `lktagdisplaygroup`.`value` AS tagValue
