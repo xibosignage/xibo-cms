@@ -437,15 +437,15 @@ class Soap5 extends Soap4
         $display->clientCode = $clientCode;
 
         // Parse operatingSystem data
-        $operatingSystem = json_decode($operatingSystem, false);
+        $operatingSystemJson = json_decode($operatingSystem, false);
 
         // Newer version of players will return a JSON value, but for older version, it will return a string.
         // In case the json decode fails, use the operatingSystem string value as the default value for the osVersion.
-        $display->osVersion = isset($operatingSystem) ? $operatingSystem->osVersion : $operatingSystem;
-        $display->osSdk = $operatingSystem->osSdk ?? null;
-        $display->manufacturer = $operatingSystem->manufacturer ?? null;
-        $display->brand = $operatingSystem->brand ?? null;
-        $display->model = $operatingSystem->model ?? null;
+        $display->osVersion = $operatingSystemJson->osVersion ?? $operatingSystem;
+        $display->osSdk = $operatingSystemJson->osSdk ?? null;
+        $display->manufacturer = $operatingSystemJson->manufacturer ?? null;
+        $display->brand = $operatingSystemJson->brand ?? null;
+        $display->model = $operatingSystemJson->model ?? null;
 
         // Commercial Licence Check,  0 - Not licensed, 1 - licensed, 2 - trial licence, 3 - not applicable
         // only sent by xmds v7
