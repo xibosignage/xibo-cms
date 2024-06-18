@@ -384,7 +384,7 @@ class Media implements \JsonSerializable
 
         // Check the naming of this item to ensure it doesn't conflict
         $params = [];
-        $checkSQL = 'SELECT `name`, `mediaId` FROM `media` WHERE `name` = :name AND userid = :userId';
+        $checkSQL = 'SELECT `name`, `mediaId`, `apiRef` FROM `media` WHERE `name` = :name AND userid = :userId';
 
         if ($this->mediaId != 0) {
             $checkSQL .= ' AND mediaId <> :mediaId AND IsEdited = 0 ';
@@ -401,7 +401,7 @@ class Media implements \JsonSerializable
 
         if (count($result) > 0) {
             // If the media is imported from a provider (ie Pixabay, etc), use it instead of importing again.
-            if (isset($this->apiRef)) {
+            if (isset($this->apiRef) && $this->apiRef === $result[0]['apiRef']) {
                 $this->mediaId = $result[0]['mediaId'];
             } else {
                 throw new DuplicateEntityException(__('Media you own already has this name. Please choose another.'));
