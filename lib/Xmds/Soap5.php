@@ -435,12 +435,13 @@ class Soap5 extends Soap4
         $display->clientType = $clientType;
         $display->clientVersion = $clientVersion;
         $display->clientCode = $clientCode;
-        //$display->operatingSystem = $operatingSystem;
 
         // Parse operatingSystem data
-        $operatingSystem = json_decode($operatingSystem, true);
+        $operatingSystem = json_decode($operatingSystem, false);
 
-        $display->osVersion = $operatingSystem->osVersion ?? null;
+        // Newer version of players will return a JSON value, but for older version, it will return a string.
+        // In case the json decode fails, use the operatingSystem string value as the default value for the osVersion.
+        $display->osVersion = isset($operatingSystem) ? $operatingSystem->osVersion : $operatingSystem;
         $display->osSdk = $operatingSystem->osSdk ?? null;
         $display->manufacturer = $operatingSystem->manufacturer ?? null;
         $display->brand = $operatingSystem->brand ?? null;
