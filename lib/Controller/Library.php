@@ -2805,7 +2805,8 @@ class Library extends Base
                                 : $module->defaultDuration,
                             'enableStat' => $enableStat,
                             'folderId' => $folder->getId(),
-                            'permissionsFolderId' => $folder->permissionsFolderId
+                            'permissionsFolderId' => $folder->permissionsFolderId,
+                            'apiRef' => $import->searchResult->id
                         ]
                     );
                 } else {
