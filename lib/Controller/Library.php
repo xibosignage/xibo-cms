@@ -2791,6 +2791,9 @@ class Library extends Base
                         throw new InvalidArgumentException('Missing or invalid URL', 'url');
                     }
 
+                    // This ensures that apiRef will be unique for each provider and resource id
+                    $apiRef = $import->searchResult->provider->id . '_' . $import->searchResult->id;
+
                     // Queue this for upload.
                     // Use a module to make sure our type, etc is supported.
                     $module = $this->getModuleFactory()->getByType($import->searchResult->type);
@@ -2806,7 +2809,7 @@ class Library extends Base
                             'enableStat' => $enableStat,
                             'folderId' => $folder->getId(),
                             'permissionsFolderId' => $folder->permissionsFolderId,
-                            'apiRef' => $import->searchResult->id
+                            'apiRef' => $apiRef
                         ]
                     );
                 } else {

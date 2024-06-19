@@ -402,7 +402,7 @@ class Media implements \JsonSerializable
         if (count($result) > 0) {
             // If the media is imported from a provider (ie Pixabay, etc), use it instead of importing again.
             if (isset($this->apiRef) && $this->apiRef === $result[0]['apiRef']) {
-                $this->mediaId = $result[0]['mediaId'];
+                $this->mediaId = intval($result[0]['mediaId']);
             } else {
                 throw new DuplicateEntityException(__('Media you own already has this name. Please choose another.'));
             }
