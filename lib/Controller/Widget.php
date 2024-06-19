@@ -1175,14 +1175,27 @@ class Widget extends Base
         // Will we use fallback data if available?
         $showFallback = $widget->getOptionValue('showFallback', 'none');
         if ($showFallback !== 'none') {
-            // Potentially we will, so get the modifiedDt of this fallback data.
-            $fallbackModifiedDt = $this->widgetDataFactory->getModifiedDtForWidget($widget->widgetId);
+            // What data type are we dealing with?
+            try {
+                $dataTypeFields = [];
+                foreach ($this->moduleFactory->getDataTypeById($module->dataType)->fields as $field) {
+                    $dataTypeFields[$field->id] = $field->type;
+                }
 
-            if ($fallbackModifiedDt !== null) {
-                $this->getLog()->debug('getData: fallback modifiedDt is ' . $fallbackModifiedDt->toAtomString());
+                // Potentially we will, so get the modifiedDt of this fallback data.
+                $fallbackModifiedDt = $this->widgetDataFactory->getModifiedDtForWidget($widget->widgetId);
 
-                $dataModifiedDt = max($dataModifiedDt, $fallbackModifiedDt);
+                if ($fallbackModifiedDt !== null) {
+                    $this->getLog()->debug('getData: fallback modifiedDt is ' . $fallbackModifiedDt->toAtomString());
+
+                    $dataModifiedDt = max($dataModifiedDt, $fallbackModifiedDt);
+                }
+            } catch (NotFoundException) {
+                $this->getLog()->info('getData: widget will fallback set where the module does not support it');
+                $dataTypeFields = null;
             }
+        } else {
+            $dataTypeFields = null;
         }
 
         // Use the cache if we can.
@@ -1211,6 +1224,7 @@ class Widget extends Base
                 // Before caching images, check to see if the data provider is handled
                 $isFallback = false;
                 if ($showFallback !== 'none'
+                    && $dataTypeFields !== null
                     && (
                         count($dataProvider->getErrors()) > 0
                         || count($dataProvider->getData()) <= 0
@@ -1222,6 +1236,13 @@ class Widget extends Base
 
                     // Pull in the fallback data
                     foreach ($this->widgetDataFactory->getByWidgetId($dataProvider->getWidgetId()) as $item) {
+                        // Handle any special data types in the fallback data
+                        foreach ($item->data as $itemId => $itemData) {
+                            if (array_key_exists($itemId, $dataTypeFields) && $dataTypeFields[$itemId] === 'image') {
+                                $item->data[$itemId] = $dataProvider->addLibraryFile($itemData);
+                            }
+                        }
+
                         $dataProvider->addItem($item->data);
 
                         // Indicate we've been handled by fallback data

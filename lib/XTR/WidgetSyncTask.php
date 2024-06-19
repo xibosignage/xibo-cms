@@ -229,14 +229,27 @@ class WidgetSyncTask implements TaskInterface
         // Will we use fallback data if available?
         $showFallback = $widget->getOptionValue('showFallback', 'none');
         if ($showFallback !== 'none') {
-            // Potentially we will, so get the modifiedDt of this fallback data.
-            $fallbackModifiedDt = $this->widgetDataFactory->getModifiedDtForWidget($widget->widgetId);
+            // What data type are we dealing with?
+            try {
+                $dataTypeFields = [];
+                foreach ($this->moduleFactory->getDataTypeById($module->dataType)->fields as $field) {
+                    $dataTypeFields[$field->id] = $field->type;
+                }
 
-            if ($fallbackModifiedDt !== null) {
-                $this->getLogger()->debug('cache: fallback modifiedDt is ' . $fallbackModifiedDt->toAtomString());
+                // Potentially we will, so get the modifiedDt of this fallback data.
+                $fallbackModifiedDt = $this->widgetDataFactory->getModifiedDtForWidget($widget->widgetId);
 
-                $dataModifiedDt = max($dataModifiedDt, $fallbackModifiedDt);
+                if ($fallbackModifiedDt !== null) {
+                    $this->getLogger()->debug('cache: fallback modifiedDt is ' . $fallbackModifiedDt->toAtomString());
+
+                    $dataModifiedDt = max($dataModifiedDt, $fallbackModifiedDt);
+                }
+            } catch (NotFoundException) {
+                $this->getLogger()->info('cache: widget will fallback set where the module does not support it');
+                $dataTypeFields = null;
             }
+        } else {
+            $dataTypeFields = null;
         }
 
         if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey, $dataModifiedDt)
@@ -265,6 +278,7 @@ class WidgetSyncTask implements TaskInterface
                 $isFallback = false;
                 $showFallback = $widget->getOptionValue('showFallback', 'none');
                 if ($showFallback !== 'none'
+                    && $dataTypeFields !== null
                     && (
                         count($dataProvider->getErrors()) > 0
                         || count($dataProvider->getData()) <= 0
@@ -274,7 +288,12 @@ class WidgetSyncTask implements TaskInterface
                     // Error or no data.
                     // Pull in the fallback data
                     foreach ($this->widgetDataFactory->getByWidgetId($dataProvider->getWidgetId()) as $item) {
-                        $dataProvider->addItem($item->data);
+                        // Handle any special data types in the fallback data
+                        foreach ($item->data as $itemId => $itemData) {
+                            if (array_key_exists($itemId, $dataTypeFields) && $dataTypeFields[$itemId] === 'image') {
+                                $item->data[$itemId] = $dataProvider->addLibraryFile($itemData);
+                            }
+                        }
 
                         // Indicate we've been handled by fallback data
                         $isFallback = true;
