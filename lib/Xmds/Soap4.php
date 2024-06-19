@@ -69,7 +69,7 @@ class Soap4 extends Soap
             'operatingSystem' => $operatingSystem,
             'macAddress' => $macAddress,
             'xmrChannel' => $xmrChannel,
-            'xmrPubKey' => $xmrPubKey
+            'xmrPubKey' => $xmrPubKey,
         ]);
 
         // Sanitize
@@ -81,6 +81,7 @@ class Soap4 extends Soap
         $clientCode = $sanitized->getInt('clientCode');
         $macAddress = $sanitized->getString('macAddress');
         $clientAddress = $this->getIp();
+        $operatingSystem = $sanitized->getString('operatingSystem');
 
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
@@ -271,7 +272,18 @@ class Soap4 extends Soap
         $display->clientType = $clientType;
         $display->clientVersion = $clientVersion;
         $display->clientCode = $clientCode;
-        //$display->operatingSystem = $operatingSystem;
+
+        // Parse operatingSystem JSON data
+        $operatingSystemJson = json_decode($operatingSystem, false);
+
+        // Newer version of players will return a JSON value, but for older version, it will return a string.
+        // In case the json decode fails, use the operatingSystem string value as the default value for the osVersion.
+        $display->osVersion = $operatingSystemJson->version ?? $operatingSystem;
+        $display->osSdk = $operatingSystemJson->sdk ?? null;
+        $display->manufacturer = $operatingSystemJson->manufacturer ?? null;
+        $display->brand = $operatingSystemJson->brand ?? null;
+        $display->model = $operatingSystemJson->model ?? null;
+
         $display->save(['validate' => false, 'audit' => false]);
 
         // Log Bandwidth

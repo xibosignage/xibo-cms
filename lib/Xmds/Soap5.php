@@ -99,6 +99,8 @@ class Soap5 extends Soap4
         $clientAddress = $this->getIp();
         $xmrChannel = $sanitized->getString('xmrChannel');
         $xmrPubKey = trim($sanitized->getString('xmrPubKey'));
+        $operatingSystem = $sanitized->getString('operatingSystem');
+
         // this is only sent from xmds v7
         $commercialLicenceString = $sanitized->getString('licenceResult');
 
@@ -433,7 +435,17 @@ class Soap5 extends Soap4
         $display->clientType = $clientType;
         $display->clientVersion = $clientVersion;
         $display->clientCode = $clientCode;
-        //$display->operatingSystem = $operatingSystem;
+
+        // Parse operatingSystem data
+        $operatingSystemJson = json_decode($operatingSystem, false);
+
+        // Newer version of players will return a JSON value, but for older version, it will return a string.
+        // In case the json decode fails, use the operatingSystem string value as the default value for the osVersion.
+        $display->osVersion = $operatingSystemJson->version ?? $operatingSystem;
+        $display->osSdk = $operatingSystemJson->sdk ?? null;
+        $display->manufacturer = $operatingSystemJson->manufacturer ?? null;
+        $display->brand = $operatingSystemJson->brand ?? null;
+        $display->model = $operatingSystemJson->model ?? null;
 
         // Commercial Licence Check,  0 - Not licensed, 1 - licensed, 2 - trial licence, 3 - not applicable
         // only sent by xmds v7

@@ -279,6 +279,11 @@
                                         <th>{% trans "Created Date" %}</th>
                                         <th>{% trans "Modified Date" %}</th>
                                         <th>{% trans "Faults?" %}</th>
+                                        <th>{% trans "OS Version" %}</th>
+                                        <th>{% trans "OS SDK" %}</th>
+                                        <th>{% trans "Manufacturer" %}</th>
+                                        <th>{% trans "Brand" %}</th>
+                                        <th>{% trans "Model" %}</th>
                                         <th class="rowMenu"></th>
                                     </tr>
                                 </thead>
@@ -688,6 +693,11 @@
                             }
                         }
                     },
+                    {"data": "osVersion", "visible": false, responsivePriority: 6},
+                    {"data": "osSdk", "visible": false, responsivePriority: 6},
+                    {"data": "manufacturer", "visible": false, responsivePriority: 6},
+                    {"data": "brand", "visible": false, responsivePriority: 6},
+                    {"data": "model", "visible": false, responsivePriority: 6},
                     {
                         "orderable": false,
                         responsivePriority: 1,
