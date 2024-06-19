@@ -492,6 +492,76 @@ class DataSet implements \JsonSerializable
             'connection' => 'default'
         ], $options);
 
+        // Fetch display tag value/s
+        if ($filter != '' && $displayId != 0) {
+
+            // Define the regular expression to match [Tag:...]
+            $pattern = '/\[Tag:[^]]+\]/';
+
+            // Find all instances of [Tag:...]
+            preg_match_all($pattern, $filter, $matches);
+
+            // Check if matches were found
+            if (!empty($matches[0])) {
+                $displayTags = [];
+
+                // Iterate through the matches and process each tag
+                foreach ($matches[0] as $tagString) {
+                    // Remove the enclosing [Tag:] brackets
+                    $tagContent = substr($tagString, 5, -1);
+
+                    // Explode the tag content by ":" to separate tagName and defaultValue (if present)
+                    $parts = explode(':', $tagContent);
+                    $tagName = $parts[0];
+                    $defaultTagValue = $parts[1] ?? '';
+
+                    $displayTags[] = [
+                        'tagString' => $tagString,
+                        'tagName' => $tagName,
+                        'defaultValue' => $defaultTagValue
+                    ];
+                }
+
+                // Loop through each tag and get the actual tag value from the database
+                foreach ($displayTags as $tag) {
+                    $tagSanitizer = $this->getSanitizer($tag);
+
+                    $tagName = $tagSanitizer->getString('tagName');
+                    $defaultTagValue = $tagSanitizer->getString('defaultValue');
+                    $tagString = $tag['tagString'];
+
+                    $query = 'SELECT `lktagdisplaygroup`.`value` AS tagValue
+                                FROM `lkdisplaydg`
+                                INNER JOIN `displaygroup` ON `displaygroup`.displayGroupId = `lkdisplaydg`.displayGroupId 
+                                    AND `displaygroup`.isDisplaySpecific = 1
+                                INNER JOIN `lktagdisplaygroup` ON `lktagdisplaygroup`.displayGroupId = `lkdisplaydg`.displayGroupId
+                                INNER JOIN `tag` ON `lktagdisplaygroup`.tagId = `tag`.tagId
+                                WHERE `lkdisplaydg`.displayId = :displayId
+                                    AND `tag`.`tag` = :tagName
+                                LIMIT 1';
+
+                    $params = [
+                        'displayId' => $displayId,
+                        'tagName' => $tagName
+                    ];
+
+                    // Execute the query
+                    $results = $this->getStore()->select($query, $params);
+
+                    // Determine the tag value
+                    if (!empty($results)) {
+                        $tagValue = !empty($results[0]['tagValue']) ? $results[0]['tagValue'] : '';
+                    } else {
+                        // Use default tag value if no tag is found
+                        $tagValue = $defaultTagValue;
+                    }
+
+                    // Replace the tag string in the filter with the actual tag value or default value
+                    $filter = str_replace($tagString, $tagValue, $filter);
+                }
+            }
+        }
+
         // Params
         $params = [];
 
