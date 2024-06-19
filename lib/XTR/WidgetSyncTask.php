@@ -226,6 +226,19 @@ class WidgetSyncTask implements TaskInterface
             }
         }
 
+        // Will we use fallback data if available?
+        $showFallback = $widget->getOptionValue('showFallback', 'none');
+        if ($showFallback !== 'none') {
+            // Potentially we will, so get the modifiedDt of this fallback data.
+            $fallbackModifiedDt = $this->widgetDataFactory->getModifiedDtForWidget($widget->widgetId);
+
+            if ($fallbackModifiedDt !== null) {
+                $this->getLogger()->debug('cache: fallback modifiedDt is ' . $fallbackModifiedDt->toAtomString());
+
+                $dataModifiedDt = max($dataModifiedDt, $fallbackModifiedDt);
+            }
+        }
+
         if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey, $dataModifiedDt)
             || $widgetDataProviderCache->isCacheMissOrOld()
         ) {

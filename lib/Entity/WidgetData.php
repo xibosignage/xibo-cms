@@ -22,7 +22,9 @@
 
 namespace Xibo\Entity;
 
+use Carbon\Carbon;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -72,6 +74,24 @@ class WidgetData implements \JsonSerializable
     public int $displayOrder;
 
     /**
+     * @SWG\Property(
+     *     property="createdDt",
+     *     description="The datetime this entity was created"
+     * )
+     * @var ?string
+     */
+    public ?string $createdDt;
+
+    /**
+     * @SWG\Property(
+     *     property="createdDt",
+     *     description="The datetime this entity was last modified"
+     * )
+     * @var ?string
+     */
+    public ?string $modifiedDt;
+
+    /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
@@ -94,6 +114,7 @@ class WidgetData implements \JsonSerializable
         if ($this->id === null) {
             $this->add();
         } else {
+            $this->modifiedDt = Carbon::now()->format(DateFormatHelper::getSystemFormat());
             $this->edit();
         }
         return $this;
@@ -115,12 +136,14 @@ class WidgetData implements \JsonSerializable
     private function add(): void
     {
         $this->id = $this->getStore()->insert('
-            INSERT INTO `widgetdata` (widgetId, data, displayOrder) 
-                VALUES (:widgetId, :data, :displayOrder)
+            INSERT INTO `widgetdata` (`widgetId`, `data`, `displayOrder`, `createdDt`, `modifiedDt`) 
+                VALUES (:widgetId, :data, :displayOrder, :createdDt, :modifiedDt)
         ', [
             'widgetId' => $this->widgetId,
             'data' => $this->data == null ? null : json_encode($this->data),
             'displayOrder' => $this->displayOrder,
+            'createdDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
+            'modifiedDt' => null,
         ]);
     }
 
@@ -133,12 +156,14 @@ class WidgetData implements \JsonSerializable
         $this->getStore()->update('
             UPDATE `widgetdata` SET
                 `data` = :data,
-                `displayOrder` = :displayOrder
+                `displayOrder` = :displayOrder,
+                `modifiedDt` = :modifiedDt
              WHERE `id` = :id
         ', [
             'id' => $this->id,
             'data' => $this->data == null ? null : json_encode($this->data),
             'displayOrder' => $this->displayOrder,
+            'modifiedDt' => $this->modifiedDt,
         ]);
     }
 }

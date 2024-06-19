@@ -41,6 +41,8 @@ class WidgetFallbackDataMigration extends AbstractMigration
             ->addColumn('displayOrder', 'integer', [
                 'limit' => MysqlAdapter::INT_MEDIUM,
             ])
+            ->addColumn('createdDt', 'datetime', ['null' => true, 'default' => null])
+            ->addColumn('modifiedDt', 'datetime', ['null' => true, 'default' => null])
             ->addForeignKey('widgetId', 'widget', 'widgetId')
             ->create();
     }

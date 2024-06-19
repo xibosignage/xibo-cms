@@ -139,6 +139,9 @@ class WidgetData extends Base
             )
             ->save();
 
+        // Update the widget modified dt
+        $widget->modifiedDt =
+
         // Successful
         $this->getState()->hydrate([
             'httpStatus' => 201,

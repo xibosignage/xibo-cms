@@ -22,7 +22,9 @@
 
 namespace Xibo\Factory;
 
+use Carbon\Carbon;
 use Xibo\Entity\WidgetData;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -86,6 +88,24 @@ class WidgetDataFactory extends BaseFactory
         };
 
         return $entries;
+    }
+
+    /**
+     * Get modified date for Widget Data for a Widget
+     * @param int $widgetId
+     * @return ?\Carbon\Carbon
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     */
+    public function getModifiedDtForWidget(int $widgetId): ?Carbon
+    {
+        if (empty($widgetId)) {
+            throw new InvalidArgumentException(__('Missing Widget ID'), 'widgetId');
+        }
+
+        $entries = [];
+        $sql = 'SELECT MAX(`modifiedDt`) AS modifiedDt FROM `widgetdata` WHERE `widgetId` = :widgetId';
+        $result = $this->getStore()->select($sql, ['widgetId' => $widgetId]);
+        return Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $result[0]['modifiedDt']);
     }
 
     /**

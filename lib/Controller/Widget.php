@@ -1172,6 +1172,19 @@ class Widget extends Base
             }
         }
 
+        // Will we use fallback data if available?
+        $showFallback = $widget->getOptionValue('showFallback', 'none');
+        if ($showFallback !== 'none') {
+            // Potentially we will, so get the modifiedDt of this fallback data.
+            $fallbackModifiedDt = $this->widgetDataFactory->getModifiedDtForWidget($widget->widgetId);
+
+            if ($fallbackModifiedDt !== null) {
+                $this->getLog()->debug('getData: fallback modifiedDt is ' . $fallbackModifiedDt->toAtomString());
+
+                $dataModifiedDt = max($dataModifiedDt, $fallbackModifiedDt);
+            }
+        }
+
         // Use the cache if we can.
         if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey, $dataModifiedDt)
             || $widgetDataProviderCache->isCacheMissOrOld()
@@ -1197,7 +1210,6 @@ class Widget extends Base
 
                 // Before caching images, check to see if the data provider is handled
                 $isFallback = false;
-                $showFallback = $widget->getOptionValue('showFallback', 'none');
                 if ($showFallback !== 'none'
                     && (
                         count($dataProvider->getErrors()) > 0
