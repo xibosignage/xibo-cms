@@ -1687,23 +1687,27 @@ PropertiesPanel.prototype.render = function(
     }
 
     // Show fallback tab if widget has datatype
-    if (
-      target.type === 'widget' &&
-      target.moduleDataType != ''
-    ) {
+    const showFallbackData = (target.type === 'widget') ?
+      target.checkShowFallbackData() :
+      false;
+
+    if (showFallbackData) {
       // Show fallback tab
       self.DOMObject.find('.nav-link[href="#fallbackTab"]')
         .parent().removeClass('d-none');
 
       // Get datatype
       target.getDataType().then((dt) => {
-        // Create form
-        forms.createFallbackDataForm(
-          dt,
-          self.DOMObject.find('#fallbackTab'),
-          target.fallbackData,
-          target,
-        );
+        // Get data before creating form
+        target.getFallbackData().then((fbd) => {
+          // Create form
+          forms.createFallbackDataForm(
+            dt,
+            self.DOMObject.find('#fallbackTab'),
+            fbd,
+            target,
+          );
+        });
       });
     }
 

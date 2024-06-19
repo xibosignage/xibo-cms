@@ -232,6 +232,28 @@
                     url: "{{ url_for("module.widget.elements", {id: ':id'}) }}",
                     type: 'PUT'
                 },
+                data: {
+                    get: {
+                        url: "{{ url_for("module.widget.data.get", {id: ':id'}) }}",
+                        type: 'GET'
+                    },
+                    add: {
+                        url: "{{ url_for("module.widget.data.add", {id: ':id'}) }}",
+                        type: 'POST'
+                    },
+                    edit: {
+                        url: "{{ url_for("module.widget.data.edit", {id: ':id', dataId: ':dataId'}) }}",
+                        type: 'PUT'
+                    },
+                    delete: {
+                        url: "{{ url_for("module.widget.data.delete", {id: ':id', dataId: ':dataId'}) }}",
+                        type: 'DELETE'
+                    },
+                    setOrder: {
+                        url: "{{ url_for("module.widget.data.set.order", {id: ':id'}) }}",
+                        type: 'POST'
+                    },
+                },
             },
             library: {
                 get: {
@@ -1030,13 +1052,16 @@
                 saveRecord: "{{ "Save"|trans }}",
                 editRecord: "{{ "Edit"|trans }}",
                 deleteRecord: "{{ "Delete"|trans }}",
-                fallbackTypeTitle: "{{ "Data display"|trans }}",
-                fallbackTypeHelpText: "{{ "How to display data related to the original content."|trans }}",
-                append: "{{ "Append to returned data"|trans }}",
-                prepend: "{{ "Prepend to returned data"|trans }}",
-                replace: "{{ "Show when no data is returned"|trans }}",
+                fallbackTypeTitle: "{{ "Show fallback data"|trans }}",
+                fallbackTypeHelpText: "{{ "If provided, when should we show fallback data for this Widget?"|trans }}",
+                never: "{{ "Never"|trans }}",
+                always: "{{ "Always"|trans }}",
+                empty: "{{ "When no data is returned"|trans }}",
+                error: "{{ "When there is an error"|trans }}",
                 noData: "{{ "Undefined"|trans }}",
-                invalidRecord: "{{ "Record not valid!"|trans }}",
+                invalidRecordEmpty: "{{ "Please fill out all least one field!"|trans }}",
+                invalidRecordRequired: "{{ "Please fill out all the required fields!"|trans }}",
+                requiredField: "{{ "Required Field!"|trans }}",
             };
 
             var datasetColStyleSelectorTranslations = {

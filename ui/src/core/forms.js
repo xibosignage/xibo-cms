@@ -3109,7 +3109,12 @@ window.forms = {
     const dataFields = dataType.fields;
 
     const createField = function(field, data) {
-      const fieldClone = {...field, ...data};
+      const fieldClone = {...field};
+      const auxId = Math.floor(Math.random() * 1000000);
+
+      if (data != undefined) {
+        fieldClone.value = data;
+      }
 
       // Set date variant
       if (
@@ -3121,12 +3126,34 @@ window.forms = {
         fieldClone.type = 'date';
       }
 
+      // Set image variant
+      if (fieldClone.type === 'image') {
+        fieldClone.type = 'mediaSelector';
+        fieldClone.mediaSearchUrl = urlsForApi.library.get.url;
+        fieldClone.initialValue = fieldClone.value;
+        fieldClone.initialKey = 'mediaId';
+      }
+
+      // Set name as id and give a unique id
+      fieldClone.name = fieldClone.id;
+      fieldClone.id = fieldClone.id + '_' + auxId;
+
       // Add custom class to prevent auto save
       fieldClone.customClass = 'fallback-property';
 
+      let $newField;
       if (templates.forms.hasOwnProperty(fieldClone.type)) {
-        return templates.forms[fieldClone.type](fieldClone);
+        $newField = $(templates.forms[fieldClone.type](fieldClone));
       }
+
+      // Add helper to required fields
+      if ($newField.is('[data-is-required="true"]')) {
+        $newField.find('label')
+          .append(`<span class="ml-1"
+            title=${fallbackDataTrans.requiredField}>*</span>`);
+      }
+
+      return $newField;
     };
 
     const updateRecordPreview = function($record, recordData) {
@@ -3155,75 +3182,119 @@ window.forms = {
 
     const saveRecord = function($record) {
       const recordData = {};
-      let valid = true;
+      let invalidRequired = false;
 
       // Get input fields and build data to be saved
       dataFields.forEach((field) => {
-        const value = $record.find('[name="' + field.id + '"]').val();
-        const required = $record.hasClass('required');
+        const $field = $record.find('[name="' + field.id + '"]');
+        const value = $field.val();
+        const required =
+          $field.parents('.fallback-property').is('[data-is-required="true"]');
 
         if (value == '' && required) {
-          valid = false;
+          invalidRequired = true;
         } else if (value != '') {
           recordData[field.id] = value;
         }
       });
 
       // If record data is empty or invalid, thow error and don't save
-      if (
-        $.isEmptyObject(recordData) ||
-        !valid
-      ) {
-        toastr.error(fallbackDataTrans.invalidRecord);
+      if ($.isEmptyObject(recordData)) {
+        toastr.error(fallbackDataTrans.invalidRecordEmpty);
+        return;
+      } else if (invalidRequired) {
+        toastr.error(fallbackDataTrans.invalidRecordRequired);
         return;
       }
 
-      // Update preview
-      updateRecordPreview($record, recordData);
+      const updateRecord = function() {
+        // Update preview
+        updateRecordPreview($record, recordData);
+        $record.removeClass('editing');
+      };
 
-      console.log('TODOM: Save record!');
-      console.log($record);
-
-      $record.removeClass('editing');
+      // Save or add new record
+      const recordId = $record.data('recordId');
+      const displayOrder = $record.index();
+      if (recordId) {
+        widget.editFallbackDataRecord(recordId, recordData, displayOrder)
+          .then((_res) => {
+            if (_res.success) {
+              updateRecord();
+            }
+          });
+      } else {
+        widget.addFallbackData(recordData, displayOrder)
+          .then((_res) => {
+            if (_res.success) {
+              // Add id to record object
+              $record.data('recordId', _res.id);
+              updateRecord();
+            }
+          });
+      }
     };
 
     const editRecord = function($record) {
-      console.log('TODOM: Save record!');
-      console.log($record);
-
       $record.addClass('editing');
     };
 
     const deleteRecord = function($record) {
-      console.log('TODOM: Delete record!');
-      console.log($record);
+      const recordId = $record.data('recordId');
 
-      $record.remove();
+      if (recordId) {
+        widget.deleteFallbackDataRecord(recordId)
+          .then((_res) => {
+            if (_res.success) {
+              // Remove object
+              $record.remove();
+            }
+          });
+      } else {
+        // Remove object
+        $record.remove();
+      }
     };
 
-    const createRecord = function(recordData = {}) {
+    const createRecord = function(data = {}) {
+      const recordData = data.data;
+      const displayOrder = data.displayOrder;
+      const recordId = data.id;
+
       const $recordContainer = $(templates.forms.fallbackDataRecord({
         trans: fallbackDataTrans,
       }));
 
+      // Add record id to data if exists
+      if (recordId != undefined) {
+        $recordContainer.data('recordId', recordId);
+      }
+
+      // Add display order to data if exists
+      if (displayOrder != undefined) {
+        $recordContainer.data('displayOrder', displayOrder);
+      }
+
       // Add properties from data
       dataFields.forEach((field) => {
-        const fieldData = recordData[field.id];
+        const fieldData = (recordData) && recordData[field.id];
         const $newField = createField(field, fieldData);
 
         // New field input
         $recordContainer.find('.fallback-data-record-fields')
           .append($newField);
-
-        // Initialize fields
-        forms.initFields($recordContainer);
       });
+
+      // Initialize fields
+      forms.initFields($recordContainer);
 
       // Record preview
       updateRecordPreview($recordContainer, recordData);
 
-      // Mark new field as editing
-      $recordContainer.addClass('editing');
+      // Mark new field as editing if it's a new record
+      if ($.isEmptyObject(data)) {
+        $recordContainer.addClass('editing');
+      }
 
       // Handle buttons
       $recordContainer.find('button').on('click', function(ev) {
@@ -3246,6 +3317,7 @@ window.forms = {
     $(container).append(templates.forms.fallbackDataContent({
       data: dataType,
       trans: fallbackDataTrans,
+      showFallback: widget.getOptions().showFallback,
     }));
 
     const $recordsContainer =
@@ -3253,11 +3325,19 @@ window.forms = {
 
     // If we have existing data, add it to the control
     if (fallbackData) {
+      // Sort array by display order
+      fallbackData.sort((a, b) => {
+        return a.displayOrder - b.displayOrder;
+      });
+
       fallbackData.forEach((data) => {
         $recordsContainer.append(
           createRecord(data),
         );
       });
+
+      // Call Xibo Init for the records container
+      XiboInitialise('.fallback-data-records');
     }
 
     // Handle create record button
@@ -3265,6 +3345,9 @@ window.forms = {
       $recordsContainer.append(
         createRecord(),
       );
+
+      // Call Xibo Init for the records container
+      XiboInitialise('.fallback-data-records');
     });
 
     // Init sortable
@@ -3273,15 +3356,28 @@ window.forms = {
       items: '.fallback-data-record',
       containment: 'parent',
       update: function() {
-        console.log('// TODO: Save sort!');
-        console.log(widget);
-      },
-    });
+        // Create records structure
+        let idxAux = 0;
+        const records = [];
 
-    // Handle data display type dropdown
-    $(container).find('[name="fallbackType"]').on('change', function() {
-      console.log('// TODO: Save type!');
-      console.log(widget);
+        $recordsContainer.find('.fallback-data-record').each((_idx, record) => {
+          const recordData = $(record).data();
+
+          if (recordData.recordId) {
+            records.push({
+              dataId: recordData.recordId,
+              displayOrder: idxAux,
+            });
+
+            // Update data on record
+            $(record).data('displayOrder', idxAux);
+
+            idxAux++;
+          }
+        });
+
+        widget.saveFallbackDataOrder(records);
+      },
     });
   },
 };

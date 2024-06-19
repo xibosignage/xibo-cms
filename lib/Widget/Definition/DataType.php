@@ -39,6 +39,7 @@ class DataType implements \JsonSerializable
         $field->id = $id;
         $field->type = $type;
         $field->title = $title;
+        $field->isRequired = $isRequired;
         $this->fields[] = $field;
         return $this;
     }

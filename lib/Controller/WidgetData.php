@@ -334,10 +334,10 @@ class WidgetData extends Base
      * @throws \Xibo\Support\Exception\GeneralException
      */
     // phpcs:enable
-    public function setOrder(Request $request, Response $response, int $widgetId): Response
+    public function setOrder(Request $request, Response $response, int $id): Response
     {
         // Check that we have permission to edit this widget
-        $widget = $this->widgetFactory->getById($widgetId);
+        $widget = $this->widgetFactory->getById($id);
         if (!$this->getUser()->checkEditable($widget)) {
             throw new AccessDeniedException(__('This Widget is not shared with you with edit permission'));
         }
@@ -351,7 +351,7 @@ class WidgetData extends Base
             $widgetData = $this->widgetDataFactory->getById($itemParams->getInt('dataId'));
             $widgetData->displayOrder = $itemParams->getInt('displayOrder');
 
-            if ($widgetId !== $widgetData->widgetId) {
+            if ($id !== $widgetData->widgetId) {
                 throw new AccessDeniedException(__('This widget data does not belong to this widget'));
             }
 
@@ -392,7 +392,7 @@ class WidgetData extends Base
 
         $dataType = $this->moduleFactory->getDataTypeById($module->dataType);
         foreach ($dataType->fields as $field) {
-            if ($field->isRequired && $params->hasParam($field->id)) {
+            if ($field->isRequired && !$params->hasParam($field->id)) {
                 throw new InvalidArgumentException(sprintf(
                     'Data is missing a field called %s',
                     $field->title

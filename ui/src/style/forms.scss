@@ -730,6 +730,10 @@ select[readonly].select2-hidden-accessible + .select2-container .select2-selecti
         border-radius: 0.5rem;
         cursor: grab;
 
+        .fallback-data-record-previews {
+            margin-bottom: 0.6rem;
+        }
+
         .fb-btn-edit, .fallback-data-record-previews {
             display: block;
         }
@@ -737,6 +741,7 @@ select[readonly].select2-hidden-accessible + .select2-container .select2-selecti
         .fallback-data-record-preview {
             display: flex;
             justify-content: space-between;
+            margin-bottom: 0.2rem;
 
             .fallback-data-record-preview-title {
                 font-weight: bold;
@@ -766,6 +771,23 @@ select[readonly].select2-hidden-accessible + .select2-container .select2-selecti
 
             .fb-btn-save, .fallback-data-record-fields {
                 display: block;
+            }
+        }
+
+        .fallback-property {
+            &[data-is-required="true"] {
+                color: $xibo-color-semantic-error;
+                font-weight: bold;
+            }
+        }
+
+        .fallback-data-record-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+
+            button {
+                flex: 1 1;
             }
         }
     }

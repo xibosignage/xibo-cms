@@ -431,6 +431,15 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
     }
   };
 
+  this.checkShowFallbackData = function() {
+    // Check if module has fallbackl data enabled
+    const module = this.editorObject.common.getModuleByType(this.subType);
+
+    this.fallbackDataActive = (module.fallbackData === 1);
+
+    return this.fallbackDataActive;
+  };
+
   /**
    * Get widget full id
    * @return {string}
@@ -1643,10 +1652,153 @@ Widget.prototype.getDataType = function() {
 };
 
 /**
- * Save fallback data
+ * Get fallback data
+ * @return {object} fallback data
  */
-Widget.prototype.saveFallbackData = function() {
-  console.log('saveFallbackData');
+Widget.prototype.getFallbackData = function() {
+  // Get request path
+  const requestPath =
+    urlsForApi.widget.data.get.url.replace(':id', this.widgetId);
+
+  return $.ajax({
+    method: 'GET',
+    url: requestPath,
+    success: function(response) {
+      return Promise.resolve(response);
+    },
+    error: function() {
+      toastr.error('An unknown error has occurred');
+    },
+  });
+};
+
+/**
+ * Add fallback data
+ * @param {object} data
+ * @param {number} displayOrder
+ * @return {Promise} - Promise
+ */
+Widget.prototype.addFallbackData = function(data, displayOrder) {
+  // Get request path
+  const linkToAPI = urlsForApi.widget.data.add;
+  const requestPath =
+    linkToAPI.url.replace(':id', this.widgetId);
+
+
+  return $.ajax({
+    method: linkToAPI.type,
+    url: requestPath,
+    data: {
+      data,
+      displayOrder,
+    },
+    success: function(response) {
+      if (!response.success) {
+        toastr.error(response.message);
+      }
+
+      return Promise.resolve(response);
+    },
+    error: function() {
+      toastr.error('An unknown error has occurred');
+    },
+  });
+};
+
+/**
+ * Edit fallback data record
+ * @param {string} recordId
+ * @param {object} data
+ * @param {number} displayOrder
+ * @return {Promise} - Promise
+ */
+Widget.prototype.editFallbackDataRecord = function(
+  recordId,
+  data,
+  displayOrder,
+) {
+  // Get request path
+  const linkToAPI = urlsForApi.widget.data.edit;
+  const requestPath =
+    linkToAPI.url.replace(':id', this.widgetId)
+      .replace(':dataId', recordId);
+
+  return $.ajax({
+    method: linkToAPI.type,
+    url: requestPath,
+    data: {
+      data,
+      displayOrder,
+    },
+    success: function(response) {
+      if (!response.success) {
+        toastr.error(response.message);
+      }
+
+      return Promise.resolve(response);
+    },
+    error: function() {
+      toastr.error('An unknown error has occurred');
+    },
+  });
+};
+
+/**
+ * Delete fallback data record
+ * @param {string} recordId
+ * @return {Promise} - Promise
+ */
+Widget.prototype.deleteFallbackDataRecord = function(recordId) {
+  // Get request path
+  const linkToAPI = urlsForApi.widget.data.delete;
+  const requestPath =
+    linkToAPI.url.replace(':id', this.widgetId)
+      .replace(':dataId', recordId);
+
+  return $.ajax({
+    method: linkToAPI.type,
+    url: requestPath,
+    success: function(response) {
+      if (!response.success) {
+        toastr.error(response.message);
+      }
+
+      return Promise.resolve(response);
+    },
+    error: function() {
+      toastr.error('An unknown error has occurred');
+    },
+  });
+};
+
+/**
+ * Save fallback data order
+ * @param {object[]} records - Records array in order
+ * @return {Promise} - Promise
+ */
+Widget.prototype.saveFallbackDataOrder = function(records) {
+  // Get request path
+  const linkToAPI = urlsForApi.widget.data.setOrder;
+  const requestPath =
+    linkToAPI.url.replace(':id', this.widgetId);
+
+  return $.ajax({
+    method: linkToAPI.type,
+    url: requestPath,
+    data: {
+      order: records,
+    },
+    success: function(response) {
+      if (!response.success) {
+        toastr.error(response.message);
+      }
+
+      return Promise.resolve(response);
+    },
+    error: function() {
+      toastr.error('An unknown error has occurred');
+    },
+  });
 };
 
 module.exports = Widget;
