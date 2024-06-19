@@ -2876,6 +2876,19 @@ Viewer.prototype.initSelecto = function(groupEditing = false, groupContainer) {
     $(e.added).addClass('selected-temp');
     $(e.removed).removeClass('selected-temp');
   }).on('selectEnd', (e) => {
+    const minSelectDistance = 10;
+    if (
+      // If it's click, don't select (only select on drag end)
+      e.isClick ||
+      // If the selection is less than minimum distance
+      (
+        e.rect.width < minSelectDistance &&
+        e.rect.height < minSelectDistance
+      )
+    ) {
+      return;
+    }
+
     const $selectedObjs = $(e.afterAdded);
     const multipleSelected = ($selectedObjs.length > 1);
 
@@ -2890,8 +2903,7 @@ Viewer.prototype.initSelecto = function(groupEditing = false, groupContainer) {
     } else {
       // If it's a single object, select it in the editor
       app.selectObject({
-        target: $selectedObjs,
-        forceSelect: true,
+        target: ($selectedObjs.length === 0) ? null : $selectedObjs,
       });
     }
 
