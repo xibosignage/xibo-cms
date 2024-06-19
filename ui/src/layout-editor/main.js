@@ -1843,6 +1843,65 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
     });
   };
 
+  const reloadRegion = function(regionId) {
+    // Save zone or playlist to a temp object
+    // so it can be selected after refreshing
+    lD.viewer.saveTemporaryObject(
+      'region_' + regionId,
+      'region',
+      {
+        type: 'region',
+      },
+    );
+
+    // Reload data ( and viewer )
+    lD.reloadData(lD.layout,
+      {
+        refreshEditor: true,
+      });
+  };
+
+  const createSubplaylistInPlaylist = function(regionId, playlistId) {
+    lD.addModuleToPlaylist(
+      regionId,
+      playlistId,
+      'subplaylist',
+      draggableData,
+      null,
+      false,
+      false,
+      false,
+      false,
+      false,
+    ).then((res) => {
+      // Update playlist values in the new widget
+      lD.historyManager.addChange(
+        'saveForm',
+        'widget', // targetType
+        res.data.widgetId, // targetId
+        null, // oldValues
+        {
+          subPlaylists: JSON.stringify([
+            {
+              rowNo: 1,
+              playlistId: draggableData.subPlaylistId,
+              spots: '',
+              spotLength: '',
+              spotFill: 'repeat',
+            },
+          ]),
+        }, // newValues
+        {
+          addToHistory: false,
+        },
+      ).then((_res) => {
+        reloadRegion(regionId);
+      }).catch((_error) => {
+        toastr.error(_error);
+      });
+    });
+  };
+
   // If draggable is a media image, we need to choose
   // if it's going to be added as static widget or element
   if (
@@ -2526,11 +2585,18 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           }
         }
       } else {
-        // Reload Data
-        lD.reloadData(lD.layout,
-          {
-            refreshEditor: true,
-          });
+        if (draggableData.subPlaylistId) {
+          createSubplaylistInPlaylist(
+            res.data.regionId,
+            res.data.regionPlaylist.playlistId,
+          );
+        } else {
+          // Reload Data
+          lD.reloadData(lD.layout,
+            {
+              refreshEditor: true,
+            });
+        }
       }
     }).fail(function(jqXHR, textStatus, errorThrown) {
       // Output error to console
@@ -2709,74 +2775,15 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
             false,
           );
         } else {
-          const reloadRegion = function() {
-            // Save zone or playlist to a temp object
-            // so it can be selected after refreshing
-            lD.viewer.saveTemporaryObject(
-              'region_' + res.data.regionId,
-              'region',
-              {
-                type: 'region',
-              },
-            );
-
-            // Reload data ( and viewer )
-            lD.reloadData(lD.layout,
-              {
-                refreshEditor: true,
-              });
-          };
-
           // If we're adding a specific playlist, we need to create a
           // subplaylist inside the new playlist
           if (draggableData.subPlaylistId) {
-            lD.addModuleToPlaylist(
+            createSubplaylistInPlaylist(
               res.data.regionId,
               res.data.regionPlaylist.playlistId,
-              'subplaylist',
-              draggableData,
-              null,
-              false,
-              false,
-              true,
-              false,
-              false,
-            ).then((res) => {
-              // Update playlist values in the new widget
-              lD.historyManager.addChange(
-                'saveForm',
-                'widget', // targetType
-                res.data.widgetId, // targetId
-                null, // oldValues
-                {
-                  subPlaylists: JSON.stringify([
-                    {
-                      rowNo: 1,
-                      playlistId: draggableData.subPlaylistId,
-                      spots: '',
-                      spotLength: '',
-                      spotFill: 'repeat',
-                    },
-                  ]),
-                }, // newValues
-                {
-                  addToHistory: false,
-                },
-              ).then((_res) => {
-                console.log(_res);
-                reloadRegion();
-              }).catch((_error) => {
-                toastr.error(_error);
-
-                // Delete new region
-                lD.layout.deleteObject(
-                  'region',
-                  res.data.regionPlaylist.regionId,
-                );
-              });
-            });
+            );
           } else {
-            reloadRegion();
+            reloadRegion(res.data.regionId);
           }
         }
       });
