@@ -84,13 +84,6 @@ interface DataProviderInterface
     public function getWidgetId(): int;
 
     /**
-     * Get the fallback mode for this widget.
-     *  (none, always, empty, error)
-     * @return string
-     */
-    public function getFallbackMode(): string;
-
-    /**
      * Get a configured Guzzle client
      *  this will have its proxy configuration set and be ready to use.
      * @param array $requestOptions An optional array of additional request options.

@@ -194,14 +194,6 @@ class DataProvider implements DataProviderInterface
     /**
      * @inheritDoc
      */
-    public function getFallbackMode(): string
-    {
-        return $this->getProperty('showFallback', 'none');
-    }
-
-    /**
-     * @inheritDoc
-     */
     public function getProperty(string $property, $default = null)
     {
         if ($this->properties === null) {

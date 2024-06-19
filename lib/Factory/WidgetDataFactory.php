@@ -70,7 +70,7 @@ class WidgetDataFactory extends BaseFactory
     /**
      * Get Widget Data for a Widget
      * @param int $widgetId
-     * @return array
+     * @return WidgetData[]
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
     public function getByWidgetId(int $widgetId): array

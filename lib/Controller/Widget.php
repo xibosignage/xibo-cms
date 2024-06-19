@@ -1196,17 +1196,29 @@ class Widget extends Base
                 }
 
                 // Before caching images, check to see if the data provider is handled
-                if ($dataProvider->getFallbackMode() !== 'none'
+                $isFallback = false;
+                $showFallback = $widget->getOptionValue('showFallback', 'none');
+                if ($showFallback !== 'none'
                     && (
                         count($dataProvider->getErrors()) > 0
                         || count($dataProvider->getData()) <= 0
-                        || $dataProvider->getFallbackMode() === 'always'
+                        || $showFallback === 'always'
                     )
                 ) {
                     // Error or no data.
+                    $this->getLog()->debug('getData: eligible for fallback data');
+
                     // Pull in the fallback data
                     foreach ($this->widgetDataFactory->getByWidgetId($dataProvider->getWidgetId()) as $item) {
-                        $dataProvider->addItem($item);
+                        $dataProvider->addItem($item->data);
+
+                        // Indicate we've been handled by fallback data
+                        $isFallback = true;
+                    }
+
+                    if ($isFallback) {
+                        $dataProvider->addOrUpdateMeta('showFallback', $showFallback);
+                        $dataProvider->addOrUpdateMeta('includesFallback', true);
                     }
                 }
 
@@ -1224,10 +1236,12 @@ class Widget extends Base
                 }
 
                 // Save to cache
-                if ($dataProvider->isHandled()) {
+                if ($dataProvider->isHandled() || $isFallback) {
                     $widgetDataProviderCache->saveToCache($dataProvider);
                 } else {
                     // Unhandled data provider.
+                    $this->getLog()->debug('getData: unhandled data provider and no fallback data');
+
                     $message = null;
                     foreach ($dataProvider->getErrors() as $error) {
                         $message .= $error . PHP_EOL;

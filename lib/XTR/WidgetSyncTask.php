@@ -249,17 +249,27 @@ class WidgetSyncTask implements TaskInterface
                 }
 
                 // Before caching images, check to see if the data provider is handled
-                if ($dataProvider->getFallbackMode() !== 'none'
+                $isFallback = false;
+                $showFallback = $widget->getOptionValue('showFallback', 'none');
+                if ($showFallback !== 'none'
                     && (
                         count($dataProvider->getErrors()) > 0
                         || count($dataProvider->getData()) <= 0
-                        || $dataProvider->getFallbackMode() === 'always'
+                        || $showFallback === 'always'
                     )
                 ) {
                     // Error or no data.
                     // Pull in the fallback data
                     foreach ($this->widgetDataFactory->getByWidgetId($dataProvider->getWidgetId()) as $item) {
-                        $dataProvider->addItem($item);
+                        $dataProvider->addItem($item->data);
+
+                        // Indicate we've been handled by fallback data
+                        $isFallback = true;
+                    }
+
+                    if ($isFallback) {
+                        $dataProvider->addOrUpdateMeta('showFallback', $showFallback);
+                        $dataProvider->addOrUpdateMeta('includesFallback', true);
                     }
                 }
 
@@ -283,7 +293,7 @@ class WidgetSyncTask implements TaskInterface
                 }
 
                 // Save to cache
-                if ($dataProvider->isHandled()) {
+                if ($dataProvider->isHandled() || $isFallback) {
                     $widgetDataProviderCache->saveToCache($dataProvider);
                 }
             } finally {

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -24,7 +24,6 @@ namespace Xibo\Widget;
 
 use Carbon\Carbon;
 use GuzzleHttp\Exception\GuzzleException;
-use GuzzleHttp\Exception\RequestException;
 use PicoFeed\Config\Config;
 use PicoFeed\Logging\Logger;
 use PicoFeed\Parser\Item;
@@ -198,7 +197,7 @@ class RssProvider implements WidgetProviderInterface
             
             $dataProvider->setCacheTtl($dataProvider->getProperty('updateInterval', 60) * 60);
             $dataProvider->setIsHandled();
-        } catch (RequestException $requestException) {
+        } catch (GuzzleException $requestException) {
             // Log and return empty?
             $this->getLog()->error('Unable to get feed: ' . $uri
                 . ', e: ' . $requestException->getMessage());
