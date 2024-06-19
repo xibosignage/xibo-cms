@@ -441,8 +441,8 @@ class Soap5 extends Soap4
 
         // Newer version of players will return a JSON value, but for older version, it will return a string.
         // In case the json decode fails, use the operatingSystem string value as the default value for the osVersion.
-        $display->osVersion = $operatingSystemJson->osVersion ?? $operatingSystem;
-        $display->osSdk = $operatingSystemJson->osSdk ?? null;
+        $display->osVersion = $operatingSystemJson->version ?? $operatingSystem;
+        $display->osSdk = $operatingSystemJson->sdk ?? null;
         $display->manufacturer = $operatingSystemJson->manufacturer ?? null;
         $display->brand = $operatingSystemJson->brand ?? null;
         $display->model = $operatingSystemJson->model ?? null;
