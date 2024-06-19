@@ -99,7 +99,7 @@ class Soap5 extends Soap4
         $clientAddress = $this->getIp();
         $xmrChannel = $sanitized->getString('xmrChannel');
         $xmrPubKey = trim($sanitized->getString('xmrPubKey'));
-        $operatingSystem = $sanitized->getString('$operatingSystem');
+        $operatingSystem = $sanitized->getString('operatingSystem');
 
         // this is only sent from xmds v7
         $commercialLicenceString = $sanitized->getString('licenceResult');
