@@ -932,7 +932,7 @@ if (useCurrentDate) {
         <stencil>
             <hbs><![CDATA[
 <div class="global-elements-image img-container"
-    style="width:100%; height: 100%; overflow: hidden; position: relative;">
+    style="width:100%; height: 100%; overflow: hidden; position: relative;
     {{#if roundBorder}}border-radius: {{borderRadius}}px;{{/if}}">
     <img src="{{#if assetId}}[[assetId={{assetId}}]]{{else}}{{{url}}}{{/if}}" style="
         width:100%; height: 100%;
