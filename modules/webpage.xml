@@ -146,8 +146,8 @@
 $(target).xiboLayoutScaler(properties);
 
 // Set dimensions based on the properties
-properties.iframeWidth = properties.pageWidth ? properties.pageWidth : $(target).width();
-properties.iframeHeight = properties.pageHeight ? properties.pageHeight : $(target).height();
+properties.iframeWidth = properties.pageWidth ? properties.pageWidth : globalOptions.originalWidth;
+properties.iframeHeight = properties.pageHeight ? properties.pageHeight : globalOptions.originalHeight;
 properties.iframeTop = properties.offsetTop ? properties.offsetTop : 0;
 properties.iframeLeft = properties.offsetLeft ? properties.offsetLeft : 0;
 properties.scale = properties.scaling ? (properties.scaling/ 100) : 1;

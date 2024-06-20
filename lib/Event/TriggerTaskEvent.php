@@ -22,33 +22,26 @@
 
 namespace Xibo\Event;
 
+/**
+ * An event which triggers the provided task to Run Now (at the next XTR poll)
+ *  optionally clears a cache key to provide further instructions to the task that's running
+ */
 class TriggerTaskEvent extends Event
 {
-    public static $NAME = 'trigger.task.event';
-    /**
-     * @var string
-     */
-    private $className;
-    /**
-     * @var string
-     */
-    private $setting;
-    /**
-     * @var mixed|null
-     */
-    private $settingValue;
+    public static string $NAME = 'trigger.task.event';
 
     /**
-     * @param string $className
+     * @param string $className Class name of the task to be run
+     * @param string $key Cache Key to be dropped
      */
-    public function __construct(string $className, string $setting = '', $value = null)
-    {
-        $this->className = $className;
-        $this->setting = $setting;
-        $this->settingValue = $value;
+    public function __construct(
+        private readonly string $className,
+        private readonly string $key = ''
+    ) {
     }
 
     /**
+     * Returns the class name for the task to be run
      * @return string
      */
     public function getClassName(): string
@@ -56,13 +49,12 @@ class TriggerTaskEvent extends Event
         return $this->className;
     }
 
-    public function getSetting(): string
+    /**
+     * Returns the cache key to be dropped
+     * @return string
+     */
+    public function getKey(): string
     {
-        return $this->setting;
-    }
-
-    public function getSettingValue()
-    {
-        return $this->settingValue;
+        return $this->key;
     }
 }
