@@ -1877,7 +1877,6 @@ class Display extends Base
 
         // Tags are stored on the displaygroup, we're just passing through here
         if ($this->getUser()->featureEnabled('tag.tagging')) {
-            $display->setOriginalValue('tags', $display->tags);
             if (is_array($sanitizedParams->getParam('tags'))) {
                 $tags = $this->tagFactory->tagsFromJson($sanitizedParams->getArray('tags'));
             } else {
