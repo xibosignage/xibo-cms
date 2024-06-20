@@ -197,12 +197,14 @@ class DisplayGroupListener
      * @param EventDispatcherInterface $dispatcher
      * @return void
      */
-    public function onTagDelete(TagDeleteEvent $event, $eventName, EventDispatcherInterface $dispatcher)
+    public function onTagDelete(TagDeleteEvent $event, $eventName, EventDispatcherInterface $dispatcher): void
     {
         $displays = $this->storageService->select('
             SELECT lktagdisplaygroup.displayGroupId 
-                 FROM `lktagdisplaygroup` INNER JOIN `displaygroup`
-                     ON `lktagdisplaygroup`.displayGroupId = `displaygroup`.displayGroupId AND `displaygroup`.isDisplaySpecific = 1
+                 FROM `lktagdisplaygroup` 
+                     INNER JOIN `displaygroup`
+                     ON `lktagdisplaygroup`.displayGroupId = `displaygroup`.displayGroupId
+                         AND `displaygroup`.isDisplaySpecific = 1
                  WHERE `lktagdisplaygroup`.tagId = :tagId', [
                 'tagId' => $event->getTagId()
             ]);
@@ -214,7 +216,7 @@ class DisplayGroupListener
 
         if (count($displays) > 0) {
             $dispatcher->dispatch(
-                new TriggerTaskEvent('\Xibo\XTR\MaintenanceRegularTask', 'DYNAMIC_DISPLAY_GROUP_ASSESS', 1),
+                new TriggerTaskEvent('\Xibo\XTR\MaintenanceRegularTask', 'DYNAMIC_DISPLAY_GROUP_ASSESSED'),
                 TriggerTaskEvent::$NAME
             );
         }

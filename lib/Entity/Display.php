@@ -25,6 +25,7 @@ use Carbon\Carbon;
 use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Event\DisplayGroupLoadEvent;
+use Xibo\Event\TriggerTaskEvent;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
@@ -884,7 +885,10 @@ class Display implements \JsonSerializable
         // Trigger an update of all dynamic DisplayGroups?
         if ($this->hasPropertyChanged('display') || $this->hasPropertyChanged('tags')) {
             // Background update.
-            $this->config->changeSetting('DYNAMIC_DISPLAY_GROUP_ASSESS', 1);
+            $this->getDispatcher()->dispatch(
+                new TriggerTaskEvent('\Xibo\XTR\MaintenanceRegularTask', 'DYNAMIC_DISPLAY_GROUP_ASSESSED'),
+                TriggerTaskEvent::$NAME
+            );
         }
     }
 

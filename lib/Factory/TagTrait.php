@@ -58,13 +58,18 @@ trait TagTrait
      * @param string $table
      * @param string $column
      * @param array $entityIds
-     * @param array $entries
+     * @param \Xibo\Entity\EntityTrait[] $entries
      */
-    public function decorateWithTagLinks(string $table, string $column, array $entityIds, array $entries)
+    public function decorateWithTagLinks(string $table, string $column, array $entityIds, array $entries): void
     {
-        $sql = 'SELECT tag.tagId, tag.tag, `'. $table .'`.value, `'.$table.'`.'.$column.' FROM `tag` INNER JOIN `'.$table.'` ON `'.$table.'`.tagId = tag.tagId WHERE `'.$table.'`.'.$column.' IN('. implode(',', $entityIds).')';
+        // Query to get all tags from a tag link table for a set of entityIds
+        $sql = 'SELECT `tag`.`tagId`, `tag`.`tag`, `' . $table . '`.`value`, `' . $table . '`.`' . $column . '`'
+            . '   FROM `tag` '
+            . '     INNER JOIN `' . $table . '` ON `' . $table . '`.`tagId` = `tag`.`tagId` '
+            . '  WHERE `' . $table . '`.`' . $column . '` IN(' . implode(',', $entityIds) .')';
 
         foreach ($this->getStore()->select($sql, []) as $row) {
+            // Add each tag returned above to its respective entity
             $sanitizedRow = $this->getSanitizer($row);
 
             $tagLink = new TagLink($this->getStore(), $this->getLog(), $this->getDispatcher());
@@ -77,6 +82,11 @@ trait TagTrait
                     $entry->tags[] = $tagLink;
                 }
             }
+        }
+
+        // Set the original value on the entity.
+        foreach ($entries as $entry) {
+            $entry->setOriginalValue('tags', $entry->tags);
         }
     }
 
