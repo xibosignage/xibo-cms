@@ -1238,7 +1238,10 @@ class Widget extends Base
                     foreach ($this->widgetDataFactory->getByWidgetId($dataProvider->getWidgetId()) as $item) {
                         // Handle any special data types in the fallback data
                         foreach ($item->data as $itemId => $itemData) {
-                            if (array_key_exists($itemId, $dataTypeFields) && $dataTypeFields[$itemId] === 'image') {
+                            if (!empty($itemData)
+                                && array_key_exists($itemId, $dataTypeFields)
+                                && $dataTypeFields[$itemId] === 'image'
+                            ) {
                                 $item->data[$itemId] = $dataProvider->addLibraryFile($itemData);
                             }
                         }
