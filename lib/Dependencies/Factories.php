@@ -223,7 +223,8 @@ class Factories
                     $c->get('widgetAudioFactory'),
                     $c->get('actionFactory'),
                     $c->get('folderFactory'),
-                    $c->get('fontFactory')
+                    $c->get('fontFactory'),
+                    $c->get('widgetDataFactory'),
                 );
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
 

@@ -163,7 +163,8 @@ class LayoutFactory extends BaseFactory
         $widgetAudioFactory,
         $actionFactory,
         $folderFactory,
-        FontFactory $fontFactory
+        FontFactory $fontFactory,
+        private readonly WidgetDataFactory $widgetDataFactory
     ) {
         $this->setAclDependencies($user, $userFactory);
         $this->config = $config;
@@ -2817,6 +2818,9 @@ class LayoutFactory extends BaseFactory
                     $new->objectId = $widget->widgetId;
                     $new->save();
                 }
+
+                // Copy widget data
+                $this->widgetDataFactory->copyByWidgetId($originalWidget->widgetId, $widget->widgetId);
             }
         }
 

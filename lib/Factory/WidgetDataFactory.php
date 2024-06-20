@@ -109,6 +109,26 @@ class WidgetDataFactory extends BaseFactory
     }
 
     /**
+     * Copy data from one widget to another
+     *  primarily used during checkout
+     * @param int $fromWidgetId
+     * @param int $toWidgetId
+     * @return void
+     */
+    public function copyByWidgetId(int $fromWidgetId, int $toWidgetId): void
+    {
+        $this->getStore()->update('
+            INSERT INTO `widgetdata` (`widgetId`, `data`, `displayOrder`, `createdDt`, `modifiedDt`) 
+            SELECT :toWidgetId, `data`, `displayOrder`, `createdDt`, `modifiedDt` 
+              FROM `widgetdata`
+             WHERE `widgetId` = :widgetId
+        ', [
+            'widgetId' => $fromWidgetId,
+            'toWidgetId' => $toWidgetId
+        ]);
+    }
+
+    /**
      * Helper function for
      * @param array $row
      * @return \Xibo\Entity\WidgetData
