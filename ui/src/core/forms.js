@@ -3099,12 +3099,14 @@ window.forms = {
   * @param {object} container
   * @param {object} fallbackData
   * @param {object} widget
+  * @param {callback} reloadWidgetCallback
    */
   createFallbackDataForm: function(
     dataType,
     container,
     fallbackData,
     widget,
+    reloadWidgetCallback,
   ) {
     const dataFields = dataType.fields;
 
@@ -3210,6 +3212,9 @@ window.forms = {
       const updateRecord = function() {
         // Update preview
         updateRecordPreview($record, recordData);
+
+        reloadWidgetCallback();
+
         $record.removeClass('editing');
       };
 
@@ -3248,6 +3253,8 @@ window.forms = {
             if (_res.success) {
               // Remove object
               $record.remove();
+
+              reloadWidgetCallback();
             }
           });
       } else {
@@ -3376,7 +3383,12 @@ window.forms = {
           }
         });
 
-        widget.saveFallbackDataOrder(records);
+        widget.saveFallbackDataOrder(records)
+          .then((_res) => {
+            if (_res.success) {
+              reloadWidgetCallback();
+            }
+          });
       },
     });
   },
