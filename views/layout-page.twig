@@ -7,7 +7,7 @@
     <div class="widget-action-menu pull-right">
         {% if currentUser.featureEnabled("layout.add") %}
             <button class="btn btn-success layout-add-button"
-                    title="{% trans "Add a new Layout and jump to the layout designer." %}"
+                    title="{% trans "Add a new Layout and jump to the layout editor." %}"
                     href="{{ url_for("layout.add") }}">
                 <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Layout" %}
             </button>

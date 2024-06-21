@@ -239,7 +239,7 @@ class Layout extends Base
                 $resolution = $this->resolutionFactory->getByDimensions($layout->width, $layout->height);
             }
         } catch (NotFoundException $notFoundException) {
-            $this->getLog()->info('Layout Designer with an unknown resolution, we will create it with name: ' . $layout->width . ' x ' . $layout->height);
+            $this->getLog()->info('Layout Editor with an unknown resolution, we will create it with name: ' . $layout->width . ' x ' . $layout->height);
 
             $resolution = $this->resolutionFactory->create($layout->width . ' x ' . $layout->height, (int)$layout->width, (int)$layout->height);
             $resolution->userId = $this->userFactory->getSystemUser()->userId;
