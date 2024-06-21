@@ -514,9 +514,13 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
         }
       }
 
-      // Save media id if exists
+      // Save media id and name if exists
       if (element.mediaId !== undefined) {
         elementObject.mediaId = element.mediaId;
+      }
+
+      if (element.mediaName !== undefined) {
+        elementObject.mediaName = element.mediaName;
       }
 
       // Save slot if exists

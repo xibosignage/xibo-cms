@@ -68,8 +68,9 @@ const Element = function(data, widgetId, regionId, parentWidget) {
   // Animation effect
   this.effect = data.effect || 'noTransition';
 
-  // Media
+  // Media id and name
   this.mediaId = data.mediaId;
+  this.mediaName = data.mediaName;
 
   this.selected = false;
 };
@@ -286,9 +287,10 @@ Element.prototype.getData = function() {
 /**
  * Replace media in element
  * @param {string} mediaId
+ * @param {string} mediaName
  * @return {Promise} - Promise with widget data
  */
-Element.prototype.replaceMedia = function(mediaId) {
+Element.prototype.replaceMedia = function(mediaId, mediaName) {
   const self = this;
   const parentWidget = lD.getObjectByTypeAndId(
     'widget',
@@ -298,6 +300,7 @@ Element.prototype.replaceMedia = function(mediaId) {
 
   // Replace media id
   self.mediaId = mediaId;
+  self.mediaName = mediaName;
 
   return parentWidget.saveElements();
 };

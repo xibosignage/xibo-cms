@@ -143,6 +143,18 @@ Bottombar.prototype.render = function(object) {
       'widget_' + object.regionId + '_' + object.widgetId,
       'canvas',
     );
+
+    // If element has media Id or media Name
+    if (
+      object.mediaId != undefined || object.mediaName != undefined
+    ) {
+      // If name is defined, use media Id and name in the tooltip/helper
+      object.elementMediaInfo = {
+        name: object.mediaName,
+        id: object.mediaId,
+      };
+    }
+
     // Render element and element group toolbar
     this.DOMObject.html(bottomBarViewerTemplate(
       {
