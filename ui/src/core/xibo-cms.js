@@ -3484,6 +3484,7 @@ function initDatePicker($element, baseFormat, displayFormat, options, onChangeCa
             allowInput: false,
             defaultDate: ((initialValue != undefined) ? initialValue : null),
             altInputClass: 'datePickerHelper ' + $element.attr('class'),
+            disableMobile: true,
             altFormat: displayFormat,
             dateFormat: baseFormat,
             locale: (language != 'en-GB') ? language : 'default',
