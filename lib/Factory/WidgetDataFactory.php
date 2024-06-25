@@ -102,10 +102,18 @@ class WidgetDataFactory extends BaseFactory
             throw new InvalidArgumentException(__('Missing Widget ID'), 'widgetId');
         }
 
-        $entries = [];
-        $sql = 'SELECT MAX(`modifiedDt`) AS modifiedDt FROM `widgetdata` WHERE `widgetId` = :widgetId';
+        $sql = '
+            SELECT MAX(`createdDt`) AS createdDt, MAX(`modifiedDt`) AS modifiedDt
+              FROM `widgetdata`
+            WHERE `widgetId` = :widgetId
+        ';
         $result = $this->getStore()->select($sql, ['widgetId' => $widgetId]);
-        return Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $result[0]['modifiedDt']);
+        $modifiedDt = $result[0]['modifiedDt'] ?? ($result[0]['createdDt'] ?? null);
+        if (empty($modifiedDt)) {
+            return null;
+        } else {
+            return Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $modifiedDt);
+        }
     }
 
     /**
