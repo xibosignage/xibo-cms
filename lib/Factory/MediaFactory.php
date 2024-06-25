@@ -183,6 +183,7 @@ class MediaFactory extends BaseFactory
             $media->enableStat = $requestOptions['enableStat'];
             $media->folderId = $requestOptions['folderId'];
             $media->permissionsFolderId = $requestOptions['permissionsFolderId'];
+            $media->apiRef = $requestOptions['apiRef'];
         }
 
         $this->getLog()->debug('Queue download of: ' . $uri . ', current mediaId for this download is '
