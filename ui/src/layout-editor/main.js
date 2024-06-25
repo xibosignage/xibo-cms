@@ -2444,6 +2444,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
             const onUploadDone = function(data) {
               // Add media id to data
               draggableData.mediaId = data.response().result.files[0].mediaId;
+              draggableData.title = data.response().result.files[0].name;
             };
 
             lD.openUploadForm({
