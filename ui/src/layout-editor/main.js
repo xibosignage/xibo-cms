@@ -2825,56 +2825,63 @@ lD.addModuleToPlaylist = function(
   selectNewWidget = true,
   addToHistory = true,
 ) {
-  if (moduleData.regionSpecific == 0) { // Upload form if not region specific
-    // On hide callback
-    const onHide = function(numUploads) {
-      // If there are no uploads, and it's not a zone, delete the region
-      if (numUploads === 0 && !zoneWidget) {
-        lD.layout.deleteObject(
-          'region',
-          regionId,
-        ).then(() => {
+  if (moduleData.regionSpecific == 0) {
+    // Upload form if not region specific
+    return new Promise((resolve) => {
+      // On hide callback
+      const onHide = function(numUploads) {
+        // If there are no uploads, and it's not a zone, delete the region
+        if (numUploads === 0 && !zoneWidget) {
+          lD.layout.deleteObject(
+            'region',
+            regionId,
+          ).then(() => {
+            // Reload data ( and viewer )
+            (reloadData) && lD.reloadData(lD.layout,
+              {
+                refreshEditor: true,
+              });
+
+            resolve();
+          });
+        } else {
           // Reload data ( and viewer )
           (reloadData) && lD.reloadData(lD.layout,
             {
               refreshEditor: true,
             });
-        });
-      } else {
-        // Reload data ( and viewer )
-        (reloadData) && lD.reloadData(lD.layout,
-          {
-            refreshEditor: true,
-          });
-      }
-    };
 
-    // On upload done callback
-    const onUploadDone = function(data) {
-      // Get added widget id
-      const widgetId = data.response().result.files[0].widgetId;
+          resolve();
+        }
+      };
 
-      // The new selected object as the id based
-      // on the previous selected region
-      if (!drawerWidget) {
-        lD.viewer.saveTemporaryObject(
-          'widget_' + regionId + '_' + widgetId,
-          'widget',
-          {
-            type: 'widget',
-            parentType: 'region',
-            widgetRegion: 'region_' + regionId,
-          },
-        );
-      }
-    };
+      // On upload done callback
+      const onUploadDone = function(data) {
+        // Get added widget id
+        const widgetId = data.response().result.files[0].widgetId;
 
-    lD.openUploadForm({
-      playlistId: playlistId,
-      moduleData: moduleData,
-      addToPosition: addToPosition,
-      onHide: onHide,
-      onUploadDone: onUploadDone,
+        // The new selected object as the id based
+        // on the previous selected region
+        if (!drawerWidget) {
+          lD.viewer.saveTemporaryObject(
+            'widget_' + regionId + '_' + widgetId,
+            'widget',
+            {
+              type: 'widget',
+              parentType: 'region',
+              widgetRegion: 'region_' + regionId,
+            },
+          );
+        }
+      };
+
+      lD.openUploadForm({
+        playlistId: playlistId,
+        moduleData: moduleData,
+        addToPosition: addToPosition,
+        onHide: onHide,
+        onUploadDone: onUploadDone,
+      });
     });
   } else { // Add widget to a region
     lD.common.showLoadingScreen();
