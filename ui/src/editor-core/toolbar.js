@@ -1508,11 +1508,14 @@ Toolbar.prototype.handleDroppables = function(draggable, customClasses = '') {
       // Drop to playlist
       selectorBuild.push('.designer-region-playlist.droppable');
 
-      // Drop to zone region
-      selectorBuild.push('.designer-region-zone.droppable');
-
       // Drop to playlist timeline
       selectorBuild.push('#playlist-timeline.ui-droppable');
+    }
+
+    // Zone droppables
+    if (app.common.hasTarget(draggable, 'zone')) {
+      // Drop to zone region
+      selectorBuild.push('.designer-region-zone.droppable');
     }
 
     // If we are in action edit mode, we need
