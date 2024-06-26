@@ -227,8 +227,8 @@ class WidgetSyncTask implements TaskInterface
         }
 
         // Will we use fallback data if available?
-        $showFallback = $widget->getOptionValue('showFallback', 'none');
-        if ($showFallback !== 'none') {
+        $showFallback = $widget->getOptionValue('showFallback', 'never');
+        if ($showFallback !== 'never') {
             // What data type are we dealing with?
             try {
                 $dataTypeFields = [];
@@ -259,6 +259,7 @@ class WidgetSyncTask implements TaskInterface
 
             $dataProvider->clearData();
             $dataProvider->clearMeta();
+            $dataProvider->addOrUpdateMeta('showFallback', $showFallback);
 
             try {
                 if ($widgetInterface !== null) {
@@ -276,8 +277,7 @@ class WidgetSyncTask implements TaskInterface
 
                 // Before caching images, check to see if the data provider is handled
                 $isFallback = false;
-                $showFallback = $widget->getOptionValue('showFallback', 'none');
-                if ($showFallback !== 'none'
+                if ($showFallback !== 'never'
                     && $dataTypeFields !== null
                     && (
                         count($dataProvider->getErrors()) > 0
@@ -303,9 +303,13 @@ class WidgetSyncTask implements TaskInterface
                     }
 
                     if ($isFallback) {
-                        $dataProvider->addOrUpdateMeta('showFallback', $showFallback);
                         $dataProvider->addOrUpdateMeta('includesFallback', true);
                     }
+                }
+
+                // Remove fallback data from the cache if no-longer needed
+                if (!$isFallback) {
+                    $dataProvider->addOrUpdateMeta('includesFallback', false);
                 }
 
                 // Do we have images?

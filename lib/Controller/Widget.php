@@ -1173,8 +1173,8 @@ class Widget extends Base
         }
 
         // Will we use fallback data if available?
-        $showFallback = $widget->getOptionValue('showFallback', 'none');
-        if ($showFallback !== 'none') {
+        $showFallback = $widget->getOptionValue('showFallback', 'never');
+        if ($showFallback !== 'never') {
             // What data type are we dealing with?
             try {
                 $dataTypeFields = [];
@@ -1206,6 +1206,7 @@ class Widget extends Base
 
             $dataProvider->clearData();
             $dataProvider->clearMeta();
+            $dataProvider->addOrUpdateMeta('showFallback', $showFallback);
 
             try {
                 if ($widgetInterface !== null) {
@@ -1223,7 +1224,7 @@ class Widget extends Base
 
                 // Before caching images, check to see if the data provider is handled
                 $isFallback = false;
-                if ($showFallback !== 'none'
+                if ($showFallback !== 'never'
                     && $dataTypeFields !== null
                     && (
                         count($dataProvider->getErrors()) > 0
@@ -1253,9 +1254,13 @@ class Widget extends Base
                     }
 
                     if ($isFallback) {
-                        $dataProvider->addOrUpdateMeta('showFallback', $showFallback);
                         $dataProvider->addOrUpdateMeta('includesFallback', true);
                     }
+                }
+
+                // Remove fallback data from the cache if no-longer needed
+                if (!$isFallback) {
+                    $dataProvider->addOrUpdateMeta('includesFallback', false);
                 }
 
                 // Do we have images?

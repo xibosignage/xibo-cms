@@ -204,6 +204,11 @@ class ModuleFactory extends BaseFactory
                     }
                 }
             }
+
+            // Include a separate cache per fallback data?
+            if ($module->fallbackData == 1) {
+                $cacheKey .= '_fb ' . $widget->getOptionValue('showFallback', 'never');
+            }
         }
 
         $this->getLog()->debug('determineCacheKey: cache key is : ' . $cacheKey);
