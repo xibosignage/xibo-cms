@@ -3136,6 +3136,11 @@ window.forms = {
         fieldClone.initialKey = 'mediaId';
       }
 
+      // If field is type string, change it to text
+      if (fieldClone.type === 'string') {
+        fieldClone.type = 'text';
+      }
+
       // Set name as id and give a unique id
       fieldClone.name = fieldClone.id;
       fieldClone.id = fieldClone.id + '_' + auxId;
@@ -3149,7 +3154,7 @@ window.forms = {
       }
 
       // Add helper to required fields
-      if ($newField.is('[data-is-required="true"]')) {
+      if ($newField && $newField.is('[data-is-required="true"]')) {
         $newField.find('label')
           .append(`<span class="ml-1"
             title=${fallbackDataTrans.requiredField}>*</span>`);
