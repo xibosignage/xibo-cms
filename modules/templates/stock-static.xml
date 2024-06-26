@@ -45,7 +45,7 @@
                 <helpText>The format to apply to all dates returned by the Widget.</helpText>
                 <default>#DATE_FORMAT#</default>
             </property>
-            <property id="maxItemsPerPage" type="number">
+            <property id="itemsPerPage" type="number">
                 <title>Items per Page</title>
                 <helpText>This is the intended number of items on each page.</helpText>
                 <default>7</default>
@@ -180,7 +180,7 @@ $(target).xiboLayoutAnimate(properties);
                 <title>Font</title>
                 <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
-            <property id="maxItemsPerPage" type="number">
+            <property id="itemsPerPage" type="number">
                 <title>Items per Page</title>
                 <helpText>This is the intended number of items on each page.</helpText>
                 <default>7</default>
@@ -486,7 +486,7 @@ $(target).xiboLayoutAnimate(properties);
                 <title>Font</title>
                 <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
-            <property id="maxItemsPerPage" type="hidden">
+            <property id="itemsPerPage" type="hidden">
                 <default>1</default>
             </property>
         </properties>
