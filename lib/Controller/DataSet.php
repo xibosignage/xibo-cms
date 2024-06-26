@@ -272,6 +272,27 @@ class DataSet extends Base
                         'text' => __('Edit')
                     );
 
+                    if ($this->getUser()->featureEnabled('folder.view')) {
+                        // Select Folder
+                        $dataSet->buttons[] = [
+                            'id' => 'dataSet_button_selectfolder',
+                            'url' => $this->urlFor($request, 'dataSet.selectfolder.form', ['id' => $dataSet->dataSetId]),
+                            'text' => __('Select Folder'),
+                            'multi-select' => true,
+                            'dataAttributes' => [
+                                [
+                                    'name' => 'commit-url',
+                                    'value' => $this->urlFor($request, 'dataSet.selectfolder', ['id' => $dataSet->dataSetId])
+                                ],
+                                ['name' => 'commit-method', 'value' => 'put'],
+                                ['name' => 'id', 'value' => 'dataSet_button_selectfolder'],
+                                ['name' => 'text', 'value' => __('Move to Folder')],
+                                ['name' => 'rowtitle', 'value' => $dataSet->dataSet],
+                                ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
+                            ]
+                        ];
+                    }
+
                     $dataSet->buttons[] = [
                         'id' => 'dataset_button_csv_export',
                         'linkType' => '_self', 'external' => true,
@@ -1120,6 +1141,107 @@ class DataSet extends Base
         $this->getState()->hydrate([
             'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $dataSet->dataSet)
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Select Folder Form
+     * @param Request $request
+     * @param Response $response
+     * @param int $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function selectFolderForm(Request $request, Response $response, $id)
+    {
+        // Get the data set
+        $dataSet = $this->dataSetFactory->getById($id);
+
+        // Check Permissions
+        if (!$this->getUser()->checkEditable($dataSet)) {
+            throw new AccessDeniedException();
+        }
+
+        $data = [
+            'dataSet' => $dataSet
+        ];
+
+        $this->getState()->template = 'dataset-form-selectfolder';
+        $this->getState()->setData($data);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * @SWG\Put(
+     *  path="/dataset/{id}/selectfolder",
+     *  operationId="dataSetSelectFolder",
+     *  tags={"dataSet"},
+     *  summary="DataSet Select folder",
+     *  description="Select Folder for DataSet",
+     *  @SWG\Parameter(
+     *      name="menuId",
+     *      in="path",
+     *      description="The DataSet ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/DataSet")
+     *  )
+     * )
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param int $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function selectFolder(Request $request, Response $response, $id)
+    {
+        // Get the DataSet
+        $dataSet = $this->dataSetFactory->getById($id);
+
+        // Check Permissions
+        if (!$this->getUser()->checkEditable($dataSet)) {
+            throw new AccessDeniedException();
+        }
+
+        $folderId = $this->getSanitizer($request->getParams())->getInt('folderId');
+
+        if ($folderId === 1) {
+            $this->checkRootFolderAllowSave();
+        }
+
+        $dataSet->folderId = $folderId;
+        $folder = $this->folderFactory->getById($dataSet->folderId);
+        $dataSet->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+
+        // Save
+        $dataSet->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('DataSet %s moved to Folder %s'), $dataSet->dataSet, $folder->text)
         ]);
 
         return $this->render($request, $response);
