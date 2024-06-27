@@ -2385,6 +2385,16 @@ Viewer.prototype.playPreview = function(dimensions) {
     .addClass('fa-stop-circle')
     .attr('title', bottombarTrans.stopPreviewLayout);
 
+  // Add preview class to editor
+  app.editorContainer.addClass('preview-playing');
+
+  // Create play overlay
+  const $customOverlay = $('.custom-overlay').clone();
+  $customOverlay
+    .addClass('custom-overlay-preview-playing')
+    .on('click', this.stopPreview.bind(this));
+  $customOverlay.appendTo(app.editorContainer);
+
   // Mark as playing
   this.previewPlaying = true;
 };
@@ -2397,6 +2407,13 @@ Viewer.prototype.stopPreview = function() {
 
   // Reload bottombar to original state
   app.bottombar.render(app.selectedObject);
+
+  // Remove preview class from editor
+  app.editorContainer.removeClass('preview-playing');
+
+  // Remove overlay
+  app.editorContainer.find('.custom-overlay-preview-playing')
+    .remove();
 
   // Reload viewer ( which stops preview )
   this.render(true);
