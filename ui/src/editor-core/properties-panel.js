@@ -1686,6 +1686,78 @@ PropertiesPanel.prototype.render = function(
       formHelpers.mediaEditFormOpen(self.DOMObject);
     }
 
+    // Show fallback tab if widget has datatype
+    const showFallbackData = (target.type === 'widget') ?
+      target.checkShowFallbackData() :
+      false;
+
+    if (showFallbackData) {
+      // Show fallback tab
+      self.DOMObject.find('.nav-link[href="#fallbackTab"]')
+        .parent().removeClass('d-none');
+
+      // Reload widget
+      const reloadWidget = function() {
+        // Reload if we're editing on the layout editor
+        if (app.mainObjectType === 'layout') {
+          lD.reloadData(lD.layout, {
+            refreshEditor: false,
+          }).then(() => {
+            // If we're selecting an element or group
+            // Render all elements from the current widget/target
+            if (isElement || isElementGroup) {
+              // If we're saving an element, reload all elements
+              // from the widget that the element is in
+              for (element in target.elements) {
+                if (
+                  Object.prototype.hasOwnProperty
+                    .call(target.elements, element)
+                ) {
+                  app.viewer.renderElementContent(target.elements[element]);
+                }
+              }
+            } else {
+              const mainObject =
+                app.getObjectByTypeAndId(app.mainObjectType, app.mainObjectId);
+
+              // Reload only for the current widget/target
+              app.reloadData(
+                mainObject,
+                {
+                  reloadPropertiesPanel: false,
+                }).done(() => {
+                if (!target.drawerWidget) {
+                  app.viewer.renderRegion(
+                    app.getObjectByTypeAndId('region', target.regionId),
+                  );
+                } else {
+                  app.viewer.renderRegion(
+                    app.layout.drawer,
+                    target,
+                  );
+                }
+              });
+            }
+          });
+        }
+      };
+
+      // Get datatype
+      target.getDataType().then((dt) => {
+        // Get data before creating form
+        target.getFallbackData().then((fbd) => {
+          // Create form
+          forms.createFallbackDataForm(
+            dt,
+            self.DOMObject.find('#fallbackTab'),
+            fbd,
+            target,
+            reloadWidget,
+          );
+        });
+      });
+    }
+
     // Init fields
     self.initFields(target, res.data, actionEditMode, false, openActionTab);
   }).fail(function(data) {
@@ -1981,6 +2053,7 @@ PropertiesPanel.prototype.initFields = function(
     const skipXiboFormInput =
       ':not(.position-input):not(.action-form-input)' +
       ':not(.snippet-selector):not(.element-slot-input)' +
+      ':not(.fallback-property)' +
       ':not(.ticker-tag-style-property)' +
       ':not(.canvas-widget-control-dropdown)';
     const skipFormInput =

@@ -186,7 +186,7 @@ class DataProvider implements DataProviderInterface
     /**
      * @inheritDoc
      */
-    public function getWidgetId() : int
+    public function getWidgetId(): int
     {
         return $this->widget->widgetId;
     }

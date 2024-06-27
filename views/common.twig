@@ -232,6 +232,28 @@
                     url: "{{ url_for("module.widget.elements", {id: ':id'}) }}",
                     type: 'PUT'
                 },
+                data: {
+                    get: {
+                        url: "{{ url_for("module.widget.data.get", {id: ':id'}) }}",
+                        type: 'GET'
+                    },
+                    add: {
+                        url: "{{ url_for("module.widget.data.add", {id: ':id'}) }}",
+                        type: 'POST'
+                    },
+                    edit: {
+                        url: "{{ url_for("module.widget.data.edit", {id: ':id', dataId: ':dataId'}) }}",
+                        type: 'PUT'
+                    },
+                    delete: {
+                        url: "{{ url_for("module.widget.data.delete", {id: ':id', dataId: ':dataId'}) }}",
+                        type: 'DELETE'
+                    },
+                    setOrder: {
+                        url: "{{ url_for("module.widget.data.set.order", {id: ':id'}) }}",
+                        type: 'POST'
+                    },
+                },
             },
             library: {
                 get: {
@@ -495,6 +517,7 @@
                 playlist: "{{ "Playlist" |trans }}",
                 configure: "{{ "Configure" |trans }}",
                 appearance: "{{ "Appearance" |trans }}",
+                fallback: "{{ "Custom Data" |trans }}",
                 advanced: "{{ "Advanced" |trans }}",
                 general: "{{ "General" |trans }}",
                 positioning: "{{ "Positioning" |trans }}",
@@ -1021,6 +1044,24 @@
                     width: "{{ "Width"|trans }}",
                     height: "{{ "Height"|trans }}",
                 }
+            };
+
+            var fallbackDataTrans = {
+                message:  "{{ "Fallback data for this Data Widget can be provided below and included according to the property \"Show fallback data\". Fallback data will be shown with the same appearance as data returned from the source, and can be edited using the form below."|trans }}",
+                addNewRecord: "{{ "Add New"|trans }}",
+                saveRecord: "{{ "Save"|trans }}",
+                editRecord: "{{ "Edit"|trans }}",
+                deleteRecord: "{{ "Delete"|trans }}",
+                fallbackTypeTitle: "{{ "Show fallback data"|trans }}",
+                fallbackTypeHelpText: "{{ "If provided, when should we show fallback data for this Widget?"|trans }}",
+                never: "{{ "Never"|trans }}",
+                always: "{{ "Always"|trans }}",
+                empty: "{{ "When no data is returned"|trans }}",
+                error: "{{ "When there is an error"|trans }}",
+                noData: "{{ "Undefined"|trans }}",
+                invalidRecordEmpty: "{{ "Please fill out all least one field!"|trans }}",
+                invalidRecordRequired: "{{ "Please fill out all the required fields!"|trans }}",
+                requiredField: "{{ "Required Field!"|trans }}",
             };
 
             var datasetColStyleSelectorTranslations = {

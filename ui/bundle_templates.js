@@ -71,5 +71,11 @@ window.templates = {
       require('./src/templates/forms/inputs/datasetColStyle.hbs'),
     imageReplaceControl:
         require('./src/templates/forms/inputs/imageReplace.hbs'),
+    fallbackDataContent:
+        require('./src/templates/fallback-data-content.hbs'),
+    fallbackDataRecord:
+        require('./src/templates/fallback-data-record.hbs'),
+    fallbackDataRecordPreview:
+      require('./src/templates/fallback-data-record-preview.hbs'),
   },
 };

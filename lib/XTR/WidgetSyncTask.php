@@ -27,6 +27,7 @@ use Xibo\Entity\Display;
 use Xibo\Entity\Module;
 use Xibo\Entity\Widget;
 use Xibo\Event\WidgetDataRequestEvent;
+use Xibo\Factory\WidgetDataFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
@@ -47,6 +48,9 @@ class WidgetSyncTask implements TaskInterface
     /** @var \Xibo\Factory\WidgetFactory */
     private $widgetFactory;
 
+    /** @var \Xibo\Factory\WidgetDataFactory */
+    private WidgetDataFactory $widgetDataFactory;
+
     /** @var \Xibo\Factory\MediaFactory */
     private $mediaFactory;
 
@@ -61,6 +65,7 @@ class WidgetSyncTask implements TaskInterface
     {
         $this->moduleFactory = $container->get('moduleFactory');
         $this->widgetFactory = $container->get('widgetFactory');
+        $this->widgetDataFactory = $container->get('widgetDataFactory');
         $this->mediaFactory = $container->get('mediaFactory');
         $this->displayFactory = $container->get('displayFactory');
         $this->eventDispatcher = $container->get('dispatcher');
@@ -221,6 +226,32 @@ class WidgetSyncTask implements TaskInterface
             }
         }
 
+        // Will we use fallback data if available?
+        $showFallback = $widget->getOptionValue('showFallback', 'never');
+        if ($showFallback !== 'never') {
+            // What data type are we dealing with?
+            try {
+                $dataTypeFields = [];
+                foreach ($this->moduleFactory->getDataTypeById($module->dataType)->fields as $field) {
+                    $dataTypeFields[$field->id] = $field->type;
+                }
+
+                // Potentially we will, so get the modifiedDt of this fallback data.
+                $fallbackModifiedDt = $this->widgetDataFactory->getModifiedDtForWidget($widget->widgetId);
+
+                if ($fallbackModifiedDt !== null) {
+                    $this->getLogger()->debug('cache: fallback modifiedDt is ' . $fallbackModifiedDt->toAtomString());
+
+                    $dataModifiedDt = max($dataModifiedDt, $fallbackModifiedDt);
+                }
+            } catch (NotFoundException) {
+                $this->getLogger()->info('cache: widget will fallback set where the module does not support it');
+                $dataTypeFields = null;
+            }
+        } else {
+            $dataTypeFields = null;
+        }
+
         if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey, $dataModifiedDt)
             || $widgetDataProviderCache->isCacheMissOrOld()
         ) {
@@ -228,6 +259,7 @@ class WidgetSyncTask implements TaskInterface
 
             $dataProvider->clearData();
             $dataProvider->clearMeta();
+            $dataProvider->addOrUpdateMeta('showFallback', $showFallback);
 
             try {
                 if ($widgetInterface !== null) {
@@ -241,6 +273,43 @@ class WidgetSyncTask implements TaskInterface
                         new WidgetDataRequestEvent($dataProvider),
                         WidgetDataRequestEvent::$NAME
                     );
+                }
+
+                // Before caching images, check to see if the data provider is handled
+                $isFallback = false;
+                if ($showFallback !== 'never'
+                    && $dataTypeFields !== null
+                    && (
+                        count($dataProvider->getErrors()) > 0
+                        || count($dataProvider->getData()) <= 0
+                        || $showFallback === 'always'
+                    )
+                ) {
+                    // Error or no data.
+                    // Pull in the fallback data
+                    foreach ($this->widgetDataFactory->getByWidgetId($dataProvider->getWidgetId()) as $item) {
+                        // Handle any special data types in the fallback data
+                        foreach ($item->data as $itemId => $itemData) {
+                            if (!empty($itemData)
+                                && array_key_exists($itemId, $dataTypeFields)
+                                && $dataTypeFields[$itemId] === 'image'
+                            ) {
+                                $item->data[$itemId] = $dataProvider->addLibraryFile($itemData);
+                            }
+                        }
+
+                        // Indicate we've been handled by fallback data
+                        $isFallback = true;
+                    }
+
+                    if ($isFallback) {
+                        $dataProvider->addOrUpdateMeta('includesFallback', true);
+                    }
+                }
+
+                // Remove fallback data from the cache if no-longer needed
+                if (!$isFallback) {
+                    $dataProvider->addOrUpdateMeta('includesFallback', false);
                 }
 
                 // Do we have images?
@@ -263,7 +332,7 @@ class WidgetSyncTask implements TaskInterface
                 }
 
                 // Save to cache
-                if ($dataProvider->isHandled()) {
+                if ($dataProvider->isHandled() || $isFallback) {
                     $widgetDataProviderCache->saveToCache($dataProvider);
                 }
             } finally {

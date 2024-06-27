@@ -1108,8 +1108,15 @@ class Widget implements \JsonSerializable
         $this->mediaIds = [];
         $this->unlinkMedia();
 
+        // Delete any fallback data
+        $this->getStore()->update('DELETE FROM `widgetdata` WHERE `widgetId` = :widgetId', [
+            'widgetId' => $this->widgetId,
+        ]);
+
         // Delete this
-        $this->getStore()->update('DELETE FROM `widget` WHERE widgetId = :widgetId', array('widgetId' => $this->widgetId));
+        $this->getStore()->update('DELETE FROM `widget` WHERE `widgetId` = :widgetId', [
+            'widgetId' => $this->widgetId,
+        ]);
 
         // Call notify with the notify options passed in
         $this->notify($options);

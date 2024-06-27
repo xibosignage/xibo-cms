@@ -81,7 +81,7 @@ interface DataProviderInterface
      * Get the ID for this Widget
      * @return int
      */
-    public function getWidgetId() : int;
+    public function getWidgetId(): int;
 
     /**
      * Get a configured Guzzle client

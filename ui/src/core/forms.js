@@ -3092,4 +3092,309 @@ window.forms = {
       $parent.removeClass('loading');
     });
   },
+
+  /**
+   * Create form fields for fallback data
+  * @param {object} dataType
+  * @param {object} container
+  * @param {object} fallbackData
+  * @param {object} widget
+  * @param {callback} reloadWidgetCallback
+   */
+  createFallbackDataForm: function(
+    dataType,
+    container,
+    fallbackData,
+    widget,
+    reloadWidgetCallback,
+  ) {
+    const dataFields = dataType.fields;
+
+    const createField = function(field, data) {
+      const fieldClone = {...field};
+      const auxId = Math.floor(Math.random() * 1000000);
+
+      if (data != undefined) {
+        fieldClone.value = data;
+      }
+
+      // Set date variant
+      if (
+        ['datetime', 'date', 'time', 'month'].indexOf(fieldClone.type) != -1
+      ) {
+        fieldClone.variant = (fieldClone.type === 'datetime')?
+          'dateTime' :
+          fieldClone.type;
+        fieldClone.type = 'date';
+      }
+
+      // Set image variant
+      if (fieldClone.type === 'image') {
+        fieldClone.type = 'mediaSelector';
+        fieldClone.mediaSearchUrl = urlsForApi.library.get.url;
+        fieldClone.initialValue = fieldClone.value;
+        fieldClone.initialKey = 'mediaId';
+      }
+
+      // If field is type string, change it to text
+      if (fieldClone.type === 'string') {
+        fieldClone.type = 'text';
+      }
+
+      // Set name as id and give a unique id
+      fieldClone.name = fieldClone.id;
+      fieldClone.id = fieldClone.id + '_' + auxId;
+
+      // Add custom class to prevent auto save
+      fieldClone.customClass = 'fallback-property';
+
+      let $newField;
+      if (templates.forms.hasOwnProperty(fieldClone.type)) {
+        $newField = $(templates.forms[fieldClone.type](fieldClone));
+      }
+
+      // Add helper to required fields
+      if ($newField && $newField.is('[data-is-required="true"]')) {
+        $newField.find('label')
+          .append(`<span class="ml-1"
+            title=${fallbackDataTrans.requiredField}>*</span>`);
+      }
+
+      return $newField;
+    };
+
+    const updateRecordPreview = function($record, recordData) {
+      const $previewsContainer =
+        $record.find('.fallback-data-record-previews');
+
+      // Empty container
+      $previewsContainer.empty();
+
+      dataFields.forEach((field) => {
+        if (recordData && recordData[field.id]) {
+          const fieldData = recordData[field.id];
+
+          // New field preview
+          const $recordPreview = $(templates.forms.fallbackDataRecordPreview({
+            trans: fallbackDataTrans,
+            field: field,
+            data: fieldData,
+          }));
+
+          $record.find('.fallback-data-record-previews')
+            .append($recordPreview);
+        }
+      });
+    };
+
+    const saveRecord = function($record) {
+      const recordData = {};
+      let invalidRequired = false;
+
+      // Get input fields and build data to be saved
+      dataFields.forEach((field) => {
+        const $field = $record.find('[name="' + field.id + '"]');
+        const value = $field.val();
+        const required =
+          $field.parents('.fallback-property').is('[data-is-required="true"]');
+
+        if (value == '' && required) {
+          invalidRequired = true;
+        } else if (value != '') {
+          recordData[field.id] = value;
+        }
+      });
+
+      // If record data is empty or invalid, thow error and don't save
+      if ($.isEmptyObject(recordData)) {
+        toastr.error(fallbackDataTrans.invalidRecordEmpty);
+        return;
+      } else if (invalidRequired) {
+        toastr.error(fallbackDataTrans.invalidRecordRequired);
+        return;
+      }
+
+      const updateRecord = function() {
+        // Update preview
+        updateRecordPreview($record, recordData);
+
+        reloadWidgetCallback();
+
+        $record.removeClass('editing');
+      };
+
+      // Save or add new record
+      const recordId = $record.data('recordId');
+      const displayOrder = $record.index();
+      if (recordId) {
+        widget.editFallbackDataRecord(recordId, recordData, displayOrder)
+          .then((_res) => {
+            if (_res.success) {
+              updateRecord();
+            }
+          });
+      } else {
+        widget.addFallbackData(recordData, displayOrder)
+          .then((_res) => {
+            if (_res.success) {
+              // Add id to record object
+              $record.data('recordId', _res.id);
+              updateRecord();
+            }
+          });
+      }
+    };
+
+    const editRecord = function($record) {
+      $record.addClass('editing');
+    };
+
+    const deleteRecord = function($record) {
+      const recordId = $record.data('recordId');
+
+      if (recordId) {
+        widget.deleteFallbackDataRecord(recordId)
+          .then((_res) => {
+            if (_res.success) {
+              // Remove object
+              $record.remove();
+
+              reloadWidgetCallback();
+            }
+          });
+      } else {
+        // Remove object
+        $record.remove();
+      }
+    };
+
+    const createRecord = function(data = {}) {
+      const recordData = data.data;
+      const displayOrder = data.displayOrder;
+      const recordId = data.id;
+
+      const $recordContainer = $(templates.forms.fallbackDataRecord({
+        trans: fallbackDataTrans,
+      }));
+
+      // Add record id to data if exists
+      if (recordId != undefined) {
+        $recordContainer.data('recordId', recordId);
+      }
+
+      // Add display order to data if exists
+      if (displayOrder != undefined) {
+        $recordContainer.data('displayOrder', displayOrder);
+      }
+
+      // Add properties from data
+      dataFields.forEach((field) => {
+        const fieldData = (recordData) && recordData[field.id];
+        const $newField = createField(field, fieldData);
+
+        // New field input
+        $recordContainer.find('.fallback-data-record-fields')
+          .append($newField);
+      });
+
+      // Initialize fields
+      forms.initFields($recordContainer);
+
+      // Record preview
+      updateRecordPreview($recordContainer, recordData);
+
+      // Mark new field as editing if it's a new record
+      if ($.isEmptyObject(data)) {
+        $recordContainer.addClass('editing');
+      }
+
+      // Handle buttons
+      $recordContainer.find('button').on('click', function(ev) {
+        const actionType =
+          $(ev.currentTarget).data('action');
+
+        if (actionType == 'save-record') {
+          saveRecord($recordContainer);
+        } else if (actionType == 'delete-record') {
+          deleteRecord($recordContainer);
+        } else if (actionType == 'edit-record') {
+          editRecord($recordContainer);
+        }
+      });
+
+      return $recordContainer;
+    };
+
+    // Create main content
+    $(container).append(templates.forms.fallbackDataContent({
+      data: dataType,
+      trans: fallbackDataTrans,
+      showFallback: widget.getOptions().showFallback,
+    }));
+
+    const $recordsContainer =
+      $(container).find('.fallback-data-records');
+
+    // If we have existing data, add it to the control
+    if (fallbackData) {
+      // Sort array by display order
+      fallbackData.sort((a, b) => {
+        return a.displayOrder - b.displayOrder;
+      });
+
+      fallbackData.forEach((data) => {
+        $recordsContainer.append(
+          createRecord(data),
+        );
+      });
+
+      // Call Xibo Init for the records container
+      XiboInitialise('.fallback-data-records');
+    }
+
+    // Handle create record button
+    $(container).find('[data-action="add-new-record"]').on('click', function() {
+      $recordsContainer.append(
+        createRecord(),
+      );
+
+      // Call Xibo Init for the records container
+      XiboInitialise('.fallback-data-records');
+    });
+
+    // Init sortable
+    $recordsContainer.sortable({
+      axis: 'y',
+      items: '.fallback-data-record',
+      containment: 'parent',
+      update: function() {
+        // Create records structure
+        let idxAux = 0;
+        const records = [];
+
+        $recordsContainer.find('.fallback-data-record').each((_idx, record) => {
+          const recordData = $(record).data();
+
+          if (recordData.recordId) {
+            records.push({
+              dataId: recordData.recordId,
+              displayOrder: idxAux,
+            });
+
+            // Update data on record
+            $(record).data('displayOrder', idxAux);
+
+            idxAux++;
+          }
+        });
+
+        widget.saveFallbackDataOrder(records)
+          .then((_res) => {
+            if (_res.success) {
+              reloadWidgetCallback();
+            }
+          });
+      },
+    });
+  },
 };

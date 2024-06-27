@@ -24,6 +24,9 @@ namespace Xibo\Dependencies;
 
 use Psr\Container\ContainerInterface;
 
+/**
+ * Helper class to add controllers to DI
+ */
 class Controllers
 {
     /**
@@ -248,7 +251,8 @@ class Controllers
                     $c->get('pool'),
                     $c->get('mediaService'),
                     $c->get('widgetFactory'),
-                    $c->get('playlistFactory')
+                    $c->get('widgetDataFactory'),
+                    $c->get('playlistFactory'),
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
@@ -615,7 +619,17 @@ class Controllers
                     $c->get('widgetFactory'),
                     $c->get('transitionFactory'),
                     $c->get('regionFactory'),
-                    $c->get('widgetAudioFactory')
+                    $c->get('widgetAudioFactory'),
+                    $c->get('widgetDataFactory'),
+                );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
+            },
+            '\Xibo\Controller\WidgetData' => function (ContainerInterface $c) {
+                $controller = new \Xibo\Controller\WidgetData(
+                    $c->get('widgetDataFactory'),
+                    $c->get('widgetFactory'),
+                    $c->get('moduleFactory'),
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;

@@ -163,7 +163,8 @@ class LayoutFactory extends BaseFactory
         $widgetAudioFactory,
         $actionFactory,
         $folderFactory,
-        FontFactory $fontFactory
+        FontFactory $fontFactory,
+        private readonly WidgetDataFactory $widgetDataFactory
     ) {
         $this->setAclDependencies($user, $userFactory);
         $this->config = $config;
@@ -1948,6 +1949,12 @@ class LayoutFactory extends BaseFactory
             }
         }
 
+        // Load widget data into an array for processing outside (once the layout has been saved)
+        $fallback = $zip->getFromName('fallback.json');
+        if ($fallback !== false) {
+            $layout->setUnmatchedProperty('fallback', json_decode($fallback, true));
+        }
+
         // Save the thumbnail to a temporary location.
         $image_path = $zip->getFromName('library/thumbs/campaign_thumb.png');
         if ($image_path !== false) {
@@ -2811,6 +2818,9 @@ class LayoutFactory extends BaseFactory
                     $new->objectId = $widget->widgetId;
                     $new->save();
                 }
+
+                // Copy widget data
+                $this->widgetDataFactory->copyByWidgetId($originalWidget->widgetId, $widget->widgetId);
             }
         }
 

@@ -31,6 +31,7 @@
     <legacyType>calendar</legacyType>
     <dataType>event</dataType>
     <dataCacheKey>%uri%_%useDateRange%_%startIntervalFrom%_%customInterval%_%rangeStart%_%rangeEnd%_%useEventTimezone%_%useCalendarTimezone%_%windowsFormatCalendar%</dataCacheKey>
+    <fallbackData>1</fallbackData>
     <schemaVersion>2</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>1</regionSpecific>

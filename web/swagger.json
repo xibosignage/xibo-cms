@@ -11446,6 +11446,153 @@
                     }
                 }
             }
+        },
+        "/playlist/widget/data/{id}": {
+            "post": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Get data for Widget",
+                "description": "Return all of the fallback data currently assigned to this Widget",
+                "operationId": "getWidgetData",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "The Widget ID that this data should be added to",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/WidgetData"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/playlist/widget/data/{id}/{dataId}": {
+            "put": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Edit data on a Widget",
+                "description": "Edit fallback data on a data Widget",
+                "operationId": "editWidgetData",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "The Widget ID that this data is attached to",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "dataId",
+                        "in": "path",
+                        "description": "The ID of the data to be edited",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "data",
+                        "in": "path",
+                        "description": "A JSON formatted string containing a single data item for this widget's data type",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "displayOrder",
+                        "in": "formData",
+                        "description": "Optional integer to say which position this data should appear if there is more than one data item",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Delete data on a Widget",
+                "description": "Delete fallback data on a data Widget",
+                "operationId": "deleteWidgetData",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "The Widget ID that this data is attached to",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "dataId",
+                        "in": "path",
+                        "description": "The ID of the data to be deleted",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/playlist/widget/data/{id}/order": {
+            "post": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Update the order of data on a Widget",
+                "description": "Provide all data to be ordered on a widget",
+                "operationId": "orderWidgetData",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "The Widget ID that this data is attached to",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "dataId",
+                        "in": "path",
+                        "description": "The ID of the data to be deleted",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "order",
+                        "in": "body",
+                        "description": "An array of any widget data records that should be re-ordered",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "WidgetDataOrder"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -11612,6 +11759,18 @@
                 },
                 "isFinished": {
                     "type": "boolean"
+                }
+            }
+        },
+        "WidgetDataOrder": {
+            "properties": {
+                "dataId": {
+                    "description": "Data ID",
+                    "type": "integer"
+                },
+                "displayOrder": {
+                    "description": "Desired display order",
+                    "type": "integer"
                 }
             }
         },
@@ -14817,6 +14976,29 @@
                 },
                 "loop": {
                     "description": "Flag indicating whether to loop",
+                    "type": "integer"
+                }
+            }
+        },
+        "WidgetData": {
+            "properties": {
+                "id": {
+                    "description": "The ID",
+                    "type": "integer"
+                },
+                "widgetId": {
+                    "description": "The Widget ID",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "Array of data properties depending on the widget data type this data is for",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "displayOrder": {
+                    "description": "The Display Order",
                     "type": "integer"
                 }
             }

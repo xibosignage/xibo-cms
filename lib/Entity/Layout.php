@@ -39,6 +39,7 @@ use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TagFactory;
+use Xibo\Factory\WidgetDataFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
 use Xibo\Helper\Profiler;
@@ -1896,16 +1897,20 @@ class Layout implements \JsonSerializable
     /**
      * Export the Layout as a ZipArchive
      * @param DataSetFactory $dataSetFactory
+     * @param \Xibo\Factory\WidgetDataFactory $widgetDataFactory
      * @param string $fileName
      * @param array $options
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function toZip($dataSetFactory, $fileName, $options = [])
-    {
+    public function toZip(
+        DataSetFactory $dataSetFactory,
+        WidgetDataFactory $widgetDataFactory,
+        string $fileName,
+        array $options = []
+    ): void {
         $options = array_merge([
-            'includeData' => false
+            'includeData' => false,
+            'includeFallback' => false,
         ], $options);
 
         // Load the complete layout
@@ -2055,13 +2060,15 @@ class Layout implements \JsonSerializable
         $dataSetIds = [];
         $dataSets = [];
 
+        // Handle any Widget Data
+        $widgetData = [];
+
         // Playlists
         $playlistMappings = [];
         $playlistDefinitions = [];
         $nestedPlaylistDefinitions = [];
 
         foreach ($this->getAllWidgets() as $widget) {
-            /** @var Widget $widget */
             if ($widget->type == 'dataset') {
                 $dataSetId = $widget->getOptionValue('dataSetId', 0);
 
@@ -2082,7 +2089,7 @@ class Layout implements \JsonSerializable
                     $dataSetIds[] = $dataSet->dataSetId;
                     $dataSets[] = $dataSet;
                 }
-            } elseif ($widget->type == 'subplaylist') {
+            } else if ($widget->type == 'subplaylist') {
                 $playlistItems = json_decode($widget->getOptionValue('subPlaylists', '[]'), true);
                 foreach ($playlistItems as $playlistItem) {
                     $count = 1;
@@ -2110,11 +2117,24 @@ class Layout implements \JsonSerializable
                     );
                 }
             }
+
+            // Handle fallback data?
+            if ($options['includeFallback'] == 1) {
+                $fallback = $widgetDataFactory->getByWidgetId($widget->widgetId);
+                if (count($fallback) > 0) {
+                    $widgetData[$widget->widgetId] = $fallback;
+                }
+            }
         }
 
         // Add the mappings file to the ZIP
         if ($dataSets != []) {
             $zip->addFromString('dataSet.json', json_encode($dataSets, JSON_PRETTY_PRINT));
+        }
+
+        // Add widget data
+        if ($options['includeFallback'] == 1 && $widgetData != []) {
+            $zip->addFromString('fallback.json', json_encode($widgetData, JSON_PRETTY_PRINT));
         }
 
         // Add the Playlist definitions to the ZIP
