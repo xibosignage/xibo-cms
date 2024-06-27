@@ -2098,6 +2098,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
         properties,
         groupProperties,
         mediaId,
+        mediaName,
         isVisible,
       } = {},
       ) {
@@ -2114,6 +2115,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           layer: layer,
           rotation: rotation,
           mediaId: mediaId,
+          mediaName: mediaName,
           isVisible: isVisible,
         };
 
@@ -2306,6 +2308,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
             extendsOverride: draggableData.extendsOverride,
             extendsOverrideId: draggableData.extendsOverrideId,
             mediaId: draggableData.mediaId,
+            mediaName: draggableData.title,
             isVisible: draggableData.isVisible,
           };
 
@@ -2500,6 +2503,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
             const onUploadDone = function(data) {
               // Add media id to data
               draggableData.mediaId = data.response().result.files[0].mediaId;
+              draggableData.title = data.response().result.files[0].name;
             };
 
             lD.openUploadForm({

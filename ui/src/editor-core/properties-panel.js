@@ -1834,8 +1834,8 @@ PropertiesPanel.prototype.initFields = function(
     const fromProvider = $(card).hasClass('from-provider');
 
     // Replace in element, save and reload
-    const replaceInElement = function(mediaId) {
-      element.replaceMedia(mediaId).then(() => {
+    const replaceInElement = function(mediaId, mediaName) {
+      element.replaceMedia(mediaId, mediaName).then(() => {
         self.parent.viewer.renderElementContent(element);
       });
     };
@@ -1853,7 +1853,10 @@ PropertiesPanel.prototype.initFields = function(
         }
       });
     } else {
-      replaceInElement($(card).data('mediaId'));
+      replaceInElement(
+        $(card).data('mediaId'),
+        $(card).data('title'),
+      );
     }
   };
 
