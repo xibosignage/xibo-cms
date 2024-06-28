@@ -3981,6 +3981,13 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
       return false;
     }
 
+    // If it's an element inside a group, fail condition
+    if (
+      $(el).parent().hasClass('designer-element-group-elements')
+    ) {
+      return false;
+    }
+
     // If it's not a global element
     // check if the widget is the same as the other elements
     if ($(el).data('elementType') != 'global') {
@@ -4012,9 +4019,18 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
       break;
     }
 
+    // If it's a static widget (region), fail condition
+    if ($item.data('type') === 'region') {
+      canBeAddedToGroup = false;
+      break;
+    }
+
     // If it's not a global element
     // check if the widget is the same as the other elements
-    if ($item.data('elementType') != 'global') {
+    if (
+      $item.data('type') === 'element' &&
+      $item.data('elementType') != 'global'
+    ) {
       if (tempWidgetId === undefined) {
         tempWidgetId = $item.data('widgetId');
       } else {
