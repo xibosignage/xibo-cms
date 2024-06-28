@@ -47,7 +47,7 @@
                         {% set helpText %}{% trans "The Name for this Command" %}{% endset %}
                         {{ forms.input("command", title, "", helpText, "", "required") }}
 
-                        {% set title %}{% trans "Reference" %}{% endset %}
+                        {% set title %}{% trans "Code" %}{% endset %}
                         {% set helpText %}{% trans "A reference code for this command which is used to identify the command internally." %}{% endset %}
                         {{ forms.input("code", title, "", helpText, "", "required") }}
 
