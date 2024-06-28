@@ -4230,4 +4230,27 @@ Viewer.prototype.editText = function(
   $editable[0].addEventListener('blur', saveOnBlur);
 };
 
+/**
+ * Toggle loader to viewer object
+ * @param {object} target - Target in viewer (element or group )
+ * @param {boolean} enable
+ */
+Viewer.prototype.toggleLoader = function(
+  target,
+  enable = true,
+) {
+  const self = this;
+
+  if (enable) {
+    const $loader = $(`<div class="loader"></div>`);
+    $loader.html(loadingTemplate());
+
+    self.DOMObject.find('#' + target)
+      .append($loader);
+  } else {
+    self.DOMObject.find('#' + target + ' > .loader')
+      .remove();
+  }
+};
+
 module.exports = Viewer;

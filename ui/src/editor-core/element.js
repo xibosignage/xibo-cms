@@ -274,7 +274,16 @@ Element.prototype.getData = function() {
       resolve();
     } else {
       const slot = self.slot ? self.slot : 0;
+      const loaderTargetId = (self.groupId) ?
+        self.groupId : self.elementId;
+
+      // Show loader on element or group
+      lD.viewer.toggleLoader(loaderTargetId, true);
+
       parentWidget.getData().then(({data, meta}) => {
+        // Show loader on element or group
+        lD.viewer.toggleLoader(loaderTargetId, false);
+
         // Resolve the promise with the data
         // If slot is outside the data array
         // restart from 0
