@@ -26,6 +26,8 @@ use Carbon\Carbon;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Str;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Xibo\Event\ScheduleCriteriaRequestEvent;
+use Xibo\Event\ScheduleCriteriaRequestInterface;
 use Xibo\Event\WidgetDataRequestEvent;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
@@ -58,6 +60,7 @@ class OpenWeatherMapConnector implements ConnectorInterface
     public function registerWithDispatcher(EventDispatcherInterface $dispatcher): ConnectorInterface
     {
         $dispatcher->addListener(WidgetDataRequestEvent::$NAME, [$this, 'onDataRequest']);
+        $dispatcher->addListener(ScheduleCriteriaRequestEvent::$NAME, [$this, 'onScheduleCriteriaRequest']);
         return $this;
     }
 
@@ -637,5 +640,51 @@ class OpenWeatherMapConnector implements ConnectorInterface
             'W' => [247.5, 292.5],
             'NW' => [292.5, 337.5]
         ];
+    }
+
+    public function onScheduleCriteriaRequest(ScheduleCriteriaRequestInterface $event): void
+    {
+        // Initialize Open Weather Schedule Criteria parameters
+        $event->addType('open_weather_map', __('Open Weather Map'))
+                ->addMetric('owm_weather_condition', __('Weather Condition'))
+                    ->addValues('dropdown', [
+                        'Clear Sky',
+                        'Few Clouds',
+                        'Scattered Clouds',
+                        'Broken Clouds',
+                        'Shower Rain',
+                        'Rain',
+                        'Thunderstorm',
+                        'Snow',
+                        'Mist'
+                    ])
+                ->addMetric('owm_atmosphere', __('Atmosphere'))
+                    ->addValues('dropdown', [
+                        'List',
+                        'Smoke',
+                        'Haze',
+                        'Dust',
+                        'Fog',
+                        'Sand',
+                        'Dust',
+                        'Ash',
+                        'Squall',
+                        'Tornado'
+                    ])
+                ->addMetric('owm_temperature', __('Temperature'))
+                    ->addValues('number', [])
+                ->addMetric('own_wind_speed', __('Wind Speed'))
+                    ->addValues('number', [])
+                ->addMetric('owm_wind_direction', __('Wind Direction'))
+                    ->addValues('number', [])
+                ->addMetric('owm_humidity', __('Humidity'))
+                    ->addValues('number', [])
+                ->addMetric('owm_pressure', __('Pressure'))
+                    ->addValues('number', [])
+                ->addMetric('owm_visibility', __('Visibility'))
+                    ->addValues('number', []);
+
+
+        $this->getLogger()->debug('>> onScheduleCriteriaRequest method called');
     }
 }

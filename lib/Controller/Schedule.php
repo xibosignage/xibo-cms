@@ -26,7 +26,9 @@ use Illuminate\Support\Str;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 use Xibo\Entity\ScheduleReminder;
+use Xibo\Event\ScheduleCriteriaRequestEvent;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DayPartFactory;
@@ -773,6 +775,15 @@ class Schedule extends Base
         $defaultLat = (float)$this->getConfig()->getSetting('DEFAULT_LAT');
         $defaultLong = (float)$this->getConfig()->getSetting('DEFAULT_LONG');
 
+        // Dispatch an event to retrieve criteria for scheduling from the OpenWeatherMap connector.
+        $event = new ScheduleCriteriaRequestEvent();
+        $this->getDispatcher()->dispatch($event, ScheduleCriteriaRequestEvent::$NAME);
+
+        // Retrieve the data from the event
+        $criteria = $event->getCriteria();
+
+        // maybe add a scheduleCriteria and add that in the $addFormData instead of adding the type, metric and value individually
+
         $addFormData = [
             'dayParts' => $this->dayPartFactory->allWithSystem(),
             'reminders' => [],
@@ -782,6 +793,7 @@ class Schedule extends Base
             'isScheduleNow' => false,
             'relativeTime' => 0,
             'setDisplaysFromFilter' => true,
+            'scheduleCriteria' => $criteria
         ];
         $formNowData = [];
 
@@ -1323,6 +1335,13 @@ class Schedule extends Base
         $schedule = $this->scheduleFactory->getById($id);
         $schedule->load();
 
+        // Dispatch an event to retrieve criteria for scheduling from the OpenWeatherMap connector.
+        $event = new ScheduleCriteriaRequestEvent();
+        $this->getDispatcher()->dispatch($event, ScheduleCriteriaRequestEvent::$NAME);
+
+        // Retrieve the data from the event
+        $criteria = $event->getCriteria();
+
         if (!$this->isEventEditable($schedule)) {
             throw new AccessDeniedException();
         }
@@ -1386,6 +1405,7 @@ class Schedule extends Base
             'eventStart' => $eventStart,
             'eventEnd' => $eventEnd,
             'eventTypes' => \Xibo\Entity\Schedule::getEventTypesForm(),
+            'scheduleCriteria' => $criteria
         ]);
 
         return $this->render($request, $response);
