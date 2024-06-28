@@ -29,6 +29,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Event\ScheduleCriteriaRequestEvent;
 use Xibo\Event\ScheduleCriteriaRequestInterface;
 use Xibo\Event\WidgetDataRequestEvent;
+use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 use Xibo\Widget\DataType\Forecast;
@@ -642,6 +643,11 @@ class OpenWeatherMapConnector implements ConnectorInterface
         ];
     }
 
+    /**
+     * @param ScheduleCriteriaRequestInterface $event
+     * @return void
+     * @throws ConfigurationException
+     */
     public function onScheduleCriteriaRequest(ScheduleCriteriaRequestInterface $event): void
     {
         // Initialize Open Weather Schedule Criteria parameters
@@ -683,8 +689,5 @@ class OpenWeatherMapConnector implements ConnectorInterface
                     ->addValues('number', [])
                 ->addMetric('owm_visibility', __('Visibility'))
                     ->addValues('number', []);
-
-
-        $this->getLogger()->debug('>> onScheduleCriteriaRequest method called');
     }
 }
