@@ -256,7 +256,8 @@ class Bandwidth implements ReportInterface
         }
 
         // Decide what our units are going to be, based on the size
-        $base = floor(log($maxSize) / log(1024));
+        // We need to put a fallback value in case it returns infinite value
+        $base = !is_infinite(floor(log($maxSize) / log(1024))) ? floor(log($maxSize) / log(1024)) : 0;
 
         $labels = [];
         $data = [];
