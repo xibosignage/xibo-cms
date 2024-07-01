@@ -115,14 +115,22 @@ class Applications extends Base
     {
         // Load all connectors and output any javascript.
         $connectorJavaScript = [];
+        $partnersArr = [];
+
         foreach ($this->connectorFactory->query(['isVisible' => 1]) as $connector) {
             try {
                 // Create a connector, add in platform settings and register it with the dispatcher.
                 $connectorObject = $this->connectorFactory->create($connector);
 
                 $settingsFormJavaScript = $connectorObject->getSettingsFormJavaScript();
+                $partners = $connectorObject->getAvailablePartners() ?? [];
+
                 if (!empty($settingsFormJavaScript)) {
                     $connectorJavaScript[] = $settingsFormJavaScript;
+                }
+
+                if (!empty($partners)) {
+                    $partnersArr[] = $partners;
                 }
             } catch (\Exception $exception) {
                 // Log and ignore.
@@ -133,6 +141,7 @@ class Applications extends Base
         $this->getState()->template = 'applications-page';
         $this->getState()->setData([
             'connectorJavaScript' => $connectorJavaScript,
+            'partnersArr' => $partnersArr
         ]);
 
         return $this->render($request, $response);

@@ -442,7 +442,7 @@ class XiboSspConnector implements ConnectorInterface
                     'fromDt' => $fromDt->toAtomString(),
                     'toDt' => $toDt->toAtomString(),
                     'displayId' => $params->getInt('displayId'),
-                    'campaignId' => $params->getString('campaignId'),
+                    'campaignId' => $params->getString('partnerId'),
                 ],
             ]);
 
