@@ -41,11 +41,12 @@ $(document).ready(function() {
     });
 
     // Set a listener for type change event
-    $('body').on('change', 'select[name="criteria_type[]"]', function() {
+    $('body').on('change', '#scheduleCriteriaFields select[name="criteria_type[]"]', function(e) {
+        // Capture the event target
+        var $target = $(e.target);
         // Get the row where the type was changed
-        var $row = $(this).closest('.form-group');
-
-        var selectedType = $(this).val();
+        var $row = $target.closest('.form-group');
+        var selectedType = $target.val();
         var $fields = $('#scheduleCriteriaFields');
         var scheduleCriteria = $fields.data('scheduleCriteria');
 
@@ -53,11 +54,9 @@ $(document).ready(function() {
             if (selectedType === 'custom') {
                 // Use a text input for metrics
                 updateMetricsFieldAsText($row);
-
                 // Use a text input for values
                 updateValueFieldAsText($row);
             } else if (scheduleCriteria) {
-
                 // Update metrics based on the selected type and change text field to dropdown
                 updateMetricsField($row, scheduleCriteria, selectedType);
             }
@@ -107,11 +106,12 @@ $(document).ready(function() {
     }
 
     // Handle value field update outside of updateMetricsField
-    $('body').on('change', 'select[name="criteria_metric[]"]', function() {
+    $('body').on('change', '#scheduleCriteriaFields select[name="criteria_metric[]"]', function(e) {
+        // Capture the event target
+        var $target = $(e.target);
         // Get the row where the metric was changed
-        var $row = $(this).closest('.form-group');
-
-        var selectedMetric = $(this).val();
+        var $row = $target.closest('.form-group');
+        var selectedMetric = $target.val();
         var $fields = $('#scheduleCriteriaFields');
         var scheduleCriteria = $fields.data('scheduleCriteria');
         var selectedType = $row.find('select[name="criteria_type[]"]').val();
@@ -144,7 +144,7 @@ $(document).ready(function() {
             // change to dropdown and populate
             var $valueSelect = $('<select class="form-control" name="criteria_value[]"></select>');
             values.values.forEach(function(value) {
-                $valueSelect.append(new Option(value, value));
+                $valueSelect.append(new Option(value.title, value.id));
             });
             $valueLabel.append($valueSelect);
         } else {
@@ -1959,7 +1959,6 @@ const configureCriteriaFields = function(dialog) {
             const type = types.find(t => t.id === typeId);
             if (type) {
                 const metric = type.metrics.find(m => m.id === selectedMetric);
-
                 // update value field if metric is present
                 if (metric) {
                     updateValueField($row, metric, elementValue);
@@ -1974,18 +1973,16 @@ const configureCriteriaFields = function(dialog) {
         let $valueInput;
 
         if (metric.values && metric.values.inputType === 'dropdown') {
-
             // change input type to dropdown
             $valueInput = $('<select class="form-control" name="criteria_value[]"></select>');
             if (metric.values.values) {
                 metric.values.values.forEach(value => {
-                    $valueInput.append(new Option(value, value));
+                    $valueInput.append(new Option(value.title, value.id));
                 });
             }
-
-            $valueInput.val(elementValue); // Set the selected value
+            // Set the selected value
+            $valueInput.val(elementValue);
         } else {
-
             // change input type according to inputType's value
             const inputType = metric.values ? metric.values.inputType : 'text';
             const value = elementValue || '';

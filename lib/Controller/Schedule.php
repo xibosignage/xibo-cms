@@ -775,14 +775,12 @@ class Schedule extends Base
         $defaultLat = (float)$this->getConfig()->getSetting('DEFAULT_LAT');
         $defaultLong = (float)$this->getConfig()->getSetting('DEFAULT_LONG');
 
-        // Dispatch an event to retrieve criteria for scheduling from the OpenWeatherMap connector.
+        // Dispatch an event to initialize schedule criteria
         $event = new ScheduleCriteriaRequestEvent();
         $this->getDispatcher()->dispatch($event, ScheduleCriteriaRequestEvent::$NAME);
 
-        // Retrieve the data from the event
+        // Retrieve the criteria data from the event
         $criteria = $event->getCriteria();
-
-        // maybe add a scheduleCriteria and add that in the $addFormData instead of adding the type, metric and value individually
 
         $addFormData = [
             'dayParts' => $this->dayPartFactory->allWithSystem(),

@@ -24,6 +24,11 @@ namespace Xibo\Event;
 
 use Xibo\Support\Exception\ConfigurationException;
 
+/**
+ * This class represents a schedule criteria request event. It is responsible for initializing,
+ * managing, and retrieving schedule criteria. The class provides methods for adding types,
+ * metrics, and their associated values.
+ */
 class ScheduleCriteriaRequestEvent extends Event implements ScheduleCriteriaRequestInterface
 {
     public static $NAME = 'schedule.criteria.request';
@@ -64,7 +69,7 @@ class ScheduleCriteriaRequestEvent extends Event implements ScheduleCriteriaRequ
             $this->criteria['types'][$this->currentTypeIndex]['metrics'][] = $metric;
             $this->currentMetric = $metric;
         } else {
-            throw new ConfigurationException('Current type is not set.');
+            throw new ConfigurationException(__('Current type is not set.'));
         }
 
         return $this;
@@ -78,7 +83,7 @@ class ScheduleCriteriaRequestEvent extends Event implements ScheduleCriteriaRequ
         // Restrict input types to 'dropdown', 'number', 'text' and 'date'
         $allowedInputTypes = ['dropdown', 'number', 'text', 'date'];
         if (!in_array($inputType, $allowedInputTypes)) {
-            throw new ConfigurationException('Invalid input type.');
+            throw new ConfigurationException(__('Invalid input type.'));
         }
 
         // Add values to the current metric
@@ -86,19 +91,33 @@ class ScheduleCriteriaRequestEvent extends Event implements ScheduleCriteriaRequ
             foreach ($this->criteria['types'][$this->currentTypeIndex]['metrics'] as &$metric) {
                 // check if the current metric matches the metric from the current iteration
                 if ($metric['name'] === $this->currentMetric['name']) {
+                    // format the values to separate id and title
+                    $formattedValues = [];
+                    foreach ($values as $id => $title) {
+                        $formattedValues[] = [
+                            'id' => $id,
+                            'title' => $title
+                        ];
+                    }
+
                     $metric['values'] = [
                         'inputType' => $inputType,
-                        'values' => $values
+                        'values' => $formattedValues
                     ];
                 }
             }
         } else {
-            throw new ConfigurationException('Current type is not set.');
+            throw new ConfigurationException(__('Current type is not set.'));
         }
 
         return $this;
     }
 
+    /**
+     * Get the criteria array.
+     *
+     * @return array
+     */
     public function getCriteria(): array
     {
         return $this->criteria;

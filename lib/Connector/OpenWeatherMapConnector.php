@@ -651,43 +651,43 @@ class OpenWeatherMapConnector implements ConnectorInterface
     public function onScheduleCriteriaRequest(ScheduleCriteriaRequestInterface $event): void
     {
         // Initialize Open Weather Schedule Criteria parameters
-        $event->addType('open_weather_map', __('Open Weather Map'))
-                ->addMetric('owm_weather_condition', __('Weather Condition'))
+        $event->addType('weather', __('Weather'))
+                ->addMetric('weather_condition', __('Weather Condition'))
                     ->addValues('dropdown', [
-                        'Clear Sky',
-                        'Few Clouds',
-                        'Scattered Clouds',
-                        'Broken Clouds',
-                        'Shower Rain',
-                        'Rain',
-                        'Thunderstorm',
-                        'Snow',
-                        'Mist'
+                        'clear_sky' => __('Clear Sky'),
+                        'few_clouds' => __('Few Clouds'),
+                        'scattered_clouds' => __('Scattered Clouds'),
+                        'broken_clouds' => __('Broken Clouds'),
+                        'shower_rain' => __('Shower Rain'),
+                        'rain' => __('Rain'),
+                        'thunderstorm' => __('Thunderstorm'),
+                        'snow' => __('Snow'),
+                        'mist' => __('Mist')
                     ])
-                ->addMetric('owm_atmosphere', __('Atmosphere'))
+                ->addMetric('atmosphere', __('Atmosphere'))
                     ->addValues('dropdown', [
-                        'List',
-                        'Smoke',
-                        'Haze',
-                        'Dust',
-                        'Fog',
-                        'Sand',
-                        'Dust',
-                        'Ash',
-                        'Squall',
-                        'Tornado'
+                        'list' => __('List'),
+                        'smoke'=> __('Smoke'),
+                        'haze' => __('Haze'),
+                        'dust_whirls' => __('Sand/Dust Whirls'),
+                        'fog' => __('Fog'),
+                        'sand' => __('Sand'),
+                        'dust' => __('Dust'),
+                        'ash' => __('Ash'),
+                        'squall' => __('Squall'),
+                        'tornado' => __('Tornado')
                     ])
-                ->addMetric('owm_temperature', __('Temperature'))
+                ->addMetric('temperature', __('Temperature'))
                     ->addValues('number', [])
-                ->addMetric('own_wind_speed', __('Wind Speed'))
+                ->addMetric('wind_speed', __('Wind Speed'))
                     ->addValues('number', [])
-                ->addMetric('owm_wind_direction', __('Wind Direction'))
+                ->addMetric('wind_direction', __('Wind Direction'))
                     ->addValues('number', [])
-                ->addMetric('owm_humidity', __('Humidity'))
+                ->addMetric('humidity', __('Humidity'))
                     ->addValues('number', [])
-                ->addMetric('owm_pressure', __('Pressure'))
+                ->addMetric('pressure', __('Pressure'))
                     ->addValues('number', [])
-                ->addMetric('owm_visibility', __('Visibility'))
+                ->addMetric('visibility', __('Visibility'))
                     ->addValues('number', []);
     }
 }

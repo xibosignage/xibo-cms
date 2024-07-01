@@ -29,8 +29,10 @@ use Xibo\Support\Exception\ConfigurationException;
  *
  * Allows the addition of types, metrics, and values in a chained manner:
  * - Start with addType() to add a new type. Call addType() multiple times to add multiple types.
- * - Follow with addMetric() to add metrics under the specified type. Call addMetric() multiple times to add multiple metrics to the current type.
- * - Conclude with addValues() immediately after addMetric() to specify a set of values for the metric. Each metric can have one set of values.
+ * - Follow with addMetric() to add metrics under the specified type. Call addMetric() multiple times to add multiple
+ * metrics to the current type.
+ * - Conclude with addValues() immediately after addMetric() to specify a set of values for the metric. Each metric can
+ * have one set of values.
  *
  * The added criteria are then parsed and displayed in the Schedule Criteria Form, enabling users to configure
  * scheduling conditions based on the specified types, metrics, and values.
@@ -59,8 +61,19 @@ interface ScheduleCriteriaRequestInterface
     /**
      * Add values to the current metric. The input type must be either "dropdown", "string", "date", or "number".
      *
+     * The values array should be formatted such that the index is the id and the value is the title/name of the value.
+     * For "dropdown" input type, provide an array of values. For other input types ("string", "date", "number"),
+     * the values array should be empty "[]".
+     *
+     * Example values for "dropdown":
+     * [
+     *     'id1' => 'Value 1',
+     *     'id2' => 'Value 2'
+     * ]
+     *
      * @param string $inputType Type of input for the values ("dropdown", "string", "date", "number").
-     * @param array $values Array of values to be associated with the metric.
+     * @param array $values Array of values to be associated with the metric, where the index is the id and the value is
+     * the title.
      * @return self
      * @throws ConfigurationException If the current type or metric is not set.
      */
