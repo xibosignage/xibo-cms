@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -439,7 +439,7 @@ class UserFactory extends BaseFactory
         if (!$this->getUser()->isSuperAdmin()) {
             // Non-super admins should only get a count of users in their group
             $sql .= '
-                WHERE user.userId IN (
+                WHERE `user`.userId IN (
                     SELECT `otherUserLinks`.userId
                       FROM `lkusergroup`
                         INNER JOIN `group`
