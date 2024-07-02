@@ -69,8 +69,8 @@
 
     dialog.closest('.modal').addClass('modal-big');
 
-    // Get the filter value
-    let filter = $('select[name="campaignFilter"]').val();
+    // Set initial summaryFilter value
+    let filter = '';
 
     // Make a datatable
     var table;
@@ -182,7 +182,7 @@
     });
 
     // Parse activity log summary according to filter selected
-    function filterData(summaryData, filter) {
+    function filterData(summaryData, filter='hour') {
       let filterOption = '';
 
       // Group the data according the filter selected
@@ -247,7 +247,7 @@
       }
     }
 
-    function drawSummaryTable(filteredData, filter) {
+    function drawSummaryTable(filteredData, filter='hour') {
       let summaryTable = $('#ssp-activity-summary').dataTable({
         "bDestroy": true,
         data: filteredData.data,
