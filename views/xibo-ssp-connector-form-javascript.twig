@@ -69,6 +69,9 @@
 
     dialog.closest('.modal').addClass('modal-big');
 
+    // Get the filter value
+    let filter = $('select[name="campaignFilter"]').val();
+
     // Make a datatable
     var table;
     var chart;
@@ -129,6 +132,12 @@
         { data: 'errorCode', responsivePriority: 10 },
       ],
 
+      initComplete: function(settings, json) {
+        let filteredData = filterData(json.data, filter);
+
+        drawSummaryTable(filteredData, filter);
+      },
+
       footerCallback: function(row, data, start, end, display) {
         var json = this.api().ajax.json();
         if (json && json.stats) {
@@ -156,7 +165,6 @@
     dialog.find('a[data-apply-button="true"]').on('click', function() {
       $(this).addClass('disabled').append('<span class="saving fa fa-cog fa-spin p-1"></span>');
       table.ajax.reload(function(json) {
-          let filter = $('select[name="campaignFilter"]').val();
           let filteredData = filterData(json.data, filter);
 
           drawSummaryTable(filteredData, filter);
@@ -164,9 +172,9 @@
     });
 
     // Watch for filter option changes in Summary tab
-    dialog.find('select[name="campaignFilter"]').on('change', function() {
+    dialog.find('select[name="campaignFilter"]').on('change', function(e) {
       table.ajax.reload(function(json) {
-        let filter = $('select[name="campaignFilter"]').val();
+        filter = $(e.target).val();
         let filteredData = filterData(json.data, filter);
 
         drawSummaryTable(filteredData, filter);
@@ -254,6 +262,7 @@
           { data: 'impressions', responsivePriority: 2 },
           { data: 'impressionActual', responsivePriority: 10 },
         ],
+
         initComplete: function () {
           if (filter === 'hour' ) {
             // Hide Display ID column
@@ -263,7 +272,10 @@
             $(this.api().column(0).visible(false));
             $(this.api().column(1).visible(false));
           }
+
+          drawSummaryChart(filteredData.stats);
         },
+
         footerCallback: function(row, data, start, end, display) {
             var json = filteredData.stats;
             if (filteredData) {
@@ -278,14 +290,7 @@
 
       // Render the summary table
       summaryTable.on('draw', dataTableDraw);
-      summaryTable.on('processing.dt', function(e, settings, processing) {
-        dataTableProcessing(e, settings, processing);
-
-        if (!processing) {
-          // Finally, render the chart data
-          drawSummaryChart(filteredData.stats);
-        }
-      });
+      summaryTable.on('processing.dt', dataTableProcessing);
     }
 
     // Renders the chart data
