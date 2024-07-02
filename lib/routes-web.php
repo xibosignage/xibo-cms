@@ -421,6 +421,7 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/dataset/form/import/{id}', ['\Xibo\Controller\DataSet', 'importForm'])->setName('dataSet.import.form');
     $group->get('/dataset/form/cache/clear/{id}', ['\Xibo\Controller\DataSet', 'clearCacheForm'])->setName('dataSet.clear.cache.form');
     $group->post('/dataset/cache/clear/{id}', ['\Xibo\Controller\DataSet', 'clearCache'])->setName('dataSet.clear.cache');
+    $group->get('/dataset/form/{id}/selectfolder', ['\Xibo\Controller\DataSet', 'selectFolderForm'])->setName('dataSet.selectfolder.form');
 
     $group->get('/dataset/dataConnector/{id}', ['\Xibo\Controller\DataSet', 'dataConnectorView'])->setName('dataSet.dataConnector.view');
     $group->get('/dataset/dataConnector/request/{id}', ['\Xibo\Controller\DataSet', 'dataConnectorRequest'])->setName('dataSet.dataConnector.request');
