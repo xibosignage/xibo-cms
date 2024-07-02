@@ -90,8 +90,11 @@ class Property implements \JsonSerializable
     /** @var bool Should translations be parsed in the value? */
     public $parseTranslations = false;
 
-    /** @var bool Should the prooperty be included in the XLF? */
+    /** @var bool Should the property be included in the XLF? */
     public $includeInXlf = false;
+
+    /** @var bool Should the default value be written out to widget options */
+    public $saveDefault = false;
 
     /** @var \Xibo\Widget\Definition\PlayerCompatibility */
     public $playerCompatibility;
@@ -111,6 +114,7 @@ class Property implements \JsonSerializable
     /** @var string The group ID of the property */
     public $propertyGroupId;
 
+    /** @var mixed The value assigned to this property. This is set from widget options, or settings, never via XML  */
     public $value;
 
     /** @inheritDoc */
@@ -136,6 +140,7 @@ class Property implements \JsonSerializable
             'allowLibraryRefs' => $this->allowLibraryRefs,
             'allowAssetRefs' => $this->allowAssetRefs,
             'parseTranslations' => $this->parseTranslations,
+            'saveDefault' => $this->saveDefault,
             'dependsOn' => $this->dependsOn,
         ];
     }
@@ -197,7 +202,7 @@ class Property implements \JsonSerializable
         bool $ignoreDefault = false
     ): Property {
         $value = $this->getByType($params, $key);
-        if ($value !== $this->default || $ignoreDefault) {
+        if ($value !== $this->default || $ignoreDefault || $this->saveDefault) {
             $this->value = $value;
         }
         return $this;

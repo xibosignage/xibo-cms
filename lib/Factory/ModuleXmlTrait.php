@@ -122,9 +122,9 @@ trait ModuleXmlTrait
                 $property->allowLibraryRefs = $node->getAttribute('allowLibraryRefs') === 'true';
                 $property->allowAssetRefs = $node->getAttribute('allowAssetRefs') === 'true';
                 $property->parseTranslations = $node->getAttribute('parseTranslations') === 'true';
+                $property->saveDefault = $node->getAttribute('saveDefault') === 'true';
                 $property->title = __($this->getFirstValueOrDefaultFromXmlNode($node, 'title'));
                 $property->helpText = __($this->getFirstValueOrDefaultFromXmlNode($node, 'helpText'));
-                $property->value = $this->getFirstValueOrDefaultFromXmlNode($node, 'value');
                 $property->dependsOn = $this->getFirstValueOrDefaultFromXmlNode($node, 'dependsOn');
 
                 // How should we default includeInXlf?

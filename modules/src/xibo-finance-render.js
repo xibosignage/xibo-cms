@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -35,6 +35,10 @@ jQuery.fn.extend({
     };
 
     options = $.extend({}, defaults, options);
+
+    if (!options.itemsPerPage) {
+      options.itemsPerPage = 1;
+    }
 
     // Calculate the dimensions of this itemoptions.numItems
     // based on the preview/original dimensions
