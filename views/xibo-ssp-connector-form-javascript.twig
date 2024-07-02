@@ -62,7 +62,26 @@
       message: template({}),
       title: '{{ "Activity Report"|trans }}',
       animate: false,
-      size: 'xl'
+      size: 'xl',
+      onShown: function(e) {
+        $.ajax({
+          url: $sspConnector.data('proxyUrl').replace(':method', 'getAvailablePartnersFilter'),
+          success: function(result) {
+            if (result) {
+              const $form = $('#activity-log-filters');
+              const $partnerId = $form.find('select[name=partnerId]');
+
+              $.each(result, function(partnerKey, available) {
+                $partnerId.append($('<option>', {
+                  id: partnerKey,
+                  text: available.name,
+                  value : partnerKey
+                }));
+              });
+            }
+          }
+        });
+      }
     });
 
     XiboInitialise('#{{ gridId }}');
@@ -332,7 +351,7 @@
   <div class="XiboGrid" id="{{ gridId }}" data-grid-name="connector-ssp-activity-log">
       <div class="XiboFilterCustom card bg-light mb-3">
           <div class="FilterDiv card-body" id="connector-ssp-activity-log">
-              <form class="form-inline">
+              <form id="activity-log-filters" class="form-inline">
                   {% set title %}{% trans "From Date" %}{% endset %}
                   {{ inline.dateTime("activityFromDt", title, 'now'|date_modify('today')|date("Y-m-d H:i:s"), "", "activity-from-dt", "", "") }}
 
@@ -354,27 +373,7 @@
                   {{ inline.dropdown("displayId", "single", title, "", null, "displayId", "display", "", "pagedSelect", "", "", "", attributes) }}
 
                   {% set title %}{% trans "Partner" %}{% endset %}
-
-                  {% set partners = partnersArr[0] %}
                   {% set options = [{id: '', value: ''}] %}
-
-                  {% for partnerKey, available in partners %}
-                      {% set options = options|merge([{
-                          id: partnerKey,
-                          value: available.name
-                      }]) %}
-                  {% endfor %}
-
-                  {% set attributes = [
-                      { name: "data-width", value: "200px" },
-                      { name: "data-allow-clear", value: "true" },
-                      { name: "data-placeholder--id", value: null },
-                      { name: "data-placeholder--value", value: "" },
-                      { name: "data-search-url", value: options },
-                      { name: "data-search-term", value: "partners" },
-                      { name: "data-id-property", value: "partnerId" },
-                      { name: "data-text-property", value: "partners" }
-                  ] %}
 
                   {{ inline.dropdown("partnerId", "single", title, "", options, "id", "value") }}
 

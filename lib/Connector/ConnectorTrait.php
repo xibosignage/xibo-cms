@@ -165,11 +165,6 @@ trait ConnectorTrait
         return '';
     }
 
-    public function getAvailablePartners(bool $isThrowError = false, ?string $withApiKey = null)
-    {
-        return [];
-    }
-
     /**
      * Get an HTTP client with the default proxy settings, etc
      * @return \GuzzleHttp\Client

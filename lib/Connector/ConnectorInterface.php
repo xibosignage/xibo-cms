@@ -52,5 +52,4 @@ interface ConnectorInterface
     public function getSettingsFormTwig(): string;
     public function getSettingsFormJavaScript(): string;
     public function processSettingsForm(SanitizerInterface $params, array $settings): array;
-    public function getAvailablePartners(bool $isThrowError = false, ?string $withApiKey = null);
 }
