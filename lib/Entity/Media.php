@@ -837,14 +837,16 @@ class Media implements \JsonSerializable
      * @param $md5
      * @param $fileSize
      */
-    public function release($md5, $fileSize)
+    public function release($md5, $fileSize, $height, $width)
     {
         // Update the MD5 and fileSize
-        $this->getStore()->update('UPDATE `media` SET md5 = :md5, fileSize = :fileSize, released = :released, modifiedDt = :modifiedDt WHERE mediaId = :mediaId', [
+        $this->getStore()->update('UPDATE `media` SET md5 = :md5, fileSize = :fileSize, released = :released, height = :height, width = :width, modifiedDt = :modifiedDt WHERE mediaId = :mediaId', [
             'fileSize' => $fileSize,
             'md5' => $md5,
             'released' => 1,
             'mediaId' => $this->mediaId,
+            'height' => $height,
+            'width' => $width,
             'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
         ]);
         $this->getLog()->debug('Updating image md5 and fileSize. MediaId '. $this->mediaId);

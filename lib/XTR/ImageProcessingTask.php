@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2019 Xibo Signage Ltd
+/*
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -97,7 +97,9 @@ class ImageProcessingTask implements TaskInterface
             $count++;
 
             // Release image and save
-            $media->release(md5_file($filePath), filesize($filePath));
+            list($updatedImgWidth, $updatedImgHeight) = @getimagesize($filePath);
+
+            $media->release(md5_file($filePath), filesize($filePath), $updatedImgHeight, $updatedImgWidth);
             $this->store->commitIfNecessary();
 
             $mediaDisplays= [];
