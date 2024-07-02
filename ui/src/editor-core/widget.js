@@ -685,12 +685,10 @@ Widget.prototype.saveElements = function(
   let savePending;
 
   const reloadLayout = function(forceReload = false) {
-    if (reload || forceReload) {
-      app.reloadData(app.layout,
-        {
-          refreshEditor: true,
-        });
-    }
+    app.reloadData(app.layout,
+      {
+        refreshEditor: (reload || forceReload),
+      });
   };
 
   // If there's no more elements in widget, remove it

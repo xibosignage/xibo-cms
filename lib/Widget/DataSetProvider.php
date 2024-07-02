@@ -50,8 +50,6 @@ class DataSetProvider implements WidgetProviderInterface
     public function fetchDuration(DurationProviderInterface $durationProvider): WidgetProviderInterface
     {
         if ($durationProvider->getWidget()->getOptionValue('durationIsPerItem', 0) == 1) {
-            $this->getLog()->debug('fetchDuration: duration is per item');
-
             // Count of rows
             $numItems = $durationProvider->getWidget()->getOptionValue('numItems', 0);
 
@@ -66,6 +64,13 @@ class DataSetProvider implements WidgetProviderInterface
             }
 
             $durationProvider->setDuration($durationProvider->getWidget()->calculatedDuration * $numItems);
+
+            $this->getLog()->debug(sprintf(
+                'fetchDuration: duration is per item, numItems: %s, rowsPerPage: %s, itemsPerPage: %s',
+                $numItems,
+                $rowsPerPage,
+                $itemsPerPage
+            ));
         }
         return $this;
     }
