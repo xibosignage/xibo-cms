@@ -2951,6 +2951,7 @@ lD.checkLayoutStatus = function() {
         res.extra.status,
         res.html,
         res.extra.statusMessage,
+        res.extra.duration,
       );
 
       if (
