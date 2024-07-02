@@ -338,7 +338,7 @@
                             </div>
                         </div>
 
-                        <div id="scheduleCriteriaFields" data-criteria=""></div>
+                        <div id="scheduleCriteriaFields" data-criteria="" data-schedule-criteria="{{ scheduleCriteria|json_encode|e('html_attr') }}"></div>
                     </div>
                 </div>
             </form>

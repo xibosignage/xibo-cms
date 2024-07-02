@@ -26,7 +26,10 @@ use Carbon\Carbon;
 use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Str;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Xibo\Event\ScheduleCriteriaRequestEvent;
+use Xibo\Event\ScheduleCriteriaRequestInterface;
 use Xibo\Event\WidgetDataRequestEvent;
+use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 use Xibo\Widget\DataType\Forecast;
@@ -58,6 +61,7 @@ class OpenWeatherMapConnector implements ConnectorInterface
     public function registerWithDispatcher(EventDispatcherInterface $dispatcher): ConnectorInterface
     {
         $dispatcher->addListener(WidgetDataRequestEvent::$NAME, [$this, 'onDataRequest']);
+        $dispatcher->addListener(ScheduleCriteriaRequestEvent::$NAME, [$this, 'onScheduleCriteriaRequest']);
         return $this;
     }
 
@@ -637,5 +641,53 @@ class OpenWeatherMapConnector implements ConnectorInterface
             'W' => [247.5, 292.5],
             'NW' => [292.5, 337.5]
         ];
+    }
+
+    /**
+     * @param ScheduleCriteriaRequestInterface $event
+     * @return void
+     * @throws ConfigurationException
+     */
+    public function onScheduleCriteriaRequest(ScheduleCriteriaRequestInterface $event): void
+    {
+        // Initialize Open Weather Schedule Criteria parameters
+        $event->addType('weather', __('Weather'))
+                ->addMetric('weather_condition', __('Weather Condition'))
+                    ->addValues('dropdown', [
+                        'clear_sky' => __('Clear Sky'),
+                        'few_clouds' => __('Few Clouds'),
+                        'scattered_clouds' => __('Scattered Clouds'),
+                        'broken_clouds' => __('Broken Clouds'),
+                        'shower_rain' => __('Shower Rain'),
+                        'rain' => __('Rain'),
+                        'thunderstorm' => __('Thunderstorm'),
+                        'snow' => __('Snow'),
+                        'mist' => __('Mist')
+                    ])
+                ->addMetric('atmosphere', __('Atmosphere'))
+                    ->addValues('dropdown', [
+                        'list' => __('List'),
+                        'smoke'=> __('Smoke'),
+                        'haze' => __('Haze'),
+                        'dust_whirls' => __('Sand/Dust Whirls'),
+                        'fog' => __('Fog'),
+                        'sand' => __('Sand'),
+                        'dust' => __('Dust'),
+                        'ash' => __('Ash'),
+                        'squall' => __('Squall'),
+                        'tornado' => __('Tornado')
+                    ])
+                ->addMetric('temperature', __('Temperature'))
+                    ->addValues('number', [])
+                ->addMetric('wind_speed', __('Wind Speed'))
+                    ->addValues('number', [])
+                ->addMetric('wind_direction', __('Wind Direction'))
+                    ->addValues('number', [])
+                ->addMetric('humidity', __('Humidity'))
+                    ->addValues('number', [])
+                ->addMetric('pressure', __('Pressure'))
+                    ->addValues('number', [])
+                ->addMetric('visibility', __('Visibility'))
+                    ->addValues('number', []);
     }
 }
