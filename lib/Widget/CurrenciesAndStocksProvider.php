@@ -74,7 +74,7 @@ class CurrenciesAndStocksProvider implements WidgetProviderInterface
 
         if ($numItems > 1) {
             // If we have paging involved then work out the page count.
-            $itemsPerPage = $durationProvider->getWidget()->getOptionValue('maxItemsPerPage', 0);
+            $itemsPerPage = $durationProvider->getWidget()->getOptionValue('itemsPerPage', 0);
             if ($itemsPerPage > 0) {
                 $numItems = ceil($numItems / $itemsPerPage);
             }
