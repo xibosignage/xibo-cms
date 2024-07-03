@@ -36,7 +36,7 @@ class LayoutUploadHandler extends BlueImpUploadHandler
      * @param $file
      * @param $index
      */
-    protected function handle_form_data($file, $index)
+    protected function handleFormData($file, $index)
     {
         /* @var \Xibo\Controller\Layout $controller */
         $controller = $this->options['controller'];

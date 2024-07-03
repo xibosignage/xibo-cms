@@ -45,7 +45,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
      * @param $file
      * @param $index
      */
-    protected function handle_form_data($file, $index)
+    protected function handleFormData($file, $index)
     {
         $controller = $this->options['controller'];
         /* @var \Xibo\Controller\Library $controller */
@@ -55,7 +55,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
         $fileName = $file->name;
         $filePath = $controller->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/' . $fileName;
 
-        $controller->getLog()->debug('Upload complete for name: ' . $fileName . '. Index is ' . $index);
+        $this->getLogger()->debug('Upload complete for name: ' . $fileName . '. Index is ' . $index);
 
         // Upload and Save
         try {
@@ -83,7 +83,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
             $module = $controller->getModuleFactory()
                 ->getByExtension(strtolower(substr(strrchr($fileName, '.'), 1)));
 
-            $controller->getLog()->debug(sprintf(
+            $this->getLogger()->debug(sprintf(
                 'Module Type = %s, Name = %s',
                 $module->type,
                 $module->name
@@ -94,7 +94,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 $updateInLayouts = ($this->options['updateInLayouts'] == 1);
                 $deleteOldRevisions = ($this->options['deleteOldRevisions'] == 1);
 
-                $controller->getLog()->debug(sprintf(
+                $this->getLogger()->debug(sprintf(
                     'Replacing old with new - updateInLayouts = %d, deleteOldRevisions = %d',
                     $updateInLayouts,
                     $deleteOldRevisions
@@ -166,7 +166,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                     LibraryUploadCompleteEvent::$NAME
                 );
 
-                $controller->getLog()->debug('Copying permissions to new media');
+                $this->getLogger()->debug('Copying permissions to new media');
 
                 foreach ($controller->getPermissionFactory()->getAllByObjectId(
                     $controller->getUser(),
@@ -181,10 +181,10 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // Do we want to replace this in all layouts?
                 if ($updateInLayouts) {
-                    $controller->getLog()->debug('Replace in all Layouts selected. Getting associated widgets');
+                    $this->getLogger()->debug('Replace in all Layouts selected. Getting associated widgets');
 
                     foreach ($controller->getWidgetFactory()->getByMediaId($oldMedia->mediaId, 0) as $widget) {
-                        $controller->getLog()->debug('Found widgetId ' . $widget->widgetId
+                        $this->getLogger()->debug('Found widgetId ' . $widget->widgetId
                                 . ' to assess, type is ' . $widget->type);
 
                         if (!$controller->getUser()->checkEditable($widget)) {
@@ -202,7 +202,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                         if ($module->type == 'audio'
                             && in_array($oldMedia->mediaId, $widget->getAudioIds())
                         ) {
-                            $controller->getLog()->debug('Found audio on widget that needs updating. widgetId = ' .
+                            $this->getLogger()->debug('Found audio on widget that needs updating. widgetId = ' .
                                 $widget->getId() . '. Linking ' . $media->mediaId);
 
                             $widget->unassignAudioById($oldMedia->mediaId);
@@ -210,7 +210,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                             $widget->save();
                         } else if ($widget->type == 'global') {
                             // This is a global widget and will have elements which refer to this media id.
-                            $controller->getLog()->debug('This is a global widget, checking for elements.');
+                            $this->getLogger()->debug('This is a global widget, checking for elements.');
 
                             // We need to load options as that is where we store elements
                             $widget->load(false);
@@ -268,7 +268,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                                 }
                             }
 
-                            $controller->getLog()->debug(sprintf(
+                            $this->getLogger()->debug(sprintf(
                                 'Found widget that needs updating. ID = %d. Linking %d',
                                 $widget->getId(),
                                 $media->mediaId
@@ -299,7 +299,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                     // Update any background images
                     if ($media->mediaType == 'image') {
-                        $controller->getLog()->debug(sprintf(
+                        $this->getLogger()->debug(sprintf(
                             'Updating layouts with the old media %d as the background image.',
                             $oldMedia->mediaId
                         ));
@@ -316,12 +316,12 @@ class XiboUploadHandler extends BlueImpUploadHandler
                                 // this means we can't delete the original mediaId when it comes time to do so.
                                 $deleteOldRevisions = false;
 
-                                $controller->getLog()->info(
+                                $this->getLogger()->info(
                                     'Media used on Widget that we cannot edit. Delete Old Revisions has been disabled.'
                                 );
                             }
 
-                            $controller->getLog()->debug(sprintf(
+                            $this->getLogger()->debug(sprintf(
                                 'Found layout that needs updating. ID = %d. Setting background image id to %d',
                                 $layout->layoutId,
                                 $media->mediaId
@@ -331,7 +331,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                         }
                     }
                 } elseif ($this->options['widgetId'] != 0) {
-                    $controller->getLog()->debug('Swapping a specific widget only.');
+                    $this->getLogger()->debug('Swapping a specific widget only.');
                     // swap this one
                     $widget = $controller->getWidgetFactory()->getById($this->options['widgetId']);
 
@@ -346,7 +346,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // We either want to Link the old record to this one, or delete it
                 if ($updateInLayouts && $deleteOldRevisions) {
-                    $controller->getLog()->debug('Delete old revisions of ' . $oldMedia->mediaId);
+                    $this->getLogger()->debug('Delete old revisions of ' . $oldMedia->mediaId);
 
                     // Check we have permission to delete this media
                     if (!$controller->getUser()->checkDeleteable($oldMedia)) {
@@ -357,7 +357,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                         // Join the prior revision up with the new media.
                         $priorMedia = $controller->getMediaFactory()->getParentById($oldMedia->mediaId);
 
-                        $controller->getLog()->debug(
+                        $this->getLogger()->debug(
                             'Prior media found, joining ' .
                             $priorMedia->mediaId . ' with ' . $media->mediaId
                         );
@@ -366,7 +366,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                         $priorMedia->save(['validate' => false]);
                     } catch (NotFoundException $e) {
                         // Nothing to do then
-                        $controller->getLog()->debug('No prior media found');
+                        $this->getLogger()->debug('No prior media found');
                     }
 
                     $controller->getDispatcher()->dispatch(
@@ -444,7 +444,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
             // Are we assigning to a Playlist?
             if ($this->options['playlistId'] != 0 && $this->options['widgetId'] == 0) {
-                $controller->getLog()->debug('Assigning uploaded media to playlistId '
+                $this->getLogger()->debug('Assigning uploaded media to playlistId '
                     . $this->options['playlistId']);
 
                 // Get the Playlist
@@ -494,8 +494,8 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 $file->widgetId = $widget->widgetId;
             }
         } catch (Exception $e) {
-            $controller->getLog()->error('Error uploading media: ' . $e->getMessage());
-            $controller->getLog()->debug($e->getTraceAsString());
+            $this->getLogger()->error('Error uploading media: ' . $e->getMessage());
+            $this->getLogger()->debug($e->getTraceAsString());
 
             // Unlink the temporary file
             @unlink($filePath);

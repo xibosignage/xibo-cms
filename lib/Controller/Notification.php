@@ -404,11 +404,6 @@ class Notification extends Base
         $options = array(
             'userId' => $this->getUser()->userId,
             'controller' => $this,
-            'upload_dir' => $libraryFolder . 'temp/',
-            'download_via_php' => true,
-            'script_url' => $this->urlFor($request,'notification.add'),
-            'upload_url' => $this->urlFor($request,'notification.add'),
-            'image_versions' => array(),
             'accept_file_types' => '/\.jpg|.jpeg|.png|.bmp|.gif|.zip|.pdf/i'
         );
 
@@ -418,7 +413,7 @@ class Notification extends Base
         $this->getLog()->debug('Hand off to Upload Handler with options: ' . json_encode($options));
 
         // Hand off to the Upload Handler provided by jquery-file-upload
-        new AttachmentUploadHandler($options);
+        new AttachmentUploadHandler($libraryFolder . 'temp/', $this->getLog()->getLoggerInterface(), $options);
 
         // Explicitly set the Content-Type header to application/json
         $response = $response->withHeader('Content-Type', 'application/json');
