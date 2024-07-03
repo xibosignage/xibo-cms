@@ -1943,11 +1943,14 @@ const configureCriteriaFields = function(dialog) {
         } else {
             // change input type to dropdown
             $metricSelect = $('<select class="form-control" name="criteria_metric[]"></select>');
-            const type = types.find(t => t.id === typeId);
+            const type = types ? types.find(t => t.id === typeId) : null;
             if (type) {
                 type.metrics.forEach(metric => {
                     $metricSelect.append(new Option(metric.name, metric.id));
                 });
+            } else {
+                // change the input type back to text
+                $metricSelect = $('<input class="form-control" name="criteria_metric[]" type="text" value="' + selectedMetric + '" />');
             }
         }
 
@@ -1958,7 +1961,7 @@ const configureCriteriaFields = function(dialog) {
         // Set the selected metric if provided
         if (selectedMetric) {
             $metricSelect.val(selectedMetric);
-            const type = types.find(t => t.id === typeId);
+            const type = types?  types.find(t => t.id === typeId) : null;
             if (type) {
                 const metric = type.metrics.find(m => m.id === selectedMetric);
                 // update value field if metric is present
