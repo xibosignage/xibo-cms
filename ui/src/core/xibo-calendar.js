@@ -1917,7 +1917,7 @@ const configureCriteriaFields = function(dialog) {
     const scheduleCriteria = $fields.data('scheduleCriteria');
 
     // Extract the types from scheduleCriteria
-    const types = scheduleCriteria.types;
+    const types = scheduleCriteria ? scheduleCriteria.types : [];
 
     // We use a template
     const templateScheduleCriteriaFields =
@@ -1925,9 +1925,11 @@ const configureCriteriaFields = function(dialog) {
 
     // Function to populate type dropdowns
     const populateTypeDropdown = function($typeSelect) {
-        types.forEach(type => {
-            $typeSelect.append(new Option(type.name, type.id));
-        });
+        if (types && types.length > 0) {
+            types.forEach(type => {
+                $typeSelect.append(new Option(type.name, type.id));
+            });
+        }
     };
 
     // Function to update metrics field
