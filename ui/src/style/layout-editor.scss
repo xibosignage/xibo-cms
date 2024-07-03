@@ -244,6 +244,26 @@ body.editor-opened {
         }
     }
 
+    &.preview-playing {
+        .custom-overlay-preview-playing {
+            display: block !important;
+            z-index: $preview-playing-z-index !important;
+            opacity: 0.5;
+        }
+
+        .main-panel {
+            z-index: calc(#{$preview-playing-z-index} + 10);
+
+            #fullscreenBtn, #layerManagerBtn {
+                display: none;
+            }
+
+            .main-panel-wrapper, .editor-bottom-bar {
+                outline: 4px solid $xibo-color-primary-l60;
+            }
+        }
+    }
+
     .snap-controls {
         position: absolute;
         display: flex;
