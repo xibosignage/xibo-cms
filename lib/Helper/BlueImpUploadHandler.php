@@ -26,6 +26,14 @@ use Psr\Log\LoggerInterface;
 
 /**
  * Heavily modified BlueImp Upload handler, stripped out image processing, downloads, etc.
+ * jQuery File Upload Plugin PHP Class 6.4.2
+ * https://github.com/blueimp/jQuery-File-Upload
+ *
+ * Copyright 2010, Sebastian Tschan
+ * https://blueimp.net
+ *
+ * Licensed under the MIT license:
+ * http://www.opensource.org/licenses/MIT
  */
 class BlueImpUploadHandler
 {
