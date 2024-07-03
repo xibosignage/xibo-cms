@@ -86,20 +86,18 @@ class ImageProcessingTask implements TaskInterface
 
             // Orientation of the image
             if ($imgWidth > $imgHeight) { // 'landscape';
-                $this->imageProcessingService->resizeImage($filePath, $resizeThreshold, null);
+                $updatedImg = $this->imageProcessingService->resizeImage($filePath, $resizeThreshold, null);
             } else { // 'portrait';
-                $this->imageProcessingService->resizeImage($filePath, null, $resizeThreshold);
+                $updatedImg = $this->imageProcessingService->resizeImage($filePath, null, $resizeThreshold);
             }
 
             // Clears file status cache
-            clearstatcache(true, $filePath);
+            clearstatcache(true, $updatedImg['filePath']);
 
             $count++;
 
             // Release image and save
-            list($updatedImgWidth, $updatedImgHeight) = @getimagesize($filePath);
-
-            $media->release(md5_file($filePath), filesize($filePath), $updatedImgHeight, $updatedImgWidth);
+            $media->release($updatedImg);
             $this->store->commitIfNecessary();
 
             $mediaDisplays= [];
