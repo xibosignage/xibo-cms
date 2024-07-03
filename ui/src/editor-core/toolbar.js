@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -677,7 +677,7 @@ Toolbar.prototype.loadPrefs = function() {
     } else {
       // Login Form needed?
       if (res.login) {
-        window.location.href = window.location.href;
+        window.location.reload();
         location.reload();
       } else {
         // Just an error we dont know about
@@ -791,7 +791,7 @@ Toolbar.prototype.savePrefs = _.debounce(function(clearPrefs = false) {
     if (!res.success) {
       // Login Form needed?
       if (res.login) {
-        window.location.href = window.location.href;
+        window.location.reload();
         location.reload();
       } else {
         toastr.error(errorMessagesTrans.userSavePreferencesFailed);
@@ -1626,7 +1626,7 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
     }).catch(function(jqXHR, textStatus, errorThrown) {
       // Login Form needed?
       if (res.login) {
-        window.location.href = window.location.href;
+        window.location.reload();
         location.reload();
       } else {
         // Just an error we dont know about
@@ -1994,7 +1994,7 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
             self.handleCardsBehaviour();
           });
         } else if (response.login) {
-          window.location.href = window.location.href;
+          window.location.reload();
           location.reload();
         } else if ($content.find('.toolbar-card').length === 0) {
           $searchForm.append(

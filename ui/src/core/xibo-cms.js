@@ -3045,7 +3045,7 @@ function XiboRedirect(url) {
 function LoginBox(message) {
 
     // Reload the page (appending the message)
-    window.location.href = window.location.href;
+    window.location.reload();
     location.reload();
 }
 
