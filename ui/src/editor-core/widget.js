@@ -574,7 +574,6 @@ Widget.prototype.editPropertyForm = function(property, type) {
       // Login Form needed?
       if (res.login) {
         window.location.reload();
-        location.reload();
       } else {
         toastr.error(errorMessagesTrans.formLoadFailed);
 
@@ -759,7 +758,6 @@ Widget.prototype.saveElements = function(
           // Login Form needed?
           if (res.login) {
             window.location.reload();
-            location.reload();
           } else {
             toastr.error(errorMessagesTrans.formLoadFailed);
 
@@ -946,7 +944,6 @@ Widget.prototype.saveElements = function(
         // Login Form needed?
         if (res.login) {
           window.location.reload();
-          location.reload();
         } else {
           if (res.statusText != 'requestAborted') {
             // Just an error we dont know about

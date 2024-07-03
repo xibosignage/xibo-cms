@@ -3043,10 +3043,8 @@ function XiboRedirect(url) {
  * @param {String} message
  */
 function LoginBox(message) {
-
     // Reload the page (appending the message)
     window.location.reload();
-    location.reload();
 }
 
 /**

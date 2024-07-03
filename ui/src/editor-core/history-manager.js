@@ -251,7 +251,6 @@ HistoryManager.prototype.uploadChange = function(
         // Login Form needed?
         if (data.login) {
           window.location.reload();
-          location.reload();
         } else {
           // Just an error we dont know about
           if (data.message == undefined) {
@@ -383,7 +382,6 @@ HistoryManager.prototype.revertChange = function() {
             // Login Form needed?
             if (data.login) {
               window.location.reload();
-              location.reload();
             } else {
               // Just an error we dont know about
               if (data.message == undefined) {

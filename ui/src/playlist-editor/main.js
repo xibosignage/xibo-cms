@@ -242,7 +242,6 @@ pE.loadEditor = function(inline = false) {
         // Login Form needed?
         if (res.login) {
           window.location.reload();
-          location.reload();
         } else {
           pE.showErrorMessage();
         }
@@ -649,7 +648,6 @@ pE.reloadData = function(
       } else {
         if (res.login) {
           window.location.reload();
-          location.reload();
         } else {
           pE.showErrorMessage();
         }
@@ -888,7 +886,6 @@ pE.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
       // Login Form needed?
       if (res.login) {
         window.location.reload();
-        location.reload();
       } else {
         // Just an error we dont know about
         if (res.message == undefined) {
@@ -1005,7 +1002,6 @@ pE.importFromProvider = function(items) {
         // Login Form needed?
         if (data.login) {
           window.location.reload();
-          location.reload();
         } else {
           // Just an error we dont know about
           if (data.message == undefined) {

@@ -678,7 +678,6 @@ Toolbar.prototype.loadPrefs = function() {
       // Login Form needed?
       if (res.login) {
         window.location.reload();
-        location.reload();
       } else {
         // Just an error we dont know about
         if (res.message == undefined) {
@@ -792,7 +791,6 @@ Toolbar.prototype.savePrefs = _.debounce(function(clearPrefs = false) {
       // Login Form needed?
       if (res.login) {
         window.location.reload();
-        location.reload();
       } else {
         toastr.error(errorMessagesTrans.userSavePreferencesFailed);
 
@@ -1627,7 +1625,6 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
       // Login Form needed?
       if (res.login) {
         window.location.reload();
-        location.reload();
       } else {
         // Just an error we dont know about
         if (res.message == undefined) {
@@ -1995,7 +1992,6 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
           });
         } else if (response.login) {
           window.location.reload();
-          location.reload();
         } else if ($content.find('.toolbar-card').length === 0) {
           $searchForm.append(
             '<div class="no-results-message">' +
