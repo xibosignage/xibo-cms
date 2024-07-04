@@ -190,6 +190,17 @@ if (isset($_GET['file'])) {
         $libraryLocation = $container->get('configService')->getSetting('LIBRARY_LOCATION');
         $logger->info('HTTP GetFile request redirecting to ' . $libraryLocation . $file->path);
 
+        // Issue content type header
+        if ($file->type === 'L') {
+            // Layouts are always XML
+            header('Content-Type', 'text/xml');
+        } else {
+            $contentType = mime_content_type($libraryLocation . $file->path);
+            if ($contentType !== false) {
+                header('Content-Type: ' . $contentType);
+            }
+        }
+
         if ($sendFileMode == 'Apache') {
             // Send via Apache X-Sendfile header
             header('X-Sendfile: ' . $libraryLocation . $file->path);

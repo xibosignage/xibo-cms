@@ -35,7 +35,8 @@
         "ext-pdo": "1",
         "ext-json": "1",
         "ext-soap": "1",
-        "ext-zip": "1"
+        "ext-zip": "1",
+        "ext-fileinfo": "*"
       }
   },
   "minimum-stability": "dev",
@@ -48,6 +49,7 @@
     "ext-soap": "*",
     "ext-zip": "*",
     "ext-openssl": "*",
+    "ext-fileinfo": "*",
     "slim/slim": "^4.3",
     "slim/http": "^1.2",
     "slim/flash": "^0.4",
