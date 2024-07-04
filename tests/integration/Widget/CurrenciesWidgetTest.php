@@ -78,7 +78,7 @@ class CurrenciesWidgetTest extends LocalWebTestCase
 
     /**
      * Each array is a test run
-     * Format ($overrideTemplate, $templateId, $name, $duration, $useDuration, $base, $items, $reverseConversion, $effect, $speed, $backgroundColor, $noRecordsMessage, $dateFormat, $updateInterval, $durationIsPerItem, $widgetOriginalWidth, $widgetOriginalHeight, $maxItemsPerPage, $mainTemplate, $itemTemplate, $styleSheet, $javaScript)
+     * Format ($overrideTemplate, $templateId, $name, $duration, $useDuration, $base, $items, $reverseConversion, $effect, $speed, $backgroundColor, $noRecordsMessage, $dateFormat, $updateInterval, $durationIsPerItem, $widgetOriginalWidth, $widgetOriginalHeight, $itemsPerPage, $mainTemplate, $itemTemplate, $styleSheet, $javaScript)
      * @return array
      */
     public function provideSuccessCases()
@@ -96,7 +96,7 @@ class CurrenciesWidgetTest extends LocalWebTestCase
      * @group broken
      * @dataProvider provideSuccessCases
      */
-    public function testEdit($isOverride, $templateId, $name, $duration, $useDuration, $base, $items, $reverseConversion, $effect, $speed, $backgroundColor, $noRecordsMessage, $dateFormat, $updateInterval, $durationIsPerItem, $widgetOriginalWidth, $widgetOriginalHeight, $maxItemsPerPage, $mainTemplate, $itemTemplate, $styleSheet, $javaScript)
+    public function testEdit($isOverride, $templateId, $name, $duration, $useDuration, $base, $items, $reverseConversion, $effect, $speed, $backgroundColor, $noRecordsMessage, $dateFormat, $updateInterval, $durationIsPerItem, $widgetOriginalWidth, $widgetOriginalHeight, $itemsPerPage, $mainTemplate, $itemTemplate, $styleSheet, $javaScript)
     {
         # Edit currency widget and change name, duration, template, reverseConversion and items
         $response = $this->sendRequest('PUT','/playlist/widget/' . $this->widgetId, [
