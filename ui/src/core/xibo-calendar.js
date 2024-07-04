@@ -40,6 +40,133 @@ $(document).ready(function() {
         });
     });
 
+    // Set a listener for type change event
+    $('body').on('change', '#scheduleCriteriaFields select[name="criteria_type[]"]', function(e) {
+        // Capture the event target
+        var $target = $(e.target);
+        // Get the row where the type was changed
+        var $row = $target.closest('.form-group');
+        var selectedType = $target.val();
+        var $fields = $('#scheduleCriteriaFields');
+        var scheduleCriteria = $fields.data('scheduleCriteria');
+
+        if (scheduleCriteria) {
+            if (selectedType === 'custom') {
+                // Use a text input for metrics
+                updateMetricsFieldAsText($row);
+                // Use a text input for values
+                updateValueFieldAsText($row);
+            } else if (scheduleCriteria) {
+                // Update metrics based on the selected type and change text field to dropdown
+                updateMetricsField($row, scheduleCriteria, selectedType);
+            }
+        }
+    });
+
+    // Function to update the metrics field based on the selected type
+    function updateMetricsField($row, scheduleCriteria, type) {
+        var $metricLabel = $row.find('label[for="criteria_metric[]"]');
+        var $metricSelect = $('<select class="form-control" name="criteria_metric[]"></select>');
+
+        // Check if scheduleCriteria has types
+        if (scheduleCriteria.types) {
+            var typeData = scheduleCriteria.types.find(t => t.id === type);
+            if (typeData) {
+                var metrics = typeData.metrics;
+                metrics.forEach(function(metric) {
+                    $metricSelect.append(new Option(metric.name, metric.id));
+                });
+
+                // Check for the currently selected metric and update the value field accordingly
+                var selectedMetric = $metricSelect.val();
+                var metricData = metrics.find(m => m.id === selectedMetric);
+
+                // Update the value field based on the selected metric
+                if (metricData && metricData.values) {
+                    updateValueField($row, metricData.values);
+                } else {
+                    updateValueFieldAsText($row);
+                }
+            }
+        }
+
+        // Remove only input or select elements inside the label
+        $metricLabel.find('input, select').remove();
+        $metricLabel.append($metricSelect);
+    }
+
+    // Function to revert the metrics field to a text input
+    function updateMetricsFieldAsText($row) {
+        var $metricLabel = $row.find('label[for="criteria_metric[]"]');
+        var $metricInput = $('<input class="form-control" name="criteria_metric[]" type="text" value="" />');
+
+        // Remove only input or select elements inside the label
+        $metricLabel.find('input, select').remove();
+        $metricLabel.append($metricInput);
+    }
+
+    // Handle value field update outside of updateMetricsField
+    $('body').on('change', '#scheduleCriteriaFields select[name="criteria_metric[]"]', function(e) {
+        // Capture the event target
+        var $target = $(e.target);
+        // Get the row where the metric was changed
+        var $row = $target.closest('.form-group');
+        var selectedMetric = $target.val();
+        var $fields = $('#scheduleCriteriaFields');
+        var scheduleCriteria = $fields.data('scheduleCriteria');
+        var selectedType = $row.find('select[name="criteria_type[]"]').val();
+
+        if (scheduleCriteria && selectedType) {
+            var typeData = scheduleCriteria.types.find(t => t.id === selectedType);
+            if (typeData) {
+                var metrics = typeData.metrics;
+                var metricData = metrics.find(m => m.id === selectedMetric);
+
+                // Update the value field based on the selected metric
+                if (metricData && metricData.values) {
+                    updateValueField($row, metricData.values);
+                } else {
+                    updateValueFieldAsText($row);
+                }
+            }
+        }
+    });
+
+    // Function to update the value field based on the selected metric's values
+    function updateValueField($row, values) {
+        var $valueLabel = $row.find('label[for="criteria_value[]"]');
+
+        // Remove only input or select elements inside the label
+        $valueLabel.find('input, select').remove();
+
+        // Check the inputType in the values object
+        if (values.inputType === 'dropdown') {
+            // change to dropdown and populate
+            var $valueSelect = $('<select class="form-control" name="criteria_value[]"></select>');
+            values.values.forEach(function(value) {
+                $valueSelect.append(new Option(value.title, value.id));
+            });
+            $valueLabel.append($valueSelect);
+        } else {
+            // change to either text or number field
+            var $valueInput;
+            if (values.inputType === 'text' || values.inputType === 'number' || values.inputType === 'date') {
+                $valueInput = $('<input class="form-control" name="criteria_value[]" type="' + values.inputType + '" value="" />');
+            }
+            $valueLabel.append($valueInput);
+        }
+    }
+
+    // Function to revert the value field to a text input
+    function updateValueFieldAsText($row) {
+        var $valueLabel = $row.find('label[for="criteria_value[]"]');
+        var $valueInput = $('<input class="form-control" name="criteria_value[]" type="text" value="" />');
+
+        // Remove only input or select elements inside the label
+        $valueLabel.find('input, select').remove();
+        $valueLabel.append($valueInput);
+    }
+
     // Set up the navigational controls
     $('.btn-group button[data-calendar-nav]').each(function() {
         var $this = $(this);
@@ -1781,48 +1908,149 @@ var setupSelectForSchedule = function (dialog) {
  */
 // eslint-disable-next-line no-unused-vars
 const configureCriteriaFields = function(dialog) {
-  const $fields = dialog.find('#scheduleCriteriaFields');
-  if ($fields.length <= 0) {
-    return;
-  }
-
-  // We use a template
-  const templateScheduleCriteriaFields =
-    Handlebars.compile($('#templateScheduleCriteriaFields').html());
-
-  // Existing criteria?
-  const existingCriteria = $fields.data('criteria');
-  if (existingCriteria && existingCriteria.length >= 0) {
-    // Yes there are existing criteria
-    // Go through each one and add a field row to the form.
-    let i = 0;
-    $.each(existingCriteria, function(index, element) {
-      i++;
-      element.isAdd = false;
-      element.i = i;
-      $fields.append(templateScheduleCriteriaFields(element));
-    });
-  }
-
-  // Add a row at the end for configuring a new criterion
-  $fields.append(templateScheduleCriteriaFields({
-    isAdd: true,
-  }));
-
-  // Buttons we've added should be bound.
-  $fields.on('click', 'button', function(e) {
-    e.preventDefault();
-    // eslint-disable-next-line no-invalid-this
-    const $button = $(this);
-    if ($button.data('isAdd')) {
-      $fields.append(templateScheduleCriteriaFields({
-        isAdd: true,
-      }));
-      $button.data('isAdd', false);
-    } else {
-      $button.closest('.form-group').remove();
+    const $fields = dialog.find('#scheduleCriteriaFields');
+    if ($fields.length <= 0) {
+        return;
     }
-  });
+
+    // Get the scheduleCriteria from the data attribute
+    const scheduleCriteria = $fields.data('scheduleCriteria');
+
+    // Extract the types from scheduleCriteria
+    const types = scheduleCriteria ? scheduleCriteria.types : [];
+
+    // We use a template
+    const templateScheduleCriteriaFields =
+        Handlebars.compile($('#templateScheduleCriteriaFields').html());
+
+    // Function to populate type dropdowns
+    const populateTypeDropdown = function($typeSelect) {
+        if (types && types.length > 0) {
+            types.forEach(type => {
+                $typeSelect.append(new Option(type.name, type.id));
+            });
+        }
+    };
+
+    // Function to update metrics field
+    const updateMetricsField = function($row, typeId, selectedMetric, elementValue) {
+        const $metricLabel = $row.find('label[for="criteria_metric[]"]');
+        let $metricSelect;
+
+        if (typeId === 'custom') {
+            // change the input type to text
+            $metricSelect = $('<input class="form-control" name="criteria_metric[]" type="text" value="" />');
+        } else {
+            // change input type to dropdown
+            $metricSelect = $('<select class="form-control" name="criteria_metric[]"></select>');
+            const type = types ? types.find(t => t.id === typeId) : null;
+            if (type) {
+                type.metrics.forEach(metric => {
+                    $metricSelect.append(new Option(metric.name, metric.id));
+                });
+            } else {
+                // change the input type back to text
+                $metricSelect = $('<input class="form-control" name="criteria_metric[]" type="text" value="' + selectedMetric + '" />');
+            }
+        }
+
+        // Remove only input or select elements inside the label
+        $metricLabel.find('input, select').remove();
+        $metricLabel.append($metricSelect);
+
+        // Set the selected metric if provided
+        if (selectedMetric) {
+            $metricSelect.val(selectedMetric);
+            const type = types?  types.find(t => t.id === typeId) : null;
+            if (type) {
+                const metric = type.metrics.find(m => m.id === selectedMetric);
+                // update value field if metric is present
+                if (metric) {
+                    updateValueField($row, metric, elementValue);
+                }
+            }
+        }
+    };
+
+    // Function to update value field
+    const updateValueField = function($row, metric, elementValue) {
+        const $valueLabel = $row.find('label[for="criteria_value[]"]');
+        let $valueInput;
+
+        if (metric.values && metric.values.inputType === 'dropdown') {
+            // change input type to dropdown
+            $valueInput = $('<select class="form-control" name="criteria_value[]"></select>');
+            if (metric.values.values) {
+                metric.values.values.forEach(value => {
+                    $valueInput.append(new Option(value.title, value.id));
+                });
+            }
+            // Set the selected value
+            $valueInput.val(elementValue);
+        } else {
+            // change input type according to inputType's value
+            const inputType = metric.values ? metric.values.inputType : 'text';
+            const value = elementValue || '';
+            $valueInput = $('<input class="form-control" name="criteria_value[]" type="' + inputType + '" value="' + value + '" />');
+        }
+
+        // Remove only input or select elements inside the label
+        $valueLabel.find('input, select').remove();
+        $valueLabel.append($valueInput);
+    };
+
+    // Existing criteria?
+    const existingCriteria = $fields.data('criteria');
+    if (existingCriteria && existingCriteria.length >= 0) {
+        // Yes there are existing criteria
+        // Go through each one and add a field row to the form.
+        let i = 0;
+        $.each(existingCriteria, function(index, element) {
+            i++;
+            element.isAdd = false;
+            element.i = i;
+            const $newField = $(templateScheduleCriteriaFields(element));
+            $fields.append($newField);
+
+            // Populate the type field
+            const $typeSelect = $newField.find('select[name="criteria_type[]"]');
+            populateTypeDropdown($typeSelect);
+
+            // Set the selected type
+            $typeSelect.val(element.type);
+
+            // Update metrics and value fields based on the selected type and metric
+            updateMetricsField($newField, element.type, element.metric, element.value);
+        });
+    }
+
+    // Add a row at the end for configuring a new criterion
+    const $newRow = $(templateScheduleCriteriaFields({
+        isAdd: true,
+    }));
+    const $newTypeSelect = $newRow.find('select[name="criteria_type[]"]');
+
+    // populate type dropdown based on scheduleCriteria
+    populateTypeDropdown($newTypeSelect);
+    $fields.append($newRow);
+
+    // Buttons we've added should be bound
+    $fields.on('click', 'button', function(e) {
+        e.preventDefault();
+        const $button = $(this);
+        if ($button.data('isAdd')) {
+            const newField = $(templateScheduleCriteriaFields({ isAdd: true }));
+            $fields.append(newField);
+
+            // Populate the type field for the new row
+            const $newTypeSelect = newField.find('select[name="criteria_type[]"]');
+            populateTypeDropdown($newTypeSelect);
+
+            $button.data('isAdd', false);
+        } else {
+            $button.closest('.form-group').remove();
+        }
+    });
 };
 
 const processCriteriaFields = function($form, data) {

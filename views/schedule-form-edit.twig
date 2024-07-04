@@ -332,7 +332,7 @@
                             </div>
                         </div>
 
-                        <div id="scheduleCriteriaFields" data-criteria="{{ event.criteria|json_encode }}"></div>
+                        <div id="scheduleCriteriaFields" data-criteria="{{ event.criteria|json_encode }}" data-schedule-criteria="{{ scheduleCriteria|json_encode|e('html_attr') }}"></div>
                     </div>
                 </div>
             </form>
