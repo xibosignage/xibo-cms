@@ -30,7 +30,6 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Helper\ByteFormatter;
-use Xibo\Helper\UploadHandler;
 use Xibo\Service\DownloadService;
 use Xibo\Service\MediaService;
 use Xibo\Service\MediaServiceInterface;
@@ -576,9 +575,6 @@ class PlayerSoftware extends Base
         $libraryLimit = $this->getConfig()->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
 
         $options = [
-            'upload_dir' => $libraryFolder . 'temp/',
-            'script_url' => $this->urlFor($request, 'playersoftware.add'),
-            'upload_url' => $this->urlFor($request, 'playersoftware.add'),
             'accept_file_types' => '/\.' . implode('|', $validExt) . '$/i',
             'libraryLimit' => $libraryLimit,
             'libraryQuotaFull' => ($libraryLimit > 0 && $this->getMediaService()->libraryUsage() > $libraryLimit),
@@ -590,10 +586,10 @@ class PlayerSoftware extends Base
         $this->getLog()->debug('Hand off to Upload Handler with options: ' . json_encode($options));
 
         // Hand off to the Upload Handler provided by jquery-file-upload
-        $uploadService = new UploadService($options, $this->getLog(), $this->getState());
+        $uploadService = new UploadService($libraryFolder . 'temp/', $options, $this->getLog(), $this->getState());
         $uploadHandler = $uploadService->createUploadHandler();
 
-        $uploadHandler->setPostProcessor(function ($file, $uploadHandler) {
+        $uploadHandler->setPostProcessor(function ($file, $uploadHandler) use ($libraryFolder) {
             // Return right away if the file already has an error.
             if (!empty($file->error)) {
                 $this->getState()->setCommitState(false);
@@ -602,9 +598,8 @@ class PlayerSoftware extends Base
 
             $this->getUser()->isQuotaFullByUser(true);
 
-            /** @var UploadHandler $uploadHandler */
-            $filePath = $uploadHandler->getUploadPath() . $file->fileName;
-            $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+            // Get the uploaded file and move it to the right place
+            $filePath = $libraryFolder . 'temp/' . $file->fileName;
 
             // Add the Player Software record
             $playerSoftware = $this->getPlayerVersionFactory()->createEmpty();
@@ -633,7 +628,7 @@ class PlayerSoftware extends Base
             }
 
             // everything is fine, move the file from temp folder.
-            rename($filePath, $libraryLocation . 'playersoftware/' . $playerSoftware->fileName);
+            rename($filePath, $libraryFolder . 'playersoftware/' . $playerSoftware->fileName);
 
             // return
             $file->id = $playerSoftware->versionId;

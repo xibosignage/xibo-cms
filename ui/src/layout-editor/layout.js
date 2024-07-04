@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -411,8 +411,7 @@ Layout.prototype.checkout = function() {
     } else {
       // Login Form needed?
       if (res.login) {
-        window.location.href = window.location.href;
-        location.reload();
+        window.location.reload();
       } else {
         toastr.error(res.message);
       }
@@ -463,8 +462,7 @@ Layout.prototype.publish = function() {
 
       // Login Form needed?
       if (res.login) {
-        window.location.href = window.location.href;
-        location.reload();
+        window.location.reload();
       } else {
         toastr.error(res.message);
 
@@ -515,8 +513,7 @@ Layout.prototype.discard = function() {
     } else {
       // Login Form needed?
       if (res.login) {
-        window.location.href = window.location.href;
-        location.reload();
+        window.location.reload();
       } else {
         toastr.error(res.message);
 
@@ -569,8 +566,7 @@ Layout.prototype.delete = function() {
     } else {
       // Login Form needed?
       if (res.login) {
-        window.location.href = window.location.href;
-        location.reload();
+        window.location.reload();
       } else {
         toastr.error(res.message);
 
