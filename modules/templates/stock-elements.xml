@@ -145,4 +145,590 @@ if ($targetContainer.find('.sampleCSS').length == 0) {
             <asset id="fontawesome-webfont.woff2" type="path" mimeType="application/font-woff2" path="/modules/assets/common/fontawesome-webfont.woff2"></asset>
         </assets>
     </template>
+    <template>
+        <id>stocks_single_1</id>
+        <type>element-group</type>
+        <dataType>stock</dataType>
+        <title>Stocks - Single 1</title>
+        <thumbnail>stocks-single-1</thumbnail>
+        <stencil>
+            <hbs></hbs>
+            <startWidth>419</startWidth>
+            <startHeight>169</startHeight>
+            <elements>
+                <element id="rectangle">
+                    <title>Background</title>
+                    <layer>0</layer>
+                    <top>0</top>
+                    <left>0</left>
+                    <width>419</width>
+                    <height>169</height>
+                    <defaultProperties>
+                        <property id="backgroundColor">#001061</property>
+                        <property id="roundBorder">1</property>
+                        <property id="borderRadius">20</property>
+                        <property id="outline">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="rectangle">
+                    <title>Temp area</title>
+                    <layer>2</layer>
+                    <top>20</top>
+                    <left>28</left>
+                    <width>124</width>
+                    <height>124</height>
+                    <defaultProperties>
+                        <property id="backgroundColor">#fff</property>
+                        <property id="roundBorder">1</property>
+                        <property id="borderRadius">10</property>
+                        <property id="outline">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="stock_changeIcon">
+                    <title>Stock change icon</title>
+                    <layer>4</layer>
+                    <top>31</top>
+                    <left>40</left>
+                    <width>100</width>
+                    <height>100</height>
+                </element>
+                <element id="stock_name">
+                    <title>Stock name</title>
+                    <layer>4</layer>
+                    <top>21</top>
+                    <left>185</left>
+                    <width>208</width>
+                    <height>63</height>
+                    <defaultProperties>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#fff</property>
+                        <property id="fontSize">40</property>
+                        <property id="bold">1</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="textWrap">0</property>
+                        <property id="showOverflow">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="text">
+                    <title>Stocks symbol</title>
+                    <layer>8</layer>
+                    <top>85</top>
+                    <left>184</left>
+                    <width>39</width>
+                    <height>63</height>
+                    <defaultProperties>
+                        <property id="text">$</property>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#fff</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                    </defaultProperties>
+                </element>
+                <element id="stock_lastTradePrice">
+                    <title>Last trade price</title>
+                    <layer>3</layer>
+                    <top>85</top>
+                    <left>223</left>
+                    <width>169</width>
+                    <height>63</height>
+                    <defaultProperties>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#fff</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                    </defaultProperties>
+                </element>
+            </elements>
+        </stencil>
+        <assets>
+            <asset id="stocks-single-1" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/stocks/elements/stocks-single-1.png" />
+        </assets>
+    </template>
+    <template>
+        <id>stocks_single_2</id>
+        <type>element-group</type>
+        <dataType>stock</dataType>
+        <title>Stocks - Single 2</title>
+        <thumbnail>stocks-single-2</thumbnail>
+        <stencil>
+            <hbs></hbs>
+            <startWidth>479</startWidth>
+            <startHeight>225</startHeight>
+            <elements>
+                <element id="rectangle">
+                    <title>Background</title>
+                    <layer>0</layer>
+                    <top>0</top>
+                    <left>0</left>
+                    <width>479</width>
+                    <height>225</height>
+                    <defaultProperties>
+                        <property id="backgroundColor">#171717</property>
+                        <property id="roundBorder">1</property>
+                        <property id="borderRadius">20</property>
+                        <property id="outline">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="stock_name">
+                    <title>Stock name</title>
+                    <layer>4</layer>
+                    <top>41</top>
+                    <left>44</left>
+                    <width>392</width>
+                    <height>63</height>
+                    <defaultProperties>
+                        <property id="fontFamily">open sans regular</property>
+                        <property id="fontColor">#fff</property>
+                        <property id="fontSize">60</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="textWrap">0</property>
+                        <property id="showOverflow">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="text">
+                    <title>Stock symbol</title>
+                    <layer>8</layer>
+                    <top>124</top>
+                    <left>45</left>
+                    <width>39</width>
+                    <height>64</height>
+                    <defaultProperties>
+                        <property id="text">$</property>
+                        <property id="fontFamily">open sans regular</property>
+                        <property id="fontColor">#b4b4b4</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                    </defaultProperties>
+                </element>
+                <element id="stock_lastTradePrice">
+                    <title>Last trade price</title>
+                    <layer>3</layer>
+                    <top>124</top>
+                    <left>84</left>
+                    <width>119</width>
+                    <height>63</height>
+                    <defaultProperties>
+                        <property id="fontFamily">open sans regular</property>
+                        <property id="fontColor">#b4b4b4</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                    </defaultProperties>
+                </element>
+                <element id="stock_changeIcon">
+                    <title>Stock change icon</title>
+                    <layer>10</layer>
+                    <top>125</top>
+                    <left>222</left>
+                    <width>58</width>
+                    <height>63</height>
+                </element>
+                <element id="stock_changePercentage">
+                    <title>Change percentage</title>
+                    <layer>9</layer>
+                    <top>124</top>
+                    <left>288</left>
+                    <width>148</width>
+                    <height>63</height>
+                    <defaultProperties>
+                        <property id="fontFamily">open sans regular</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                    </defaultProperties>
+                </element>
+            </elements>
+        </stencil>
+        <assets>
+            <asset id="stocks-single-2" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/stocks/elements/stocks-single-2.png" />
+        </assets>
+    </template>
+    <template>
+        <id>stocks_group_1</id>
+        <type>element-group</type>
+        <dataType>stock</dataType>
+        <title>Stocks - Group 1</title>
+        <thumbnail>stocks-group-1</thumbnail>
+        <stencil>
+            <hbs></hbs>
+            <startWidth>482</startWidth>
+            <startHeight>683</startHeight>
+            <elementGroups>
+                <elementGroup id="group_0">
+                    <title>Background group</title>
+                    <layer>0</layer>
+                    <top>0</top>
+                    <left>0</left>
+                    <width>482</width>
+                    <height>683</height>
+                    <slot>0</slot>
+                    <pinSlot>1</pinSlot>
+                </elementGroup>
+                <elementGroup id="group_1">
+                    <title>Group 1</title>
+                    <layer>3</layer>
+                    <top>38</top>
+                    <left>40</left>
+                    <width>400</width>
+                    <height>63</height>
+                    <slot>0</slot>
+                </elementGroup>
+                <elementGroup id="group_2">
+                    <title>Group 2</title>
+                    <layer>3</layer>
+                    <top>179</top>
+                    <left>40</left>
+                    <width>400</width>
+                    <height>63</height>
+                    <slot>1</slot>
+                </elementGroup>
+                <elementGroup id="group_3">
+                    <title>Group 3</title>
+                    <layer>3</layer>
+                    <top>312</top>
+                    <left>40</left>
+                    <width>400</width>
+                    <height>63</height>
+                    <slot>2</slot>
+                </elementGroup>
+                <elementGroup id="group_4">
+                    <title>Group 4</title>
+                    <layer>3</layer>
+                    <top>445</top>
+                    <left>40</left>
+                    <width>400</width>
+                    <height>63</height>
+                    <slot>3</slot>
+                </elementGroup>
+                <elementGroup id="group_5">
+                    <title>Group 5</title>
+                    <layer>3</layer>
+                    <top>582</top>
+                    <left>40</left>
+                    <width>400</width>
+                    <height>63</height>
+                    <slot>4</slot>
+                </elementGroup>
+            </elementGroups>
+            <elements>
+                <element id="rectangle" elementGroupId="group_0">
+                    <title>Background</title>
+                    <layer>1</layer>
+                    <top>0</top>
+                    <left>0</left>
+                    <width>482</width>
+                    <height>683</height>
+                    <defaultProperties>
+                        <property id="backgroundColor">#171717</property>
+                        <property id="outline">1</property>
+                        <property id="outlineColor">#b4b4b4</property>
+                        <property id="outlineWidth">2</property>
+                        <property id="roundBorder">1</property>
+                        <property id="borderRadius">20</property>
+                    </defaultProperties>
+                </element>
+                <element id="line" elementGroupId="group_0">
+                    <title>Separator 1</title>
+                    <layer>5</layer>
+                    <top>116</top>
+                    <left>36</left>
+                    <width>402</width>
+                    <height>48</height>
+                    <defaultProperties>
+                        <property id="lineColor">#b4b4b4</property>
+                        <property id="lineWidth">2</property>
+                    </defaultProperties>
+                </element>
+                <element id="line" elementGroupId="group_0">
+                    <title>Separator 2</title>
+                    <layer>5</layer>
+                    <top>253</top>
+                    <left>36</left>
+                    <width>402</width>
+                    <height>48</height>
+                    <defaultProperties>
+                        <property id="lineColor">#b4b4b4</property>
+                        <property id="lineWidth">2</property>
+                    </defaultProperties>
+                </element>
+                <element id="line" elementGroupId="group_0">
+                    <title>Separator 3</title>
+                    <layer>5</layer>
+                    <top>386</top>
+                    <left>36</left>
+                    <width>402</width>
+                    <height>48</height>
+                    <defaultProperties>
+                        <property id="lineColor">#b4b4b4</property>
+                        <property id="lineWidth">2</property>
+                    </defaultProperties>
+                </element>
+                <element id="line" elementGroupId="group_0">
+                    <title>Separator 4</title>
+                    <layer>5</layer>
+                    <top>523</top>
+                    <left>36</left>
+                    <width>402</width>
+                    <height>48</height>
+                    <defaultProperties>
+                        <property id="lineColor">#b4b4b4</property>
+                        <property id="lineWidth">2</property>
+                    </defaultProperties>
+                </element>
+                <element id="stock_name" elementGroupId="group_1">
+                    <title>Stock name</title>
+                    <layer>4</layer>
+                    <top>0</top>
+                    <left>0</left>
+                    <width>203</width>
+                    <height>63</height>
+                    <defaultProperties>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#fff</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="textWrap">0</property>
+                        <property id="showOverflow">0</property>
+                        <property id="bold">1</property>
+                    </defaultProperties>
+                </element>
+                <element id="text" elementGroupId="group_1">
+                    <title>Stock symbol</title>
+                    <layer>8</layer>
+                    <top>0</top>
+                    <left>225</left>
+                    <width>39</width>
+                    <height>63</height>
+                    <defaultProperties>
+                        <property id="text">$</property>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#b4b4b4</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                    </defaultProperties>
+                </element>
+                <element id="stock_lastTradePrice" elementGroupId="group_1">
+                    <title>Last trade price</title>
+                    <layer>3</layer>
+                    <top>0</top>
+                    <left>264</left>
+                    <width>136</width>
+                    <height>63</height>
+                    <defaultProperties>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#b4b4b4</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                    </defaultProperties>
+                </element>
+                <element id="stock_name" elementGroupId="group_2">
+                    <title>Stock name</title>
+                    <layer>4</layer>
+                    <top>0</top>
+                    <left>0</left>
+                    <width>203</width>
+                    <height>63</height>
+                    <defaultProperties>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#fff</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="textWrap">0</property>
+                        <property id="showOverflow">0</property>
+                        <property id="bold">1</property>
+                    </defaultProperties>
+                </element>
+                <element id="text" elementGroupId="group_2">
+                    <title>Stock symbol</title>
+                    <layer>8</layer>
+                    <top>0</top>
+                    <left>225</left>
+                    <width>39</width>
+                    <height>63</height>
+                    <defaultProperties>
+                        <property id="text">$</property>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#b4b4b4</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                    </defaultProperties>
+                </element>
+                <element id="stock_lastTradePrice" elementGroupId="group_2">
+                    <title>Last trade price</title>
+                    <layer>3</layer>
+                    <top>0</top>
+                    <left>264</left>
+                    <width>136</width>
+                    <height>63</height>
+                    <defaultProperties>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#b4b4b4</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                    </defaultProperties>
+                </element>
+                <element id="stock_name" elementGroupId="group_3">
+                    <title>Stock name</title>
+                    <layer>4</layer>
+                    <top>0</top>
+                    <left>0</left>
+                    <width>203</width>
+                    <height>63</height>
+                    <defaultProperties>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#fff</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="textWrap">0</property>
+                        <property id="showOverflow">0</property>
+                        <property id="bold">1</property>
+                    </defaultProperties>
+                </element>
+                <element id="text" elementGroupId="group_3">
+                    <title>Stock symbol</title>
+                    <layer>8</layer>
+                    <top>0</top>
+                    <left>225</left>
+                    <width>39</width>
+                    <height>63</height>
+                    <defaultProperties>
+                        <property id="text">$</property>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#b4b4b4</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                    </defaultProperties>
+                </element>
+                <element id="stock_lastTradePrice" elementGroupId="group_3">
+                    <title>Last trade price</title>
+                    <layer>3</layer>
+                    <top>0</top>
+                    <left>264</left>
+                    <width>136</width>
+                    <height>63</height>
+                    <defaultProperties>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#b4b4b4</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                    </defaultProperties>
+                </element>
+                <element id="stock_name" elementGroupId="group_4">
+                    <title>Stock name</title>
+                    <layer>4</layer>
+                    <top>0</top>
+                    <left>0</left>
+                    <width>203</width>
+                    <height>63</height>
+                    <defaultProperties>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#fff</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="textWrap">0</property>
+                        <property id="showOverflow">0</property>
+                        <property id="bold">1</property>
+                    </defaultProperties>
+                </element>
+                <element id="text" elementGroupId="group_4">
+                    <title>Stock symbol</title>
+                    <layer>8</layer>
+                    <top>0</top>
+                    <left>225</left>
+                    <width>39</width>
+                    <height>63</height>
+                    <defaultProperties>
+                        <property id="text">$</property>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#b4b4b4</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                    </defaultProperties>
+                </element>
+                <element id="stock_lastTradePrice" elementGroupId="group_4">
+                    <title>Last trade price</title>
+                    <layer>3</layer>
+                    <top>0</top>
+                    <left>264</left>
+                    <width>136</width>
+                    <height>63</height>
+                    <defaultProperties>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#b4b4b4</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                    </defaultProperties>
+                </element>
+                <element id="stock_name" elementGroupId="group_5">
+                    <title>Stock name</title>
+                    <layer>4</layer>
+                    <top>0</top>
+                    <left>0</left>
+                    <width>203</width>
+                    <height>63</height>
+                    <defaultProperties>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#fff</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="textWrap">0</property>
+                        <property id="showOverflow">0</property>
+                        <property id="bold">1</property>
+                    </defaultProperties>
+                </element>
+                <element id="text" elementGroupId="group_5">
+                    <title>Stock symbol</title>
+                    <layer>8</layer>
+                    <top>0</top>
+                    <left>225</left>
+                    <width>39</width>
+                    <height>63</height>
+                    <defaultProperties>
+                        <property id="text">$</property>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#b4b4b4</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                    </defaultProperties>
+                </element>
+                <element id="stock_lastTradePrice" elementGroupId="group_5">
+                    <title>Last trade price</title>
+                    <layer>3</layer>
+                    <top>0</top>
+                    <left>264</left>
+                    <width>136</width>
+                    <height>63</height>
+                    <defaultProperties>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#b4b4b4</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                    </defaultProperties>
+                </element>
+            </elements>
+        </stencil>
+        <assets>
+            <asset id="stocks-group-1" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/stocks/elements/stocks-group-1.png" />
+        </assets>
+    </template>
 </templates>
