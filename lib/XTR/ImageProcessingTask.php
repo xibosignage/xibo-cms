@@ -97,7 +97,12 @@ class ImageProcessingTask implements TaskInterface
             $count++;
 
             // Release image and save
-            $media->release($updatedImg);
+            $media->release(
+                md5_file($updatedImg['filePath']),
+                filesize($updatedImg['filePath']),
+                $updatedImg['height'],
+                $updatedImg['width']
+            );
             $this->store->commitIfNecessary();
 
             $mediaDisplays= [];
