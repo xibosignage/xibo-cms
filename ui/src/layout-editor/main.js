@@ -519,6 +519,7 @@ lD.selectObject =
       const oldSelectedId = (this.selectedObject.type === 'element') ?
         this.selectedObject.elementId : this.selectedObject.id;
       const oldSelectedType = this.selectedObject.type;
+      const oldSelectedMultiple = lD.viewer.getMultipleSelected();
 
       // If the selected object was different from the previous
       // and we are focused on a properties panel field, save before continuing
@@ -643,6 +644,11 @@ lD.selectObject =
         // even if we're not refreshing the whole editor
         (reloadLayerManager) &&
           lD.viewer.layerManager.render();
+
+        // Render bottombar to fix issue with coming
+        // from selecting multiple objects
+        (oldSelectedMultiple && oldSelectedMultiple.multiple) &&
+          lD.bottombar.render(this.selectedObject, false);
       }
     }
   };
