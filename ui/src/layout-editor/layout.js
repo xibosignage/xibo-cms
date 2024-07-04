@@ -982,6 +982,7 @@ Layout.prototype.getCanvas = function(canvasLayer) {
           self.canvas.regionId,
           self,
         );
+        widget.editorObject = lD;
         self.canvas.widgets[widget.widgetId] = widget;
       });
 
