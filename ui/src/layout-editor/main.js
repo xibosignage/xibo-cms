@@ -1898,6 +1898,8 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
               self,
             );
 
+            newWidget.editorObject = lD;
+
             // Add element to the new widget
             addToWidget(newWidget);
           });
