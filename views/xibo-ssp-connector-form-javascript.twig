@@ -62,15 +62,39 @@
       message: template({}),
       title: '{{ "Activity Report"|trans }}',
       animate: false,
-      size: 'large'
+      size: 'xl',
+      onShown: function(e) {
+        $.ajax({
+          url: $sspConnector.data('proxyUrl').replace(':method', 'getAvailablePartnersFilter'),
+          success: function(result) {
+            if (result) {
+              const $form = $('#activity-log-filters');
+              const $partnerId = $form.find('select[name=partnerId]');
+
+              $.each(result, function(partnerKey, available) {
+                $partnerId.append($('<option>', {
+                  id: partnerKey,
+                  text: available.name,
+                  value : partnerKey
+                }));
+              });
+            }
+          }
+        });
+      }
     });
 
     XiboInitialise('#{{ gridId }}');
 
     dialog.closest('.modal').addClass('modal-big');
 
+    // Initialize summary filter
+    let filter;
+
     // Make a datatable
     var table;
+    var chart;
+
     table = $('#ssp-activity').DataTable({
       language: dataTablesLanguage,
       dom: dataTablesTemplate,
@@ -127,6 +151,12 @@
         { data: 'errorCode', responsivePriority: 10 },
       ],
 
+      initComplete: function(settings, json) {
+        let filteredData = filterData(json.data, filter);
+
+        drawSummaryTable(filteredData, filter);
+      },
+
       footerCallback: function(row, data, start, end, display) {
         var json = this.api().ajax.json();
         if (json && json.stats) {
@@ -153,26 +183,199 @@
     // Find the apply button
     dialog.find('a[data-apply-button="true"]').on('click', function() {
       $(this).addClass('disabled').append('<span class="saving fa fa-cog fa-spin p-1"></span>');
-      table.ajax.reload(null, true);
+      table.ajax.reload(function(json) {
+          let filteredData = filterData(json.data, filter);
+
+          drawSummaryTable(filteredData, filter);
+      }, true);
     });
+
+    // Watch for filter option changes in Summary tab
+    dialog.find('select[name="campaignFilter"]').on('change', function(e) {
+      table.ajax.reload(function(json) {
+        filter = $(e.target).val();
+        let filteredData = filterData(json.data, filter);
+
+        drawSummaryTable(filteredData, filter);
+      }, true);
+    });
+
+    // Parse activity log summary according to filter selected
+    function filterData(summaryData, filter='hour') {
+      let filterOption = '';
+
+      // Group the data according the filter selected
+      let groups = summaryData.reduce((group, item) => {
+        if (filter === 'display') {
+          filterOption = item.displayId;
+        } else if (filter === 'hour') {
+          filterOption = `${moment(item.scheduledAt).format('YYYY-MM-DD HH')}:00`;
+        } else {
+          filterOption = `${moment(item.scheduledAt).format('YYYY-MM-DD HH')}:00 - ${item.displayId}`;
+        }
+
+        if (!group[filterOption]) {
+          group[filterOption] = [];
+        }
+
+        group[filterOption].push({key: filterOption, ...item});
+
+        return group;
+      }, {});
+
+      const groupKeys = Object.keys(groups);
+
+      // Aggregate the data
+      let data = groupKeys.map(key => {
+        return groups[key].reduce((acc, {key, campaignId, scheduledAt, displayId, errors, isPlayed, isErrored, impressions, impressionActual}) => {
+          acc['key'] = key;
+          acc['errorCount'] = errors + (acc['errorCount'] || 0);
+          acc['playCount'] = !isPlayed ? (acc['playCount'] || 0) : acc['playCount'] + 1
+          acc['missesCount'] = (!isPlayed && !isErrored) ? (acc['missesCount'] + 1 || 1) : acc['missesCount'] || 0
+          acc['impressions'] = impressions + (acc['impressions'] || 0);
+          acc['impressionActual'] = impressionActual + (acc['impressionActual'] || 0);
+          acc['campaignId'] = campaignId;
+          acc['displayId'] = displayId;
+          acc['date'] = moment(scheduledAt).format('MM-DD-YYYY');
+          acc['time'] = `${moment(scheduledAt).format('HH')}:00`;
+
+          return acc;
+        }, {});
+      })
+
+      // Get new data stats
+      let stats = {
+        totalErrorCount: 0,
+        totalPlayCount: 0,
+        totalMissCount: 0,
+        totalImpressions: 0,
+        impressionActual: 0
+      }
+
+      $.each(data, function(index, el) {
+        stats.totalErrorCount += el.errorCount;
+        stats.totalPlayCount += el.playCount;
+        stats.totalMissCount += el.missesCount;
+        stats.totalImpressions += el.impressions;
+        stats.impressionActual += el.impressionActual;
+      });
+
+      return {
+        data: data.sort((a,b) => a.key.replace(/-|\s/g,"") - b.key.replace(/-|\s/g,"")),
+        stats: stats
+      }
+    }
+
+    function drawSummaryTable(filteredData, filter='hour') {
+      let summaryTable = $('#ssp-activity-summary').dataTable({
+        "bDestroy": true,
+        data: filteredData.data,
+        columns: [
+          { data: 'date', responsivePriority: 1 },
+          { data: 'time', responsivePriority: 1 },
+          { data: 'displayId', responsivePriority: 1 },
+          { data: 'campaignId', responsivePriority: 1 },
+          { data: 'playCount', responsivePriority: 1 },
+          { data: 'errorCount', responsivePriority: 1 },
+          { data: 'missesCount', responsivePriority: 1 },
+          { data: 'impressions', responsivePriority: 2 },
+          { data: 'impressionActual', responsivePriority: 10 },
+        ],
+
+        initComplete: function () {
+          if (filter === 'hour' ) {
+            // Hide Display ID column
+            $(this.api().column(2).visible(false));
+          } else if (filter === 'display') {
+            // Hide date and hour
+            $(this.api().column(0).visible(false));
+            $(this.api().column(1).visible(false));
+          }
+
+          drawSummaryChart(filteredData.stats);
+        },
+
+        footerCallback: function(row, data, start, end, display) {
+            var json = filteredData.stats;
+            if (filteredData) {
+                $(this.api().column(4).footer()).html(json.totalPlayCount || 0);
+                $(this.api().column(5).footer()).html(json.totalErrorCount || 0);
+                $(this.api().column(6).footer()).html(json.totalMissCount || 0);
+                $(this.api().column(7).footer()).html(json.totalImpressions || 0);
+                $(this.api().column(8).footer()).html(json.impressionActual || 0);
+            }
+        },
+      });
+
+      // Render the summary table
+      summaryTable.on('draw', dataTableDraw);
+      summaryTable.on('processing.dt', dataTableProcessing);
+    }
+
+    // Renders the chart data
+    function drawSummaryChart(data) {
+      if (chart !== undefined && chart !== null) {
+        chart.destroy();
+      }
+
+      // Organise the rows into datasets for the chart
+      let totalSize = data.totalErrorCount + data.totalPlayCount + data.totalMissCount;
+      let chartData = {
+          userData: [getPercentage(data.totalErrorCount), getPercentage(data.totalPlayCount), getPercentage(data.totalMissCount)],
+          userLabels: ['Errors', 'Plays', 'Misses'],
+          colours: ['red', 'green', 'blue']
+      }
+
+      function getPercentage(data) {
+        return ((data/totalSize)*100).toFixed(2);
+      }
+
+      // Create the pie chart
+      chart = new Chart($("#canvas"), {
+        type: 'pie',
+        data: {
+          datasets: [{
+            data: chartData.userData,
+            backgroundColor: chartData.colours
+          }],
+          labels: chartData.userLabels
+        },
+        options: {
+          maintainAspectRatio: true
+        }
+      });
+    }
   };
 </script>
 <script type="text/x-handlebars-template" id="connector-ssp-activity">
   <div class="XiboGrid" id="{{ gridId }}" data-grid-name="connector-ssp-activity-log">
       <div class="XiboFilterCustom card bg-light mb-3">
           <div class="FilterDiv card-body" id="connector-ssp-activity-log">
-              <form class="form-inline">
+              <form id="activity-log-filters" class="form-inline">
                   {% set title %}{% trans "From Date" %}{% endset %}
-                  {{ inline.dateTime("activityFromDt", title, "", "", "activity-from-dt", "", "") }}
+                  {{ inline.dateTime("activityFromDt", title, 'now'|date_modify('today')|date("Y-m-d H:i:s"), "", "activity-from-dt", "", "") }}
 
                   {% set title %}{% trans "To Date" %}{% endset %}
-                  {{ inline.dateTime("activityToDt", title, "", "", "activity-to-dt", "", "") }}
+                  {{ inline.dateTime("activityToDt", title, 'tomorrow'|date_modify('-1 minute')|date("Y-m-d H:i:s"), "", "activity-to-dt", "", "") }}
 
-                  {% set title %}{% trans "Display ID" %}{% endset %}
-                  {{ inline.number("displayId", title) }}
+                  {% set title %}{% trans "Display" %}{% endset %}
+                  {% set attributes = [
+                      { name: "data-width", value: "200px" },
+                      { name: "data-allow-clear", value: "true" },
+                      { name: "data-placeholder--id", value: null },
+                      { name: "data-placeholder--value", value: "" },
+                      { name: "data-search-url", value: url_for("display.search") },
+                      { name: "data-search-term", value: "display" },
+                      { name: "data-search-term-tags", value: "tags" },
+                      { name: "data-id-property", value: "displayId" },
+                      { name: "data-text-property", value: "display" }
+                  ] %}
+                  {{ inline.dropdown("displayId", "single", title, "", null, "displayId", "display", "", "pagedSelect", "", "", "", attributes) }}
 
                   {% set title %}{% trans "Partner" %}{% endset %}
-                  {{ inline.input("campaignId", title) }}
+                  {% set options = [{id: '', value: ''}] %}
+
+                  {{ inline.dropdown("partnerId", "single", title, "", options, "id", "value") }}
 
                   <div class="w-100">
                       <a data-apply-button="true" class="btn btn-success">
@@ -182,43 +385,130 @@
               </form>
           </div>
       </div>
-      <div class="XiboData card pt-3">
-          <table id="ssp-activity" class="table table-striped"
-                 data-state-preference-name="connector-ssp-activity-log">
-              <thead>
-                <tr>
-                    <th>{% trans "Scheduled At" %}</th>
-                    <th>{% trans "Campaign" %}</th>
-                    <th>{% trans "Display ID" %}</th>
-                    <th>{% trans "Played?" %}</th>
-                    <th>{% trans "Errored?" %}</th>
-                    <th>{% trans "Impressions" %}</th>
-                    <th>{% trans "Impression Date" %}</th>
-                    <th>{% trans "Impression Actual" %}</th>
-                    <th>{% trans "Errors" %}</th>
-                    <th>{% trans "Error Date" %}</th>
-                    <th>{% trans "Error Code" %}</th>
-                </tr>
-              </thead>
-              <tbody>
+      <!-- Card Header -->
+      <div class="card-header">
+          <ul class="nav nav-tabs card-header-tabs" role="tablist">
+              <li class="nav-item">
+                  <a class="nav-link active" id="chart-tab" data-toggle="tab" href="#chartTab" role="tab"
+                     aria-controls="chartTab" aria-selected="true">Summary</a>
+              </li>
+              <li class="nav-item">
+                  <a class="nav-link" id="tabular-tab" data-toggle="tab" href="#tabularTab" role="tab"
+                     aria-controls="tabularTab" aria-selected="false">Detailed</a>
+              </li>
+          </ul>
+      </div>
+      <!-- Card Body -->
+      <div class="card-body">
+          <div class="tab-content">
 
-              </tbody>
-              <tfoot>
-                <tr>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                    <th></th>
-                </tr>
-              </tfoot>
-          </table>
+              <!-- SUMMARY TAB-->
+              <div class="tab-pane active" id="chartTab" role="tabpanel" aria-labelledby="chart-tab">
+                  <div class="XiboFilterCustom card bg-light pb-0 mb-0">
+                      <div class="FilterDiv card-body" id="connector-ssp-activity-logs">
+                          <form id="campaign-filter">
+                              {% set title %}{% trans "Filter Options" %}{% endset %}
+                              {% set options = [
+                                  { optionid: "hour", option: "Hour" },
+                                  { optionid: "display", option: "Display" },
+                                  { optionid: "hourdisplay", option: "Display and Hour" },
+
+                              ] %}
+                              {{ inline.dropdown("campaignFilter", "single", title, "", options, "optionid", "option", helpText) }}
+                              {{ forms.hidden("isDynamic", 1) }}
+                          </form>
+
+                          <!-- SUMMARY DATATABLE -->
+                          <div class="XiboData card pt-3 my-3">
+                              <table id="ssp-activity-summary"
+                                     class="table table-striped table-full-width"
+                                     style="width: 100%"
+                                     data-state-preference-name="connector-ssp-activity-log-summary">
+                                  <thead>
+                                      <tr>
+                                          <th>{% trans "Date" %}</th>
+                                          <th>{% trans "Hour" %}</th>
+                                          <th>{% trans "Display ID" %}</th>
+                                          <th>{% trans "Campaign" %}</th>
+                                          <th>{% trans "Play Count" %}</th>
+                                          <th>{% trans "Error Count" %}</th>
+                                          <th>{% trans "Misses Count" %}</th>
+                                          <th>{% trans "Impressions" %}</th>
+                                          <th>{% trans "Impression Actual" %}</th>
+                                      </tr>
+                                  </thead>
+                                  <tbody>
+                                  </tbody>
+                                  <tfoot>
+                                      <tr>
+                                          <th></th>
+                                          <th></th>
+                                          <th></th>
+                                          <th></th>
+                                          <th></th>
+                                          <th></th>
+                                          <th></th>
+                                          <th></th>
+                                          <th></th>
+                                      </tr>
+                                  </tfoot>
+                              </table>
+                          </div>
+                      </div>
+                  </div>
+                  <div class="widget mt-2 pb-2">
+                      <div class="widget-title">
+                          <i class="fa fa-tasks"></i>
+                              {% trans "Summary Chart" %}
+                          <div class="clearfix"></div>
+                      </div>
+                      <canvas id="canvas" style="clear:both; margin-top:25px;" height="100%"></canvas>
+                  </div>
+              </div>
+
+              <!-- TABULAR TAB-->
+              <div class="tab-pane show" id="tabularTab" role="tabpanel" aria-labelledby="tabular-tab">
+                  <div class="XiboData card pt-3">
+                      <table id="ssp-activity"
+                             class="table table-striped table-full-width"
+                             style="width: 100%"
+                             data-state-preference-name="connector-ssp-activity-log" >
+                          <thead>
+                          <tr>
+                              <th>{% trans "Scheduled At" %}</th>
+                              <th>{% trans "Campaign" %}</th>
+                              <th>{% trans "Display ID" %}</th>
+                              <th>{% trans "Played?" %}</th>
+                              <th>{% trans "Errored?" %}</th>
+                              <th>{% trans "Impressions" %}</th>
+                              <th>{% trans "Impression Date" %}</th>
+                              <th>{% trans "Impression Actual" %}</th>
+                              <th>{% trans "Errors" %}</th>
+                              <th>{% trans "Error Date" %}</th>
+                              <th>{% trans "Error Code" %}</th>
+                          </tr>
+                          </thead>
+                          <tbody>
+                          </tbody>
+                          <tfoot>
+                              <tr>
+                                  <th></th>
+                                  <th></th>
+                                  <th></th>
+                                  <th></th>
+                                  <th></th>
+                                  <th></th>
+                                  <th></th>
+                                  <th></th>
+                                  <th></th>
+                                  <th></th>
+                                  <th></th>
+                              </tr>
+                          </tfoot>
+                      </table>
+                  </div>
+              </div>
+          </div>
       </div>
   </div>
 </script>
