@@ -416,8 +416,7 @@ body {
 var overrideItemPerPage = {
     itemsPerPage: 0,
 };
-
-$(target).xiboLayoutScaler({...properties, ...overrideItemPerPage});
+$(target).xiboLayoutScaler($.extend({}, properties, overrideItemPerPage));
 
 // Get items
 var items = $(target).find(".template-item");
