@@ -380,6 +380,27 @@ class DisplayProfileFactory extends BaseFactory
                 ['name' => 'updateEndWindow', 'default' => '00:00'],
                 ['name' => 'embeddedServerAllowWan', 'default' => 0, 'type' => 'checkbox'],
                 ['name' => 'serverPort', 'default' => 9696],
+            ],
+            'chromeOS' => [
+                ['name' => 'emailAddress', 'default' => ''],
+                ['name' => 'collectInterval', 'default' => 300],
+                ['name' => 'dayPartId', 'default' => null],
+                ['name' => 'xmrNetworkAddress', 'default' => ''],
+                [
+                    'name' => 'statsEnabled',
+                    'default' => (int)$this->config->getSetting('DISPLAY_PROFILE_STATS_DEFAULT', 0),
+                    'type' => 'checkbox',
+                ],
+                [
+                    'name' => 'aggregationLevel',
+                    'default' => $this->config->getSetting('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT'),
+                    'type' => 'string',
+                ],
+                ['name' => 'orientation', 'default' => 0],
+                ['name' => 'logLevel', 'default' => 'error'],
+                ['name' => 'elevateLogsUntil', 'default' => 0, 'type' => 'int'],
+                ['name' => 'screenShotRequestInterval', 'default' => 0, 'type' => 'int'],
+                ['name' => 'screenShotSize', 'default' => 1],
             ]
         ];
 
