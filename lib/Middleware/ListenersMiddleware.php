@@ -146,7 +146,8 @@ class ListenersMiddleware implements MiddlewareInterface
         // Listen for event that affect Task
         (new TaskListener(
             $c->get('taskFactory'),
-            $c->get('configService')
+            $c->get('configService'),
+            $c->get('pool')
         ))
             ->useLogger($c->get('logger'))
             ->registerWithDispatcher($dispatcher);

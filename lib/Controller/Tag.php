@@ -27,6 +27,7 @@ use Slim\Http\ServerRequest as Request;
 use Xibo\Event\DisplayGroupLoadEvent;
 use Xibo\Event\TagDeleteEvent;
 use Xibo\Event\TagEditEvent;
+use Xibo\Event\TriggerTaskEvent;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -743,7 +744,10 @@ class Tag extends Base
             // Once we're done, and if we're a Display entity, we need to calculate the dynamic display groups
             if ($targetType === 'display') {
                 // Background update.
-                $this->getConfig()->changeSetting('DYNAMIC_DISPLAY_GROUP_ASSESS', 1);
+                $this->getDispatcher()->dispatch(
+                    new TriggerTaskEvent('\Xibo\XTR\MaintenanceRegularTask', 'DYNAMIC_DISPLAY_GROUP_ASSESSED'),
+                    TriggerTaskEvent::$NAME
+                );
             }
         } else {
             $this->getLog()->debug('Tags were not changed');

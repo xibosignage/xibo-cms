@@ -44,16 +44,12 @@ class OpenWeatherMapConnector implements ConnectorInterface
     private $forecast3Hourly = '2.5/forecast';
     private $forecastDaily = '2.5/forecast/daily';
     private $forecastCombinedV3 = '3.0/onecall';
-    private $forecastUv = 'uvi';
 
     /** @var string */
     protected $timezone;
 
     /** @var \Xibo\Widget\DataType\Forecast */
     protected $currentDay;
-
-    /** @var \Xibo\Widget\DataType\Forecast[] */
-    protected $forecast;
 
     public function registerWithDispatcher(EventDispatcherInterface $dispatcher): ConnectorInterface
     {
@@ -90,8 +86,7 @@ class OpenWeatherMapConnector implements ConnectorInterface
     {
         if (!$this->isProviderSetting('owmApiKey')) {
             $settings['owmApiKey'] = $params->getString('owmApiKey');
-            $settings['owmApiVersion'] = $params->getString('owmApiVersion');
-            $settings['owmIsPaidPlan'] = $params->getString('owmIsPaidPlan');
+            $settings['owmIsPaidPlan'] = $params->getCheckbox('owmIsPaidPlan');
             $settings['cachePeriod'] = $params->getInt('cachePeriod');
         }
         return $settings;

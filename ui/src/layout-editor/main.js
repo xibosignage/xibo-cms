@@ -352,8 +352,7 @@ $(() => {
     } else {
       // Login Form needed?
       if (res.login) {
-        window.location.href = window.location.href;
-        location.reload();
+        window.location.reload();
       } else {
         lD.showErrorMessage();
       }
@@ -520,6 +519,7 @@ lD.selectObject =
       const oldSelectedId = (this.selectedObject.type === 'element') ?
         this.selectedObject.elementId : this.selectedObject.id;
       const oldSelectedType = this.selectedObject.type;
+      const oldSelectedMultiple = lD.viewer.getMultipleSelected();
 
       // If the selected object was different from the previous
       // and we are focused on a properties panel field, save before continuing
@@ -644,6 +644,11 @@ lD.selectObject =
         // even if we're not refreshing the whole editor
         (reloadLayerManager) &&
           lD.viewer.layerManager.render();
+
+        // Render bottombar to fix issue with coming
+        // from selecting multiple objects
+        (oldSelectedMultiple && oldSelectedMultiple.multiple) &&
+          lD.bottombar.render(this.selectedObject, false);
       }
     }
   };
@@ -778,8 +783,7 @@ lD.reloadData = function(
     } else {
       // Login Form needed?
       if (res.login) {
-        window.location.href = window.location.href;
-        location.reload();
+        window.location.reload();
       } else {
         lD.showErrorMessage();
       }
@@ -1111,8 +1115,7 @@ lD.loadFormFromAPI = function(
     } else {
       // Login Form needed?
       if (res.login) {
-        window.location.href = window.location.href;
-        location.reload();
+        window.location.reload();
       } else {
         toastr.error(errorMessagesTrans.formLoadFailed);
 
@@ -1895,6 +1898,8 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
               self,
             );
 
+            newWidget.editorObject = lD;
+
             // Add element to the new widget
             addToWidget(newWidget);
           });
@@ -2198,8 +2203,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
       if (!res.success) {
         // Login Form needed?
         if (res.login) {
-          window.location.href = window.location.href;
-          location.reload();
+          window.location.reload();
         } else {
           // Just an error we dont know about
           if (res.message == undefined) {
@@ -2935,8 +2939,7 @@ lD.checkLayoutStatus = function() {
     if (!res.success) {
       // Login Form needed?
       if (res.login) {
-        window.location.href = window.location.href;
-        location.reload();
+        window.location.reload();
       } else {
         // Just an error we dont know about
         if (res.message == undefined) {
@@ -2951,6 +2954,7 @@ lD.checkLayoutStatus = function() {
         res.extra.status,
         res.html,
         res.extra.statusMessage,
+        res.extra.duration,
       );
 
       if (
@@ -4055,8 +4059,7 @@ lD.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
     } else {
       // Login Form needed?
       if (res.login) {
-        window.location.href = window.location.href;
-        location.reload(false);
+        window.location.reload();
       } else {
         // Just an error we dont know about
         if (res.message == undefined) {
@@ -4178,8 +4181,7 @@ lD.unlockLayout = function() {
     } else {
       // Login Form needed?
       if (res.login) {
-        window.location.href = window.location.href;
-        location.reload();
+        window.location.reload();
       } else {
         toastr.error(res.message);
       }
@@ -4306,8 +4308,7 @@ lD.importFromProvider = function(items) {
 
         // Login Form needed?
         if (res.login) {
-          window.location.href = window.location.href;
-          location.reload();
+          window.location.reload();
         } else {
           // Just an error we dont know about
           if (res.message == undefined) {
@@ -4473,8 +4474,7 @@ lD.loadPrefs = function() {
     } else {
       // Login Form needed?
       if (res.login) {
-        window.location.href = window.location.href;
-        location.reload();
+        window.location.reload();
       } else {
         // Just an error we dont know about
         if (res.message == undefined) {
@@ -4527,8 +4527,7 @@ lD.savePrefs = _.debounce(function(clearPrefs = false) {
     if (!res.success) {
       // Login Form needed?
       if (res.login) {
-        window.location.href = window.location.href;
-        location.reload();
+        window.location.reload();
       } else {
         toastr.error(errorMessagesTrans.userSavePreferencesFailed);
 
@@ -4585,8 +4584,7 @@ lD.initDrawer = function(data) {
       } else {
         // Login Form needed?
         if (res.login) {
-          window.location.href = window.location.href;
-          location.reload(false);
+          window.location.reload();
         } else {
           toastr.error(res.message);
         }

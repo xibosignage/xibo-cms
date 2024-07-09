@@ -493,15 +493,23 @@ class MaintenanceRegularTask implements TaskInterface
     /**
      * Assess any eligible dynamic display groups if necessary
      * @return void
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
-    private function assessDynamicDisplayGroups()
+    private function assessDynamicDisplayGroups(): void
     {
         $this->runMessage .= '## ' . __('Assess Dynamic Display Groups') . PHP_EOL;
 
-        if ($this->config->getSetting('DYNAMIC_DISPLAY_GROUP_ASSESS', 0) == 1) {
+        // Do we have a cache key set to say that dynamic display group assessment has been completed?
+        $cache = $this->pool->getItem('DYNAMIC_DISPLAY_GROUP_ASSESSED');
+        if ($cache->isMiss()) {
             Profiler::start('RegularMaintenance::assessDynamicDisplayGroups', $this->log);
 
-            $this->config->changeSetting('DYNAMIC_DISPLAY_GROUP_ASSESS', 0);
+            // Set the cache key with a long expiry and save.
+            $cache->set(true);
+            $cache->expiresAt(Carbon::now()->addYear());
+            $this->pool->save($cache);
+
+            // Process each dynamic display group
             $count = 0;
 
             foreach ($this->displayGroupFactory->getByIsDynamic(1) as $group) {

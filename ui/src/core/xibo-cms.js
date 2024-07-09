@@ -3043,10 +3043,8 @@ function XiboRedirect(url) {
  * @param {String} message
  */
 function LoginBox(message) {
-
     // Reload the page (appending the message)
-    window.location.href = window.location.href;
-    location.reload();
+    window.location.reload();
 }
 
 /**
@@ -3484,6 +3482,7 @@ function initDatePicker($element, baseFormat, displayFormat, options, onChangeCa
             allowInput: false,
             defaultDate: ((initialValue != undefined) ? initialValue : null),
             altInputClass: 'datePickerHelper ' + $element.attr('class'),
+            disableMobile: true,
             altFormat: displayFormat,
             dateFormat: baseFormat,
             locale: (language != 'en-GB') ? language : 'default',

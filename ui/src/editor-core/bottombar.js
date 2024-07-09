@@ -14,8 +14,9 @@ const Bottombar = function(parent, container) {
 /**
  * Render bottombar
  * @param {object} object - the object to render the bottombar to
+ * @param {boolean} renderMultiple
  */
-Bottombar.prototype.render = function(object) {
+Bottombar.prototype.render = function(object, renderMultiple = true) {
   const app = this.parent;
   const readOnlyModeOn = (app?.readOnlyMode === true);
   let trashBinActive = false;
@@ -36,6 +37,7 @@ Bottombar.prototype.render = function(object) {
   // Do we have multiple objects selected
   const selectedInViewer = lD.viewer.getMultipleSelected();
   if (
+    renderMultiple &&
     selectedInViewer.multiple === true
   ) {
     multipleSelected = true;
