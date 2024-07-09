@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -704,8 +704,7 @@ Widget.prototype.editPropertyForm = function(property, type) {
     } else {
       // Login Form needed?
       if (res.login) {
-        window.location.href = window.location.href;
-        location.reload();
+        window.location.reload();
       } else {
         toastr.error(errorMessagesTrans.formLoadFailed);
 
@@ -819,12 +818,10 @@ Widget.prototype.saveElements = function(
   let savePending;
 
   const reloadLayout = function(forceReload = false) {
-    if (reload || forceReload) {
-      app.reloadData(app.layout,
-        {
-          refreshEditor: true,
-        });
-    }
+    app.reloadData(app.layout,
+      {
+        refreshEditor: (reload || forceReload),
+      });
   };
 
   // If there's no more elements in widget, remove it
@@ -892,8 +889,7 @@ Widget.prototype.saveElements = function(
         if (!res.success) {
           // Login Form needed?
           if (res.login) {
-            window.location.href = window.location.href;
-            location.reload();
+            window.location.reload();
           } else {
             toastr.error(errorMessagesTrans.formLoadFailed);
 
@@ -1071,8 +1067,7 @@ Widget.prototype.saveElements = function(
       } else {
         // Login Form needed?
         if (res.login) {
-          window.location.href = window.location.href;
-          location.reload();
+          window.location.reload();
         } else {
           if (res.statusText != 'requestAborted') {
             // Just an error we dont know about

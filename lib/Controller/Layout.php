@@ -2592,10 +2592,6 @@ class Layout extends Base
             'controller' => $this,
             'dataSetFactory' => $this->getDataSetFactory(),
             'widgetDataFactory' => $this->widgetDataFactory,
-            'upload_dir' => $libraryFolder . 'temp/',
-            'download_via_php' => true,
-            'script_url' => $this->urlFor($request, 'layout.import'),
-            'upload_url' => $this->urlFor($request, 'layout.import'),
             'image_versions' => [],
             'accept_file_types' => '/\.zip$/i',
             'libraryLimit' => $libraryLimit,
@@ -2608,7 +2604,7 @@ class Layout extends Base
         $this->setNoOutput();
 
         // Hand off to the Upload Handler provided by jquery-file-upload
-        new LayoutUploadHandler($options);
+        new LayoutUploadHandler($libraryFolder . 'temp/', $this->getLog()->getLoggerInterface(), $options);
 
         // Explicitly set the Content-Type header to application/json
         return $response->withHeader('Content-Type', 'application/json');
