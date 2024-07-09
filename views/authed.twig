@@ -169,7 +169,7 @@
             let eventParam = $(this).attr('data-custom-handler-url');
 
             if (eventType === 'createMiniLayoutPreview') {
-                $('a.dropdown-item').click(createMiniLayoutPreview(eventParam));
+                $(this).click(createMiniLayoutPreview(eventParam));
             }
         })
     </script>
@@ -191,7 +191,7 @@
                         </a>
                     {{else}}
                         {{#if external}}
-                            <a class="dropdown-item {{ id }}" tabindex="-1" data-custom-handler="{{ onclick }}" data-custom-handler-url="{{ onclickParam }}" target="{{ linkType }}" href="{{ url }}"{{#if title}} title="{{title}}"{{/if}}>{{ text }}</a>
+                            <a class="dropdown-item {{ id }}" id="{{ id }}" tabindex="-1" data-custom-handler="{{ onclick }}" data-custom-handler-url="{{ onclickParam }}" target="{{ linkType }}" href="{{ url }}"{{#if title}} title="{{title}}"{{/if}}>{{ text }}</a>
                         {{/if}}
 
                         {{#unless external}}
