@@ -1722,7 +1722,8 @@ class Layout extends Base
                     'id' => 'layout_button_preview',
                     'external' => true,
                     'url' => '#',
-                    'onclick' => 'createMiniLayoutPreview("' . $this->urlFor($request, 'layout.preview', ['id' => $layout->layoutId]) . '");',
+                    'onclick' => 'createMiniLayoutPreview',
+                    'onclickParam' => $this->urlFor($request, 'layout.preview', ['id' => $layout->layoutId]),
                     'text' => __('Preview Layout')
                 );
 
@@ -1732,7 +1733,8 @@ class Layout extends Base
                         'id' => 'layout_button_preview_draft',
                         'external' => true,
                         'url' => '#',
-                        'onclick' => 'createMiniLayoutPreview("' . $this->urlFor($request, 'layout.preview', ['id' => $layout->layoutId]) . '?isPreviewDraft=true");',
+                        'onclick' => 'createMiniLayoutPreview',
+                        'onclickParam' => $this->urlFor($request, 'layout.preview', ['id' => $layout->layoutId]) . '?isPreviewDraft=true',
                         'text' => __('Preview Draft Layout')
                     );
                 }

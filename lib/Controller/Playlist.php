@@ -1712,7 +1712,8 @@ class Playlist extends Base
                     'id' => 'layout_button_preview',
                     'external' => true,
                     'url' => '#',
-                    'onclick' => 'createMiniLayoutPreview("' . $this->urlFor($request, 'layout.preview', ['id' => $layout->layoutId]) . '");',
+                    'onclick' => 'createMiniLayoutPreview',
+                    'onclickParam' => $this->urlFor($request, 'layout.preview', ['id' => $layout->layoutId]),
                     'text' => __('Preview Layout')
                 );
             }
