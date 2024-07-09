@@ -1440,24 +1440,17 @@ class DataSet extends Base
 
         $sanitizer = $this->getSanitizer($request->getParams());
 
-
         $options = array(
             'userId' => $this->getUser()->userId,
             'dataSetId' => $id,
             'controller' => $this,
-            'upload_dir' => $libraryFolder . 'temp/',
-            'download_via_php' => true,
-            'script_url' => $this->urlFor($request,'dataSet.import', ['id' => $id]),
-            'upload_url' => $this->urlFor($request,'dataSet.import', ['id' => $id]),
-            'image_versions' => array(),
             'accept_file_types' => '/\.csv/i',
             'sanitizer' => $sanitizer
         );
 
         try {
             // Hand off to the Upload Handler provided by jquery-file-upload
-            new DataSetUploadHandler($options);
-
+            new DataSetUploadHandler($libraryFolder . 'temp/', $this->getLog()->getLoggerInterface(), $options);
         } catch (\Exception $e) {
             // We must not issue an error, the file upload return should have the error object already
             $this->getState()->setCommitState(false);

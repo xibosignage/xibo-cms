@@ -509,8 +509,7 @@
                 if (!res.success) {
                     // Login Form needed?
                     if (res.login) {
-                        window.location.href = window.location.href;
-                        location.reload();
+                        window.location.reload();
                     } else {
                         // Just an error we dont know about
                         if (res.message == undefined) {

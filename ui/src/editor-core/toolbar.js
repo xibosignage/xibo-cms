@@ -816,8 +816,7 @@ Toolbar.prototype.loadPrefs = function() {
     } else {
       // Login Form needed?
       if (res.login) {
-        window.location.href = window.location.href;
-        location.reload();
+        window.location.reload();
       } else {
         // Just an error we dont know about
         if (res.message == undefined) {
@@ -942,8 +941,7 @@ Toolbar.prototype.savePrefs = _.debounce(function(clearPrefs = false) {
     if (!res.success) {
       // Login Form needed?
       if (res.login) {
-        window.location.href = window.location.href;
-        location.reload();
+        window.location.reload();
       } else {
         toastr.error(errorMessagesTrans.userSavePreferencesFailed);
 
@@ -1903,8 +1901,7 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
     }).catch(function(jqXHR, textStatus, errorThrown) {
       // Login Form needed?
       if (res.login) {
-        window.location.href = window.location.href;
-        location.reload();
+        window.location.reload();
       } else {
         // Just an error we dont know about
         if (res.message == undefined) {
@@ -2507,8 +2504,7 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
             self.handleCardsBehaviour();
           });
         } else if (response.login) {
-          window.location.href = window.location.href;
-          location.reload();
+          window.location.reload();
         } else if (
           $content.find('.toolbar-card:not(.toolbar-card-special)').length === 0
         ) {

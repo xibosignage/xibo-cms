@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -38,7 +38,7 @@ class DataSetUploadHandler extends BlueImpUploadHandler
      * @param $file
      * @param $index
      */
-    protected function handle_form_data($file, $index)
+    protected function handleFormData($file, $index)
     {
         /* @var \Xibo\Controller\DataSet $controller */
         $controller = $this->options['controller'];

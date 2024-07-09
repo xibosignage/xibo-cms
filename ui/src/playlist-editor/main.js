@@ -267,8 +267,7 @@ pE.loadEditor = function(
       } else {
         // Login Form needed?
         if (res.login) {
-          window.location.href = window.location.href;
-          location.reload();
+          window.location.reload();
         } else {
           pE.showErrorMessage();
         }
@@ -725,8 +724,7 @@ pE.reloadData = function(
         });
       } else {
         if (res.login) {
-          window.location.href = window.location.href;
-          location.reload();
+          window.location.reload();
         } else {
           pE.showErrorMessage();
         }
@@ -964,8 +962,7 @@ pE.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
     } else {
       // Login Form needed?
       if (res.login) {
-        window.location.href = window.location.href;
-        location.reload();
+        window.location.reload();
       } else {
         // Just an error we dont know about
         if (res.message == undefined) {
@@ -1081,8 +1078,7 @@ pE.importFromProvider = function(items) {
 
         // Login Form needed?
         if (data.login) {
-          window.location.href = window.location.href;
-          location.reload();
+          window.location.reload();
         } else {
           // Just an error we dont know about
           if (data.message == undefined) {

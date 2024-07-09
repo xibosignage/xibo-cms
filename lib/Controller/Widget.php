@@ -1777,7 +1777,18 @@ class Widget extends Base
         }
 
         if ($uniqueSlots > 0) {
+            $currentItemsPerPage = $widget->getOptionValue('itemsPerPage', null);
+
             $widget->setOptionValue('itemsPerPage', 'attrib', $uniqueSlots);
+
+            // We should calculate the widget duration as it might have changed
+            if ($currentItemsPerPage != $uniqueSlots) {
+                $this->getLog()->debug('saveElements: updating unique slots to ' . $uniqueSlots
+                    . ', currentItemsPerPage: ' . $currentItemsPerPage);
+
+                $module = $this->moduleFactory->getByType($widget->type);
+                $widget->calculateDuration($module);
+            }
         }
 
         // Save elements
