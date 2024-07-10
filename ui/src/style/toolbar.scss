@@ -1080,6 +1080,10 @@
 }
 
 /* Side bar */
+.editor-toolbar.editor-side-bar {
+    min-width: $toolbar-width;
+}
+
 .editor-toolbar.editor-side-bar nav {
     width: $toolbar-width;
     padding: 1rem 0 !important;
