@@ -336,6 +336,18 @@ class UserFactory extends BaseFactory
             $params['email'] = $parsedFilter->getString('email');
         }
 
+        // First Name Provided
+        if ($parsedFilter->getString('firstName') != null) {
+            $body .= " AND user.firstName LIKE :firstName ";
+            $params['firstName'] = '%' . $parsedFilter->getString('firstName') . '%';
+        }
+
+        // Last Name Provided
+        if ($parsedFilter->getString('lastName') != null) {
+            $body .= " AND user.lastName LIKE :lastName ";
+            $params['lastName'] = '%' . $parsedFilter->getString('lastName') . '%';
+        }
+
         // Retired users?
         if ($parsedFilter->getInt('retired') !== null) {
             $body .= " AND user.retired = :retired ";
