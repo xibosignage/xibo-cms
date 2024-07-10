@@ -104,7 +104,8 @@
         });
 
         // Handle convert playlist
-        form.find('#convertPlaylistButton').click(convertPlaylist);
+        var throttleConverPlaylist = _.debounce(convertPlaylist, 400, true);
+        form.find('#convertPlaylistButton').click(throttleConverPlaylist);
         
         form.find('[name="top"], [name="left"], [name="width"], [name="height"], [name="zIndex"]').on('change', _.debounce(function(){
             formChangesRegion();
