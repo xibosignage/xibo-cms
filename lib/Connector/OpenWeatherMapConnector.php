@@ -726,12 +726,19 @@ class OpenWeatherMapConnector implements ConnectorInterface
         // Temperature
         // imperial = F
         // metric = C
-        $data['temperature_imperial'] = $item['temp'];
-        $data['apparent_temperature_imperial'] = $item['feels_like'];
+        $tempImperial = $item['temp'];
+        $apparentTempImperial = $item['feels_like'];
 
         // Convert F to C
-        $data['temperature_metric'] = ($data['temperature_imperial'] - 32) * 5 / 9;
-        $data['apparent_temperature_metric'] = ($data['apparent_temperature_imperial'] - 32) * 5 / 9;
+        $tempMetric = ($tempImperial - 32) * 5 / 9;
+        $apparentTempMetric = ($apparentTempImperial - 32) * 5 / 9;
+
+        // Round those temperature values
+        $data['temperature_imperial'] = round($tempImperial, 0);
+        $data['apparent_temperature_imperial'] = round($apparentTempImperial, 0);
+        $data['temperature_metric'] = round($tempMetric, 0);
+        $data['apparent_temperature_metric'] = round($apparentTempMetric, 0);
+
 
         // Humidity
         $data['humidity'] = $item['humidity'];
@@ -800,7 +807,7 @@ class OpenWeatherMapConnector implements ConnectorInterface
     /**
      * @param XmdsWeatherRequestEvent $event
      * @return void
-     * @throws GeneralException
+     * @throws GeneralException|\SoapFault
      */
     public function onXmdsWeatherRequest(XmdsWeatherRequestEvent $event): void
     {
@@ -808,13 +815,10 @@ class OpenWeatherMapConnector implements ConnectorInterface
         if (empty($this->getSetting('owmApiKey'))) {
             $this->getLogger()->debug('onXmdsWeatherRequest: Open Weather Map not configured.');
 
-            // Initialize error message
-            $errorData = json_encode([
-                'error' => 'Open Weather Map API key is not configured.'
-            ]);
-
-            $event->setWeatherData($errorData);
-            return;
+            throw new \SoapFault(
+                'Receiver',
+                'Open Weather Map API key is not configured'
+            );
         }
 
         $latitude = $event->getLatitude();

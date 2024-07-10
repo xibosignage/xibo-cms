@@ -301,9 +301,10 @@ class Soap7 extends Soap6
             $event = new XmdsWeatherRequestEvent($latitude, $longitude);
             $this->getDispatcher()->dispatch($event, XmdsWeatherRequestEvent::$NAME);
         } else {
-            return json_encode([
-                'error' => 'Display coordinates is not configured.'
-            ]);
+            throw new \SoapFault(
+                'Receiver',
+                'Display coordinates is not configured'
+            );
         }
 
         // return weather data
