@@ -72,7 +72,7 @@
         <div class="col-md-12">
             <form id="dataSetColumnEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("dataSet.column.edit", {id: dataSet.dataSetId, colId: dataSetColumn.dataSetColumnId}) }}">
                 {% set title %}{% trans "Heading" %}{% endset %}
-                {% set helpText %}{% trans "The heading for this Column" %}{% endset %}
+                {% set helpText %}{% trans "The heading for this Column. You cannot use a column name with spaces." %}{% endset %}
                 {{ forms.input("heading", title, dataSetColumn.heading, helpText, "", "required") }}
 
                 {% set title %}{% trans "Column Type" %}{% endset %}
