@@ -52,8 +52,8 @@
             <form id="userEditForm" class="UserForm form-horizontal" data-user-id="{{ user.userId }}" method="put" action="{{ url_for("user.edit", {id: user.userId}) }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
-                        {% set title %}{% trans "User Name" %}{% endset %}
-                        {% set helpText %}{% trans "The Login Name of the user." %}{% endset %}
+                        {% set title %}{% trans "Username" %}{% endset %}
+                        {% set helpText %}{% trans "The Username of the user." %}{% endset %}
                         {{ forms.input("userName", title, user.userName, helpText, "", "required maxlength='50'") }}
 
                         {% set title %}{% trans "Email" %}{% endset %}
