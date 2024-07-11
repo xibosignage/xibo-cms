@@ -398,8 +398,22 @@ class ProofOfPlay implements ReportInterface
             $start = 0;
             $length = -1;
             $sortBy = $this->getSanitizer()->getString('sortBy', $filterCriteria);
-
-            $columns = ($sortBy == '') ? ['widgetId'] : [$sortBy];
+            if (empty($sortBy)) {
+                $sortBy = 'widgetId';
+            }
+            if (!in_array($sortBy, [
+                'widgetId',
+                'type',
+                'display',
+                'displayId',
+                'media',
+                'layout',
+                'layoutId',
+                'tag',
+            ])) {
+                throw new InvalidArgumentException(__('Invalid Sort By'), 'sortBy');
+            }
+            $columns = [$sortBy];
         }
 
         //
