@@ -29,6 +29,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Event\ScheduleCriteriaRequestEvent;
 use Xibo\Event\ScheduleCriteriaRequestInterface;
 use Xibo\Event\WidgetDataRequestEvent;
+use Xibo\Event\XmdsWeatherRequestEvent;
 use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
@@ -58,6 +59,7 @@ class OpenWeatherMapConnector implements ConnectorInterface
     {
         $dispatcher->addListener(WidgetDataRequestEvent::$NAME, [$this, 'onDataRequest']);
         $dispatcher->addListener(ScheduleCriteriaRequestEvent::$NAME, [$this, 'onScheduleCriteriaRequest']);
+        $dispatcher->addListener(XmdsWeatherRequestEvent::$NAME, [$this, 'onXmdsWeatherRequest']);
         return $this;
     }
 
@@ -92,6 +94,7 @@ class OpenWeatherMapConnector implements ConnectorInterface
             $settings['owmApiKey'] = $params->getString('owmApiKey');
             $settings['owmIsPaidPlan'] = $params->getCheckbox('owmIsPaidPlan');
             $settings['cachePeriod'] = $params->getInt('cachePeriod');
+            $settings['xmdsCachePeriod'] = $params->getInt('xmdsCachePeriod');
         }
         return $settings;
     }
@@ -659,30 +662,218 @@ class OpenWeatherMapConnector implements ConnectorInterface
                         'snow' => __('Snow'),
                         'mist' => __('Mist')
                     ])
-                ->addMetric('atmosphere', __('Atmosphere'))
-                    ->addValues('dropdown', [
-                        'list' => __('List'),
-                        'smoke'=> __('Smoke'),
-                        'haze' => __('Haze'),
-                        'dust_whirls' => __('Sand/Dust Whirls'),
-                        'fog' => __('Fog'),
-                        'sand' => __('Sand'),
-                        'dust' => __('Dust'),
-                        'ash' => __('Ash'),
-                        'squall' => __('Squall'),
-                        'tornado' => __('Tornado')
-                    ])
-                ->addMetric('temperature', __('Temperature'))
+                ->addMetric('temperature_imperial', __('Temperature (Imperial)'))
+                    ->addValues('number', [])
+                ->addMetric('temperature_metric', __('Temperature (Metric)'))
+                    ->addValues('number', [])
+                ->addMetric('apparent_temperature_imperial', __('Apparent Temperature (Imperial)'))
+                    ->addValues('number', [])
+                ->addMetric('apparent_temperature_metric', __('Apparent Temperature (Metric)'))
                     ->addValues('number', [])
                 ->addMetric('wind_speed', __('Wind Speed'))
                     ->addValues('number', [])
                 ->addMetric('wind_direction', __('Wind Direction'))
+                    ->addValues('dropdown', [
+                        'N' => __('North'),
+                        'NNE ' => __('North-Northeast'),
+                        'NE' => __('Northeast'),
+                        'ENE' => __('East-Northeast'),
+                        'E' => __('East'),
+                        'ESE' => __('East-Southeast'),
+                        'SE' => __('Southeast'),
+                        'SSE' => __('South-Southeast'),
+                        'S' => __('South'),
+                        'SSW' => __('South-Southwest'),
+                        'SW' => __('Southwest'),
+                        'WSW' => __('West-Southwest'),
+                        'W' => __('West'),
+                        'WNW' => __('West-Northwest'),
+                        'NW' => __('Northwest'),
+                        'NNW' => __('North-Northwest'),
+                    ])
+                ->addMetric('wind_bearing', __('Wind Bearing'))
                     ->addValues('number', [])
-                ->addMetric('humidity', __('Humidity'))
+                ->addMetric('humidity', __('Humidity (Percent)'))
                     ->addValues('number', [])
                 ->addMetric('pressure', __('Pressure'))
                     ->addValues('number', [])
                 ->addMetric('visibility', __('Visibility'))
                     ->addValues('number', []);
+    }
+
+    /**
+     * @param $item
+     * @param $unit
+     * @param $requestUnit
+     * @return array
+     */
+    private function processXmdsWeatherData($item, $unit, $requestUnit): array
+    {
+        $windSpeedUnit = $unit['windUnit'] ?? 'KPH';
+        $visibilityDistanceUnit = $unit['visibilityUnit'] ?? 'km';
+
+        // var to store output/response
+        $data = array();
+
+        // format the weather condition
+        $data['weather_condition'] = str_replace(' ', '_', strtolower($item['weather'][0]['main']));
+
+        // Temperature
+        // imperial = F
+        // metric = C
+        $tempImperial = $item['temp'];
+        $apparentTempImperial = $item['feels_like'];
+
+        // Convert F to C
+        $tempMetric = ($tempImperial - 32) * 5 / 9;
+        $apparentTempMetric = ($apparentTempImperial - 32) * 5 / 9;
+
+        // Round those temperature values
+        $data['temperature_imperial'] = round($tempImperial, 0);
+        $data['apparent_temperature_imperial'] = round($apparentTempImperial, 0);
+        $data['temperature_metric'] = round($tempMetric, 0);
+        $data['apparent_temperature_metric'] = round($apparentTempMetric, 0);
+
+
+        // Humidity
+        $data['humidity'] = $item['humidity'];
+
+        // Pressure
+        // received in hPa, display in mB
+        $data['pressure'] = $item['pressure'] / 100;
+
+        // Wind
+        // metric = meters per second
+        // imperial = miles per hour
+        $data['wind_speed'] = $item['wind_speed'] ?? $item['speed'] ?? null;
+        $data['wind_bearing'] = $item['wind_deg'] ?? $item['deg'] ?? null;
+
+        if ($requestUnit === 'metric' && $windSpeedUnit !== 'MPS') {
+            // We have MPS and need to go to something else
+            if ($windSpeedUnit === 'MPH') {
+                // Convert MPS to MPH
+                $data['wind_speed'] = round($data['wind_speed'] * 2.237, 2);
+            } else if ($windSpeedUnit === 'KPH') {
+                // Convert MPS to KPH
+                $data['wind_speed'] = round($data['wind_speed'] * 3.6, 2);
+            }
+        } else if ($requestUnit === 'imperial' && $windSpeedUnit !== 'MPH') {
+            if ($windSpeedUnit === 'MPS') {
+                // Convert MPH to MPS
+                $data['wind_speed'] = round($data['wind_speed'] / 2.237, 2);
+            } else if ($windSpeedUnit === 'KPH') {
+                // Convert MPH to KPH
+                $data['wind_speed'] = round($data['wind_speed'] * 1.609344, 2);
+            }
+        }
+
+        // Wind direction
+        $data['wind_direction'] = '--';
+        if ($data['wind_bearing'] !== null && $data['wind_bearing'] !== 0) {
+            foreach (self::cardinalDirections() as $dir => $angles) {
+                if ($data['wind_bearing'] >= $angles[0] && $data['wind_bearing'] < $angles[1]) {
+                    $data['wind_direction'] = $dir;
+                    break;
+                }
+            }
+        }
+
+        // Visibility
+        // metric = meters
+        // imperial = meters?
+        $data['visibility'] = $item['visibility'] ?? '--';
+
+        if ($data['visibility'] !== '--') {
+            // Always in meters
+            if ($visibilityDistanceUnit === 'mi') {
+                // Convert meters to miles
+                $data['visibility'] = $data['visibility'] / 1609;
+            } else {
+                if ($visibilityDistanceUnit === 'km') {
+                    // Convert meters to KM
+                    $data['visibility'] = $data['visibility'] / 1000;
+                }
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * @param XmdsWeatherRequestEvent $event
+     * @return void
+     * @throws GeneralException|\SoapFault
+     */
+    public function onXmdsWeatherRequest(XmdsWeatherRequestEvent $event): void
+    {
+        // check for API Key
+        if (empty($this->getSetting('owmApiKey'))) {
+            $this->getLogger()->debug('onXmdsWeatherRequest: Open Weather Map not configured.');
+
+            throw new \SoapFault(
+                'Receiver',
+                'Open Weather Map API key is not configured'
+            );
+        }
+
+        $latitude = $event->getLatitude();
+        $longitude = $event->getLongitude();
+
+        // Cache expiry date
+        $cacheExpire = Carbon::now()->addHours($this->getSetting('xmdsCachePeriod'));
+
+        // use imperial as the default units, so we can get the right value when converting to metric
+        $units = 'imperial';
+
+        // Temperature and Wind Speed Unit Mappings
+        $unit = $this->getUnit('auto');
+
+        // Build the URL
+        $url = '?lat=' . $latitude
+            . '&lon=' . $longitude
+            . '&units=' . $units
+            . '&appid=[API_KEY]';
+
+        // check API plan
+        if ($this->getSetting('owmIsPaidPlan') ?? 0 == 1) {
+            // use weather data endpoints for Paid Plan
+            $data = $this->queryApi($this->apiUrl . $this->forecastCurrent . $url, $cacheExpire);
+            $data['current'] = $this->parseCurrentIntoFormat($data);
+
+            // Pick out the country
+            $country = $data['sys']['country'] ?? null;
+
+            // If we don't have a unit, then can we base it on the timezone we got back?
+            if ($country !== null) {
+                // Pick out some countries to set the units
+                if ($country === 'GB') {
+                    $unit = $this->getUnit('uk2');
+                } else if ($country === 'US') {
+                    $unit = $this->getUnit('us');
+                } else if ($country === 'CA') {
+                    $unit = $this->getUnit('ca');
+                } else {
+                    $unit = $this->getUnit('si');
+                }
+            }
+        } else {
+            // We use one call API 3.0 for Free Plan
+            $data = $this->queryApi($this->apiUrl . $this->forecastCombinedV3 . $url, $cacheExpire);
+
+            // Country based on timezone (this is harder than using the real country)
+            if (Str::startsWith($data['timezone'], 'America')) {
+                $unit = $this->getUnit('us');
+            } else if ($data['timezone'] === 'Europe/London') {
+                $unit = $this->getUnit('uk2');
+            } else {
+                $unit = $this->getUnit('si');
+            }
+        }
+
+        // process weather data
+        $weatherData = $this->processXmdsWeatherData($data['current'], $unit, 'imperial');
+
+        // Set the processed weather data in the event as a JSON-encoded string
+        $event->setWeatherData(json_encode($weatherData));
     }
 }
