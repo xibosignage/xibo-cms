@@ -1852,11 +1852,11 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
 
         // Layout masonry after images are loaded
         $mediaContent.imagesLoaded(function() {
-          // Recalculate masonry layout
-          $mediaContent.masonry('layout');
-
           // Show content in widgets
           $mediaContent.find('.toolbar-card').removeClass('hide-content');
+
+          // Recalculate masonry layout again
+          $mediaContent.masonry('layout');
 
           // Show more button
           if (res.data.length > 0) {
@@ -1885,9 +1885,6 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
             'scroll',
             ($parent.width() < $parent[0].scrollHeight),
           );
-
-          // Handle card behaviour
-          self.handleCardsBehaviour();
         });
 
         // For video, wait for 3s and call
@@ -1897,6 +1894,9 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
             $mediaContent.masonry('layout');
           }, 3000);
         }
+
+        // Handle card behaviour
+        self.handleCardsBehaviour();
       }
     }).catch(function(jqXHR, textStatus, errorThrown) {
       // Login Form needed?
@@ -2467,11 +2467,11 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
 
           // Layout masonry after images are loaded
           $content.imagesLoaded(function() {
-            // Recalculate masonry layout
-            $content.masonry('layout');
-
             // Show content in widgets
             $content.find('.toolbar-card').removeClass('hide-content');
+
+            // Recalculate masonry layout
+            $content.masonry('layout');
 
             // Show more button
             if (response.data.length > 0) {
@@ -2500,9 +2500,10 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
               'scroll',
               ($parent.width() < $parent[0].scrollHeight),
             );
-
-            self.handleCardsBehaviour();
           });
+
+          // Handle card behaviour
+          self.handleCardsBehaviour();
         } else if (response.login) {
           window.location.reload();
         } else if (
