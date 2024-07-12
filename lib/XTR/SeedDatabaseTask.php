@@ -909,7 +909,7 @@ class SeedDatabaseTask implements TaskInterface
                 $command->description = 'a command to test schedule';
                 $command->code = 'TIMEZONE';
                 $command->userId = $this->userFactory->getSystemUser()->getId();
-
+                $command->createAlertOn = 'never';
                 $command->save();
                 $this->store->commitIfNecessary();
             } catch (GeneralException $e) {
