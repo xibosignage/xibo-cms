@@ -112,11 +112,15 @@ class DataSetData extends Base
 
         // Filter criteria
         $filter = '';
+        $params = [];
+        $i = 0;
         foreach ($dataSet->getColumn() as $column) {
             /* @var \Xibo\Entity\DataSetColumn $column */
             if ($column->dataSetColumnTypeId == 1) {
+                $i++;
                 if ($this->getSanitizer()->getString($column->heading) != null) {
-                    $filter .= 'AND ' . $column->heading . ' LIKE \'%' . $this->getSanitizer()->getString($column->heading) . '%\' ';
+                    $filter .= 'AND `' . $column->heading . '` LIKE :heading_' . $i;
+                    $params['heading_' . $i] = '%' . $this->getSanitizer()->getString($column->heading) . '%';
                 }
             }
         }
@@ -126,12 +130,16 @@ class DataSetData extends Base
         $filter = $this->gridRenderFilter(['filter' => $this->getSanitizer()->getParam('filter', $filter)]);
 
         try {
-            $data = $dataSet->getData([
-                'order' => $sorting,
-                'start' => $filter['start'],
-                'size' => $filter['length'],
-                'filter' => $filter['filter']
-            ]);
+            $data = $dataSet->getData(
+                [
+                    'order' => $sorting,
+                    'start' => $filter['start'],
+                    'size' => $filter['length'],
+                    'filter' => $filter['filter']
+                ],
+                [],
+                $params
+            );
         } catch (\Exception $e) {
             $data = ['exception' => __('Error getting DataSet data, failed with following message: ') . $e->getMessage()];
             $this->getLog()->error('Error getting DataSet data, failed with following message: ' . $e->getMessage());

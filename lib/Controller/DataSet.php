@@ -1067,15 +1067,23 @@ class DataSet extends Base
 
                     // Build a filter to select existing records
                     $filter = '';
+                    $params = [];
+                    $i = 0;
                     foreach ($data['uniqueKeys'] as $uniqueKey) {
                         if (isset($sanitizedRow[$uniqueKey])) {
-                            $filter .= 'AND `' . $uniqueKey . '` = \'' . $sanitizedRow[$uniqueKey] . '\' ';
+                            $i++;
+                            $filter .= 'AND `' . $uniqueKey . '` = :uniqueKey_' . $i;
+                            $params['uniqueKey_' . $i] = $sanitizedRow[$uniqueKey];
                         }
                     }
                     $filter = trim($filter, 'AND');
 
                     // Use the unique keys to look up this row and see if it exists
-                    $existingRows = $dataSet->getData(['filter' => $filter], ['includeFormulaColumns' => false, 'requireTotal' => false]);
+                    $existingRows = $dataSet->getData(
+                        ['filter' => $filter],
+                        ['includeFormulaColumns' => false, 'requireTotal' => false],
+                        $params
+                    );
 
                     if (count($existingRows) > 0) {
                         foreach ($existingRows as $existingRow) {
