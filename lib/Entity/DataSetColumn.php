@@ -113,6 +113,9 @@ class DataSetColumn implements \JsonSerializable
     /** @var  DataSetColumnTypeFactory */
     private $dataSetColumnTypeFactory;
 
+    /** @var array Blacklist for SQL */
+    private $blackList = array(';', 'INSERT', 'UPDATE', 'SELECT', 'DELETE', 'TRUNCATE', 'TABLE', 'FROM', 'WHERE');
+
     /**
      * The prior dataset column id, when cloning
      * @var int
@@ -242,7 +245,19 @@ class DataSetColumn implements \JsonSerializable
         // if formula dataSetType is set and formula is not empty, try to execute the SQL to validate it - we're ignoring client side formulas here.
         if ($this->dataSetColumnTypeId == 2 && $this->formula != '' && substr($this->formula, 0, 1) !== '$') {
            try {
-               $formula = str_replace('[DisplayId]', 0, $this->formula);
+               $count = 0;
+               $formula = str_ireplace(
+                   $this->blackList,
+                   '',
+                   htmlspecialchars_decode($this->formula, ENT_QUOTES),
+                   $count
+               );
+
+               if ($count > 0) {
+                   throw new InvalidArgumentException(__('Formula contains disallowed keywords.'));
+               }
+
+               $formula = str_replace('[DisplayId]', 0, $formula);
                $this->getStore()->select('SELECT * FROM (SELECT `id`, ' . $formula . ' AS `' . $this->heading . '`  FROM `dataset_' . $this->dataSetId . '`) dataset WHERE 1 = 1 ', []);
            } catch (\Exception $e) {
                $this->getLog()->debug('Formula validation failed with following message ' . $e->getMessage());
