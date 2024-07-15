@@ -1359,18 +1359,25 @@ class DataSet extends Base
 
                 // Check unique keys to see if this is an update
                 if (!empty($data['uniqueKeys']) && is_array($data['uniqueKeys'])) {
-
                     // Build a filter to select existing records
                     $filter = '';
+                    $params = [];
+                    $i = 0;
                     foreach ($data['uniqueKeys'] as $uniqueKey) {
                         if (isset($rowToAdd[$uniqueKey])) {
-                            $filter .= 'AND `' . $uniqueKey . '` = \'' . $rowToAdd[$uniqueKey] . '\' ';
+                            $i++;
+                            $filter .= 'AND `' . $uniqueKey . '` = :uniqueKey_' . $i;
+                            $params['uniqueKey_' . $i] = $rowToAdd[$uniqueKey];
                         }
                     }
                     $filter = trim($filter, 'AND');
 
                     // Use the unique keys to look up this row and see if it exists
-                    $existingRows = $dataSet->getData(['filter' => $filter], ['includeFormulaColumns' => false, 'requireTotal' => false]);
+                    $existingRows = $dataSet->getData(
+                        ['filter' => $filter],
+                        ['includeFormulaColumns' => false, 'requireTotal' => false],
+                        $params,
+                    );
 
                     if (count($existingRows) > 0) {
                         foreach ($existingRows as $existingRow) {
