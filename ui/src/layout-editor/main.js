@@ -729,6 +729,8 @@ lD.refreshEditor = function(
  * @param {boolean} [reloadToolbar=false] - update toolbar
  * @param {boolean} [reloadViewer=true] - Reload viewer
  * @param {boolean} [reloadPropertiesPanel=true] - Reload properties panel
+ * @param {boolean} [resetPropertiesPanelOpenedTab=false]
+ * - Reset properties panel opened tab
  * @return {Promise} - Promise
  */
 lD.reloadData = function(
@@ -740,12 +742,18 @@ lD.reloadData = function(
     reloadToolbar = false,
     reloadViewer = true,
     reloadPropertiesPanel = true,
+    resetPropertiesPanelOpenedTab = false,
   } = {},
 ) {
   const layoutId =
     (typeof layout.layoutId == 'undefined') ? layout : layout.layoutId;
 
   lD.common.showLoadingScreen();
+
+  // Reset tab to be opened
+  if (resetPropertiesPanelOpenedTab) {
+    lD.propertiesPanel.openTabOnRender = '';
+  }
 
   return $.get(
     urlsForApi.layout.get.url + '?layoutId=' + layoutId +
@@ -2603,6 +2611,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           lD.reloadData(lD.layout,
             {
               refreshEditor: true,
+              resetPropertiesPanelOpenedTab: true,
             });
         }
       }
@@ -2639,6 +2648,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
             lD.reloadData(response.data,
               {
                 refreshEditor: true,
+                resetPropertiesPanelOpenedTab: true,
               });
           } else if (response.login) {
             // eslint-disable-next-line new-cap
@@ -2848,6 +2858,7 @@ lD.addModuleToPlaylist = function(
             (reloadData) && lD.reloadData(lD.layout,
               {
                 refreshEditor: true,
+                resetPropertiesPanelOpenedTab: true,
               });
 
             resolve();
@@ -2857,6 +2868,7 @@ lD.addModuleToPlaylist = function(
           (reloadData) && lD.reloadData(lD.layout,
             {
               refreshEditor: true,
+              resetPropertiesPanelOpenedTab: true,
             });
 
           resolve();
@@ -2970,6 +2982,7 @@ lD.addModuleToPlaylist = function(
         (reloadData) && lD.reloadData(lD.layout,
           {
             refreshEditor: true,
+            resetPropertiesPanelOpenedTab: true,
           });
       } else {
         const newWidgetId = res.data.widgetId;
@@ -2977,6 +2990,7 @@ lD.addModuleToPlaylist = function(
         (reloadData) && lD.reloadData(
           lD.layout,
           {
+            resetPropertiesPanelOpenedTab: true,
             callBack: () => {
               const $actionForm =
                 lD.propertiesPanel.DOMObject.find('.action-element-form');
@@ -3160,6 +3174,7 @@ lD.addMediaToPlaylist = function(
       lD.reloadData(lD.layout,
         {
           refreshEditor: true,
+          resetPropertiesPanelOpenedTab: true,
         });
     } else {
       const newWidgetId = res.data.newWidgets[0].widgetId;
@@ -3167,6 +3182,7 @@ lD.addMediaToPlaylist = function(
       lD.reloadData(
         lD.layout,
         {
+          resetPropertiesPanelOpenedTab: true,
           callBack: () => {
             const $actionForm =
               lD.propertiesPanel.DOMObject.find('.action-element-form');
@@ -5633,6 +5649,7 @@ lD.addElementsToWidget = function(
         lD.layout,
         {
           refreshEditor: true,
+          resetPropertiesPanelOpenedTab: true,
         },
       ).then(() => {
         const widgetAux = lD.layout.canvas.widgets[widget.id];
