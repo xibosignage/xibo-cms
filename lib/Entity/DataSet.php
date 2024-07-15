@@ -527,11 +527,21 @@ class DataSet implements \JsonSerializable
                     continue;
                 }
 
+                $count = 0;
                 $formula = str_ireplace(
                     Sql::DISALLOWED_KEYWORDS,
                     '',
-                    htmlspecialchars_decode($column->formula, ENT_QUOTES)
+                    htmlspecialchars_decode($column->formula, ENT_QUOTES),
+                    $count
                 );
+
+                if ($count > 0) {
+                    $this->getLog()->error(
+                        'Formula contains disallowed keywords on DataSet ID ' . $this->dataSetId
+                    );
+                    continue;
+                }
+
                 $formula = str_replace('[DisplayId]', $displayId, $formula);
 
                 $heading = str_replace('[DisplayGeoLocation]', $displayGeoLocation, $formula)
