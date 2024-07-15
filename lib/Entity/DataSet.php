@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -526,7 +526,21 @@ class DataSet implements \JsonSerializable
                     continue;
                 }
 
-                $formula = str_ireplace($this->blackList, '', htmlspecialchars_decode($column->formula, ENT_QUOTES));
+                $count = 0;
+                $formula = str_ireplace(
+                    $this->blackList,
+                    '',
+                    htmlspecialchars_decode($column->formula, ENT_QUOTES),
+                    $count
+                );
+
+                if ($count > 0) {
+                    $this->getLog()->error(
+                        'Formula contains disallowed keywords on DataSet ID ' . $this->dataSetId
+                    );
+                    continue;
+                }
+
                 $formula = str_replace('[DisplayId]', $displayId, $formula);
 
                 $heading = str_replace('[DisplayGeoLocation]', $displayGeoLocation, $formula) . ' AS `' . $column->heading . '`';
