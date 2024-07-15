@@ -203,6 +203,11 @@ PropertiesPanel.prototype.save = function(
       // Success
       app.common.hideLoadingScreen();
 
+      // Stop if not available
+      if (Object.keys(self).length === 0) {
+        return;
+      }
+
       // Updated saved form data
       self.formSerializedLoadData[target.type] = formNewData;
 
@@ -256,6 +261,11 @@ PropertiesPanel.prototype.save = function(
               reloadPropertiesPanel: false,
             },
           ).then(() => {
+            // Stop if not available
+            if (Object.keys(self).length === 0) {
+              return;
+            }
+
             // Save element
             if (savingElement) {
               // Reload Data and then save element
@@ -528,6 +538,11 @@ PropertiesPanel.prototype.render = function(
   // Create a new request
   this.renderRequest = $.get(requestPath).done(function(res) {
     const app = self.parent;
+
+    // Stop if not available
+    if (Object.keys(self).length === 0) {
+      return;
+    }
 
     // Clear request var after response
     self.renderRequest = undefined;
@@ -1703,6 +1718,11 @@ PropertiesPanel.prototype.render = function(
           lD.reloadData(lD.layout, {
             refreshEditor: false,
           }).then(() => {
+            // Stop if not available
+            if (Object.keys(self).length === 0) {
+              return;
+            }
+
             // If we're selecting an element or group
             // Render all elements from the current widget/target
             if (isElement || isElementGroup) {

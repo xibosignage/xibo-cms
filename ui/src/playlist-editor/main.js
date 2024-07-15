@@ -159,6 +159,11 @@ pE.loadEditor = function(
   )
     .done(function(res) {
       if (res.data != null && res.data.length > 0) {
+        // Stop if not available
+        if (Object.keys(pE.editorContainer).length === 0) {
+          return;
+        }
+
         // Template type
         const template = inline ?
           playlistEditorTemplate :
@@ -703,6 +708,11 @@ pE.reloadData = function(
     .done(function(res) {
       pE.common.hideLoadingScreen();
 
+      // Stop if editor container is not available
+      if (Object.keys(pE.editorContainer).length === 0) {
+        return;
+      }
+
       if (res.data != null && res.data.length > 0) {
         pE.playlist = new Playlist(pE.playlist.playlistId, res.data[0]);
 
@@ -820,8 +830,8 @@ pE.close = function() {
 
   // Make sure all remaining objects are pure empty JS objects
   this.playlist = this.editorContainer = this.timeline =
-    this.propertiesPanel = this.historyManager =
-    this.selectedObject = this.toolbar = {};
+    this.propertiesPanel = this.historyManager = this.toolbar = {};
+  this.selectedObject = {};
 
   // Restore toastr positioning
   toastr.options.positionClass = this.toastrPosition;
