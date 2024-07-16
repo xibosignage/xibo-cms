@@ -139,7 +139,7 @@ class DataSetData extends Base
             if ($column->dataSetColumnTypeId == 1) {
                 $i++;
                 if ($sanitizedParams->getString($column->heading) != null) {
-                    $filter .= 'AND `' . $column->heading . '` LIKE :heading_' . $i;
+                    $filter .= 'AND `' . $column->heading . '` LIKE :heading_' . $i . ' ';
                     $params['heading_' . $i] = '%' . $sanitizedParams->getString($column->heading) . '%';
                 }
             }
