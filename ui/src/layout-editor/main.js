@@ -3584,6 +3584,15 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
     layoutObject.template.templateId === 'text'
   );
 
+  // If it's a playlist, check if it's a layout playlist only
+  // and has at least one widget
+  layoutObject.playlistCanBeConverted = (
+    layoutObject.isPlaylist &&
+    !$(obj).find('.playlist-edit-btn')
+      .hasClass('subplaylist-inline-edit-btn') &&
+    layoutObject.playlists.widgets.length > 0
+  );
+
   // Create menu and append to the designer div
   // ( using the object extended with translations )
   lD.editorContainer.append(
@@ -3916,6 +3925,11 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
       });
     } else if (target.data('action') == 'editText') {
       lD.viewer.editText(layoutObject);
+    } else if (target.data('action') == 'convertPlaylist') {
+      lD.convertPlaylist(
+        layoutObject.playlists.playlistId,
+        layoutObject.playlists.name,
+      );
     } else {
       const property = target.data('property');
       const propertyType = target.data('propertyType');
@@ -5650,8 +5664,16 @@ lD.addElementsToWidget = function(
 /**
  * Convert playlist into global
  * @param {string} playlistId
+ * @param {string} playlistName
  */
-lD.convertPlaylist = function(playlistId) {
+lD.convertPlaylist = function(playlistId, playlistName) {
+  if (playlistName === undefined || playlistName === '') {
+    toastr.error(
+      errorMessagesTrans.convertPlaylistFailed +
+      ' ' + errorMessagesTrans.convertPlaylistNoName);
+    return;
+  }
+
   // Load form the API
   const linkToAPI = urlsForApi.playlist.convert;
 
@@ -5684,13 +5706,15 @@ lD.convertPlaylist = function(playlistId) {
         window.location.href = window.location.href;
         location.reload();
       } else {
-        toastr.error(errorMessagesTrans.convertPlaylistFailed);
-
         // Just an error we dont know about
         if (res.message == undefined) {
           console.error(res);
+          toastr.error(errorMessagesTrans.convertPlaylistFailed);
         } else {
           console.error(res.message);
+          toastr.error(
+            errorMessagesTrans.convertPlaylistFailed + ' ' + res.message,
+          );
         }
       }
     }

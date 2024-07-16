@@ -102,9 +102,6 @@
 
             formChangesRegion();
         });
-
-        // Handle convert playlist
-        form.find('#convertPlaylistButton').click(convertPlaylist);
         
         form.find('[name="top"], [name="left"], [name="width"], [name="height"], [name="zIndex"]').on('change', _.debounce(function(){
             formChangesRegion();
@@ -163,11 +160,5 @@
         // Set dimensions values to be the same as the layout's
         form.find('[name="width"]').val(parseInt(regionDimensions.width));
         form.find('[name="height"]').val(parseInt(regionDimensions.height));
-    }
-
-    function convertPlaylist() {
-        var app = lD;
-        var playlistId = app.selectedObject.playlists.playlistId;
-        app.convertPlaylist(playlistId);
     }
 </script>

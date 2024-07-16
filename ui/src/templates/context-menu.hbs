@@ -65,6 +65,12 @@
                 <div class="context-menu-btn editPlaylistBtn" data-title="{{trans.editPlaylist}}" data-action="editPlaylist" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
                     <i class="fa fa-edit"></i><span>{{trans.editPlaylist}}</span>
                 </div>
+
+                {{#if playlistCanBeConverted}}
+                    <div class="context-menu-btn convertPlaylistButton" data-title="{{trans.convertPlaylistHelpText}}" data-action="convertPlaylist" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
+                        <i class="fa fa-refresh"></i><span>{{trans.convertPlaylist}}</span>
+                    </div>
+                {{/if}}
             {{/if}}
 
             {{#if isFrameOrZone}}
