@@ -369,8 +369,7 @@ $app->get('/campaign/form/{id}/selectfolder', ['\Xibo\Controller\Campaign','sele
     ->setName('campaign.selectfolder.form');
 
 $app->get('/campaign/{id}/preview', ['\Xibo\Controller\Campaign','preview'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['campaign.view']))
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.view']))
+    ->addMiddleware(new FeatureAuth($app->getContainer(), ['campaign.view', 'layout.view']))
     ->setName('campaign.preview');
 
 //

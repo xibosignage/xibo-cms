@@ -123,7 +123,7 @@
 
                         {{ forms.hidden('fullScreenCampaignId', event.getUnmatchedProperty("fullScreenCampaignId")) }}
 
-                        <div style="{% if not currentUser.featureEnabled('campaign.view') %}display: none;{% endif %}">
+                        <div style="{% if not (currentUser.featureEnabled('campaign.view') or currentUser.featureEnabled('layout.view')) %}display: none;{% endif %}">
                             <div class="form-group row preview-button-container">
                                 <div class="offset-md-2 col-md-10">
                                     <a id="previewButton" class="btn btn-success" target="_blank" data-url="{{ url_for("campaign.preview", {id: ':id'}) }}">{% trans "Preview" %} <span class="fa fa-tablet"></span></a>
