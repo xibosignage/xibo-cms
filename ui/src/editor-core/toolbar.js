@@ -629,6 +629,11 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
 
   // Get providers
   $.ajax(urlsForApi.media.getProviders).done(function(res) {
+    // Stop if not available
+    if (Object.keys(self).length === 0) {
+      return;
+    }
+
     if (
       Array.isArray(res)
     ) {
@@ -702,6 +707,7 @@ Toolbar.prototype.loadPrefs = function() {
   // Load using the API
   const linkToAPI = urlsForApi.user.getPref;
   const app = this.parent;
+  const self = this;
 
   const renderBars = function() {
     // Render toolbar and topbar if exists
@@ -715,11 +721,15 @@ Toolbar.prototype.loadPrefs = function() {
   };
 
   // Request items based on filters
-  const self = this;
   $.ajax({
     url: linkToAPI.url + '?preference=toolbar',
     type: linkToAPI.type,
   }).done(function(res) {
+    // Stop if not available
+    if (Object.keys(self).length === 0) {
+      return;
+    }
+
     if (res.success) {
       const loadedData = JSON.parse(res.data.value ?? '{}');
       const findMenuIndexByName = function(name) {
@@ -964,6 +974,9 @@ Toolbar.prototype.savePrefs = _.debounce(function(clearPrefs = false) {
  * @param {bool=} savePrefs - Save preferences
  */
 Toolbar.prototype.render = function({savePrefs = true} = {}) {
+  const self = this;
+  const app = this.parent;
+
   // If toolbar isn't initialized, do it
   if (this.initalized === false) {
     // Initialize toolbar
@@ -986,8 +999,11 @@ Toolbar.prototype.render = function({savePrefs = true} = {}) {
     return;
   }
 
-  const self = this;
-  const app = this.parent;
+  // Stop if not available
+  if (Object.keys(self).length === 0) {
+    return;
+  }
+
   const readOnlyModeOn =
     (typeof (lD) != 'undefined' && lD?.readOnlyMode === true) ||
     (app?.readOnlyMode === true);
@@ -1721,6 +1737,11 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
       // Remove loading
       $mediaContent.parent().find('.loading-container-toolbar').remove();
 
+      // Stop if not available
+      if (Object.keys(self).length === 0) {
+        return;
+      }
+
       // If there's no masonry sizer, add it
       if ($mediaContent.find('.toolbar-card-sizer').length == 0) {
         $mediaContent.append(
@@ -1852,6 +1873,11 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
 
         // Layout masonry after images are loaded
         $mediaContent.imagesLoaded(function() {
+          // Stop if not available
+          if (Object.keys(self).length === 0) {
+            return;
+          }
+
           // Show content in widgets
           $mediaContent.find('.toolbar-card').removeClass('hide-content');
 
@@ -2429,6 +2455,11 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
         provider: 'both',
       }, $searchForm.serializeObject()),
       success: function(response) {
+        // Stop if not available
+        if (Object.keys(self).length === 0) {
+          return;
+        }
+
         $container.parent().find('.loading-container-toolbar').remove();
 
         if (response && response.data && response.data.length > 0) {
@@ -2617,6 +2648,11 @@ Toolbar.prototype.playlistsContentPopulate = function(menu) {
         provider: 'both',
       }, $searchForm.serializeObject()),
       success: function(response) {
+        // Stop if not available
+        if (Object.keys(self).length === 0) {
+          return;
+        }
+
         $container.parent().find('.loading-container-toolbar').remove();
 
         // Send translation with module object
@@ -3362,6 +3398,11 @@ Toolbar.prototype.loadTemplates = function(
   app.templateManager.getTemplateByDataType(contentType)
     .then(function(templatesData) {
       const populateContent = function() {
+        // Stop if not available
+        if (Object.keys(self).length === 0) {
+          return;
+        }
+
         const elements = [];
         const stencils = [];
         const templates = [];
