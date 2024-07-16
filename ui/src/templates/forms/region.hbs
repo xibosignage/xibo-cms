@@ -4,7 +4,7 @@
         {{#if showExitTransition}}
             <li class="nav-item"><a class="nav-link" href="#transitionTab" role="tab" data-toggle="tab"><span>{{trans.transition}}</span></a></li>
         {{/if}}
-        <li class="nav-item"><a class="nav-link" href="#positioningTab" role="tab" data-toggle="tab"><i class="fas fa-border-none tooltip-always-on" data-toggle="tooltip" data-title="{{trans.positioning}}"></i></a></li>
+        <li class="nav-item"><a class="nav-link" href="#positionTab" role="tab" data-toggle="tab"><i class="fas fa-border-none tooltip-always-on" data-toggle="tooltip" data-title="{{trans.positioning}}"></i></a></li>
     </ul>
     <div class="form-content">
         <form id="regionFormEdit" class="XiboForm">
@@ -35,7 +35,7 @@
                     </div>
                 {{/if}}
 
-                <div class="tab-pane" id="positioningTab">
+                <div class="tab-pane" id="positionTab">
                     {{> button id="bringToViewButton" type="btn-block btn-outline-success inline-btn d-none mb-2" name=trans.region.bringRegionToView customClass="position-input" }}
                     {{> inputs/number value=region.zIndex id="zIndex" title=trans.region.layer helpText=trans.region.layerHelpText customClass="position-input" }}
                     {{> inputs/number value=region.top id="top" title=trans.region.top helpText=trans.region.topHelpText customClass="position-input" }}

@@ -181,13 +181,6 @@ PropertiesPanel.prototype.save = function(
   ) {
     app.common.showLoadingScreen();
 
-    // Save content tab
-    this.openTabOnRender =
-      'a[href="' +
-      app.propertiesPanel.DOMObject.find('.nav-tabs .nav-link.active')
-        .attr('href') +
-      '"]';
-
     // Add a save form change to the history array
     // with previous form state and the new state
     app.historyManager.addChange(
@@ -340,9 +333,6 @@ PropertiesPanel.prototype.save = function(
       if (app.propertiesPanel.inlineEditor) {
         app.viewer.showInlineEditor();
       }
-
-      // Reset active tab
-      self.openTabOnRender = '';
     });
 
     // Call callback without waiting for the request
@@ -689,7 +679,7 @@ PropertiesPanel.prototype.render = function(
         self.DOMObject.find('[href="#configureTab"]').parent().remove();
 
         // Select advanced tab
-        self.DOMObject.find('[href="#advancedTab"]').tab('show');
+        self.showTab('a[href="#advancedTab"]', false);
       }
 
       // Appearance tab
@@ -699,11 +689,8 @@ PropertiesPanel.prototype.render = function(
           .parent().removeClass('d-none');
 
         if (selectTab) {
-          // Deselect active tab
-          self.DOMObject.find('.nav-link.active').removeClass('active');
-
           // Select appearance tab
-          self.DOMObject.find('[href="#appearanceTab"]').tab('show');
+          self.showTab('a[href="#appearanceTab"]', false);
         }
       };
 
@@ -1070,9 +1057,13 @@ PropertiesPanel.prototype.render = function(
           // Show the appearance tab
           // and select it if element isn't the only one on the widget
           // or it's a global element
+          // and we don't have previous tab to be opened
           showAppearanceTab(
-            Object.values(target.elements).length > 1 ||
-            target.subType === 'global',
+            (
+              Object.values(target.elements).length > 1 ||
+              target.subType === 'global'
+            ) &&
+            self.openTabOnRender == '',
           );
 
           // Also Init fields for the element
@@ -1778,8 +1769,9 @@ PropertiesPanel.prototype.render = function(
       });
     }
 
-    // Init fields
-    self.initFields(target, res.data, actionEditMode, false, openActionTab);
+    // Init fields ( for non elements )
+    (!isElement) &&
+      self.initFields(target, res.data, actionEditMode, false, openActionTab);
   }).fail(function(data) {
     // Clear request var after response
     self.renderRequest = undefined;
@@ -1847,6 +1839,13 @@ PropertiesPanel.prototype.initFields = function(
   ) {
     window.regionFormEditOpen.bind(self.DOMObject)();
   }
+
+  // Save tab when changing
+  self.DOMObject.on('click', '.nav-tabs .nav-link', function(ev) {
+    // Save previous tab for elements
+    self.openTabOnRender =
+      'a[href="' + $(ev.currentTarget).attr('href') + '"]';
+  });
 
   // Check for spacing issues on text fields
   forms.checkForSpacingIssues(self.DOMObject);
@@ -1997,11 +1996,8 @@ PropertiesPanel.prototype.initFields = function(
 
   // if a tab was previously selected, select it again
   if (self.openTabOnRender != '') {
-    // Open tab
-    self.DOMObject.find(self.openTabOnRender).tab('show');
-
-    // Reset flag
-    self.openTabOnRender = '';
+    // Show tab
+    self.showTab(self.openTabOnRender, false);
   }
 
   // Initialise tooltips
@@ -2635,7 +2631,7 @@ PropertiesPanel.prototype.attachActionsForm = function() {
 PropertiesPanel.prototype.updatePositionForm = function(properties) {
   const app = this.parent;
   const $positionTab =
-    this.DOMObject.find('form #positionTab, form.region-form #positioningTab');
+    this.DOMObject.find('form #positionTab, form.region-form #positionTab');
 
   // Loop properties
   $.each(properties, function(key, value) {
@@ -2873,6 +2869,31 @@ PropertiesPanel.prototype.showWidgetControl = function(target) {
         // Reload select2
         makeLocalSelect($select);
       });
+  }
+};
+
+/**
+ * Open custom tab or the previous tab
+ * @param {string} tabSelector - jQuery tab selector
+ * @param {boolean} save - Save tab to be opened next?
+ */
+PropertiesPanel.prototype.showTab = function(tabSelector, save = true) {
+  const self = this;
+  const tabSelectorAux = tabSelector || self.openTabOnRender;
+  const $tabToShow = self.DOMObject.find(tabSelectorAux);
+
+  // If tab doesn't exist or it not visible, clear tab
+  if (
+    $tabToShow.length === 0 ||
+    !$tabToShow.is(':visible')
+  ) {
+    self.openTabOnRender = '';
+  } else {
+    // Show tab
+    $tabToShow.tab('show');
+
+    // Save selector
+    (save) && (self.openTabOnRender = tabSelectorAux);
   }
 };
 
