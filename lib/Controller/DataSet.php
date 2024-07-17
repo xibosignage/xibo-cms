@@ -1355,7 +1355,7 @@ class DataSet extends Base
                     foreach ($data['uniqueKeys'] as $uniqueKey) {
                         if (isset($rowToAdd[$uniqueKey])) {
                             $i++;
-                            $filter .= 'AND `' . $uniqueKey . '` = :uniqueKey_' . $i;
+                            $filter .= 'AND `' . $uniqueKey . '` = :uniqueKey_' . $i . ' ';
                             $params['uniqueKey_' . $i] = $rowToAdd[$uniqueKey];
                         }
                     }
