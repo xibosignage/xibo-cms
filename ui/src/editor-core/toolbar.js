@@ -297,6 +297,9 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
     provider: {
       value: 'both',
     },
+    folder: {
+      value: '',
+    },
   };
 
   const defaultMenuItems = [
@@ -354,6 +357,12 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
           value: 'image',
           locked: true,
         },
+        folder: {
+          value: '',
+          key: 'folders',
+          dataRole: 'foldersList',
+          searchUrl: urlsForApi.folders.get.url,
+        },
         owner: {
           value: '',
           key: 'users',
@@ -400,6 +409,12 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
           value: 'audio',
           locked: true,
         },
+        folder: {
+          value: '',
+          key: 'folders',
+          dataRole: 'foldersList',
+          searchUrl: urlsForApi.folders.get.url,
+        },
         owner: {
           value: '',
           key: 'users',
@@ -439,6 +454,12 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
         type: {
           value: 'video',
           locked: true,
+        },
+        folder: {
+          value: '',
+          key: 'folders',
+          dataRole: 'foldersList',
+          searchUrl: urlsForApi.folders.get.url,
         },
         owner: {
           value: '',
@@ -486,6 +507,12 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
           key: 'tags',
           dataRole: 'tagsinput',
         },
+        folder: {
+          value: '',
+          key: 'folders',
+          dataRole: 'foldersList',
+          searchUrl: urlsForApi.folders.get.url,
+        },
         owner: {
           value: '',
           key: 'users',
@@ -521,6 +548,12 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
           value: '',
           key: 'tags',
           dataRole: 'tagsinput',
+        },
+        folder: {
+          value: '',
+          key: 'folders',
+          dataRole: 'foldersList',
+          searchUrl: urlsForApi.folders.get.url,
         },
         user: {
           value: '',
@@ -565,6 +598,12 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
         provider: {
           value: 'local',
           locked: true,
+        },
+        folder: {
+          value: '',
+          key: 'folders',
+          dataRole: 'foldersList',
+          searchUrl: urlsForApi.folders.get.url,
         },
         orientation: {
           value: '',
@@ -2289,10 +2328,43 @@ Toolbar.prototype.mediaContentHandleInputs = function(
   const $userListInput = $mediaForm.find('select[name="ownerId"]');
   makePagedSelect($userListInput);
 
+  // Initialize folder input
+  const $folderInput = $mediaForm.find('select[name="folderId"]');
+  makePagedSelect($folderInput, null, function(data) {
+    // Format data
+    const newData = [];
+
+    // Get data from folder structure recursively
+    const getData = function(arr) {
+      arr.forEach((el) => {
+        // Add to data
+        newData.push({
+          folderId: el.folderId,
+          folderName: el.text,
+        });
+
+        // If folder has sub-folders, get data from them as well
+        if (Array.isArray(el.children)) {
+          getData(el.children);
+        }
+      });
+    };
+
+    // Get initial data
+    getData(data);
+
+    return {
+      data: newData,
+    };
+  });
+
   // Initialize other select inputs
   $mediaForm
-    .find('select:not([name="ownerId"]):not(.input-sort)')
-    .select2({
+    .find(
+      'select:not([name="ownerId"])' +
+      ':not([name="folderId"])' +
+      ':not(.input-sort)',
+    ).select2({
       minimumResultsForSearch: -1, // Hide search box
     });
 };
@@ -2588,6 +2660,36 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
     filterRefresh();
   }, 200));
 
+  // Initialize folder input
+  const $folderInput = $searchForm.find('select[name="folderId"]');
+  makePagedSelect($folderInput, null, function(data) {
+    // Format data
+    const newData = [];
+
+    // Get data from folder structure recursively
+    const getData = function(arr) {
+      arr.forEach((el) => {
+        // Add to data
+        newData.push({
+          folderId: el.folderId,
+          folderName: el.text,
+        });
+
+        // If folder has sub-folders, get data from them as well
+        if (Array.isArray(el.children)) {
+          getData(el.children);
+        }
+      });
+    };
+
+    // Get initial data
+    getData(data);
+
+    return {
+      data: newData,
+    };
+  });
+
   // Initialize other select inputs
   $container
     .find('.media-search-form select:not([name="ownerId"]):not(.input-sort)')
@@ -2817,9 +2919,41 @@ Toolbar.prototype.playlistsContentPopulate = function(menu) {
     .find('.media-search-form select[name="userId"]');
   makePagedSelect($userListInput);
 
+  // Initialize folder input
+  const $folderInput = $container.find('select[name="folderId"]');
+  makePagedSelect($folderInput, null, function(data) {
+    // Format data
+    const newData = [];
+
+    // Get data from folder structure recursively
+    const getData = function(arr) {
+      arr.forEach((el) => {
+        // Add to data
+        newData.push({
+          folderId: el.folderId,
+          folderName: el.text,
+        });
+
+        // If folder has sub-folders, get data from them as well
+        if (Array.isArray(el.children)) {
+          getData(el.children);
+        }
+      });
+    };
+
+    // Get initial data
+    getData(data);
+
+    return {
+      data: newData,
+    };
+  });
+
   // Initialize other select inputs
   $container
-    .find('.media-search-form select:not([name="userId"]):not(.input-sort)')
+    .find('.media-search-form select:not([name="userId"])' +
+      ':not([name="folderId"])' +
+      ':not(.input-sort)')
     .select2({
       minimumResultsForSearch: -1, // Hide search box
     });

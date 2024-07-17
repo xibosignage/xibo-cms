@@ -3155,8 +3155,9 @@ function ToggleFilterView(div) {
  * Make a Paged Layout Selector from a Select Element and its parent (which can be null)
  * @param element
  * @param parent
+ * @param dataFormatter
  */
-function makePagedSelect(element, parent) {
+function makePagedSelect(element, parent, dataFormatter) {
     element.select2({
         dropdownParent: ((parent == null) ? $("body") : $(parent)),
         minimumResultsForSearch: (element.data('hideSearch')) ? Infinity : 1,
@@ -3210,6 +3211,14 @@ function makePagedSelect(element, parent) {
             processResults: function(data, params) {
                 var results = [];
                 var $element = element;
+
+                // If we have a custom data formatter
+                if (
+                    dataFormatter &&
+                    typeof dataFormatter === 'function'
+                ) {
+                    data = dataFormatter(data);
+                }
 
                 $.each(data.data, function(index, el) {
                     var result = {
@@ -3283,6 +3292,14 @@ function makePagedSelect(element, parent) {
             type: 'GET',
             data: dataObj
         }).then(function(data) {
+            // If we have a custom data formatter
+            if (
+                dataFormatter &&
+                typeof dataFormatter === 'function'
+            ) {
+                data = dataFormatter(data);
+            }
+
             // create the option and append to Select2
             data.data.forEach(object => {
                 var option = new Option(
