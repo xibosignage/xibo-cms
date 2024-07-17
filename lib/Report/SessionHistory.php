@@ -378,14 +378,12 @@ class SessionHistory implements ReportInterface
              `session_history`.`userId`,
              `session_history`.`userAgent`,
              `session_history`.`ipAddress`,
+             `session_history`.`lastUsedTime`,
              `user`.`userName`,
-             `usertype`.`userType`,
-             `session`.`session_expiration`
+             `usertype`.`userType`
                 FROM `session_history`
                     LEFT OUTER JOIN `user` ON `user`.`userId` = `session_history`.`userId`
                     LEFT OUTER JOIN `usertype` ON `usertype`.`userTypeId` = `user`.`userTypeId`
-                    LEFT OUTER JOIN `session` ON `session`.`session_data` 
-                        LIKE CONCAT("sessionHistoryId|i:", session_history.sessionId, "%")
              WHERE `session_history`.startTime BETWEEN :fromDt AND :toDt
              ';
 
@@ -409,9 +407,8 @@ class SessionHistory implements ReportInterface
             $rows = [];
             foreach ($this->store->select($sql, $params) as $row) {
                 $sessionRecord = $this->logFactory->createEmpty()->hydrate($row, ['htmlStringProperties' => ['message']]);
-                $endTime = isset($row['session_expiration']) ? date("Y-m-d H:i:s", $row['session_expiration']) : null;
-                $duration = isset($endTime)
-                    ? date_diff(date_create($row['startTime']), date_create($endTime))->format('%H:%I:%S') ?? null
+                $duration = isset($row['lastUsedTime'])
+                    ? date_diff(date_create($row['startTime']), date_create($row['lastUsedTime']))->format('%H:%I:%S')
                     : null;
 
                 $sessionRecord->setUnmatchedProperty(
@@ -431,7 +428,7 @@ class SessionHistory implements ReportInterface
 
                 $sessionRecord->setUnmatchedProperty(
                     'endTime',
-                    $endTime
+                    $row['lastUsedTime']
                 );
 
                 $sessionRecord->setUnmatchedProperty(
