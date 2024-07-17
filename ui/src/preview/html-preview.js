@@ -73,7 +73,7 @@ function playLog(logLevel, logClass, logMessage, logToScreen) {
         var msg = timestamp() + " " + logClass.toUpperCase() + ": " + logMessage;
         if (logLevel > 0)
         {
-            console.log(msg);
+            console.debug(msg);
         }
         
         if (logToScreen) {
@@ -1050,7 +1050,7 @@ function ActionController(parent, actions, options) {
             loadMediaInRegion(actionData.targetId, actionData.widgetId);
         } else {
             // TODO Handle other action types ( later? )
-            console.log(actionData.actionType + ' > ' + actionData.target + '[' + actionData.targetId + ']');
+            console.debug(actionData.actionType + ' > ' + actionData.target + '[' + actionData.targetId + ']');
         }
     };
 

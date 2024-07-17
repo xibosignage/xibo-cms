@@ -1134,12 +1134,12 @@
 
 
         function setDefaultMultiSelectFormOpen(dialog) {
-            console.log('Multi-select form opened for default layout');
+            console.debug('Multi-select form opened for default layout');
 
             // Inject a list of layouts into the form, in a drop down.
             var $select = $('<select name="layoutId" class="form-control" data-search-url="{{ url_for("layout.search") }}" data-search-term="layout" data-search-term-tags="tags" data-id-property="layoutId" data-text-property="layout">');
             $select.on('change', function() {
-                console.log('Setting commit data to ' + $(this).val());
+                console.debug('Setting commit data to ' + $(this).val());
                 dialog.data().commitData = {layoutId: $(this).val()};
             });
 
@@ -1158,7 +1158,7 @@
         }
 
         function setMoveCmsMultiSelectFormOpen(dialog) {
-            console.log('Multi-select form opened for move CMS');
+            console.debug('Multi-select form opened for move CMS');
 
             var $message = $(
                 '<div class="col-sm-12 alert alert-info">' +

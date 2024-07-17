@@ -176,7 +176,7 @@
           // Window message to receive data and logs.
           window.receiveData = function(type, data) {
             if (type === 'loaded') {
-              console.log('Script loaded');
+              console.debug('Script loaded');
               $script.find('iframe')[0].contentWindow.xiboDC.initialise({{ dataSet.dataSetId }}, $scriptParams.val());
             } else if (type === 'log') {
               $logs.prepend('[' + moment().format('YY-MM-DD HH:mm:ss') + '] ' + data + '\n');
