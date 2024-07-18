@@ -2204,7 +2204,6 @@ Toolbar.prototype.mediaContentPopulateTable = function(menu) {
 
       // Add with click if playlist
       if (self.isPlaylist) {
-        console.log('Add with click!');
         app.dropItemAdd({}, $target.closest('tr'));
       } else {
         self.selectCard($target.closest('tr'), data);

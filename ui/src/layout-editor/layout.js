@@ -755,7 +755,7 @@ Layout.prototype.savePlaylistOrder = function(playlist, widgets) {
     },
   ).catch((error) => {
     toastr.error(errorMessagesTrans.playlistOrderSave);
-    console.log(error);
+    console.error(error);
   });
 };
 

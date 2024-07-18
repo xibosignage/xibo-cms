@@ -4894,7 +4894,7 @@ lD.loadPrefs = function() {
 lD.savePrefs = _.debounce(function(clearPrefs = false) {
   // Clear values to defaults
   if (clearPrefs) {
-    console.log('Clearing user preferences');
+    console.debug('Clearing user preferences');
   }
 
   // Data to be saved

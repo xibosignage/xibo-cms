@@ -40,7 +40,7 @@ if (!String.prototype.endsWith) {
 
 // Configure a global error handler for data tables
 $.fn.dataTable.ext.errMode = function (settings, helpPage, message) {
-    console.log(message);
+    console.error(message);
 };
 
 // Set up the light boxes
@@ -148,7 +148,7 @@ function XiboInitialise(scope, options) {
                         field.data('initial-value', element.value)
                     }
                 } catch (e) {
-                    console.log("Error populating form saved value with selector input[name=" + element.name + "], select[name=" + element.name + "]");
+                    console.error("Error populating form saved value with selector input[name=" + element.name + "], select[name=" + element.name + "]");
                 }
             });
         }
@@ -2344,7 +2344,7 @@ function formRenderDetectSpacingIssues(element) {
 
     if (value !== '' && (value.startsWith(" ") || value.endsWith(" ") || value.indexOf("  ") > -1)) {
         // Add a little icon to the fields parent to inform of this issue
-        console.log("Field with strange spacing: " + $el.attr("name"));
+        console.debug("Field with strange spacing: " + $el.attr("name"));
 
         var warning = $("<span></span>").addClass("fa fa-exclamation-circle spacing-warning-icon").attr("title", translations.spacesWarning);
 

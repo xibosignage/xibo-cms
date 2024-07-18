@@ -134,7 +134,7 @@ Region.prototype.transform = function(transform, saveToHistory = true) {
       },
     ).catch((error) => {
       toastr.error(errorMessagesTrans.transformRegionFailed);
-      console.log(error);
+      console.error(error);
     });
   }
 
