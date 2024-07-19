@@ -615,11 +615,25 @@ Viewer.prototype.handleInteractions = function() {
   // Handle click and double click
   let clicks = 0;
   let timer = null;
-  $viewerContainer.parent().find('.viewer-object-select').off()
-    .on('mousedown', function(e) {
+  $viewerContainer.parent().find(
+    '.viewer-object-select,' +
+    '.viewer-object-select .message-container,' +
+    '.viewer-object-select .slot').off('mousedown.viewer')
+    .on('mousedown.viewer', function(e) {
       e.stopPropagation();
 
       const shiftIsPressed = e.shiftKey;
+
+      // If we're selecting a message or slot, change target
+      if (
+        (
+          $(e.currentTarget).hasClass('message-container') ||
+          $(e.currentTarget).hasClass('slot')
+        ) &&
+        $(e.target).closest('.viewer-object-select').length > 0
+      ) {
+        e.target = $(e.target).closest('.viewer-object-select')[0];
+      }
 
       // Right click open context menu
       if (e.which == 3) {
@@ -939,7 +953,10 @@ Viewer.prototype.handleInteractions = function() {
     }).on('dblclick', function(e) {
       // Cancel default double click
       e.preventDefault();
-    }).children().on('mousedown dblclick', function(e) {
+    }).children(
+      ':not(.message-container):not(.message-container *)' +
+      ':not(.slot):not(.slot *)',
+    ).on('mousedown dblclick', function(e) {
       // Cancel default click
       e.stopPropagation();
     }).contextmenu(function(ev) {
