@@ -134,13 +134,16 @@ $app->get('/layout/view', ['\Xibo\Controller\Layout', 'displayPage'])
     ->setName('layout.view');
 
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/layout/preview/{id}', ['\Xibo\Controller\Preview', 'show'])->setName('layout.preview');
     $group->get('/layout/xlf/{id}', ['\Xibo\Controller\Preview', 'getXlf'])->setName('layout.getXlf');
     $group->get('/layout/background/{id}', ['\Xibo\Controller\Layout', 'downloadBackground'])->setName('layout.download.background');
     $group->get('/layout/thumbnail/{id}', ['\Xibo\Controller\Layout', 'downloadThumbnail'])->setName('layout.download.thumbnail');
     $group->get('/layout/playerBundle', ['\Xibo\Controller\Preview', 'playerBundle'])->setName('layout.preview.bundle');
     $group->get('/connector/widget/preview', ['\Xibo\Controller\Connector', 'connectorPreview'])->setName('layout.preview.connector');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.view', 'template.view']));
+
+$app->get('/layout/preview/{id}', ['\Xibo\Controller\Preview', 'show'])
+    ->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.view', 'template.view', 'campaign.view']))
+    ->setName('layout.preview');
 
 // forms
 $app->get('/layout/form/add', ['\Xibo\Controller\Layout','addForm'])
@@ -369,8 +372,7 @@ $app->get('/campaign/form/{id}/selectfolder', ['\Xibo\Controller\Campaign','sele
     ->setName('campaign.selectfolder.form');
 
 $app->get('/campaign/{id}/preview', ['\Xibo\Controller\Campaign','preview'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['campaign.view']))
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.view']))
+    ->addMiddleware(new FeatureAuth($app->getContainer(), ['campaign.view', 'layout.view']))
     ->setName('campaign.preview');
 
 //
