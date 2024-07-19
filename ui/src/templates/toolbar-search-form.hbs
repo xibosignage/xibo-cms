@@ -35,6 +35,24 @@
                     {{/if}}
                 </select>
             </div>
+        {{else eq @key "folder"}}
+            <div class="form-group {{#if this.locked}}hidden{{/if}}">
+                <label for="input-folder" class="mb-0">{{../trans.searchFilters.folder}}</label>
+                <select id="input-folder" name="folderId" class="form-control mr-1 input-folder"
+                    {{#if searchUrl}}data-search-url="{{searchUrl}}"{{/if}}
+                    data-id-property="folderId"
+                    data-search-term="folderName"
+                    data-allow-clear="true"
+                    data-placeholder--id= "null"
+                    data-placeholder--value= ""
+                    data-text-property="folderName"
+                    data-initial-key="folderId"
+                    data-initial-value="{{this.value}}">
+                    {{#if this.locked}}
+                        <option value="{{this.value}}" selected>{{this.value}}</option>
+                    {{/if}}
+                </select>
+            </div>
         {{else eq @key "user"}}
             <div class="form-group {{#if this.locked}}hidden{{/if}}">
                 <label for="input-user" class="mb-0">{{../trans.searchFilters.user}}</label>

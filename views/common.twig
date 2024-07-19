@@ -393,6 +393,12 @@
                     type: 'GET',
                 }
             },
+            folders: {
+                get: {
+                    url: "{{ url_for("folders.search") }}",
+                    type: 'GET',
+                }
+            }
         };
 
         {% autoescape "js" %}
@@ -717,6 +723,7 @@
                     user: "{{ "Owner"|trans }}",
                     orientation: "{{ "Orientation"|trans }}",
                     provider: "{{ "Provider"|trans }}",
+                    folder: "{{ "Folder"|trans }}",
                 },
                 searchSortBy: "{{ "Sort by"|trans }}",
                 searchSort: {

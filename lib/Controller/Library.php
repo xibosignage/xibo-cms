@@ -849,6 +849,7 @@ class Library extends Base
                 'tags' => $parsedQueryParams->getString('tags'),
                 'exactTags' => $parsedQueryParams->getCheckbox('exactTags'),
                 'ownerId' => $parsedQueryParams->getInt('ownerId'),
+                'folderId' => $parsedQueryParams->getInt('folderId'),
                 'assignable' => 1,
                 'retired' => 0,
                 'orientation' => $parsedQueryParams->getString('orientation', ['defaultOnEmptyString' => true])
