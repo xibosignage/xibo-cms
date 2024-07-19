@@ -97,6 +97,10 @@ PropertiesPanel.prototype.save = function(
     target = app.selectedObject;
   }
 
+  // Check if target is playlist
+  const isPlaylist =
+    (target.type === 'region' && target.subType === 'playlist');
+
   // Save original target
   const originalTarget = target;
 
@@ -163,7 +167,7 @@ PropertiesPanel.prototype.save = function(
     form.find('[name]');
 
   // Filter out position related fields
-  formFieldsToSave =
+  formFieldsToSave = (isPlaylist) ? formFieldsToSave :
     formFieldsToSave.filter('.tab-pane:not(#positionTab) [name]');
 
   // Get form old data
@@ -1386,7 +1390,9 @@ PropertiesPanel.prototype.render = function(
 
           if (targetAux == undefined) {
             // Widget
-            const regionId = target.parent.id;
+            const regionId = (target.type === 'region') ?
+              target.id :
+              target.parent.id;
             const positions = {
               width: form.find('[name="width"]').val(),
               height: form.find('[name="height"]').val(),
@@ -1808,6 +1814,8 @@ PropertiesPanel.prototype.initFields = function(
   const self = this;
   const app = this.parent;
   const targetIsElement = (target.type === 'element');
+  const targetIsPlaylist =
+    (target.type === 'region' && target.subType === 'playlist');
   const readOnlyModeOn =
     (typeof(lD) != 'undefined' && lD?.readOnlyMode === true) ||
     (app?.readOnlyMode === true);
@@ -1863,10 +1871,11 @@ PropertiesPanel.prototype.initFields = function(
     };
 
     // Save for this type
-    self.formSerializedLoadData[target.type] =
-      self.DOMObject.find('form [name]:not(.element-property)')
-        .filter('.tab-pane:not(#positionTab) [name]')
-        .serialize();
+    let $fields = self.DOMObject.find('form [name]:not(.element-property)');
+    // Filter position tab if needed
+    $fields = (targetIsPlaylist) ?
+      $fields : $fields.filter('.tab-pane:not(#positionTab) [name]');
+    self.formSerializedLoadData[target.type] = $fields.serialize();
 
     // If widget, also save position form
     if (target.type === 'widget') {
