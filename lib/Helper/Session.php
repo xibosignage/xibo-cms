@@ -493,13 +493,14 @@ class Session implements \SessionHandlerInterface
     {
         $sql = '
             UPDATE `session_history` SET
-              lastUsedTime = :lastUsedTime
+              lastUsedTime = :lastUsedTime, userID = :userId
             WHERE sessionId = :sessionId
         ';
 
         $params = [
             'lastUsedTime' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
-            'sessionId' => $_SESSION['sessionHistoryId']
+            'userId' => $this->userId,
+            'sessionId' => $_SESSION['sessionHistoryId'],
         ];
 
         $this->getDb()->update($sql, $params);
