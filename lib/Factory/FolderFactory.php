@@ -94,13 +94,18 @@ class FolderFactory extends BaseFactory
 
     /**
      * @param string $folderName
+     * @param int $folderExact
      * @param int $disableUserCheck
      * @return Folder[]
      * @throws NotFoundException
      */
-    public function getByName(string $folderName, int $disableUserCheck = 1)
+    public function getByName(string $folderName, int $folderExact = 0, int $disableUserCheck = 1)
     {
-        $folders = $this->query(null, ['folderName' => $folderName, 'disableUserCheck' => $disableUserCheck]);
+        $folders = $this->query(null, [
+            'folderName' => $folderName,
+            'folderExact' => $folderExact,
+            'disableUserCheck' => $disableUserCheck
+        ]);
 
         if (count($folders) <= 0) {
             throw new NotFoundException(__('Folder not found'));
@@ -167,6 +172,12 @@ class FolderFactory extends BaseFactory
         // for the "grid" ie tree view, we need the root folder to keep the tree structure
         if ($sanitizedFilter->getInt('includeRoot') === 1) {
             $body .= 'OR folder.isRoot = 1';
+        }
+
+        // get the exact match for the search functionality
+        if ($sanitizedFilter->getInt('folderExact') === 1) {
+            $body.= " AND folder.folderName = :exactFolderName ";
+            $params['exactFolderName'] = $sanitizedFilter->getString('folderName');
         }
 
         // View Permissions (home folder included in here)

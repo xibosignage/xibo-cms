@@ -543,7 +543,7 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/folders/{folderId}/move', ['\Xibo\Controller\Folder', 'move'])->setName('folders.move');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['folder.modify']));
 
-$app->get('/folders/search/{folderName}', ['\Xibo\Controller\Folder','searchFolder'])->setName('folders.getByName');
+$app->get('/folders/search/', ['\Xibo\Controller\Folder','searchFolder'])->setName('folders.getByName');
 
 /**
  * Statistics

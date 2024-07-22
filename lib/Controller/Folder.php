@@ -528,36 +528,48 @@ class Folder extends Base
 
     /**
      * @SWG\GET(
-     *  path="/folders/search/{folderName}",
+     *  path="/folders/search/",
      *  operationId="folderSearchAll",
      *  tags={"folder"},
      *  summary="Folders Search All",
      *  description="Search All Folders",
      *  @SWG\Parameter(
      *      name="folderName",
-     *      in="path",
+     *      in="query",
      *      description="Folder name to search",
      *      type="string",
-     *      required=true
-     *   ),
+     *      required=false
+     *    ),
+     *  @SWG\Parameter(
+     *      name="folderExact",
+     *      in="query",
+     *      description="A flag indicating whether to treat the folder name filter as an exact match",
+     *      type="integer",
+     *      required=false
+     *    ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation",
      *      @SWG\Schema(
-     *          @SWG\Items(ref="#/definitions/SearchResult")
-     *      )
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/Folder")
+     *    )
      *  )
      * )
      * @param Request $request
      * @param Response $response
-     * @param $folderName
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function searchFolder(Request $request, Response $response, $folderName)
+    public function searchFolder(Request $request, Response $response)
     {
-        $folders = $this->folderFactory->getByName($folderName);
+        $params = $this->getSanitizer($request->getParams());
+        $folders = $this->folderFactory->getByName(
+            $params->getString('folderName') ?? '',
+            $params->getInt('folderExact') ?? 0
+        );
 
+        $this->getState()->recordsTotal = $this->folderFactory->countLast();
         $this->getState()->setData($folders);
 
         return $this->render($request, $response);

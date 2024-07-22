@@ -4550,7 +4550,7 @@
                 }
             }
         },
-        "/folders/search/{folderName}": {
+        "/folders/search/": {
             "get": {
                 "tags": [
                     "folder"
@@ -4561,10 +4561,17 @@
                 "parameters": [
                     {
                         "name": "folderName",
-                        "in": "path",
+                        "in": "query",
                         "description": "Folder name to search",
-                        "required": true,
+                        "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "folderExact",
+                        "in": "query",
+                        "description": "A flag indicating whether to treat the folder name filter as an exact match",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -4573,7 +4580,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/SearchResult"
+                                "$ref": "#/definitions/Folder"
                             }
                         }
                     }
