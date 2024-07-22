@@ -49,10 +49,10 @@ class DataConnectorSourceRequestEvent extends Event implements DataConnectorSour
         // ensure that there are no duplicate id or name
         foreach ($this->dataConnectorSources as $dataConnectorSource) {
             if ($dataConnectorSource['id'] == $id) {
-                throw new InvalidArgumentException("Duplicate Connector ID found.");
+                throw new InvalidArgumentException('Duplicate Connector ID found.');
             }
             if ($dataConnectorSource['name'] == $name) {
-                throw new InvalidArgumentException("Duplicate Connector Name found");
+                throw new InvalidArgumentException('Duplicate Connector Name found.');
             }
         }
 
