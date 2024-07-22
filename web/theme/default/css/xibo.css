@@ -1579,3 +1579,25 @@ div.dataTables_wrapper div.dataTables_info {
     max-height: 300px;
     overflow-y: auto;
 }
+
+/* User onboard form */
+#userOnboardingForm .setup-content .panel-body {
+    position: relative;
+}
+
+#userOnboardingForm .setup-content .folder-tree-buttons {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+    position: absolute;
+    z-index: 2;
+    right: 18px;
+    padding-top: 18px;
+}
+
+#userOnboardingForm .setup-content .folder-tree-buttons button {
+    box-shadow: none;
+    height: 24px;
+    line-height: 1;
+    border-radius: 2px;
+}

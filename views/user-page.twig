@@ -465,6 +465,15 @@
                 plugins,
                 $(dialog).find('input[name=homeFolderId]').val()
             );
+
+            $('.folder-tree-buttons').on('click', 'button', function(ev) {
+                const jsTree = $(dialog).find('#container-form-folder-tree').jstree(true);
+                if ($(ev.target).attr('id') === 'selectAllBtn') {
+                    jsTree.select_all();
+                } else if ($(ev.target).attr('id') === 'selectNoneBtn') {
+                    jsTree.deselect_all();
+                }
+            });
         }
     </script>
 {% endblock %}
