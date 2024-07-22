@@ -294,7 +294,7 @@ class SessionHistory implements ReportInterface
                 $rows,
                 count($rows),
             );
-        } else {
+        } else if ($type === 'debug') {
             $params = [
                 'fromDt' => $fromDt->format(DateFormatHelper::getSystemFormat()),
                 'toDt' => $toDt->format(DateFormatHelper::getSystemFormat()),
@@ -359,6 +359,84 @@ class SessionHistory implements ReportInterface
                 );
 
                 $rows[] = $logRecord;
+            }
+
+            return new ReportResult(
+                $metadata,
+                $rows,
+                count($rows),
+            );
+        } else {
+            $params = [
+                'fromDt' => $fromDt->format(DateFormatHelper::getSystemFormat()),
+                'toDt' => $toDt->format(DateFormatHelper::getSystemFormat()),
+            ];
+
+            $sql = 'SELECT
+             `session_history`.`sessionId`,
+             `session_history`.`startTime`,
+             `session_history`.`userId`,
+             `session_history`.`userAgent`,
+             `session_history`.`ipAddress`,
+             `session_history`.`lastUsedTime`,
+             `user`.`userName`,
+             `usertype`.`userType`
+                FROM `session_history`
+                    LEFT OUTER JOIN `user` ON `user`.`userId` = `session_history`.`userId`
+                    LEFT OUTER JOIN `usertype` ON `usertype`.`userTypeId` = `user`.`userTypeId`
+             WHERE `session_history`.startTime BETWEEN :fromDt AND :toDt
+             ';
+
+            if ($sanitizedParams->getInt('userId') !== null) {
+                $sql .= ' AND `session_history`.`userId` = :userId';
+                $params['userId'] = $sanitizedParams->getInt('userId');
+            }
+
+            if ($sanitizedParams->getInt('sessionHistoryId') !== null) {
+                $sql .= ' AND `session_history`.`sessionId` = :sessionHistoryId';
+                $params['sessionHistoryId'] = $sanitizedParams->getInt('sessionHistoryId');
+            }
+
+            // Sorting?
+            $sortOrder = $this->gridRenderSort($sanitizedParams);
+
+            if (is_array($sortOrder)) {
+                $sql .= ' ORDER BY ' . implode(',', $sortOrder);
+            }
+
+            $rows = [];
+            foreach ($this->store->select($sql, $params) as $row) {
+                $sessionRecord = $this->logFactory->createEmpty()->hydrate($row, ['htmlStringProperties' => ['message']]);
+                $duration = isset($row['lastUsedTime'])
+                    ? date_diff(date_create($row['startTime']), date_create($row['lastUsedTime']))->format('%H:%I:%S')
+                    : null;
+
+                $sessionRecord->setUnmatchedProperty(
+                    'userAgent',
+                    $row['userAgent']
+                );
+
+                $sessionRecord->setUnmatchedProperty(
+                    'ipAddress',
+                    $row['ipAddress']
+                );
+
+                $sessionRecord->setUnmatchedProperty(
+                    'userName',
+                    $row['userName']
+                );
+
+                $sessionRecord->setUnmatchedProperty(
+                    'endTime',
+                    $row['lastUsedTime']
+                );
+
+                $sessionRecord->setUnmatchedProperty(
+                    'duration',
+                    $duration
+                );
+
+                $rows[] = $sessionRecord;
             }
 
             return new ReportResult(

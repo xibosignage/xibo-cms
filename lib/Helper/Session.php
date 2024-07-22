@@ -434,8 +434,8 @@ class Session implements \SessionHandlerInterface
     private function insertSessionHistory()
     {
         $sql = '
-        INSERT INTO `session_history` (`ipAddress`, `userAgent`, `startTime`, `userId`)
-            VALUES (:ipAddress, :userAgent, :startTime, :userId)
+        INSERT INTO `session_history` (`ipAddress`, `userAgent`, `startTime`, `userId`, `lastUsedTime`)
+            VALUES (:ipAddress, :userAgent, :startTime, :userId, :lastUsedTime)
         ';
 
         $params = [
@@ -443,6 +443,7 @@ class Session implements \SessionHandlerInterface
             'userAgent' => substr(htmlspecialchars($_SERVER['HTTP_USER_AGENT']), 0, 253),
             'startTime' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             'userId' => $this->userId,
+            'lastUsedTime' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
         ];
 
         $id = $this->getDb()->insert($sql, $params);
@@ -461,6 +462,8 @@ class Session implements \SessionHandlerInterface
     {
         //$this->log->debug('Session update');
 
+        $this->updateSessionHistory();
+
         $sql = '
             UPDATE `session` SET
               session_data = :session_data,
@@ -478,6 +481,26 @@ class Session implements \SessionHandlerInterface
             'userId' => $this->userId,
             'expired' => ($this->expired) ? 1 : 0,
             'session_id' => $key
+        ];
+
+        $this->getDb()->update($sql, $params);
+    }
+
+    /**
+     * Updates the session history
+     */
+    private function updateSessionHistory()
+    {
+        $sql = '
+            UPDATE `session_history` SET
+              lastUsedTime = :lastUsedTime, userID = :userId
+            WHERE sessionId = :sessionId
+        ';
+
+        $params = [
+            'lastUsedTime' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
+            'userId' => $this->userId,
+            'sessionId' => $_SESSION['sessionHistoryId'],
         ];
 
         $this->getDb()->update($sql, $params);
