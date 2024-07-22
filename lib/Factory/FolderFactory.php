@@ -93,28 +93,6 @@ class FolderFactory extends BaseFactory
     }
 
     /**
-     * @param string $folderName
-     * @param int $folderExact
-     * @param int $disableUserCheck
-     * @return Folder[]
-     * @throws NotFoundException
-     */
-    public function getByName(string $folderName, int $folderExact = 0, int $disableUserCheck = 1)
-    {
-        $folders = $this->query(null, [
-            'folderName' => $folderName,
-            'folderExact' => $folderExact,
-            'disableUserCheck' => $disableUserCheck
-        ]);
-
-        if (count($folders) <= 0) {
-            throw new NotFoundException(__('Folder not found'));
-        }
-
-        return $folders;
-    }
-
-    /**
      * @param array $sortOrder
      * @param array $filterBy
      * @return Folder[]
@@ -175,7 +153,7 @@ class FolderFactory extends BaseFactory
         }
 
         // get the exact match for the search functionality
-        if ($sanitizedFilter->getInt('folderExact') === 1) {
+        if ($sanitizedFilter->getInt('exactFolderName') === 1) {
             $body.= " AND folder.folderName = :exactFolderName ";
             $params['exactFolderName'] = $sanitizedFilter->getString('folderName');
         }

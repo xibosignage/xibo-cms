@@ -4438,6 +4438,13 @@
                         "description": "Use with gridView, Filter by Folder name",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "exactFolderName",
+                        "in": "query",
+                        "description": "A flag indicating whether to treat the folder name filter as an exact match",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -4549,43 +4556,6 @@
                     }
                 }
             }
-        },
-        "/folders/search/": {
-            "get": {
-                "tags": [
-                    "folder"
-                ],
-                "summary": "Folders Search All",
-                "description": "Search All Folders",
-                "operationId": "folderSearchAll",
-                "parameters": [
-                    {
-                        "name": "folderName",
-                        "in": "query",
-                        "description": "Folder name to search",
-                        "required": false,
-                        "type": "string"
-                    },
-                    {
-                        "name": "folderExact",
-                        "in": "query",
-                        "description": "A flag indicating whether to treat the folder name filter as an exact match",
-                        "required": false,
-                        "type": "integer"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "successful operation",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/Folder"
-                            }
-                        }
-                    }
-                }
-            },
         },
         "/fonts": {
             "get": {

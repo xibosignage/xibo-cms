@@ -97,6 +97,13 @@ class Folder extends Base
      *       type="string",
      *       required=false
      *    ),
+     *   @SWG\Parameter(
+     *       name="exactFolderName",
+     *       in="query",
+     *       description="Use with gridView, Filter by exact Folder name match",
+     *       type="integer",
+     *       required=false
+     *    ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -118,6 +125,7 @@ class Folder extends Base
             $folders = $this->folderFactory->query($this->gridRenderSort($params), $this->gridRenderFilter([
                 'folderName' => $params->getString('folderName'),
                 'folderId' => $params->getInt('folderId'),
+                'exactFolderName' => $params->getInt('exactFolderName'),
             ], $params));
 
             $this->getState()->template = 'grid';
@@ -522,55 +530,6 @@ class Folder extends Base
             // changing the permissionsFolderId as well if needed.
             $folder->updateFoldersAfterMove($folder->parentId, $newParentFolder->getId());
         }
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * @SWG\GET(
-     *  path="/folders/search/",
-     *  operationId="folderSearchAll",
-     *  tags={"folder"},
-     *  summary="Folders Search All",
-     *  description="Search All Folders",
-     *  @SWG\Parameter(
-     *      name="folderName",
-     *      in="query",
-     *      description="Folder name to search",
-     *      type="string",
-     *      required=false
-     *    ),
-     *  @SWG\Parameter(
-     *      name="folderExact",
-     *      in="query",
-     *      description="A flag indicating whether to treat the folder name filter as an exact match",
-     *      type="integer",
-     *      required=false
-     *    ),
-     *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation",
-     *      @SWG\Schema(
-     *          type="array",
-     *          @SWG\Items(ref="#/definitions/Folder")
-     *    )
-     *  )
-     * )
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    public function searchFolder(Request $request, Response $response)
-    {
-        $params = $this->getSanitizer($request->getParams());
-        $folders = $this->folderFactory->getByName(
-            $params->getString('folderName') ?? '',
-            $params->getInt('folderExact') ?? 0
-        );
-
-        $this->getState()->recordsTotal = $this->folderFactory->countLast();
-        $this->getState()->setData($folders);
 
         return $this->render($request, $response);
     }
