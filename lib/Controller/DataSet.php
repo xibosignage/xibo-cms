@@ -26,6 +26,8 @@ use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Str;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Event\DataConnectorScriptRequestEvent;
+use Xibo\Event\DataConnectorSourceRequestEvent;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\FolderFactory;
@@ -381,9 +383,18 @@ class DataSet extends Base
      */
     public function addForm(Request $request, Response $response)
     {
+
+        // Dispatch an event to initialize list of data sources for data connectors
+        $event = new DataConnectorSourceRequestEvent();
+        $this->getDispatcher()->dispatch($event, DataConnectorSourceRequestEvent::$NAME);
+
+        // Retrieve data connector sources from the event
+        $dataConnectorSources = $event->getDataConnectorSources();
+
         $this->getState()->template = 'dataset-form-add';
         $this->getState()->setData([
             'dataSets' => $this->dataSetFactory->query(),
+            'dataConnectorSources' => $dataConnectorSources,
         ]);
 
         return $this->render($request, $response);
@@ -433,6 +444,13 @@ class DataSet extends Base
      *      type="integer",
      *      required=true
      *   ),
+     *   @SWG\Parameter(
+     *       name="dataConnectorSource",
+     *       in="formData",
+     *       description="Source of the data connector",
+     *       type="string",
+     *       required=true
+     *    ),
      *  @SWG\Parameter(
      *      name="method",
      *      in="formData",
@@ -617,6 +635,7 @@ class DataSet extends Base
         $dataSet->code = $sanitizedParams->getString('code');
         $dataSet->isRemote = $sanitizedParams->getCheckbox('isRemote');
         $dataSet->isRealTime = $sanitizedParams->getCheckbox('isRealTime');
+        $dataSet->dataConnectorSource = $sanitizedParams->getString('dataConnectorSource');
         $dataSet->userId = $this->getUser()->userId;
 
         // Folders
@@ -703,12 +722,20 @@ class DataSet extends Base
             throw new AccessDeniedException();
         }
 
+        // Dispatch an event to initialize list of data sources for data connectors
+        $event = new DataConnectorSourceRequestEvent();
+        $this->getDispatcher()->dispatch($event, DataConnectorSourceRequestEvent::$NAME);
+
+        // Retrieve data sources from the event
+        $dataConnectorSources = $event->getDataConnectorSources();
+
         // Set the form
         $this->getState()->template = 'dataset-form-edit';
         $this->getState()->setData([
             'dataSet' => $dataSet,
             'dataSets' => $this->dataSetFactory->query(),
             'script' => $dataSet->getScript(),
+            'dataConnectorSources' => $dataConnectorSources
         ]);
 
         return $this->render($request, $response);
@@ -774,6 +801,13 @@ class DataSet extends Base
      *      type="integer",
      *      required=true
      *   ),
+     *   @SWG\Parameter(
+     *       name="dataConnectorSource",
+     *       in="formData",
+     *       description="Source of the data connector",
+     *       type="string",
+     *       required=true
+     *    ),
      *  @SWG\Parameter(
      *      name="method",
      *      in="formData",
@@ -949,6 +983,7 @@ class DataSet extends Base
         $dataSet->code = $sanitizedParams->getString('code');
         $dataSet->isRemote = $sanitizedParams->getCheckbox('isRemote');
         $dataSet->isRealTime = $sanitizedParams->getCheckbox('isRealTime');
+        $dataSet->dataConnectorSource = $sanitizedParams->getString('dataConnectorSource');
         $dataSet->folderId = $sanitizedParams->getInt('folderId', ['default' => $dataSet->folderId]);
 
         if ($dataSet->hasPropertyChanged('folderId')) {
@@ -1832,13 +1867,23 @@ class DataSet extends Base
 
         $dataSet->load();
 
+        if ($dataSet->dataConnectorSource == 'user_defined') {
+            // retrieve the user defined javascript
+            $script = $dataSet->getScript();
+        } else {
+            // Dispatch the event to get the script from the connector
+            $event = new DataConnectorScriptRequestEvent($dataSet);
+            $this->getDispatcher()->dispatch($event, DataConnectorScriptRequestEvent::$NAME);
+            $script = $dataSet->getScript();
+        }
+
         $this->getState()->template = 'dataset-data-connector-page';
         $this->getState()->setData([
             'dataSet' => $dataSet,
-            'script' => $dataSet->getScript(),
-        ]);
-
-        return $this->render($request, $response);
+            'script' => $script,
+            ]);
+    
+            return $this->render($request, $response);
     }
 
     /**

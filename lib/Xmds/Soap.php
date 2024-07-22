@@ -33,6 +33,7 @@ use Xibo\Entity\Display;
 use Xibo\Entity\Region;
 use Xibo\Entity\RequiredFile;
 use Xibo\Entity\Schedule;
+use Xibo\Event\DataConnectorScriptRequestEvent;
 use Xibo\Event\XmdsDependencyListEvent;
 use Xibo\Factory\BandwidthFactory;
 use Xibo\Factory\DataSetFactory;
@@ -588,6 +589,14 @@ class Soap
 
                 // Data Connectors
                 if ($isSupportsDependency && $schedule->eventTypeId === Schedule::$DATA_CONNECTOR_EVENT) {
+                    $dataSet = $this->dataSetFactory->getById($row['dataSetId']);
+
+                    if ($dataSet->dataConnectorSource != 'user_defined') {
+                        // Dispatch an event to save the data connector javascript from the connector
+                        $dataConnectorScriptRequestEvent = new DataConnectorScriptRequestEvent($dataSet);
+                        $this->getDispatcher()->dispatch($dataConnectorScriptRequestEvent, DataConnectorScriptRequestEvent::$NAME);
+                    }
+
                     $this->addDependency(
                         $newRfIds,
                         $requiredFilesXml,

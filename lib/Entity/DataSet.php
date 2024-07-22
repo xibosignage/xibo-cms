@@ -119,6 +119,12 @@ class DataSet implements \JsonSerializable
     public $isRealTime = 0;
 
     /**
+     * @SWG\Property(description="Indicates the source of the data connector. Requires the Real time flag. Can be null, user-defined, or a connector.")
+     * @var string
+     */
+    public $dataConnectorSource;
+
+    /**
      * @SWG\Property(description="Method to fetch the Data, can be GET or POST")
      * @var string
      */
@@ -1089,9 +1095,9 @@ class DataSet implements \JsonSerializable
     private function add()
     {
         $columns = 'DataSet, Description, UserID, `code`, `isLookup`, `isRemote`,';
-        $columns .= '`lastDataEdit`, `lastClear`, `folderId`, `permissionsFolderId`, `isRealTime`';
+        $columns .= '`lastDataEdit`, `lastClear`, `folderId`, `permissionsFolderId`, `isRealTime`, `dataConnectorSource`';
         $values = ':dataSet, :description, :userId, :code, :isLookup, :isRemote,';
-        $values .= ':lastDataEdit, :lastClear, :folderId, :permissionsFolderId, :isRealTime';
+        $values .= ':lastDataEdit, :lastClear, :folderId, :permissionsFolderId, :isRealTime, :dataConnectorSource';
 
         $params = [
             'dataSet' => $this->dataSet,
@@ -1101,6 +1107,7 @@ class DataSet implements \JsonSerializable
             'isLookup' => $this->isLookup,
             'isRemote' => $this->isRemote,
             'isRealTime' => $this->isRealTime,
+            'dataConnectorSource' => $this->dataConnectorSource,
             'lastDataEdit' => 0,
             'lastClear' => 0,
             'folderId' => ($this->folderId === null) ? 1 : $this->folderId,
@@ -1156,6 +1163,7 @@ class DataSet implements \JsonSerializable
             `isLookup` = :isLookup, 
             `isRemote` = :isRemote, 
             `isRealTime` = :isRealTime, 
+            `dataConnectorSource` = :dataConnectorSource, 
             `folderId` = :folderId, 
             `permissionsFolderId` = :permissionsFolderId 
         ';
@@ -1169,6 +1177,7 @@ class DataSet implements \JsonSerializable
             'isLookup' => $this->isLookup,
             'isRemote' => $this->isRemote,
             'isRealTime' => $this->isRealTime,
+            'dataConnectorSource' => $this->dataConnectorSource,
             'folderId' => $this->folderId,
             'permissionsFolderId' => $this->permissionsFolderId
         ];
