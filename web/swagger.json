@@ -4550,6 +4550,36 @@
                 }
             }
         },
+        "/folders/search/{folderName}": {
+            "get": {
+                "tags": [
+                    "folder"
+                ],
+                "summary": "Folders Search All",
+                "description": "Search All Folders",
+                "operationId": "folderSearchAll",
+                "parameters": [
+                    {
+                        "name": "folderName",
+                        "in": "path",
+                        "description": "Folder name to search",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/SearchResult"
+                            }
+                        }
+                    }
+                }
+            },
+        },
         "/fonts": {
             "get": {
                 "tags": [

@@ -525,4 +525,41 @@ class Folder extends Base
 
         return $this->render($request, $response);
     }
+
+    /**
+     * @SWG\GET(
+     *  path="/folders/search/{folderName}",
+     *  operationId="folderSearchAll",
+     *  tags={"folder"},
+     *  summary="Folders Search All",
+     *  description="Search All Folders",
+     *  @SWG\Parameter(
+     *      name="folderName",
+     *      in="path",
+     *      description="Folder name to search",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          @SWG\Items(ref="#/definitions/SearchResult")
+     *      )
+     *  )
+     * )
+     * @param Request $request
+     * @param Response $response
+     * @param $folderName
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function searchFolder(Request $request, Response $response, $folderName)
+    {
+        $folders = $this->folderFactory->getByName($folderName);
+
+        $this->getState()->setData($folders);
+
+        return $this->render($request, $response);
+    }
 }

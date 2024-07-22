@@ -93,6 +93,23 @@ class FolderFactory extends BaseFactory
     }
 
     /**
+     * @param string $folderName
+     * @param int $disableUserCheck
+     * @return Folder[]
+     * @throws NotFoundException
+     */
+    public function getByName(string $folderName, int $disableUserCheck = 1)
+    {
+        $folders = $this->query(null, ['folderName' => $folderName, 'disableUserCheck' => $disableUserCheck]);
+
+        if (count($folders) <= 0) {
+            throw new NotFoundException(__('Folder not found'));
+        }
+
+        return $folders;
+    }
+
+    /**
      * @param array $sortOrder
      * @param array $filterBy
      * @return Folder[]
