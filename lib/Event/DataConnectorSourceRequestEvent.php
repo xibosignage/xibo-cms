@@ -37,9 +37,17 @@ class DataConnectorSourceRequestEvent extends Event implements DataConnectorSour
     /**
      * @var array
      */
-    private $dataConnectorSources = [
-        ['id' => 'user_defined', 'name' => 'User Defined JavaScript']
-    ];
+    private $dataConnectorSources = [];
+
+    /**
+     * Initializes the dataConnectorSources with default value.
+     */
+    public function __construct() {
+        $this->dataConnectorSources[] = [
+            'id' => 'user_defined',
+            'name' => __('User-Defined JavaScript')
+        ];
+    }
 
     /**
      * @inheritDoc
