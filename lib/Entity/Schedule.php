@@ -499,8 +499,11 @@ class Schedule implements \JsonSerializable
      */
     public function addOrUpdateCriteria(ScheduleCriteria $criteria, ?int $id = null): Schedule
     {
+        // set empty array as the default value if original value is empty/null
+        $originalValue = $this->getOriginalValue('criteria') ?? [];
+
         // Does this already exist?
-        foreach ($this->getOriginalValue('criteria') as $existing) {
+        foreach ($originalValue as $existing) {
             if ($id !== null && $existing->id === $id) {
                 $this->criteria[] = $criteria;
                 return $this;
