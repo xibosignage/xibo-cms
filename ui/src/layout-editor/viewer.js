@@ -846,7 +846,10 @@ Viewer.prototype.handleInteractions = function() {
               }
               self.selectObject($target, shiftIsPressed);
             } else if (
-              $target.hasClass('designer-element') &&
+              (
+                $target.hasClass('designer-element') ||
+                $target.hasClass('designer-element-group')
+              ) &&
               !$target.hasClass('selected')
             ) {
               // If we're multi selecting, deselect all
