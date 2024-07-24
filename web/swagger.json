@@ -1477,6 +1477,40 @@
                 }
             }
         },
+        "/dataset/{id}/selectfolder": {
+            "put": {
+                "tags": [
+                    "dataSet"
+                ],
+                "summary": "DataSet Select folder",
+                "description": "Select Folder for DataSet",
+                "operationId": "dataSetSelectFolder",
+                "parameters": [
+                    {
+                        "name": "menuId",
+                        "in": "path",
+                        "description": "The DataSet ID",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/DataSet"
+                        }
+                    }
+                }
+            }
+        },
         "/dataset/copy/{dataSetId}": {
             "post": {
                 "tags": [
@@ -4442,7 +4476,7 @@
                     {
                         "name": "exactFolderName",
                         "in": "query",
-                        "description": "A flag indicating whether to treat the folder name filter as an exact match",
+                        "description": "Use with gridView, Filter by exact Folder name match",
                         "required": false,
                         "type": "integer"
                     }
@@ -11194,6 +11228,13 @@
                         "type": "integer"
                     },
                     {
+                        "name": "showFallback",
+                        "in": "formData",
+                        "description": "If this widget requires data and allows fallback data how should that data be returned? (never, always, empty, error)",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "properties",
                         "in": "formData",
                         "description": "Add an additional parameter for each of the properties required this module and its template. Use the moduleProperties and moduleTemplateProperties calls to get a list of properties needed",
@@ -13444,6 +13485,10 @@
                     "description": "The cache key used when requesting data",
                     "type": "string"
                 },
+                "fallbackData": {
+                    "description": "Is fallback data allowed for this module? Only applicable for a Data Widget",
+                    "type": "integer"
+                },
                 "regionSpecific": {
                     "description": "Is specific to a Layout or can be uploaded to the Library?",
                     "type": "integer"
@@ -15007,6 +15052,9 @@
                 "displayOrder": {
                     "description": "The Display Order",
                     "type": "integer"
+                },
+                "createdDt": {
+                    "description": "The datetime this entity was created"
                 }
             }
         },
