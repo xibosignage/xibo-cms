@@ -4438,6 +4438,13 @@
                         "description": "Use with gridView, Filter by Folder name",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "exactFolderName",
+                        "in": "query",
+                        "description": "A flag indicating whether to treat the folder name filter as an exact match",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
