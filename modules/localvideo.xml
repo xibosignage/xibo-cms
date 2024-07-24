@@ -46,7 +46,6 @@
             <rule>
                 <test type="and">
                     <condition type="required"></condition>
-                    <condition type="uri"></condition>
                 </test>
             </rule>
         </property>
