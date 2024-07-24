@@ -515,7 +515,7 @@ body.editor-opened {
                 position: absolute;
                 min-width: 100%;
                 width: max-content;
-                height: 20px;
+                height: 22px;
                 bottom: 0;
                 z-index: 2;
                 @include set-transparent-color(background, $xibo-color-neutral-900, 0.5);
