@@ -1826,7 +1826,7 @@ class Soap
         if (count($logs) > 0) {
             // Insert
             $sql = '
-                INSERT INTO log (
+                INSERT INTO `log` (
                     `runNo`,
                     `logdate`,
                     `channel`,
@@ -1838,20 +1838,29 @@ class Soap
                     `displayid`
                 ) VALUES 
             ';
-            $placeHolders = '(?, ?, ?, ?, ?, ?, ?, ?, ?)';
 
-            $sql = $sql . implode(', ', array_fill(1, count($logs), $placeHolders));
+            // Build our query
+            $params = [];
 
-            // Flatten the array
-            $data = [];
+            // We're going to make params for each row/column
+            $i = 0;
+            $row = 0;
             foreach ($logs as $log) {
+                $row++;
+                $sql .= '(';
                 foreach ($log as $field) {
-                    $data[] = $field;
+                    $i++;
+                    $key = $row . '_' . $i;
+                    $sql .= ':' . $key . ',';
+                    $params[$key] = $field;
                 }
+                $sql = rtrim($sql, ',');
+                $sql .= '),';
             }
+            $sql = rtrim($sql, ',');
 
             // Insert
-            $this->getStore()->update($sql, $data);
+            $this->getStore()->update($sql, $params);
         } else {
             $this->getLog()->info('0 logs resolved from log package');
         }
