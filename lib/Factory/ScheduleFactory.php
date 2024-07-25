@@ -273,10 +273,15 @@ class ScheduleFactory extends BaseFactory
                 ON `schedule`.CampaignID = campaign.CampaignID
                 LEFT OUTER JOIN `lkcampaignlayout`
                 ON lkcampaignlayout.CampaignID = campaign.CampaignID
-                LEFT OUTER JOIN `layout`
-                ON lkcampaignlayout.LayoutID = layout.LayoutID
-                  AND layout.retired = 0
-                  AND layout.parentId IS NULL
+                LEFT OUTER JOIN (
+                    SELECT `layout`.`layoutId`,
+                        `layout`.`status`, 
+                        `layout`.`duration`
+                      FROM `layout`
+                     WHERE `layout`.`retired` = 0
+                        AND `layout`.`parentId` IS NULL
+                ) `layout`
+                ON `lkcampaignlayout`.LayoutID = `layout`.layoutId  
                 LEFT OUTER JOIN `command`
                 ON `command`.commandId = `schedule`.commandId
                 LEFT OUTER JOIN `schedule_sync`
