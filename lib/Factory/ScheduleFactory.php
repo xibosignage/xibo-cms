@@ -208,9 +208,9 @@ class ScheduleFactory extends BaseFactory
         // Firstly get all the scheduled layouts
         $SQL = '
             SELECT `schedule`.eventTypeId, 
-                layout.layoutId, 
-                `layout`.status, 
-                `layout`.duration,
+                `layoutLinks`.layoutId, 
+                `layoutLinks`.status, 
+                `layoutLinks`.duration,
                 `command`.code, 
                 schedule.fromDt, 
                 schedule.toDt,
@@ -271,17 +271,19 @@ class ScheduleFactory extends BaseFactory
         $SQL .= '    
                 LEFT OUTER JOIN `campaign`
                 ON `schedule`.CampaignID = campaign.CampaignID
-                LEFT OUTER JOIN `lkcampaignlayout`
-                ON lkcampaignlayout.CampaignID = campaign.CampaignID
                 LEFT OUTER JOIN (
-                    SELECT `layout`.`layoutId`,
-                        `layout`.`status`, 
-                        `layout`.`duration`
+                    SELECT `layout`.layoutId,
+                        `layout`.status, 
+                        `layout`.duration,
+                        `lkcampaignlayout`.campaignId,
+                        `lkcampaignlayout`.displayOrder
                       FROM `layout`
-                     WHERE `layout`.`retired` = 0
-                        AND `layout`.`parentId` IS NULL
-                ) `layout`
-                ON `lkcampaignlayout`.LayoutID = `layout`.layoutId  
+                        INNER JOIN `lkcampaignlayout`
+                        ON `lkcampaignlayout`.LayoutID = `layout`.layoutId  
+                     WHERE `layout`.retired = 0
+                        AND `layout`.parentId IS NULL
+                ) layoutLinks
+                ON `campaign`.CampaignID = `layoutLinks`.campaignId  
                 LEFT OUTER JOIN `command`
                 ON `command`.commandId = `schedule`.commandId
                 LEFT OUTER JOIN `schedule_sync`
@@ -321,7 +323,7 @@ class ScheduleFactory extends BaseFactory
             ORDER BY `schedule`.DisplayOrder,
                 CASE WHEN `campaign`.listPlayOrder = \'block\' THEN `schedule`.FromDT ELSE 0 END,
                 CASE WHEN `campaign`.listPlayOrder = \'block\' THEN `campaign`.campaignId ELSE 0 END,
-                IFNULL(`lkcampaignlayout`.DisplayOrder, 0),
+                IFNULL(`layoutLinks`.displayOrder, 0),
                 `schedule`.FromDT,
                 `schedule`.eventId
         ';
