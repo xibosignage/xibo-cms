@@ -386,6 +386,13 @@ PropertiesPanel.prototype.saveElement = function(
       }).get();
 
     // Make sure we copy current target to widget elements
+    // but update position on target
+    const targetAux = parentWidget.elements[target.elementId];
+    target.width = targetAux.width;
+    target.height = targetAux.height;
+    target.top = targetAux.top;
+    target.left = targetAux.left;
+    target.layer = targetAux.layer;
     parentWidget.elements[target.elementId] = target;
 
     // Add to the element properties
