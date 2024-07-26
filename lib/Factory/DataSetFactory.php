@@ -203,6 +203,7 @@ class DataSetFactory extends BaseFactory
             dataset.`isLookup`,
             dataset.`isRemote`,
             dataset.`isRealTime`,
+            dataset.`dataConnectorSource`,
             dataset.`method`,
             dataset.`uri`,
             dataset.`postData`,
