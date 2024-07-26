@@ -143,15 +143,11 @@ class PermissionFactory extends BaseFactory
         $params = array('entity' => $entity, 'objectId' => $objectId);
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $permission = $this->createEmpty();
-            $permission->permissionId = $row['permissionId'];
-            $permission->groupId = $row['groupId'];
-            $permission->view = $row['view'];
-            $permission->edit = $row['edit'];
-            $permission->delete = $row['delete'];
+            $permission = $this->createEmpty()->hydrate($row, [
+                'intProperties' => ['view', 'edit', 'delete'],
+            ]);
             $permission->objectId = $objectId;
             $permission->entity = $entity;
-            $permission->entityId = $row['entityId'];
 
             $permissions[] = $permission;
         }
@@ -285,23 +281,13 @@ class PermissionFactory extends BaseFactory
 
         $sql = $select . $body . $order . $limit;
 
-
-
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            // TODO Sanitizer?
-            $permission = $this->createEmpty();
-            $permission->permissionId = intval($row['permissionId']);
-            $permission->groupId = intval($row['groupId']);
-            $permission->view = intval($row['view']);
-            $permission->edit = intval($row['edit']);
-            $permission->delete = intval($row['delete']);
-            $permission->objectId = intval($objectId);
-            $permission->entity = $entity;
-            $permission->entityId = intval($entityId);
-            $permission->isUser = intval($row['isuserspecific']);
-            $permission->group = ($row['group']);
-
-            $permissions[] = $permission;
+            $row['entityId'] = $entityId;
+            $row['entity'] = $entity;
+            $row['objectId'] = $objectId;
+            $permissions[] = $this->createEmpty()->hydrate($row, [
+                'intProperties' => ['view', 'edit', 'delete', 'isUser'],
+            ]);
         }
 
         // Paging
@@ -321,10 +307,16 @@ class PermissionFactory extends BaseFactory
      */
     public function getByGroupId($entity, $groupId)
     {
-        $permissions = array();
+        $permissions = [];
 
         $sql = '
-            SELECT `permission`.`permissionId`, `permission`.`groupId`, `permission`.`objectId`, `permission`.`view`, `permission`.`edit`, `permission`.`delete`, permissionentity.entityId
+            SELECT `permission`.`permissionId`,
+                   `permission`.`groupId`,
+                   `permission`.`objectId`,
+                   `permission`.`view`,
+                   `permission`.`edit`,
+                   `permission`.`delete`,
+                   `permissionentity`.`entityId`
               FROM `permission`
                 INNER JOIN `permissionentity`
                 ON `permissionentity`.entityId = permission.entityId
@@ -333,22 +325,13 @@ class PermissionFactory extends BaseFactory
              WHERE entity = :entity
                 AND `permission`.`groupId` = :groupId
         ';
-        $params = array('entity' => 'Xibo\Entity\\' . $entity, 'groupId' => $groupId);
-
-
+        $params = ['entity' => 'Xibo\Entity\\' . $entity, 'groupId' => $groupId];
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $permission = $this->createEmpty();
-            $permission->permissionId = $row['permissionId'];
-            $permission->groupId = $row['groupId'];
-            $permission->view = $row['view'];
-            $permission->edit = $row['edit'];
-            $permission->delete = $row['delete'];
-            $permission->objectId = $row['objectId'];
-            $permission->entity = $entity;
-            $permission->entityId = $row['entityId'];
-
-            $permissions[] = $permission;
+            $row['entity'] = $entity;
+            $permissions[] = $this->createEmpty()->hydrate($row, [
+                'intProperties' => ['view', 'edit', 'delete'],
+            ]);
         }
 
         return $permissions;
@@ -360,7 +343,7 @@ class PermissionFactory extends BaseFactory
      * @param int $userId
      * @return Permission[]
      */
-    public function getByUserId($entity, $userId)
+    public function getByUserId($entity, $userId): array
     {
         $permissions = [];
 
@@ -371,7 +354,7 @@ class PermissionFactory extends BaseFactory
                 `permission`.`view`, 
                 `permission`.`edit`, 
                 `permission`.`delete`, 
-                `permissionentity`.entityId
+                `permissionentity`.`entityId`
               FROM `permission`
                 INNER JOIN `permissionentity`
                 ON `permissionentity`.entityId = permission.entityId
@@ -402,17 +385,10 @@ class PermissionFactory extends BaseFactory
         $params = ['entity' => $entity, 'userId' => $userId];
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $permission = $this->createEmpty();
-            $permission->permissionId = $row['permissionId'];
-            $permission->groupId = $row['groupId'];
-            $permission->view = $row['view'];
-            $permission->edit = $row['edit'];
-            $permission->delete = $row['delete'];
-            $permission->objectId = $row['objectId'];
-            $permission->entity = $entity;
-            $permission->entityId = $row['entityId'];
-
-            $permissions[] = $permission;
+            $row['entity'] = $entity;
+            $permissions[] = $this->createEmpty()->hydrate($row, [
+                'intProperties' => ['view', 'edit', 'delete'],
+            ]);
         }
 
         return $permissions;
@@ -422,7 +398,7 @@ class PermissionFactory extends BaseFactory
      * Get Full Permissions
      * @return Permission
      */
-    public function getFullPermissions()
+    public function getFullPermissions(): Permission
     {
         $permission = $this->createEmpty();
         $permission->view = 1;
