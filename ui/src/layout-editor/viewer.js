@@ -628,7 +628,8 @@ Viewer.prototype.handleInteractions = function() {
         return;
       }
 
-      const $target = $(e.currentTarget);
+      const $target = $(e.target).hasClass('viewer-object-select') ?
+        $(e.target) : $(e.currentTarget);
 
       const playlistEditorBtnClick = function(playlistId) {
         // Edit region if it's a playlist
