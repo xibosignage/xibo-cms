@@ -168,8 +168,23 @@ class OpenWeatherMapConnector implements ConnectorInterface
             $data = $this->queryApi($this->apiUrl . $this->forecastCurrent . $url, $cacheExpire);
             $data['current'] = $this->parseCurrentIntoFormat($data);
 
-            $timezoneOffset = (int)$data['timezone'] / 3600;
-            $this->timezone = (new \DateTimeZone(($timezoneOffset < 0 ? '-' : '+') . abs($timezoneOffset)))->getName();
+            // initialize timezone
+            $timezoneOffset = (int)$data['timezone'];
+
+            // Calculate the number of whole hours in the offset
+            $offsetHours = floor($timezoneOffset / 3600);
+
+            // Calculate the remaining minutes after extracting the whole hours
+            $offsetMinutes = ($timezoneOffset % 3600) / 60;
+
+            // Determine the sign of the offset (positive or negative)
+            $sign = $offsetHours < 0 ? '-' : '+';
+
+            // Ensure the format is as follows: +/-hh:mm
+            $formattedOffset = sprintf("%s%02d:%02d", $sign, abs($offsetHours), abs($offsetMinutes));
+
+            // Get the timezone name
+            $this->timezone = (new \DateTimeZone($formattedOffset))->getName();
 
             // Pick out the country
             $country = $data['sys']['country'] ?? null;
