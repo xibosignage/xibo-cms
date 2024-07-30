@@ -36,7 +36,6 @@ use Xibo\Entity\Widget;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\MediaServiceInterface;
-use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\DuplicateEntityException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -1252,7 +1251,7 @@ class LayoutFactory extends BaseFactory
      * @param string $zipFile
      * @param string $layoutName
      * @param int $userId
-     * @param int $template
+     * @param int $template Are we importing a layout to be used as a template?
      * @param int $replaceExisting
      * @param int $importTags
      * @param bool $useExistingDataSets
@@ -1261,12 +1260,10 @@ class LayoutFactory extends BaseFactory
      * @param string $tags
      * @param MediaServiceInterface $mediaService
      * @param int $folderId
+     * @param bool $isSystemTags Should we add the system tags (currently the "imported" tag)
      * @return Layout
-     * @throws DuplicateEntityException
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     * @throws ConfigurationException
+     * @throws \FontLib\Exception\FontNotFoundException
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function createFromZip(
         $zipFile,
@@ -1280,7 +1277,8 @@ class LayoutFactory extends BaseFactory
         $dataSetFactory,
         $tags,
         MediaServiceInterface $mediaService,
-        int $folderId
+        int $folderId,
+        bool $isSystemTags = true,
     ) {
         $this->getLog()->debug(sprintf(
             'Create Layout from ZIP File: %s, imported name will be %s.',
@@ -1433,8 +1431,11 @@ class LayoutFactory extends BaseFactory
             $layout->assignTag($this->tagFactory->tagFromString('template'));
         }
 
-        // Tag as imported
-        $layout->assignTag($this->tagFactory->tagFromString('imported'));
+        // Add system tags?
+        if ($isSystemTags) {
+            // Tag as imported
+            $layout->assignTag($this->tagFactory->tagFromString('imported'));
+        }
 
         // Tag from the upload form
         $tagsFromForm = (($tags != '') ? $this->tagFactory->tagsFromString($tags) : []);
