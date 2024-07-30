@@ -192,6 +192,15 @@
     }
 
     &.detached {
+        z-index: $properties-panel-rich-text-container-z-index;
+        position: fixed;
+        top: 100px;
+        right: 150px;
+        outline-width: 1px;
+        width: calc(100vw - 300px) !important;
+        height: calc(100vh - 200px) !important;
+        overflow: hidden;
+
         .rich-text-container-wrapper {
             height: calc(100% - 28.5px) !important;
             max-height: none;
@@ -209,15 +218,6 @@
                 display: inline-block;
             }
         }
-
-        z-index: $properties-panel-rich-text-container-z-index;
-        position: fixed;
-        top: 100px;
-        right: 150px;
-        outline-width: 1px;
-        width: calc(100vw - 300px) !important;
-        height: calc(100vh - 200px) !important;
-        overflow: hidden;
 
         .text-area-buttons {
             border-radius: 0.25rem 0.25rem 0 0;

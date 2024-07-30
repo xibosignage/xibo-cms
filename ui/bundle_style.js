@@ -1,9 +1,6 @@
 // --- NPM packages style ---
 import './public_path';
 
-// Material icons
-require('material-design-icons/iconfont/material-icons.css');
-
 // font-awesome
 require('@fortawesome/fontawesome-free/css/all.min.css');
 
