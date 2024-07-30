@@ -174,7 +174,7 @@ class OpenWeatherMapConnector implements ConnectorInterface
             $sign = $offsetHours < 0 ? '-' : '+';
 
             // Ensure the format is as follows: +/-hh:mm
-            $formattedOffset = sprintf("%s%02d:%02d", $sign, abs($offsetHours), abs($offsetMinutes));
+            $formattedOffset = sprintf('%s%02d:%02d', $sign, abs($offsetHours), abs($offsetMinutes));
 
             // Get the timezone name
             $this->timezone = (new \DateTimeZone($formattedOffset))->getName();
