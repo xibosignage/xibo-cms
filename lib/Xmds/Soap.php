@@ -110,7 +110,7 @@ class Soap
     private $sanitizerService;
 
     /** @var  ConfigServiceInterface */
-    private $configService;
+    protected $configService;
 
     /** @var  RequiredFileFactory */
     protected $requiredFileFactory;
@@ -411,7 +411,9 @@ class Soap
                         }
 
                         // Generate a new URL.
-                        $newUrl = $this->generateRequiredFileDownloadPath(
+                        $newUrl = LinkSigner::generateSignedLink(
+                            $this->display,
+                            $this->configService->getApiKeyDetails()['encryptionKey'],
                             $type,
                             $realId,
                             $node->getAttribute('saveAs'),
@@ -752,7 +754,14 @@ class Soap
 
                 if ($httpDownloads) {
                     // Serve a link instead (standard HTTP link)
-                    $file->setAttribute('path', $this->generateRequiredFileDownloadPath('M', $id, $path));
+                    $file->setAttribute('path', LinkSigner::generateSignedLink(
+                        $this->display,
+                        $this->configService->getApiKeyDetails()['encryptionKey'],
+                        null,
+                        'M',
+                        $id,
+                        $path,
+                    ));
                     $file->setAttribute('saveAs', $path);
                     $file->setAttribute('download', 'http');
                 } else {
@@ -833,7 +842,14 @@ class Soap
 
                 if ($httpDownloads && $supportsHttpLayouts) {
                     // Serve a link instead (standard HTTP link)
-                    $file->setAttribute('path', $this->generateRequiredFileDownloadPath('L', $layoutId, $fileName));
+                    $file->setAttribute('path', LinkSigner::generateSignedLink(
+                        $this->display,
+                        $this->configService->getApiKeyDetails()['encryptionKey'],
+                        'L',
+                        null,
+                        $layoutId,
+                        $fileName,
+                    ));
                     $file->setAttribute('saveAs', $fileName);
                     $file->setAttribute('download', 'http');
                 } else {
@@ -2486,7 +2502,12 @@ class Soap
                                 throw new NotFoundException('Cache not ready');
                             }
 
-                            $widgetData = $widgetDataProviderCache->decorateForPlayer($dataProvider->getData(), $media);
+                            $widgetData = $widgetDataProviderCache->decorateForPlayer(
+                                $this->display,
+                                $this->configService->getApiKeyDetails()['encryptionKey'],
+                                $dataProvider->getData(),
+                                $media,
+                            );
                         } catch (GeneralException $exception) {
                             // No data cached yet, exception
                             $this->getLog()->error('getResource: Failed to get data cache for widgetId '
@@ -2504,6 +2525,7 @@ class Soap
 
             // Decorate for the player
             $resource = $renderer->decorateForPlayer(
+                $this->display,
                 $resource,
                 $media,
                 $isSupportsDataUrl,
@@ -2902,57 +2924,6 @@ class Soap
     }
 
     /**
-     * Generate a file download path for HTTP downloads, taking into account the precence of a CDN.
-     * @param $type
-     * @param $itemId
-     * @param string $storedAs
-     * @param string|null $fileType
-     * @return string
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    protected function generateRequiredFileDownloadPath(
-        $type,
-        $itemId,
-        string $storedAs,
-        string $fileType = null
-    ): string {
-        $xmdsRoot = Wsdl::getRoot();
-        $saveAsPath = $xmdsRoot
-            . '?file=' . $storedAs
-            . '&displayId=' . $this->display->displayId
-            . '&type=' . $type
-            . '&itemId=' . $itemId;
-
-        if ($fileType !== null) {
-            $saveAsPath .= '&fileType=' . $fileType;
-        }
-
-        $saveAsPath .= '&' . LinkSigner::getSignature(
-            parse_url($xmdsRoot, PHP_URL_HOST),
-            $storedAs,
-            time() + ($this->display->getSetting('collectionInterval', 300) * 2),
-            $this->configService->getApiKeyDetails()['encryptionKey'],
-        );
-
-        // CDN?
-        $cdnUrl = $this->configService->getSetting('CDN_URL');
-        if ($cdnUrl != '') {
-            // Serve a link to the CDN
-            // CDN_URL has a `?dl=` parameter on the end already, so we just encode our string and concatenate it
-            return 'http' . (
-                (
-                    (isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on') ||
-                    (isset($_SERVER['HTTP_X_FORWARDED_PROTO'])
-                        && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) == 'https')
-                ) ? 's' : '')
-                . '://' . $cdnUrl . urlencode($saveAsPath);
-        } else {
-            // Serve a HTTP link to XMDS
-            return $saveAsPath;
-        }
-    }
-
-    /**
      * Add a dependency to the provided DOM element
      * @param array $rfIds
      * @param \DOMDocument $requiredFilesXml
@@ -3001,7 +2972,10 @@ class Soap
         // 3) some dependencies don't support HTTP downloads because they aren't in the library
         $httpFilePath = null;
         if ($httpDownloads && $dependency->isAvailableOverHttp) {
-            $httpFilePath = $this->generateRequiredFileDownloadPath(
+            $httpFilePath = LinkSigner::generateSignedLink(
+                $this->display,
+                $this->configService->getApiKeyDetails()['encryptionKey'],
+                null,
                 RequiredFile::$TYPE_DEPENDENCY,
                 $dependency->id,
                 $dependencyBasePath,

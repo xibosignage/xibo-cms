@@ -692,6 +692,14 @@ class Display implements \JsonSerializable
     }
 
     /**
+     * @return bool true is this display is a PWA
+     */
+    public function isPwa(): bool
+    {
+        return $this->clientType === 'chromeOS';
+    }
+
+    /**
      * Is this display auditing?
      * return bool
      */

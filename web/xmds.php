@@ -24,6 +24,7 @@ use Monolog\Logger;
 use Nyholm\Psr7\ServerRequest;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\ContainerFactory;
+use Xibo\Helper\LinkSigner;
 use Xibo\Support\Exception\NotFoundException;
 
 define('XIBO', true);
@@ -137,12 +138,13 @@ if (isset($_GET['file'])) {
         }
 
         // Validate the URL.
+        $encryptionKey = $container->get('configService')->getApiKeyDetails()['encryptionKey'];
         $signature = $_REQUEST['X-Amz-Signature'];
         $calculatedSignature = \Xibo\Helper\LinkSigner::getSignature(
             parse_url(\Xibo\Xmds\Wsdl::getRoot(), PHP_URL_HOST),
             $_GET['file'],
             $_REQUEST['X-Amz-Expires'],
-            $container->get('configService')->getApiKeyDetails()['encryptionKey'],
+            $encryptionKey,
             $_REQUEST['X-Amz-Date'],
             true,
         );
@@ -193,7 +195,11 @@ if (isset($_GET['file'])) {
         // Issue content type header
         if ($file->type === 'L') {
             // Layouts are always XML
-            header('Content-Type', 'text/xml');
+            header('Content-Type: text/xml');
+        } else if ($file->fileType === 'bundle') {
+            header('Content-Type: application/javascript');
+        } else if ($file->fileType === 'fontCss') {
+            header('Content-Type: text/css');
         } else {
             $contentType = mime_content_type($libraryLocation . $file->path);
             if ($contentType !== false) {
@@ -201,22 +207,51 @@ if (isset($_GET['file'])) {
             }
         }
 
-        if ($sendFileMode == 'Apache') {
-            // Send via Apache X-Sendfile header
-            header('X-Sendfile: ' . $libraryLocation . $file->path);
-        } else if ($sendFileMode == 'Nginx') {
-            // Send via Nginx X-Accel-Redirect
-            header('X-Accel-Redirect: /download/' . $file->path);
-        } else {
-            header('HTTP/1.0 404 Not Found');
-        }
+        // Are we a special request that needs modification before sending.
+        if ($display->isPwa() && $file->fileType === 'fontCss') {
+            // Rewrite font file for PWAs
+            $fontCss = file_get_contents($libraryLocation . $file->path);
+            $matches = [];
+            preg_match_all('/url\(\'(.*?)\'\);/', $fontCss, $matches);
+            foreach ($matches[1] as $match) {
+                $url = LinkSigner::generateSignedLink(
+                    $display,
+                    $encryptionKey,
+                    null,
+                    'P',
+                    $file->realId,
+                    $file->path,
+                    'font',
+                );
+                $fontCss = str_replace(
+                    $match,
+                    $url,
+                    $fontCss,
+                );
+            }
 
-        // Also add to the overall bandwidth used by get file
-        $container->get('bandwidthFactory')->createAndSave(
-            \Xibo\Entity\Bandwidth::$GETFILE,
-            $file->displayId,
-            $file->size
-        );
+            $file->size = strlen($fontCss);
+
+            echo $fontCss;
+        } else {
+            // Normal send
+            if ($sendFileMode == 'Apache') {
+                // Send via Apache X-Sendfile header
+                header('X-Sendfile: ' . $libraryLocation . $file->path);
+            } else if ($sendFileMode == 'Nginx') {
+                // Send via Nginx X-Accel-Redirect
+                header('X-Accel-Redirect: /download/' . $file->path);
+            } else {
+                header('HTTP/1.0 404 Not Found');
+            }
+
+            // Also add to the overall bandwidth used by get file
+            $container->get('bandwidthFactory')->createAndSave(
+                \Xibo\Entity\Bandwidth::$GETFILE,
+                $file->displayId,
+                $file->size
+            );
+        }
     } catch (\Xibo\Support\Exception\NotFoundException|\Xibo\Support\Exception\ExpiredException $e) {
         $logger->notice('HTTP GetFile request received but unable to find XMDS Nonce. Issuing 404. '
             . $e->getMessage());

@@ -17,6 +17,11 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_URI} ^/api/.*$
 RewriteRule ^ api/index.php [QSA,L]
 
+# requests that start with pwa go down to pwa/index.php
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_URI} ^/pwa/.*$
+RewriteRule ^ pwa/index.php [QSA,L]
+
 # install
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_URI} ^/install/.*$
