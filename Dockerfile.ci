@@ -10,7 +10,7 @@ RUN composer install --no-interaction
 
 # Stage 2
 # Run webpack
-FROM node:lts AS webpack
+FROM node:20 AS webpack
 WORKDIR /app
 
 # Copy package.json and the webpack config file
