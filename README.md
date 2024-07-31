@@ -114,7 +114,7 @@ npm run build
 Alternatively you can use a Docker container:
 
 ```shell
-docker run -it --volume $PWD:/app --volume ~/.npm:/root/.npm -w /app node:12 sh -c "npm install webpack -g; npm install; npm run build;"
+docker run -it --volume $PWD:/app --volume ~/.npm:/root/.npm -w /app node:22 sh -c "npm install webpack -g; npm install; npm run build;"
 ```
 
 ### Mapped Volumes
