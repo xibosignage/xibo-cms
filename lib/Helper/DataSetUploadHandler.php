@@ -62,6 +62,12 @@ class DataSetUploadHandler extends BlueImpUploadHandler
                 throw new AccessDeniedException();
             }
 
+            // Check if there are any columns defined in the dataset
+            if (count($dataSet->getColumn()) === 0) {
+                $controller->getLog()->error('Import failed: No columns defined in the dataset.');
+                throw new InvalidArgumentException('Import failed: No columns defined in the dataset.');
+            }
+
             // We are allowed to edit - pull all required parameters from the request object
             $overwrite = $sanitizer->getCheckbox('overwrite');
             $ignoreFirstRow = $sanitizer->getCheckbox('ignorefirstrow');
@@ -95,7 +101,6 @@ class DataSetUploadHandler extends BlueImpUploadHandler
 
             $firstRow = true;
             $i = 0;
-
             $handle = fopen($controller->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/' . $fileName, 'r');
             while (($data = fgetcsv($handle)) !== FALSE ) {
                 $i++;
