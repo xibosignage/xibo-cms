@@ -105,7 +105,7 @@
     "moment-timezone": "^0.5.45",
     "monaco-editor": "^0.50.0",
     "moveable": "^0.53.0",
-    "pdfjs-dist": "^4.5.136",
+    "pdfjs-dist": "2.4.456",
     "persian-date": "^1.1.0",
     "persian-datepicker": "^1.2.0",
     "select2": "4.1.0-rc.0",

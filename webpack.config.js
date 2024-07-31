@@ -240,7 +240,7 @@ const moduleConfig = Object.assign({}, config, {
       patterns: [
         // Copy directory contents to {output}/
         {
-          from: 'node_modules/pdfjs-dist/legacy/build/pdf.worker.min.mjs',
+          from: 'node_modules/pdfjs-dist/es5/build/pdf.worker.js',
           to: 'assets/pdfjs/pdf.worker.js',
         },
       ],

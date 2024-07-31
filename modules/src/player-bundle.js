@@ -56,7 +56,7 @@ require('./handlebars-helpers.js');
 window.Hls = require('hls.js');
 
 // Include PDFjs
-window.pdfjsLib = require('pdfjs-dist');
+window.pdfjsLib = require('pdfjs-dist/es5/build/pdf.js');
 
 // Include common helpers/transformer
 window.transformer = require('../../ui/src/helpers/transformer.js');
