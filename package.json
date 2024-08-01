@@ -123,6 +123,6 @@
     "toastr": "~2.1.4",
     "underscore": "^1.12.1",
     "xibo-interactive-control": "git+https://github.com/xibosignage/xibo-interactive-control.git#44ad744a5a2a0af9e7fcdb828dbdbeff45cc40f0",
-    "xibo-layout-renderer": "git+https://github.com/xibosignage/xibo-layout-renderer.git#7ce749ac3303d73c4b20de2a0eed47dd50a7da82"
+    "xibo-layout-renderer": "git+https://github.com/xibosignage/xibo-layout-renderer.git#0fe31c109aeeafe6aa37bd4a1ff449a29a315b55"
   }
 }
