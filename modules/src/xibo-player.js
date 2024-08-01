@@ -1283,7 +1283,6 @@ XiboPlayer.prototype.postRenderDataElements = function(
     position: 'absolute',
     top: slotObjItem.top,
     left: slotObjItem.left,
-    overflow: 'hidden',
     zIndex: slotObjItem.layer,
   });
 
