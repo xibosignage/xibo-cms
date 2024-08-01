@@ -363,6 +363,8 @@ class TimeDisconnectedSummary implements ReportInterface
             $displayBody .= 'AND display.displayId IN (' . implode(',', $displayIds) . ') ';
         }
 
+        $tagParams = [];
+
         if ($tags != '') {
             if (trim($tags) === '--no-tag') {
                 $displayBody .= ' AND `displaygroup`.displaygroupId NOT IN (
@@ -393,9 +395,9 @@ class TimeDisconnectedSummary implements ReportInterface
                     }
 
                     if ($operator === '=') {
-                        $params['tags' . $i] = $tag;
+                        $tagParams['tags' . $i] = $tag;
                     } else {
-                        $params['tags' . $i] = '%' . $tag . '%';
+                        $tagParams['tags' . $i] = '%' . $tag . '%';
                     }
                 }
 
@@ -411,7 +413,7 @@ class TimeDisconnectedSummary implements ReportInterface
             GROUP BY display.display, display.displayId
         ';
 
-        if ($groupBy === 'displayGroup') {
+        if ($tags != '' || $groupBy === 'displayGroup') {
             $displayBody .= ', displaygroup.displayGroupId ';
         }
 
@@ -428,7 +430,7 @@ class TimeDisconnectedSummary implements ReportInterface
         $rows = [];
 
         // Retrieve the disconnected/connected time from the $disconnectedDisplays array into displays
-        foreach ($this->store->select($displaySql, []) as $displayRow) {
+        foreach ($this->store->select($displaySql, $tagParams) as $displayRow) {
             $sanitizedDisplayRow = $this->sanitizer->getSanitizer($displayRow);
             $entry = [];
             $displayId = $sanitizedDisplayRow->getInt(('displayId'));
