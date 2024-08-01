@@ -967,7 +967,7 @@ $(target).find('img').xiboImageRender(properties);
         <properties>
             <property id="imageReplace" type="imageReplaceControl">
                 <title>Replace Image</title>
-                <helpText>Add an image from the Toolbar to replace this element.</helpText>
+                <helpText>Select an image from the Toolbox and drop here to replace this element.</helpText>
             </property>
         </properties>
     </template>
