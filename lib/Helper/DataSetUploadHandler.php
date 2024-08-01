@@ -67,13 +67,13 @@ class DataSetUploadHandler extends BlueImpUploadHandler
 
             // Filter columns where dataSetColumnType is "Value"
             $filteredColumns = array_filter($columns, function ($column) {
-                return $column->dataSetColumnType == 'Value';
+                return $column->dataSetColumnTypeId == '1';
             });
 
             // Check if there are any value columns defined in the dataset
             if (count($filteredColumns) === 0) {
                 $controller->getLog()->error('Import failed: No value columns defined in the dataset.');
-                throw new InvalidArgumentException('Import failed: No value columns defined in the dataset.');
+                throw new InvalidArgumentException(__('Import failed: No value columns defined in the dataset.'));
             }
 
             // We are allowed to edit - pull all required parameters from the request object

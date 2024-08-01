@@ -104,7 +104,7 @@ class RemoteDataSetFetchTask implements TaskInterface
 
                 // Filter columns where dataSetColumnType is "Remote"
                 $filteredColumns = array_filter($columns, function ($column) {
-                    return $column->dataSetColumnType == 'Remote';
+                    return $column->dataSetColumnTypeId == '3';
                 });
 
                 // Check if there are any remote columns defined in the dataset

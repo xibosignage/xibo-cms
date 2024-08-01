@@ -95,12 +95,12 @@
                         </div>
 
                         {% if dataSet.isRemote %}
-                            {% set columnCount = dataSet.columns|filter(column => column.dataSetColumnType == 'Remote') %}
+                            {% set columnCount = dataSet.columns|filter(column => column.dataSetColumnTypeId == '3') %}
                             {% if columnCount|length == 0 %}
                                 {{ forms.message("No remote columns have been configured for this dataset. Please configure your columns accordingly."|trans, "alert alert-warning") }}
                             {% endif %}
                         {% else %}
-                            {% set columnCount = dataSet.columns|filter(column => column.dataSetColumnType == 'Value') %}
+                            {% set columnCount = dataSet.columns|filter(column => column.dataSetColumnTypeId == '1') %}
                             {% if columnCount|length == 0 %}
                                 {{ forms.message("No value columns have been configured for this dataset. Please configure your columns accordingly."|trans, "alert alert-warning") }}
                             {% endif %}
