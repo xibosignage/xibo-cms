@@ -94,8 +94,16 @@
                             {{ forms.dropdown("dataConnectorSource", "single", title, dataSet.dataConnectorSource, dataConnectorSources, "id", "name", helpText) }}
                         </div>
 
-                        {% if dataSet.columns|length == 0 %}
-                            {{ forms.message("No columns have been configured for this dataset. Please configure your columns accordingly."|trans, "alert alert-warning") }}
+                        {% if dataSet.isRemote %}
+                            {% set columnCount = dataSet.columns|filter(column => column.dataSetColumnType == 'Remote') %}
+                            {% if columnCount|length == 0 %}
+                                {{ forms.message("No remote columns have been configured for this dataset. Please configure your columns accordingly."|trans, "alert alert-warning") }}
+                            {% endif %}
+                        {% else %}
+                            {% set columnCount = dataSet.columns|filter(column => column.dataSetColumnType == 'Value') %}
+                            {% if columnCount|length == 0 %}
+                                {{ forms.message("No value columns have been configured for this dataset. Please configure your columns accordingly."|trans, "alert alert-warning") }}
+                            {% endif %}
                         {% endif %}
 
                         {% if dataSet.isActive() %}
