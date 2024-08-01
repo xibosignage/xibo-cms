@@ -1081,7 +1081,6 @@ Viewer.prototype.update = function() {
     height: this.containerObjectDimensions.height,
     top: this.containerObjectDimensions.top,
     left: this.containerObjectDimensions.left,
-    scale: this.containerObjectDimensions.scale,
   });
 
   // Show viewer element

@@ -25,7 +25,7 @@ RUN find -type d -name '.git' -exec rm -r {} + && \
 
 # Stage 2
 # Run webpack
-FROM node:12 AS webpack
+FROM node:22 AS webpack
 WORKDIR /app
 
 # Copy package.json and the webpack config file

@@ -21,7 +21,7 @@
 
 const path = require('path');
 const webpack = require('webpack');
-const CleanWebpackPlugin = require('clean-webpack-plugin');
+const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 
@@ -50,9 +50,12 @@ const mainConfig = Object.assign({}, config, {
     rules: [
       {
         test: /datatables\.net.*/,
-        use: [
-          'imports-loader?define=>false',
-        ],
+        use: [{
+          loader: 'imports-loader',
+          options: {
+            additionalCode: 'var define = false;',
+          },
+        }],
       },
       {
         test: /\.(css)$/,
@@ -70,7 +73,7 @@ const mainConfig = Object.assign({}, config, {
         ],
       },
       {
-        test: /\.(scss)$/,
+        test: /\.s[ac]ss$/i,
         use: [{
           loader: 'style-loader', // inject CSS to page
         }, {
@@ -78,12 +81,10 @@ const mainConfig = Object.assign({}, config, {
         }, {
           loader: 'postcss-loader', // Run post css actions
           options: {
-            // post css plugins, can be exported to postcss.config.js
-            plugins: function() {
-              return [
-                require('precss'),
-                require('autoprefixer'),
-              ];
+            postcssOptions: {
+              plugins: [
+                'autoprefixer',
+              ]
             },
           },
         }, {
@@ -91,13 +92,11 @@ const mainConfig = Object.assign({}, config, {
         }],
       },
       {
-        test: /\.(png|svg|jpg|gif|ttf|eot|woff|woff2)$/,
-        use: [{
-          loader: 'file-loader',
-          options: {
-            name: '[name].[hash].[ext]',
-          },
-        }],
+        test: /\.(woff(2)?|ttf|eot|svg|jpg|gif|png)$/,
+        type: 'asset/resource',
+        generator: {
+          filename: 'assets/[hash][ext][query]'
+        }
       },
       {
         test: /\.(csv|tsv)$/,
@@ -138,7 +137,7 @@ const mainConfig = Object.assign({}, config, {
     ],
   },
   plugins: [
-    new CleanWebpackPlugin(['web/dist']),
+    new CleanWebpackPlugin(),
     new CopyWebpackPlugin({
       patterns: [
         // Copy directory contents to {output}/
@@ -234,7 +233,9 @@ const moduleConfig = Object.assign({}, config, {
       $: 'jquery',
       jQuery: 'jquery',
     }),
-    new CleanWebpackPlugin(['modules/*.min.js']),
+    new CleanWebpackPlugin({
+      cleanOnceBeforeBuildPatterns: ['modules/*.min.js'],
+    }),
     new CopyWebpackPlugin({
       patterns: [
         // Copy directory contents to {output}/

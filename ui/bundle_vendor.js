@@ -139,7 +139,9 @@ const DT_EXTRAS = [
   require('datatables.net-responsive'),
 ];
 DT_EXTRAS.forEach(function(e) {
-  e(window, window.$);
+  if (typeof e === 'function') {
+    e(window, window.$);
+  }
 });
 
 // --- Add Local JS files ---

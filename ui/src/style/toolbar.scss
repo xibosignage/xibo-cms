@@ -58,11 +58,11 @@
             padding: 0.5rem 1rem;
 
             .form-group {
+                margin-bottom: 0;
+
                 label {
                     font-weight: bold;
                 }
-
-                margin-bottom: 0;
             }
 
             &.media-search-form, &.layout_tempates-search-form {
@@ -681,6 +681,13 @@
                     }
 
                     .toolbar-card-preview {
+                        background: $xibo-color-primary-l20;
+                        color: $xibo-color-primary-d60;
+                        border: 1px solid $xibo-color-primary-l30;
+                        min-height: $toolbar-widgets-card-height;
+                        padding: 4px;
+                        margin-bottom: 2px;
+
                         .media-title {
                             font-weight: normal;
                         }
@@ -697,12 +704,6 @@
                             opacity: 0.9;
                             line-height: 20px;
                         }
-                        background: $xibo-color-primary-l20;
-                        color: $xibo-color-primary-d60;
-                        border: 1px solid $xibo-color-primary-l30;
-                        min-height: $toolbar-widgets-card-height;
-                        padding: 4px;
-                        margin-bottom: 2px;
                     }
 
                     .badges {
@@ -908,11 +909,6 @@
         padding: 10px;
         line-height: 30px;
         height: $toolbar-tab-menu-height;
-
-        .material-icons {
-            font-size: 1.85rem;
-            line-height: 30px;
-        }
 
         &.btn-menu-option-custom-icon {
             padding: 8px;
