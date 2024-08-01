@@ -594,7 +594,8 @@ class Soap
                     if ($dataSet->dataConnectorSource != 'user_defined') {
                         // Dispatch an event to save the data connector javascript from the connector
                         $dataConnectorScriptRequestEvent = new DataConnectorScriptRequestEvent($dataSet);
-                        $this->getDispatcher()->dispatch($dataConnectorScriptRequestEvent, DataConnectorScriptRequestEvent::$NAME);
+                        $this->getDispatcher()
+                            ->dispatch($dataConnectorScriptRequestEvent, DataConnectorScriptRequestEvent::$NAME);
                     }
 
                     $this->addDependency(
