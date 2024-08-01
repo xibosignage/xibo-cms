@@ -97,9 +97,12 @@ class DataSetUploadHandler extends BlueImpUploadHandler
             while (($data = fgetcsv($handle)) !== FALSE ) {
                 $i++;
 
-                // remove any elements that doesn't contain any value from the array
-                $filteredData = array_filter($data, function($value) {
-                    return strlen((string)$value) > 0;
+                // Filter out rows that are entirely empty
+                $filteredData = array_filter($data, function($row) {
+                    // Check if the row is empty (all elements are empty or null)
+                    return array_filter($row, function($value) {
+                        return !empty($value);
+                    });
                 });
 
                 // Skip empty lines without any delimiters or data
