@@ -342,21 +342,26 @@ class TimeDisconnectedSummary implements ReportInterface
         $displayBody = 'FROM `display` ';
 
         if ($groupBy === 'displayGroup') {
-            $displaySelect .= ', displaygroup.displayGroup, displaygroup.displayGroupId ';
+            $displaySelect .= ', displaydg.displayGroup, displaydg.displayGroupId ';
         }
 
-        if ($tags != '' || $groupBy === 'displayGroup') {
+        if ($tags != '') {
             $displayBody .= 'INNER JOIN `lkdisplaydg`
                         ON lkdisplaydg.DisplayID = display.displayid
                      INNER JOIN `displaygroup`
-                        ON displaygroup.displaygroupId = lkdisplaydg.displaygroupId ';
-
-            if ($groupBy === 'displayGroup') {
-                $displayBody .= 'AND `displaygroup`.isDisplaySpecific = 0 ';
-            } else {
-                $displayBody .= 'AND `displaygroup`.isDisplaySpecific = 1 ';
-            }
+                        ON displaygroup.displaygroupId = lkdisplaydg.displaygroupId
+                         AND `displaygroup`.isDisplaySpecific = 1 ';
         }
+
+        // Grouping Option
+        if ($groupBy === 'displayGroup') {
+            $displayBody .= 'INNER JOIN `lkdisplaydg` AS linkdg
+                        ON linkdg.DisplayID = display.displayid
+                     INNER JOIN `displaygroup` AS displaydg
+                        ON displaydg.displaygroupId = linkdg.displaygroupId 
+                        AND `displaydg`.isDisplaySpecific = 0 ';
+        }
+
         $displayBody .= 'WHERE 1 = 1 ';
 
         if (count($displayIds) > 0) {
@@ -413,8 +418,12 @@ class TimeDisconnectedSummary implements ReportInterface
             GROUP BY display.display, display.displayId
         ';
 
-        if ($tags != '' || $groupBy === 'displayGroup') {
+        if ($tags != '') {
             $displayBody .= ', displaygroup.displayGroupId ';
+        }
+
+        if ($groupBy === 'displayGroup') {
+            $displayBody .= ', displaydg.displayGroupId ';
         }
 
         // Sorting?

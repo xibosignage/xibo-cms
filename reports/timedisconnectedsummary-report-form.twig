@@ -52,7 +52,7 @@
 
                             {% set title %}{% trans "Group By" %}{% endset %}
                             {% set options = [
-                                { id: null, name: "" },
+                                { id: "display", name: "Display"|trans },
                                 { id: "displayGroup", name: "Display Group"|trans },
                             ] %}
                             {{ inline.dropdown("groupBy", "single", title, "", options, "id", "name", "") }}
