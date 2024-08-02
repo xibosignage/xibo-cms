@@ -157,6 +157,14 @@ PlaylistTimeline.prototype.render = function() {
 
   // Sortable widgets
   this.DOMObject.find('#timeline-container').sortable({
+    // Disabled if we're inline with a non-external playlist
+    // and on read only mode
+    disabled: (
+      pE.inline === true &&
+      pE.externalPlaylist === false &&
+      typeof lD != undefined &&
+      lD.readOnlyMode === true
+    ),
     axis: 'y',
     items: '.playlist-widget',
     start: function(event, ui) {

@@ -101,6 +101,9 @@ window.pE = {
   // inline playlist editor?
   inline: false,
 
+  // is it an external playlist?
+  externalPlaylist: true,
+
   // Show minimum dimensions message
   showMinDimensionsMessage: false,
 };
@@ -138,6 +141,7 @@ pE.loadEditor = function(
     pE.mainRegion =
       pE.editorContainer.parents('#editor-container').data('regionObj');
     pE.inline = true;
+    pE.externalPlaylist = showExternalPlaylistMessage;
   }
 
   // Get playlist id
