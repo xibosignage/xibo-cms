@@ -93,7 +93,7 @@ class XiboExchangeConnector implements ConnectorInterface
         $this->getLogger()->debug('XiboExchangeConnector: onTemplateProvider');
 
         // Get a cache of the layouts.json file, or request one from download.
-        $uri = 'https://download.xibosignage.com/layouts_v4.json';
+        $uri = 'https://download.xibosignage.com/layouts_v4_1.json';
         $key = md5($uri);
         $cache = $this->getPool()->getItem($key);
         $body = $cache->get();
