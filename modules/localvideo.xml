@@ -46,7 +46,10 @@
             <rule>
                 <test type="and">
                     <condition type="required"></condition>
+                </test>
+                <test type="or">
                     <condition type="uri"></condition>
+                    <condition type="windowsPath"></condition>
                 </test>
             </rule>
         </property>
