@@ -58,7 +58,7 @@
                     <td>{{ item.objectAfter }}</td>
                 </tr>
             {% endfor %}
-        {% else %}
+        {% elseif metadata.logType == 'debug' %}
             <tr>
                 <th>{% trans "Date" %}</th>
                 <th>{% trans "UserName" %}</th>
@@ -81,6 +81,27 @@
                     <td>{{ item.url }}</td>
                     <td>{{ item.type }}</td>
                     <td>{{ item.message }}</td>
+                </tr>
+            {% endfor %}
+        {% else %}
+            <tr>
+                <th>{% trans "Date" %}</th>
+                <th>{% trans "UserName" %}</th>
+                <th>{% trans "User ID" %}</th>
+                <th>{% trans "Application" %}</th>
+                <th>{% trans "Request ID" %}</th>
+                <th>{% trans "Method" %}</th>
+                <th>{% trans "Url" %}</th>
+            </tr>
+            {% for item in tableData %}
+                <tr>
+                    <td>{{ item.startTime }}</td>
+                    <td>{{ item.userName }}</td>
+                    <td>{{ item.userId }}</td>
+                    <td>{{ item.applicationName }}</td>
+                    <td>{{ item.requestId }}</td>
+                    <td>{{ item.method }}</td>
+                    <td>{{ item.url }}</td>
                 </tr>
             {% endfor %}
         {% endif %}
