@@ -541,9 +541,12 @@ class DataSetFactory extends BaseFactory
                         array_shift($array);
                     }
 
-                    // remove any elements that doesn't contain any value from the array
-                    $array = array_filter($array, function($value) {
-                        return !empty($value);
+                    // Filter out rows that are entirely empty
+                    $array = array_filter($array, function($row) {
+                        // Check if the row is empty (all elements are empty or null)
+                        return array_filter($row, function($value) {
+                            return !empty($value);
+                        });
                     });
 
                     $result->entries = $array;
