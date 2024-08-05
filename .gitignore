@@ -27,3 +27,4 @@ tests/http-client.private.env.json
 
 # Hide module/template translate file
 locale/moduletranslate.php
+/nbproject/private/
