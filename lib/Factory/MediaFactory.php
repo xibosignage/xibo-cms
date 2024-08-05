@@ -271,12 +271,17 @@ class MediaFactory extends BaseFactory
                                 $this->getLog()->debug('processDownloads: successful, headers = '
                                     . var_export($response->getHeaders(), true));
 
-                                // Get the content length
-                                $contentLength = $response->getHeaderLine('Content-Length');
-                                if (empty($contentLength)
-                                    || intval($contentLength) > ByteFormatter::toBytes(Environment::getMaxUploadSize())
-                                ) {
-                                    throw new \Exception(__('File too large'));
+                                // Apache 2.4.44 and newer removed header Content-Length (at least with cgi php)
+                                // https://bz.apache.org/bugzilla/show_bug.cgi?id=68973
+                                // https://bz.apache.org/bugzilla/show_bug.cgi?id=68907
+                                if($response->hasHeader('Content-Length')){
+                                    // Get the content length
+                                    $contentLength = $response->getHeaderLine('Content-Length');
+                                    if (empty($contentLength)
+                                        || intval($contentLength) > ByteFormatter::toBytes(Environment::getMaxUploadSize())
+                                    ) {
+                                        throw new \Exception(__('File too large'));
+                                    }
                                 }
                             }
                         }
