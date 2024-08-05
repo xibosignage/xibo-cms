@@ -2325,11 +2325,11 @@ Toolbar.prototype.mediaContentHandleInputs = function(
 
   // Initialize user list input
   const $userListInput = $mediaForm.find('select[name="ownerId"]');
-  makePagedSelect($userListInput);
+  makePagedSelect($userListInput, $mediaContainer, null, true);
 
   // Initialize folder input
   const $folderInput = $mediaForm.find('select[name="folderId"]');
-  makePagedSelect($folderInput, null, function(data) {
+  makePagedSelect($folderInput, $mediaContainer, function(data) {
     // Format data
     const newData = [];
 
@@ -2355,7 +2355,7 @@ Toolbar.prototype.mediaContentHandleInputs = function(
     return {
       data: newData,
     };
-  });
+  }, true);
 
   // Initialize other select inputs
   $mediaForm
@@ -2661,7 +2661,7 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
 
   // Initialize folder input
   const $folderInput = $searchForm.find('select[name="folderId"]');
-  makePagedSelect($folderInput, null, function(data) {
+  makePagedSelect($folderInput, $searchForm, function(data) {
     // Format data
     const newData = [];
 
@@ -2687,7 +2687,7 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
     return {
       data: newData,
     };
-  });
+  }, true);
 
   // Initialize other select inputs
   $container
@@ -2916,11 +2916,11 @@ Toolbar.prototype.playlistsContentPopulate = function(menu) {
   // Initialize user list input
   const $userListInput = $container
     .find('.media-search-form select[name="userId"]');
-  makePagedSelect($userListInput);
+  makePagedSelect($userListInput, $container, null, true);
 
   // Initialize folder input
   const $folderInput = $container.find('select[name="folderId"]');
-  makePagedSelect($folderInput, null, function(data) {
+  makePagedSelect($folderInput, $container, function(data) {
     // Format data
     const newData = [];
 
@@ -2946,7 +2946,7 @@ Toolbar.prototype.playlistsContentPopulate = function(menu) {
     return {
       data: newData,
     };
-  });
+  }, true);
 
   // Initialize other select inputs
   $container
