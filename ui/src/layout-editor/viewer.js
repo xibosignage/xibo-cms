@@ -1440,22 +1440,30 @@ Viewer.prototype.updateElement = function(
 ) {
   const $container = lD.viewer.DOMObject.find(`#${element.elementId}`);
 
+  // Get real elements from the structure
+  const realElement =
+    lD.getObjectByTypeAndId(
+      'element',
+      element.elementId,
+      'widget_' + element.regionId + '_' + element.widgetId,
+    );
+
   // Calculate scaled dimensions
-  element.scaledDimensions = {
-    height: element.height * lD.viewer.containerObjectDimensions.scale,
-    left: element.left * lD.viewer.containerObjectDimensions.scale,
-    top: element.top * lD.viewer.containerObjectDimensions.scale,
-    width: element.width * lD.viewer.containerObjectDimensions.scale,
+  realElement.scaledDimensions = {
+    height: realElement.height * lD.viewer.containerObjectDimensions.scale,
+    left: realElement.left * lD.viewer.containerObjectDimensions.scale,
+    top: realElement.top * lD.viewer.containerObjectDimensions.scale,
+    width: realElement.width * lD.viewer.containerObjectDimensions.scale,
   };
 
   // Update element index
   $container.css({
-    'z-index': element.layer,
+    'z-index': realElement.layer,
   });
 
   // Update element content
   lD.viewer.renderElementContent(
-    element,
+    realElement,
   );
 };
 
@@ -2489,6 +2497,7 @@ Viewer.prototype.initMoveable = function() {
     // Apply transformation to the element
     const transformSplit = (target.style.transform).split(/[(),]+/);
     let hasTranslate = false;
+    let hasRotate = false;
 
     // If the transform has translate
     if (target.style.transform.search('translate') != -1) {
@@ -2507,6 +2516,10 @@ Viewer.prototype.initMoveable = function() {
         transformSplit[4] :
         transformSplit[1];
 
+      if (rotateValue != '0deg') {
+        hasRotate = true;
+      }
+
       target.style.transform = `rotate(${rotateValue})`;
     } else {
       target.style.transform = '';
@@ -2514,7 +2527,8 @@ Viewer.prototype.initMoveable = function() {
 
     // If snap to borders is active, prevent negative values
     // Or snap to border if <1px delta
-    if (self.moveableOptions.snapToBorders) {
+    // only works for no rotation
+    if (self.moveableOptions.snapToBorders && !hasRotate) {
       let left = Number(target.style.left.split('px')[0]);
       let top = Number(target.style.top.split('px')[0]);
       let width = Number(target.style.width.split('px')[0]);
