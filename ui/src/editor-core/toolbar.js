@@ -25,6 +25,8 @@ const ToolbarTemplate = require('../templates/toolbar.hbs');
 const ToolbarCardMediaTemplate = require('../templates/toolbar-card-media.hbs');
 const ToolbarCardMediaUploadTemplate =
   require('../templates/toolbar-card-media-upload.hbs');
+const ToolbaRowMediaUploadTemplate =
+  require('../templates/toolbar-row-media-upload.hbs');
 const ToolbarCardMediaPlaceholderTemplate =
   require('../templates/toolbar-card-media-placeholder.hbs');
 const ToolbarCardLayoutTemplateTemplate =
@@ -2116,6 +2118,9 @@ Toolbar.prototype.mediaContentPopulateTable = function(menu) {
     trans: toolbarTrans.mediaTable,
   }));
 
+  // Add upload container
+  $mediaContent.prepend('<div class="upload-container"></div>');
+
   // Media form
   const $mediaForm = $mediaContainer.find('.media-search-form');
 
@@ -2140,6 +2145,47 @@ Toolbar.prototype.mediaContentPopulateTable = function(menu) {
           filter.type == ''
         ) {
           filter.types = self.moduleListOtherFiltered.map((el) => el.type);
+        }
+
+        // Show upload card
+        const addUploadCard = function(module, removeOthers) {
+          if (removeOthers) {
+            $mediaContent.find('.upload-container').empty();
+          }
+
+          if (
+            module &&
+            $mediaContent.find('.upload-card[data-sub-type="' +
+              module.type +
+              '"]').length == 0
+          ) {
+            module.trans = toolbarTrans;
+
+            module.trans.upload =
+              module.trans.uploadType.replace('%obj%', module.name);
+
+            const $uploadCard = $(ToolbaRowMediaUploadTemplate(
+              Object.assign(
+                {},
+                module,
+                {
+                  editingPlaylist: self.isPlaylist,
+                })),
+            );
+
+            $mediaContent.find('.upload-container').append($uploadCard);
+          }
+        };
+
+        // Add upload card
+        // If we have a specific module type
+        if (filter.type != '') {
+          addUploadCard(app.common.getModuleByType(filter.type), true);
+        } else {
+          // Show one upload card for each media type
+          self.moduleListOtherTypes.forEach((moduleType) => {
+            addUploadCard(app.common.getModuleByType(moduleType), false);
+          });
         }
 
         $.extend(
