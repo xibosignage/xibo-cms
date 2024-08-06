@@ -21,6 +21,7 @@
  */
 namespace Xibo\Controller;
 
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Display;
@@ -36,6 +37,7 @@ use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Service\PlayerActionServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
@@ -43,7 +45,9 @@ use Xibo\XMR\ChangeLayoutAction;
 use Xibo\XMR\CollectNowAction;
 use Xibo\XMR\CommandAction;
 use Xibo\XMR\OverlayLayoutAction;
+use Xibo\XMR\PlayerActionException;
 use Xibo\XMR\RevertToSchedule;
+use Xibo\XMR\ScheduleCriteriaUpdateAction;
 use Xibo\XMR\TriggerWebhookAction;
 
 /**
@@ -2869,6 +2873,90 @@ class DisplayGroup extends Base
             'id' => $displayGroup->displayGroupId
         ]);
 
+        return $this->render($request, $response);
+    }
+
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param null $displayGroupId
+     * @return ResponseInterface|Response
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws PlayerActionException
+     * @SWG\Post(
+     *   path="/displaygroup/criteria[/{displayGroupId}]",
+     *   operationId="ScheduleCriteriaUpdateActionPushCriteriaUpdate",
+     *   tags={"displayGroup"},
+     *   summary="Action: Push Criteria Update",
+     *   description="Send criteria updates to the specified DisplayGroup or to all displays if displayGroupId is not provided.",
+     *   @SWG\Parameter(
+     *       name="displayGroupId",
+     *       in="path",
+     *       description="The display group id",
+     *       type="integer",
+     *       required=false
+     *    ),
+     *   @SWG\Parameter(
+     *       name="criteriaUpdates",
+     *       in="body",
+     *       description="The criteria updates to send to the Player",
+     *       required=true,
+     *       @SWG\Schema(
+     *           type="array",
+     *           @SWG\Items(
+     *               type="object",
+     *               @SWG\Property(property="metric", type="string"),
+     *               @SWG\Property(property="value", type="string"),
+     *               @SWG\Property(property="ttl", type="integer")
+     *           )
+     *       )
+     *    ),
+     *   @SWG\Response(
+     *       response=204,
+     *       description="Successful operation"
+     *   ),
+     *   @SWG\Response(
+     *       response=400,
+     *       description="Invalid criteria format"
+     *   )
+     *  )
+     */
+    public function pushCriteriaUpdate(Request $request, Response $response, $displayGroupId = null): Response|ResponseInterface
+    {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        // Get criteria updates
+        $criteriaUpdates = $sanitizedParams->getArray('criteriaUpdates');
+
+        // ensure criteria updates exists
+        if (empty($criteriaUpdates)) {
+            throw new InvalidArgumentException(__('No criteria found.'), 'criteriaUpdates');
+        }
+
+        if ($displayGroupId !== null) {
+            // fetch displays under the Display Group
+            $displayGroup = $this->displayFactory->getByDisplayGroupId($displayGroupId);
+        } else {
+            // fetch all displays regardless of Display Group
+            $displayGroup = $this->displayFactory->query();
+        }
+
+        // Create and send the player action
+        $this->playerAction->sendAction(
+            $displayGroup,
+            (new ScheduleCriteriaUpdateAction())->setCriteriaUpdates($criteriaUpdates)
+        );
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => __('Schedule criteria updates sent to players.'),
+            'id' => $displayGroupId
+        ]);
+
+        
         return $this->render($request, $response);
     }
 }
