@@ -275,6 +275,17 @@
                             table-layout: fixed;
                         }
                     }
+
+                    .upload-container {
+                        display: flex;
+                        width: 100%;
+                        gap: 8px;
+                        margin-bottom: 8px;
+                        border: 1px solid $xibo-color-neutral-600;
+                        background-color: $xibo-color-neutral-0;
+                        padding: 12px;
+                        border-radius: 4px;
+                    }
                 }
             }
 
@@ -585,6 +596,26 @@
                             max-height: 100%;
                             padding: 2px 6px;
                             background-color: $xibo-color-neutral-0;
+                        }
+                    }
+
+                    &.upload-card.toolbar-row-special {
+                        min-height: 60px;
+
+                        .toolbar-card-preview {
+                            gap: 8px;
+                            padding: 12px;
+                            flex-direction: column;
+                            justify-content: center;
+
+                            .card-icon {
+                                margin: inherit;
+                            }
+
+                            .media-title {
+                                color: $xibo-color-neutral-0;
+                                text-align: center;
+                            }
                         }
                     }
 
@@ -1159,8 +1190,12 @@
             .toolbar-menu-content .toolbar-pane {
                 width: $toolbar-content-level-4-width;
 
-                .toolbar-card:not(tr), .toolbar-card-sizer {
+                .toolbar-card:not(tr):not(.toolbar-row-special), .toolbar-card-sizer {
                     width: calc(calc(100%/4) - 4.5px) !important;
+                }
+
+                .toolbar-row-special {
+                    width: calc(calc(100%/3) - 4px) !important;
                 }
 
                 /* Filter form */
