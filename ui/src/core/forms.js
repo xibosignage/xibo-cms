@@ -248,7 +248,15 @@ window.forms = {
         if (templates.forms.hasOwnProperty(property.type)) {
           // New field
           const $newField = $(templates.forms[property.type](
-            Object.assign({}, property, {trans: propertiesPanelTrans}),
+            Object.assign(
+              {},
+              property,
+              {
+                trans: (typeof propertiesPanelTrans === 'undefined') ?
+                  {} :
+                  propertiesPanelTrans,
+              },
+            ),
           ));
 
           // Target to append to
