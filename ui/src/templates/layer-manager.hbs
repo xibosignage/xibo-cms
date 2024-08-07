@@ -92,6 +92,9 @@
                     {{#eq type 'staticWidget'}}
                         <i title="{{moduleName}}" class="{{icon}}"></i>
                     {{/eq}}
+                    {{#eq type 'layoutBackground'}}
+                        <i class="fa fa-image" title="{{../../trans.layoutBackground}}"></i>
+                    {{/eq}}
 
                     <span class="name" title="{{../../trans.name}}">
                         {{name}}

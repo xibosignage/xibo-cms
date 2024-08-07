@@ -338,6 +338,10 @@ Viewer.prototype.render = function(forceReload = false, target = {}) {
     // Initialise moveable
     this.initMoveable();
 
+    // Remove background image component if exists
+    $viewerContainer.find('.layout-live-preview .layout-background-image')
+      .remove();
+
     // Render background image or color to the preview
     if (lD.layout.backgroundImage === null) {
       $viewerContainer.find('.viewer-object')
@@ -348,7 +352,9 @@ Viewer.prototype.render = function(forceReload = false, target = {}) {
       // Replace ID in the link
       linkToAPI = linkToAPI.replace(':id', lD.layout.layoutId);
 
-      $viewerContainer.find('.viewer-object')
+      // Append layout background image component
+      const $layoutBgImage = $('<div class="layout-background-image"></div>');
+      $layoutBgImage
         .css({
           background:
             'url(\'' + linkToAPI + '?preview=1&width=' +
@@ -362,7 +368,9 @@ Viewer.prototype.render = function(forceReload = false, target = {}) {
             lD.layout.backgroundImage + '\') top center no-repeat',
           backgroundSize: '100% 100%',
           backgroundColor: lD.layout.backgroundColor,
+          zIndex: lD.layout.backgroundzIndex,
         });
+      $layoutBgImage.appendTo($viewerContainer.find('.layout-live-preview'));
     }
 
     // Render viewer regions/widgets
