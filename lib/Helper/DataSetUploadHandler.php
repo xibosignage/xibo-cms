@@ -104,14 +104,21 @@ class DataSetUploadHandler extends BlueImpUploadHandler
             if ($overwrite == 1)
                 $dataSet->deleteData();
 
-            // Load the file
-            ini_set('auto_detect_line_endings', true);
-
             $firstRow = true;
             $i = 0;
             $handle = fopen($controller->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/' . $fileName, 'r');
             while (($data = fgetcsv($handle)) !== FALSE ) {
                 $i++;
+
+                // remove any elements that doesn't contain any value from the array
+                $filteredData = array_filter($data, function($value) {
+                    return !empty($value);
+                });
+
+                // Skip empty lines without any delimiters or data
+                if (empty($filteredData)) {
+                    continue;
+                }
 
                 $row = [];
 
@@ -149,9 +156,6 @@ class DataSetUploadHandler extends BlueImpUploadHandler
 
             // Close the file
             fclose($handle);
-
-            // Change the auto detect setting back
-            ini_set('auto_detect_line_endings', false);
 
             // TODO: update list content definitions
 
