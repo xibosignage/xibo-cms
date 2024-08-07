@@ -62,6 +62,20 @@ class DataSetUploadHandler extends BlueImpUploadHandler
                 throw new AccessDeniedException();
             }
 
+            // Get all columns
+            $columns = $dataSet->getColumn();
+
+            // Filter columns where dataSetColumnType is "Value"
+            $filteredColumns = array_filter($columns, function ($column) {
+                return $column->dataSetColumnTypeId == '1';
+            });
+
+            // Check if there are any value columns defined in the dataset
+            if (count($filteredColumns) === 0) {
+                $controller->getLog()->error('Import failed: No value columns defined in the dataset.');
+                throw new InvalidArgumentException(__('Import failed: No value columns defined in the dataset.'));
+            }
+
             // We are allowed to edit - pull all required parameters from the request object
             $overwrite = $sanitizer->getCheckbox('overwrite');
             $ignoreFirstRow = $sanitizer->getCheckbox('ignorefirstrow');
@@ -95,7 +109,6 @@ class DataSetUploadHandler extends BlueImpUploadHandler
 
             $firstRow = true;
             $i = 0;
-
             $handle = fopen($controller->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/' . $fileName, 'r');
             while (($data = fgetcsv($handle)) !== FALSE ) {
                 $i++;
