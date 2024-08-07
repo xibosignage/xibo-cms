@@ -42,20 +42,10 @@ class ScheduleCriteriaUpdateAction extends PlayerAction
      * Set criteria updates
      * @param array $criteriaUpdates an array of criteria updates
      * @return $this
-     * @throws PlayerActionException
      */
     public function setCriteriaUpdates(array $criteriaUpdates)
     {
-        foreach ($criteriaUpdates as $criteria) {
-            // Ensure each criterion has metric, value, and ttl
-            if (empty($criteria['metric']) || empty($criteria['value']) || empty($criteria['ttl'])) {
-                // Throw an exception if any of the required fields are missing or empty
-                throw new PlayerActionException(__('Invalid criteria format. Metric, value, and ttl must all be present and not empty.'));
-            }
-
-            $this->criteriaUpdates[] = $criteria;
-        }
-
+        $this->criteriaUpdates = $criteriaUpdates;
         return $this;
     }
 

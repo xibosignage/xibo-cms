@@ -2877,53 +2877,55 @@ class DisplayGroup extends Base
     }
 
     /**
+     * @SWG\Post(
+     *    path="/displaygroup/criteria[/{displayGroupId}]",
+     *    operationId="ScheduleCriteriaUpdate",
+     *    tags={"displayGroup"},
+     *    summary="Action: Push Criteria Update",
+     *    description="Send criteria updates to the specified DisplayGroup or to all displays if displayGroupId is not
+     *                  provided.",
+     *    @SWG\Parameter(
+     *        name="displayGroupId",
+     *        in="path",
+     *        description="The display group id",
+     *        type="integer",
+     *        required=false
+     *     ),
+     *    @SWG\Parameter(
+     *        name="criteriaUpdates",
+     *        in="body",
+     *        description="The criteria updates to send to the Player",
+     *        required=true,
+     *        @SWG\Schema(
+     *            type="array",
+     *            @SWG\Items(
+     *                type="object",
+     *                @SWG\Property(property="metric", type="string"),
+     *                @SWG\Property(property="value", type="string"),
+     *                @SWG\Property(property="ttl", type="integer")
+     *            )
+     *        )
+     *     ),
+     *    @SWG\Response(
+     *        response=204,
+     *        description="Successful operation"
+     *    ),
+     *    @SWG\Response(
+     *        response=400,
+     *        description="Invalid criteria format"
+     *    )
+     *   )
+     *
      * @param Request $request
      * @param Response $response
-     * @param null $displayGroupId
+     * @param int|null $displayGroupId
      * @return ResponseInterface|Response
      * @throws ControllerNotImplemented
      * @throws GeneralException
      * @throws NotFoundException
      * @throws PlayerActionException
-     * @SWG\Post(
-     *   path="/displaygroup/criteria[/{displayGroupId}]",
-     *   operationId="ScheduleCriteriaUpdateActionPushCriteriaUpdate",
-     *   tags={"displayGroup"},
-     *   summary="Action: Push Criteria Update",
-     *   description="Send criteria updates to the specified DisplayGroup or to all displays if displayGroupId is not provided.",
-     *   @SWG\Parameter(
-     *       name="displayGroupId",
-     *       in="path",
-     *       description="The display group id",
-     *       type="integer",
-     *       required=false
-     *    ),
-     *   @SWG\Parameter(
-     *       name="criteriaUpdates",
-     *       in="body",
-     *       description="The criteria updates to send to the Player",
-     *       required=true,
-     *       @SWG\Schema(
-     *           type="array",
-     *           @SWG\Items(
-     *               type="object",
-     *               @SWG\Property(property="metric", type="string"),
-     *               @SWG\Property(property="value", type="string"),
-     *               @SWG\Property(property="ttl", type="integer")
-     *           )
-     *       )
-     *    ),
-     *   @SWG\Response(
-     *       response=204,
-     *       description="Successful operation"
-     *   ),
-     *   @SWG\Response(
-     *       response=400,
-     *       description="Invalid criteria format"
-     *   )
-     *  )
      */
-    public function pushCriteriaUpdate(Request $request, Response $response, $displayGroupId = null): Response|ResponseInterface
+    public function pushCriteriaUpdate(Request $request, Response $response, int $displayGroupId = null): Response|ResponseInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -2933,6 +2935,34 @@ class DisplayGroup extends Base
         // ensure criteria updates exists
         if (empty($criteriaUpdates)) {
             throw new InvalidArgumentException(__('No criteria found.'), 'criteriaUpdates');
+        }
+
+        // Initialize array to hold sanitized criteria updates
+        $sanitizedCriteriaUpdates = [];
+
+        // Loop through each criterion and sanitize the input
+        foreach ($criteriaUpdates as $criteria) {
+            $criteriaSanitizer = $this->getSanitizer($criteria);
+
+            // Sanitize and retrieve the metric, value, and ttl
+            $metric = $criteriaSanitizer->getString('metric');
+            $value = $criteriaSanitizer->getString('value');
+            $ttl = $criteriaSanitizer->getInt('ttl');
+
+            // Ensure each criterion has metric, value, and ttl
+            if (empty($metric) || empty($value) || empty($ttl)) {
+                // Throw an exception if any of the required fields are missing or empty
+                throw new PlayerActionException(
+                    __('Invalid criteria format. Metric, value, and ttl must all be present and not empty.')
+                );
+            }
+
+            // Add sanitized criteria
+            $sanitizedCriteriaUpdates[] = [
+                'metric' => $metric,
+                'value' => $value,
+                'ttl' => $ttl
+            ];
         }
 
         if ($displayGroupId !== null) {
@@ -2946,7 +2976,7 @@ class DisplayGroup extends Base
         // Create and send the player action
         $this->playerAction->sendAction(
             $displayGroup,
-            (new ScheduleCriteriaUpdateAction())->setCriteriaUpdates($criteriaUpdates)
+            (new ScheduleCriteriaUpdateAction())->setCriteriaUpdates($sanitizedCriteriaUpdates)
         );
 
         // Return
