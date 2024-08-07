@@ -175,6 +175,18 @@ LayerManager.prototype.createStructure = function() {
       duration: parseDuration(canvas.duration),
       layers: canvasObject.subLayers,
     });
+
+    // If we have a background image for the layout
+    // Add it to structure
+    if (
+      self.parent.layout.backgroundImage &&
+      self.parent.layout.backgroundzIndex != null
+    ) {
+      addToLayerStructure(self.parent.layout.backgroundzIndex, {
+        type: 'layoutBackground',
+        name: 'Layout Background',
+      });
+    }
   }
 
   // Get static widgets and playlists
@@ -299,8 +311,11 @@ LayerManager.prototype.render = function(reset) {
         this.DOMObject
           .find('.layer-manager-layer-item.selectable:not(.selected)')
           .off('click').on('click', function(ev) {
-            const elementId = $(ev.currentTarget).data('item-id');
-            const $viewerObject = self.viewerContainer.find('#' + elementId);
+            const elementData = $(ev.currentTarget).data();
+            const elementId = elementData.itemId;
+            const $viewerObject = (elementData.type === 'layoutBackground') ?
+              self.viewerContainer :
+              self.viewerContainer.find('#' + elementId);
 
             if ($viewerObject.length) {
               // Select in editor
@@ -584,6 +599,7 @@ LayerManager.prototype.saveSort = function({
 
   if (type === 'main') {
     const regionToBeSaved = [];
+    let layoutSaving = null;
     lD.viewer.layerManager.DOMObject
       .find('.layer-manager-body > .sortable-main')
       .each((idx, target) => {
@@ -594,7 +610,21 @@ LayerManager.prototype.saveSort = function({
           $target.data('itemId');
         const newLayer = idx;
         let updateOnViewer = '';
-        if (targetType === 'canvas') {
+
+        if (targetType === 'layoutBackground') {
+          // Only save layout if we have a new value
+          if (lD.layout.backgroundzIndex != newLayer) {
+            console.log('Save layout layer:' + newLayer);
+            lD.layout.backgroundzIndex = newLayer;
+
+            layoutSaving = lD.layout.saveBackgroundLayer(newLayer);
+
+            if (lD.selectedObject.type === 'layout') {
+              lD.propertiesPanel.DOMObject
+                .find('#input_backgroundzIndex').val(newLayer);
+            }
+          }
+        } else if (targetType === 'canvas') {
           // Only save canvas if we have a new value
           if (lD.layout.canvas.zIndex != newLayer) {
             const canvas = lD.getObjectByTypeAndId('canvas');
@@ -653,7 +683,15 @@ LayerManager.prototype.saveSort = function({
 
     // Save regions if needed
     if (regionToBeSaved.length > 0) {
-      lD.layout.saveMultipleRegions(regionToBeSaved);
+      const saveRegions = function() {
+        lD.layout.saveMultipleRegions(regionToBeSaved);
+      };
+
+      if (layoutSaving) {
+        layoutSaving.then(saveRegions);
+      } else {
+        saveRegions();
+      }
     }
   } else if (type === 'canvas') {
     const widgetsToSave = {};

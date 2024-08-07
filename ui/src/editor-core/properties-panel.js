@@ -185,6 +185,11 @@ PropertiesPanel.prototype.save = function(
   ) {
     app.common.showLoadingScreen();
 
+    // If it's a layout, save its resolution
+    const resolutionId = (target.type === 'layout') ?
+      formFieldsToSave.filter('[name="resolutionId"]').val() :
+      null;
+
     // Add a save form change to the history array
     // with previous form state and the new state
     app.historyManager.addChange(
@@ -292,6 +297,11 @@ PropertiesPanel.prototype.save = function(
               // If we're saving an element group, update bottom bar
               (savingElementGroup) &&
                 app.bottombar.render(originalTarget);
+            }
+
+            // If target was layout, update resolution id
+            if (originalTarget.type === 'layout') {
+              app.layout.resolutionId = resolutionId;
             }
 
             // If we're saving a region, update bottom bar
@@ -610,6 +620,9 @@ PropertiesPanel.prototype.render = function(
       dataToRender.orientation = lD.viewer.getLayoutOrientation(
         dataToRender.resolution.width, dataToRender.resolution.height);
       dataToRender.bgImageName = dataToRender.backgrounds[0]?.name || '';
+
+      // Save resolution to layout for later use
+      target.resolutionId = dataToRender.resolution.resolutionId;
     }
 
     // if region, add subtype name

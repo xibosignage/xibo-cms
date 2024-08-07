@@ -68,6 +68,8 @@ const Layout = function(id, data) {
 
   this.backgroundImage = data.backgroundImageId;
   this.backgroundColor = data.backgroundColor;
+  this.backgroundzIndex = data.backgroundzIndex;
+  this.resolutionId = null;
 
   this.code = data.code;
   this.folderId = data.folderId;
@@ -1132,6 +1134,35 @@ Layout.prototype.saveMultipleRegions = function(regions) {
       type: urlsForApi.region.transform.type,
       data: {
         regions: JSON.stringify(requestData),
+      },
+    }).done(function(data) {
+      resolve(data);
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+      // Reject promise and return an object with all values
+      reject(new Error({jqXHR, textStatus, errorThrown}));
+    });
+  });
+};
+
+/**
+ * Save layout background layer
+ * @param {number} layer New layer
+ * @return {Promise} - Promise that resolves when the regions are saved
+ */
+Layout.prototype.saveBackgroundLayer = function(layer) {
+  const self = this;
+  return new Promise(function(resolve, reject) {
+    const requestPath =
+      urlsForApi.layout.saveForm.url.replace(':id', self.layoutId);
+
+    $.ajax({
+      url: requestPath,
+      type: urlsForApi.layout.saveForm.type,
+      data: {
+        backgroundColor: self.backgroundColor,
+        backgroundImageId: self.backgroundImage,
+        resolutionId: self.resolutionId,
+        backgroundzIndex: self.backgroundzIndex,
       },
     }).done(function(data) {
       resolve(data);
