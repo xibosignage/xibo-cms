@@ -423,6 +423,7 @@ $app->get('/displaygroup', ['\Xibo\Controller\DisplayGroup','grid'])->setName('d
 $app->post('/displaygroup', ['\Xibo\Controller\DisplayGroup','add'])
     ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['displaygroup.add']))
     ->setName('displayGroup.add');
+$app->post('/displaygroup/criteria/{displayGroupId}', ['\Xibo\Controller\DisplayGroup','pushCriteriaUpdate'])->setName('displayGroup.criteria.push');
 
 $app->post('/displaygroup/{id}/action/collectNow', ['\Xibo\Controller\DisplayGroup','collectNow'])
     ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['displaygroup.view']))
