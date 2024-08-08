@@ -2889,7 +2889,7 @@ class DisplayGroup extends Base
      *        in="path",
      *        description="The display group id",
      *        type="integer",
-     *        required=false
+     *        required=true
      *     ),
      *    @SWG\Parameter(
      *        name="criteriaUpdates",
@@ -2918,14 +2918,14 @@ class DisplayGroup extends Base
      *
      * @param Request $request
      * @param Response $response
-     * @param int|null $displayGroupId
+     * @param int $displayGroupId
      * @return ResponseInterface|Response
      * @throws ControllerNotImplemented
      * @throws GeneralException
      * @throws NotFoundException
      * @throws PlayerActionException
      */
-    public function pushCriteriaUpdate(Request $request, Response $response, int $displayGroupId = null): Response|ResponseInterface
+    public function pushCriteriaUpdate(Request $request, Response $response, int $displayGroupId): Response|ResponseInterface
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -2950,7 +2950,7 @@ class DisplayGroup extends Base
             $ttl = $criteriaSanitizer->getInt('ttl');
 
             // Ensure each criterion has metric, value, and ttl
-            if (empty($metric) || empty($value) || empty($ttl)) {
+            if (empty($metric) || empty($value) || !isset($ttl)) {
                 // Throw an exception if any of the required fields are missing or empty
                 throw new PlayerActionException(
                     __('Invalid criteria format. Metric, value, and ttl must all be present and not empty.')
@@ -2961,21 +2961,13 @@ class DisplayGroup extends Base
             $sanitizedCriteriaUpdates[] = [
                 'metric' => $metric,
                 'value' => $value,
-                'ttl' => $ttl
+                'ttl' => abs($ttl)
             ];
         }
 
-        if ($displayGroupId !== null) {
-            // fetch displays under the Display Group
-            $displayGroup = $this->displayFactory->getByDisplayGroupId($displayGroupId);
-        } else {
-            // fetch all displays regardless of Display Group
-            $displayGroup = $this->displayFactory->query();
-        }
-
-        // Create and send the player action
+        // Create and send the player action to displays under the display group
         $this->playerAction->sendAction(
-            $displayGroup,
+            $this->displayFactory->getByDisplayGroupId($displayGroupId),
             (new ScheduleCriteriaUpdateAction())->setCriteriaUpdates($sanitizedCriteriaUpdates)
         );
 
@@ -2986,7 +2978,6 @@ class DisplayGroup extends Base
             'id' => $displayGroupId
         ]);
 
-        
         return $this->render($request, $response);
     }
 }
