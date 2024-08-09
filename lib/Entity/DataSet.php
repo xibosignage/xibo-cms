@@ -119,7 +119,8 @@ class DataSet implements \JsonSerializable
     public $isRealTime = 0;
 
     /**
-     * @SWG\Property(description="Indicates the source of the data connector. Requires the Real time flag. Can be null, user-defined, or a connector.")
+     * @SWG\Property(description="Indicates the source of the data connector. Requires the Real time flag. Can be null,
+     * user-defined, or a connector.")
      * @var string
      */
     public $dataConnectorSource;
@@ -499,9 +500,11 @@ class DataSet implements \JsonSerializable
             'connection' => 'default'
         ], $options);
 
+        // Params (start from extraParams supplied)
+        $params = $extraParams;
+
         // Fetch display tag value/s
         if ($filter != '' && $displayId != 0) {
-
             // Define the regular expression to match [Tag:...]
             $pattern = '/\[Tag:[^]]+\]/';
 
@@ -529,6 +532,8 @@ class DataSet implements \JsonSerializable
                     ];
                 }
 
+                $tagCount = 1;
+
                 // Loop through each tag and get the actual tag value from the database
                 foreach ($displayTags as $tag) {
                     $tagSanitizer = $this->getSanitizer($tag);
@@ -539,21 +544,23 @@ class DataSet implements \JsonSerializable
 
                     $query = 'SELECT `lktagdisplaygroup`.`value` AS tagValue
                                 FROM `lkdisplaydg`
-                                INNER JOIN `displaygroup` ON `displaygroup`.displayGroupId = `lkdisplaydg`.displayGroupId 
+                                INNER JOIN `displaygroup` 
+                                    ON `displaygroup`.displayGroupId = `lkdisplaydg`.displayGroupId 
                                     AND `displaygroup`.isDisplaySpecific = 1
-                                INNER JOIN `lktagdisplaygroup` ON `lktagdisplaygroup`.displayGroupId = `lkdisplaydg`.displayGroupId
+                                INNER JOIN `lktagdisplaygroup` 
+                                    ON `lktagdisplaygroup`.displayGroupId = `lkdisplaydg`.displayGroupId
                                 INNER JOIN `tag` ON `lktagdisplaygroup`.tagId = `tag`.tagId
                                 WHERE `lkdisplaydg`.displayId = :displayId
                                     AND `tag`.`tag` = :tagName
                                 LIMIT 1';
 
-                    $params = [
+                    $tagParams = [
                         'displayId' => $displayId,
                         'tagName' => $tagName
                     ];
 
                     // Execute the query
-                    $results = $this->getStore()->select($query, $params);
+                    $results = $this->getStore()->select($query, $tagParams);
 
                     // Determine the tag value
                     if (!empty($results)) {
@@ -564,13 +571,13 @@ class DataSet implements \JsonSerializable
                     }
 
                     // Replace the tag string in the filter with the actual tag value or default value
-                    $filter = str_replace($tagString, $tagValue, $filter);
+                    $filter = str_replace($tagString, ':tagValue_'.$tagCount, $filter);
+                    $params['tagValue_'.$tagCount] = $tagValue;
+
+                    $tagCount++;
                 }
             }
         }
-
-        // Params (start from extraParams supplied)
-        $params = $extraParams;
 
         // Sanitize the filter options provided
         // Get the Latitude and Longitude ( might be used in a formula )
@@ -1094,8 +1101,8 @@ class DataSet implements \JsonSerializable
      */
     private function add()
     {
-        $columns = 'DataSet, Description, UserID, `code`, `isLookup`, `isRemote`,';
-        $columns .= '`lastDataEdit`, `lastClear`, `folderId`, `permissionsFolderId`, `isRealTime`, `dataConnectorSource`';
+        $columns = 'DataSet, Description, UserID, `code`, `isLookup`, `isRemote`, `lastDataEdit`,';
+        $columns .= '`lastClear`, `folderId`, `permissionsFolderId`, `isRealTime`, `dataConnectorSource`';
         $values = ':dataSet, :description, :userId, :code, :isLookup, :isRemote,';
         $values .= ':lastDataEdit, :lastClear, :folderId, :permissionsFolderId, :isRealTime, :dataConnectorSource';
 
