@@ -499,6 +499,9 @@ class DataSet implements \JsonSerializable
             'connection' => 'default'
         ], $options);
 
+        // Params (start from extraParams supplied)
+        $params = $extraParams;
+
         // Fetch display tag value/s
         if ($filter != '' && $displayId != 0) {
 
@@ -529,6 +532,8 @@ class DataSet implements \JsonSerializable
                     ];
                 }
 
+                $tagCount = 1;
+
                 // Loop through each tag and get the actual tag value from the database
                 foreach ($displayTags as $tag) {
                     $tagSanitizer = $this->getSanitizer($tag);
@@ -547,13 +552,13 @@ class DataSet implements \JsonSerializable
                                     AND `tag`.`tag` = :tagName
                                 LIMIT 1';
 
-                    $params = [
+                    $tagParams = [
                         'displayId' => $displayId,
                         'tagName' => $tagName
                     ];
 
                     // Execute the query
-                    $results = $this->getStore()->select($query, $params);
+                    $results = $this->getStore()->select($query, $tagParams);
 
                     // Determine the tag value
                     if (!empty($results)) {
@@ -564,13 +569,13 @@ class DataSet implements \JsonSerializable
                     }
 
                     // Replace the tag string in the filter with the actual tag value or default value
-                    $filter = str_replace($tagString, $tagValue, $filter);
+                    $filter = str_replace($tagString, ':tagValue_'.$tagCount, $filter);
+                    $params['tagValue_'.$tagCount] = $tagValue;
+
+                    $tagCount++;
                 }
             }
         }
-
-        // Params (start from extraParams supplied)
-        $params = $extraParams;
 
         // Sanitize the filter options provided
         // Get the Latitude and Longitude ( might be used in a formula )
