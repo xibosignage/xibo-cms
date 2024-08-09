@@ -466,7 +466,7 @@ class DataSetColumn implements \JsonSerializable
         switch ($this->dataTypeId) {
 
             case 2:
-                $dataType = 'FLOAT';
+                $dataType = 'DOUBLE';
                 break;
 
             case 3:
