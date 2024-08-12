@@ -29,6 +29,7 @@ use Slim\Http\Factory\DecoratedResponseFactory;
 use Slim\Routing\RouteContext;
 use Xibo\Entity\User;
 use Xibo\Helper\HttpsDetect;
+use Xibo\Helper\UserLogProcessor;
 
 /**
  * Trait AuthenticationTrait
@@ -143,7 +144,15 @@ trait AuthenticationTrait
      */
     protected function setUserForRequest($user)
     {
-        $this->app->getContainer()->set('user', $user);
+        $container = $this->app->getContainer();
+        $container->set('user', $user);
+
+        // Add this users information to the logger
+        $this->getLog()->getLoggerInterface()->pushProcessor(new UserLogProcessor(
+            $user->userId,
+            $this->getLog()->getSessionHistoryId(),
+            null,
+        ));
     }
 
     /**

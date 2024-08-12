@@ -69,9 +69,9 @@ $container->set('name', 'API');
 
 $app->add(new \Xibo\Middleware\ConnectorMiddleware($app));
 $app->add(new \Xibo\Middleware\ListenersMiddleware($app));
-$app->add(new \Xibo\Middleware\Log($app));
 $app->add(new \Xibo\Middleware\ApiAuthorization($app));
 $app->add(new \Xibo\Middleware\State($app));
+$app->add(new \Xibo\Middleware\Log($app));
 $app->add(new \Xibo\Middleware\Storage($app));
 $app->add(new \Xibo\Middleware\Xmr($app));
 $app->addRoutingMiddleware();

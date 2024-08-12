@@ -95,7 +95,6 @@ $app->add(new \Xibo\Middleware\ListenersMiddleware($app));
 $app->add(new \Xibo\Middleware\Theme($app));
 $app->add(new \Xibo\Middleware\CsrfGuard($app));
 $app->add(new \Xibo\Middleware\Csp($container));
-$app->add(new \Xibo\Middleware\Log($app));
 
 // Authentication
 $authentication = ($container->get('configService')->authentication != null)
@@ -109,6 +108,7 @@ $app->add(new RKA\Middleware\IpAddress(true, []));
 // TODO reconfigure this and enable
 //$app->add(new Xibo\Middleware\HttpCache());
 $app->add(new \Xibo\Middleware\State($app));
+$app->add(new \Xibo\Middleware\Log($app));
 $app->add(TwigMiddleware::createFromContainer($app));
 $app->add(new \Xibo\Middleware\Storage($app));
 $app->add(new \Xibo\Middleware\Xmr($app));

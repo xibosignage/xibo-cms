@@ -24,23 +24,19 @@
 namespace Xibo\Helper;
 
 /**
- * Class LogProcessor
+ * Class UserLogProcessor
  * @package Xibo\Helper
  */
-class LogProcessor
+class UserLogProcessor
 {
     /**
-     * Log Processor
-     * @param string $route
-     * @param string $method
-     * @param int|null $userId
+     * UserLogProcessor
+     * @param int $userId
      * @param int|null $sessionHistoryId
      * @param int|null $requestId
      */
     public function __construct(
-        private readonly string $route,
-        private readonly string $method,
-        private readonly ?int $userId,
+        private readonly int $userId,
         private readonly ?int $sessionHistoryId,
         private readonly ?int $requestId
     ) {
@@ -52,12 +48,7 @@ class LogProcessor
      */
     public function __invoke(array $record): array
     {
-        $record['extra']['method'] = $this->method;
-        $record['extra']['route'] = $this->route;
-
-        if ($this->userId != null) {
-            $record['extra']['userId'] = $this->userId;
-        }
+        $record['extra']['userId'] = $this->userId;
         
         if ($this->sessionHistoryId != null) {
             $record['extra']['sessionHistoryId'] = $this->sessionHistoryId;
