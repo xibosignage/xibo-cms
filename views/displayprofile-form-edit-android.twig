@@ -167,7 +167,7 @@
                     {{ forms.dropdown("orientation", "single", title, displayProfile.getSetting("orientation"), options, "id", "value", helpText) }}
 
                     {% set title = "Screen Dimensions"|trans %}
-                    {% set helpText = "Set dimensions to be used for the Player window ensuring that they do not exceed the actual screen size. Enter the following values representing the pixel sizings for; Left,Top,Width,Height. This requires a Player Restart to action."|trans %}
+                    {% set helpText = "Set dimensions to be used for the Player window ensuring that they do not exceed the actual screen size. Enter the following values representing the pixel sizings for; Top,Left,Width,Height. This requires a Player Restart to action."|trans %}
                     {{ forms.input("screenDimensions", title, displayProfile.getSetting("screenDimensions"), helpText) }}
 
                 </div>
