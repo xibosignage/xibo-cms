@@ -334,6 +334,7 @@ class Developer extends Base
             );
         }]);
 
+        $template->dataType = $dataType;
         $template->isEnabled = $params->getCheckbox('enabled');
 
         // TODO: validate?
