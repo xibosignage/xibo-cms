@@ -251,8 +251,11 @@ if(properties.fitToArea) {
     // Set target for the text
     properties.fitTarget = 'div';
 
+    var $selector = $(target).is('.global-elements-text') ?
+        $(target) : $(target).find('.global-elements-text');
+
     // Scale text to container
-    $(target).find('.global-elements-text').xiboTextScaler(properties);
+    $selector.xiboTextScaler(properties);
 }
         ]]></onTemplateRender>
         </stencil>
@@ -497,8 +500,11 @@ $(target).find('.date').each(function(_idx, dateEl){
         // Set target for the text
         properties.fitTarget = '.date';
 
+        var $selector = $(target).is('.global-elements-date') ?
+            $(target) : $(target).find('.global-elements-date');
+
         // Scale text to container
-        $(target).find('.global-elements-date').xiboTextScaler(properties);
+        $selector.xiboTextScaler(properties);
     }
 });
         ]]></onTemplateRender>
@@ -767,6 +773,9 @@ if (useCurrentDate) {
             // Set target for the text
             properties.fitTarget = '.date-advanced';
 
+            var $selector = $(target).is('.global-elements-date-advanced') ?
+                $(target) : $(target).find('.global-elements-date-advanced');
+
             // Scale text to container
             $(target).find('.global-elements-date-advanced').xiboTextScaler(properties);
 
@@ -799,8 +808,11 @@ if (useCurrentDate) {
         // Set target for the text
         properties.fitTarget = '.date-advanced';
 
+        var $selector = $(target).is('.global-elements-date-advanced') ?
+            $(target) : $(target).find('.global-elements-date-advanced');
+
         // Scale text to container
-        $(target).find('.global-elements-date-advanced').xiboTextScaler(properties);
+        $selector.xiboTextScaler(properties);
     }
 }
         ]]></onTemplateRender>
