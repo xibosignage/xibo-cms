@@ -27,7 +27,6 @@ use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\ModuleTemplateFactory;
 use Xibo\Helper\SendFile;
-use Xibo\Helper\UploadHandler;
 use Xibo\Service\MediaService;
 use Xibo\Service\UploadService;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -530,8 +529,6 @@ class Developer extends Base
 
         $options = [
             'upload_dir' => $libraryFolder . 'temp/',
-            'script_url' => $this->urlFor($request, 'developer.templates.import'),
-            'upload_url' => $this->urlFor($request, 'developer.templates.import'),
             'accept_file_types' => '/\.xml/i',
             'libraryQuotaFull' => false,
         ];
@@ -539,10 +536,10 @@ class Developer extends Base
         $this->getLog()->debug('Hand off to Upload Handler with options: ' . json_encode($options));
 
         // Hand off to the Upload Handler provided by jquery-file-upload
-        $uploadService = new UploadService($options, $this->getLog(), $this->getState());
+        $uploadService = new UploadService($libraryFolder . 'temp/', $options, $this->getLog(), $this->getState());
         $uploadHandler = $uploadService->createUploadHandler();
 
-        $uploadHandler->setPostProcessor(function ($file, $uploadHandler) {
+        $uploadHandler->setPostProcessor(function ($file, $uploadHandler) use ($libraryFolder) {
             // Return right away if the file already has an error.
             if (!empty($file->error)) {
                 return $file;
@@ -550,8 +547,7 @@ class Developer extends Base
 
             $this->getUser()->isQuotaFullByUser(true);
 
-            /** @var UploadHandler $uploadHandler */
-            $filePath = $uploadHandler->getUploadPath() . $file->fileName;
+            $filePath = $libraryFolder . 'temp/' . $file->fileName;
 
             // load the xml from uploaded file
             $xml = new \DOMDocument();
