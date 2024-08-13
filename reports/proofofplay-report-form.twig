@@ -80,6 +80,14 @@
                             {% set title %}{% trans "Time" %}{% endset %}
                             {{ inline.time("statsToDtTime", title, "00:00", "", "stats-to-dt-time") }}
 
+                            {% set title %}{% trans "Group By" %}{% endset %}
+                            {% set options = [
+                                { id: "", name: "" },
+                                { id: "displayGroup", name: "Display Group"|trans },
+                                { id: "tag", name: "Tag"|trans }
+                            ] %}
+                            {{ inline.dropdown("groupBy", "single", title, "", options, "id", "name", "") }}
+
                             {% set title %}{% trans "Display" %}{% endset %}
                             {% set attributes = [
                                 { name: "data-width", value: "200px" },
@@ -219,6 +227,9 @@
                                         <th>{% trans "Type" %}</th>
                                         <th>{% trans "Display ID" %}</th>
                                         <th>{% trans "Display" %}</th>
+                                        <th>{% trans "Display Group ID" %}</th>
+                                        <th>{% trans "Display Group" %}</th>
+                                        <th>{% trans "Tag ID" %}</th>
                                         <th>{% trans "Campaign" %}</th>
                                         <th>{% trans "Layout ID" %}</th>
                                         <th>{% trans "Layout" %}</th>
@@ -237,6 +248,9 @@
                                     </tbody>
                                     <tfoot>
                                     <tr>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
                                         <th></th>
                                         <th></th>
                                         <th></th>
@@ -290,6 +304,21 @@
                     setTimeout(function() {
                         $("#applyBtn").removeClass('disabled');
                     }, 300);
+
+                    // Hide and show appropriate columns
+                    switch ($('select[name="groupBy"]').val()) {
+                        case 'displayGroup':
+                            $(this.api().columns([1, 2, 5, 6, 7, 8, 9, 10, 11]).visible(false));
+                            $(this.api().columns([3, 4]).visible(true));
+                            break;
+                        case 'tag':
+                            $(this.api().columns([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]).visible(false));
+                            $(this.api().columns([5]).visible(true));
+                            break;
+                        default:
+                            $(this.api().columns([3, 4, 5]).visible(false));
+                            $(this.api().columns([1, 2, 5, 6, 7, 8, 9, 10, 11]).visible(true));
+                    }
                 },
                 filter: false,
                 "order": [[1, "asc"]],
@@ -298,6 +327,9 @@
                     {"data": "type"},
                     {"data": "displayId"},
                     {"data": "display"},
+                    {"data": "displayGroupId"},
+                    {"data": "displayGroup"},
+                    {"data": "tagId"},
                     {"data": "parentCampaign"},
                     {"data": "layoutId"},
                     {"data": "layout"},
@@ -449,9 +481,12 @@
                 if (displayId) {
                     $('select[name="displayGroupId[]"] option').remove();
                     $('select[name="displayGroupId[]"]').next(".select2-container").parent().hide();
+                    $('select[name="groupBy[]"] option').remove();
+                    $('select[name="groupBy"]').parent().hide();
                 } else {
                     $('#displayId option').remove();
                     $('select[name="displayGroupId[]"]').next(".select2-container").parent().show();
+                    $('select[name="groupBy"]').parent().show();
                 }
             });
 
