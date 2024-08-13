@@ -1637,7 +1637,7 @@ class Library extends Base
         $params = $this->getSanitizer($request->getParams());
 
         // Check if preview is allowed for the module
-        if ($params->getCheckbox('preview') == 1 && $module->previewEnabled == 1) {
+        if ($params->getCheckbox('preview') == 1 && $module->allowPreview === 1) {
             $this->getLog()->debug('download: preview mode, seeing if we can output an image/video');
 
             // Output a 1px image if we're not allowed to see the media.
