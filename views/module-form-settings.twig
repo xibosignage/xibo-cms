@@ -44,7 +44,7 @@
 
                 {% set title %}{% trans "Preview Enabled?" %}{% endset %}
                 {% set helpText %}{% trans "When Preview is Enabled users will be able to see a preview in the layout editor." %}{% endset %}
-                {{ forms.checkbox("previewEnabled", title, module.previewEnabled, helpText) }}
+                {{ forms.checkbox("previewEnabled", title, module.previewEnabled, helpText, "", "", module.allowPreview == 0) }}
 
                 {% set title %}{% trans "Enabled?" %}{% endset %}
                 {% set helpText %}{% trans "When Enabled users will be able to add media using this module." %}{% endset %}
