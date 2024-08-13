@@ -1635,7 +1635,9 @@ class Library extends Base
         $downloader->useLogger($this->getLog()->getLoggerInterface());
 
         $params = $this->getSanitizer($request->getParams());
-        if ($params->getCheckbox('preview') == 1) {
+
+        // Check if preview is allowed for the module
+        if ($params->getCheckbox('preview') == 1 && $module->previewEnabled == 1) {
             $this->getLog()->debug('download: preview mode, seeing if we can output an image/video');
 
             // Output a 1px image if we're not allowed to see the media.

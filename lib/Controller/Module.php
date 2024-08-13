@@ -256,6 +256,11 @@ class Module extends Base
             $setting->setValueByType($sanitizedParams, null, true);
         }
 
+        // Preview is not allowed for generic file type
+        if ($module->moduleId == 'core-genericfile' && $sanitizedParams->getCheckbox('previewEnabled') == 1) {
+            throw new InvalidArgumentException(__('Preview is not allowed for generic file type'));
+        }
+
         // Save
         $module->save();
 
