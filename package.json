@@ -25,6 +25,7 @@
   "homepage": "https://github.com/xibosignage/xibo-cms#readme",
   "devDependencies": {
     "@babel/core": "^7.9.6",
+    "@babel/plugin-transform-optional-chaining": "^7.24.8",
     "@babel/preset-env": "^7.22.5",
     "autoprefixer": "^9.7.6",
     "babel-core": "^6.26.3",
@@ -123,6 +124,6 @@
     "toastr": "~2.1.4",
     "underscore": "^1.12.1",
     "xibo-interactive-control": "git+https://github.com/xibosignage/xibo-interactive-control.git#44ad744a5a2a0af9e7fcdb828dbdbeff45cc40f0",
-    "xibo-layout-renderer": "git+https://github.com/xibosignage/xibo-layout-renderer.git#dd865aebc7d9f336fa1c3adee80d2dcea0b67c37"
+    "xibo-layout-renderer": "git+https://github.com/xibosignage/xibo-layout-renderer.git#d1ae2ffd4affa4d8534ee589cd7acc933c8b9894"
   }
 }
