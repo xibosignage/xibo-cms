@@ -25,7 +25,6 @@
   "homepage": "https://github.com/xibosignage/xibo-cms#readme",
   "devDependencies": {
     "@babel/core": "^7.9.6",
-    "@babel/plugin-transform-optional-chaining": "^7.24.8",
     "@babel/preset-env": "^7.22.5",
     "autoprefixer": "^9.7.6",
     "babel-core": "^6.26.3",
