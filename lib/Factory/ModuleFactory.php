@@ -754,6 +754,7 @@ class ModuleFactory extends BaseFactory
         $module->renderAs = $this->getFirstValueOrDefaultFromXmlNode($xml, 'renderAs');
         $module->defaultDuration = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'defaultDuration'));
         $module->hasThumbnail = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'hasThumbnail', 0));
+        $module->allowPreview = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'allowPreview', 1));
 
         // Validator classes
         foreach ($xml->getElementsByTagName('validatorClass') as $node) {

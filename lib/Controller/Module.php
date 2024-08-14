@@ -256,6 +256,11 @@ class Module extends Base
             $setting->setValueByType($sanitizedParams, null, true);
         }
 
+        // Preview is not allowed for generic file type
+        if ($module->allowPreview === 0 && $sanitizedParams->getCheckbox('previewEnabled') == 1) {
+            throw new InvalidArgumentException(__('Preview is disabled'));
+        }
+
         // Save
         $module->save();
 
