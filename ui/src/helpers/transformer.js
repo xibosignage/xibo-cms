@@ -1,4 +1,3 @@
-// eslint-disable-next-line valid-jsdoc
 /**
  * String | Number transformer
  */
