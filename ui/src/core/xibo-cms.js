@@ -276,7 +276,18 @@ function XiboInitialise(scope, options) {
     // NOTE: The validation plugin does not like binding to multiple forms at once.
     $(scope + ' .XiboForm').validate({
         submitHandler: XiboFormSubmit,
+        // Ignore the date picker helpers
+        ignore: '.datePickerHelper',
         errorElement: "span",
+        errorPlacement: function(error, element) {
+            if($(element).hasClass('dateControl')) {
+                // Places the error label date controller
+                error.insertAfter(element.parent());
+            } else {
+                // Places the error label after the invalid element
+                error.insertAfter(element);
+            }
+        },
         highlight: function(element) {
             $(element).closest('.form-group').removeClass('has-success').addClass('has-error');
         },
