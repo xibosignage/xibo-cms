@@ -614,15 +614,22 @@ LayerManager.prototype.saveSort = function({
         if (targetType === 'layoutBackground') {
           // Only save layout if we have a new value
           if (lD.layout.backgroundzIndex != newLayer) {
-            console.log('Save layout layer:' + newLayer);
             lD.layout.backgroundzIndex = newLayer;
 
             layoutSaving = lD.layout.saveBackgroundLayer(newLayer);
 
             if (lD.selectedObject.type === 'layout') {
+              // Change value on form
               lD.propertiesPanel.DOMObject
                 .find('#input_backgroundzIndex').val(newLayer);
+
+              // Update properties panel serialized
+              // old data to prevent another auto save
+              lD.propertiesPanel.formSerializedLoadData['layout'] =
+                lD.propertiesPanel.DOMObject.find('form [name]').serialize();
             }
+
+            updateOnViewer = '.layout-background-image';
           }
         } else if (targetType === 'canvas') {
           // Only save canvas if we have a new value
@@ -638,7 +645,7 @@ LayerManager.prototype.saveSort = function({
             }
 
             // Save id to update on viewer
-            updateOnViewer = lD.layout.canvas.id;
+            updateOnViewer = '#' + lD.layout.canvas.id;
           }
         } else {
           // Update regions
@@ -670,13 +677,13 @@ LayerManager.prototype.saveSort = function({
             }
 
             // Save id to update on viewer
-            updateOnViewer = targetId;
+            updateOnViewer = '#' + targetId;
           }
         }
 
         // Update on viewer if needed
         if (updateOnViewer != '') {
-          const $container = lD.viewer.DOMObject.find(`#${updateOnViewer}`);
+          const $container = lD.viewer.DOMObject.find(updateOnViewer);
           $container.css('z-index', newLayer);
         }
       });
