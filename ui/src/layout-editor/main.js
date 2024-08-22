@@ -3609,6 +3609,13 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
     layoutObject.playlists.widgets.length > 0
   );
 
+  // Check if it's a dynamic playlist
+  layoutObject.isDynamicPlaylist =
+    (
+      layoutObject.isPlaylist &&
+      $(obj).find('.dynamic-playlist-icon').length === 1
+    );
+
   // Create menu and append to the designer div
   // ( using the object extended with translations )
   lD.editorContainer.append(

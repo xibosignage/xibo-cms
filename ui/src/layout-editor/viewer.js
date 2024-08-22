@@ -1299,6 +1299,7 @@ Viewer.prototype.renderRegion = function(
         isEmpty: res.extra && res.extra.empty,
         trans: viewerTrans,
         canEditPlaylist: false,
+        isDynamicPlaylist: false,
       };
 
       // Append playlist controls using appendOptions
@@ -1306,7 +1307,7 @@ Viewer.prototype.renderRegion = function(
         $container.append(viewerPlaylistControlsTemplate(appendOptions));
       };
 
-      // If it's playslist with a single subplaylist widget
+      // If it's playlist with a single subplaylist widget
       if (
         Object.keys(region.widgets).length === 1 &&
         Object.values(region.widgets)[0].subType === 'subplaylist' &&
@@ -1328,8 +1329,14 @@ Viewer.prototype.renderRegion = function(
             success: function(_res) {
               // User has permissions
               if (_res.data && _res.data.length > 0) {
-                appendOptions.canEditPlaylist = true;
-                appendOptions.canEditPlaylistId = subPlaylistId;
+                // Check if playlist is dynamic
+                if (_res.data[0].isDynamic === 1) {
+                  appendOptions.isDynamicPlaylist = true;
+                } else {
+                  // If it's not dynamic, enable editing
+                  appendOptions.canEditPlaylist = true;
+                  appendOptions.canEditPlaylistId = subPlaylistId;
+                }
               }
 
               // Append playlist controls
