@@ -1168,6 +1168,12 @@ class Library extends Base
             $folderId = $this->getUser()->homeFolderId;
         }
 
+        $playlist = $this->playlistFactory->getById($parsedBody->getInt('playlistId'));
+
+        if ($playlist->isDynamic === 1) {
+            throw new InvalidArgumentException(__('This Playlist is dynamically managed so cannot accept manual assignments.'), 'isDynamic');
+        }
+
         $options = array_merge([
             'oldMediaId' => null,
             'updateInLayouts' => 0,
