@@ -1666,10 +1666,6 @@ class Widget extends Base
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
         }
 
-        if ($playlist->isDynamic === 1) {
-            throw new InvalidArgumentException(__('This Playlist is dynamically managed so cannot accept manual assignments.'), 'isDynamic');
-        }
-
         // Make sure we are on a Drawer Widget
         $region = $this->regionFactory->getById($playlist->regionId);
         if ($region->isDrawer !== 1) {
@@ -1750,10 +1746,6 @@ class Widget extends Base
         // If we are a region Playlist, we need to check whether the owning Layout is a draft or editable
         if (!$playlist->isRegionPlaylist() || !$playlist->isEditable()) {
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
-        }
-
-        if ($playlist->isDynamic === 1) {
-            throw new InvalidArgumentException(__('This Playlist is dynamically managed so cannot accept manual assignments.'), 'isDynamic');
         }
 
         // Store the target regionId
