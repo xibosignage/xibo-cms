@@ -24,6 +24,7 @@ namespace Xibo\Xmds;
 
 use Xibo\Entity\Bandwidth;
 use Xibo\Helper\LinkSigner;
+use Xibo\Event\XmdsWeatherRequestEvent;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -300,7 +301,22 @@ class Soap7 extends Soap6
             throw new \SoapFault('Receiver', 'This Display is not authorised.');
         }
 
-        // TODO actually get the Weather with Display lat/long
-        return '{}';
+        $latitude = $this->display->latitude;
+        $longitude = $this->display->longitude;
+
+        // check for coordinates if present
+        if ($latitude && $longitude) {
+            // Dispatch an event to initialize weather data.
+            $event = new XmdsWeatherRequestEvent($latitude, $longitude);
+            $this->getDispatcher()->dispatch($event, XmdsWeatherRequestEvent::$NAME);
+        } else {
+            throw new \SoapFault(
+                'Receiver',
+                'Display coordinates is not configured'
+            );
+        }
+
+        // return weather data
+        return $event->getWeatherData();
     }
 }

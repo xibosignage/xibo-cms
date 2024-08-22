@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022-2024 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -270,14 +270,20 @@ class ConfigService implements ConfigServiceInterface
      * @param string|null $themeName
      * @throws ConfigurationException
      */
-    public function loadTheme($themeName = null)
+    public function loadTheme($themeName = null): void
     {
+        global $config;
+
         // What is the currently selected theme?
-        $globalTheme = ($themeName == NULL) ? $this->getSetting('GLOBAL_THEME_NAME', 'default') : $themeName;
+        $globalTheme = ($themeName == null)
+            ? basename($this->getSetting('GLOBAL_THEME_NAME', 'default'))
+            : $themeName;
 
         // Is this theme valid?
-        $systemTheme = (is_dir(PROJECT_ROOT . '/web/theme/' . $globalTheme) && file_exists(PROJECT_ROOT . '/web/theme/' . $globalTheme . '/config.php'));
-        $customTheme = (is_dir(PROJECT_ROOT . '/web/theme/custom/' . $globalTheme) && file_exists(PROJECT_ROOT . '/web/theme/custom/' . $globalTheme . '/config.php'));
+        $systemTheme = (is_dir(PROJECT_ROOT . '/web/theme/' . $globalTheme)
+            && file_exists(PROJECT_ROOT . '/web/theme/' . $globalTheme . '/config.php'));
+        $customTheme = (is_dir(PROJECT_ROOT . '/web/theme/custom/' . $globalTheme)
+            && file_exists(PROJECT_ROOT . '/web/theme/custom/' . $globalTheme . '/config.php'));
 
         if ($systemTheme) {
             require(PROJECT_ROOT . '/web/theme/' . $globalTheme . '/config.php');
@@ -285,8 +291,9 @@ class ConfigService implements ConfigServiceInterface
         } elseif ($customTheme) {
             require(PROJECT_ROOT . '/web/theme/custom/' . $globalTheme . '/config.php');
             $themeFolder = 'theme/custom/' . $globalTheme . '/';
-        } else
+        } else {
             throw new ConfigurationException(__('The theme "%s" does not exist', $globalTheme));
+        }
 
         $this->themeLoaded = true;
         $this->themeConfig = $config;

@@ -99,6 +99,20 @@ class RemoteDataSetFetchTask implements TaskInterface
                     continue;
                 }
 
+                // Get all columns
+                $columns = $dataSet->getColumn();
+
+                // Filter columns where dataSetColumnType is "Remote"
+                $filteredColumns = array_filter($columns, function ($column) {
+                    return $column->dataSetColumnTypeId == '3';
+                });
+
+                // Check if there are any remote columns defined in the dataset
+                if (count($filteredColumns) === 0) {
+                    $this->log->info('Skipping dataSet ' . $dataSet->dataSetId . ': No remote columns defined in the dataset.');
+                    continue;
+                }
+
                 $this->log->debug('Comparing run time ' . $runTime . ' to next sync time ' . $dataSet->getNextSyncTime());
 
                 if ($runTime >= $dataSet->getNextSyncTime()) {

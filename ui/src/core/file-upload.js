@@ -69,7 +69,7 @@ function openUploadForm(options) {
   }).attr('id', Date.now());
 
   setTimeout(function() {
-    console.log('Timeout fired, we should be shown by now');
+    console.debug('Timeout fired, we should be shown by now');
 
     // Configure the upload form
     const form = $(dialog).find('form');

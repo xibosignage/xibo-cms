@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -20,8 +20,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 namespace Xibo\Entity;
+
 use Respect\Validation\Validator as v;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetColumnTypeFactory;
@@ -30,6 +30,7 @@ use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Widget\Definition\Sql;
 
 /**
  * Class DataSetColumn
@@ -299,7 +300,19 @@ class DataSetColumn implements \JsonSerializable
             && !str_starts_with($this->formula, '$')
         ) {
             try {
-                $formula = str_replace('[DisplayId]', 0, $this->formula);
+                $count = 0;
+                $formula = str_ireplace(
+                    Sql::DISALLOWED_KEYWORDS,
+                    '',
+                    htmlspecialchars_decode($this->formula, ENT_QUOTES),
+                    $count
+                );
+
+                if ($count > 0) {
+                    throw new InvalidArgumentException(__('Formula contains disallowed keywords.'));
+                }
+
+                $formula = str_replace('[DisplayId]', 0, $formula);
                 $formula = str_replace('[DisplayGeoLocation]', "ST_GEOMFROMTEXT('POINT(51.504 -0.104)')", $formula);
 
                 $this->getStore()->select('
@@ -453,7 +466,7 @@ class DataSetColumn implements \JsonSerializable
         switch ($this->dataTypeId) {
 
             case 2:
-                $dataType = 'FLOAT';
+                $dataType = 'DOUBLE';
                 break;
 
             case 3:

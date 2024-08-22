@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -344,8 +344,20 @@ class ProofOfPlay implements ReportInterface
                 $columns = $sortOrder;
             }
         } else {
-            $sortBy = $sanitizedParams->getString('sortBy');
-            $columns = ($sortBy == '') ? ['widgetId'] : [$sortBy];
+            $sortBy = $sanitizedParams->getString('sortBy', ['default' => 'widgetId']);
+            if (!in_array($sortBy, [
+                'widgetId',
+                'type',
+                'display',
+                'displayId',
+                'media',
+                'layout',
+                'layoutId',
+                'tag',
+            ])) {
+                throw new InvalidArgumentException(__('Invalid Sort By'), 'sortBy');
+            }
+            $columns = [$sortBy];
         }
 
         //

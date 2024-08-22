@@ -1368,7 +1368,7 @@
               if (data.isAlways === 1) {
                 return '{{ "Always"|trans }}'
               } else {
-                return moment(data.fromDt, 'X').format(jsDateFormat)
+                return moment(data.displayFromDt, systemDateFormat).format(jsDateFormat)
               }
             }
           },
@@ -1380,7 +1380,7 @@
               if (data.isAlways === 1) {
                 return '{{ "Always"|trans }}'
               } else {
-                return moment(data.toDt, 'X').format(jsDateFormat)
+                return moment(data.displayToDt, systemDateFormat).format(jsDateFormat)
               }
             }
           },

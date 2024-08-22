@@ -330,8 +330,15 @@
             // Set up some dependencies between the isRemote checkbox and the tabs related to remote datasets
             onRemoteFieldChanged(dialog);
 
+            // show data source dropdown if real time is checked
+            onIsRealTimeFieldChanged(dialog);
+
             $(dialog).find("#isRemote").on('change', function() {
                 onRemoteFieldChanged(dialog);
+            });
+
+            $(dialog).find("#isRealTime").on('change', function() {
+                onIsRealTimeFieldChanged(dialog);
             });
 
             // Auth field
@@ -346,6 +353,22 @@
             $(dialog).find('#sourceId').on('change', function() {
                 onSourceFieldChanged(dialog);
             });
+        }
+
+        function onIsRealTimeFieldChanged(dialog) {
+            var isRealTime = $(dialog).find("#isRealTime").is(":checked");
+            var dataSourceField = $(dialog).find("#dataSourceField");
+            var dataConnectorSource = $(dialog).find("#dataConnectorSource");
+
+            if (isRealTime) {
+                // show and enable data connector source
+                dataSourceField.removeClass("d-none");
+                dataConnectorSource.prop('disabled', false)
+            } else {
+                // hide and disable data connector source
+                dataSourceField.addClass("d-none");
+                dataConnectorSource.prop('disabled', true)
+            }
         }
 
         function onRemoteFieldChanged(dialog) {

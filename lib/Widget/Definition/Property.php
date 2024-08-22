@@ -90,11 +90,14 @@ class Property implements \JsonSerializable
     /** @var bool Should translations be parsed in the value? */
     public $parseTranslations = false;
 
-    /** @var bool Should the prooperty be included in the XLF? */
+    /** @var bool Should the property be included in the XLF? */
     public $includeInXlf = false;
 
     /** @var bool Should the property be sent into Elements */
     public $sendToElements = false;
+
+    /** @var bool Should the default value be written out to widget options */
+    public $saveDefault = false;
 
     /** @var \Xibo\Widget\Definition\PlayerCompatibility */
     public $playerCompatibility;
@@ -114,6 +117,7 @@ class Property implements \JsonSerializable
     /** @var string The group ID of the property */
     public $propertyGroupId;
 
+    /** @var mixed The value assigned to this property. This is set from widget options, or settings, never via XML  */
     public $value;
 
     /** @inheritDoc */
@@ -139,6 +143,7 @@ class Property implements \JsonSerializable
             'allowLibraryRefs' => $this->allowLibraryRefs,
             'allowAssetRefs' => $this->allowAssetRefs,
             'parseTranslations' => $this->parseTranslations,
+            'saveDefault' => $this->saveDefault,
             'dependsOn' => $this->dependsOn,
             'sendToElements' => $this->sendToElements,
         ];
@@ -201,7 +206,7 @@ class Property implements \JsonSerializable
         bool $ignoreDefault = false
     ): Property {
         $value = $this->getByType($params, $key);
-        if ($value !== $this->default || $ignoreDefault) {
+        if ($value !== $this->default || $ignoreDefault || $this->saveDefault) {
             $this->value = $value;
         }
         return $this;
@@ -272,6 +277,23 @@ class Property implements \JsonSerializable
                                     $this->id
                                 );
                             }
+                            break;
+
+                        case 'windowsPath':
+                            // Ensure the path is a valid Windows file path ending in a file, not a directory
+                            $windowsPathRegex = '/^(?P<Root>[A-Za-z]:)(?P<Relative>(?:\\\\[^<>:"\/\\\\|?*\r\n]+)+)(?P<File>\\\\[^<>:"\/\\\\|?*\r\n]+)$/';
+
+                            // Check if the test value is not empty and does not match the regular expression
+                            if (!empty($testValue)
+                                && !preg_match($windowsPathRegex, $testValue)
+                            ) {
+                                // Throw an InvalidArgumentException if the test value is not a valid Windows path
+                                throw new InvalidArgumentException(
+                                    $message ?? sprintf(__('%s must be a valid Windows path'), $this->title),
+                                    $this->id
+                                );
+                            }
+
                             break;
 
                         case 'interval':

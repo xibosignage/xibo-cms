@@ -97,6 +97,10 @@ PropertiesPanel.prototype.save = function(
     target = app.selectedObject;
   }
 
+  // Check if target is playlist
+  const isPlaylist =
+    (target.type === 'region' && target.subType === 'playlist');
+
   // Save original target
   const originalTarget = target;
 
@@ -163,7 +167,7 @@ PropertiesPanel.prototype.save = function(
     form.find('[name]');
 
   // Filter out position related fields
-  formFieldsToSave =
+  formFieldsToSave = (isPlaylist) ? formFieldsToSave :
     formFieldsToSave.filter('.tab-pane:not(#positionTab) [name]');
 
   // Get form old data
@@ -181,13 +185,6 @@ PropertiesPanel.prototype.save = function(
   ) {
     app.common.showLoadingScreen();
 
-    // Save content tab
-    this.openTabOnRender =
-      'a[href="' +
-      app.propertiesPanel.DOMObject.find('.nav-tabs .nav-link.active')
-        .attr('href') +
-      '"]';
-
     // Add a save form change to the history array
     // with previous form state and the new state
     app.historyManager.addChange(
@@ -202,6 +199,11 @@ PropertiesPanel.prototype.save = function(
     ).then((_res) => {
       // Success
       app.common.hideLoadingScreen();
+
+      // Stop if not available
+      if (Object.keys(self).length === 0) {
+        return;
+      }
 
       // Updated saved form data
       self.formSerializedLoadData[target.type] = formNewData;
@@ -256,6 +258,11 @@ PropertiesPanel.prototype.save = function(
               reloadPropertiesPanel: false,
             },
           ).then(() => {
+            // Stop if not available
+            if (Object.keys(self).length === 0) {
+              return;
+            }
+
             // Save element
             if (savingElement) {
               // Reload Data and then save element
@@ -330,9 +337,6 @@ PropertiesPanel.prototype.save = function(
       if (app.propertiesPanel.inlineEditor) {
         app.viewer.showInlineEditor();
       }
-
-      // Reset active tab
-      self.openTabOnRender = '';
     });
 
     // Call callback without waiting for the request
@@ -382,6 +386,13 @@ PropertiesPanel.prototype.saveElement = function(
       }).get();
 
     // Make sure we copy current target to widget elements
+    // but update position on target
+    const targetAux = parentWidget.elements[target.elementId];
+    target.width = targetAux.width;
+    target.height = targetAux.height;
+    target.top = targetAux.top;
+    target.left = targetAux.left;
+    target.layer = targetAux.layer;
     parentWidget.elements[target.elementId] = target;
 
     // Add to the element properties
@@ -529,6 +540,11 @@ PropertiesPanel.prototype.render = function(
   this.renderRequest = $.get(requestPath).done(function(res) {
     const app = self.parent;
 
+    // Stop if not available
+    if (Object.keys(self).length === 0) {
+      return;
+    }
+
     // Clear request var after response
     self.renderRequest = undefined;
 
@@ -674,7 +690,7 @@ PropertiesPanel.prototype.render = function(
         self.DOMObject.find('[href="#configureTab"]').parent().remove();
 
         // Select advanced tab
-        self.DOMObject.find('[href="#advancedTab"]').tab('show');
+        self.showTab('a[href="#advancedTab"]', false);
       }
 
       // Appearance tab
@@ -684,11 +700,8 @@ PropertiesPanel.prototype.render = function(
           .parent().removeClass('d-none');
 
         if (selectTab) {
-          // Deselect active tab
-          self.DOMObject.find('.nav-link.active').removeClass('active');
-
           // Select appearance tab
-          self.DOMObject.find('[href="#appearanceTab"]').tab('show');
+          self.showTab('a[href="#appearanceTab"]', false);
         }
       };
 
@@ -1055,9 +1068,13 @@ PropertiesPanel.prototype.render = function(
           // Show the appearance tab
           // and select it if element isn't the only one on the widget
           // or it's a global element
+          // and we don't have previous tab to be opened
           showAppearanceTab(
-            Object.values(target.elements).length > 1 ||
-            target.subType === 'global',
+            (
+              Object.values(target.elements).length > 1 ||
+              target.subType === 'global'
+            ) &&
+            self.openTabOnRender == '',
           );
 
           // Also Init fields for the element
@@ -1211,454 +1228,474 @@ PropertiesPanel.prototype.render = function(
         isElementGroup
       )
     ) {
-      // Get position
-      let positionProperties = {};
-      if (isElementGroup) {
-        positionProperties = {
-          type: 'element-group',
-          top: targetAux.top,
-          left: targetAux.left,
-          width: targetAux.width,
-          height: targetAux.height,
-          zIndex: targetAux.layer,
-        };
-      } else if (targetAux?.type === 'element') {
-        positionProperties = {
-          type: 'element',
-          top: targetAux.top,
-          left: targetAux.left,
-          width: targetAux.width,
-          height: targetAux.height,
-          zIndex: targetAux.layer,
-        };
-
-        if (targetAux.canRotate) {
-          positionProperties.rotation = targetAux.rotation;
-        }
-      } else if (target.subType === 'playlist') {
-        positionProperties = {
-          type: 'region',
-          regionType: target.subType,
-          regionName: target.name,
-          top: target.dimensions.top,
-          left: target.dimensions.left,
-          width: target.dimensions.width,
-          height: target.dimensions.height,
-          zIndex: target.zIndex,
-        };
-      } else {
-        positionProperties = {
-          type: 'region',
-          regionType: target.parent.subType,
-          regionName: target.parent.name,
-          top: target.parent.dimensions.top,
-          left: target.parent.dimensions.left,
-          width: target.parent.dimensions.width,
-          height: target.parent.dimensions.height,
-          zIndex: target.parent.zIndex,
-        };
-      }
-
-      // Get position template
-      const positionTemplate = formTemplates.position;
-
-      // Add position tab after advanced tab
-      self.DOMObject.find('[href="#advancedTab"]').parent()
-        .after(`<li class="nav-item">
-          <a class="nav-link" href="#positionTab"
-            data-toggle="tab">
-            <i class="fas fa-border-none tooltip-always-on"
-              data-toggle="tooltip"
-              data-title="${propertiesPanelTrans.positioning}"></i>
-          </a>
-        </li>`);
-
-      // Add position tab content after advanced tab content
-      // If element is in a group, adjust position to the group's
-      if (
-        targetAux?.type == 'element' &&
-        targetAux?.group != undefined
-      ) {
-        positionProperties.left -= targetAux.group.left;
-        positionProperties.top -= targetAux.group.top;
-      }
-
-      // If it's an element, or element group, show canvas layer
-      if (
-        targetAux?.type == 'element' ||
-        targetAux?.type == 'element-group'
-      ) {
-        positionProperties.zIndexCanvas = app.layout.canvas.zIndex;
-
-        (targetAux?.type == 'element') &&
-          (positionProperties.showElementLayer = true);
-
-        (targetAux?.type == 'element-group') &&
-            (positionProperties.showElementGroupLayer = true);
-      }
-
-      self.DOMObject.find('#advancedTab').after(
-        positionTemplate(
-          Object.assign(positionProperties, {trans: propertiesPanelTrans}),
-        ),
-      );
-
-      // Hide make fullscreen button for element groups
-      if (isElementGroup) {
-        self.DOMObject.find('#positionTab #setFullScreen').hide();
-      }
-
-      // Check if we should show the bring to view button
-      const checkBringToView = function(pos) {
-        const notInView = (
-          pos.left > lD.layout.width ||
-          (pos.left + pos.width) < 0 ||
-          pos.top > lD.layout.height ||
-          (pos.top + pos.height) < 0
-        );
-        self.DOMObject.find('#positionTab #bringToView')
-          .toggleClass('d-none', !notInView);
-      };
-      checkBringToView(positionProperties);
-
-      // If we change any input, update the target position
-      self.DOMObject.find('#positionTab [name]').on(
-        'change', _.debounce(function(ev) {
-          const form = $(ev.currentTarget).parents('#positionTab');
-
-          const preventNegative = function($field) {
-            // Prevent layer to be negative
-            let fieldValue = Number($field.val());
-            if (fieldValue && fieldValue < 0) {
-              fieldValue = 0;
-
-              // Set form field back to 0
-              $field.val(0);
-            }
-
-            // Return field value
-            return fieldValue;
+      const renderPositionTab = function() {
+        // Get position
+        let positionProperties = {};
+        if (isElementGroup) {
+          positionProperties = {
+            type: 'element-group',
+            top: targetAux.top,
+            left: targetAux.left,
+            width: targetAux.width,
+            height: targetAux.height,
+            zIndex: targetAux.layer,
+          };
+        } else if (targetAux?.type === 'element') {
+          positionProperties = {
+            type: 'element',
+            top: targetAux.top,
+            left: targetAux.left,
+            width: targetAux.width,
+            height: targetAux.height,
+            zIndex: targetAux.layer,
           };
 
-          // If we changed the canvas layer, save only the canvas region
-          if (
-            $(ev.currentTarget).parents('.position-canvas-input').length > 0
-          ) {
-            const canvasZIndexVal = preventNegative(
-              form.find('[name="zIndexCanvas"]'),
+          if (targetAux.canRotate) {
+            positionProperties.rotation = targetAux.rotation;
+          }
+        } else if (target.subType === 'playlist') {
+          positionProperties = {
+            type: 'region',
+            regionType: target.subType,
+            regionName: target.name,
+            top: target.dimensions.top,
+            left: target.dimensions.left,
+            width: target.dimensions.width,
+            height: target.dimensions.height,
+            zIndex: target.zIndex,
+          };
+        } else {
+          positionProperties = {
+            type: 'region',
+            regionType: target.parent.subType,
+            regionName: target.parent.name,
+            top: target.parent.dimensions.top,
+            left: target.parent.dimensions.left,
+            width: target.parent.dimensions.width,
+            height: target.parent.dimensions.height,
+            zIndex: target.parent.zIndex,
+          };
+        }
+
+        // Get position template
+        const positionTemplate = formTemplates.position;
+
+        // Add position tab after advanced tab
+        self.DOMObject.find('[href="#advancedTab"]').parent()
+          .after(`<li class="nav-item">
+            <a class="nav-link" href="#positionTab"
+              data-toggle="tab">
+              <i class="fas fa-border-none tooltip-always-on"
+                data-toggle="tooltip"
+                data-title="${propertiesPanelTrans.positioning}"></i>
+            </a>
+          </li>`);
+
+        // Add position tab content after advanced tab content
+        // If element is in a group, adjust position to the group's
+        if (
+          targetAux?.type == 'element' &&
+          targetAux?.group != undefined
+        ) {
+          positionProperties.left -= targetAux.group.left;
+          positionProperties.top -= targetAux.group.top;
+        }
+
+        // If it's an element, or element group, show canvas layer
+        if (
+          targetAux?.type == 'element' ||
+          targetAux?.type == 'element-group'
+        ) {
+          positionProperties.zIndexCanvas = app.layout.canvas.zIndex;
+
+          (targetAux?.type == 'element') &&
+            (positionProperties.showElementLayer = true);
+
+          (targetAux?.type == 'element-group') &&
+              (positionProperties.showElementGroupLayer = true);
+        }
+
+        self.DOMObject.find('#advancedTab').after(
+          positionTemplate(
+            Object.assign(positionProperties, {trans: propertiesPanelTrans}),
+          ),
+        );
+
+        // Hide make fullscreen button for element groups
+        if (isElementGroup) {
+          self.DOMObject.find('#positionTab #setFullScreen').hide();
+        }
+
+        // Check if we should show the bring to view button
+        const checkBringToView = function(pos) {
+          const notInView = (
+            pos.left > lD.layout.width ||
+            (pos.left + pos.width) < 0 ||
+            pos.top > lD.layout.height ||
+            (pos.top + pos.height) < 0
+          );
+          self.DOMObject.find('#positionTab #bringToView')
+            .toggleClass('d-none', !notInView);
+        };
+        checkBringToView(positionProperties);
+
+        // If we change any input, update the target position
+        self.DOMObject.find('#positionTab [name]').on(
+          'change', _.debounce(function(ev) {
+            const form = $(ev.currentTarget).parents('#positionTab');
+
+            const preventNegative = function($field) {
+              // Prevent layer to be negative
+              let fieldValue = Number($field.val());
+              if (fieldValue && fieldValue < 0) {
+                fieldValue = 0;
+
+                // Set form field back to 0
+                $field.val(0);
+              }
+
+              // Return field value
+              return fieldValue;
+            };
+
+            // If we changed the canvas layer, save only the canvas region
+            if (
+              $(ev.currentTarget).parents('.position-canvas-input').length > 0
+            ) {
+              const canvasZIndexVal = preventNegative(
+                form.find('[name="zIndexCanvas"]'),
+              );
+
+              // Save canvas region
+              app.layout.canvas.changeLayer(canvasZIndexVal);
+
+              // Change layer for the viewer object
+              app.viewer.DOMObject.find('.designer-region-canvas')
+                .css('zIndex', canvasZIndexVal);
+
+              // Update layer manager
+              app.viewer.layerManager.render();
+
+              // Don't save the rest of the form
+              return;
+            }
+
+            const viewerScale = lD.viewer.containerObjectDimensions.scale;
+
+            // Prevent layer to be negative
+            const zIndexVal = preventNegative(
+              form.find('[name="zIndex"]'),
             );
 
-            // Save canvas region
-            app.layout.canvas.changeLayer(canvasZIndexVal);
+            if (targetAux == undefined) {
+              // Widget
+              const regionId = (target.type === 'region') ?
+                target.id :
+                target.parent.id;
+              const positions = {
+                width: form.find('[name="width"]').val(),
+                height: form.find('[name="height"]').val(),
+                top: form.find('[name="top"]').val(),
+                left: form.find('[name="left"]').val(),
+                zIndex: zIndexVal,
+              };
 
-            // Change layer for the viewer object
-            app.viewer.DOMObject.find('.designer-region-canvas')
-              .css('zIndex', canvasZIndexVal);
+              lD.layout.regions[regionId].transform(positions, true);
+
+              // Check bring to view button
+              checkBringToView(positions);
+
+              lD.viewer.updateRegion(lD.layout.regions[regionId]);
+
+              // Update moveable
+              lD.viewer.updateMoveable();
+            } else if (targetAux?.type == 'element') {
+              // Element
+              const $targetElement = $('#' + targetAux.elementId);
+
+              // Move element
+              $targetElement.css({
+                width: form.find('[name="width"]').val() * viewerScale,
+                height: form.find('[name="height"]').val() * viewerScale,
+                top: form.find('[name="top"]').val() * viewerScale,
+                left: form.find('[name="left"]').val() * viewerScale,
+                zIndex: zIndexVal,
+              });
+
+              // Check bring to view button
+              checkBringToView({
+                width: form.find('[name="width"]').val(),
+                height: form.find('[name="height"]').val(),
+                top: form.find('[name="top"]').val(),
+                left: form.find('[name="left"]').val(),
+              });
+
+              // Rotate element
+              if (form.find('[name="rotation"]').val() != undefined) {
+                $targetElement.css('transform', 'rotate(' +
+                  form.find('[name="rotation"]').val() +
+                  'deg)');
+                lD.viewer.moveable.updateRect();
+              }
+
+              // Save layer
+              targetAux.layer = zIndexVal;
+
+              // Recalculate group dimensions
+              if (targetAux.groupId) {
+                lD.viewer.saveElementGroupProperties(
+                  lD.viewer.DOMObject.find('#' + targetAux.groupId),
+                  true,
+                  false,
+                );
+              } else {
+                // Save properties
+                lD.viewer.saveElementProperties($targetElement, true);
+              }
+
+              // Update element
+              lD.viewer.updateElement(targetAux, true);
+
+              // Update moveable
+              lD.viewer.updateMoveable();
+            } else if (targetAux?.type == 'element-group') {
+              // Element group
+              const $targetElementGroup = $('#' + targetAux.id);
+
+              // Move element group
+              $targetElementGroup.css({
+                width: form.find('[name="width"]').val() * viewerScale,
+                height: form.find('[name="height"]').val() * viewerScale,
+                top: form.find('[name="top"]').val() * viewerScale,
+                left: form.find('[name="left"]').val() * viewerScale,
+                zIndex: zIndexVal,
+              });
+
+              // Save layer
+              targetAux.layer = zIndexVal;
+
+              // Check bring to view button
+              checkBringToView({
+                width: form.find('[name="width"]').val(),
+                height: form.find('[name="height"]').val(),
+                top: form.find('[name="top"]').val(),
+                left: form.find('[name="left"]').val(),
+              });
+
+              // Scale group
+              // Update element dimension properties
+              targetAux.transform({
+                width: parseFloat(
+                  form.find('[name="width"]').val(),
+                ),
+                height: parseFloat(
+                  form.find('[name="height"]').val(),
+                ),
+              }, false);
+              lD.viewer.updateElementGroup(targetAux);
+
+              // Save properties
+              lD.viewer.saveElementGroupProperties(
+                $targetElementGroup,
+                true,
+                true,
+              );
+
+              // Update moveable
+              lD.viewer.updateMoveable();
+            }
 
             // Update layer manager
             app.viewer.layerManager.render();
+          }, 200));
 
-            // Don't save the rest of the form
-            return;
-          }
+        // Handle set fullscreen button
+        self.DOMObject.find('#positionTab #setFullScreen').off().on(
+          'click',
+          function(ev) {
+            const form = $(ev.currentTarget).parents('#positionTab');
+            const viewerScale = lD.viewer.containerObjectDimensions.scale;
 
-          const viewerScale = lD.viewer.containerObjectDimensions.scale;
+            if (targetAux == undefined) {
+              // Widget
+              const regionId = target.parent.id;
 
-          // Prevent layer to be negative
-          const zIndexVal = preventNegative(
-            form.find('[name="zIndex"]'),
-          );
+              lD.layout.regions[regionId].transform({
+                width: lD.layout.width,
+                height: lD.layout.height,
+                top: 0,
+                left: 0,
+              }, true);
 
-          if (targetAux == undefined) {
-            // Widget
-            const regionId = target.parent.id;
-            const positions = {
-              width: form.find('[name="width"]').val(),
-              height: form.find('[name="height"]').val(),
-              top: form.find('[name="top"]').val(),
-              left: form.find('[name="left"]').val(),
-              zIndex: zIndexVal,
-            };
+              lD.viewer.updateRegion(lD.layout.regions[regionId], true);
+            } else if (targetAux?.type == 'element') {
+              // Element
+              const $targetElement = $('#' + targetAux.elementId);
 
-            lD.layout.regions[regionId].transform(positions, true);
+              // Move element
+              $targetElement.css({
+                width: lD.layout.width * viewerScale,
+                height: lD.layout.height * viewerScale,
+                top: 0,
+                left: 0,
+              });
 
-            // Check bring to view button
-            checkBringToView(positions);
-
-            lD.viewer.updateRegion(lD.layout.regions[regionId]);
-
-            // Update moveable
-            lD.viewer.updateMoveable();
-          } else if (targetAux?.type == 'element') {
-            // Element
-            const $targetElement = $('#' + targetAux.elementId);
-
-            // Move element
-            $targetElement.css({
-              width: form.find('[name="width"]').val() * viewerScale,
-              height: form.find('[name="height"]').val() * viewerScale,
-              top: form.find('[name="top"]').val() * viewerScale,
-              left: form.find('[name="left"]').val() * viewerScale,
-              zIndex: zIndexVal,
-            });
-
-            // Check bring to view button
-            checkBringToView({
-              width: form.find('[name="width"]').val(),
-              height: form.find('[name="height"]').val(),
-              top: form.find('[name="top"]').val(),
-              left: form.find('[name="left"]').val(),
-            });
-
-            // Rotate element
-            if (form.find('[name="rotation"]').val() != undefined) {
-              $targetElement.css('transform', 'rotate(' +
-                form.find('[name="rotation"]').val() +
-                'deg)');
-              lD.viewer.moveable.updateRect();
-            }
-
-            // Save layer
-            targetAux.layer = zIndexVal;
-
-            // Recalculate group dimensions
-            if (targetAux.groupId) {
-              lD.viewer.saveElementGroupProperties(
-                lD.viewer.DOMObject.find('#' + targetAux.groupId),
-                true,
-                false,
-              );
-            } else {
               // Save properties
               lD.viewer.saveElementProperties($targetElement, true);
+
+              // Update element
+              lD.viewer.updateElement(targetAux, true);
             }
 
-            // Update element
-            lD.viewer.updateElement(targetAux, true);
-
-            // Update moveable
-            lD.viewer.updateMoveable();
-          } else if (targetAux?.type == 'element-group') {
-            // Element group
-            const $targetElementGroup = $('#' + targetAux.id);
-
-            // Move element group
-            $targetElementGroup.css({
-              width: form.find('[name="width"]').val() * viewerScale,
-              height: form.find('[name="height"]').val() * viewerScale,
-              top: form.find('[name="top"]').val() * viewerScale,
-              left: form.find('[name="left"]').val() * viewerScale,
-              zIndex: zIndexVal,
-            });
-
-            // Save layer
-            targetAux.layer = zIndexVal;
+            // Change position tab values
+            form.find('[name="width"]').val(lD.layout.width);
+            form.find('[name="height"]').val(lD.layout.height);
+            form.find('[name="top"]').val(0);
+            form.find('[name="left"]').val(0);
 
             // Check bring to view button
             checkBringToView({
-              width: form.find('[name="width"]').val(),
-              height: form.find('[name="height"]').val(),
-              top: form.find('[name="top"]').val(),
-              left: form.find('[name="left"]').val(),
-            });
-
-            // Scale group
-            // Update element dimension properties
-            targetAux.transform({
-              width: parseFloat(
-                form.find('[name="width"]').val(),
-              ),
-              height: parseFloat(
-                form.find('[name="height"]').val(),
-              ),
-            }, false);
-            lD.viewer.updateElementGroup(targetAux);
-
-            // Save properties
-            lD.viewer.saveElementGroupProperties(
-              $targetElementGroup,
-              true,
-              true,
-            );
-
-            // Update moveable
-            lD.viewer.updateMoveable();
-          }
-
-          // Update layer manager
-          app.viewer.layerManager.render();
-        }, 200));
-
-      // Handle set fullscreen button
-      self.DOMObject.find('#positionTab #setFullScreen').off().on(
-        'click',
-        function(ev) {
-          const form = $(ev.currentTarget).parents('#positionTab');
-          const viewerScale = lD.viewer.containerObjectDimensions.scale;
-
-          if (targetAux == undefined) {
-            // Widget
-            const regionId = target.parent.id;
-
-            lD.layout.regions[regionId].transform({
               width: lD.layout.width,
               height: lD.layout.height,
               top: 0,
               left: 0,
-            }, true);
-
-            lD.viewer.updateRegion(lD.layout.regions[regionId], true);
-          } else if (targetAux?.type == 'element') {
-            // Element
-            const $targetElement = $('#' + targetAux.elementId);
-
-            // Move element
-            $targetElement.css({
-              width: lD.layout.width * viewerScale,
-              height: lD.layout.height * viewerScale,
-              top: 0,
-              left: 0,
             });
-
-            // Save properties
-            lD.viewer.saveElementProperties($targetElement, true);
-
-            // Update element
-            lD.viewer.updateElement(targetAux, true);
-          }
-
-          // Change position tab values
-          form.find('[name="width"]').val(lD.layout.width);
-          form.find('[name="height"]').val(lD.layout.height);
-          form.find('[name="top"]').val(0);
-          form.find('[name="left"]').val(0);
-
-          // Check bring to view button
-          checkBringToView({
-            width: lD.layout.width,
-            height: lD.layout.height,
-            top: 0,
-            left: 0,
-          });
-
-          // Update moveable
-          lD.viewer.updateMoveable();
-        });
-
-      // Handle bring to view button
-      self.DOMObject.find('#positionTab #bringToView').off().on(
-        'click',
-        function(ev) {
-          const form = $(ev.currentTarget).parents('#positionTab');
-          const viewerScale = lD.viewer.containerObjectDimensions.scale;
-
-          // Get position to fix the item being outside of the layout
-          const calculateNewPosition = function(positions) {
-            if (Number(positions.left) > app.layout.width) {
-              positions.left = app.layout.width - positions.width;
-            }
-            if (Number(positions.left) + positions.width < 0) {
-              positions.left = 0;
-            }
-            if (Number(positions.top) > app.layout.height) {
-              positions.top = app.layout.height - positions.height;
-            }
-            if (Number(positions.top) + Number(positions.height) < 0) {
-              positions.top = 0;
-            }
-            return positions;
-          };
-
-          let newPosition = {};
-
-          if (targetAux == undefined) {
-            // Widget
-            const regionId = target.parent.id;
-
-            newPosition =
-              calculateNewPosition(lD.layout.regions[regionId].dimensions);
-
-            lD.layout.regions[regionId].transform(
-              newPosition,
-              true,
-            );
-
-            lD.viewer.updateRegion(lD.layout.regions[regionId], true);
-          } else if (targetAux?.type == 'element') {
-            // Element
-            const $targetElement = $('#' + targetAux.elementId);
-
-            newPosition =
-              calculateNewPosition({
-                width: targetAux.width,
-                height: targetAux.height,
-                top: targetAux.top,
-                left: targetAux.left,
-              });
-
-            // Move element
-            $targetElement.css({
-              width: newPosition.width * viewerScale,
-              height: newPosition.height * viewerScale,
-              top: newPosition.top * viewerScale,
-              left: newPosition.left * viewerScale,
-            });
-
-            // Save properties
-            lD.viewer.saveElementProperties($targetElement, true);
-
-            // Update element
-            lD.viewer.updateElement(targetAux, true);
-          } else if (targetAux?.type == 'element-group') {
-            const $targetElementGroup = $('#' + targetAux.id);
-
-            newPosition =
-              calculateNewPosition({
-                width: targetAux.width,
-                height: targetAux.height,
-                top: targetAux.top,
-                left: targetAux.left,
-              });
-
-            // Move element group
-            $targetElementGroup.css({
-              width: newPosition.width * viewerScale,
-              height: newPosition.height * viewerScale,
-              top: newPosition.top * viewerScale,
-              left: newPosition.left * viewerScale,
-            });
-
-            // Scale group
-            // Update element dimension properties
-            targetAux.transform({
-              width: newPosition.width,
-              height: newPosition.height,
-              top: newPosition.top,
-              left: newPosition.left,
-            });
-
-            lD.viewer.updateElementGroup(targetAux);
-
-            // Save properties
-            lD.viewer.saveElementGroupProperties(
-              $targetElementGroup,
-              true,
-              true,
-            );
 
             // Update moveable
             lD.viewer.updateMoveable();
-          }
+          });
 
-          // Change position tab values
-          form.find('[name="width"]').val(newPosition.width);
-          form.find('[name="height"]').val(newPosition.height);
-          form.find('[name="top"]').val(newPosition.top);
-          form.find('[name="left"]').val(newPosition.left);
+        // Handle bring to view button
+        self.DOMObject.find('#positionTab #bringToView').off().on(
+          'click',
+          function(ev) {
+            const form = $(ev.currentTarget).parents('#positionTab');
+            const viewerScale = lD.viewer.containerObjectDimensions.scale;
 
-          // Update moveable
-          lD.viewer.updateMoveable();
+            // Get position to fix the item being outside of the layout
+            const calculateNewPosition = function(positions) {
+              if (Number(positions.left) > app.layout.width) {
+                positions.left = app.layout.width - positions.width;
+              }
+              if (Number(positions.left) + positions.width < 0) {
+                positions.left = 0;
+              }
+              if (Number(positions.top) > app.layout.height) {
+                positions.top = app.layout.height - positions.height;
+              }
+              if (Number(positions.top) + Number(positions.height) < 0) {
+                positions.top = 0;
+              }
+              return positions;
+            };
+
+            let newPosition = {};
+
+            if (targetAux == undefined) {
+              // Widget
+              const regionId = target.parent.id;
+
+              newPosition =
+                calculateNewPosition(lD.layout.regions[regionId].dimensions);
+
+              lD.layout.regions[regionId].transform(
+                newPosition,
+                true,
+              );
+
+              lD.viewer.updateRegion(lD.layout.regions[regionId], true);
+            } else if (targetAux?.type == 'element') {
+              // Element
+              const $targetElement = $('#' + targetAux.elementId);
+
+              newPosition =
+                calculateNewPosition({
+                  width: targetAux.width,
+                  height: targetAux.height,
+                  top: targetAux.top,
+                  left: targetAux.left,
+                });
+
+              // Move element
+              $targetElement.css({
+                width: newPosition.width * viewerScale,
+                height: newPosition.height * viewerScale,
+                top: newPosition.top * viewerScale,
+                left: newPosition.left * viewerScale,
+              });
+
+              // Save properties
+              lD.viewer.saveElementProperties($targetElement, true);
+
+              // Update element
+              lD.viewer.updateElement(targetAux, true);
+            } else if (targetAux?.type == 'element-group') {
+              const $targetElementGroup = $('#' + targetAux.id);
+
+              newPosition =
+                calculateNewPosition({
+                  width: targetAux.width,
+                  height: targetAux.height,
+                  top: targetAux.top,
+                  left: targetAux.left,
+                });
+
+              // Move element group
+              $targetElementGroup.css({
+                width: newPosition.width * viewerScale,
+                height: newPosition.height * viewerScale,
+                top: newPosition.top * viewerScale,
+                left: newPosition.left * viewerScale,
+              });
+
+              // Scale group
+              // Update element dimension properties
+              targetAux.transform({
+                width: newPosition.width,
+                height: newPosition.height,
+                top: newPosition.top,
+                left: newPosition.left,
+              });
+
+              lD.viewer.updateElementGroup(targetAux);
+
+              // Save properties
+              lD.viewer.saveElementGroupProperties(
+                $targetElementGroup,
+                true,
+                true,
+              );
+
+              // Update moveable
+              lD.viewer.updateMoveable();
+            }
+
+            // Change position tab values
+            form.find('[name="width"]').val(newPosition.width);
+            form.find('[name="height"]').val(newPosition.height);
+            form.find('[name="top"]').val(newPosition.top);
+            form.find('[name="left"]').val(newPosition.left);
+
+            // Update moveable
+            lD.viewer.updateMoveable();
+          });
+      };
+
+      // If it's an element, get properties, first to update it
+      // and only then call render position tab
+      if (targetAux?.type === 'element') {
+        targetAux.getProperties().then(function() {
+          renderPositionTab();
+
+          // Handle replacements for element
+          const data = {
+            layout: app.layout,
+          };
+          forms.handleFormReplacements(self.DOMObject.find('form'), data);
         });
+      } else {
+        renderPositionTab();
+      }
     }
 
     // For media widget, add replacement button
@@ -1703,6 +1740,11 @@ PropertiesPanel.prototype.render = function(
           lD.reloadData(lD.layout, {
             refreshEditor: false,
           }).then(() => {
+            // Stop if not available
+            if (Object.keys(self).length === 0) {
+              return;
+            }
+
             // If we're selecting an element or group
             // Render all elements from the current widget/target
             if (isElement || isElementGroup) {
@@ -1758,8 +1800,9 @@ PropertiesPanel.prototype.render = function(
       });
     }
 
-    // Init fields
-    self.initFields(target, res.data, actionEditMode, false, openActionTab);
+    // Init fields ( for non elements )
+    (!isElement) &&
+      self.initFields(target, res.data, actionEditMode, false, openActionTab);
   }).fail(function(data) {
     // Clear request var after response
     self.renderRequest = undefined;
@@ -1788,6 +1831,8 @@ PropertiesPanel.prototype.initFields = function(
   const self = this;
   const app = this.parent;
   const targetIsElement = (target.type === 'element');
+  const targetIsPlaylist =
+    (target.type === 'region' && target.subType === 'playlist');
   const readOnlyModeOn =
     (typeof(lD) != 'undefined' && lD?.readOnlyMode === true) ||
     (app?.readOnlyMode === true);
@@ -1828,6 +1873,13 @@ PropertiesPanel.prototype.initFields = function(
     window.regionFormEditOpen.bind(self.DOMObject)();
   }
 
+  // Save tab when changing
+  self.DOMObject.on('click', '.nav-tabs .nav-link', function(ev) {
+    // Save previous tab for elements
+    self.openTabOnRender =
+      'a[href="' + $(ev.currentTarget).attr('href') + '"]';
+  });
+
   // Check for spacing issues on text fields
   forms.checkForSpacingIssues(self.DOMObject);
 
@@ -1843,10 +1895,11 @@ PropertiesPanel.prototype.initFields = function(
     };
 
     // Save for this type
-    self.formSerializedLoadData[target.type] =
-      self.DOMObject.find('form [name]:not(.element-property)')
-        .filter('.tab-pane:not(#positionTab) [name]')
-        .serialize();
+    let $fields = self.DOMObject.find('form [name]:not(.element-property)');
+    // Filter position tab if needed
+    $fields = (targetIsPlaylist) ?
+      $fields : $fields.filter('.tab-pane:not(#positionTab) [name]');
+    self.formSerializedLoadData[target.type] = $fields.serialize();
 
     // If widget, also save position form
     if (target.type === 'widget') {
@@ -1977,11 +2030,8 @@ PropertiesPanel.prototype.initFields = function(
 
   // if a tab was previously selected, select it again
   if (self.openTabOnRender != '') {
-    // Open tab
-    self.DOMObject.find(self.openTabOnRender).tab('show');
-
-    // Reset flag
-    self.openTabOnRender = '';
+    // Show tab
+    self.showTab(self.openTabOnRender, false);
   }
 
   // Initialise tooltips
@@ -2615,7 +2665,7 @@ PropertiesPanel.prototype.attachActionsForm = function() {
 PropertiesPanel.prototype.updatePositionForm = function(properties) {
   const app = this.parent;
   const $positionTab =
-    this.DOMObject.find('form #positionTab, form.region-form #positioningTab');
+    this.DOMObject.find('form #positionTab, form.region-form #positionTab');
 
   // Loop properties
   $.each(properties, function(key, value) {
@@ -2853,6 +2903,31 @@ PropertiesPanel.prototype.showWidgetControl = function(target) {
         // Reload select2
         makeLocalSelect($select);
       });
+  }
+};
+
+/**
+ * Open custom tab or the previous tab
+ * @param {string} tabSelector - jQuery tab selector
+ * @param {boolean} save - Save tab to be opened next?
+ */
+PropertiesPanel.prototype.showTab = function(tabSelector, save = true) {
+  const self = this;
+  const tabSelectorAux = tabSelector || self.openTabOnRender;
+  const $tabToShow = self.DOMObject.find(tabSelectorAux);
+
+  // If tab doesn't exist or it not visible, clear tab
+  if (
+    $tabToShow.length === 0 ||
+    !$tabToShow.is(':visible')
+  ) {
+    self.openTabOnRender = '';
+  } else {
+    // Show tab
+    $tabToShow.tab('show');
+
+    // Save selector
+    (save) && (self.openTabOnRender = tabSelectorAux);
   }
 };
 

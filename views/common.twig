@@ -393,6 +393,12 @@
                     type: 'GET',
                 }
             },
+            folders: {
+                get: {
+                    url: "{{ url_for("folders.search") }}",
+                    type: 'GET',
+                }
+            }
         };
 
         {% autoescape "js" %}
@@ -491,6 +497,8 @@
                 editRegionPermissions: "{{ "Edit Region Sharing" |trans }}",
                 editWidgetPermissions: "{{ "Edit Widget Sharing" |trans }}",
                 editPlaylist: "{{ "Edit Playlist" |trans }}",
+                convertPlaylist: "{{ "Convert Playlist" |trans }}",
+                convertPlaylistHelpText: "{{ "Convert Layout playlist into a Global playlist." |trans }}",
                 options: "{% trans "Options" %}",
                 moveLeft: "{{ "Move one step left" |trans }}",
                 moveRight: "{{ "Move one step right" |trans }}",
@@ -517,7 +525,7 @@
                 playlist: "{{ "Playlist" |trans }}",
                 configure: "{{ "Configure" |trans }}",
                 appearance: "{{ "Appearance" |trans }}",
-                fallback: "{{ "Custom Data" |trans }}",
+                fallback: "{{ "Fallback Data" |trans }}",
                 advanced: "{{ "Advanced" |trans }}",
                 general: "{{ "General" |trans }}",
                 positioning: "{{ "Positioning" |trans }}",
@@ -611,7 +619,7 @@
                     backgroundColor: "{{ "Background Colour" |trans }}",
                     backgroundColorHelpText: "{{ "Use the colour picker to select the background colour" |trans }}",
                     backgroundImage: "{{ "Background Image" |trans }}",
-                    noImageSet: "{{ "No Image set, add from Toolbar or Upload!" |trans }}",
+                    noImageSet: "{{ "No Image set, add from Toolbox or Upload!" |trans }}",
                     addBackgroundImage: "{{ "Add background image" |trans }}",
                     upload: "{{ "Upload" |trans }}",
                     remove: "{{ "Remove" |trans }}",
@@ -645,8 +653,7 @@
                     height: "{{ "Height" |trans }}",
                     heightHelpText: "{{ "The height of the %regionType%" |trans }}",
                     makeRegionFullScreen: "{{ "Make this %regionType% full screen, dimensions will be set to %layout.width% by %layout.height%." |trans }}",
-                    bringRegionToView: "{{ "Bring selected %regionType% back to the Layout view." |trans }}",
-                    convertPlaylist: "{{ "Convert Layout playlist into a Global playlist." |trans }}",
+                    bringRegionToView: "{{ "Bring selected %regionType% back to the Layout view." |trans }}"
                 },
                 widget: {
                     name: "{{ "Configuration Name" |trans }}",
@@ -717,6 +724,7 @@
                     user: "{{ "Owner"|trans }}",
                     orientation: "{{ "Orientation"|trans }}",
                     provider: "{{ "Provider"|trans }}",
+                    folder: "{{ "Folder"|trans }}",
                 },
                 searchSortBy: "{{ "Sort by"|trans }}",
                 searchSort: {
@@ -917,6 +925,7 @@
                 libraryLoadFailed: "{{ "Library load failed!" |trans }}",
                 formLoadFailed: "{{ "Form load failed!" |trans }}",
                 convertPlaylistFailed: "{{ "Convert playlist failed!" |trans }}",
+                convertPlaylistNoName: "{{ "Playlist needs a name to be converted!" |trans }}",
                 revertFailed: "{{ "Revert failed: %error%" |trans }}",
                 saveOrderFailed: "{{ "Save order failed: %error%" |trans }}",
                 deleteFailed: "{{ "Delete failed: %error%" |trans }}",

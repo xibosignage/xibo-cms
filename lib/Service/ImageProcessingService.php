@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2019 Xibo Signage Ltd
+/*
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -62,13 +62,21 @@ class ImageProcessingService implements ImageProcessingServiceInterface
             $img->resize($width, $height, function ($constraint)  {
                 $constraint->aspectRatio();
             });
+
+            // Get the updated height and width
+            $updatedHeight = $img->height();
+            $updatedWidth = $img->width();
+
             $img->save($filePath);
             $img->destroy();
-
         } catch (NotReadableException $notReadableException) {
             $this->log->error('Image not readable: ' . $notReadableException->getMessage());
         }
 
-        return $filePath;
+        return [
+            'filePath' => $filePath,
+            'height' => $updatedHeight ?? $height,
+            'width' => $updatedWidth ?? $width
+        ];
     }
 }

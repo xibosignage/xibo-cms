@@ -1035,6 +1035,13 @@
                         "type": "integer"
                     },
                     {
+                        "name": "dataConnectorSource",
+                        "in": "formData",
+                        "description": "Source of the data connector",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
                         "name": "method",
                         "in": "formData",
                         "description": "The Request Method GET or POST",
@@ -1257,6 +1264,13 @@
                         "type": "integer"
                     },
                     {
+                        "name": "dataConnectorSource",
+                        "in": "formData",
+                        "description": "Source of the data connector",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
                         "name": "method",
                         "in": "formData",
                         "description": "The Request Method GET or POST",
@@ -1465,6 +1479,40 @@
                         "description": "If isRealTime then provide a script to connect to the data source",
                         "required": false,
                         "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/DataSet"
+                        }
+                    }
+                }
+            }
+        },
+        "/dataset/{id}/selectfolder": {
+            "put": {
+                "tags": [
+                    "dataSet"
+                ],
+                "summary": "DataSet Select folder",
+                "description": "Select Folder for DataSet",
+                "operationId": "dataSetSelectFolder",
+                "parameters": [
+                    {
+                        "name": "menuId",
+                        "in": "path",
+                        "description": "The DataSet ID",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": true,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -4199,6 +4247,56 @@
                 }
             }
         },
+        "/displaygroup/criteria[/{displayGroupId}]": {
+            "post": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Action: Push Criteria Update",
+                "description": "Send criteria updates to the specified DisplayGroup or to all displays if displayGroupId is not\r\n     *                  provided.",
+                "operationId": "ScheduleCriteriaUpdate",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The display group id",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "criteriaUpdates",
+                        "in": "body",
+                        "description": "The criteria updates to send to the Player",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "properties": {
+                                    "metric": {
+                                        "type": "string"
+                                    },
+                                    "value": {
+                                        "type": "string"
+                                    },
+                                    "ttl": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid criteria format"
+                    }
+                }
+            }
+        },
         "/displayprofile": {
             "get": {
                 "tags": [
@@ -4438,6 +4536,13 @@
                         "description": "Use with gridView, Filter by Folder name",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "exactFolderName",
+                        "in": "query",
+                        "description": "Use with gridView, Filter by exact Folder name match",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -11187,6 +11292,13 @@
                         "type": "integer"
                     },
                     {
+                        "name": "showFallback",
+                        "in": "formData",
+                        "description": "If this widget requires data and allows fallback data how should that data be returned? (never, always, empty, error)",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "properties",
                         "in": "formData",
                         "description": "Add an additional parameter for each of the properties required this module and its template. Use the moduleProperties and moduleTemplateProperties calls to get a list of properties needed",
@@ -12152,6 +12264,10 @@
                 "isRealTime": {
                     "description": "Flag to indicate whether this DataSet is Real time",
                     "type": "integer"
+                },
+                "dataConnectorSource": {
+                    "description": "Indicates the source of the data connector. Requires the Real time flag. Can be null,\r\n     * user-defined, or a connector.",
+                    "type": "string"
                 },
                 "method": {
                     "description": "Method to fetch the Data, can be GET or POST",
@@ -13436,6 +13552,10 @@
                 "dataCacheKey": {
                     "description": "The cache key used when requesting data",
                     "type": "string"
+                },
+                "fallbackData": {
+                    "description": "Is fallback data allowed for this module? Only applicable for a Data Widget",
+                    "type": "integer"
                 },
                 "regionSpecific": {
                     "description": "Is specific to a Layout or can be uploaded to the Library?",
@@ -15000,6 +15120,9 @@
                 "displayOrder": {
                     "description": "The Display Order",
                     "type": "integer"
+                },
+                "createdDt": {
+                    "description": "The datetime this entity was created"
                 }
             }
         },

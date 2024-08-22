@@ -70,6 +70,7 @@
                             {% set options = [
                                 { id: 'audit', value: "Audit"|trans },
                                 { id: 'debug', value: "Debug"|trans },
+                                { id: 'sessions', value: "Sessions"|trans },
                             ] %}
                             {{ inline.dropdown("type", "single", title, "audit", options, "id", "value", helpText) }}
 
@@ -121,10 +122,10 @@
                     </div>
                 </div>
 
-                <div class="card-body session-history-log d-none">
+                <div class="card-body session-history-debug d-none">
                     <!-- DATATABLE -->
                     <div class="table-container" id="table_wrapper">
-                        <table id="sessionHistoryLogGrid"
+                        <table id="sessionHistoryDebugGrid"
                                class="table xibo-table table-striped table-full-width"
                                style="width: 100%"
                                data-url="{{ url_for("report.data", {name: 'sessionhistory'}) }}">
@@ -153,6 +154,40 @@
                                 <th></th>
                                 <th></th>
                             </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card-body session-history-log d-none">
+                    <!-- DATATABLE -->
+                    <div class="table-container" id="table_wrapper">
+                        <table id="sessionHistoryLogGrid"
+                            class="table xibo-table table-striped table-full-width"
+                            style="width: 100%"
+                            data-url="{{ url_for("report.data", {name: 'sessionhistory'}) }}">
+                            <thead>
+                                <tr>
+                                    <th>{% trans "Start Date" %}</th>
+                                    <th>{% trans "End Date" %}</th>
+                                    <th>{% trans "Duration" %}</th>
+                                    <th>{% trans "UserName" %}</th>
+                                    <th>{% trans "User Type" %}</th>
+                                    <th>{% trans "IP Address" %}</th>
+                                    <th>{% trans "Session ID" %}</th>
+                                    <th>{% trans "Browser" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                </tr>
                             </tfoot>
                         </table>
                     </div>
@@ -193,12 +228,15 @@
 
         $('[data-toggle="popover"]').popover();
         let $report = $('#sessionHistoryFilter');
-        let $auditDataTable = $('#sessionHistoryAuditGrid')
+        let $auditDataTable = $('#sessionHistoryAuditGrid');
         let auditTable = createAuditTable($auditDataTable);
-        let $logDataTable = $('#sessionHistoryLogGrid')
-        let logTable = createLogTable($logDataTable)
+        let $logDataTable = $('#sessionHistoryDebugGrid');
+        let logTable = createLogTable($logDataTable);
+        let $sessionDataTable = $('#sessionHistoryLogGrid');
+        let sessionTable = createSessionTable($sessionDataTable);
 
         let result; // XHR get data result
+        let reportType = $report.find('#type').val();
 
         let imageLoader = $("#imageLoader");
         let $warning = $("#applyWarning");
@@ -213,16 +251,24 @@
             data: $report.find('form').serialize(),
             success: function success(data) {
               result = data;
+              reportType = $report.find('#type').val();
               $applyBtn.removeClass('disabled');
               imageLoader.removeClass('fa fa-spinner fa-spin loading-icon');
-              if ($report.find('#type').val() === 'audit') {
+              if (reportType === 'audit') {
                 $('.session-history-audit').removeClass('d-none');
+                $('.session-history-debug').addClass('d-none');
                 $('.session-history-log').addClass('d-none');
                 setTabularData(auditTable, result.table);
+              } else if (reportType === 'debug') {
+                $('.session-history-audit').addClass('d-none');
+                $('.session-history-log').addClass('d-none');
+                $('.session-history-debug').removeClass('d-none');
+                setTabularData(logTable, result.table);
               } else {
                 $('.session-history-audit').addClass('d-none');
+                $('.session-history-debug').addClass('d-none');
                 $('.session-history-log').removeClass('d-none');
-                setTabularData(logTable, result.table);
+                setTabularData(sessionTable, result.table);
               }
             },
             error: function error(xhr, textStatus, _error) {
@@ -254,10 +300,14 @@
         });
 
         $("#refreshGrid").click(function () {
-          if ($report.find('#type').val() === 'audit') {
+          reportType = $report.find('#type').val();
+
+          if (reportType=== 'audit') {
             auditTable.ajax.reload();
-          } else {
+          } else if (reportType=== 'debug') {
             logTable.ajax.reload();
+          } else {
+            sessionTable.ajax.reload();
           }
         });
 
@@ -331,6 +381,31 @@
               {data: 'type'},
               {data: 'page'},
               {data: 'message'},
+            ]
+          })
+        }
+
+        function createSessionTable($dataTable) {
+          return $dataTable.DataTable({
+            language: dataTablesLanguage,
+            dom: dataTablesTemplate,
+            searching: false,
+            paging: true,
+            bInfo: false,
+            stateSave: true,
+            bDestroy: true,
+            processing: true,
+            order: [[0, 'desc']],
+            data: {},
+            columns: [
+              {data: 'startTime', "render": dataTableDateFromIso},
+              {data: 'endTime', "render": dataTableDateFromIso},
+              {data: 'duration'},
+              {data: 'userName'},
+              {data: 'userType'},
+              {data: 'ipAddress'},
+              {data: 'sessionId'},
+              {data: 'userAgent'},
             ]
           })
         }

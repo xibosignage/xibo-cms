@@ -101,6 +101,9 @@ window.pE = {
   // inline playlist editor?
   inline: false,
 
+  // is it an external playlist?
+  externalPlaylist: true,
+
   // Show minimum dimensions message
   showMinDimensionsMessage: false,
 };
@@ -138,6 +141,7 @@ pE.loadEditor = function(
     pE.mainRegion =
       pE.editorContainer.parents('#editor-container').data('regionObj');
     pE.inline = true;
+    pE.externalPlaylist = showExternalPlaylistMessage;
   }
 
   // Get playlist id
@@ -159,6 +163,11 @@ pE.loadEditor = function(
   )
     .done(function(res) {
       if (res.data != null && res.data.length > 0) {
+        // Stop if not available
+        if (Object.keys(pE.editorContainer).length === 0) {
+          return;
+        }
+
         // Template type
         const template = inline ?
           playlistEditorTemplate :
@@ -267,8 +276,7 @@ pE.loadEditor = function(
       } else {
         // Login Form needed?
         if (res.login) {
-          window.location.href = window.location.href;
-          location.reload();
+          window.location.reload();
         } else {
           pE.showErrorMessage();
         }
@@ -704,6 +712,11 @@ pE.reloadData = function(
     .done(function(res) {
       pE.common.hideLoadingScreen();
 
+      // Stop if editor container is not available
+      if (Object.keys(pE.editorContainer).length === 0) {
+        return;
+      }
+
       if (res.data != null && res.data.length > 0) {
         pE.playlist = new Playlist(pE.playlist.playlistId, res.data[0]);
 
@@ -725,8 +738,7 @@ pE.reloadData = function(
         });
       } else {
         if (res.login) {
-          window.location.href = window.location.href;
-          location.reload();
+          window.location.reload();
         } else {
           pE.showErrorMessage();
         }
@@ -822,8 +834,8 @@ pE.close = function() {
 
   // Make sure all remaining objects are pure empty JS objects
   this.playlist = this.editorContainer = this.timeline =
-    this.propertiesPanel = this.historyManager =
-    this.selectedObject = this.toolbar = {};
+    this.propertiesPanel = this.historyManager = this.toolbar = {};
+  this.selectedObject = {};
 
   // Restore toastr positioning
   toastr.options.positionClass = this.toastrPosition;
@@ -964,8 +976,7 @@ pE.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
     } else {
       // Login Form needed?
       if (res.login) {
-        window.location.href = window.location.href;
-        location.reload();
+        window.location.reload();
       } else {
         // Just an error we dont know about
         if (res.message == undefined) {
@@ -1081,8 +1092,7 @@ pE.importFromProvider = function(items) {
 
         // Login Form needed?
         if (data.login) {
-          window.location.href = window.location.href;
-          location.reload();
+          window.location.reload();
         } else {
           // Just an error we dont know about
           if (data.message == undefined) {

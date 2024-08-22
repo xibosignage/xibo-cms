@@ -38,6 +38,7 @@
             <default>apk,ipk,js,html,htm</default>
         </property>
     </settings>
+    <allowPreview>0</allowPreview>
     <properties></properties>
     <preview></preview>
     <stencil>

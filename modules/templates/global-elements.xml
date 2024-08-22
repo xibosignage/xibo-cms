@@ -251,8 +251,11 @@ if(properties.fitToArea) {
     // Set target for the text
     properties.fitTarget = 'div';
 
+    var $selector = $(target).is('.global-elements-text') ?
+        $(target) : $(target).find('.global-elements-text');
+
     // Scale text to container
-    $(target).find('.global-elements-text').xiboTextScaler(properties);
+    $selector.xiboTextScaler(properties);
 }
         ]]></onTemplateRender>
         </stencil>
@@ -497,8 +500,11 @@ $(target).find('.date').each(function(_idx, dateEl){
         // Set target for the text
         properties.fitTarget = '.date';
 
+        var $selector = $(target).is('.global-elements-date') ?
+            $(target) : $(target).find('.global-elements-date');
+
         // Scale text to container
-        $(target).find('.global-elements-date').xiboTextScaler(properties);
+        $selector.xiboTextScaler(properties);
     }
 });
         ]]></onTemplateRender>
@@ -767,6 +773,9 @@ if (useCurrentDate) {
             // Set target for the text
             properties.fitTarget = '.date-advanced';
 
+            var $selector = $(target).is('.global-elements-date-advanced') ?
+                $(target) : $(target).find('.global-elements-date-advanced');
+
             // Scale text to container
             $(target).find('.global-elements-date-advanced').xiboTextScaler(properties);
 
@@ -799,8 +808,11 @@ if (useCurrentDate) {
         // Set target for the text
         properties.fitTarget = '.date-advanced';
 
+        var $selector = $(target).is('.global-elements-date-advanced') ?
+            $(target) : $(target).find('.global-elements-date-advanced');
+
         // Scale text to container
-        $(target).find('.global-elements-date-advanced').xiboTextScaler(properties);
+        $selector.xiboTextScaler(properties);
     }
 }
         ]]></onTemplateRender>
@@ -967,7 +979,7 @@ $(target).find('img').xiboImageRender(properties);
         <properties>
             <property id="imageReplace" type="imageReplaceControl">
                 <title>Replace Image</title>
-                <helpText>Add an image from the Toolbar to replace this element.</helpText>
+                <helpText>Select an image from the Toolbox and drop here to replace this element.</helpText>
             </property>
         </properties>
     </template>
@@ -1340,13 +1352,92 @@ $(target).find('img').xiboImageRender(properties);
             ]]></hbs>
         </stencil>
         <onTemplateRender><![CDATA[
-// Calculate circle radius based on outlineWidth
-var circleRadius = properties.outline == 1 ?
-    50 - (properties.outlineWidth / 4) : 50;
-$(target).find('.global-elements-circle svg symbol circle').attr('r', circleRadius);
+    // Calculate circle radius based on outlineWidth
+    var circleRadius = properties.outline == 1 ?
+        50 - (properties.outlineWidth / 4) : 50;
+    var selector = $(target).is('.global-elements-circle') ? '' : '.global-elements-circle ';
+    $(target).find(selector + 'svg symbol circle').attr('r', circleRadius);
         ]]></onTemplateRender>
         <assets>
             <asset id="circle-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/circle.png" />
+        </assets>
+    </template>
+    <template>
+        <id>ellipse</id>
+        <title>Ellipse</title>
+        <type>element</type>
+        <dataType>global</dataType>
+        <thumbnail>ellipse-thumb</thumbnail>
+        <canRotate>true</canRotate>
+        <startWidth>300</startWidth>
+        <startHeight>200</startHeight>
+        <properties>
+            <property id="backgroundColor" type="color">
+                <title>Background Colour</title>
+                <default>#1775F6</default>
+            </property>
+            <property id="outline" type="checkbox">
+                <title>Show Outline</title>
+                <default>1</default>
+                <helpText>Should the circle have an outline?</helpText>
+            </property>
+            <property id="outlineColor" type="color">
+                <title>Outline Colour</title>
+                <default>%THEME_COLOR%</default>
+                <visibility>
+                    <test>
+                        <condition field="outline" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="outlineWidth" type="number">
+                <title>Outline Width</title>
+                <default>4</default>
+                <visibility>
+                    <test>
+                        <condition field="outline" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <preview></preview>
+        <stencil>
+            <hbs><![CDATA[
+<div class="global-elements-ellipse" style="position: relative;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;"
+><svg version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <symbol id="ellipse_{{uniqueID}}" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <ellipse
+                {{# if backgroundColor }}
+                    fill="{{backgroundColor}}"
+                {{else}}
+                    fill="none"
+                {{/if}}
+                {{# if outline }}
+                    {{#if outlineColor }}stroke="{{outlineColor}}"{{/if}}
+                    {{#if outlineWidth }}stroke-width="{{outlineWidth}}"{{/if}}
+                    vector-effect="non-scaling-stroke"
+                    rx="49"
+                    ry="49"
+                {{else}}
+                    rx="50"
+                    ry="50"
+                {{/if}}
+                cx="50"
+                cy="50"
+            ></ellipse>
+        </symbol>
+    </defs>
+    <use href="#ellipse_{{uniqueID}}" width="100%" height="100%" />
+</svg></div>
+            ]]></hbs>
+        </stencil>
+        <assets>
+            <asset id="ellipse-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/ellipse.png" />
         </assets>
     </template>
     <template>

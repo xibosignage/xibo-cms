@@ -360,8 +360,7 @@ $(() => {
     } else {
       // Login Form needed?
       if (res.login) {
-        window.location.href = window.location.href;
-        location.reload();
+        window.location.reload();
       } else {
         lD.showErrorMessage();
       }
@@ -540,6 +539,7 @@ lD.selectObject =
       const oldSelectedId = (this.selectedObject.type === 'element') ?
         this.selectedObject.elementId : this.selectedObject.id;
       const oldSelectedType = this.selectedObject.type;
+      const oldSelectedMultiple = lD.viewer.getMultipleSelected();
 
       // If the selected object was different from the previous
       // and we are focused on a properties panel field, save before continuing
@@ -677,6 +677,11 @@ lD.selectObject =
         // even if we're not refreshing the whole editor
         (reloadLayerManager) &&
           lD.viewer.layerManager.render();
+
+        // Render bottombar to fix issue with coming
+        // from selecting multiple objects
+        (oldSelectedMultiple && oldSelectedMultiple.multiple) &&
+          lD.bottombar.render(this.selectedObject, false);
       }
     }
   };
@@ -724,6 +729,8 @@ lD.refreshEditor = function(
  * @param {boolean} [reloadToolbar=false] - update toolbar
  * @param {boolean} [reloadViewer=true] - Reload viewer
  * @param {boolean} [reloadPropertiesPanel=true] - Reload properties panel
+ * @param {boolean} [resetPropertiesPanelOpenedTab=false]
+ * - Reset properties panel opened tab
  * @return {Promise} - Promise
  */
 lD.reloadData = function(
@@ -735,12 +742,18 @@ lD.reloadData = function(
     reloadToolbar = false,
     reloadViewer = true,
     reloadPropertiesPanel = true,
+    resetPropertiesPanelOpenedTab = false,
   } = {},
 ) {
   const layoutId =
     (typeof layout.layoutId == 'undefined') ? layout : layout.layoutId;
 
   lD.common.showLoadingScreen();
+
+  // Reset tab to be opened
+  if (resetPropertiesPanelOpenedTab) {
+    lD.propertiesPanel.openTabOnRender = '';
+  }
 
   return $.get(
     urlsForApi.layout.get.url + '?layoutId=' + layoutId +
@@ -811,8 +824,7 @@ lD.reloadData = function(
     } else {
       // Login Form needed?
       if (res.login) {
-        window.location.href = window.location.href;
-        location.reload();
+        window.location.reload();
       } else {
         lD.showErrorMessage();
       }
@@ -1144,8 +1156,7 @@ lD.loadFormFromAPI = function(
     } else {
       // Login Form needed?
       if (res.login) {
-        window.location.href = window.location.href;
-        location.reload();
+        window.location.reload();
       } else {
         toastr.error(errorMessagesTrans.formLoadFailed);
 
@@ -2177,6 +2188,8 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
               self,
             );
 
+            newWidget.editorObject = lD;
+
             // Add element to the new widget
             addToWidget(newWidget);
           });
@@ -2578,8 +2591,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
       if (!res.success) {
         // Login Form needed?
         if (res.login) {
-          window.location.href = window.location.href;
-          location.reload();
+          window.location.reload();
         } else {
           // Just an error we dont know about
           if (res.message == undefined) {
@@ -2599,6 +2611,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           lD.reloadData(lD.layout,
             {
               refreshEditor: true,
+              resetPropertiesPanelOpenedTab: true,
             });
         }
       }
@@ -2635,6 +2648,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
             lD.reloadData(response.data,
               {
                 refreshEditor: true,
+                resetPropertiesPanelOpenedTab: true,
               });
           } else if (response.login) {
             // eslint-disable-next-line new-cap
@@ -2844,6 +2858,7 @@ lD.addModuleToPlaylist = function(
             (reloadData) && lD.reloadData(lD.layout,
               {
                 refreshEditor: true,
+                resetPropertiesPanelOpenedTab: true,
               });
 
             resolve();
@@ -2853,6 +2868,7 @@ lD.addModuleToPlaylist = function(
           (reloadData) && lD.reloadData(lD.layout,
             {
               refreshEditor: true,
+              resetPropertiesPanelOpenedTab: true,
             });
 
           resolve();
@@ -2966,6 +2982,7 @@ lD.addModuleToPlaylist = function(
         (reloadData) && lD.reloadData(lD.layout,
           {
             refreshEditor: true,
+            resetPropertiesPanelOpenedTab: true,
           });
       } else {
         const newWidgetId = res.data.widgetId;
@@ -2973,6 +2990,7 @@ lD.addModuleToPlaylist = function(
         (reloadData) && lD.reloadData(
           lD.layout,
           {
+            resetPropertiesPanelOpenedTab: true,
             callBack: () => {
               const $actionForm =
                 lD.propertiesPanel.DOMObject.find('.action-element-form');
@@ -3156,6 +3174,7 @@ lD.addMediaToPlaylist = function(
       lD.reloadData(lD.layout,
         {
           refreshEditor: true,
+          resetPropertiesPanelOpenedTab: true,
         });
     } else {
       const newWidgetId = res.data.newWidgets[0].widgetId;
@@ -3163,6 +3182,7 @@ lD.addMediaToPlaylist = function(
       lD.reloadData(
         lD.layout,
         {
+          resetPropertiesPanelOpenedTab: true,
           callBack: () => {
             const $actionForm =
               lD.propertiesPanel.DOMObject.find('.action-element-form');
@@ -3323,8 +3343,7 @@ lD.checkLayoutStatus = function() {
     if (!res.success) {
       // Login Form needed?
       if (res.login) {
-        window.location.href = window.location.href;
-        location.reload();
+        window.location.reload();
       } else {
         // Just an error we dont know about
         if (res.message == undefined) {
@@ -3339,6 +3358,7 @@ lD.checkLayoutStatus = function() {
         res.extra.status,
         res.html,
         res.extra.statusMessage,
+        res.extra.duration,
       );
 
       if (
@@ -3578,6 +3598,15 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
     layoutObject.selected &&
     layoutObject.elementType === 'global' &&
     layoutObject.template.templateId === 'text'
+  );
+
+  // If it's a playlist, check if it's a layout playlist only
+  // and has at least one widget
+  layoutObject.playlistCanBeConverted = (
+    layoutObject.isPlaylist &&
+    !$(obj).find('.playlist-edit-btn')
+      .hasClass('subplaylist-inline-edit-btn') &&
+    layoutObject.playlists.widgets.length > 0
   );
 
   // Create menu and append to the designer div
@@ -3912,6 +3941,11 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
       });
     } else if (target.data('action') == 'editText') {
       lD.viewer.editText(layoutObject);
+    } else if (target.data('action') == 'convertPlaylist') {
+      lD.convertPlaylist(
+        layoutObject.playlists.playlistId,
+        layoutObject.playlists.name,
+      );
     } else {
       const property = target.data('property');
       const propertyType = target.data('propertyType');
@@ -4436,8 +4470,7 @@ lD.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
     } else {
       // Login Form needed?
       if (res.login) {
-        window.location.href = window.location.href;
-        location.reload(false);
+        window.location.reload();
       } else {
         // Just an error we dont know about
         if (res.message == undefined) {
@@ -4559,8 +4592,7 @@ lD.unlockLayout = function() {
     } else {
       // Login Form needed?
       if (res.login) {
-        window.location.href = window.location.href;
-        location.reload();
+        window.location.reload();
       } else {
         toastr.error(res.message);
       }
@@ -4687,8 +4719,7 @@ lD.importFromProvider = function(items) {
 
         // Login Form needed?
         if (res.login) {
-          window.location.href = window.location.href;
-          location.reload();
+          window.location.reload();
         } else {
           // Just an error we dont know about
           if (res.message == undefined) {
@@ -4854,8 +4885,7 @@ lD.loadPrefs = function() {
     } else {
       // Login Form needed?
       if (res.login) {
-        window.location.href = window.location.href;
-        location.reload();
+        window.location.reload();
       } else {
         // Just an error we dont know about
         if (res.message == undefined) {
@@ -4878,7 +4908,7 @@ lD.loadPrefs = function() {
 lD.savePrefs = _.debounce(function(clearPrefs = false) {
   // Clear values to defaults
   if (clearPrefs) {
-    console.log('Clearing user preferences');
+    console.debug('Clearing user preferences');
   }
 
   // Data to be saved
@@ -4908,8 +4938,7 @@ lD.savePrefs = _.debounce(function(clearPrefs = false) {
     if (!res.success) {
       // Login Form needed?
       if (res.login) {
-        window.location.href = window.location.href;
-        location.reload();
+        window.location.reload();
       } else {
         toastr.error(errorMessagesTrans.userSavePreferencesFailed);
 
@@ -4966,8 +4995,7 @@ lD.initDrawer = function(data) {
       } else {
         // Login Form needed?
         if (res.login) {
-          window.location.href = window.location.href;
-          location.reload(false);
+          window.location.reload();
         } else {
           toastr.error(res.message);
         }
@@ -5635,6 +5663,7 @@ lD.addElementsToWidget = function(
         lD.layout,
         {
           refreshEditor: true,
+          resetPropertiesPanelOpenedTab: true,
         },
       ).then(() => {
         const widgetAux = lD.layout.canvas.widgets[widget.id];
@@ -5652,8 +5681,16 @@ lD.addElementsToWidget = function(
 /**
  * Convert playlist into global
  * @param {string} playlistId
+ * @param {string} playlistName
  */
-lD.convertPlaylist = function(playlistId) {
+lD.convertPlaylist = function(playlistId, playlistName) {
+  if (playlistName === undefined || playlistName === '') {
+    toastr.error(
+      errorMessagesTrans.convertPlaylistFailed +
+      ' ' + errorMessagesTrans.convertPlaylistNoName);
+    return;
+  }
+
   // Load form the API
   const linkToAPI = urlsForApi.playlist.convert;
 
@@ -5686,13 +5723,15 @@ lD.convertPlaylist = function(playlistId) {
         window.location.href = window.location.href;
         location.reload();
       } else {
-        toastr.error(errorMessagesTrans.convertPlaylistFailed);
-
         // Just an error we dont know about
         if (res.message == undefined) {
           console.error(res);
+          toastr.error(errorMessagesTrans.convertPlaylistFailed);
         } else {
           console.error(res.message);
+          toastr.error(
+            errorMessagesTrans.convertPlaylistFailed + ' ' + res.message,
+          );
         }
       }
     }

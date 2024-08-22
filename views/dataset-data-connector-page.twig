@@ -48,7 +48,7 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-lg-6">
+                    <div class="col-lg-6 {% if dataSet.dataConnectorSource != 'user_defined'  %}hidden{% endif %}">
                         <form id="dataconnector-builder-form" class="XiboForm form-horizontal"
                              method="put"
                              action="{{ url_for("dataSet.dataConnector.update", {id: dataSet.dataSetId}) }}"
@@ -67,7 +67,7 @@
                                 </div>
                             </div>
 
-                            {{ forms.button("Save"|trans, "submit", null, null, null, "btn-success") }}
+                            {{ forms.button("Save"|trans, "submit", null, null, null, "btn-success " ~ (dataSet.dataConnectorSource != 'user_defined' ? 'disabled' : '')) }}
                         </form>
                     </div>
                     <div class="col-lg-6">
@@ -176,7 +176,7 @@
           // Window message to receive data and logs.
           window.receiveData = function(type, data) {
             if (type === 'loaded') {
-              console.log('Script loaded');
+              console.debug('Script loaded');
               $script.find('iframe')[0].contentWindow.xiboDC.initialise({{ dataSet.dataSetId }}, $scriptParams.val());
             } else if (type === 'log') {
               $logs.prepend('[' + moment().format('YY-MM-DD HH:mm:ss') + '] ' + data + '\n');

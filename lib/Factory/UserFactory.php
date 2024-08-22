@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -336,6 +336,18 @@ class UserFactory extends BaseFactory
             $params['email'] = $parsedFilter->getString('email');
         }
 
+        // First Name Provided
+        if ($parsedFilter->getString('firstName') != null) {
+            $body .= " AND user.firstName LIKE :firstName ";
+            $params['firstName'] = '%' . $parsedFilter->getString('firstName') . '%';
+        }
+
+        // Last Name Provided
+        if ($parsedFilter->getString('lastName') != null) {
+            $body .= " AND user.lastName LIKE :lastName ";
+            $params['lastName'] = '%' . $parsedFilter->getString('lastName') . '%';
+        }
+
         // Retired users?
         if ($parsedFilter->getInt('retired') !== null) {
             $body .= " AND user.retired = :retired ";
@@ -431,5 +443,47 @@ class UserFactory extends BaseFactory
         }
 
         return $entries;
+    }
+
+    /**
+     * Get a count of users, with respect to the logged-in user
+     * @return int
+     */
+    public function count(): int
+    {
+        $params = [];
+        $sql = '
+        SELECT COUNT(DISTINCT `user`.userId) AS countOf
+          FROM `user`
+            INNER JOIN `lkusergroup`
+            ON `lkusergroup`.userId = `user`.userId
+            INNER JOIN `folder`
+            ON `folder`.folderId = `user`.homeFolderId
+            INNER JOIN `group`
+            ON `group`.groupId = `lkusergroup`.groupId
+              AND `group`.isUserSpecific = 1
+        ';
+
+        // Super admins should get a count of all users in the system.
+        if (!$this->getUser()->isSuperAdmin()) {
+            // Non-super admins should only get a count of users in their group
+            $sql .= '
+                WHERE `user`.userId IN (
+                    SELECT `otherUserLinks`.userId
+                      FROM `lkusergroup`
+                        INNER JOIN `group`
+                        ON `group`.groupId = `lkusergroup`.groupId
+                            AND `group`.isUserSpecific = 0
+                        INNER JOIN `lkusergroup` `otherUserLinks`
+                        ON `otherUserLinks`.groupId = `group`.groupId
+                     WHERE `lkusergroup`.userId = :currentUserId
+                )
+            ';
+            $params['currentUserId'] = $this->getUser()->userId;
+        }
+
+        // Run the query
+        $results = $this->getStore()->select($sql, $params);
+        return intval($results[0]['countOf'] ?? 0);
     }
 }

@@ -849,6 +849,7 @@ class Library extends Base
                 'tags' => $parsedQueryParams->getString('tags'),
                 'exactTags' => $parsedQueryParams->getCheckbox('exactTags'),
                 'ownerId' => $parsedQueryParams->getInt('ownerId'),
+                'folderId' => $parsedQueryParams->getInt('folderId'),
                 'assignable' => 1,
                 'retired' => 0,
                 'orientation' => $parsedQueryParams->getString('orientation', ['defaultOnEmptyString' => true])
@@ -1217,11 +1218,6 @@ class Library extends Base
             'allowMediaTypeChange' => $options['allowMediaTypeChange'],
             'displayOrder' => $parsedBody->getInt('displayOrder'),
             'playlistId' => $parsedBody->getInt('playlistId'),
-            'upload_dir' => $libraryFolder . 'temp/',
-            'download_via_php' => true,
-            'script_url' => $this->urlFor($request,'library.add'),
-            'upload_url' => $this->urlFor($request,'library.add'),
-            'image_versions' => [],
             'accept_file_types' => '/\.' . implode('|', $validExt) . '$/i',
             'libraryLimit' => $libraryLimit,
             'libraryQuotaFull' => ($libraryLimit > 0 && $this->getMediaService()->libraryUsage() > $libraryLimit),
@@ -1238,7 +1234,7 @@ class Library extends Base
         $this->getLog()->debug('Hand off to Upload Handler with options: ' . json_encode($options));
 
         // Hand off to the Upload Handler provided by jquery-file-upload
-        new XiboUploadHandler($options);
+        new XiboUploadHandler($libraryFolder . 'temp/', $this->getLog()->getLoggerInterface(), $options);
 
         // Explicitly set the Content-Type header to application/json
         $response = $response->withHeader('Content-Type', 'application/json');
@@ -1639,7 +1635,9 @@ class Library extends Base
         $downloader->useLogger($this->getLog()->getLoggerInterface());
 
         $params = $this->getSanitizer($request->getParams());
-        if ($params->getCheckbox('preview') == 1) {
+
+        // Check if preview is allowed for the module
+        if ($params->getCheckbox('preview') == 1 && $module->allowPreview === 1) {
             $this->getLog()->debug('download: preview mode, seeing if we can output an image/video');
 
             // Output a 1px image if we're not allowed to see the media.
@@ -2152,7 +2150,8 @@ class Library extends Base
                     'id' => 'layout_button_preview',
                     'external' => true,
                     'url' => '#',
-                    'onclick' => 'createMiniLayoutPreview("' . $this->urlFor($request, 'layout.preview', ['id' => $layout->layoutId]) . '");',
+                    'onclick' => 'createMiniLayoutPreview',
+                    'onclickParam' => $this->urlFor($request, 'layout.preview', ['id' => $layout->layoutId]),
                     'text' => __('Preview Layout')
                 );
             }

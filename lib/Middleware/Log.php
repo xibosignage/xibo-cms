@@ -28,13 +28,18 @@ use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Psr\Log\LoggerInterface;
 use Slim\App as App;
-use Xibo\Helper\LogProcessor;
+use Xibo\Helper\RouteLogProcessor;
 
+/**
+ * Log Middleware
+ */
 class Log implements Middleware
 {
-    /* @var App $app */
-    private $app;
+    private App $app;
 
+    /**
+     * @param $app
+     */
     public function __construct($app)
     {
         $this->app = $app;
@@ -44,18 +49,14 @@ class Log implements Middleware
      * @param Request $request
      * @param RequestHandler $handler
      * @return Response
+     * @throws \Psr\Container\ContainerExceptionInterface
+     * @throws \Psr\Container\NotFoundExceptionInterface
      */
     public function process(Request $request, RequestHandler $handler): Response
     {
         $container = $this->app->getContainer();
 
-        self::addLogProcessorToLogger(
-            $container->get('logger'),
-            $request,
-            $container->get('logService')->getUserId(),
-            $container->get('logService')->getSessionHistoryId(),
-            $container->get('logService')->getRequestId(),
-        );
+        self::addLogProcessorToLogger($container->get('logger'), $request);
 
         return $handler->handle($request);
     }
@@ -63,23 +64,14 @@ class Log implements Middleware
     /**
      * @param LoggerInterface $logger
      * @param \Psr\Http\Message\ServerRequestInterface $request
-     * @param ?int $userId
-     * @param ?int $sessionHistoryId
      */
     public static function addLogProcessorToLogger(
         LoggerInterface $logger,
         Request $request,
-        ?int $userId = null,
-        ?int $sessionHistoryId = null,
-        ?int $requestId = null
-    ) {
-        $logHelper = new LogProcessor(
+    ): void {
+        $logger->pushProcessor(new RouteLogProcessor(
             $request->getUri()->getPath(),
             $request->getMethod(),
-            $userId,
-            $sessionHistoryId,
-            $requestId
-        );
-        $logger->pushProcessor($logHelper);
+        ));
     }
 }

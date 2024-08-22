@@ -488,7 +488,7 @@ Playlist.prototype.saveOrder = function(widgets) {
     },
   ).catch((error) => {
     toastr.error(errorMessagesTrans.playlistOrderSave);
-    console.log(error);
+    console.error(error);
   });
 };
 

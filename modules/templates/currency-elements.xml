@@ -229,4 +229,953 @@ if (width > height) {
             <asset id="flagsCSS" type="path" mimeType="text/css" path="/modules/assets/currency/flags.css" />
         </assets>
     </template>
+    <template>
+        <id>currency_single_1</id>
+        <type>element-group</type>
+        <dataType>currency</dataType>
+        <title>Currency - Single 1</title>
+        <thumbnail>currency-single-1</thumbnail>
+        <stencil>
+            <hbs></hbs>
+            <startWidth>678</startWidth>
+            <startHeight>133</startHeight>
+            <elements>
+                <element id="rectangle">
+                    <title>Background</title>
+                    <layer>0</layer>
+                    <top>0</top>
+                    <left>0</left>
+                    <width>678</width>
+                    <height>133</height>
+                    <defaultProperties>
+                        <property id="backgroundColor">#001061</property>
+                        <property id="roundBorder">1</property>
+                        <property id="borderRadius">16</property>
+                        <property id="outline">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="currency_logo">
+                    <title>Currency logo</title>
+                    <layer>1</layer>
+                    <top>29</top>
+                    <left>40</left>
+                    <width>75</width>
+                    <height>75</height>
+                </element>
+                <element id="currency_name">
+                    <title>Currency name</title>
+                    <layer>1</layer>
+                    <top>29</top>
+                    <left>150</left>
+                    <width>199</width>
+                    <height>75</height>
+                    <defaultProperties>
+                        <property id="fontFamily">open sans regular</property>
+                        <property id="fontColor">#fff</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="textWrap">0</property>
+                        <property id="showOverflow">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="currency_rawLastTradePriceOnly">
+                    <title>Currency trade price</title>
+                    <layer>1</layer>
+                    <top>29</top>
+                    <left>391</left>
+                    <width>250</width>
+                    <height>75</height>
+                    <defaultProperties>
+                        <property id="fontFamily">open sans regular</property>
+                        <property id="fontColor">#fff</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">flex-end</property>
+                        <property id="verticalAlign">center</property>
+                    </defaultProperties>
+                </element>
+            </elements>
+        </stencil>
+        <assets>
+            <asset id="currency-single-1" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/elements/currency-single-1.png" />
+        </assets>
+    </template>
+    <template>
+        <id>currency_single_2</id>
+        <type>element-group</type>
+        <dataType>currency</dataType>
+        <title>Currency - Single 2</title>
+        <thumbnail>currency-single-2</thumbnail>
+        <stencil>
+            <hbs></hbs>
+            <startWidth>642</startWidth>
+            <startHeight>174</startHeight>
+            <elements>
+                <element id="rectangle">
+                    <title>Background</title>
+                    <layer>0</layer>
+                    <top>0</top>
+                    <left>0</left>
+                    <width>642</width>
+                    <height>174</height>
+                    <defaultProperties>
+                        <property id="backgroundColor">#171717</property>
+                        <property id="roundBorder">1</property>
+                        <property id="borderRadius">16</property>
+                        <property id="outline">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="currency_logo">
+                    <title>Currency logo</title>
+                    <layer>1</layer>
+                    <top>27</top>
+                    <left>32</left>
+                    <width>107</width>
+                    <height>119</height>
+                </element>
+                <element id="currency_name">
+                    <title>Currency name</title>
+                    <layer>1</layer>
+                    <top>66</top>
+                    <left>179</left>
+                    <width>136</width>
+                    <height>75</height>
+                    <defaultProperties>
+                        <property id="fontFamily">open sans regular</property>
+                        <property id="fontColor">#fff</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="textWrap">0</property>
+                        <property id="showOverflow">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="currency_rawLastTradePriceOnly">
+                    <title>Currency trade price</title>
+                    <layer>1</layer>
+                    <top>66</top>
+                    <left>360</left>
+                    <width>250</width>
+                    <height>75</height>
+                    <defaultProperties>
+                        <property id="fontFamily">open sans regular</property>
+                        <property id="fontColor">#fff</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">flex-end</property>
+                        <property id="verticalAlign">center</property>
+                    </defaultProperties>
+                </element>
+                <element id="text">
+                    <title>Currency name</title>
+                    <layer>1</layer>
+                    <top>27</top>
+                    <left>179</left>
+                    <width>200</width>
+                    <height>48</height>
+                    <defaultProperties>
+                        <property id="text">[Currency Name]</property>
+                        <property id="fontColor">#fff</property>
+                        <property id="fontSize">24</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                    </defaultProperties>
+                </element>
+                <element id="currency_changePercentage">
+                    <title>Currency change percent</title>
+                    <layer>2</layer>
+                    <top>27</top>
+                    <left>379</left>
+                    <width>191</width>
+                    <height>48</height>
+                    <defaultProperties>
+                        <property id="fontColor">#333</property>
+                        <property id="fontSize">24</property>
+                        <property id="horizontalAlign">flex-end</property>
+                        <property id="verticalAlign">center</property>
+                    </defaultProperties>
+                </element>
+                <element id="currency_changeIcon">
+                    <title>Currency change icon</title>
+                    <layer>2</layer>
+                    <top>27</top>
+                    <left>586</left>
+                    <width>24</width>
+                    <height>48</height>
+                    <defaultProperties>
+                        <property id="fontSize">40</property>
+                    </defaultProperties>
+                </element>
+            </elements>
+        </stencil>
+        <assets>
+            <asset id="currency-single-2" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/elements/currency-single-2.png" />
+        </assets>
+    </template>
+    <template>
+        <id>currency_single_3</id>
+        <type>element-group</type>
+        <dataType>currency</dataType>
+        <title>Currency - Single 3</title>
+        <thumbnail>currency-single-3</thumbnail>
+        <stencil>
+            <hbs></hbs>
+            <startWidth>351</startWidth>
+            <startHeight>375</startHeight>
+            <elements>
+                <element id="rectangle">
+                    <title>Background</title>
+                    <layer>0</layer>
+                    <top>0</top>
+                    <left>0</left>
+                    <width>351</width>
+                    <height>375</height>
+                    <defaultProperties>
+                        <property id="backgroundColor">#171717</property>
+                        <property id="roundBorder">1</property>
+                        <property id="borderRadius">16</property>
+                        <property id="outline">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="currency_logo">
+                    <title>Currency logo</title>
+                    <layer>1</layer>
+                    <top>34</top>
+                    <left>122</left>
+                    <width>107</width>
+                    <height>119</height>
+                </element>
+                <element id="currency_name">
+                    <title>Currency name</title>
+                    <layer>1</layer>
+                    <top>160</top>
+                    <left>107</left>
+                    <width>136</width>
+                    <height>75</height>
+                    <defaultProperties>
+                        <property id="fontFamily">open sans regular</property>
+                        <property id="fontColor">#fff</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">center</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="textWrap">0</property>
+                        <property id="showOverflow">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="currency_rawLastTradePriceOnly">
+                    <title>Currency trade price</title>
+                    <layer>1</layer>
+                    <top>220</top>
+                    <left>50</left>
+                    <width>250</width>
+                    <height>75</height>
+                    <defaultProperties>
+                        <property id="fontFamily">open sans regular</property>
+                        <property id="fontColor">#fff</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">center</property>
+                        <property id="verticalAlign">center</property>
+                    </defaultProperties>
+                </element>
+                <element id="currency_changePercentage">
+                    <title>Currency change percent</title>
+                    <layer>2</layer>
+                    <top>291</top>
+                    <left>148</left>
+                    <width>97</width>
+                    <height>48</height>
+                    <defaultProperties>
+                        <property id="fontColor">#333</property>
+                        <property id="fontSize">24</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                    </defaultProperties>
+                </element>
+                <element id="currency_changeIcon">
+                    <title>Currency change icon</title>
+                    <layer>2</layer>
+                    <top>291</top>
+                    <left>102</left>
+                    <width>24</width>
+                    <height>48</height>
+                    <defaultProperties>
+                        <property id="fontSize">40</property>
+                    </defaultProperties>
+                </element>
+            </elements>
+        </stencil>
+        <assets>
+            <asset id="currency-single-3" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/elements/currency-single-3.png" />
+        </assets>
+    </template>
+    <template>
+        <id>currency_single_4</id>
+        <type>element-group</type>
+        <dataType>currency</dataType>
+        <title>Currency - Single 4</title>
+        <thumbnail>currency-single-4</thumbnail>
+        <stencil>
+            <hbs></hbs>
+            <startWidth>695</startWidth>
+            <startHeight>174</startHeight>
+            <elements>
+                <element id="rectangle">
+                    <title>Background</title>
+                    <layer>0</layer>
+                    <top>0</top>
+                    <left>56</left>
+                    <width>639</width>
+                    <height>174</height>
+                    <defaultProperties>
+                        <property id="backgroundColor">#000b33</property>
+                        <property id="roundBorder">1</property>
+                        <property id="borderRadius">16</property>
+                        <property id="outline">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="currency_logo">
+                    <title>Currency logo</title>
+                    <layer>1</layer>
+                    <top>25</top>
+                    <left>0</left>
+                    <width>114</width>
+                    <height>121</height>
+                </element>
+                <element id="currency_name">
+                    <title>Currency name</title>
+                    <layer>1</layer>
+                    <top>51</top>
+                    <left>150</left>
+                    <width>185</width>
+                    <height>73</height>
+                    <defaultProperties>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#fff</property>
+                        <property id="fontSize">56</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="textWrap">0</property>
+                        <property id="showOverflow">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="currency_rawLastTradePriceOnly">
+                    <title>Currency trade price</title>
+                    <layer>1</layer>
+                    <top>53</top>
+                    <left>336</left>
+                    <width>300</width>
+                    <height>65</height>
+                    <defaultProperties>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#fff</property>
+                        <property id="fontSize">56</property>
+                        <property id="horizontalAlign">flex-end</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="textWrap">0</property>
+                        <property id="showOverflow">0</property>
+                    </defaultProperties>
+                </element>
+            </elements>
+        </stencil>
+        <assets>
+            <asset id="currency-single-4" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/elements/currency-single-4.png" />
+        </assets>
+    </template>
+    <template>
+        <id>currency_group_1</id>
+        <type>element-group</type>
+        <dataType>currency</dataType>
+        <title>Currency - Group 1</title>
+        <thumbnail>currency-group-1</thumbnail>
+        <stencil>
+            <hbs></hbs>
+            <startWidth>473</startWidth>
+            <startHeight>1016</startHeight>
+            <elementGroups>
+                <elementGroup id="group_0">
+                    <title>Background group</title>
+                    <layer>0</layer>
+                    <top>0</top>
+                    <left>0</left>
+                    <width>473</width>
+                    <height>1016</height>
+                    <slot>0</slot>
+                    <pinSlot>1</pinSlot>
+                </elementGroup>
+                <elementGroup id="group_1">
+                    <title>Group 1</title>
+                    <layer>1</layer>
+                    <top>56</top>
+                    <left>36</left>
+                    <width>401</width>
+                    <height>136</height>
+                    <slot>0</slot>
+                </elementGroup>
+                <elementGroup id="group_2">
+                    <title>Group 2</title>
+                    <layer>1</layer>
+                    <top>248</top>
+                    <left>36</left>
+                    <width>401</width>
+                    <height>136</height>
+                    <slot>1</slot>
+                </elementGroup>
+                <elementGroup id="group_3">
+                    <title>Group 3</title>
+                    <layer>1</layer>
+                    <top>440</top>
+                    <left>36</left>
+                    <width>401</width>
+                    <height>136</height>
+                    <slot>2</slot>
+                </elementGroup>
+                <elementGroup id="group_4">
+                    <title>Group 4</title>
+                    <layer>1</layer>
+                    <top>632</top>
+                    <left>36</left>
+                    <width>401</width>
+                    <height>136</height>
+                    <slot>3</slot>
+                </elementGroup>
+                <elementGroup id="group_5">
+                    <title>Group 5</title>
+                    <layer>1</layer>
+                    <top>824</top>
+                    <left>36</left>
+                    <width>401</width>
+                    <height>136</height>
+                    <slot>4</slot>
+                </elementGroup>
+            </elementGroups>
+            <elements>
+                <element id="rectangle" elementGroupId="group_0">
+                    <title>Background</title>
+                    <layer>0</layer>
+                    <top>0</top>
+                    <left>0</left>
+                    <width>473</width>
+                    <height>1016</height>
+                    <defaultProperties>
+                        <property id="backgroundColor">#171717</property>
+                        <property id="roundBorder">1</property>
+                        <property id="borderRadius">16</property>
+                        <property id="outline">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="currency_logo" elementGroupId="group_1">
+                    <title>Currency logo</title>
+                    <layer>2</layer>
+                    <top>0</top>
+                    <left>0</left>
+                    <width>136</width>
+                    <height>136</height>
+                </element>
+                <element id="currency_name" elementGroupId="group_1">
+                    <title>Currency name</title>
+                    <layer>2</layer>
+                    <top>12</top>
+                    <left>171</left>
+                    <width>230</width>
+                    <height>56</height>
+                    <defaultProperties>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="textWrap">0</property>
+                        <property id="showOverflow">0</property>
+                        <property id="bold">1</property>
+                    </defaultProperties>
+                </element>
+                <element id="currency_rawLastTradePriceOnly" elementGroupId="group_1">
+                    <title>Currency trade price</title>
+                    <layer>2</layer>
+                    <top>68</top>
+                    <left>171</left>
+                    <width>230</width>
+                    <height>56</height>
+                    <defaultProperties>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">38</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="textWrap">0</property>
+                        <property id="showOverflow">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="currency_logo" elementGroupId="group_2">
+                    <title>Currency logo</title>
+                    <layer>2</layer>
+                    <top>0</top>
+                    <left>0</left>
+                    <width>136</width>
+                    <height>136</height>
+                </element>
+                <element id="currency_name" elementGroupId="group_2">
+                    <title>Currency name</title>
+                    <layer>2</layer>
+                    <top>12</top>
+                    <left>171</left>
+                    <width>230</width>
+                    <height>56</height>
+                    <defaultProperties>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="textWrap">0</property>
+                        <property id="showOverflow">0</property>
+                        <property id="bold">1</property>
+                    </defaultProperties>
+                </element>
+                <element id="currency_rawLastTradePriceOnly" elementGroupId="group_2">
+                    <title>Currency trade price</title>
+                    <layer>2</layer>
+                    <top>68</top>
+                    <left>171</left>
+                    <width>230</width>
+                    <height>56</height>
+                    <defaultProperties>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">38</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="textWrap">0</property>
+                        <property id="showOverflow">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="currency_logo" elementGroupId="group_3">
+                    <title>Currency logo</title>
+                    <layer>2</layer>
+                    <top>0</top>
+                    <left>0</left>
+                    <width>136</width>
+                    <height>136</height>
+                </element>
+                <element id="currency_name" elementGroupId="group_3">
+                    <title>Currency name</title>
+                    <layer>2</layer>
+                    <top>12</top>
+                    <left>171</left>
+                    <width>230</width>
+                    <height>56</height>
+                    <defaultProperties>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="textWrap">0</property>
+                        <property id="showOverflow">0</property>
+                        <property id="bold">1</property>
+                    </defaultProperties>
+                </element>
+                <element id="currency_rawLastTradePriceOnly" elementGroupId="group_3">
+                    <title>Currency trade price</title>
+                    <layer>2</layer>
+                    <top>68</top>
+                    <left>171</left>
+                    <width>230</width>
+                    <height>56</height>
+                    <defaultProperties>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">38</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="textWrap">0</property>
+                        <property id="showOverflow">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="currency_logo" elementGroupId="group_4">
+                    <title>Currency logo</title>
+                    <layer>2</layer>
+                    <top>0</top>
+                    <left>0</left>
+                    <width>136</width>
+                    <height>136</height>
+                </element>
+                <element id="currency_name" elementGroupId="group_4">
+                    <title>Currency name</title>
+                    <layer>2</layer>
+                    <top>12</top>
+                    <left>171</left>
+                    <width>230</width>
+                    <height>56</height>
+                    <defaultProperties>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="textWrap">0</property>
+                        <property id="showOverflow">0</property>
+                        <property id="bold">1</property>
+                    </defaultProperties>
+                </element>
+                <element id="currency_rawLastTradePriceOnly" elementGroupId="group_4">
+                    <title>Currency trade price</title>
+                    <layer>2</layer>
+                    <top>68</top>
+                    <left>171</left>
+                    <width>230</width>
+                    <height>56</height>
+                    <defaultProperties>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">38</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="textWrap">0</property>
+                        <property id="showOverflow">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="currency_logo" elementGroupId="group_5">
+                    <title>Currency logo</title>
+                    <layer>2</layer>
+                    <top>0</top>
+                    <left>0</left>
+                    <width>136</width>
+                    <height>136</height>
+                </element>
+                <element id="currency_name" elementGroupId="group_5">
+                    <title>Currency name</title>
+                    <layer>2</layer>
+                    <top>12</top>
+                    <left>171</left>
+                    <width>230</width>
+                    <height>56</height>
+                    <defaultProperties>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="textWrap">0</property>
+                        <property id="showOverflow">0</property>
+                        <property id="bold">1</property>
+                    </defaultProperties>
+                </element>
+                <element id="currency_rawLastTradePriceOnly" elementGroupId="group_5">
+                    <title>Currency trade price</title>
+                    <layer>2</layer>
+                    <top>68</top>
+                    <left>171</left>
+                    <width>230</width>
+                    <height>56</height>
+                    <defaultProperties>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">38</property>
+                        <property id="horizontalAlign">flex-start</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="textWrap">0</property>
+                        <property id="showOverflow">0</property>
+                    </defaultProperties>
+                </element>
+            </elements>
+        </stencil>
+        <assets>
+            <asset id="currency-group-1" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/elements/currency-group-1.png" />
+        </assets>
+    </template>
+    <template>
+        <id>currency_group_2</id>
+        <type>element-group</type>
+        <dataType>currency</dataType>
+        <title>Currency - Group 2</title>
+        <thumbnail>currency-group-2</thumbnail>
+        <stencil>
+            <hbs></hbs>
+            <startWidth>1200</startWidth>
+            <startHeight>341</startHeight>
+            <elementGroups>
+                <elementGroup id="group_0">
+                    <title>Background group</title>
+                    <layer>0</layer>
+                    <top>0</top>
+                    <left>0</left>
+                    <width>1200</width>
+                    <height>341</height>
+                    <slot>0</slot>
+                    <pinSlot>1</pinSlot>
+                </elementGroup>
+                <elementGroup id="group_1">
+                    <title>Group 1</title>
+                    <layer>1</layer>
+                    <top>0</top>
+                    <left>0</left>
+                    <width>300</width>
+                    <height>311</height>
+                    <slot>0</slot>
+                </elementGroup>
+                <elementGroup id="group_2">
+                    <title>Group 2</title>
+                    <layer>1</layer>
+                    <top>0</top>
+                    <left>300</left>
+                    <width>300</width>
+                    <height>311</height>
+                    <slot>1</slot>
+                </elementGroup>
+                <elementGroup id="group_3">
+                    <title>Group 3</title>
+                    <layer>1</layer>
+                    <top>0</top>
+                    <left>600</left>
+                    <width>300</width>
+                    <height>311</height>
+                    <slot>2</slot>
+                </elementGroup>
+                <elementGroup id="group_4">
+                    <title>Group 4</title>
+                    <layer>1</layer>
+                    <top>0</top>
+                    <left>900</left>
+                    <width>300</width>
+                    <height>311</height>
+                    <slot>3</slot>
+                </elementGroup>
+            </elementGroups>
+            <elements>
+                <element id="rectangle" elementGroupId="group_0">
+                    <title>Background</title>
+                    <layer>0</layer>
+                    <top>63</top>
+                    <left>0</left>
+                    <width>1200</width>
+                    <height>278</height>
+                    <defaultProperties>
+                        <property id="backgroundColor">#000b33</property>
+                        <property id="roundBorder">1</property>
+                        <property id="borderRadius">16</property>
+                        <property id="outline">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="currency_logo" elementGroupId="group_1">
+                    <title>Currency logo</title>
+                    <layer>2</layer>
+                    <top>0</top>
+                    <left>93</left>
+                    <width>114</width>
+                    <height>121</height>
+                </element>
+                <element id="currency_name" elementGroupId="group_1">
+                    <title>Currency name</title>
+                    <layer>2</layer>
+                    <top>147</top>
+                    <left>0</left>
+                    <width>300</width>
+                    <height>73</height>
+                    <defaultProperties>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#fff</property>
+                        <property id="fontSize">56</property>
+                        <property id="horizontalAlign">center</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="textWrap">0</property>
+                        <property id="showOverflow">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="line" elementGroupId="group_1">
+                    <title>Separator</title>
+                    <layer>2</layer>
+                    <top>217</top>
+                    <left>113</left>
+                    <width>74</width>
+                    <height>27</height>
+                    <defaultProperties>
+                        <property id="lineColor">#fff</property>
+                        <property id="lineWidth">1</property>
+                    </defaultProperties>
+                </element>
+                <element id="currency_rawLastTradePriceOnly" elementGroupId="group_1">
+                    <title>Currency trade price</title>
+                    <layer>2</layer>
+                    <top>246</top>
+                    <left>0</left>
+                    <width>300</width>
+                    <height>65</height>
+                    <defaultProperties>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#fff</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">center</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="textWrap">0</property>
+                        <property id="showOverflow">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="currency_logo" elementGroupId="group_2">
+                    <title>Currency logo</title>
+                    <layer>2</layer>
+                    <top>0</top>
+                    <left>93</left>
+                    <width>114</width>
+                    <height>121</height>
+                </element>
+                <element id="currency_name" elementGroupId="group_2">
+                    <title>Currency name</title>
+                    <layer>2</layer>
+                    <top>147</top>
+                    <left>0</left>
+                    <width>300</width>
+                    <height>73</height>
+                    <defaultProperties>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#fff</property>
+                        <property id="fontSize">56</property>
+                        <property id="horizontalAlign">center</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="textWrap">0</property>
+                        <property id="showOverflow">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="line" elementGroupId="group_2">
+                    <title>Separator</title>
+                    <layer>2</layer>
+                    <top>217</top>
+                    <left>113</left>
+                    <width>74</width>
+                    <height>27</height>
+                    <defaultProperties>
+                        <property id="lineColor">#fff</property>
+                        <property id="lineWidth">1</property>
+                    </defaultProperties>
+                </element>
+                <element id="currency_rawLastTradePriceOnly" elementGroupId="group_2">
+                    <title>Currency trade price</title>
+                    <layer>2</layer>
+                    <top>246</top>
+                    <left>0</left>
+                    <width>300</width>
+                    <height>65</height>
+                    <defaultProperties>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#fff</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">center</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="textWrap">0</property>
+                        <property id="showOverflow">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="currency_logo" elementGroupId="group_3">
+                    <title>Currency logo</title>
+                    <layer>2</layer>
+                    <top>0</top>
+                    <left>93</left>
+                    <width>114</width>
+                    <height>121</height>
+                </element>
+                <element id="currency_name" elementGroupId="group_3">
+                    <title>Currency name</title>
+                    <layer>2</layer>
+                    <top>147</top>
+                    <left>0</left>
+                    <width>300</width>
+                    <height>73</height>
+                    <defaultProperties>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#fff</property>
+                        <property id="fontSize">56</property>
+                        <property id="horizontalAlign">center</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="textWrap">0</property>
+                        <property id="showOverflow">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="line" elementGroupId="group_3">
+                    <title>Separator</title>
+                    <layer>2</layer>
+                    <top>217</top>
+                    <left>113</left>
+                    <width>74</width>
+                    <height>27</height>
+                    <defaultProperties>
+                        <property id="lineColor">#fff</property>
+                        <property id="lineWidth">1</property>
+                    </defaultProperties>
+                </element>
+                <element id="currency_rawLastTradePriceOnly" elementGroupId="group_3">
+                    <title>Currency trade price</title>
+                    <layer>2</layer>
+                    <top>246</top>
+                    <left>0</left>
+                    <width>300</width>
+                    <height>65</height>
+                    <defaultProperties>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#fff</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">center</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="textWrap">0</property>
+                        <property id="showOverflow">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="currency_logo" elementGroupId="group_4">
+                    <title>Currency logo</title>
+                    <layer>2</layer>
+                    <top>0</top>
+                    <left>93</left>
+                    <width>114</width>
+                    <height>121</height>
+                </element>
+                <element id="currency_name" elementGroupId="group_4">
+                    <title>Currency name</title>
+                    <layer>2</layer>
+                    <top>147</top>
+                    <left>0</left>
+                    <width>300</width>
+                    <height>73</height>
+                    <defaultProperties>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#fff</property>
+                        <property id="fontSize">56</property>
+                        <property id="horizontalAlign">center</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="textWrap">0</property>
+                        <property id="showOverflow">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="line" elementGroupId="group_4">
+                    <title>Separator</title>
+                    <layer>2</layer>
+                    <top>217</top>
+                    <left>113</left>
+                    <width>74</width>
+                    <height>27</height>
+                    <defaultProperties>
+                        <property id="lineColor">#fff</property>
+                        <property id="lineWidth">1</property>
+                    </defaultProperties>
+                </element>
+                <element id="currency_rawLastTradePriceOnly" elementGroupId="group_4">
+                    <title>Currency trade price</title>
+                    <layer>2</layer>
+                    <top>246</top>
+                    <left>0</left>
+                    <width>300</width>
+                    <height>65</height>
+                    <defaultProperties>
+                        <property id="fontFamily">Poppins Regular</property>
+                        <property id="fontColor">#fff</property>
+                        <property id="fontSize">40</property>
+                        <property id="horizontalAlign">center</property>
+                        <property id="verticalAlign">center</property>
+                        <property id="textWrap">0</property>
+                        <property id="showOverflow">0</property>
+                    </defaultProperties>
+                </element>
+            </elements>
+        </stencil>
+        <assets>
+            <asset id="currency-group-2" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/currency/elements/currency-group-2.png" />
+        </assets>
+    </template>
 </templates>

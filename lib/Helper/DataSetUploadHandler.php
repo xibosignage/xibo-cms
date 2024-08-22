@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -38,7 +38,7 @@ class DataSetUploadHandler extends BlueImpUploadHandler
      * @param $file
      * @param $index
      */
-    protected function handle_form_data($file, $index)
+    protected function handleFormData($file, $index)
     {
         /* @var \Xibo\Controller\DataSet $controller */
         $controller = $this->options['controller'];
@@ -60,6 +60,20 @@ class DataSetUploadHandler extends BlueImpUploadHandler
 
             if (!$controller->getUser()->checkEditable($dataSet)) {
                 throw new AccessDeniedException();
+            }
+
+            // Get all columns
+            $columns = $dataSet->getColumn();
+
+            // Filter columns where dataSetColumnType is "Value"
+            $filteredColumns = array_filter($columns, function ($column) {
+                return $column->dataSetColumnTypeId == '1';
+            });
+
+            // Check if there are any value columns defined in the dataset
+            if (count($filteredColumns) === 0) {
+                $controller->getLog()->error('Import failed: No value columns defined in the dataset.');
+                throw new InvalidArgumentException(__('Import failed: No value columns defined in the dataset.'));
             }
 
             // We are allowed to edit - pull all required parameters from the request object
@@ -90,15 +104,21 @@ class DataSetUploadHandler extends BlueImpUploadHandler
             if ($overwrite == 1)
                 $dataSet->deleteData();
 
-            // Load the file
-            ini_set('auto_detect_line_endings', true);
-
             $firstRow = true;
             $i = 0;
-
             $handle = fopen($controller->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/' . $fileName, 'r');
             while (($data = fgetcsv($handle)) !== FALSE ) {
                 $i++;
+
+                // remove any elements that doesn't contain any value from the array
+                $filteredData = array_filter($data, function($value) {
+                    return !empty($value);
+                });
+
+                // Skip empty lines without any delimiters or data
+                if (empty($filteredData)) {
+                    continue;
+                }
 
                 $row = [];
 
@@ -136,9 +156,6 @@ class DataSetUploadHandler extends BlueImpUploadHandler
 
             // Close the file
             fclose($handle);
-
-            // Change the auto detect setting back
-            ini_set('auto_detect_line_endings', false);
 
             // TODO: update list content definitions
 

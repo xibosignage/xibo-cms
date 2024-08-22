@@ -1747,21 +1747,21 @@ class Schedule extends Base
         if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$ACTION_EVENT) {
             $schedule->actionType = $sanitizedParams->getString('actionType');
             $schedule->actionTriggerCode = $sanitizedParams->getString('actionTriggerCode');
+            $schedule->commandId = $sanitizedParams->getInt('commandId');
             $schedule->actionLayoutCode = $sanitizedParams->getString('actionLayoutCode');
             $schedule->campaignId = null;
         } else {
             $schedule->actionType = null;
             $schedule->actionTriggerCode = null;
+            $schedule->commandId = null;
             $schedule->actionLayoutCode = null;
         }
 
-        // collect commandId only on Command event
-        // null commandId otherwise
+        // collect commandId on Command event
+        // Retain existing commandId value otherwise
         if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$COMMAND_EVENT) {
             $schedule->commandId = $sanitizedParams->getInt('commandId');
             $schedule->campaignId = null;
-        } else {
-            $schedule->commandId = null;
         }
 
         // Set the parentCampaignId for campaign events
@@ -2310,8 +2310,9 @@ class Schedule extends Base
             ], $params)
         );
 
-        // Setting for whether we show Layouts with out permissions
+        // Grab some settings which determine how events are displayed.
         $showLayoutName = ($this->getConfig()->getSetting('SCHEDULE_SHOW_LAYOUT_NAME') == 1);
+        $defaultTimezone = $this->getConfig()->getSetting('defaultTimezone');
 
         foreach ($events as $event) {
             $event->load();
@@ -2374,15 +2375,25 @@ class Schedule extends Base
                         $i++;
                     }
                 } else if ($event->recurrenceType === 'Month') {
+                    // Force the timezone for this date (schedule from/to dates are timezone agnostic, but this
+                    // date still has timezone information, which could lead to use formatting as the wrong day)
+                    $date = Carbon::parse($event->fromDt)->tz($defaultTimezone);
+                    $this->getLog()->debug('grid: setting description for monthly event with date: '
+                        . $date->toAtomString());
+
                     if ($event->recurrenceMonthlyRepeatsOn === 0) {
-                        $repeatsOn = 'the ' . Carbon::parse($event->fromDt)->format('jS') . ' day of the month';
+                        $repeatsOn = 'the ' . $date->format('jS') . ' day of the month';
                     } else {
-                        $date = Carbon::parse($event->fromDt);
+                        // Which day of the month is this?
                         $firstDay = Carbon::parse('first ' . $date->format('l') . ' of ' . $date->format('F'));
+
+                        $this->getLog()->debug('grid: the first day of the month for this date is: '
+                            . $firstDay->toAtomString());
+
                         $nth = $firstDay->diffInDays($date) / 7 + 1;
                         $repeatWeekDayDate = $date->copy()->setDay($nth)->format('jS');
                         $repeatsOn = 'the ' . $repeatWeekDayDate . ' '
-                            . Carbon::parse($event->fromDt)->format('l')
+                            . $date->format('l')
                             . ' of the month';
                     }
                 }
@@ -2416,6 +2427,16 @@ class Schedule extends Base
             if ($event->eventTypeId == \Xibo\Entity\Schedule::$COMMAND_EVENT) {
                 $event->toDt = $event->fromDt;
             }
+
+            // Set the row from/to date to be an ISO date for display (no timezone)
+            $event->setUnmatchedProperty(
+                'displayFromDt',
+                Carbon::createFromTimestamp($event->fromDt)->format(DateFormatHelper::getSystemFormat())
+            );
+            $event->setUnmatchedProperty(
+                'displayToDt',
+                Carbon::createFromTimestamp($event->toDt)->format(DateFormatHelper::getSystemFormat())
+            );
 
             if ($this->isApi($request)) {
                 continue;

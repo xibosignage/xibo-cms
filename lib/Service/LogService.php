@@ -117,17 +117,17 @@ class LogService implements LogServiceInterface
         $this->requestId = $requestId;
     }
 
-    public function getUserId(): int
+    public function getUserId(): ?int
     {
         return $this->userId;
     }
 
-    public function getSessionHistoryId()
+    public function getSessionHistoryId(): ?int
     {
         return $this->sessionHistoryId;
     }
 
-    public function getRequestId()
+    public function getRequestId(): ?int
     {
         return $this->requestId;
     }

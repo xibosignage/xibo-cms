@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -130,7 +130,6 @@ jQuery.fn.extend({
     }
 
     const isAndroid = navigator.userAgent.indexOf('Android') > -1;
-    const isEditor = xiboIC.checkIsEditor();
 
     // For each matched element
     this.each(function(_key, element) {
@@ -203,7 +202,7 @@ jQuery.fn.extend({
           // hide the original and show the clone
           let $newItem;
           let $oldItem;
-          if (isEditor && $.contains(element, items[i])) {
+          if ($.contains(element, items[i])) {
             $oldItem = $(items[i]);
             $newItem = $oldItem.clone();
           } else {
@@ -326,6 +325,11 @@ jQuery.fn.extend({
 
         // Make sure the speed is something sensible
         options.speed = (options.speed === 0) ? 1 : options.speed;
+
+        // Set the content div height, if we don't do this when the marquee
+        // plugin floats the content inside, this goes to 0 and up/down
+        // marquees don't work
+        $contentDiv.css('height', height);
       }
 
       if (marquee) {
@@ -364,8 +368,10 @@ jQuery.fn.extend({
           options.effect === 'marqueeUp' ||
           options.effect === 'marqueeDown'
         ) {
-          $contentDiv.css('height', '100%');
-          $contentDiv.find('.scroll').css('height', '100%').children()
+          // Set the height of the scroller to 100%
+          $contentDiv.find('.scroll')
+            .css('height', '100%')
+            .children()
             .css({'white-space': 'normal', float: 'none'});
         }
 

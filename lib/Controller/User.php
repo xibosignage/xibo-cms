@@ -280,6 +280,8 @@ class User extends Base
             'userId' => $sanitizedParams->getInt('userId'),
             'userTypeId' => $sanitizedParams->getInt('userTypeId'),
             'userName' => $sanitizedParams->getString('userName'),
+            'firstName' => $sanitizedParams->getString('firstName'),
+            'lastName' => $sanitizedParams->getString('lastName'),
             'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
             'retired' => $sanitizedParams->getInt('retired'),
             'logicalOperatorName' => $sanitizedParams->getString('logicalOperatorName'),

@@ -1,5 +1,5 @@
 <!--
-  ~ Copyright (C) 2023 Xibo Signage Ltd
+  ~ Copyright (C) 2024 Xibo Signage Ltd
   ~
   ~ Xibo - Digital Signage - https://xibosignage.com
   ~
@@ -40,7 +40,7 @@
                 <helpText>The selected effect works best with a background colour. Optionally add one here.</helpText>
                 <default></default>
             </property>
-            <property id="maxItemsPerPage" type="number">
+            <property id="itemsPerPage" type="number">
                 <title>Items per Page</title>
                 <helpText>This is the intended number of items on each page.</helpText>
                 <default>4</default>
@@ -174,9 +174,7 @@ $(target).xiboLayoutAnimate(properties);
                 <title>Font</title>
                 <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
-            <property id="maxItemsPerPage" type="number">
-                <title>Items per Page</title>
-                <helpText>This is the intended number of items on each page.</helpText>
+            <property id="itemsPerPage" type="hidden" saveDefault="true">
                 <default>4</default>
             </property>
         </properties>
@@ -330,7 +328,10 @@ body {
 // target: The target element to render
 // items: The items to render
 // properties: The properties for the widget
-$(target).xiboLayoutScaler(properties);
+var overrideItemPerPage = {
+    itemsPerPage: 0,
+};
+$(target).xiboLayoutScaler($.extend({}, properties, overrideItemPerPage));
 
 // Get items
 var templateItems = $(target).find(".template-item");
@@ -415,9 +416,7 @@ $(target).xiboLayoutAnimate(properties);
                 <title>Font</title>
                 <helpText>Select a custom font - leave empty to use the default font.</helpText>
             </property>
-            <property id="maxItemsPerPage" type="number">
-                <title>Items per Page</title>
-                <helpText>This is the intended number of items on each page.</helpText>
+            <property id="itemsPerPage" type="hidden" saveDefault="true">
                 <default>5</default>
             </property>
         </properties>
@@ -608,7 +607,10 @@ body {
 // target: The target element to render
 // items: The items to render
 // properties: The properties for the widget
-$(target).xiboLayoutScaler(properties);
+var overrideItemPerPage = {
+    itemsPerPage: 0,
+};
+$(target).xiboLayoutScaler($.extend({}, properties, overrideItemPerPage));
 
 // Get template items
 var templateItems = $(target).find(".template-item");

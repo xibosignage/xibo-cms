@@ -1,8 +1,27 @@
 <?php
+/*
+ * Copyright (C) 2024 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 namespace Xibo\Helper;
 
-use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\LibraryFullException;
 
 /**
@@ -14,8 +33,7 @@ class UploadHandler extends BlueImpUploadHandler
      * @var callable
      */
     private $postProcess;
-    /** @var LogServiceInterface */
-    private $logger;
+
     /** @var ApplicationState */
     private $state;
 
@@ -29,16 +47,6 @@ class UploadHandler extends BlueImpUploadHandler
     }
 
     /**
-     * @param LogServiceInterface $logger
-     * @return $this
-     */
-    public function setLogger(LogServiceInterface $logger)
-    {
-        $this->logger = $logger;
-        return $this;
-    }
-
-    /**
      * @param ApplicationState $state
      * @return $this
      */
@@ -49,26 +57,17 @@ class UploadHandler extends BlueImpUploadHandler
     }
 
     /**
-     * Get Upload path
-     * @return string
-     */
-    public function getUploadPath()
-    {
-        return $this->options['upload_dir'];
-    }
-
-    /**
      * Handle form data from BlueImp
      * @param $file
      * @param $index
      */
-    protected function handle_form_data($file, $index)
+    protected function handleFormData($file, $index)
     {
         try {
-            $filePath = $this->getUploadPath() . $file->name;
+            $filePath = $this->getUploadDir() . $file->name;
             $file->fileName = $file->name;
 
-            $name = $this->getParam($index, 'name', $file->name);
+            $name = htmlspecialchars($this->getParam($index, 'name', $file->name));
             $file->name = $name;
 
             // Check Library
@@ -81,14 +80,14 @@ class UploadHandler extends BlueImpUploadHandler
                 );
             }
 
-            $this->logger->debug('Upload complete for name: ' . $name . '. Index is ' . $index);
+            $this->getLogger()->debug('Upload complete for name: ' . $name . '. Index is ' . $index);
 
             if ($this->postProcess !== null) {
                 $file = call_user_func($this->postProcess, $file, $this);
             }
         } catch (\Exception $exception) {
-            $this->logger->error('Error uploading file : ' . $exception->getMessage());
-            $this->logger->debug($exception->getTraceAsString());
+            $this->getLogger()->error('Error uploading file : ' . $exception->getMessage());
+            $this->getLogger()->debug($exception->getTraceAsString());
 
             // Unlink the temporary file
             @unlink($filePath);

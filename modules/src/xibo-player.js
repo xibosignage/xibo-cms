@@ -33,7 +33,7 @@ const XiboPlayer = function() {
   this.getWidgetData = async function(currentWidget) {
     // if we are a dataset type, then first check to see if there
     // is realtime data.
-    console.log('getWidgetData: ' + currentWidget.widgetId);
+    console.debug('getWidgetData: ' + currentWidget.widgetId);
 
     let localData;
     if (currentWidget.properties?.dataSetId) {
@@ -67,7 +67,7 @@ const XiboPlayer = function() {
             isDataReady: true,
           });
         }).fail(function(jqXHR, textStatus, errorThrown) {
-          console.log(jqXHR, textStatus, errorThrown);
+          console.error(jqXHR, textStatus, errorThrown);
           resolve({
             isDataReady: false,
             error: jqXHR.status,
@@ -124,13 +124,13 @@ const XiboPlayer = function() {
 
     if (isDataWidget) {
       const dataLoadState = playerWidget.onDataLoad(widgetDataItems);
-      console.log('onDataLoad::handled = ', dataLoadState.handled);
+      console.debug('onDataLoad::handled = ', dataLoadState.handled);
 
       widgetDataItems = dataLoadState.dataItems;
 
       if (!dataLoadState.handled) {
         widgetDataItems = playerWidget.onParseData(widgetDataItems);
-        console.log('onParseData::widgetDataItems ', widgetDataItems);
+        console.debug('onParseData::widgetDataItems ', widgetDataItems);
       }
     }
 
@@ -279,7 +279,7 @@ const XiboPlayer = function() {
           collection[grpWidgetId] = groupProps;
           collection[grpWidgetId].onTemplateVisible = function($target) {
             self.runLayoutAnimate($target, groupProps);
-            console.log('Called onTemplateVisible for group > ', grpWidgetId);
+            console.debug('Called onTemplateVisible for group > ', grpWidgetId);
           };
         }
 
@@ -681,7 +681,7 @@ const XiboPlayer = function() {
     if (!self.isGroup(elemCopy)) {
       elemCopy.onTemplateVisible = function($target) {
         self.runLayoutAnimate($target, elemCopy);
-        console.log('Called onTemplateVisible for element > ',
+        console.debug('Called onTemplateVisible for element > ',
           elemCopy.elementId);
       };
     }
@@ -719,7 +719,10 @@ XiboPlayer.prototype.init = function() {
           inputWidget.properties,
           inputWidget.meta,
         );
-        console.log('Called onInitialize for widget > ', inputWidget.widgetId);
+        console.debug(
+          'Called onInitialize for widget > ',
+          inputWidget.widgetId,
+        );
       }
 
       // Set default isDataExpected value if it does not exist
@@ -732,10 +735,10 @@ XiboPlayer.prototype.init = function() {
         // Load data
         self.getWidgetData(inputWidget).then(function(response) {
           if (self.isStaticWidget(inputWidget)) {
-            console.log('Data Widget::Static Template');
+            console.debug('Data Widget::Static Template');
             self.countWidgetStatic++;
           } else {
-            console.log('Data Widget::Elements');
+            console.debug('Data Widget::Elements');
             self.countWidgetElements++;
           }
 
@@ -764,7 +767,7 @@ XiboPlayer.prototype.init = function() {
           });
         }
       } else if (self.isModule(inputWidget)) { // It's a module
-        console.log('Non-data Widget::Module');
+        console.debug('Non-data Widget::Module');
         const currentWidget = self.playerWidget(
           inputWidget,
           [],
@@ -774,7 +777,7 @@ XiboPlayer.prototype.init = function() {
 
         self.renderModule(currentWidget);
       } else { // All global elements goes here
-        console.log('Non-data Widget::Global Elements');
+        console.debug('Non-data Widget::Global Elements');
         const currentWidget = self.playerWidget(
           inputWidget,
           [],
@@ -1094,7 +1097,7 @@ XiboPlayer.prototype.renderStaticWidget = function(staticWidget) {
     xiboIC.addToQueue(onVisibleMethods);
   }
 
-  console.log(
+  console.debug(
     '<<<END>>> renderStaticWidget for widget >', staticWidget.widgetId);
 };
 
@@ -1260,7 +1263,7 @@ XiboPlayer.prototype.renderDataElements = function(currentWidget) {
     xiboIC.addToQueue(currentWidget.onVisible);
   }
 
-  console.log(
+  console.debug(
     '<<<END>>> of renderDataElements for widget >', currentWidget.widgetId);
 };
 
@@ -1280,7 +1283,6 @@ XiboPlayer.prototype.postRenderDataElements = function(
     position: 'absolute',
     top: slotObjItem.top,
     left: slotObjItem.left,
-    overflow: 'hidden',
     zIndex: slotObjItem.layer,
   });
 
@@ -1385,14 +1387,13 @@ XiboPlayer.prototype.renderGlobalElements = function(currentWidget) {
 
             const itemID =
                 groupItem.uniqueID || groupItem.templateData?.uniqueID;
-            const $itemContainer = $(`<div class="${itemKey}"></div>`);
 
             // Call onTemplateRender
             // Handle the rendering of the template
             (groupItem.onTemplateRender() !== undefined) &&
             groupItem.onTemplateRender()(
               groupItem.elementId,
-              $itemContainer.find(`.${itemID}--item`),
+              $content.find(`#${itemID}`),
               $content.find(`.${itemID}--item`),
               {groupItem, ...groupItem.templateData, data: {}},
               meta,
@@ -1414,14 +1415,13 @@ XiboPlayer.prototype.renderGlobalElements = function(currentWidget) {
 
         const itemID =
           elemObj.uniqueID || elemObj.templateData?.uniqueID;
-        const $itemContainer = $(`<div class="${itemKey}"></div>`);
 
         // Call onTemplateRender
         // Handle the rendering of the template
         (elemObj.onTemplateRender() !== undefined) &&
           elemObj.onTemplateRender()(
             elemObj.elementId,
-            $itemContainer.find(`.${itemID}--item`),
+            $content.find(`#${itemID}`),
             $content.find(`.${itemID}--item`),
             {elemObj, ...elemObj.templateData, data: {}},
             meta,
@@ -1440,7 +1440,7 @@ XiboPlayer.prototype.renderGlobalElements = function(currentWidget) {
     xiboIC.addToQueue(currentWidget.onVisible);
   }
 
-  console.log(
+  console.debug(
     '<<<END>>> of renderGlobalElements for widget >', currentWidget.widgetId);
 };
 
@@ -1489,7 +1489,8 @@ XiboPlayer.prototype.renderModule = function(currentWidget) {
     xiboIC.addToQueue(currentWidget.onVisible);
   }
 
-  console.log('<<<END>>> of renderModule for widget >', currentWidget.widgetId);
+  console.debug(
+    '<<<END>>> of renderModule for widget >', currentWidget.widgetId);
 };
 
 /**
@@ -1543,7 +1544,7 @@ XiboPlayer.prototype.loadElementFunctions = function(element, dataItem) {
         );
     }
 
-    console.log('Called onElementParseData for element >', element.elementId);
+    console.debug('Called onElementParseData for element >', element.elementId);
     return newDataItem;
   };
   element.onTemplateRender = function() {
@@ -1564,7 +1565,7 @@ XiboPlayer.prototype.loadElementFunctions = function(element, dataItem) {
       onTemplateRender = window[`onTemplateRender_${element.templateData.id}`];
     }
 
-    console.log('Called onTemplateRender for element >', element.elementId);
+    console.debug('Called onTemplateRender for element >', element.elementId);
 
     return onTemplateRender;
   };
@@ -1686,7 +1687,7 @@ XiboPlayer.prototype.onTemplateRender = function(params, currentWidget) {
       params.rendering,
       params.meta,
     );
-    console.log('Called onTemplateRender for widget > ', params.widgetId);
+    console.debug('Called onTemplateRender for widget > ', params.widgetId);
 
     if (onTemplateRenderResult !== undefined &&
       Object.keys(onTemplateRenderResult).length > 0
@@ -1725,7 +1726,7 @@ XiboPlayer.prototype.onRender = function(params) {
       params.rendering,
       params.meta,
     );
-    console.log('Called onRender for widget > ', params.widgetId);
+    console.debug('Called onRender for widget > ', params.widgetId);
   }
 };
 
@@ -1749,7 +1750,7 @@ XiboPlayer.prototype.onTemplateVisible = function(params) {
         params.rendering,
         params.meta,
       );
-      console.log('Called onTemplateVisible for widget > ', params.widgetId);
+      console.debug('Called onTemplateVisible for widget > ', params.widgetId);
 
       if (onTemplateVisibleResult !== undefined &&
         Object.keys(onTemplateVisibleResult).length > 0
@@ -1788,7 +1789,7 @@ XiboPlayer.prototype.onVisible = function(params) {
         params.rendering,
         params.meta,
       );
-      console.log('Called onVisible for widget > ', params.widgetId);
+      console.debug('Called onVisible for widget > ', params.widgetId);
     };
 
     window.runOnVisible();

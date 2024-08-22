@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2019 Xibo Signage Ltd
+/*
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -86,18 +86,23 @@ class ImageProcessingTask implements TaskInterface
 
             // Orientation of the image
             if ($imgWidth > $imgHeight) { // 'landscape';
-                $this->imageProcessingService->resizeImage($filePath, $resizeThreshold, null);
+                $updatedImg = $this->imageProcessingService->resizeImage($filePath, $resizeThreshold, null);
             } else { // 'portrait';
-                $this->imageProcessingService->resizeImage($filePath, null, $resizeThreshold);
+                $updatedImg = $this->imageProcessingService->resizeImage($filePath, null, $resizeThreshold);
             }
 
             // Clears file status cache
-            clearstatcache(true, $filePath);
+            clearstatcache(true, $updatedImg['filePath']);
 
             $count++;
 
             // Release image and save
-            $media->release(md5_file($filePath), filesize($filePath));
+            $media->release(
+                md5_file($updatedImg['filePath']),
+                filesize($updatedImg['filePath']),
+                $updatedImg['height'],
+                $updatedImg['width']
+            );
             $this->store->commitIfNecessary();
 
             $mediaDisplays= [];

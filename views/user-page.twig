@@ -48,7 +48,7 @@
                     <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
 
-                            {% set title %}{% trans "Name" %}{% endset %}
+                            {% set title %}{% trans "Username" %}{% endset %}
                             {{ inline.inputNameGrid('userName', title) }}
 
                             {% set title %}{% trans "User Type" %}{% endset %}
@@ -57,6 +57,12 @@
                             {% set title %}{% trans "Retired" %}{% endset %}
                             {% set values = [{id: 1, value: "Yes"}, {id: 0, value: "No"}] %}
                             {{ inline.dropdown("retired", "single", title, 0, values, "id", "value") }}
+
+                            {% set title %}{% trans "First Name" %}{% endset %}
+                            {{ inline.input('firstName', title) }}
+
+                            {% set title %}{% trans "Last Name" %}{% endset %}
+                            {{ inline.input('lastName', title) }}
                         </form>
                     </div>
                 </div>
@@ -64,7 +70,7 @@
                     <table id="users" class="table table-striped" data-state-preference-name="userGrid">
                         <thead>
                             <tr>
-                                <th>{% trans "Name" %}</th>
+                                <th>{% trans "Username" %}</th>
                                 <th>{% trans "Homepage" %}</th>
                                 <th>{% trans "Home folder" %}</th>
                                 <th>{% trans "Email" %}</th>
@@ -459,6 +465,15 @@
                 plugins,
                 $(dialog).find('input[name=homeFolderId]').val()
             );
+
+            $('.folder-tree-buttons').on('click', 'button', function(ev) {
+                const jsTree = $(dialog).find('#container-form-folder-tree').jstree(true);
+                if ($(ev.target).attr('id') === 'selectAllBtn') {
+                    jsTree.select_all();
+                } else if ($(ev.target).attr('id') === 'selectNoneBtn') {
+                    jsTree.deselect_all();
+                }
+            });
         }
     </script>
 {% endblock %}

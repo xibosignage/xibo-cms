@@ -297,6 +297,9 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
     provider: {
       value: 'both',
     },
+    folder: {
+      value: '',
+    },
   };
 
   const defaultMenuItems = [
@@ -354,6 +357,12 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
           value: 'image',
           locked: true,
         },
+        folder: {
+          value: '',
+          key: 'folders',
+          dataRole: 'foldersList',
+          searchUrl: urlsForApi.folders.get.url,
+        },
         owner: {
           value: '',
           key: 'users',
@@ -400,6 +409,12 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
           value: 'audio',
           locked: true,
         },
+        folder: {
+          value: '',
+          key: 'folders',
+          dataRole: 'foldersList',
+          searchUrl: urlsForApi.folders.get.url,
+        },
         owner: {
           value: '',
           key: 'users',
@@ -439,6 +454,12 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
         type: {
           value: 'video',
           locked: true,
+        },
+        folder: {
+          value: '',
+          key: 'folders',
+          dataRole: 'foldersList',
+          searchUrl: urlsForApi.folders.get.url,
         },
         owner: {
           value: '',
@@ -486,6 +507,12 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
           key: 'tags',
           dataRole: 'tagsinput',
         },
+        folder: {
+          value: '',
+          key: 'folders',
+          dataRole: 'foldersList',
+          searchUrl: urlsForApi.folders.get.url,
+        },
         owner: {
           value: '',
           key: 'users',
@@ -521,6 +548,12 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
           value: '',
           key: 'tags',
           dataRole: 'tagsinput',
+        },
+        folder: {
+          value: '',
+          key: 'folders',
+          dataRole: 'foldersList',
+          searchUrl: urlsForApi.folders.get.url,
         },
         user: {
           value: '',
@@ -565,6 +598,12 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
         provider: {
           value: 'local',
           locked: true,
+        },
+        folder: {
+          value: '',
+          key: 'folders',
+          dataRole: 'foldersList',
+          searchUrl: urlsForApi.folders.get.url,
         },
         orientation: {
           value: '',
@@ -629,6 +668,11 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
 
   // Get providers
   $.ajax(urlsForApi.media.getProviders).done(function(res) {
+    // Stop if not available
+    if (Object.keys(self).length === 0) {
+      return;
+    }
+
     if (
       Array.isArray(res)
     ) {
@@ -702,6 +746,7 @@ Toolbar.prototype.loadPrefs = function() {
   // Load using the API
   const linkToAPI = urlsForApi.user.getPref;
   const app = this.parent;
+  const self = this;
 
   const renderBars = function() {
     // Render toolbar and topbar if exists
@@ -715,11 +760,15 @@ Toolbar.prototype.loadPrefs = function() {
   };
 
   // Request items based on filters
-  const self = this;
   $.ajax({
     url: linkToAPI.url + '?preference=toolbar',
     type: linkToAPI.type,
   }).done(function(res) {
+    // Stop if not available
+    if (Object.keys(self).length === 0) {
+      return;
+    }
+
     if (res.success) {
       const loadedData = JSON.parse(res.data.value ?? '{}');
       const findMenuIndexByName = function(name) {
@@ -816,8 +865,7 @@ Toolbar.prototype.loadPrefs = function() {
     } else {
       // Login Form needed?
       if (res.login) {
-        window.location.href = window.location.href;
-        location.reload();
+        window.location.reload();
       } else {
         // Just an error we dont know about
         if (res.message == undefined) {
@@ -942,8 +990,7 @@ Toolbar.prototype.savePrefs = _.debounce(function(clearPrefs = false) {
     if (!res.success) {
       // Login Form needed?
       if (res.login) {
-        window.location.href = window.location.href;
-        location.reload();
+        window.location.reload();
       } else {
         toastr.error(errorMessagesTrans.userSavePreferencesFailed);
 
@@ -966,6 +1013,9 @@ Toolbar.prototype.savePrefs = _.debounce(function(clearPrefs = false) {
  * @param {bool=} savePrefs - Save preferences
  */
 Toolbar.prototype.render = function({savePrefs = true} = {}) {
+  const self = this;
+  const app = this.parent;
+
   // If toolbar isn't initialized, do it
   if (this.initalized === false) {
     // Initialize toolbar
@@ -988,8 +1038,11 @@ Toolbar.prototype.render = function({savePrefs = true} = {}) {
     return;
   }
 
-  const self = this;
-  const app = this.parent;
+  // Stop if not available
+  if (Object.keys(self).length === 0) {
+    return;
+  }
+
   const readOnlyModeOn =
     (typeof (lD) != 'undefined' && lD?.readOnlyMode === true) ||
     (app?.readOnlyMode === true);
@@ -1723,6 +1776,11 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
       // Remove loading
       $mediaContent.parent().find('.loading-container-toolbar').remove();
 
+      // Stop if not available
+      if (Object.keys(self).length === 0) {
+        return;
+      }
+
       // If there's no masonry sizer, add it
       if ($mediaContent.find('.toolbar-card-sizer').length == 0) {
         $mediaContent.append(
@@ -1854,11 +1912,16 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
 
         // Layout masonry after images are loaded
         $mediaContent.imagesLoaded(function() {
-          // Recalculate masonry layout
-          $mediaContent.masonry('layout');
+          // Stop if not available
+          if (Object.keys(self).length === 0) {
+            return;
+          }
 
           // Show content in widgets
           $mediaContent.find('.toolbar-card').removeClass('hide-content');
+
+          // Recalculate masonry layout again
+          $mediaContent.masonry('layout');
 
           // Show more button
           if (res.data.length > 0) {
@@ -1887,9 +1950,6 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
             'scroll',
             ($parent.width() < $parent[0].scrollHeight),
           );
-
-          // Handle card behaviour
-          self.handleCardsBehaviour();
         });
 
         // For video, wait for 3s and call
@@ -1899,12 +1959,14 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
             $mediaContent.masonry('layout');
           }, 3000);
         }
+
+        // Handle card behaviour
+        self.handleCardsBehaviour();
       }
     }).catch(function(jqXHR, textStatus, errorThrown) {
       // Login Form needed?
       if (res.login) {
-        window.location.href = window.location.href;
-        location.reload();
+        window.location.reload();
       } else {
         // Just an error we dont know about
         if (res.message == undefined) {
@@ -2181,7 +2243,6 @@ Toolbar.prototype.mediaContentPopulateTable = function(menu) {
 
       // Add with click if playlist
       if (self.isPlaylist) {
-        console.log('Add with click!');
         app.dropItemAdd({}, $target.closest('tr'));
       } else {
         self.selectCard($target.closest('tr'), data);
@@ -2264,12 +2325,45 @@ Toolbar.prototype.mediaContentHandleInputs = function(
 
   // Initialize user list input
   const $userListInput = $mediaForm.find('select[name="ownerId"]');
-  makePagedSelect($userListInput);
+  makePagedSelect($userListInput, $mediaContainer, null, true);
+
+  // Initialize folder input
+  const $folderInput = $mediaForm.find('select[name="folderId"]');
+  makePagedSelect($folderInput, $mediaContainer, function(data) {
+    // Format data
+    const newData = [];
+
+    // Get data from folder structure recursively
+    const getData = function(arr) {
+      arr.forEach((el) => {
+        // Add to data
+        newData.push({
+          folderId: el.folderId,
+          folderName: el.text,
+        });
+
+        // If folder has sub-folders, get data from them as well
+        if (Array.isArray(el.children)) {
+          getData(el.children);
+        }
+      });
+    };
+
+    // Get initial data
+    getData(data);
+
+    return {
+      data: newData,
+    };
+  }, true);
 
   // Initialize other select inputs
   $mediaForm
-    .find('select:not([name="ownerId"]):not(.input-sort)')
-    .select2({
+    .find(
+      'select:not([name="ownerId"])' +
+      ':not([name="folderId"])' +
+      ':not(.input-sort)',
+    ).select2({
       minimumResultsForSearch: -1, // Hide search box
     });
 };
@@ -2432,6 +2526,11 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
         provider: 'both',
       }, $searchForm.serializeObject()),
       success: function(response) {
+        // Stop if not available
+        if (Object.keys(self).length === 0) {
+          return;
+        }
+
         $container.parent().find('.loading-container-toolbar').remove();
 
         if (response && response.data && response.data.length > 0) {
@@ -2470,11 +2569,11 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
 
           // Layout masonry after images are loaded
           $content.imagesLoaded(function() {
-            // Recalculate masonry layout
-            $content.masonry('layout');
-
             // Show content in widgets
             $content.find('.toolbar-card').removeClass('hide-content');
+
+            // Recalculate masonry layout
+            $content.masonry('layout');
 
             // Show more button
             if (response.data.length > 0) {
@@ -2503,12 +2602,12 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
               'scroll',
               ($parent.width() < $parent[0].scrollHeight),
             );
-
-            self.handleCardsBehaviour();
           });
+
+          // Handle card behaviour
+          self.handleCardsBehaviour();
         } else if (response.login) {
-          window.location.href = window.location.href;
-          location.reload();
+          window.location.reload();
         } else if (
           $content.find('.toolbar-card:not(.toolbar-card-special)').length === 0
         ) {
@@ -2559,6 +2658,36 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
   $searchForm.find('select, input[type="text"]').change(_.debounce(function() {
     filterRefresh();
   }, 200));
+
+  // Initialize folder input
+  const $folderInput = $searchForm.find('select[name="folderId"]');
+  makePagedSelect($folderInput, $searchForm, function(data) {
+    // Format data
+    const newData = [];
+
+    // Get data from folder structure recursively
+    const getData = function(arr) {
+      arr.forEach((el) => {
+        // Add to data
+        newData.push({
+          folderId: el.folderId,
+          folderName: el.text,
+        });
+
+        // If folder has sub-folders, get data from them as well
+        if (Array.isArray(el.children)) {
+          getData(el.children);
+        }
+      });
+    };
+
+    // Get initial data
+    getData(data);
+
+    return {
+      data: newData,
+    };
+  }, true);
 
   // Initialize other select inputs
   $container
@@ -2620,6 +2749,11 @@ Toolbar.prototype.playlistsContentPopulate = function(menu) {
         provider: 'both',
       }, $searchForm.serializeObject()),
       success: function(response) {
+        // Stop if not available
+        if (Object.keys(self).length === 0) {
+          return;
+        }
+
         $container.parent().find('.loading-container-toolbar').remove();
 
         // Send translation with module object
@@ -2782,11 +2916,43 @@ Toolbar.prototype.playlistsContentPopulate = function(menu) {
   // Initialize user list input
   const $userListInput = $container
     .find('.media-search-form select[name="userId"]');
-  makePagedSelect($userListInput);
+  makePagedSelect($userListInput, $container, null, true);
+
+  // Initialize folder input
+  const $folderInput = $container.find('select[name="folderId"]');
+  makePagedSelect($folderInput, $container, function(data) {
+    // Format data
+    const newData = [];
+
+    // Get data from folder structure recursively
+    const getData = function(arr) {
+      arr.forEach((el) => {
+        // Add to data
+        newData.push({
+          folderId: el.folderId,
+          folderName: el.text,
+        });
+
+        // If folder has sub-folders, get data from them as well
+        if (Array.isArray(el.children)) {
+          getData(el.children);
+        }
+      });
+    };
+
+    // Get initial data
+    getData(data);
+
+    return {
+      data: newData,
+    };
+  }, true);
 
   // Initialize other select inputs
   $container
-    .find('.media-search-form select:not([name="userId"]):not(.input-sort)')
+    .find('.media-search-form select:not([name="userId"])' +
+      ':not([name="folderId"])' +
+      ':not(.input-sort)')
     .select2({
       minimumResultsForSearch: -1, // Hide search box
     });
@@ -3365,6 +3531,11 @@ Toolbar.prototype.loadTemplates = function(
   app.templateManager.getTemplateByDataType(contentType)
     .then(function(templatesData) {
       const populateContent = function() {
+        // Stop if not available
+        if (Object.keys(self).length === 0) {
+          return;
+        }
+
         const elements = [];
         const stencils = [];
         const templates = [];

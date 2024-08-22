@@ -32,11 +32,13 @@ jobs:
       # Step 4: The Rest
       - name: Check Comment
         id: check_comment
+        env:
+          COMMENT_BODY: ${{ github.event.comment.body }}
         run: |
-          comment_body="${{ github.event.comment.body }}"
-          if [[ "$comment_body" =~ TEST:\ (all|\*) ]]; then
+          # Sanitize and validate comment body for TEST command
+          if [[ "$COMMENT_BODY" =~ ^TEST:\ (all|\*)$ ]]; then
             test_all=true
-          elif [[ "$comment_body" =~ TEST:(.*?)END ]]; then
+          elif [[ "$COMMENT_BODY" =~ ^TEST:(.*?)END$ ]]; then
             specs="${BASH_REMATCH[1]}"
             # Split the content by commas and remove spaces
             IFS=',' read -ra content_array <<< "$specs"
@@ -46,7 +48,7 @@ jobs:
             content_array=("${content_array[@]%/}")
             # Add "/app/cypress/e2e/" prefix to each element
             for ((i=0; i<${#content_array[@]}; i++)); do
-            content_array[$i]="/app/cypress/e2e/${content_array[$i]}"
+              content_array[$i]="/app/cypress/e2e/${content_array[$i]}"
             done
             # Join the content array elements with commas
             content_no_spaces="$(IFS=','; echo "${content_array[*]}")"

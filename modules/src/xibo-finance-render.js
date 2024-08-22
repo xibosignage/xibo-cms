@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -28,13 +28,17 @@ jQuery.fn.extend({
       duration: '30',
       durationIsPerItem: false,
       numItems: items.length,
-      maxItemsPerPage: 5,
+      itemsPerPage: 5,
       previewWidth: 0,
       previewHeight: 0,
       scaleOverride: 0,
     };
 
     options = $.extend({}, defaults, options);
+
+    if (!options.itemsPerPage) {
+      options.itemsPerPage = 1;
+    }
 
     // Calculate the dimensions of this itemoptions.numItems
     // based on the preview/original dimensions
@@ -65,8 +69,8 @@ jQuery.fn.extend({
     this.each(function(_idx, _elem) {
       // How many pages to we need?
       const numberOfPages =
-        (options.numItems > options.maxItemsPerPage) ?
-          Math.ceil(options.numItems / options.maxItemsPerPage) : 1;
+        (options.numItems > options.itemsPerPage) ?
+          Math.ceil(options.numItems / options.itemsPerPage) : 1;
       const $mainContainer = $(_elem);
 
       // Destroy any existing cycle
@@ -91,9 +95,9 @@ jQuery.fn.extend({
       for (let i = 0; i < numberOfPages; i++) {
         // Create a page
         const $itemsHTML = $('<div />').addClass('page');
-        for (let j = 0; j < options.maxItemsPerPage; j++) {
-          if (((i * options.maxItemsPerPage) + j) < options.numItems) {
-            const $item = $(items[(i * options.maxItemsPerPage) + j]);
+        for (let j = 0; j < options.itemsPerPage; j++) {
+          if (((i * options.itemsPerPage) + j) < options.numItems) {
+            const $item = $(items[(i * options.itemsPerPage) + j]);
             // Clone and append the item to the page
             // and remove template-item class when isEditor = true
             (isEditor ? $item.clone() : $item).appendTo($itemsHTML)

@@ -26,6 +26,8 @@ use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Str;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Event\DataConnectorScriptRequestEvent;
+use Xibo\Event\DataConnectorSourceRequestEvent;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\FolderFactory;
@@ -381,9 +383,18 @@ class DataSet extends Base
      */
     public function addForm(Request $request, Response $response)
     {
+
+        // Dispatch an event to initialize list of data sources for data connectors
+        $event = new DataConnectorSourceRequestEvent();
+        $this->getDispatcher()->dispatch($event, DataConnectorSourceRequestEvent::$NAME);
+
+        // Retrieve data connector sources from the event
+        $dataConnectorSources = $event->getDataConnectorSources();
+
         $this->getState()->template = 'dataset-form-add';
         $this->getState()->setData([
             'dataSets' => $this->dataSetFactory->query(),
+            'dataConnectorSources' => $dataConnectorSources,
         ]);
 
         return $this->render($request, $response);
@@ -433,6 +444,13 @@ class DataSet extends Base
      *      type="integer",
      *      required=true
      *   ),
+     *   @SWG\Parameter(
+     *       name="dataConnectorSource",
+     *       in="formData",
+     *       description="Source of the data connector",
+     *       type="string",
+     *       required=true
+     *    ),
      *  @SWG\Parameter(
      *      name="method",
      *      in="formData",
@@ -617,6 +635,7 @@ class DataSet extends Base
         $dataSet->code = $sanitizedParams->getString('code');
         $dataSet->isRemote = $sanitizedParams->getCheckbox('isRemote');
         $dataSet->isRealTime = $sanitizedParams->getCheckbox('isRealTime');
+        $dataSet->dataConnectorSource = $sanitizedParams->getString('dataConnectorSource');
         $dataSet->userId = $this->getUser()->userId;
 
         // Folders
@@ -703,12 +722,23 @@ class DataSet extends Base
             throw new AccessDeniedException();
         }
 
+        // Dispatch an event to initialize list of data sources for data connectors
+        $event = new DataConnectorSourceRequestEvent();
+        $this->getDispatcher()->dispatch($event, DataConnectorSourceRequestEvent::$NAME);
+
+        // Retrieve data sources from the event
+        $dataConnectorSources = $event->getDataConnectorSources();
+
+        // retrieve the columns of the selected dataset
+        $dataSet->getColumn();
+
         // Set the form
         $this->getState()->template = 'dataset-form-edit';
         $this->getState()->setData([
             'dataSet' => $dataSet,
             'dataSets' => $this->dataSetFactory->query(),
             'script' => $dataSet->getScript(),
+            'dataConnectorSources' => $dataConnectorSources
         ]);
 
         return $this->render($request, $response);
@@ -774,6 +804,13 @@ class DataSet extends Base
      *      type="integer",
      *      required=true
      *   ),
+     *   @SWG\Parameter(
+     *       name="dataConnectorSource",
+     *       in="formData",
+     *       description="Source of the data connector",
+     *       type="string",
+     *       required=true
+     *    ),
      *  @SWG\Parameter(
      *      name="method",
      *      in="formData",
@@ -949,6 +986,7 @@ class DataSet extends Base
         $dataSet->code = $sanitizedParams->getString('code');
         $dataSet->isRemote = $sanitizedParams->getCheckbox('isRemote');
         $dataSet->isRealTime = $sanitizedParams->getCheckbox('isRealTime');
+        $dataSet->dataConnectorSource = $sanitizedParams->getString('dataConnectorSource');
         $dataSet->folderId = $sanitizedParams->getInt('folderId', ['default' => $dataSet->folderId]);
 
         if ($dataSet->hasPropertyChanged('folderId')) {
@@ -1440,24 +1478,17 @@ class DataSet extends Base
 
         $sanitizer = $this->getSanitizer($request->getParams());
 
-
         $options = array(
             'userId' => $this->getUser()->userId,
             'dataSetId' => $id,
             'controller' => $this,
-            'upload_dir' => $libraryFolder . 'temp/',
-            'download_via_php' => true,
-            'script_url' => $this->urlFor($request,'dataSet.import', ['id' => $id]),
-            'upload_url' => $this->urlFor($request,'dataSet.import', ['id' => $id]),
-            'image_versions' => array(),
             'accept_file_types' => '/\.csv/i',
             'sanitizer' => $sanitizer
         );
 
         try {
             // Hand off to the Upload Handler provided by jquery-file-upload
-            new DataSetUploadHandler($options);
-
+            new DataSetUploadHandler($libraryFolder . 'temp/', $this->getLog()->getLoggerInterface(), $options);
         } catch (\Exception $e) {
             // We must not issue an error, the file upload return should have the error object already
             $this->getState()->setCommitState(false);
@@ -1597,28 +1628,33 @@ class DataSet extends Base
 
                 // Check unique keys to see if this is an update
                 if (!empty($data['uniqueKeys']) && is_array($data['uniqueKeys'])) {
-
                     // Build a filter to select existing records
                     $filter = '';
+                    $params = [];
+                    $i = 0;
                     foreach ($data['uniqueKeys'] as $uniqueKey) {
                         if (isset($rowToAdd[$uniqueKey])) {
-                            $filter .= 'AND `' . $uniqueKey . '` = \'' . $rowToAdd[$uniqueKey] . '\' ';
+                            $i++;
+                            $filter .= 'AND `' . $uniqueKey . '` = :uniqueKey_' . $i . ' ';
+                            $params['uniqueKey_' . $i] = $rowToAdd[$uniqueKey];
                         }
                     }
                     $filter = trim($filter, 'AND');
 
                     // Use the unique keys to look up this row and see if it exists
-                    $existingRows = $dataSet->getData(['filter' => $filter], ['includeFormulaColumns' => false, 'requireTotal' => false]);
+                    $existingRows = $dataSet->getData(
+                        ['filter' => $filter],
+                        ['includeFormulaColumns' => false, 'requireTotal' => false],
+                        $params,
+                    );
 
                     if (count($existingRows) > 0) {
                         foreach ($existingRows as $existingRow) {
                             $dataSet->editRow($existingRow['id'], array_merge($existingRow, $rowToAdd));
                         }
-                    }
-                    else {
+                    } else {
                         $dataSet->addRow($rowToAdd);
                     }
-
                 } else {
                     $dataSet->addRow($rowToAdd);
                 }
@@ -1834,13 +1870,23 @@ class DataSet extends Base
 
         $dataSet->load();
 
+        if ($dataSet->dataConnectorSource == 'user_defined') {
+            // retrieve the user defined javascript
+            $script = $dataSet->getScript();
+        } else {
+            // Dispatch the event to get the script from the connector
+            $event = new DataConnectorScriptRequestEvent($dataSet);
+            $this->getDispatcher()->dispatch($event, DataConnectorScriptRequestEvent::$NAME);
+            $script = $dataSet->getScript();
+        }
+
         $this->getState()->template = 'dataset-data-connector-page';
         $this->getState()->setData([
             'dataSet' => $dataSet,
-            'script' => $dataSet->getScript(),
-        ]);
-
-        return $this->render($request, $response);
+            'script' => $script,
+            ]);
+    
+            return $this->render($request, $response);
     }
 
     /**

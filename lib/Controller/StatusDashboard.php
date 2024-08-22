@@ -310,16 +310,9 @@ class StatusDashboard extends Base
             $data['libraryWidgetData'] = json_encode($libraryUsage);
 
             // Get a count of users
-            $data['countUsers'] = count($this->userFactory->query());
+            $data['countUsers'] = $this->userFactory->count();
 
             // Get a count of active layouts, only for display groups we have permission for
-            $displayGroups = $this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]);
-            $displayGroupIds = array_map(function ($element) {
-                return $element->displayGroupId;
-            }, $displayGroups);
-            // Add an empty one
-            $displayGroupIds[] = -1;
-
             $params = ['now' => Carbon::now()->format('U')];
 
             $sql = '
@@ -422,9 +415,7 @@ class StatusDashboard extends Base
 
             // Display Status and Media Inventory data - Level one
             $displays = $this->displayFactory->query();
-            $displayIds = [];
             $displayLoggedIn = [];
-            $displayNames = [];
             $displayMediaStatus = [];
             $displaysOnline = 0;
             $displaysOffline = 0;
@@ -432,8 +423,6 @@ class StatusDashboard extends Base
             $displaysMediaNotUpToDate = 0;
 
             foreach ($displays as $display) {
-                $displayIds[] = $display->displayId;
-                $displayNames[] = $display->display;
                 $displayLoggedIn[] = $display->loggedIn;
                 $displayMediaStatus[] = $display->mediaInventoryStatus;
             }
@@ -456,7 +445,6 @@ class StatusDashboard extends Base
 
             $data['displayStatus'] = json_encode([$displaysOnline, $displaysOffline]);
             $data['displayMediaStatus'] = json_encode([$displaysMediaUpToDate, $displaysMediaNotUpToDate]);
-            $data['displayLabels'] = json_encode($displayNames);
         } catch (Exception $e) {
             $this->getLog()->error($e->getMessage());
             $this->getLog()->debug($e->getTraceAsString());

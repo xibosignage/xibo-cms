@@ -40,7 +40,7 @@ if (!String.prototype.endsWith) {
 
 // Configure a global error handler for data tables
 $.fn.dataTable.ext.errMode = function (settings, helpPage, message) {
-    console.log(message);
+    console.error(message);
 };
 
 // Set up the light boxes
@@ -148,7 +148,7 @@ function XiboInitialise(scope, options) {
                         field.data('initial-value', element.value)
                     }
                 } catch (e) {
-                    console.log("Error populating form saved value with selector input[name=" + element.name + "], select[name=" + element.name + "]");
+                    console.error("Error populating form saved value with selector input[name=" + element.name + "], select[name=" + element.name + "]");
                 }
             });
         }
@@ -2344,7 +2344,7 @@ function formRenderDetectSpacingIssues(element) {
 
     if (value !== '' && (value.startsWith(" ") || value.endsWith(" ") || value.indexOf("  ") > -1)) {
         // Add a little icon to the fields parent to inform of this issue
-        console.log("Field with strange spacing: " + $el.attr("name"));
+        console.debug("Field with strange spacing: " + $el.attr("name"));
 
         var warning = $("<span></span>").addClass("fa fa-exclamation-circle spacing-warning-icon").attr("title", translations.spacesWarning);
 
@@ -3041,10 +3041,8 @@ function XiboRedirect(url) {
  * @param {String} message
  */
 function LoginBox(message) {
-
     // Reload the page (appending the message)
-    window.location.href = window.location.href;
-    location.reload();
+    window.location.reload();
 }
 
 /**
@@ -3157,8 +3155,18 @@ function ToggleFilterView(div) {
  * Make a Paged Layout Selector from a Select Element and its parent (which can be null)
  * @param element
  * @param parent
+ * @param dataFormatter
+ * @param addRandomId
  */
-function makePagedSelect(element, parent) {
+function makePagedSelect(element, parent, dataFormatter, addRandomId = false) {
+    // If we need to append random id
+    if (addRandomId === true) {
+        const randomNum = Math.floor(1000000000 + Math.random() * 9000000000);
+        const previousId = $(element).attr('id');
+        const newId = previousId ? previousId + '_' + randomNum : randomNum;
+        $(element).attr('data-select2-id', newId);
+    }
+
     element.select2({
         dropdownParent: ((parent == null) ? $("body") : $(parent)),
         minimumResultsForSearch: (element.data('hideSearch')) ? Infinity : 1,
@@ -3212,6 +3220,14 @@ function makePagedSelect(element, parent) {
             processResults: function(data, params) {
                 var results = [];
                 var $element = element;
+
+                // If we have a custom data formatter
+                if (
+                    dataFormatter &&
+                    typeof dataFormatter === 'function'
+                ) {
+                    data = dataFormatter(data);
+                }
 
                 $.each(data.data, function(index, el) {
                     var result = {
@@ -3271,6 +3287,8 @@ function makePagedSelect(element, parent) {
     ) {
         var initialValue = element.data("initialValue");
         var initialKey = element.data("initialKey");
+        var textProperty = element.data("textProperty");
+        var idProperty = element.data("idProperty");
         var dataObj = {};
         dataObj[initialKey] = initialValue;
 
@@ -3285,15 +3303,37 @@ function makePagedSelect(element, parent) {
             type: 'GET',
             data: dataObj
         }).then(function(data) {
+            // Do we need to check if it's selected
+            var checkSelected = false;
+
+            // If we have a custom data formatter
+            if (
+                dataFormatter &&
+                typeof dataFormatter === 'function'
+            ) {
+                data = dataFormatter(data);
+                checkSelected = true;
+            }
+
             // create the option and append to Select2
             data.data.forEach(object => {
-                var option = new Option(
-                    object[element.data("textProperty")],
-                    object[element.data("idProperty")],
-                    true,
-                    true
-                );
-                element.append(option)
+                var isSelected = true;
+
+                // Check if it's selected if needed
+                if(checkSelected) {
+                    isSelected = (initialValue == object[idProperty]);
+                }
+
+                // Only had if the option is selected
+                if (isSelected) {
+                    var option = new Option(
+                        object[textProperty],
+                        object[idProperty],
+                        isSelected,
+                        isSelected
+                    );
+                    element.append(option)
+                }
             });
 
             // Trigger change but skip auto save
@@ -3319,8 +3359,17 @@ function makePagedSelect(element, parent) {
  * Make a dropwdown with a search field for option's text and tag datafield (data-tags)
  * @param element
  * @param parent
+ * @param addRandomId
  */
-function makeLocalSelect(element, parent) {
+function makeLocalSelect(element, parent, addRandomId = false) {
+    // If we need to append random id
+    if (addRandomId === true) {
+        const randomNum = Math.floor(1000000000 + Math.random() * 9000000000);
+        const previousId = $(element).attr('id');
+        const newId = previousId ? previousId + '_' + randomNum : randomNum;
+        $(element).attr('data-select2-id', newId);
+    }
+
     element.select2({
         dropdownParent: ((parent == null) ? $("body") : $(parent)),
         matcher: function(params, data) {
@@ -3492,6 +3541,7 @@ function initDatePicker($element, baseFormat, displayFormat, options, onChangeCa
             allowInput: false,
             defaultDate: ((initialValue != undefined) ? initialValue : null),
             altInputClass: 'datePickerHelper ' + $element.attr('class'),
+            disableMobile: true,
             altFormat: displayFormat,
             dateFormat: baseFormat,
             locale: (language != 'en-GB') ? language : 'default',
