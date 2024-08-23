@@ -3202,7 +3202,7 @@ class Soap
             $eventTypeId = $displayEvent->getEventIdFromString($eventType);
             empty($refId)
                 ? $displayEvent->eventEnd($this->display->displayId, $eventTypeId, $date)
-                : $displayEvent->eventEndByReference($this->display->displayId, $eventTypeId, $refId);
+                : $displayEvent->eventEndByReference($this->display->displayId, $eventTypeId, $refId, $detail);
         }
     }
 }
