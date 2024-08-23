@@ -167,13 +167,13 @@ class DisplayEvent implements \JsonSerializable
 
         // When updating the event end, concatenate the end message to the current message
         $this->getStore()->update(
-            'UPDATE `displayevent` SET 
+            "UPDATE `displayevent` SET 
                       `end` = :toDt, 
-                      `detail` = CONCAT_WS(". ", NULLIF(CONCAT_WS(".", NULLIF(`detail`, "")), ""), :detail)
+                      `detail` = CONCAT_WS('. ', NULLIF(`detail`, ''), :detail)
                       WHERE displayId = :displayId 
                         AND `end` IS NULL 
                         AND eventTypeId = :eventTypeId
-                        AND refId = :refId',
+                        AND refId = :refId",
             [
                 'toDt' => $date ?? Carbon::now()->format('U'),
                 'displayId' => $displayId,
