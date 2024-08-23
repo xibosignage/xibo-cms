@@ -3201,7 +3201,7 @@ class Soap
             $displayEvent = $this->displayEventFactory->createEmpty();
             $eventTypeId = $displayEvent->getEventIdFromString($eventType);
             empty($refId)
-                ? $displayEvent->eventEnd($this->display->displayId, $eventTypeId, $date)
+                ? $displayEvent->eventEnd($this->display->displayId, $eventTypeId, $detail, $date)
                 : $displayEvent->eventEndByReference($this->display->displayId, $eventTypeId, $refId, $detail);
         }
     }

@@ -123,7 +123,7 @@ class DisplayEvent implements \JsonSerializable
      * @param int $eventTypeId
      * @return void
      */
-    public function eventEnd(int $displayId, int $eventTypeId = 1, ?int $date = null): void
+    public function eventEnd(int $displayId, int $eventTypeId = 1, string $detail = null, ?int $date = null): void
     {
         $this->getLog()->debug(
             sprintf(
@@ -134,14 +134,15 @@ class DisplayEvent implements \JsonSerializable
         );
 
         $this->getStore()->update(
-            'UPDATE `displayevent` SET `end` = :toDt 
+            "UPDATE `displayevent` SET `end` = :toDt, `detail` = CONCAT_WS('. ', NULLIF(`detail`, ''), :detail) 
                       WHERE displayId = :displayId 
                         AND `end` IS NULL 
-                        AND eventTypeId = :eventTypeId',
+                        AND eventTypeId = :eventTypeId",
             [
                 'toDt' => $date ?? Carbon::now()->format('U'),
                 'displayId' => $displayId,
                 'eventTypeId' => $eventTypeId,
+                'detail' => $detail,
             ]
         );
     }
