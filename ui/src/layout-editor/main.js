@@ -3604,8 +3604,7 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
   // and has at least one widget
   layoutObject.playlistCanBeConverted = (
     layoutObject.isPlaylist &&
-    !$(obj).find('.playlist-edit-btn')
-      .hasClass('subplaylist-inline-edit-btn') &&
+    !$(obj).hasClass('playlist-global-editable') &&
     layoutObject.playlists.widgets.length > 0
   );
 
@@ -3613,7 +3612,7 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
   layoutObject.isDynamicPlaylist =
     (
       layoutObject.isPlaylist &&
-      $(obj).find('.dynamic-playlist-icon').length === 1
+      $(obj).hasClass('playlist-dynamic')
     );
 
   // Create menu and append to the designer div

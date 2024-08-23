@@ -1304,6 +1304,17 @@ Viewer.prototype.renderRegion = function(
 
       // Append playlist controls using appendOptions
       const appendPlaylistControls = function() {
+        // Mark playlist container as global-editable or dynamic
+        $container.toggleClass(
+          'playlist-global-editable',
+          appendOptions.canEditPlaylist,
+        );
+        $container.toggleClass(
+          'playlist-dynamic',
+          appendOptions.isDynamicPlaylist,
+        );
+
+        // Append playlist controls to container
         $container.append(viewerPlaylistControlsTemplate(appendOptions));
       };
 
