@@ -899,6 +899,7 @@ Viewer.prototype.handleInteractions = function() {
 
           if (
             $target.data('subType') === 'playlist' &&
+            !$target.hasClass('playlist-dynamic') &&
             $target.hasClass('editable')
           ) {
             // Edit region if it's a playlist
