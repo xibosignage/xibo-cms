@@ -131,7 +131,7 @@ Bottombar.prototype.render = function(object, renderMultiple = true) {
         trans: newBottomBarTrans,
         readOnlyModeOn: readOnlyModeOn,
         object: object,
-        objectTypeName: newBottomBarTrans.objectType.region,
+        objectTypeName: newBottomBarTrans.objectType[object.subType],
         undoActive: checkHistory.undoActive,
         trashActive: trashBinActive,
       },
