@@ -2434,7 +2434,7 @@ class DisplayGroup extends Base
         $displayGroup = $this->displayGroupFactory->getById($id);
 
         // Non-destructive edit-only feature; allow limited view access
-        if (!$this->getUser()->checkEditable($displayGroup) || !$this->getUser()->featureEnabled('displays.limitedView')) {
+        if (!$this->getUser()->checkEditable($displayGroup) && !$this->getUser()->featureEnabled('displays.limitedView')) {
             throw new AccessDeniedException();
         }
 
