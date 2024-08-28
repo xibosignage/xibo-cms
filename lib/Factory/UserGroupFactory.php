@@ -780,6 +780,11 @@ class UserGroupFactory extends BaseFactory
                     'group' => 'displays',
                     'title' => __('Allow edits including deletion for all created Display Groups')
                 ],
+                'displaygroup.limitedView' => [
+                    'feature' => 'displaygroup.limitedView',
+                    'group' => 'displays',
+                    'title' => __('Allow access to non-destructive edit-only features in a Display Group')
+                ],
                 'displayprofile.view' => [
                     'feature' => 'displayprofile.view',
                     'group' => 'displays',
