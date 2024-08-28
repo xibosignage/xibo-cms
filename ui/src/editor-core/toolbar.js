@@ -1704,6 +1704,11 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
   const $mediaContent = self.DOMObject.find('#media-content-' + menu);
   const $mediaForm = $mediaContainer.find('.media-search-form');
 
+  // If media container isn't still loaded, skip
+  if ($mediaContainer.length === 0) {
+    return;
+  }
+
   // Request elements based on filters
   const loadData = function(clear = true) {
     // Remove show more button
@@ -3642,6 +3647,17 @@ Toolbar.prototype.loadTemplates = function(
       // Call populate content on load
       populateContent();
     });
+};
+
+/**
+ * Get menu item id from type
+ * @param {string} type - Menu type
+ * @return {number} - Menu id
+ */
+Toolbar.prototype.getMenuIdFromType = function(
+  type,
+) {
+  return this.menuItems.findIndex((item) => item.name === type);
 };
 
 module.exports = Toolbar;

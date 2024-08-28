@@ -1045,6 +1045,10 @@ pE.importFromProvider = function(items) {
     }
   });
 
+  // Get item type, if not image/audio/video, set it as library
+  const itemType =
+    ['image', 'audio', 'video'].indexOf(itemsResult[0].type) == -1 ?
+      'library' : itemsResult[0].type;
   const linkToAPI = urlsForApi.library.connectorImport;
   const requestPath = linkToAPI.url;
 
@@ -1085,6 +1089,11 @@ pE.importFromProvider = function(items) {
 
         // Filter null results
         itemsResult = itemsResult.filter((el) => el);
+
+        // Empty toolbar content for this type of media
+        // so it can be reloaded
+        const menuId = pE.toolbar.getMenuIdFromType(itemType);
+        pE.toolbar.DOMObject.find('#content-' + menuId).empty();
 
         resolve(itemsResult);
       } else {
