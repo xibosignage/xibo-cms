@@ -1035,6 +1035,13 @@
                         "type": "integer"
                     },
                     {
+                        "name": "dataConnectorSource",
+                        "in": "formData",
+                        "description": "Source of the data connector",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
                         "name": "method",
                         "in": "formData",
                         "description": "The Request Method GET or POST",
@@ -1255,6 +1262,13 @@
                         "description": "Is this a real time DataSet?",
                         "required": true,
                         "type": "integer"
+                    },
+                    {
+                        "name": "dataConnectorSource",
+                        "in": "formData",
+                        "description": "Source of the data connector",
+                        "required": true,
+                        "type": "string"
                     },
                     {
                         "name": "method",
@@ -4229,6 +4243,56 @@
                 "responses": {
                     "204": {
                         "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/displaygroup/criteria[/{displayGroupId}]": {
+            "post": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Action: Push Criteria Update",
+                "description": "Send criteria updates to the specified DisplayGroup or to all displays if displayGroupId is not\r\n     *                  provided.",
+                "operationId": "ScheduleCriteriaUpdate",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The display group id",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "criteriaUpdates",
+                        "in": "body",
+                        "description": "The criteria updates to send to the Player",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "properties": {
+                                    "metric": {
+                                        "type": "string"
+                                    },
+                                    "value": {
+                                        "type": "string"
+                                    },
+                                    "ttl": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid criteria format"
                     }
                 }
             }
@@ -12200,6 +12264,10 @@
                 "isRealTime": {
                     "description": "Flag to indicate whether this DataSet is Real time",
                     "type": "integer"
+                },
+                "dataConnectorSource": {
+                    "description": "Indicates the source of the data connector. Requires the Real time flag. Can be null,\r\n     * user-defined, or a connector.",
+                    "type": "string"
                 },
                 "method": {
                     "description": "Method to fetch the Data, can be GET or POST",

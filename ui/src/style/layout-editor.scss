@@ -1530,6 +1530,14 @@ body.editor-opened {
                 }
             }
         }
+
+        /* Layout tbackgrouynd */
+        .viewer-object .layout-background-image {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
     }
 
     .viewer-object-select.selected-temp {
@@ -1775,6 +1783,7 @@ div#bg_media_name {
         gap: 6px;
         padding: 0 4px;
         height: 34px;
+        cursor: pointer;
 
         .layer {
             flex-basis: 30px;
