@@ -323,7 +323,7 @@ HistoryManager.prototype.revertChange = function() {
         widget.saveElements({
           elements: elementsToSave,
           addToHistory: false,
-          reload: true,
+          updateEditor: true,
         }).then(function() {
           // Remove change from history
           self.removeLastChange();

@@ -415,7 +415,9 @@ PropertiesPanel.prototype.saveElement = function(
   this.toSaveElementCallback = null;
 
   // Save elements to the widget
-  return parentWidget.saveElements().then((_res) => {
+  return parentWidget.saveElements({
+    reloadData: false,
+  }).then((_res) => {
     // Update element position
     if (positionChanged) {
       app.viewer.updateElement(parentWidget.elements[target.elementId]);
@@ -799,7 +801,9 @@ PropertiesPanel.prototype.render = function(
             targetAux.updateSlot(slotValue - 1, true);
 
             // Save elements
-            target.saveElements().then((_res) => {
+            target.saveElements({
+              reloadData: false,
+            }).then((_res) => {
               // Update group
               app.viewer.updateElementGroup(app.selectedObject);
             });
