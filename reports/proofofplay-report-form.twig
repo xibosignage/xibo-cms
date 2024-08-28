@@ -229,7 +229,6 @@
                                         <th>{% trans "Display" %}</th>
                                         <th>{% trans "Display Group ID" %}</th>
                                         <th>{% trans "Display Group" %}</th>
-                                        <th>{% trans "Tag ID" %}</th>
                                         <th>{% trans "Campaign" %}</th>
                                         <th>{% trans "Layout ID" %}</th>
                                         <th>{% trans "Layout" %}</th>
@@ -248,7 +247,6 @@
                                     </tbody>
                                     <tfoot>
                                     <tr>
-                                        <th></th>
                                         <th></th>
                                         <th></th>
                                         <th></th>
@@ -308,16 +306,16 @@
                     // Hide and show appropriate columns
                     switch ($('select[name="groupBy"]').val()) {
                         case 'displayGroup':
-                            $(this.api().columns([1, 2, 5, 6, 7, 8, 9, 10, 11]).visible(false));
+                            $(this.api().columns([1, 2, 5, 6, 7, 8, 9, 10, 14, 15]).visible(false));
                             $(this.api().columns([3, 4]).visible(true));
                             break;
                         case 'tag':
-                            $(this.api().columns([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]).visible(false));
-                            $(this.api().columns([5]).visible(true));
+                            $(this.api().columns([1, 2, 3, 4, 5, 6, 7, 8, 9, 14, 15]).visible(false));
+                            $(this.api().columns([10]).visible(true));
                             break;
                         default:
-                            $(this.api().columns([3, 4, 5]).visible(false));
-                            $(this.api().columns([1, 2, 5, 6, 7, 8, 9, 10, 11]).visible(true));
+                            $(this.api().columns([3, 4]).visible(false));
+                            $(this.api().columns([1, 2, 5, 6, 7, 8, 9, 10, 14, 15]).visible(true));
                     }
                 },
                 filter: false,
@@ -329,7 +327,6 @@
                     {"data": "display"},
                     {"data": "displayGroupId"},
                     {"data": "displayGroup"},
-                    {"data": "tagId"},
                     {"data": "parentCampaign"},
                     {"data": "layoutId"},
                     {"data": "layout"},
@@ -373,28 +370,27 @@
                     {"data": "duration"},
                     {"data": "minStart"},
                     {"data": "maxEnd"}
-
                 ],
                 footerCallback: function (row, data, start, end, display) {
                     let api = this.api();
 
                     // Total over all pages
-                    let totalNumberPlays = api.column(9).data().reduce(function (a, b) {
+                    let totalNumberPlays = api.column(11).data().reduce(function (a, b) {
                         return a + b;
                     }, 0);
-                    let totalDuration = api.column(11).data().reduce(function (a, b) {
+                    let totalDuration = api.column(13).data().reduce(function (a, b) {
                         return a + b;
                     }, 0);
-                    let totalNumberPlaysPage = api.column(9, { page: 'current'}).data().reduce(function (a, b) {
+                    let totalNumberPlaysPage = api.column(11, { page: 'current'}).data().reduce(function (a, b) {
                         return a + b;
                     }, 0);
-                    let totalDurationPage = api.column(11, { page: 'current'}).data().reduce(function (a, b) {
+                    let totalDurationPage = api.column(13, { page: 'current'}).data().reduce(function (a, b) {
                         return a + b;
                     }, 0);
 
                     // Update footer
-                    $(api.column(9).footer()).html(totalNumberPlaysPage + ' (' + totalNumberPlays + ' total)');
-                    $(api.column(11).footer()).html(Math.floor(totalDurationPage) + ' (' + Math.floor(totalDuration) + ' total)');
+                    $(api.column(11).footer()).html(totalNumberPlaysPage + ' (' + totalNumberPlays + ' total)');
+                    $(api.column(13).footer()).html(Math.floor(totalDurationPage) + ' (' + Math.floor(totalDuration) + ' total)');
                 },
             });
 
@@ -474,10 +470,10 @@
                 getData($dataTable.data().url);
             });
 
-            // If we select a displayId we hide the display group filter
+            // If we select a displayId, we hide the display group filter
             $('#displayId').off('change').change( function() {
-
                 let displayId = $('#displayId').val();
+
                 if (displayId) {
                     $('select[name="displayGroupId[]"] option').remove();
                     $('select[name="displayGroupId[]"]').next(".select2-container").parent().hide();
@@ -487,6 +483,24 @@
                     $('#displayId option').remove();
                     $('select[name="displayGroupId[]"]').next(".select2-container").parent().show();
                     $('select[name="groupBy"]').parent().show();
+                }
+            });
+
+            // If we select a group by filter, we hide the display filter
+            $("select[name='groupBy']").on('change', function() {
+                let optionSelected = $(this).find("option:selected").val();
+
+                if (optionSelected === 'tag') {
+                    $('select[name="displayGroupId[]"] option').remove();
+                    $('select[name="displayGroupId[]"]').next(".select2-container").parent().hide();
+                } else if (optionSelected === 'displayGroup') {
+                    $('select[name="groupBy"]').parent().show();
+                }
+
+                if (optionSelected !== '') {
+                    $("select[name='displayId']").parent().hide();
+                } else {
+                    $("select[name='displayId']").parent().show();
                 }
             });
 

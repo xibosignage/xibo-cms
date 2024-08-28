@@ -324,6 +324,8 @@ class ProofOfPlay implements ReportInterface
         $exactTags = $sanitizedParams->getCheckbox('exactTags');
         $operator = $sanitizedParams->getString('logicalOperator', ['default' => 'OR']);
         $parentCampaignId = $sanitizedParams->getInt('parentCampaignId');
+        $groupBy = $sanitizedParams->getString('groupBy');
+        $displayGroupIds = $sanitizedParams->getIntArray('displayGroupId', ['default' => []]);
 
         // Display filter.
         try {
@@ -472,7 +474,9 @@ class ProofOfPlay implements ReportInterface
                 $tags,
                 $tagsType,
                 $exactTags,
-                $operator
+                $operator,
+                $groupBy,
+                $displayGroupIds
             );
         }
 
@@ -505,6 +509,8 @@ class ProofOfPlay implements ReportInterface
             $entry['minStart'] = Carbon::createFromTimestamp($row['minStart'])->format(DateFormatHelper::getSystemFormat());
             $entry['maxEnd'] =  Carbon::createFromTimestamp($row['maxEnd'])->format(DateFormatHelper::getSystemFormat());
             $entry['mediaId'] = $sanitizedRow->getInt('mediaId');
+            $entry['displayGroup'] = $sanitizedRow->getString('displayGroup');
+            $entry['displayGroupId'] = $sanitizedRow->getInt('displayGroupId');
 
             $rows[] = $entry;
         }
@@ -541,6 +547,8 @@ class ProofOfPlay implements ReportInterface
      * @param $tags string
      * @param $tagsType string
      * @param $exactTags mixed
+     * @param $groupBy string
+     * @param $displayGroupIds array
      * @return array[array result, date periodStart, date periodEnd, int count, int totalStats]
      */
     private function getProofOfPlayReportMySql(
@@ -555,7 +563,9 @@ class ProofOfPlay implements ReportInterface
         $tags,
         $tagsType,
         $exactTags,
-        $logicalOperator
+        $logicalOperator,
+        $groupBy,
+        $displayGroupIds
     ) {
         $fromDt = $fromDt->format('U');
         $toDt = $toDt->format('U');
@@ -585,6 +595,11 @@ class ProofOfPlay implements ReportInterface
               stat.displayId
         ';
 
+
+        if ($groupBy === 'displayGroup') {
+            $select .= ', displaydg.displayGroup, displaydg.displayGroupId ';
+        }
+
         $body = '
             FROM stat
               LEFT OUTER JOIN display
@@ -613,6 +628,15 @@ class ProofOfPlay implements ReportInterface
                         ON displaygroup.displaygroupId = lkdisplaydg.displaygroupId
                          AND `displaygroup`.isDisplaySpecific = 1 ';
             }
+        }
+
+        // Grouping Option
+        if ($groupBy === 'displayGroup') {
+            $body .= 'INNER JOIN `lkdisplaydg` AS linkdg
+                        ON linkdg.DisplayID = display.displayid
+                     INNER JOIN `displaygroup` AS displaydg
+                        ON displaydg.displaygroupId = linkdg.displaygroupId
+                         AND `displaydg`.isDisplaySpecific = 0 ';
         }
 
         $body .= ' WHERE stat.type <> \'displaydown\'
@@ -816,6 +840,11 @@ class ProofOfPlay implements ReportInterface
                 stat.displayId 
         ';
 
+        // Group By displayGroup Filter
+        if ($groupBy === 'displayGroup') {
+            $body .= ', displaydg.displayGroupId';
+        }
+
         $order = '';
         if ($columns != null) {
             $order = 'ORDER BY ' . implode(',', $columns);
@@ -843,8 +872,15 @@ class ProofOfPlay implements ReportInterface
             $entry['widgetId'] = $row['widgetId'];
             $entry['mediaId'] = $row['mediaId'];
             $entry['tag'] = $row['tag'];
-
+            $entry['displayGroupId'] = $row['displayGroupId'] ?? '';
+            $entry['displayGroup'] = $row['displayGroup'] ?? '';
             $rows[] = $entry;
+        }
+
+        if ($groupBy != '') {
+            $filterKey = $groupBy === 'tag' ? 'tag' : 'displayGroupId';
+
+            $rows = $this->getByDisplayGroup($rows, $filterKey, $displayGroupIds);
         }
 
         return [
@@ -901,6 +937,8 @@ class ProofOfPlay implements ReportInterface
      * @param $tags string
      * @param $tagsType string
      * @param $exactTags mixed
+     * @param $groupBy string
+     * @param $displayGroupIds array
      * @return array[array result, date periodStart, date periodEnd, int count, int totalStats]
      * @throws InvalidArgumentException
      * @throws \Xibo\Support\Exception\GeneralException
@@ -917,7 +955,9 @@ class ProofOfPlay implements ReportInterface
         $tags,
         $tagsType,
         $exactTags,
-        $operator
+        $operator,
+        $groupBy,
+        $displayGroupIds
     ) {
         $fromDt = new UTCDateTime($filterFromDt->format('U')*1000);
         $toDt = new UTCDateTime($filterToDt->format('U')*1000);
@@ -1156,5 +1196,45 @@ class ProofOfPlay implements ReportInterface
             'result' => $rows,
             'count' => count($rows)
         ];
+    }
+
+    /**
+     * Get the accumulated value by display groups
+     * @param array $rows
+     * @param string $type
+     * @param array $displayIds
+     * @return array
+     */
+    private function getByDisplayGroup(array $rows, string $type, array $displayIds = []) : array
+    {
+        $data = [];
+        $groups = [];
+
+        // Get the accumulated values by displayGroupId
+        foreach ($rows as $row) {
+            $groupId = $row[$type];
+
+            if (isset($groups[$groupId])) {
+                $groups[$groupId]['duration'] += $row['duration'];
+                $groups[$groupId]['numberPlays'] += $row['numberPlays'];
+                $groups[$groupId]['count'] += 1;
+            } else if ($row[$type] != '') {
+                $row['count'] = 1;
+                $groups[$groupId] = $row;
+            }
+        }
+
+        if ($type === 'tag') {
+            return $groups;
+        }
+
+        // Get all display groups or selected display groups only
+        foreach ($groups as $group) {
+            if (!$displayIds || in_array($group['displayGroupId'], $displayIds)) {
+                $data[] = $group;
+            }
+        }
+
+        return $data;
     }
 }
