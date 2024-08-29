@@ -3732,7 +3732,18 @@ function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected =
                                     "label": translations.folderTreeShare,
                                     "_class": "XiboFormRender",
                                     "action": function (obj) {
-                                        XiboFormRender(permissionsUrl.replace(":entity", "form/Folder/") + $node.id);
+                                        // Check if we have more than one selected node
+                                        var selectedNodes = $(container).jstree('get_selected', true).map((el) => {
+                                            return Number(el.id);
+                                        });
+
+                                        if(selectedNodes.length > 1) {
+                                            // If we have more than one selected node, call share multiple
+                                            XiboFormRender(permissionsUrl.replace(":entity", "multiple/form/Folder"), {ids: selectedNodes.toString()});
+                                        } else {
+                                            // Call share for single folder
+                                            XiboFormRender(permissionsUrl.replace(":entity", "form/Folder/") + $node.id);
+                                        }
                                     }
                                 }
                             }
