@@ -399,11 +399,11 @@ class DisplayGroup extends Base
                 ];
             }
 
-            $group->buttons[] = ['divider' => true];
-
             if ($this->getUser()->featureEnabled('displaygroup.modify')
                 && $this->getUser()->checkEditable($group)
             ) {
+                $group->buttons[] = ['divider' => true];
+
                 // File Associations
                 $group->buttons[] = [
                     'id' => 'displaygroup_button_fileassociations',
@@ -460,11 +460,16 @@ class DisplayGroup extends Base
                 ];
             }
 
-            if ($this->getUser()->featureEnabled('displaygroup.modify')
-                && $this->getUser()->checkEditable($group)
+            // Check if limited view access is allowed
+            if (($this->getUser()->featureEnabled('displaygroup.modify') && $this->getUser()->checkEditable($group))
+                || $this->getUser()->featureEnabled('displaygroup.limitedView')
             ) {
-                $group->buttons[] = ['divider' => true];
 
+                if ($this->getUser()->checkEditable($group)) {
+                    $group->buttons[] = ['divider' => true];
+                }
+
+                // Send command
                 $group->buttons[] = [
                     'id' => 'displaygroup_button_command',
                     'url' => $this->urlFor($request, 'displayGroup.command.form', ['id' => $group->displayGroupId]),
@@ -488,6 +493,7 @@ class DisplayGroup extends Base
                     ]
                 ];
 
+                // Collect Now
                 $group->buttons[] = [
                     'id' => 'displaygroup_button_collectNow',
                     'url' => $this->urlFor($request, 'displayGroup.collectNow.form', ['id' => $group->displayGroupId]),
@@ -505,32 +511,34 @@ class DisplayGroup extends Base
                     ]
                 ];
 
-                // Trigger webhook
-                $group->buttons[] = [
-                    'id' => 'displaygroup_button_trigger_webhook',
-                    'url' => $this->urlFor(
-                        $request,
-                        'displayGroup.trigger.webhook.form',
-                        ['id' => $group->displayGroupId]
-                    ),
-                    'text' => __('Trigger a web hook'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        [
-                            'name' => 'commit-url',
-                            'value' => $this->urlFor(
-                                $request,
-                                'displayGroup.action.trigger.webhook',
-                                ['id' => $group->displayGroupId]
-                            )
-                        ],
-                        ['name' => 'commit-method', 'value' => 'post'],
-                        ['name' => 'id', 'value' => 'displaygroup_button_trigger_webhook'],
-                        ['name' => 'text', 'value' => __('Trigger a web hook')],
-                        ['name' => 'rowtitle', 'value' => $group->displayGroup],
-                        ['name' => 'form-callback', 'value' => 'triggerWebhookMultiSelectFormOpen']
-                    ]
-                ];
+                if ($this->getUser()->checkEditable($group)) {
+                    // Trigger webhook
+                    $group->buttons[] = [
+                        'id' => 'displaygroup_button_trigger_webhook',
+                        'url' => $this->urlFor(
+                            $request,
+                            'displayGroup.trigger.webhook.form',
+                            ['id' => $group->displayGroupId]
+                        ),
+                        'text' => __('Trigger a web hook'),
+                        'multi-select' => true,
+                        'dataAttributes' => [
+                            [
+                                'name' => 'commit-url',
+                                'value' => $this->urlFor(
+                                    $request,
+                                    'displayGroup.action.trigger.webhook',
+                                    ['id' => $group->displayGroupId]
+                                )
+                            ],
+                            ['name' => 'commit-method', 'value' => 'post'],
+                            ['name' => 'id', 'value' => 'displaygroup_button_trigger_webhook'],
+                            ['name' => 'text', 'value' => __('Trigger a web hook')],
+                            ['name' => 'rowtitle', 'value' => $group->displayGroup],
+                            ['name' => 'form-callback', 'value' => 'triggerWebhookMultiSelectFormOpen']
+                        ]
+                    ];
+                }
             }
         }
 
@@ -1949,7 +1957,12 @@ class DisplayGroup extends Base
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($displayGroup)) {
+        // Non-destructive edit-only feature; allow limited view access
+        if (
+            !$this->getUser()->checkEditable($displayGroup)
+            && !$this->getUser()->featureEnabled('displays.limitedView')
+            && !$this->getUser()->featureEnabled('displaygroup.limitedView')
+        ) {
             throw new AccessDeniedException();
         }
 
@@ -1995,7 +2008,12 @@ class DisplayGroup extends Base
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($displayGroup)) {
+        // Non-destructive edit-only feature; allow limited view access
+        if (
+            !$this->getUser()->checkEditable($displayGroup)
+            && !$this->getUser()->featureEnabled('displays.limitedView')
+            && !$this->getUser()->featureEnabled('displaygroup.limitedView')
+        ) {
             throw new AccessDeniedException();
         }
 
@@ -2423,7 +2441,11 @@ class DisplayGroup extends Base
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($displayGroup)) {
+        // Non-destructive edit-only feature; allow limited view access
+        if (
+            !$this->getUser()->checkEditable($displayGroup)
+            && !$this->getUser()->featureEnabled('displaygroup.limitedView')
+        ) {
             throw new AccessDeniedException();
         }
 
@@ -2484,7 +2506,11 @@ class DisplayGroup extends Base
         $displayGroup = $this->displayGroupFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($displayGroup)) {
+        // Non-destructive edit-only feature; allow limited view access
+        if (
+            !$this->getUser()->checkEditable($displayGroup)
+            && !$this->getUser()->featureEnabled('displaygroup.limitedView')
+        ) {
             throw new AccessDeniedException();
         }
 
