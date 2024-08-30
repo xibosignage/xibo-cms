@@ -338,6 +338,10 @@ Viewer.prototype.render = function(forceReload = false, target = {}) {
     // Initialise moveable
     this.initMoveable();
 
+    // Remove background image component if exists
+    $viewerContainer.find('.layout-live-preview .layout-background-image')
+      .remove();
+
     // Render background image or color to the preview
     if (lD.layout.backgroundImage === null) {
       $viewerContainer.find('.viewer-object')
@@ -348,7 +352,9 @@ Viewer.prototype.render = function(forceReload = false, target = {}) {
       // Replace ID in the link
       linkToAPI = linkToAPI.replace(':id', lD.layout.layoutId);
 
-      $viewerContainer.find('.viewer-object')
+      // Append layout background image component
+      const $layoutBgImage = $('<div class="layout-background-image"></div>');
+      $layoutBgImage
         .css({
           background:
             'url(\'' + linkToAPI + '?preview=1&width=' +
@@ -362,7 +368,9 @@ Viewer.prototype.render = function(forceReload = false, target = {}) {
             lD.layout.backgroundImage + '\') top center no-repeat',
           backgroundSize: '100% 100%',
           backgroundColor: lD.layout.backgroundColor,
+          zIndex: lD.layout.backgroundzIndex,
         });
+      $layoutBgImage.appendTo($viewerContainer.find('.layout-live-preview'));
     }
 
     // Render viewer regions/widgets
@@ -899,6 +907,7 @@ Viewer.prototype.handleInteractions = function() {
 
           if (
             $target.data('subType') === 'playlist' &&
+            !$target.hasClass('playlist-dynamic') &&
             $target.hasClass('editable')
           ) {
             // Edit region if it's a playlist
@@ -1298,14 +1307,26 @@ Viewer.prototype.renderRegion = function(
         isEmpty: res.extra && res.extra.empty,
         trans: viewerTrans,
         canEditPlaylist: false,
+        isDynamicPlaylist: false,
       };
 
       // Append playlist controls using appendOptions
       const appendPlaylistControls = function() {
+        // Mark playlist container as global-editable or dynamic
+        $container.toggleClass(
+          'playlist-global-editable',
+          appendOptions.canEditPlaylist,
+        );
+        $container.toggleClass(
+          'playlist-dynamic',
+          appendOptions.isDynamicPlaylist,
+        );
+
+        // Append playlist controls to container
         $container.append(viewerPlaylistControlsTemplate(appendOptions));
       };
 
-      // If it's playslist with a single subplaylist widget
+      // If it's playlist with a single subplaylist widget
       if (
         Object.keys(region.widgets).length === 1 &&
         Object.values(region.widgets)[0].subType === 'subplaylist' &&
@@ -1327,8 +1348,14 @@ Viewer.prototype.renderRegion = function(
             success: function(_res) {
               // User has permissions
               if (_res.data && _res.data.length > 0) {
-                appendOptions.canEditPlaylist = true;
-                appendOptions.canEditPlaylistId = subPlaylistId;
+                // Check if playlist is dynamic
+                if (_res.data[0].isDynamic === 1) {
+                  appendOptions.isDynamicPlaylist = true;
+                } else {
+                  // If it's not dynamic, enable editing
+                  appendOptions.canEditPlaylist = true;
+                  appendOptions.canEditPlaylistId = subPlaylistId;
+                }
               }
 
               // Append playlist controls
@@ -1439,22 +1466,30 @@ Viewer.prototype.updateElement = function(
 ) {
   const $container = lD.viewer.DOMObject.find(`#${element.elementId}`);
 
+  // Get real elements from the structure
+  const realElement =
+    lD.getObjectByTypeAndId(
+      'element',
+      element.elementId,
+      'widget_' + element.regionId + '_' + element.widgetId,
+    );
+
   // Calculate scaled dimensions
-  element.scaledDimensions = {
-    height: element.height * lD.viewer.containerObjectDimensions.scale,
-    left: element.left * lD.viewer.containerObjectDimensions.scale,
-    top: element.top * lD.viewer.containerObjectDimensions.scale,
-    width: element.width * lD.viewer.containerObjectDimensions.scale,
+  realElement.scaledDimensions = {
+    height: realElement.height * lD.viewer.containerObjectDimensions.scale,
+    left: realElement.left * lD.viewer.containerObjectDimensions.scale,
+    top: realElement.top * lD.viewer.containerObjectDimensions.scale,
+    width: realElement.width * lD.viewer.containerObjectDimensions.scale,
   };
 
   // Update element index
   $container.css({
-    'z-index': element.layer,
+    'z-index': realElement.layer,
   });
 
   // Update element content
   lD.viewer.renderElementContent(
-    element,
+    realElement,
   );
 };
 
@@ -2488,6 +2523,7 @@ Viewer.prototype.initMoveable = function() {
     // Apply transformation to the element
     const transformSplit = (target.style.transform).split(/[(),]+/);
     let hasTranslate = false;
+    let hasRotate = false;
 
     // If the transform has translate
     if (target.style.transform.search('translate') != -1) {
@@ -2506,6 +2542,10 @@ Viewer.prototype.initMoveable = function() {
         transformSplit[4] :
         transformSplit[1];
 
+      if (rotateValue != '0deg') {
+        hasRotate = true;
+      }
+
       target.style.transform = `rotate(${rotateValue})`;
     } else {
       target.style.transform = '';
@@ -2513,7 +2553,8 @@ Viewer.prototype.initMoveable = function() {
 
     // If snap to borders is active, prevent negative values
     // Or snap to border if <1px delta
-    if (self.moveableOptions.snapToBorders) {
+    // only works for no rotation
+    if (self.moveableOptions.snapToBorders && !hasRotate) {
       let left = Number(target.style.left.split('px')[0]);
       let top = Number(target.style.top.split('px')[0]);
       let width = Number(target.style.width.split('px')[0]);

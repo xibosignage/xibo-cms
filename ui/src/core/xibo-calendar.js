@@ -1264,6 +1264,8 @@ var processScheduleFormElements = function(el) {
 
             $('.layout-code-control').css('display', layoutCodeControl);
             $('.command-control').css('display', commandControlDisplay);
+
+            break;
         case 'relativeTime' :
             if (!el.is(":visible")) {
                 return;

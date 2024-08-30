@@ -290,6 +290,7 @@ class Module implements \JsonSerializable
     public $errors;
 
     // </editor-fold>
+    public $allowPreview;
 
     /** @var ModuleFactory */
     private $moduleFactory;

@@ -68,6 +68,7 @@
 
                             {% set title = "Report Type"|trans %}
                             {% set options = [
+                                { id: 'requests', value: "Requests"|trans },
                                 { id: 'audit', value: "Audit"|trans },
                                 { id: 'debug', value: "Debug"|trans },
                             ] %}
@@ -140,6 +141,31 @@
                         </table>
                     </div>
                 </div>
+
+                <div class="card-body api-requests-history d-none">
+                    <!-- DATATABLE -->
+                    <div class="table-container" id="table_wrapper">
+                        <table id="apiRequestsHistoryGrid"
+                               class="table xibo-table table-striped"
+                               style="width: 100%"
+                               data-url="{{ url_for("report.data", {name: 'apirequests'}) }}">
+                            <thead>
+                            <tr>
+                                <th>{% trans "Date" %}</th>
+                                <th>{% trans "UserName" %}</th>
+                                <th>{% trans "User ID" %}</th>
+                                <th>{% trans "Application" %}</th>
+                                <th>{% trans "Request ID" %}</th>
+                                <th>{% trans "Method" %}</th>
+                                <th>{% trans "Url" %}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -176,12 +202,15 @@
 
         $('[data-toggle="popover"]').popover();
         let $report = $('#apiRequestsHistoryFilter');
-        let $auditDataTable = $('#apiRequestsHistoryAuditGrid')
+        let $auditDataTable = $('#apiRequestsHistoryAuditGrid');
         let auditTable = createAuditTable($auditDataTable);
-        let $logDataTable = $('#apiRequestsHistoryLogGrid')
-        let logTable = createLogTable($logDataTable)
+        let $logDataTable = $('#apiRequestsHistoryLogGrid');
+        let logTable = createLogTable($logDataTable);
+        let $requestsDataTable = $('#apiRequestsHistoryGrid');
+        let requestsTable = createRequestsTable($requestsDataTable);
 
         let result; // XHR get data result
+        let reportType = $report.find('#type').val();
 
         let imageLoader = $("#imageLoader");
         let $warning = $("#applyWarning");
@@ -198,14 +227,22 @@
               result = data;
               $applyBtn.removeClass('disabled');
               imageLoader.removeClass('fa fa-spinner fa-spin loading-icon');
-              if ($report.find('#type').val() === 'audit') {
+
+              if (reportType === 'audit') {
                 $('.api-requests-history-audit').removeClass('d-none');
                 $('.api-requests-history-log').addClass('d-none');
+                $('.api-requests-history').addClass('d-none');
                 setTabularData(auditTable, result.table);
-              } else {
-                $('.api-requests-history-audit').addClass('d-none');
+              } else if (reportType === 'debug') {
                 $('.api-requests-history-log').removeClass('d-none');
+                $('.api-requests-history-audit').addClass('d-none');
+                $('.api-requests-history').addClass('d-none');
                 setTabularData(logTable, result.table);
+              } else {
+                $('.api-requests-history').removeClass('d-none');
+                $('.api-requests-history-audit').addClass('d-none');
+                $('.api-requests-history-log').addClass('d-none');
+                setTabularData(requestsTable, result.table);
               }
             },
             error: function error(xhr, textStatus, _error) {
@@ -233,16 +270,20 @@
 
         // Apply
         $applyBtn.click(function () {
+          reportType = $report.find('#type').val();
           $(this).addClass('disabled');
           imageLoader.addClass('fa fa-spinner fa-spin loading-icon');
           getData($auditDataTable.data().url);
         });
 
         $("#refreshGrid").click(function () {
-          if ($report.find('#type').val() === 'audit') {
+          reportType = $report.find('#type').val();
+          if (reportType === 'audit') {
             auditTable.ajax.reload();
-          } else {
+          } else if (reportType === 'debug') {
             logTable.ajax.reload();
+          } else {
+            requestsTable.ajax.reload();
           }
         });
 
@@ -319,6 +360,31 @@
               {data: 'url'},
               {data: 'type'},
               {data: 'message'},
+            ]
+          })
+        }
+
+        function createRequestsTable($dataTable) {
+          return $dataTable.DataTable({
+            language: dataTablesLanguage,
+            dom: dataTablesTemplate,
+            searching: false,
+            paging: true,
+            bInfo: false,
+            stateSave: true,
+            bDestroy: true,
+            processing: true,
+            responsive: true,
+            order: [[0, 'desc']],
+            data: {},
+            columns: [
+              {data: 'startTime'},
+              {data: 'userName'},
+              {data: 'userId'},
+              {data: 'applicationName'},
+              {data: 'requestId'},
+              {data: 'method'},
+              {data: 'url'},
             ]
           })
         }

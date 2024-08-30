@@ -1747,21 +1747,21 @@ class Schedule extends Base
         if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$ACTION_EVENT) {
             $schedule->actionType = $sanitizedParams->getString('actionType');
             $schedule->actionTriggerCode = $sanitizedParams->getString('actionTriggerCode');
+            $schedule->commandId = $sanitizedParams->getInt('commandId');
             $schedule->actionLayoutCode = $sanitizedParams->getString('actionLayoutCode');
             $schedule->campaignId = null;
         } else {
             $schedule->actionType = null;
             $schedule->actionTriggerCode = null;
+            $schedule->commandId = null;
             $schedule->actionLayoutCode = null;
         }
 
-        // collect commandId only on Command event
-        // null commandId otherwise
+        // collect commandId on Command event
+        // Retain existing commandId value otherwise
         if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$COMMAND_EVENT) {
             $schedule->commandId = $sanitizedParams->getInt('commandId');
             $schedule->campaignId = null;
-        } else {
-            $schedule->commandId = null;
         }
 
         // Set the parentCampaignId for campaign events

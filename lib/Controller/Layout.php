@@ -879,7 +879,8 @@ class Layout extends Base
                 $this->getDataSetFactory(),
                 '',
                 $this->mediaService,
-                $layout->folderId
+                $layout->folderId,
+                false,
             );
 
             $template->managePlaylistClosureTable();

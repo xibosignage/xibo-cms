@@ -123,7 +123,7 @@ class DisplayEvent implements \JsonSerializable
      * @param int $eventTypeId
      * @return void
      */
-    public function eventEnd(int $displayId, int $eventTypeId = 1, ?int $date = null): void
+    public function eventEnd(int $displayId, int $eventTypeId = 1, string $detail = null, ?int $date = null): void
     {
         $this->getLog()->debug(
             sprintf(
@@ -134,14 +134,15 @@ class DisplayEvent implements \JsonSerializable
         );
 
         $this->getStore()->update(
-            'UPDATE `displayevent` SET `end` = :toDt 
+            "UPDATE `displayevent` SET `end` = :toDt, `detail` = CONCAT_WS('. ', NULLIF(`detail`, ''), :detail) 
                       WHERE displayId = :displayId 
                         AND `end` IS NULL 
-                        AND eventTypeId = :eventTypeId',
+                        AND eventTypeId = :eventTypeId",
             [
                 'toDt' => $date ?? Carbon::now()->format('U'),
                 'displayId' => $displayId,
                 'eventTypeId' => $eventTypeId,
+                'detail' => $detail,
             ]
         );
     }
@@ -154,7 +155,7 @@ class DisplayEvent implements \JsonSerializable
      * @param int|null $date
      * @return void
      */
-    public function eventEndByReference(int $displayId, int $eventTypeId, int $refId, ?int $date = null): void
+    public function eventEndByReference(int $displayId, int $eventTypeId, int $refId, string $detail = null, ?int $date = null): void
     {
         $this->getLog()->debug(
             sprintf(
@@ -165,17 +166,21 @@ class DisplayEvent implements \JsonSerializable
             )
         );
 
+        // When updating the event end, concatenate the end message to the current message
         $this->getStore()->update(
-            'UPDATE `displayevent` SET `end` = :toDt
+            "UPDATE `displayevent` SET 
+                      `end` = :toDt, 
+                      `detail` = CONCAT_WS('. ', NULLIF(`detail`, ''), :detail)
                       WHERE displayId = :displayId 
                         AND `end` IS NULL 
                         AND eventTypeId = :eventTypeId
-                        AND refId = :refId',
+                        AND refId = :refId",
             [
                 'toDt' => $date ?? Carbon::now()->format('U'),
                 'displayId' => $displayId,
                 'eventTypeId' => $eventTypeId,
                 'refId' => $refId,
+                'detail' => $detail,
             ]
         );
     }

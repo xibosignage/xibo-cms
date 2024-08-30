@@ -32,6 +32,7 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App as App;
 use Slim\Routing\RouteContext;
 use Xibo\Factory\ApplicationScopeFactory;
+use Xibo\Helper\UserLogProcessor;
 use Xibo\OAuth\AccessTokenRepository;
 use Xibo\Support\Exception\AccessDeniedException;
 
@@ -192,16 +193,26 @@ class ApiAuthorization implements Middleware
         ', [
             'userId' => $user->userId,
             'applicationId' => $validatedRequest->getAttribute('oauth_client_id'),
-            'url' => $resource,
+            'url' => htmlspecialchars($request->getUri()->getPath()),
             'method' => $request->getMethod(),
             'startTime' => Carbon::now(),
             'endTime' => Carbon::now(),
             'duration' => 0
-        ]);
+        ], 'api_requests_history');
+
+        $this->app->getContainer()->get('store')->commitIfNecessary('api_requests_history');
 
         $logger->setUserId($user->userId);
         $this->app->getContainer()->set('user', $user);
         $logger->setRequestId($requestId);
+
+        // Add this request information to the logger.
+        $logger->getLoggerInterface()->pushProcessor(new UserLogProcessor(
+            $user->userId,
+            null,
+            $requestId,
+        ));
+
         return $handler->handle($validatedRequest->withAttribute('name', 'API'));
     }
 }

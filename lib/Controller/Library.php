@@ -1168,6 +1168,14 @@ class Library extends Base
             $folderId = $this->getUser()->homeFolderId;
         }
 
+        if ($parsedBody->getInt('playlistId') !== null) {
+            $playlist = $this->playlistFactory->getById($parsedBody->getInt('playlistId'));
+
+            if ($playlist->isDynamic === 1) {
+                throw new InvalidArgumentException(__('This Playlist is dynamically managed so cannot accept manual assignments.'), 'isDynamic');
+            }
+        }
+
         $options = array_merge([
             'oldMediaId' => null,
             'updateInLayouts' => 0,
@@ -1635,7 +1643,9 @@ class Library extends Base
         $downloader->useLogger($this->getLog()->getLoggerInterface());
 
         $params = $this->getSanitizer($request->getParams());
-        if ($params->getCheckbox('preview') == 1) {
+
+        // Check if preview is allowed for the module
+        if ($params->getCheckbox('preview') == 1 && $module->allowPreview === 1) {
             $this->getLog()->debug('download: preview mode, seeing if we can output an image/video');
 
             // Output a 1px image if we're not allowed to see the media.

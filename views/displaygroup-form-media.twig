@@ -53,10 +53,14 @@
     <div class="row">
         <div class="col-md-12">
             <div class="XiboGrid" id="{{ random() }}">
-                <div class="FilterDiv card-body">
-                    <form onsubmit="false">
-                    {{ inline.dropdown("type", "single", "Type", "", [{type: null, module: ""}]|merge(modules), "type", "name") }}
-                    </form>
+                <div class="XiboFilter card mb-3 bg-light">
+                    <div class="FilterDiv card-body" id="Filter">
+                        <form class="form-inline" id="displayForm">
+                            {% set title %}{% trans "Name" %}{% endset %}
+                            {{ inline.input("media", title) }}
+                            {{ inline.dropdown("type", "single", "Type", "", [{type: null, module: ""}]|merge(modules), "type", "name") }}
+                        </form>
+                    </div>
                 </div>
                 <div class="XiboData card pt-3">
                     <table id="mediaAssignments" data-url="{{ url_for("library.search") }}" class="table table-striped">

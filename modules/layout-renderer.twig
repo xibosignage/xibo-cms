@@ -31,14 +31,10 @@
         <meta name="public-path" content="{{ theme.rootUri() }}"/>
         
         <link rel="shortcut icon" href="{{ theme.uri("img/favicon.ico") }}" />
-        <link rel="stylesheet" type="text/css" href="{{ theme.rootUri() }}dist/preview/html-preview.css" />
-        <link rel="stylesheet" type="text/css" href="{{ theme.uri("css/html-preview.css") }}" />
     </head>
     <body>
-        {% include 'layout-preview-partial.twig' with {'layout': layout, 'previewOptions': previewOptions} %}
         {# Import JS bundle from dist #}
-        <script src="{{ theme.rootUri() }}dist/vendor.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
-        <script src="{{ theme.rootUri() }}dist/xlr/xibo-layout-renderer.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+        <script src="{{ theme.rootUri() }}dist/preview.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
         <script type="text/javascript" nonce="{{ cspNonce }}">
 
             var previewTranslations = {};
@@ -60,13 +56,13 @@
             {% set xlrOptions = previewOptions|merge({inPreview: true}) %}
             (function($){
                 $(document).ready(function(){
-                    let xiboLayoutRenderer = new XiboLayoutRenderer({{ layoutObj|json_encode()|raw }}, {{ xlrOptions|json_encode()|raw }});
+                    var xiboLayoutRenderer = new XiboLayoutRenderer({{ layoutObj|json_encode()|raw }}, {{ xlrOptions|json_encode()|raw }});
 
                     xiboLayoutRenderer.init().then(function(xlr) {
                       xlr.playSchedules(xlr);
                     });
                 });
-            }(jQuery));
+            }(window.jQuery));
         </script>
     </body>
 </html>

@@ -729,6 +729,9 @@ class DataSet extends Base
         // Retrieve data sources from the event
         $dataConnectorSources = $event->getDataConnectorSources();
 
+        // retrieve the columns of the selected dataset
+        $dataSet->getColumn();
+
         // Set the form
         $this->getState()->template = 'dataset-form-edit';
         $this->getState()->setData([

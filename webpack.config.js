@@ -40,6 +40,7 @@ const mainConfig = Object.assign({}, config, {
     layoutEditor: './ui/src/layout-editor/main.js',
     playlistEditor: './ui/src/playlist-editor/main.js',
     campaignBuilder: './ui/src/campaign-builder/main.js',
+    preview: './ui/bundle_preview.js',
   },
   output: {
     path: path.resolve(__dirname, 'web/dist'),
@@ -156,10 +157,6 @@ const mainConfig = Object.assign({}, config, {
         {
           from: 'ui/src/vendor',
           to: 'vendor',
-        },
-        {
-          from: 'node_modules/xibo-layout-renderer/dist',
-          to: 'xlr',
         },
       ],
     }),

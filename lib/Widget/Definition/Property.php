@@ -279,6 +279,23 @@ class Property implements \JsonSerializable
                             }
                             break;
 
+                        case 'windowsPath':
+                            // Ensure the path is a valid Windows file path ending in a file, not a directory
+                            $windowsPathRegex = '/^(?P<Root>[A-Za-z]:)(?P<Relative>(?:\\\\[^<>:"\/\\\\|?*\r\n]+)+)(?P<File>\\\\[^<>:"\/\\\\|?*\r\n]+)$/';
+
+                            // Check if the test value is not empty and does not match the regular expression
+                            if (!empty($testValue)
+                                && !preg_match($windowsPathRegex, $testValue)
+                            ) {
+                                // Throw an InvalidArgumentException if the test value is not a valid Windows path
+                                throw new InvalidArgumentException(
+                                    $message ?? sprintf(__('%s must be a valid Windows path'), $this->title),
+                                    $this->id
+                                );
+                            }
+
+                            break;
+
                         case 'interval':
                             if (!empty($testValue)) {
                                 // Try to create a date interval from it

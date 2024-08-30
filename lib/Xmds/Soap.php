@@ -594,7 +594,8 @@ class Soap
                     if ($dataSet->dataConnectorSource != 'user_defined') {
                         // Dispatch an event to save the data connector javascript from the connector
                         $dataConnectorScriptRequestEvent = new DataConnectorScriptRequestEvent($dataSet);
-                        $this->getDispatcher()->dispatch($dataConnectorScriptRequestEvent, DataConnectorScriptRequestEvent::$NAME);
+                        $this->getDispatcher()
+                            ->dispatch($dataConnectorScriptRequestEvent, DataConnectorScriptRequestEvent::$NAME);
                     }
 
                     $this->addDependency(
@@ -3200,8 +3201,8 @@ class Soap
             $displayEvent = $this->displayEventFactory->createEmpty();
             $eventTypeId = $displayEvent->getEventIdFromString($eventType);
             empty($refId)
-                ? $displayEvent->eventEnd($this->display->displayId, $eventTypeId, $date)
-                : $displayEvent->eventEndByReference($this->display->displayId, $eventTypeId, $refId);
+                ? $displayEvent->eventEnd($this->display->displayId, $eventTypeId, $detail, $date)
+                : $displayEvent->eventEndByReference($this->display->displayId, $eventTypeId, $refId, $detail);
         }
     }
 }
