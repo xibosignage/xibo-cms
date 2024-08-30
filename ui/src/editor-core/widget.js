@@ -786,7 +786,8 @@ Widget.prototype.getNextWidget = function(reverse = false) {
 /**
  * Save elements to widget
  * @param {object} elements - elements to save
- * @param {boolean} reload - reload layout
+ * @param {boolean} updateEditor - update editor
+ * @param {boolean} reloadData - reload data
  * @param {boolean} forceRequest
  *  - always make request even another one is happening
  * @param {boolean} addToHistory
@@ -796,7 +797,8 @@ Widget.prototype.getNextWidget = function(reverse = false) {
 Widget.prototype.saveElements = function(
   {
     elements = null,
-    reload = false,
+    updateEditor = false,
+    reloadData = true,
     forceRequest = false,
     addToHistory = true,
   } = {},
@@ -817,10 +819,14 @@ Widget.prototype.saveElements = function(
 
   let savePending;
 
-  const reloadLayout = function(forceReload = false) {
+  const reloadLayout = function() {
+    if (!reloadData) {
+      return;
+    }
+
     app.reloadData(app.layout,
       {
-        refreshEditor: (reload || forceReload),
+        refreshEditor: updateEditor,
       });
   };
 
@@ -1243,7 +1249,7 @@ Widget.prototype.removeElement = function(
   // Only save if we're not removing the widget
   // Save changes to widget
   (save && !savedAlready) && this.saveElements({
-    reload: reload,
+    updateEditor: reload,
   });
 
   // If object is selected, remove it from selection

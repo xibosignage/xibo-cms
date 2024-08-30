@@ -1005,33 +1005,36 @@ class Display extends Base
                 );
             }
 
-            if ($this->getUser()->featureEnabled('displays.modify')
-                && $this->getUser()->checkEditable($display)
+            // Check if limited view access is allowed
+            if (($this->getUser()->featureEnabled('displays.modify') && $this->getUser()->checkEditable($display))
+                || $this->getUser()->featureEnabled('displays.limitedView')
             ) {
-                if ($this->getUser()->featureEnabled('layout.view')) {
-                    $display->buttons[] = [
-                        'id' => 'display_button_layouts_jump',
-                        'linkType' => '_self',
-                        'external' => true,
-                        'url' => $this->urlFor($request, 'layout.view')
-                            . '?activeDisplayGroupId=' . $display->displayGroupId,
-                        'text' => __('Jump to Scheduled Layouts')
-                    ];
+                if ($this->getUser()->checkEditable($display)) {
+                    if ($this->getUser()->featureEnabled('layout.view')) {
+                        $display->buttons[] = [
+                            'id' => 'display_button_layouts_jump',
+                            'linkType' => '_self',
+                            'external' => true,
+                            'url' => $this->urlFor($request, 'layout.view')
+                                . '?activeDisplayGroupId=' . $display->displayGroupId,
+                            'text' => __('Jump to Scheduled Layouts')
+                        ];
+                    }
+
+                    // File Associations
+                    $display->buttons[] = array(
+                        'id' => 'displaygroup_button_fileassociations',
+                        'url' => $this->urlFor($request, 'displayGroup.media.form', ['id' => $display->displayGroupId]),
+                        'text' => __('Assign Files')
+                    );
+
+                    // Layout Assignments
+                    $display->buttons[] = array(
+                        'id' => 'displaygroup_button_layout_associations',
+                        'url' => $this->urlFor($request, 'displayGroup.layout.form', ['id' => $display->displayGroupId]),
+                        'text' => __('Assign Layouts')
+                    );
                 }
-
-                // File Associations
-                $display->buttons[] = array(
-                    'id' => 'displaygroup_button_fileassociations',
-                    'url' => $this->urlFor($request, 'displayGroup.media.form', ['id' => $display->displayGroupId]),
-                    'text' => __('Assign Files')
-                );
-
-                // Layout Assignments
-                $display->buttons[] = array(
-                    'id' => 'displaygroup_button_layout_associations',
-                    'url' => $this->urlFor($request, 'displayGroup.layout.form', ['id' => $display->displayGroupId]),
-                    'text' => __('Assign Layouts')
-                );
 
                 // Screen Shot
                 $display->buttons[] = [
@@ -1085,43 +1088,45 @@ class Display extends Base
                     ]
                 ];
 
-                // Trigger webhook
-                $display->buttons[] = [
-                    'id' => 'display_button_trigger_webhook',
-                    'url' => $this->urlFor(
-                        $request,
-                        'displayGroup.trigger.webhook.form',
-                        ['id' => $display->displayGroupId]
-                    ),
-                    'text' => __('Trigger a web hook'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        [
-                            'name' => 'commit-url',
-                            'value' => $this->urlFor(
-                                $request,
-                                'displayGroup.action.trigger.webhook',
-                                ['id' => $display->displayGroupId]
-                            )
-                        ],
-                        ['name' => 'commit-method', 'value' => 'post'],
-                        ['name' => 'id', 'value' => 'display_button_trigger_webhook'],
-                        ['name' => 'sort-group', 'value' => 3],
-                        ['name' => 'text', 'value' => __('Trigger a web hook')],
-                        ['name' => 'rowtitle', 'value' => $display->display],
-                        ['name' => 'form-callback', 'value' => 'triggerWebhookMultiSelectFormOpen']
-                    ]
-                ];
-
-                if ($this->getUser()->isSuperAdmin()) {
+                if ($this->getUser()->checkEditable($display)) {
+                    // Trigger webhook
                     $display->buttons[] = [
-                        'id' => 'display_button_purgeAll',
-                        'url' => $this->urlFor($request, 'display.purge.all.form', ['id' => $display->displayId]),
-                        'text' => __('Purge All')
+                        'id' => 'display_button_trigger_webhook',
+                        'url' => $this->urlFor(
+                            $request,
+                            'displayGroup.trigger.webhook.form',
+                            ['id' => $display->displayGroupId]
+                        ),
+                        'text' => __('Trigger a web hook'),
+                        'multi-select' => true,
+                        'dataAttributes' => [
+                            [
+                                'name' => 'commit-url',
+                                'value' => $this->urlFor(
+                                    $request,
+                                    'displayGroup.action.trigger.webhook',
+                                    ['id' => $display->displayGroupId]
+                                )
+                            ],
+                            ['name' => 'commit-method', 'value' => 'post'],
+                            ['name' => 'id', 'value' => 'display_button_trigger_webhook'],
+                            ['name' => 'sort-group', 'value' => 3],
+                            ['name' => 'text', 'value' => __('Trigger a web hook')],
+                            ['name' => 'rowtitle', 'value' => $display->display],
+                            ['name' => 'form-callback', 'value' => 'triggerWebhookMultiSelectFormOpen']
+                        ]
                     ];
-                }
 
-                $display->buttons[] = ['divider' => true];
+                    if ($this->getUser()->isSuperAdmin()) {
+                        $display->buttons[] = [
+                            'id' => 'display_button_purgeAll',
+                            'url' => $this->urlFor($request, 'display.purge.all.form', ['id' => $display->displayId]),
+                            'text' => __('Purge All')
+                        ];
+                    }
+
+                    $display->buttons[] = ['divider' => true];
+                }
             }
 
             if ($this->getUser()->featureEnabled('displays.modify')
@@ -2187,7 +2192,8 @@ class Display extends Base
     {
         $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser()->checkViewable($display)) {
+        // Allow limited view access
+        if (!$this->getUser()->checkViewable($display) && !$this->getUser()->featureEnabled('displays.limitedView')) {
             throw new AccessDeniedException();
         }
 
@@ -2247,7 +2253,8 @@ class Display extends Base
     {
         $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser()->checkViewable($display)) {
+        // Allow limited view access
+        if (!$this->getUser()->checkViewable($display) && !$this->getUser()->featureEnabled('displays.limitedView')) {
             throw new AccessDeniedException();
         }
 
@@ -2305,7 +2312,8 @@ class Display extends Base
     {
         $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser()->checkViewable($display)) {
+        // Allow limited view access
+        if (!$this->getUser()->checkViewable($display) && !$this->getUser()->featureEnabled('displays.limitedView')) {
             throw new AccessDeniedException();
         }
 

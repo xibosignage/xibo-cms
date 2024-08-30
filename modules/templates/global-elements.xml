@@ -251,8 +251,11 @@ if(properties.fitToArea) {
     // Set target for the text
     properties.fitTarget = 'div';
 
+    var $selector = $(target).is('.global-elements-text') ?
+        $(target) : $(target).find('.global-elements-text');
+
     // Scale text to container
-    $(target).find('.global-elements-text').xiboTextScaler(properties);
+    $selector.xiboTextScaler(properties);
 }
         ]]></onTemplateRender>
         </stencil>
@@ -497,8 +500,11 @@ $(target).find('.date').each(function(_idx, dateEl){
         // Set target for the text
         properties.fitTarget = '.date';
 
+        var $selector = $(target).is('.global-elements-date') ?
+            $(target) : $(target).find('.global-elements-date');
+
         // Scale text to container
-        $(target).find('.global-elements-date').xiboTextScaler(properties);
+        $selector.xiboTextScaler(properties);
     }
 });
         ]]></onTemplateRender>
@@ -767,6 +773,9 @@ if (useCurrentDate) {
             // Set target for the text
             properties.fitTarget = '.date-advanced';
 
+            var $selector = $(target).is('.global-elements-date-advanced') ?
+                $(target) : $(target).find('.global-elements-date-advanced');
+
             // Scale text to container
             $(target).find('.global-elements-date-advanced').xiboTextScaler(properties);
 
@@ -799,8 +808,11 @@ if (useCurrentDate) {
         // Set target for the text
         properties.fitTarget = '.date-advanced';
 
+        var $selector = $(target).is('.global-elements-date-advanced') ?
+            $(target) : $(target).find('.global-elements-date-advanced');
+
         // Scale text to container
-        $(target).find('.global-elements-date-advanced').xiboTextScaler(properties);
+        $selector.xiboTextScaler(properties);
     }
 }
         ]]></onTemplateRender>
@@ -967,7 +979,7 @@ $(target).find('img').xiboImageRender(properties);
         <properties>
             <property id="imageReplace" type="imageReplaceControl">
                 <title>Replace Image</title>
-                <helpText>Add an image from the Toolbar to replace this element.</helpText>
+                <helpText>Select an image from the Toolbox and drop here to replace this element.</helpText>
             </property>
         </properties>
     </template>
@@ -1340,10 +1352,11 @@ $(target).find('img').xiboImageRender(properties);
             ]]></hbs>
         </stencil>
         <onTemplateRender><![CDATA[
-// Calculate circle radius based on outlineWidth
-var circleRadius = properties.outline == 1 ?
-    50 - (properties.outlineWidth / 4) : 50;
-$(target).find('.global-elements-circle svg symbol circle').attr('r', circleRadius);
+    // Calculate circle radius based on outlineWidth
+    var circleRadius = properties.outline == 1 ?
+        50 - (properties.outlineWidth / 4) : 50;
+    var selector = $(target).is('.global-elements-circle') ? '' : '.global-elements-circle ';
+    $(target).find(selector + 'svg symbol circle').attr('r', circleRadius);
         ]]></onTemplateRender>
         <assets>
             <asset id="circle-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/circle.png" />

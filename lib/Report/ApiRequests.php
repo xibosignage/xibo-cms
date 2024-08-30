@@ -28,6 +28,7 @@ use Xibo\Controller\DataTablesDotNetTrait;
 use Xibo\Entity\ReportForm;
 use Xibo\Entity\ReportResult;
 use Xibo\Entity\ReportSchedule;
+use Xibo\Factory\ApplicationRequestsFactory;
 use Xibo\Factory\AuditLogFactory;
 use Xibo\Factory\LogFactory;
 use Xibo\Helper\DateFormatHelper;
@@ -45,11 +46,15 @@ class ApiRequests implements ReportInterface
     /** @var AuditLogFactory */
     private $auditLogFactory;
 
+    /** @var ApplicationRequestsFactory */
+    private $apiRequestsFactory;
+
     /** @inheritdoc */
     public function setFactories(ContainerInterface $container)
     {
         $this->logFactory = $container->get('logFactory');
         $this->auditLogFactory = $container->get('auditLogFactory');
+        $this->apiRequestsFactory = $container->get('apiRequestsFactory');
 
         return $this;
     }
@@ -319,7 +324,7 @@ class ApiRequests implements ReportInterface
                 $rows,
                 count($rows),
             );
-        } else {
+        } else if ($type === 'debug') {
             $params = [
                 'fromDt' => $fromDt->format(DateFormatHelper::getSystemFormat()),
                 'toDt' => $toDt->format(DateFormatHelper::getSystemFormat()),
@@ -393,6 +398,64 @@ class ApiRequests implements ReportInterface
                 );
 
                 $rows[] = $logRecord;
+            }
+
+            return new ReportResult(
+                $metadata,
+                $rows,
+                count($rows),
+            );
+        } else {
+            $params = [
+                'fromDt' => $fromDt->format(DateFormatHelper::getSystemFormat()),
+                'toDt' => $toDt->format(DateFormatHelper::getSystemFormat()),
+            ];
+
+            $sql = 'SELECT
+             `application_requests_history`.applicationId,
+             `application_requests_history`.requestId,
+             `application_requests_history`.userId,
+             `application_requests_history`.url,
+             `application_requests_history`.method,
+             `application_requests_history`.startTime,
+             `oauth_clients`.name AS applicationName,
+             `user`.`userName`
+                FROM `application_requests_history`
+                    INNER JOIN `user`
+                        ON `user`.`userId` = `application_requests_history`.`userId`
+                    INNER JOIN `oauth_clients` 
+                        ON `oauth_clients`.id = `application_requests_history`.applicationId
+             WHERE `application_requests_history`.startTime BETWEEN :fromDt AND :toDt
+             ';
+
+            if ($sanitizedParams->getInt('userId') !== null) {
+                $sql .= ' AND `application_requests_history`.`userId` = :userId';
+                $params['userId'] = $sanitizedParams->getInt('userId');
+            }
+
+            // Sorting?
+            $sortOrder = $this->gridRenderSort($sanitizedParams);
+
+            if (is_array($sortOrder)) {
+                $sql .= ' ORDER BY ' . implode(',', $sortOrder);
+            }
+
+            $rows = [];
+
+            foreach ($this->store->select($sql, $params) as $row) {
+                $apiRequestRecord = $this->apiRequestsFactory->createEmpty()->hydrate($row);
+
+                $apiRequestRecord->setUnmatchedProperty(
+                    'userName',
+                    $row['userName']
+                );
+
+                $apiRequestRecord->setUnmatchedProperty(
+                    'applicationName',
+                    $row['applicationName']
+                );
+
+                $rows[] = $apiRequestRecord;
             }
 
             return new ReportResult(

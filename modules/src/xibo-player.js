@@ -1283,7 +1283,6 @@ XiboPlayer.prototype.postRenderDataElements = function(
     position: 'absolute',
     top: slotObjItem.top,
     left: slotObjItem.left,
-    overflow: 'hidden',
     zIndex: slotObjItem.layer,
   });
 
@@ -1388,14 +1387,13 @@ XiboPlayer.prototype.renderGlobalElements = function(currentWidget) {
 
             const itemID =
                 groupItem.uniqueID || groupItem.templateData?.uniqueID;
-            const $itemContainer = $(`<div class="${itemKey}"></div>`);
 
             // Call onTemplateRender
             // Handle the rendering of the template
             (groupItem.onTemplateRender() !== undefined) &&
             groupItem.onTemplateRender()(
               groupItem.elementId,
-              $itemContainer.find(`.${itemID}--item`),
+              $content.find(`#${itemID}`),
               $content.find(`.${itemID}--item`),
               {groupItem, ...groupItem.templateData, data: {}},
               meta,
@@ -1417,14 +1415,13 @@ XiboPlayer.prototype.renderGlobalElements = function(currentWidget) {
 
         const itemID =
           elemObj.uniqueID || elemObj.templateData?.uniqueID;
-        const $itemContainer = $(`<div class="${itemKey}"></div>`);
 
         // Call onTemplateRender
         // Handle the rendering of the template
         (elemObj.onTemplateRender() !== undefined) &&
           elemObj.onTemplateRender()(
             elemObj.elementId,
-            $itemContainer.find(`.${itemID}--item`),
+            $content.find(`#${itemID}`),
             $content.find(`.${itemID}--item`),
             {elemObj, ...elemObj.templateData, data: {}},
             meta,

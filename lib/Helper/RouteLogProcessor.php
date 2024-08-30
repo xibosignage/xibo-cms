@@ -24,25 +24,20 @@
 namespace Xibo\Helper;
 
 /**
- * Class LogProcessor
+ * Class RouteLogProcessor
+ *  a process to add route/method information to the log record
  * @package Xibo\Helper
  */
-class LogProcessor
+class RouteLogProcessor
 {
     /**
      * Log Processor
      * @param string $route
      * @param string $method
-     * @param int|null $userId
-     * @param int|null $sessionHistoryId
-     * @param int|null $requestId
      */
     public function __construct(
         private readonly string $route,
-        private readonly string $method,
-        private readonly ?int $userId,
-        private readonly ?int $sessionHistoryId,
-        private readonly ?int $requestId
+        private readonly string $method
     ) {
     }
 
@@ -54,19 +49,6 @@ class LogProcessor
     {
         $record['extra']['method'] = $this->method;
         $record['extra']['route'] = $this->route;
-
-        if ($this->userId != null) {
-            $record['extra']['userId'] = $this->userId;
-        }
-        
-        if ($this->sessionHistoryId != null) {
-            $record['extra']['sessionHistoryId'] = $this->sessionHistoryId;
-        }
-
-        if ($this->requestId != null) {
-            $record['extra']['requestId'] = $this->requestId;
-        }
-
         return $record;
     }
 }

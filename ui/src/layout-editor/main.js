@@ -1530,11 +1530,11 @@ lD.deleteObject = function(
  * @param {boolean=} showConfirmationModal
  */
 lD.deleteMultipleObjects = function(showConfirmationModal = true) {
-  const deleteElementsOrGroupElements = function(
+  const deleteElements = function(
     itemsArray,
-    type = 'elements',
   ) {
     let auxWidget = null;
+    let auxWidgetId = null;
     itemsArray.each((idx, item) => {
       const itemId = $(item).attr('id');
       const widgetId = $(item).data('widgetId');
@@ -1552,8 +1552,11 @@ lD.deleteMultipleObjects = function(showConfirmationModal = true) {
         )
       );
 
-      // Get parent widget if doesn't exist or we need to save
+      // Get parent widget if doesn't exist
+      // if widget is a new one
+      // or we need to save
       if (
+        widgetFullId != auxWidgetId ||
         !auxWidget ||
         save
       ) {
@@ -1562,26 +1565,18 @@ lD.deleteMultipleObjects = function(showConfirmationModal = true) {
           widgetFullId,
           'canvas',
         );
+
+        auxWidgetId = widgetFullId;
       }
 
-      // Delete element from widget
-      if (type === 'elements') {
-        auxWidget.removeElement(
-          itemId,
-          {
-            save: save,
-            reload: false,
-          },
-        );
-      } else {
-        auxWidget.removeElementGroup(
-          itemId,
-          {
-            save: save,
-            reload: false,
-          },
-        );
-      }
+      // Delete elements from widget
+      auxWidget.removeElement(
+        itemId,
+        {
+          save: save,
+          reload: false,
+        },
+      );
     });
   };
 
@@ -1616,17 +1611,13 @@ lD.deleteMultipleObjects = function(showConfirmationModal = true) {
     return;
   }
 
-  // First delete elements if they exist
-  const $elementsToBeDeleted =
+  // Get elements to be deleted
+  let $elementsToBeDeleted =
     lD.viewer.DOMObject.find('.selected.designer-element').sort((a, b) => {
       return Number($(b).data('widgetId')) - Number($(a).data('widgetId'));
     });
 
-  if ($elementsToBeDeleted.length > 0) {
-    deleteElementsOrGroupElements($elementsToBeDeleted);
-  }
-
-  // Then delete element groups
+  // Get groups to be deleted
   const $elementGroupsToBeDeleted =
     lD.viewer.DOMObject.find('.selected.designer-element-group')
       .sort((a, b) => {
@@ -1636,11 +1627,20 @@ lD.deleteMultipleObjects = function(showConfirmationModal = true) {
         );
       });
 
+  // Grab elements from the groups
   if ($elementGroupsToBeDeleted.length > 0) {
-    deleteElementsOrGroupElements(
-      $elementGroupsToBeDeleted,
-      'elementGroups',
+    // Add elements from the groups to all elements to be deleted
+    $elementsToBeDeleted = $elementsToBeDeleted.add(
+      $elementGroupsToBeDeleted.find('.designer-element').sort((a, b) => {
+        return Number($(b).data('widgetId')) - Number($(a).data('widgetId'));
+      }),
     );
+  }
+
+  // Delete elements (groups will be automatically deleted
+  // if all elements from a group are also deleted)
+  if ($elementsToBeDeleted.length > 0) {
+    deleteElements($elementsToBeDeleted);
   }
 
   // Finally, delete regions one by one
@@ -3604,10 +3604,16 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
   // and has at least one widget
   layoutObject.playlistCanBeConverted = (
     layoutObject.isPlaylist &&
-    !$(obj).find('.playlist-edit-btn')
-      .hasClass('subplaylist-inline-edit-btn') &&
+    !$(obj).hasClass('playlist-global-editable') &&
     layoutObject.playlists.widgets.length > 0
   );
+
+  // Check if it's a dynamic playlist
+  layoutObject.isDynamicPlaylist =
+    (
+      layoutObject.isPlaylist &&
+      $(obj).hasClass('playlist-dynamic')
+    );
 
   // Create menu and append to the designer div
   // ( using the object extended with translations )
@@ -4672,6 +4678,10 @@ lD.importFromProvider = function(items) {
     }
   });
 
+  // Get item type, if not image/audio/video, set it as library
+  const itemType =
+    ['image', 'audio', 'video'].indexOf(itemsResult[0].type) == -1 ?
+      'library' : itemsResult[0].type;
   const linkToAPI = urlsForApi.library.connectorImport;
   const requestPath = linkToAPI.url;
 
@@ -4712,6 +4722,11 @@ lD.importFromProvider = function(items) {
 
         // Filter null results
         itemsResult = itemsResult.filter((el) => el);
+
+        // Empty toolbar content for this type of media
+        // so it can be reloaded
+        const menuId = lD.toolbar.getMenuIdFromType(itemType);
+        lD.toolbar.DOMObject.find('#content-' + menuId).empty();
 
         resolve(itemsResult);
       } else {

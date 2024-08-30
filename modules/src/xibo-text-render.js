@@ -130,7 +130,6 @@ jQuery.fn.extend({
     }
 
     const isAndroid = navigator.userAgent.indexOf('Android') > -1;
-    const isEditor = xiboIC.checkIsEditor();
 
     // For each matched element
     this.each(function(_key, element) {
@@ -203,7 +202,7 @@ jQuery.fn.extend({
           // hide the original and show the clone
           let $newItem;
           let $oldItem;
-          if (isEditor && $.contains(element, items[i])) {
+          if ($.contains(element, items[i])) {
             $oldItem = $(items[i]);
             $newItem = $oldItem.clone();
           } else {

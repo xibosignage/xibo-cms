@@ -43,6 +43,11 @@ class Factories
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;
             },
+            'apiRequestsFactory' => function (ContainerInterface $c) {
+                $repository = new \Xibo\Factory\ApplicationRequestsFactory();
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
+            },
             'applicationFactory' => function (ContainerInterface $c) {
                 $repository = new \Xibo\Factory\ApplicationFactory(
                     $c->get('user'),

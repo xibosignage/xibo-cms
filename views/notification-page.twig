@@ -212,6 +212,17 @@
         dialog.find("#notificationForm").validate({
           submitHandler: attachmentFormSubmit,
           errorElement: "span",
+          // Ignore the date picker helpers
+          ignore: '.datePickerHelper',
+          errorPlacement: function(error, element) {
+              if($(element).hasClass('dateControl')) {
+                  // Places the error label date controller
+                  error.insertAfter(element.parent());
+              } else {
+                  // Places the error label after the invalid element
+                  error.insertAfter(element);
+              }
+          },
           highlight: function(element) {
             $(element).closest('.form-group').removeClass('has-success').addClass('has-error');
           },

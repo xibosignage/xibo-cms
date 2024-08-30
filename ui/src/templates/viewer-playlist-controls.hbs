@@ -1,8 +1,14 @@
-<div class="playlist-edit-btn viewer-object-select {{#if canEditPlaylist}}subplaylist-inline-edit-btn{{/if}}"
-    data-child-playlist-id="{{canEditPlaylistId}}"
-    title="{{trans.editPlaylistTitle}}">
-    <i class="fa fa-list-ol" aria-hidden="true"></i>
-</div>
+{{#if isDynamicPlaylist}}
+    <div class="dynamic-playlist-icon" title="{{trans.dynamicPlaylistTitle}}">
+        <i class="fa fa-magic" aria-hidden="true"></i>
+    </div>    
+{{else}}
+    <div class="playlist-edit-btn viewer-object-select {{#if canEditPlaylist}}subplaylist-inline-edit-btn{{/if}}"
+        data-child-playlist-id="{{canEditPlaylistId}}"
+        title="{{trans.editPlaylistTitle}}">
+        <i class="fa fa-list-ol" aria-hidden="true"></i>
+    </div>
+{{/if}}
 {{#if isEmpty}}
     <div class="playlist-preview-empty">
         <i alt="{{ "A playlist region" }}"
