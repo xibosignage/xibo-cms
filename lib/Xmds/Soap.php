@@ -415,6 +415,7 @@ class Soap
                         $newUrl = LinkSigner::generateSignedLink(
                             $this->display,
                             $this->configService->getApiKeyDetails()['encryptionKey'],
+                            null,
                             $type,
                             $realId,
                             $node->getAttribute('saveAs'),
@@ -855,8 +856,8 @@ class Soap
                     $file->setAttribute('path', LinkSigner::generateSignedLink(
                         $this->display,
                         $this->configService->getApiKeyDetails()['encryptionKey'],
-                        'L',
                         null,
+                        'L',
                         $layoutId,
                         $fileName,
                     ));
