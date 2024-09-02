@@ -211,9 +211,9 @@
         // NOTE: The validation plugin does not like binding to multiple forms at once.
         dialog.find("#notificationForm").validate({
           submitHandler: attachmentFormSubmit,
-          errorElement: "span",
+          errorElement: 'span',
           // Ignore the date picker helpers
-          ignore: '.datePickerHelper',
+          ignore: '.datePickerHelper, :hidden>*:not(.flatpickr-input)',
           errorPlacement: function(error, element) {
               if($(element).hasClass('dateControl')) {
                   // Places the error label date controller
