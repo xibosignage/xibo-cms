@@ -277,8 +277,9 @@ function XiboInitialise(scope, options) {
     $(scope + ' .XiboForm').validate({
         submitHandler: XiboFormSubmit,
         // Ignore the date picker helpers
-        ignore: '.datePickerHelper',
-        errorElement: "span",
+        // and input groups that are hidden
+        ignore: '.datePickerHelper, :hidden>*:not(.flatpickr-input)',
+        errorElement: 'span',
         errorPlacement: function(error, element) {
             if($(element).hasClass('dateControl')) {
                 // Places the error label date controller
