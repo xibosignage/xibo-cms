@@ -331,7 +331,11 @@ class ProofOfPlay implements ReportInterface
         $exactTags = $sanitizedParams->getCheckbox('exactTags');
         $operator = $sanitizedParams->getString('logicalOperator', ['default' => 'OR']);
         $parentCampaignId = $sanitizedParams->getInt('parentCampaignId');
+
+        // Group the data by display, display group, or by tag
         $groupBy = $sanitizedParams->getString('groupBy');
+
+        // Used alongside groupBy in case we want to filter by specific display groups only
         $displayGroupIds = $sanitizedParams->getIntArray('displayGroupId', ['default' => []]);
 
         // Display filter.
@@ -604,7 +608,7 @@ class ProofOfPlay implements ReportInterface
               stat.displayId
         ';
 
-
+        // If grouping is by display group, include the display group name and display group Id
         if ($groupBy === 'displayGroup') {
             $select .= ', displaydg.displayGroup, displaydg.displayGroupId ';
         }
@@ -639,7 +643,7 @@ class ProofOfPlay implements ReportInterface
             }
         }
 
-        // Grouping Option
+        // Group the data by display group
         if ($groupBy === 'displayGroup') {
             $body .= 'INNER JOIN `lkdisplaydg` AS linkdg
                         ON linkdg.DisplayID = display.displayid
@@ -849,7 +853,7 @@ class ProofOfPlay implements ReportInterface
                 stat.displayId 
         ';
 
-        // Group By displayGroup Filter
+        // Group the data by display group
         if ($groupBy === 'displayGroup') {
             $body .= ', displaydg.displayGroupId';
         }
@@ -886,10 +890,10 @@ class ProofOfPlay implements ReportInterface
             $rows[] = $entry;
         }
 
-        if ($groupBy != '') {
-            $filterKey = $groupBy === 'tag' ? 'tag' : 'displayGroupId';
-
-            $rows = $this->getByDisplayGroup($rows, $filterKey, $displayGroupIds);
+        if ($groupBy === 'tag') {
+            $rows = $this->getByDisplayGroup($rows, 'tag', $displayGroupIds);
+        } else if ($groupBy === 'displayGroup') {
+            $rows = $this->getByDisplayGroup($rows, 'displayGroupId', $displayGroupIds);
         }
 
         return [
@@ -1200,9 +1204,10 @@ class ProofOfPlay implements ReportInterface
             }
         }
 
+        // If grouping is by display group, include the display group name and display group Id
         if ($groupBy === 'tag') {
-            $rows = $this->getByDisplayGroup($rows, $groupBy, $displayGroupIds);
-        } elseif ($groupBy === 'displayGroup') {
+            $rows = $this->getByDisplayGroup($rows, 'tag', $displayGroupIds);
+        } else if ($groupBy === 'displayGroup') {
             $rows = $this->getDisplayGroupInMongoDB($rows, $displayGroupIds);
         }
 
@@ -1267,8 +1272,7 @@ class ProofOfPlay implements ReportInterface
         $data = [];
 
         // Get list of display groups
-        $dgs = $this->displayGroupFactory->query();
-        foreach ($dgs as $dg) {
+        foreach ($this->displayGroupFactory->query() as $dg) {
             $displayGroups[$dg->displayGroupId]['displayGroup'] = $dg->displayGroup;
 
             foreach ($this->displayFactory->query(null, [
@@ -1283,7 +1287,7 @@ class ProofOfPlay implements ReportInterface
             foreach ($displayGroups as $key => $value) {
                 if (in_array($row['displayId'], $value['displays'])) {
 
-                    if (isset($data[$key])) {
+                    if (isset($groups[$key])) {
                         $groups[$key]['duration'] += $row['duration'];
                         $groups[$key]['numberPlays'] += $row['numberPlays'];
                         $groups[$key]['count'] += 1;
@@ -1297,7 +1301,7 @@ class ProofOfPlay implements ReportInterface
             }
         }
 
-        // Check if with displayGroup filter
+        // Check if for specific display groups only
         foreach ($groups as $group) {
             if (!$displayIds || in_array($group['displayGroupId'], $displayIds)) {
                 $data[] = $group;
