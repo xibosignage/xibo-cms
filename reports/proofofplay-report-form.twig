@@ -490,17 +490,18 @@
             $("select[name='groupBy']").on('change', function() {
                 let optionSelected = $(this).find("option:selected").val();
 
-                if (optionSelected === 'tag') {
+                if (optionSelected === 'displayGroup') {
+                    $('select[name="groupBy"]').parent().show();
+                    $('select[name="displayGroupId[]"]').next(".select2-container").parent().show();
+                } else {
                     $('select[name="displayGroupId[]"] option').remove();
                     $('select[name="displayGroupId[]"]').next(".select2-container").parent().hide();
-                } else if (optionSelected === 'displayGroup') {
-                    $('select[name="groupBy"]').parent().show();
                 }
 
-                if (optionSelected !== '') {
-                    $("select[name='displayId']").parent().hide();
-                } else {
+                if (optionSelected === 'display') {
                     $("select[name='displayId']").parent().show();
+                } else {
+                    $("select[name='displayId']").parent().hide();
                 }
             });
 
