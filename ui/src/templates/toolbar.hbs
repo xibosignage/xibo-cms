@@ -1,12 +1,16 @@
-<nav class="navbar navbar-dark navbar-expand-md flex-column {{#if opened}}opened{{/if}}">
+<nav class="navbar navbar-dark navbar-expand-md flex-column {{#if opened}}opened{{/if}} toolbar-level-{{toolbarLevel}}">
     <div class="container-toolbar container-fluid flex-column flex-column justify-content-between">
         {{!-- Menu buttons --}}
         <ul class="navbar-nav navbar-buttons flex-column toolbar-menu-left hide-on-read-only hide-on-lock">
             {{#each menuItems}}
                 <li>
-                    <a id="btn-menu-{{@index}}" class="btn-menu-option {{#if disabled}}d-none{{/if}} {{state}}" data-container=".editor-side-bar"
+                    <a id="btn-menu-{{@index}}" class="btn-menu-option {{#if customIcon}}btn-menu-option-custom-icon no-user-select tooltip-always-on{{/if}} {{#if disabled}}d-none{{/if}} {{state}}" data-container=".editor-side-bar"
                         data-toggle="tooltip" data-title="{{itemTitle}}" data-test="toolbarTabs">
-                        <i class="fas fa-{{itemIcon}}"></i>
+                        {{#if customIcon}}
+                            <div class="btn-menu-custom-icon" style="background: no-repeat url('{{itemIcon}}') center / contain;"></div>
+                        {{else}}
+                            <i class="fas fa-{{itemIcon}}"></i>
+                        {{/if}}
                     </a>
                 </li>
             {{/each}}
@@ -22,10 +26,29 @@
             <div id="content-submenu" class="d-none"></div>
         </ul>
 
-        {{#if helpLink}}
-            <a href="{{ helpLink }}" class="editor-help-link" target="_blank" rel="noopener noreferrer">
-                <i class="fas fa-question-circle"></i>
-            </a>
-        {{/if}}
+        <div class="align-items-center d-flex flex-column toolbar-controls">
+            {{#if toolbarLevel}}
+                <div class="toolbar-level-control-menu">
+                    <i class="toolbar-level-control toolbar-level-icon toolbar-level-control-button toolbar-level-control-{{toolbarLevel}}"></i>
+
+                    <div class="toolbar-level-control-select">
+                        <i class="toolbar-level-control toolbar-level-icon toolbar-level-control-1" data-level="1"></i>
+                        <i class="toolbar-level-control toolbar-level-icon toolbar-level-control-2" data-level="2"></i>
+                        {{#unless levelLimiter}}
+                            <i class="toolbar-level-control toolbar-level-icon toolbar-level-control-3" data-level="3"></i>
+                            <i class="toolbar-level-control toolbar-level-icon toolbar-level-control-4" data-level="4"></i>
+                        {{/unless}}
+                    </div>
+                </div>
+            {{/if}}
+
+            {{#if helpLink}}
+                <div class="toolbar-help-control">
+                    <a href="{{ helpLink }}" class="editor-help-link" target="_blank" rel="noopener noreferrer">
+                        <i class="fas fa-question-circle"></i>
+                    </a>
+                </div>
+            {{/if}}
+        </div>
     </div>
 </nav>

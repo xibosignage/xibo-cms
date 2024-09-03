@@ -96,6 +96,12 @@ body.editor-opened {
     }
 }
 
+#layout-editor.overlay-on, #playlist-editor.overlay-on {
+    .properties-panel-container {
+        z-index: auto;
+    }
+}
+
 .properties-panel-container {
     flex: 0;
     width: auto;
@@ -235,6 +241,26 @@ body.editor-opened {
 
         &:hover {
             opacity: 1;
+        }
+    }
+
+    &.preview-playing {
+        .custom-overlay-preview-playing {
+            display: block !important;
+            z-index: $preview-playing-z-index !important;
+            opacity: 0.5;
+        }
+
+        .main-panel {
+            z-index: calc(#{$preview-playing-z-index} + 10);
+
+            #fullscreenBtn, #layerManagerBtn {
+                display: none;
+            }
+
+            .main-panel-wrapper, .editor-bottom-bar {
+                outline: 4px solid $xibo-color-primary-l60;
+            }
         }
     }
 
@@ -413,7 +439,7 @@ body.editor-opened {
             margin-top: 10px;
         }
 
-        .cke_textarea_inline {
+        .ck-editor__editable_inline {
             display: none;
         }
 
@@ -433,7 +459,7 @@ body.editor-opened {
         .designer-region-playlist {
             background: transparent;
 
-            .playlist-edit-btn {
+            .playlist-edit-btn, .dynamic-playlist-icon {
                 position: absolute;
                 top: 2px;
                 right: 2px;
@@ -462,8 +488,18 @@ body.editor-opened {
                 }
             }
 
+            .dynamic-playlist-icon {
+                background-color: darken($xibo-color-primary, 20%);
+                opacity: 0.7;
+                cursor: inherit;
+            }
+
             &:hover > .playlist-edit-btn {
-                opacity: 0.8;
+                opacity: 0.7;
+
+                &:hover {
+                    opacity: 0.9;
+                }
             }
 
             &:hover > .playlist-preview-paging {
@@ -485,7 +521,7 @@ body.editor-opened {
                 position: absolute;
                 min-width: 100%;
                 width: max-content;
-                height: 20px;
+                height: 22px;
                 bottom: 0;
                 z-index: 2;
                 @include set-transparent-color(background, $xibo-color-neutral-900, 0.5);
@@ -1135,6 +1171,7 @@ body.editor-opened {
         &.ui-droppable-active {
             @include z-index-set($designer-select-z-index);
             background: $xibo-color-accent !important;
+            outline: 3px solid $xibo-color-accent;
 
             &.ui-droppable-hover,
             &:hover {
@@ -1148,6 +1185,12 @@ body.editor-opened {
 
         .element-content {
             font-family: sans-serif, Arial, Verdana, "Trebuchet MS";
+        }
+
+        &.inline-editing {
+            &::after {
+                display: none;
+            }
         }
     }
 
@@ -1254,6 +1297,7 @@ body.editor-opened {
         &.ui-droppable-active {
             @include z-index-set($designer-select-z-index);
             background: $xibo-color-accent !important;
+            outline: 3px solid $xibo-color-accent;
 
             .group-select-overlay {
                 display: initial;
@@ -1271,6 +1315,25 @@ body.editor-opened {
     }
 
     .designer-element, .designer-element-group {
+        .loader {
+            position: absolute;
+            z-index: 1000;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            @include set-transparent-color(background-color, $xibo-color-primary-l5, 0.4);
+            opacity: 0.8;
+
+            .loading-container {
+                height: 100% !important;
+
+                .loading-icon {
+                    font-size: 3rem !important;
+                }
+            }
+        }
+
         .message-container {
             display: flex;
             flex-direction: column-reverse;
@@ -1321,6 +1384,7 @@ body.editor-opened {
         .designer-region.ui-droppable-active {
             @include z-index-set($designer-select-z-index);
             background: $xibo-color-region-hover !important;
+            outline: 3px solid $xibo-color-region-hover;
 
             &.ui-droppable-hover,
             &:hover {
@@ -1472,6 +1536,21 @@ body.editor-opened {
                 }
             }
         }
+
+        /* Layout tbackgrouynd */
+        .viewer-object .layout-background-image {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+    }
+
+    .viewer-object-select.selected-temp {
+        &::after, &.designer-element-group  .group-select-overlay{
+            @include set-transparent-color(background-color, $xibo-color-primary, 0.4);
+            outline: 2px solid $xibo-color-primary;
+        }
     }
 
     .ui-droppable-active {
@@ -1555,6 +1634,7 @@ body.editor-opened {
     padding: 4px 0 7px 0;
     background-color: $xibo-color-primary-l5;
     border-radius: 4px 4px 0 0;
+    border: 2px solid darken($xibo-color-primary-l5, 10%);
     display: flex;
     align-content: center;
     flex-direction: column;
@@ -1600,7 +1680,7 @@ body.editor-opened {
 .background-image-add.ui-droppable-active {
     .background-image-drop {
         display: block;
-        z-index: 3;
+        z-index: $designer-select-z-index;
     }
     &.ui-droppable-hover {
         .background-image-drop {
@@ -1709,6 +1789,7 @@ div#bg_media_name {
         gap: 6px;
         padding: 0 4px;
         height: 34px;
+        cursor: pointer;
 
         .layer {
             flex-basis: 30px;

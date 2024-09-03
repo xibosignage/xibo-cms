@@ -369,6 +369,14 @@ class Command extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="createAlertOn",
+     *      in="formData",
+     *      description="On command execution, when should a Display alert be created?
+     * success, failure, always or never",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -398,6 +406,7 @@ class Command extends Base
         $command->userId = $this->getUser()->userId;
         $command->commandString = $sanitizedParams->getString('commandString');
         $command->validationString = $sanitizedParams->getString('validationString');
+        $command->createAlertOn = $sanitizedParams->getString('createAlertOn', ['default' => 'never']);
         $availableOn = $sanitizedParams->getArray('availableOn');
         if (empty($availableOn)) {
             $command->availableOn = null;
@@ -476,6 +485,14 @@ class Command extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="createAlertOn",
+     *      in="formData",
+     *      description="On command execution, when should a Display alert be created?
+     * success, failure, always or never",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -496,6 +513,7 @@ class Command extends Base
         $command->description = $sanitizedParams->getString('description');
         $command->commandString = $sanitizedParams->getString('commandString');
         $command->validationString = $sanitizedParams->getString('validationString');
+        $command->createAlertOn = $sanitizedParams->getString('createAlertOn', ['default' => 'never']);
         $availableOn = $sanitizedParams->getArray('availableOn');
         if (empty($availableOn)) {
             $command->availableOn = null;
@@ -552,7 +570,7 @@ class Command extends Base
             throw new AccessDeniedException();
         }
 
-        $this->getDispatcher()->dispatch(CommandDeleteEvent::$NAME, new CommandDeleteEvent($command));
+        $this->getDispatcher()->dispatch(new CommandDeleteEvent($command), CommandDeleteEvent::$NAME);
 
         $command->delete();
 

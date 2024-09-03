@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -355,6 +355,17 @@ class DisplayGroupFactory extends BaseFactory
         if ($parsedBody->getInt('displayGroupId') !== null) {
             $body .= ' AND displaygroup.displayGroupId = :displayGroupId ';
             $params['displayGroupId'] = $parsedBody->getInt('displayGroupId');
+        }
+
+        if ($parsedBody->getIntArray('displayGroupIds') !== null) {
+            $body .= ' AND displaygroup.displayGroupId IN (0';
+            $i = 0;
+            foreach ($parsedBody->getIntArray('displayGroupIds') as $displayGroupId) {
+                $i++;
+                $body .= ',:displayGroupId' . $i;
+                $params['displayGroupId' . $i] = $displayGroupId;
+            }
+            $body .= ')';
         }
 
         if ($parsedBody->getInt('parentId') !== null) {

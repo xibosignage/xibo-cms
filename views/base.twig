@@ -10,7 +10,7 @@
         <link rel="shortcut icon" href="{{ theme.uri("img/favicon.ico") }}" />
         
         {# Import CSS bundle from dist #}
-        <script src="{{ theme.rootUri() }}dist/style.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
+        <script src="{{ theme.rootUri() }}dist/style.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
 
         {# Import user made CSS from theme #}
         <link href="{{ theme.uri("css/dashboard.css") }}?v={{ version }}&rev={{revision}}" rel="stylesheet" media="screen">
@@ -20,55 +20,53 @@
         <link href="{{ theme.uri("css/override.css") }}?v={{ version }}&rev={{revision}}" rel="stylesheet" media="screen">
         <link href="{{ theme.uri("css/print.css") }}?v={{ version }}&rev={{revision}}" rel="stylesheet">
         <link href="{{ url_for("library.font.css") }}" rel="stylesheet">
-        <!-- Copyright 2006-2022 Xibo Signage Ltd. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
+        <!-- Copyright 2006-{{ 'now' | date('Y') }} Xibo Signage Ltd. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
         <!-- Please be sure you read this before removing the Source/About links from your theme: http://bit.ly/agplv3 -->
         {% block headContent %}{% endblock %}
     </head>
     <body>
         {% block content %}{% endblock %}
-        <script type="text/javascript">
+        <script type="text/javascript" nonce="{{ cspNonce }}">
             var CALENDAR_TYPE = "{{ settings.CALENDAR_TYPE }}";
             var jsLocale = "{{ translate.jsLocale }}";
             var jsShortLocale = "{{ translate.jsShortLocale }}";
         </script>
 
         {# Import JS bundle from dist #}
-        <script src="{{ theme.rootUri() }}dist/vendor.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
+        <script src="{{ theme.rootUri() }}dist/vendor.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
 
         {# Import JS system tools #}
-        <script src="{{ theme.rootUri() }}dist/systemTools.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
+        <script src="{{ theme.rootUri() }}dist/systemTools.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
         
         {# Import JS templates #}
-        <script src="{{ theme.rootUri() }}dist/templates.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
+        <script src="{{ theme.rootUri() }}dist/templates.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
 
         {# Import libraries copied to dist #}
-        <script src="{{ theme.rootUri() }}dist/vendor/ckeditor/ckeditor.js?v={{ version }}&rev={{revision}}"></script>
-        <script src="{{ theme.rootUri() }}dist/vendor/bootstrap-fix/bootstrap-ckeditor-fix.js?v={{ version }}&rev={{revision}}"></script>
-
+        <script src="{{ theme.rootUri() }}dist/vendor/ckeditor/build/ckeditor.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
         {# Import XIBO js files #}
-        <script src="{{ theme.rootUri() }}dist/xibo.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
-        <script src="{{ theme.rootUri() }}dist/core/xibo-cms.js?v={{ version }}&rev={{revision}}"></script>
-        <script src="{{ theme.rootUri() }}dist/core/xibo-forms.js?v={{ version }}&rev={{revision}}"></script>
-        <script src="{{ theme.rootUri() }}dist/core/xibo-calendar.js?v={{ version }}&rev={{revision}}"></script>
-        <script src="{{ theme.rootUri() }}dist/core/xibo-datasets.js?v={{ version }}&rev={{revision}}"></script>
+        <script src="{{ theme.rootUri() }}dist/xibo.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+        <script src="{{ theme.rootUri() }}dist/core/xibo-cms.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+        <script src="{{ theme.rootUri() }}dist/core/xibo-forms.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+        <script src="{{ theme.rootUri() }}dist/core/xibo-calendar.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+        <script src="{{ theme.rootUri() }}dist/core/xibo-datasets.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
 
         {# Dates #}
         {% if settings.CALENDAR_TYPE == "Jalali" %}
-            <script src="{{ theme.rootUri() }}dist/vendor/calendar/js/calendar-jalali.js?v={{ version }}&rev={{revision}}"></script>
-            <script type="text/javascript">
+            <script src="{{ theme.rootUri() }}dist/vendor/calendar/js/calendar-jalali.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+            <script type="text/javascript" nonce="{{ cspNonce }}">
                 moment.loadPersian();
             </script>
         {% else %}
-            <script src="{{ theme.rootUri() }}dist/vendor/calendar/js/calendar.js?v={{ version }}&rev={{revision}}"></script>
+            <script src="{{ theme.rootUri() }}dist/vendor/calendar/js/calendar.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
         {% endif %}
 
         {# Handle the inclusion of i18n #}
         {% set calendarTranslation %}dist/vendor/calendar/js/language/{{ translate.jsShortLocale }}.js{% endset %}
         {% if theme.fileExists(calendarTranslation) %}
-            <script src="{{ theme.rootUri() }}{{ calendarTranslation }}"></script>
+            <script src="{{ theme.rootUri() }}{{ calendarTranslation }}" nonce="{{ cspNonce }}"></script>
         {% endif %}
 
-        <script type="text/javascript">
+        <script type="text/javascript" nonce="{{ cspNonce }}">
 
             var translations = {{ translations|raw }};
             // Translations we want always available
@@ -140,6 +138,22 @@
             var getFontsUrl = "{{ url_for("font.search") }}";
             var libraryFontCSS = "{{ url_for("library.font.css") }}";
             var imageDownloadUrl = "{{ url_for("library.download", {id: ':id'}) }}?preview=1";
+            var CKEDITOR_DEFAULT_CONFIG = {
+                contentsCss: ['styles.css', libraryFontCSS],
+                imageDownloadUrl: imageDownloadUrl,
+                fontFamily: {
+                    options: ['default'],
+                },
+                fontSize: {
+                    options: [
+                    'default',
+                    8, 9, 10, 11, 12, 16, 18, 20,
+                    22, 24, 26, 28, 36, 48, 72, 80,
+                    88, 96, 128, 144, 168, 186, 200,
+                    244, 288, 300,
+                    ],
+                },
+            };
 
             {% autoescape "js" %}
             var dataTablesLanguage = {

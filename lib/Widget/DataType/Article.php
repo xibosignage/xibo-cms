@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -74,7 +74,7 @@ class Article implements \JsonSerializable, DataTypeInterface
             ->addField('link', __('Link'), 'text')
             ->addField('date', __('Created Date'), 'datetime')
             ->addField('publishedDate', __('Published Date'), 'datetime')
-            ->addField('image', __('Image'), 'text');
+            ->addField('image', __('Image'), 'image');
         return $dataType;
     }
 }

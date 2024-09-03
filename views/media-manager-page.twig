@@ -169,7 +169,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
       const stringToColour = function(str) {
         let hash = 0;
         str.split('').forEach(char => {

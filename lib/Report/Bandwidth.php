@@ -255,7 +255,7 @@ class Bandwidth implements ReportInterface
             $params['displayid'] = $displayId;
         }
 
-        $SQL .= 'GROUP BY display.display ';
+        $SQL .= 'GROUP BY display.displayId, display.display ';
 
         if ($displayId != 0) {
             $SQL .= ' , bandwidthtype.name ';

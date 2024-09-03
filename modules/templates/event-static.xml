@@ -145,8 +145,8 @@ $(target).xiboLayoutAnimate(properties);
         <startWidth>800</startWidth>
         <startHeight>500</startHeight>
         <properties>
-            <property type="message">
-                <title>This is an advanced template which may not work on devices with an older browser.</title>
+            <property type="message" variant="warning">
+                <title>This template uses features which will not work on devices with a browser older than Chrome 57, including webOS older than 6 and Tizen older than 5.</title>
             </property>
             <property id="startTime" type="date" variant="time">
                 <title>First hour slot</title>
@@ -593,8 +593,8 @@ $(target).find('img').xiboImageRender(properties);
         <startWidth>800</startWidth>
         <startHeight>500</startHeight>
         <properties>
-            <property type="message">
-                <title>This is an advanced template which may not work on devices with an older browser.</title>
+            <property type="message" variant="warning">
+                <title>This template uses features which will not work on devices with a browser older than Chrome 57, including webOS older than 6 and Tizen older than 5.</title>
             </property>
             <property id="startTime" type="date" variant="time">
                 <title>First hour slot</title>
@@ -1044,8 +1044,8 @@ $(target).find('img').xiboImageRender(properties);
         <startWidth>800</startWidth>
         <startHeight>500</startHeight>
         <properties>
-            <property type="message">
-                <title>This is an advanced template which may not work on devices with an older browser.</title>
+            <property type="message" variant="warning">
+                <title>This template uses features which will not work on devices with a browser older than Chrome 57, including webOS older than 6 and Tizen older than 5.</title>
             </property>
             <property id="startTime" type="date" variant="time">
                 <title>First hour slot</title>
@@ -1511,8 +1511,8 @@ $(target).find('img').xiboImageRender(properties);
         <startWidth>800</startWidth>
         <startHeight>500</startHeight>
         <properties>
-            <property type="message">
-                <title>This is an advanced template which may not work on devices with an older browser.</title>
+            <property type="message" variant="warning">
+                <title>This template uses features which will not work on devices with a browser older than Chrome 57, including webOS older than 6 and Tizen older than 5.</title>
             </property>
             <property id="startTime" type="date" variant="time">
                 <title>First hour slot</title>
@@ -1982,8 +1982,8 @@ $(target).find('img').xiboImageRender(properties);
         <startWidth>800</startWidth>
         <startHeight>500</startHeight>
         <properties>
-            <property type="message">
-                <title>This is an advanced template which may not work on devices with an older browser.</title>
+            <property type="message" variant="warning">
+                <title>This template uses features which will not work on devices with a browser older than Chrome 57, including webOS older than 6 and Tizen older than 5.</title>
             </property>
             <property id="excludeWeekendDays" type="checkbox">
                 <title>Exclude weekend days?</title>
@@ -2375,8 +2375,8 @@ $(target).find('img').xiboImageRender(properties);
         <startWidth>800</startWidth>
         <startHeight>500</startHeight>
         <properties>
-            <property type="message">
-                <title>This is an advanced template which may not work on devices with an older browser.</title>
+            <property type="message" variant="warning">
+                <title>This template uses features which will not work on devices with a browser older than Chrome 57, including webOS older than 6 and Tizen older than 5.</title>
             </property>
             <property id="excludeWeekendDays" type="checkbox">
                 <title>Exclude weekend days?</title>
@@ -2771,8 +2771,8 @@ $(target).find('img').xiboImageRender(properties);
         <startWidth>400</startWidth>
         <startHeight>800</startHeight>
         <properties>
-            <property type="message">
-                <title>This is an advanced template which may not work on devices with an older browser.</title>
+            <property type="message" variant="warning">
+                <title>This template uses features which will not work on devices with a browser older than Chrome 57, including webOS older than 6 and Tizen older than 5.</title>
             </property>
             <property id="noEventsMessage" type="text">
                 <title>No events message</title>
@@ -3072,8 +3072,8 @@ $(target).find('img').xiboImageRender(properties);
         <startWidth>400</startWidth>
         <startHeight>800</startHeight>
         <properties>
-            <property type="message">
-                <title>This is an advanced template which may not work on devices with an older browser.</title>
+            <property type="message" variant="warning">
+                <title>This template uses features which will not work on devices with a browser older than Chrome 57, including webOS older than 6 and Tizen older than 5.</title>
             </property>
             <property id="noEventsMessage" type="text">
                 <title>No events message</title>

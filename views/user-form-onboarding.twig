@@ -124,6 +124,10 @@
 
                         {% if currentUser.featureEnabled("folder.view") %}
                             <p>{{ "Select any folders the new user should have shared with them for viewing and editing."|trans }}</p>
+                            <div class="folder-tree-buttons">
+                                <button type="button" id="selectAllBtn" class="btn btn-sm btn-outline-primary">{% trans "Select All" %}</button>
+                                <button type="button" id="selectNoneBtn" class="btn btn-sm btn-outline-secondary">{% trans "Clear Selection" %}</button>
+                            </div>
                             <div id="container-form-folder-tree" class="card card-body bg-light"></div>
                         {% endif %}
                     </div>

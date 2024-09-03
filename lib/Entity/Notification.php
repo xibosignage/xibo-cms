@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -72,19 +72,19 @@ class Notification implements \JsonSerializable
 
     /**
      * @SWG\Property(
+     *  description="The Notification type"
+     * )
+     * @var string
+     */
+    public $type;
+
+    /**
+     * @SWG\Property(
      *  description="The HTML body of the notification"
      * )
      * @var string
      */
     public $body;
-
-    /**
-     * @SWG\Property(
-     *  description="Should the notification be emailed"
-     * )
-     * @var int
-     */
-    public $isEmail = 0;
 
     /**
      * @SWG\Property(
@@ -198,8 +198,9 @@ class Notification implements \JsonSerializable
     {
         $this->load();
 
-        if (!in_array($userGroup, $this->userGroups))
+        if (!in_array($userGroup, $this->userGroups)) {
             $this->userGroups[] = $userGroup;
+        }
     }
 
     /**
@@ -211,8 +212,9 @@ class Notification implements \JsonSerializable
     {
         $this->load();
 
-        if (!in_array($displayGroup, $this->displayGroups))
+        if (!in_array($displayGroup, $this->displayGroups)) {
             $this->displayGroups[] = $displayGroup;
+        }
     }
 
     /**
@@ -221,11 +223,13 @@ class Notification implements \JsonSerializable
      */
     public function validate()
     {
-        if (empty($this->subject))
+        if (empty($this->subject)) {
             throw new InvalidArgumentException(__('Please provide a subject'), 'subject');
+        }
 
-        if (empty($this->body))
+        if (empty($this->body)) {
             throw new InvalidArgumentException(__('Please provide a body'), 'body');
+        }
     }
 
     /**
@@ -240,15 +244,18 @@ class Notification implements \JsonSerializable
             'loadDisplayGroups' => true,
         ], $options);
 
-        if ($this->loaded || $this->notificationId == null)
+        if ($this->loaded || $this->notificationId == null) {
             return;
+        }
 
         // Load the Display Groups and User Group Notifications
-        if ($options['loadUserGroups'])
+        if ($options['loadUserGroups']) {
             $this->userGroups = $this->userGroupFactory->getByNotificationId($this->notificationId);
+        }
 
-        if ($options['loadDisplayGroups'])
+        if ($options['loadDisplayGroups']) {
             $this->displayGroups = $this->displayGroupFactory->getByNotificationId($this->notificationId);
+        }
 
         $this->loaded = true;
     }
@@ -278,14 +285,26 @@ class Notification implements \JsonSerializable
     public function delete()
     {
         // Remove all links
-        $this->getStore()->update('DELETE FROM `lknotificationuser` WHERE `notificationId` = :notificationId', ['notificationId' => $this->notificationId]);
+        $this->getStore()->update(
+            'DELETE FROM `lknotificationuser` WHERE `notificationId` = :notificationId',
+            ['notificationId' => $this->notificationId]
+        );
 
-        $this->getStore()->update('DELETE FROM `lknotificationgroup` WHERE `notificationId` = :notificationId', ['notificationId' => $this->notificationId]);
+        $this->getStore()->update(
+            'DELETE FROM `lknotificationgroup` WHERE `notificationId` = :notificationId',
+            ['notificationId' => $this->notificationId]
+        );
 
-        $this->getStore()->update('DELETE FROM `lknotificationdg` WHERE `notificationId` = :notificationId', ['notificationId' => $this->notificationId]);
+        $this->getStore()->update(
+            'DELETE FROM `lknotificationdg` WHERE `notificationId` = :notificationId',
+            ['notificationId' => $this->notificationId]
+        );
 
         // Remove the notification
-        $this->getStore()->update('DELETE FROM `notification` WHERE `notificationId` = :notificationId', ['notificationId' => $this->notificationId]);
+        $this->getStore()->update(
+            'DELETE FROM `notification` WHERE `notificationId` = :notificationId',
+            ['notificationId' => $this->notificationId]
+        );
     }
 
     /**
@@ -294,21 +313,44 @@ class Notification implements \JsonSerializable
     private function add()
     {
         $this->notificationId = $this->getStore()->insert('
-            INSERT INTO `notification`
-              (`subject`, `body`, `createDt`, `releaseDt`, `isEmail`, `isInterrupt`, `isSystem`, `userId`, `filename`, `originalFileName`, `nonusers`)
-              VALUES (:subject, :body, :createDt, :releaseDt, :isEmail, :isInterrupt, :isSystem, :userId, :filename, :originalFileName, :nonusers)
+            INSERT INTO `notification` (
+                `subject`,
+                `body`,
+                `createDt`,
+                `releaseDt`,
+                `isInterrupt`,
+                `isSystem`,
+                `userId`,
+                `filename`,
+                `originalFileName`,
+                `nonusers`,
+                `type`
+              )
+              VALUES (
+                :subject,
+                :body,
+                :createDt,
+                :releaseDt,
+                :isInterrupt,
+                :isSystem,
+                :userId,
+                :filename,
+                :originalFileName,
+                :nonusers,
+                :type
+              )
         ', [
             'subject' => $this->subject,
             'body' => $this->body,
             'createDt' => $this->createDt,
             'releaseDt' => $this->releaseDt,
-            'isEmail' => $this->isEmail,
             'isInterrupt' => $this->isInterrupt,
             'isSystem' => $this->isSystem,
             'userId' => $this->userId,
             'filename' => $this->filename,
             'originalFileName' => $this->originalFileName,
-            'nonusers' => $this->nonusers
+            'nonusers' => $this->nonusers,
+            'type' => $this->type ?? 'custom'
         ]);
     }
 
@@ -322,26 +364,26 @@ class Notification implements \JsonSerializable
                 `body` = :body,
                 `createDt` = :createDt,
                 `releaseDt` = :releaseDt,
-                `isEmail` = :isEmail,
                 `isInterrupt` = :isInterrupt,
                 `isSystem` = :isSystem,
                 `userId` = :userId,
                 `filename` = :filename,
                 `originalFileName` = :originalFileName,
-                `nonusers` = :nonusers
+                `nonusers` = :nonusers,
+                `type` = :type
               WHERE `notificationId` = :notificationId
         ', [
             'subject' => $this->subject,
             'body' => $this->body,
             'createDt' => $this->createDt,
             'releaseDt' => $this->releaseDt,
-            'isEmail' => $this->isEmail,
             'isInterrupt' => $this->isInterrupt,
             'isSystem' => $this->isSystem,
             'userId' => $this->userId,
             'filename' => $this->filename,
             'originalFileName' => $this->originalFileName,
             'nonusers' => $this->nonusers,
+            'type' => $this->type ?? 'custom',
             'notificationId' => $this->notificationId
         ]);
     }

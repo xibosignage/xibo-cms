@@ -1,8 +1,8 @@
 {#
 /**
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -52,8 +52,8 @@
             <form id="userAddForm" class="UserForm form-horizontal" method="post" action="{{ url_for("user.add") }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
-                        {% set title %}{% trans "User Name" %}{% endset %}
-                        {% set helpText %}{% trans "The Login Name of the user." %}{% endset %}
+                        {% set title %}{% trans "Username" %}{% endset %}
+                        {% set helpText %}{% trans "The Username of the user." %}{% endset %}
                         {{ forms.input("userName", title, "", helpText, "", "required maxlength='50'") }}
 
                         {% set title %}{% trans "Password" %}{% endset %}
@@ -164,6 +164,30 @@
                         {% set title %}{% trans "Receive Display Notifications?" %}{% endset %}
                         {% set helpText %}{% trans "Should this User receive Display notifications for Displays they have permission to see?" %}{% endset %}
                         {{ forms.checkbox("isDisplayNotification", title, 0, helpText) }}
+
+                        {% set title %}{% trans "Receive DataSet Notifications?" %}{% endset %}
+                        {% set helpText %}{% trans "Should this User receive DataSet notification emails?" %}{% endset %}
+                        {{ forms.checkbox("isDataSetNotification", title, 0, helpText) }}
+
+                        {% set title %}{% trans "Receive Layout Notifications?" %}{% endset %}
+                        {% set helpText %}{% trans "Should this User receive Layout notification emails?" %}{% endset %}
+                        {{ forms.checkbox("isLayoutNotification", title, 0, helpText) }}
+
+                        {% set title %}{% trans "Receive Library Notifications?" %}{% endset %}
+                        {% set helpText %}{% trans "Should this User receive Library notification emails?" %}{% endset %}
+                        {{ forms.checkbox("isLibraryNotification", title, 0, helpText) }}
+
+                        {% set title %}{% trans "Receive Report Notifications?" %}{% endset %}
+                        {% set helpText %}{% trans "Should this User receive Report notification emails?" %}{% endset %}
+                        {{ forms.checkbox("isReportNotification", title, 0, helpText) }}
+
+                        {% set title %}{% trans "Receive Schedule Notifications?" %}{% endset %}
+                        {% set helpText %}{% trans "Should this User receive Schedule notification emails?" %}{% endset %}
+                        {{ forms.checkbox("isScheduleNotification", title, 0, helpText) }}
+
+                        {% set title %}{% trans "Receive Custom Notifications?" %}{% endset %}
+                        {% set helpText %}{% trans "Should this User receive notifications emails for Notifications manually created in CMS?" %}{% endset %}
+                        {{ forms.checkbox("isCustomNotification", title, 0, helpText) }}
                     </div>
                     {% endif %}
                     <div class="tab-pane" id="optionsTab">

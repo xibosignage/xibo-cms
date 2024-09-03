@@ -68,6 +68,8 @@ const Layout = function(id, data) {
 
   this.backgroundImage = data.backgroundImageId;
   this.backgroundColor = data.backgroundColor;
+  this.backgroundzIndex = data.backgroundzIndex;
+  this.resolutionId = null;
 
   this.code = data.code;
   this.folderId = data.folderId;
@@ -236,6 +238,9 @@ Layout.prototype.createDataStructure = function(data) {
                 );
               }
             }
+
+            // Update elements previous state
+            newWidget.updateElementPreviousState();
 
             // Check required elements
             newWidget.validateRequiredElements();
@@ -658,7 +663,7 @@ Layout.prototype.deleteObject = function(
   deselectObject = true,
 ) {
   (showLoadingScreen) &&
-    lD.common.showLoadingScreen('deleteObject');
+    lD.common.showLoadingScreen();
 
   // Save all changes first
   return lD.historyManager.saveAllChanges().then((res) => {
@@ -676,7 +681,7 @@ Layout.prototype.deleteObject = function(
         lD.selectObject();
 
       (showLoadingScreen) &&
-        lD.common.hideLoadingScreen('deleteObject');
+        lD.common.hideLoadingScreen();
 
       // Create a delete type change, upload it
       // but don't add it to the history array
@@ -692,13 +697,13 @@ Layout.prototype.deleteObject = function(
       );
     }).catch(function() {
       (showLoadingScreen) &&
-        lD.common.hideLoadingScreen('deleteObject');
+        lD.common.hideLoadingScreen();
 
       toastr.error(errorMessagesTrans.removeAllChangesFailed);
     });
   }).catch(function() {
     (showLoadingScreen) &&
-      lD.common.hideLoadingScreen('deleteObject');
+      lD.common.hideLoadingScreen();
 
     toastr.error(errorMessagesTrans.saveAllChangesFailed);
   });
@@ -752,7 +757,7 @@ Layout.prototype.savePlaylistOrder = function(playlist, widgets) {
     },
   ).catch((error) => {
     toastr.error(errorMessagesTrans.playlistOrderSave);
-    console.log(error);
+    console.error(error);
   });
 };
 
@@ -1129,6 +1134,35 @@ Layout.prototype.saveMultipleRegions = function(regions) {
       type: urlsForApi.region.transform.type,
       data: {
         regions: JSON.stringify(requestData),
+      },
+    }).done(function(data) {
+      resolve(data);
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+      // Reject promise and return an object with all values
+      reject(new Error({jqXHR, textStatus, errorThrown}));
+    });
+  });
+};
+
+/**
+ * Save layout background layer
+ * @param {number} layer New layer
+ * @return {Promise} - Promise that resolves when the regions are saved
+ */
+Layout.prototype.saveBackgroundLayer = function(layer) {
+  const self = this;
+  return new Promise(function(resolve, reject) {
+    const requestPath =
+      urlsForApi.layout.saveForm.url.replace(':id', self.layoutId);
+
+    $.ajax({
+      url: requestPath,
+      type: urlsForApi.layout.saveForm.type,
+      data: {
+        backgroundColor: self.backgroundColor,
+        backgroundImageId: self.backgroundImage,
+        resolutionId: self.resolutionId,
+        backgroundzIndex: self.backgroundzIndex,
       },
     }).done(function(data) {
       resolve(data);

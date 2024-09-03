@@ -21,8 +21,13 @@
  */
 namespace Xibo\Controller;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
+use Illuminate\Support\Str;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Event\DataConnectorScriptRequestEvent;
+use Xibo\Event\DataConnectorSourceRequestEvent;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\FolderFactory;
@@ -128,6 +133,13 @@ class DataSet extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="isRealTime",
+     *      in="query",
+     *      description="Filter by real time",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="userId",
      *      in="query",
      *      description="Filter by user Id",
@@ -165,12 +177,13 @@ class DataSet extends Base
 
         // Embed?
         $embed = ($sanitizedParams->getString('embed') != null) ? explode(',', $sanitizedParams->getString('embed')) : [];
-        
+
         $filter = [
             'dataSetId' => $sanitizedParams->getInt('dataSetId'),
             'dataSet' => $sanitizedParams->getString('dataSet'),
             'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
             'code' => $sanitizedParams->getString('code'),
+            'isRealTime' => $sanitizedParams->getInt('isRealTime'),
             'userId' => $sanitizedParams->getInt('userId'),
             'folderId' => $sanitizedParams->getInt('folderId'),
             'logicalOperatorName' => $sanitizedParams->getString('logicalOperatorName'),
@@ -221,6 +234,17 @@ class DataSet extends Base
                         'text' => __('View RSS')
                     );
 
+                    if ($this->getUser()->featureEnabled('dataset.realtime') && $dataSet->isRealTime === 1) {
+                        $dataSet->buttons[] = [
+                            'id' => 'dataset_button_view_data_connector',
+                            'url' => $this->urlFor($request, 'dataSet.dataConnector.view', [
+                                'id' => $dataSet->dataSetId
+                            ]),
+                            'class' => 'XiboRedirectButton',
+                            'text' => __('View Data Connector'),
+                        ];
+                    }
+
                     // Divider
                     $dataSet->buttons[] = ['divider' => true];
 
@@ -250,6 +274,27 @@ class DataSet extends Base
                         'text' => __('Edit')
                     );
 
+                    if ($this->getUser()->featureEnabled('folder.view')) {
+                        // Select Folder
+                        $dataSet->buttons[] = [
+                            'id' => 'dataSet_button_selectfolder',
+                            'url' => $this->urlFor($request, 'dataSet.selectfolder.form', ['id' => $dataSet->dataSetId]),
+                            'text' => __('Select Folder'),
+                            'multi-select' => true,
+                            'dataAttributes' => [
+                                [
+                                    'name' => 'commit-url',
+                                    'value' => $this->urlFor($request, 'dataSet.selectfolder', ['id' => $dataSet->dataSetId])
+                                ],
+                                ['name' => 'commit-method', 'value' => 'put'],
+                                ['name' => 'id', 'value' => 'dataSet_button_selectfolder'],
+                                ['name' => 'text', 'value' => __('Move to Folder')],
+                                ['name' => 'rowtitle', 'value' => $dataSet->dataSet],
+                                ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
+                            ]
+                        ];
+                    }
+
                     $dataSet->buttons[] = [
                         'id' => 'dataset_button_csv_export',
                         'linkType' => '_self', 'external' => true,
@@ -271,7 +316,10 @@ class DataSet extends Base
                     }
                 }
 
-                if ($user->checkDeleteable($dataSet) && $dataSet->isLookup == 0) {
+                if ($user->checkDeleteable($dataSet)
+                    && $dataSet->isLookup == 0
+                    && ($dataSet->isRealTime === 0 || $this->getUser()->featureEnabled('dataset.realtime'))
+                ) {
                     $dataSet->buttons[] = ['divider' => true];
                     // Delete DataSet
                     $dataSet->buttons[] = [
@@ -335,9 +383,18 @@ class DataSet extends Base
      */
     public function addForm(Request $request, Response $response)
     {
+
+        // Dispatch an event to initialize list of data sources for data connectors
+        $event = new DataConnectorSourceRequestEvent();
+        $this->getDispatcher()->dispatch($event, DataConnectorSourceRequestEvent::$NAME);
+
+        // Retrieve data connector sources from the event
+        $dataConnectorSources = $event->getDataConnectorSources();
+
         $this->getState()->template = 'dataset-form-add';
         $this->getState()->setData([
             'dataSets' => $this->dataSetFactory->query(),
+            'dataConnectorSources' => $dataConnectorSources,
         ]);
 
         return $this->render($request, $response);
@@ -380,6 +437,20 @@ class DataSet extends Base
      *      type="integer",
      *      required=true
      *   ),
+     *  @SWG\Parameter(
+     *      name="isRealTime",
+     *      in="formData",
+     *      description="Is this a real time DataSet?",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *   @SWG\Parameter(
+     *       name="dataConnectorSource",
+     *       in="formData",
+     *       description="Source of the data connector",
+     *       type="string",
+     *       required=true
+     *    ),
      *  @SWG\Parameter(
      *      name="method",
      *      in="formData",
@@ -521,6 +592,13 @@ class DataSet extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="dataConnectorScript",
+     *      in="formData",
+     *      description="If isRealTime then provide a script to connect to the data source",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="folderId",
      *      in="formData",
      *      description="Folder ID to which this object should be assigned to",
@@ -556,6 +634,8 @@ class DataSet extends Base
         $dataSet->description = $sanitizedParams->getString('description');
         $dataSet->code = $sanitizedParams->getString('code');
         $dataSet->isRemote = $sanitizedParams->getCheckbox('isRemote');
+        $dataSet->isRealTime = $sanitizedParams->getCheckbox('isRealTime');
+        $dataSet->dataConnectorSource = $sanitizedParams->getString('dataConnectorSource');
         $dataSet->userId = $this->getUser()->userId;
 
         // Folders
@@ -642,11 +722,23 @@ class DataSet extends Base
             throw new AccessDeniedException();
         }
 
+        // Dispatch an event to initialize list of data sources for data connectors
+        $event = new DataConnectorSourceRequestEvent();
+        $this->getDispatcher()->dispatch($event, DataConnectorSourceRequestEvent::$NAME);
+
+        // Retrieve data sources from the event
+        $dataConnectorSources = $event->getDataConnectorSources();
+
+        // retrieve the columns of the selected dataset
+        $dataSet->getColumn();
+
         // Set the form
         $this->getState()->template = 'dataset-form-edit';
         $this->getState()->setData([
             'dataSet' => $dataSet,
             'dataSets' => $this->dataSetFactory->query(),
+            'script' => $dataSet->getScript(),
+            'dataConnectorSources' => $dataConnectorSources
         ]);
 
         return $this->render($request, $response);
@@ -705,6 +797,20 @@ class DataSet extends Base
      *      type="integer",
      *      required=true
      *   ),
+     *  @SWG\Parameter(
+     *      name="isRealTime",
+     *      in="formData",
+     *      description="Is this a real time DataSet?",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *   @SWG\Parameter(
+     *       name="dataConnectorSource",
+     *       in="formData",
+     *       description="Source of the data connector",
+     *       type="string",
+     *       required=true
+     *    ),
      *  @SWG\Parameter(
      *      name="method",
      *      in="formData",
@@ -846,6 +952,13 @@ class DataSet extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="dataConnectorScript",
+     *      in="formData",
+     *      description="If isRealTime then provide a script to connect to the data source",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="folderId",
      *      in="formData",
      *      description="Folder ID to which this object should be assigned to",
@@ -872,6 +985,8 @@ class DataSet extends Base
         $dataSet->description = $sanitizedParams->getString('description');
         $dataSet->code = $sanitizedParams->getString('code');
         $dataSet->isRemote = $sanitizedParams->getCheckbox('isRemote');
+        $dataSet->isRealTime = $sanitizedParams->getCheckbox('isRealTime');
+        $dataSet->dataConnectorSource = $sanitizedParams->getString('dataConnectorSource');
         $dataSet->folderId = $sanitizedParams->getInt('folderId', ['default' => $dataSet->folderId]);
 
         if ($dataSet->hasPropertyChanged('folderId')) {
@@ -902,10 +1017,74 @@ class DataSet extends Base
             $dataSet->ignoreFirstRow = $sanitizedParams->getCheckbox('ignoreFirstRow');
             $dataSet->rowLimit = $sanitizedParams->getInt('rowLimit');
             $dataSet->limitPolicy = $sanitizedParams->getString('limitPolicy') ?? 'stop';
-            $dataSet->csvSeparator = ($dataSet->sourceId === 2) ? $sanitizedParams->getString('csvSeparator') ?? ',' : null;
+            $dataSet->csvSeparator = ($dataSet->sourceId === 2)
+                ? $sanitizedParams->getString('csvSeparator') ?? ','
+                : null;
         }
 
         $dataSet->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Edited %s'), $dataSet->dataSet),
+            'id' => $dataSet->dataSetId,
+            'data' => $dataSet
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Edit DataSet Data Connector
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     *
+     * @SWG\Put(
+     *  path="/dataset/dataConnector/{dataSetId}",
+     *  operationId="dataSetDataConnectorEdit",
+     *  tags={"dataset"},
+     *  summary="Edit DataSet Data Connector",
+     *  description="Edit a DataSet Data Connector",
+     *  @SWG\Parameter(
+     *      name="dataSetId",
+     *      in="path",
+     *      description="The DataSet ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dataConnectorScript",
+     *      in="formData",
+     *      description="If isRealTime then provide a script to connect to the data source",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/DataSet")
+     *  )
+     * )
+     */
+    public function updateDataConnector(Request $request, Response $response, $id)
+    {
+        $dataSet = $this->dataSetFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        if (!$this->getUser()->checkEditable($dataSet)) {
+            throw new AccessDeniedException();
+        }
+
+        if ($dataSet->isRealTime === 1) {
+            // Set the script.
+            $dataSet->saveScript($sanitizedParams->getParam('dataConnectorScript'));
+            $dataSet->notify();
+        } else {
+            throw new InvalidArgumentException(__('This DataSet does not have a data connector'), 'isRealTime');
+        }
 
         // Return
         $this->getState()->hydrate([
@@ -1000,6 +1179,107 @@ class DataSet extends Base
         $this->getState()->hydrate([
             'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $dataSet->dataSet)
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Select Folder Form
+     * @param Request $request
+     * @param Response $response
+     * @param int $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function selectFolderForm(Request $request, Response $response, $id)
+    {
+        // Get the data set
+        $dataSet = $this->dataSetFactory->getById($id);
+
+        // Check Permissions
+        if (!$this->getUser()->checkEditable($dataSet)) {
+            throw new AccessDeniedException();
+        }
+
+        $data = [
+            'dataSet' => $dataSet
+        ];
+
+        $this->getState()->template = 'dataset-form-selectfolder';
+        $this->getState()->setData($data);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * @SWG\Put(
+     *  path="/dataset/{id}/selectfolder",
+     *  operationId="dataSetSelectFolder",
+     *  tags={"dataSet"},
+     *  summary="DataSet Select folder",
+     *  description="Select Folder for DataSet",
+     *  @SWG\Parameter(
+     *      name="menuId",
+     *      in="path",
+     *      description="The DataSet ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/DataSet")
+     *  )
+     * )
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param int $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function selectFolder(Request $request, Response $response, $id)
+    {
+        // Get the DataSet
+        $dataSet = $this->dataSetFactory->getById($id);
+
+        // Check Permissions
+        if (!$this->getUser()->checkEditable($dataSet)) {
+            throw new AccessDeniedException();
+        }
+
+        $folderId = $this->getSanitizer($request->getParams())->getInt('folderId');
+
+        if ($folderId === 1) {
+            $this->checkRootFolderAllowSave();
+        }
+
+        $dataSet->folderId = $folderId;
+        $folder = $this->folderFactory->getById($dataSet->folderId);
+        $dataSet->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+
+        // Save
+        $dataSet->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('DataSet %s moved to Folder %s'), $dataSet->dataSet, $folder->text)
         ]);
 
         return $this->render($request, $response);
@@ -1348,28 +1628,33 @@ class DataSet extends Base
 
                 // Check unique keys to see if this is an update
                 if (!empty($data['uniqueKeys']) && is_array($data['uniqueKeys'])) {
-
                     // Build a filter to select existing records
                     $filter = '';
+                    $params = [];
+                    $i = 0;
                     foreach ($data['uniqueKeys'] as $uniqueKey) {
                         if (isset($rowToAdd[$uniqueKey])) {
-                            $filter .= 'AND `' . $uniqueKey . '` = \'' . $rowToAdd[$uniqueKey] . '\' ';
+                            $i++;
+                            $filter .= 'AND `' . $uniqueKey . '` = :uniqueKey_' . $i . ' ';
+                            $params['uniqueKey_' . $i] = $rowToAdd[$uniqueKey];
                         }
                     }
                     $filter = trim($filter, 'AND');
 
                     // Use the unique keys to look up this row and see if it exists
-                    $existingRows = $dataSet->getData(['filter' => $filter], ['includeFormulaColumns' => false, 'requireTotal' => false]);
+                    $existingRows = $dataSet->getData(
+                        ['filter' => $filter],
+                        ['includeFormulaColumns' => false, 'requireTotal' => false],
+                        $params,
+                    );
 
                     if (count($existingRows) > 0) {
                         foreach ($existingRows as $existingRow) {
                             $dataSet->editRow($existingRow['id'], array_merge($existingRow, $rowToAdd));
                         }
-                    }
-                    else {
+                    } else {
                         $dataSet->addRow($rowToAdd);
                     }
-
                 } else {
                     $dataSet->addRow($rowToAdd);
                 }
@@ -1565,5 +1850,136 @@ class DataSet extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Real-time data script editor
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return Response
+     * @throws GeneralException
+     */
+    public function dataConnectorView(Request $request, Response $response, $id): Response
+    {
+        $dataSet = $this->dataSetFactory->getById($id);
+
+        if (!$this->getUser()->checkEditable($dataSet)) {
+            throw new AccessDeniedException();
+        }
+
+        $dataSet->load();
+
+        if ($dataSet->dataConnectorSource == 'user_defined') {
+            // retrieve the user defined javascript
+            $script = $dataSet->getScript();
+        } else {
+            // Dispatch the event to get the script from the connector
+            $event = new DataConnectorScriptRequestEvent($dataSet);
+            $this->getDispatcher()->dispatch($event, DataConnectorScriptRequestEvent::$NAME);
+            $script = $dataSet->getScript();
+        }
+
+        $this->getState()->template = 'dataset-data-connector-page';
+        $this->getState()->setData([
+            'dataSet' => $dataSet,
+            'script' => $script,
+            ]);
+    
+            return $this->render($request, $response);
+    }
+
+    /**
+     * Real-time data script test
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return Response
+     * @throws GeneralException
+     */
+    public function dataConnectorTest(Request $request, Response $response, $id): Response
+    {
+        $dataSet = $this->dataSetFactory->getById($id);
+
+        if (!$this->getUser()->checkEditable($dataSet)) {
+            throw new AccessDeniedException();
+        }
+
+        $dataSet->load();
+
+        $this->getState()->template = 'dataset-data-connector-test-page';
+        $this->getState()->setData([
+            'dataSet' => $dataSet,
+            'script' => $dataSet->getScript(),
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Real-time data script test
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return Response
+     * @throws GeneralException
+     */
+    public function dataConnectorRequest(Request $request, Response $response, $id): Response
+    {
+        $dataSet = $this->dataSetFactory->getById($id);
+
+        if (!$this->getUser()->checkEditable($dataSet)) {
+            throw new AccessDeniedException();
+        }
+
+        $params = $this->getSanitizer($request->getParams());
+        $url = $params->getString('url');
+        $method = $params->getString('method', ['default' => 'GET']);
+        $headers = $params->getArray('headers');
+        $body = $params->getArray('body');
+
+        // Verify that the requested URL appears in the script somewhere.
+        $script = $dataSet->getScript();
+
+        if (!Str::contains($script, $url)) {
+            throw new InvalidArgumentException(__('URL not found in data connector script'), 'url');
+        }
+
+        // Make the request
+        $options = [];
+        if (is_array($headers)) {
+            $options['headers'] = $headers;
+        }
+
+        if ($method === 'GET') {
+            $options['query'] = $body;
+        } else {
+            $options['body'] = $body;
+        }
+
+        $this->getLog()->debug('dataConnectorRequest: making request with options ' . var_export($options, true));
+
+        // Use guzzle to make the request
+        try {
+            $client = new Client();
+            $remoteResponse = $client->request($method, $url, $options);
+
+            // Format the response
+            $response->getBody()->write($remoteResponse->getBody()->getContents());
+            $response = $response->withAddedHeader('Content-Type', $remoteResponse->getHeader('Content-Type')[0]);
+            $response = $response->withStatus($remoteResponse->getStatusCode());
+        } catch (RequestException $exception) {
+            $this->getLog()->error('dataConnectorRequest: error with request: ' . $exception->getMessage());
+
+            if ($exception->hasResponse()) {
+                $remoteResponse = $exception->getResponse();
+                $response = $response->withStatus($remoteResponse->getStatusCode());
+                $response->getBody()->write($remoteResponse->getBody()->getContents());
+            } else {
+                $response = $response->withStatus(500);
+            }
+        }
+
+        return $response;
     }
 }

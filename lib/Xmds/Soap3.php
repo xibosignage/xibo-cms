@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -72,7 +72,7 @@ class Soap3 extends Soap
                 $display->licensed = 0;
             }
 
-            $this->logProcessor->setDisplay($display->displayId, ($display->isAuditing()));
+            $this->logProcessor->setDisplay($display->displayId, $display->isAuditing());
 
             if ($display->licensed == 0) {
                 $active = 'Display is awaiting licensing approval from an Administrator.';
@@ -156,7 +156,10 @@ class Soap3 extends Soap
 
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
-            throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
+            throw new \SoapFault(
+                'Sender',
+                'The Server key you entered does not match with the server key at this address'
+            );
         }
 
         // Authenticate this request...
@@ -169,15 +172,19 @@ class Soap3 extends Soap
             throw new \SoapFault('Receiver', 'Bandwidth Limit exceeded');
         }
 
-        if ($this->display->isAuditing()) {
-            $this->getLog()->debug("[IN] Params: [$hardwareKey] [$filePath] [$fileType] [$chunkOffset] [$chunkSize]");
-        }
+        $this->getLog()->debug(
+            '[IN] Params: ['. $hardwareKey .'] ['. $filePath . '] 
+            ['. $fileType.'] ['.$chunkOffset.'] ['.$chunkSize.']'
+        );
 
         $file = null;
 
         if (empty($filePath)) {
             $this->getLog()->error('Soap3 GetFile request without a file path. Maybe a player missing ?v= parameter');
-            throw new \SoapFault('Receiver', 'GetFile request is missing file path - is this version compatible with this CMS?');
+            throw new \SoapFault(
+                'Receiver',
+                'GetFile request is missing file path - is this version compatible with this CMS?'
+            );
         }
 
         try {

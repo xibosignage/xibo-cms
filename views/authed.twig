@@ -139,7 +139,7 @@
 {% block javaScriptTemplates %}
     {% include 'schedule-form-templates.twig' %}
 
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         var userPreferencesUrl = "{{ url_for("user.pref") }}";
 
         // TODO: Change this to a call to all route permissions ( something like currentUser.getRoutePermissions() )
@@ -163,13 +163,22 @@
                 return opts.inverse(this);
             }
         });
+
+        $(document).on('click', '#dropdown-menu-right-container a.dropdown-item', function(e) {
+            let eventType = $(this).attr('data-custom-handler');
+            let eventParam = $(this).attr('data-custom-handler-url');
+
+            if (eventType === 'createMiniLayoutPreview') {
+                $(this).click(createMiniLayoutPreview(eventParam));
+            }
+        })
     </script>
 
     {% verbatim %}
     <script type="text/x-handlebars-template" id="buttons-template">
         <div class="btn-group pull-right dropdown-menu-container" title="{% endverbatim %}{% trans "Row Menu" %}{% verbatim %}">
             <button class="btn btn-white dropdown-toggle" data-toggle="dropdown"></button>
-            <div class="dropdown-menu dropdown-menu-right">
+            <div class="dropdown-menu dropdown-menu-right" id="dropdown-menu-right-container">
                 {{#each buttons}}
                     {{#if divider}}
                         <div class="dropdown-divider"></div>
@@ -182,7 +191,7 @@
                         </a>
                     {{else}}
                         {{#if external}}
-                            <a class="dropdown-item {{ id }}" tabindex="-1" target="{{ linkType }}" onclick="{{ onclick }}" href="{{ url }}"{{#if title}} title="{{title}}"{{/if}}>{{ text }}</a>
+                            <a class="dropdown-item {{ id }}" id="{{ id }}" tabindex="-1" data-custom-handler="{{ onclick }}" data-custom-handler-url="{{ onclickParam }}" target="{{ linkType }}" href="{{ url }}"{{#if title}} title="{{title}}"{{/if}}>{{ text }}</a>
                         {{/if}}
 
                         {{#unless external}}
@@ -796,7 +805,7 @@
         </div>
     </script>
 
-    <script  type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         function moveFolderMultiSelectFormOpen(dialog) {
             // make bootstrap happy.
             if ($('#folder-tree-form-modal').length != 0) {

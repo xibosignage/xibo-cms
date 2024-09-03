@@ -26,11 +26,12 @@
 {% block title %}{{ "Resolutions"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    {% if currentUser.featureEnabled("resolution.add") %}
     <div class="widget-action-menu pull-right">
-        <button class="btn btn-success XiboFormButton btns" title="{% trans "Add a new resolution for use on layouts" %}" href="{{ url_for("resolution.add.form") }}"><span class="fa fa-plus"></span> {% trans "Add Resolution" %}</button>
+        {% if currentUser.featureEnabled("resolution.add") %}
+            <button class="btn btn-success XiboFormButton btns" title="{% trans "Add a new resolution for use on layouts" %}" href="{{ url_for("resolution.add.form") }}"><span class="fa fa-plus"></span> {% trans "Add Resolution" %}</button>
+        {% endif %}
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
     </div>
-    {% endif %}
 {% endblock %}
 
 
@@ -73,7 +74,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         $(document).ready(function() {
             var table = $("#resolutions").DataTable({
                 "language": dataTablesLanguage,
@@ -110,6 +111,10 @@
             table.on('draw', dataTableDraw);
             table.on('processing.dt', dataTableProcessing);
             dataTableAddButtons(table, $('#resolutions_wrapper').find('.dataTables_buttons'));
+
+            $("#refreshGrid").click(function () {
+                table.ajax.reload();
+            });
         });
     </script>
 {% endblock %}

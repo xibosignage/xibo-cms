@@ -1,8 +1,8 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -26,23 +26,48 @@
 {% block title %}{{ "Notification Centre"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    {% if currentUser.featureEnabled("notification.add") %}
     <div class="widget-action-menu pull-right">
-        <button class="btn btn-success XiboFormButton" href="{{ url_for("notification.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Notification" %}</button>
+        {% if currentUser.featureEnabled("notification.add") %}
+            <button class="btn btn-success XiboFormButton" href="{{ url_for("notification.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Notification" %}</button>
+        {% endif %}
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
     </div>
-    {% endif %}
 {% endblock %}
-
 
 {% block pageContent %}
     <div class="widget">
         <div class="widget-title">{% trans "Notification Centre" %}</div>
         <div class="widget-body">
-            <div class="XiboGrid" id="{{ random() }}">
-                <div class="XiboFilter">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="notificationView">
+                <div class="XiboFilter card mb-3 bg-light">
                     <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
+                            {% set title %}{% trans "Status" %}{% endset %}
+                            {% set option1 = "My Read"|trans %}
+                            {% set option2 = "My Unread"|trans %}
+                            {% set option3 = "All"|trans %}
+                            {% set values = [{id: 1, value: option1}, {id: 0, value: option2}] %}
+                            {% if currentUser.isSuperAdmin() %}
+                                {% set values = values|merge([{id:null, value:option3}]) %}
+                            {% endif %}
+                            {{ inline.dropdown("read", "single", title, 0, values, "id", "value") }}
 
+                            {% set options = [
+                              { optionid: "", option: "All" },
+                              { optionid: "custom", option: "Custom"|trans },
+                              { optionid: "dataset", option: "DataSet"|trans },
+                              { optionid: "display", option: "Display"|trans },
+                              { optionid: "layout", option: "Layout"|trans },
+                              { optionid: "library", option: "Library"|trans },
+                              { optionid: "report", option: "Report"|trans },
+                              { optionid: "schedule", option: "Schedule"|trans },
+                            ] %}
+                            {% set title %}{% trans "Type" %}{% endset %}
+
+                            {{ inline.dropdown("type", "single", title, "", options, "optionid", "option", helpText) }}
+
+                            {% set title %}{% trans "Date" %}{% endset %}
+                            {{ inline.dateTime("releaseDt", title, "", helpText, "", "") }}
                         </form>
                     </div>
                 </div>
@@ -51,8 +76,8 @@
                         <thead>
                             <tr>
                                 <th>{% trans "Subject" %}</th>
+                                <th>{% trans "Type" %}</th>
                                 <th>{% trans "Date" %}</th>
-                                <th>{% trans "Email?" %}</th>
                                 <th>{% trans "Interrupt?" %}</th>
                                 <th class="rowMenu"></th>
                             </tr>
@@ -68,194 +93,202 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
+      $(function() {
         var table = $("#notifications").DataTable({
-            "language": dataTablesLanguage,
-            dom: dataTablesTemplate,
-            serverSide: true,
-            stateSave: true,
-            stateDuration: 0,
-            responsive: true,
-            stateLoadCallback: dataTableStateLoadCallback,
-            stateSaveCallback: dataTableStateSaveCallback,
-            filter: false,
-            searchDelay: 3000,
-            "order": [[ 1, "desc"]],
-            ajax: {
-                "url": "{{ url_for("notification.search") }}",
-                "data": function(d) {
-                    $.extend(d, $("#notifications").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
-                }
+          language: dataTablesLanguage,
+          dom: dataTablesTemplate,
+          serverSide: true,
+          stateSave: true,
+          stateDuration: 0,
+          responsive: true,
+          stateLoadCallback: dataTableStateLoadCallback,
+          stateSaveCallback: dataTableStateSaveCallback,
+          filter: false,
+          searchDelay: 3000,
+          order: [[ 1, 'desc']],
+          ajax: {
+            url: "{{ url_for('notification.search') }}",
+            data: function(d) {
+              $.extend(d, $('#notifications').closest('.XiboGrid').find('.FilterDiv form').serializeObject());
+            }
+          },
+          columns: [
+            {
+              data: 'subject',
+              responsivePriority: 2
             },
-            "columns": [
-                { "data": "subject", responsivePriority: 2 },
-                {
-                    "data": "releaseDt",
-                    responsivePriority: 2,
-                    "render": dataTableDateFromUnix
-                },
-                {
-                    "data": "isEmail",
-                    responsivePriority: 3,
-                    "render": dataTableTickCrossColumn
-                },
-                {
-                    "data": "isInterrupt",
-                    responsivePriority: 3,
-                    "render": dataTableTickCrossColumn
-                },
-                {
-                    "orderable": false,
-                    responsivePriority : 1,
-                    "data": dataTableButtonsColumn
-                }
-            ]
+            {
+              data: 'type',
+              responsivePriority: 2
+            },
+            {
+              data: 'releaseDt',
+              responsivePriority: 2,
+              render: dataTableDateFromUnix
+            },
+            {
+              data: 'isInterrupt',
+              responsivePriority: 3,
+              render: dataTableTickCrossColumn
+            },
+            {
+              orderable: false,
+              responsivePriority : 1,
+              data: dataTableButtonsColumn
+            }
+          ]
         });
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
         dataTableAddButtons(table, $('#notifications_wrapper').find('.dataTables_buttons'));
 
-        var attachmentFormSubmit = function(dialog) {
+        $("#refreshGrid").click(function () {
+            table.ajax.reload();
+        });
 
-            var form = $(dialog);
+        const notificationShow = _.debounce(function() {
+          const data = table.row($(this)).data();
+          let showUrl = "{{ url_for('notification.show', {id: ':rowId'}) }}".replace(':rowId', data.notificationId);
+          XiboFormRender(showUrl);
+        }, 500);
 
-            // Pull any text editor instances we have
-            for (var editor in CKEDITOR.instances) {
+        $("#notifications tbody").on('dblclick', 'tr', notificationShow);
+      });
 
-                // Parse the data for library preview references, and replace those with their original values
-                // /\/library\/download\/(.[0-9]+)\?preview=1/;
-                var regex = new RegExp(CKEDITOR_DEFAULT_CONFIG.imageDownloadUrl.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&").replace(":id", "([0-9]+)"), "g");
+      var attachmentFormSubmit = function(dialog) {
+        var form = $(dialog);
 
-                var data = CKEDITOR.instances[editor].getData().replace(regex, function (match, group1) {
-                    var replacement = "[" + group1 + "]";
-                    //console.log("match = " + match + ". replacement = " + replacement);
-                    return replacement;
-                });
+        // Update any text editor instances we have
+        for(var editor in formHelpers.ckEditorInstances) {
+          formHelpers.updateCKEditor(
+            formHelpers.ckEditorInstances[editor].id,
+          );
+        }
 
-                // Set the appropriate text editor field with this data.
-                $("#" + editor).val(data);
+        // Submit via ajax - change the attachment color on success
+        $.ajax({
+          type: form.attr("method"),
+          url: form.attr("action"),
+          cache: false,
+          dataType: "json",
+          data: $(form).serialize(),
+          success: function(xhr, textStatus, error) {
+
+            XiboSubmitResponse(xhr, form);
+
+            if (xhr.success) {
+              console.debug('success');
             }
+          },
+          error: function(xhr, textStatus, errorThrown) {
+            SystemMessage(xhr.responseText, false);
+          }
+        });
+      }
 
-            // Submit via ajax - change the attachment color on success
-            $.ajax({
-                type: form.attr("method"),
-                url: form.attr("action"),
-                cache: false,
-                dataType: "json",
-                data: $(form).serialize(),
-                success: function(xhr, textStatus, error) {
+      var attachmentFormSetup = function(dialog) {
+        // Conjure up a text editor
+        formHelpers.createCKEditor('notificationMessage', $('#body'));
 
-                    XiboSubmitResponse(xhr, form);
+        // Make sure when we close the dialog we also destroy the editor
+        dialog.on("hide.bs.modal", function(event) {
+          if ($(event.target).hasClass('bootbox')) {
+            formHelpers.destroyCKEditor('notificationMessage');
+          }
+        });
 
-                    if (xhr.success) {
+        var attachmentImageList = $('#attachmentImageId');
+        var attachmentChanged = false;
 
-                        console.log('success');
+        // Bind to the attachment add button click
+        $("#attachmentAddButton").on("click", function(e) {
+          notificationAddFormAttachmentButtonClicked(e, dialog);
+        });
 
-                    }
-                },
-                error: function(xhr, textStatus, errorThrown) {
-                    SystemMessage(xhr.responseText, false);
-                }
-            });
-        }
+        // Search for any forms that will need submitting
+        // NOTE: The validation plugin does not like binding to multiple forms at once.
+        dialog.find("#notificationForm").validate({
+          submitHandler: attachmentFormSubmit,
+          errorElement: 'span',
+          // Ignore the date picker helpers
+          ignore: '.datePickerHelper, :hidden>*:not(.flatpickr-input)',
+          errorPlacement: function(error, element) {
+              if($(element).hasClass('dateControl')) {
+                  // Places the error label date controller
+                  error.insertAfter(element.parent());
+              } else {
+                  // Places the error label after the invalid element
+                  error.insertAfter(element);
+              }
+          },
+          highlight: function(element) {
+            $(element).closest('.form-group').removeClass('has-success').addClass('has-error');
+          },
+          success: function(element) {
+            $(element).closest('.form-group').removeClass('has-error').addClass('has-success');
+          },
+          invalidHandler: function(event, validator) {
+            // Remove the spinner
+            $(this).closest(".modal-dialog").find(".saving").remove();
+            // https://github.com/xibosignage/xibo/issues/1589
+            $(this).closest(".modal-dialog").find(".save-button").removeClass("disabled");
+          }
+        });
+      };
 
-        var attachmentFormSetup = function(dialog) {
-            // Get the CKEditor config and then setup the editor
-            formHelpers.getCKEditorConfig().then(function(config) {
-                // Save the config
-                CKEDITOR_DEFAULT_CONFIG = config;
+      /**
+       * Add notification attachment add image button
+       * @param e the event
+       * @param dialog the dialog
+       */
+      function notificationAddFormAttachmentButtonClicked(e, dialog) {
+        e.preventDefault();
 
-                // Conjure up a text editor
-                CKEDITOR.replace("body", CKEDITOR_DEFAULT_CONFIG);
+        // Open an upload form
+        var upload = openUploadForm({
+          url: "{{ url_for("notification.addattachment") }}",
+          title: "{% trans "Browse/Add attachment" %}",
+          videoImageCovers: false,
+          animateDialog: false,
+          className: "second-dialog",
+          buttons: {
+            main: {
+              label: "{% trans "Done" %}",
+              className: "btn-primary btn-bb-main",
+              callback: function () {
+                upload.modal('hide');
+              }
+            }
+          },
+          templateOptions: {
+            multi: false,
+            trans: {
+              addFiles: "{% trans "Browse/Add Attachment" %}",
+              startUpload: "{% trans "Start Upload" %}",
+              cancelUpload: "{% trans "Cancel Upload" %}"
+            },
+            upload: {
+              maxSize: {{ libraryUpload.maxSize }},
+              maxSizeMessage: "{{ libraryUpload.maxSizeMessage }}",
+              validExt: "jpg|jpeg|png|bmp|gif|zip|pdf"
+            },
+            folderSelector: false
+          },
+          uploadDoneEvent: function (data) {
+            // Get the attachment filename
+            var filename = data.result.files[0].name;
 
-                // Make sure when we close the dialog we also destroy the editor
-                dialog.on("hide.bs.modal", function(event) {
-                    if (event.target.className == "bootbox modal in" && CKEDITOR.instances["body"] != undefined) {
-                        CKEDITOR.instances["body"].destroy();
-                    }
-                });
+            dialog.find("input[name='attachedFilename']").remove();
 
-                var attachmentImageList = $('#attachmentImageId');
-                var attachmentChanged = false;
+            // Create a hidden field with the filename
+            $("#notificationForm").append($("<input type='hidden' name='attachedFilename' value='" + filename + "'/>"));
 
-                // Bind to the attachment add button click
-                $("#attachmentAddButton").on("click", function(e) {
-                    notificationAddFormAttachmentButtonClicked(e, dialog);
-                });
-
-                // Search for any forms that will need submitting
-                // NOTE: The validation plugin does not like binding to multiple forms at once.
-                dialog.find("#notificationForm").validate({
-                    submitHandler: attachmentFormSubmit,
-                    errorElement: "span",
-                    highlight: function(element) {
-                        $(element).closest('.form-group').removeClass('has-success').addClass('has-error');
-                    },
-                    success: function(element) {
-                        $(element).closest('.form-group').removeClass('has-error').addClass('has-success');
-                    },
-                    invalidHandler: function(event, validator) {
-                        // Remove the spinner
-                        $(this).closest(".modal-dialog").find(".saving").remove();
-                        // https://github.com/xibosignage/xibo/issues/1589
-                        $(this).closest(".modal-dialog").find(".save-button").removeClass("disabled");
-                    }
-                });
-            });
-        };
-
-        /**
-         * Add notification attachment add image button
-         * @param e the event
-         * @param dialog the dialog
-         */
-        function notificationAddFormAttachmentButtonClicked(e, dialog) {
-            e.preventDefault();
-
-            // Open an upload form
-            var upload = openUploadForm({
-                url: "{{ url_for("notification.addattachment") }}",
-                title: "{% trans "Browse/Add attachment" %}",
-                videoImageCovers: false,
-                animateDialog: false,
-                className: "second-dialog",
-                buttons: {
-                    main: {
-                        label: "{% trans "Done" %}",
-                        className: "btn-primary btn-bb-main",
-                        callback: function () {
-                            upload.modal('hide');
-                        }
-                    }
-                },
-                templateOptions: {
-                    multi: false,
-                    trans: {
-                        addFiles: "{% trans "Browse/Add Attachment" %}",
-                        startUpload: "{% trans "Start Upload" %}",
-                        cancelUpload: "{% trans "Cancel Upload" %}"
-                    },
-                    upload: {
-                        maxSize: {{ libraryUpload.maxSize }},
-                        maxSizeMessage: "{{ libraryUpload.maxSizeMessage }}",
-                        validExt: "jpg|jpeg|png|bmp|gif|zip|pdf"
-                    },
-                    folderSelector: false
-                },
-                uploadDoneEvent: function (data) {
-                    // Get the attachment filename
-                    var filename = data.result.files[0].name;
-
-                    dialog.find("input[name='attachedFilename']").remove();
-
-                    // Create a hidden field with the filename
-                    $("#notificationForm").append($("<input type='hidden' name='attachedFilename' value='" + filename + "'/>"));
-
-                    // Close
-                    upload.modal('hide');
-                }
-            });
-        }
+            // Close
+            upload.modal('hide');
+          }
+        });
+      }
     </script>
 {% endblock %}

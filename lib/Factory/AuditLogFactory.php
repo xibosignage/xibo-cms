@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -61,7 +61,8 @@ class AuditLogFactory extends BaseFactory
                 `entity`,
                 `entityId`,
                 `auditlog`.userId,
-                `auditlog`.ipAddress
+                `auditlog`.ipAddress,
+                `auditlog`.sessionHistoryId
         ';
 
         $body = '
@@ -139,6 +140,16 @@ class AuditLogFactory extends BaseFactory
             } else {
                 $body .= ' ) ';
             }
+        }
+
+        if ($sanitizedFilter->getInt('userId') !== null) {
+            $body .= ' AND `auditlog`.`userId` = :userId ';
+            $params['userId'] = $sanitizedFilter->getInt('userId');
+        }
+
+        if ($sanitizedFilter->getInt('sessionHistoryId') !== null) {
+            $body .= ' AND `auditlog`.`sessionHistoryId` = :sessionHistoryId ';
+            $params['sessionHistoryId'] = $sanitizedFilter->getInt('sessionHistoryId');
         }
 
         $order = '';

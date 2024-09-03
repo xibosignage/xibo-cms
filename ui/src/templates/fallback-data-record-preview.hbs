@@ -1,0 +1,12 @@
+<div class="fallback-data-record-preview" data-id="{{field.id}}">
+    <div class="fallback-data-record-preview-title" title="{{field.title}} ({{field.type}})">
+        {{field.title}} ({{field.type}})
+    </div>
+    <div class="fallback-data-record-preview-value" title="{{data}}">
+        {{#if data}}
+            {{data}}
+        {{else}}
+            {{trans.noData}}
+        {{/if}}
+    </div>
+</div>

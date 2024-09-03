@@ -2,6 +2,7 @@
     <ul class="nav nav-tabs" role="tablist">
         <li class="nav-item"><a class="nav-link active" href="#configureTab" role="tab" data-toggle="tab"><span>{{trans.configure}}</span></a></li>
         <li class="nav-item d-none"><a class="nav-link" href="#appearanceTab" role="tab" data-toggle="tab"><span>{{trans.appearance}}</span></a></li>
+        <li class="nav-item d-none"><a class="nav-link" href="#fallbackTab" role="tab" data-toggle="tab"><span>{{trans.fallback}}</span></a></li>
         <li class="nav-item"><a class="nav-link" href="#advancedTab" role="tab" data-toggle="tab"><span>{{trans.advanced}}</span></a></li>
     </ul>
     <div class="form-content">
@@ -18,6 +19,7 @@
                 <div class="tab-pane active" id="configureTab"></div>
 
                 <div class="tab-pane" id="appearanceTab"></div>
+                <div class="tab-pane" id="fallbackTab"></div>
 
                 <div class="tab-pane" id="advancedTab">
                     {{set "name" (concat target "_name")}}

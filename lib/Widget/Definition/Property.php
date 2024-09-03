@@ -93,6 +93,9 @@ class Property implements \JsonSerializable
     /** @var bool Should the property be included in the XLF? */
     public $includeInXlf = false;
 
+    /** @var bool Should the property be sent into Elements */
+    public $sendToElements = false;
+
     /** @var bool Should the default value be written out to widget options */
     public $saveDefault = false;
 
@@ -142,6 +145,7 @@ class Property implements \JsonSerializable
             'parseTranslations' => $this->parseTranslations,
             'saveDefault' => $this->saveDefault,
             'dependsOn' => $this->dependsOn,
+            'sendToElements' => $this->sendToElements,
         ];
     }
 
@@ -273,6 +277,23 @@ class Property implements \JsonSerializable
                                     $this->id
                                 );
                             }
+                            break;
+
+                        case 'windowsPath':
+                            // Ensure the path is a valid Windows file path ending in a file, not a directory
+                            $windowsPathRegex = '/^(?P<Root>[A-Za-z]:)(?P<Relative>(?:\\\\[^<>:"\/\\\\|?*\r\n]+)+)(?P<File>\\\\[^<>:"\/\\\\|?*\r\n]+)$/';
+
+                            // Check if the test value is not empty and does not match the regular expression
+                            if (!empty($testValue)
+                                && !preg_match($windowsPathRegex, $testValue)
+                            ) {
+                                // Throw an InvalidArgumentException if the test value is not a valid Windows path
+                                throw new InvalidArgumentException(
+                                    $message ?? sprintf(__('%s must be a valid Windows path'), $this->title),
+                                    $this->id
+                                );
+                            }
+
                             break;
 
                         case 'interval':

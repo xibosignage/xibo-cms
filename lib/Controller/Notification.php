@@ -68,8 +68,13 @@ class Notification extends Base
      * @param UserGroupFactory $userGroupFactory
      * @param DisplayNotifyService $displayNotifyService
      */
-    public function __construct($notificationFactory, $userNotificationFactory, $displayGroupFactory, $userGroupFactory, $displayNotifyService)
-    {
+    public function __construct(
+        $notificationFactory,
+        $userNotificationFactory,
+        $displayGroupFactory,
+        $userGroupFactory,
+        $displayNotifyService
+    ) {
         $this->notificationFactory = $notificationFactory;
         $this->userNotificationFactory = $userNotificationFactory;
         $this->displayGroupFactory = $displayGroupFactory;
@@ -128,16 +133,21 @@ class Notification extends Base
      */
     public function show(Request $request, Response $response, $id)
     {
+        $params = $this->getSanitizer($request->getParams());
         $notification = $this->userNotificationFactory->getByNotificationId($id);
 
         // Mark it as read
         $notification->setRead(Carbon::now()->format('U'));
         $notification->save();
 
-        $this->getState()->template = 'notification-form-show';
-        $this->getState()->setData(['notification' => $notification]);
+        if ($params->getCheckbox('multiSelect')) {
+            return $response->withStatus(201);
+        } else {
+            $this->getState()->template = 'notification-form-show';
+            $this->getState()->setData(['notification' => $notification]);
 
-        return $this->render($request, $response);
+            return $this->render($request, $response);
+        }
     }
 
     /**
@@ -184,20 +194,27 @@ class Notification extends Base
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    function grid(Request $request, Response $response)
+    public function grid(Request $request, Response $response): Response|\Psr\Http\Message\ResponseInterface
     {
         $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
 
         $filter = [
             'notificationId' => $sanitizedQueryParams->getInt('notificationId'),
-            'subject' => $sanitizedQueryParams->getString('subject')
+            'subject' => $sanitizedQueryParams->getString('subject'),
+            'read' => $sanitizedQueryParams->getInt('read'),
+            'releaseDt' => $sanitizedQueryParams->getDate('releaseDt')?->format('U'),
+            'type' => $sanitizedQueryParams->getString('type'),
         ];
-        $embed = ($sanitizedQueryParams->getString('embed') != null) ? explode(',', $sanitizedQueryParams->getString('embed')) : [];
-        $notifications = $this->notificationFactory->query($this->gridRenderSort($sanitizedQueryParams), $this->gridRenderFilter($filter, $sanitizedQueryParams));
+        $embed = ($sanitizedQueryParams->getString('embed') != null)
+            ? explode(',', $sanitizedQueryParams->getString('embed'))
+            : [];
+
+        $notifications = $this->notificationFactory->query(
+            $this->gridRenderSort($sanitizedQueryParams),
+            $this->gridRenderFilter($filter, $sanitizedQueryParams)
+        );
 
         foreach ($notifications as $notification) {
-            /* @var \Xibo\Entity\Notification $notification */
-
             if (in_array('userGroups', $embed) || in_array('displayGroups', $embed)) {
                 $notification->load([
                     'loadUserGroups' => in_array('userGroups', $embed),
@@ -205,30 +222,83 @@ class Notification extends Base
                 ]);
             }
 
-            if ($this->isApi($request) || !$this->getUser()->featureEnabled('notification.modify'))
+            if ($this->isApi($request)) {
                 continue;
+            }
 
             $notification->includeProperty('buttons');
 
-            // Default Layout
+            // View Notification
             $notification->buttons[] = [
-                'id' => 'notification_button_edit',
-                'url' => $this->urlFor($request,'notification.edit.form', ['id' => $notification->notificationId]),
-                'text' => __('Edit')
+                'id' => 'notification_button_view',
+                'url' => $this->urlFor(
+                    $request,
+                    'notification.show',
+                    ['id' => $notification->notificationId]
+                ),
+                'text' => __('View'),
+                'multi-select' => true,
+                'dataAttributes' => [
+                    [
+                        'name' => 'commit-url',
+                        'value' => $this->urlFor(
+                            $request,
+                            'notification.show',
+                            ['id' => $notification->notificationId, 'multiSelect' => true]
+                        ),
+                    ],
+                    ['name' => 'commit-method', 'value' => 'get'],
+                    ['name' => 'id', 'value' => 'notification_button_view'],
+                    ['name' => 'text', 'value' => __('Mark as read?')],
+                    ['name' => 'sort-group', 'value' => 1],
+                    ['name' => 'rowtitle', 'value' => $notification->subject]
+                ]
             ];
 
-            if ($this->getUser()->checkDeleteable($notification)) {
+
+            // Edit Notification
+            if ($this->getUser()->checkEditable($notification) &&
+                $this->getUser()->featureEnabled('notification.modify')
+            ) {
+                $notification->buttons[] = [
+                    'id' => 'notification_button_edit',
+                    'url' => $this->urlFor(
+                        $request,
+                        'notification.edit.form',
+                        ['id' => $notification->notificationId]
+                    ),
+                    'text' => __('Edit')
+                ];
+            }
+
+            // Delete Notifications
+            if ($this->getUser()->checkDeleteable($notification) &&
+                $this->getUser()->featureEnabled('notification.modify')
+            ) {
+                $notification->buttons[] = ['divider' => true];
+
                 $notification->buttons[] = [
                     'id' => 'notification_button_delete',
-                    'url' => $this->urlFor($request,'notification.delete.form', ['id' => $notification->notificationId]),
+                    'url' => $this->urlFor(
+                        $request,
+                        'notification.delete.form',
+                        ['id' => $notification->notificationId]
+                    ),
                     'text' => __('Delete'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'notification.delete', ['id' => $notification->notificationId])],
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'notification.delete',
+                                ['id' => $notification->notificationId]
+                            )
+                        ],
                         ['name' => 'commit-method', 'value' => 'delete'],
                         ['name' => 'id', 'value' => 'notification_button_delete'],
                         ['name' => 'text', 'value' => __('Delete?')],
-                        ['name' => 'sort-group', 'value' => 1],
+                        ['name' => 'sort-group', 'value' => 2],
                         ['name' => 'rowtitle', 'value' => $notification->subject]
                     ]
                 ];
@@ -258,7 +328,7 @@ class Notification extends Base
         $userGroups = [];
         $users = [];
 
-        foreach ($this->displayGroupFactory->query(['displayGroup'], ['isDisplaySpecific' => -1], $request) as $displayGroup) {
+        foreach ($this->displayGroupFactory->query(['displayGroup'], ['isDisplaySpecific' => -1]) as $displayGroup) {
             /* @var \Xibo\Entity\DisplayGroup $displayGroup */
 
             if ($displayGroup->isDisplaySpecific == 1) {
@@ -268,7 +338,7 @@ class Notification extends Base
             }
         }
 
-        foreach ($this->userGroupFactory->query(['`group`'], ['isUserSpecific' => -1], $request) as $userGroup) {
+        foreach ($this->userGroupFactory->query(['`group`'], ['isUserSpecific' => -1]) as $userGroup) {
             /* @var UserGroup $userGroup */
 
             if ($userGroup->isUserSpecific == 0) {
@@ -347,10 +417,10 @@ class Notification extends Base
             'displayGroups' => $groups,
             'users' => $users,
             'userGroups' => $userGroups,
-            'displayGroupIds' => array_map(function($element) {
+            'displayGroupIds' => array_map(function ($element) {
                 return $element->displayGroupId;
             }, $notification->displayGroups),
-            'userGroupIds' => array_map(function($element) {
+            'userGroupIds' => array_map(function ($element) {
                 return $element->groupId;
             }, $notification->userGroups)
         ]);
@@ -401,11 +471,11 @@ class Notification extends Base
         // Make sure the library exists
         MediaService::ensureLibraryExists($this->getConfig()->getSetting('LIBRARY_LOCATION'));
 
-        $options = array(
+        $options = [
             'userId' => $this->getUser()->userId,
             'controller' => $this,
             'accept_file_types' => '/\.jpg|.jpeg|.png|.bmp|.gif|.zip|.pdf/i'
-        );
+        ];
 
         // Output handled by UploadHandler
         $this->setNoOutput(true);
@@ -450,13 +520,6 @@ class Notification extends Base
      *      description="ISO date representing the release date for this notification",
      *      type="string",
      *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="isEmail",
-     *      in="formData",
-     *      description="Flag indicating whether this notification should be emailed.",
-     *      type="integer",
-     *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="isInterrupt",
@@ -516,10 +579,10 @@ class Notification extends Base
             $notification->releaseDt = $notification->createDt;
         }
 
-        $notification->isEmail = $sanitizedParams->getCheckbox('isEmail');
         $notification->isInterrupt = $sanitizedParams->getCheckbox('isInterrupt');
         $notification->userId = $this->getUser()->userId;
         $notification->nonusers = $sanitizedParams->getString('nonusers');
+        $notification->type = 'custom';
 
         // Displays and Users to link
         foreach ($sanitizedParams->getIntArray('displayGroupIds', ['default' => [] ]) as $displayGroupId) {
@@ -550,7 +613,9 @@ class Notification extends Base
             $moved = rename($from, $to);
 
             if (!$moved) {
-                $this->getLog()->info('Cannot move file: ' . $from . ' to ' . $to . ', will try and copy/delete instead.');
+                $this->getLog()->info(
+                    'Cannot move file: ' . $from . ' to ' . $to . ', will try and copy/delete instead.'
+                );
 
                 // Copy
                 $moved = copy($from, $to);
@@ -624,13 +689,6 @@ class Notification extends Base
      *      required=true
      *   ),
      *  @SWG\Parameter(
-     *      name="isEmail",
-     *      in="formData",
-     *      description="Flag indicating whether this notification should be emailed.",
-     *      type="integer",
-     *      required=true
-     *   ),
-     *  @SWG\Parameter(
      *      name="isInterrupt",
      *      in="formData",
      *      description="Flag indication whether this notification should interrupt the web portal nativation/login",
@@ -675,7 +733,6 @@ class Notification extends Base
         $notification->body = $request->getParam('body', '');
         $notification->createDt = Carbon::now()->format('U');
         $notification->releaseDt = $sanitizedParams->getDate('releaseDt')->format('U');
-        $notification->isEmail = $sanitizedParams->getCheckbox('isEmail');
         $notification->isInterrupt = $sanitizedParams->getCheckbox('isInterrupt');
         $notification->userId = $this->getUser()->userId;
         $notification->nonusers = $sanitizedParams->getString('nonusers');

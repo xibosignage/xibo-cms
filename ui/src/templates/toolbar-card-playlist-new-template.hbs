@@ -1,0 +1,13 @@
+<div class="toolbar-card new-playlist-card toolbar-card-special"
+    data-toggle="tooltip" 
+    data-type="widgets" 
+    data-sub-type="{{#if editingPlaylist}}subplaylist{{else}}playlist{{/if}}"
+    data-target="{{#if target}}{{target}}{{else}}layout zone {{#if editingPlaylist}}playlist{{/if}}{{/if}}"
+    data-region-specific="1"
+    data-title="{{description}}">
+
+    <div class="toolbar-card-preview">
+        <i class="fa fa-list-ol card-icon"></i>
+        <span class="media-title">{{trans.newPlaylist}}</span>
+    </div>
+</div>

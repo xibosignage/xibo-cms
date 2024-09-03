@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -164,7 +164,10 @@ class UserGroupFactory extends BaseFactory
      */
     public function getByNotificationId($notificationId)
     {
-        return $this->query(null, ['disableUserCheck' => 1, 'notificationId' => $notificationId, 'isUserSpecific' => -1]);
+        return $this->query(
+            null,
+            ['disableUserCheck' => 1, 'notificationId' => $notificationId, 'isUserSpecific' => -1]
+        );
     }
 
     /**
@@ -175,6 +178,18 @@ class UserGroupFactory extends BaseFactory
     public function getByDisplayGroupId($displayGroupId)
     {
         return $this->query(null, ['disableUserCheck' => 1, 'displayGroupId' => $displayGroupId]);
+    }
+
+    /**
+     * @param int $userId
+     * @param string $type
+     * @return bool
+     */
+    public function checkNotificationEmailPreferences(int $userId, string $type): bool
+    {
+        $groups = $this->query(null, ['disableUserCheck' => 1, 'userId' => $userId, 'notificationType' => $type]);
+
+        return count($groups) > 0;
     }
 
     /**
@@ -201,6 +216,12 @@ class UserGroupFactory extends BaseFactory
             `group`.libraryQuota,
             `group`.isSystemNotification,
             `group`.isDisplayNotification,
+            `group`.isDataSetNotification,
+            `group`.isLayoutNotification,
+            `group`.isLibraryNotification,
+            `group`.isReportNotification,
+            `group`.isScheduleNotification,
+            `group`.isCustomNotification,
             `group`.isShownForAddUser,
             `group`.defaultHomepageId,
             `group`.features
@@ -295,8 +316,14 @@ class UserGroupFactory extends BaseFactory
             $params['isDisplayNotification'] = $parsedFilter->getInt('isDisplayNotification');
         }
 
+        if (!empty($parsedFilter->getString('notificationType'))) {
+            $body .= ' AND ' . $parsedFilter->getString('notificationType') . ' = 1 ';
+        }
+
         if ($parsedFilter->getInt('notificationId') !== null) {
-            $body .= ' AND `group`.groupId IN (SELECT groupId FROM `lknotificationgroup` WHERE notificationId = :notificationId) ';
+            $body .= ' AND `group`.groupId IN (
+                            SELECT groupId FROM `lknotificationgroup` WHERE notificationId = :notificationId
+                        ) ';
             $params['notificationId'] = $parsedFilter->getInt('notificationId');
         }
 
@@ -376,7 +403,17 @@ class UserGroupFactory extends BaseFactory
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $group = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
-                    'isUserSpecific', 'isEveryone', 'libraryQuota', 'isSystemNotification', 'isDisplayNotification', 'isShownForAddUser'
+                    'isUserSpecific',
+                    'isEveryone',
+                    'libraryQuota',
+                    'isSystemNotification',
+                    'isDisplayNotification',
+                    'isDataSetNotification',
+                    'isLayoutNotification',
+                    'isReportNotification',
+                    'isScheduleNotification',
+                    'isCustomNotification',
+                    'isShownForAddUser'
                 ],
                 'stringProperties' => [
                     'defaultHomepageId'
@@ -478,6 +515,11 @@ class UserGroupFactory extends BaseFactory
                     'group' => 'scheduling',
                     'title' => __('Allow creation of Synchronised Schedules')
                 ],
+                'schedule.dataConnector' => [
+                    'feature' => 'schedule.dataConnector',
+                    'group' => 'scheduling',
+                    'title' => __('Allow creation of Data Connector Schedules')
+                ],
                 'daypart.view' => [
                     'feature' => 'daypart.view',
                     'group' => 'scheduling',
@@ -527,6 +569,11 @@ class UserGroupFactory extends BaseFactory
                     'feature' => 'dataset.data',
                     'group' => 'library',
                     'title' => __('Allow edits including deletion to all data contained within a DataSet independently to Layouts')
+                ],
+                'dataset.dataConnector' => [
+                    'feature' => 'dataset.realtime',
+                    'group' => 'library',
+                    'title' => __('Create and update real time DataSets')
                 ],
                 'layout.view' => [
                     'feature' => 'layout.view',
@@ -713,6 +760,11 @@ class UserGroupFactory extends BaseFactory
                     'group' => 'displays',
                     'title' => __('Allow edits including deletion for all added Displays')
                 ],
+                'displays.limitedView' => [
+                    'feature' => 'displays.limitedView',
+                    'group' => 'displays',
+                    'title' => __('Allow access to non-destructive edit-only features')
+                ],
                 'displaygroup.view' => [
                     'feature' => 'displaygroup.view',
                     'group' => 'displays',
@@ -727,6 +779,11 @@ class UserGroupFactory extends BaseFactory
                     'feature' => 'displaygroup.modify',
                     'group' => 'displays',
                     'title' => __('Allow edits including deletion for all created Display Groups')
+                ],
+                'displaygroup.limitedView' => [
+                    'feature' => 'displaygroup.limitedView',
+                    'group' => 'displays',
+                    'title' => __('Allow access to non-destructive edit-only features in a Display Group')
                 ],
                 'displayprofile.view' => [
                     'feature' => 'displayprofile.view',
@@ -792,6 +849,16 @@ class UserGroupFactory extends BaseFactory
                     'feature' => 'module.view',
                     'group' => 'system',
                     'title' => __('Page which allows for Module Management for the platform')
+                ],
+                'developer.edit' => [
+                    'feature' => 'developer.edit',
+                    'group' => 'system',
+                    'title' => __('Add/Edit custom modules and templates'),
+                ],
+                'developer.delete' => [
+                    'feature' => 'developer.delete',
+                    'group' => 'system',
+                    'title' => __('Delete custom modules and templates'),
                 ],
                 'transition.view' => [
                     'feature' => 'transition.view',

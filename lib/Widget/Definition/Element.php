@@ -35,6 +35,7 @@ class Element implements \JsonSerializable
     public $height;
     public $rotation;
     public $layer;
+    public $elementGroupId;
     public $properties = [];
 
     /** @inheritDoc */
@@ -48,6 +49,7 @@ class Element implements \JsonSerializable
             'height' => $this->height,
             'rotation' => $this->rotation,
             'layer' => $this->layer,
+            'elementGroupId' => $this->elementGroupId,
             'properties' => $this->properties
         ];
     }

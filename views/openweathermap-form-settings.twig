@@ -58,5 +58,9 @@
         {% set title %}{% trans "Cache Period" %}{% endset %}
         {% set helpText %}{% trans "This module uses 3rd party data. Please enter the number of seconds you would like to cache results." %}{% endset %}
         {{ forms.input("cachePeriod", title, interface.getSetting("cachePeriod", 3600), helpText) }}
+
+        {% set title %}{% trans "Schedule Criteria Cache Period" %}{% endset %}
+        {% set helpText %}{% trans "If a player has weather based schedule criteria, how many hours should this connector cache that weather data for?" %}{% endset %}
+        {{ forms.input("xmdsCachePeriod", title, interface.getSetting("xmdsCachePeriod", 4), helpText) }}
     {% endif %}
 {% endblock %}

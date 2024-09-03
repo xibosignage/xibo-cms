@@ -4,11 +4,12 @@
 {% block title %}{{ "Categories for "|trans }} {{menuBoard.name}} | {% endblock %}
 
 {% block actionMenu %}
-    {% if currentUser.featureEnabled("menuBoard.modify") %}
-        <div class="widget-action-menu pull-right">
+    <div class="widget-action-menu pull-right">
+        {% if currentUser.featureEnabled("menuBoard.modify") %}
             <button class="btn btn-success XiboFormButton" title="{% trans "Add a new Menu Board Category" %}" href="{{ url_for("menuBoard.category.add.form", {id : menuBoard.menuId}) }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Category" %}</button>
-        </div>
-    {% endif %}
+        {% endif %}
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
+    </div>
 {% endblock %}
 
 {% block pageContent %}
@@ -62,7 +63,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         var table;
         $(document).ready(function() {
             table = $("#menuBoardCategories").DataTable({
@@ -126,6 +127,10 @@
             table.on('draw', dataTableDraw);
             table.on('processing.dt', dataTableProcessing);
             dataTableAddButtons(table, $('#menuBoardCategories_wrapper').find('.col-md-6').eq(1));
+
+            $("#refreshGrid").click(function () {
+                table.ajax.reload();
+            });
         });
 
     </script>

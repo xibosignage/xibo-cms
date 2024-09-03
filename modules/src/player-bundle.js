@@ -35,6 +35,7 @@ import './xibo-menuboard-render';
 import './xibo-metro-render';
 import './xibo-substitutes-parser';
 import './xibo-text-render';
+import './xibo-text-scaler';
 import './xibo-dataset-render';
 import './xibo-webpage-render';
 import './xibo-worldclock-render';

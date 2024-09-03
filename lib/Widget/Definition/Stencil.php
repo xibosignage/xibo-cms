@@ -56,6 +56,12 @@ class Stencil implements \JsonSerializable
     /** @var double Optional positional information if contained as part of an element group */
     public $gapBetweenHbs;
 
+    /**
+     * @SWG\Property(description="An array of element groups")
+     * @var \Xibo\Widget\Definition\ElementGroup[]
+     */
+    public $elementGroups = [];
+
     /** @inheritDoc */
     public function jsonSerialize(): array
     {
@@ -67,7 +73,8 @@ class Stencil implements \JsonSerializable
             'width' => $this->width,
             'height' => $this->height,
             'gapBetweenHbs' => $this->gapBetweenHbs,
-            'elements' => $this->elements
+            'elements' => $this->elements,
+            'elementGroups' => $this->elementGroups
         ];
     }
 }

@@ -27,11 +27,12 @@
 {% block title %}{{ "DataSets"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    {% if currentUser.featureEnabled("dataset.add") %}
     <div class="widget-action-menu pull-right">
-        <button class="btn btn-success XiboFormButton btns" title="{% trans "Add a new DataSet" %}" href="{{ url_for("dataSet.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add DataSet" %}</button>
+        {% if currentUser.featureEnabled("dataset.add") %}
+            <button class="btn btn-success XiboFormButton btns" title="{% trans "Add a new DataSet" %}" href="{{ url_for("dataSet.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add DataSet" %}</button>
+        {% endif %}
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
     </div>
-    {% endif %}
 {% endblock %}
 
 {% block pageContent %}
@@ -70,26 +71,24 @@
                     </div>
                 </div>
 
-                <div class="row">
-                    <div class="col-sm-2 grid-folder-tree-container" id="grid-folder-filter">
-                        <div class="p-3 mr-2">
-                            <input id="jstree-search" class="form-control" type="text" placeholder="{% trans "Search" %}">
-                            <div class="form-check">
-                                <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
-                                <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "All Folders" %}</label>
-                            </div>
-                            <div class="folder-search-no-results d-none">
-                                <p>{% trans 'No Folders matching the search term' %}</p>
-                            </div>
-                            <div id="container-folder-tree"></div>
+                <div class="grid-with-folders-container">
+                    <div class="grid-folder-tree-container p-3" id="grid-folder-filter">
+                        <input id="jstree-search" class="form-control" type="text" placeholder="{% trans "Search" %}">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
+                            <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "All Folders" %}</label>
                         </div>
+                        <div class="folder-search-no-results d-none">
+                            <p>{% trans 'No Folders matching the search term' %}</p>
+                        </div>
+                        <div id="container-folder-tree"></div>
                     </div>
                     <div class="folder-controller d-none">
                         <button type="button" id="folder-tree-select-folder-button" class="btn btn-outline-secondary" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-folder fa-1x"></i></button>
                         <div id="breadcrumbs" class="mt-2 pl-2"></div>
                     </div>
-                    <div id="datatable-container" class="col-sm-10 pr-0">
-                        <div class="XiboData card pt-4 px-2">
+                    <div id="datatable-container">
+                        <div class="XiboData card py-3">
                             <table id="datasets" class="table table-striped" data-state-preference-name="dataSetGrid" style="width: 100%;">
                                 <thead>
                                     <tr>
@@ -98,6 +97,7 @@
                                         <th>{% trans "Description" %}</th>
                                         <th>{% trans "Code" %}</th>
                                         <th>{% trans "Remote?" %}</th>
+                                        <th>{% trans "Real time?" %}</th>
                                         <th>{% trans "Owner" %}</th>
                                         <th>{% trans "Sharing" %}</th>
                                         <th>{% trans "Last Sync" %}</th>
@@ -118,7 +118,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         var table;
         $(document).ready(function() {
             {% if not currentUser.featureEnabled("folder.view") %}
@@ -152,6 +152,11 @@
                         "data": "isRemote",
                         responsivePriority: 3,
                         "render": dataTableTickCrossColumn
+                    },
+                    {
+                        data: 'isRealTime',
+                        responsivePriority: 3,
+                        render: dataTableTickCrossColumn,
                     },
                     { "data": "owner", responsivePriority: 3 },
                     {
@@ -303,11 +308,15 @@
             });
             table.on('processing.dt', dataTableProcessing);
             dataTableAddButtons(table, $('#datasets_wrapper').find('.dataTables_buttons'));
+
+            $("#refreshGrid").click(function () {
+                table.ajax.reload();
+            });
         });
 
 
         function dataSetFormOpen(dialog) {
-            // Bind the test button
+            // Bind the remote dataset test button
             $(dialog).find("#dataSetRemoteTestButton").on('click', function() {
                 var $form = $(dialog).find("form");
                 XiboRemoteRequest("{{ url_for("dataSet.test.remote") }}", $form.serializeObject(), function(response) {
@@ -321,8 +330,15 @@
             // Set up some dependencies between the isRemote checkbox and the tabs related to remote datasets
             onRemoteFieldChanged(dialog);
 
+            // show data source dropdown if real time is checked
+            onIsRealTimeFieldChanged(dialog);
+
             $(dialog).find("#isRemote").on('change', function() {
                 onRemoteFieldChanged(dialog);
+            });
+
+            $(dialog).find("#isRealTime").on('change', function() {
+                onIsRealTimeFieldChanged(dialog);
             });
 
             // Auth field
@@ -337,6 +353,22 @@
             $(dialog).find('#sourceId').on('change', function() {
                 onSourceFieldChanged(dialog);
             });
+        }
+
+        function onIsRealTimeFieldChanged(dialog) {
+            var isRealTime = $(dialog).find("#isRealTime").is(":checked");
+            var dataSourceField = $(dialog).find("#dataSourceField");
+            var dataConnectorSource = $(dialog).find("#dataConnectorSource");
+
+            if (isRealTime) {
+                // show and enable data connector source
+                dataSourceField.removeClass("d-none");
+                dataConnectorSource.prop('disabled', false)
+            } else {
+                // hide and disable data connector source
+                dataSourceField.addClass("d-none");
+                dataConnectorSource.prop('disabled', true)
+            }
         }
 
         function onRemoteFieldChanged(dialog) {

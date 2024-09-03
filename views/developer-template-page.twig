@@ -1,0 +1,298 @@
+{#
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block title %}{{ "Module Templates"|trans }} | {% endblock %}
+
+{% block actionMenu %}
+    <div class="widget-action-menu pull-right">
+        <button class="btn btn-success XiboFormButton" title="{% trans "Add a new template" %}" href="{{ url_for("developer.templates.form.add") }}">
+            <i class="fa fa-plus" aria-hidden="true"></i> {% trans "Add Module Template" %}
+        </button>
+        <button class="btn btn-success" href="#" id="module-template-xml-import" title="{% trans "Add a new template by importing XML file" %}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Import XML" %}</button>
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
+    </div>
+{% endblock %}
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "Module Templates" %}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-name="moduleTemplatesView">
+                <div class="XiboFilter card mb-3 bg-light">
+                    <div class="FilterDiv card-body" id="Filter">
+                        <form class="form-inline">
+                            {% set title %}{% trans "ID" %}{% endset %}
+                            {{ inline.number('id', title) }}
+
+                            {% set title %}{% trans "Title" %}{% endset %}
+                            {{ inline.input('templateId', title) }}
+
+                            {% set attributes = [
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-width", value: "200px" },
+                                { name: "data-search-url", value:  url_for("developer.templates.datatypes.search") },
+                                { name: "data-search-term", value: "name" },
+                                { name: "data-id-property", value: "id" },
+                                { name: "data-text-property", value: "name" },
+                                { name: "data-initial-key", value: "dataType" },
+                                { name: "data-allow-clear", value: "true"},
+                                { name: "data-hide-search", value: 1}
+                            ] %}
+                            {% set title %}{% trans "Data Type" %}{% endset %}
+                            {% set helpText %}{% trans "Which data type does this template need?" %}{% endset %}
+                            {{ inline.dropdown("dataType", "single", title, null, null, "id", "id", helpText, "pagedSelect", "", "", "", attributes) }}
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData card pt-3">
+                    <table id="templates" class="table table-striped" data-state-preference-name="moduleTemplateGrid">
+                        <thead>
+                        <tr>
+                            <th>{% trans "ID" %}</th>
+                            <th>{% trans "Template ID" %}</th>
+                            <th>{% trans "Data Type" %}</th>
+                            <th>{% trans "Title" %}</th>
+                            <th>{% trans "Type" %}</th>
+                            <th>{% trans "Sharing" %}</th>
+                            <th class="rowMenu"></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript" nonce="{{ cspNonce }}">
+      var table = $('#templates').DataTable({
+        language: dataTablesLanguage,
+        dom: dataTablesTemplate,
+        serverSide: true,
+        stateSave: true,
+        stateDuration: 0,
+        responsive: true,
+        stateLoadCallback: dataTableStateLoadCallback,
+        stateSaveCallback: dataTableStateSaveCallback,
+        filter: false,
+        searchDelay: 3000,
+        order: [[ 0, 'asc']],
+        ajax: {
+          url: '{{ url_for("developer.templates.search") }}',
+          data: function (d) {
+            $.extend(d, $('#templates').closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+          }
+        },
+        columns: [
+          { data: 'id' , responsivePriority: 2},
+          { data: 'templateId' , responsivePriority: 2},
+          { data: 'dataType' },
+          { data: 'title', orderable: false },
+          { data: 'type', orderable: false },
+          {
+            data: 'groupsWithPermissions',
+            responsivePriority: 3,
+            render: dataTableCreatePermissions
+          },
+          {
+            orderable: false,
+            responsivePriority: 1,
+            data: dataTableButtonsColumn
+          }
+        ]
+      });
+
+      table.on('draw', dataTableDraw);
+      table.on('processing.dt', dataTableProcessing);
+      dataTableAddButtons(table, $('#templates_wrapper').find('.dataTables_buttons'));
+
+      $("#refreshGrid").click(function () {
+          table.ajax.reload();
+      });
+
+      $('#module-template-xml-import').click(function(e) {
+        e.preventDefault();
+
+        openUploadForm({
+          url: "{{ url_for("developer.templates.import") }}",
+          templateId : 'template-module-xml-upload',
+          uploadTemplateId: 'template-module-xml-upload-files',
+          title: "{% trans "Import XML" %}",
+          initialisedBy: "module-templates-upload",
+          buttons: {
+            main: {
+              label: "{% trans "Done" %}",
+              className: "btn-primary btn-bb-main",
+              callback: function () {
+                table.ajax.reload();
+                XiboDialogClose();
+              }
+            }
+          },
+          templateOptions: {
+            multi: false,
+            trans: {
+              addFiles: "{% trans "Add files" %}",
+              startUpload: "{% trans "Start upload" %}",
+              cancelUpload: "{% trans "Cancel upload" %}",
+            },
+            upload: {
+              validExt: "xml"
+            },
+          }
+        });
+      });
+
+      function moduleTemplateAddFormOpen(dialog) {
+        const $form = $(dialog).find('#form-module-template');
+        $('#dataType', $form)
+          .on('select2:select', function(e) {
+            let dataType = $(this).select2('data')[0].id;
+            let $templateSelect = $(dialog).find('#copyTemplateId');
+            let searchUrl =
+              "{{ url_for('module.template.search', {dataType : ':dataType'}) }}"
+                .replace(':dataType', dataType);
+
+            $templateSelect.data('searchUrl', searchUrl);
+            makeTemplateSelect($templateSelect)
+            $templateSelect.parent().parent().removeClass('d-none')
+            $templateSelect.val(null).trigger('change');
+          })
+      }
+
+      function makeTemplateSelect($element) {
+        // clear existing options.
+        $element.empty().trigger('change');
+        // append empty option
+        $element.append(new Option('', '', false, false));
+
+        // get static templates for the selected dataType
+        $.ajax({
+          method: 'GET',
+          url: $element.data('searchUrl'),
+          data: $element.data('filterOptions'),
+          dataType: 'json',
+          success: function(response) {
+            $.each(response.data, function(key, el) {
+              $element.append(new Option(el.title, el.templateId, false, false));
+            });
+
+            $element.select2({
+              allowClear: true,
+              placeholder: {
+                id: null,
+                value: ''
+              },
+            });
+          },
+          error: function(xhr) {
+            SystemMessage(xhr.message || '{{"Unknown error"|trans}}', false);
+          }
+        });
+      }
+    </script>
+{% endblock %}
+
+{% block javaScriptTemplates %}
+    {{ parent() }}
+
+    {% verbatim %}
+
+    <script type="text/x-handlebars-template" id="template-module-xml-upload">
+        <form class="form-horizontal" method="post" enctype="multipart/form-data">
+            <div class="row fileupload-buttonbar">
+                <div class="col-md-7">
+                    <!-- The fileinput-button span is used to style the file input field as button -->
+                    <span class="btn btn-success fileinput-button">
+                        <i class="fa fa-plus"></i>
+                        <span>{{ trans.addFiles }}</span>
+                        <input type="file" name="files">
+                    </span>
+                    <button type="submit" class="btn btn-primary start">
+                        <i class="fa fa-upload"></i>
+                        <span>{{ trans.startUpload }}</span>
+                    </button>
+                    <button type="reset" class="btn btn-warning cancel">
+                        <i class="fa fa-ban"></i>
+                        <span>{{ trans.cancelUpload }}</span>
+                    </button>
+                    <!-- The loading indicator is shown during file processing -->
+                    <span class="fileupload-loading"></span>
+                </div>
+                <!-- The global progress information -->
+                <div class="col-md-4 fileupload-progress fade">
+                    <!-- The global progress bar -->
+                    <div class="progress">
+                        <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width:0%;">
+                            <div class="sr-only"></div>
+                        </div>
+                    </div>
+                    <!-- The extended global progress information -->
+                    <div class="progress-extended">&nbsp;</div>
+                    <!-- Processing info container -->
+                    <div class="progress-end" style="display:none;">{{ trans.processing }}</div>
+                </div>
+            </div>
+            <!-- The table listing the files available for upload/download -->
+            <table role="presentation" class="table table-striped"><tbody class="files"></tbody></table>
+        </form>
+    </script>
+
+<script id="template-module-xml-upload-files" type="text/x-tmpl">
+{% for (var i=0, file; file=o.files[i]; i++) { %}
+    <tr class="template-upload">
+        <td>
+            <p class="size">{%=o.formatFileSize(file.size)%}</p>
+                <div class="progress">
+                    <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width:0%;">
+                        <div class="sr-only"></div>
+                    </div>
+                </div>
+            </div>
+        </td>
+        <td>
+            <div class="btn-group">
+                {% if (!i && !o.options.autoUpload) { %}
+                    <button class="btn btn-primary start" disabled>
+                        <i class="fa fa-upload"></i>
+                    </button>
+                {% } %}
+                {% if (!i) { %}
+                    <button class="btn btn-warning cancel">
+                        <i class="fa fa-ban"></i>
+                    </button>
+                {% } %}
+            </div>
+        </td>
+    </tr>
+{% } %}
+</script>
+    {% endverbatim %}
+{% endblock %}

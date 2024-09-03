@@ -40,14 +40,47 @@
             <property id="fontColor" type="color">
                 <title>Font Colour</title>
                 <default>%THEME_COLOR%</default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">0</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fitToArea" type="checkbox">
+                <title>Fit to selection</title>
+                <helpText>Fit to selected area instead of using the font size?</helpText>
+                <default>0</default>
+            </property>
+            <property id="useGradient" type="checkbox">
+                <title>Use gradient for the text?</title>
+                <default>0</default>
+            </property>
+            <property id="gradient" type="colorGradient">
+                <title>Gradient</title>
+                <default></default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">1</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="fontSize" type="number">
                 <title>Font Size</title>
                 <default>40</default>
+                <visibility>
+                    <test>
+                        <condition field="fitToArea" type="neq">1</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="lineHeight" type="number">
                 <title>Line Height</title>
                 <default>1.2</default>
+                <visibility>
+                    <test>
+                        <condition field="fitToArea" type="neq">1</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="bold" type="checkbox">
                 <title>Bold</title>
@@ -68,14 +101,20 @@
                 <title>Text Wrap</title>
                 <helpText>Should the text wrap to the next line?</helpText>
                 <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="fitToArea" type="neq">1</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="justify" type="checkbox">
                 <title>Justify</title>
                 <helpText>Should the text be justified?</helpText>
                 <default>0</default>
                 <visibility>
-                    <test>
+                    <test type="and">
                         <condition field="textWrap" type="eq">1</condition>
+                        <condition field="fitToArea" type="neq">1</condition>
                     </test>
                 </visibility>
             </property>
@@ -83,6 +122,11 @@
                 <title>Show Overflow</title>
                 <helpText>Should the widget overflow the region?</helpText>
                 <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="fitToArea" type="neq">1</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="textShadow" type="checkbox">
                 <title>Text Shadow</title>
@@ -127,6 +171,11 @@
             <property id="horizontalAlign" type="dropdown">
                 <title>Horizontal Align</title>
                 <default>center</default>
+                <visibility>
+                    <test>
+                        <condition field="fitToArea" type="neq">1</condition>
+                    </test>
+                </visibility>
                 <options>
                     <option name="flex-start">Left</option>
                     <option name="center">Center</option>
@@ -149,30 +198,44 @@
     style="
     display: flex;
     {{#if fontFamily}}font-family: {{fontFamily}};{{/if}}
-    {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
-    {{#if fontColor}}color: {{fontColor}};{{/if}}
+    {{#if useGradient}}
+        {{parseJSON "gb" gradient}}
+        background-clip: text;
+        color: transparent;
+        {{#eq gb.type 'linear'}}
+            background-image: linear-gradient({{gb.angle}}deg, {{gb.color1}}, {{gb.color2}});
+        {{else}}
+            background-image: radial-gradient(circle, {{gb.color1}}, {{gb.color2}});
+        {{/eq}}
+    {{else}}
+        {{#if fontColor}}color: {{fontColor}};{{/if}}
+    {{/if}}
     {{#if bold}}font-weight: bold;{{/if}}
     {{#if italics}}font-style: italic;{{/if}}
     {{#if underline}}text-decoration: underline;{{/if}}
-    {{#if showOverflow}}overflow: visible;{{else}}overflow: hidden;{{/if}}
-    {{#if horizontalAlign}}
-        justify-content: {{horizontalAlign}};
-    {{/if}}
-    {{#eq horizontalAlign "flex-start"}}text-align: left;{{/eq}}
-    {{#eq horizontalAlign "center"}}text-align: center;{{/eq}}
-    {{#eq horizontalAlign "flex-end"}}text-align: right;{{/eq}}
     {{#if verticalAlign}}align-items: {{verticalAlign}};{{/if}}
-    {{#if textWrap}}
-        white-space: break-spaces;
-        {{#if justify}}
-            text-align: justify;
-        {{/if}}
-    {{else}}
+    {{#if fitToArea}}
         white-space: nowrap;
+    {{else}}
+        {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
+        {{#if showOverflow}}overflow: visible;{{else}}overflow: hidden;{{/if}}
+        {{#if horizontalAlign}}
+            justify-content: {{horizontalAlign}};
+        {{/if}}
+        {{#eq horizontalAlign "flex-start"}}text-align: left;{{/eq}}
+        {{#eq horizontalAlign "center"}}text-align: center;{{/eq}}
+        {{#eq horizontalAlign "flex-end"}}text-align: right;{{/eq}}
+            {{#if lineHeight}}line-height: {{lineHeight}};{{/if}}
+        {{#if textWrap}}
+            white-space: break-spaces;
+            {{#if justify}}
+                text-align: justify;
+            {{/if}}
+        {{else}}
+            white-space: nowrap;
+        {{/if}}
     {{/if}}
-    {{#if lineHeight}}line-height: {{lineHeight}};{{/if}}
     {{#if verticalAlign}}align-items: {{verticalAlign}};{{/if}}
-    {{#if textWrap}}white-space: break-spaces;{{else}}white-space: nowrap;{{/if}}
     {{#if textShadow}}text-shadow: {{shadowX}}px {{shadowY}}px {{shadowBlur}}px {{textShadowColor}};{{/if}}
     width: 100%; height: 100%;"
 >
@@ -183,6 +246,18 @@
 {{/if}}
 </div>
             ]]></hbs>
+        <onTemplateRender><![CDATA[
+if(properties.fitToArea) {
+    // Set target for the text
+    properties.fitTarget = 'div';
+
+    var $selector = $(target).is('.global-elements-text') ?
+        $(target) : $(target).find('.global-elements-text');
+
+    // Scale text to container
+    $selector.xiboTextScaler(properties);
+}
+        ]]></onTemplateRender>
         </stencil>
         <assets>
             <asset id="text-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/text.png" />
@@ -218,14 +293,47 @@
             <property id="fontColor" type="color">
                 <title>Font Colour</title>
                 <default>%THEME_COLOR%</default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">0</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fitToArea" type="checkbox">
+                <title>Fit to selection</title>
+                <helpText>Fit to selected area instead of using the font size?</helpText>
+                <default>0</default>
+            </property>
+            <property id="useGradient" type="checkbox">
+                <title>Use gradient for the text?</title>
+                <default>0</default>
+            </property>
+            <property id="gradient" type="colorGradient">
+                <title>Gradient</title>
+                <default></default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">1</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="fontSize" type="number">
                 <title>Font Size</title>
                 <default>40</default>
+                <visibility>
+                    <test>
+                        <condition field="fitToArea" type="neq">1</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="lineHeight" type="number">
                 <title>Line Height</title>
                 <default>1.2</default>
+                <visibility>
+                    <test>
+                        <condition field="fitToArea" type="neq">1</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="bold" type="checkbox">
                 <title>Bold</title>
@@ -246,6 +354,280 @@
                 <title>Text Wrap</title>
                 <helpText>Should the text wrap to the next line?</helpText>
                 <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="fitToArea" type="neq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="showOverflow" type="checkbox">
+                <title>Show Overflow</title>
+                <helpText>Should the widget overflow the region?</helpText>
+                <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="fitToArea" type="neq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="textShadow" type="checkbox">
+                <title>Text Shadow</title>
+                <default>0</default>
+                <helpText>Should the text have a shadow?</helpText>
+            </property>
+            <property id="textShadowColor" type="color">
+                <title>Text Shadow Colour</title>
+                <visibility>
+                    <test>
+                        <condition field="textShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="shadowX" type="number">
+                <title>Shadow X Offset</title>
+                <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="textShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="shadowY" type="number">
+                <title>Shadow Y Offset</title>
+                <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="textShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="shadowBlur" type="number">
+                <title>Shadow Blur</title>
+                <default>2</default>
+                <visibility>
+                    <test>
+                        <condition field="textShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="horizontalAlign" type="dropdown">
+                <title>Horizontal Align</title>
+                <default>center</default>
+                <visibility>
+                    <test>
+                        <condition field="fitToArea" type="neq">1</condition>
+                    </test>
+                </visibility>
+                <options>
+                    <option name="flex-start">Left</option>
+                    <option name="center">Center</option>
+                    <option name="flex-end">Right</option>
+                </options>
+            </property>
+            <property id="verticalAlign" type="dropdown">
+                <title>Vertical Align</title>
+                <default>center</default>
+                <options>
+                    <option name="flex-start">Top</option>
+                    <option name="center">Middle</option>
+                    <option name="flex-end">Bottom</option>
+                </options>
+            </property>
+        </properties>
+        <stencil>
+            <hbs><![CDATA[
+<div class="global-elements-date"
+    style="
+    display: flex;
+    {{#if fontFamily}}font-family: {{fontFamily}};{{/if}}
+    {{#if useGradient}}
+        {{parseJSON "gb" gradient}}
+        background-clip: text;
+        color: transparent;
+        {{#eq gb.type 'linear'}}
+            background-image: linear-gradient({{gb.angle}}deg, {{gb.color1}}, {{gb.color2}});
+        {{else}}
+            background-image: radial-gradient(circle, {{gb.color1}}, {{gb.color2}});
+        {{/eq}}
+    {{else}}
+        {{#if fontColor}}color: {{fontColor}};{{/if}}
+    {{/if}}
+    {{#if bold}}font-weight: bold;{{/if}}
+    {{#if italics}}font-style: italic;{{/if}}
+    {{#if underline}}text-decoration: underline;{{/if}}
+    {{#if showOverflow}}overflow: visible;{{else}}overflow: hidden;{{/if}}
+    {{#if verticalAlign}}align-items: {{verticalAlign}};{{/if}}
+    {{#if fitToArea}}
+        white-space: nowrap;
+    {{else}}
+        {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
+        {{#if lineHeight}}line-height: {{lineHeight}};{{/if}}
+        {{#if horizontalAlign}}justify-content: {{horizontalAlign}};{{/if}}
+    {{#if textWrap}}white-space: break-spaces;{{else}}white-space: nowrap;{{/if}}
+    {{/if}}
+    {{#if textShadow}}text-shadow: {{shadowX}}px {{shadowY}}px {{shadowBlur}}px {{textShadowColor}};{{/if}}
+    width: 100%; height: 100%;"
+>
+<div class="date" data-date="{{date}}">{{date}}</div>
+</div>
+            ]]></hbs>
+        </stencil>
+        <onTemplateRender><![CDATA[
+// Match all affected elements and get date div value
+$(target).find('.date').each(function(_idx, dateEl){
+    var dateValue = $(dateEl).data('date');
+
+    if (String(dateValue).length === 0 || !dateValue) {
+        $(dateEl).html('');
+        return;
+    }
+
+    var globalDate = moment(dateValue);
+
+    // Check for lang config
+    if (properties.lang !== null && String(properties.lang).length > 0) {
+        globalDate.locale(properties.lang);
+    }
+
+    // Format the date with the dateFormat property
+    var formattedDate = globalDate.format(properties.dateFormat);
+
+    // Set the date div value to the formatted date
+    $(dateEl).html(formattedDate);
+
+
+    if (properties.fitToArea) {
+        // Set target for the text
+        properties.fitTarget = '.date';
+
+        var $selector = $(target).is('.global-elements-date') ?
+            $(target) : $(target).find('.global-elements-date');
+
+        // Scale text to container
+        $selector.xiboTextScaler(properties);
+    }
+});
+        ]]></onTemplateRender>
+        <assets>
+            <asset id="date-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/date.png" />
+        </assets>
+    </template>
+    <template>
+        <id>date_advanced</id>
+        <title>Date / Time</title>
+        <type>element</type>
+        <dataType>global</dataType>
+        <canRotate>true</canRotate>
+        <thumbnail>date-thumb</thumbnail>
+        <startWidth>380</startWidth>
+        <startHeight>80</startHeight>
+        <properties>
+            <property id="currentDate" type="checkbox">
+                <title>Current date?</title>
+                <helpText>Use the current date to be displayed.</helpText>
+                <default>1</default>
+            </property>
+            <property id="offset" type="number">
+                <title>Offset</title>
+                <helpText>The offset in minutes that should be applied to the current date.</helpText>
+                <default></default>
+                <visibility>
+                    <test>
+                        <condition field="currentDate" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="date" type="date" format="DD/MM/Y HH:mm:ss" variant="dateTime">
+                <title>Custom Date</title>
+                <helpText>Insert date to be displayed.</helpText>
+                <default></default>
+                <visibility>
+                    <test>
+                        <condition field="currentDate" type="eq">0</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="dateFormat" type="text" variant="dateFormat">
+                <title>Date Format</title>
+                <default>d/m/Y H:i:s</default>
+            </property>
+            <property id="lang" type="languageSelector" variant="momentLocales">
+                <title>Language</title>
+                <helpText>Select the language you would like to use.</helpText>
+            </property>
+            <property id="fontFamily" type="fontSelector">
+                <title>Font Family</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+            </property>
+            <property id="fontColor" type="color">
+                <title>Font Colour</title>
+                <default>%THEME_COLOR%</default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">0</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fitToArea" type="checkbox">
+                <title>Fit to selection</title>
+                <helpText>Fit to selected area instead of using the font size?</helpText>
+                <default>0</default>
+            </property>
+            <property id="useGradient" type="checkbox">
+                <title>Use gradient for the text?</title>
+                <default>0</default>
+            </property>
+            <property id="gradient" type="colorGradient">
+                <title>Gradient</title>
+                <default></default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fontSize" type="number">
+                <title>Font Size</title>
+                <default>40</default>
+                <visibility>
+                    <test>
+                        <condition field="fitToArea" type="neq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="lineHeight" type="number">
+                <title>Line Height</title>
+                <default>1.2</default>
+                <visibility>
+                    <test>
+                        <condition field="fitToArea" type="neq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="bold" type="checkbox">
+                <title>Bold</title>
+                <helpText>Should the text be bold?</helpText>
+                <default>0</default>
+            </property>
+            <property id="italics" type="checkbox">
+                <title>Italics</title>
+                <helpText>Should the text be italicised?</helpText>
+                <default>0</default>
+            </property>
+            <property id="underline" type="checkbox">
+                <title>Underline</title>
+                <helpText>Should the text be underlined?</helpText>
+                <default>0</default>
+            </property>
+            <property id="textWrap" type="checkbox">
+                <title>Text Wrap</title>
+                <helpText>Should the text wrap to the next line?</helpText>
+                <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="fitToArea" type="neq">1</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="showOverflow" type="checkbox">
                 <title>Show Overflow</title>
@@ -295,6 +677,11 @@
             <property id="horizontalAlign" type="dropdown">
                 <title>Horizontal Align</title>
                 <default>center</default>
+                <visibility>
+                    <test>
+                        <condition field="fitToArea" type="neq">1</condition>
+                    </test>
+                </visibility>
                 <options>
                     <option name="flex-start">Left</option>
                     <option name="center">Center</option>
@@ -313,50 +700,121 @@
         </properties>
         <stencil>
             <hbs><![CDATA[
-<div class="global-elements-date"
+<div class="global-elements-date-advanced"
     style="
     display: flex;
     {{#if fontFamily}}font-family: {{fontFamily}};{{/if}}
-    {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
-    {{#if lineHeight}}line-height: {{lineHeight}};{{/if}}
-    {{#if fontColor}}color: {{fontColor}};{{/if}}
+    {{#if useGradient}}
+        {{parseJSON "gb" gradient}}
+        background-clip: text;
+        color: transparent;
+        {{#eq gb.type 'linear'}}
+            background-image: linear-gradient({{gb.angle}}deg, {{gb.color1}}, {{gb.color2}});
+        {{else}}
+            background-image: radial-gradient(circle, {{gb.color1}}, {{gb.color2}});
+        {{/eq}}
+    {{else}}
+        {{#if fontColor}}color: {{fontColor}};{{/if}}
+    {{/if}}
     {{#if bold}}font-weight: bold;{{/if}}
     {{#if italics}}font-style: italic;{{/if}}
     {{#if underline}}text-decoration: underline;{{/if}}
-    {{#if showOverflow}}overflow: visible;{{else}}overflow: hidden;{{/if}}
-    {{#if horizontalAlign}}justify-content: {{horizontalAlign}};{{/if}}
+    {{#if fitToArea}}
+        white-space: nowrap;
+    {{else}}
+        {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
+        {{#if lineHeight}}line-height: {{lineHeight}};{{/if}}
+        {{#if showOverflow}}overflow: visible;{{else}}overflow: hidden;{{/if}}
+        {{#if horizontalAlign}}justify-content: {{horizontalAlign}};{{/if}}
+        {{#if textWrap}}white-space: break-spaces;{{else}}white-space: nowrap;{{/if}}
+    {{/if}}
     {{#if verticalAlign}}align-items: {{verticalAlign}};{{/if}}
-    {{#if textWrap}}white-space: break-spaces;{{else}}white-space: nowrap;{{/if}}
     {{#if textShadow}}text-shadow: {{shadowX}}px {{shadowY}}px {{shadowBlur}}px {{textShadowColor}};{{/if}}
     width: 100%; height: 100%;"
 >
-<div class="date" data-date="{{date}}">{{date}}</div>
+<div class="date-advanced"></div>
 </div>
             ]]></hbs>
         </stencil>
         <onTemplateRender><![CDATA[
-// Match all affected elements and get date div value
-$(target).find('.date').each(function(_idx, dateEl){
-    var dateValue = $(dateEl).data('date');
+var $dateEl = $(target).find('.date-advanced');
+var useCurrentDate = (properties.currentDate == 1);
 
-    if (String(dateValue).length === 0 || !dateValue) {
-        $(dateEl).html('');
+if (useCurrentDate) {
+    // Use current date
+
+    let firstRun = true;
+
+    var offset = properties.offset || 0;
+    // Clear previous interval if exists
+    if (window['updateInterval_' + id]) {
+        clearInterval(window['updateInterval_' + id]);
+    }
+
+    // Update every second
+    window['updateInterval_' + id] = setInterval(function() {
+        // If element was removed, clear interval
+        if(!$dateEl.is(':visible')) {
+            clearInterval(window['updateInterval_' + id]);
+            return;
+        }
+
+        // Update date value
+        var currentDate = moment().add(offset, "m");
+
+        // Check for lang config
+        if (properties.lang !== null && String(properties.lang).length > 0) {
+            currentDate.locale(properties.lang);
+        }
+
+        $dateEl.html(currentDate.format(properties.dateFormat));
+
+        if (firstRun && properties.fitToArea) {
+            // Set target for the text
+            properties.fitTarget = '.date-advanced';
+
+            var $selector = $(target).is('.global-elements-date-advanced') ?
+                $(target) : $(target).find('.global-elements-date-advanced');
+
+            // Scale text to container
+            $(target).find('.global-elements-date-advanced').xiboTextScaler(properties);
+
+            firstRun = false;
+        }
+    }, 1000);
+} else {
+    // Use custom date
+
+    // If date is not defined, don't render
+    if (String(properties.date).length === 0) {
+        $dateEl.html('');
         return;
     }
 
-    var globalDate = moment(dateValue);
+    var customDate = moment(properties.date);
 
     // Check for lang config
     if (properties.lang !== null && String(properties.lang).length > 0) {
-        globalDate.locale(properties.lang);
+        customDate.locale(properties.lang);
     }
 
     // Format the date with the dateFormat property
-    var formattedDate = globalDate.format(properties.dateFormat);
+    var formattedDate = customDate.format(properties.dateFormat);
 
     // Set the date div value to the formatted date
-    $(dateEl).html(formattedDate);
-});
+    $dateEl.html(formattedDate);
+
+    if (properties.fitToArea) {
+        // Set target for the text
+        properties.fitTarget = '.date-advanced';
+
+        var $selector = $(target).is('.global-elements-date-advanced') ?
+            $(target) : $(target).find('.global-elements-date-advanced');
+
+        // Scale text to container
+        $selector.xiboTextScaler(properties);
+    }
+}
         ]]></onTemplateRender>
         <assets>
             <asset id="date-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/date.png" />
@@ -441,17 +899,61 @@ $(target).find('.date').each(function(_idx, dateEl){
                     </test>
                 </visibility>
             </property>
+            <property id="imageShadow" type="checkbox">
+                <title>Image Shadow</title>
+                <default>0</default>
+                <helpText>Should the image have a shadow?</helpText>
+            </property>
+            <property id="imageShadowColor" type="color">
+                <title>Image Shadow Colour</title>
+                <visibility>
+                    <test>
+                        <condition field="imageShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="shadowX" type="number">
+                <title>Shadow X Offset</title>
+                <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="imageShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="shadowY" type="number">
+                <title>Shadow Y Offset</title>
+                <default>1</default>
+                <visibility>
+                    <test>
+                        <condition field="imageShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="shadowBlur" type="number">
+                <title>Shadow Blur</title>
+                <default>2</default>
+                <visibility>
+                    <test>
+                        <condition field="imageShadow" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
             <property id="assetId" type="hidden"></property>
         </properties>
         <stencil>
             <hbs><![CDATA[
-<div class="global-elements-image img-container" style="width:100%; height: 100%; overflow: hidden; position: relative;
+<div class="global-elements-image img-container"
+    style="width:100%; height: 100%; overflow: hidden; position: relative;
     {{#if roundBorder}}border-radius: {{borderRadius}}px;{{/if}}">
     <img src="{{#if assetId}}[[assetId={{assetId}}]]{{else}}{{{url}}}{{/if}}" style="
         width:100%; height: 100%;
         object-fit: {{objectFit}};
         object-position: {{alignId}} {{valignId}};
         opacity: {{opacity}}%;
+        {{#if imageShadow}}
+            filter: drop-shadow({{shadowX}}px {{shadowY}}px {{shadowBlur}}px {{imageShadowColor}});
+        {{/if}}
         position: absolute; top: 0; left: 0;"
     />
 </div>
@@ -474,6 +976,12 @@ $(target).find('img').xiboImageRender(properties);
         <canRotate>true</canRotate>
         <startWidth>250</startWidth>
         <startHeight>250</startHeight>
+        <properties>
+            <property id="imageReplace" type="imageReplaceControl">
+                <title>Replace Image</title>
+                <helpText>Select an image from the Toolbox and drop here to replace this element.</helpText>
+            </property>
+        </properties>
     </template>
     <template>
         <id>line</id>
@@ -661,6 +1169,24 @@ $(target).find('img').xiboImageRender(properties);
             <property id="backgroundColor" type="color">
                 <title>Background Colour</title>
                 <default>#1775F6</default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">0</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="useGradient" type="checkbox">
+                <title>Use gradient as background?</title>
+                <default>0</default>
+            </property>
+            <property id="gradient" type="colorGradient">
+                <title>Gradient</title>
+                <default></default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">1</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="roundBorder" type="checkbox">
                 <title>Round Border</title>
@@ -703,7 +1229,17 @@ $(target).find('img').xiboImageRender(properties);
         <stencil>
             <hbs><![CDATA[
 <div class="rectangle-container"
-    style="background-color: {{backgroundColor}};
+    style="
+    {{#if useGradient}}
+        {{parseJSON "gb" gradient}}
+        {{#eq gb.type 'linear'}}
+            background: linear-gradient({{gb.angle}}deg, {{gb.color1}}, {{gb.color2}});
+        {{else}}
+            background: radial-gradient(circle, {{gb.color1}}, {{gb.color2}});
+        {{/eq}}
+    {{else}}
+        background-color: {{backgroundColor}};
+    {{/if}}
     {{#if outline}}border: {{outlineWidth}}px solid {{outlineColor}};{{/if}}
     {{#if roundBorder}}border-radius: {{borderRadius}}px;{{/if}}
     width: 100%; height: 100%; box-sizing: border-box;"
@@ -727,6 +1263,29 @@ $(target).find('img').xiboImageRender(properties);
             <property id="backgroundColor" type="color">
                 <title>Background Colour</title>
                 <default>#1775F6</default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">0</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="useGradient" type="checkbox">
+                <title>Use gradient as background?</title>
+                <default>0</default>
+            </property>
+            <property id="gradient" type="colorGradient">
+                <title>Gradient</title>
+                <default></default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fit" type="checkbox">
+                <title>Fit to area</title>
+                <default>0</default>
+                <helpText>Should the shape scale to fit the element area?</helpText>
             </property>
             <property id="outline" type="checkbox">
                 <title>Show Outline</title>
@@ -762,14 +1321,18 @@ $(target).find('img').xiboImageRender(properties);
     height: 100%;"
 ><svg version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
     <defs>
-        <symbol id="circle_{{uniqueID}}" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+        {{{createGradientInSVG gradient uniqueID}}}
+
+        <symbol id="circle_{{uniqueID}}" viewBox="0 0 100 100" preserveAspectRatio="{{# if fit }}none{{else}}xMidYMid meet{{/if}}">
             <circle
-                {{#if circleRadius}}
-                    r="{{circleRadius}}"
-                {{else}}
-                    r="50"
-                {{/if}}
-                {{# if backgroundColor }}
+                {{# if useGradient }}
+                    {{parseJSON "gb" gradient}}
+                    {{# eq gb.type 'linear'}}
+                        fill="url(#gradLinear_{{uniqueID}})"
+                    {{else}}
+                        fill="url(#gradRadial_{{uniqueID}})"
+                    {{/eq}}
+                {{else if backgroundColor }}
                     fill="{{backgroundColor}}"
                 {{else}}
                     fill="none"
@@ -788,8 +1351,93 @@ $(target).find('img').xiboImageRender(properties);
 </svg></div>
             ]]></hbs>
         </stencil>
+        <onTemplateRender><![CDATA[
+    // Calculate circle radius based on outlineWidth
+    var circleRadius = properties.outline == 1 ?
+        50 - (properties.outlineWidth / 4) : 50;
+    var selector = $(target).is('.global-elements-circle') ? '' : '.global-elements-circle ';
+    $(target).find(selector + 'svg symbol circle').attr('r', circleRadius);
+        ]]></onTemplateRender>
         <assets>
             <asset id="circle-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/circle.png" />
+        </assets>
+    </template>
+    <template>
+        <id>ellipse</id>
+        <title>Ellipse</title>
+        <type>element</type>
+        <dataType>global</dataType>
+        <thumbnail>ellipse-thumb</thumbnail>
+        <canRotate>true</canRotate>
+        <startWidth>300</startWidth>
+        <startHeight>200</startHeight>
+        <properties>
+            <property id="backgroundColor" type="color">
+                <title>Background Colour</title>
+                <default>#1775F6</default>
+            </property>
+            <property id="outline" type="checkbox">
+                <title>Show Outline</title>
+                <default>1</default>
+                <helpText>Should the circle have an outline?</helpText>
+            </property>
+            <property id="outlineColor" type="color">
+                <title>Outline Colour</title>
+                <default>%THEME_COLOR%</default>
+                <visibility>
+                    <test>
+                        <condition field="outline" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="outlineWidth" type="number">
+                <title>Outline Width</title>
+                <default>4</default>
+                <visibility>
+                    <test>
+                        <condition field="outline" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+        </properties>
+        <preview></preview>
+        <stencil>
+            <hbs><![CDATA[
+<div class="global-elements-ellipse" style="position: relative;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;"
+><svg version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <symbol id="ellipse_{{uniqueID}}" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <ellipse
+                {{# if backgroundColor }}
+                    fill="{{backgroundColor}}"
+                {{else}}
+                    fill="none"
+                {{/if}}
+                {{# if outline }}
+                    {{#if outlineColor }}stroke="{{outlineColor}}"{{/if}}
+                    {{#if outlineWidth }}stroke-width="{{outlineWidth}}"{{/if}}
+                    vector-effect="non-scaling-stroke"
+                    rx="49"
+                    ry="49"
+                {{else}}
+                    rx="50"
+                    ry="50"
+                {{/if}}
+                cx="50"
+                cy="50"
+            ></ellipse>
+        </symbol>
+    </defs>
+    <use href="#ellipse_{{uniqueID}}" width="100%" height="100%" />
+</svg></div>
+            ]]></hbs>
+        </stencil>
+        <assets>
+            <asset id="ellipse-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/ellipse.png" />
         </assets>
     </template>
     <template>
@@ -805,6 +1453,29 @@ $(target).find('img').xiboImageRender(properties);
             <property id="backgroundColor" type="color">
                 <title>Background Colour</title>
                 <default>#1775F6</default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">0</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="useGradient" type="checkbox">
+                <title>Use gradient as background?</title>
+                <default>0</default>
+            </property>
+            <property id="gradient" type="colorGradient">
+                <title>Gradient</title>
+                <default></default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fit" type="checkbox">
+                <title>Fit to area</title>
+                <default>0</default>
+                <helpText>Should the shape scale to fit the element area?</helpText>
             </property>
             <property id="outline" type="checkbox">
                 <title>Show Outline</title>
@@ -840,9 +1511,18 @@ $(target).find('img').xiboImageRender(properties);
     height: 100%;"
 ><svg version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
     <defs>
-        <symbol id="triangle_{{uniqueID}}" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
-            <polygon points="1,99 50,1 99,99"
-                {{#if backgroundColor }}
+        {{{createGradientInSVG gradient uniqueID}}}
+
+        <symbol id="triangle_{{uniqueID}}" viewBox="0 0 100 100" preserveAspectRatio="{{# if fit }}none{{else}}xMidYMid meet{{/if}}">
+            <polygon points="0,100 50,0 100,100"
+                {{# if useGradient }}
+                    {{parseJSON "gb" gradient}}
+                    {{# eq gb.type 'linear'}}
+                        fill="url(#gradLinear_{{uniqueID}})"
+                    {{else}}
+                        fill="url(#gradRadial_{{uniqueID}})"
+                    {{/eq}}
+                {{else if backgroundColor }}
                     fill="{{backgroundColor}}"
                 {{else}}
                     fill="none"
@@ -860,6 +1540,18 @@ $(target).find('img').xiboImageRender(properties);
 </svg></div>
             ]]></hbs>
         </stencil>
+        <onTemplateRender><![CDATA[
+// Calculate points based on outlineWidth
+if(properties.outline == 1) {
+    var outlineDeltaX = properties.outlineWidth / 4;
+    var outlineDeltaY = properties.outlineWidth / 3;
+
+    var calcPoints = outlineDeltaX + ',' + (100 - outlineDeltaY) + ' ' +
+        '50,' + outlineDeltaY + ' ' +
+        (100 - outlineDeltaX) + ',' + (100-outlineDeltaY);
+    $(target).find('.global-elements-triangle svg symbol polygon').attr('points', calcPoints);
+}
+        ]]></onTemplateRender>
         <assets>
             <asset id="triangle-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/triangle.png" />
         </assets>
@@ -877,6 +1569,29 @@ $(target).find('img').xiboImageRender(properties);
             <property id="backgroundColor" type="color">
                 <title>Background Colour</title>
                 <default>#1775F6</default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">0</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="useGradient" type="checkbox">
+                <title>Use gradient as background?</title>
+                <default>0</default>
+            </property>
+            <property id="gradient" type="colorGradient">
+                <title>Gradient</title>
+                <default></default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fit" type="checkbox">
+                <title>Fit to area</title>
+                <default>0</default>
+                <helpText>Should the shape scale to fit the element area?</helpText>
             </property>
             <property id="outline" type="checkbox">
                 <title>Show Outline</title>
@@ -912,9 +1627,18 @@ $(target).find('img').xiboImageRender(properties);
     height: 100%;"
 ><svg version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
     <defs>
-        <symbol id="pentagon_{{uniqueID}}" viewBox="0 0 100 93" preserveAspectRatio="xMidYMid meet">
-            <polygon points="50,1 99,36 83.33,93 16.67,93 1,36"
-                {{#if backgroundColor }}
+        {{{createGradientInSVG gradient uniqueID}}}
+
+        <symbol id="pentagon_{{uniqueID}}" viewBox="0 0 100 100" preserveAspectRatio="{{# if fit }}none{{else}}xMidYMid meet{{/if}}">
+            <polygon points="50,0 100,36 83.33,100 16.67,100 0,36"
+                {{# if useGradient }}
+                    {{parseJSON "gb" gradient}}
+                    {{# eq gb.type 'linear'}}
+                        fill="url(#gradLinear_{{uniqueID}})"
+                    {{else}}
+                        fill="url(#gradRadial_{{uniqueID}})"
+                    {{/eq}}
+                {{else if backgroundColor }}
                     fill="{{backgroundColor}}"
                 {{else}}
                     fill="none"
@@ -931,6 +1655,18 @@ $(target).find('img').xiboImageRender(properties);
 </svg></div>
             ]]></hbs>
         </stencil>
+        <onTemplateRender><![CDATA[
+// Calculate points based on outlineWidth
+if(properties.outline == 1) {
+    var outlineDelta = properties.outlineWidth / 4;
+    var calcPoints = '50,' + outlineDelta + ' ' +
+        (100 - outlineDelta) + ',36 ' +
+        '83.33,' + (100 - outlineDelta) + ' ' +
+        '16.67,' + (100 - outlineDelta) + ' ' +
+        outlineDelta + ',36';
+    $(target).find('.global-elements-pentagon svg symbol polygon').attr('points', calcPoints);
+}
+        ]]></onTemplateRender>
         <assets>
             <asset id="pentagon-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/pentagon.png" />
         </assets>
@@ -948,6 +1684,29 @@ $(target).find('img').xiboImageRender(properties);
             <property id="backgroundColor" type="color">
                 <title>Background Colour</title>
                 <default>#1775F6</default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">0</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="useGradient" type="checkbox">
+                <title>Use gradient as background?</title>
+                <default>0</default>
+            </property>
+            <property id="gradient" type="colorGradient">
+                <title>Gradient</title>
+                <default></default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fit" type="checkbox">
+                <title>Fit to area</title>
+                <default>0</default>
+                <helpText>Should the shape scale to fit the element area?</helpText>
             </property>
             <property id="outline" type="checkbox">
                 <title>Show Outline</title>
@@ -983,9 +1742,18 @@ $(target).find('img').xiboImageRender(properties);
     height: 100%;"
 ><svg version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
     <defs>
-        <symbol id="hexagon_{{uniqueID}}" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
-            <polygon points="50,1 99,24.5 99,73.5 50,99 1,73.5 1,24.5"
-                {{#if backgroundColor }}
+        {{{createGradientInSVG gradient uniqueID}}}
+
+        <symbol id="hexagon_{{uniqueID}}" viewBox="0 0 100 100" preserveAspectRatio="{{# if fit }}none{{else}}xMidYMid meet{{/if}}">
+            <polygon points="50,0 100,24.5 100,73.5 50,100 0,73.5 0,24.5"
+                {{# if useGradient }}
+                    {{parseJSON "gb" gradient}}
+                    {{# eq gb.type 'linear'}}
+                        fill="url(#gradLinear_{{uniqueID}})"
+                    {{else}}
+                        fill="url(#gradRadial_{{uniqueID}})"
+                    {{/eq}}
+                {{else if backgroundColor }}
                     fill="{{backgroundColor}}"
                 {{else}}
                     fill="none"
@@ -1002,8 +1770,147 @@ $(target).find('img').xiboImageRender(properties);
 </svg></div>
             ]]></hbs>
         </stencil>
+        <onTemplateRender><![CDATA[
+// Calculate points based on outlineWidth
+if(properties.outline == 1) {
+    var outlineDelta = properties.outlineWidth / 4;
+    var calcPoints = '50,' + outlineDelta + ' ' +
+        (100 - outlineDelta) + ',24.5 ' +
+        (100 - outlineDelta) + ',73.5 ' +
+        '50,' + (100 - outlineDelta) + ' ' +
+        outlineDelta + ',73.5' + ' ' +
+        outlineDelta + ',24.5';
+    $(target).find('.global-elements-hexagon svg symbol polygon').attr('points', calcPoints);
+}
+        ]]></onTemplateRender>
         <assets>
             <asset id="hexagon-thumb" type="path" mimeType="image/png" path="/modules/assets/template-thumbnails/global/hexagon.png" />
         </assets>
+    </template>
+    <template>
+        <id>placeholder</id>
+        <title>Placeholder</title>
+        <type>element</type>
+        <dataType>global</dataType>
+        <showIn>none</showIn>
+        <isVisible>false</isVisible>
+        <thumbnail>placeholder-thumb</thumbnail>
+        <startWidth>200</startWidth>
+        <startHeight>100</startHeight>
+        <properties>
+            <property id="placeholderType" type="dropdown" mode="single">
+                <title>Placeholder type</title>
+                <helpText>Please select the type of placeholder to use as target.</helpText>
+                <default>all</default>
+                <options>
+                    <option name="all">All</option>
+                    <option name="image">Image</option>
+                    <option name="global">Global</option>
+                </options>
+            </property>
+        </properties>
+        <stencil>
+            <hbs><![CDATA[
+<div data-placeholder-type="{{placeholderType}}">
+<span>Placeholder: {{placeholderType}}</span>
+</div>
+            ]]></hbs>
+            <style><![CDATA[
+div[data-placeholder-type] {
+    color: grey;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+            ]]></style>
+        </stencil>
+        <assets>
+            <asset id="placeholder-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/global/placeholder.png" />
+        </assets>
+    </template>
+    <template>
+        <id>image_placeholder</id>
+        <title>Image Placeholder</title>
+        <canRotate>true</canRotate>
+        <extends override="url">global_image</extends>
+        <type>element</type>
+        <dataType>global</dataType>
+        <showIn>none</showIn>
+        <isVisible>false</isVisible>
+        <startWidth>200</startWidth>
+        <startHeight>100</startHeight>
+        <propertyGroups>
+            <propertyGroup id="placeholderOptions" expanded="true">
+                <title>Placeholder options</title>
+                <helpText></helpText>
+            </propertyGroup>
+        </propertyGroups>
+        <properties>
+            <property id="placeholderMessage" type="text" propertyGroupId="placeholderOptions">
+                <title>Placeholder message</title>
+                <helpText></helpText>
+                <default>Image Placeholder</default>
+            </property>
+            <property id="placeholderMessageColor" type="color" propertyGroupId="placeholderOptions">
+                <title>Placeholder message colour</title>
+                <helpText></helpText>
+                <default>#333</default>
+            </property>
+            <property id="fontFamily" type="fontSelector" propertyGroupId="placeholderOptions">
+                <title>Font Family</title>
+                <helpText>Select a custom font - leave empty to use the default font.</helpText>
+            </property>
+            <property id="fontSize" type="number" propertyGroupId="placeholderOptions">
+                <title>Font Size</title>
+                <default>22</default>
+            </property>
+            <property id="placeholderBackgroundColor" type="color" propertyGroupId="placeholderOptions">
+                <title>Placeholder background colour</title>
+                <helpText></helpText>
+                <default>#f9f9f9</default>
+            </property>
+        </properties>
+        <stencil>
+            <hbs><![CDATA[
+<div class="global-elements-image img-container" style="width:100%; height: 100%; position: relative;">
+    <img src="" style="
+        width:100%; height: 100%;
+        object-fit: {{objectFit}};
+        object-position: {{alignId}} {{valignId}};
+        opacity: {{opacity}}%;
+        position: absolute; top: 0; left: 0;
+        {{#if imageShadow}}
+            filter: drop-shadow({{shadowX}}px {{shadowY}}px {{shadowBlur}}px {{imageShadowColor}});
+        {{/if}}
+        {{#if roundBorder}}border-radius: {{borderRadius}}px;{{/if}}
+        background-color: {{placeholderBackgroundColor}};
+        "
+    />
+    <div data-placeholder-type="image">
+        <span style="color: {{placeholderMessageColor}};
+        {{#if fontFamily}}font-family: {{fontFamily}};{{/if}}
+        {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
+        ">
+            {{placeholderMessage}}</span>
+    </div>
+</div>
+            ]]></hbs>
+            <style><![CDATA[
+div[data-placeholder-type] {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    z-index: 2;
+}
+            ]]></style>
+        </stencil>
+        <onTemplateRender><![CDATA[
+$(target).find('img').xiboImageRender(properties);
+        ]]></onTemplateRender>
     </template>
 </templates>

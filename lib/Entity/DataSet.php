@@ -113,6 +113,19 @@ class DataSet implements \JsonSerializable
     public $isRemote = 0;
 
     /**
+     * @SWG\Property(description="Flag to indicate whether this DataSet is Real time")
+     * @var int
+     */
+    public $isRealTime = 0;
+
+    /**
+     * @SWG\Property(description="Indicates the source of the data connector. Requires the Real time flag. Can be null,
+     * user-defined, or a connector.")
+     * @var string
+     */
+    public $dataConnectorSource;
+
+    /**
      * @SWG\Property(description="Method to fetch the Data, can be GET or POST")
      * @var string
      */
@@ -467,10 +480,11 @@ class DataSet implements \JsonSerializable
      * Get DataSet Data
      * @param array $filterBy
      * @param array $options
+     * @param array $extraParams Extra params to apply to the final query
      * @return array
      * @throws NotFoundException
      */
-    public function getData($filterBy = [], $options = [])
+    public function getData($filterBy = [], $options = [], $extraParams = [])
     {
         $sanitizer = $this->getSanitizer($filterBy);
 
@@ -486,8 +500,84 @@ class DataSet implements \JsonSerializable
             'connection' => 'default'
         ], $options);
 
-        // Params
-        $params = [];
+        // Params (start from extraParams supplied)
+        $params = $extraParams;
+
+        // Fetch display tag value/s
+        if ($filter != '' && $displayId != 0) {
+            // Define the regular expression to match [Tag:...]
+            $pattern = '/\[Tag:[^]]+\]/';
+
+            // Find all instances of [Tag:...]
+            preg_match_all($pattern, $filter, $matches);
+
+            // Check if matches were found
+            if (!empty($matches[0])) {
+                $displayTags = [];
+
+                // Iterate through the matches and process each tag
+                foreach ($matches[0] as $tagString) {
+                    // Remove the enclosing [Tag:] brackets
+                    $tagContent = substr($tagString, 5, -1);
+
+                    // Explode the tag content by ":" to separate tagName and defaultValue (if present)
+                    $parts = explode(':', $tagContent);
+                    $tagName = $parts[0];
+                    $defaultTagValue = $parts[1] ?? '';
+
+                    $displayTags[] = [
+                        'tagString' => $tagString,
+                        'tagName' => $tagName,
+                        'defaultValue' => $defaultTagValue
+                    ];
+                }
+
+                $tagCount = 1;
+
+                // Loop through each tag and get the actual tag value from the database
+                foreach ($displayTags as $tag) {
+                    $tagSanitizer = $this->getSanitizer($tag);
+
+                    $tagName = $tagSanitizer->getString('tagName');
+                    $defaultTagValue = $tagSanitizer->getString('defaultValue');
+                    $tagString = $tag['tagString'];
+
+                    $query = 'SELECT `lktagdisplaygroup`.`value` AS tagValue
+                                FROM `lkdisplaydg`
+                                INNER JOIN `displaygroup` 
+                                    ON `displaygroup`.displayGroupId = `lkdisplaydg`.displayGroupId 
+                                    AND `displaygroup`.isDisplaySpecific = 1
+                                INNER JOIN `lktagdisplaygroup` 
+                                    ON `lktagdisplaygroup`.displayGroupId = `lkdisplaydg`.displayGroupId
+                                INNER JOIN `tag` ON `lktagdisplaygroup`.tagId = `tag`.tagId
+                                WHERE `lkdisplaydg`.displayId = :displayId
+                                    AND `tag`.`tag` = :tagName
+                                LIMIT 1';
+
+                    $tagParams = [
+                        'displayId' => $displayId,
+                        'tagName' => $tagName
+                    ];
+
+                    // Execute the query
+                    $results = $this->getStore()->select($query, $tagParams);
+
+                    // Determine the tag value
+                    if (!empty($results)) {
+                        $tagValue = !empty($results[0]['tagValue']) ? $results[0]['tagValue'] : '';
+                    } else {
+                        // Use default tag value if no tag is found
+                        $tagValue = $defaultTagValue;
+                    }
+
+                    // Replace the tag string in the filter with the actual tag value or default value
+                    $filter = str_replace($tagString, ':tagValue_'.$tagCount, $filter);
+                    $params['tagValue_'.$tagCount] = $tagValue;
+
+                    $tagCount++;
+                }
+            }
+        }
 
         // Sanitize the filter options provided
         // Get the Latitude and Longitude ( might be used in a formula )
@@ -526,11 +616,21 @@ class DataSet implements \JsonSerializable
                     continue;
                 }
 
+                $count = 0;
                 $formula = str_ireplace(
                     Sql::DISALLOWED_KEYWORDS,
                     '',
-                    htmlspecialchars_decode($column->formula, ENT_QUOTES)
+                    htmlspecialchars_decode($column->formula, ENT_QUOTES),
+                    $count
                 );
+
+                if ($count > 0) {
+                    $this->getLog()->error(
+                        'Formula contains disallowed keywords on DataSet ID ' . $this->dataSetId
+                    );
+                    continue;
+                }
+
                 $formula = str_replace('[DisplayId]', $displayId, $formula);
 
                 $heading = str_replace('[DisplayGeoLocation]', $displayGeoLocation, $formula)
@@ -953,6 +1053,17 @@ class DataSet implements \JsonSerializable
             throw new InvalidArgumentException(__('Cannot delete because DataSet is in use on one or more Layouts.'), 'dataSetId');
         }
 
+        if ($this->getStore()->exists('
+            SELECT `eventId` 
+              FROM `schedule`
+              WHERE `dataSetId` = :dataSetId
+        ', ['dataSetId' => $this->dataSetId])) {
+            throw new InvalidArgumentException(
+                __('Cannot delete because DataSet is in use on one or more Data Connector schedules.'),
+                'dataSetId'
+            );
+        }
+
         // Delete Permissions
         foreach ($this->permissions as $permission) {
             /* @var Permission $permission */
@@ -990,8 +1101,10 @@ class DataSet implements \JsonSerializable
      */
     private function add()
     {
-        $columns = 'DataSet, Description, UserID, `code`, `isLookup`, `isRemote`, `lastDataEdit`, `lastClear`, `folderId`, `permissionsFolderId`';
-        $values = ':dataSet, :description, :userId, :code, :isLookup, :isRemote, :lastDataEdit, :lastClear, :folderId, :permissionsFolderId';
+        $columns = 'DataSet, Description, UserID, `code`, `isLookup`, `isRemote`, `lastDataEdit`,';
+        $columns .= '`lastClear`, `folderId`, `permissionsFolderId`, `isRealTime`, `dataConnectorSource`';
+        $values = ':dataSet, :description, :userId, :code, :isLookup, :isRemote,';
+        $values .= ':lastDataEdit, :lastClear, :folderId, :permissionsFolderId, :isRealTime, :dataConnectorSource';
 
         $params = [
             'dataSet' => $this->dataSet,
@@ -1000,10 +1113,12 @@ class DataSet implements \JsonSerializable
             'code' => ($this->code == '') ? null : $this->code,
             'isLookup' => $this->isLookup,
             'isRemote' => $this->isRemote,
+            'isRealTime' => $this->isRealTime,
+            'dataConnectorSource' => $this->dataConnectorSource,
             'lastDataEdit' => 0,
             'lastClear' => 0,
             'folderId' => ($this->folderId === null) ? 1 : $this->folderId,
-            'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this-> permissionsFolderId
+            'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this-> permissionsFolderId,
         ];
 
         // Insert the extra columns we expect for a remote DataSet
@@ -1046,7 +1161,19 @@ class DataSet implements \JsonSerializable
      */
     private function edit()
     {
-        $sql = 'DataSet = :dataSet, Description = :description, userId = :userId, lastDataEdit = :lastDataEdit, `code` = :code, `isLookup` = :isLookup, `isRemote` = :isRemote, `folderId` = :folderId, `permissionsFolderId` = :permissionsFolderId ';
+        $sql = '
+            `DataSet` = :dataSet,
+            `Description` = :description,
+            `userId` = :userId, 
+            `lastDataEdit` = :lastDataEdit, 
+            `code` = :code, 
+            `isLookup` = :isLookup, 
+            `isRemote` = :isRemote, 
+            `isRealTime` = :isRealTime, 
+            `dataConnectorSource` = :dataConnectorSource, 
+            `folderId` = :folderId, 
+            `permissionsFolderId` = :permissionsFolderId 
+        ';
         $params = [
             'dataSetId' => $this->dataSetId,
             'dataSet' => $this->dataSet,
@@ -1056,6 +1183,8 @@ class DataSet implements \JsonSerializable
             'code' => $this->code,
             'isLookup' => $this->isLookup,
             'isRemote' => $this->isRemote,
+            'isRealTime' => $this->isRealTime,
+            'dataConnectorSource' => $this->dataConnectorSource,
             'folderId' => $this->folderId,
             'permissionsFolderId' => $this->permissionsFolderId
         ];
@@ -1151,15 +1280,22 @@ class DataSet implements \JsonSerializable
         $this->lastDataEdit = Carbon::now()->format('U');
 
         // Build a query to insert
+        $params = [];
         $keys = array_keys($row);
-        $keys[] = 'id';
 
-        $values = array_values($row);
-        $values[] = NULL;
+        $sql = 'INSERT INTO `dataset_' . $this->dataSetId
+            . '` (`' . implode('`, `', $keys) . '`) VALUES (';
 
-        $sql = 'INSERT INTO `dataset_' . $this->dataSetId . '` (`' . implode('`, `', $keys) . '`) VALUES (' . implode(',', array_fill(0, count($values), '?')) . ')';
+        $i = 0;
+        foreach ($row as $value) {
+            $i++;
+            $sql .= ':value' . $i . ',';
+            $params['value' . $i] = $value;
+        }
+        $sql = rtrim($sql, ',');
+        $sql .= ')';
 
-        return $this->getStore()->insert($sql, $values);
+        return $this->getStore()->insert($sql, $params);
     }
 
     /**
@@ -1226,5 +1362,33 @@ class DataSet implements \JsonSerializable
     {
         $this->getLog()->debug('Force sync detected, clear cache for remote dataSet ID ' . $this->dataSetId);
         $this->pool->deleteItem('/dataset/cache/' . $this->dataSetId);
+    }
+
+    private function getScriptPath(): string
+    {
+        return $this->config->getSetting('LIBRARY_LOCATION')
+            . 'data_connectors' . DIRECTORY_SEPARATOR
+            . 'dataSet_' . $this->dataSetId . '.js';
+    }
+
+    public function getScript(): string
+    {
+        if ($this->isRealTime == 0) {
+            return '';
+        }
+
+        $path = $this->getScriptPath();
+        return (file_exists($path))
+            ? file_get_contents($path)
+            : '';
+    }
+
+    public function saveScript(string $script): void
+    {
+        if ($this->isRealTime == 1) {
+            $path = $this->getScriptPath();
+            file_put_contents($path, $script);
+            file_put_contents($path . '.md5', md5_file($path));
+        }
     }
 }

@@ -109,7 +109,7 @@ Canvas.prototype.changeLayer = function(newLayer, saveToHistory = true) {
       },
     ).catch((error) => {
       toastr.error(errorMessagesTrans.transformRegionFailed);
-      console.log(error);
+      console.error(error);
     });
   }
 

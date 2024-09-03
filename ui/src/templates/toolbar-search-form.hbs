@@ -7,7 +7,9 @@
                     {{#if this.locked}}
                         <option value="{{this.value}}" selected>{{this.value}}</option>
                     {{else}}
-                        <option value=""></option>
+                        {{#unless hideDefault}}
+                            <option value=""></option>
+                        {{/unless}}
 
                         {{#each this.values}}
                             <option value="{{type}}" class="{{#if disabled}}disabled{{/if}}" {{#eq ../this.value type}}selected{{/eq}}>{{name}}</option>
@@ -16,7 +18,7 @@
                 </select>
             </div>
         {{else eq @key "owner"}}
-            <div class="form-group">
+            <div class="form-group {{#if this.locked}}hidden{{/if}}">
                 <label for="input-owner" class="mb-0">{{../trans.searchFilters.owner}}</label>
                 <select id="input-owner" name="ownerId" class="form-control mr-1 input-owner"
                     {{#if searchUrl}}data-search-url="{{searchUrl}}"{{/if}}
@@ -25,29 +27,78 @@
                     data-allow-clear="true"
                     data-placeholder--id= "null"
                     data-placeholder--value= ""
-                    data-text-property="userName">
+                    data-text-property="userName"
+                    data-initial-key="userId"
+                    data-initial-value="{{this.value}}">
+                    {{#if this.locked}}
+                        <option value="{{this.value}}" selected>{{this.value}}</option>
+                    {{/if}}
+                </select>
+            </div>
+        {{else eq @key "folder"}}
+            <div class="form-group {{#if this.locked}}hidden{{/if}}">
+                <label for="input-folder" class="mb-0">{{../trans.searchFilters.folder}}</label>
+                <select id="input-folder" name="folderId" class="form-control mr-1 input-folder"
+                    {{#if searchUrl}}data-search-url="{{searchUrl}}"{{/if}}
+                    data-id-property="folderId"
+                    data-search-term="folderName"
+                    data-allow-clear="true"
+                    data-placeholder--id= "null"
+                    data-placeholder--value= ""
+                    data-text-property="folderName"
+                    data-initial-key="folderId"
+                    data-initial-value="{{this.value}}">
+                    {{#if this.locked}}
+                        <option value="{{this.value}}" selected>{{this.value}}</option>
+                    {{/if}}
+                </select>
+            </div>
+        {{else eq @key "user"}}
+            <div class="form-group {{#if this.locked}}hidden{{/if}}">
+                <label for="input-user" class="mb-0">{{../trans.searchFilters.user}}</label>
+                <select id="input-user" name="userId" class="form-control mr-1 input-user"
+                    {{#if searchUrl}}data-search-url="{{searchUrl}}"{{/if}}
+                    data-id-property="userId"
+                    data-search-term="userName"
+                    data-allow-clear="true"
+                    data-placeholder--id= "null"
+                    data-placeholder--value= ""
+                    data-text-property="userName"
+                    data-initial-key="userId"
+                    data-initial-value="{{this.value}}">
+                    {{#if this.locked}}
+                        <option value="{{this.value}}" selected>{{this.value}}</option>
+                    {{/if}}
                 </select>
             </div>
         {{else eq @key "orientation"}}
-            <div class="form-group">
+            <div class="form-group {{#if this.locked}}hidden{{/if}}">
                 <label for="input-orientation" class="mb-0">{{../trans.searchFilters.orientation}}</label>
                 <select id="input-orientation" name="orientation" class="form-control mr-1 input-orientation">
-                    <option value="" {{#eq this.value ""}}selected{{/eq}}>{{ ../trans.orientationValues.all}}</option>
-                    <option value="landscape" {{#eq this.value "landscape"}}selected{{/eq}}>{{ ../trans.orientationValues.landscape}}</option>
-                    <option value="portrait" {{#eq this.value "portrait"}}selected{{/eq}}>{{ ../trans.orientationValues.portrait}}</option>
+                    {{#if this.locked}}
+                        <option value="{{this.value}}" selected>{{this.value}}</option>
+                    {{else}}
+                        <option value="" {{#eq this.value ""}}selected{{/eq}}>{{ ../trans.orientationValues.all}}</option>
+                        <option value="landscape" {{#eq this.value "landscape"}}selected{{/eq}}>{{ ../trans.orientationValues.landscape}}</option>
+                        <option value="portrait" {{#eq this.value "portrait"}}selected{{/eq}}>{{ ../trans.orientationValues.portrait}}</option>
+                    {{/if}}
                 </select>
             </div>
         {{else eq @key "provider"}}
-            <div class="form-group">
+            <div class="form-group {{#if this.locked}}hidden{{/if}}">
                 <label for="input-provider" class="mb-0">{{../trans.searchFilters.provider}}</label>
                 <select id="input-provider" name="provider" class="form-control mr-1 input-provider">
-                    <option value="both" {{#eq this.value "both"}}selected{{/eq}}>{{ ../trans.providerValues.both}}</option>
-                    <option value="local" {{#eq this.value "local"}}selected{{/eq}}>{{ ../trans.providerValues.local}}</option>
-                    <option value="remote" {{#eq this.value "remote"}}selected{{/eq}}>{{ ../trans.providerValues.remote}}</option>
+                    {{#if this.locked}}
+                        <option value="{{this.value}}" selected>{{this.value}}</option>
+                    {{else}}
+                        <option value="both" {{#eq this.value "both"}}selected{{/eq}}>{{ ../trans.providerValues.both}}</option>
+                        <option value="local" {{#eq this.value "local"}}selected{{/eq}}>{{ ../trans.providerValues.local}}</option>
+                        <option value="remote" {{#eq this.value "remote"}}selected{{/eq}}>{{ ../trans.providerValues.remote}}</option>
+                    {{/if}}
                 </select>
             </div>
         {{else}}
-            <div class="form-group">
+            <div class="form-group {{#if this.locked}}hidden{{/if}}">
                 <label for="input-{{@key}}" class="mb-0">{{#if title}}{{title}}{{else}}{{lookup ../trans.searchFilters @key}}{{/if}}</label>
                 <input id="input-{{@key}}" name="{{#if key}}{{key}}{{else}}{{@key}}{{/if}}" type="text"
                     value="{{this.value}}" class="form-control mr-1 input-{{@key}}"
@@ -59,7 +110,7 @@
     {{/each}}
 
     {{#if showSort}}
-        <div class="form-group sort-form-group">
+        <div class="form-group sort-form-group {{#if this.locked}}hidden{{/if}}">
             <label for="input-sort" class="mb-0">{{trans.searchSortBy}}</label>
             <div class="{{#if sortCol}}input-group{{/if}} input-group-toggle">
                 <select id="input-sort" class="form-control input-sort">

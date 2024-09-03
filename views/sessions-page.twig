@@ -25,6 +25,22 @@
 
 {% block title %}{{ "Sessions"|trans }} | {% endblock %}
 
+{% block actionMenu %}
+    <div class="widget-action-menu pull-right">
+        {% if currentUser.featureEnabled("schedule.add") %}
+            {% if currentUser.featureEnabled("schedule.sync") %}
+                <button class="btn btn-white XiboFormButton btns" title="{% trans "Add a new Sync event" %}"
+                        href="{{ url_for("schedule.add.sync.form") }}"><span
+                            class="fa fa-plus"></span> {% trans "Add Synchronised Event" %}</button>
+            {% endif %}
+            <button class="btn btn-success XiboFormButton btns" title="{% trans "Add a new Scheduled event" %}"
+                    href="{{ url_for("schedule.add.form") }}"><span class="fa fa-plus"></span> {% trans "Add Event" %}
+            </button>
+        {% endif %}
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
+    </div>
+{% endblock %}
+
 {% block pageContent %}
     <div class="widget">
         <div class="widget-title">{% trans "Sessions" %}</div>
@@ -75,7 +91,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         $(document).ready(function() {
             var table = $("#sessions").DataTable({
                 "language": dataTablesLanguage,
@@ -113,6 +129,10 @@
             table.on('draw', dataTableDraw);
             table.on('processing.dt', dataTableProcessing);
             dataTableAddButtons(table, $('#sessions_wrapper').find('.dataTables_buttons'));
+
+            $("#refreshGrid").click(function () {
+                table.ajax.reload();
+            });
         });
     </script>
 {% endblock %}

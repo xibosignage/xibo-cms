@@ -75,6 +75,18 @@
                         {% set title %}{% trans "Remote?" %}{% endset %}
                         {% set helpText %}{% trans "Is this DataSet connected to a remote data source?" %}{% endset %}
                         {{ forms.checkbox("isRemote", title, 0, helpText) }}
+
+                        {% if currentUser.featureEnabled("dataset.realtime") %}
+                            {% set title %}{% trans "Real time?" %}{% endset %}
+                            {% set helpText %}{% trans "Is this DataSet connected to a real time data source?" %}{% endset %}
+                            {{ forms.checkbox("isRealTime", title, 0, helpText) }}
+                        {% endif %}
+
+                        <div class="d-none" id="dataSourceField">
+                            {% set title %}{% trans "Data Connector Source" %}{% endset %}
+                            {% set helpText %}{% trans "Select data connector source." %}{% endset %}
+                            {{ forms.dropdown("dataConnectorSource", "single", title, "", dataConnectorSources, "id", "name", helpText) }}
+                        </div>
                     </div>
 
                     <div class="tab-pane" id="gateway">

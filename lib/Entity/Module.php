@@ -105,6 +105,12 @@ class Module implements \JsonSerializable
     public $dataCacheKey;
 
     /**
+     * @SWG\Property(description="Is fallback data allowed for this module? Only applicable for a Data Widget")
+     * @var int
+     */
+    public $fallbackData;
+
+    /**
      * @SWG\Property(description="Is specific to a Layout or can be uploaded to the Library?")
      * @var int
      */
@@ -284,6 +290,7 @@ class Module implements \JsonSerializable
     public $errors;
 
     // </editor-fold>
+    public $allowPreview;
 
     /** @var ModuleFactory */
     private $moduleFactory;

@@ -118,9 +118,11 @@
     "popper.js": "^1.16.1",
     "select2": "4.1.0-rc.0",
     "select2-bootstrap-theme": "0.1.0-beta.10",
+    "selecto": "^1.26.3",
     "serialize-javascript": "^3.1.0",
     "toastr": "~2.1.4",
     "underscore": "^1.12.1",
-    "xibo-interactive-control": "git+https://github.com/xibosignage/xibo-interactive-control.git#44ad744a5a2a0af9e7fcdb828dbdbeff45cc40f0"
+    "xibo-interactive-control": "git+https://github.com/xibosignage/xibo-interactive-control.git#44ad744a5a2a0af9e7fcdb828dbdbeff45cc40f0",
+    "xibo-layout-renderer": "git+https://github.com/xibosignage/xibo-layout-renderer.git#73b357402c5c483befa868889ce710698c34ffb3"
   }
 }

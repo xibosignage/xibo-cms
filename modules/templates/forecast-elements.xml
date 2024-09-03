@@ -31,6 +31,17 @@
         <startHeight>100</startHeight>
     </template>
     <template>
+        <id>weather_location</id>
+        <extends override="text" with="data.location">text</extends>
+        <title>Location</title>
+        <type>element</type>
+        <dataType>forecast</dataType>
+        <canRotate>true</canRotate>
+        <icon>fa fa-map</icon>
+        <startWidth>360</startWidth>
+        <startHeight>100</startHeight>
+    </template>
+    <template>
         <id>weather_temperature</id>
         <extends override="text" with="data.temperatureRound" escapeHtml="false">text</extends>
         <title>Temperature</title>
@@ -151,6 +162,16 @@ return value + '%';
             <property id="fontSize" type="number">
                 <title>Font Size</title>
                 <default>40</default>
+                <visibility>
+                    <test>
+                        <condition field="fitToArea" type="neq">1</condition>
+                    </test>
+                </visibility>
+            </property>
+            <property id="fitToArea" type="checkbox">
+                <title>Fit to selection</title>
+                <helpText>Fit to selected area instead of using the font size?</helpText>
+                <default>0</default>
             </property>
         </properties>
         <stencil>
@@ -165,6 +186,18 @@ return value + '%';
     "></i>
 </div>
         ]]></hbs>
+        <onTemplateRender><![CDATA[
+if (properties.fitToArea) {
+    // Set target for the text
+    properties.fitTarget = 'i.wi';
+
+    // Set target for the text
+    properties.isIcon = true;
+
+    // Scale text to container
+    $(target).find('.forecast-elements-weather-icon').xiboTextScaler(properties);
+}
+        ]]></onTemplateRender>
         </stencil>
         <assets>
             <asset id="weather-icons" type="path" mimeType="text/css" path="/modules/assets/forecastio/weather-icons.min.css"></asset>
@@ -260,11 +293,19 @@ if (meta && meta.hasOwnProperty('Attribution')) {
     var $childElem = $(target).is('.' + id + '--item') ? '> div:first-child' : '.global-elements-text > div:first-child';
     $(target).find($childElem).html(meta.Attribution);
 }
+
+if(properties.fitToArea) {
+    // Set target for the text
+    properties.fitTarget = 'div';
+
+    // Scale text to container
+    $(target).find('.global-elements-text').xiboTextScaler(properties);
+}
         ]]></onTemplateRender>
     </template>
     <template>
         <id>weather_condition_background_image</id>
-        <title>Background Image</title>
+        <title>Image</title>
         <type>element</type>
         <dataType>forecast</dataType>
         <canRotate>true</canRotate>
@@ -327,7 +368,7 @@ if (meta && meta.hasOwnProperty('Attribution')) {
                 </visibility>
             </property>
             <property type="header" variant="main">
-                <title>Backgrounds</title>
+                <title>Images</title>
                 <visibility>
                     <test>
                         <condition field="backgroundImage" type="neq">none</condition>
@@ -335,7 +376,7 @@ if (meta && meta.hasOwnProperty('Attribution')) {
                 </visibility>
             </property>
             <property type="message">
-                <title>Select images from the media library to replace the default weather backgrounds.</title>
+                <title>Select images from the media library to replace the default weather images.</title>
             </property>
             <property id="cloudyImage" type="mediaSelector">
                 <title>Cloudy</title>
@@ -376,7 +417,7 @@ if (meta && meta.hasOwnProperty('Attribution')) {
 <div class="global-elements-image img-container forecast-elements-background-image weather-bg--{{data.icon}}"
     style="width:100%; height: 100%; overflow: hidden; position: relative;">
     {{set 'bgImg' (weatherBackgroundImage data.icon cloudyImage dayCloudyImage dayClearImage fogImage hailImage nightClearImage nightPartlyCloudyImage rainImage snowImage windImage)}}
-    <img src="{{#if @root.bgImg}}/library/download/{{@root.bgImg}}?preview=1{{else}}[[assetId={{iconPrefix}}{{data.icon}}]]{{/if}}"
+    <img src="{{#if @root.bgImg}}{{@root.bgImg}}{{else}}[[assetId={{iconPrefix}}{{data.icon}}]]{{/if}}"
         style="width:100%; height: 100%;
         object-fit: {{objectFit}};
         object-position: {{alignId}} {{valignId}};
@@ -435,14 +476,315 @@ $(target).find('.date').each(function(_idx, dateEl){
 
     // Set the date div value to the formatted date
     $(dateEl).html(formattedDate);
+
+    if (properties.fitToArea) {
+        // Set target for the text
+        properties.fitTarget = '.date';
+
+        // Scale text to container
+        $(target).find('.global-elements-date').xiboTextScaler(properties);
+    }
 });
         ]]></onTemplateRender>
+    </template>
+    <template>
+        <id>weather_group_1</id>
+        <type>element-group</type>
+        <dataType>forecast</dataType>
+        <title>Forecast 1</title>
+        <thumbnail>forecast-group-1</thumbnail>
+        <stencil>
+            <hbs></hbs>
+            <startWidth>940</startWidth>
+            <startHeight>400</startHeight>
+            <elementGroups>
+                <elementGroup id="group_0">
+                    <title>Group 0</title>
+                    <top>0</top>
+                    <left>0</left>
+                    <layer>0</layer>
+                    <width>940</width>
+                    <height>400</height>
+                    <slot>0</slot>
+                    <pinSlot>1</pinSlot>
+                </elementGroup>
+                <elementGroup id="group_1">
+                    <title>Group 1</title>
+                    <top>25</top>
+                    <left>20</left>
+                    <layer>0</layer>
+                    <width>300</width>
+                    <height>350</height>
+                    <slot>0</slot>
+                    <pinSlot>1</pinSlot>
+                </elementGroup>
+                <elementGroup id="group_2">
+                    <title>Group 2</title>
+                    <top>120</top>
+                    <left>320</left>
+                    <layer>2</layer>
+                    <width>200</width>
+                    <height>160</height>
+                    <slot>1</slot>
+                    <pinSlot>1</pinSlot>
+                </elementGroup>
+                <elementGroup id="group_3">
+                    <title>Group 3</title>
+                    <top>120</top>
+                    <left>520</left>
+                    <layer>2</layer>
+                    <width>200</width>
+                    <height>160</height>
+                    <slot>2</slot>
+                    <pinSlot>1</pinSlot>
+                </elementGroup>
+                <elementGroup id="group_4">
+                    <title>Group 4</title>
+                    <top>120</top>
+                    <left>720</left>
+                    <layer>2</layer>
+                    <width>200</width>
+                    <height>160</height>
+                    <slot>3</slot>
+                    <pinSlot>1</pinSlot>
+                </elementGroup>
+            </elementGroups>
+            <elements>
+                <element id="rectangle" elementGroupId="group_0">
+                    <title>Background</title>
+                    <top>100</top>
+                    <left>0</left>
+                    <layer>1</layer>
+                    <width>940</width>
+                    <height>200</height>
+                    <defaultProperties>
+                        <property id="backgroundColor">rgba(84,103,228,0.8)</property>
+                        <property id="outline">0</property>
+                        <property id="roundBorder">1</property>
+                        <property id="borderRadius">24</property>
+                    </defaultProperties>
+                </element>
+                <element id="rectangle" elementGroupId="group_0">
+                    <title>Day 1 Background</title>
+                    <top>0</top>
+                    <left>20</left>
+                    <layer>0</layer>
+                    <width>300</width>
+                    <height>400</height>
+                    <defaultProperties>
+                        <property id="backgroundColor">rgba(0,0,0,0.7)</property>
+                        <property id="roundBorder">1</property>
+                        <property id="borderRadius">24</property>
+                        <property id="outline">0</property>
+                    </defaultProperties>
+                </element>
+                <element id="weather_date" elementGroupId="group_1">
+                    <title>Date</title>
+                    <top>0</top>
+                    <left>0</left>
+                    <layer>2</layer>
+                    <width>300</width>
+                    <height>55</height>
+                    <defaultProperties>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">60</property>
+                        <property id="bold">1</property>
+                        <property id="lineHeight">1</property>
+                        <property id="verticalAlign">flex-start</property>
+                    </defaultProperties>
+                </element>
+                <element id="weather_icon" elementGroupId="group_1">
+                    <title>Icon</title>
+                    <top>100</top>
+                    <left>0</left>
+                    <layer>2</layer>
+                    <width>300</width>
+                    <height>80</height>
+                    <defaultProperties>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">66</property>
+                    </defaultProperties>
+                </element>
+                <element id="weather_temperature" elementGroupId="group_1">
+                    <title>Temperature</title>
+                    <top>175</top>
+                    <left>0</left>
+                    <layer>2</layer>
+                    <width>300</width>
+                    <height>80</height>
+                    <defaultProperties>
+                        <property id="fontFamily">aileron regular</property>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">60</property>
+                        <property id="bold">1</property>
+                        <property id="lineHeight">0.8</property>
+                        <property id="verticalAlign">flex-end</property>
+                    </defaultProperties>
+                </element>
+                <element id="weather_summary" elementGroupId="group_1">
+                    <title>Summary</title>
+                    <top>295</top>
+                    <left>0</left>
+                    <layer>2</layer>
+                    <width>300</width>
+                    <height>30</height>
+                    <defaultProperties>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">32</property>
+                        <property id="bold">1</property>
+                        <property id="lineHeight">0.8</property>
+                        <property id="verticalAlign">flex-start</property>
+                    </defaultProperties>
+                </element>
+                <element id="weather_attribution" elementGroupId="group_1">
+                    <title>Attribution</title>
+                    <top>325</top>
+                    <left>0</left>
+                    <layer>2</layer>
+                    <width>300</width>
+                    <height>25</height>
+                    <defaultProperties>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">16</property>
+                    </defaultProperties>
+                </element>
+                <element id="weather_date" elementGroupId="group_2">
+                    <title>Date</title>
+                    <top>0</top>
+                    <left>0</left>
+                    <layer>2</layer>
+                    <width>200</width>
+                    <height>50</height>
+                    <defaultProperties>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">32</property>
+                        <property id="lineHeight">1</property>
+                        <property id="verticalAlign">flex-start</property>
+                    </defaultProperties>
+                </element>
+                <element id="weather_icon" elementGroupId="group_2">
+                    <title>Icon</title>
+                    <top>50</top>
+                    <left>0</left>
+                    <layer>2</layer>
+                    <width>200</width>
+                    <height>50</height>
+                    <defaultProperties>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">40</property>
+                    </defaultProperties>
+                </element>
+                <element id="weather_temperature" elementGroupId="group_2">
+                    <title>Temperature</title>
+                    <top>100</top>
+                    <left>0</left>
+                    <layer>2</layer>
+                    <width>200</width>
+                    <height>60</height>
+                    <defaultProperties>
+                        <property id="fontFamily">aileron regular</property>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">40</property>
+                        <property id="bold">1</property>
+                        <property id="lineHeight">1</property>
+                        <property id="verticalAlign">flex-end</property>
+                    </defaultProperties>
+                </element>
+                <element id="weather_date" elementGroupId="group_3">
+                    <title>Date</title>
+                    <top>0</top>
+                    <left>0</left>
+                    <layer>2</layer>
+                    <width>200</width>
+                    <height>50</height>
+                    <defaultProperties>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">32</property>
+                        <property id="lineHeight">1</property>
+                        <property id="verticalAlign">flex-start</property>
+                    </defaultProperties>
+                </element>
+                <element id="weather_icon" elementGroupId="group_3">
+                    <title>Icon</title>
+                    <top>50</top>
+                    <left>0</left>
+                    <layer>2</layer>
+                    <width>200</width>
+                    <height>50</height>
+                    <defaultProperties>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">40</property>
+                    </defaultProperties>
+                </element>
+                <element id="weather_temperature" elementGroupId="group_3">
+                    <title>Temperature</title>
+                    <top>100</top>
+                    <left>0</left>
+                    <layer>2</layer>
+                    <width>200</width>
+                    <height>60</height>
+                    <defaultProperties>
+                        <property id="fontFamily">aileron regular</property>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">40</property>
+                        <property id="bold">1</property>
+                        <property id="lineHeight">1</property>
+                        <property id="verticalAlign">flex-end</property>
+                    </defaultProperties>
+                </element>
+                <element id="weather_date" elementGroupId="group_4">
+                    <title>Date</title>
+                    <top>0</top>
+                    <left>0</left>
+                    <layer>2</layer>
+                    <width>200</width>
+                    <height>50</height>
+                    <defaultProperties>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">32</property>
+                        <property id="lineHeight">1</property>
+                        <property id="verticalAlign">flex-start</property>
+                    </defaultProperties>
+                </element>
+                <element id="weather_icon" elementGroupId="group_4">
+                    <title>Icon</title>
+                    <top>50</top>
+                    <left>0</left>
+                    <layer>2</layer>
+                    <width>200</width>
+                    <height>50</height>
+                    <defaultProperties>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">40</property>
+                    </defaultProperties>
+                </element>
+                <element id="weather_temperature" elementGroupId="group_4">
+                    <title>Temperature</title>
+                    <top>100</top>
+                    <left>0</left>
+                    <layer>2</layer>
+                    <width>200</width>
+                    <height>60</height>
+                    <defaultProperties>
+                        <property id="fontFamily">aileron regular</property>
+                        <property id="fontColor">#f9f9f9</property>
+                        <property id="fontSize">40</property>
+                        <property id="bold">1</property>
+                        <property id="lineHeight">1</property>
+                        <property id="verticalAlign">flex-end</property>
+                    </defaultProperties>
+                </element>
+            </elements>
+        </stencil>
+        <assets>
+            <asset id="forecast-group-1" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/forecast-group-1.png" />
+        </assets>
     </template>
     <template>
         <id>weather_current_1</id>
         <type>element-group</type>
         <dataType>forecast</dataType>
-        <title>Weather 1</title>
+        <title>Daily 1</title>
         <thumbnail>forecast-current-1</thumbnail>
         <stencil>
             <hbs></hbs>
@@ -562,7 +904,7 @@ $(target).find('.date').each(function(_idx, dateEl){
         <id>weather_current_2</id>
         <type>element-group</type>
         <dataType>forecast</dataType>
-        <title>Weather 2</title>
+        <title>Daily 2</title>
         <thumbnail>forecast-current-2</thumbnail>
         <stencil>
             <hbs></hbs>
@@ -644,7 +986,7 @@ $(target).find('.date').each(function(_idx, dateEl){
         <id>weather_current_3</id>
         <type>element-group</type>
         <dataType>forecast</dataType>
-        <title>Weather 3</title>
+        <title>Daily 3</title>
         <thumbnail>forecast-current-3</thumbnail>
         <stencil>
             <hbs></hbs>
@@ -849,7 +1191,7 @@ $(target).find('.date').each(function(_idx, dateEl){
         <id>weather_current_4</id>
         <type>element-group</type>
         <dataType>forecast</dataType>
-        <title>Weather 4</title>
+        <title>Daily 4</title>
         <thumbnail>forecast-current-4</thumbnail>
         <stencil>
             <hbs></hbs>

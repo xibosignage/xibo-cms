@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -20,9 +20,10 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 namespace Xibo\Entity;
+
 use Carbon\Carbon;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -39,55 +40,186 @@ class DisplayEvent implements \JsonSerializable
     public $eventDate;
     public $start;
     public $end;
+    public $eventTypeId;
+    public $refId;
+    public $detail;
 
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
+     * @param EventDispatcherInterface $dispatcher
      */
-    public function __construct($store, $log, $dispatcher)
-    {
+    public function __construct(
+        StorageServiceInterface $store,
+        LogServiceInterface $log,
+        EventDispatcherInterface $dispatcher
+    ) {
         $this->setCommonDependencies($store, $log, $dispatcher);
     }
 
-    public function save()
+    /**
+     * Save displayevent
+     * @return void
+     */
+    public function save(): void
     {
-        if ($this->displayEventId == null)
+        if ($this->displayEventId == null) {
             $this->add();
-        else
+        } else {
             $this->edit();
+        }
     }
 
-    private function add()
+    /**
+     * Add a new displayevent
+     * @return void
+     */
+    private function add(): void
     {
         $this->displayEventId = $this->getStore()->insert('
-            INSERT INTO `displayevent` (eventDate, start, end, displayID)
-              VALUES (:eventDate, :start, :end, :displayId)
+            INSERT INTO `displayevent` (eventDate, start, end, displayID, eventTypeId, refId, detail)
+              VALUES (:eventDate, :start, :end, :displayId, :eventTypeId, :refId, :detail)
         ', [
             'eventDate' => Carbon::now()->format('U'),
             'start' => $this->start,
             'end' => $this->end,
-            'displayId' => $this->displayId
-        ]);
-    }
-
-    private function edit()
-    {
-        $this->getStore()->update('UPDATE `displayevent` SET `end` = :end WHERE statId = :statId', [
-            'displayevent' => $this->displayEventId, 'end' => $this->end
+            'displayId' => $this->displayId,
+            'eventTypeId' => $this->eventTypeId,
+            'refId' => $this->refId,
+            'detail' => $this->detail,
         ]);
     }
 
     /**
-     * Record the display coming online
-     * @param $displayId
+     * Edit displayevent
+     * @return void
      */
-    public function displayUp($displayId)
+    private function edit(): void
     {
-        $this->getStore()->update('UPDATE `displayevent` SET `end` = :toDt WHERE displayId = :displayId AND `end` IS NULL', [
-            'toDt' => Carbon::now()->format('U'),
-            'displayId' => $displayId
+        $this->getStore()->update('
+          UPDATE displayevent 
+          SET end = :end,
+            displayId = :displayId,
+            eventTypeId = :eventTypeId,
+            refId = :refId,
+            detail = :detail
+          WHERE displayEventId = :displayEventId
+        ', [
+            'displayEventId' => $this->displayEventId,
+            'end' => $this->end,
+            'displayId' => $this->displayId,
+            'eventTypeId' => $this->eventTypeId,
+            'refId' => $this->refId,
+            'detail' => $this->detail,
         ]);
+    }
+
+
+    /**
+     * Record end date for specified display and event type.
+     * @param int $displayId
+     * @param int|null $date
+     * @param int $eventTypeId
+     * @return void
+     */
+    public function eventEnd(int $displayId, int $eventTypeId = 1, string $detail = null, ?int $date = null): void
+    {
+        $this->getLog()->debug(
+            sprintf(
+                'displayEvent : end display alert for eventType %s and displayId %d',
+                $this->getEventNameFromId($eventTypeId),
+                $displayId
+            )
+        );
+
+        $this->getStore()->update(
+            "UPDATE `displayevent` SET `end` = :toDt, `detail` = CONCAT_WS('. ', NULLIF(`detail`, ''), :detail) 
+                      WHERE displayId = :displayId 
+                        AND `end` IS NULL 
+                        AND eventTypeId = :eventTypeId",
+            [
+                'toDt' => $date ?? Carbon::now()->format('U'),
+                'displayId' => $displayId,
+                'eventTypeId' => $eventTypeId,
+                'detail' => $detail,
+            ]
+        );
+    }
+
+    /**
+     * Record end date for specified display, event type and refId
+     * @param int $displayId
+     * @param int $eventTypeId
+     * @param int $refId
+     * @param int|null $date
+     * @return void
+     */
+    public function eventEndByReference(int $displayId, int $eventTypeId, int $refId, string $detail = null, ?int $date = null): void
+    {
+        $this->getLog()->debug(
+            sprintf(
+                'displayEvent : end display alert for refId %d, displayId %d and eventType %s',
+                $refId,
+                $displayId,
+                $this->getEventNameFromId($eventTypeId),
+            )
+        );
+
+        // When updating the event end, concatenate the end message to the current message
+        $this->getStore()->update(
+            "UPDATE `displayevent` SET 
+                      `end` = :toDt, 
+                      `detail` = CONCAT_WS('. ', NULLIF(`detail`, ''), :detail)
+                      WHERE displayId = :displayId 
+                        AND `end` IS NULL 
+                        AND eventTypeId = :eventTypeId
+                        AND refId = :refId",
+            [
+                'toDt' => $date ?? Carbon::now()->format('U'),
+                'displayId' => $displayId,
+                'eventTypeId' => $eventTypeId,
+                'refId' => $refId,
+                'detail' => $detail,
+            ]
+        );
+    }
+
+    /**
+     * Match event type string from log to eventTypeId in database.
+     * @param string $eventType
+     * @return int
+     */
+    public function getEventIdFromString(string $eventType): int
+    {
+        return match ($eventType) {
+            'Display Up/down' => 1,
+            'App Start' => 2,
+            'Power Cycle' => 3,
+            'Network Cycle' => 4,
+            'TV Monitoring' => 5,
+            'Player Fault' => 6,
+            'Command' => 7,
+            default => 8
+        };
+    }
+
+    /**
+     * Match eventTypeId from database to string event name.
+     * @param int $eventTypeId
+     * @return string
+     */
+    public function getEventNameFromId(int $eventTypeId): string
+    {
+        return match ($eventTypeId) {
+            1 => __('Display Up/down'),
+            2 => __('App Start'),
+            3 => __('Power Cycle'),
+            4 => __('Network Cycle'),
+            5 => __('TV Monitoring'),
+            6 => __('Player Fault'),
+            7 => __('Command'),
+            default => __('Other')
+        };
     }
 }

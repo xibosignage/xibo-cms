@@ -69,7 +69,7 @@ class Preview extends Base
         }
 
         if (!$this->getUser()->checkViewable($layout)
-            || !$this->getUser()->featureEnabled(['layout.view', 'playlist.view'])
+            || !$this->getUser()->featureEnabled(['layout.view', 'playlist.view', 'campaign.view'])
         ) {
             throw new AccessDeniedException();
         }
@@ -79,7 +79,8 @@ class Preview extends Base
             $layout = $this->layoutFactory->getByParentId($layout->layoutId);
         }
 
-        $this->getState()->template = 'layout-preview';
+        // $this->getState()->template = 'layout-preview';
+        $this->getState()->template = 'layout-renderer';
         $this->getState()->setData([
             'layout' => $layout,
             'previewOptions' => [

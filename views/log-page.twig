@@ -28,10 +28,9 @@
 {% block actionMenu %}
     <div class="widget-action-menu pull-right">
         <button class="btn btn-warning XiboFormButton" title="{% trans "Truncate the Log" %}" href="{{ url_for("log.truncate.form") }}" data-auto-submit="true" data-commit-url="{{ url_for("log.truncate") }}" data-commit-method="DELETE"><i class="fa fa-scissors" aria-hidden="true"></i> {% trans "Truncate" %}</button>
-        <button class="btn btn-success" id="refreshLog" title="{% trans "Refresh the Log" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</button>
+        <button class="btn btn-primary" id="refreshLog" title="{% trans "Refresh the Log" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</button>
     </div>
 {% endblock %}
-
 
 {% block pageContent %}
     <div class="widget">
@@ -187,7 +186,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         $(document).ready(function() {
             var table = $("#logs").DataTable({
                 "language": dataTablesLanguage,

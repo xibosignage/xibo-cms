@@ -168,5 +168,14 @@
                 <li class="sidebar-list"><a href="{{ url_for("fault.view") }}">{% trans "Report Fault" %}</a></li>
             {% endif %}
         {% endif %}
+
+        {% set countViewable = currentUser.featureEnabledCount(["developer.edit"]) %}
+        {% if countViewable > 0 %}
+            <li class="sidebar-title"><a>{% trans "Developer" %}</a></li>
+
+            {% if currentUser.featureEnabled("developer.edit") %}
+                <li class="sidebar-list"><a href="{{ url_for("developer.templates.view") }}">{% trans "Module Templates" %}</a></li>
+            {% endif %}
+        {% endif %}
     </ul>
 </div>

@@ -152,6 +152,12 @@ class FolderFactory extends BaseFactory
             $body .= 'OR folder.isRoot = 1';
         }
 
+        // get the exact match for the search functionality
+        if ($sanitizedFilter->getInt('exactFolderName') === 1) {
+            $body.= " AND folder.folderName = :exactFolderName ";
+            $params['exactFolderName'] = $sanitizedFilter->getString('folderName');
+        }
+
         // View Permissions (home folder included in here)
         $this->viewPermissionSql(
             'Xibo\Entity\Folder',

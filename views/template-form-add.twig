@@ -86,7 +86,7 @@
                         {% set helpText %}{% trans "Choose the resolution this Template should be designed for." %}{% endset %}
                         {{ forms.dropdown("resolutionId", "single", title, "", resolutions, "resolutionId", "resolution", helpText, "resolution-group") }}
 
-                        {{ forms.message("You can also add a template from an existing Layout from the Layout Designer."|trans, "alert alert-info") }}
+                        {{ forms.message("You can also add a template from an existing Layout from the Layout Editor."|trans, "alert alert-info") }}
                     </div>
                     <div class="tab-pane" id="description">
                         {% set title %}{% trans "Description" %}{% endset %}

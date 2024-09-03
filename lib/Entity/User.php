@@ -244,16 +244,52 @@ class User implements \JsonSerializable, UserEntityInterface
     public $dayParts = [];
 
     /**
-     * @SWG\Property(description="Does this Group receive system notifications.")
+     * @SWG\Property(description="Does this User receive system notifications.")
      * @var int
      */
     public $isSystemNotification = 0;
 
     /**
-     * @SWG\Property(description="Does this Group receive system notifications.")
+     * @SWG\Property(description="Does this User receive system notifications.")
      * @var int
      */
     public $isDisplayNotification = 0;
+
+    /**
+     * @SWG\Property(description="Does this User receive DataSet notifications.")
+     * @var int
+     */
+    public $isDataSetNotification = 0;
+
+    /**
+     * @SWG\Property(description="Does this User receive Layout notifications.")
+     * @var int
+     */
+    public $isLayoutNotification = 0;
+
+    /**
+     * @SWG\Property(description="Does this User receive Library notifications.")
+     * @var int
+     */
+    public $isLibraryNotification = 0;
+
+    /**
+     * @SWG\Property(description="Does this User receive Report notifications.")
+     * @var int
+     */
+    public $isReportNotification = 0;
+
+    /**
+     * @SWG\Property(description="Does this User receive Schedule notifications.")
+     * @var int
+     */
+    public $isScheduleNotification = 0;
+
+    /**
+     * @SWG\Property(description="Does this User receive Custom notifications.")
+     * @var int
+     */
+    public $isCustomNotification = 0;
 
     /**
      * @SWG\Property(description="The two factor type id")
@@ -420,7 +456,14 @@ class User implements \JsonSerializable, UserEntityInterface
      */
     public function __toString()
     {
-        return sprintf('User %s. userId: %d, UserTypeId: %d, homePageId: %d, email = %s', $this->userName, $this->userId, $this->userTypeId, $this->homePageId, $this->email);
+        return sprintf(
+            'User %s. userId: %d, UserTypeId: %d, homePageId: %d, email = %s',
+            $this->userName,
+            $this->userId,
+            $this->userTypeId,
+            $this->homePageId,
+            $this->email
+        );
     }
 
     /**
@@ -465,8 +508,9 @@ class User implements \JsonSerializable, UserEntityInterface
 
         foreach ($this->userOptions as $userOption) {
             /* @var UserOption $userOption */
-            if ($userOption->option == $option)
+            if ($userOption->option == $option) {
                 return $userOption;
+            }
         }
 
         $this->getLog()->debug(sprintf('UserOption %s not found', $option));
@@ -591,15 +635,16 @@ class User implements \JsonSerializable, UserEntityInterface
      */
     public function checkPassword($password)
     {
-        if ($this->userId == 0)
+        if ($this->userId == 0) {
             throw new NotFoundException(__('User not found'));
+        }
 
         if ($this->CSPRNG == 0) {
             // Password is tested using a plain MD5 check
-            if ($this->password != md5($password))
+            if ($this->password != md5($password)) {
                 throw new AccessDeniedException();
-        }
-        else if ($this->CSPRNG == 1) {
+            }
+        } else if ($this->CSPRNG == 1) {
             // Test with Pbkdf2
             try {
                 if (!Pbkdf2Hash::verifyPassword($password, $this->password)) {
@@ -610,8 +655,7 @@ class User implements \JsonSerializable, UserEntityInterface
                 $this->getLog()->warning('Invalid password hash stored for userId ' . $this->userId);
                 $this->getLog()->debug('Hash error: ' . $e->getMessage());
             }
-        }
-        else {
+        } else {
             if (!password_verify($password, $this->password)) {
                 $this->getLog()->debug('Password failed Hash Check.');
                 throw new AccessDeniedException();
@@ -672,8 +716,9 @@ class User implements \JsonSerializable, UserEntityInterface
         if ($this->userId == null || $this->loaded)
             return;
 
-        if ($this->userGroupFactory == null)
+        if ($this->userGroupFactory == null) {
             throw new \RuntimeException('Cannot load user without first calling setUserGroupFactory');
+        }
 
         $this->getLog()->debug(sprintf('Loading %d. All Objects = %d', $this->userId, $all));
 
@@ -844,6 +889,13 @@ class User implements \JsonSerializable, UserEntityInterface
         $group->setOwner($this);
         $group->isSystemNotification = $this->isSystemNotification;
         $group->isDisplayNotification = $this->isDisplayNotification;
+        $group->isCustomNotification = $this->isCustomNotification;
+        $group->isDataSetNotification = $this->isDataSetNotification;
+        $group->isLayoutNotification = $this->isLayoutNotification;
+        $group->isLibraryNotification = $this->isLibraryNotification;
+        $group->isReportNotification = $this->isReportNotification;
+        $group->isScheduleNotification = $this->isScheduleNotification;
+
         $group->save();
 
         // Assert the groupIds on the user (we do this so we have group in the API return)
@@ -918,6 +970,12 @@ class User implements \JsonSerializable, UserEntityInterface
         $group->libraryQuota = $this->libraryQuota;
         $group->isSystemNotification = $this->isSystemNotification;
         $group->isDisplayNotification = $this->isDisplayNotification;
+        $group->isCustomNotification = $this->isCustomNotification;
+        $group->isDataSetNotification = $this->isDataSetNotification;
+        $group->isLayoutNotification = $this->isLayoutNotification;
+        $group->isLibraryNotification = $this->isLibraryNotification;
+        $group->isReportNotification = $this->isReportNotification;
+        $group->isScheduleNotification = $this->isScheduleNotification;
         $group->save(['linkUsers' => false]);
     }
 

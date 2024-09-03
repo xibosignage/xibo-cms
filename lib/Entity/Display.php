@@ -512,6 +512,36 @@ class Display implements \JsonSerializable
      */
     public $syncGroupId;
 
+    /**
+     * @SWG\Property(description="The OS version of the Display")
+     * @var string
+     */
+    public $osVersion;
+
+    /**
+     * @SWG\Property(description="The SDK version of the Display")
+     * @var string
+     */
+    public $osSdk;
+
+    /**
+     * @SWG\Property(description="The manufacturer of the Display")
+     * @var string
+     */
+    public $manufacturer;
+
+    /**
+     * @SWG\Property(description="The brand of the Display")
+     * @var string
+     */
+    public $brand;
+
+    /**
+     * @SWG\Property(description="The model of the Display")
+     * @var string
+     */
+    public $model;
+
     /** @var array The configuration from the Display Profile  */
     private $profileConfig;
 
@@ -675,6 +705,37 @@ class Display implements \JsonSerializable
 
         // Test $this->auditingUntil against the current date.
         return (!empty($this->auditingUntil) && $this->auditingUntil >= Carbon::now()->format('U'));
+    }
+
+    /**
+     * Does this display has elevated log level?
+     * @return bool
+     * @throws NotFoundException
+     */
+    public function isElevatedLogging(): bool
+    {
+        $elevatedUntil = $this->getSetting('elevateLogsUntil', 0);
+
+        $this->getLog()->debug(sprintf(
+            'Testing whether this display has elevated log level. %d vs %d.',
+            $elevatedUntil,
+            Carbon::now()->format('U')
+        ));
+
+        return (!empty($elevatedUntil) && $elevatedUntil >= Carbon::now()->format('U'));
+    }
+
+    /**
+     * Get current log level for this Display
+     * @return string
+     * @throws NotFoundException
+     */
+    public function getLogLevel(): string
+    {
+        $restingLogLevel = $this->getSetting('logLevel', 'error');
+        $isElevated = $this->isElevatedLogging();
+
+        return $isElevated ? 'debug' : $restingLogLevel;
     }
 
     /**
@@ -945,8 +1006,8 @@ class Display implements \JsonSerializable
     private function add()
     {
         $this->displayId = $this->getStore()->insert('
-            INSERT INTO display (display, auditingUntil, defaultlayoutid, license, licensed, lastAccessed, inc_schedule, email_alert, alert_timeout, clientAddress, xmrChannel, xmrPubKey, lastCommandSuccess, macAddress, lastChanged, lastWakeOnLanCommandSent, client_type, client_version, client_code, overrideConfig, newCmsAddress, newCmsKey, commercialLicence, lanIpAddress, syncGroupId)
-              VALUES (:display, :auditingUntil, :defaultlayoutid, :license, :licensed, :lastAccessed, :inc_schedule, :email_alert, :alert_timeout, :clientAddress, :xmrChannel, :xmrPubKey, :lastCommandSuccess, :macAddress, :lastChanged, :lastWakeOnLanCommandSent, :clientType, :clientVersion, :clientCode, :overrideConfig, :newCmsAddress, :newCmsKey, :commercialLicence, :lanIpAddress, :syncGroupId)
+            INSERT INTO display (display, auditingUntil, defaultlayoutid, license, licensed, lastAccessed, inc_schedule, email_alert, alert_timeout, clientAddress, xmrChannel, xmrPubKey, lastCommandSuccess, macAddress, lastChanged, lastWakeOnLanCommandSent, client_type, client_version, client_code, overrideConfig, newCmsAddress, newCmsKey, commercialLicence, lanIpAddress, syncGroupId, osVersion, osSdk, manufacturer, brand, model)
+              VALUES (:display, :auditingUntil, :defaultlayoutid, :license, :licensed, :lastAccessed, :inc_schedule, :email_alert, :alert_timeout, :clientAddress, :xmrChannel, :xmrPubKey, :lastCommandSuccess, :macAddress, :lastChanged, :lastWakeOnLanCommandSent, :clientType, :clientVersion, :clientCode, :overrideConfig, :newCmsAddress, :newCmsKey, :commercialLicence, :lanIpAddress, :syncGroupId, :osVersion, :osSdk, :manufacturer, :brand, :model)
         ', [
             'display' => $this->display,
             'auditingUntil' => 0,
@@ -973,6 +1034,11 @@ class Display implements \JsonSerializable
             'commercialLicence' => $this->commercialLicence,
             'lanIpAddress' => empty($this->lanIpAddress) ? null : $this->lanIpAddress,
             'syncGroupId' => empty($this->syncGroupId) ? null : $this->syncGroupId,
+            'osVersion' => $this->osVersion,
+            'osSdk' => $this->osSdk,
+            'manufacturer' => $this->manufacturer,
+            'brand' => $this->brand,
+            'model' => $this->model,
         ]);
 
 
@@ -1060,6 +1126,11 @@ class Display implements \JsonSerializable
                     screenShotRequested = :screenShotRequested,
                     storageAvailableSpace = :storageAvailableSpace,
                     storageTotalSpace = :storageTotalSpace,
+                    osVersion = :osVersion,
+                    osSdk = :osSdk,
+                    manufacturer = :manufacturer,
+                    brand = :brand,
+                    model = :model,
                     xmrChannel = :xmrChannel,
                     xmrPubKey = :xmrPubKey,
                     `lastCommandSuccess` = :lastCommandSuccess,
@@ -1132,7 +1203,12 @@ class Display implements \JsonSerializable
             'webkeySerial' => empty($this->webkeySerial) ? null : $this->webkeySerial,
             'lanIpAddress' => empty($this->lanIpAddress) ? null : $this->lanIpAddress,
             'syncGroupId' => empty($this->syncGroupId) ? null : $this->syncGroupId,
-            'displayId' => $this->displayId
+            'displayId' => $this->displayId,
+            'osVersion' => $this->osVersion,
+            'osSdk' => $this->osSdk,
+            'manufacturer' => $this->manufacturer,
+            'brand' => $this->brand,
+            'model' => $this->model,
         ]);
 
         // Maintain the Display Group

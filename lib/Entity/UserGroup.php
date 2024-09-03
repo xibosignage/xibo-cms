@@ -92,6 +92,42 @@ class UserGroup
     public $isDisplayNotification = 0;
 
     /**
+     * @SWG\Property(description="Does this Group receive DataSet notifications.")
+     * @var int
+     */
+    public $isDataSetNotification = 0;
+
+    /**
+     * @SWG\Property(description="Does this Group receive Layout notifications.")
+     * @var int
+     */
+    public $isLayoutNotification = 0;
+
+    /**
+     * @SWG\Property(description="Does this Group receive Library notifications.")
+     * @var int
+     */
+    public $isLibraryNotification = 0;
+
+    /**
+     * @SWG\Property(description="Does this Group receive Report notifications.")
+     * @var int
+     */
+    public $isReportNotification = 0;
+
+    /**
+     * @SWG\Property(description="Does this Group receive Schedule notifications.")
+     * @var int
+     */
+    public $isScheduleNotification = 0;
+
+    /**
+     * @SWG\Property(description="Does this Group receive Custom notifications.")
+     * @var int
+     */
+    public $isCustomNotification = 0;
+
+    /**
      * @SWG\Property(description="Is this Group shown in the list of choices when onboarding a new user")
      * @var int
      */
@@ -217,7 +253,7 @@ class UserGroup
     {
         $this->load();
         $this->unassignedUserIds[] = $user->userId;
-        $this->users = array_udiff($this->users, [$user], function($a, $b) {
+        $this->users = array_udiff($this->users, [$user], function ($a, $b) {
             /**
              * @var User $a
              * @var User $b
@@ -231,19 +267,23 @@ class UserGroup
      */
     public function validate()
     {
-        if (!v::stringType()->length(1, 50)->validate($this->group))
+        if (!v::stringType()->length(1, 50)->validate($this->group)) {
             throw new InvalidArgumentException(__('User Group Name cannot be empty.') . $this, 'name');
+        }
 
-        if ($this->libraryQuota !== null && !v::intType()->validate($this->libraryQuota))
+        if ($this->libraryQuota !== null && !v::intType()->validate($this->libraryQuota)) {
             throw new InvalidArgumentException(__('Library Quota must be a whole number.'), 'libraryQuota');
+        }
 
         try {
             $group = $this->userGroupFactory->getByName($this->group, $this->isUserSpecific);
 
-            if ($this->groupId == null || $this->groupId != $group->groupId)
-                throw new DuplicateEntityException(__('There is already a group with this name. Please choose another.'));
-        }
-        catch (NotFoundException $e) {
+            if ($this->groupId == null || $this->groupId != $group->groupId) {
+                throw new DuplicateEntityException(
+                    __('There is already a group with this name. Please choose another.')
+                );
+            }
+        } catch (NotFoundException $e) {
 
         }
     }
@@ -285,8 +325,9 @@ class UserGroup
             'linkUsers' => true
         ], $options);
 
-        if ($options['validate'])
+        if ($options['validate']) {
             $this->validate();
+        }
 
         if ($this->groupId == null || $this->groupId == 0) {
             $this->add();
@@ -374,23 +415,35 @@ class UserGroup
         $this->groupId = $this->getStore()->insert('
             INSERT INTO `group` (
                  `group`, 
-                 IsUserSpecific,
+                 `IsUserSpecific`,
                  `description`,
-                 libraryQuota, 
+                 `libraryQuota`, 
                  `isSystemNotification`, 
                  `isDisplayNotification`,
+                 `isDataSetNotification`,
+                 `isLayoutNotification`,
+                 `isLibraryNotification`,
+                 `isReportNotification`,
+                 `isScheduleNotification`,
+                 `isCustomNotification`,
                  `isShownForAddUser`,
                  `defaultHomepageId`
               )
               VALUES (
-                      :group, 
-                      :isUserSpecific, 
-                      :description, 
-                      :libraryQuota, 
-                      :isSystemNotification, 
-                      :isDisplayNotification,
-                      :isShownForAddUser,
-                      :defaultHomepageId
+                 :group, 
+                 :isUserSpecific, 
+                 :description, 
+                 :libraryQuota, 
+                 :isSystemNotification, 
+                 :isDisplayNotification,
+                 :isDataSetNotification,
+                 :isLayoutNotification,
+                 :isLibraryNotification,
+                 :isReportNotification,
+                 :isScheduleNotification,
+                 :isCustomNotification,
+                 :isShownForAddUser,
+                 :defaultHomepageId
               )
         ', [
             'group' => $this->group,
@@ -399,6 +452,12 @@ class UserGroup
             'libraryQuota' => $this->libraryQuota,
             'isSystemNotification' => $this->isSystemNotification,
             'isDisplayNotification' => $this->isDisplayNotification,
+            'isDataSetNotification' => $this->isDataSetNotification,
+            'isLayoutNotification' => $this->isLayoutNotification,
+            'isLibraryNotification' => $this->isLibraryNotification,
+            'isReportNotification' => $this->isReportNotification,
+            'isScheduleNotification' => $this->isScheduleNotification,
+            'isCustomNotification' => $this->isCustomNotification,
             'isShownForAddUser' => $this->isShownForAddUser,
             'defaultHomepageId' => $this->defaultHomepageId
         ]);
@@ -416,6 +475,12 @@ class UserGroup
             libraryQuota = :libraryQuota, 
             `isSystemNotification` = :isSystemNotification,
             `isDisplayNotification` = :isDisplayNotification,
+            `isDataSetNotification` = :isDataSetNotification,
+            `isLayoutNotification` = :isLayoutNotification,
+            `isLibraryNotification` = :isLibraryNotification,
+            `isReportNotification` = :isReportNotification,
+            `isScheduleNotification` = :isScheduleNotification,
+            `isCustomNotification` = :isCustomNotification,
             `isShownForAddUser` = :isShownForAddUser,
             `defaultHomepageId` = :defaultHomepageId
            WHERE groupId = :groupId
@@ -426,6 +491,12 @@ class UserGroup
             'libraryQuota' => $this->libraryQuota,
             'isSystemNotification' => $this->isSystemNotification,
             'isDisplayNotification' => $this->isDisplayNotification,
+            'isDataSetNotification' => $this->isDataSetNotification,
+            'isLayoutNotification' => $this->isLayoutNotification,
+            'isLibraryNotification' => $this->isLibraryNotification,
+            'isReportNotification' => $this->isReportNotification,
+            'isScheduleNotification' => $this->isScheduleNotification,
+            'isCustomNotification' => $this->isCustomNotification,
             'isShownForAddUser' => $this->isShownForAddUser,
             'defaultHomepageId' => $this->defaultHomepageId
         ]);
@@ -436,7 +507,10 @@ class UserGroup
      */
     private function linkUsers()
     {
-        $insert = $this->getStore()->getConnection()->prepare('INSERT INTO `lkusergroup` (groupId, userId) VALUES (:groupId, :userId) ON DUPLICATE KEY UPDATE groupId = groupId');
+        $insert = $this->getStore()->getConnection()->prepare(
+            'INSERT INTO `lkusergroup` (groupId, userId)
+                    VALUES (:groupId, :userId) ON DUPLICATE KEY UPDATE groupId = groupId'
+        );
 
         foreach ($this->users as $user) {
             /* @var User $user */

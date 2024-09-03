@@ -1,8 +1,8 @@
 {#
 /**
- * Copyright (C) 2021 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -30,7 +30,7 @@
         {% if currentUser.isSuperAdmin() %}
             <button class="btn btn-success XiboFormButton" title="{% trans "Add a new User Group" %}" href="{{ url_for("group.add.form") }}"><i class="fa fa-users" aria-hidden="true"></i> {% trans "Add User Group" %}</button>
         {% endif %}
-        <button class="btn btn-primary refresh-grid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</button>
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
     </div>
 {% endblock %}
 
@@ -58,6 +58,12 @@
                                 <th>{% trans "Library Quota" %}</th>
                                 <th>{% trans "Receive System Notifications?" %}</th>
                                 <th>{% trans "Receive Display Notifications?" %}</th>
+                                <th>{% trans "Receive Custom Notifications?" %}</th>
+                                <th>{% trans "Receive DataSet Notifications?" %}</th>
+                                <th>{% trans "Receive Layout Notifications?" %}</th>
+                                <th>{% trans "Receive Library Notifications?" %}</th>
+                                <th>{% trans "Receive Report Notifications?" %}</th>
+                                <th>{% trans "Receive Schedule Notifications?" %}</th>
                                 <th>{% trans "Is shown for Add User?" %}</th>
                                 <th class="rowMenu"></th>
                             </tr>
@@ -73,7 +79,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         $(document).ready(function() {
             var table = $("#userGroups").DataTable({
                 "language": dataTablesLanguage,
@@ -86,32 +92,62 @@
                 stateSaveCallback: dataTableStateSaveCallback,
                 searchDelay: 3000,
                 filter: false,
-                "order": [[0, "asc"]],
+                order: [[0, 'asc']],
                 ajax: {
-                    url: "{{ url_for("group.search") }}",
-                    "data": function (d) {
-                        $.extend(d, $("#userGroups").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                    url: "{{ url_for('group.search') }}",
+                    data: function (d) {
+                        $.extend(d, $('#userGroups').closest('.XiboGrid').find('.FilterDiv form').serializeObject());
                     }
                 },
                 "columns": [
-                    {"data": "group", "render": dataTableSpacingPreformatted, responsivePriority: 2 },
-                    {"data": "description", "visible": false },
+                    {data: 'group', render: dataTableSpacingPreformatted, responsivePriority: 2 },
+                    {data: 'description', visible: false },
                     {
-                        "name": "libraryQuota",
-                        "data": null,
-                        "render": {"_": "libraryQuota", "display": "libraryQuotaFormatted", "sort": "libraryQuota"}
+                        name: 'libraryQuota',
+                        data: null,
+                        render: {'_': 'libraryQuota', 'display': 'libraryQuotaFormatted', 'sort': 'libraryQuota'}
                     },
                     {
-                        "data": "isSystemNotification",
-                        "render": dataTableTickCrossColumn
+                        data: 'isSystemNotification',
+                        render: dataTableTickCrossColumn
                     },
                     {
-                        "data": "isDisplayNotification",
-                        "render": dataTableTickCrossColumn
+                        data: 'isDisplayNotification',
+                        render: dataTableTickCrossColumn
                     },
                     {
-                        "data": "isShownForAddUser",
-                        "render": dataTableTickCrossColumn
+                        data: 'isDataSetNotification',
+                        render: dataTableTickCrossColumn,
+                        visible: false
+                    },
+                    {
+                        data: 'isLayoutNotification',
+                        render: dataTableTickCrossColumn,
+                        visible: false
+                    },
+                    {
+                        data: 'isLibraryNotification',
+                        render: dataTableTickCrossColumn,
+                        visible: false
+                    },
+                    {
+                        data: 'isReportNotification',
+                        render: dataTableTickCrossColumn,
+                        visible: false
+                    },
+                    {
+                        data: 'isScheduleNotification',
+                        render: dataTableTickCrossColumn,
+                        visible: false
+                    },
+                    {
+                        data: 'isCustomNotification',
+                        render: dataTableTickCrossColumn,
+                        visible: false
+                    },
+                    {
+                        data: "isShownForAddUser",
+                        render: dataTableTickCrossColumn
                     },
                     {
                         "orderable": false,
@@ -125,7 +161,7 @@
             table.on('processing.dt', dataTableProcessing);
             dataTableAddButtons(table, $('#userGroups_wrapper').find('.dataTables_buttons'));
 
-            $(".refresh-grid").click(function() {
+            $("#refreshGrid").click(function () {
                 table.ajax.reload();
             });
         });

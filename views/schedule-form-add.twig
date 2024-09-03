@@ -1,8 +1,8 @@
 {#
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -45,6 +45,7 @@
                 <li class="nav-item repeats"><a class="nav-link" href="#repeats" role="tab" data-toggle="tab"><span>{% trans "Repeats" %}</span></a></li>
                 <li class="nav-item reminders"><a class="nav-link" href="#reminders" role="tab" data-toggle="tab"><span>{% trans "Reminder" %}</span></a></li>
                 <li class="nav-item geoSchedule"><a class="nav-link" href="#geoSchedule" role="tab" data-toggle="tab"><span>{% trans "Geo Location" %}</span></a></li>
+                <li class="nav-item criteria"><a class="nav-link" href="#tab-criteria" role="tab" data-toggle="tab"><span>{% trans "Criteria" %}</span></a></li>
             </ul>
             {% set dayPartMessage %}{% trans "Select the start time for this event" %}{% endset %}
             {% set notDayPartMessage %}{% trans "Start and end time will be defined by the daypart's configuration for this day of the week. Use a repeating schedule to apply this event over multiple days" %}{% endset %}
@@ -54,7 +55,8 @@
                   data-default-lat="{{ defaultLat }}"
                   data-default-long = "{{ defaultLong }}"
                   data-library-get-url="{{ url_for("library.search") }}?fullScreenScheduleCheck=true&types[]=image&types[]=video"
-                  data-playlist-get-url="{{ url_for("playlist.search") }}?fullScreenScheduleCheck=true">
+                  data-playlist-get-url="{{ url_for("playlist.search") }}?fullScreenScheduleCheck=true"
+                  data-set-displays-from-grid-filters="{{ setDisplaysFromFilter }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Name" %}{% endset %}
@@ -75,7 +77,10 @@
                         {% set attributes = [
                             { name: "data-search-url", value:  url_for("displayGroup.search") },
                             { name: "data-trans-groups", value:  "Groups"|trans },
-                            { name: "data-trans-display", value:  "Display"|trans }
+                            { name: "data-trans-display", value:  "Display"|trans },
+                            { name: "data-initial-key", value: "displayGroupIds[]"},
+                            { name: "data-id-property", value: "displayGroupId"},
+                            { name: "data-text-property", value: "displayGroup"}
                         ] %}
                         {{ forms.dropdown("displayGroupIds[]", "dropdownmulti", title, displayGroupIds, displayGroups, "displayGroupId", "displayGroup", helpText, "", "", "", "", attributes) }}
 
@@ -147,10 +152,12 @@
                         {{ forms.inputFullScreenSchedule('playlist', title, "", helpText, "playlist-control full-screen-control", playlistId, "", "", readonlySelect) }}
                         {{ forms.hidden('fullScreenCampaignId') }}
 
-                        <div class="form-group row preview-button-container">
-                            <div class="offset-md-2 col-md-10">
-                                <a id="previewButton" class="btn btn-success" target="_blank" data-url="{{ url_for("campaign.preview", {id: ':id'}) }}">{% trans "Preview" %} <span class="fa fa-tablet"></span></a>
-                                <small class="form-text text-muted">{% trans "Preview your selection in a new tab" %}</small>
+                        <div style="{% if not (currentUser.featureEnabled('campaign.view') or currentUser.featureEnabled('layout.view')) %}display: none;{% endif %}">
+                            <div class="form-group row preview-button-container">
+                                <div class="offset-md-2 col-md-10">
+                                    <a id="previewButton" class="btn btn-success" target="_blank" data-url="{{ url_for("campaign.preview", {id: ':id'}) }}">{% trans "Preview" %} <span class="fa fa-tablet"></span></a>
+                                    <small class="form-text text-muted">{% trans "Preview your selection in a new tab" %}</small>
+                                </div>
                             </div>
                         </div>
 
@@ -203,6 +210,22 @@
                             { name: "data-text-property", value: "command" }
                         ] %}
                         {{ forms.dropdown("commandId", "single", title, "", null, "commandId", "command", helpText, "pagedSelect command-control", "", "", "", attributes) }}
+
+                        {% set title %}{% trans "DataSet" %}{% endset %}
+                        {% set helpText %}{% trans "Please select the real time DataSet related to this Data Connector event" %}{% endset %}
+
+                        {% set attributes = [
+                            { name: "data-width", value: "100%" },
+                            { name: "data-search-url", value: url_for("dataSet.search") ~ "?isRealTime=1" },
+                            { name: "data-search-term", value: "dataSet" },
+                            { name: "data-id-property", value: "dataSetId" },
+                            { name: "data-text-property", value: "dataSet" }
+                        ] %}
+                        {{ forms.dropdown("dataSetId", "single", title, "", null, "dataSetId", "dataSet", helpText, "pagedSelect data-connector-control", "", "", "", attributes) }}
+
+                        {% set title %}{% trans "Data Connector Parameters" %}{% endset %}
+                        {% set helpText %}{% trans "Optionally provide any parameters to be used by the Data Connector." %}{% endset %}
+                        {{ forms.input("dataSetParams", title, "", helpText, 'data-connector-control') }}
 
                         {% set title %}{% trans "Display Order" %}{% endset %}
                         {% set helpText %}{% trans "Please select the order this event should appear in relation to others when there is more than one event scheduled" %}{% endset %}
@@ -302,6 +325,22 @@
                         <div id="geoScheduleMap" style="height: 500px; width: 100%" class="d-none"></div>
 
                         {{ forms.hidden("geoLocation", "") }}
+                    </div>
+
+                    <div class="tab-pane" id="tab-criteria">
+                        {% set message %}{% trans "Set criteria to determine when this event is active. All conditions must be true for an event to be included in the schedule loop. Events without criteria are always active." %}{% endset %}
+                        {{ forms.message(message) }}
+
+                        <div class="form-criteria-field-headings">
+                            <div class="form-group row">
+                                <div class="col-form-label col-sm-2">{{ "Type"|trans }}</div>
+                                <div class="col-form-label col-sm-2">{{ "Metric"|trans }}</div>
+                                <div class="col-form-label col-sm-3">{{ "Condition"|trans }}</div>
+                                <div class="col-form-label col-sm-2">{{ "Value"|trans }}</div>
+                            </div>
+                        </div>
+
+                        <div id="scheduleCriteriaFields" data-criteria="" data-schedule-criteria="{{ scheduleCriteria|json_encode|e('html_attr') }}"></div>
                     </div>
                 </div>
             </form>

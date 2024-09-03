@@ -126,3 +126,47 @@
             </div>
 
 </script>
+
+{# Schedule Form, criteria fields. #}
+{% verbatim %}
+<script type="text/x-handlebars-template" id="templateScheduleCriteriaFields">
+    <div class="form-group row">
+        <input class="form-control" name="criteria_id[]" type="hidden" value="{{ id }}" />
+        <div class="col-sm-2">
+            <label for="criteria_type[]">
+                <select class="form-control" name="criteria_type[]">
+                    <option value="custom" {{#eq type "custom"}}selected{{/eq}}>{% endverbatim %}{% trans "Custom" %}{% verbatim %}</option>
+                </select>
+            </label>
+        </div>
+        <div class="col-sm-2">
+            <label for="criteria_metric[]">
+                <input class="form-control" name="criteria_metric[]" type="text" value="{{ metric }}" />
+            </label>
+        </div>
+        <div class="col-sm-3">
+            <label for="criteria_condition[]">
+                <select class="form-control" name="criteria_condition[]">
+                    <option value="set" {{#eq condition "set"}}selected{{/eq}}>{% endverbatim %}{% trans "Is set" %}{% verbatim %}</option>
+                    <option value="lt" {{#eq condition "lt"}}selected{{/eq}}>{% endverbatim %}{% trans "Less than" %}{% verbatim %}</option>
+                    <option value="lte" {{#eq condition "lte"}}selected{{/eq}}>{% endverbatim %}{% trans "Less than or equal to" %}{% verbatim %}</option>
+                    <option value="eq" {{#eq condition "eq"}}selected{{/eq}}>{% endverbatim %}{% trans "Equal to" %}{% verbatim %}</option>
+                    <option value="neq" {{#eq condition "neq"}}selected{{/eq}}>{% endverbatim %}{% trans "Not equal to" %}{% verbatim %}</option>
+                    <option value="gte" {{#eq condition "gte"}}selected{{/eq}}>{% endverbatim %}{% trans "Greater than or equal to" %}{% verbatim %}</option>
+                    <option value="gt" {{#eq condition "gt"}}selected{{/eq}}>{% endverbatim %}{% trans "Greater than" %}{% verbatim %}</option>
+                    <option value="contains" {{#eq condition "contains"}}selected{{/eq}}>{% endverbatim %}{% trans "Contains" %}{% verbatim %}</option>
+                    <option value="ncontains" {{#eq condition "ncontains"}}selected{{/eq}}>{% endverbatim %}{% trans "Not contains" %}{% verbatim %}</option>
+                </select>
+            </label>
+        </div>
+        <div class="col-sm-2">
+            <label for="criteria_value[]">
+                <input class="form-control" name="criteria_value[]" type="text" value="{{ value }}" />
+            </label>
+        </div>
+        <div class="col-sm-2">
+            <button class="btn btn-white" data-is-add="{{isAdd}}"><i class="fa {{#if isAdd}}fa-plus{{else}}fa-times{{/if}}"></i></button>
+        </div>
+    </div>
+</script>
+{% endverbatim %}

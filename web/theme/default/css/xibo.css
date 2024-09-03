@@ -1519,9 +1519,32 @@ div.dataTables_wrapper div.dataTables_info {
     color: #0E70F6;
 }
 
+.grid-with-folders-container {
+    display: flex;
+    gap: 12px;
+    flex-wrap: nowrap;
+}
+
+.grid-with-folders-container #datatable-container {
+    flex: 1;
+    min-width: 0;
+}
+
 .grid-folder-tree-container {
     border: 1px solid #00000020;
     border-radius: 0.25rem;
+    width: 300px;
+}
+
+.grid-folder-tree-container #jstree-search {
+    margin-bottom: 0.5rem;
+}
+
+.grid-folder-tree-container a.jstree-anchor {
+    white-space: nowrap !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: calc(100% - 20px);
 }
 
 /* Select2 4.1.0-rc.0 fix */
@@ -1541,4 +1564,40 @@ div.dataTables_wrapper div.dataTables_info {
 .select2-container--bootstrap .select2-selection--multiple .select2-selection__rendered {
     float: left;
     width: auto;
+}
+
+/* CKEditor */
+.ck-editor__editable_inline {
+    min-height: 100px;
+}
+
+.ck-fontsize-option span {
+    font-size: 1rem !important;
+}
+
+.ck.ck-dropdown__panel {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* User onboard form */
+#userOnboardingForm .setup-content .panel-body {
+    position: relative;
+}
+
+#userOnboardingForm .setup-content .folder-tree-buttons {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+    position: absolute;
+    z-index: 2;
+    right: 18px;
+    padding-top: 18px;
+}
+
+#userOnboardingForm .setup-content .folder-tree-buttons button {
+    box-shadow: none;
+    height: 24px;
+    line-height: 1;
+    border-radius: 2px;
 }

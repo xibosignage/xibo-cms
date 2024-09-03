@@ -70,15 +70,15 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script src="{{ theme.rootUri() }}dist/vendor/html5preloader/html5Preloader.js?v={{ version }}&rev={{revision}}"></script>
-    <script src="{{ theme.rootUri() }}dist/preview/html-preview.js?v={{ version }}&rev={{revision}}"></script>
-    <script type="text/javascript">
+    <script src="{{ theme.rootUri() }}dist/vendor/html5preloader/html5Preloader.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+    <script src="{{ theme.rootUri() }}dist/preview/html-preview.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         var previewTranslations = {};
         // Translations we want always available
         {% autoescape "js" %}
             previewTranslations.actionControllerTitle = "{{ "Webhook Controller"|trans }}";
             previewTranslations.navigateToLayout = "{{ "Navigate to layout with code [layoutTag]?"|trans }}";
-            previewTranslations.emptyRegionMessage = "{{ "Empty layout"|trans }}";
+            previewTranslations.emptyRegionMessage = "{{ "Empty region!"|trans }}";
             previewTranslations.nextItem = "{{ "Next Item"|trans }}";
             previewTranslations.previousItem = "{{ "Previous Item"|trans }}";
             previewTranslations.navWidget = "{{ "Navigate to Widget"|trans }}";

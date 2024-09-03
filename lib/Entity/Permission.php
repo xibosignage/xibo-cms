@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -123,21 +123,45 @@ class Permission implements \JsonSerializable
         $this->permissionId = null;
     }
 
-    public function save()
+    /**
+     * Save this permission
+     * @return void
+     */
+    public function save(): void
     {
         if ($this->permissionId == 0) {
             // Check there is something to add
             if ($this->view != 0 || $this->edit != 0 || $this->delete != 0) {
-                $this->getLog()->debug(sprintf('Adding Permission for %s, %d. GroupId: %d - View = %d, Edit = %d, Delete = %d', $this->entity, $this->objectId, $this->groupId, $this->view, $this->edit, $this->delete));
+                $this->getLog()->debug(sprintf(
+                    'save: Adding Permission for %s, %d. GroupId: %d - View = %d, Edit = %d, Delete = %d',
+                    $this->entity,
+                    $this->objectId,
+                    $this->groupId,
+                    $this->view,
+                    $this->edit,
+                    $this->delete,
+                ));
+
                 $this->add();
             }
         } else {
-            $this->getLog()->debug(sprintf('Editing Permission for %s, %d. GroupId: %d - View = %d, Edit = %d, Delete = %d', $this->entity, $this->objectId, $this->groupId, $this->view, $this->edit, $this->delete));
-            // Are we all 0 permissions
-            if ($this->view == 0 && $this->edit == 0 && $this->delete == 0)
+            $this->getLog()->debug(sprintf(
+                'save: Editing Permission for %s, %d. GroupId: %d - View = %d, Edit = %d, Delete = %d',
+                $this->entity,
+                $this->objectId,
+                $this->groupId,
+                $this->view,
+                $this->edit,
+                $this->delete,
+            ));
+
+            // If all permissions are set to 0, then we delete the record to tidy up
+            if ($this->view == 0 && $this->edit == 0 && $this->delete == 0) {
                 $this->delete();
-            else
+            } else if (count($this->getChangedProperties()) > 0) {
+                // Something has changed, so run the update.
                 $this->update();
+            }
         }
     }
 

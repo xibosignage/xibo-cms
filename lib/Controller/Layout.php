@@ -45,6 +45,7 @@ use Xibo\Factory\ResolutionFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
+use Xibo\Factory\WidgetDataFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
@@ -154,6 +155,7 @@ class Layout extends Base
         $pool,
         MediaServiceInterface $mediaService,
         WidgetFactory $widgetFactory,
+        private readonly WidgetDataFactory $widgetDataFactory,
         PlaylistFactory $playlistFactory,
     ) {
         $this->session = $session;
@@ -239,7 +241,7 @@ class Layout extends Base
                 $resolution = $this->resolutionFactory->getByDimensions($layout->width, $layout->height);
             }
         } catch (NotFoundException $notFoundException) {
-            $this->getLog()->info('Layout Designer with an unknown resolution, we will create it with name: ' . $layout->width . ' x ' . $layout->height);
+            $this->getLog()->info('Layout Editor with an unknown resolution, we will create it with name: ' . $layout->width . ' x ' . $layout->height);
 
             $resolution = $this->resolutionFactory->create($layout->width . ' x ' . $layout->height, (int)$layout->width, (int)$layout->height);
             $resolution->userId = $this->userFactory->getSystemUser()->userId;
@@ -877,11 +879,32 @@ class Layout extends Base
                 $this->getDataSetFactory(),
                 '',
                 $this->mediaService,
-                $layout->folderId
+                $layout->folderId,
+                false,
             );
 
             $template->managePlaylistClosureTable();
             $template->manageActions();
+
+            // Handle widget data
+            $fallback = $layout->getUnmatchedProperty('fallback');
+            if ($fallback !== null) {
+                foreach ($layout->getAllWidgets() as $widget) {
+                    // Did this widget have fallback data included in its export?
+                    if (array_key_exists($widget->tempWidgetId, $fallback)) {
+                        foreach ($fallback[$widget->tempWidgetId] as $item) {
+                            // We create the widget data with the new widgetId
+                            $this->widgetDataFactory
+                                ->create(
+                                    $widget->widgetId,
+                                    $item['data'] ?? [],
+                                    intval($item['displayOrder'] ?? 1),
+                                )
+                                ->save();
+                        }
+                    }
+                }
+            }
 
             @unlink($event->getFilePath());
         } else {
@@ -1493,6 +1516,7 @@ class Layout extends Base
                     }
 
                     $widget->setUnmatchedProperty('moduleName', $module->name);
+                    $widget->setUnmatchedProperty('moduleDataType', $module->dataType);
 
                     if ($module->regionSpecific == 0) {
                         // Use the media assigned to this widget
@@ -1699,7 +1723,8 @@ class Layout extends Base
                     'id' => 'layout_button_preview',
                     'external' => true,
                     'url' => '#',
-                    'onclick' => 'createMiniLayoutPreview("' . $this->urlFor($request, 'layout.preview', ['id' => $layout->layoutId]) . '");',
+                    'onclick' => 'createMiniLayoutPreview',
+                    'onclickParam' => $this->urlFor($request, 'layout.preview', ['id' => $layout->layoutId]),
                     'text' => __('Preview Layout')
                 );
 
@@ -1709,7 +1734,8 @@ class Layout extends Base
                         'id' => 'layout_button_preview_draft',
                         'external' => true,
                         'url' => '#',
-                        'onclick' => 'createMiniLayoutPreview("' . $this->urlFor($request, 'layout.preview', ['id' => $layout->layoutId]) . '?isPreviewDraft=true");',
+                        'onclick' => 'createMiniLayoutPreview',
+                        'onclickParam' => $this->urlFor($request, 'layout.preview', ['id' => $layout->layoutId]) . '?isPreviewDraft=true',
                         'text' => __('Preview Draft Layout')
                     );
                 }
@@ -2496,7 +2522,15 @@ class Layout extends Base
         }
 
         $fileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/' . $saveAs . '.zip';
-        $layout->toZip($this->dataSetFactory, $fileName, ['includeData' => ($sanitizedParams->getCheckbox('includeData')== 1)]);
+        $layout->toZip(
+            $this->dataSetFactory,
+            $this->widgetDataFactory,
+            $fileName,
+            [
+                'includeData' => ($sanitizedParams->getCheckbox('includeData') == 1),
+                'includeFallback' => ($sanitizedParams->getCheckbox('includeFallback') == 1),
+            ]
+        );
 
         return $this->render($request, SendFile::decorateResponse(
             $response,
@@ -2530,7 +2564,7 @@ class Layout extends Base
      * @param Request $request
      * @param Response $response
      * @return Response
-     * @throws \Xibo\Support\Exception\ConfigurationException
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function import(Request $request, Response $response)
     {
@@ -2560,6 +2594,7 @@ class Layout extends Base
             'userId' => $this->getUser()->userId,
             'controller' => $this,
             'dataSetFactory' => $this->getDataSetFactory(),
+            'widgetDataFactory' => $this->widgetDataFactory,
             'image_versions' => [],
             'accept_file_types' => '/\.zip$/i',
             'libraryLimit' => $libraryLimit,
@@ -2569,15 +2604,13 @@ class Layout extends Base
             'folderId' => $folderId,
         ];
 
-        $this->setNoOutput(true);
+        $this->setNoOutput();
 
         // Hand off to the Upload Handler provided by jquery-file-upload
         new LayoutUploadHandler($libraryFolder . 'temp/', $this->getLog()->getLoggerInterface(), $options);
 
         // Explicitly set the Content-Type header to application/json
-        $response = $response->withHeader('Content-Type', 'application/json');
-
-        return $response;
+        return $response->withHeader('Content-Type', 'application/json');
     }
 
     /**

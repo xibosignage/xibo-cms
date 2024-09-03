@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -198,6 +198,7 @@ class TimeDisconnectedSummary implements ReportInterface
 
         $tags = $sanitizedParams->getString('tags');
         $onlyLoggedIn = $sanitizedParams->getCheckbox('onlyLoggedIn') == 1;
+        $groupBy = $sanitizedParams->getString('groupBy');
 
         $currentDate = Carbon::now()->startOfDay();
 
@@ -281,7 +282,8 @@ class TimeDisconnectedSummary implements ReportInterface
                 ON display.displayId = `displayevent`.displayId 
                 WHERE `start` <= :end
                   AND IFNULL(`end`, :end) >= :start
-                  AND :end <= UNIX_TIMESTAMP(NOW()) ';
+                  AND :end <= UNIX_TIMESTAMP(NOW()) 
+                  AND `displayevent`.eventTypeId = 1 ';
 
         if (count($displayIds) > 0) {
             $body .= 'AND display.displayId IN (' . implode(',', $displayIds) . ') ';
@@ -339,6 +341,10 @@ class TimeDisconnectedSummary implements ReportInterface
 
         $displayBody = 'FROM `display` ';
 
+        if ($groupBy === 'displayGroup') {
+            $displaySelect .= ', displaydg.displayGroup, displaydg.displayGroupId ';
+        }
+
         if ($tags != '') {
             $displayBody .= 'INNER JOIN `lkdisplaydg`
                         ON lkdisplaydg.DisplayID = display.displayid
@@ -346,11 +352,23 @@ class TimeDisconnectedSummary implements ReportInterface
                         ON displaygroup.displaygroupId = lkdisplaydg.displaygroupId
                          AND `displaygroup`.isDisplaySpecific = 1 ';
         }
+
+        // Grouping Option
+        if ($groupBy === 'displayGroup') {
+            $displayBody .= 'INNER JOIN `lkdisplaydg` AS linkdg
+                        ON linkdg.DisplayID = display.displayid
+                     INNER JOIN `displaygroup` AS displaydg
+                        ON displaydg.displaygroupId = linkdg.displaygroupId 
+                        AND `displaydg`.isDisplaySpecific = 0 ';
+        }
+
         $displayBody .= 'WHERE 1 = 1 ';
 
         if (count($displayIds) > 0) {
             $displayBody .= 'AND display.displayId IN (' . implode(',', $displayIds) . ') ';
         }
+
+        $tagParams = [];
 
         if ($tags != '') {
             if (trim($tags) === '--no-tag') {
@@ -382,9 +400,9 @@ class TimeDisconnectedSummary implements ReportInterface
                     }
 
                     if ($operator === '=') {
-                        $params['tags' . $i] = $tag;
+                        $tagParams['tags' . $i] = $tag;
                     } else {
-                        $params['tags' . $i] = '%' . $tag . '%';
+                        $tagParams['tags' . $i] = '%' . $tag . '%';
                     }
                 }
 
@@ -400,6 +418,14 @@ class TimeDisconnectedSummary implements ReportInterface
             GROUP BY display.display, display.displayId
         ';
 
+        if ($tags != '') {
+            $displayBody .= ', displaygroup.displayGroupId ';
+        }
+
+        if ($groupBy === 'displayGroup') {
+            $displayBody .= ', displaydg.displayGroupId ';
+        }
+
         // Sorting?
         $sortOrder = $this->gridRenderSort($sanitizedParams);
 
@@ -413,7 +439,7 @@ class TimeDisconnectedSummary implements ReportInterface
         $rows = [];
 
         // Retrieve the disconnected/connected time from the $disconnectedDisplays array into displays
-        foreach ($this->store->select($displaySql, []) as $displayRow) {
+        foreach ($this->store->select($displaySql, $tagParams) as $displayRow) {
             $sanitizedDisplayRow = $this->sanitizer->getSanitizer($displayRow);
             $entry = [];
             $displayId = $sanitizedDisplayRow->getInt(('displayId'));
@@ -422,6 +448,15 @@ class TimeDisconnectedSummary implements ReportInterface
             $entry['timeDisconnected'] = $disconnectedDisplays[$displayId]['timeDisconnected'] ?? 0 ;
             $entry['timeConnected'] = $disconnectedDisplays[$displayId]['timeConnected'] ?? round(($toDt->format('U') - $fromDt->format('U')) / $divisor, 2);
             $entry['postUnits'] = $postUnits;
+            $entry['displayGroupId'] = $sanitizedDisplayRow->getInt(('displayGroupId'));
+            $entry['displayGroup'] = $sanitizedDisplayRow->getString(('displayGroup'));
+            $entry['avgTimeDisconnected'] = 0;
+            $entry['avgTimeConnected'] = 0;
+            $entry['availabilityPercentage'] = $this->getAvailabilityPercentage(
+                $entry['timeConnected'],
+                $entry['timeDisconnected']
+            ) . '%';
+
             $rows[] = $entry;
         }
 
@@ -434,10 +469,16 @@ class TimeDisconnectedSummary implements ReportInterface
         $availabilityLabels = [];
         $postUnits = '';
 
+        if ($groupBy === 'displayGroup') {
+            $rows = $this->getByDisplayGroup($rows, $sanitizedParams->getIntArray('displayGroupId', ['default' => []]));
+        }
+
         foreach ($rows as $row) {
             $availabilityData[] = $row['timeDisconnected'];
             $availabilityDataConnected[] = $row['timeConnected'];
-            $availabilityLabels[] = $row['display'];
+            $availabilityLabels[] = ($groupBy === 'displayGroup')
+                ? $row['displayGroup']
+                : $row['display'];
             $postUnits = $row['postUnits'];
         }
 
@@ -498,5 +539,64 @@ class TimeDisconnectedSummary implements ReportInterface
             count($rows),
             $chart
         );
+    }
+
+    /**
+     * Get the Availability Percentage
+     * @param float $connectedTime
+     * @param float $disconnectedTime
+     * @return float
+     */
+    private function getAvailabilityPercentage(float $connectedTime, float $disconnectedTime) : float
+    {
+        $connectedPercentage = $connectedTime/($connectedTime + $disconnectedTime ?: 1);
+
+        return abs(round($connectedPercentage * 100, 2));
+    }
+
+    /**
+     * Get the accumulated value by display groups
+     * @param array $rows
+     * @param array $displayGroupIds
+     * @return array
+     */
+    private function getByDisplayGroup(array $rows, array $displayGroupIds = []) : array
+    {
+        $data = [];
+        $displayGroups = [];
+
+        // Get the accumulated values by displayGroupId
+        foreach ($rows as $row) {
+            $displayGroupId = $row['displayGroupId'];
+
+            if (isset($displayGroups[$displayGroupId])) {
+                $displayGroups[$displayGroupId]['timeDisconnected'] += $row['timeDisconnected'];
+                $displayGroups[$displayGroupId]['timeConnected'] += $row['timeConnected'];
+                $displayGroups[$displayGroupId]['count'] += 1;
+            } else {
+                $row['count'] = 1;
+                $displayGroups[$displayGroupId] = $row;
+            }
+        }
+
+        // Get all display groups or selected display groups only
+        foreach ($displayGroups as $displayGroup) {
+            if (!$displayGroupIds || in_array($displayGroup['displayGroupId'], $displayGroupIds)) {
+                $displayGroup['timeConnected'] = round($displayGroup['timeConnected'], 2);
+                $displayGroup['timeDisconnected'] = round($displayGroup['timeDisconnected'], 2);
+                $displayGroup['availabilityPercentage'] = $this->getAvailabilityPercentage(
+                    $displayGroup['timeConnected'],
+                    $displayGroup['timeDisconnected']
+                ) . '%';
+
+                // Calculate the average values
+                $displayGroup['avgTimeConnected'] = round($displayGroup['timeConnected'] / $displayGroup['count'], 2);
+                $displayGroup['avgTimeDisconnected'] = round($displayGroup['timeDisconnected'] / $displayGroup['count'], 2);
+
+                $data[] = $displayGroup;
+            }
+        }
+
+        return $data;
     }
 }

@@ -45,6 +45,10 @@ interface LogServiceInterface
      */
     public function getLoggerInterface(): LoggerInterface;
 
+    public function getUserId(): ?int;
+    public function getSessionHistoryId(): ?int;
+    public function getRequestId(): ?int;
+
     /**
      * Set the user Id
      * @param int $userId
@@ -57,6 +61,20 @@ interface LogServiceInterface
      * @return mixed
      */
     public function setIpAddress($ip);
+
+    /**
+     * Set history session id
+     * @param $sessionHistoryId
+     * @return mixed
+     */
+    public function setSessionHistoryId($sessionHistoryId);
+
+    /**
+     * Set API requestId
+     * @param $requestId
+     * @return mixed
+     */
+    public function setRequestId($requestId);
 
     /**
      * @param $mode

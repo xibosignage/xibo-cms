@@ -162,14 +162,24 @@
                     {{ forms.input("clientInformationKeyCode", title, displayProfile.getSetting("clientInformationKeyCode"), helpText) }}
 
                     {% set title = "Log Level"|trans %}
-                    {% set helpText = "The logging level that should be recorded by the Player."|trans %}
+                    {% set helpText = "The resting logging level that should be recorded by the Player."|trans %}
                     {% set options = [
-                        { id: 'audit', value: "Audit"|trans },
-                        { id: 'info', value: "Information"|trans },
+                        { id: 'emergency', value: "Emergency"|trans },
+                        { id: 'alert', value: "Alert"|trans },
+                        { id: 'critical', value: "Critical"|trans },
                         { id: 'error', value: "Error"|trans },
                         { id: 'off', value: "Off"|trans }
                     ] %}
                     {{ forms.dropdown("logLevel", "single", title, displayProfile.getSetting("logLevel"), options, "id", "value", helpText) }}
+
+                    {% set title %}{% trans "Elevate Logging until" %}{% endset %}
+                    {% set helpText %}{% trans "Elevate log level for the specified time. Should only be used if there is a problem with the display." %}{% endset %}
+                    {% if displayProfile.isElevatedLogging() %}
+                        {% set elevatedLogs = displayProfile.getUnmatchedProperty("elevateLogsUntilIso") %}
+                    {% else %}
+                        {% set elevatedLogs = "" %}
+                    {% endif %}
+                    {{ forms.dateTime("elevateLogsUntil", title, elevatedLogs, helpText) }}
 
                     {% set title = "Log file path name."|trans %}
                     {% set helpText = "Create a log file on disk in this location. Please enter a fully qualified path."|trans %}

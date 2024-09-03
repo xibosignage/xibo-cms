@@ -23,7 +23,6 @@
 namespace Xibo\Helper;
 
 use Exception;
-use Xibo\Entity\Layout;
 use Xibo\Support\Exception\LibraryFullException;
 
 /**
@@ -40,6 +39,7 @@ class LayoutUploadHandler extends BlueImpUploadHandler
     {
         /* @var \Xibo\Controller\Layout $controller */
         $controller = $this->options['controller'];
+
         /* @var SanitizerService $sanitizerService */
         $sanitizerService = $this->options['sanitizerService'];
 
@@ -52,7 +52,10 @@ class LayoutUploadHandler extends BlueImpUploadHandler
         try {
             // Check Library
             if ($this->options['libraryQuotaFull']) {
-                throw new LibraryFullException(sprintf(__('Your library is full. Library Limit: %s K'), $this->options['libraryLimit']));
+                throw new LibraryFullException(sprintf(
+                    __('Your library is full. Library Limit: %s K'),
+                    $this->options['libraryLimit']
+                ));
             }
 
             // Check for a user quota
@@ -69,8 +72,8 @@ class LayoutUploadHandler extends BlueImpUploadHandler
             $importTags = $params->getCheckbox('importTags', ['default' => 0]);
             $useExistingDataSets = $params->getCheckbox('useExistingDataSets', ['default' => 0]);
             $importDataSetData = $params->getCheckbox('importDataSetData', ['default' => 0]);
+            $importFallback = $params->getCheckbox('importFallback', ['default' => 0]);
 
-            /* @var Layout $layout */
             $layout = $controller->getLayoutFactory()->createFromZip(
                 $controller->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/' . $fileName,
                 $name,
@@ -83,7 +86,7 @@ class LayoutUploadHandler extends BlueImpUploadHandler
                 $this->options['dataSetFactory'],
                 $tags,
                 $this->options['mediaService'],
-                $this->options['folderId']
+                $this->options['folderId'],
             );
 
             // set folderId, permissionFolderId is handled on Layout specific Campaign record.
@@ -96,6 +99,28 @@ class LayoutUploadHandler extends BlueImpUploadHandler
             }
             $layout->managePlaylistClosureTable();
             $layout->manageActions();
+
+            // Handle widget data
+            $fallback = $layout->getUnmatchedProperty('fallback');
+            if ($importFallback == 1 && $fallback !== null) {
+                /** @var \Xibo\Factory\WidgetDataFactory $widgetDataFactory */
+                $widgetDataFactory = $this->options['widgetDataFactory'];
+                foreach ($layout->getAllWidgets() as $widget) {
+                    // Did this widget have fallback data included in its export?
+                    if (array_key_exists($widget->tempWidgetId, $fallback)) {
+                        foreach ($fallback[$widget->tempWidgetId] as $item) {
+                            // We create the widget data with the new widgetId
+                            $widgetDataFactory
+                                ->create(
+                                    $widget->widgetId,
+                                    $item['data'] ?? [],
+                                    intval($item['displayOrder'] ?? 1),
+                                )
+                                ->save();
+                        }
+                    }
+                }
+            }
 
             @unlink($controller->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/' . $fileName);
 

@@ -168,6 +168,14 @@
             <title>Label Colour</title>
             <default>#333</default>
         </property>
+        <property id="warningBackgroundColor" type="color">
+            <title>Warning Background Colour</title>
+            <default>darkgoldenrod</default>
+        </property>
+        <property id="finishedBackgroundColor" type="color">
+            <title>Finished Background Colour</title>
+            <default>darkred</default>
+        </property>
     </properties>
     <preview></preview>
     <stencil>
@@ -229,22 +237,14 @@ body {
     font-size: 30px;
 }
 
-.warning>#clockdiv>div>span {
-    border-color: darkgoldenrod;
-    color: darkgoldenrod;
-}
-
-.finished>#clockdiv>div>span {
-    border-color: darkred;
-    color: darkred;
-}
-
 {% if textColor %}#clockdiv div>span { color: {{textColor}} !important; }{% endif %}
 {% if fontFamily %}#clockdiv div>span { font-family: {{fontFamily}} !important; }{% endif %}
 {% if textBackgroundColor %}#clockdiv div>span { background-color: {{textBackgroundColor}} !important; }{% endif %}
 {% if borderColor %}#clockdiv div>span { border-color: {{borderColor}} !important; }{% endif %}
 {% if labelTextColor %}#clockdiv { color: {{labelTextColor}} !important; }{% endif %}
 {% if labelFontFamily %}#clockdiv { font-family: {{labelFontFamily}} !important; }{% endif %}
+{% if warningBackgroundColor %}.warning #clockdiv > div > span {border-color: {{warningBackgroundColor}} !important;color: {{warningBackgroundColor}} !important;}{% endif %}
+{% if finishedBackgroundColor %}.finished #clockdiv > div > span {border-color: {{finishedBackgroundColor}} !important;color: {{finishedBackgroundColor}} !important;}{% endif %}
         ]]></style>
     </stencil>
     <onRender><![CDATA[

@@ -26,11 +26,12 @@
 {% block title %}{{ "Menu Boards"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    {% if currentUser.featureEnabled("menuBoard.add") %}
-        <div class="widget-action-menu pull-right">
+    <div class="widget-action-menu pull-right">
+        {% if currentUser.featureEnabled("menuBoard.add") %}
             <button class="btn btn-success XiboFormButton" title="{% trans "Add a new Menu Board" %}" href="{{ url_for("menuBoard.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Menu Board" %}</button>
-        </div>
-    {% endif %}
+        {% endif %}
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
+    </div>
 {% endblock %}
 
 {% block pageContent %}
@@ -79,22 +80,20 @@
                     </div>
                 </div>
 
-                <div class="row">
-                    <div class="col-sm-2 grid-folder-tree-container" id="grid-folder-filter">
-                        <div class="p-3 mr-2">
-                            <input id="jstree-search" class="form-control" type="text" placeholder="{% trans "Search" %}">
-                            <div class="form-check">
-                                <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
-                                <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "All Folders" %}</label>
-                            </div>
-                            <div class="folder-search-no-results d-none">
-                                <p>{% trans 'No Folders matching the search term' %}</p>
-                            </div>
-                            <div id="container-folder-tree"></div>
+                <div class="grid-with-folders-container">
+                    <div class="grid-folder-tree-container p-3" id="grid-folder-filter">
+                        <input id="jstree-search" class="form-control" type="text" placeholder="{% trans "Search" %}">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
+                            <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "All Folders" %}</label>
                         </div>
+                        <div class="folder-search-no-results d-none">
+                            <p>{% trans 'No Folders matching the search term' %}</p>
+                        </div>
+                        <div id="container-folder-tree"></div>
                     </div>
-                    <div id="datatable-container" class="col-sm-10 pr-0">
-                        <div class="XiboData card pt-4 px-2">
+                    <div id="datatable-container">
+                        <div class="XiboData card py-3">
                             <table id="menuBoards" class="table table-striped responsive nowrap" data-content-type="menuBoard" data-content-id-name="menuId" data-state-preference-name="menuBoardGrid" style="width: 100%;">
                                 <thead>
                                 <tr>
@@ -121,7 +120,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         var table;
         $(document).ready(function() {
             {% if not currentUser.featureEnabled("folder.view") %}
@@ -185,6 +184,10 @@
             table.on('draw', dataTableDraw);
             table.on('processing.dt', dataTableProcessing);
             dataTableAddButtons(table, $('#menuBoards_wrapper').find('.col-md-6').eq(1));
+
+            $("#refreshGrid").click(function () {
+                table.ajax.reload();
+            });
         });
 
     </script>

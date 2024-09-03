@@ -23,6 +23,57 @@ Handlebars.registerHelper('set', function(varName, varValue, opts) {
   opts.data.root[varName] = varValue;
 });
 
+Handlebars.registerHelper('parseJSON', function(varName, varValue, opts) {
+  if (!opts.data.root) {
+    opts.data.root = {};
+  }
+
+  try {
+    opts.data.root[varName] = JSON.parse(varValue);
+  } catch (error) {
+    opts.data.root = {};
+  }
+});
+
+Handlebars.registerHelper('createGradientInSVG', function(
+  gradient,
+  uniqueId,
+) {
+  if (gradient == '') {
+    return '';
+  }
+
+  const gradientObj = JSON.parse(gradient);
+
+  if (gradientObj.type === 'linear') {
+    // Convert angle to radians
+    const radians = (gradientObj.angle - 90) * Math.PI / 180;
+
+    // Calculate x and y components
+    const x = Math.cos(radians);
+    const y = Math.sin(radians);
+
+    // Determine x1, x2, y1, y2 points
+    const x1 = 0.5 - 0.5 * x;
+    const x2 = 0.5 + 0.5 * x;
+    const y1 = 0.5 - 0.5 * y;
+    const y2 = 0.5 + 0.5 * y;
+
+    return `<linearGradient id="gradLinear_${uniqueId}"
+      x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}">
+      <stop offset="0%" style="stop-color:${gradientObj.color1};" />
+      <stop offset="100%" style="stop-color:${gradientObj.color2};" />
+      </linearGradient>`;
+  } else {
+    // Radial
+    return `<radialGradient id="gradRadial_${uniqueId}"
+      cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+      <stop offset="0%" style="stop-color:${gradientObj.color1};" />
+      <stop offset="100%" style="stop-color:${gradientObj.color2};" />
+      </radialGradient>`;
+  }
+});
+
 Handlebars.registerHelper('weatherBackgroundImage', function(
   icon,
   cloudyImage,
@@ -69,6 +120,11 @@ Handlebars.registerHelper('weatherBackgroundImage', function(
   } else if ((typeof windImage !== 'undefined' && windImage !== '') &&
     icon === 'wind') {
     bgImage = windImage;
+  }
+
+  // If it's the media id, replace with path to be rendered
+  if (bgImage && !isNaN(bgImage) && imageDownloadUrl) {
+    bgImage = imageDownloadUrl.replace(':id', bgImage);
   }
 
   return bgImage;

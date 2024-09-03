@@ -48,6 +48,14 @@
 if (properties.dimWhenUnavailable && properties.data && properties.data.availability === 0) {
     $(target).find('div:first').css('color', properties.dimColor);
 }
+
+if(properties.fitToArea) {
+    // Set target for the text
+    properties.fitTarget = 'div';
+
+    // Scale text to container
+    $(target).find('.global-elements-text').xiboTextScaler(properties);
+}
         ]]></onTemplateRender>
     </template>
     <template>
@@ -149,9 +157,19 @@ return value;
                 <title>Option slot</title>
                 <default>1</default>
             </property>
+            <property id="fitToArea" type="checkbox">
+                <title>Fit to selection</title>
+                <helpText>Fit to selected area instead of using the font size?</helpText>
+                <default>0</default>
+            </property>
             <property id="fontSize" type="number">
                 <title>Font Size</title>
                 <default>24</default>
+                <visibility>
+                    <test>
+                        <condition field="fitToArea" type="neq">1</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="fontColor" type="color">
                 <title>Font Colour</title>
@@ -168,6 +186,11 @@ return value;
             <property id="horizontalAlign" type="dropdown">
                 <title>Horizontal Align</title>
                 <default>center</default>
+                <visibility>
+                    <test>
+                        <condition field="fitToArea" type="neq">1</condition>
+                    </test>
+                </visibility>
                 <options>
                     <option name="flex-start">Left</option>
                     <option name="center">Center</option>
@@ -189,18 +212,22 @@ return value;
 <div class="product-elements-options-name"
     style="
     display: flex;
-    {{#if horizontalAlign}}
-        justify-content: {{horizontalAlign}};
+    {{#if fitToArea}}
+        white-space: nowrap;
+    {{else}}
+        {{#if horizontalAlign}}
+            justify-content: {{horizontalAlign}};
+        {{/if}}
+        {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
+        {{#eq horizontalAlign "flex-start"}}text-align: left;{{/eq}}
+        {{#eq horizontalAlign "center"}}text-align: center;{{/eq}}
+        {{#eq horizontalAlign "flex-end"}}text-align: right;{{/eq}}
     {{/if}}
-    {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
     {{#if fontColor}}color: {{fontColor}};{{/if}}
-    {{#eq horizontalAlign "flex-start"}}text-align: left;{{/eq}}
-    {{#eq horizontalAlign "center"}}text-align: center;{{/eq}}
-    {{#eq horizontalAlign "flex-end"}}text-align: right;{{/eq}}
     {{#if verticalAlign}}align-items: {{verticalAlign}};{{/if}}
     overflow: hidden;
     width: 100%; height: 100%;"
->
+><div></div>
 </div>
             ]]></hbs>
         </stencil>
@@ -231,7 +258,15 @@ if (
         name = name + '' + properties.suffix;
     }
 
-    $productContainer.append(name);
+    $productContainer.find('div').append(name);
+}
+
+if(properties.fitToArea) {
+    // Set target for the text
+    properties.fitTarget = 'div';
+
+    // Scale text to container
+    $(target).find('.product-elements-options-name').xiboTextScaler(properties);
 }
         ]]></onTemplateRender>
     </template>
@@ -249,9 +284,19 @@ if (
                 <title>Option slot</title>
                 <default>1</default>
             </property>
+            <property id="fitToArea" type="checkbox">
+                <title>Fit to selection</title>
+                <helpText>Fit to selected area instead of using the font size?</helpText>
+                <default>0</default>
+            </property>
             <property id="fontSize" type="number">
                 <title>Font Size</title>
                 <default>24</default>
+                <visibility>
+                    <test>
+                        <condition field="fitToArea" type="neq">1</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="fontColor" type="color">
                 <title>Font Colour</title>
@@ -273,6 +318,11 @@ if (
             <property id="horizontalAlign" type="dropdown">
                 <title>Horizontal Align</title>
                 <default>center</default>
+                <visibility>
+                    <test>
+                        <condition field="fitToArea" type="neq">1</condition>
+                    </test>
+                </visibility>
                 <options>
                     <option name="flex-start">Left</option>
                     <option name="center">Center</option>
@@ -294,18 +344,22 @@ if (
 <div class="product-elements-options-value"
     style="
     display: flex;
-    {{#if horizontalAlign}}
-        justify-content: {{horizontalAlign}};
+    {{#if fitToArea}}
+        white-space: nowrap;
+    {{else}}
+        {{#if horizontalAlign}}
+            justify-content: {{horizontalAlign}};
+        {{/if}}
+        {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
+        {{#eq horizontalAlign "flex-start"}}text-align: left;{{/eq}}
+        {{#eq horizontalAlign "center"}}text-align: center;{{/eq}}
+        {{#eq horizontalAlign "flex-end"}}text-align: right;{{/eq}}
     {{/if}}
-    {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
     {{#if fontColor}}color: {{fontColor}};{{/if}}
-    {{#eq horizontalAlign "flex-start"}}text-align: left;{{/eq}}
-    {{#eq horizontalAlign "center"}}text-align: center;{{/eq}}
-    {{#eq horizontalAlign "flex-end"}}text-align: right;{{/eq}}
     {{#if verticalAlign}}align-items: {{verticalAlign}};{{/if}}
     overflow: hidden;
     width: 100%; height: 100%;"
->
+><div></div>
 </div>
             ]]></hbs>
         </stencil>
@@ -344,7 +398,15 @@ if (
         value = value + '' + properties.suffix;
     }
 
-    $productContainer.append(value);
+    $productContainer.find('div').append(value);
+}
+
+if(properties.fitToArea) {
+    // Set target for the text
+    properties.fitTarget = 'div';
+
+    // Scale text to container
+    $(target).find('.product-elements-options-value').xiboTextScaler(properties);
 }
         ]]></onTemplateRender>
     </template>
@@ -380,6 +442,8 @@ if (
                         <condition field="units" type="neq"></condition>
                     </test>
                 </visibility>
+            </property>
+            <property id="fitToArea" type="hidden">
             </property>
         </properties>
         <onTemplateRender><![CDATA[

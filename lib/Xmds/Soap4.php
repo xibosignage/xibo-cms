@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -69,7 +69,7 @@ class Soap4 extends Soap
             'operatingSystem' => $operatingSystem,
             'macAddress' => $macAddress,
             'xmrChannel' => $xmrChannel,
-            'xmrPubKey' => $xmrPubKey
+            'xmrPubKey' => $xmrPubKey,
         ]);
 
         // Sanitize
@@ -81,6 +81,7 @@ class Soap4 extends Soap
         $clientCode = $sanitized->getInt('clientCode');
         $macAddress = $sanitized->getString('macAddress');
         $clientAddress = $this->getIp();
+        $operatingSystem = $sanitized->getString('operatingSystem');
 
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
@@ -102,10 +103,13 @@ class Soap4 extends Soap
             $display = $this->displayFactory->getByLicence($hardwareKey);
             $this->display = $display;
 
-            $this->logProcessor->setDisplay($display->displayId, ($display->isAuditing()));
+            $this->logProcessor->setDisplay($display->displayId, $display->isAuditing());
 
             // Audit in
-            $this->getLog()->debug('serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey . ', displayName: ' . $displayName . ', macAddress: ' . $macAddress);
+            $this->getLog()->debug(
+                'serverKey: ' . $serverKey . ', hardwareKey: ' . $hardwareKey .
+                ', displayName: ' . $displayName . ', macAddress: ' . $macAddress
+            );
 
             // Now
             $dateNow = Carbon::now();
@@ -268,7 +272,18 @@ class Soap4 extends Soap
         $display->clientType = $clientType;
         $display->clientVersion = $clientVersion;
         $display->clientCode = $clientCode;
-        //$display->operatingSystem = $operatingSystem;
+
+        // Parse operatingSystem JSON data
+        $operatingSystemJson = json_decode($operatingSystem, false);
+
+        // Newer version of players will return a JSON value, but for older version, it will return a string.
+        // In case the json decode fails, use the operatingSystem string value as the default value for the osVersion.
+        $display->osVersion = $operatingSystemJson->version ?? $operatingSystem;
+        $display->osSdk = $operatingSystemJson->sdk ?? null;
+        $display->manufacturer = $operatingSystemJson->manufacturer ?? null;
+        $display->brand = $operatingSystemJson->brand ?? null;
+        $display->model = $operatingSystemJson->model ?? null;
+
         $display->save(['validate' => false, 'audit' => false]);
 
         // Log Bandwidth
@@ -357,10 +372,12 @@ class Soap4 extends Soap
             throw new \SoapFault('Receiver', 'Bandwidth Limit exceeded');
         }
 
-        if ($this->display->isAuditing()) {
-            $this->getLog()->debug('hardwareKey: ' . $hardwareKey . ', fileId: ' . $fileId . ', fileType: '
-                . $fileType . ', chunkOffset: ' . $chunkOffset . ', chunkSize: ' . $chunkSize);
-        }
+
+        $this->getLog()->debug(
+            'hardwareKey: ' . $hardwareKey . ', fileId: ' . $fileId . ', fileType: ' . $fileType .
+            ', chunkOffset: ' . $chunkOffset . ', chunkSize: ' . $chunkSize
+        );
+
 
         try {
             if ($isDependency || ($fileType == 'media' && $fileId < 0)) {
@@ -598,9 +615,7 @@ class Soap4 extends Soap
         }
 
         // Important to keep this logging in place (status screen notification gets logged)
-        if ($this->display->isAuditing()) {
-            $this->getLog()->debug($status);
-        }
+        $this->getLog()->debug($status);
 
         $this->logBandwidth($this->display->displayId, Bandwidth::$NOTIFYSTATUS, strlen($status));
 
@@ -756,9 +771,7 @@ class Soap4 extends Soap
             throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
         }
 
-        if ($this->display->isAuditing()) {
-            $this->getLog()->debug('Received Screen shot');
-        }
+        $this->getLog()->debug('Received Screen shot');
 
         // Open this displays screen shot file and save this.
         $location = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'screenshots/' . $this->display->displayId . '_screenshot.' . $screenShotFmt;
@@ -768,14 +781,10 @@ class Soap4 extends Soap
             try {
                 $screenShotImg = Img::make($screenShot);
             } catch (\Exception $e) {
-                if ($this->display->isAuditing()) {
-                    $this->getLog()->debug($imgDriver . " - " . $e->getMessage());
-                }
+                $this->getLog()->debug($imgDriver . ' - ' . $e->getMessage());
             }
             if ($screenShotImg !== false) {
-                if ($this->display->isAuditing()) {
-                    $this->getLog()->debug("Use " . $imgDriver);
-                }
+                $this->getLog()->debug('Use ' . $imgDriver);
                 break;
             }
         }
@@ -786,15 +795,11 @@ class Soap4 extends Soap
             if ($imgMime != $screenShotMime) {
                 $needConversion = true;
                 try {
-                    if ($this->display->isAuditing()) {
-                        $this->getLog()->debug("converting: '" . $imgMime . "' to '" . $screenShotMime . "'");
-                    }
+                    $this->getLog()->debug("converting: '" . $imgMime . "' to '" . $screenShotMime . "'");
                     $screenShot = (string) $screenShotImg->encode($screenShotFmt);
                     $converted = true;
                 } catch (\Exception $e) {
-                    if ($this->display->isAuditing()) {
-                        $this->getLog()->debug($e->getMessage());
-                    }
+                    $this->getLog()->debug($e->getMessage());
                 }
             }
         }

@@ -22,6 +22,7 @@
 
 namespace Xibo\Controller;
 
+use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\DisplayFactory;
@@ -36,10 +37,12 @@ use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Widget\SubPlaylistItem;
 
 /**
  * Class Playlist
@@ -1709,7 +1712,8 @@ class Playlist extends Base
                     'id' => 'layout_button_preview',
                     'external' => true,
                     'url' => '#',
-                    'onclick' => 'createMiniLayoutPreview("' . $this->urlFor($request, 'layout.preview', ['id' => $layout->layoutId]) . '");',
+                    'onclick' => 'createMiniLayoutPreview',
+                    'onclickParam' => $this->urlFor($request, 'layout.preview', ['id' => $layout->layoutId]),
                     'text' => __('Preview Layout')
                 );
             }
@@ -1932,5 +1936,155 @@ class Playlist extends Base
     private function hasFullScreenLayout(\Xibo\Entity\Playlist $playlist): ?int
     {
         return $this->layoutFactory->getLinkedFullScreenLayout('playlist', $playlist->playlistId)?->campaignId;
+    }
+
+    /**
+     * Convert Layout editor playlist to global playlist.
+     * Assign this Playlist to the original regionPlaylist via sub-playlist Widget.
+     * @SWG\Post(
+     *   path="/playlist/{id}/convert",
+     *   operationId="convert",
+     *   tags={"playlist"},
+     *   summary="Playlist Convert",
+     *   description="Create a global playlist from inline editor Playlist.
+     * Assign created Playlist via sub-playlist Widget to region Playlist.",
+     *   @SWG\Parameter(
+     *       name="playlistId",
+     *       in="path",
+     *       description="The Playlist ID",
+     *       type="integer",
+     *       required=true
+     *    ),
+     *   @SWG\Parameter(
+     *       name="name",
+     *       in="formData",
+     *       description="Optional name for the global Playlist.",
+     *       type="string",
+     *       required=false
+     *    ),
+     *   @SWG\Response(
+     *       response=201,
+     *       description="successful operation"
+     *   )
+     *  )
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function convert(Request $request, Response $response, $id): Response
+    {
+        $params = $this->getSanitizer($request->getParams());
+
+        // get region playlist
+        $regionPlaylist = $this->playlistFactory->getById($id);
+
+        // check if it is region playlist
+        if (!$regionPlaylist->isRegionPlaylist()) {
+            throw new InvalidArgumentException(__('Not a Region Playlist'), 'playlistId');
+        }
+
+        // get the region
+        $region = $this->regionFactory->getById($regionPlaylist->regionId);
+
+        // make sure this is playlist type region
+        if ($region->type !== 'playlist') {
+            throw new InvalidArgumentException(__('Not a Playlist'), 'playlistId');
+        }
+
+        // get Layout
+        $layout = $this->layoutFactory->getByRegionId($regionPlaylist->regionId);
+
+        // check permissions
+        if (!$this->getUser()->checkEditable($layout)) {
+            throw new AccessDeniedException();
+        }
+
+        // check if it is a draft
+        if (!$layout->isEditable()) {
+            throw new InvalidArgumentException(
+                __('This Layout is not a Draft, please checkout.'),
+                'layoutId'
+            );
+        }
+
+        $regionPlaylist->load();
+
+        // clone region playlist to a new Playlist object
+        $playlist = clone $regionPlaylist;
+        $name = $params->getString(
+            'name',
+            ['default' => sprintf(__('Untitled %s'), Carbon::now()->format(DateFormatHelper::getSystemFormat()))]
+        );
+
+        $playlist->name = empty($playlist->name) ? $name : $playlist->name;
+        $playlist->setOwner($this->getUser()->userId);
+
+        if ($playlist->enableStat == null) {
+            $playlist->enableStat = $this->getConfig()->getSetting('PLAYLIST_STATS_ENABLED_DEFAULT');
+        }
+
+        // Save the new playlist
+        $playlist->save();
+        $playlist->updateDuration();
+
+        // Clone the closure table for the original playlist
+        $regionPlaylist->cloneClosureTable($playlist->getId());
+
+        // remove widgets on the region Playlist
+        foreach ($regionPlaylist->widgets as $widget) {
+            $widget->delete();
+        }
+        $regionPlaylist->widgets = [];
+
+        $module = $this->moduleFactory->getByType('subplaylist');
+
+        // create a new sub-playlist Widget
+        $widget = $this->widgetFactory->create(
+            $this->getUser()->userId,
+            $regionPlaylist->playlistId,
+            'subplaylist',
+            $playlist->duration,
+            $module->schemaVersion
+        );
+
+        // save, simulate add
+        $widget->save();
+
+        // prepare sub-playlist item
+        $item = new SubPlaylistItem();
+        $item->rowNo = 1;
+        $item->playlistId = $playlist->playlistId;
+        $item->spotFill = 'repeat';
+        $item->spotLength =  '';
+        $item->spots = '';
+
+        $playlistItems[] = $item;
+
+        // update Widget subPlaylists option
+        $widget->setOptionValue('subPlaylists', 'attrib', json_encode($playlistItems));
+
+        // Calculate the duration
+        $widget->calculateDuration($module);
+
+        // Assign the sub-playlist widget to the region playlist
+        $regionPlaylist->assignWidget($widget);
+        // Save the region playlist
+        $regionPlaylist->save();
+
+        // build Layout xlf
+        $layout->xlfToDisk(['notify' => true, 'exceptionOnError' => true, 'exceptionOnEmptyRegion' => false]);
+
+        // Success
+        $this->getState()->hydrate([
+            'httpStatus' => 201,
+            'message' => __('Conversion Successful'),
+        ]);
+
+        return $this->render($request, $response);
     }
 }

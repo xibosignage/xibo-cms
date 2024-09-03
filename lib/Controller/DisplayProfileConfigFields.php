@@ -120,6 +120,23 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('logLevel', $sanitizedParams->getString('logLevel'), $ownConfig, $config);
                 }
 
+                if ($sanitizedParams->hasParam('elevateLogsUntil')) {
+                    $this->handleChangedSettings(
+                        'elevateLogsUntil',
+                        ($ownConfig)
+                            ? $displayProfile->getSetting('elevateLogsUntil')
+                            : $display->getSetting('elevateLogsUntil'),
+                        $sanitizedParams->getDate('elevateLogsUntil')?->format('U'),
+                        $changedSettings
+                    );
+                    $displayProfile->setSetting(
+                        'elevateLogsUntil',
+                        $sanitizedParams->getDate('elevateLogsUntil')?->format('U'),
+                        $ownConfig,
+                        $config
+                    );
+                }
+
                 if ($sanitizedParams->hasParam('versionMediaId')) {
                     $this->handleChangedSettings('versionMediaId', ($ownConfig) ? $displayProfile->getSetting('versionMediaId') : $display->getSetting('versionMediaId'), $sanitizedParams->getInt('versionMediaId'), $changedSettings);
                     $displayProfile->setSetting('versionMediaId', $sanitizedParams->getInt('versionMediaId'), $ownConfig, $config);
@@ -356,6 +373,23 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('logLevel', $sanitizedParams->getString('logLevel'), $ownConfig, $config);
                 }
 
+                if ($sanitizedParams->hasParam('elevateLogsUntil')) {
+                    $this->handleChangedSettings(
+                        'elevateLogsUntil',
+                        ($ownConfig)
+                            ? $displayProfile->getSetting('elevateLogsUntil')
+                            : $display->getSetting('elevateLogsUntil'),
+                        $sanitizedParams->getDate('elevateLogsUntil')?->format('U'),
+                        $changedSettings
+                    );
+                    $displayProfile->setSetting(
+                        'elevateLogsUntil',
+                        $sanitizedParams->getDate('elevateLogsUntil')?->format('U'),
+                        $ownConfig,
+                        $config
+                    );
+                }
+
                 if ($sanitizedParams->hasParam('logToDiskLocation')){
                     $this->handleChangedSettings('logToDiskLocation', ($ownConfig) ? $displayProfile->getSetting('logToDiskLocation') : $display->getSetting('logToDiskLocation'), $sanitizedParams->getString('logToDiskLocation'), $changedSettings);
                     $displayProfile->setSetting('logToDiskLocation', $sanitizedParams->getString('logToDiskLocation'), $ownConfig, $config);
@@ -524,6 +558,23 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('logLevel', $sanitizedParams->getString('logLevel'), $ownConfig, $config);
                 }
 
+                if ($sanitizedParams->hasParam('elevateLogsUntil')) {
+                    $this->handleChangedSettings(
+                        'elevateLogsUntil',
+                        ($ownConfig)
+                            ? $displayProfile->getSetting('elevateLogsUntil')
+                            : $display->getSetting('elevateLogsUntil'),
+                        $sanitizedParams->getDate('elevateLogsUntil')?->format('U'),
+                        $changedSettings
+                    );
+                    $displayProfile->setSetting(
+                        'elevateLogsUntil',
+                        $sanitizedParams->getDate('elevateLogsUntil')?->format('U'),
+                        $ownConfig,
+                        $config
+                    );
+                }
+
                 if ($sanitizedParams->hasParam('enableShellCommands')) {
                     $this->handleChangedSettings('enableShellCommands',($ownConfig) ? $displayProfile->getSetting('enableShellCommands') : $display->getSetting('enableShellCommands'), $sanitizedParams->getCheckbox('enableShellCommands'), $changedSettings);
                     $displayProfile->setSetting('enableShellCommands', $sanitizedParams->getCheckbox('enableShellCommands'), $ownConfig, $config);
@@ -647,6 +698,23 @@ trait DisplayProfileConfigFields
                 if ($sanitizedParams->hasParam('logLevel')) {
                     $this->handleChangedSettings('logLevel', ($ownConfig) ? $displayProfile->getSetting('logLevel') : $display->getSetting('logLevel'), $sanitizedParams->getString('logLevel'), $changedSettings);
                     $displayProfile->setSetting('logLevel', $sanitizedParams->getString('logLevel'), $ownConfig, $config);
+                }
+
+                if ($sanitizedParams->hasParam('elevateLogsUntil')) {
+                    $this->handleChangedSettings(
+                        'elevateLogsUntil',
+                        ($ownConfig)
+                            ? $displayProfile->getSetting('elevateLogsUntil')
+                            : $display->getSetting('elevateLogsUntil'),
+                        $sanitizedParams->getDate('elevateLogsUntil')?->format('U'),
+                        $changedSettings
+                    );
+                    $displayProfile->setSetting(
+                        'elevateLogsUntil',
+                        $sanitizedParams->getDate('elevateLogsUntil')?->format('U'),
+                        $ownConfig,
+                        $config
+                    );
                 }
 
                 if ($sanitizedParams->hasParam('versionMediaId')) {

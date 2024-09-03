@@ -40,6 +40,133 @@ $(document).ready(function() {
         });
     });
 
+    // Set a listener for type change event
+    $('body').on('change', '#scheduleCriteriaFields select[name="criteria_type[]"]', function(e) {
+        // Capture the event target
+        var $target = $(e.target);
+        // Get the row where the type was changed
+        var $row = $target.closest('.form-group');
+        var selectedType = $target.val();
+        var $fields = $('#scheduleCriteriaFields');
+        var scheduleCriteria = $fields.data('scheduleCriteria');
+
+        if (scheduleCriteria) {
+            if (selectedType === 'custom') {
+                // Use a text input for metrics
+                updateMetricsFieldAsText($row);
+                // Use a text input for values
+                updateValueFieldAsText($row);
+            } else if (scheduleCriteria) {
+                // Update metrics based on the selected type and change text field to dropdown
+                updateMetricsField($row, scheduleCriteria, selectedType);
+            }
+        }
+    });
+
+    // Function to update the metrics field based on the selected type
+    function updateMetricsField($row, scheduleCriteria, type) {
+        var $metricLabel = $row.find('label[for="criteria_metric[]"]');
+        var $metricSelect = $('<select class="form-control" name="criteria_metric[]"></select>');
+
+        // Check if scheduleCriteria has types
+        if (scheduleCriteria.types) {
+            var typeData = scheduleCriteria.types.find(t => t.id === type);
+            if (typeData) {
+                var metrics = typeData.metrics;
+                metrics.forEach(function(metric) {
+                    $metricSelect.append(new Option(metric.name, metric.id));
+                });
+
+                // Check for the currently selected metric and update the value field accordingly
+                var selectedMetric = $metricSelect.val();
+                var metricData = metrics.find(m => m.id === selectedMetric);
+
+                // Update the value field based on the selected metric
+                if (metricData && metricData.values) {
+                    updateValueField($row, metricData.values);
+                } else {
+                    updateValueFieldAsText($row);
+                }
+            }
+        }
+
+        // Remove only input or select elements inside the label
+        $metricLabel.find('input, select').remove();
+        $metricLabel.append($metricSelect);
+    }
+
+    // Function to revert the metrics field to a text input
+    function updateMetricsFieldAsText($row) {
+        var $metricLabel = $row.find('label[for="criteria_metric[]"]');
+        var $metricInput = $('<input class="form-control" name="criteria_metric[]" type="text" value="" />');
+
+        // Remove only input or select elements inside the label
+        $metricLabel.find('input, select').remove();
+        $metricLabel.append($metricInput);
+    }
+
+    // Handle value field update outside of updateMetricsField
+    $('body').on('change', '#scheduleCriteriaFields select[name="criteria_metric[]"]', function(e) {
+        // Capture the event target
+        var $target = $(e.target);
+        // Get the row where the metric was changed
+        var $row = $target.closest('.form-group');
+        var selectedMetric = $target.val();
+        var $fields = $('#scheduleCriteriaFields');
+        var scheduleCriteria = $fields.data('scheduleCriteria');
+        var selectedType = $row.find('select[name="criteria_type[]"]').val();
+
+        if (scheduleCriteria && selectedType) {
+            var typeData = scheduleCriteria.types.find(t => t.id === selectedType);
+            if (typeData) {
+                var metrics = typeData.metrics;
+                var metricData = metrics.find(m => m.id === selectedMetric);
+
+                // Update the value field based on the selected metric
+                if (metricData && metricData.values) {
+                    updateValueField($row, metricData.values);
+                } else {
+                    updateValueFieldAsText($row);
+                }
+            }
+        }
+    });
+
+    // Function to update the value field based on the selected metric's values
+    function updateValueField($row, values) {
+        var $valueLabel = $row.find('label[for="criteria_value[]"]');
+
+        // Remove only input or select elements inside the label
+        $valueLabel.find('input, select').remove();
+
+        // Check the inputType in the values object
+        if (values.inputType === 'dropdown') {
+            // change to dropdown and populate
+            var $valueSelect = $('<select class="form-control" name="criteria_value[]"></select>');
+            values.values.forEach(function(value) {
+                $valueSelect.append(new Option(value.title, value.id));
+            });
+            $valueLabel.append($valueSelect);
+        } else {
+            // change to either text or number field
+            var $valueInput;
+            if (values.inputType === 'text' || values.inputType === 'number' || values.inputType === 'date') {
+                $valueInput = $('<input class="form-control" name="criteria_value[]" type="' + values.inputType + '" value="" />');
+            }
+            $valueLabel.append($valueInput);
+        }
+    }
+
+    // Function to revert the value field to a text input
+    function updateValueFieldAsText($row) {
+        var $valueLabel = $row.find('label[for="criteria_value[]"]');
+        var $valueInput = $('<input class="form-control" name="criteria_value[]" type="text" value="" />');
+
+        // Remove only input or select elements inside the label
+        $valueLabel.find('input, select').remove();
+        $valueLabel.append($valueInput);
+    }
+
     // Set up the navigational controls
     $('.btn-group button[data-calendar-nav]').each(function() {
         var $this = $(this);
@@ -256,6 +383,7 @@ $(document).ready(function() {
 
                     // Serialise
                     let displayGroups = $('select[name="displayGroupIds[]"').serialize();
+                    let displaySpecificGroups = $('select[name="displaySpecificGroupIds[]"').serialize();
                     let displayLayouts = $('#campaignIdFilter').serialize();
                     let eventTypes = $('#eventTypeId').serialize();
                     let geoAware = $('#geoAware').serialize();
@@ -264,7 +392,9 @@ $(document).ready(function() {
                     let nameRegEx = 'useRegexForName=' + $('#useRegexForName').is('checked');
                     let nameLogicalOperator = $('#logicalOperatorName').serialize();
 
-                    !displayGroups && !displayLayouts ? $calendarErrorMessage.show() : $calendarErrorMessage.hide()
+                    !displayGroups && !displayLayouts && !displaySpecificGroups
+                      ? $calendarErrorMessage.show()
+                      : $calendarErrorMessage.hide()
 
                     var url = calendarOptions.eventSource;
 
@@ -274,12 +404,12 @@ $(document).ready(function() {
                       '&' + nameRegEx + '&' + nameLogicalOperator;
 
                     // Should we append displays?
-                    if (!displayGroups && displayLayouts !== '') {
+                    if (!displayGroups && !displaySpecificGroups && displayLayouts !== '') {
                         // Ignore the display list
                         url += '&' + 'displayGroupIds[]=-1';
-                    } else if (displayGroups !== '') {
+                    } else if (displayGroups !== '' || displaySpecificGroups !== '') {
                         // Append display list
-                        url += '&' + displayGroups;
+                        url += '&' + displayGroups + '&' + displaySpecificGroups;
                     }
 
                     events = [];
@@ -406,28 +536,28 @@ $(document).ready(function() {
                         $('#DisplayList, #DisplayGroupList').prop('disabled', false);
 
                         // Find selected display group and create a display group list used to create tabs
-                        $('select[name="displayGroupIds[]"] option').each(function () {
-                            var $self = $(this);
+                        $('select[name="displayGroupIds[]"] option, select[name="displaySpecificGroupIds[]"] option')
+                          .each(function () {
+                              var $self = $(this);
 
-                            // If the all option is selected
-                            if ($self.val() == -1 && $self.is(':selected')) {
-                                chooseAllDisplays = true;
-                                return true;
-                            }
+                              // If the all option is selected
+                              if ($self.val() == -1 && $self.is(':selected')) {
+                                  chooseAllDisplays = true;
+                                  return true;
+                              }
 
-                            if ($self.is(':selected') || chooseAllDisplays) {
+                              if ($self.is(':selected') || chooseAllDisplays) {
+                                  displayGroupsList.push({
+                                      id: $self.val(),
+                                      name: $self.html(),
+                                      isDisplaySpecific: $self.attr('type')
+                                  });
 
-                                displayGroupsList.push({
-                                    id: $self.val(),
-                                    name: $self.html(),
-                                    isDisplaySpecific: $self.attr('type')
-                                });
-
-                                if (typeof selectedDisplayGroup == 'undefined') {
-                                    selectedDisplayGroup = $self.val();
-                                }
-                            }
-                        });
+                                  if (typeof selectedDisplayGroup == 'undefined') {
+                                      selectedDisplayGroup = $self.val();
+                                  }
+                              }
+                          });
                     }
 
                     // Sort display group list by name
@@ -642,7 +772,10 @@ var setupScheduleForm = function(dialog) {
     // geo schedule
     var $geoAware = $('#isGeoAware');
     var isGeoAware = $geoAware.is(':checked');
-    let $form = dialog.find('form')
+    let $form = dialog.find('form');
+
+  // Configure the schedule criteria fields.
+  configureCriteriaFields(dialog);
 
     if (isGeoAware) {
         // without this additional check the map will not load correctly, it should be initialised when we are on the Geo Location tab
@@ -732,29 +865,37 @@ var setupScheduleForm = function(dialog) {
         $recurrenceMonthlyRepeatsOn.find("option").remove().end().append($dayOption).append($weekdayOption).val($recurrenceMonthlyRepeatsOn.data("value"));
     });
 
-    // Bind to the dialog submit
-    $("#scheduleAddForm, #scheduleEditForm, #scheduleDeleteForm, #scheduleRecurrenceDeleteForm").submit(function(e) {
-        e.preventDefault();
+  // Bind to the dialog submit
+  // this should make any changes to the form needed before we submit.
+  // eslint-disable-next-line max-len
+  $('#scheduleAddForm, #scheduleEditForm, #scheduleDeleteForm, #scheduleRecurrenceDeleteForm')
+    .submit(function(e) {
+      e.preventDefault();
 
-        var form = $(this);
+      // eslint-disable-next-line no-invalid-this
+      const $form = $(this);
+      const data = $form.serializeObject();
 
-        $.ajax({
-            type: $(this).attr("method"),
-            url: $(this).attr("action"),
-            data: $(this).serialize(),
-            cache: false,
-            dataType: "json",
-            success: function(xhr, textStatus, error) {
+      // Criteria fields
+      processCriteriaFields($form, data);
 
-                XiboSubmitResponse(xhr, form);
+      $.ajax({
+        type: $form.attr('method'),
+        url: $form.attr('action'),
+        data: data,
+        cache: false,
+        dataType: 'json',
+        success: function(xhr, textStatus, error) {
+          // eslint-disable-next-line new-cap
+          XiboSubmitResponse(xhr, $form);
 
-                if (xhr.success && calendar !== undefined) {
-                    // Reload the Calendar
-                    calendar.options['clearCache'] = true;
-                    calendar.view();
-                }
-            }
-        });
+          if (xhr.success && calendar !== undefined) {
+            // Reload the Calendar
+            calendar.options['clearCache'] = true;
+            calendar.view();
+          }
+        },
+      });
     });
 
     // Popover
@@ -964,27 +1105,26 @@ var processScheduleFormElements = function(el) {
             //console.log('Process: eventTypeId, val = ' + fieldVal);
 
             var layoutControlDisplay =
-              (fieldVal == 2 || fieldVal == 6 || fieldVal == 7 || fieldVal == 8) ? 'none' : '';
+              (fieldVal == 2 || fieldVal == 6 || fieldVal == 7 || fieldVal == 8 || fieldVal == 10) ? 'none' : '';
             var endTimeControlDisplay = (fieldVal == 2 || relativeTime) ? 'none' : '';
             var startTimeControlDisplay = (relativeTime && fieldVal != 2) ? 'none' : '';
             var dayPartControlDisplay = (fieldVal == 2) ? 'none' : '';
             var commandControlDisplay = (fieldVal == 2) ? '' : 'none';
-            var scheduleSyncControlDisplay = (fieldVal == 1) ? '' : 'none';
             var interruptControlDisplay = (fieldVal == 4) ? '' : 'none';
             var actionControlDisplay = (fieldVal == 6) ? '' : 'none';
-            var maxPlaysControlDisplay = (fieldVal == 2 || fieldVal == 6) ? 'none' : '';
+            var maxPlaysControlDisplay = (fieldVal == 2 || fieldVal == 6 || fieldVal == 10) ? 'none' : '';
             var mediaScheduleControlDisplay = (fieldVal == 7) ? '' : 'none';
             var playlistScheduleControlDisplay = (fieldVal == 8) ? '' : 'none';
             var playlistMediaScheduleControlDisplay = (fieldVal == 7 || fieldVal == 8) ? '' : 'none';
             var relativeTimeControlDisplay = (fieldVal == 2 || !relativeTime) ? 'none' : '';
             var relativeTimeCheckboxDisplay = (fieldVal == 2) ? 'none' : '';
+            var dataConnectorDisplay = fieldVal == 10 ? '' : 'none';
 
             $('.layout-control').css('display', layoutControlDisplay);
             $('.endtime-control').css('display', endTimeControlDisplay);
             $('.starttime-control').css('display', startTimeControlDisplay);
             $('.day-part-control').css('display', dayPartControlDisplay);
             $('.command-control').css('display', commandControlDisplay);
-            $('.sync-schedule-control').css('display', scheduleSyncControlDisplay);
             $('.interrupt-control').css('display', interruptControlDisplay);
             $('.action-control').css('display', actionControlDisplay);
             $('.max-plays-control').css('display', maxPlaysControlDisplay);
@@ -992,7 +1132,8 @@ var processScheduleFormElements = function(el) {
             $('.playlist-control').css('display', playlistScheduleControlDisplay);
             $('.media-playlist-control').css('display', playlistMediaScheduleControlDisplay);
             $('.relative-time-control').css('display', relativeTimeControlDisplay);
-            $('.relative-time-checkbox').css('display', relativeTimeCheckboxDisplay)
+            $('.relative-time-checkbox').css('display', relativeTimeCheckboxDisplay);
+            $('.data-connector-control').css('display', dataConnectorDisplay);
 
             // action event type
             if (fieldVal === 6) {
@@ -1123,6 +1264,8 @@ var processScheduleFormElements = function(el) {
 
             $('.layout-code-control').css('display', layoutCodeControl);
             $('.command-control').css('display', commandControlDisplay);
+
+            break;
         case 'relativeTime' :
             if (!el.is(":visible")) {
                 return;
@@ -1632,6 +1775,61 @@ var setupSelectForSchedule = function (dialog) {
         }
     });
 
+    // set initial displays on add form.
+    if(
+      [undefined, ''].indexOf($displaySelect.data('initialKey')) == -1 &&
+      $(dialog).find('form').data('setDisplaysFromGridFilters')
+    ) {
+        // filter from the Schedule grid
+        let displaySpecificGroups = $('#DisplayList').val() ?? [];
+        let displayGroups = $('#DisplayGroupList').val() ?? [];
+        // add values to one array
+        let addFormDisplayGroup = displaySpecificGroups.concat(displayGroups);
+        // set array of displayGroups as initial value
+        $displaySelect.data('initial-value', addFormDisplayGroup);
+
+        // query displayGroups and add all relevant options.
+        var initialValue = $displaySelect.data('initialValue');
+        var initialKey = $displaySelect.data('initialKey');
+        var dataObj = {};
+        dataObj[initialKey] = initialValue;
+        dataObj['isDisplaySpecific'] = -1;
+        dataObj['forSchedule'] = 1;
+
+        $.ajax({
+            url: $displaySelect.data('searchUrl'),
+            type: 'GET',
+            data: dataObj
+        }).then(function(data) {
+            // create the option and append to Select2
+            data.data.forEach(object => {
+                var option = new Option(
+                  object[$displaySelect.data('textProperty')],
+                  object[$displaySelect.data('idProperty')],
+                  true,
+                  true
+                );
+                $displaySelect.append(option)
+            });
+
+            // Trigger change but skip auto save
+            $displaySelect.trigger(
+              'change',
+              [{
+                  skipSave: true,
+              }]
+            );
+
+            // manually trigger the `select2:select` event
+            $displaySelect.trigger({
+                type: 'select2:select',
+                params: {
+                    data: data
+                }
+            });
+        });
+    }
+
     $('#mediaId, #playlistId', dialog).on('select2:select', function(event) {
         let hasFullScreenLayout = false;
         if (event.params.data.data !== undefined) {
@@ -1704,4 +1902,177 @@ var setupSelectForSchedule = function (dialog) {
                 SystemMessage(xhr.responseText, false);
             })
     })
+};
+
+/**
+ * Configure criteria fields on the schedule add/edit forms.
+ * @param {object} dialog - Dialog object
+ */
+// eslint-disable-next-line no-unused-vars
+const configureCriteriaFields = function(dialog) {
+    const $fields = dialog.find('#scheduleCriteriaFields');
+    if ($fields.length <= 0) {
+        return;
+    }
+
+    // Get the scheduleCriteria from the data attribute
+    const scheduleCriteria = $fields.data('scheduleCriteria');
+
+    // Extract the types from scheduleCriteria
+    const types = scheduleCriteria ? scheduleCriteria.types : [];
+
+    // We use a template
+    const templateScheduleCriteriaFields =
+        Handlebars.compile($('#templateScheduleCriteriaFields').html());
+
+    // Function to populate type dropdowns
+    const populateTypeDropdown = function($typeSelect) {
+        if (types && types.length > 0) {
+            types.forEach(type => {
+                $typeSelect.append(new Option(type.name, type.id));
+            });
+        }
+    };
+
+    // Function to update metrics field
+    const updateMetricsField = function($row, typeId, selectedMetric, elementValue) {
+        const $metricLabel = $row.find('label[for="criteria_metric[]"]');
+        let $metricSelect;
+
+        if (typeId === 'custom') {
+            // change the input type to text
+            $metricSelect = $('<input class="form-control" name="criteria_metric[]" type="text" value="" />');
+        } else {
+            // change input type to dropdown
+            $metricSelect = $('<select class="form-control" name="criteria_metric[]"></select>');
+            const type = types ? types.find(t => t.id === typeId) : null;
+            if (type) {
+                type.metrics.forEach(metric => {
+                    $metricSelect.append(new Option(metric.name, metric.id));
+                });
+            } else {
+                // change the input type back to text
+                $metricSelect = $('<input class="form-control" name="criteria_metric[]" type="text" value="' + selectedMetric + '" />');
+            }
+        }
+
+        // Remove only input or select elements inside the label
+        $metricLabel.find('input, select').remove();
+        $metricLabel.append($metricSelect);
+
+        // Set the selected metric if provided
+        if (selectedMetric) {
+            $metricSelect.val(selectedMetric);
+            const type = types?  types.find(t => t.id === typeId) : null;
+            if (type) {
+                const metric = type.metrics.find(m => m.id === selectedMetric);
+                // update value field if metric is present
+                if (metric) {
+                    updateValueField($row, metric, elementValue);
+                }
+            }
+        }
+    };
+
+    // Function to update value field
+    const updateValueField = function($row, metric, elementValue) {
+        const $valueLabel = $row.find('label[for="criteria_value[]"]');
+        let $valueInput;
+
+        if (metric.values && metric.values.inputType === 'dropdown') {
+            // change input type to dropdown
+            $valueInput = $('<select class="form-control" name="criteria_value[]"></select>');
+            if (metric.values.values) {
+                metric.values.values.forEach(value => {
+                    $valueInput.append(new Option(value.title, value.id));
+                });
+            }
+            // Set the selected value
+            $valueInput.val(elementValue);
+        } else {
+            // change input type according to inputType's value
+            const inputType = metric.values ? metric.values.inputType : 'text';
+            const value = elementValue || '';
+            $valueInput = $('<input class="form-control" name="criteria_value[]" type="' + inputType + '" value="' + value + '" />');
+        }
+
+        // Remove only input or select elements inside the label
+        $valueLabel.find('input, select').remove();
+        $valueLabel.append($valueInput);
+    };
+
+    // Existing criteria?
+    const existingCriteria = $fields.data('criteria');
+    if (existingCriteria && existingCriteria.length >= 0) {
+        // Yes there are existing criteria
+        // Go through each one and add a field row to the form.
+        let i = 0;
+        $.each(existingCriteria, function(index, element) {
+            i++;
+            element.isAdd = false;
+            element.i = i;
+            const $newField = $(templateScheduleCriteriaFields(element));
+            $fields.append($newField);
+
+            // Populate the type field
+            const $typeSelect = $newField.find('select[name="criteria_type[]"]');
+            populateTypeDropdown($typeSelect);
+
+            // Set the selected type
+            $typeSelect.val(element.type);
+
+            // Update metrics and value fields based on the selected type and metric
+            updateMetricsField($newField, element.type, element.metric, element.value);
+        });
+    }
+
+    // Add a row at the end for configuring a new criterion
+    const $newRow = $(templateScheduleCriteriaFields({
+        isAdd: true,
+    }));
+    const $newTypeSelect = $newRow.find('select[name="criteria_type[]"]');
+
+    // populate type dropdown based on scheduleCriteria
+    populateTypeDropdown($newTypeSelect);
+    $fields.append($newRow);
+
+    // Buttons we've added should be bound
+    $fields.on('click', 'button', function(e) {
+        e.preventDefault();
+        const $button = $(this);
+        if ($button.data('isAdd')) {
+            const newField = $(templateScheduleCriteriaFields({ isAdd: true }));
+            $fields.append(newField);
+
+            // Populate the type field for the new row
+            const $newTypeSelect = newField.find('select[name="criteria_type[]"]');
+            populateTypeDropdown($newTypeSelect);
+
+            $button.data('isAdd', false);
+        } else {
+            $button.closest('.form-group').remove();
+        }
+    });
+};
+
+const processCriteriaFields = function($form, data) {
+  data.criteria = [];
+  $.each(data.criteria_metric, function(index, element) {
+    if (element) {
+      data.criteria.push({
+        id: data.criteria_id[index],
+        type: data.criteria_type[index],
+        metric: element,
+        condition: data.criteria_condition[index],
+        value: data.criteria_value[index],
+      });
+    }
+  });
+
+  // Tidy up fields.
+  delete data['criteria_id'];
+  delete data['criteria_type'];
+  delete data['criteria_metric'];
+  delete data['criteria_criteria'];
+  delete data['criteria_value'];
 };

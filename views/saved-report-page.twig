@@ -28,6 +28,7 @@
     <div class="widget-action-menu pull-right">
         <button class="btn btn-success XiboRedirectButton" href="{{ url_for("report.view") }}"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Back to dashboard" %}</button>
         <button class="btn btn-primary XiboRedirectButton" href="{{ url_for("reportschedule.view") }}"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</button>
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
     </div>
 {% endblock %}
 
@@ -96,7 +97,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         var table;
         $(document).ready(function() {
 
@@ -143,6 +144,10 @@
             table.on('draw', dataTableDraw);
             table.on('processing.dt', dataTableProcessing);
             dataTableAddButtons(table, $('#savedreports_wrapper').find('.dataTables_buttons'));
+
+            $("#refreshGrid").click(function () {
+                table.ajax.reload();
+            });
         })
     </script>
 {% endblock %}

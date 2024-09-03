@@ -47,7 +47,7 @@
                         {% set helpText %}{% trans "The Name for this Command" %}{% endset %}
                         {{ forms.input("command", title, "", helpText, "", "required") }}
 
-                        {% set title %}{% trans "Reference" %}{% endset %}
+                        {% set title %}{% trans "Code" %}{% endset %}
                         {% set helpText %}{% trans "A reference code for this command which is used to identify the command internally." %}{% endset %}
                         {{ forms.input("code", title, "", helpText, "", "required") }}
 
@@ -72,6 +72,17 @@
                         {% set helpText %}{% trans "Leave empty if this command should be available on all types of Display." %}{% endset %}
 
                         {{ forms.dropdown("availableOn[]", "dropdownmulti", title, "", options, "optionid", "option", helpText, "selectPicker") }}
+
+                        {% set options = [
+                            { optionid: "never", option: "Never" },
+                            { optionid: "success", option: "Success" },
+                            { optionid: "failure", option: "Failure" },
+                            { optionid: "always", option: "Always" },
+                        ] %}
+                        {% set title %}{% trans "Create Alert On" %}{% endset %}
+                        {% set helpText %}{% trans "On command execution, when should a Display alert be created?" %}{% endset %}
+
+                        {{ forms.dropdown("createAlertOn", "single", title, "never", options, "optionid", "option", helpText) }}
                     </div>
 
                     <div class="tab-pane" id="description">

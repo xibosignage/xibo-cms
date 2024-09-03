@@ -62,6 +62,9 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
   this.elementGroups = {};
   this.elementTypeMap = {};
 
+  // Elements previous state
+  this.elementsLastState = '';
+
   this.widgetName = data.name;
 
   this.layoutObject = layoutObject;
@@ -72,6 +75,7 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
   this.type = 'widget';
   this.subType = data.type;
   this.moduleName = data.moduleName;
+  this.moduleDataType = data.moduleDataType;
 
   // Permissions
   this.isEditable = data.isEditable;
@@ -375,6 +379,27 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
   };
 
   /**
+     * Get properties that are to be sent to the widget elements
+     * @return {boolean}
+     */
+  this.getSendToElementProperties = function() {
+    const self = this;
+    const sendToElement = {};
+
+    Object.keys(modulesList).forEach(function(item) {
+      if (modulesList[item].type == self.subType) {
+        modulesList[item].properties.forEach((ppt) => {
+          if (ppt.sendToElements === true) {
+            sendToElement[ppt.id] = self.getOptions()[ppt.id];
+          }
+        });
+      }
+    });
+
+    return sendToElement;
+  };
+
+  /**
    * Get icon from module
    * @return {string}
    */
@@ -406,12 +431,118 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
     }
   };
 
+  this.checkShowFallbackData = function() {
+    // Check if module has fallbackl data enabled
+    const module = this.editorObject.common.getModuleByType(this.subType);
+
+    this.fallbackDataActive = (module.fallbackData === 1);
+
+    return this.fallbackDataActive;
+  };
+
   /**
    * Get widget full id
    * @return {string}
    */
   this.getFullId = function() {
     return 'widget_' + this.regionId.split('region_')[1] + '_' + this.widgetId;
+  };
+
+  /**
+   * Save current element state to be used for history manager
+   */
+  this.updateElementPreviousState = function() {
+    this.elementsLastState =
+      JSON.stringify([
+        {
+          elements: this.processElementsToSave(this.elements),
+        },
+      ]);
+  };
+
+  /**
+   * Process elements to be saved
+   * @param {object} elements
+   * @return {object} elements to save
+   */
+  this.processElementsToSave = function(elements) {
+    const elementsToParse = (elements) ? elements : this.elements;
+
+    return Object.values(elementsToParse).map((element) => {
+      // Save only id and value for element properties if they are not empty
+      if (element.properties != undefined) {
+        element.properties =
+          Object.values(element.properties).map((property) => {
+            return {
+              id: property.id,
+              value: property.value,
+            };
+          });
+      }
+
+      const elementObject = {
+        id: element.id,
+        elementName: element.elementName,
+        elementId: element.elementId,
+        type: element.elementType,
+        left: element.left,
+        top: element.top,
+        width: element.width,
+        height: element.height,
+        layer: element.layer,
+        rotation: element.rotation,
+        properties: element.properties,
+        isVisible: element.isVisible,
+      };
+
+      // If we have group, add group properties
+      if (element.group) {
+        elementObject.groupId = element.group.id;
+        elementObject.groupProperties = {
+          elementGroupName: element.group.elementGroupName,
+          top: element.group.top,
+          left: element.group.left,
+          width: element.group.width,
+          height: element.group.height,
+          effect: element.group.effect,
+          layer: element.group.layer,
+          pinSlot: element.group.pinSlot,
+        };
+
+        // Save group scale type if exists
+        if (element.groupScale) {
+          elementObject.groupScale = 1;
+        } else if (element.groupScaleType) {
+          elementObject.groupScale = 0;
+          elementObject.groupScaleType = element.groupScaleType;
+        }
+      } else {
+        // Save effect if exists
+        if (element.effect !== undefined) {
+          elementObject.effect = element.effect;
+        }
+      }
+
+      // Save media id and name if exists
+      if (element.mediaId !== undefined) {
+        elementObject.mediaId = element.mediaId;
+      }
+
+      if (element.mediaName !== undefined) {
+        elementObject.mediaName = element.mediaName;
+      }
+
+      // Save slot if exists
+      if (element.slot != undefined) {
+        elementObject.slot = Number(element.slot);
+
+        // Save pin slot option
+        (element.pinSlot != undefined) &&
+          (elementObject.pinSlot = element.pinSlot);
+      }
+
+      return elementObject;
+    });
   };
 };
 
@@ -655,16 +786,21 @@ Widget.prototype.getNextWidget = function(reverse = false) {
 /**
  * Save elements to widget
  * @param {object} elements - elements to save
- * @param {boolean} reload - reload layout
+ * @param {boolean} updateEditor - update editor
+ * @param {boolean} reloadData - reload data
  * @param {boolean} forceRequest
  *  - always make request even another one is happening
+ * @param {boolean} addToHistory
+ *  - save state to history so it can be reverted
  * @return {Promise} - Promise
  */
 Widget.prototype.saveElements = function(
   {
     elements = null,
-    reload = false,
+    updateEditor = false,
+    reloadData = true,
     forceRequest = false,
+    addToHistory = true,
   } = {},
 ) {
   // If widget isn't editable, throw an error
@@ -683,10 +819,14 @@ Widget.prototype.saveElements = function(
 
   let savePending;
 
-  const reloadLayout = function(forceReload = false) {
+  const reloadLayout = function() {
+    if (!reloadData) {
+      return;
+    }
+
     app.reloadData(app.layout,
       {
-        refreshEditor: (reload || forceReload),
+        refreshEditor: updateEditor,
       });
   };
 
@@ -784,6 +924,16 @@ Widget.prototype.saveElements = function(
             'canvas',
           );
 
+          // If selected object is an element or group with the canvas region id
+          // unselect it
+          if (
+            app.selectedObject.regionId === canvas.regionId
+          ) {
+            app.selectedObject = app.layout;
+            app.selectedObject.type = 'layout';
+            app.viewer.selectObject();
+          }
+
           // Refresh layer manager
           app.viewer.layerManager.render();
 
@@ -801,6 +951,16 @@ Widget.prototype.saveElements = function(
             'canvas',
           );
 
+          // If selected object is an element or group with the widget id
+          // unselect it
+          if (
+            app.selectedObject.widgetId === this.widgetId
+          ) {
+            app.selectedObject = app.layout;
+            app.selectedObject.type = 'layout';
+            app.viewer.selectObject();
+          }
+
           // Refresh layer manager
           app.viewer.layerManager.render();
         });
@@ -816,87 +976,57 @@ Widget.prototype.saveElements = function(
     }
   }
 
-  // Convert element to the correct type
-  elementsToSave = Object.values(elementsToSave).map((element) => {
-    // Save only id and value for element properties if they are not empty
-    if (element.properties != undefined) {
-      element.properties =
-        Object.values(element.properties).map((property) => {
-          return {
-            id: property.id,
-            value: property.value,
-          };
-        });
-    }
-
-    const elementObject = {
-      id: element.id,
-      elementName: element.elementName,
-      elementId: element.elementId,
-      type: element.elementType,
-      left: element.left,
-      top: element.top,
-      width: element.width,
-      height: element.height,
-      layer: element.layer,
-      rotation: element.rotation,
-      properties: element.properties,
-    };
-
-    // If we have group, add group properties
-    if (element.group) {
-      elementObject.groupId = element.group.id;
-      elementObject.groupProperties = {
-        elementGroupName: element.group.elementGroupName,
-        top: element.group.top,
-        left: element.group.left,
-        width: element.group.width,
-        height: element.group.height,
-        effect: element.group.effect,
-        layer: element.group.layer,
-        pinSlot: element.group.pinSlot,
-      };
-
-      // Save group scale type if exists
-      if (element.groupScale) {
-        elementObject.groupScale = 1;
-      } else if (element.groupScaleType) {
-        elementObject.groupScale = 0;
-        elementObject.groupScaleType = element.groupScaleType;
-      }
-    } else {
-      // Save effect if exists
-      if (element.effect !== undefined) {
-        elementObject.effect = element.effect;
-      }
-    }
-
-    // Save media id if exists
-    if (element.mediaId !== undefined) {
-      elementObject.mediaId = element.mediaId;
-    }
-
-    // Save slot if exists
-    if (element.slot != undefined) {
-      elementObject.slot = Number(element.slot);
-
-      // Save pin slot option
-      (element.pinSlot != undefined) &&
-        (elementObject.pinSlot = element.pinSlot);
-    }
-
-    return elementObject;
-  });
-
   // Update element map
   this.updateElementMap();
 
-  // check if it's valid JSON
+  // Process elements to save
+  elementsToSave = Array.isArray(elementsToSave) ?
+    elementsToSave :
+    this.processElementsToSave(elementsToSave);
+
+  // Check if it's valid JSON
   try {
     JSON.parse(JSON.stringify(elementsToSave));
   } catch (e) {
     console.error('saveElementsToWidget', e);
     return;
+  }
+
+  // Check previously saved elements
+  let previousElements = '';
+  if (this.elementsLastState != '') {
+    previousElements = this.elementsLastState;
+  }
+
+  // Save current as previous to be used for undo next time
+  this.elementsLastState = JSON.stringify([
+    {
+      elements: elementsToSave,
+    },
+  ]);
+
+  // Save to history if it has previous state to be reverted to
+  if (addToHistory) {
+    lD.historyManager.addChange(
+      'saveElements',
+      'widget',
+      this.widgetId,
+      previousElements,
+      JSON.stringify([
+        {
+          elements: elementsToSave,
+        },
+      ]),
+      {
+        upload: false, // options.upload
+        skipUpload: true,
+        uploaded: true,
+        auxTarget: {
+          type: 'region',
+          id: lD.layout.canvas.regionId,
+        },
+      },
+    );
   }
 
   lD.common.showLoadingScreen();
@@ -906,6 +1036,8 @@ Widget.prototype.saveElements = function(
       self.saveElementsRequest == 'force' &&
       forceRequest === false
     ) {
+      lD.common.hideLoadingScreen();
+
       // If the previous request was forced, cancel current
       return Promise.resolve('Cancelled due to previous force request!');
     } else if (
@@ -1029,10 +1161,17 @@ Widget.prototype.addElement = function(
       .elements[element.elementId] =
         this.elements[element.elementId];
 
-    // Update slot on group
-    this.elementGroups[element.groupId].updateSlot(
-      newElement.slot,
-    );
+    // Update slot on group ( if not defined )
+    if (this.elementGroups[element.groupId].slot != undefined) {
+      this.elementGroups[element.groupId].updateSlot(
+        this.elementGroups[element.groupId].slot,
+        true,
+      );
+    } else {
+      this.elementGroups[element.groupId].updateSlot(
+        newElement.slot,
+      );
+    }
   }
 
   // Get element properties
@@ -1110,7 +1249,7 @@ Widget.prototype.removeElement = function(
   // Only save if we're not removing the widget
   // Save changes to widget
   (save && !savedAlready) && this.saveElements({
-    reload: reload,
+    updateEditor: reload,
   });
 
   // If object is selected, remove it from selection
@@ -1492,6 +1631,179 @@ Widget.prototype.updateElementMap = function(element) {
     // Return element new position
     return newElSlot;
   }
+};
+
+/**
+ * Get data type structure from widget
+ * @return {Promise} - Promise
+ */
+Widget.prototype.getDataType = function() {
+  // Get request path
+  const requestPath =
+    urlsForApi.widget.getDataType.url.replace(':id', this.widgetId);
+
+  return $.ajax({
+    method: 'GET',
+    url: requestPath,
+    success: function(response) {
+      return Promise.resolve(response);
+    },
+    error: function() {
+      $select.parent().append(
+        '{% trans "An unknown error has occurred. Please refresh" %}',
+      );
+    },
+  });
+};
+
+/**
+ * Get fallback data
+ * @return {object} fallback data
+ */
+Widget.prototype.getFallbackData = function() {
+  // Get request path
+  const requestPath =
+    urlsForApi.widget.data.get.url.replace(':id', this.widgetId);
+
+  return $.ajax({
+    method: 'GET',
+    url: requestPath,
+    success: function(response) {
+      return Promise.resolve(response);
+    },
+    error: function() {
+      toastr.error('An unknown error has occurred');
+    },
+  });
+};
+
+/**
+ * Add fallback data
+ * @param {object} data
+ * @param {number} displayOrder
+ * @return {Promise} - Promise
+ */
+Widget.prototype.addFallbackData = function(data, displayOrder) {
+  // Get request path
+  const linkToAPI = urlsForApi.widget.data.add;
+  const requestPath =
+    linkToAPI.url.replace(':id', this.widgetId);
+
+
+  return $.ajax({
+    method: linkToAPI.type,
+    url: requestPath,
+    data: {
+      data,
+      displayOrder,
+    },
+    success: function(response) {
+      if (!response.success) {
+        toastr.error(response.message);
+      }
+
+      return Promise.resolve(response);
+    },
+    error: function() {
+      toastr.error('An unknown error has occurred');
+    },
+  });
+};
+
+/**
+ * Edit fallback data record
+ * @param {string} recordId
+ * @param {object} data
+ * @param {number} displayOrder
+ * @return {Promise} - Promise
+ */
+Widget.prototype.editFallbackDataRecord = function(
+  recordId,
+  data,
+  displayOrder,
+) {
+  // Get request path
+  const linkToAPI = urlsForApi.widget.data.edit;
+  const requestPath =
+    linkToAPI.url.replace(':id', this.widgetId)
+      .replace(':dataId', recordId);
+
+  return $.ajax({
+    method: linkToAPI.type,
+    url: requestPath,
+    data: {
+      data,
+      displayOrder,
+    },
+    success: function(response) {
+      if (!response.success) {
+        toastr.error(response.message);
+      }
+
+      return Promise.resolve(response);
+    },
+    error: function() {
+      toastr.error('An unknown error has occurred');
+    },
+  });
+};
+
+/**
+ * Delete fallback data record
+ * @param {string} recordId
+ * @return {Promise} - Promise
+ */
+Widget.prototype.deleteFallbackDataRecord = function(recordId) {
+  // Get request path
+  const linkToAPI = urlsForApi.widget.data.delete;
+  const requestPath =
+    linkToAPI.url.replace(':id', this.widgetId)
+      .replace(':dataId', recordId);
+
+  return $.ajax({
+    method: linkToAPI.type,
+    url: requestPath,
+    success: function(response) {
+      if (!response.success) {
+        toastr.error(response.message);
+      }
+
+      return Promise.resolve(response);
+    },
+    error: function() {
+      toastr.error('An unknown error has occurred');
+    },
+  });
+};
+
+/**
+ * Save fallback data order
+ * @param {object[]} records - Records array in order
+ * @return {Promise} - Promise
+ */
+Widget.prototype.saveFallbackDataOrder = function(records) {
+  // Get request path
+  const linkToAPI = urlsForApi.widget.data.setOrder;
+  const requestPath =
+    linkToAPI.url.replace(':id', this.widgetId);
+
+  return $.ajax({
+    method: linkToAPI.type,
+    url: requestPath,
+    data: {
+      order: records,
+    },
+    success: function(response) {
+      if (!response.success) {
+        toastr.error(response.message);
+      }
+
+      return Promise.resolve(response);
+    },
+    error: function() {
+      toastr.error('An unknown error has occurred');
+    },
+  });
 };
 
 module.exports = Widget;

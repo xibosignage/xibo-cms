@@ -98,7 +98,6 @@
                 }
 
                 .label-name {
-                    line-height: 1;
                     display: flex;
                     gap: 8px;
 
@@ -106,6 +105,11 @@
                         white-space: nowrap;
                         overflow: hidden;
                         text-overflow: ellipsis;
+                    }
+
+                    & > .mediaInfo {
+                        display: inline-flex;
+                        gap: 6px;
                     }
                 }
             }

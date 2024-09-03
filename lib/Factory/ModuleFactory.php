@@ -49,6 +49,16 @@ class ModuleFactory extends BaseFactory
 {
     use ModuleXmlTrait;
 
+    public static $systemDataTypes = [
+        'Article',
+        'Event',
+        'Forecast',
+        'Product',
+        'ProductCategory',
+        'SocialMedia',
+        'dataset'
+    ];
+
     /** @var Module[] all modules */
     private $modules = null;
 
@@ -193,6 +203,11 @@ class ModuleFactory extends BaseFactory
                         );
                     }
                 }
+            }
+
+            // Include a separate cache per fallback data?
+            if ($module->fallbackData == 1) {
+                $cacheKey .= '_fb ' . $widget->getOptionValue('showFallback', 'never');
             }
         }
 
@@ -426,7 +441,8 @@ class ModuleFactory extends BaseFactory
     public function getDataTypeById(string $dataTypeId): DataType
     {
         // Rely on a class if we have one.
-        $className = '\\Xibo\\Widget\\DataType\\' . ucfirst($dataTypeId);
+        $className = ucfirst(str_replace('-', '', ucwords($dataTypeId, '-')));
+        $className = '\\Xibo\\Widget\\DataType\\' . $className;
         if (class_exists($className)) {
             $class = new $className();
             if ($class instanceof DataTypeInterface) {
@@ -442,6 +458,51 @@ class ModuleFactory extends BaseFactory
         }
 
         throw new NotFoundException(__('DataType not found'));
+    }
+
+    /**
+     * @return DataType[]
+     */
+    public function getAllDataTypes()
+    {
+        $dataTypes = [];
+
+        // get system data types
+        foreach (self::$systemDataTypes as $dataTypeId) {
+            $className = '\\Xibo\\Widget\\DataType\\' . ucfirst($dataTypeId);
+            if (class_exists($className)) {
+                $class = new $className();
+                if ($class instanceof DataTypeInterface) {
+                    $dataTypes[] = $class->getDefinition();
+                }
+            }
+
+            // special handling for dataset
+            if ($dataTypeId === 'dataset') {
+                $dataType = new DataType();
+                $dataType->id  = $dataTypeId;
+                $dataType->name = 'DataSet';
+                $dataTypes[] = $dataType;
+            }
+        }
+
+        // get data types from xml
+        $files = array_merge(
+            glob(PROJECT_ROOT . '/modules/datatypes/*.xml'),
+            glob(PROJECT_ROOT . '/custom/modules/datatypes/*.xml')
+        );
+
+        foreach ($files as $file) {
+            $xml = new \DOMDocument();
+            $xml->load($file);
+            $dataType = new DataType();
+            $dataType->id = $this->getFirstValueOrDefaultFromXmlNode($xml, 'id');
+            $dataType->name = $this->getFirstValueOrDefaultFromXmlNode($xml, 'name');
+            $dataTypes[] = $dataType;
+        }
+
+        sort($dataTypes);
+        return $dataTypes;
     }
 
     /**
@@ -684,6 +745,7 @@ class ModuleFactory extends BaseFactory
         $module->startHeight = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'startHeight'));
         $module->dataType = $this->getFirstValueOrDefaultFromXmlNode($xml, 'dataType');
         $module->dataCacheKey = $this->getFirstValueOrDefaultFromXmlNode($xml, 'dataCacheKey');
+        $module->fallbackData = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'fallbackData', 0));
         $module->schemaVersion = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'schemaVersion'));
         $module->compatibilityClass = $this->getFirstValueOrDefaultFromXmlNode($xml, 'compatibilityClass');
         $module->showIn = $this->getFirstValueOrDefaultFromXmlNode($xml, 'showIn') ?? 'both';
@@ -692,6 +754,7 @@ class ModuleFactory extends BaseFactory
         $module->renderAs = $this->getFirstValueOrDefaultFromXmlNode($xml, 'renderAs');
         $module->defaultDuration = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'defaultDuration'));
         $module->hasThumbnail = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'hasThumbnail', 0));
+        $module->allowPreview = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'allowPreview', 1));
 
         // Validator classes
         foreach ($xml->getElementsByTagName('validatorClass') as $node) {
@@ -868,7 +931,8 @@ class ModuleFactory extends BaseFactory
                 $dataType->addField(
                     $field->getAttribute('id'),
                     trim($field->textContent),
-                    $field->getAttribute('type')
+                    $field->getAttribute('type'),
+                    $field->getAttribute('isRequired') === 'true',
                 );
             }
         }

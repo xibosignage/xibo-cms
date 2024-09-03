@@ -1,22 +1,22 @@
 {# All client side file upload stuff #}
 {# we use blueimp jquery-file-upload #}
-<script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/tmpl.min.js?v={{ version }}&rev={{revision}}"></script>
-<script src="{{ theme.rootUri() }}dist/vendor/jquery-load-image/load-image.all.min.js?v={{ version }}&rev={{revision}}"></script>
-<script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.iframe-transport.js?v={{ version }}&rev={{revision}}"></script>
-<script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload.js?v={{ version }}&rev={{revision}}"></script>
-<script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-process.js?v={{ version }}&rev={{revision}}"></script>
-<script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-resize.js?v={{ version }}&rev={{revision}}"></script>
-<script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-validate.js?v={{ version }}&rev={{revision}}"></script>
-<script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-ui.js?v={{ version }}&rev={{revision}}"></script>
-<script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-image.js?v={{ version }}&rev={{revision}}"></script>
-<script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-video.js?v={{ version }}&rev={{revision}}"></script>
-<script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-audio.js?v={{ version }}&rev={{revision}}"></script>
+<script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/tmpl.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+<script src="{{ theme.rootUri() }}dist/vendor/jquery-load-image/load-image.all.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+<script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.iframe-transport.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+<script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+<script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-process.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+<script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-resize.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+<script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-validate.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+<script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-ui.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+<script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-image.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+<script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-video.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+<script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-audio.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
 
 {# Our implementation of blueimp #}
-<script src="{{ theme.rootUri() }}dist/core/file-upload.js?v={{ version }}&rev={{revision}}"></script>
+<script src="{{ theme.rootUri() }}dist/core/file-upload.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
 
 {# Max image resize size from settings #}
-<script type="text/javascript">
+<script type="text/javascript" nonce="{{ cspNonce }}">
   let maxImagePixelSize = "{{ settings.DEFAULT_RESIZE_LIMIT }}";
 </script>
 
@@ -156,6 +156,17 @@
                     <input class="form-check-input" type="checkbox" id="importDataSetData" name="importDataSetData" disabled>
                     <label class="form-check-label" for="importDataSetData">
                         {{ trans.dataSetDataMessage }}
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6"></div>
+            <div class="col-md-6">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="field-importFallback" name="importFallback">
+                    <label class="form-check-label" for="field-importFallback">
+                        {{ trans.fallbackMessage }}
                     </label>
                 </div>
             </div>

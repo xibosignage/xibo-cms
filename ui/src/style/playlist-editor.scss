@@ -69,10 +69,9 @@ $timeline-step-height: 22px;
     }
 
     &.toolbar-opened {
-        padding-left: 350px;
+
 
         .back-button {
-            width: 348px;
             a {
                 min-width: 100px;
                 width: auto;
@@ -80,6 +79,38 @@ $timeline-step-height: 22px;
             span {
                 display: inline;
             }
+        }
+
+        &[toolbar-level="1"] {
+            padding-left: 220px;
+
+            .back-button {
+                width: 220px;
+            } 
+        }
+
+        &[toolbar-level="2"] {
+            padding-left: 350px;
+
+            .back-button {
+                width: 350px;
+            }   
+        }
+
+        &[toolbar-level="3"] {
+            padding-left: 480px;
+
+            .back-button {
+                width: 480px;
+            }   
+        }
+
+        &[toolbar-level="4"] {
+            padding-left: 660px;
+
+            .back-button {
+                width: 660px;
+            }   
         }
     }
 
@@ -211,6 +242,18 @@ $timeline-step-height: 22px;
 
 .playlist-editor-inline-container {
     padding: 16px;
+
+    #playlist-timeline {
+        position: relative;
+
+        .loading-container {
+            height: calc(100vh - 140px);
+        }
+    }
+
+    #playlist-editor.multi-select #playlist-timeline {
+        position: initial;
+    }
 }
 
 #playlist-editor {
@@ -675,7 +718,6 @@ $timeline-step-height: 22px;
             .footer-info {
                 position: relative;
                 z-index: $playlist-editor-z-index-select;
-                width: 100%;
             }
 
             .footer-actions {
@@ -687,6 +729,10 @@ $timeline-step-height: 22px;
                     display: inline-block !important;
                 }
             }
+        }
+
+        .editor-side-bar nav.opened {
+            z-index: calc($playlist-editor-z-index-select - 2) !important; 
         }
 
         #timeline-container {
@@ -759,4 +805,22 @@ $timeline-step-height: 22px;
             }
         }
     }
+
+    &.external-playlist-message-on {
+        height: calc(100% - 46px);
+    }
+}
+
+.external-playlist-message-container {
+    background-color: lighten($xibo-color-semantic-warning, 10%);
+    border: 2px solid $xibo-color-semantic-warning;
+    font-weight: bold;
+    height: 50px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    border-radius: 4px 4px 0 0;
+    margin-bottom: -4px;
+    justify-content: center;
 }

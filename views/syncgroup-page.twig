@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -26,12 +26,12 @@
 {% block title %}{{ "Sync Groups"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    {% if currentUser.featureEnabled("display.syncAdd") %}
-        <div class="widget-action-menu pull-right">
+    <div class="widget-action-menu pull-right">
+        {% if currentUser.featureEnabled("display.syncAdd") %}
             <button class="btn btn-success XiboFormButton" title="{% trans "Add a new Sync Group" %}" href="{{ url_for("syncgroup.form.add") }}"> <i class="fa fa-desktop" aria-hidden="true"></i> {% trans "Add Sync Group" %}</button>
-            <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</button>
-        </div>
-    {% endif %}
+        {% endif %}
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
+    </div>
 {% endblock %}
 
 {% block pageContent %}
@@ -55,26 +55,24 @@
                         </form>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-sm-2 grid-folder-tree-container" id="grid-folder-filter">
-                        <div class="p-3 mr-2">
-                            <input id="jstree-search" class="form-control" type="text" placeholder="{% trans "Search" %}">
-                            <div class="form-check">
-                                <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
-                                <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "All Folders" %}</label>
-                            </div>
-                            <div class="folder-search-no-results d-none">
-                                <p>{% trans 'No Folders matching the search term' %}</p>
-                            </div>
-                            <div id="container-folder-tree"></div>
+                <div class="grid-with-folders-container">
+                    <div class="grid-folder-tree-container p-3" id="grid-folder-filter">
+                        <input id="jstree-search" class="form-control" type="text" placeholder="{% trans "Search" %}">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
+                            <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "All Folders" %}</label>
                         </div>
+                        <div class="folder-search-no-results d-none">
+                            <p>{% trans 'No Folders matching the search term' %}</p>
+                        </div>
+                        <div id="container-folder-tree"></div>
                     </div>
                     <div class="folder-controller d-none">
                         <button type="button" id="folder-tree-select-folder-button" class="btn btn-outline-secondary" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-folder fa-1x"></i></button>
                         <div id="breadcrumbs" class="mt-2 pl-2"></div>
                     </div>
-                    <div id="datatable-container" class="col-sm-10 pr-0">
-                        <div class="XiboData card pt-4 px-2">
+                    <div id="datatable-container">
+                        <div class="XiboData card py-3">
                             <table id="syncgroups" class="table table-striped" data-content-type="syncGroup" data-content-id-name="syncGroupId" data-state-preference-name="syncGroupGrid" style="width: 100%;">
                                 <thead>
                                 <tr>
@@ -85,6 +83,8 @@
                                     <th>{% trans "Owner" %}</th>
                                     <th>{% trans "Modified By" %}</th>
                                     <th>{% trans "Publisher Port" %}</th>
+                                    <th>{% trans "Switch Delay" %}</th>
+                                    <th>{% trans "Video Pause Delay" %}</th>
                                     <th>{% trans "Lead Display" %}</th>
                                     <th class="rowMenu"></th>
                                 </tr>
@@ -102,7 +102,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
       let syncGroupTable;
 
       $(document).ready(function() {
@@ -132,6 +132,8 @@
             { "data": "owner", responsivePriority: 3 },
             { "data": "modifiedByName", responsivePriority: 4 },
             { "data": "syncPublisherPort", responsivePriority: 3 },
+            { "data": "syncSwitchDelay", responsivePriority: 3 },
+            { "data": "syncVideoPauseDelay", responsivePriority: 3 },
             { "data": "leadDisplay", responsivePriority: 3 },
             {
               "orderable": false,
@@ -141,13 +143,13 @@
           ]
         });
 
-        $("#refreshGrid").click(function () {
-          syncGroupTable.ajax.reload();
-        });
-
         syncGroupTable.on('draw', dataTableDraw);
         syncGroupTable.on('processing.dt', dataTableProcessing);
         dataTableAddButtons(syncGroupTable, $('#syncgroups_wrapper').find('.dataTables_buttons'));
+
+        $("#refreshGrid").click(function () {
+            syncGroupTable.ajax.reload();
+        });
       });
     </script>
 {% endblock %}

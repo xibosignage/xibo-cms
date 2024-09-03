@@ -37,6 +37,9 @@ class ModuleTemplate implements \JsonSerializable
     use EntityTrait;
     use ModulePropertyTrait;
 
+    /** @var int The database ID */
+    public $id;
+
     /**
      * @SWG\Property()
      * @var string The templateId
@@ -113,6 +116,12 @@ class ModuleTemplate implements \JsonSerializable
     public $isVisible = true;
 
     /**
+     * @SWG\Property()
+     * @var bool Is Enabled?
+     */
+    public $isEnabled = true;
+
+    /**
      * @SWG\Property(description="An array of additional module specific group properties")
      * @var \Xibo\Widget\Definition\PropertyGroup[]
      */
@@ -138,12 +147,30 @@ class ModuleTemplate implements \JsonSerializable
 
     /** @var string A data parser for elements */
     public $onElementParseData;
-    
+
     /** @var bool $isError Does this module have any errors? */
     public $isError;
 
     /** @var string[] $errors An array of errors this module has. */
     public $errors;
+
+    /** @var string $ownership Who owns this file? system|custom|user */
+    public $ownership;
+
+    /** @var int $ownerId User ID of the owner of this template */
+    public $ownerId;
+
+    /**
+     * @SWG\Property(description="A comma separated list of groups/users with permissions to this template")
+     * @var string
+     */
+    public $groupsWithPermissions;
+    /** @var string $xml The XML used to build this template */
+    
+    private $xml;
+
+    /** @var \DOMDocument The DOM Document for this templates XML */
+    private $document;
 
     /** @var \Xibo\Factory\ModuleTemplateFactory */
     private $moduleTemplateFactory;
@@ -154,15 +181,34 @@ class ModuleTemplate implements \JsonSerializable
      * @param LogServiceInterface $log
      * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param \Xibo\Factory\ModuleTemplateFactory $moduleTemplateFactory
+     * @param string $file The file this template resides in
      */
     public function __construct(
         StorageServiceInterface $store,
         LogServiceInterface $log,
         EventDispatcherInterface $dispatcher,
-        ModuleTemplateFactory $moduleTemplateFactory
+        ModuleTemplateFactory $moduleTemplateFactory,
+        private readonly string $file
     ) {
         $this->setCommonDependencies($store, $log, $dispatcher);
+        $this->setPermissionsClass('Xibo\Entity\ModuleTemplate');
         $this->moduleTemplateFactory = $moduleTemplateFactory;
+    }
+
+    public function getId()
+    {
+        return $this->id;
+    }
+
+    public function getOwnerId()
+    {
+        return $this->ownerId;
+    }
+
+    public function __clone()
+    {
+        $this->id = null;
+        $this->templateId = null;
     }
 
     /**
@@ -172,5 +218,157 @@ class ModuleTemplate implements \JsonSerializable
     public function getAssets(): array
     {
         return $this->assets;
+    }
+
+    /**
+     * Set XML for this Module Template
+     * @param string $xml
+     * @return void
+     */
+    public function setXml(string $xml): void
+    {
+        $this->xml = $xml;
+    }
+
+    /**
+     * Get XML for this Module Template
+     * @return string
+     */
+    public function getXml(): string
+    {
+        // for system templates
+        if ($this->file !== 'database') {
+            $xml = new \DOMDocument();
+            // load whole file to document
+            $xml->loadXML(file_get_contents($this->file));
+            // go through template tags
+            foreach ($xml->getElementsByTagName('template') as $templateXml) {
+                if ($templateXml instanceof \DOMElement) {
+                    foreach ($templateXml->childNodes as $childNode) {
+                        if ($childNode instanceof \DOMElement) {
+                            // match the template to what was requested
+                            // set the xml and return it.
+                            if ($childNode->nodeName === 'id' && $childNode->nodeValue == $this->templateId) {
+                                $this->setXml($xml->saveXML($templateXml));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return $this->xml;
+    }
+
+    /**
+     * Set Document
+     * @param \DOMDocument $document
+     * @return void
+     */
+    public function setDocument(\DOMDocument $document): void
+    {
+        $this->document = $document;
+    }
+
+    /**
+     * Get this templates DOM document
+     * @return \DOMDocument
+     */
+    public function getDocument(): \DOMDocument
+    {
+        if ($this->document === null) {
+            $this->document = new \DOMDocument();
+            $this->document->load($this->getXml());
+        }
+        return $this->document;
+    }
+
+    /**
+     * Save
+     * @return void
+     */
+    public function save(): void
+    {
+        if ($this->file === 'database') {
+            if ($this->id === null) {
+                $this->add();
+            } else {
+                $this->edit();
+            }
+        }
+    }
+
+    /**
+     * Delete
+     * @return void
+     */
+    public function delete(): void
+    {
+        if ($this->file === 'database') {
+            $this->getStore()->update('DELETE FROM module_templates WHERE id = :id', [
+                'id' => $this->id
+            ]);
+        }
+    }
+
+    /**
+     * Invalidate this module template for any widgets that use it
+     * @return void
+     */
+    public function invalidate(): void
+    {
+        // TODO: can we improve this via the event mechanism instead?
+        $this->getStore()->update('
+            UPDATE `widget` SET modifiedDt = :now
+             WHERE widgetId IN (
+                SELECT widgetId
+                  FROM widgetoption 
+                 WHERE `option` = \'templateId\'
+                    AND `value` = :templateId
+             )
+        ', [
+            'now' => time(),
+            'templateId' => $this->templateId,
+        ]);
+    }
+
+    /**
+     * Add
+     * @return void
+     */
+    private function add(): void
+    {
+        $this->id = $this->getStore()->insert('
+            INSERT INTO `module_templates` (`templateId`, `dataType`, `xml`, `ownerId`)
+                VALUES (:templateId, :dataType, :xml, :ownerId)
+        ', [
+            'templateId' => $this->templateId,
+            'dataType' => $this->dataType,
+            'xml' => $this->xml,
+            'ownerId' => $this->ownerId,
+        ]);
+    }
+
+    /**
+     * Edit
+     * @return void
+     */
+    private function edit(): void
+    {
+        $this->getStore()->update('
+            UPDATE `module_templates` SET
+                `templateId` = :templateId,
+                `dataType`= :dataType,
+                `enabled` = :enabled,
+                `xml` = :xml,
+                `ownerId` = :ownerId
+             WHERE `id` = :id
+        ', [
+            'templateId' => $this->templateId,
+            'dataType' => $this->dataType,
+            'xml' => $this->xml,
+            'enabled' => $this->isEnabled ? 1 : 0,
+            'ownerId' => $this->ownerId,
+            'id' => $this->id,
+        ]);
     }
 }

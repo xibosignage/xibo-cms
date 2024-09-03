@@ -1,8 +1,8 @@
 {#
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -83,6 +83,28 @@
                         {% set title %}{% trans "Remote?" %}{% endset %}
                         {% set helpText %}{% trans "Is this DataSet connected to a remote data source?" %}{% endset %}
                         {{ forms.checkbox("isRemote", title, dataSet.isRemote, helpText) }}
+
+                        {% set title %}{% trans "Real time?" %}{% endset %}
+                        {% set helpText %}{% trans "Is this DataSet connected to a real time data source?" %}{% endset %}
+                        {{ forms.checkbox("isRealTime", title, dataSet.isRealTime, helpText) }}
+
+                        <div class="d-none" id="dataSourceField">
+                            {% set title %}{% trans "Data Connector Source" %}{% endset %}
+                            {% set helpText %}{% trans "Select data connector source." %}{% endset %}
+                            {{ forms.dropdown("dataConnectorSource", "single", title, dataSet.dataConnectorSource, dataConnectorSources, "id", "name", helpText) }}
+                        </div>
+
+                        {% if dataSet.isRemote %}
+                            {% set columnCount = dataSet.columns|filter(column => column.dataSetColumnTypeId == '3') %}
+                            {% if columnCount|length == 0 %}
+                                {{ forms.message("No remote columns have been configured for this dataset. Please configure your columns accordingly."|trans, "alert alert-warning") }}
+                            {% endif %}
+                        {% else %}
+                            {% set columnCount = dataSet.columns|filter(column => column.dataSetColumnTypeId == '1') %}
+                            {% if columnCount|length == 0 %}
+                                {{ forms.message("No value columns have been configured for this dataset. Please configure your columns accordingly."|trans, "alert alert-warning") }}
+                            {% endif %}
+                        {% endif %}
 
                         {% if dataSet.isActive() %}
                         {{ forms.message("This DataSet has been accessed or updated recently, which means the CMS will keep it active."|trans, "alert alert-success") }}

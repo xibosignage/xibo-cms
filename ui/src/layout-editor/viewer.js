@@ -80,6 +80,9 @@ const Viewer = function(parent, container) {
     snapToElements: false,
   };
 
+  // Selecto
+  this.selecto = null;
+
   // Layout orientation
   this.orientation = null;
 
@@ -98,9 +101,11 @@ const Viewer = function(parent, container) {
 
   this.multiSelectActive = false;
 
+  this.editingGroup = false;
+
   // Events for shift key
   addEventListener('keydown', (e) => {
-    if (e.key === 'Shift') {
+    if (e.key === 'Shift' && this.editingGroup === false) {
       this.multiSelectActive = true;
       $('body').attr('multi-select-active', true);
     }
@@ -333,6 +338,10 @@ Viewer.prototype.render = function(forceReload = false, target = {}) {
     // Initialise moveable
     this.initMoveable();
 
+    // Remove background image component if exists
+    $viewerContainer.find('.layout-live-preview .layout-background-image')
+      .remove();
+
     // Render background image or color to the preview
     if (lD.layout.backgroundImage === null) {
       $viewerContainer.find('.viewer-object')
@@ -343,7 +352,9 @@ Viewer.prototype.render = function(forceReload = false, target = {}) {
       // Replace ID in the link
       linkToAPI = linkToAPI.replace(':id', lD.layout.layoutId);
 
-      $viewerContainer.find('.viewer-object')
+      // Append layout background image component
+      const $layoutBgImage = $('<div class="layout-background-image"></div>');
+      $layoutBgImage
         .css({
           background:
             'url(\'' + linkToAPI + '?preview=1&width=' +
@@ -357,7 +368,9 @@ Viewer.prototype.render = function(forceReload = false, target = {}) {
             lD.layout.backgroundImage + '\') top center no-repeat',
           backgroundSize: '100% 100%',
           backgroundColor: lD.layout.backgroundColor,
+          zIndex: lD.layout.backgroundzIndex,
         });
+      $layoutBgImage.appendTo($viewerContainer.find('.layout-live-preview'));
     }
 
     // Render viewer regions/widgets
@@ -374,6 +387,9 @@ Viewer.prototype.render = function(forceReload = false, target = {}) {
     (!$.isEmptyObject(lD.layout.canvas)) && this.renderCanvas(lD.layout.canvas);
   }
 
+  // Initalise selecto
+  this.initSelecto();
+
   // Handle UI interactions
   this.handleInteractions();
 
@@ -389,6 +405,7 @@ Viewer.prototype.render = function(forceReload = false, target = {}) {
         this.parent.selectedObject.groupId,
       ),
       this.parent.selectedObject.elementId,
+      true,
     );
   }
 
@@ -418,6 +435,7 @@ Viewer.prototype.render = function(forceReload = false, target = {}) {
 Viewer.prototype.handleInteractions = function() {
   const self = this;
   const $viewerContainer = this.DOMObject;
+  const $viewerContainerParent = $viewerContainer.parent();
 
   const calculatePosition = function(
     $droppableArea,
@@ -582,12 +600,33 @@ Viewer.prototype.handleInteractions = function() {
     });
   });
 
+  // Handle droppable - image placeholder
+  this.DOMObject.find(
+    '.designer-element[data-sub-type="image_placeholder"]',
+  ).each((_idx, element) => {
+    const $el = $(element);
+
+    $el.droppable({
+      greedy: true,
+      tolerance: 'pointer',
+      accept: (draggable) => {
+        return (
+          $(draggable).data('type') === 'media' &&
+          $(draggable).data('subType') === 'image'
+        );
+      },
+      drop: _.debounce(function(event, ui) {
+        lD.dropItemAdd(event.target, ui.draggable[0]);
+      }, 200),
+    });
+  });
 
   // Handle click and double click
   let clicks = 0;
   let timer = null;
-  $viewerContainer.parent().find('.viewer-object-select').off()
-    .on('mousedown', function(e) {
+  $viewerContainerParent.find('.viewer-object-select')
+    .off('mousedown.viewer')
+    .on('mousedown.viewer', function(e) {
       e.stopPropagation();
 
       const shiftIsPressed = e.shiftKey;
@@ -597,6 +636,9 @@ Viewer.prototype.handleInteractions = function() {
         return;
       }
 
+      const $target = $(e.target).hasClass('viewer-object-select') ?
+        $(e.target) : $(e.currentTarget);
+
       const playlistEditorBtnClick = function(playlistId) {
         // Edit region if it's a playlist
         // Get region object
@@ -605,7 +647,24 @@ Viewer.prototype.handleInteractions = function() {
         // Open playlist editor
         lD.openPlaylistEditor(
           regionObject.playlists.playlistId,
-          regionObject);
+          regionObject,
+        );
+      };
+
+      const playlistInlineEditorBtnClick = function(
+        childPlaylistId,
+        regionId,
+      ) {
+        const regionObject =
+          lD.getObjectByTypeAndId('region', regionId);
+        lD.openPlaylistEditor(
+          childPlaylistId,
+          regionObject,
+          false,
+          true,
+          true,
+          regionObject.playlists.playlistId,
+        );
       };
 
       const playlistPreviewBtnClick = function(playlistId, direction) {
@@ -650,71 +709,81 @@ Viewer.prototype.handleInteractions = function() {
       // Click on layout or layout wrapper to clear selection
       // or add item to the layout
       if (
-        $(e.target).hasClass('ui-droppable-actions-target')
+        $target.hasClass('ui-droppable-actions-target')
       ) {
         // Add action to the selected object
         lD.selectObject({
-          target: $(e.target),
+          target: $target,
           forceSelect: true,
         });
       } else if (
         (
-          $(e.target).hasClass('designer-region-zone') ||
-          $(e.target).hasClass('designer-region-playlist') ||
-          $(e.target).hasClass('designer-widget') ||
-          $(e.target).hasClass('designer-element')
+          $target.hasClass('designer-region-zone') ||
+          $target.hasClass('designer-region-playlist') ||
+          $target.hasClass('designer-widget') ||
+          $target.hasClass('designer-element')
         ) &&
-        $(e.target).hasClass('ui-droppable-active')
+        $target.hasClass('ui-droppable-active')
       ) {
         // Add item to the selected element
         lD.selectObject({
-          target: $(e.target),
+          target: $target,
           forceSelect: true,
           clickPosition: clickPosition,
         });
       } else if (
-        $(e.target).is('.designer-element-group.editing.ui-droppable-active')
+        $target.is('.designer-element-group.editing.ui-droppable-active')
       ) {
         // Add item to the selected element group
         lD.selectObject({
-          target: $(e.target),
+          target: $target,
           forceSelect: true,
           clickPosition: clickPosition,
         });
       } else if (
-        $(e.target).hasClass('layout-wrapper') ||
-        $(e.target).hasClass('layout')
+        $target.hasClass('layout-wrapper') ||
+        $target.hasClass('layout')
       ) {
         // Clear selected object
         lD.selectObject({
           target: null,
           reloadViewer: false,
-          clickPosition: $(e.target).hasClass('layout') ? clickPosition : null,
+          clickPosition: $target.hasClass('layout') ? clickPosition : null,
         });
         self.selectObject();
       } else if (
-        $(e.target).hasClass('group-edit-btn')
+        $target.hasClass('group-edit-btn')
       ) {
         self.editGroup(
-          $(e.target).parents('.designer-element-group'),
+          $target.parents('.designer-element-group'),
         );
       } else if (
-        $(e.target).hasClass('playlist-edit-btn')
+        $target.hasClass('playlist-edit-btn')
       ) {
-        // Edit region if it's a playlist
-        playlistEditorBtnClick($(e.target)
-          .parents('.designer-region-playlist').attr('id'));
+        // Edit subplaylist inside playlist
+        if ($target.hasClass('subplaylist-inline-edit-btn')) {
+          // Edit subplaylist inside playlist
+          playlistInlineEditorBtnClick(
+            $target.data('childPlaylistId'),
+            $target.parents('.designer-region-playlist').attr('id'),
+          );
+        } else {
+          // Edit region if it's a playlist
+          playlistEditorBtnClick(
+            $target.parents('.designer-region-playlist').attr('id'),
+          );
+        }
       } else if (
-        $(e.target).hasClass('playlist-preview-paging-prev')
+        $target.hasClass('playlist-preview-paging-prev')
       ) {
         // Somewhere in paging clicked.
-        playlistPreviewBtnClick($(e.target)
+        playlistPreviewBtnClick($target
           .parents('.designer-region-playlist').attr('id'), 'prev');
       } else if (
-        $(e.target).hasClass('playlist-preview-paging-next')
+        $target.hasClass('playlist-preview-paging-next')
       ) {
         // Somewhere in paging clicked.
-        playlistPreviewBtnClick($(e.target)
+        playlistPreviewBtnClick($target
           .parents('.designer-region-playlist').attr('id'), 'next');
       } else {
         // Select elements inside the layout
@@ -727,9 +796,9 @@ Viewer.prototype.handleInteractions = function() {
             clicks = 0;
 
             if (
-              $(e.target).data('subType') === 'playlist' &&
-              $(e.target).hasClass('designer-region') &&
-              !$(e.target).hasClass('selected')
+              $target.data('subType') === 'playlist' &&
+              $target.hasClass('designer-region') &&
+              !$target.hasClass('selected')
             ) {
               // If we're multi selecting, deselect all
               if (shiftIsPressed) {
@@ -739,15 +808,15 @@ Viewer.prototype.handleInteractions = function() {
               } else {
                 // Select region
                 lD.selectObject({
-                  target: $(e.target),
+                  target: $target,
                 });
               }
 
-              self.selectObject($(e.target), shiftIsPressed);
+              self.selectObject($target, shiftIsPressed);
             } else if (
-              $(e.target).find('.designer-widget').length > 0 &&
-              !$(e.target).find('.designer-widget').hasClass('selected') &&
-              !$(e.target).hasClass('selected')
+              $target.find('.designer-widget').length > 0 &&
+              !$target.find('.designer-widget').hasClass('selected') &&
+              !$target.hasClass('selected')
             ) {
               // If we're multi selecting, deselect all
               if (shiftIsPressed) {
@@ -757,21 +826,21 @@ Viewer.prototype.handleInteractions = function() {
               } else {
                 // Select widget if exists
                 lD.selectObject({
-                  target: $(e.target).find('.designer-widget'),
+                  target: $target.find('.designer-widget'),
                   clickPosition: clickPosition,
                 });
               }
-              self.selectObject($(e.target), shiftIsPressed);
+              self.selectObject($target, shiftIsPressed);
             } else if (
               (
-                $(e.target).data('subType') === 'zone' ||
+                $target.data('subType') === 'zone' ||
                 (
-                  $(e.target).data('subType') === 'frame' &&
-                  $(e.target).is('.designer-region-frame.invalid-region')
+                  $target.data('subType') === 'frame' &&
+                  $target.is('.designer-region-frame.invalid-region')
                 )
               ) &&
-              $(e.target).hasClass('designer-region') &&
-              !$(e.target).hasClass('selected')
+              $target.hasClass('designer-region') &&
+              !$target.hasClass('selected')
             ) {
               // If we're multi selecting, deselect all
               if (shiftIsPressed) {
@@ -781,13 +850,16 @@ Viewer.prototype.handleInteractions = function() {
               } else {
                 // Select zone
                 lD.selectObject({
-                  target: $(e.target),
+                  target: $target,
                 });
               }
-              self.selectObject($(e.target), shiftIsPressed);
+              self.selectObject($target, shiftIsPressed);
             } else if (
-              $(e.target).hasClass('designer-element') &&
-              !$(e.target).hasClass('selected')
+              (
+                $target.hasClass('designer-element') ||
+                $target.hasClass('designer-element-group')
+              ) &&
+              !$target.hasClass('selected')
             ) {
               // If we're multi selecting, deselect all
               if (shiftIsPressed) {
@@ -797,14 +869,14 @@ Viewer.prototype.handleInteractions = function() {
               } else {
                 // Select element if exists
                 lD.selectObject({
-                  target: $(e.target),
+                  target: $target,
                   clickPosition: clickPosition,
                 });
               }
-              self.selectObject($(e.target), shiftIsPressed);
+              self.selectObject($target, shiftIsPressed);
             } else if (
-              $(e.target).hasClass('group-select-overlay') &&
-              !$(e.target).parent().hasClass('selected')
+              $target.hasClass('group-select-overlay') &&
+              !$target.parent().hasClass('selected')
             ) {
               // If we're multi selecting, deselect all
               if (shiftIsPressed) {
@@ -814,11 +886,18 @@ Viewer.prototype.handleInteractions = function() {
               } else {
                 // Select element if exists
                 lD.selectObject({
-                  target: $(e.target).parent(),
+                  target: $target.parent(),
                   clickPosition: clickPosition,
                 });
               }
-              self.selectObject($(e.target).parent(), shiftIsPressed);
+              self.selectObject($target.parent(), shiftIsPressed);
+            } else if (
+              $target.hasClass('designer-element-group') &&
+              $target.hasClass('editing')
+            ) {
+              // If we're editing, and select on group, deselect other elements
+              lD.selectObject();
+              self.selectObject(null, false, false);
             }
           }, 200);
         } else {
@@ -827,38 +906,60 @@ Viewer.prototype.handleInteractions = function() {
           clicks = 0;
 
           if (
-            $(e.target).data('subType') === 'playlist' &&
-            $(e.target).hasClass('editable')
+            $target.data('subType') === 'playlist' &&
+            !$target.hasClass('playlist-dynamic') &&
+            $target.hasClass('editable')
           ) {
             // Edit region if it's a playlist
-            playlistEditorBtnClick($(e.target).attr('id'));
+            playlistEditorBtnClick($target.attr('id'));
           } else if (
             // Select static widget region
-            $(e.target).data('subType') === 'frame' &&
-            $(e.target).hasClass('designer-region') &&
-            $(e.target).find('.designer-widget').length > 0
+            $target.data('subType') === 'frame' &&
+            $target.hasClass('designer-region') &&
+            $target.find('.designer-widget').length > 0
           ) {
             lD.selectObject({
-              target: $(e.target),
+              target: $target,
             });
-            self.selectObject($(e.target), shiftIsPressed);
+            self.selectObject($target, shiftIsPressed);
           } else if (
-            $(e.target).hasClass('group-select-overlay')
+            $target.hasClass('group-select-overlay') &&
+            !$target.hasClass('editing')
           ) {
             self.editGroup(
-              $(e.target).parents('.designer-element-group'),
+              $target.parents('.designer-element-group'),
             );
-          } else {
+          } else if (
+            $target.data('type') === 'element' &&
+            $target.data('subType') === 'text' &&
+            $target.hasClass('editable') &&
+            $target.hasClass('selected')
+          ) {
+            const element = lD.getObjectByTypeAndId(
+              'element',
+              $target.attr('id'),
+              'widget_' + $target.data('regionId') +
+                '_' + $target.data('widgetId'),
+            );
+
+            self.editText(element);
+          } else if (
+            $target.data('type') != undefined &&
+            $target.data('subType') != undefined
+          ) {
             // Move out from group editing
             lD.selectObject();
-            self.selectObject();
+            self.selectObject(null, false, false);
           }
         }
       }
     }).on('dblclick', function(e) {
       // Cancel default double click
       e.preventDefault();
-    }).children().on('mousedown dblclick', function(e) {
+    }).children(
+      ':not(.message-container):not(.message-container *)' +
+      ':not(.slot):not(.slot *)',
+    ).on('mousedown dblclick', function(e) {
       // Cancel default click
       e.stopPropagation();
     }).contextmenu(function(ev) {
@@ -903,7 +1004,7 @@ Viewer.prototype.handleInteractions = function() {
     }.bind(this));
 
   // Handle snap buttons
-  $viewerContainer.parent().find('#snapToGrid')
+  $viewerContainerParent.find('#snapToGrid')
     .off('click').click(function() {
       this.moveableOptions.snapToGrid = !this.moveableOptions.snapToGrid;
 
@@ -919,7 +1020,7 @@ Viewer.prototype.handleInteractions = function() {
       this.updateMoveableUI();
     }.bind(this));
 
-  $viewerContainer.parent().find('#snapToBorders')
+  $viewerContainerParent.find('#snapToBorders')
     .off('click').click(function() {
       this.moveableOptions.snapToBorders = !this.moveableOptions.snapToBorders;
 
@@ -930,7 +1031,7 @@ Viewer.prototype.handleInteractions = function() {
       this.updateMoveableUI();
     }.bind(this));
 
-  $viewerContainer.parent().find('#snapToElements')
+  $viewerContainerParent.find('#snapToElements')
     .off('click').click(function() {
       this.moveableOptions.snapToElements =
         !this.moveableOptions.snapToElements;
@@ -950,7 +1051,7 @@ Viewer.prototype.handleInteractions = function() {
   const updateMoveableWithDebounce = _.debounce(function() {
     self.updateMoveableOptions();
   }, 1000);
-  $viewerContainer.parent().find('.snap-to-grid-value')
+  $viewerContainerParent.find('.snap-to-grid-value')
     .off().on('input', function(ev) {
       let gridValue = Number($(ev.currentTarget).val());
 
@@ -1027,11 +1128,29 @@ Viewer.prototype.update = function() {
     );
   }.bind(this));
 
+  // If we are selecting an element in a group,
+  // we need to put the group in edit mode
+  if (
+    self.parent.selectedObject.type == 'element' &&
+    self.parent.selectedObject.groupId != undefined
+  ) {
+    self.editGroup(
+      self.DOMObject.find(
+        '.designer-element-group#' +
+        self.parent.selectedObject.groupId,
+      ),
+      self.parent.selectedObject.elementId,
+      true,
+    );
+  }
+
   // Update moveable
   this.updateMoveable(true);
 
   // Update moveable options
-  this.updateMoveableOptions();
+  this.updateMoveableOptions({
+    savePreferences: false,
+  });
 };
 
 /**
@@ -1182,13 +1301,81 @@ Viewer.prototype.renderRegion = function(
       region.playlistCountOfWidgets = res.extra && res.extra.countOfWidgets ?
         res.extra.countOfWidgets : 1;
 
-      $container.append(viewerPlaylistControlsTemplate({
+      const appendOptions = {
         titleEdit: viewerTrans.editPlaylist,
         seq: region.playlistSeq,
         countOfWidgets: region.playlistCountOfWidgets,
         isEmpty: res.extra && res.extra.empty,
         trans: viewerTrans,
-      }));
+        canEditPlaylist: false,
+        isDynamicPlaylist: false,
+      };
+
+      // Append playlist controls using appendOptions
+      const appendPlaylistControls = function() {
+        // Mark playlist container as global-editable or dynamic
+        $container.toggleClass(
+          'playlist-global-editable',
+          appendOptions.canEditPlaylist,
+        );
+        $container.toggleClass(
+          'playlist-dynamic',
+          appendOptions.isDynamicPlaylist,
+        );
+
+        // Append playlist controls to container
+        $container.append(viewerPlaylistControlsTemplate(appendOptions));
+      };
+
+      // If it's playlist with a single subplaylist widget
+      if (
+        Object.keys(region.widgets).length === 1 &&
+        Object.values(region.widgets)[0].subType === 'subplaylist' &&
+        Object.values(region.widgets)[0].getOptions().subPlaylists
+      ) {
+        // Get assigned subplaylists
+        const subplaylists =
+          JSON.parse(
+            Object.values(region.widgets)[0].getOptions().subPlaylists,
+          );
+
+        // If there's only one playlist, get permissions
+        if (subplaylists.length === 1) {
+          const subPlaylistId = subplaylists[0].playlistId;
+          $.ajax({
+            method: 'GET',
+            url: urlsForApi.playlist.get.url +
+              '?playlistId=' + subplaylists[0].playlistId,
+            success: function(_res) {
+              // User has permissions
+              if (_res.data && _res.data.length > 0) {
+                // Check if playlist is dynamic
+                if (_res.data[0].isDynamic === 1) {
+                  appendOptions.isDynamicPlaylist = true;
+                } else {
+                  // If it's not dynamic, enable editing
+                  appendOptions.canEditPlaylist = true;
+                  appendOptions.canEditPlaylistId = subPlaylistId;
+                }
+              }
+
+              // Append playlist controls
+              appendPlaylistControls();
+            },
+            error: function(_res) {
+              console.error(_res);
+              // Still append playlist controls
+              appendPlaylistControls();
+            },
+          });
+        } else {
+          // Append playlist controls
+          appendPlaylistControls();
+        }
+      } else {
+        // Append playlist controls
+        appendPlaylistControls();
+      }
     }
 
     // If widget is selected, update moveable for the region
@@ -1280,22 +1467,30 @@ Viewer.prototype.updateElement = function(
 ) {
   const $container = lD.viewer.DOMObject.find(`#${element.elementId}`);
 
+  // Get real elements from the structure
+  const realElement =
+    lD.getObjectByTypeAndId(
+      'element',
+      element.elementId,
+      'widget_' + element.regionId + '_' + element.widgetId,
+    );
+
   // Calculate scaled dimensions
-  element.scaledDimensions = {
-    height: element.height * lD.viewer.containerObjectDimensions.scale,
-    left: element.left * lD.viewer.containerObjectDimensions.scale,
-    top: element.top * lD.viewer.containerObjectDimensions.scale,
-    width: element.width * lD.viewer.containerObjectDimensions.scale,
+  realElement.scaledDimensions = {
+    height: realElement.height * lD.viewer.containerObjectDimensions.scale,
+    left: realElement.left * lD.viewer.containerObjectDimensions.scale,
+    top: realElement.top * lD.viewer.containerObjectDimensions.scale,
+    width: realElement.width * lD.viewer.containerObjectDimensions.scale,
   };
 
   // Update element index
   $container.css({
-    'z-index': element.layer,
+    'z-index': realElement.layer,
   });
 
   // Update element content
   lD.viewer.renderElementContent(
-    element,
+    realElement,
   );
 };
 
@@ -1434,11 +1629,13 @@ Viewer.prototype.updateRegion = function(
   // If region is selected, but not on the container, do it
   if (region.selected && !$container.hasClass('selected')) {
     lD.viewer.selectObject($container);
-    lD.viewer.updateMoveable();
 
     // Update bottom bar
     lD.bottombar.render(region);
   }
+
+  // Always update moveable
+  lD.viewer.updateMoveable();
 };
 
 /**
@@ -1642,6 +1839,13 @@ Viewer.prototype.renderElementContent = function(
   const $assetContainer =
     this.parent.editorContainer.find('#asset-container');
 
+  // Get parent widget
+  const parentWidget = lD.getObjectByTypeAndId(
+    'widget',
+    'widget_' + element.regionId + '_' + element.widgetId,
+    'canvas',
+  );
+
   // Get element template ( most of the time
   // template will be already loaded/cached )
   element.getTemplate().then((template) => {
@@ -1743,12 +1947,22 @@ Viewer.prototype.renderElementContent = function(
 
     // Get element properties
     element.getProperties().then((properties) => {
+      // Parent widget sendToElement properties
+      const sendToElementProperties =
+        parentWidget.getSendToElementProperties();
+
       // Convert properties to object with id and value
       const convertedProperties = {};
       let hasCircleOutline = false;
       for (const key in properties) {
         if (properties.hasOwnProperty(key)) {
           const property = properties[key];
+
+          // If the widget is sending the property
+          // to the element, use that value instead
+          if (sendToElementProperties[property.id] != undefined) {
+            property.value = sendToElementProperties[property.id];
+          }
 
           // Convert checkbox values to boolean
           if (property.type === 'checkbox') {
@@ -2217,6 +2431,16 @@ Viewer.prototype.playPreview = function(dimensions) {
     .addClass('fa-stop-circle')
     .attr('title', bottombarTrans.stopPreviewLayout);
 
+  // Add preview class to editor
+  app.editorContainer.addClass('preview-playing');
+
+  // Create play overlay
+  const $customOverlay = $('.custom-overlay').clone();
+  $customOverlay
+    .addClass('custom-overlay-preview-playing')
+    .on('click', this.stopPreview.bind(this));
+  $customOverlay.appendTo(app.editorContainer);
+
   // Mark as playing
   this.previewPlaying = true;
 };
@@ -2229,6 +2453,13 @@ Viewer.prototype.stopPreview = function() {
 
   // Reload bottombar to original state
   app.bottombar.render(app.selectedObject);
+
+  // Remove preview class from editor
+  app.editorContainer.removeClass('preview-playing');
+
+  // Remove overlay
+  app.editorContainer.find('.custom-overlay-preview-playing')
+    .remove();
 
   // Reload viewer ( which stops preview )
   this.render(true);
@@ -2283,6 +2514,7 @@ Viewer.prototype.initMoveable = function() {
   this.moveable = new Moveable(document.body, {
     draggable: true,
     resizable: true,
+    origin: false,
   });
 
   // Const save tranformation
@@ -2292,6 +2524,7 @@ Viewer.prototype.initMoveable = function() {
     // Apply transformation to the element
     const transformSplit = (target.style.transform).split(/[(),]+/);
     let hasTranslate = false;
+    let hasRotate = false;
 
     // If the transform has translate
     if (target.style.transform.search('translate') != -1) {
@@ -2310,6 +2543,10 @@ Viewer.prototype.initMoveable = function() {
         transformSplit[4] :
         transformSplit[1];
 
+      if (rotateValue != '0deg') {
+        hasRotate = true;
+      }
+
       target.style.transform = `rotate(${rotateValue})`;
     } else {
       target.style.transform = '';
@@ -2317,7 +2554,8 @@ Viewer.prototype.initMoveable = function() {
 
     // If snap to borders is active, prevent negative values
     // Or snap to border if <1px delta
-    if (self.moveableOptions.snapToBorders) {
+    // only works for no rotation
+    if (self.moveableOptions.snapToBorders && !hasRotate) {
       let left = Number(target.style.left.split('px')[0]);
       let top = Number(target.style.top.split('px')[0]);
       let width = Number(target.style.width.split('px')[0]);
@@ -2648,6 +2886,98 @@ Viewer.prototype.initMoveable = function() {
   // Update moveable options
   this.updateMoveableOptions({
     savePreferences: false,
+  });
+};
+
+/**
+ * Initialise Selecto
+ * @param {boolean} groupEditing
+ * @param {object} groupContainer
+ */
+Viewer.prototype.initSelecto = function(groupEditing = false, groupContainer) {
+  const self = this;
+  const app = this.parent;
+
+  const container = (groupEditing) ?
+    groupContainer[0] :
+    lD.viewer.DOMObject[0];
+
+  const dragContainer = (groupEditing) ?
+    [
+      groupContainer[0],
+      lD.viewer.DOMObject.find('.viewer-overlay')[0],
+    ] :
+    [
+      lD.viewer.DOMObject[0],
+      lD.viewer.DOMObject.find('.viewer-object.layout')[0],
+    ];
+
+  const selectableTargets = (groupEditing) ?
+    [
+      // Elements in group
+      '.designer-element-group .viewer-object-select.editable',
+    ] :
+    [
+      // Elements
+      '.designer-region-canvas > ' +
+        '.designer-element.viewer-object-select.editable',
+      // Regions
+      '.designer-region.viewer-object-select.editable',
+      // Element groups
+      '.designer-element-group.viewer-object-select.editable',
+    ];
+
+  // Destroy previous selecto
+  if (this.selecto) {
+    this.selecto.destroy();
+  }
+
+  this.selecto = new Selecto({
+    container: container,
+    dragContainer: dragContainer,
+    selectableTargets: selectableTargets,
+    hitRate: 0,
+    selectByClick: false,
+    selectFromInside: true,
+  });
+
+  this.selecto.on('select', (e) => {
+    $(e.added).addClass('selected-temp');
+    $(e.removed).removeClass('selected-temp');
+  }).on('selectEnd', (e) => {
+    const minSelectDistance = 10;
+    if (
+      // If it's click, don't select (only select on drag end)
+      e.isClick ||
+      // If the selection is less than minimum distance
+      (
+        e.rect.width < minSelectDistance &&
+        e.rect.height < minSelectDistance
+      )
+    ) {
+      return;
+    }
+
+    const $selectedObjs = $(e.afterAdded);
+    const multipleSelected = ($selectedObjs.length > 1);
+
+    // Remove all temporary select classes
+    self.DOMObject.find('.selected-temp').removeClass('selected-temp');
+
+    if (multipleSelected) {
+      // Deselect in editor ( only select on viewer with multiple )
+      app.selectObject({
+        reloadLayerManager: true,
+      });
+    } else {
+      // If it's a single object, select it in the editor
+      app.selectObject({
+        target: ($selectedObjs.length === 0) ? null : $selectedObjs,
+      });
+    }
+
+    // Select on viewer
+    lD.viewer.selectObject($selectedObjs, multipleSelected, !groupEditing);
   });
 };
 
@@ -3408,11 +3738,21 @@ Viewer.prototype.updateRegionContent = function(
     }
   }
 
-  // Process image
+  // Process image and video/playlist thumbs
   const $imageContainer = $container
-    .find('[data-type="widget_image"], [data-type="widget_video"]');
+    .find(
+      '[data-type="widget_image"], ' +
+      '[data-type="widget_video"], ' +
+      '[data-type="playlist"]',
+    );
   if ($imageContainer.length) {
     const $image = $imageContainer.find('img');
+
+    // If there's no image container, skip
+    if ($image.length === 0) {
+      return;
+    }
+
     const $imageParent = $image.parent();
     const $imageParentContainer = $image.parents('.img-container');
     const urlSplit = $image.attr('src').split('&proportional=');
@@ -3752,6 +4092,7 @@ Viewer.prototype.saveTemporaryObject = function(objectId, objectType, data) {
 Viewer.prototype.editGroup = function(
   groupDOMObject,
   elementToSelectOnLoad = null,
+  forceEditOn = false,
 ) {
   const self = this;
   const editing = $(groupDOMObject).hasClass('editing');
@@ -3771,7 +4112,9 @@ Viewer.prototype.editGroup = function(
   }
 
   // If we're not editing yet, start
-  if (!editing) {
+  if (!editing || forceEditOn) {
+    self.editingGroup = true;
+
     // Get group object from structure
     const groupId = $(groupDOMObject).attr('id');
     const groupObj = lD.getObjectByTypeAndId(
@@ -3812,7 +4155,12 @@ Viewer.prototype.editGroup = function(
     // Give group the same background as the layout's
     $(groupDOMObject).css('background-color',
       self.DOMObject.find('> .layout').css('background-color'));
+
+    // Change selecto to edit group
+    self.initSelecto(true, groupDOMObject);
   } else {
+    self.editingGroup = false;
+
     // Hide overlay
     self.DOMObject.find('.viewer-overlay').hide();
 
@@ -3829,6 +4177,9 @@ Viewer.prototype.editGroup = function(
 
     // Remove background color
     $(groupDOMObject).css('background-color', '');
+
+    // Revert selecto to edit global
+    self.initSelecto();
   }
 };
 
@@ -3870,6 +4221,105 @@ Viewer.prototype.getMultipleSelected = function() {
     objects: $selected,
     canBeDeleted: canBeDeleted,
   };
+};
+
+/**
+ * Inline editing for text element
+ * @param {object} textElement - Text Element
+ */
+Viewer.prototype.editText = function(
+  textElement,
+) {
+  // Get element on viewer
+  const $viewerElement =
+    this.DOMObject.find('#' + textElement.elementId);
+  const $canvas =
+    $viewerElement.parents('.designer-region-canvas');
+  const $editable =
+    $viewerElement.find('.element-content .global-elements-text > div');
+  const originalZIndex = $viewerElement.css('z-index');
+  const canvasOriginalZIndex = $canvas.css('z-index');
+  const editTextZIndex = 2000;
+
+  /**
+   * Save on blur method
+   */
+  function saveOnBlur() {
+    // Remove editing class
+    $viewerElement.removeClass('inline-editing');
+
+    // Restore z index
+    $viewerElement.css('z-index', originalZIndex);
+    $canvas.css('z-index', canvasOriginalZIndex);
+
+    // Remove overlay
+    lD.editorContainer.find('.custom-overlay-edit-text')
+      .remove();
+
+    // Get text and set it for the text field
+    const $textArea =
+      lD.propertiesPanel.DOMObject.find('textarea[name=text]');
+    $textArea.val($editable.html());
+
+    // Save property
+    lD.propertiesPanel.saveElement(
+      textElement,
+      lD.propertiesPanel.DOMObject.find('[name].element-property'),
+    );
+
+    // Remove listener
+    $editable[0].removeEventListener('blur', saveOnBlur);
+  };
+
+  // Enable editing
+  $editable[0].contentEditable = true;
+
+  // Mark element as being edited
+  $viewerElement.addClass('inline-editing');
+
+  // Show overlay
+  const $customOverlay = $('.custom-overlay').clone();
+  $customOverlay.attr('id', 'editTextOverlay')
+    .removeClass('custom-overlay')
+    .on('click', saveOnBlur)
+    .css('z-index', editTextZIndex)
+    .addClass('custom-overlay-edit-text');
+  $customOverlay.appendTo(lD.editorContainer);
+
+  // Set z-index to viewer element
+  $viewerElement.css('z-index', (editTextZIndex + 10));
+  $canvas.css('z-index', 'auto');
+
+  // Focus on field ( Fix - after timeout )
+  setTimeout(function() {
+    $editable[0].focus();
+  }, 20);
+
+  // Add blur event handler
+  $editable[0].addEventListener('blur', saveOnBlur);
+};
+
+/**
+ * Toggle loader to viewer object
+ * @param {object} target - Target in viewer (element or group )
+ * @param {boolean} enable
+ */
+Viewer.prototype.toggleLoader = function(
+  target,
+  enable = true,
+) {
+  const self = this;
+
+  if (enable) {
+    const $loader = $(`<div class="loader"></div>`);
+    $loader.html(loadingTemplate());
+
+    self.DOMObject.find('#' + target)
+      .append($loader);
+  } else {
+    self.DOMObject.find('#' + target + ' > .loader')
+      .remove();
+  }
 };
 
 module.exports = Viewer;

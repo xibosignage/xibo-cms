@@ -26,17 +26,18 @@
 {% block title %}{{ "Library"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    {% if currentUser.featureEnabledCount(["library.add", "library.modify"]) > 0 or settings.SETTING_LIBRARY_TIDY_ENABLED == 1 %}
     <div class="widget-action-menu pull-right">
-        {% if currentUser.featureEnabled("library.add") %}
-        <button class="btn btn-success" href="#" id="libraryUploadForm" title="{% trans "Add a new media item to the library" %}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Media" %}</button>
-        <button class="btn btn-success XiboFormButton" title="{% trans "Add a new media item to the library via external URL" %}" href="{{ url_for("library.uploadUrl.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add media (URL)" %}</button>
+        {% if currentUser.featureEnabledCount(["library.add", "library.modify"]) > 0 or settings.SETTING_LIBRARY_TIDY_ENABLED == 1 %}
+            {% if currentUser.featureEnabled("library.add") %}
+                <button class="btn btn-success" href="#" id="libraryUploadForm" title="{% trans "Add a new media item to the library" %}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Media" %}</button>
+                <button class="btn btn-success XiboFormButton" title="{% trans "Add a new media item to the library via external URL" %}" href="{{ url_for("library.uploadUrl.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add media (URL)" %}</button>
+            {% endif %}
+            {% if settings.SETTING_LIBRARY_TIDY_ENABLED == 1 and currentUser.featureEnabled("library.modify") %}
+                <button class="btn btn-danger XiboFormButton" title="{% trans "Run through the library and remove unused and unnecessary files" %}" href="{{ url_for("library.tidy.form") }}"> <i class="fa fa-trash" aria-hidden="true"></i> {% trans "Tidy Library" %}</button>
+            {% endif %}
         {% endif %}
-        {% if settings.SETTING_LIBRARY_TIDY_ENABLED == 1 and currentUser.featureEnabled("library.modify") %}
-            <button class="btn btn-danger XiboFormButton" title="{% trans "Run through the library and remove unused and unnecessary files" %}" href="{{ url_for("library.tidy.form") }}"> <i class="fa fa-trash" aria-hidden="true"></i> {% trans "Tidy Library" %}</button>
-        {% endif %}
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
     </div>
-    {% endif %}
 {% endblock %}
 
 
@@ -120,26 +121,24 @@
                         </form>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-sm-2 grid-folder-tree-container" id="grid-folder-filter">
-                        <div class="p-3 mr-2">
-                            <input id="jstree-search" class="form-control" type="text" placeholder="{% trans "Search" %}">
-                            <div class="form-check">
-                                <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
-                                <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "All Folders" %}</label>
-                            </div>
-                            <div class="folder-search-no-results d-none">
-                                <p>{% trans 'No Folders matching the search term' %}</p>
-                            </div>
-                            <div id="container-folder-tree"></div>
+                <div class="grid-with-folders-container">
+                    <div class="grid-folder-tree-container p-3" id="grid-folder-filter">
+                        <input id="jstree-search" class="form-control" type="text" placeholder="{% trans "Search" %}">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
+                            <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "All Folders" %}</label>
                         </div>
+                        <div class="folder-search-no-results d-none">
+                            <p>{% trans 'No Folders matching the search term' %}</p>
+                        </div>
+                        <div id="container-folder-tree"></div>
                     </div>
                     <div class="folder-controller d-none">
                         <button type="button" id="folder-tree-select-folder-button" class="btn btn-outline-secondary" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-folder fa-1x"></i></button>
                         <div id="breadcrumbs" class="mt-2 pl-2"></div>
                     </div>
-                    <div id="datatable-container" class="col-sm-10 pr-0">
-                        <div class="XiboData card pt-4 px-2">
+                    <div id="datatable-container">
+                        <div class="XiboData card py-3">
                             <table id="libraryItems" class="table table-striped responsive nowrap" data-content-type="media" data-content-id-name="mediaId" data-state-preference-name="libraryGrid" style="width: 100%;">
                                 <thead>
                                 <tr>
@@ -178,7 +177,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         var table;
         $(document).ready(function() {
 
@@ -349,6 +348,10 @@
             table.on('draw', { form: $("#libraryItems").closest(".XiboGrid").find(".FilterDiv form") } ,dataTableCreateTagEvents);
             table.on('processing.dt', dataTableProcessing);
             dataTableAddButtons(table, $('#libraryItems_wrapper').find('.dataTables_buttons'));
+
+            $("#refreshGrid").click(function () {
+                table.ajax.reload();
+            });
         });
 
         $("#libraryUploadForm").click(function(e) {

@@ -952,8 +952,15 @@ function membersFormSubmit(id) {
 function mediaDisplayGroupFormCallBack() {
 
     var container = $("#FileAssociationsAssign");
-    if (container.data().media == undefined)
+    if (container.data().media == undefined) {
         container.data().media = {};
+    }
+
+    // Get starting items
+    var includedItems = [];
+    $('#FileAssociationsSortable').find('[data-media-id]').each((_i, el) => {
+        includedItems.push($(el).data('mediaId'));
+    });
 
     var mediaTable = $("#mediaAssignments").DataTable({ "language": dataTablesLanguage,
             serverSide: true, stateSave: true,
@@ -975,8 +982,15 @@ function mediaDisplayGroupFormCallBack() {
                     if (type != "display")
                         return "";
 
-                    // Create a click-able span
-                    return "<a href=\"#\" class=\"assignItem\"><span class=\"fa fa-plus\"></a>";
+                    // If media id is already added to the container
+                    // Create span with disabled
+                    if(includedItems.indexOf(data.mediaId) != -1) {
+                        // Create a disabled span
+                        return "<a href=\"#\" class=\"assignItem disabled\"><span class=\"fa fa-plus hidden\"></a>";
+                    } else {
+                        // Create a click-able span
+                        return "<a href=\"#\" class=\"assignItem\"><span class=\"fa fa-plus\"></a>";
+                    }
                 }
             }
         ]
@@ -986,12 +1000,20 @@ function mediaDisplayGroupFormCallBack() {
         dataTableDraw(e, settings);
 
         // Clicky on the +spans
-        $(".assignItem", "#mediaAssignments").click(function() {
+        $(".assignItem:not(.disabled)", "#mediaAssignments").on("click", function() {
             // Get the row that this is in.
             var data = mediaTable.row($(this).closest("tr")).data();
 
             // Append to our media list
             container.data().media[data.mediaId] = 1;
+
+            // Add to aux array
+            includedItems.push(data.mediaId);
+
+            // Disable add button
+            $(this).parents("tr").addClass('disabled');
+            // Hide plus button
+            $(this).hide();
 
             // Construct a new list item for the lower list and append it.
             var newItem = $("<li/>", {
@@ -1004,11 +1026,7 @@ function mediaDisplayGroupFormCallBack() {
 
             // Add a span to that new item
             $("<span/>", {
-                "class": "fa fa-minus",
-                click: function(){
-                    container.data().media[$(this).parent().data().mediaId] = 0;
-                    $(this).parent().remove();
-                }
+                "class": "fa fa-minus ml-1",
             }).appendTo(newItem);
         });
     });
@@ -1018,9 +1036,16 @@ function mediaDisplayGroupFormCallBack() {
     $("#FileAssociationsSortable").sortable();
 
     // Bind to the existing items in the list
-    $("#FileAssociationsSortable").find('li span').click(function () {
-        container.data().media[$(this).parent().data().mediaId] = 0;
+    $("#FileAssociationsSortable").on("click", "li span", function () {
+        var mediaId = $(this).parent().data().mediaId;
+        container.data().media[mediaId] = 0;
         $(this).parent().remove();
+
+        // Remove from aux array
+        includedItems = includedItems.filter(item => item != mediaId);
+
+        // Reload table
+        mediaTable.ajax.reload();
     });
 
     // Bind to the filter

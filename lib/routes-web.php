@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -134,13 +134,16 @@ $app->get('/layout/view', ['\Xibo\Controller\Layout', 'displayPage'])
     ->setName('layout.view');
 
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/layout/preview/{id}', ['\Xibo\Controller\Preview', 'show'])->setName('layout.preview');
     $group->get('/layout/xlf/{id}', ['\Xibo\Controller\Preview', 'getXlf'])->setName('layout.getXlf');
     $group->get('/layout/background/{id}', ['\Xibo\Controller\Layout', 'downloadBackground'])->setName('layout.download.background');
     $group->get('/layout/thumbnail/{id}', ['\Xibo\Controller\Layout', 'downloadThumbnail'])->setName('layout.download.thumbnail');
     $group->get('/layout/playerBundle', ['\Xibo\Controller\Preview', 'playerBundle'])->setName('layout.preview.bundle');
     $group->get('/connector/widget/preview', ['\Xibo\Controller\Connector', 'connectorPreview'])->setName('layout.preview.connector');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.view', 'template.view']));
+
+$app->get('/layout/preview/{id}', ['\Xibo\Controller\Preview', 'show'])
+    ->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.view', 'template.view', 'campaign.view']))
+    ->setName('layout.preview');
 
 // forms
 $app->get('/layout/form/add', ['\Xibo\Controller\Layout','addForm'])
@@ -236,6 +239,9 @@ $app->get('/playlist/form/usage/{id}', ['\Xibo\Controller\Playlist','usageForm']
 //
 $app->get('/library/search', ['\Xibo\Controller\Library','search'])
     ->setName('library.search.all');
+
+$app->get('/library/connector/list', ['\Xibo\Controller\Library','providersList'])
+    ->setName('library.search.providers');
 
 $app->get('/library/view', ['\Xibo\Controller\Library','displayPage'])
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['library.view']))
@@ -366,8 +372,7 @@ $app->get('/campaign/form/{id}/selectfolder', ['\Xibo\Controller\Campaign','sele
     ->setName('campaign.selectfolder.form');
 
 $app->get('/campaign/{id}/preview', ['\Xibo\Controller\Campaign','preview'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['campaign.view']))
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.view']))
+    ->addMiddleware(new FeatureAuth($app->getContainer(), ['campaign.view', 'layout.view']))
     ->setName('campaign.preview');
 
 //
@@ -418,6 +423,11 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/dataset/form/import/{id}', ['\Xibo\Controller\DataSet', 'importForm'])->setName('dataSet.import.form');
     $group->get('/dataset/form/cache/clear/{id}', ['\Xibo\Controller\DataSet', 'clearCacheForm'])->setName('dataSet.clear.cache.form');
     $group->post('/dataset/cache/clear/{id}', ['\Xibo\Controller\DataSet', 'clearCache'])->setName('dataSet.clear.cache');
+    $group->get('/dataset/form/{id}/selectfolder', ['\Xibo\Controller\DataSet', 'selectFolderForm'])->setName('dataSet.selectfolder.form');
+
+    $group->get('/dataset/dataConnector/{id}', ['\Xibo\Controller\DataSet', 'dataConnectorView'])->setName('dataSet.dataConnector.view');
+    $group->get('/dataset/dataConnector/request/{id}', ['\Xibo\Controller\DataSet', 'dataConnectorRequest'])->setName('dataSet.dataConnector.request');
+    $group->get('/dataset/dataConnector/test/{id}', ['\Xibo\Controller\DataSet', 'dataConnectorTest'])->setName('dataSet.dataConnector.test');
 
     // columns
     $group->get('/dataset/{id}/column/view', ['\Xibo\Controller\DataSetColumn','displayPage'])->setName('dataSet.column.view');
@@ -565,6 +575,46 @@ $app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/module/form/settings/{id}', ['\Xibo\Controller\Module','settingsForm'])
         ->setName('module.settings.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['module.view']));
+
+//
+// Developer
+//
+$app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
+    $group->get('/developer/template/datatypes', ['\Xibo\Controller\Developer', 'getAvailableDataTypes'])
+        ->setName('developer.templates.datatypes.search');
+    $group->get('/developer/template/view', ['\Xibo\Controller\Developer', 'displayTemplatePage'])
+        ->setName('developer.templates.view');
+    $group->get('/developer/template', ['\Xibo\Controller\Developer', 'templateGrid'])
+        ->setName('developer.templates.search');
+
+    $group->get('/developer/template/{id}', ['\Xibo\Controller\Developer', 'displayTemplateEditPage'])
+        ->setName('developer.templates.view.edit');
+
+    $group->get('/developer/template/form/add', ['\Xibo\Controller\Developer', 'templateAddForm'])
+        ->setName('developer.templates.form.add');
+
+    $group->get('/developer/template/form/edit/{id}', ['\Xibo\Controller\Developer', 'templateEditForm'])
+        ->setName('developer.templates.form.edit');
+
+    $group->get('/developer/template/form/delete/{id}', ['\Xibo\Controller\Developer', 'templateDeleteForm'])
+        ->setName('developer.templates.form.delete');
+
+    $group->get('/developer/template/form/copy/{id}', ['\Xibo\Controller\Developer', 'templateCopyForm'])
+        ->setName('developer.templates.form.copy');
+
+    $group->post('/developer/template', ['\Xibo\Controller\Developer', 'templateAdd'])
+        ->setName('developer.templates.add');
+    $group->put('/developer/template/{id}', ['\Xibo\Controller\Developer', 'templateEdit'])
+        ->setName('developer.templates.edit');
+    $group->delete('/developer/template/{id}', ['\Xibo\Controller\Developer', 'templateDelete'])
+        ->setName('developer.templates.delete');
+    $group->get('/developer/template/{id}/export', ['\Xibo\Controller\Developer', 'templateExport'])
+        ->setName('developer.templates.export');
+    $group->post('/developer/template/import', ['\Xibo\Controller\Developer', 'templateImport'])
+        ->setName('developer.templates.import');
+    $group->post('/developer/template/{id}/copy', ['\Xibo\Controller\Developer', 'templateCopy'])
+        ->setName('developer.templates.copy');
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['developer.edit']));
 
 //
 // transition

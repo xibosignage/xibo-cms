@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -67,7 +67,11 @@ abstract class AuthenticationBase implements Middleware, AuthenticationInterface
             // Need to check
             if ($user->hasIdentity() && !$this->getSession()->isExpired()) {
                 // Replace our user with a fully loaded one
-                $user = $this->getUser($user->userId, $request->getAttribute('ip_address'));
+                $user = $this->getUser(
+                    $user->userId,
+                    $request->getAttribute('ip_address'),
+                    $this->getSession()->get('sessionHistoryId')
+                );
 
                 // We are authenticated, override with the populated user object
                 $this->setUserForRequest($user);

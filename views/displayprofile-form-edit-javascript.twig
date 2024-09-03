@@ -20,7 +20,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 #}
-<script type="text/javascript">
+<script type="text/javascript" nonce="{{ cspNonce }}">
     /**
     * Setup Display Profile setting forms
     */
@@ -75,10 +75,10 @@
             let values = $inputField.val().split(',');
 
             fieldsTemplate = template({
-                left: values[0],
-                top: values[1],
-                width: values[2],
-                height:  values[3]
+              top: values[0],
+              left: values[1],
+              width: values[2],
+              height:  values[3]
             });
         } else {
             fieldsTemplate = template();
@@ -375,8 +375,8 @@
 
     <script type="text/x-handlebars-template" id="android-dimension-fields">
         <div class="row">
-            <input type="number" value="{{ left }}" class="col-3 form-control androidDimensionInput" name="dimensionLeft" id="dimensionLeft" placeholder="{% endverbatim %}{{ "Left"|trans }}{% verbatim %}"></input>
             <input type="number" value="{{ top }}" class="col-3 form-control androidDimensionInput" name="dimensionTop" id="dimensionTop" placeholder="{% endverbatim %}{{ "Top"|trans }}{% verbatim %}"></input>
+            <input type="number" value="{{ left }}" class="col-3 form-control androidDimensionInput" name="dimensionLeft" id="dimensionLeft" placeholder="{% endverbatim %}{{ "Left"|trans }}{% verbatim %}"></input>
             <input type="number" value="{{ width }}" class="col-3 form-control androidDimensionInput" name="dimensionWidth" id="dimensionWidth" placeholder="{% endverbatim %}{{ "Width"|trans }}{% verbatim %}"></input>
             <input type="number" value="{{ height }}" class="col-3 form-control androidDimensionInput" name="dimensionHeight" id="dimensionHeight" placeholder="{% endverbatim %}{{ "Height"|trans }}{% verbatim %}"></input>
         </div>

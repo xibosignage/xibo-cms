@@ -32,6 +32,7 @@
         <button class="btn btn-primary toggleMultiSelectMode" id="toggleMultiSelectMode" title="{% trans "Click to toggle between Data Edit and Multi Select modes" %}"><i class="fa fa-object-group" aria-hidden="true"></i> <span class="button-text">{% trans "Multi Select Mode" %}</span></button>
         <button class="btn btn-danger d-none deleteSelectedRows" id="deleteSelectedRows" title="{% trans "Click to delete selected rows" %}" disabled="disabled"><i class="fa fa-trash" aria-hidden="true"></i> <span class="button-text">{% trans "Delete Rows" %}</span></button>
         <button class="btn btn-info XiboRedirectButton" href="{{ url_for("dataSet.column.view", {"id": dataSet.dataSetId}) }}"><i class="fa fa-columns" aria-hidden="true"></i> {% trans "View Columns" %}</button>
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
     </div>
 {% endblock %}
 
@@ -76,7 +77,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
 
         var imageUrl = $("#datasets").data("imageUrl");
         var cols = [];
@@ -85,7 +86,33 @@
         var multiSelectTitleTrans = "{% trans "Multi Select Mode" %}";
         var editModeHelpTrans = "{% trans "Click on any row to edit" %}";
         var multiSelectHelpTrans = "{% trans "Select one or more rows to delete" %}";
+        const entityMap = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;',
+            '/': '&#x2F;',
+            '`': '&#x60;',
+            '=': '&#x3D;'
+        };
 
+        function sanitizeHtml(string) {
+            return String(string).replace(/[&<>"'`=\/]/g, function (s) {
+                return entityMap[s];
+            });
+        }
+
+        function validateHTMLData(str) {
+            let doc = new DOMParser().parseFromString(str, "text/html");
+
+            // If valid html, sanitize and format as a code
+            if (Array.from(doc.body.childNodes).some(node => node.nodeType === 1)) {
+                return `<code>${sanitizeHtml(str)}</code>`;
+            }
+
+            return str;
+        }
 
         cols.push({ "name": "id", "data": "id" });
         {% for col in dataSet.getColumn() %}
@@ -103,7 +130,13 @@
                     }
                 });
             {% else %}
-                cols.push({ "data": "{{ col.heading }}", "orderable": {% if col.showSort == 1 %}true{% else %}false{% endif %} });
+                cols.push({
+                    "data": "{{ col.heading }}",
+                    "orderable": {% if col.showSort == 1 %}true{% else %}false{% endif %},
+                    "render": function(data) {
+                        return validateHTMLData(data);
+                    }
+                });
             {% endif %}
         {% endfor %}
 
@@ -162,6 +195,10 @@
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
         dataTableAddButtons(table, $('#datasets_wrapper').find('.dataTables_buttons'));
+
+        $("#refreshGrid").click(function () {
+            table.ajax.reload();
+        });
 
         var dataSetEditFormOpen = _.debounce(function() {
             var data = table.row($(this)).data();

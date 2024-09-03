@@ -1,8 +1,8 @@
 {#
 /**
- * Copyright (C) 2021 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -41,7 +41,10 @@
             <ul class="nav nav-tabs" role="tablist">
                 <li class="nav-item"><a class="nav-link active" href="#general-tab" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
                 <li class="nav-item"><a class="nav-link" href="#description-tab" role="tab" data-toggle="tab"><span>{% trans "Description" %}</span></a></li>
-                {% if currentUser.userTypeId == 1 %}<li class="nav-item"><a class="nav-link" href="#onboarding-tab" role="tab" data-toggle="tab"><span>{% trans "Onboarding Settings" %}</span></a></li>{% endif %}
+                {% if currentUser.userTypeId == 1 %}
+                <li class="nav-item"><a class="nav-link" href="#notifications-tab" role="tab" data-toggle="tab"><span>{% trans "Notifications" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#onboarding-tab" role="tab" data-toggle="tab"><span>{% trans "Onboarding Settings" %}</span></a></li>
+                {% endif %}
             </ul>
             <form id="userGroupEditForm" class="UserGroupForm form-horizontal" method="put" action="{{ url_for("group.edit", {"id": group.groupId}) }}">
                 <div class="tab-content">
@@ -67,8 +70,10 @@
                                 </select>
                             </div>
                         </div>
+                    </div>
 
-                        {% if currentUser.userTypeId == 1 %}
+                    {% if currentUser.userTypeId == 1 %}
+                        <div class="tab-pane" id="notifications-tab">
                             {% set title %}{% trans "Receive System Notifications?" %}{% endset %}
                             {% set helpText %}{% trans "Should members of this Group receive system notifications?" %}{% endset %}
                             {{ forms.checkbox("isSystemNotification", title, group.isSystemNotification, helpText) }}
@@ -76,8 +81,32 @@
                             {% set title %}{% trans "Receive Display Notifications?" %}{% endset %}
                             {% set helpText %}{% trans "Should members of this Group receive Display notifications for Displays they have permission to see?" %}{% endset %}
                             {{ forms.checkbox("isDisplayNotification", title, group.isDisplayNotification, helpText) }}
-                        {% endif %}
-                    </div>
+
+                            {% set title %}{% trans "Receive DataSet Notifications?" %}{% endset %}
+                            {% set helpText %}{% trans "Should members of this Group receive DataSet emails?" %}{% endset %}
+                            {{ forms.checkbox("isDataSetNotification", title, group.isDataSetNotification, helpText) }}
+
+                            {% set title %}{% trans "Receive Layout Notifications?" %}{% endset %}
+                            {% set helpText %}{% trans "Should members of this Group receive Layout emails?" %}{% endset %}
+                            {{ forms.checkbox("isLayoutNotification", title, group.isLayoutNotification, helpText) }}
+
+                            {% set title %}{% trans "Receive Library Notifications?" %}{% endset %}
+                            {% set helpText %}{% trans "Should members of this Group receive Library notification emails?" %}{% endset %}
+                            {{ forms.checkbox("isLibraryNotification", title, group.isLibraryNotification, helpText) }}
+
+                            {% set title %}{% trans "Receive Report Notifications?" %}{% endset %}
+                            {% set helpText %}{% trans "Should members of this Group receive Report emails?" %}{% endset %}
+                            {{ forms.checkbox("isReportNotification", title, group.isReportNotification, helpText) }}
+
+                            {% set title %}{% trans "Receive Schedule Notifications?" %}{% endset %}
+                            {% set helpText %}{% trans "Should members of this Group receive Schedule emails?" %}{% endset %}
+                            {{ forms.checkbox("isScheduleNotification", title, group.isScheduleNotification, helpText) }}
+
+                            {% set title %}{% trans "Receive Custom Notifications?" %}{% endset %}
+                            {% set helpText %}{% trans "Should members of this Group receive notifications emails for Notifications manually created in CMS?" %}{% endset %}
+                            {{ forms.checkbox("isCustomNotification", title, group.isCustomNotification, helpText) }}
+                        </div>
+                    {% endif %}
 
                     <div class="tab-pane" id="description-tab">
                         {% set title %}{% trans "Description" %}{% endset %}

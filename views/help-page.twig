@@ -28,9 +28,9 @@
 {% block actionMenu %}
     <div class="widget-action-menu pull-right">
         <button class="btn btn-info XiboFormButton" title="{% trans "Add a new Help page" %}" href="{{ url_for("help.add.form") }}"><i class="fa fa-question-circle" aria-hidden="true"></i> {% trans "Add Help Link" %}</button>
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
     </div>
 {% endblock %}
-
 
 {% block pageContent %}
     <div class="widget">
@@ -65,7 +65,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         var table = $("#helpLinks").DataTable({
             "language": dataTablesLanguage,
             dom: dataTablesTemplate,
@@ -99,5 +99,9 @@
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
         dataTableAddButtons(table, $('#helpLinks_wrapper').find('.dataTables_buttons'));
+
+        $("#refreshGrid").click(function () {
+            table.ajax.reload();
+        });
     </script>
 {% endblock %}

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -132,11 +132,15 @@ class DataSetData extends Base
         
         // Filter criteria
         $filter = '';
+        $params = [];
+        $i = 0;
         foreach ($dataSet->getColumn() as $column) {
             /* @var \Xibo\Entity\DataSetColumn $column */
             if ($column->dataSetColumnTypeId == 1) {
+                $i++;
                 if ($sanitizedParams->getString($column->heading) != null) {
-                    $filter .= 'AND ' . $column->heading . ' LIKE \'%' . $sanitizedParams->getString($column->heading) . '%\' ';
+                    $filter .= 'AND `' . $column->heading . '` LIKE :heading_' . $i . ' ';
+                    $params['heading_' . $i] = '%' . $sanitizedParams->getString($column->heading) . '%';
                 }
             }
         }
@@ -146,12 +150,16 @@ class DataSetData extends Base
         $filter = $this->gridRenderFilter(['filter' => $request->getParam('filter', $filter)], $sanitizedParams);
 
         try {
-            $data = $dataSet->getData([
-                'order' => $sorting,
-                'start' => $filter['start'],
-                'size' => $filter['length'],
-                'filter' => $filter['filter']
-            ]);
+            $data = $dataSet->getData(
+                [
+                    'order' => $sorting,
+                    'start' => $filter['start'],
+                    'size' => $filter['length'],
+                    'filter' => $filter['filter']
+                ],
+                [],
+                $params,
+            );
         } catch (\Exception $e) {
             $data = ['exception' => __('Error getting DataSet data, failed with following message: ') . $e->getMessage()];
             $this->getLog()->error('Error getting DataSet data, failed with following message: ' . $e->getMessage());

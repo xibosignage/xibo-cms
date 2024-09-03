@@ -4,12 +4,13 @@
 {% block title %}{{ "Products for "|trans }} {{menuBoardCategory.name}} {{ "in Menu Board "|trans }} {{ menuBoard.name }} | {% endblock %}
 
 {% block actionMenu %}
-    {% if currentUser.featureEnabled("menuBoard.modify") %}
-        <div class="widget-action-menu pull-right">
+    <div class="widget-action-menu pull-right">
+        {% if currentUser.featureEnabled("menuBoard.modify") %}
             <button class="btn btn-success XiboFormButton" title="{% trans "Add a new Menu Board Product" %}" href="{{ url_for("menuBoard.product.add.form", {id : menuBoardCategory.menuCategoryId}) }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Product" %}</button>
             <button class="btn btn-info XiboRedirectButton" href="{{ url_for("menuBoard.category.view", {"id": menuBoardCategory.menuId}) }}"><i class="fa fa-columns" aria-hidden="true"></i> {% trans "View Categories" %}</button>
-        </div>
-    {% endif %}
+        {% endif %}
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
+    </div>
 {% endblock %}
 
 {% block pageContent %}
@@ -77,7 +78,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         var table;
         $(document).ready(function() {
             table = $("#menuBoardProducts").DataTable({
@@ -92,23 +93,23 @@
                 filter: false,
                 searchDelay: 3000,
                 dataType: 'json',
-                "order": [[5, "asc"]],
+                order: [[5, 'asc']],
                 ajax: {
                     url: "{{ url_for("menuBoard.product.search", {id: menuBoardCategory.menuCategoryId}) }}",
-                    "data": function (d) {
+                    data: function (d) {
                         $.extend(d, $("#menuBoardProducts").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                     }
                 },
-                "columns": [
-                    {"data": "menuProductId", responsivePriority: 2},
+                columns: [
+                    {data: 'menuProductId', responsivePriority: 2},
                     {
-                        "data": "name",
+                        data: 'name',
                         responsivePriority: 2,
-                        "render": dataTableSpacingPreformatted
+                        render: dataTableSpacingPreformatted,
                     },
                     {
-                        "data": "description",
-                        responsivePriority: 2
+                        data: 'description',
+                        responsivePriority: 3,
                     },
                     {
                       data: 'price',
@@ -135,45 +136,46 @@
                           } else {
                             return '';
                           }
-                        }
+                        },
                     },
                     {
                         data: 'displayOrder',
                         responsivePriority: 2,
                     },
                     {
-                        "data": "availability",
-                        "render": function (data, type, row) {
-                            if (type != "display")
-                                return data;
-
-                            var icon = "";
-                            if (data == 1) {
-                                icon = "fa-check";
-                            }
-                            else if (data == 0) {
-                                icon = "fa-times";
-                            }
-
-                            return '<span class="fa ' + icon + '"></span>';
+                      data: 'availability',
+                      responsivePriority: 2,
+                      render: function (data, type, row) {
+                        if (type !== 'display') {
+                          return data;
                         }
+
+                        let icon = '';
+                        if (data === 1) {
+                          icon = 'fa-check';
+                        } else if (data === 0) {
+                          icon = 'fa-times';
+                        }
+
+                        return '<span class="fa ' + icon + '"></span>';
+                      },
                     },
                     {
-                        "data": "allergyInfo",
-                        responsivePriority: 2
+                        data: 'allergyInfo',
+                        responsivePriority: 3,
                     },
                     {
                         data: 'calories',
-                        responsivePriority: 2
+                        responsivePriority: 2,
                     },
                     {
-                        "data": "code",
-                        responsivePriority: 3
+                        data: 'code',
+                        responsivePriority: 2,
                     },
                     {
-                        "orderable": false,
+                        orderable: false,
                         responsivePriority: 1,
-                        "data": dataTableButtonsColumn
+                        data: dataTableButtonsColumn,
                     }
                 ]
             });
@@ -181,6 +183,10 @@
             table.on('draw', dataTableDraw);
             table.on('processing.dt', dataTableProcessing);
             dataTableAddButtons(table, $('#menuBoardProducts_wrapper').find('.col-md-6').eq(1));
+
+            $("#refreshGrid").click(function () {
+                table.ajax.reload();
+            });
         });
 
     </script>

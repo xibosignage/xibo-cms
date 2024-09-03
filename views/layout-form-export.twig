@@ -45,6 +45,10 @@
                 {% set helpText %}{% trans "Do you want to include the DataSet data?" %}{% endset %}
                 {{ forms.checkbox("includeData", title, 0, helpText) }}
 
+                {% set title %}{% trans "Include Widget fallback data?" %}{% endset %}
+                {% set helpText %}{% trans "Do you want to include fallback data added to Widgets used on this Layout?" %}{% endset %}
+                {{ forms.checkbox("includeFallback", title, 0, helpText) }}
+
                 {% set title %}{% trans "Save as" %}{% endset %}
                 {% set helpText %}{% trans "Change the name of the downloaded file if desired." %}{% endset %}
                 {{ forms.input("saveAs", title, saveAs, helpText) }}

@@ -28,7 +28,7 @@
 {% block actionMenu %}
     <div class="widget-action-menu pull-right">
         <button class="btn btn-success XiboFormButton" title="{% trans "Export raw data to CSV" %}" href="{{ url_for("auditLog.export.form") }}"><i class="fa fa-cloud-upload" aria-hidden="true"></i> {% trans "Export" %}</button>
-        <button class="btn btn-primary" id="refreshLog" title="{% trans "Refresh the Log" %}" href="#"> <i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</button>
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
     </div>
 {% endblock %}
 
@@ -92,7 +92,7 @@
     {% verbatim %}
     <script type="text/x-handlebars-template" id="table-array-viewer">
         <a class="arrayViewerToggle" href="#"><span class="fa fa-search"></span></a>
-        <table class="arrayViewer table table-bordered" data-state-preferene-name="auditlogGrid">
+        <table class="arrayViewer table table-bordered" data-state-preference-name="auditlogGrid">
             <thead>
                 <tr>
                     <th>{{ col1 }}</th>
@@ -110,7 +110,7 @@
         </table>
     </script>
     {% endverbatim %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
 
         $(document).ready(function() {
             var arrayViewer = Handlebars.compile($("#table-array-viewer").html());
@@ -174,7 +174,7 @@
             table.on('processing.dt', dataTableProcessing);
             dataTableAddButtons(table, $('#logs_wrapper').find('.dataTables_buttons'));
 
-            $("#refreshLog").click(function () {
+            $("#refreshGrid").click(function () {
                 table.ajax.reload();
             });
         });

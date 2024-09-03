@@ -804,6 +804,13 @@
                         "description": "An array of Player types this Command is available on, empty for all.",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "createAlertOn",
+                        "in": "formData",
+                        "description": "On command execution, when should a Display alert be created?\r\n     * success, failure, always or never",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -872,6 +879,13 @@
                         "description": "An array of Player types this Command is available on, empty for all.",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "createAlertOn",
+                        "in": "formData",
+                        "description": "On command execution, when should a Display alert be created?\r\n     * success, failure, always or never",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -935,6 +949,13 @@
                         "description": "Filter by DataSet Code",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "isRealTime",
+                        "in": "query",
+                        "description": "Filter by real time",
+                        "required": false,
+                        "type": "integer"
                     },
                     {
                         "name": "userId",
@@ -1007,6 +1028,20 @@
                         "type": "integer"
                     },
                     {
+                        "name": "isRealTime",
+                        "in": "formData",
+                        "description": "Is this a real time DataSet?",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "dataConnectorSource",
+                        "in": "formData",
+                        "description": "Source of the data connector",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
                         "name": "method",
                         "in": "formData",
                         "description": "The Request Method GET or POST",
@@ -1143,6 +1178,13 @@
                         "name": "csvSeparator",
                         "in": "formData",
                         "description": "Separator that should be used when using Remote DataSets with CSV source, comma will be used by default.",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "dataConnectorScript",
+                        "in": "formData",
+                        "description": "If isRealTime then provide a script to connect to the data source",
                         "required": false,
                         "type": "string"
                     },
@@ -1215,6 +1257,20 @@
                         "type": "integer"
                     },
                     {
+                        "name": "isRealTime",
+                        "in": "formData",
+                        "description": "Is this a real time DataSet?",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "dataConnectorSource",
+                        "in": "formData",
+                        "description": "Source of the data connector",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
                         "name": "method",
                         "in": "formData",
                         "description": "The Request Method GET or POST",
@@ -1355,6 +1411,13 @@
                         "type": "string"
                     },
                     {
+                        "name": "dataConnectorScript",
+                        "in": "formData",
+                        "description": "If isRealTime then provide a script to connect to the data source",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "folderId",
                         "in": "formData",
                         "description": "Folder ID to which this object should be assigned to",
@@ -1390,6 +1453,74 @@
                 "responses": {
                     "204": {
                         "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/dataset/dataConnector/{dataSetId}": {
+            "put": {
+                "tags": [
+                    "dataset"
+                ],
+                "summary": "Edit DataSet Data Connector",
+                "description": "Edit a DataSet Data Connector",
+                "operationId": "dataSetDataConnectorEdit",
+                "parameters": [
+                    {
+                        "name": "dataSetId",
+                        "in": "path",
+                        "description": "The DataSet ID",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "dataConnectorScript",
+                        "in": "formData",
+                        "description": "If isRealTime then provide a script to connect to the data source",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/DataSet"
+                        }
+                    }
+                }
+            }
+        },
+        "/dataset/{id}/selectfolder": {
+            "put": {
+                "tags": [
+                    "dataSet"
+                ],
+                "summary": "DataSet Select folder",
+                "description": "Select Folder for DataSet",
+                "operationId": "dataSetSelectFolder",
+                "parameters": [
+                    {
+                        "name": "menuId",
+                        "in": "path",
+                        "description": "The DataSet ID",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/DataSet"
+                        }
                     }
                 }
             }
@@ -4116,6 +4247,56 @@
                 }
             }
         },
+        "/displaygroup/criteria[/{displayGroupId}]": {
+            "post": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Action: Push Criteria Update",
+                "description": "Send criteria updates to the specified DisplayGroup or to all displays if displayGroupId is not\r\n     *                  provided.",
+                "operationId": "ScheduleCriteriaUpdate",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The display group id",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "criteriaUpdates",
+                        "in": "body",
+                        "description": "The criteria updates to send to the Player",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "properties": {
+                                    "metric": {
+                                        "type": "string"
+                                    },
+                                    "value": {
+                                        "type": "string"
+                                    },
+                                    "ttl": {
+                                        "type": "integer"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Successful operation"
+                    },
+                    "400": {
+                        "description": "Invalid criteria format"
+                    }
+                }
+            }
+        },
         "/displayprofile": {
             "get": {
                 "tags": [
@@ -4355,6 +4536,13 @@
                         "description": "Use with gridView, Filter by Folder name",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "exactFolderName",
+                        "in": "query",
+                        "description": "Use with gridView, Filter by exact Folder name match",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -6960,6 +7148,13 @@
                         "description": "DataType to return templates for",
                         "required": true,
                         "type": "string"
+                    },
+                    {
+                        "name": "type",
+                        "in": "query",
+                        "description": "Type to return templates for",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -7086,13 +7281,6 @@
                         "type": "string"
                     },
                     {
-                        "name": "isEmail",
-                        "in": "formData",
-                        "description": "Flag indicating whether this notification should be emailed.",
-                        "required": true,
-                        "type": "integer"
-                    },
-                    {
                         "name": "isInterrupt",
                         "in": "formData",
                         "description": "Flag indication whether this notification should interrupt the web portal nativation/login",
@@ -7172,13 +7360,6 @@
                         "description": "ISO date representing the release date for this notification",
                         "required": true,
                         "type": "string"
-                    },
-                    {
-                        "name": "isEmail",
-                        "in": "formData",
-                        "description": "Flag indicating whether this notification should be emailed.",
-                        "required": true,
-                        "type": "integer"
                     },
                     {
                         "name": "isInterrupt",
@@ -7917,6 +8098,37 @@
                 ],
                 "responses": {
                     "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/playlist/{id}/convert": {
+            "post": {
+                "tags": [
+                    "playlist"
+                ],
+                "summary": "Playlist Convert",
+                "description": "Create a global playlist from inline editor Playlist.\r\n     * Assign created Playlist via sub-playlist Widget to region Playlist.",
+                "operationId": "convert",
+                "parameters": [
+                    {
+                        "name": "playlistId",
+                        "in": "path",
+                        "description": "The Playlist ID",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Optional name for the global Playlist.",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
                         "description": "successful operation"
                     }
                 }
@@ -8726,6 +8938,20 @@
                         "description": "For Action eventTypeId and navLayout actionType, the Layout Code identifier",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "dataSetId",
+                        "in": "formData",
+                        "description": "For Data Connector eventTypeId, the DataSet ID",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "dataSetParams",
+                        "in": "formData",
+                        "description": "For Data Connector eventTypeId, the DataSet params",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -8953,6 +9179,20 @@
                         "name": "actionLayoutCode",
                         "in": "formData",
                         "description": "For Action eventTypeId and navLayout actionType, the Layout Code identifier",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "dataSetId",
+                        "in": "formData",
+                        "description": "For Data Connector eventTypeId, the DataSet ID",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "dataSetParams",
+                        "in": "formData",
+                        "description": "For Data Connector eventTypeId, the DataSet params",
                         "required": false,
                         "type": "string"
                     }
@@ -9397,6 +9637,20 @@
                         "name": "syncPublisherPort",
                         "in": "formData",
                         "description": "The publisher port number on which sync group members will communicate - default 9590",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "syncSwitchDelay",
+                        "in": "formData",
+                        "description": "The delay (in ms) when displaying the changes in content - default 750",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "syncVideoPauseDelay",
+                        "in": "formData",
+                        "description": "The delay (in ms) before unpausing the video on start - default 100",
                         "required": false,
                         "type": "integer"
                     },
@@ -10584,7 +10838,49 @@
                     {
                         "name": "isDisplayNotification",
                         "in": "formData",
-                        "description": "Flag (0, 1), should members of this Group receive Display notifications for Displays they have permissions to see",
+                        "description": "Flag (0, 1), should members of this Group receive Display notifications\r\n     * for Displays they have permissions to see",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "isDataSetNotification",
+                        "in": "formData",
+                        "description": "Flag (0, 1), should members of this Group receive DataSet notification emails?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "isLayoutNotification",
+                        "in": "formData",
+                        "description": "Flag (0, 1), should members of this Group receive Layout notification emails?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "isLibraryNotification",
+                        "in": "formData",
+                        "description": "Flag (0, 1), should members of this Group receive Library notification emails?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "isReportNotification",
+                        "in": "formData",
+                        "description": "Flag (0, 1), should members of this Group receive Report notification emails?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "isScheduleNotification",
+                        "in": "formData",
+                        "description": "Flag (0, 1), should members of this Group receive Schedule notification emails?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "isCustomNotification",
+                        "in": "formData",
+                        "description": "Flag (0, 1), should members of this Group receive Custom notification emails?",
                         "required": false,
                         "type": "integer"
                     },
@@ -10663,7 +10959,49 @@
                     {
                         "name": "isDisplayNotification",
                         "in": "formData",
-                        "description": "Flag (0, 1), should members of this Group receive Display notifications for Displays they have permissions to see",
+                        "description": "Flag (0, 1), should members of this Group receive Display notifications\r\n     * for Displays they have permissions to see",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "isDataSetNotification",
+                        "in": "formData",
+                        "description": "Flag (0, 1), should members of this Group receive DataSet notification emails?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "isLayoutNotification",
+                        "in": "formData",
+                        "description": "Flag (0, 1), should members of this Group receive Layout notification emails?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "isLibraryNotification",
+                        "in": "formData",
+                        "description": "Flag (0, 1), should members of this Group receive Library notification emails?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "isReportNotification",
+                        "in": "formData",
+                        "description": "Flag (0, 1), should members of this Group receive Report notification emails?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "isScheduleNotification",
+                        "in": "formData",
+                        "description": "Flag (0, 1), should members of this Group receive Schedule notification emails?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "isCustomNotification",
+                        "in": "formData",
+                        "description": "Flag (0, 1), should members of this Group receive Custom notification emails?",
                         "required": false,
                         "type": "integer"
                     },
@@ -10954,6 +11292,13 @@
                         "type": "integer"
                     },
                     {
+                        "name": "showFallback",
+                        "in": "formData",
+                        "description": "If this widget requires data and allows fallback data how should that data be returned? (never, always, empty, error)",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "properties",
                         "in": "formData",
                         "description": "Add an additional parameter for each of the properties required this module and its template. Use the moduleProperties and moduleTemplateProperties calls to get a list of properties needed",
@@ -11213,6 +11558,153 @@
                     }
                 }
             }
+        },
+        "/playlist/widget/data/{id}": {
+            "post": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Get data for Widget",
+                "description": "Return all of the fallback data currently assigned to this Widget",
+                "operationId": "getWidgetData",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "The Widget ID that this data should be added to",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/WidgetData"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/playlist/widget/data/{id}/{dataId}": {
+            "put": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Edit data on a Widget",
+                "description": "Edit fallback data on a data Widget",
+                "operationId": "editWidgetData",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "The Widget ID that this data is attached to",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "dataId",
+                        "in": "path",
+                        "description": "The ID of the data to be edited",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "data",
+                        "in": "path",
+                        "description": "A JSON formatted string containing a single data item for this widget's data type",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "displayOrder",
+                        "in": "formData",
+                        "description": "Optional integer to say which position this data should appear if there is more than one data item",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Delete data on a Widget",
+                "description": "Delete fallback data on a data Widget",
+                "operationId": "deleteWidgetData",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "The Widget ID that this data is attached to",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "dataId",
+                        "in": "path",
+                        "description": "The ID of the data to be deleted",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/playlist/widget/data/{id}/order": {
+            "post": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Update the order of data on a Widget",
+                "description": "Provide all data to be ordered on a widget",
+                "operationId": "orderWidgetData",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "The Widget ID that this data is attached to",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "dataId",
+                        "in": "path",
+                        "description": "The ID of the data to be deleted",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "order",
+                        "in": "body",
+                        "description": "An array of any widget data records that should be re-ordered",
+                        "required": true,
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "WidgetDataOrder"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -11382,6 +11874,18 @@
                 }
             }
         },
+        "WidgetDataOrder": {
+            "properties": {
+                "dataId": {
+                    "description": "Data ID",
+                    "type": "integer"
+                },
+                "displayOrder": {
+                    "description": "Desired display order",
+                    "type": "integer"
+                }
+            }
+        },
         "Action": {
             "properties": {
                 "actionId": {
@@ -11535,6 +12039,10 @@
                 "ipAddress": {
                     "description": "The IP Address of the User that took this action",
                     "type": "string"
+                },
+                "sessionHistoryId": {
+                    "description": "Session history id.",
+                    "type": "integer"
                 }
             }
         },
@@ -11697,6 +12205,13 @@
                     "description": "A comma separated list of player types this command is available on",
                     "type": "string"
                 },
+                "createAlertOn": {
+                    "description": "Define if execution of this command should create an alert on success, failure, always or never.",
+                    "type": "string"
+                },
+                "createAlertOnDisplayProfile": {
+                    "description": "Create Alert On specific to the provided DisplayProfile."
+                },
                 "groupsWithPermissions": {
                     "description": "A comma separated list of groups/users with permissions to this Command",
                     "type": "string"
@@ -11745,6 +12260,14 @@
                 "isRemote": {
                     "description": "Flag to indicate whether this DataSet is Remote",
                     "type": "integer"
+                },
+                "isRealTime": {
+                    "description": "Flag to indicate whether this DataSet is Real time",
+                    "type": "integer"
+                },
+                "dataConnectorSource": {
+                    "description": "Indicates the source of the data connector. Requires the Real time flag. Can be null,\r\n     * user-defined, or a connector.",
+                    "type": "string"
                 },
                 "method": {
                     "description": "Method to fetch the Data, can be GET or POST",
@@ -12267,6 +12790,26 @@
                 "syncGroupId": {
                     "description": "The Display Group ID this Display is synced to",
                     "type": "integer"
+                },
+                "osVersion": {
+                    "description": "The OS version of the Display",
+                    "type": "string"
+                },
+                "osSdk": {
+                    "description": "The SDK version of the Display",
+                    "type": "string"
+                },
+                "manufacturer": {
+                    "description": "The manufacturer of the Display",
+                    "type": "string"
+                },
+                "brand": {
+                    "description": "The brand of the Display",
+                    "type": "string"
+                },
+                "model": {
+                    "description": "The model of the Display",
+                    "type": "string"
                 }
             }
         },
@@ -12688,6 +13231,14 @@
                 "display": {
                     "description": "The display this message relates to or CMS for CMS.",
                     "type": "string"
+                },
+                "sessionHistoryId": {
+                    "description": "Session history id.",
+                    "type": "integer"
+                },
+                "userId": {
+                    "description": "User id.",
+                    "type": "integer"
                 }
             }
         },
@@ -13002,6 +13553,10 @@
                     "description": "The cache key used when requesting data",
                     "type": "string"
                 },
+                "fallbackData": {
+                    "description": "Is fallback data allowed for this module? Only applicable for a Data Widget",
+                    "type": "integer"
+                },
                 "regionSpecific": {
                     "description": "Is specific to a Layout or can be uploaded to the Library?",
                     "type": "integer"
@@ -13171,6 +13726,10 @@
                     "description": "Is Visible?",
                     "type": "boolean"
                 },
+                "isEnabled": {
+                    "description": "Is Enabled?",
+                    "type": "boolean"
+                },
                 "propertyGroups": {
                     "description": "An array of additional module specific group properties",
                     "type": "array",
@@ -13186,6 +13745,10 @@
                     "description": "",
                     "type": "array",
                     "items": {}
+                },
+                "groupsWithPermissions": {
+                    "description": "A comma separated list of groups/users with permissions to this template",
+                    "type": "string"
                 }
             }
         },
@@ -13207,13 +13770,13 @@
                     "description": "The subject line",
                     "type": "string"
                 },
+                "type": {
+                    "description": "The Notification type",
+                    "type": "string"
+                },
                 "body": {
                     "description": "The HTML body of the notification",
                     "type": "string"
-                },
-                "isEmail": {
-                    "description": "Should the notification be emailed",
-                    "type": "integer"
                 },
                 "isInterrupt": {
                     "description": "Should the notification interrupt the CMS UI on navigate/login",
@@ -13742,6 +14305,13 @@
                         "$ref": "#/definitions/ScheduleReminder"
                     }
                 },
+                "criteria": {
+                    "description": "Schedule Criteria assigned to this Scheduled Event.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ScheduleCriteria"
+                    }
+                },
                 "userId": {
                     "description": "The userId that owns this event.",
                     "type": "integer"
@@ -13857,6 +14427,14 @@
                     "description": "For sync events, the id the the sync group",
                     "type": "integer"
                 },
+                "dataSetId": {
+                    "description": "For data connector events, the dataSetId",
+                    "type": "integer"
+                },
+                "dataSetParams": {
+                    "description": "For data connector events, the data set parameters",
+                    "type": "integer"
+                },
                 "modifiedBy": {
                     "description": "The userId of the user that last modified this Schedule",
                     "type": "integer"
@@ -13875,6 +14453,7 @@
                 }
             }
         },
+        "ScheduleCriteria": {},
         "ScheduleExclusion": {
             "properties": {
                 "scheduleExclusionId": {
@@ -13968,6 +14547,14 @@
                 },
                 "syncPublisherPort": {
                     "description": "The publisher port number",
+                    "type": "integer"
+                },
+                "syncSwitchDelay": {
+                    "description": "The delay (in ms) when displaying the changes in content",
+                    "type": "integer"
+                },
+                "syncVideoPauseDelay": {
+                    "description": "The delay (in ms) before unpausing the video on start.",
                     "type": "integer"
                 },
                 "leadDisplayId": {
@@ -14206,11 +14793,35 @@
                     }
                 },
                 "isSystemNotification": {
-                    "description": "Does this Group receive system notifications.",
+                    "description": "Does this User receive system notifications.",
                     "type": "integer"
                 },
                 "isDisplayNotification": {
-                    "description": "Does this Group receive system notifications.",
+                    "description": "Does this User receive system notifications.",
+                    "type": "integer"
+                },
+                "isDataSetNotification": {
+                    "description": "Does this User receive DataSet notifications.",
+                    "type": "integer"
+                },
+                "isLayoutNotification": {
+                    "description": "Does this User receive Layout notifications.",
+                    "type": "integer"
+                },
+                "isLibraryNotification": {
+                    "description": "Does this User receive Library notifications.",
+                    "type": "integer"
+                },
+                "isReportNotification": {
+                    "description": "Does this User receive Report notifications.",
+                    "type": "integer"
+                },
+                "isScheduleNotification": {
+                    "description": "Does this User receive Schedule notifications.",
+                    "type": "integer"
+                },
+                "isCustomNotification": {
+                    "description": "Does this User receive Custom notifications.",
                     "type": "integer"
                 },
                 "twoFactorTypeId": {
@@ -14262,6 +14873,30 @@
                 },
                 "isDisplayNotification": {
                     "description": "Does this Group receive display notifications.",
+                    "type": "integer"
+                },
+                "isDataSetNotification": {
+                    "description": "Does this Group receive DataSet notifications.",
+                    "type": "integer"
+                },
+                "isLayoutNotification": {
+                    "description": "Does this Group receive Layout notifications.",
+                    "type": "integer"
+                },
+                "isLibraryNotification": {
+                    "description": "Does this Group receive Library notifications.",
+                    "type": "integer"
+                },
+                "isReportNotification": {
+                    "description": "Does this Group receive Report notifications.",
+                    "type": "integer"
+                },
+                "isScheduleNotification": {
+                    "description": "Does this Group receive Schedule notifications.",
+                    "type": "integer"
+                },
+                "isCustomNotification": {
+                    "description": "Does this Group receive Custom notifications.",
                     "type": "integer"
                 },
                 "isShownForAddUser": {
@@ -14465,6 +15100,32 @@
                 }
             }
         },
+        "WidgetData": {
+            "properties": {
+                "id": {
+                    "description": "The ID",
+                    "type": "integer"
+                },
+                "widgetId": {
+                    "description": "The Widget ID",
+                    "type": "integer"
+                },
+                "data": {
+                    "description": "Array of data properties depending on the widget data type this data is for",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "displayOrder": {
+                    "description": "The Display Order",
+                    "type": "integer"
+                },
+                "createdDt": {
+                    "description": "The datetime this entity was created"
+                }
+            }
+        },
         "WidgetOption": {
             "properties": {
                 "widgetId": {
@@ -14486,6 +15147,7 @@
             }
         },
         "Element": {},
+        "ElementGroup": {},
         "Extend": {},
         "LegacyType": {},
         "Option": {
@@ -14537,7 +15199,17 @@
         },
         "PropertyGroup": {},
         "Rule": {},
-        "Stencil": {},
+        "Stencil": {
+            "properties": {
+                "elementGroups": {
+                    "description": "An array of element groups",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/ElementGroup"
+                    }
+                }
+            }
+        },
         "Test": {}
     },
     "parameters": {

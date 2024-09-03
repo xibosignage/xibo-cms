@@ -43,6 +43,9 @@ const Element = function(data, widgetId, regionId, parentWidget) {
   this.isDeletable = (parentWidget) ? parentWidget.isDeletable : true;
   this.isViewable = (parentWidget) ? parentWidget.isViewable : true;
 
+  // Check if the element is visible on rendering ( true by default )
+  this.isVisible = (data.isVisible === undefined) ? true : data.isVisible;
+
   // Element data from the linked widget/module
   this.data = {};
 
@@ -65,8 +68,9 @@ const Element = function(data, widgetId, regionId, parentWidget) {
   // Animation effect
   this.effect = data.effect || 'noTransition';
 
-  // Media
+  // Media id and name
   this.mediaId = data.mediaId;
+  this.mediaName = data.mediaName;
 
   this.selected = false;
 };
@@ -270,7 +274,16 @@ Element.prototype.getData = function() {
       resolve();
     } else {
       const slot = self.slot ? self.slot : 0;
+      const loaderTargetId = (self.groupId) ?
+        self.groupId : self.elementId;
+
+      // Show loader on element or group
+      lD.viewer.toggleLoader(loaderTargetId, true);
+
       parentWidget.getData().then(({data, meta}) => {
+        // Show loader on element or group
+        lD.viewer.toggleLoader(loaderTargetId, false);
+
         // Resolve the promise with the data
         // If slot is outside the data array
         // restart from 0
@@ -278,6 +291,27 @@ Element.prototype.getData = function() {
       });
     }
   });
+};
+
+/**
+ * Replace media in element
+ * @param {string} mediaId
+ * @param {string} mediaName
+ * @return {Promise} - Promise with widget data
+ */
+Element.prototype.replaceMedia = function(mediaId, mediaName) {
+  const self = this;
+  const parentWidget = lD.getObjectByTypeAndId(
+    'widget',
+    'widget_' + this.regionId + '_' + this.widgetId,
+    'canvas',
+  );
+
+  // Replace media id
+  self.mediaId = mediaId;
+  self.mediaName = mediaName;
+
+  return parentWidget.saveElements();
 };
 
 module.exports = Element;

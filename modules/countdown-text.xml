@@ -192,14 +192,8 @@ body {
 {% if fontFamily %}.hoursAll, .hours, .minutes, .seconds { font-family: {{fontFamily}}; }{% endif %}
 {% if textColor %}.hoursAll, .hours, .minutes, .seconds  { color: {{textColor}}; }{% endif %}
 {% if dividerTextColor %}.countdown-container > p > span { color: {{dividerTextColor}}; }{% endif %}
-
-.warning .seconds, .warning .minutes, .warning .hours, .warning .hoursAll {
-    color: {{warningColor}};
-}
-
-.finished .seconds, .finished .minutes, .finished .hours, .finished .hoursAll {
-    color: {{finishedColor}};
-}
+{% if warningColor %}.warning .seconds, .warning .minutes, .warning .hours, .warning .hoursAll {color: {{warningColor}};}{% endif %}
+{% if finishedColor %}.finished .seconds, .finished .minutes, .finished .hours, .finished .hoursAll {color: {{finishedColor}};}{% endif %}
         ]]></style>
     </stencil>
     <onRender><![CDATA[

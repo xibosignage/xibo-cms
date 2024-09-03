@@ -50,6 +50,9 @@ const inverseChangeMap = {
   order: {
     inverse: 'order',
   },
+  saveElements: {
+    inverse: 'saveElements',
+  },
 };
 
 /**
@@ -123,6 +126,8 @@ HistoryManager.prototype.addChange = function(
     customRequestPath = null,
     customRequestReplace = null,
     targetSubType = null,
+    skipUpload = false,
+    auxTarget = {},
   } = {},
 ) {
   const changeId = this.changeUniqueId++;
@@ -136,7 +141,16 @@ HistoryManager.prototype.addChange = function(
     targetId,
     oldValues,
     newValues,
+    auxTarget,
   );
+
+  // If we want to skip upload and only use it for revert locally
+  newChange.skipUpload = skipUpload;
+
+  // If we skip upload, mark it as uploaded
+  if (skipUpload) {
+    newChange.uploaded = true;
+  }
 
   // Add change to the history array
   if (addToHistory) {
@@ -294,7 +308,35 @@ HistoryManager.prototype.revertChange = function() {
   const parseData = inverseChangeMap[lastChange.type].parseData;
 
   return new Promise(function(resolve, reject) {
-    if (!lastChange.uploaded) {
+    // Revert element save
+    if (lastChange.type === 'saveElements') {
+      const widget =
+        lD.getObjectByTypeAndId('widget', lastChange.target.id, 'canvas');
+
+      try {
+        // Get elements from previous state
+        const elementsToSave = (lastChange.oldState === '') ?
+          [] :
+          JSON.parse(lastChange.oldState)[0].elements;
+
+        // Save elements to widget ( without saving to history )
+        widget.saveElements({
+          elements: elementsToSave,
+          addToHistory: false,
+          updateEditor: true,
+        }).then(function() {
+          // Remove change from history
+          self.removeLastChange();
+
+          resolve({
+            localRevert: true,
+          });
+        });
+      } catch (e) {
+        console.error('parseElementFromWidget', e);
+        return;
+      }
+    } else if (!lastChange.uploaded) {
       // Revert on the client side ( non uploaded change )
       // Get data to apply
       let data = lastChange.oldState;
@@ -314,7 +356,7 @@ HistoryManager.prototype.revertChange = function() {
       object[inverseOperation](data, false);
 
       // Remove change from history
-      self.changeHistory.pop();
+      self.removeLastChange();
 
       resolve({
         type: inverseOperation,
@@ -361,10 +403,10 @@ HistoryManager.prototype.revertChange = function() {
                 Array.isArray(lastChange.target.id) &&
                 lastChange.target.id.length == 0
               ) ||
-              $.isNumeric(lastChange.target.id)
+              !isNaN(lastChange.target.id)
             ) {
               // Remove change from history
-              self.changeHistory.pop();
+              self.removeLastChange();
 
               // If the operation is a deletion, unselect object before deleting
               if (inverseOperation === 'delete') {
@@ -421,8 +463,8 @@ HistoryManager.prototype.saveAllChanges = async function() {
   for (let index = 0; index < self.changeHistory.length; index++) {
     const change = self.changeHistory[index];
 
-    // skip already uploaded changes
-    if (change.uploaded || change.uploading) {
+    // skip already uploaded changes or skipped
+    if (change.uploaded || change.uploading || change.skipUpload) {
       continue;
     }
 
@@ -451,14 +493,30 @@ HistoryManager.prototype.removeAllChanges = function(targetType, targetId) {
     for (let index = 0; index < self.changeHistory.length; index++) {
       const change = self.changeHistory[index];
 
-      if (change.target.type === targetType &&
-        (change.target.id === targetId ||
+      const isTarget = (
+        change.target.type === targetType &&
+        (
+          change.target.id === targetId ||
           (
             Array.isArray(change.target.id) &&
             change.target.id.includes(targetId)
           )
         )
-      ) {
+      );
+
+      const isAuxTarget = (
+        change.auxTarget &&
+        change.auxTarget.type === targetType &&
+        (
+          change.auxTarget.id === targetId ||
+          (
+            Array.isArray(change.auxTarget.id) &&
+            change.auxTarget.id.includes(targetId)
+          )
+        )
+      );
+
+      if (isTarget || isAuxTarget) {
         self.changeHistory.splice(index, 1);
 
         // When change is removed, we need to decrement the index

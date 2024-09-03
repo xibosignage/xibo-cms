@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -24,6 +24,9 @@ namespace Xibo\Dependencies;
 
 use Psr\Container\ContainerInterface;
 
+/**
+ * Helper class to add factories to DI.
+ */
 class Factories
 {
     /**
@@ -37,6 +40,11 @@ class Factories
                     $c->get('user'),
                     $c->get('userFactory')
                 );
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
+            },
+            'apiRequestsFactory' => function (ContainerInterface $c) {
+                $repository = new \Xibo\Factory\ApplicationRequestsFactory();
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;
             },
@@ -220,7 +228,8 @@ class Factories
                     $c->get('widgetAudioFactory'),
                     $c->get('actionFactory'),
                     $c->get('folderFactory'),
-                    $c->get('fontFactory')
+                    $c->get('fontFactory'),
+                    $c->get('widgetDataFactory'),
                 );
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
 
@@ -289,9 +298,14 @@ class Factories
             'moduleTemplateFactory' => function (ContainerInterface $c) {
                 $repository = new \Xibo\Factory\ModuleTemplateFactory(
                     $c->get('pool'),
-                    $c->get('view')
+                    $c->get('view'),
                 );
-                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                $repository
+                    ->setAclDependencies(
+                        $c->get('user'),
+                        $c->get('userFactory')
+                    )
+                    ->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;
             },
             'notificationFactory' => function (ContainerInterface $c) {
@@ -387,7 +401,8 @@ class Factories
                     $c->get('userFactory'),
                     $c->get('scheduleReminderFactory'),
                     $c->get('scheduleExclusionFactory'),
-                    $c->get('user')
+                    $c->get('user'),
+                    $c->get('scheduleCriteriaFactory')
                 );
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;
@@ -403,6 +418,11 @@ class Factories
             },
             'scheduleExclusionFactory' => function (ContainerInterface $c) {
                 $repository = new \Xibo\Factory\ScheduleExclusionFactory();
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
+            },
+            'scheduleCriteriaFactory' => function (ContainerInterface $c) {
+                $repository = new \Xibo\Factory\ScheduleCriteriaFactory();
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;
             },
@@ -500,6 +520,11 @@ class Factories
             },
             'widgetOptionFactory' => function (ContainerInterface $c) {
                 $repository = new \Xibo\Factory\WidgetOptionFactory();
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
+            },
+            'widgetDataFactory' => function (ContainerInterface $c) {
+                $repository = new \Xibo\Factory\WidgetDataFactory();
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;
             },

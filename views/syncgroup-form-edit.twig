@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -55,6 +55,14 @@
                 {% set title %}{% trans "Publisher Port" %}{% endset %}
                 {% set helpText %}{% trans "The port on which players will communicate" %}{% endset %}
                 {{ forms.input("syncPublisherPort", title, syncGroup.syncPublisherPort, helpText) }}
+
+                {% set title %}{% trans "Switch Delay" %}{% endset %}
+                {% set helpText %}{% trans "The delay (in ms) when displaying the changes in content. If the network is unstable this value can be raised to compensate." %}{% endset %}
+                {{ forms.number("syncSwitchDelay", title, syncGroup.syncSwitchDelay, helpText) }}
+
+                {% set title %}{% trans "Video Pause Delay" %}{% endset %}
+                {% set helpText %}{% trans "The delay (in ms) before unpausing the video on start. If some of the devices in the group do not support gapless, this value can be raised to compensate." %}{% endset %}
+                {{ forms.number("syncVideoPauseDelay", title, syncGroup.syncVideoPauseDelay, helpText) }}
 
                 {% set title %}{% trans "Lead Display" %}{% endset %}
                 {% set helpText %}{% trans "Select Lead Display for this sync group" %}{% endset %}

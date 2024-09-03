@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -277,6 +277,11 @@ class DisplayFactory extends BaseFactory
                   display.screenShotRequested,
                   display.storageAvailableSpace,
                   display.storageTotalSpace,
+                  display.osVersion,
+                  display.osSdk,
+                  display.manufacturer,
+                  display.brand,
+                  display.model,
                   displaygroup.displayGroupId,
                   displaygroup.description,
                   displaygroup.bandwidthLimit,

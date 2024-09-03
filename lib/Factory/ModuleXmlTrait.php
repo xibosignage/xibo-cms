@@ -26,6 +26,7 @@ use Illuminate\Support\Str;
 use Xibo\Entity\Module;
 use Xibo\Widget\Definition\Asset;
 use Xibo\Widget\Definition\Element;
+use Xibo\Widget\Definition\ElementGroup;
 use Xibo\Widget\Definition\Extend;
 use Xibo\Widget\Definition\LegacyType;
 use Xibo\Widget\Definition\PlayerCompatibility;
@@ -76,6 +77,8 @@ trait ModuleXmlTrait
                     $stencil->height = doubleval($childNode->textContent);
                 } else if ($childNode->nodeName === 'gapBetweenHbs') {
                     $stencil->gapBetweenHbs = doubleval($childNode->textContent);
+                } else if ($childNode->nodeName === 'elementGroups') {
+                    $stencil->elementGroups = $this->parseElementGroups($childNode->childNodes);
                 }
             }
 
@@ -123,6 +126,7 @@ trait ModuleXmlTrait
                 $property->allowAssetRefs = $node->getAttribute('allowAssetRefs') === 'true';
                 $property->parseTranslations = $node->getAttribute('parseTranslations') === 'true';
                 $property->saveDefault = $node->getAttribute('saveDefault') === 'true';
+                $property->sendToElements = $node->getAttribute('sendToElements') === 'true';
                 $property->title = __($this->getFirstValueOrDefaultFromXmlNode($node, 'title'));
                 $property->helpText = __($this->getFirstValueOrDefaultFromXmlNode($node, 'helpText'));
                 $property->dependsOn = $this->getFirstValueOrDefaultFromXmlNode($node, 'dependsOn');
@@ -326,6 +330,7 @@ trait ModuleXmlTrait
             if ($elementNode instanceof \DOMElement) {
                 $element = new Element();
                 $element->id = $elementNode->getAttribute('id');
+                $element->elementGroupId = $elementNode->getAttribute('elementGroupId');
                 foreach ($elementNode->childNodes as $childNode) {
                     if ($childNode instanceof \DOMElement) {
                         if ($childNode->nodeName === 'top') {
@@ -357,6 +362,46 @@ trait ModuleXmlTrait
         }
 
         return $elements;
+    }
+
+    /**
+     * @param \DOMNodeList $elementGroupsNodes
+     * @return \Xibo\Widget\Definition\Property[]
+     */
+    private function parseElementGroups (\DOMNodeList $elementGroupsNodes): array
+    {
+        $elementGroups = [];
+        foreach ($elementGroupsNodes as $elementGroupsNode) {
+            /** @var \DOMNode $elementNode */
+            if ($elementGroupsNode instanceof \DOMElement) {
+                $elementGroup = new ElementGroup();
+                $elementGroup->id = $elementGroupsNode->getAttribute('id');
+                foreach ($elementGroupsNode->childNodes as $childNode) {
+                    if ($childNode instanceof \DOMElement) {
+                        if ($childNode->nodeName === 'top') {
+                            $elementGroup->top = doubleval($childNode->textContent);
+                        } else if ($childNode->nodeName === 'left') {
+                            $elementGroup->left = doubleval($childNode->textContent);
+                        } else if ($childNode->nodeName === 'width') {
+                            $elementGroup->width = doubleval($childNode->textContent);
+                        } else if ($childNode->nodeName === 'height') {
+                            $elementGroup->height = doubleval($childNode->textContent);
+                        } else if ($childNode->nodeName === 'layer') {
+                            $elementGroup->layer = intval($childNode->textContent);
+                        } else if ($childNode->nodeName === 'title') {
+                            $elementGroup->title = $childNode->textContent;
+                        } else if ($childNode->nodeName === 'slot') {
+                            $elementGroup->slot = intval($childNode->textContent);
+                        } else if ($childNode->nodeName === 'pinSlot') {
+                            $elementGroup->pinSlot = boolval($childNode->textContent);
+                        }
+                    }
+                }
+                $elementGroups[] = $elementGroup;
+            }
+        }
+
+        return $elementGroups;
     }
 
     /**

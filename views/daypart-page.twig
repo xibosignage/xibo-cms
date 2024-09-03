@@ -26,11 +26,12 @@
 {% block title %}{{ "Dayparting"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    {% if currentUser.featureEnabled("daypart.add") %}
     <div class="widget-action-menu pull-right">
-        <button class="btn btn-success XiboFormButton" href="{{ url_for("daypart.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Daypart" %}</button>
+        {% if currentUser.featureEnabled("daypart.add") %}
+            <button class="btn btn-success XiboFormButton" href="{{ url_for("daypart.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Daypart" %}</button>
+        {% endif %}
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
     </div>
-    {% endif %}
 {% endblock %}
 
 {% block pageContent %}
@@ -68,7 +69,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
 
         var table = $("#dayparts").DataTable({
             "language": dataTablesLanguage,
@@ -104,6 +105,10 @@
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
         dataTableAddButtons(table, $('#dayparts_wrapper').find('.dataTables_buttons'));
+
+        $("#refreshGrid").click(function () {
+            table.ajax.reload();
+        });
 
         function dayPartFormOpen(dialog) {
             // Render a set of exceptions

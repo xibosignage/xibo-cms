@@ -26,6 +26,11 @@ describe('Layout Designer', function() {
   });
 
   it('should create a new layout and be redirected to the layout designer, add/delete RSS ticker widget', function() {
+    cy.intercept({
+      method: 'DELETE',
+      url: '/region/*',
+    }).as('deleteWidget');
+
     cy.visit('/layout/view');
 
     cy.get('button[href="/layout"]').click();
@@ -64,12 +69,16 @@ describe('Layout Designer', function() {
     cy.get('[name="itemImageFit"]').select('Fill', {force: true});
     cy.get('[name="effect"]').select('Fade', {force: true});
     cy.get('[name="speed"]').clear().type('500');
-    cy.get('.cke_editable_inline').focus().clear();
-    cy.get('.cke_editable_inline').type('No data to show').trigger('change');
+    // Update CKEditor value
+    cy.updateCKEditor('noDataMessage', 'No data to show');
     cy.get('[name="copyright"]').clear().type('Xibo').trigger('change');
 
     cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_rss-ticker"]').parents('.designer-region').rightclick();
     cy.get('[data-title="Delete"]').click();
+    cy.contains('Yes').click();
+
+    // Wait until the widget has been deleted
+    cy.wait('@deleteWidget');
     cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_rss-ticker"]').should('not.exist');
   });
 });

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -376,7 +376,8 @@ try {
         $container->get('playerVersionFactory'),
         $container->get('dispatcher'),
         $container->get('campaignFactory'),
-        $container->get('syncGroupFactory')
+        $container->get('syncGroupFactory'),
+        $container->get('playerFaultFactory')
     );
 
     // Add manual raw post data parsing, as HTTP_RAW_POST_DATA is deprecated.

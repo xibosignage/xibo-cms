@@ -44,20 +44,6 @@
         .navbar-btn {
             margin: 8px 3px;
         }
-
-        .editor-help-link {
-            width: 60px;
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            text-decoration: none;
-
-            &:hover {
-                color: $xibo-color-neutral-0;
-            }
-        }
     }
 
     .toolbar-pane {
@@ -82,15 +68,6 @@
             &.media-search-form, &.layout_tempates-search-form {
                 padding: 0;
                 padding-bottom: 1rem;
-                display: flex;
-                flex-direction: row;
-                flex-wrap: wrap;
-                align-items: center;
-                justify-content: space-between;
-
-                .form-group {
-                    width: calc(50% - 4px);
-                }
             }
         }
     }
@@ -104,7 +81,6 @@
             bottom: 0;
             background: $xibo-color-primary-l5;
             color: $xibo-color-primary;
-            width: 288px;
 
             .content-header {
                 display: flex;
@@ -139,6 +115,97 @@
                     font-size: 3rem;
                     opacity: 0.6;
                     margin: 15px;
+                }
+            }
+
+            // Table toolbar card
+            tr.toolbar-card {
+                cursor: inherit;
+                height: 50px;
+
+                .dt-col {
+                    padding: 6px;
+                }
+
+                .id-col {
+                    width: 10% !important;
+                }
+
+                .name-col {
+                    min-width: 30%;
+                    max-width: 45%;
+
+                    & > div {
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                    }
+                }
+
+                .type-col {
+                    width: 15% !important;
+                }
+
+                .tags-col {
+                    width: 20%;
+
+                    #tagDiv {
+                        display: flex;
+                        flex-wrap: wrap;
+                    }
+                }
+
+                .thumb-col {
+                    width: 20%;
+
+                    img {
+                        max-height: 50px;
+                        max-width: 100%;
+                    }
+
+                    &:hover {
+                        max-height: 100px;
+                    }
+                }
+
+                .action-col {
+                    width: 5%;
+
+                    .assign-item-container {
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        height: 100%;
+
+                        .assignItem {
+                            font-size: 1.2rem;
+                            background-color: $xibo-color-primary;
+                            padding: 6px;
+                            border-radius: 6px;
+
+                            &:hover {
+                                background-color: darken($xibo-color-primary, 5%);
+                            }
+                        }
+                    }
+                }
+
+                &.card-selected {
+                    background-color: $xibo-color-primary-l10;
+
+                    .assign-item-container {
+                        display: none;
+                    }
+                }
+
+                &.ui-draggable-dragging {
+                    width: 557px !important;
+                    height: 63px;
+                    background-color: $xibo-color-primary-l10;
+
+                    .action-col {
+                        display: none;
+                    }
                 }
             }
 
@@ -187,18 +254,26 @@
                     text-align: center;
                 }
 
-                .toolbar-pane-content {
+                .toolbar-pane-content:not(.masonry-container) {
                     display: flex;
                     flex-direction: row;
                     width: auto;
                     white-space: nowrap;
                     flex-wrap: wrap;
-                    justify-content: space-between;
+                    gap: 6px;
 
                     .toolbar-header {
                         flex-basis: 100%;
-                        margin: 6px 0 4px 0;
+                        margin: 12px 0 4px 0;
                         text-transform: uppercase;
+                    }
+
+                    .dataTables_wrapper {
+                        margin: 0 -15px;
+
+                        .table {
+                            table-layout: fixed;
+                        }
                     }
                 }
             }
@@ -262,7 +337,6 @@
                     padding: 0 !important;
                     flex-direction: column;
                     background: none;
-                    height: 120px !important;
                     grid-gap: 0 !important;
 
                     .toolbar-content {
@@ -279,7 +353,7 @@
                         background: $xibo-color-primary-l60;
                         border-radius: 4px;
                         padding: 4px 1px;
-                        height: 80px;
+                        max-height: 80px;
                         width: 100%;
 
                         img {
@@ -310,8 +384,8 @@
                     top: 0;
                     left: 0;
                     @include border-radius(4px);
-                    width: 15px;
-                    height: 15px;
+                    width: 18px;
+                    height: 18px;
                     opacity: 0.8;
                     transition-delay: 0s;
 
@@ -392,9 +466,9 @@
             }
 
             &.toolbar-library-pane {
-                .toolbar-pane-content {
+                .toolbar-pane-content.masonry-container {
                     align-content: flex-start;
-                    overflow-y: auto;
+                    overflow-y: scroll;
                 }
 
                 .toolbar-pane-container {
@@ -402,15 +476,9 @@
                     flex-direction: column;
                 }
 
-                // Card sizer for masonry layout
-                .toolbar-card-sizer {
-                    width: calc(50% - 4px);
-                }
-
                 .toolbar-card {
                     cursor: grab;
                     background: none;
-                    margin-bottom: 8px;
                     height: auto;
                     border: none;
 
@@ -423,10 +491,12 @@
                         opacity: 1;
                     }
 
-                    &.hide-content {
+                    &.hide-content > .toolbar-card-preview {
+                        max-height: 60px;
                         animation: animateBg 1.5s linear infinite;
                         background-image: linear-gradient(0deg, $xibo-color-primary,lighten($xibo-color-primary, 10%),$xibo-color-primary);
                         background-size: 100% 1100%;
+                        border-radius: 4px;
 
                         & > * {
                             opacity: 0;
@@ -437,7 +507,7 @@
                         100% { background-position: 0% 100%; }
                     }
 
-                    &.no-thumbnail, &.upload-card {
+                    &.no-thumbnail, &.upload-card, &.placeholder-card, &.new-playlist-card {
                         min-height: 85px;
 
                         .toolbar-card-preview {
@@ -448,8 +518,10 @@
                         }
                     }
 
-                    &.upload-card .toolbar-card-preview {
-                        background: $xibo-color-primary-d60;
+                    &.upload-card, &.placeholder-card, &.new-playlist-card {
+                        .toolbar-card-preview {
+                            background: $xibo-color-primary-d60;
+                        }
                     }
 
                     .toolbar-card-preview {
@@ -458,6 +530,7 @@
                         font-size: 0;
                         overflow: hidden;
                         border: 2px solid $xibo-color-primary-l30;
+                        min-height: 60px;
                     }
 
                     .media-title {
@@ -556,22 +629,95 @@
                     }
                 }
 
-                &.toolbar-layout_templates-pane {
+                &.toolbar-layout_templates-pane, &.toolbar-layout_exchange-pane {
                     .toolbar-card:not(.has-thumb):hover .media-title {
                         overflow: visible;
                         white-space: normal;
+                        @include set-transparent-color(background-color, $xibo-color-primary-l5, 0.75);
+                        position: relative;
+                        z-index: calc(#{$toolbar-card-z-index} + 1);
                     }
-                    
-                    .toolbar-card:not(.has-thumb):hover .badges {
+
+                    .badges {
                         display: flex;
+                        padding-bottom: 4px;
+                    }
+
+                    .toolbar-card:not(.has-thumb):hover .badges {
                         position: absolute;
                         width: 100%;
                         flex-wrap: wrap;
                         z-index: calc(#{$toolbar-card-z-index} + 1);
                         gap: 3px;
-                        padding: 4px 0;
                         @include set-transparent-color(background-color, $xibo-color-primary-l5, 0.75);
                         border-radius: 0 0 4px 4px;
+                    }
+                    
+                    .toolbar-card:not(.has-thumb):hover {
+                        @include set-transparent-color(background-color, $xibo-color-primary-l5, 0.75);
+                        overflow: visible;
+                    }
+                }
+
+                &.toolbar-playlists-pane {
+                    .new-playlist-card {
+                        min-height: initial;
+
+                        .card-icon {
+                            margin: 5px 0;
+                        }
+
+                        .media-title {
+                            color: $xibo-color-primary-l10;
+                            text-align: center;
+                            font-weight: normal;
+                        }
+                    }
+
+                    .toolbar-card {
+                        margin-bottom: 2px;
+                        padding-bottom: 6px;
+                        border-radius: 4px;
+                    }
+
+                    .toolbar-card-preview {
+                        .media-title {
+                            font-weight: normal;
+                        }
+
+                        .dynamic-logo {
+                            position: absolute;
+                            font-size: 0.85rem;
+                            bottom: 0;
+                            right: 0;
+                            background: $xibo-color-primary;
+                            color: $xibo-color-primary-l10;
+                            padding: 0px 4px;
+                            @include border-radius(4px 0 0 0);
+                            opacity: 0.9;
+                            line-height: 20px;
+                        }
+                        background: $xibo-color-primary-l20;
+                        color: $xibo-color-primary-d60;
+                        border: 1px solid $xibo-color-primary-l30;
+                        min-height: $toolbar-widgets-card-height;
+                        padding: 4px;
+                        margin-bottom: 2px;
+                    }
+
+                    .badges {
+                        padding-bottom: 4px;
+                        display: flex;
+                        position: absolute;
+                        width: 100%;
+                        gap: 3px;
+                        @include set-transparent-color(background-color, $xibo-color-primary-l5, 0.75);
+                        border-radius: 0 0 4px 4px;
+                    }
+
+                    .toolbar-card:not(.has-thumb):hover .badges {
+                        flex-wrap: wrap;
+                        z-index: calc(#{$toolbar-card-z-index} + 1);
                     }
                     
                     .toolbar-card:not(.has-thumb):hover {
@@ -585,8 +731,6 @@
                 .toolbar-card {
                     cursor: pointer;
                     min-height: $toolbar-widgets-card-height;
-                    height: $toolbar-widgets-card-height;
-                    margin-bottom: $toolbar-widgets-card-margin-bottom;
                     display: flex;
                     gap: 8px;
                     padding: 8px;
@@ -613,10 +757,10 @@
                         position: absolute;
                         z-index: calc(#{$toolbar-card-z-index} + 1);
                         background: $xibo-color-primary;
-                        width: 16px;
+                        width: 18px;
                         @include border-radius(0px 0 4px 0);
                         margin: 0;
-                        height: 16px;
+                        height: 18px;
                         text-align: center;
                         font-size: 0.85rem;
                         top: 0;
@@ -723,6 +867,11 @@
         cursor: pointer;
     }
 
+    .navbar-buttons {
+        width: $toolbar-width;
+        overflow: auto;
+    }
+
     .navbar-buttons a.active {
         background: $xibo-color-primary-l5;
         color: $xibo-color-primary;
@@ -753,16 +902,26 @@
     .btn-menu-option {
         display: block;
         color: $xibo-color-primary-l5;
-        width: $toolbar-width;
+        width: 100%;
         text-align: center;
         font-size: 1.5rem;
         padding: 10px;
         line-height: 30px;
-        max-height: $toolbar-width;
+        height: $toolbar-tab-menu-height;
 
         .material-icons {
             font-size: 1.85rem;
             line-height: 30px;
+        }
+
+        &.btn-menu-option-custom-icon {
+            padding: 8px;
+        }
+
+        .btn-menu-custom-icon {
+            width: 100%;
+            height: calc($toolbar-tab-menu-height - 16px);
+            margin: 0;
         }
 
         &:hover {
@@ -852,15 +1011,175 @@
             }
         }
     }
+
+    .toolbar-controls {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        padding-top: 14px;
+
+        .toolbar-level-control, .toolbar-help-control {
+            display: block;
+            cursor: pointer;
+            color: $xibo-color-primary-l5;
+            width: calc($toolbar-width - 20px);
+            text-align: center;
+            font-size: 1.2rem;
+            padding: 10px;
+            line-height: 20px;
+            height: calc($toolbar-tab-menu-height - 10px);
+            border-radius: 8px;
+            @include set-transparent-color(background-color, $xibo-color-primary-d60, 0.4);
+
+            &.btn-menu-option-custom-icon {
+                padding: 8px;
+            }
+
+            .btn-menu-custom-icon {
+                width: 100%;
+                height: calc($toolbar-tab-menu-height - 16px);
+                margin: 0;
+            }
+
+            &:hover {
+                @include set-transparent-color(background-color, $xibo-color-primary-d60, 0.6);
+                color: $xibo-color-neutral-100;
+            }
+        }
+
+        .toolbar-level-control-menu {
+            position: relative;
+    
+            .toolbar-level-control-select {
+                position: absolute;
+                left: 54px;
+                bottom: -4px;
+                background-color: $xibo-color-primary-d60;
+                flex-direction: column;
+                padding: 4px;
+                border-radius: 6px;
+                gap: 4px;
+                display: none;
+
+                .toolbar-level-control:hover {
+                    background-color: lighten($xibo-color-primary-d60, 10);
+                }
+            }
+    
+            &.opened {
+                .toolbar-level-control-select {
+                    display: flex;
+                }
+
+                .toolbar-level-control-button {
+                    @include set-transparent-color(background-color, $xibo-color-primary-d60, 0.8);
+                }
+            }
+        }
+    }
 }
 
 /* Side bar */
+.editor-toolbar.editor-side-bar {
+    min-width: $toolbar-width;
+}
+
 .editor-toolbar.editor-side-bar nav {
     width: $toolbar-width;
     padding: 1rem 0 !important;
 
     &.opened {
-        margin-right: 290px;
+        &.toolbar-level-1 {
+            margin-right: $toolbar-content-level-1-width;
+
+            .toolbar-menu-content .toolbar-pane {
+                width: $toolbar-content-level-1-width;
+
+                .toolbar-card:not(tr), .toolbar-card-sizer {
+                    width: 100% !important;
+                }
+
+                /* Filter form */
+                form.toolbar-search-form {
+                    .form-group {
+                        width: 100%;
+                    }
+                }
+            }
+        }
+
+        &.toolbar-level-2 {
+            margin-right: $toolbar-content-level-2-width;
+            
+            .toolbar-menu-content .toolbar-pane {
+                width: $toolbar-content-level-2-width;
+
+                .toolbar-card:not(tr), .toolbar-card-sizer {
+                    width: calc(calc(100%/2) - 3px) !important;
+                }
+
+                /* Filter form */
+                form.toolbar-search-form {
+                    display: flex;
+                    gap: 6px;
+                    flex-wrap: wrap;
+
+                    .form-group {
+                        flex: 1 1 calc(50% - 3px);
+                        min-width: calc(50% - 3px);
+                    }
+                }
+            }
+        }
+
+        &.toolbar-level-3 {
+            margin-right: $toolbar-content-level-3-width;
+            
+            .toolbar-menu-content .toolbar-pane {
+                width: $toolbar-content-level-3-width;
+
+                .toolbar-card:not(tr), .toolbar-card-sizer {
+                    width: calc(calc(100%/3) - 4px) !important;
+                }
+
+                /* Filter form */
+                form.toolbar-search-form {
+                    display: flex;
+                    gap: 6px;
+                    flex-wrap: wrap;
+
+                    .form-group {
+                        flex: 1 1 calc(50% - 3px);
+                        min-width: calc(50% - 3px);
+                    }
+                }
+            }
+        }
+
+        &.toolbar-level-4 {
+            margin-right: $toolbar-content-level-4-width;
+            
+            .toolbar-menu-content .toolbar-pane {
+                width: $toolbar-content-level-4-width;
+
+                .toolbar-card:not(tr), .toolbar-card-sizer {
+                    width: calc(calc(100%/4) - 4.5px) !important;
+                }
+
+                /* Filter form */
+                form.toolbar-search-form {
+                    display: flex;
+                    gap: 6px;
+                    flex-wrap: wrap;
+
+                    .form-group {
+                        flex: 1 1 calc(25% - 4.5px);
+                        min-width: calc(25% - 4.5px);
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -870,6 +1189,7 @@
     top: 50px;
     left: 0;
     bottom: 0;
+    height: calc(100% - 50px);
 
     .navbar-submenu > a.option-container {
         text-align: center;

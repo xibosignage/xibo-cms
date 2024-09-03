@@ -1,0 +1,393 @@
+{#
+/**
+ * Copyright (C) 2024 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block title %}{% trans "Report: API Requests History" %} | {% endblock %}
+
+{% block actionMenu %}
+    {% include "report-schedule-buttons.twig" %}
+{% endblock %}
+
+{% block pageContent %}
+
+    <div class="widget">
+        <div class="widget-title">
+            <span>{% trans "API Requests History" %}</span>
+        </div>
+
+        {% include "report-selector.twig" %}
+
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}" data-refresh-on-form-submit="false">
+                <div class="XiboFilterCustom">
+                    <div class="FilterDiv card-body" id="apiRequestsHistoryFilter">
+                        <form class="form-inline">
+                            {% set title %}{% trans "From Date" %}{% endset %}
+                            {{ inline.date("fromDt", title, defaults.fromDate, "", "", "", "") }}
+
+                            {% set title %}{% trans "To Date" %}{% endset %}
+                            {{ inline.date("toDt", title, defaults.toDate, "", "", "", "") }}
+
+                            {% set title %}{% trans "User" %}{% endset %}
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: url_for("user.search") },
+                                { name: "data-search-term", value: "userName" },
+                                { name: "data-id-property", value: "userId" },
+                                { name: "data-text-property", value: "userName" },
+                            ] %}
+                            {{ inline.dropdown("userId", "single", title, "", null, "userId", "userName", "", "pagedSelect", "", "d", "", attributes) }}
+
+                            {% set title %}{% trans "Request ID" %}{% endset %}
+                            {{ inline.number('requestId', title) }}
+
+                            {% set title = "Report Type"|trans %}
+                            {% set options = [
+                                { id: 'requests', value: "Requests"|trans },
+                                { id: 'audit', value: "Audit"|trans },
+                                { id: 'debug', value: "Debug"|trans },
+                            ] %}
+                            {{ inline.dropdown("type", "single", title, "audit", options, "id", "value", helpText) }}
+
+                            <div class="w-100">
+                                <a id="applyBtn" class="btn btn-success">
+                                    <span>{% trans "Apply" %}</span>
+                                </a>
+                                <span id="imageLoader" class=""></span>
+                                <span id="applyWarning" class="text-warning" style="display:none; padding-left: 10px">{% trans "Warning: This may return a lot of data and may take several minutes to process." %}</span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Card Body -->
+                <div class="card-body api-requests-history-audit">
+                    <!-- DATATABLE -->
+                    <div class="table-container" id="table_wrapper">
+                        <table id="apiRequestsHistoryAuditGrid"
+                               class="table xibo-table table-striped"
+                               style="width: 100%"
+                               data-url="{{ url_for("report.data", {name: 'apirequests'}) }}">
+                            <thead>
+                            <tr>
+                                <th>{% trans "Date" %}</th>
+                                <th>{% trans "User Name" %}</th>
+                                <th>{% trans "User ID" %}</th>
+                                <th>{% trans "Application" %}</th>
+                                <th>{% trans "Request ID" %}</th>
+                                <th>{% trans "Method" %}</th>
+                                <th>{% trans "Url" %}</th>
+                                <th>{% trans "Entity" %}</th>
+                                <th>{% trans "Entity ID" %}</th>
+                                <th>{% trans "Message" %}</th>
+                                <th>{% trans "Details" %}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card-body api-requests-history-log d-none">
+                    <!-- DATATABLE -->
+                    <div class="table-container" id="table_wrapper">
+                        <table id="apiRequestsHistoryLogGrid"
+                               class="table xibo-table table-striped"
+                               style="width: 100%"
+                               data-url="{{ url_for("report.data", {name: 'apirequests'}) }}">
+                            <thead>
+                            <tr>
+                                <th>{% trans "Date" %}</th>
+                                <th>{% trans "UserName" %}</th>
+                                <th>{% trans "User ID" %}</th>
+                                <th>{% trans "Application" %}</th>
+                                <th>{% trans "Request ID" %}</th>
+                                <th>{% trans "Method" %}</th>
+                                <th>{% trans "Url" %}</th>
+                                <th>{% trans "Level" %}</th>
+                                <th>{% trans "Details" %}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card-body api-requests-history d-none">
+                    <!-- DATATABLE -->
+                    <div class="table-container" id="table_wrapper">
+                        <table id="apiRequestsHistoryGrid"
+                               class="table xibo-table table-striped"
+                               style="width: 100%"
+                               data-url="{{ url_for("report.data", {name: 'apirequests'}) }}">
+                            <thead>
+                            <tr>
+                                <th>{% trans "Date" %}</th>
+                                <th>{% trans "UserName" %}</th>
+                                <th>{% trans "User ID" %}</th>
+                                <th>{% trans "Application" %}</th>
+                                <th>{% trans "Request ID" %}</th>
+                                <th>{% trans "Method" %}</th>
+                                <th>{% trans "Url" %}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block javaScript %}
+    {% verbatim %}
+    <script type="text/x-handlebars-template" id="table-array-viewer">
+        <a class="arrayViewerToggle" href="#"><span class="fa fa-search"></span></a>
+        <table class="arrayViewer table table-bordered">
+            <thead>
+                <tr>
+                    <th>{{ col1 }}</th>
+                    <th>{{ col2 }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each items}}
+                <tr>
+                    <td>{{ @key }}</td>
+                    <td>{{ this }}</td>
+                </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </script>
+    {% endverbatim %}
+
+    <script type="text/javascript" nonce="{{ cspNonce }}">
+
+      $(function() {
+        var arrayViewer = Handlebars.compile($('#table-array-viewer').html());
+
+        $('[data-toggle="popover"]').popover();
+        let $report = $('#apiRequestsHistoryFilter');
+        let $auditDataTable = $('#apiRequestsHistoryAuditGrid');
+        let auditTable = createAuditTable($auditDataTable);
+        let $logDataTable = $('#apiRequestsHistoryLogGrid');
+        let logTable = createLogTable($logDataTable);
+        let $requestsDataTable = $('#apiRequestsHistoryGrid');
+        let requestsTable = createRequestsTable($requestsDataTable);
+
+        let result; // XHR get data result
+        let reportType = $report.find('#type').val();
+
+        let imageLoader = $("#imageLoader");
+        let $warning = $("#applyWarning");
+        let $applyBtn = $("#applyBtn");
+
+        // Get Data
+        function getData(url) {
+          $.ajax({
+            url: url,
+            method: 'GET',
+            dataType: 'json',
+            data: $report.find('form').serialize(),
+            success: function success(data) {
+              result = data;
+              $applyBtn.removeClass('disabled');
+              imageLoader.removeClass('fa fa-spinner fa-spin loading-icon');
+
+              if (reportType === 'audit') {
+                $('.api-requests-history-audit').removeClass('d-none');
+                $('.api-requests-history-log').addClass('d-none');
+                $('.api-requests-history').addClass('d-none');
+                setTabularData(auditTable, result.table);
+              } else if (reportType === 'debug') {
+                $('.api-requests-history-log').removeClass('d-none');
+                $('.api-requests-history-audit').addClass('d-none');
+                $('.api-requests-history').addClass('d-none');
+                setTabularData(logTable, result.table);
+              } else {
+                $('.api-requests-history').removeClass('d-none');
+                $('.api-requests-history-audit').addClass('d-none');
+                $('.api-requests-history-log').addClass('d-none');
+                setTabularData(requestsTable, result.table);
+              }
+            },
+            error: function error(xhr, textStatus, _error) {
+              $applyBtn.removeClass('disabled');
+              toastr.error(xhr.responseJSON.message);
+            }
+          });
+        }
+
+        function setTabularData(table, data) {
+          table.clear().draw();
+
+          if (Object.keys(data).length > 0) {
+            table.rows.add( data ).draw()
+          }
+
+          if ($report.find('#type').val() === 'audit') {
+            $('.arrayViewerToggle').click(function () {
+              $(this).parent().find('.arrayViewer').toggle();
+            });
+          }
+
+          table.columns.adjust().draw();
+        }
+
+        // Apply
+        $applyBtn.click(function () {
+          reportType = $report.find('#type').val();
+          $(this).addClass('disabled');
+          imageLoader.addClass('fa fa-spinner fa-spin loading-icon');
+          getData($auditDataTable.data().url);
+        });
+
+        $("#refreshGrid").click(function () {
+          reportType = $report.find('#type').val();
+          if (reportType === 'audit') {
+            auditTable.ajax.reload();
+          } else if (reportType === 'debug') {
+            logTable.ajax.reload();
+          } else {
+            requestsTable.ajax.reload();
+          }
+        });
+
+        function createAuditTable($dataTable) {
+          return $dataTable.DataTable({
+            language: dataTablesLanguage,
+            dom: dataTablesTemplate,
+            searching: false,
+            paging: true,
+            bInfo: false,
+            stateSave: true,
+            bDestroy: true,
+            processing: true,
+            responsive: true,
+            order: [[0, 'desc']],
+            data: {},
+            columns: [
+              {data: 'logDate', "render": dataTableDateFromIso},
+              {data: 'userName'},
+              {data: 'userId'},
+              {data: 'applicationName'},
+              {data: 'requestId'},
+              {data: 'method'},
+              {data: 'url'},
+              {data: 'entity', responsivePriority: 2},
+              {
+                name: 'entityId',
+                responsivePriority: 2,
+                data : function (data) {
+                  if (data.entityId === 0) {
+                    return ''
+                  }
+
+                  return data.entityId;
+                }
+              },
+              {data: 'message'},
+              {
+                "data": function (data, type, row, meta) {
+                  if (type != "display")
+                    return "";
+
+                  return arrayViewer(
+                    {"col1": "{% trans "Property" %}", "col2": "{% trans "Value" %}", "items": data.objectAfter}
+                  );
+                },
+                "sortable": false,
+                responsivePriority: 1
+              }
+            ]
+          })
+        }
+
+        function createLogTable($dataTable) {
+          return $dataTable.DataTable({
+            language: dataTablesLanguage,
+            dom: dataTablesTemplate,
+            searching: false,
+            paging: true,
+            bInfo: false,
+            stateSave: true,
+            bDestroy: true,
+            processing: true,
+            responsive: true,
+            order: [[0, 'desc']],
+            data: {},
+            columns: [
+              {data: 'logDate', "render": dataTableDateFromIso},
+              {data: 'userName'},
+              {data: 'userId'},
+              {data: 'applicationName'},
+              {data: 'requestId'},
+              {data: 'method'},
+              {data: 'url'},
+              {data: 'type'},
+              {data: 'message'},
+            ]
+          })
+        }
+
+        function createRequestsTable($dataTable) {
+          return $dataTable.DataTable({
+            language: dataTablesLanguage,
+            dom: dataTablesTemplate,
+            searching: false,
+            paging: true,
+            bInfo: false,
+            stateSave: true,
+            bDestroy: true,
+            processing: true,
+            responsive: true,
+            order: [[0, 'desc']],
+            data: {},
+            columns: [
+              {data: 'startTime'},
+              {data: 'userName'},
+              {data: 'userId'},
+              {data: 'applicationName'},
+              {data: 'requestId'},
+              {data: 'method'},
+              {data: 'url'},
+            ]
+          })
+        }
+      });
+    </script>
+{% endblock %}

@@ -26,11 +26,12 @@
 {% block title %}{{ "Commands"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    {% if currentUser.featureEnabled("command.add") %}
     <div class="widget-action-menu pull-right">
-        <button class="btn btn-success XiboFormButton" href="{{ url_for("command.add.form") }}"><i class="fa fa-terminal" aria-hidden="true"></i> {% trans "Add Command" %}</button>
+        {% if currentUser.featureEnabled("command.add") %}
+            <button class="btn btn-success XiboFormButton" href="{{ url_for("command.add.form") }}"><i class="fa fa-terminal" aria-hidden="true"></i> {% trans "Add Command" %}</button>
+        {% endif %}
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
     </div>
-    {% endif %}
 {% endblock %}
 
 
@@ -42,7 +43,7 @@
                 <div class="XiboFilter card mb-3 bg-light">
                     <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
-                            {% set title %}{% trans "Command" %}{% endset %}
+                            {% set title %}{% trans "Name" %}{% endset %}
                             {{ inline.inputNameGrid('command', title) }}
 
                             {% set title %}{% trans "Code" %}{% endset %}
@@ -73,7 +74,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         var table = $("#commands").DataTable({ "language": dataTablesLanguage,
             dom: dataTablesTemplate,
             serverSide: true,
@@ -140,5 +141,9 @@
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
         dataTableAddButtons(table, $('#commands_wrapper').find('.dataTables_buttons'));
+
+        $("#refreshGrid").click(function () {
+            table.ajax.reload();
+        });
     </script>
 {% endblock %}

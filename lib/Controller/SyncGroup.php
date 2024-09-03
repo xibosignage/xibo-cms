@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -280,6 +280,8 @@ class SyncGroup extends Base
         $syncGroup->name = $params->getString('name');
         $syncGroup->ownerId = $this->getUser()->userId;
         $syncGroup->syncPublisherPort = $params->getInt('syncPublisherPort');
+        $syncGroup->syncSwitchDelay = $params->getInt('syncSwitchDelay');
+        $syncGroup->syncVideoPauseDelay = $params->getInt('syncVideoPauseDelay');
         $syncGroup->folderId = $folder->getId();
         $syncGroup->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
 
@@ -488,6 +490,20 @@ class SyncGroup extends Base
      *      required=false
      *  ),
      *  @SWG\Parameter(
+     *      name="syncSwitchDelay",
+     *      in="formData",
+     *      description="The delay (in ms) when displaying the changes in content - default 750",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="syncVideoPauseDelay",
+     *      in="formData",
+     *      description="The delay (in ms) before unpausing the video on start - default 100",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
      *      name="leadDisplayId",
      *      in="formData",
      *      description="The ID of the Display that belongs to this Sync Group and should act as a Lead Display",
@@ -545,6 +561,8 @@ class SyncGroup extends Base
 
         $syncGroup->name = $params->getString('name');
         $syncGroup->syncPublisherPort = $params->getInt('syncPublisherPort');
+        $syncGroup->syncSwitchDelay = $params->getInt('syncSwitchDelay');
+        $syncGroup->syncVideoPauseDelay = $params->getInt('syncVideoPauseDelay');
         $syncGroup->leadDisplayId = $params->getInt('leadDisplayId');
         $syncGroup->modifiedBy = $this->getUser()->userId;
         $syncGroup->folderId = $folder->getId();

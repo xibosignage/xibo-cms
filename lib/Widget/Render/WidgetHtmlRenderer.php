@@ -25,6 +25,7 @@ namespace Xibo\Widget\Render;
 use Carbon\Carbon;
 use FilesystemIterator;
 use Illuminate\Support\Str;
+use Psr\Http\Message\RequestInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Slim\Views\Twig;
@@ -269,10 +270,15 @@ class WidgetHtmlRenderer
      * @param \Xibo\Entity\Region $region
      * @param string $output
      * @param callable $urlFor
+     * @param \Psr\Http\Message\ServerRequestInterface $request
      * @return string
      */
-    public function decorateForPreview(Region $region, string $output, callable $urlFor): string
-    {
+    public function decorateForPreview(
+        Region $region,
+        string $output,
+        callable $urlFor,
+        RequestInterface $request
+    ): string {
         $matches = [];
         preg_match_all('/\[\[(.*?)\]\]/', $output, $matches);
         foreach ($matches[1] as $match) {
@@ -319,7 +325,18 @@ class WidgetHtmlRenderer
                 );
             }
         }
-        return $output;
+
+        // Handle CSP in preview
+        $html = new \DOMDocument();
+        $html->loadHTML($output, LIBXML_NOERROR | LIBXML_NOWARNING | LIBXML_SCHEMA_CREATE);
+        foreach ($html->getElementsByTagName('script') as $node) {
+            // We add this requests cspNonce to every script tag
+            if ($node instanceof \DOMElement) {
+                $node->setAttribute('nonce', $request->getAttribute('cspNonce'));
+            }
+        }
+
+        return $html->saveHTML();
     }
 
     /**
@@ -481,11 +498,9 @@ class WidgetHtmlRenderer
                 $widget->isValid = 0;
             }
 
+            // Parse out some common properties.
             $moduleLanguage = null;
-            $translator = null;
 
-            // Check if a language property is defined against the module
-            // Note: We are using the language defined against the module and not from the module template
             foreach ($module->properties as $property) {
                 if ($property->type === 'languageSelector' && !empty($property->value)) {
                     $moduleLanguage = $property->value;
@@ -493,6 +508,12 @@ class WidgetHtmlRenderer
                 }
             }
 
+            // Get an array of the modules property values.
+            $modulePropertyValues = $module->getPropertyValues();
+
+            // Configure a translator for the module
+            // Note: We are using the language defined against the module and not from the module template
+            $translator = null;
             if ($moduleLanguage !== null) {
                 $translator = Translate::getTranslationsFromLocale($moduleLanguage);
             }
@@ -502,7 +523,7 @@ class WidgetHtmlRenderer
                 'widgetId' => $widget->widgetId,
                 'templateId' => $templateId,
                 'sample' => $module->sampleData,
-                'properties' => $module->getPropertyValues(),
+                'properties' => $modulePropertyValues,
                 'isValid' => $widget->isValid === 1,
                 'isRepeatData' => $widget->getOptionValue('isRepeatData', 1) === 1,
                 'duration' => $widget->useDuration ? $widget->duration : $module->defaultDuration,
@@ -589,8 +610,6 @@ class WidgetHtmlRenderer
             // What does our module have
             if ($module->stencil !== null) {
                 // Stencils have access to any module properties
-                $modulePropertyValues = $module->getPropertyValues();
-
                 if ($module->stencil->twig !== null) {
                     $twig['twig'][] = $this->twig->fetchFromString(
                         $this->decorateTranslations($module->stencil->twig, null),
@@ -627,6 +646,16 @@ class WidgetHtmlRenderer
                 // Elements will be JSON
                 $widgetElements = json_decode($widgetElements, true);
 
+                // Are any of the module properties marked for sending to elements?
+                $modulePropertiesToSend = [];
+                if (count($widgetElements) > 0) {
+                    foreach ($module->properties as $property) {
+                        if ($property->sendToElements) {
+                            $modulePropertiesToSend[$property->id] = $modulePropertyValues[$property->id] ?? null;
+                        }
+                    }
+                }
+
                 // Join together the template properties for this element, and the element properties
                 foreach ($widgetElements as $widgetIndex => $widgetElement) {
                     // Assert the widgetId
@@ -650,6 +679,12 @@ class WidgetHtmlRenderer
                                             true
                                         )
                                     );
+
+                                // Update any properties which match on the element
+                                foreach ($modulePropertiesToSend as $propertyToSend => $valueToSend) {
+                                    $widgetElements[$widgetIndex]['elements']
+                                        [$elementIndex]['properties'][$propertyToSend] = $valueToSend;
+                                }
                             }
                         }
 

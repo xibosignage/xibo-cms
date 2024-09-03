@@ -28,6 +28,7 @@
 {% block actionMenu %}
     <div class="widget-action-menu pull-right">
         <button class="btn btn-success XiboFormButton btns" title="{% trans "Add a new Tag" %}" href="{{ url_for("tag.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i>  {% trans "Add Tag" %}</button>
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
     </div>
 {% endblock %}
 
@@ -75,7 +76,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         var table = $("#tags").DataTable({
             "language": dataTablesLanguage,
             dom: dataTablesTemplate,
@@ -137,6 +138,10 @@
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
         dataTableAddButtons(table, $('#tags_wrapper').find('.dataTables_buttons'), false);
+
+        $("#refreshGrid").click(function () {
+            table.ajax.reload();
+        });
 
         ///
         /// Tag Usage Form

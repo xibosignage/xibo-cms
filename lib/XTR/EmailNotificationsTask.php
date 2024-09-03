@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -24,6 +24,8 @@ namespace Xibo\XTR;
 
 use Carbon\Carbon;
 use Slim\Views\Twig;
+use Xibo\Entity\UserNotification;
+use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserNotificationFactory;
 
 /**
@@ -40,11 +42,15 @@ class EmailNotificationsTask implements TaskInterface
     /** @var UserNotificationFactory */
     private $userNotificationFactory;
 
+    /** @var UserGroupFactory */
+    private $userGroupFactory;
+
     /** @inheritdoc */
     public function setFactories($container)
     {
         $this->view = $container->get('view');
         $this->userNotificationFactory = $container->get('userNotificationFactory');
+        $this->userGroupFactory = $container->get('userGroupFactory');
         return $this;
     }
 
@@ -77,7 +83,10 @@ class EmailNotificationsTask implements TaskInterface
                 $mail = new \PHPMailer\PHPMailer\PHPMailer();
 
                 $this->log->debug('Sending Notification email to ' . $notification->email);
-                $mail->addAddress($notification->email);
+
+                if ($this->checkEmailPreferences($notification)) {
+                    $mail->addAddress($notification->email);
+                }
 
                 // System notifications, add mail_to to addresses if set.
                 if ($notification->isSystem == 1) {
@@ -170,12 +179,27 @@ class EmailNotificationsTask implements TaskInterface
         ob_start();
 
         // Render the template
-        echo $this->view->fetch('email-template.twig', ['config' => $this->config, 'subject' => $subject, 'body' => $body]);
+        echo $this->view->fetch(
+            'email-template.twig',
+            ['config' => $this->config, 'subject' => $subject, 'body' => $body]
+        );
 
         $body = ob_get_contents();
 
         ob_end_clean();
 
         return $body;
+    }
+
+    /**
+     * Should we send email to this user?
+     * check relevant flag for the notification type on the user group.
+     * @param UserNotification $notification
+     * @return bool
+     */
+    private function checkEmailPreferences(UserNotification $notification)
+    {
+        $groupType = $notification->getTypeForGroup();
+        return $this->userGroupFactory->checkNotificationEmailPreferences($notification->userId, $groupType);
     }
 }

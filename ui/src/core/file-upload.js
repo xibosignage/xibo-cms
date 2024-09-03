@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -28,6 +28,7 @@ let videoImageCovers = {};
 function openUploadForm(options) {
   options = $.extend(true, {}, {
     templateId: 'template-file-upload',
+    uploadTemplateId: 'template-upload',
     videoImageCovers: true,
     className: '',
     animateDialog: true,
@@ -68,7 +69,7 @@ function openUploadForm(options) {
   }).attr('id', Date.now());
 
   setTimeout(function() {
-    console.log('Timeout fired, we should be shown by now');
+    console.debug('Timeout fired, we should be shown by now');
 
     // Configure the upload form
     const form = $(dialog).find('form');
@@ -81,6 +82,7 @@ function openUploadForm(options) {
       acceptFileTypes: new RegExp('\\.(' + options.templateOptions.upload.validExt + ')$', 'i'),
       maxFileSize: options.templateOptions.upload.maxSize,
       includeTagsInput: options.templateOptions.includeTagsInput,
+      uploadTemplateId: options.uploadTemplateId,
     };
     let refreshSessionInterval;
 

@@ -1,0 +1,267 @@
+{#
+/**
+ * Copyright (C) 2024 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block title %}{% trans "Report: Display Alerts" %} | {% endblock %}
+
+{% block actionMenu %}
+    {% include "report-schedule-buttons.twig" %}
+{% endblock %}
+
+{% block pageContent %}
+
+    <div class="widget">
+        <div class="widget-title">
+            <span>{% trans "Display Alerts" %}</span>
+        </div>
+
+        {% include "report-selector.twig" %}
+
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}" data-refresh-on-form-submit="false">
+                <div class="XiboFilterCustom">
+                    <div class="FilterDiv card-body" id="displayAlertsFilter">
+                        <form class="form-inline">
+                            {% set title %}{% trans "From Date" %}{% endset %}
+                            {{ inline.date("fromDt", title, defaults.fromDate, "", "", "", "") }}
+
+                            {% set title %}{% trans "To Date" %}{% endset %}
+                            {{ inline.date("toDt", title, defaults.toDate, "", "", "", "") }}
+
+                            {% set title %}{% trans "Display" %}{% endset %}
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: url_for("display.search") },
+                                { name: "data-search-term", value: "display" },
+                                { name: "data-search-term-tags", value: "tags" },
+                                { name: "data-id-property", value: "displayId" },
+                                { name: "data-text-property", value: "display" }
+                            ] %}
+                            {{ inline.dropdown("displayId", "single", title, "", null, "displayId", "display", "", "pagedSelect", "", "d", "", attributes) }}
+
+                            {% set title %}{% trans "Display Group" %}{% endset %}
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: url_for("displayGroup.search") },
+                                { name: "data-search-term", value: "displayGroup" },
+                                { name: "data-id-property", value: "displayGroupId" },
+                                { name: "data-text-property", value: "displayGroup" }
+                            ] %}
+                            {{ inline.dropdown("displayGroupId[]", "dropdownmulti", title, "", null, "displayGroupId", "displayGroup", "", "pagedSelect", "", "d", "", attributes) }}
+
+                            {% if currentUser.featureEnabled("tag.tagging") %}
+                                {% set title %}{% trans "Tags" %}{% endset %}
+                                {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
+                                {% set logicalOperatorTitle %}{% trans "When filtering by multiple Tags, which logical operator should be used?" %}{% endset %}
+                                {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
+                                {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle, logicalOperatorTitle) }}
+                            {% endif %}
+
+                            {% set title %}{% trans "Only show currently logged in?" %}{% endset %}
+                            {{ inline.checkbox("onlyLoggedIn", title) }}
+
+                            <div class="w-100">
+                                <a id="applyBtn" class="btn btn-success">
+                                    <span>{% trans "Apply" %}</span>
+                                </a>
+                                <span id="imageLoader" class=""></span>
+                                <span id="applyWarning" class="text-warning" style="display:none; padding-left: 10px">{% trans "Warning: This may return a lot of data and may take several minutes to process." %}</span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Card Body -->
+                <div class="card-body">
+                    <!-- DATATABLE -->
+                    <div class="table-container" id="table_wrapper">
+                        <table id="displayAlertsGrid"
+                               class="table xibo-table table-striped table-full-width"
+                               style="width: 100%"
+                               data-url="{{ url_for("report.data", {name: 'displayalerts'}) }}">
+                            <thead>
+                            <tr>
+                                <th>{% trans "Display ID" %}</th>
+                                <th>{% trans "Display" %}</th>
+                                <th>{% trans "Event Type" %}</th>
+                                <th>{% trans "Start" %}</th>
+                                <th>{% trans "End" %}</th>
+                                <th>{% trans "Reference" %}</th>
+                                <th>{% trans "Detail" %}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                            <tfoot>
+                            <tr>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                                <th></th>
+                            </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript" nonce="{{ cspNonce }}">
+
+      $(document).ready(function() {
+
+        $('[data-toggle="popover"]').popover();
+
+        let $report = $("#displayAlertsFilter");
+        let $dataTable = $('#displayAlertsGrid'); // Datatable
+        let result; // XHR get data result
+
+        let imageLoader = $("#imageLoader");
+        let $warning = $("#applyWarning");
+        let $applyBtn = $("#applyBtn");
+
+        // Initialize table with empty data
+        let table = $dataTable.DataTable({
+          language: dataTablesLanguage,
+          dom: dataTablesTemplate,
+          searching: false,
+          paging: true,
+          bInfo: false,
+          stateSave: true,
+          bDestroy: true,
+          processing: true,
+          order: [[3, 'desc']],
+          data: {},
+          columns: [
+            {data: 'displayId'},
+            {data: 'display'},
+            {data: 'eventType', "sortable": false},
+            {
+              name: 'start',
+              data: function(data) {
+                if(data.start) {
+                  return moment(data.start, 'X').format(jsDateFormat)
+                } else {
+                  return '';
+                }
+              }
+            },
+            {
+              name: 'end',
+              data: function(data) {
+                if(data.end) {
+                  return moment(data.end, 'X').format(jsDateFormat)
+                } else {
+                  return '';
+                }
+              }
+            },
+            {data: 'refId'},
+            {data: 'detail'}
+          ]
+        });
+
+        // Get Data
+        function getData(url) {
+          $.ajax({
+            url: url,
+            method: 'GET',
+            dataType: 'json',
+            data: $report.find("form").serialize(),
+            success: function success(data) {
+              result = data;
+              $applyBtn.removeClass('disabled');
+              imageLoader.removeClass('fa fa-spinner fa-spin loading-icon');
+              setTabularData(table, result.table);
+            },
+            error: function error(xhr, textStatus, _error) {
+              $applyBtn.removeClass('disabled');
+              toastr.error(xhr.responseJSON.message);
+            }
+          });
+        }
+
+        function setTabularData(table, data) {
+          table.clear().draw();
+
+          if (Object.keys(data).length > 0) {
+            table.rows.add( data ).draw()
+          }
+        }
+
+        // Apply
+        $applyBtn.click(function () {
+          $(this).addClass('disabled');
+          imageLoader.addClass('fa fa-spinner fa-spin loading-icon');
+          getData($dataTable.data().url);
+        });
+
+        // If we select a displayId we hide the display group filter
+        $('#displayId').off('change').change( function() {
+          let displayId = $('#displayId').val();
+          if (displayId) {
+            $('select[name="displayGroupId[]"] option').remove();
+            $('select[name="displayGroupId[]"]').next(".select2-container").parent().hide();
+          } else {
+            $('#displayId option').remove();
+            $('select[name="displayGroupId[]"]').next(".select2-container").parent().show();
+          }
+        });
+
+        $("#refreshGrid").click(function () {
+          table.ajax.reload();
+        });
+      });
+
+      function displayAlertsReportScheduleFormOpen(dialog) {
+
+        // If we select a displayId we hide the display group filter
+        $('#reportScheduleAddForm #displayId').off('change').change( function() {
+
+          let displayId = $('#reportScheduleAddForm #displayId').val();
+          if (displayId) {
+            $('select[name="displayGroupId[]"] option').remove();
+            $('select[name="displayGroupId[]"]').next(".select2-container").parent().parent().hide();
+          } else {
+            $('#reportScheduleAddForm #displayId option').remove();
+            $('select[name="displayGroupId[]"]').next(".select2-container").parent().parent().show();
+          }
+        });
+      }
+
+    </script>
+{% endblock %}

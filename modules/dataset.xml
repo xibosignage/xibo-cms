@@ -187,6 +187,15 @@
                 </test>
             </visibility>
         </property>
+        <property type="message">
+            <title>The substitution [Tag:tagName:defaultValue] can also be used in filter clauses. Replace tagName with the actual display tag name you want to use and defaultValue with the value to be used if the tag value is not found (e.g., [Tag:region:unknown]). At runtime, it will be substituted with the Display's tag value or defaultValue if the tag value is not found. When shown in the CMS, it will be substituted with an empty string if the tag is not found at all.
+            </title>
+            <visibility>
+                <test>
+                    <condition field="dataSetId" type="neq"></condition>
+                </test>
+            </visibility>
+        </property>
         <property id="filterClauses" type="datasetFilter">
             <default>[]</default>
             <dependsOn>dataSetId</dependsOn>

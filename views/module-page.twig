@@ -27,7 +27,7 @@
 
 {% block actionMenu %}
     <div class="widget-action-menu pull-right">
-        <button class="btn btn btn-secondary" id="refreshGrid" title="{% trans "Refresh" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</button>
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
     </div>
 {% endblock %}
 
@@ -70,7 +70,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         var table = $('#modules').DataTable({
             language: dataTablesLanguage,
             dom: dataTablesTemplate,
@@ -110,7 +110,7 @@
         table.on('processing.dt', dataTableProcessing);
         dataTableAddButtons(table, $('#modules_wrapper').find('.dataTables_buttons'));
 
-        $('#refreshGrid').click(function () {
+        $("#refreshGrid").click(function () {
             table.ajax.reload();
         });
 

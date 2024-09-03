@@ -62,9 +62,17 @@
             {{/eq}}
 
             {{#if isPlaylist}}
-                <div class="context-menu-btn editPlaylistBtn" data-title="{{trans.editPlaylist}}" data-action="editPlaylist" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
-                    <i class="fa fa-edit"></i><span>{{trans.editPlaylist}}</span>
-                </div>
+                {{#unless isDynamicPlaylist}}
+                    <div class="context-menu-btn editPlaylistBtn" data-title="{{trans.editPlaylist}}" data-action="editPlaylist" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
+                        <i class="fa fa-edit"></i><span>{{trans.editPlaylist}}</span>
+                    </div>
+
+                    {{#if playlistCanBeConverted}}
+                        <div class="context-menu-btn convertPlaylistButton" data-title="{{trans.convertPlaylistHelpText}}" data-action="convertPlaylist" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
+                            <i class="fa fa-refresh"></i><span>{{trans.convertPlaylist}}</span>
+                        </div>
+                    {{/if}}
+                {{/unless}}
             {{/if}}
 
             {{#if isFrameOrZone}}
@@ -102,6 +110,12 @@
             {{#if canHaveNewConfig}}
                 <div class="context-menu-btn newConfigBtn" data-title="{{trans.newConfig}}" data-action="newConfig" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
                     <i class="fa fa-plus-square"></i><span>{{trans.newConfig}}</span>
+                </div>
+            {{/if}}
+
+            {{#if canEditText}}
+                <div class="context-menu-btn editText" data-title="{{trans.editText}}" data-action="editText" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
+                    <i class="fa fa-edit"></i><span>{{trans.editText}}</span>
                 </div>
             {{/if}}
 

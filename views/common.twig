@@ -3,7 +3,7 @@
         Add by including in another twig file javaScript block: {% include "common.twig" %}
 #}
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
 
         // COMMON VARIABLES
         var serverMode = "{{ settings.SERVER_MODE }}";
@@ -232,6 +232,28 @@
                     url: "{{ url_for("module.widget.elements", {id: ':id'}) }}",
                     type: 'PUT'
                 },
+                data: {
+                    get: {
+                        url: "{{ url_for("module.widget.data.get", {id: ':id'}) }}",
+                        type: 'GET'
+                    },
+                    add: {
+                        url: "{{ url_for("module.widget.data.add", {id: ':id'}) }}",
+                        type: 'POST'
+                    },
+                    edit: {
+                        url: "{{ url_for("module.widget.data.edit", {id: ':id', dataId: ':dataId'}) }}",
+                        type: 'PUT'
+                    },
+                    delete: {
+                        url: "{{ url_for("module.widget.data.delete", {id: ':id', dataId: ':dataId'}) }}",
+                        type: 'DELETE'
+                    },
+                    setOrder: {
+                        url: "{{ url_for("module.widget.data.set.order", {id: ':id'}) }}",
+                        type: 'POST'
+                    },
+                },
             },
             library: {
                 get: {
@@ -271,7 +293,11 @@
                 order: {
                     url: "{{ url_for("playlist.order", {id: ':id'}) }}",
                     type: 'POST'
-                }
+                },
+                convert: {
+                    url: "{{ url_for("playlist.convert", {id: ':id'}) }}",
+                    type: 'POST'
+                },
             },
             user: {
                 get: {
@@ -294,6 +320,10 @@
             media: {
                 isUsed: {
                     url: "{{ url_for("library.isused", {id: ':id'}) }}",
+                    type: 'GET'
+                },
+                getProviders: {
+                    url: "{{ url_for("library.search.providers") }}",
                     type: 'GET'
                 }
             },
@@ -363,6 +393,12 @@
                     type: 'GET',
                 }
             },
+            folders: {
+                get: {
+                    url: "{{ url_for("folders.search") }}",
+                    type: 'GET',
+                }
+            }
         };
 
         {% autoescape "js" %}
@@ -370,6 +406,8 @@
             var editorsTrans = {
                 deleteTitle: "{{ "Delete %obj%" |trans }}",
                 onbeforeunload: "{{ "Changes that you have made may not be saved!" |trans }}",
+                minDimensionsMessageHeader: "{{ "Please increase your resolution to use the editing tools" |trans }}",
+                minDimensionsMessageBody: "{{ "Layout and Playlist editing requires a minimum width of 1200 pixels and height of 600 pixels" |trans }}",
                 yes: "{{ "Yes" |trans }}",
                 no: "{{ "No" |trans }}",
                 selectAll: "{{ "Select All" |trans }}",
@@ -425,6 +463,7 @@
                     numElGr: "{{ "# of element groups"|trans }}",
                 },
                 exit: "{{ "Exit"|trans }}",
+                convertPlaylistSuccess: "{{ "Playlist converted to global!"|trans }}",
             };
 
             var uploadTrans = {
@@ -458,6 +497,8 @@
                 editRegionPermissions: "{{ "Edit Region Sharing" |trans }}",
                 editWidgetPermissions: "{{ "Edit Widget Sharing" |trans }}",
                 editPlaylist: "{{ "Edit Playlist" |trans }}",
+                convertPlaylist: "{{ "Convert Playlist" |trans }}",
+                convertPlaylistHelpText: "{{ "Convert Layout playlist into a Global playlist." |trans }}",
                 options: "{% trans "Options" %}",
                 moveLeft: "{{ "Move one step left" |trans }}",
                 moveRight: "{{ "Move one step right" |trans }}",
@@ -470,6 +511,7 @@
                 delete: "{{ "Delete"|trans }}",
                 copy: "{{ "Duplicate"|trans }}",
                 newConfig: "{{ "New Configuration"|trans }}",
+                editText: "{{ "Edit Text"|trans }}",
                 groupElements: "{{ "Group elements"|trans }}",
                 ungroupElements: "{{ "Ungroup elements"|trans }}",
                 addElementsToGroup: "{{ "Add elements to group"|trans }}",
@@ -483,6 +525,7 @@
                 playlist: "{{ "Playlist" |trans }}",
                 configure: "{{ "Configure" |trans }}",
                 appearance: "{{ "Appearance" |trans }}",
+                fallback: "{{ "Fallback Data" |trans }}",
                 advanced: "{{ "Advanced" |trans }}",
                 general: "{{ "General" |trans }}",
                 positioning: "{{ "Positioning" |trans }}",
@@ -576,7 +619,7 @@
                     backgroundColor: "{{ "Background Colour" |trans }}",
                     backgroundColorHelpText: "{{ "Use the colour picker to select the background colour" |trans }}",
                     backgroundImage: "{{ "Background Image" |trans }}",
-                    noImageSet: "{{ "No Image set, add from Toolbar or Upload!" |trans }}",
+                    noImageSet: "{{ "No Image set, add from Toolbox or Upload!" |trans }}",
                     addBackgroundImage: "{{ "Add background image" |trans }}",
                     upload: "{{ "Upload" |trans }}",
                     remove: "{{ "Remove" |trans }}",
@@ -597,6 +640,8 @@
                     loopMessage1: "{{ "When should the Widget Loop be enabled?" |trans }}",
                     loopMessage2: "{{ "* If the Widget is a 'fixed' item (eg Text), Loop should not be enabled." |trans }}",
                     loopMessage3: "{{ "* If the Widget needs to update periodically (eg RSS Ticker Widget), Loop can be enabled ONLY if the Widget needs to update MORE frequently than the duration of the overall Layout." |trans }}",
+                    exitTransitionTitle: "{{ "Exit Transition?" |trans }}",
+                    exitTransitionHelpText: "{{ "What transition should be applied when this region is finished?" |trans }}",
                     layer: "{{ "Layer" |trans }}",
                     layerHelpText: "{{ "The layering order of this %regionType% (z-index). Advanced use only." |trans }}",
                     top: "{{ "Top" |trans }}",
@@ -608,10 +653,10 @@
                     height: "{{ "Height" |trans }}",
                     heightHelpText: "{{ "The height of the %regionType%" |trans }}",
                     makeRegionFullScreen: "{{ "Make this %regionType% full screen, dimensions will be set to %layout.width% by %layout.height%." |trans }}",
-                    bringRegionToView: "{{ "Bring selected %regionType% back to the Layout view." |trans }}",
+                    bringRegionToView: "{{ "Bring selected %regionType% back to the Layout view." |trans }}"
                 },
                 widget: {
-                    name: "{{ "Widget Name" |trans }}",
+                    name: "{{ "Configuration Name" |trans }}",
                     nameHelpText: "{{ "An optional name for this widget" |trans }}",
                     useDuration: "{{ "Set a duration?" |trans }}",
                     useDurationHelpText: "{{ "Select to provide a specific duration for this Widget" |trans }}",
@@ -640,6 +685,14 @@
                 elementNameHelpText: "{{ "An optional name for this element" |trans }}",
                 elementGroupName: "{{ "Element Group Name" |trans }}",
                 elementGroupNameHelpText: "{{ "An optional name for this group of elements" |trans }}",
+                colorGradient: {
+                    gradientColor1: "{{ "Color 1" |trans }}",
+                    gradientColor2: "{{ "Color 2" |trans }}",
+                    gradientType: "{{ "Type" |trans }}",
+                    gradientTypeRadial: "{{ "Radial" |trans }}",
+                    gradientTypeLinear: "{{ "Linear" |trans }}",
+                    gradientAngle: "{{ "Angle" |trans }}",
+                }
             };
 
             var toolbarTrans = {
@@ -649,23 +702,29 @@
                 options: "{{ "Options" |trans }}",
                 displayTooltipsName: "{{ "Tooltips?" |trans }}",
                 displayTooltipsTitle: "{{ "Show/Hide tooltips which provide help; informational tooltips will remain." |trans }}",
+                deleteConfirmationName: "{{ "Delete confirmation?" |trans }}",
+                deleteConfirmationTitle: "{{ "Do we want to show confirmation modals when deleting critical Layout content?" |trans }}",
                 search: "{{ "Search" |trans }}",
                 select: "{{ "Select" |trans }}",
                 deselect: "{{ "Deselect" |trans }}",
                 duration: "{{ "Duration" |trans }}",
+                dynamicPlaylist: "{{ "Dynamic Playlist" |trans }}",
                 preview: "{{ "Preview media" |trans }}",
                 open: "{{ "Open" |trans }}",
                 addAsFavourite: "{{ "Mark as favourite" |trans }}",
                 upload: "{{ "Upload new" |trans }}",
                 uploadType: "{{ "Upload %obj%" |trans }}",
+                newPlaylist: "{{ "New Playlist" |trans }}",
                 searchFilters: {
                     search: "{{ "Search" |trans }}",
                     name: "{{ "Name" |trans }}",
                     tag: "{{ "Tag" |trans }}",
                     type: "{{ "Type" |trans }}",
                     owner: "{{ "Owner"|trans }}",
+                    user: "{{ "Owner"|trans }}",
                     orientation: "{{ "Orientation"|trans }}",
                     provider: "{{ "Provider"|trans }}",
+                    folder: "{{ "Folder"|trans }}",
                 },
                 searchSortBy: "{{ "Sort by"|trans }}",
                 searchSort: {
@@ -706,6 +765,11 @@
                     actionsTitle: "{{ "Interactive actions"|trans }}",
                     layoutTemplateName: "{{ "Layout Templates" |trans }}",
                     layoutTemplateTitle: "{{ "Search for Layout Templates"|trans }}",
+                    layoutExchangeName: "{{ "Xibo Layout Exchange" |trans }}",
+                    layoutExchangeTitle: "{{ "Search for templates available from the Xibo Exchange."|trans }}",
+                    playlistsName: "{{ "Playlists" |trans }}",
+                    playlistsTitle: "{{ "Add Playlists"|trans }}",
+                    providerTitle: "{{ "Provider: %obj%"|trans }}",
                 },
                 window: {
                     drag: "{{ "Move Window" |trans }}",
@@ -735,6 +799,7 @@
                 noActionsToShow: "{{ "No actions to display" |trans }}",
                 noTemplatesToShow: "{{ "No templates to display"|trans }}",
                 noMediaToShow: "{{ "No media to display!" |trans }}",
+                noPlaylistsToShow: "{{ "No playlists to display!" |trans }}",
                 showMore: "{{ "Show more" |trans }}",
                 noShowMore: "{{ "No more results for this filter!" |trans }}",
                 mediaPreview: {
@@ -751,7 +816,30 @@
                 layout: "{{ "Layout"|trans }}",
                 region: "{{ "Zone"|trans }}",
                 layoutTemplatesMessage: "{{ "Replace your Layout with a template?"|trans }}",
+                layoutExchangeTemplatesMessage: "{{ "Replace your Layout with a Xibo Exchange template?"|trans }}",
                 isRequired: "{{ "Required"|trans }}",
+                libraryTypes: {
+                    image: "{{ "Image" |trans }}",
+                    video: "{{ "Video" |trans }}",
+                    audio: "{{ "Audio" |trans }}",
+                    flash: "{{ "Flash" |trans }}",
+                    htmlpackage: "{{ "HTML Package" |trans }}",
+                    pdf: "{{ "PDF" |trans }}",
+                    powerpoint: "{{ "PowerPoint" |trans }}",
+                },
+                mediaTable: {
+                    mediaId: "{{ "ID" |trans }}",
+                    mediaName: "{{ "Name" |trans }}",
+                    mediaType: "{{ "Type" |trans }}",
+                    mediaTags: "{{ "Tags" |trans }}",
+                    mediaThumb: "{{ "Thumbnail" |trans }}",
+                },
+                placeholder: {
+                    image: {
+                        title: "{{ "Placeholder" |trans }}",
+                        description: "{{ "Use this item to be used as a placeholder to add images." |trans }}",
+                    }
+                }
             };
 
             var topbarTrans = {
@@ -772,7 +860,8 @@
                     transform: "{{ "Revert %target% transformation" |trans }}",
                     addWidget: "{{ "Revert %target% creation" |trans }}",
                     addMedia: "{{ "Revert %target% assignment" |trans }}",
-                    create: "{{ "Revert %target% creation"|trans }}"
+                    create: "{{ "Revert %target% creation"|trans }}",
+                    saveElements: "{{ "Revert %target% elements change"|trans }}"
                 },
                 target: {
                     widget: "{{ "Widget" |trans }}",
@@ -798,6 +887,7 @@
                 shrink: "{{ "Shrink" |trans }}",
                 playlist: "{{ "Playlist" |trans }}",
                 zone: "{{ "Zone" |trans }}",
+                layoutBackground: "{{ "Layout Background" |trans }}",
                 invalidRegion: "{{ "Invalid Region" |trans }}",
                 invalidRegionHelp: "{{ "Region is invalid: Please delete it to validate the Layout!" |trans }}",
             };
@@ -835,6 +925,8 @@
                 userLoadPreferencesFailed: "{{ "User load preferences failed!" |trans }}",
                 libraryLoadFailed: "{{ "Library load failed!" |trans }}",
                 formLoadFailed: "{{ "Form load failed!" |trans }}",
+                convertPlaylistFailed: "{{ "Convert playlist failed!" |trans }}",
+                convertPlaylistNoName: "{{ "Playlist needs a name to be converted!" |trans }}",
                 revertFailed: "{{ "Revert failed: %error%" |trans }}",
                 saveOrderFailed: "{{ "Save order failed: %error%" |trans }}",
                 deleteFailed: "{{ "Delete failed: %error%" |trans }}",
@@ -855,6 +947,7 @@
                 invalidRegion: "{{ "Region is invalid: Please delete it to validate the Layout!"|trans }}",
                 failedToImportMedia: "{{ "Failed to import media!"|trans }}",
                 canvasWidgetNotShared: "{{ "This Canvas is not shared with you with edit permission!"|trans }}",
+                getProvidersFailed: "{{ "Failed to load media providers!"|trans }}",
             };
 
             var widgetStatusTrans = {
@@ -963,6 +1056,24 @@
                 }
             };
 
+            var fallbackDataTrans = {
+                message:  "{{ "Fallback data for this Data Widget can be provided below and included according to the property \"Show fallback data\". Fallback data will be shown with the same appearance as data returned from the source, and can be edited using the form below."|trans }}",
+                addNewRecord: "{{ "Add New"|trans }}",
+                saveRecord: "{{ "Save"|trans }}",
+                editRecord: "{{ "Edit"|trans }}",
+                deleteRecord: "{{ "Delete"|trans }}",
+                fallbackTypeTitle: "{{ "Show fallback data"|trans }}",
+                fallbackTypeHelpText: "{{ "If provided, when should we show fallback data for this Widget?"|trans }}",
+                never: "{{ "Never"|trans }}",
+                always: "{{ "Always"|trans }}",
+                empty: "{{ "When no data is returned"|trans }}",
+                error: "{{ "When there is an error"|trans }}",
+                noData: "{{ "Undefined"|trans }}",
+                invalidRecordEmpty: "{{ "Please fill out all least one field!"|trans }}",
+                invalidRecordRequired: "{{ "Please fill out all the required fields!"|trans }}",
+                requiredField: "{{ "Required Field!"|trans }}",
+            };
+
             var datasetColStyleSelectorTranslations = {
                 colAvailable: "{{ "Columns Available"|trans }}",
                 colSelected: "{{ "Columns Selected"|trans }}",
@@ -1037,19 +1148,37 @@
                 duration: toolbarTrans.duration,
                 editPlaylistTitle: "{{ "Edit Playlist - %playlistName% - "|trans }}",
                 widgetsCount: "{{ "Widgets count"|trans }}",
+                editingSourcePlaylist: "{{ "Editing source playlist %playlistName% "|trans }}",
                 zoomControls: {
                     in: "{{ "Zoom In"|trans }}",
                     out: "{{ "Zoom Out"|trans }}",
                     default: "{{ "Default zoom"|trans }}",
                     scaleMode: "{{ "Change scale mode"|trans }}",
                 },
+                externalPlaylistMessage: "{{ "Your changes will apply anywhere this Playlist is used."|trans }}",
             };
 
             var deleteModalTrans = {
                 playlist: {
                     title: "{{ "Delete Playlist"|trans }}",
                     message: "{{ "Are you sure you want to delete a non-empty Playlist?"|trans }}",
-                }
+                },
+                widget: {
+                    title: "{{ "Delete Widget"|trans }}",
+                    message: "{{ "Are you sure you want to delete this widget?"|trans }}",
+                },
+                element: {
+                    title: "{{ "Delete Element"|trans }}",
+                    message: "{{ "Are you sure you want to delete this element? Widget will also be deleted and configuration will be lost."|trans }}",
+                },
+                elementGroup: {
+                    title: "{{ "Delete Element Group"|trans }}",
+                    message: "{{ "Are you sure you want to delete this element group? Widget will also be deleted and configuration will be lost."|trans }}",
+                },
+                multiple: {
+                    title: "{{ "Delete all selected objects?"|trans }}",
+                    message: "{{ "Are you sure you want to delete all selected objects? Widgets might also be deleted and configuration will be lost."|trans }}",
+                },
             };
 
             var momentLocalesTrans = {

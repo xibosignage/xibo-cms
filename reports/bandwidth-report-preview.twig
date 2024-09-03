@@ -70,7 +70,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
 
         let reportChart = new Chart($("#canvas"), {{ chart|json_encode|raw }});
         let outputData = {{ table|json_encode|raw }};

@@ -71,14 +71,22 @@ $designer-overlay-z-index: 1050;
 $toolbar-card-z-index: 1060;
 
 $properties-panel-rich-text-container-z-index: 1050;
+
+$preview-playing-z-index: 2000;
+
 $bootbox-second-dialog-z-index: 3100;
 $context-menu-overlay-z-index: 3000;
 $loading-overlay-z-index: 3000;
 
 // DIMENSIONS
 $toolbar-width: 60px;
+$toolbar-tab-menu-height: 50px;
 $toolbar-header-height: 50px;
 $toolbar-content-header-height: 40px;
+$toolbar-content-level-1-width: 160px;
+$toolbar-content-level-2-width: 290px;
+$toolbar-content-level-3-width: 420px;
+$toolbar-content-level-4-width: 600px;
 
 $toolbar-widgets-card-height: 60px;
 $toolbar-widgets-card-margin-bottom: 0.5rem;

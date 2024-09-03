@@ -4,16 +4,17 @@
 {% block title %}{{ "Layouts"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    {% if currentUser.featureEnabled("layout.add") %}
     <div class="widget-action-menu pull-right">
-        <button class="btn btn-success layout-add-button"
-                title="{% trans "Add a new Layout and jump to the layout designer." %}"
-                href="{{ url_for("layout.add") }}">
-            <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Layout" %}
-        </button>
-        <button class="btn btn-info" id="layoutUploadForm" title="{% trans "Import a Layout from a ZIP file." %}" href="#"> <i class="fa fa-cloud-download" aria-hidden="true"></i> {% trans "Import" %}</button>
+        {% if currentUser.featureEnabled("layout.add") %}
+            <button class="btn btn-success layout-add-button"
+                    title="{% trans "Add a new Layout and jump to the layout editor." %}"
+                    href="{{ url_for("layout.add") }}">
+                <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Layout" %}
+            </button>
+            <button class="btn btn-info" id="layoutUploadForm" title="{% trans "Import a Layout from a ZIP file." %}" href="#"> <i class="fa fa-cloud-download" aria-hidden="true"></i> {% trans "Import" %}</button>
+        {% endif %}
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
     </div>
-    {% endif %}
 {% endblock %}
 
 {% block pageContent %}
@@ -143,19 +144,17 @@
                     </div>
                 </div>
 
-                <div class="row">
-                    <div class="col-sm-2 grid-folder-tree-container" id="grid-folder-filter">
-                        <div class="p-3 mr-2">
-                            <input id="jstree-search" class="form-control" type="text" placeholder="{% trans "Search" %}">
-                            <div class="form-check">
-                                <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
-                                <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "All Folders" %}</label>
-                            </div>
-                            <div class="folder-search-no-results d-none">
-                                <p>{% trans 'No Folders matching the search term' %}</p>
-                            </div>
-                            <div id="container-folder-tree"></div>
+                <div class="grid-with-folders-container">
+                    <div class="grid-folder-tree-container p-3" id="grid-folder-filter">
+                        <input id="jstree-search" class="form-control" type="text" placeholder="{% trans "Search" %}">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
+                            <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "All Folders" %}</label>
                         </div>
+                        <div class="folder-search-no-results d-none">
+                            <p>{% trans 'No Folders matching the search term' %}</p>
+                        </div>
+                        <div id="container-folder-tree"></div>
                     </div>
 
                     <div class="folder-controller d-none">
@@ -163,8 +162,8 @@
                         <div id="breadcrumbs" class="mt-2 pl-2"></div>
                     </div>
 
-                    <div id="datatable-container" class="col-sm-10 pr-0">
-                        <div class="XiboData card pt-4 px-2">
+                    <div id="datatable-container">
+                        <div class="XiboData card py-3">
                             <table id="layouts" class="table table-striped responsive nowrap" data-content-type="layout" data-content-id-name="layoutId" data-state-preference-name="layoutGrid" style="width: 100%;">
                                 <thead>
                                     <tr>
@@ -200,7 +199,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         var table;
         $(document).ready(function() {
             {% if not currentUser.featureEnabled("folder.view") %}
@@ -384,6 +383,10 @@
             table.on('processing.dt', dataTableProcessing);
             dataTableAddButtons(table, $('#layouts_wrapper').find('.dataTables_buttons'));
 
+            $("#refreshGrid").click(function() {
+                table.ajax.reload();
+            });
+
             // Bind to the layout add button
             $('button.layout-add-button').on('click', function() {
               let currentWorkingFolderId =
@@ -447,6 +450,7 @@
                         importTagsMessage: "{{ "Import Tags?"|trans }}",
                         useExistingDataSetsMessage: "{{ "Use existing DataSets matched by name?"|trans }}",
                         dataSetDataMessage: "{{ "Import DataSet Data?"|trans }}",
+                        fallbackMessage: "{{ "Import Widget Fallback Data?"|trans }}",
                         selectFolder: "{{ "Select Folder"|trans }}",
                         selectFolderTitle: "{{ "Change Current Folder location"|trans }}",
                         selectedFolder: "{{ "Current Folder"|trans }}:",

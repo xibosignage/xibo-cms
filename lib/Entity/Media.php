@@ -34,6 +34,7 @@ use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\DuplicateEntityException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Media
@@ -384,7 +385,7 @@ class Media implements \JsonSerializable
 
         // Check the naming of this item to ensure it doesn't conflict
         $params = [];
-        $checkSQL = 'SELECT `name` FROM `media` WHERE `name` = :name AND userid = :userId';
+        $checkSQL = 'SELECT `name`, `mediaId`, `apiRef` FROM `media` WHERE `name` = :name AND userid = :userId';
 
         if ($this->mediaId != 0) {
             $checkSQL .= ' AND mediaId <> :mediaId AND IsEdited = 0 ';
@@ -399,8 +400,14 @@ class Media implements \JsonSerializable
 
         $result = $this->getStore()->select($checkSQL, $params);
 
-        if (count($result) > 0)
-            throw new DuplicateEntityException(__('Media you own already has this name. Please choose another.'));
+        if (count($result) > 0) {
+            // If the media is imported from a provider (ie Pixabay, etc), use it instead of importing again.
+            if (isset($this->apiRef) && $this->apiRef === $result[0]['apiRef']) {
+                $this->mediaId = intval($result[0]['mediaId']);
+            } else {
+                throw new DuplicateEntityException(__('Media you own already has this name. Please choose another.'));
+            }
+        }
     }
 
     /**
@@ -447,7 +454,8 @@ class Media implements \JsonSerializable
             'validate' => true,
             'oldMedia' => null,
             'deferred' => false,
-            'saveTags' => true
+            'saveTags' => true,
+            'audit' => true,
         ], $options);
 
         if ($options['validate'] && $this->mediaType !== 'module') {
@@ -461,13 +469,15 @@ class Media implements \JsonSerializable
             // Always set force to true as we always want to save new files
             $this->isSaveRequired = true;
 
-            $this->audit($this->mediaId, 'Added', [
-                'mediaId' => $this->mediaId,
-                'name' => $this->name,
-                'mediaType' => $this->mediaType,
-                'fileName' => $this->fileName,
-                'folderId' => $this->folderId
-            ]);
+            if ($options['audit']) {
+                $this->audit($this->mediaId, 'Added', [
+                    'mediaId' => $this->mediaId,
+                    'name' => $this->name,
+                    'mediaType' => $this->mediaType,
+                    'fileName' => $this->fileName,
+                    'folderId' => $this->folderId
+                ]);
+            }
         } else {
             $this->edit();
 
@@ -478,7 +488,9 @@ class Media implements \JsonSerializable
                 || ($expires > 0 && $expires < Carbon::now()->format('U'))
                 || ($this->mediaType === 'module' && !file_exists($this->downloadSink(false)));
 
-            $this->audit($this->mediaId, 'Updated', $this->getChangedProperties());
+            if ($options['audit']) {
+                $this->audit($this->mediaId, 'Updated', $this->getChangedProperties());
+            }
         }
 
         if ($options['deferred']) {
@@ -549,6 +561,29 @@ class Media implements \JsonSerializable
 
         $this->load(['deleting' => true]);
 
+        // Prepare some contexts for auditing
+        $auditMessage = 'Deleted';
+        $auditContext = [
+            'mediaId' => $this->mediaId,
+            'name' => $this->name,
+            'mediaType' => $this->mediaType,
+            'fileName' => $this->fileName,
+        ];
+
+        // Should we bring back this items parent?
+        try {
+            // Revert
+            $parentMedia = $this->mediaFactory->getParentById($this->mediaId);
+            $parentMedia->isEdited = 0;
+            $parentMedia->parentId = null;
+            $parentMedia->save(['validate' => false, 'audit' => false]);
+
+            $auditMessage .= ' and reverted old revision';
+            $auditContext['revertedMediaId'] = $parentMedia->mediaId;
+        } catch (NotFoundException) {
+            // No parent, this is fine.
+        }
+
         foreach ($this->permissions as $permission) {
             /* @var Permission $permission */
             $permission->delete();
@@ -559,7 +594,7 @@ class Media implements \JsonSerializable
         $this->deleteRecord();
         $this->deleteFile();
 
-        $this->audit($this->mediaId, 'Deleted', ['mediaId' => $this->mediaId, 'name' => $this->name, 'mediaType' => $this->mediaType, 'fileName' => $this->fileName]);
+        $this->audit($this->mediaId, $auditMessage, $auditContext);
     }
 
     /**

@@ -1,0 +1,95 @@
+{#
+/**
+ * Copyright (C) 2024 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Add Report Schedule" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#reportScheduleAddForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="reportScheduleAddForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("reportschedule.add") }}">
+                {{ forms.hidden("hiddenFields", hiddenFields) }}
+                {{ forms.hidden("reportName", reportName) }}
+
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "The name for this report schedule" %}{% endset %}
+                {{ forms.input("name", title, "", helpText, "", "required") }}
+
+                {% set title %}{% trans "Frequency" %}{% endset %}
+                {% set helpText %}{% trans "Select how frequently you would like this report to run" %}{% endset %}
+                {% set daily %}{% trans "Daily" %}{% endset %}
+                {% set weekly %}{% trans "Weekly" %}{% endset %}
+                {% set monthly %}{% trans "Monthly" %}{% endset %}
+                {% set yearly %}{% trans "Yearly" %}{% endset %}
+                {% set options = [
+                    { name: "daily", filter: daily },
+                    { name: "weekly", filter: weekly },
+                    { name: "monthly", filter: monthly },
+                    { name: "yearly", filter: yearly },
+                ] %}
+                {{ forms.dropdown("filter", "single", title, "", options, "name", "filter", helpText) }}
+
+                {% set title %}{% trans "User" %}{% endset %}
+                {% set attributes = [
+                    { name: "data-width", value: "100%" },
+                    { name: "data-allow-clear", value: "true" },
+                    { name: "data-placeholder--id", value: null },
+                    { name: "data-placeholder--value", value: "" },
+                    { name: "data-search-url", value: url_for("user.search") },
+                    { name: "data-search-term", value: "userName" },
+                    { name: "data-id-property", value: "userId" },
+                    { name: "data-text-property", value: "userName" },
+                ] %}
+                {{ forms.dropdown("userId", "single", title, "", null, "userId", "userName", "", "pagedSelect", "", "d", "", attributes) }}
+
+                {% set title = "Report Type"|trans %}
+                {% set options = [
+                    { id: 'requests', value: "Requests"|trans },
+                    { id: 'audit', value: "Audit"|trans },
+                    { id: 'debug', value: "Debug"|trans },
+                ] %}
+                {{ forms.dropdown("type", "single", title, "audit", options, "id", "value", helpText) }}
+
+                {% set title %}{% trans "Start Time" %}{% endset %}
+                {% set helpText %}{% trans "Set a future date and time to run this report. Leave blank to run from the next collection point." %}{% endset %}
+                {{ forms.dateTime("fromDt", title, "", helpText, "starttime-control") }}
+
+                {% set title %}{% trans "End Time" %}{% endset %}
+                {% set helpText %}{% trans "Set a future date and time to end the schedule. Leave blank to run indefinitely." %}{% endset %}
+                {{ forms.dateTime("toDt", title, "", helpText, "endtime-control") }}
+
+                {% set title %}{% trans "Email addresses" %}{% endset %}
+                {% set helpText %}{% trans "Additional emails separated by a comma." %}{% endset %}
+                {{ forms.inputWithTags("nonusers", title, nonusers, helpText) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

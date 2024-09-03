@@ -1,0 +1,104 @@
+{#
+/**
+ * Copyright (C) 2024 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <div class="widget-action-menu pull-right">
+        <button class="btn btn-info XiboRedirectButton" href="{{ url_for("savedreport.view") }}"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</button>
+    </div>
+{% endblock %}
+
+{% block pageContent %}
+
+    <div class="widget">
+        <div class="widget-title">
+            <i class="fa fa-list"></i>
+            {{ metadata.title }}
+            <span class="small">({% trans "Generated on: " %}{{ metadata.generatedOn }})</span>
+            <div><span class="small">{% trans "From" %} {{ metadata.periodStart }} {% trans "To" %} {{ metadata.periodEnd }}</span></div>
+            <div class="clearfix"></div>
+        </div>
+
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+
+                <div class="XiboData card pt-3">
+                    <table id="sessionHistoryReportPreview" class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>{% trans "Date" %}</th>
+                            <th>{% trans "User Name" %}</th>
+                            <th>{% trans "User ID" %}</th>
+                            <th>{% trans "IP Address" %}</th>
+                            <th>{% trans "Session ID" %}</th>
+                            <th>{% trans "Message" %}</th>
+                            <th>{% trans "Object" %}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript" nonce="{{ cspNonce }}">
+
+      $(document).ready(function() {
+
+        var outputData = {{ table|json_encode|raw }};
+
+        var table = $("#sessionHistoryReportPreview").DataTable({
+          language: dataTablesLanguage,
+          dom: dataTablesTemplate,
+          paging:   false,
+          ordering: false,
+          info:     false,
+          order: [[0, 'desc']],
+          searching: false,
+          data: outputData,
+          columns: [
+            {data: 'logDate',},
+            {data: 'userName'},
+            {data: 'userId'},
+            {data: 'ipAddress'},
+            {data: 'sessionHistoryId'},
+            {data: 'message'},
+            {data: 'objectAfter'},
+          ]
+        });
+
+        table.on('draw', dataTableDraw);
+        table.on('processing.dt', function(e, settings, processing) {
+          dataTableProcessing(e, settings, processing);
+        });
+      });
+    </script>
+{% endblock %}

@@ -28,6 +28,7 @@
 {% block actionMenu %}
     <div class="widget-action-menu pull-right">
         <button class="btn btn-success XiboFormButton" title="{% trans "Add an Application" %}" href="{{ url_for("application.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Application" %}</button>
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
     </div>
 {% endblock %}
 
@@ -89,7 +90,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
 
         {% autoescape "js" %}
             var copyToClipboardTrans = "{{ "Copy to Clipboard"|trans }}";
@@ -131,6 +132,10 @@
             table.on('draw', dataTableDraw);
             table.on('processing.dt', dataTableProcessing);
             dataTableAddButtons(table, $('#applications_wrapper').find('.dataTables_buttons'));
+
+            $("#refreshGrid").click(function () {
+                table.ajax.reload();
+            });
 
           // Connectors
           loadConnectors();

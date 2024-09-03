@@ -27,6 +27,7 @@ use Stash\Interfaces\PoolInterface;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\ScheduleCriteriaFactory;
 use Xibo\Factory\ScheduleExclusionFactory;
 use Xibo\Factory\ScheduleReminderFactory;
 use Xibo\Factory\UserFactory;
@@ -62,6 +63,7 @@ class Schedule implements \JsonSerializable
     public static $MEDIA_EVENT = 7;
     public static $PLAYLIST_EVENT = 8;
     public static $SYNC_EVENT = 9;
+    public static $DATA_CONNECTOR_EVENT = 10;
     public static $DATE_MIN = 0;
     public static $DATE_MAX = 2147483647;
 
@@ -116,6 +118,16 @@ class Schedule implements \JsonSerializable
      * @var ScheduleReminder[]
      */
     public $scheduleReminders = [];
+
+    /**
+     * @SWG\Property(
+     *  description="Schedule Criteria assigned to this Scheduled Event.",
+     *  type="array",
+     *  @SWG\Items(ref="#/definitions/ScheduleCriteria")
+     * )
+     * @var ScheduleCriteria[]
+     */
+    public $criteria = [];
 
     /**
      * @SWG\Property(
@@ -305,6 +317,18 @@ class Schedule implements \JsonSerializable
     public $syncGroupId;
 
     /**
+     * @SWG\Property(description="For data connector events, the dataSetId")
+     * @var int
+     */
+    public $dataSetId;
+
+    /**
+     * @SWG\Property(description="For data connector events, the data set parameters")
+     * @var int
+     */
+    public $dataSetParams;
+
+    /**
      * @SWG\Property(description="The userId of the user that last modified this Schedule")
      * @var int
      */
@@ -384,8 +408,19 @@ class Schedule implements \JsonSerializable
      * @param ScheduleReminderFactory $scheduleReminderFactory
      * @param ScheduleExclusionFactory $scheduleExclusionFactory
      */
-    public function __construct($store, $log, $dispatcher, $config, $pool, $displayGroupFactory, $dayPartFactory, $userFactory, $scheduleReminderFactory, $scheduleExclusionFactory)
-    {
+    public function __construct(
+        $store,
+        $log,
+        $dispatcher,
+        $config,
+        $pool,
+        $displayGroupFactory,
+        $dayPartFactory,
+        $userFactory,
+        $scheduleReminderFactory,
+        $scheduleExclusionFactory,
+        private readonly ScheduleCriteriaFactory $scheduleCriteriaFactory
+    ) {
         $this->setCommonDependencies($store, $log, $dispatcher);
         $this->config = $config;
         $this->pool = $pool;
@@ -458,6 +493,29 @@ class Schedule implements \JsonSerializable
     }
 
     /**
+     * @param ScheduleCriteria $criteria
+     * @param int|null $id
+     * @return $this
+     */
+    public function addOrUpdateCriteria(ScheduleCriteria $criteria, ?int $id = null): Schedule
+    {
+        // set empty array as the default value if original value is empty/null
+        $originalValue = $this->getOriginalValue('criteria') ?? [];
+
+        // Does this already exist?
+        foreach ($originalValue as $existing) {
+            if ($id !== null && $existing->id === $id) {
+                $this->criteria[] = $criteria;
+                return $this;
+            }
+        }
+
+        // We didn't find it.
+        $this->criteria[] = $criteria;
+        return $this;
+    }
+
+    /**
      * Are the provided dates within the schedule look ahead
      * @return bool
      * @throws GeneralException
@@ -510,7 +568,9 @@ class Schedule implements \JsonSerializable
     public function load($options = [])
     {
         $options = array_merge([
-            'loadScheduleReminders' => false
+            'loadDisplayGroups' => true,
+            'loadScheduleReminders' => false,
+            'loadScheduleCriteria' => true,
         ], $options);
 
         // If we are already loaded, then don't do it again
@@ -518,11 +578,19 @@ class Schedule implements \JsonSerializable
             return;
         }
 
-        $this->displayGroups = $this->displayGroupFactory->getByEventId($this->eventId);
+        // Load display groups
+        if ($options['loadDisplayGroups']) {
+            $this->displayGroups = $this->displayGroupFactory->getByEventId($this->eventId);
+        }
 
         // Load schedule reminders
         if ($options['loadScheduleReminders']) {
             $this->scheduleReminders = $this->scheduleReminderFactory->query(null, ['eventId'=> $this->eventId]);
+        }
+
+        // Load schedule criteria
+        if ($options['loadScheduleCriteria']) {
+            $this->criteria = $this->scheduleCriteriaFactory->getByEventId($this->eventId);
         }
 
         // Set the original values now that we're loaded.
@@ -672,6 +740,11 @@ class Schedule implements \JsonSerializable
                     );
                 }
             }
+        } else if ($this->eventTypeId === Schedule::$DATA_CONNECTOR_EVENT) {
+            if (!v::intType()->notEmpty()->validate($this->dataSetId)) {
+                throw new InvalidArgumentException(__('Please select a DataSet for this event.'), 'dataSetId');
+            }
+            $this->campaignId = null;
         } else {
             // No event type selected
             throw new InvalidArgumentException(__('Please select the Event Type'), 'eventTypeId');
@@ -794,6 +867,32 @@ class Schedule implements \JsonSerializable
             $this->manageAssignments($isEdit && $options['notify']);
         }
 
+        // Update schedule criteria
+        $criteriaIds = [];
+        foreach ($this->criteria as $criteria) {
+            $criteria->eventId = $this->eventId;
+            $criteria->save();
+
+            $criteriaIds[] = $criteria->id;
+        }
+
+        // Remove records that no longer exist.
+        if (count($criteriaIds) > 0) {
+            // There are still criteria left
+            $this->getStore()->update('
+                DELETE FROM `schedule_criteria` 
+                 WHERE `id` NOT IN (' . implode(',', $criteriaIds) . ')
+                    AND `eventId` = :eventId
+            ', [
+                'eventId' => $this->eventId,
+            ]);
+        } else {
+            // No criteria left at all (or never was any)
+            $this->getStore()->update('DELETE FROM `schedule_criteria`  WHERE `eventId` = :eventId', [
+                'eventId' => $this->eventId,
+            ]);
+        }
+
         // Notify
         if ($options['notify']) {
             // Only if the schedule effects the immediate future - i.e. within the RF Look Ahead
@@ -857,6 +956,11 @@ class Schedule implements \JsonSerializable
                 $reminder->delete();
             }
         }
+
+        // Delete schedule criteria
+        $this->getStore()->update('DELETE FROM `schedule_criteria` WHERE `eventId` = :eventId', [
+            'eventId' => $this->eventId,
+        ]);
 
         if ($this->eventTypeId === self::$SYNC_EVENT) {
             $this->getStore()->update('DELETE FROM `schedule_sync` WHERE eventId = :eventId', [
@@ -928,7 +1032,9 @@ class Schedule implements \JsonSerializable
                 `modifiedBy`,
                 `createdOn`,
                 `updatedOn`,
-                `name`
+                `name`,
+                `dataSetId`,
+                `dataSetParams`
             )
             VALUES (
                 :eventTypeId,
@@ -959,7 +1065,9 @@ class Schedule implements \JsonSerializable
                 :modifiedBy,
                 :createdOn,
                 :updatedOn,
-                :name
+                :name,
+                :dataSetId,
+                :dataSetParams
             )
         ', [
             'eventTypeId' => $this->eventTypeId,
@@ -992,7 +1100,9 @@ class Schedule implements \JsonSerializable
             'modifiedBy' => null,
             'createdOn' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             'updatedOn' => null,
-            'name' => !empty($this->name) ? $this->name : null
+            'name' => !empty($this->name) ? $this->name : null,
+            'dataSetId' => !empty($this->dataSetId) ? $this->dataSetId : null,
+            'dataSetParams' => !empty($this->dataSetParams) ? $this->dataSetParams : null,
         ]);
     }
 
@@ -1030,7 +1140,9 @@ class Schedule implements \JsonSerializable
             `syncGroupId` = :syncGroupId,
             `modifiedBy` = :modifiedBy,
             `updatedOn` = :updatedOn,
-            `name` = :name
+            `name` = :name,
+            `dataSetId` = :dataSetId,
+            `dataSetParams` = :dataSetParams
           WHERE eventId = :eventId
         ', [
             'eventTypeId' => $this->eventTypeId,
@@ -1061,6 +1173,8 @@ class Schedule implements \JsonSerializable
             'modifiedBy' => $this->modifiedBy,
             'updatedOn' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             'name' => $this->name,
+            'dataSetId' => !empty($this->dataSetId) ? $this->dataSetId : null,
+            'dataSetParams' => !empty($this->dataSetParams) ? $this->dataSetParams : null,
             'eventId' => $this->eventId,
         ]);
     }
@@ -1973,6 +2087,7 @@ class Schedule implements \JsonSerializable
             ['eventTypeId' => self::$ACTION_EVENT, 'eventTypeName' => __('Action')],
             ['eventTypeId' => self::$MEDIA_EVENT, 'eventTypeName' => __('Video/Image')],
             ['eventTypeId' => self::$PLAYLIST_EVENT, 'eventTypeName' => __('Playlist')],
+            ['eventTypeId' => self::$DATA_CONNECTOR_EVENT, 'eventTypeName' => __('Data Connector')],
         ];
     }
 

@@ -5,14 +5,20 @@
             <div class="info">
                 {{#ifCond object.widgetName '||' object.moduleName}}
                     <div class="label-name">
-                        <strong>{{objectTypeName}}</strong> <div class="name" title="{{trans.widgetName}} {{object.widgetName}}">{{#if object.widgetName}}"{{object.widgetName}}"{{/if}}</div>
+                        <strong title="{{trans.widgetType}}">{{objectTypeName}}</strong> <div class="name" title="{{trans.widgetName}}">{{#if object.widgetName}}"{{object.widgetName}}"{{/if}}{{#if moduleTemplateTitle}}<span class="template-name" title="{{trans.widgetTemplate}}"> | "{{moduleTemplateTitle}}"</span>{{/if}}</div>
                     </div>
                 {{/ifCond}}
             </div>
         {{else eq object.type "element"}}
             <div class="info">
                 <div class="label-name">
-                    <strong>{{objectTypeName}}</strong> | <div title="{{trans.templateName}}">{{object.template.title}}</div>{{#if object.elementName}} - <div class="name" title="{{trans.elementName}}">"{{object.elementName}}"</div>{{/if}}
+                    <strong>{{objectTypeName}}</strong> | <div title="{{trans.templateName}}">{{object.template.title}}</div>
+                    {{#if object.elementName}} - <div class="name" title="{{trans.elementName}}">"{{object.elementName}}"</div>{{/if}}
+                    {{#if object.elementMediaInfo}}
+                        - <div class="mediaInfo">[
+                            <div class="mediaInfoName" title="{{trans.elementMediaInfoName}}">{{object.elementMediaInfo.name}}</div>
+                            <div class="mediaInfoId" title="{{trans.elementMediaInfoId}}">#{{object.elementMediaInfo.id}}</div>
+                        ]</div>{{/if}}
                 </div>
             </div>
         {{else eq object.type "element-group"}}
@@ -60,11 +66,6 @@
                                 <i class="tool-icon-audio card-icon"></i>
                             </button>
                         {{/if}}
-
-                        <button type="button" id="expiry-btn" class="properties-btn btn btn-sm" data-property="Expiry" 
-                            data-toggle="tooltip" data-container=".editor-bottom-bar" data-placement="top" data-title="{{trans.tools.expiry.description}}">
-                            <i class="tool-icon-expiry card-icon"></i>
-                        </button>
 
                         <button type="button" id="transitionIn-btn" class="properties-btn btn btn-sm" data-property="Transition" data-property-type="in" 
                             data-toggle="tooltip" data-container=".editor-bottom-bar" data-placement="top" data-title="{{trans.tools.transitionIn.description}}">

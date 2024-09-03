@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -29,6 +29,7 @@ use Slim\Http\Factory\DecoratedResponseFactory;
 use Slim\Routing\RouteContext;
 use Xibo\Entity\User;
 use Xibo\Helper\HttpsDetect;
+use Xibo\Helper\UserLogProcessor;
 
 /**
  * Trait AuthenticationTrait
@@ -115,9 +116,11 @@ trait AuthenticationTrait
 
     /**
      * @param int $userId
+     * @param string $ip
+     * @param int $sessionHistoryId
      * @return \Xibo\Entity\User
      */
-    protected function getUser($userId, $ip)
+    protected function getUser($userId, $ip, $sessionHistoryId): User
     {
         $container = $this->app->getContainer();
         $user = $container->get('userFactory')->getById($userId);
@@ -131,6 +134,7 @@ trait AuthenticationTrait
         // Configure the log service with the logged in user id
         $container->get('logService')->setUserId($user->userId);
         $container->get('logService')->setIpAddress($ip);
+        $container->get('logService')->setSessionHistoryId($sessionHistoryId);
 
         return $user;
     }
@@ -140,7 +144,15 @@ trait AuthenticationTrait
      */
     protected function setUserForRequest($user)
     {
-        $this->app->getContainer()->set('user', $user);
+        $container = $this->app->getContainer();
+        $container->set('user', $user);
+
+        // Add this users information to the logger
+        $this->getLog()->getLoggerInterface()->pushProcessor(new UserLogProcessor(
+            $user->userId,
+            $this->getLog()->getSessionHistoryId(),
+            null,
+        ));
     }
 
     /**

@@ -50,6 +50,13 @@
                             {% set title %}{% trans "To Date" %}{% endset %}
                             {{ inline.date("availabilityToDt", title, defaults.toDate, "", "", "", "") }}
 
+                            {% set title %}{% trans "Group By" %}{% endset %}
+                            {% set options = [
+                                { id: "display", name: "Display"|trans },
+                                { id: "displayGroup", name: "Display Group"|trans },
+                            ] %}
+                            {{ inline.dropdown("groupBy", "single", title, "", options, "id", "name", "") }}
+
                             {% set title %}{% trans "Display" %}{% endset %}
                             {% set attributes = [
                                 { name: "data-width", value: "200px" },
@@ -136,10 +143,14 @@
                                     <tr>
                                         <th>{% trans "Display ID" %}</th>
                                         <th>{% trans "Display" %}</th>
+                                        <th>{% trans "Display Group ID" %}</th>
+                                        <th>{% trans "Display Group" %}</th>
                                         <th>{% trans "Time Disconnected" %}</th>
                                         <th>{% trans "Time Connected" %}</th>
+                                        <th>{% trans "Average Time Disconnected" %}</th>
+                                        <th>{% trans "Average Time Connected" %}</th>
+                                        <th>{% trans "Availability" %}</th>
                                         <th>{% trans "Units" %}</th>
-
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -168,7 +179,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
 
         $(document).ready(function() {
 
@@ -198,10 +209,26 @@
                 columns: [
                     {"data": "displayId"},
                     {"data": "display"},
+                    {"data": "displayGroupId"},
+                    {"data": "displayGroup"},
                     {"data": "timeDisconnected", "sortable": false},
                     {"data": "timeConnected", "sortable": false},
-                    {"data": "postUnits", "sortable": false}
-                ]
+                    {"data": "avgTimeDisconnected", "sortable": false},
+                    {"data": "avgTimeConnected", "sortable": false},
+                    {"data": "availabilityPercentage", "sortable": false},
+                    {"data": "postUnits", "sortable": false},
+                ],
+                drawCallback: function () {
+                    if ($('select[name="groupBy"]').val() === 'displayGroup') {
+                        // Hide 'Display ID and Display' columns
+                        $(this.api().columns([0, 1]).visible(false));
+                        $(this.api().columns([2, 3, 6, 7]).visible(true));
+                    } else {
+                        // Hide 'Display Group ID, Display Group, Avg Time Connected/Disconnected' columns
+                        $(this.api().columns([2, 3, 6, 7]).visible(false));
+                        $(this.api().columns([0, 1]).visible(true));
+                    }
+                },
             });
 
             // Get Data
@@ -278,9 +305,12 @@
                 if (displayId) {
                     $('select[name="displayGroupId[]"] option').remove();
                     $('select[name="displayGroupId[]"]').next(".select2-container").parent().hide();
+                    $('select[name="groupBy[]"] option').remove();
+                    $('select[name="groupBy"]').parent().hide();
                 } else {
                     $('#displayId option').remove();
                     $('select[name="displayGroupId[]"]').next(".select2-container").parent().show();
+                    $('select[name="groupBy"]').parent().show();
                 }
             });
 
@@ -298,9 +328,12 @@
                 if (displayId) {
                     $('select[name="displayGroupId[]"] option').remove();
                     $('select[name="displayGroupId[]"]').next(".select2-container").parent().parent().hide();
+                    $('select[name="groupBy[]"] option').remove();
+                    $('select[name="groupBy"]').parent().hide();
                 } else {
                     $('#reportScheduleAddForm #displayId option').remove();
                     $('select[name="displayGroupId[]"]').next(".select2-container").parent().parent().show();
+                    $('select[name="groupBy"]').parent().show();
                 }
             });
         }

@@ -41,6 +41,7 @@
     <div class="row">
         <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item"><a class="nav-link active" href="#generalTab" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="#detailTab" role="tab" data-toggle="tab"><span>{% trans "Details" %}</span></a></li>
             <li class="nav-item"><a class="nav-link" href="#configurationTab" role="tab" data-toggle="tab"><span>{% trans "Product Options" %}</span></a></li>
         </ul>
         <div class="col-md-12">
@@ -51,21 +52,9 @@
                         {% set helpText %}{% trans "The Name for this Menu Board Product" %}{% endset %}
                         {{ forms.input("name", title, menuBoardProduct.name, helpText) }}
 
-                        {% set title %}{% trans "Description" %}{% endset %}
-                        {% set helpText %}{% trans "The Description for this Menu Board Product" %}{% endset %}
-                        {{ forms.input("description", title, menuBoardProduct.description, helpText) }}
-
                         {% set title %}{% trans "Price" %}{% endset %}
                         {% set helpText %}{% trans "The Price for this Menu Board Product" %}{% endset %}
                         {{ forms.number("price", title, menuBoardProduct.price, helpText) }}
-
-                        {% set title %}{% trans "Allergy Information" %}{% endset %}
-                        {% set helpText %}{% trans "The Allergy Information for this Menu Board Product" %}{% endset %}
-                        {{ forms.input("allergyInfo", title, menuBoardProduct.allergyInfo, helpText) }}
-
-                        {% set title %}{% trans "Calories" %}{% endset %}
-                        {% set helpText %}{% trans "How many calories are in this product?" %}{% endset %}
-                        {{ forms.number("calories", title, menuBoardProduct.calories, helpText) }}
 
                         {% set title %}{% trans "Display Order" %}{% endset %}
                         {% set helpText %}{% trans "Set a display order for this item to appear" %}{% endset %}
@@ -94,6 +83,21 @@
                         ] %}
                         {{ forms.dropdown("mediaId", "single", title, menuBoardProduct.mediaId, [media], "mediaId", "name", helpText, "pagedSelect", "", "d", "", attributes) }}
                     </div>
+
+                    <div class="tab-pane" id="detailTab">
+                        {% set title %}{% trans "Description" %}{% endset %}
+                        {% set helpText %}{% trans "The Description for this Menu Board Product" %}{% endset %}
+                        {{ forms.textarea("description", title, menuBoardProduct.description, helpText) }}
+
+                        {% set title %}{% trans "Allergy Information" %}{% endset %}
+                        {% set helpText %}{% trans "The Allergy Information for this Menu Board Product" %}{% endset %}
+                        {{ forms.textarea("allergyInfo", title, menuBoardProduct.allergyInfo, helpText) }}
+
+                        {% set title %}{% trans "Calories" %}{% endset %}
+                        {% set helpText %}{% trans "How many calories are in this product?" %}{% endset %}
+                        {{ forms.number("calories", title, menuBoardProduct.calories, helpText) }}
+                    </div>
+
                     <div class="tab-pane" id="configurationTab">
                         {% set message %} {% trans "If required please provide additional options and their prices for this Product." %}{% endset %}
                         {{ forms.message(message, 'alert alert-info') }}

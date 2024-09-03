@@ -410,6 +410,8 @@ class Session implements \SessionHandlerInterface
     {
         //$this->log->debug('Session insert');
 
+        $this->insertSessionHistory();
+
         $sql = '
           INSERT INTO `session` (session_id, session_data, session_expiration, lastaccessed, userid, isexpired, useragent, remoteaddr)
             VALUES (:session_id, :session_data, :session_expiration, :lastAccessed, :userId, :expired, :useragent, :remoteaddr)
@@ -429,6 +431,26 @@ class Session implements \SessionHandlerInterface
         $this->getDb()->update($sql, $params);
     }
 
+    private function insertSessionHistory()
+    {
+        $sql = '
+        INSERT INTO `session_history` (`ipAddress`, `userAgent`, `startTime`, `userId`, `lastUsedTime`)
+            VALUES (:ipAddress, :userAgent, :startTime, :userId, :lastUsedTime)
+        ';
+
+        $params = [
+            'ipAddress' => $this->getIp(),
+            'userAgent' => substr(htmlspecialchars($_SERVER['HTTP_USER_AGENT']), 0, 253),
+            'startTime' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
+            'userId' => $this->userId,
+            'lastUsedTime' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
+        ];
+
+        $id = $this->getDb()->insert($sql, $params);
+
+        $this->set('sessionHistoryId', $id);
+    }
+
     /**
      * Update Session
      * @param $key
@@ -439,6 +461,8 @@ class Session implements \SessionHandlerInterface
     private function updateSession($key, $data, $lastAccessed, $expiry)
     {
         //$this->log->debug('Session update');
+
+        $this->updateSessionHistory();
 
         $sql = '
             UPDATE `session` SET
@@ -457,6 +481,26 @@ class Session implements \SessionHandlerInterface
             'userId' => $this->userId,
             'expired' => ($this->expired) ? 1 : 0,
             'session_id' => $key
+        ];
+
+        $this->getDb()->update($sql, $params);
+    }
+
+    /**
+     * Updates the session history
+     */
+    private function updateSessionHistory()
+    {
+        $sql = '
+            UPDATE `session_history` SET
+              lastUsedTime = :lastUsedTime, userID = :userId
+            WHERE sessionId = :sessionId
+        ';
+
+        $params = [
+            'lastUsedTime' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
+            'userId' => $this->userId,
+            'sessionId' => $_SESSION['sessionHistoryId'],
         ];
 
         $this->getDb()->update($sql, $params);

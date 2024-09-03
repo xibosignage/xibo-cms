@@ -1,0 +1,88 @@
+{#
+/*
+ * Copyright (C) 2023 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Add Module Template" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#form-module-template").submit();
+{% endblock %}
+
+{% block callBack %}moduleTemplateAddFormOpen{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="form-module-template"
+                  class="XiboForm form-horizontal"
+                  method="post"
+                  action="{{ url_for("developer.templates.add") }}">
+
+                {% set title %}{% trans "ID" %}{% endset %}
+                {% set helpText %}{% trans "A unique ID for the module template" %}{% endset %}
+                {{ forms.input("templateId", title, "custom_", helpText) }}
+
+                {% set title %}{% trans "Title" %}{% endset %}
+                {% set helpText %}{% trans "A title for the module template" %}{% endset %}
+                {{ forms.input("title", title, "Custom Template", helpText) }}
+
+                {% set attributes = [
+                    { name: "data-search-url", value:  url_for("developer.templates.datatypes.search") },
+                    { name: "data-search-term", value: "name" },
+                    { name: "data-id-property", value: "id" },
+                    { name: "data-text-property", value: "name" },
+                    { name: "data-hide-search", value: 1},
+                ] %}
+                {% set title %}{% trans "Data Type" %}{% endset %}
+                {% set helpText %}{% trans "Which data type does this template need?" %}{% endset %}
+                {{ forms.dropdown("dataType", "single", title, null, null, "id", "id", helpText, "pagedSelect", "", "", "", attributes) }}
+
+                {% set attributes = [
+                    { name: "data-search-term", value: "title" },
+                    { name: "data-id-property", value: "templateId" },
+                    { name: "data-text-property", value: "title" },
+                    { name: "data-hide-search", value: 1},
+                    { name: "data-filter-options", value: '{"type":"static"}' },
+                ] %}
+                {% set title %}{% trans "Template" %}{% endset %}
+                {% set helpText %}{% trans "Optionally select existing template to use as a base for this Template" %}{% endset %}
+                {{ forms.dropdown("copyTemplateId", "single", title, null, null, "templateId", "title", helpText, "d-none", "", "", "", attributes) }}
+
+                {% set title %}{% trans "Show In" %}{% endset %}
+                {% set helpText %}{% trans "Which Editor should this template be available in?" %}{% endset %}
+                {% set options = [
+                    { id: "none", name: "None"|trans },
+                    { id: "layout", name: "Layout Editor"|trans },
+                    { id: "playlist", name: "Playlist Editor"|trans },
+                    { id: "both", name: "Both"|trans },
+                ] %}
+                {{ forms.dropdown("showIn", "single", title, "layout", options, "id", "name", helpText) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

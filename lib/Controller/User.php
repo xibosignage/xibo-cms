@@ -280,6 +280,8 @@ class User extends Base
             'userId' => $sanitizedParams->getInt('userId'),
             'userTypeId' => $sanitizedParams->getInt('userTypeId'),
             'userName' => $sanitizedParams->getString('userName'),
+            'firstName' => $sanitizedParams->getString('firstName'),
+            'lastName' => $sanitizedParams->getString('lastName'),
             'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
             'retired' => $sanitizedParams->getInt('retired'),
             'logicalOperatorName' => $sanitizedParams->getString('logicalOperatorName'),
@@ -839,9 +841,21 @@ class User extends Base
             if ($user->retired === 1) {
                 $user->isSystemNotification = 0;
                 $user->isDisplayNotification = 0;
+                $user->isDataSetNotification = 0;
+                $user->isCustomNotification = 0;
+                $user->isLayoutNotification = 0;
+                $user->isLibraryNotification = 0;
+                $user->isReportNotification = 0;
+                $user->isScheduleNotification = 0;
             } else {
                 $user->isSystemNotification = $sanitizedParams->getCheckbox('isSystemNotification');
                 $user->isDisplayNotification = $sanitizedParams->getCheckbox('isDisplayNotification');
+                $user->isDataSetNotification = $sanitizedParams->getCheckbox('isDataSetNotification');
+                $user->isCustomNotification = $sanitizedParams->getCheckbox('isCustomNotification');
+                $user->isLayoutNotification = $sanitizedParams->getCheckbox('isLayoutNotification');
+                $user->isLibraryNotification = $sanitizedParams->getCheckbox('isLibraryNotification');
+                $user->isReportNotification = $sanitizedParams->getCheckbox('isReportNotification');
+                $user->isScheduleNotification = $sanitizedParams->getCheckbox('isScheduleNotification');
             }
         }
 
@@ -864,7 +878,10 @@ class User extends Base
         // Handle enabled features for the homepage.
         $homepage = $this->userGroupFactory->getHomepageByName($user->homePageId);
         if (!empty($homepage->feature) && !$user->featureEnabled($homepage->feature)) {
-            throw new InvalidArgumentException(__('User does not have the enabled Feature for this Dashboard'), 'homePageId');
+            throw new InvalidArgumentException(
+                __('User does not have the enabled Feature for this Dashboard'),
+                'homePageId'
+            );
         }
 
         $this->getLog()->debug('Homepage validated.');

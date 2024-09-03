@@ -30,7 +30,7 @@
         {% if settings.TASK_CONFIG_LOCKED_CHECKB == 0 or settings.TASK_CONFIG_LOCKED_CHECKB == "Unchecked" %}
             <button class="btn btn-success XiboFormButton" href="{{ url_for("task.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Task" %}</button>
         {% endif %}
-        <button class="btn btn-primary" id="refreshLog" title="{% trans "Refresh the Log" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</button>
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
     </div>
 {% endblock %}
 
@@ -73,7 +73,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         var table = $("#tasks").DataTable({
             "language": dataTablesLanguage,
             dom: dataTablesTemplate,
@@ -181,8 +181,8 @@
         table.on('processing.dt', dataTableProcessing);
         dataTableAddButtons(table, $('#tasks_wrapper').find('.dataTables_buttons'));
 
-        $("#refreshLog").click(function () {
-            table.ajax.reload(null, false);
+        $("#refreshGrid").click(function () {
+            table.ajax.reload();
         });
     </script>
 {% endblock %}

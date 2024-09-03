@@ -23,6 +23,8 @@ require('../../public_path');
 
 // Add image render lib
 import '/modules/src/xibo-image-render.js';
+// Add text scaler lib
+import '/modules/src/xibo-text-scaler.js';
 
 // Include handlebars templates
 const playlistEditorTemplate =
@@ -32,6 +34,10 @@ const playlistEditorExternalContainerTemplate =
 const messageTemplate = require('../templates/message.hbs');
 const loadingTemplate = require('../templates/loading.hbs');
 const contextMenuTemplate = require('../templates/context-menu.hbs');
+const topbarTemplatePlaylistEditor =
+  require('../templates/topbar-playlist-editor.hbs');
+const externalPlaylistMessageTemplate =
+  require('../templates/topbar-external-playlist-message.hbs');
 
 // Include modules
 const Playlist = require('../playlist-editor/playlist.js');
@@ -40,8 +46,6 @@ const Toolbar = require('../editor-core/toolbar.js');
 const PropertiesPanel = require('../editor-core/properties-panel.js');
 const HistoryManager = require('../editor-core/history-manager.js');
 const TemplateManager = require('../layout-editor/template-manager.js');
-const topbarTemplatePlaylistEditor =
-  require('../templates/topbar-playlist-editor.hbs');
 
 // Include CSS
 if (typeof lD == 'undefined') {
@@ -96,13 +100,26 @@ window.pE = {
 
   // inline playlist editor?
   inline: false,
+
+  // is it an external playlist?
+  externalPlaylist: true,
+
+  // Show minimum dimensions message
+  showMinDimensionsMessage: false,
 };
 
 /**
  * Load Playlist and build app structure
  * @param {string} inline - Is this an inline playlist editor?
+ * @param {boolean} regionSpecific - Is this region specific?
+ * @param {boolean} showExternalPlaylistMessage
+ *  - Are we editing a child playlist?
  */
-pE.loadEditor = function(inline = false) {
+pE.loadEditor = function(
+  inline = false,
+  regionSpecific = true,
+  showExternalPlaylistMessage = false,
+) {
   // Add class to body so we can use CSS specifically on it
   (!inline) && $('body').addClass('editor-opened');
 
@@ -120,10 +137,11 @@ pE.loadEditor = function(inline = false) {
   pE.regionSpecificQuery = '';
 
   if (inline) {
-    pE.regionSpecificQuery = '&regionSpecific=1';
+    (regionSpecific) && (pE.regionSpecificQuery = '&regionSpecific=1');
     pE.mainRegion =
       pE.editorContainer.parents('#editor-container').data('regionObj');
     pE.inline = true;
+    pE.externalPlaylist = showExternalPlaylistMessage;
   }
 
   // Get playlist id
@@ -145,6 +163,11 @@ pE.loadEditor = function(inline = false) {
   )
     .done(function(res) {
       if (res.data != null && res.data.length > 0) {
+        // Stop if not available
+        if (Object.keys(pE.editorContainer).length === 0) {
+          return;
+        }
+
         // Template type
         const template = inline ?
           playlistEditorTemplate :
@@ -238,6 +261,18 @@ pE.loadEditor = function(inline = false) {
           .on('click', function() {
             pE.close();
           });
+        pE.editorContainer.parents('#editor-container')
+          .find('.editor-modal-close')
+          .on('click', function() {
+            pE.close();
+          });
+
+        if (showExternalPlaylistMessage) {
+          pE.showExternalPlaylistMessage();
+        }
+
+        // Handle editor minimum dimensions when resizing
+        pE.common.handleEditorMinimumDimensions(pE);
       } else {
         // Login Form needed?
         if (res.login) {
@@ -449,6 +484,7 @@ pE.deleteSelectedObject = function() {
     pE.deleteObject(
       pE.selectedObject.type,
       pE.selectedObject[pE.selectedObject.type + 'Id'],
+      true, // Show confirmation modal for all static widgets
     );
   }
 };
@@ -457,15 +493,56 @@ pE.deleteSelectedObject = function() {
  * Delete object
  * @param {string} objectType
  * @param {number} objectId
+ * @param {boolean=} showConfirmationModal
+ *   - If we need to show a confirmation modal
  */
-pE.deleteObject = function(objectType, objectId) {
-  pE.common.showLoadingScreen('deleteObject');
+pE.deleteObject = function(
+  objectType,
+  objectId,
+  showConfirmationModal = false,
+) {
+  // Create modal before delete element
+  const createDeleteModal = function() {
+    bootbox.hideAll();
+
+    bootbox.dialog({
+      title: deleteModalTrans.widget.title,
+      message: deleteModalTrans.widget.message,
+      size: 'large',
+      buttons: {
+        cancel: {
+          label: editorsTrans.no,
+          className: 'btn-white btn-bb-cancel',
+        },
+        confirm: {
+          label: editorsTrans.yes,
+          className: 'btn-danger btn-bb-confirm',
+          callback: function() {
+            // Delete
+            pE.deleteObject(
+              objectType,
+              objectId,
+              false,
+            );
+          },
+        },
+      },
+    }).attr('data-test', 'deleteObjectModal');
+  };
+
+  // Show confirmation modal if needed
+  if (showConfirmationModal) {
+    createDeleteModal();
+    return;
+  }
+
+  pE.common.showLoadingScreen();
 
   // Delete object from the layout
   pE.playlist.deleteObject(objectType, objectId)
     .then((_res) => {
       // Success
-      pE.common.hideLoadingScreen('deleteObject');
+      pE.common.hideLoadingScreen();
 
       // Remove selected object if the deleted was selected
       if (pE.selectedObject.widgetId === objectId) {
@@ -475,7 +552,7 @@ pE.deleteObject = function(objectType, objectId) {
       // Reload data
       pE.reloadData();
     }).catch((error) => { // Fail/error
-      pE.common.hideLoadingScreen('deleteObject');
+      pE.common.hideLoadingScreen();
 
       // Show error returned or custom message to the user
       let errorMessage = '';
@@ -498,7 +575,7 @@ pE.deleteObject = function(objectType, objectId) {
  */
 pE.deleteMultipleObjects = function(objectsType, objectIds) {
   if (objectsType === 'widget') {
-    pE.common.showLoadingScreen('deleteObjects');
+    pE.common.showLoadingScreen();
 
     let deletedIndex = 0;
 
@@ -515,7 +592,7 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
 
           if (deletedIndex == objectIds.length) {
             // Hide loading screen
-            pE.common.hideLoadingScreen('deleteObjects');
+            pE.common.hideLoadingScreen();
 
             // Remove selected object if it's one in the objectIds
             if (
@@ -533,7 +610,7 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
             deleteNext();
           }
         }).catch((error) => { // Fail/error
-          pE.common.hideLoadingScreen('deleteObjects');
+          pE.common.hideLoadingScreen();
 
           // Show error returned or custom message to the user
           let errorMessage = '';
@@ -581,6 +658,15 @@ pE.refreshEditor = function(
     this.selectedObject.selected = true;
   }
 
+  // If we have more than one widget in the playlist
+  // and the external playlist message is shown, remove it
+  if (
+    this.externalPlaylistMessageOn === false &&
+    Object.values(this.playlist.widgets).length != 1
+  ) {
+    this.removeExternalPlaylistMessage();
+  }
+
   // Remove temporary data
   (reloadPropertiesPanel) && this.clearTemporaryData();
 
@@ -625,6 +711,11 @@ pE.reloadData = function(
   )
     .done(function(res) {
       pE.common.hideLoadingScreen();
+
+      // Stop if editor container is not available
+      if (Object.keys(pE.editorContainer).length === 0) {
+        return;
+      }
 
       if (res.data != null && res.data.length > 0) {
         pE.playlist = new Playlist(pE.playlist.playlistId, res.data[0]);
@@ -685,19 +776,19 @@ pE.showErrorMessage = function() {
 pE.saveOrder = function() {
   const self = this;
 
-  pE.common.showLoadingScreen('saveOrder');
+  pE.common.showLoadingScreen();
 
   this.playlist.saveOrder(
     this.editorContainer.find('#timeline-container').find('.playlist-widget'),
   ).then((res) => { // Success
-    pE.common.hideLoadingScreen('saveOrder');
+    pE.common.hideLoadingScreen();
 
     self.reloadData({
       reloadToolbar: false,
       reloadPropertiesPanel: false,
     });
   }).catch((error) => { // Fail/error
-    pE.common.hideLoadingScreen('saveOrder');
+    pE.common.hideLoadingScreen();
 
     // Show error returned or custom message to the user
     let errorMessage = '';
@@ -743,8 +834,8 @@ pE.close = function() {
 
   // Make sure all remaining objects are pure empty JS objects
   this.playlist = this.editorContainer = this.timeline =
-    this.propertiesPanel = this.historyManager =
-    this.selectedObject = this.toolbar = {};
+    this.propertiesPanel = this.historyManager = this.toolbar = {};
+  this.selectedObject = {};
 
   // Restore toastr positioning
   toastr.options.positionClass = this.toastrPosition;
@@ -849,7 +940,7 @@ pE.openContextMenu = function(obj, position = {x: 0, y: 0}) {
     const target = $(ev.currentTarget);
 
     if (target.data('action') == 'Delete') {
-      pE.deleteObject(objType, playlistObject[objType + 'Id']);
+      pE.deleteObject(objType, playlistObject[objType + 'Id'], true);
     } else {
       playlistObject.editPropertyForm(
         target.data('property'),
@@ -954,6 +1045,10 @@ pE.importFromProvider = function(items) {
     }
   });
 
+  // Get item type, if not image/audio/video, set it as library
+  const itemType =
+    ['image', 'audio', 'video'].indexOf(itemsResult[0].type) == -1 ?
+      'library' : itemsResult[0].type;
   const linkToAPI = urlsForApi.library.connectorImport;
   const requestPath = linkToAPI.url;
 
@@ -994,6 +1089,11 @@ pE.importFromProvider = function(items) {
 
         // Filter null results
         itemsResult = itemsResult.filter((el) => el);
+
+        // Empty toolbar content for this type of media
+        // so it can be reloaded
+        const menuId = pE.toolbar.getMenuIdFromType(itemType);
+        pE.toolbar.DOMObject.find('#content-' + menuId).empty();
 
         resolve(itemsResult);
       } else {
@@ -1122,7 +1222,11 @@ pE.updateObjects = function() {
   pE.editorContainer.find('#playlist-timeline .playlist-widget .widgetDelete')
     .click(function(e) {
       e.stopPropagation();
-      pE.deleteObject('widget', $(e.currentTarget).parent().data('widgetId'));
+      pE.deleteObject(
+        'widget',
+        $(e.currentTarget).parent().data('widgetId'),
+        true,
+      );
     });
 };
 
@@ -1213,10 +1317,17 @@ pE.handleKeyInputs = function() {
   // Handle keyboard keys
   $('body').off('keydown.editor')
     .on('keydown.editor', function(handler) {
+      const controlOrCommandPressed = (
+        handler.ctrlKey ||
+        handler.metaKey
+      );
+
       if ($(handler.target).is($('body'))) {
         // Delete
         if (
-          handler.key == 'Delete' &&
+          (
+            handler.key == 'Delete' ||
+            handler.key == 'Backspace') &&
           allowInputs
         ) {
           pE.deleteSelectedObject();
@@ -1224,8 +1335,8 @@ pE.handleKeyInputs = function() {
 
         // Undo
         if (
-          handler.key == 'z' &&
-          handler.ctrlKey &&
+          handler.code == 'KeyZ' &&
+          controlOrCommandPressed &&
           allowInputs
         ) {
           pE.undoLastAction();
@@ -1234,3 +1345,44 @@ pE.handleKeyInputs = function() {
     });
 };
 
+/**
+ * Show message to warn user that we're editing en extenal playlist
+ */
+pE.showExternalPlaylistMessage = function() {
+  const $topContainer =
+    pE.editorContainer.parents('#editor-container');
+
+  // Get switch container
+  let $messageContainer =
+    $topContainer.find('.external-playlist-message-container');
+
+  // If container doesn't exist, create it
+  if ($messageContainer.length === 0) {
+    $messageContainer = $(externalPlaylistMessageTemplate(playlistEditorTrans));
+    $messageContainer.prependTo($topContainer);
+  }
+
+  // Add class to playlist editor container
+  // to adjust its height
+  $topContainer.find('#playlist-editor')
+    .addClass('external-playlist-message-on');
+
+
+  this.externalPlaylistMessageOn = true;
+};
+
+/**
+ * Remove playlist switch
+ */
+pE.removeExternalPlaylistMessage = function() {
+  // Get switch container
+  const $switchContainer =
+    pE.editorContainer.parents('#editor-container')
+      .find('.external-playlist-message-container');
+
+  // Remove container
+  $switchContainer.remove();
+
+  // Set flag as off
+  this.externalPlaylistMessageOn = false;
+};

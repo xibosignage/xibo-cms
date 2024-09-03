@@ -25,13 +25,21 @@ const ToolbarTemplate = require('../templates/toolbar.hbs');
 const ToolbarCardMediaTemplate = require('../templates/toolbar-card-media.hbs');
 const ToolbarCardMediaUploadTemplate =
   require('../templates/toolbar-card-media-upload.hbs');
+const ToolbarCardMediaPlaceholderTemplate =
+  require('../templates/toolbar-card-media-placeholder.hbs');
 const ToolbarCardLayoutTemplateTemplate =
   require('../templates/toolbar-card-layout-template.hbs');
+const ToolbarCardPlaylistTemplate =
+  require('../templates/toolbar-card-playlist-template.hbs');
+const ToolbarCardNewPlaylistTemplate =
+  require('../templates/toolbar-card-playlist-new-template.hbs');
 const ToolbarContentTemplate = require('../templates/toolbar-content.hbs');
 const ToolbarSearchFormTemplate =
-require('../templates/toolbar-search-form.hbs');
+  require('../templates/toolbar-search-form.hbs');
 const ToolbarContentMediaTemplate =
   require('../templates/toolbar-content-media.hbs');
+const ToolbarContentMediaTableTemplate =
+  require('../templates/toolbar-content-media-table.hbs');
 const ToolbarContentSubmenuTemplate =
   require('../templates/toolbar-content-submenu.hbs');
 const ToolbarContentSubmenuCardsTemplate =
@@ -41,6 +49,9 @@ const ToolbarContentGroupTemplate =
 const MediaPlayerTemplate = require('../templates/toolbar-media-preview.hbs');
 const MediaInfoTemplate =
   require('../templates/toolbar-media-preview-info.hbs');
+
+// Constants
+const TABLE_VIEW_LEVEL = 4;
 
 /**
  * Bottom toolbar contructor
@@ -62,6 +73,9 @@ const Toolbar = function(
 
   this.selectedCard = {};
 
+  // Flag to mark if toolbar is properly initialized
+  this.initalized = false;
+
   // Flag to mark if the toolbar has been rendered at least one time
   this.firstRun = true;
 
@@ -80,10 +94,11 @@ const Toolbar = function(
   // Is the toolbar a playlist toolbar?
   this.isPlaylist = isPlaylist;
 
-  // Initialize toolbar
-  this.init({
-    isPlaylist: isPlaylist,
-  });
+  // Toolbar zoom level (1-4 : 2 default)
+  this.level = 2;
+
+  // Level limiter ( show only 1 and 2 )
+  this.levelLimiter = false;
 };
 
 /**
@@ -92,6 +107,8 @@ const Toolbar = function(
  * @param {boolean=} [options.isPlaylist] - is it a playlist toolbar?
  */
 Toolbar.prototype.init = function({isPlaylist = false} = {}) {
+  const self = this;
+
   // Modules to be used in Widgets
   let moduleListFiltered = [];
 
@@ -100,6 +117,9 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
 
   // Module media types (other than the 3 main types)
   const moduleListOtherTypes = [];
+
+  // Mark as initialized
+  self.initalized = true;
 
   // Filter module list to create the types for the filter
   modulesList.forEach((el) => {
@@ -118,7 +138,7 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
 
       if (setting.id == 'validExtensions') {
         el.validExtensions =
-            (setting.value) ? setting.value : setting.default;
+          (setting.value) ? setting.value : setting.default;
       }
     }
 
@@ -131,6 +151,7 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
       moduleListOtherFiltered.push({
         type: el.type,
         name: el.name,
+        hasThumbnail: el.hasThumbnail,
       });
 
       // Add to types
@@ -155,19 +176,6 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
       moduleListFiltered.push(el);
     }
   });
-
-  // Add playlist to modules
-  if (!isPlaylist) {
-    moduleListFiltered.push({
-      moduleId: 'playlist',
-      name: toolbarTrans.playlist,
-      type: 'playlist',
-      icon: 'fa fa-list-ol',
-      dataType: '',
-      regionSpecific: 1,
-      group: [],
-    });
-  }
 
   // Add zone to template edit mode
   if (
@@ -271,6 +279,9 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
     name: {
       value: '',
     },
+    user: {
+      value: '',
+    },
     tag: {
       value: '',
     },
@@ -285,6 +296,9 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
     },
     provider: {
       value: 'both',
+    },
+    folder: {
+      value: '',
     },
   };
 
@@ -343,6 +357,12 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
           value: 'image',
           locked: true,
         },
+        folder: {
+          value: '',
+          key: 'folders',
+          dataRole: 'foldersList',
+          searchUrl: urlsForApi.folders.get.url,
+        },
         owner: {
           value: '',
           key: 'users',
@@ -351,9 +371,6 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
         },
         orientation: {
           value: '',
-        },
-        provider: {
-          value: 'both',
         },
       },
       sort: {
@@ -392,14 +409,17 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
           value: 'audio',
           locked: true,
         },
+        folder: {
+          value: '',
+          key: 'folders',
+          dataRole: 'foldersList',
+          searchUrl: urlsForApi.folders.get.url,
+        },
         owner: {
           value: '',
           key: 'users',
           dataRole: 'usersList',
           searchUrl: urlsForApi.user.get.url,
-        },
-        provider: {
-          value: 'both',
         },
       },
       sort: {
@@ -435,6 +455,12 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
           value: 'video',
           locked: true,
         },
+        folder: {
+          value: '',
+          key: 'folders',
+          dataRole: 'foldersList',
+          searchUrl: urlsForApi.folders.get.url,
+        },
         owner: {
           value: '',
           key: 'users',
@@ -443,9 +469,6 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
         },
         orientation: {
           value: '',
-        },
-        provider: {
-          value: 'both',
         },
       },
       sort: {
@@ -484,14 +507,17 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
           key: 'tags',
           dataRole: 'tagsinput',
         },
+        folder: {
+          value: '',
+          key: 'folders',
+          dataRole: 'foldersList',
+          searchUrl: urlsForApi.folders.get.url,
+        },
         owner: {
           value: '',
           key: 'users',
           dataRole: 'usersList',
           searchUrl: urlsForApi.user.get.url,
-        },
-        provider: {
-          value: 'both',
         },
       },
       sort: {
@@ -504,6 +530,38 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
       },
       sortCol: '',
       sortDir: 'asc',
+      state: '',
+      itemCount: 0,
+    },
+    {
+      name: 'playlists',
+      itemName: toolbarTrans.menuItems.playlistsName,
+      itemIcon: 'list',
+      itemTitle: toolbarTrans.menuItems.playlistsTitle,
+      contentType: 'playlists',
+      filters: {
+        name: {
+          value: '',
+          key: 'name',
+        },
+        tag: {
+          value: '',
+          key: 'tags',
+          dataRole: 'tagsinput',
+        },
+        folder: {
+          value: '',
+          key: 'folders',
+          dataRole: 'foldersList',
+          searchUrl: urlsForApi.folders.get.url,
+        },
+        user: {
+          value: '',
+          key: 'users',
+          dataRole: 'usersList',
+          searchUrl: urlsForApi.user.get.url,
+        },
+      },
       state: '',
       itemCount: 0,
     },
@@ -538,7 +596,40 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
           key: 'template',
         },
         provider: {
-          value: 'both',
+          value: 'local',
+          locked: true,
+        },
+        folder: {
+          value: '',
+          key: 'folders',
+          dataRole: 'foldersList',
+          searchUrl: urlsForApi.folders.get.url,
+        },
+        orientation: {
+          value: '',
+        },
+      },
+      state: '',
+      itemCount: 0,
+    },
+    {
+      name: 'layout_exchange',
+      disabled: isPlaylist,
+      itemName: toolbarTrans.menuItems.layoutExchangeName,
+      itemIcon: 'exchange-alt', // TODO: Change icon!
+      itemTitle: toolbarTrans.menuItems.layoutExchangeTitle,
+      contentType: 'layout_exchange',
+      filters: {
+        name: {
+          value: '',
+          key: 'template',
+        },
+        provider: {
+          value: 'remote',
+          locked: true,
+        },
+        orientation: {
+          value: '',
         },
       },
       state: '',
@@ -574,6 +665,78 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
   this.moduleListOtherFiltered = moduleListOtherFiltered;
   this.moduleListOtherTypes = moduleListOtherTypes;
   this.moduleGroups = moduleGroups;
+
+  // Get providers
+  $.ajax(urlsForApi.media.getProviders).done(function(res) {
+    // Stop if not available
+    if (Object.keys(self).length === 0) {
+      return;
+    }
+
+    if (
+      Array.isArray(res)
+    ) {
+      res.forEach((provider) => {
+        // Add provider to menu items
+        self.menuItems.push(
+          {
+            name: provider.id,
+            provider: provider.id,
+            itemName: provider.id,
+            link: provider.link,
+            customIcon: true,
+            itemTitle: toolbarTrans.menuItems
+              .providerTitle.replace('%obj%', provider.id),
+            itemIcon: provider.iconUrl,
+            contentType: 'media',
+            filters: {
+              name: {
+                value: '',
+                key: 'media',
+              },
+              type: {
+                value: '',
+                hideDefault: true,
+                values: provider.mediaTypes.map((media) => {
+                  return {
+                    name: toolbarTrans.libraryTypes[media],
+                    type: media,
+                    disabled: false,
+                  };
+                }),
+              },
+              orientation: {
+                value: '',
+              },
+            },
+            state: '',
+            itemCount: 0,
+          });
+      });
+    } else {
+      // Login Form needed?
+      if (res.login) {
+        window.location.href = window.location.href;
+        location.reload();
+      } else {
+        // Just an error we dont know about
+        if (res.message == undefined) {
+          console.error(res);
+        } else {
+          console.error(res.message);
+        }
+      }
+    }
+
+    // Render
+    self.render();
+  }).catch(function(jqXHR, textStatus, errorThrown) {
+    console.error(jqXHR, textStatus, errorThrown);
+    console.error(errorMessagesTrans.getProvidersFailed);
+
+    // Render
+    self.render();
+  });
 };
 
 /**
@@ -582,15 +745,30 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
 Toolbar.prototype.loadPrefs = function() {
   // Load using the API
   const linkToAPI = urlsForApi.user.getPref;
-
   const app = this.parent;
+  const self = this;
+
+  const renderBars = function() {
+    // Render toolbar and topbar if exists
+    self.render({
+      savePrefs: false,
+    });
+
+    if (app.topbar) {
+      app.topbar.render();
+    }
+  };
 
   // Request items based on filters
-  const self = this;
   $.ajax({
     url: linkToAPI.url + '?preference=toolbar',
     type: linkToAPI.type,
   }).done(function(res) {
+    // Stop if not available
+    if (Object.keys(self).length === 0) {
+      return;
+    }
+
     if (res.success) {
       const loadedData = JSON.parse(res.data.value ?? '{}');
       const findMenuIndexByName = function(name) {
@@ -636,10 +814,15 @@ Toolbar.prototype.loadPrefs = function() {
         for (const filter in loadedData.filters) {
           if (loadedData.filters.hasOwnProperty(filter)) {
             const menuIdx = findMenuIndexByName(filter);
-            for (const filterValue in loadedData.filters[filter]) {
-              if (loadedData.filters[filter].hasOwnProperty(filterValue)) {
-                self.menuItems[menuIdx].filters[filterValue].value =
-                  loadedData.filters[filter][filterValue];
+            if (menuIdx != -1) {
+              for (const filterValue in loadedData.filters[filter]) {
+                if (
+                  loadedData.filters[filter].hasOwnProperty(filterValue) &&
+                  self.menuItems[menuIdx].filters[filterValue] != undefined
+                ) {
+                  self.menuItems[menuIdx].filters[filterValue].value =
+                    loadedData.filters[filter][filterValue];
+                }
               }
             }
           }
@@ -651,10 +834,12 @@ Toolbar.prototype.loadPrefs = function() {
         for (const sortItem in loadedData.sort) {
           if (loadedData.sort.hasOwnProperty(sortItem)) {
             const menuIdx = findMenuIndexByName(sortItem);
-            self.menuItems[menuIdx].sortCol =
-              (loadedData.sort[sortItem].sortCol) || '';
-            self.menuItems[menuIdx].sortDir =
-              loadedData.sort[sortItem].sortDir || 'asc';
+            if (menuIdx != -1) {
+              self.menuItems[menuIdx].sortCol =
+                (loadedData.sort[sortItem].sortCol) || '';
+              self.menuItems[menuIdx].sortDir =
+                loadedData.sort[sortItem].sortDir || 'asc';
+            }
           }
         }
       }
@@ -664,16 +849,19 @@ Toolbar.prototype.loadPrefs = function() {
         (loadedData.displayTooltips == 1 ||
           loadedData.displayTooltips == undefined);
 
+      // Show delete confirmation modals
+      app.common.deleteConfirmation =
+        (loadedData.deleteConfirmation == 1 ||
+          loadedData.deleteConfirmation == undefined);
+
+      // Toolbar level
+      self.level = loadedData.level ?? 2;
+
       // Reload tooltips
       app.common.reloadTooltips(self.DOMObject);
 
-      // Render toolbar and topbar if exists
-      self.render({
-        savePrefs: false,
-      });
-      if (app.topbar) {
-        app.topbar.render();
-      }
+      // Render bars
+      renderBars();
     } else {
       // Login Form needed?
       if (res.login) {
@@ -685,11 +873,17 @@ Toolbar.prototype.loadPrefs = function() {
         } else {
           console.error(res.message);
         }
+
+        // Still render bars
+        renderBars();
       }
     }
   }).catch(function(jqXHR, textStatus, errorThrown) {
     console.error(jqXHR, textStatus, errorThrown);
     toastr.error(errorMessagesTrans.userLoadPreferencesFailed);
+
+    // Still render bars
+    renderBars();
   });
 };
 
@@ -709,8 +903,8 @@ Toolbar.prototype.savePrefs = _.debounce(function(clearPrefs = false) {
 
   // Make a copy of the opened submenu object
   let openedSubMenu =
-  (self.openedSubMenu != -1) ?
-    Object.assign({}, self.openedSubMenu) : -1;
+    (self.openedSubMenu != -1) ?
+      Object.assign({}, self.openedSubMenu) : -1;
 
   // Remove tooltip data from submenu if exists
   if (openedSubMenu.data && openedSubMenu.data['bs.tooltip'] != undefined) {
@@ -718,6 +912,8 @@ Toolbar.prototype.savePrefs = _.debounce(function(clearPrefs = false) {
   }
 
   let displayTooltips = (app.common.displayTooltips) ? 1 : 0;
+  let deleteConfirmation = (app.common.deleteConfirmation) ? 1 : 0;
+  let level = self.level;
   let favouriteModules = [];
   const filters = {};
   const sort = {};
@@ -735,6 +931,8 @@ Toolbar.prototype.savePrefs = _.debounce(function(clearPrefs = false) {
     openedMenu = -1;
     openedSubMenu = -1;
     displayTooltips = 1;
+    deleteConfirmation = 1;
+    level = 2;
   } else {
     // Save favourite modules
     const widgetMenu = self.menuItems.find(function(el) {
@@ -772,7 +970,9 @@ Toolbar.prototype.savePrefs = _.debounce(function(clearPrefs = false) {
           openedMenu: openedMenu,
           openedSubMenu: openedSubMenu,
           displayTooltips: displayTooltips,
+          deleteConfirmation: deleteConfirmation,
           favouriteModules: favouriteModules,
+          level: level,
         }),
       },
     ],
@@ -813,18 +1013,38 @@ Toolbar.prototype.savePrefs = _.debounce(function(clearPrefs = false) {
  * @param {bool=} savePrefs - Save preferences
  */
 Toolbar.prototype.render = function({savePrefs = true} = {}) {
+  const self = this;
+  const app = this.parent;
+
+  // If toolbar isn't initialized, do it
+  if (this.initalized === false) {
+    // Initialize toolbar
+    this.init({
+      isPlaylist: this.isPlaylist,
+    });
+
+    // Stop running
+    return;
+  }
+
   // Load preferences when the toolbar is rendered for the first time
   if (this.firstRun) {
     this.firstRun = false;
 
     // Load user preferences
     this.loadPrefs();
+
+    // Stop running
+    return;
   }
 
-  const self = this;
-  const app = this.parent;
+  // Stop if not available
+  if (Object.keys(self).length === 0) {
+    return;
+  }
+
   const readOnlyModeOn =
-    (typeof(lD) != 'undefined' && lD?.readOnlyMode === true) ||
+    (typeof (lD) != 'undefined' && lD?.readOnlyMode === true) ||
     (app?.readOnlyMode === true);
 
   // Deselect selected card on render
@@ -837,6 +1057,12 @@ Toolbar.prototype.render = function({savePrefs = true} = {}) {
     (this.openedMenu != -1) &&
     (!readOnlyModeOn);
 
+  // If we have a level limiter and we're over level 2
+  // set level at 2
+  if (this.levelLimiter && this.level > 2) {
+    this.level = 2;
+  }
+
   // Compile toolbar template with data
   const html = ToolbarTemplate({
     opened: toolbarOpened,
@@ -844,9 +1070,11 @@ Toolbar.prototype.render = function({savePrefs = true} = {}) {
     trans: newToolbarTrans,
     mainObjectType: app.mainObjectType,
     helpLink: (
-      (typeof(layoutEditorHelpLink) != 'undefined') ?
+      (typeof (layoutEditorHelpLink) != 'undefined') ?
         layoutEditorHelpLink : null
     ),
+    toolbarLevel: this.level,
+    levelLimiter: this.levelLimiter,
   });
 
   // Clear temp data
@@ -883,13 +1111,15 @@ Toolbar.prototype.render = function({savePrefs = true} = {}) {
     this.DOMObject.show();
 
     // Handle menus
-    for (let i = 0; i < this.menuItems.length; i++) {
-      const toolbar = self;
-      const index = i;
+    if (Array.isArray(this.menuItems)) {
+      for (let i = 0; i < this.menuItems.length; i++) {
+        const toolbar = self;
+        const index = i;
 
-      this.DOMObject.find('#btn-menu-' + index).click(function() {
-        toolbar.openMenu(index);
-      });
+        this.DOMObject.find('#btn-menu-' + index).click(function() {
+          toolbar.openMenu(index);
+        });
+      }
     }
   }
 
@@ -917,6 +1147,35 @@ Toolbar.prototype.render = function({savePrefs = true} = {}) {
       this.openMenu(this.openedMenu, true, openedSubMenu, savePrefs);
     }
   }
+
+  // Zoom level control
+  const $toolbarLevelControlMenuBtn =
+    this.DOMObject.find('.toolbar-level-control-button');
+
+  $toolbarLevelControlMenuBtn
+    .on('click', (ev) => {
+      $(ev.currentTarget).parent().toggleClass('opened');
+    });
+
+  this.DOMObject.find('.toolbar-level-control-select')
+    .on('click', (ev) => {
+      const newLevel = $(ev.target).data('level');
+
+      // Close menu
+      $(ev.target).parents('.toolbar-level-control-menu')
+        .removeClass('opened');
+
+      // Change toolbar level if changed
+      if (self.level != newLevel) {
+        self.level = newLevel;
+
+        // Render toolbar
+        self.render();
+
+        // Refresh viewer
+        (app.viewer) && app.viewer.update();
+      }
+    });
 };
 
 /**
@@ -1040,6 +1299,7 @@ Toolbar.prototype.createContent = function(
   if (
     !forceReload &&
     this.menuItems[menu].contentType != 'modules' &&
+    this.menuItems[menu].contentType != 'playlists' &&
     this.menuItems[menu].contentType != 'actions' &&
     self.DOMObject
       .find(
@@ -1048,9 +1308,6 @@ Toolbar.prototype.createContent = function(
         ' .toolbar-pane-container .toolbar-card',
       ).length > 0
   ) {
-    // Recalculate masonry layout to refresh the card positions
-    self.DOMObject.find('#media-content-' + menu).masonry('layout');
-
     // Adapt card behaviour to current tab
     self.handleCardsBehaviour();
 
@@ -1067,8 +1324,13 @@ Toolbar.prototype.createContent = function(
     this.mediaContentCreateWindow(menu);
   } else if (content.contentType == 'elements') {
     this.elementsContentCreateWindow(menu, savePrefs);
-  } else if (content.contentType === 'layout_templates') {
+  } else if (
+    content.contentType === 'layout_templates' ||
+    content.contentType === 'layout_exchange'
+  ) {
     this.layoutTemplatesContentCreateWindow(menu);
+  } else if (content.contentType === 'playlists') {
+    this.playlistsContentCreateWindow(menu);
   } else {
     this.handleCardsBehaviour();
 
@@ -1163,6 +1425,10 @@ Toolbar.prototype.openMenu = function(
     }
   }
 
+  // Add toolbar level to the playlist editor modal
+  this.DOMObject.parents('.editor-modal')
+    .attr('toolbar-level', this.level);
+
   // if menu was closed, save preferences and clean content
   if (!this.opened) {
     // Save user preferences
@@ -1202,6 +1468,9 @@ Toolbar.prototype.selectCard = function(card) {
 
     // Save selected card data
     this.selectedCard = card;
+
+    // Mark editor container to show overlay is on
+    this.parent.editorContainer.addClass('overlay-on');
 
     // Show designer overlay
     $('.custom-overlay').show().off('click').on('click', () => {
@@ -1275,7 +1544,7 @@ Toolbar.prototype.handleDroppables = function(draggable, customClasses = '') {
         // new dragabble of type not global
         selectorBuild.push(
           '.designer-element-group[data-element-type="' +
-            elementDataType + '"].editing, ' +
+          elementDataType + '"].editing, ' +
           '.designer-element-group[data-element-type="global"].editing',
         );
       } else {
@@ -1292,11 +1561,14 @@ Toolbar.prototype.handleDroppables = function(draggable, customClasses = '') {
       // Drop to playlist
       selectorBuild.push('.designer-region-playlist.droppable');
 
-      // Drop to zone region
-      selectorBuild.push('.designer-region-zone.droppable');
-
       // Drop to playlist timeline
       selectorBuild.push('#playlist-timeline.ui-droppable');
+    }
+
+    // Zone droppables
+    if (app.common.hasTarget(draggable, 'zone')) {
+      // Drop to zone region
+      selectorBuild.push('.designer-region-zone.droppable');
     }
 
     // If we are in action edit mode, we need
@@ -1304,6 +1576,16 @@ Toolbar.prototype.handleDroppables = function(draggable, customClasses = '') {
     if (app.viewer?.actionDropMode) {
       selectorBuild =
         ['.designer-region-drawer[data-action-edit-type="create"]'];
+    }
+
+    // Image placeholder
+    if (
+      $(draggable).data('type') === 'media' &&
+      $(draggable).data('subType') === 'image'
+    ) {
+      selectorBuild.push(
+        '.designer-element[data-sub-type="image_placeholder"]',
+      );
     }
 
     // Add droppable class to all selectors
@@ -1316,10 +1598,11 @@ Toolbar.prototype.handleDroppables = function(draggable, customClasses = '') {
       (customClasses != '') ? customClasses : 'ui-droppable-active');
   }
 
-  // Show layout background overlay if exists
-  app.propertiesPanel.DOMObject.find('.background-image-add').toggleClass(
-    'ui-droppable-active',
-    (draggableType == 'image' && !draggable.hasClass('upload-card')));
+  // Show layout background overlay or image replace area if exists
+  app.propertiesPanel.DOMObject
+    .find('.background-image-add, .image-replace-control-area').toggleClass(
+      'ui-droppable-active',
+      (draggableType == 'image' && !draggable.hasClass('upload-card')));
 };
 
 /**
@@ -1339,6 +1622,9 @@ Toolbar.prototype.deselectCardsAndDropZones = function() {
   this.DOMObject.find('.toolbar-pane-content.selected')
     .removeClass('selected');
   this.DOMObject.find('nav.navbar').removeClass('card-selected');
+
+  // Remove overlay on class from editor container
+  app.editorContainer.removeClass('overlay-on');
 
   // Remove media queue data
   this.DOMObject.find('.toolbar-pane-content').removeData('mediaQueue');
@@ -1369,9 +1655,16 @@ Toolbar.prototype.deselectCardsAndDropZones = function() {
 Toolbar.prototype.mediaContentCreateWindow = function(menu) {
   const self = this;
   const app = this.parent;
+  const hasProvider = Boolean(this.menuItems[menu].provider);
 
   // Deselect previous selections
   self.deselectCardsAndDropZones();
+
+  // Table view
+  const tableView = (
+    self.level === TABLE_VIEW_LEVEL &&
+    !hasProvider
+  );
 
   // Render template
   const html = ToolbarContentMediaTemplate({
@@ -1382,7 +1675,10 @@ Toolbar.prototype.mediaContentCreateWindow = function(menu) {
     sortDir: this.menuItems[menu].sortDir,
     trans: toolbarTrans,
     formClass: 'media-search-form',
-    showSort: true,
+    // Hide sort for providers and table view
+    showSort:
+      !hasProvider &&
+      !tableView,
   });
 
   // Clear temp data
@@ -1391,8 +1687,10 @@ Toolbar.prototype.mediaContentCreateWindow = function(menu) {
   // Append template to the search main div
   self.DOMObject.find('#media-container-' + menu).html(html);
 
-  // Populate selected tab
-  self.mediaContentPopulate(menu);
+  // Populate selected tab with table or grid
+  (tableView) ?
+    self.mediaContentPopulateTable(menu) :
+    self.mediaContentPopulate(menu);
 };
 
 /**
@@ -1402,14 +1700,17 @@ Toolbar.prototype.mediaContentCreateWindow = function(menu) {
 Toolbar.prototype.mediaContentPopulate = function(menu) {
   const self = this;
   const app = this.parent;
-  const filters = self.menuItems[menu].filters;
   const $mediaContainer = self.DOMObject.find('#media-container-' + menu);
+  const $mediaContent = self.DOMObject.find('#media-content-' + menu);
+  const $mediaForm = $mediaContainer.find('.media-search-form');
+
+  // If media container isn't still loaded, skip
+  if ($mediaContainer.length === 0) {
+    return;
+  }
 
   // Request elements based on filters
   const loadData = function(clear = true) {
-    const $mediaContent = self.DOMObject.find('#media-content-' + menu);
-    const $mediaForm = $mediaContent.parent().find('.media-search-form');
-
     // Remove show more button
     $mediaContainer.find('.show-more').remove();
 
@@ -1456,12 +1757,17 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
 
     // Get sort if exists
     const $sort = $form.find('#input-sort');
-    if (self.menuItems[menu].sortCol != '') {
+    if ($sort.length > 0 && self.menuItems[menu].sortCol != '') {
       filter.sortCol = self.menuItems[menu].sortCol;
 
       const sortDir = ($sort.siblings('.sort-button-container')
         .data('dir')).toUpperCase();
       filter.sortDir = (sortDir) || 'DESC';
+    }
+
+    // Filter by provider if exists
+    if (self.menuItems[menu].provider) {
+      filter.provider = self.menuItems[menu].provider;
     }
 
     $.ajax({
@@ -1470,46 +1776,15 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
       data: $.extend({
         start: start,
         length: requestLength,
-        provider: 'both',
       }, filter),
     }).done(function(res) {
-      // Add upload card
-      const showUploadCard = function() {
-        // Add card to content
-        const addUploadCard = function(module) {
-          if (module) {
-            module.trans = toolbarTrans;
-
-            module.trans.upload =
-              module.trans.uploadType.replace('%obj%', module.name);
-
-            const $uploadCard = $(ToolbarCardMediaUploadTemplate(
-              Object.assign(
-                {},
-                module,
-                {
-                  editingPlaylist: self.isPlaylist,
-                })),
-            );
-            $mediaContent.append($uploadCard).masonry('appended', $uploadCard);
-          }
-        };
-
-        if ($mediaContent.find('.upload-card').length == 0) {
-          // If we have a specific module type
-          if (filter.type != '') {
-            addUploadCard(app.common.getModuleByType(filter.type));
-          } else {
-            // Show one upload card for each media type
-            self.moduleListOtherTypes.forEach((moduleType) => {
-              addUploadCard(app.common.getModuleByType(moduleType));
-            });
-          }
-        }
-      };
-
       // Remove loading
       $mediaContent.parent().find('.loading-container-toolbar').remove();
+
+      // Stop if not available
+      if (Object.keys(self).length === 0) {
+        return;
+      }
 
       // If there's no masonry sizer, add it
       if ($mediaContent.find('.toolbar-card-sizer').length == 0) {
@@ -1522,16 +1797,75 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
       $mediaContent.masonry({
         itemSelector: '.toolbar-card',
         columnWidth: '.toolbar-card-sizer',
-        percentPosition: true,
-        gutter: 8,
+        gutter: 6,
       }).addClass('masonry-container');
+
+      // Show upload card
+      const addUploadCard = function(module) {
+        if (module) {
+          module.trans = toolbarTrans;
+
+          module.trans.upload =
+            module.trans.uploadType.replace('%obj%', module.name);
+
+          const $uploadCard = $(ToolbarCardMediaUploadTemplate(
+            Object.assign(
+              {},
+              module,
+              {
+                editingPlaylist: self.isPlaylist,
+              })),
+          );
+          $mediaContent.append($uploadCard).masonry('appended', $uploadCard);
+        }
+      };
+
+      // Add upload card only if we don't have provider
+      if (
+        $mediaContent.find('.upload-card').length == 0 &&
+        !self.menuItems[menu].provider
+      ) {
+        // If we have a specific module type
+        if (filter.type != '') {
+          addUploadCard(app.common.getModuleByType(filter.type));
+        } else {
+          // Show one upload card for each media type
+          self.moduleListOtherTypes.forEach((moduleType) => {
+            addUploadCard(app.common.getModuleByType(moduleType));
+          });
+        }
+      }
+
+      // Add placeholder for images if we're in template editing mode
+      if (
+        app.templateEditMode &&
+        self.menuItems[menu].contentType === 'media' &&
+        self.menuItems[menu].name === 'image'
+      ) {
+        const $placeholderCard = $(ToolbarCardMediaPlaceholderTemplate(
+          {
+            template: 'image_placeholder',
+            title: toolbarTrans.placeholder.image.title,
+            description: toolbarTrans.placeholder.image.description,
+            startWidth: 300,
+            startHeight: 150,
+            extends: {
+              template: 'global_image',
+              override: 'url',
+              with: '',
+            },
+          }),
+        );
+
+        $mediaContent.append($placeholderCard)
+          .masonry('appended', $placeholderCard);
+      }
 
       if (
         (!res.data || res.data.length == 0) &&
-        $mediaContent.find('.toolbar-card').length == 0
+        $mediaContent.find('.toolbar-card:not(.toolbar-card-special)')
+          .length == 0
       ) {
-        showUploadCard();
-
         // Handle card behaviour
         self.handleCardsBehaviour();
 
@@ -1541,8 +1875,7 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
           toolbarTrans.noMediaToShow +
           '</div>');
       } else {
-        showUploadCard();
-
+        let isVideo = false;
         for (let index = 0; index < res.data.length; index++) {
           const element = Object.assign({}, res.data[index]);
           element.trans = toolbarTrans;
@@ -1560,6 +1893,7 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
           // Get video thumbnail for videos with provider
           // Local videos will have an image thumbnail
           if (element.type == 'video' && element.provider) {
+            isVideo = true;
             element.videoThumbnail = element.thumbnail;
           }
 
@@ -1583,11 +1917,16 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
 
         // Layout masonry after images are loaded
         $mediaContent.imagesLoaded(function() {
-          // Recalculate masonry layout
-          $mediaContent.masonry('layout');
+          // Stop if not available
+          if (Object.keys(self).length === 0) {
+            return;
+          }
 
           // Show content in widgets
           $mediaContent.find('.toolbar-card').removeClass('hide-content');
+
+          // Recalculate masonry layout again
+          $mediaContent.masonry('layout');
 
           // Show more button
           if (res.data.length > 0) {
@@ -1616,10 +1955,18 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
             'scroll',
             ($parent.width() < $parent[0].scrollHeight),
           );
-
-          // Handle card behaviour
-          self.handleCardsBehaviour();
         });
+
+        // For video, wait for 3s and call
+        // masonry layout to fix layout after loading
+        if (isVideo) {
+          setTimeout(() => {
+            $mediaContent.masonry('layout');
+          }, 3000);
+        }
+
+        // Handle card behaviour
+        self.handleCardsBehaviour();
       }
     }).catch(function(jqXHR, textStatus, errorThrown) {
       // Login Form needed?
@@ -1634,10 +1981,14 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
         }
       }
     });
+
+    // Initialise tooltips
+    app.common.reloadTooltips($mediaContent);
   };
 
   // Refresh the table results
-  const filterRefresh = function(filters) {
+  const filterRefresh = function() {
+    const filters = self.menuItems[menu].filters;
     // Save filter options
     for (const filter in filters) {
       if (filters.hasOwnProperty(filter)) {
@@ -1741,51 +2092,285 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
     self.menuItems[menu].sortDir,
   );
 
+  // Handle inputs
+  self.mediaContentHandleInputs($mediaForm, filterRefresh, $mediaContainer);
+
+  // Load data
+  loadData();
+};
+
+/**
+ * Media content populate table
+ * @param {number} menu - menu id
+ */
+Toolbar.prototype.mediaContentPopulateTable = function(menu) {
+  const self = this;
+  const app = this.parent;
+  const $mediaContainer = self.DOMObject.find('#media-container-' + menu);
+  const $mediaContent = $mediaContainer.find('#media-content-' + menu);
+  const typeColNum = 2;
+  const thumbColNum = 4;
+
+  // Destroy previous table if exists
+  $mediaContent.find('#media-table-' + menu).DataTable().destroy();
+  $mediaContent.empty();
+
+  // Add table and header
+  $mediaContent.html(ToolbarContentMediaTableTemplate({
+    menu: menu,
+    trans: toolbarTrans.mediaTable,
+  }));
+
+  // Media form
+  const $mediaForm = $mediaContainer.find('.media-search-form');
+
+  const mediaTable = $mediaContent.find('#media-table-' + menu).DataTable({
+    language: dataTablesLanguage,
+    lengthMenu: [5, 10, 15, 25],
+    pageLength: 10,
+    autoWidth: false,
+    serverSide: true,
+    stateSave: true,
+    searchDelay: 3000,
+    order: [[1, 'asc']],
+    filter: false,
+    ajax: {
+      url: urlsForApi.library.get.url + '?assignable=1&retired=0',
+      data: function(d) {
+        const filter = $mediaForm.serializeObject();
+
+        // If we have type not defined, set types to other types
+        if (
+          self.menuItems[menu].name == 'library' &&
+          filter.type == ''
+        ) {
+          filter.types = self.moduleListOtherFiltered.map((el) => el.type);
+        }
+
+        $.extend(
+          d,
+          filter,
+        );
+      },
+    },
+    columns: [
+      {
+        data: 'mediaId',
+        className: 'dt-col id-col',
+      },
+      {
+        data: 'name',
+        className: 'dt-col name-col',
+        render: function(data) {
+          return '<div title="' + data + '">' +
+            data + '</div>';
+        },
+      },
+      {
+        data: 'mediaType',
+        className: 'dt-col type-col',
+      },
+      {
+        sortable: false,
+        data: dataTableCreateTags,
+        className: 'dt-col tags-col',
+      },
+      {
+        sortable: false,
+        data: null,
+        className: 'dt-col thumb-col',
+        render: function(data, type, row, _meta) {
+          if (type === 'display') {
+            // Return only the image part of the data
+            if (!data.thumbnail) {
+              return '';
+            } else {
+              return `<a data-toggle="lightbox"
+                data-type="image"
+                href="${data.thumbnail}">
+                <img src="${data.thumbnail}"/></a>`;
+            }
+          } else {
+            return row.mediaId;
+          }
+        },
+      },
+      {
+        sortable: false,
+        className: 'dt-col action-col',
+        data: function(_data, type, _row, _meta) {
+          if (type !== 'display') {
+            return '';
+          }
+
+          // Create a click-able span
+          return `<div class="assign-item-container">
+              <a href="#" class="assignItem">
+                <span class="fa fa-plus">
+              </a>
+            </div>`;
+        },
+      },
+    ],
+    createdRow: function(row, data) {
+      // Add toolbar-card class to row
+      $(row).addClass('toolbar-card');
+
+      // Add data
+      $(row).data({
+        dataType: '',
+        mediaId: data.mediaId,
+        subType: data.mediaType,
+        target: 'layout playlist drawer zone',
+        type: 'media',
+      });
+    },
+  });
+
+  // Check if we have type and thumbnail column visible based on type
+  mediaTable.column(typeColNum).visible(
+    $mediaContainer.find('form').serializeObject().type === '',
+  );
+  mediaTable.column(thumbColNum).visible(
+    ['video', 'image'].includes(
+      $mediaContainer.find('form').serializeObject().type,
+    ),
+  );
+
+  mediaTable.on('draw', function(e, settings) {
+    dataTableDraw(e, settings);
+
+    // Clicky on the +spans
+    self.DOMObject.find('.assignItem').click(function(ev) {
+      const $target = $(ev.currentTarget);
+      // Get the row that this is in.
+      const data = mediaTable.row($target.closest('tr')).data();
+
+      // Add with click if playlist
+      if (self.isPlaylist) {
+        app.dropItemAdd({}, $target.closest('tr'));
+      } else {
+        self.selectCard($target.closest('tr'), data);
+      }
+    });
+
+    // Handle card behaviour
+    self.handleCardsBehaviour();
+  });
+
+  mediaTable.on('processing.dt', dataTableProcessing);
+
+  // Refresh the table results
+  const filterRefresh = function() {
+    const filters = self.menuItems[menu].filters;
+    // Save filter options
+    for (const filter in filters) {
+      if (filters.hasOwnProperty(filter)) {
+        filters[filter].value =
+        $mediaForm.find('#input-' + filter).val();
+      }
+    }
+
+    // Check if we show type and thumbnail
+    mediaTable.column(typeColNum).visible(filters.type.value === '');
+    mediaTable.column(thumbColNum).visible(
+      ['video', 'image'].includes(filters.type.value),
+    );
+
+    // Reload table
+    mediaTable.ajax.reload();
+
+    self.savePrefs();
+  };
+
+  // Handle inputs
+  self.mediaContentHandleInputs($mediaForm, filterRefresh, $mediaContainer);
+};
+
+/**
+ * Handle inputs for media form
+ * @param {object} $mediaForm - form container
+ * @param {function} filterRefresh - Filter refresh callback
+ * @param {object} $mediaContainer - media container
+ */
+Toolbar.prototype.mediaContentHandleInputs = function(
+  $mediaForm,
+  filterRefresh,
+  $mediaContainer,
+) {
   // Prevent filter form submit and bind the change event to reload the table
-  $mediaContainer.find('.media-search-form').on('submit', function(e) {
+  $mediaForm.on('submit', function(e) {
     e.preventDefault();
     return false;
   });
 
   // Bind search action to refresh the results
-  $mediaContainer.find(
-    '.media-search-form select, ' +
-    '.media-search-form input[type="text"].input-tag',
+  $mediaForm.find(
+    'select, ' +
+    'input[type="text"].input-tag',
   ).change(_.debounce(function() {
-    filterRefresh(filters);
+    filterRefresh();
   }, 200));
 
   // Bind tags change to refresh the results
-  $mediaContainer.find('.media-search-form input[type="text"]')
+  $mediaForm.find('input[type="text"]')
     .on('input', _.debounce(function() {
-      filterRefresh(filters);
+      filterRefresh();
     }, 500));
 
   // Initialize tagsinput
-  const $tags = $mediaContainer
-    .find('.media-search-form input[data-role="tagsinput"]');
+  const $tags = $mediaForm
+    .find('input[data-role="tagsinput"]');
   $tags.tagsinput();
-
-  $mediaContainer.find('#media-' + menu).off('click')
+  $mediaContainer.off('click')
     .on('click', '#tagDiv .btn-tag', function(e) {
       // Add text to form
       $tags.tagsinput('add', $(e.target).text(), {allowDuplicates: false});
     });
 
   // Initialize user list input
-  const $userListInput = $mediaContainer
-    .find('.media-search-form select[name="ownerId"]');
-  makePagedSelect($userListInput);
+  const $userListInput = $mediaForm.find('select[name="ownerId"]');
+  makePagedSelect($userListInput, $mediaContainer, null, true);
+
+  // Initialize folder input
+  const $folderInput = $mediaForm.find('select[name="folderId"]');
+  makePagedSelect($folderInput, $mediaContainer, function(data) {
+    // Format data
+    const newData = [];
+
+    // Get data from folder structure recursively
+    const getData = function(arr) {
+      arr.forEach((el) => {
+        // Add to data
+        newData.push({
+          folderId: el.folderId,
+          folderName: el.text,
+        });
+
+        // If folder has sub-folders, get data from them as well
+        if (Array.isArray(el.children)) {
+          getData(el.children);
+        }
+      });
+    };
+
+    // Get initial data
+    getData(data);
+
+    return {
+      data: newData,
+    };
+  }, true);
 
   // Initialize other select inputs
-  $mediaContainer
-    .find('.media-search-form select:not([name="ownerId"]):not(.input-sort)')
-    .select2({
+  $mediaForm
+    .find(
+      'select:not([name="ownerId"])' +
+      ':not([name="folderId"])' +
+      ':not(.input-sort)',
+    ).select2({
       minimumResultsForSearch: -1, // Hide search box
     });
-
-  // Load data
-  loadData();
 };
 
 /**
@@ -1828,6 +2413,7 @@ Toolbar.prototype.elementsContentCreateWindow = function(
 Toolbar.prototype.layoutTemplatesContentCreateWindow = function(menu) {
   const self = this;
   const app = this.parent;
+  const tabContentName = this.menuItems[menu].name;
 
   // Deselect previous selections
   self.deselectCardsAndDropZones();
@@ -1838,19 +2424,46 @@ Toolbar.prototype.layoutTemplatesContentCreateWindow = function(menu) {
     filters: this.menuItems[menu].filters,
     trans: toolbarTrans,
     formClass: 'layout_tempates-search-form',
-    headerMessage: toolbarTrans.layoutTemplatesMessage,
+    headerMessage: (tabContentName == 'layout_exchange') ?
+      toolbarTrans.layoutExchangeTemplatesMessage :
+      toolbarTrans.layoutTemplatesMessage,
   });
 
   // Clear temp data
   app.common.clearContainer(
-    self.DOMObject.find('#layout_templates-container-' + menu),
+    self.DOMObject.find('#' + tabContentName + '-container-' + menu),
   );
 
   // Append template to the search main div
-  self.DOMObject.find('#layout_templates-container-' + menu).html(html);
+  self.DOMObject.find('#' + tabContentName + '-container-' + menu).html(html);
 
   // Load content
   this.layoutTemplatesContentPopulate(menu);
+};
+
+/**
+ * Create playlists window
+ * @param {number} menu - menu index
+ */
+Toolbar.prototype.playlistsContentCreateWindow = function(menu) {
+  const self = this;
+
+  // Deselect previous selections
+  self.deselectCardsAndDropZones();
+
+  // Render template
+  const html = ToolbarContentMediaTemplate({
+    menuIndex: menu,
+    filters: this.menuItems[menu].filters,
+    trans: toolbarTrans,
+    formClass: 'playlists-search-form media-search-form',
+  });
+
+  // Append template to the search main div
+  self.DOMObject.find('#playlists-container-' + menu).html(html);
+
+  // Load content
+  this.playlistsContentPopulate(menu);
 };
 
 /**
@@ -1858,9 +2471,12 @@ Toolbar.prototype.layoutTemplatesContentCreateWindow = function(menu) {
  * @param {number} menu - menu index
  */
 Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
+  const app = this.parent;
   const self = this;
-  const filters = self.menuItems[menu].filters;
-  const $container = self.DOMObject.find('#layout_templates-container-' + menu);
+  const tabContentName = this.menuItems[menu].name;
+  const $container = self.DOMObject.find(
+    '#' + tabContentName + '-container-' + menu,
+  );
   const $content = self.DOMObject.find('#media-content-' + menu);
   const $searchForm = $container.parent().find('.toolbar-search-form');
 
@@ -1897,8 +2513,7 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
     $content.masonry({
       itemSelector: '.toolbar-card',
       columnWidth: '.toolbar-card-sizer',
-      percentPosition: true,
-      gutter: 8,
+      gutter: 6,
     }).addClass('masonry-container');
 
     // Manage request length
@@ -1916,6 +2531,11 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
         provider: 'both',
       }, $searchForm.serializeObject()),
       success: function(response) {
+        // Stop if not available
+        if (Object.keys(self).length === 0) {
+          return;
+        }
+
         $container.parent().find('.loading-container-toolbar').remove();
 
         if (response && response.data && response.data.length > 0) {
@@ -1954,11 +2574,11 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
 
           // Layout masonry after images are loaded
           $content.imagesLoaded(function() {
-            // Recalculate masonry layout
-            $content.masonry('layout');
-
             // Show content in widgets
             $content.find('.toolbar-card').removeClass('hide-content');
+
+            // Recalculate masonry layout
+            $content.masonry('layout');
 
             // Show more button
             if (response.data.length > 0) {
@@ -1987,17 +2607,23 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
               'scroll',
               ($parent.width() < $parent[0].scrollHeight),
             );
-
-            self.handleCardsBehaviour();
           });
+
+          // Handle card behaviour
+          self.handleCardsBehaviour();
         } else if (response.login) {
           window.location.reload();
-        } else if ($content.find('.toolbar-card').length === 0) {
+        } else if (
+          $content.find('.toolbar-card:not(.toolbar-card-special)').length === 0
+        ) {
           $searchForm.append(
             '<div class="no-results-message">' +
             toolbarTrans.noMediaToShow +
             '</div>');
         }
+
+        // Initialise tooltips
+        app.common.reloadTooltips($container);
       },
       error: function(jqXHR, textStatus, errorThrown) {
         $container.parent().find('.loading-container-toolbar').remove();
@@ -2007,7 +2633,8 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
   };
 
   // Refresh the results
-  const filterRefresh = function(filters) {
+  const filterRefresh = function() {
+    const filters = self.menuItems[menu].filters;
     // Save filter options
     for (const filter in filters) {
       if (filters.hasOwnProperty(filter)) {
@@ -2015,7 +2642,7 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
           self.DOMObject.find(
             '#content-' +
             menu +
-            ' .template-search-form #input-' + filter,
+            ' .layout_tempates-search-form #input-' + filter,
           ).val();
       }
     }
@@ -2034,8 +2661,306 @@ Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
 
   // Bind search action to refresh the results
   $searchForm.find('select, input[type="text"]').change(_.debounce(function() {
-    filterRefresh(filters);
+    filterRefresh();
   }, 200));
+
+  // Initialize folder input
+  const $folderInput = $searchForm.find('select[name="folderId"]');
+  makePagedSelect($folderInput, $searchForm, function(data) {
+    // Format data
+    const newData = [];
+
+    // Get data from folder structure recursively
+    const getData = function(arr) {
+      arr.forEach((el) => {
+        // Add to data
+        newData.push({
+          folderId: el.folderId,
+          folderName: el.text,
+        });
+
+        // If folder has sub-folders, get data from them as well
+        if (Array.isArray(el.children)) {
+          getData(el.children);
+        }
+      });
+    };
+
+    // Get initial data
+    getData(data);
+
+    return {
+      data: newData,
+    };
+  }, true);
+
+  // Initialize other select inputs
+  $container
+    .find('.media-search-form select:not([name="ownerId"]):not(.input-sort)')
+    .select2({
+      minimumResultsForSearch: -1, // Hide search box
+    });
+
+  loadData();
+};
+
+/**
+ * Create content for playlists
+ * @param {number} menu - menu index
+ */
+Toolbar.prototype.playlistsContentPopulate = function(menu) {
+  const self = this;
+  const app = this.parent;
+  const $container = self.DOMObject.find('#playlists-container-' + menu);
+  const $content = self.DOMObject.find('#media-content-' + menu);
+  const $searchForm = $container.parent().find('.toolbar-search-form');
+
+  // Load playlists
+  const loadData = function(clear = true) {
+    // Remove show more button
+    $container.find('.show-more').remove();
+
+    // Empty content and reset item count
+    if (clear) {
+      // Clear selection
+      self.deselectCardsAndDropZones();
+
+      // Empty content
+      $content.empty();
+      self.menuItems[menu].itemCount = 0;
+    }
+
+    // Show loading
+    $content.before(
+      `<div class="loading-container-toolbar w-100 text-center">
+        <span class="loading fa fa-cog fa-spin"></span>
+      </div>`);
+
+    // Remove no media message if exists
+    $searchForm.find('.no-results-message').remove();
+
+    // Manage request length
+    const requestLength = 15;
+
+    // Filter start
+    const start = self.menuItems[menu].itemCount;
+
+    $.ajax({
+      method: 'GET',
+      url: urlsForApi.playlist.get.url,
+      data: $.extend({
+        start: start,
+        length: requestLength,
+        provider: 'both',
+      }, $searchForm.serializeObject()),
+      success: function(response) {
+        // Stop if not available
+        if (Object.keys(self).length === 0) {
+          return;
+        }
+
+        $container.parent().find('.loading-container-toolbar').remove();
+
+        // Send translation with module object
+        module.trans = toolbarTrans;
+
+        // Show new playlist card
+        if ($container.find('.new-playlist-card').length == 0) {
+          const $playlistCard = $(ToolbarCardNewPlaylistTemplate(
+            Object.assign(
+              {},
+              module,
+              {
+                editingPlaylist: self.isPlaylist,
+              })),
+          );
+          $content.append($playlistCard);
+        }
+
+        if (response && response.data && response.data.length > 0) {
+          // Process each row returned
+          $.each(response.data, function(index, el) {
+            // Enhance with some properties
+            el.trans = toolbarTrans;
+            el.showFooter = el.orientation ||
+              (el.provider && el.provider.logoUrl) ||
+              (el.tags && el.tags.length > 0);
+            el.thumbnail = el.thumbnail || defaultThumbnailUrl;
+
+            // Provider logos do not have the root uri
+            if (el.provider && el.provider.logoUrl) {
+              el.provider.logoUrl = $('meta[name=public-path]')
+                .attr('content') + el.provider.logoUrl;
+            }
+
+            if (el.provider && !el.provider.link) {
+              el.provider.link = '#';
+            }
+
+            // Editing playlist?
+            el.editingPlaylist = self.isPlaylist;
+
+            // Format duration
+            if (typeof el.duration === 'number') {
+              el.playlistDuration =
+                app.common.timeFormat(el.duration);
+            }
+
+            // Get template and add
+            const $card = $(ToolbarCardPlaylistTemplate(el));
+
+            // Add data object to card
+            if ($card.hasClass('from-provider')) {
+              $card.data('providerData', response.data[index]);
+            }
+
+            // Append to container
+            $content.append($card);
+
+            self.menuItems[menu].itemCount++;
+          });
+
+          // Show content in widgets
+          $content.find('.toolbar-card').removeClass('hide-content');
+
+          // Show more button
+          if (response.data.length > 0) {
+            if ($content.parent().find('.show-more').length == 0) {
+              const $showMoreBtn =
+                $('<button class="btn btn-block btn-white show-more">' +
+                  toolbarTrans.showMore +
+                  '</button>');
+              $content.after($showMoreBtn);
+
+              $showMoreBtn.off('click').on('click', function() {
+                loadData(false);
+              });
+            }
+          } else {
+            toastr.info(
+              toolbarTrans.noShowMore,
+              null,
+              {positionClass: 'toast-bottom-center'},
+            );
+          }
+
+          // Fix for scrollbar
+          const $parent = $content.parent();
+          $parent.toggleClass(
+            'scroll',
+            ($parent.width() < $parent[0].scrollHeight),
+          );
+
+          self.handleCardsBehaviour();
+        } else if (response.login) {
+          window.location.href = window.location.href;
+          location.reload();
+        } else if (
+          $content.find('.toolbar-card:not(.toolbar-card-special)').length === 0
+        ) {
+          self.handleCardsBehaviour();
+
+          $searchForm.append(
+            '<div class="no-results-message">' +
+            toolbarTrans.noPlaylistsToShow +
+            '</div>');
+        }
+
+        // Initialise tooltips
+        app.common.reloadTooltips($container);
+      },
+      error: function(jqXHR, textStatus, errorThrown) {
+        $container.parent().find('.loading-container-toolbar').remove();
+        console.error(jqXHR);
+      },
+    });
+  };
+
+  // Refresh the results
+  const filterRefresh = function() {
+    const filters = self.menuItems[menu].filters;
+    // Save filter options
+    for (const filter in filters) {
+      if (filters.hasOwnProperty(filter)) {
+        filters[filter].value =
+          self.DOMObject.find(
+            '#content-' +
+            menu +
+            ' .playlists-search-form #input-' + filter,
+          ).val();
+      }
+    }
+
+    // Reload data
+    loadData();
+
+    self.savePrefs();
+  };
+
+  // Prevent filter form submit and bind the change event to reload the table
+  $searchForm.on('submit', function(e) {
+    e.preventDefault();
+    return false;
+  });
+
+  // Bind search action to refresh the results
+  $searchForm.find('select, input[type="text"]').change(_.debounce(function() {
+    filterRefresh();
+  }, 200));
+
+  // Initialize tagsinput
+  const $tags = $container
+    .find('.media-search-form input[data-role="tagsinput"]');
+  $tags.tagsinput();
+  $container.find('#media-' + menu).off('click')
+    .on('click', '#tagDiv .btn-tag', function(e) {
+      // Add text to form
+      $tags.tagsinput('add', $(e.target).text(), {allowDuplicates: false});
+    });
+
+  // Initialize user list input
+  const $userListInput = $container
+    .find('.media-search-form select[name="userId"]');
+  makePagedSelect($userListInput, $container, null, true);
+
+  // Initialize folder input
+  const $folderInput = $container.find('select[name="folderId"]');
+  makePagedSelect($folderInput, $container, function(data) {
+    // Format data
+    const newData = [];
+
+    // Get data from folder structure recursively
+    const getData = function(arr) {
+      arr.forEach((el) => {
+        // Add to data
+        newData.push({
+          folderId: el.folderId,
+          folderName: el.text,
+        });
+
+        // If folder has sub-folders, get data from them as well
+        if (Array.isArray(el.children)) {
+          getData(el.children);
+        }
+      });
+    };
+
+    // Get initial data
+    getData(data);
+
+    return {
+      data: newData,
+    };
+  }, true);
+
+  // Initialize other select inputs
+  $container
+    .find('.media-search-form select:not([name="userId"])' +
+      ':not([name="folderId"])' +
+      ':not(.input-sort)')
+    .select2({
+      minimumResultsForSearch: -1, // Hide search box
+    });
 
   loadData();
 };
@@ -2139,25 +3064,27 @@ Toolbar.prototype.handleCardsBehaviour = function() {
   const app = this.parent;
   const self = this;
   const readOnlyModeOn =
-    (typeof(lD) != 'undefined' && lD?.readOnlyMode === true) ||
+    (typeof (lD) != 'undefined' && lD?.readOnlyMode === true) ||
     (app?.readOnlyMode === true);
 
   // If in edit mode
   if (!readOnlyModeOn) {
     this.DOMObject.find('.toolbar-card:not(.toolbar-card-menu)')
-      .each(function(idx, el) {
+      .each(function(_idx, el) {
         const $card = $(el);
         $card.draggable({
           appendTo: $card.parents('.toolbar-pane:first'),
           cursorAt: {
             top:
-            (
-              $card.height() + ($card.outerWidth(true) - $card.outerWidth()) / 2
-            ) / 2,
+              (
+                $card.height() +
+                ($card.outerWidth(true) - $card.outerWidth()) / 2
+              ) / 2,
             left:
-            (
-              $card.width() + ($card.outerWidth(true) - $card.outerWidth()) / 2
-            ) / 2,
+              (
+                $card.width() +
+                ($card.outerWidth(true) - $card.outerWidth()) / 2
+              ) / 2,
           },
           opacity: 0.7,
           helper: function(ev) {
@@ -2170,11 +3097,14 @@ Toolbar.prototype.handleCardsBehaviour = function() {
             return $clone;
           },
           start: function() {
-          // Deselect previous selections
+            // Deselect previous selections
             self.deselectCardsAndDropZones();
 
             // Show overlay
             $('.custom-overlay').show();
+
+            // Mark editor container to show overlay is on
+            self.parent.editorContainer.addClass('overlay-on');
 
             // Mark card as being dragged
             $card.addClass('card-dragged');
@@ -2184,8 +3114,11 @@ Toolbar.prototype.handleCardsBehaviour = function() {
             $card.parents('nav.navbar').addClass('card-selected');
           },
           stop: function() {
-          // Hide overlay
+            // Hide overlay
             $('.custom-overlay').hide();
+
+            // Remove overlay on class from editor container
+            self.parent.editorContainer.removeClass('overlay-on');
 
             // Remove card class as being dragged
             $card.removeClass('card-dragged');
@@ -2199,7 +3132,7 @@ Toolbar.prototype.handleCardsBehaviour = function() {
 
     // Select normal card
     this.DOMObject.find(
-      '.toolbar-card:not(.toolbar-card-menu):not(.card-selected)',
+      '.toolbar-card:not(.toolbar-card-menu):not(.card-selected):not(tr)',
     ).click((e) => {
       self.selectCard($(e.currentTarget));
     });
@@ -2230,7 +3163,7 @@ Toolbar.prototype.handleCardsBehaviour = function() {
 
     // Toggle favourite card
     this.DOMObject.find(
-      '.toolbar-card:not(.card-selected) '+
+      '.toolbar-card:not(.card-selected) ' +
       '.btn-favourite',
     ).click((e) => {
       self.toggleFavourite(e.currentTarget);
@@ -2603,6 +3536,11 @@ Toolbar.prototype.loadTemplates = function(
   app.templateManager.getTemplateByDataType(contentType)
     .then(function(templatesData) {
       const populateContent = function() {
+        // Stop if not available
+        if (Object.keys(self).length === 0) {
+          return;
+        }
+
         const elements = [];
         const stencils = [];
         const templates = [];
@@ -2646,6 +3584,7 @@ Toolbar.prototype.loadTemplates = function(
           if (
             el.showIn == 'playlist' && !self.isPlaylist ||
             el.showIn == 'layout' && self.isPlaylist ||
+            el.showIn == 'templateEditor' && !app.templateEditMode ||
             el.showIn == 'none' ||
             el.type === 'element' && self.isPlaylist ||
             el.type === 'element-group' && self.isPlaylist
@@ -2708,6 +3647,17 @@ Toolbar.prototype.loadTemplates = function(
       // Call populate content on load
       populateContent();
     });
+};
+
+/**
+ * Get menu item id from type
+ * @param {string} type - Menu type
+ * @return {number} - Menu id
+ */
+Toolbar.prototype.getMenuIdFromType = function(
+  type,
+) {
+  return this.menuItems.findIndex((item) => item.name === type);
 };
 
 module.exports = Toolbar;

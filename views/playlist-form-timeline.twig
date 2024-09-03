@@ -33,7 +33,7 @@
                     <div class="modal-header--left"></div>
                     
                     <div class="">
-                        <button type="button" class="close editor-modal-close pl-2" onclick="pE.close()">
+                        <button type="button" class="close editor-modal-close pl-2">
                             <i class="fa fa-times"></i>
                         </button>
                     </div>
@@ -46,7 +46,7 @@
         </div>
     </div>
 
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         $(document).ready(function() {
             // Load the editor to populate the modal
             pE.loadEditor();

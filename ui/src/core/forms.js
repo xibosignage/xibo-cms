@@ -83,6 +83,11 @@ window.forms = {
       if (properties.hasOwnProperty(key)) {
         const property = properties[key];
 
+        // If element is marked as skip
+        if (property.skip === true) {
+          continue;
+        }
+
         // Handle default value
         if (property.value === null && property.default !== undefined) {
           property.value = property.default;
@@ -242,7 +247,17 @@ window.forms = {
         // Append the property to the target container
         if (templates.forms.hasOwnProperty(property.type)) {
           // New field
-          const $newField = $(templates.forms[property.type](property));
+          const $newField = $(templates.forms[property.type](
+            Object.assign(
+              {},
+              property,
+              {
+                trans: (typeof propertiesPanelTrans === 'undefined') ?
+                  {} :
+                  propertiesPanelTrans,
+              },
+            ),
+          ));
 
           // Target to append to
           let $targetContainer = $(targetContainer);
@@ -1780,6 +1795,99 @@ window.forms = {
       });
     });
 
+    // Colour gradient
+    findElements(
+      '.color-gradient',
+      target,
+    ).each(function(_k, el) {
+      // Init the colour pickers
+      $(el).find('.colorpicker-input.colorpicker-element').colorpicker({
+        container: $(el).find('.picker-container'),
+        align: 'left',
+        format: ($(el).data('colorFormat') !== undefined) ?
+          $(el).data('colorFormat') :
+          false,
+      });
+      // Defaults
+      const defaults = {
+        color1: '#222',
+        color2: '#eee',
+        angle: 0,
+      };
+
+      const $inputElements =
+        $(el).find('[name]:not(.color-gradient-hidden).element-property');
+      const $hiddenInput =
+        $(el).find('.color-gradient-hidden.element-property');
+      const $gradientType =
+          $inputElements.filter('[name="gradientType"]');
+      const $gradientAngle =
+          $inputElements.filter('[name="gradientAngle"]');
+      const $gradientColor1 =
+          $inputElements.filter('[name="gradientColor1"]');
+      const $gradientColor2 =
+          $inputElements.filter('[name="gradientColor2"]');
+
+      // Load values into inputs
+      if ($hiddenInput.val() != '') {
+        const initialValue =
+          JSON.parse($hiddenInput.val());
+
+        $gradientType.val(initialValue.type).trigger('change');
+        $gradientColor1.parents('.colorpicker-input')
+          .colorpicker('setValue', initialValue.color1);
+        $gradientColor2.parents('.colorpicker-input')
+          .colorpicker('setValue', initialValue.color2);
+        $gradientAngle.val(initialValue.angle);
+      }
+
+      // Update fields visibility and default values
+      const updateFields = function() {
+        if ($gradientColor1.val() == '') {
+          $gradientColor1.parents('.colorpicker-input')
+            .colorpicker('setValue', defaults.color1);
+        }
+        if ($gradientColor2.val() == '') {
+          $gradientColor2.parents('.colorpicker-input')
+            .colorpicker('setValue', defaults.color2);
+        }
+        if ($gradientAngle.val() == '') {
+          $gradientAngle.val(defaults.angle);
+        }
+        $gradientAngle.parent().toggle($gradientType.val() === 'linear');
+      };
+
+      // Mark inputs to skip saving in properties panel
+      $inputElements.addClass('skip-save');
+
+      // When changing the inputs, save to hidden input
+      $inputElements.on('change', function() {
+        const gradientType = $gradientType.val();
+        const color1Val = $gradientColor1.val();
+        const color2Val = $gradientColor2.val();
+        const angleVal = $gradientAngle.val();
+
+        // Gradient object to be saved
+        const gradient = {
+          type: gradientType,
+          color1: (color1Val != '') ? color1Val : defaults.color1,
+          color2: (color2Val != '') ? color2Val : defaults.color2,
+        };
+
+        // If gradient type is linear, save angle
+        if (gradientType === 'linear') {
+          gradient.angle = (angleVal != '') ? angleVal : defaults.angle;
+        }
+
+        updateFields();
+
+        // Save value to hidden input
+        $hiddenInput.val(JSON.stringify(gradient)).trigger('change');
+      });
+
+      updateFields();
+    });
+
     // Date picker - date only
     findElements(
       '.dateControl.date:not(.datePickerHelper)',
@@ -2160,12 +2268,15 @@ window.forms = {
             const text = '[' + value + ']';
 
             // Check if there is a CKEditor instance
-            const ckeditorInstance =
-              CKEDITOR.instances['input_' + targetId + '_' + targetFieldId];
+            const ckeditorInstance = formHelpers
+              .getCKEditorInstance('input_' + targetId + '_' + targetFieldId);
 
             if (ckeditorInstance) {
               // CKEditor
-              ckeditorInstance.insertText(text);
+              formHelpers.insertToCKEditor(
+                'input_' + targetId + '_' + targetFieldId,
+                text,
+              );
             } else if ($targetField.hasClass('code-input')) {
               // Monaco editor
               const editor =
@@ -2230,12 +2341,15 @@ window.forms = {
             const text = '<img alt="" src="' + textURL + '?preview=1" />';
 
             // Check if there is a CKEditor instance
-            const ckeditorInstance =
-              CKEDITOR.instances['input_' + targetId + '_' + targetFieldId];
+            const ckeditorInstance = formHelpers
+              .getCKEditorInstance('input_' + targetId + '_' + targetFieldId);
 
             if (ckeditorInstance) {
               // CKEditor
-              ckeditorInstance.insertHtml(text);
+              formHelpers.insertToCKEditor(
+                'input_' + targetId + '_' + targetFieldId,
+                text,
+              );
             } else if ($targetField.length > 0) {
               // Text area
               const cursorPosition = $targetField[0].selectionStart;
@@ -2971,7 +3085,7 @@ window.forms = {
       $parent.addClass('loading');
 
       // Destroy CKEditor
-      CKEDITOR.instances[elId].destroy();
+      formHelpers.destroyCKEditor(elId);
 
       // Reload
       formHelpers.setupCKEditor(
@@ -2984,6 +3098,311 @@ window.forms = {
 
       // Hide text area to prevent flicker
       $parent.removeClass('loading');
+    });
+  },
+
+  /**
+   * Create form fields for fallback data
+  * @param {object} dataType
+  * @param {object} container
+  * @param {object} fallbackData
+  * @param {object} widget
+  * @param {callback} reloadWidgetCallback
+   */
+  createFallbackDataForm: function(
+    dataType,
+    container,
+    fallbackData,
+    widget,
+    reloadWidgetCallback,
+  ) {
+    const dataFields = dataType.fields;
+
+    const createField = function(field, data) {
+      const fieldClone = {...field};
+      const auxId = Math.floor(Math.random() * 1000000);
+
+      if (data != undefined) {
+        fieldClone.value = data;
+      }
+
+      // Set date variant
+      if (
+        ['datetime', 'date', 'time', 'month'].indexOf(fieldClone.type) != -1
+      ) {
+        fieldClone.variant = (fieldClone.type === 'datetime')?
+          'dateTime' :
+          fieldClone.type;
+        fieldClone.type = 'date';
+      }
+
+      // Set image variant
+      if (fieldClone.type === 'image') {
+        fieldClone.type = 'mediaSelector';
+        fieldClone.mediaSearchUrl = urlsForApi.library.get.url;
+        fieldClone.initialValue = fieldClone.value;
+        fieldClone.initialKey = 'mediaId';
+      }
+
+      // If field is type string, change it to text
+      if (fieldClone.type === 'string') {
+        fieldClone.type = 'text';
+      }
+
+      // Set name as id and give a unique id
+      fieldClone.name = fieldClone.id;
+      fieldClone.id = fieldClone.id + '_' + auxId;
+
+      // Add custom class to prevent auto save
+      fieldClone.customClass = 'fallback-property';
+
+      let $newField;
+      if (templates.forms.hasOwnProperty(fieldClone.type)) {
+        $newField = $(templates.forms[fieldClone.type](fieldClone));
+      }
+
+      // Add helper to required fields
+      if ($newField && $newField.is('[data-is-required="true"]')) {
+        $newField.find('label')
+          .append(`<span class="ml-1"
+            title=${fallbackDataTrans.requiredField}>*</span>`);
+      }
+
+      return $newField;
+    };
+
+    const updateRecordPreview = function($record, recordData) {
+      const $previewsContainer =
+        $record.find('.fallback-data-record-previews');
+
+      // Empty container
+      $previewsContainer.empty();
+
+      dataFields.forEach((field) => {
+        if (recordData && recordData[field.id]) {
+          const fieldData = recordData[field.id];
+
+          // New field preview
+          const $recordPreview = $(templates.forms.fallbackDataRecordPreview({
+            trans: fallbackDataTrans,
+            field: field,
+            data: fieldData,
+          }));
+
+          $record.find('.fallback-data-record-previews')
+            .append($recordPreview);
+        }
+      });
+    };
+
+    const saveRecord = function($record) {
+      const recordData = {};
+      let invalidRequired = false;
+
+      // Get input fields and build data to be saved
+      dataFields.forEach((field) => {
+        const $field = $record.find('[name="' + field.id + '"]');
+        const value = $field.val();
+        const required =
+          $field.parents('.fallback-property').is('[data-is-required="true"]');
+
+        if (value == '' && required) {
+          invalidRequired = true;
+        } else if (value != '') {
+          recordData[field.id] = value;
+        }
+      });
+
+      // If record data is empty or invalid, thow error and don't save
+      if ($.isEmptyObject(recordData)) {
+        toastr.error(fallbackDataTrans.invalidRecordEmpty);
+        return;
+      } else if (invalidRequired) {
+        toastr.error(fallbackDataTrans.invalidRecordRequired);
+        return;
+      }
+
+      const updateRecord = function() {
+        // Update preview
+        updateRecordPreview($record, recordData);
+
+        reloadWidgetCallback();
+
+        $record.removeClass('editing');
+      };
+
+      // Save or add new record
+      const recordId = $record.data('recordId');
+      const displayOrder = $record.index();
+      if (recordId) {
+        widget.editFallbackDataRecord(recordId, recordData, displayOrder)
+          .then((_res) => {
+            if (_res.success) {
+              updateRecord();
+            }
+          });
+      } else {
+        widget.addFallbackData(recordData, displayOrder)
+          .then((_res) => {
+            if (_res.success) {
+              // Add id to record object
+              $record.data('recordId', _res.id);
+              updateRecord();
+            }
+          });
+      }
+    };
+
+    const editRecord = function($record) {
+      $record.addClass('editing');
+    };
+
+    const deleteRecord = function($record) {
+      const recordId = $record.data('recordId');
+
+      if (recordId) {
+        widget.deleteFallbackDataRecord(recordId)
+          .then((_res) => {
+            if (_res.success) {
+              // Remove object
+              $record.remove();
+
+              reloadWidgetCallback();
+            }
+          });
+      } else {
+        // Remove object
+        $record.remove();
+      }
+    };
+
+    const createRecord = function(data = {}) {
+      const recordData = data.data;
+      const displayOrder = data.displayOrder;
+      const recordId = data.id;
+
+      const $recordContainer = $(templates.forms.fallbackDataRecord({
+        trans: fallbackDataTrans,
+      }));
+
+      // Add record id to data if exists
+      if (recordId != undefined) {
+        $recordContainer.data('recordId', recordId);
+      }
+
+      // Add display order to data if exists
+      if (displayOrder != undefined) {
+        $recordContainer.data('displayOrder', displayOrder);
+      }
+
+      // Add properties from data
+      dataFields.forEach((field) => {
+        const fieldData = (recordData) && recordData[field.id];
+        const $newField = createField(field, fieldData);
+
+        // New field input
+        $recordContainer.find('.fallback-data-record-fields')
+          .append($newField);
+      });
+
+      // Initialize fields
+      forms.initFields($recordContainer);
+
+      // Record preview
+      updateRecordPreview($recordContainer, recordData);
+
+      // Mark new field as editing if it's a new record
+      if ($.isEmptyObject(data)) {
+        $recordContainer.addClass('editing');
+      }
+
+      // Handle buttons
+      $recordContainer.find('button').on('click', function(ev) {
+        const actionType =
+          $(ev.currentTarget).data('action');
+
+        if (actionType == 'save-record') {
+          saveRecord($recordContainer);
+        } else if (actionType == 'delete-record') {
+          deleteRecord($recordContainer);
+        } else if (actionType == 'edit-record') {
+          editRecord($recordContainer);
+        }
+      });
+
+      return $recordContainer;
+    };
+
+    // Create main content
+    $(container).append(templates.forms.fallbackDataContent({
+      data: dataType,
+      trans: fallbackDataTrans,
+      showFallback: widget.getOptions().showFallback,
+    }));
+
+    const $recordsContainer =
+      $(container).find('.fallback-data-records');
+
+    // If we have existing data, add it to the control
+    if (fallbackData) {
+      // Sort array by display order
+      fallbackData.sort((a, b) => {
+        return a.displayOrder - b.displayOrder;
+      });
+
+      fallbackData.forEach((data) => {
+        $recordsContainer.append(
+          createRecord(data),
+        );
+      });
+
+      // Call Xibo Init for the records container
+      XiboInitialise('.fallback-data-records');
+    }
+
+    // Handle create record button
+    $(container).find('[data-action="add-new-record"]').on('click', function() {
+      $recordsContainer.append(
+        createRecord(),
+      );
+
+      // Call Xibo Init for the records container
+      XiboInitialise('.fallback-data-records');
+    });
+
+    // Init sortable
+    $recordsContainer.sortable({
+      axis: 'y',
+      items: '.fallback-data-record',
+      containment: 'parent',
+      update: function() {
+        // Create records structure
+        let idxAux = 0;
+        const records = [];
+
+        $recordsContainer.find('.fallback-data-record').each((_idx, record) => {
+          const recordData = $(record).data();
+
+          if (recordData.recordId) {
+            records.push({
+              dataId: recordData.recordId,
+              displayOrder: idxAux,
+            });
+
+            // Update data on record
+            $(record).data('displayOrder', idxAux);
+
+            idxAux++;
+          }
+        });
+
+        widget.saveFallbackDataOrder(records)
+          .then((_res) => {
+            if (_res.success) {
+              reloadWidgetCallback();
+            }
+          });
+      },
     });
   },
 };

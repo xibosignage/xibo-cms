@@ -1,0 +1,1027 @@
+{#
+/*
+ * Copyright (C) 2024 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+{% import "forms.twig" as forms %}
+
+{% block title %}{% set templateName = template.title %}{% trans %}{{ templateName }} - Module Template{% endtrans %} | {% endblock %}
+
+{% set hideNavigation = "1" %}
+
+{% block pageContent %}
+    <div id="developer-module-template-edit"
+         data-template-id="{{ template.templateId }}">
+        <div class="back-button">
+            <a id="backBtn" class="btn btn-primary" href="{{ url_for("developer.templates.view") }}">
+                <i class="fa fa-angle-left"></i>
+                <span>{{ "Back"|trans }}</span>
+            </a>
+        </div>
+        <div class="widget mt-3">
+            <div class="widget-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <form id="form-module-template"
+                              class="XiboForm form-horizontal"
+                              method="put"
+                              action="{{ url_for("developer.templates.edit", {id: template.id}) }}">
+
+                            <ul class="nav nav-tabs" role="tablist">
+                                <li class="nav-item">
+                                    <a class="nav-link active" href="#tab-general" role="tab" data-toggle="tab">
+                                        <span>{% trans "General" %}</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#tab-properties" role="tab" data-toggle="tab">
+                                        <span>{% trans "Properties" %}</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#tab-twig" role="tab" data-toggle="tab">
+                                        <span>{% trans "Twig" %}</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#tab-hbs" role="tab" data-toggle="tab">
+                                        <span>{% trans "HBS" %}</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#tab-style" role="tab" data-toggle="tab">
+                                        <span>{% trans "Style" %}</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#tab-head" role="tab" data-toggle="tab">
+                                        <span>{% trans "Head" %}</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#tab-onTemplateRender" role="tab" data-toggle="tab">
+                                        <span>{% trans "onTemplateRender" %}</span>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#tab-onTemplateVisible" role="tab" data-toggle="tab">
+                                        <span>{% trans "onTemplateVisible" %}</span>
+                                    </a>
+                                </li>
+                            </ul>
+                            <div class="tab-content">
+                                <div class="tab-pane active" id="tab-general">
+                                    {{ forms.alert("Changing the ID or DataType will break any existing Widgets which use this template.", "danger") }}
+
+                                    {% set title %}{% trans "ID" %}{% endset %}
+                                    {% set helpText %}{% trans "A unique ID for the module template" %}{% endset %}
+                                    {{ forms.input("templateId", title, template.templateId, helpText) }}
+
+                                    {% set title %}{% trans "Title" %}{% endset %}
+                                    {% set helpText %}{% trans "A title for the module template" %}{% endset %}
+                                    {{ forms.input("title", title, template.title, helpText) }}
+
+                                    {% set attributes = [
+                                        { name: "data-search-url", value:  url_for("developer.templates.datatypes.search") },
+                                        { name: "data-search-term", value: "name" },
+                                        { name: "data-id-property", value: "id" },
+                                        { name: "data-text-property", value: "name" },
+                                        { name: "data-initial-key", value: "dataType" },
+                                        { name: "data-initial-value", value: template.dataType },
+                                        { name: "data-hide-search", value: 1}
+                                    ] %}
+                                    {% set title %}{% trans "Data Type" %}{% endset %}
+                                    {% set helpText %}{% trans "Which data type does this template need?" %}{% endset %}
+                                    {{ forms.dropdown("dataType", "single", title, null, null, "id", "id", helpText, "pagedSelect", "", "", "", attributes) }}
+
+                                    {% set title %}{% trans "Show In" %}{% endset %}
+                                    {% set helpText %}{% trans "Which Editor should this template be available in?" %}{% endset %}
+                                    {% set options = [
+                                        { id: "none", name: "None"|trans },
+                                        { id: "layout", name: "Layout Editor"|trans },
+                                        { id: "playlist", name: "Playlist Editor"|trans },
+                                        { id: "both", name: "Both"|trans },
+                                    ] %}
+                                    {{ forms.dropdown("showIn", "single", title, template.showIn, options, "id", "name", helpText) }}
+
+                                    {% set title %}{% trans "Enabled?" %}{% endset %}
+                                    {% set helpText %}{% trans "Is this template enabled?" %}{% endset %}
+                                    {{ forms.checkbox("enabled", title, template.isEnabled, helpText) }}
+                                </div>
+                                <div class="tab-pane" id="tab-properties">
+                                    <div class="form-group row">
+                                        <div class="col-sm-12">
+                                            <small class="form-text text-muted">{{ "Properties"|trans }}</small>
+                                            <input type="hidden" name="developer-template-properties" value="{{ propertiesJSON }}">
+
+                                            <div class="developer-template-controls-tools text-right">
+                                                <button type="button" class="scroll-to-start-btn btn btn-outline-primary mb-3 d-none" title="{{ "Go to start"|trans }}">
+                                                    <i class="fa fa-arrow-left"></i>
+                                                </button>
+                                                <button type="button" class="add-property-btn btn btn-outline-primary mb-3 px-4" title="{{ "Add new property"|trans }}">
+                                                    <i class="fa fa-plus"></i> {% trans "Add" %}
+                                                </button>
+                                                <button type="button" class="scroll-to-end-btn btn btn-outline-primary mb-3 d-none" title="{{ "Go to end"|trans }}">
+                                                    <i class="fa fa-arrow-right"></i>
+                                                </button>
+                                            </div>
+                                            <div class="developer-template-controls-container">
+                                                <div class="developer-template-controls"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group row code-input-group">
+                                        <div class="col-sm-12">
+                                            <textarea class="form-control" id="input-properties" name="properties" style="display:none;">{{ propertiesJSON }}</textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane" id="tab-twig">
+                                    <div class="form-group row code-input-group xibo-code-input">
+                                        <div class="col-sm-12">
+                                            <small class="form-text text-muted">{{ "Twig"|trans }}</small>
+                                            <textarea class="form-control d-none code-input" id="input-twig" name="twig" rows="30" data-code-type="twig">{{ template.stencil.twig|raw }}</textarea>
+
+                                            <div class="code-input-editor-container" style="height: 70vh;">
+                                                <div class="code-input-editor"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane" id="tab-hbs">
+                                    <div class="form-group row code-input-group xibo-code-input">
+                                        <div class="col-sm-12">
+                                            <small class="form-text text-muted">{{ "HBS"|trans }}</small>
+                                            <textarea class="form-control d-none code-input" id="input-hbs" name="hbs" rows="30" data-code-type="handlebars">{{ template.stencil.hbs|raw }}</textarea>
+
+                                            <div class="code-input-editor-container" style="height: 70vh;">
+                                                <div class="code-input-editor"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane" id="tab-style">
+                                    <div class="form-group row code-input-group xibo-code-input">
+                                        <div class="col-sm-12">
+                                            <small class="form-text text-muted">{{ "Style"|trans }}</small>
+                                            <textarea class="form-control d-none code-input" id="input-style" name="style" rows="30" data-code-type="css">{{ template.stencil.style|raw }}</textarea>
+
+                                            <div class="code-input-editor-container" style="height: 70vh;">
+                                                <div class="code-input-editor"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane" id="tab-head">
+                                    <div class="form-group row code-input-group xibo-code-input">
+                                        <div class="col-sm-12">
+                                            <small class="form-text text-muted">{{ "Head"|trans }}</small>
+                                            <textarea class="form-control d-none code-input" id="input-head" name="head" rows="30" data-code-type="html">{{ template.stencil.head|raw }}</textarea>
+
+                                            <div class="code-input-editor-container" style="height: 70vh;">
+                                                <div class="code-input-editor"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane" id="tab-onTemplateRender">
+                                    <div class="form-group row code-input-group xibo-code-input">
+                                        <div class="col-sm-12">
+                                            <small class="form-text text-muted">{{ "onTemplateRender"|trans }}</small>
+                                            <textarea class="form-control d-none code-input" id="input-onTemplateRender" name="onTemplateRender" rows="30" data-code-type="javascript">{{ template.onTemplateRender|raw }}</textarea>
+
+                                            <div class="code-input-editor-container" style="height: 70vh;">
+                                                <div class="code-input-editor"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tab-pane" id="tab-onTemplateVisible">
+                                    <div class="form-group row code-input-group xibo-code-input">
+                                        <div class="col-sm-12">
+                                            <small class="form-text text-muted">{{ "onTemplateVisible"|trans }}</small>
+                                            <textarea class="form-control d-none code-input" id="input-onTemplateVisible" name="onTemplateVisible" rows="30" data-code-type="javascript">{{ template.onTemplateVisible|raw }}</textarea>
+
+                                            <div class="code-input-editor-container" style="height: 70vh;">
+                                                <div class="code-input-editor"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{ forms.checkbox("isInvalidateWidget", "Invalidate any widgets using this template"|trans, 1) }}
+
+                            {{ forms.button("Save"|trans, "submit", null, null, null, "btn-success") }}
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    {% verbatim %}
+        <script type="text/x-handlebars-template" id="developer-template-control">
+            <div class="developer-template-control-item">
+                <div class="developer-template-control-item-controls">
+                    <div title="{% endverbatim %}{% trans "Move" %}{% verbatim %}"" class="item-move" >
+                        <i class="fa fa-bars"></i> 
+                    </div>
+                    <button type="button" class="btn delete-btn" title="{% endverbatim %}{{ "Delete"|trans }}{% verbatim %}">
+                        <i class="fa fa-trash"></i>
+                    </button>
+                </div>
+                <div class="developer-template-control-form"></div>
+            </div>
+        </script>
+
+        <script type="text/x-handlebars-template" id="developer-template-placeholder">
+            <div class="developer-template-placeholder">
+                <div>{% endverbatim %}{% trans "No properties, click Add to create one!" %}{% verbatim %}</div>
+            </div>
+        </script>
+
+        <script type="text/x-handlebars-template" id="developer-template-control-options">
+            <div class="developer-template-control-options control-container">
+                <div>
+                    <strong class="float-left">options</strong>
+                    {{#if helpText}}
+                        <div class="input-info-container pt-0 float-left">
+                            <i class="fa fa-question-circle input-info tooltip-always-on xibo-help-text"
+                                data-toggle="tooltip" 
+                                data-placement="top"
+                                title="{{helpText}}">
+                            </i>
+                        </div>
+                    {{/if}}
+                </div>
+
+                <div class="xibo-form-input" data-control-title="options" data-control-type="options">
+                    <input type="hidden" class="jsonField"  name="options" value="{{originalValue}}">
+                </div>
+
+                <div class="options-items">
+                    <button type="button" class="add-option-btn btn btn-block btn-outline-primary btn-sm">
+                        <i class="fa fa-plus"></i> {% endverbatim %}{{ "Add option"|trans }}{% verbatim %}
+                    </button>
+                </div>
+            </div>
+        </script>
+
+        <script type="text/x-handlebars-template" id="developer-template-control-option-item">
+            <div class="option-item d-inline-flex">
+                <label for="control_option_title" class="control-label text-muted">title</label>
+                <input type="text" class="form-control subcontrol-input" name="control_option_title" value="{{title}}">
+                <label for="control_option_name" class="control-label text-muted">name</label>
+                <input type="text" class="form-control subcontrol-input" name="control_option_name" value="{{name}}">
+                <button type="button" class="del-option-btn btn btn-outline-danger btn-sm">
+                    <i class="fa fa-trash"
+                        title="{% endverbatim %}{{ "Delete option"|trans }}{% verbatim %}">
+                    </i>
+                </button>
+            </div>
+        </script>
+
+        <script type="text/x-handlebars-template" id="developer-template-control-playerCompatibility">
+            <div class="developer-template-control-playerCompatibility control-container">
+                <div>
+                    <strong class="float-left">playerCompatibility</strong>
+                    {{#if helpText}}
+                        <div class="input-info-container pt-0 float-left">
+                            <i class="fa fa-question-circle input-info tooltip-always-on xibo-help-text"
+                                data-toggle="tooltip" 
+                                data-placement="top"
+                                title="{{helpText}}">
+                            </i>
+                        </div>
+                    {{/if}}
+                </div>
+
+                <div class="xibo-form-input" data-control-title="playerCompatibility" data-control-type="playerCompatibility">
+                    <input type="hidden" class="jsonField"  name="playerCompatibility" value="{{originalValue}}">
+                </div>
+                
+                <div class="player-compat-items float-left">
+                    <label for="player_compat_windows" class="control-label text-muted">windows</label>
+                    <input type="text" class="form-control subcontrol-input" name="player_compat_windows" data-player="windows" value="{{value.windows}}">
+
+                    <label for="player_compat_windows" class="control-label text-muted">android</label>
+                    <input type="text" class="form-control subcontrol-input" name="player_compat_android" data-player="android" value="{{value.android}}">
+
+                    <label for="player_compat_windows" class="control-label text-muted">linux</label>
+                    <input type="text" class="form-control subcontrol-input" name="player_compat_linux" data-player="linux" value="{{value.linux}}">
+
+                    <label for="player_compat_windows" class="control-label text-muted">webos</label>
+                    <input type="text" class="form-control subcontrol-input" name="player_compat_webos" data-player="webos" value="{{value.webos}}">
+
+                    <label for="player_compat_windows" class="control-label text-muted">tizen</label>
+                    <input type="text" class="form-control subcontrol-input" name="player_compat_tizen" data-player="tizen" value="{{value.tizen}}">
+                </div>
+            </div>
+        </script>
+
+        <script type="text/x-handlebars-template" id="developer-template-control-visibility">
+            <div class="developer-template-control-visibility control-container">
+                <div>
+                    <strong class="float-left">visibility</strong>
+                    {{#if helpText}}
+                        <div class="input-info-container pt-0 float-left">
+                            <i class="fa fa-question-circle input-info tooltip-always-on xibo-help-text"
+                                data-toggle="tooltip" 
+                                data-placement="top"
+                                title="{{helpText}}">
+                            </i>
+                        </div>
+                    {{/if}}
+                </div>
+
+                <div class="xibo-form-input" data-control-title="visibility" data-control-type="visibility">
+                    <input type="hidden" class="jsonField"  name="visibility" value="{{originalValue}}">
+                </div>
+
+                <div class="visibility-tests test-container float-left w-100"></div>
+
+                <button type="button" class="add-test-btn btn btn-block btn-outline-primary btn-sm">
+                    <i class="fa fa-plus"></i> {% endverbatim %}{{ "Add test"|trans }}{% verbatim %}
+                </button>
+            </div>
+        </script>
+
+        <script type="text/x-handlebars-template" id="developer-template-control-validation">
+            <div class="developer-template-control-validation control-container">
+                <div>
+                    <strong class="float-left">validation</strong>
+                    {{#if helpText}}
+                        <div class="input-info-container pt-0 float-left">
+                            <i class="fa fa-question-circle input-info tooltip-always-on xibo-help-text"
+                                data-toggle="tooltip" 
+                                data-placement="top"
+                                title="{{helpText}}">
+                            </i>
+                        </div>
+                    {{/if}}
+                </div>
+
+                <div class="xibo-form-input" data-control-title="validation" data-control-type="validation">
+                    <input type="hidden" class="jsonField"  name="validation" value="{{originalValue}}">
+                </div>
+
+                <div class="validation-options float-left w-100">
+                    <div class="form-check float-right pb-1">
+                        <input type="checkbox" class="form-check-input" id="onSave" name="onSave">
+                        <label for="onSave" class="form-check-label"><strong>onSave</strong></label>
+                    </div>
+                    <div class="form-check float-right pb-1 pr-2">
+                        <input type="checkbox" class="form-check-input" id="onStatus" name="onStatus">
+                        <label for="onStatus" class="form-check-label"><strong>onStatus</strong></label>
+                    </div>
+                </div>
+
+                <div class="validation-tests test-container float-left w-100"></div>
+
+                <button type="button" class="add-test-btn btn btn-block btn-outline-primary btn-sm">
+                    <i class="fa fa-plus"></i> {% endverbatim %}{{ "Add test"|trans }}{% verbatim %}
+                </button>
+            </div>
+        </script>
+
+        <script type="text/x-handlebars-template" id="developer-template-control-test">
+            <div class="test-item">
+                <div class="item-header mb-2">
+                    <div class="test-title">{% endverbatim %}{{ "Test"|trans }}{% verbatim %}</div>
+                    <button type="button" class="del-test-btn btn btn-outline-danger btn-sm">
+                        <i class="fa fa-trash"
+                            title="{% endverbatim %}{{ "Delete test"|trans }}{% verbatim %}">
+                        </i>
+                    </button>
+                </div>
+
+                <div class="test-item-properties">
+                    <label for="test_type" class="control-label text-muted">type</label>
+                    <select name="test_type" class="test_type form-control">
+                        <options>
+                            <option value="and" {{#eq type "and"}}selected{{/eq}}>and</option>
+                            <option value="or" {{#eq type "or"}}selected{{/eq}}>or</option>
+                        </options>
+                    </select>
+
+                    <label for="test_message" class="control-label text-muted">message</label>
+                    <input type="text" class="form-control subcontrol-input" name="test_message" value="{{message}}">
+                </div>
+
+                <div class="test-conditions-container">
+                    <div class="test-conditions"></div>
+                    
+                    <button type="button" class="add-condition-btn btn btn-block btn-outline-primary btn-sm">
+                        <i class="fa fa-plus"></i> {% endverbatim %}{{ "Add condition"|trans }}{% verbatim %}
+                    </button>
+                </div>
+            </div>
+        </script>
+
+        <script type="text/x-handlebars-template" id="developer-template-control-condition">
+            <div class="condition-item">
+                <div class="item-header">
+                    <div class="condition-title">{% endverbatim %}{{ "Condition"|trans }}{% verbatim %}</div>
+                    <button type="button" class="del-condition-btn btn btn-outline-danger btn-sm">
+                        <i class="fa fa-trash"
+                            title="{% endverbatim %}{{ "Delete condition"|trans }}{% verbatim %}">
+                        </i>
+                    </button>
+                </div>
+                <label for="condition_type" class="control-label text-muted">type</label>
+                <select name="condition_type" class="condition_type form-control">
+                    <options>
+                        <option value="ne" {{#eq type "ne"}}selected{{/eq}}>ne</option>
+                        <option value="eq" {{#eq type "eq"}}selected{{/eq}}>eq</option>
+                        <option value="neq" {{#eq type "neq"}}selected{{/eq}}>neq</option>
+                        <option value="gt" {{#eq type "gt"}}selected{{/eq}}>gt</option>
+                        <option value="lt" {{#eq type "lt"}}selected{{/eq}}>lt</option>
+                        <option value="egt" {{#eq type "egt"}}selected{{/eq}}>egt</option>
+                        <option value="elt" {{#eq type "elt"}}selected{{/eq}}>elt</option>
+                        <option value="isTopLevel" {{#eq type "isTopLevel"}}selected{{/eq}}>isTopLevel</option>
+                    </options>
+                </select>
+
+                <label for="condition_field" class="control-label text-muted">field</label>
+                <input type="text" class="form-control subcontrol-input" name="condition_field" value="{{field}}">
+
+                <label for="condition_value" class="control-label text-muted">value</label>
+                <input type="text" class="form-control subcontrol-input" name="condition_value" value="{{value}}">
+            </div>
+        </script>
+    {% endverbatim %}
+
+    <script type="text/javascript" nonce="{{ cspNonce }}">
+        var propertiesMap = {
+            type: {
+                type: 'dropdown',
+                helpText: '',
+            },
+            id: {
+                type: 'text',
+                helpText: '',
+            },
+            title: {
+                type: 'text',
+                helpText: '',
+            },
+            helpText: {
+                type: 'text',
+                helpText: '',
+            },
+            default: {
+                type: 'text',
+                helpText: "{{ "Default value"|trans }}",
+            },
+            variant: {
+                type: 'text',
+                helpText: '',
+            },
+            format: {
+                type: 'text',
+                helpText: '',
+            },
+            mode: {
+                type: 'text',
+                helpText: '',
+            },
+            target: {
+                type: 'text',
+                helpText: '',
+            },
+            propertyGroupId: {
+                type: 'text',
+                helpText: '',
+            },
+            dependsOn: {
+                type: 'text',
+                helpText: '',
+            },
+            customPopOver: {
+                type: 'text',
+                helpText: '',
+            },
+            allowLibraryRefs: {
+                type: 'checkbox',
+                helpText: '',
+            },
+            allowAssetRefs: {
+                type: 'checkbox',
+                helpText: '',
+            },
+            parseTranslations: {
+                type: 'checkbox',
+                helpText: '',
+            },
+            includeInXlf: {
+                type: 'checkbox',
+                helpText: '',
+            },
+            options: {
+                type: 'options',
+                helpText: "{{ "Options for the dropdown control"|trans }}",
+                visibility: function(ctrl) {
+                    return ctrl.type === 'dropdown';
+                },
+            },
+            visibility: {
+                type: 'visibility',
+                helpText: '',
+            },
+            validation: {
+                type: 'validation',
+                helpText: '',
+            },
+            playerCompatibility: {
+                type: 'playerCompatibility',
+                helpText: '',
+            },
+        };
+
+        var controlTypes = [
+            'text',
+            'checkbox',
+            'number',
+            'textArea',
+            'dropdown',
+            'date',
+            'code',
+            'color',
+            'custom',
+            'divider',
+            'effectSelector',
+            'fontSelector',
+            'header',
+            'hidden',
+            'message',
+            'richText',
+            'snippet',
+            'canvasWidgetsSelector',
+            'commandBuilder',
+            'commandSelector',
+            'connectorProperties',
+            'datasetColStyle',
+            'datasetColStyleSelector',
+            'datasetColumnSelector',
+            'datasetField',
+            'datasetFilter',
+            'datasetOrder',
+            'datasetSelector',
+            'forecastUnitsSelector',
+            'languageSelector',
+            'mediaSelector',
+            'menuBoardCategorySelector',
+            'menuBoardSelector',
+            'playlistMixer',
+            'tickerTagSelector',
+            'tickerTagStyle',
+            'worldClock',
+        ];
+        
+        $(document).ready(function() {
+            // Create controls
+            var $controlsHiddenInput = $('#form-module-template').find('[name="properties"]');
+            var $controls = $('#form-module-template').find('.developer-template-controls');
+            var $controlsContainer = $('#form-module-template').find('.developer-template-controls-container');
+            var controls = ($controlsHiddenInput.val()) ? JSON.parse($controlsHiddenInput.val()) : [];
+            var controlTemplate = Handlebars.compile($("#developer-template-control").html())();
+            var placeholderTemplate = Handlebars.compile($("#developer-template-placeholder").html())();
+            createTemplateControlsFromJSON($controls, controls);
+
+            // Add new property
+            $('.developer-template-controls-tools .add-property-btn').on('click', (ev) => {
+                addControl();
+            });
+
+            // Scroll
+            $('.developer-template-controls-tools .scroll-to-end-btn').on('click', (ev) => {
+                scrollToEnd();
+            });
+            $('.developer-template-controls-tools .scroll-to-start-btn').on('click', (ev) => {
+                scrollToStart();
+            });
+
+            function scrollToStart() {
+                $controlsContainer.animate({scrollLeft: 0}, 1000);
+            }
+
+            function scrollToEnd() {
+                $controlsContainer.animate({scrollLeft: $controlsContainer.prop('scrollWidth')}, 1000);
+            }
+
+            function addControl(control) {
+                var $control = $(controlTemplate);
+
+                    for (var ptm in propertiesMap) {
+                        if (propertiesMap.hasOwnProperty(ptm)) {
+                            var propertyFromMap = propertiesMap[ptm].type;
+                            if (templates.forms[propertyFromMap]) {
+                                var $property = $(templates.forms[propertyFromMap](
+                                    {
+                                        title: ptm,
+                                        helpText: propertiesMap[ptm].helpText,
+                                        value: (control) ? control[ptm] : null,
+                                        options: controlTypes.map((ct) => {
+                                            return {
+                                                name: ct,
+                                                title: ct,
+                                            };
+                                        }),
+                                    }
+                                )).data('control-title', ptm)
+                                .data('control-type', propertyFromMap);
+
+                                $property.appendTo($control.find('.developer-template-control-form'));
+                            } else {
+                                var $templateDiv = $('#developer-template-control-' + propertyFromMap);
+                                if($templateDiv.length > 0) {
+                                    var controlType = propertiesMap[ptm].type;
+                                    var subControlTemplate = Handlebars.compile(
+                                        $templateDiv.html()
+                                    );
+                                    var subControlValue = (control) ? control[ptm] : '';
+                                    var $subcontrol = $(subControlTemplate(
+                                        Object.assign(
+                                            propertiesMap[ptm],
+                                            {
+                                                value: subControlValue,
+                                                originalValue: (subControlValue) ? JSON.stringify(subControlValue) : '',
+                                            }
+                                        )
+                                    ));
+
+                                    var saveSubControl = function($target) {
+                                        var $subControlAux = $target;
+                                        var controlType = $target.find('.xibo-form-input').data('controlType');
+                                        var valToSave = {};
+
+                                        // Save to hidden input
+                                        if (controlType === 'playerCompatibility') {
+                                            $subControlAux.find('.subcontrol-input').each((_key, sub) => {
+                                                var subValue = $(sub).val();
+                                                if(subValue) {
+                                                    valToSave[$(sub).data('player')] = $(sub).val();
+                                                }
+                                            });
+                                        } else if (controlType === 'options') {
+                                            valToSave = [];
+                                            $subControlAux.find('.option-item').each((_key, option) => {
+                                                var optionTitle = $(option).find('[name="control_option_title"]').val();
+                                                var optionName = $(option).find('[name="control_option_name"]').val();
+                                                if(optionTitle && optionName) {
+                                                    valToSave.push({
+                                                        title: optionTitle,
+                                                        name: optionName,
+                                                    });
+                                                }
+                                            });
+                                        } else if(controlType === 'visibility') {
+                                            valToSave = [];
+                                            $subControlAux.find('.test-item').each((_key, test) => {
+                                                var testConditions = [];
+                                                var testType = $(test).find('[name="test_type"]').val();
+                                                var testMessage = $(test).find('[name="test_message"]').val();
+
+                                                $(test).find('.condition-item').each((_key, cond) => {
+                                                    testConditions.push({
+                                                        field: $(cond).find('[name="condition_field"]').val(),
+                                                        type: $(cond).find('[name="condition_type"]').val(),
+                                                        value: $(cond).find('[name="condition_value"]').val(),
+                                                    });
+                                                });
+
+                                                valToSave.push({
+                                                    type: testType,
+                                                    message: testMessage,
+                                                    conditions: testConditions,
+                                                });
+                                            });
+                                        } else if(controlType === 'validation') {
+                                            valToSave = {
+                                                tests: [],
+                                            };
+                                            $subControlAux.find('.validation-options input').each((_key, option) => {
+                                                var $optionInput = $(option);
+                                                valToSave[$optionInput.attr('name')] = $optionInput.is(':checked')
+                                            });
+
+                                            $subControlAux.find('.test-item').each((_key, test) => {
+                                                var testConditions = [];
+                                                var testType = $(test).find('[name="test_type"]').val();
+                                                var testMessage = $(test).find('[name="test_message"]').val();
+
+                                                $(test).find('.condition-item').each((_key, cond) => {
+                                                    testConditions.push({
+                                                        field: $(cond).find('[name="condition_field"]').val(),
+                                                        type: $(cond).find('[name="condition_type"]').val(),
+                                                        value: $(cond).find('[name="condition_value"]').val(),
+                                                    });
+                                                });
+
+                                                valToSave.tests.push({
+                                                    type: testType,
+                                                    message: testMessage,
+                                                    conditions: testConditions,
+                                                });
+                                            });
+                                        }
+
+                                        // Save values to hidden field
+                                        $subControlAux.find('[name="' + controlType + '"]').val(
+                                            $.isEmptyObject(valToSave) ? '' : JSON.stringify(valToSave)
+                                        );
+
+                                        // Save all controls
+                                        saveTemplateControlsToHiddenField();
+                                    };
+
+                                    // Options control
+                                    if(controlType === 'options') {
+                                        var controlSubOptionTemplate = Handlebars.compile($("#developer-template-control-option-item").html());
+                                        (subControlValue) && subControlValue.forEach((scv) => {
+                                            var $subControlOption = $(controlSubOptionTemplate(scv));
+
+                                            // Add to container
+                                            $subcontrol.find('.options-items .add-option-btn').before($subControlOption);
+                                        });
+
+                                        // Handle add button
+                                        $subcontrol.find('.add-option-btn').on('click', (ev) => {
+                                            // Add to container
+                                            $(ev.currentTarget).parents('.options-items').find('.add-option-btn').before($(controlSubOptionTemplate()));
+                                        });
+
+                                        // Handle delete
+                                        $subcontrol.on('click', '.del-option-btn', (ev) => {
+                                            var $parentContainer = $(ev.currentTarget).parents('.control-container');
+                                            // Remove option
+                                            $(ev.currentTarget).parents('.option-item').remove();
+
+                                            // Save control
+                                            saveSubControl($parentContainer);
+
+                                            // Save all controls
+                                            saveTemplateControlsToHiddenField();
+                                        });
+                                    } else if(controlType === 'visibility') {
+                                        var controlTestTemplate = Handlebars.compile($("#developer-template-control-test").html());
+                                        var controlConditionTemplate = Handlebars.compile($("#developer-template-control-condition").html());
+
+                                        (subControlValue) && subControlValue.forEach((test) => {
+                                            var $newTest = $(controlTestTemplate(test));
+                                            var $testContainer = $subcontrol.find('.' + controlType + '-tests');
+
+                                            test.conditions.forEach((condition) => {
+                                                var $newCondition = $(controlConditionTemplate(condition));
+
+                                                $newTest.find('.test-conditions').append($newCondition);
+                                            });
+
+                                            // Add to container
+                                            $testContainer.append($newTest);
+                                        });
+
+                                        // Handle add condition button
+                                        $subcontrol.on('click', '.add-condition-btn', (ev) => {
+                                            // Add to container
+                                            $(ev.currentTarget).siblings('.test-conditions').append($(controlConditionTemplate()));
+                                        });
+
+                                        // Handle delete condition
+                                        $subcontrol.on('click', '.del-condition-btn', (ev) => {
+                                            var $parentContainer = $(ev.currentTarget).parents('.control-container');
+                                            // Remove condition
+                                            $(ev.currentTarget).parents('.condition-item').remove();
+
+                                            // Save control
+                                            saveSubControl($parentContainer);
+
+                                            // Save all controls
+                                            saveTemplateControlsToHiddenField();
+                                        });
+
+                                        // Handle add test button
+                                        $subcontrol.on('click', '.add-test-btn', (ev) => {
+                                            // Add to container
+                                            $(ev.currentTarget).siblings('.test-container').append($(controlTestTemplate()));
+                                        });
+
+                                        // Handle delete test
+                                        $subcontrol.on('click', '.del-test-btn', (ev) => {
+                                            var $parentContainer = $(ev.currentTarget).parents('.control-container');
+                                            // Remove test
+                                            $(ev.currentTarget).parents('.test-item').remove();
+
+                                            // Save control
+                                            saveSubControl($parentContainer);
+
+                                            // Save all controls
+                                            saveTemplateControlsToHiddenField();
+                                        });
+                                    } else if (controlType === 'validation') {
+                                        var controlTestTemplate = Handlebars.compile($("#developer-template-control-test").html());
+                                        var controlConditionTemplate = Handlebars.compile($("#developer-template-control-condition").html());
+                                        var $subControlContainer = $subcontrol;
+
+                                        var updateCheckboxes = function() {
+                                            var hasTests = $subControlContainer.find('.validation-tests .test-item').length > 0;
+
+                                            // Show options if we have any test
+                                            $subControlContainer.find('.validation-options').toggle(hasTests)
+                                                .toggleClass('toSave', hasTests);
+
+                                            // Handle checkbox change
+                                            $subControlContainer.find('.validation-options input').off().on('change', function() {
+                                                saveSubControl($subControlContainer);
+                                            });
+                                        };
+
+                                        (subControlValue && subControlValue.tests) && subControlValue.tests.forEach((test) => {
+                                            var $newTest = $(controlTestTemplate(test));
+                                            var $testContainer = $subControlContainer.find('.' + controlType + '-tests');
+
+                                            test.conditions.forEach((condition) => {
+                                                var $newCondition = $(controlConditionTemplate(condition));
+
+                                                $newTest.find('.test-conditions').append($newCondition);
+                                            });
+
+                                            // Add to container
+                                            $testContainer.append($newTest);
+                                        });
+
+                                        // Handle add condition button
+                                        $subControlContainer.on('click', '.add-condition-btn', (ev) => {
+                                            // Add to container
+                                            $(ev.currentTarget).siblings('.test-conditions').append($(controlConditionTemplate()));
+                                        });
+
+                                        // Handle delete condition
+                                        $subControlContainer.on('click', '.del-condition-btn', (ev) => {
+                                            var $parentContainer = $(ev.currentTarget).parents('.control-container');
+                                            // Remove condition
+                                            $(ev.currentTarget).parents('.condition-item').remove();
+
+                                            // Save control
+                                            saveSubControl($parentContainer);
+
+                                            // Save all controls
+                                            saveTemplateControlsToHiddenField();
+                                        });
+
+                                        // Handle add test button
+                                        $subControlContainer.on('click', '.add-test-btn', (ev) => {
+                                            // Add to container
+                                            $(ev.currentTarget).siblings('.test-container').append($(controlTestTemplate()));
+
+                                            // Update checkboxes
+                                            updateCheckboxes();
+                                        });
+
+                                        // Handle delete test
+                                        $subControlContainer.on('click', '.del-test-btn', (ev) => {
+                                            var $parentContainer = $(ev.currentTarget).parents('.control-container');
+                                            // Remove test
+                                            $(ev.currentTarget).parents('.test-item').remove();
+
+                                            // Update checkboxes
+                                            updateCheckboxes();
+
+                                            // Save control
+                                            saveSubControl($parentContainer);
+
+                                            // Save all controls
+                                            saveTemplateControlsToHiddenField();
+                                        });
+
+                                        // Update checkboxes on first load
+                                        updateCheckboxes();
+                                    }
+
+                                    // Handle change to update values
+                                    $subcontrol.on('change', '.subcontrol-input', (ev) => {
+                                        saveSubControl($(ev.delegateTarget));
+                                    });
+
+                                    $subcontrol.appendTo($control.find('.developer-template-control-form'));
+                                }
+                            }
+                        }
+                    }
+
+                    // Handle change to update values
+                    $control.find('.xibo-form-input')
+                        .on('change', saveTemplateControlsToHiddenField);
+
+                    // Delete
+                    $control.find('.delete-btn').on('click', (ev) => {
+                        $(ev.currentTarget).parents('.developer-template-control-item').remove();
+                        saveTemplateControlsToHiddenField();
+                    });
+
+                    // Remove placeholder container
+                    hidePlaceholder();
+
+                    // Append to container
+                    $control.appendTo($controls);
+            }
+
+            function createTemplateControlsFromJSON($container, controls) {
+                if (controls.length > 0) {
+                    controls.forEach((ct) => {
+                        addControl(ct);
+                    });
+
+                    // Sortable
+                    $controls.sortable({
+                        axis: 'x',
+                        handle: '.item-move',
+                        items: '.developer-template-control-item',
+                        containment: 'parent',
+                        update: saveTemplateControlsToHiddenField,
+                    });
+                } else {
+                    // Show placeholder
+                    showPlaceholder($container);
+                }
+            }
+
+            function saveTemplateControlsToHiddenField() {
+                var controlsToSave = [];
+                // Get properties from controls
+                $controls.find('.developer-template-control-item').each((_idx, control) => {
+                    var newControl = {};
+                    $(control).find('.xibo-form-input').each((_idx, property) => {
+                        var controlType = $(property).data('control-type');
+                        var controlTitle = $(property).data('control-title');
+                        var controlValue = $(property).find('select, input').val(); 
+
+                        if(controlType === 'checkbox') {
+                            // If checkbox, get boolean from input
+                            controlValue = $(property).find('input').is(':checked');
+                        } else if(
+                            $(property).find('select, input').hasClass('jsonField') &&
+                            controlValue != ''
+                        ) {
+                            // If property was saved as json, parse it here
+                            controlValue = JSON.parse(controlValue);
+                        }
+
+                        newControl[controlTitle] = controlValue;
+                    });
+
+                    // If control type isn't a header, divider or message
+                    // and id is empty, don't add it
+                    if (
+                        !['header', 'divider', 'message'].includes(newControl.type) &&
+                        newControl.id === ''
+                    ) {
+                        console.error('Properties other than header, divider or message need to have id!');
+                    } else {
+                        controlsToSave.push(newControl);
+                    }
+                });
+
+                // If there are no properties, show placeholder
+                if ($controls.find('.developer-template-control-item').length === 0) {
+                    showPlaceholder($controls);
+                }
+
+                // Save to hidden input
+                $controlsHiddenInput.val(JSON.stringify(controlsToSave));
+            }
+
+            function showPlaceholder($container) {
+                $container.append($(placeholderTemplate));
+            }
+
+            function hidePlaceholder() {
+                $('.developer-template-placeholder').remove();
+            }
+        });
+    </script>
+{% endblock %}

@@ -43,9 +43,9 @@
         {# Add common file #}
         {% include "common.twig" %}
 
-        <script src="{{ theme.rootUri() }}dist/layoutEditor.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
-        <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
-        <script type="text/javascript">
+        <script src="{{ theme.rootUri() }}dist/layoutEditor.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+        <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+        <script type="text/javascript" nonce="{{ cspNonce }}">
 
             {# Custom translations #}
             {% autoescape "js" %}
@@ -92,6 +92,8 @@
                     next: '{{ "Next Widget"|trans }}',
                     empty: '{{ "Empty Playlist"|trans }}',
                     invalidRegion: '{{ "Invalid Region"|trans }}',
+                    editPlaylistTitle: '{{ "Edit Playlist"|trans }}',
+                    dynamicPlaylistTitle: '{{ "Dynamic Playlist"|trans }}',
                 };
 
                 var timelineTrans = {
@@ -136,29 +138,27 @@
                     nextWidget: "{% trans "Next widget" %}",
                     previousWidget: "{% trans "Previous widget" %}",
                     widgetName: "{% trans "Widget Name" %}",
+                    widgetType: "{% trans "Widget Type" %}",
+                    widgetTemplate: "{% trans "Widget Template Name" %}",
                     elementName: "{% trans "Element Name" %}",
+                    elementMediaInfoName: "{{ "Media Name" |trans }}",
+                    elementMediaInfoId: "{{ "Media ID" |trans }}",
                     elementGroupName: "{% trans "Element Group Name" %}",
                     regionName: "{% trans "Region Name" %}",
                     templateName: "{% trans "Template" %}",
                     objectType: {
                         layout: "{{ "Layout" |trans }}",
                         region: "{{ "Region" |trans }}",
+                        zone: "{{ "Zone" |trans }}",
+                        playlist: "{{ "Playlist" |trans }}",
                         widget: "{{ "Widget" |trans }}",
                         element: "{{ "Element" |trans }}",
                         "element-group": "{{ "Element Group" |trans }}",
                     },
                     tools: {
-                        region: {
-                            name: "{{ "Region" |trans }}",
-                            description: "{{ "Add a Region"|trans }}"
-                        },
                         audio: {
                             name: "{{ "Audio" |trans }}",
                             description: "{{ "Upload Audio files to assign to Widgets"|trans }}"
-                        },
-                        expiry: {
-                            name: "{{ "Expiry Dates" |trans }}",
-                            description: "{{ "Enter start and end times for Widgets"|trans }}"
                         },
                         transitionIn: {
                             name: "{{ "Transition In" |trans }}",
@@ -176,7 +176,7 @@
                 };
             {% endautoescape %}
         </script>
-        <script type="text/javascript">
+        <script type="text/javascript" nonce="{{ cspNonce }}">
             /**
              * Setup the background form.
              */

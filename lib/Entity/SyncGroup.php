@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -84,6 +84,16 @@ class SyncGroup implements \JsonSerializable
      * @var int
      */
     public $syncPublisherPort = 9590;
+    /**
+     * @SWG\Property(description="The delay (in ms) when displaying the changes in content")
+     * @var int
+     */
+    public $syncSwitchDelay = 750;
+    /**
+     * @SWG\Property(description="The delay (in ms) before unpausing the video on start.")
+     * @var int
+     */
+    public $syncVideoPauseDelay = 100;
     /**
      * @SWG\Property(description="The ID of the lead Display for this sync group")
      * @var int
@@ -286,6 +296,14 @@ class SyncGroup implements \JsonSerializable
         if (!isset($this->leadDisplayId) && isset($this->syncGroupId)) {
             throw new InvalidArgumentException(__('Please select lead Display for this sync group'), 'leadDisplayId');
         }
+
+        if ($this->syncSwitchDelay < 0) {
+            throw new InvalidArgumentException(__('Switch Delay value cannot be negative'), 'syncSwitchDelay');
+        }
+
+        if ($this->syncVideoPauseDelay < 0) {
+            throw new InvalidArgumentException(__('Video Pause Delay value cannot be negative'), 'syncVideoPauseDelay');
+        }
     }
 
     public function validateForSchedule(SanitizerInterface $sanitizer)
@@ -305,8 +323,8 @@ class SyncGroup implements \JsonSerializable
         $time = Carbon::now()->format(DateFormatHelper::getSystemFormat());
 
         $this->syncGroupId = $this->getStore()->insert('
-          INSERT INTO syncgroup (`name`, `createdDt`, `modifiedDt`, `ownerId`, `modifiedBy`, `syncPublisherPort`, `folderId`, `permissionsFolderId`)
-            VALUES (:name, :createdDt, :modifiedDt, :ownerId, :modifiedBy, :syncPublisherPort, :folderId, :permissionsFolderId)
+          INSERT INTO syncgroup (`name`, `createdDt`, `modifiedDt`, `ownerId`, `modifiedBy`, `syncPublisherPort`, `syncSwitchDelay`, `syncVideoPauseDelay`, `folderId`, `permissionsFolderId`)
+            VALUES (:name, :createdDt, :modifiedDt, :ownerId, :modifiedBy, :syncPublisherPort, :syncSwitchDelay, :syncVideoPauseDelay, :folderId, :permissionsFolderId)
         ', [
             'name' => $this->name,
             'createdDt' => $time,
@@ -314,6 +332,8 @@ class SyncGroup implements \JsonSerializable
             'modifiedBy' => $this->modifiedBy,
             'ownerId' => $this->ownerId,
             'syncPublisherPort' => $this->syncPublisherPort,
+            'syncSwitchDelay' => $this->syncSwitchDelay,
+            'syncVideoPauseDelay' => $this->syncVideoPauseDelay,
             'folderId' => $this->folderId,
             'permissionsFolderId' => $this->permissionsFolderId
         ]);
@@ -331,6 +351,8 @@ class SyncGroup implements \JsonSerializable
               `ownerId` = :ownerId,
               `modifiedBy` = :modifiedBy,
               `syncPublisherPort` = :syncPublisherPort,
+              `syncSwitchDelay` = :syncSwitchDelay,
+              `syncVideoPauseDelay` = :syncVideoPauseDelay,
               `leadDisplayId` = :leadDisplayId,
               `folderId` = :folderId,
               `permissionsFolderId` = :permissionsFolderId
@@ -341,6 +363,8 @@ class SyncGroup implements \JsonSerializable
             'ownerId' => $this->ownerId,
             'modifiedBy' => $this->modifiedBy,
             'syncPublisherPort' => $this->syncPublisherPort,
+            'syncSwitchDelay' => $this->syncSwitchDelay,
+            'syncVideoPauseDelay' => $this->syncVideoPauseDelay,
             'leadDisplayId' => $this->leadDisplayId == 0 ? null : $this->leadDisplayId,
             'folderId' => $this->folderId,
             'permissionsFolderId' => $this->permissionsFolderId,
@@ -366,7 +390,7 @@ class SyncGroup implements \JsonSerializable
         foreach ($this->scheduleFactory->getBySyncGroupId($this->syncGroupId) as $event) {
             $event->delete();
         }
-        
+
         $this->getStore()->update('DELETE FROM `syncgroup` WHERE `syncgroup`.syncGroupId = :syncGroupId', [
             'syncGroupId' => $this->syncGroupId
         ]);
@@ -421,7 +445,7 @@ class SyncGroup implements \JsonSerializable
                     AND `schedule_sync`.eventId IN (SELECT eventId FROM schedule WHERE schedule.syncGroupId = :syncGroupId)', [
                     'displayId' => $display->displayId,
                     'syncGroupId' => $this->syncGroupId
-                    ]);
+                ]);
             }
 
             $display->notify();

@@ -27,8 +27,8 @@
 {% block title %}{{ "Schedule"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    {% if currentUser.featureEnabled("schedule.add") %}
-        <div class="widget-action-menu pull-right">
+    <div class="widget-action-menu pull-right">
+        {% if currentUser.featureEnabled("schedule.add") %}
             {% if currentUser.featureEnabled("schedule.sync") %}
                 <button class="btn btn-white XiboFormButton btns" title="{% trans "Add a new Sync event" %}"
                         href="{{ url_for("schedule.add.sync.form") }}"><span
@@ -37,8 +37,9 @@
             <button class="btn btn-success XiboFormButton btns" title="{% trans "Add a new Scheduled event" %}"
                     href="{{ url_for("schedule.add.form") }}"><span class="fa fa-plus"></span> {% trans "Add Event" %}
             </button>
-        </div>
-    {% endif %}
+        {% endif %}
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
+    </div>
 {% endblock %}
 
 {% block pageContent %}
@@ -109,7 +110,7 @@
                             <div class="form-group mr-1 mb-1 pagedSelect" style="min-width: 200px">
                                 <label class="control-label mr-1" for="DisplayList" title=""
                                        accesskey="">{{ title }}</label>
-                                <select id="DisplayList" class="form-control" name="displayGroupIds[]"
+                                <select id="DisplayList" class="form-control" name="displaySpecificGroupIds[]"
                                         data-width="100%"
                                         data-placeholder="{% trans "Displays" %}"
                                         data-search-url="{{ url_for("display.search") }}"
@@ -118,12 +119,8 @@
                                         data-text-property="display"
                                         data-additional-property="displayGroupId"
                                         data-allow-clear="true"
+                                        data-initial-key="displayGroupIds[]"
                                         multiple>
-                                    {% for option in displaySpecificDisplayGroups %}
-                                        {% set itemOptionId = attribute(option, "displayGroupId") %}
-                                        {% set itemOptionValue = attribute(option, "displayGroup") %}
-                                        <option value="{{ itemOptionId }}" selected>{{ itemOptionValue }}</option>
-                                    {% endfor %}
                                 </select>
                             </div>
 
@@ -139,12 +136,8 @@
                                         data-id-property="displayGroupId"
                                         data-text-property="displayGroup"
                                         data-allow-clear="true"
+                                        data-initial-key="displayGroupIds[]"
                                         multiple>
-                                    {% for option in displayGroups %}
-                                        {% set itemOptionId = attribute(option, "displayGroupId") %}
-                                        {% set itemOptionValue = attribute(option, "displayGroup") %}
-                                        <option value="{{ itemOptionId }}" selected>{{ itemOptionValue }}</option>
-                                    {% endfor %}
                                 </select>
                             </div>
 
@@ -234,6 +227,7 @@
                                     <th>{% trans 'Recurrence Repeats On' %}</th>
                                     <th>{% trans 'Recurrence End' %}</th>
                                     <th>{% trans 'Priority?' %}</th>
+                                    <th>{% trans 'Criteria?' %}</th>
                                     <th>{% trans 'Created On' %}</th>
                                     <th>{% trans 'Updated On' %}</th>
                                     <th>{% trans 'Modified By' %}</th>
@@ -1142,7 +1136,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
       // We are using this variable in xibo-calendar.js
       var scheduleRecurrenceDeleteUrl = "{{ url_for("schedule.recurrence.delete.form", {id:':id'}) }}";
       var layoutPreviewUrl = "{{ url_for("layout.preview", {id: ':id'}) }}";
@@ -1535,6 +1529,18 @@
             responsivePriority: 2,
           },
           {
+            data: 'criteria',
+            className: 'align-middle',
+            responsivePriority: 2,
+            data: function (data, type, row) {
+              if (data.criteria && data.criteria.length > 0) {
+                return dataTableTickCrossColumn(1, type, row);
+              } else {
+                return '';
+              }
+            }
+          },
+          {
             data: 'createdOn',
             className: 'align-middle',
             responsivePriority: 4,
@@ -1564,5 +1570,9 @@
       });
       table.on('processing.dt', dataTableProcessing);
       dataTableAddButtons(table, $('#schedule-grid_wrapper').find('.dataTables_buttons'), true, true);
+
+      $("#refreshGrid").click(function () {
+          table.ajax.reload();
+      });
     </script>
 {% endblock %}

@@ -26,13 +26,12 @@
 {% block title %}{{ "Fonts"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    {% if currentUser.featureEnabled("font.add") %}
-        <div class="widget-action-menu pull-right">
+    <div class="widget-action-menu pull-right">
         {% if currentUser.featureEnabled("font.add") %}
             <button class="btn btn-success" href="#" id="fontUploadForm" title="{% trans "Add a new Font" %}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Upload Font" %}</button>
         {% endif %}
-        </div>
-    {% endif %}
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
+    </div>
 {% endblock %}
 
 
@@ -77,7 +76,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
       var fontsTable;
       $(document).ready(function() {
         fontsTable = $("#fonts").DataTable({
@@ -122,6 +121,10 @@
         fontsTable.on('draw', dataTableDraw);
         fontsTable.on('processing.dt', dataTableProcessing);
         dataTableAddButtons(fontsTable, $('#resolutions_wrapper').find('.dataTables_buttons'));
+
+        $("#refreshGrid").click(function () {
+            fontsTable.ajax.reload();
+        });
       });
 
       $("#fontUploadForm").click(function(e) {

@@ -1220,7 +1220,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         $(function () {
             var phpDateFormatTable = Handlebars.compile($('#php-date-format-table').html());
             $('#date-format-table').popover({

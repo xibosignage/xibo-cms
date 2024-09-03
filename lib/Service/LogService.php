@@ -64,6 +64,16 @@ class LogService implements LogServiceInterface
     private $_auditLogStatement;
 
     /**
+     * The History session id.
+     */
+    private $sessionHistoryId = 0;
+
+    /**
+     * The API requestId.
+     */
+    private $requestId = 0;
+
+    /**
      * @inheritdoc
      */
     public function __construct($logger, $mode = 'production')
@@ -97,6 +107,34 @@ class LogService implements LogServiceInterface
     /**
      * @inheritdoc
      */
+    public function setSessionHistoryId($sessionHistoryId)
+    {
+        $this->sessionHistoryId = $sessionHistoryId;
+    }
+
+    public function setRequestId($requestId)
+    {
+        $this->requestId = $requestId;
+    }
+
+    public function getUserId(): ?int
+    {
+        return $this->userId;
+    }
+
+    public function getSessionHistoryId(): ?int
+    {
+        return $this->sessionHistoryId;
+    }
+
+    public function getRequestId(): ?int
+    {
+        return $this->requestId;
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function setMode($mode)
     {
         $this->mode = $mode;
@@ -108,11 +146,12 @@ class LogService implements LogServiceInterface
     public function audit($entity, $entityId, $message, $object)
     {
         $this->debug(sprintf(
-            'Audit Trail message recorded for %s with id %d. Message: %s from IP %s',
+            'Audit Trail message recorded for %s with id %d. Message: %s from IP %s, session %d',
             $entity,
             $entityId,
             $message,
-            $this->ipAddress
+            $this->ipAddress,
+            $this->sessionHistoryId
         ));
 
         if ($this->_auditLogStatement == null) {
@@ -120,8 +159,28 @@ class LogService implements LogServiceInterface
             //  audit log should rollback on failure.
             $dbh = PdoStorageService::newConnection('default');
             $this->_auditLogStatement = $dbh->prepare('
-                INSERT INTO `auditlog` (`logDate`, `userId`, `entity`, `message`, `entityId`, `objectAfter`, `ipAddress`)
-                  VALUES (:logDate, :userId, :entity, :message, :entityId, :objectAfter, :ipAddress)
+                INSERT INTO `auditlog` (
+                    `logDate`,
+                    `userId`,
+                    `entity`,
+                    `message`,
+                    `entityId`,
+                    `objectAfter`,
+                    `ipAddress`,
+                    `sessionHistoryId`,
+                    `requestId`
+                )
+                VALUES (
+                    :logDate,
+                    :userId,
+                    :entity,
+                    :message,
+                    :entityId,
+                    :objectAfter,
+                    :ipAddress,
+                    :sessionHistoryId,
+                    :requestId
+                )
             ');
         }
 
@@ -140,7 +199,9 @@ class LogService implements LogServiceInterface
             'message' => $message,
             'entityId' => $entityId,
             'ipAddress' => $this->ipAddress,
-            'objectAfter' => $object
+            'objectAfter' => $object,
+            'sessionHistoryId' => $this->sessionHistoryId,
+            'requestId' => $this->requestId
         ]);
     }
 

@@ -25,6 +25,7 @@ use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Illuminate\Support\Str;
 use Intervention\Image\ImageManagerStatic as Img;
+use Psr\Http\Message\ResponseInterface;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
@@ -36,6 +37,7 @@ use Xibo\Entity\SearchResult;
 use Xibo\Entity\SearchResults;
 use Xibo\Event\LibraryProviderEvent;
 use Xibo\Event\LibraryProviderImportEvent;
+use Xibo\Event\LibraryProviderListEvent;
 use Xibo\Event\MediaDeleteEvent;
 use Xibo\Event\MediaFullLoadEvent;
 use Xibo\Factory\DisplayFactory;
@@ -816,10 +818,10 @@ class Library extends Base
     public function search(Request $request, Response $response): Response
     {
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
-        $provider = $parsedQueryParams->getString('provider', ['default' => 'both']);
+        $provider = $parsedQueryParams->getString('provider', ['default' => 'local']);
 
         $searchResults = new SearchResults();
-        if ($provider === 'both' || $provider === 'local') {
+        if ($provider === 'local') {
             // Sorting options.
             // only allow from a preset list
             $sortCol = match ($parsedQueryParams->getString('sortCol')) {
@@ -847,6 +849,7 @@ class Library extends Base
                 'tags' => $parsedQueryParams->getString('tags'),
                 'exactTags' => $parsedQueryParams->getCheckbox('exactTags'),
                 'ownerId' => $parsedQueryParams->getInt('ownerId'),
+                'folderId' => $parsedQueryParams->getInt('folderId'),
                 'assignable' => 1,
                 'retired' => 0,
                 'orientation' => $parsedQueryParams->getString('orientation', ['defaultOnEmptyString' => true])
@@ -876,10 +879,8 @@ class Library extends Base
                 // Add the result
                 $searchResults->data[] = $searchResult;
             }
-        }
-
-        if ($provider === 'both' || $provider === 'remote') {
-            $this->getLog()->debug('Dispatching event.');
+        } else {
+            $this->getLog()->debug('Dispatching event, for provider ' . $provider);
 
             // Do we have a type filter
             $types = $parsedQueryParams->getArray('types');
@@ -895,11 +896,12 @@ class Library extends Base
                 $parsedQueryParams->getInt('length', ['default' => 10]),
                 $parsedQueryParams->getString('media'),
                 $types,
-                $parsedQueryParams->getString('orientation')
+                $parsedQueryParams->getString('orientation'),
+                $provider
             );
 
             try {
-                $this->getDispatcher()->dispatch($event->getName(), $event);
+                $this->getDispatcher()->dispatch($event, $event->getName());
             } catch (\Exception $exception) {
                 $this->getLog()->error('Library search: Exception in dispatched event: ' . $exception->getMessage());
                 $this->getLog()->debug($exception->getTraceAsString());
@@ -907,6 +909,23 @@ class Library extends Base
         }
 
         return $response->withJson($searchResults);
+    }
+
+    /**
+     * Get list of Library providers with their details.
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return Response|ResponseInterface
+     */
+    public function providersList(Request $request, Response $response): Response|\Psr\Http\Message\ResponseInterface
+    {
+        $event = new LibraryProviderListEvent();
+        $this->getDispatcher()->dispatch($event, $event->getName());
+
+        $providers = $event->getProviders();
+
+        return $response->withJson($providers);
     }
 
     /**
@@ -1147,6 +1166,14 @@ class Library extends Base
 
         if (empty($folderId) || !$this->getUser()->featureEnabled('folder.view')) {
             $folderId = $this->getUser()->homeFolderId;
+        }
+
+        if ($parsedBody->getInt('playlistId') !== null) {
+            $playlist = $this->playlistFactory->getById($parsedBody->getInt('playlistId'));
+
+            if ($playlist->isDynamic === 1) {
+                throw new InvalidArgumentException(__('This Playlist is dynamically managed so cannot accept manual assignments.'), 'isDynamic');
+            }
         }
 
         $options = array_merge([
@@ -1616,7 +1643,9 @@ class Library extends Base
         $downloader->useLogger($this->getLog()->getLoggerInterface());
 
         $params = $this->getSanitizer($request->getParams());
-        if ($params->getCheckbox('preview') == 1) {
+
+        // Check if preview is allowed for the module
+        if ($params->getCheckbox('preview') == 1 && $module->allowPreview === 1) {
             $this->getLog()->debug('download: preview mode, seeing if we can output an image/video');
 
             // Output a 1px image if we're not allowed to see the media.
@@ -2129,7 +2158,8 @@ class Library extends Base
                     'id' => 'layout_button_preview',
                     'external' => true,
                     'url' => '#',
-                    'onclick' => 'createMiniLayoutPreview("' . $this->urlFor($request, 'layout.preview', ['id' => $layout->layoutId]) . '");',
+                    'onclick' => 'createMiniLayoutPreview',
+                    'onclickParam' => $this->urlFor($request, 'layout.preview', ['id' => $layout->layoutId]),
                     'text' => __('Preview Layout')
                 );
             }
@@ -2768,6 +2798,9 @@ class Library extends Base
                         throw new InvalidArgumentException('Missing or invalid URL', 'url');
                     }
 
+                    // This ensures that apiRef will be unique for each provider and resource id
+                    $apiRef = $import->searchResult->provider->id . '_' . $import->searchResult->id;
+
                     // Queue this for upload.
                     // Use a module to make sure our type, etc is supported.
                     $module = $this->getModuleFactory()->getByType($import->searchResult->type);
@@ -2782,7 +2815,8 @@ class Library extends Base
                                 : $module->defaultDuration,
                             'enableStat' => $enableStat,
                             'folderId' => $folder->getId(),
-                            'permissionsFolderId' => $folder->permissionsFolderId
+                            'permissionsFolderId' => $folder->permissionsFolderId,
+                            'apiRef' => $apiRef
                         ]
                     );
                 } else {

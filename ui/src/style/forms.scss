@@ -102,12 +102,27 @@
 #richTextDetachedOverlay {
     z-index: calc($properties-panel-rich-text-container-z-index - 1) !important;
 }
+.ck-body-wrapper .ck-balloon-panel {
+    z-index: calc($properties-panel-rich-text-container-z-index + 1) !important;
+}
+
+.ck-editor-body-detached .ck-body-wrapper .ck-balloon-panel.ck-toolbar-container {
+    right: 150px !important;
+    left: auto !important;
+    top: 66px ! important;
+    width: calc(100vw - 300px) !important;
+}
+
 .rich-text-main-container {
     width: 100%;
     transform-origin: top right;
     box-shadow: none !important;
     overflow: hidden;
     border-radius: 0 0 0.25rem 0.25rem;
+
+    textarea {
+        display: none;
+    }
 
     .rich-text-container-wrapper {
         font-size: initial;
@@ -117,6 +132,10 @@
         &.loading > * {
             display: none;
         }
+    }
+
+    .rich-text-container, .rich-text-editor {
+        overflow: visible;
     }
 
     .text-area-buttons {
@@ -131,7 +150,7 @@
         }
     }
 
-    .cke_textarea_inline {
+    .ck-editor__editable_inline {
         outline-color: $xibo-color-accent;
         outline-style: solid;
     }
@@ -146,7 +165,7 @@
             }
         }
 
-        .cke_textarea_inline {
+        .ck-editor__editable_inline {
             display: none;
         }
 
@@ -155,6 +174,10 @@
             opacity: initial !important;
             height: 100% !important;
             min-height: 160px;
+        }
+
+        .rich-text-editor {
+            display: none;
         }
 
         .viewSourceButton {
@@ -526,4 +549,246 @@ select[readonly].select2-hidden-accessible + .select2-container .select2-selecti
 
 select[readonly].select2-hidden-accessible + .select2-container .select2-selection__arrow, select[readonly].select2-hidden-accessible + .select2-container .select2-selection__clear {
     display: none;
+}
+
+/*
+ developer template form controls
+ */
+.developer-template-controls-container {
+    overflow: auto;
+    max-height: calc(100vh - 400px);
+
+    .developer-template-controls {
+        display: flex;
+        gap: 16px;
+        margin-bottom: 6px;
+
+        .developer-template-placeholder {
+            width: 100%;
+            height: calc(100vh - 410px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 18px;
+            color: $xibo-color-primary-d60;
+            background-color: $xibo-color-primary-l10;
+            border-radius: 6px;
+        }
+
+        .developer-template-control-item {
+            background-color: $xibo-color-primary-l20;
+            padding: 16px;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            min-width: 360px;
+            max-width: 360px;
+
+            .developer-template-control-form {
+                display: flex;
+                flex-direction: column;
+                flex: 1;
+                gap: 18px;
+                
+                .xibo-form-input {
+                    margin-bottom: 0.5rem;
+
+                    label, .input-info-container {
+                        float: left;
+                    }
+                }
+
+                .player-compat-items {
+                    display: grid;
+                    grid-template-columns: repeat(4, 1fr);
+                    gap: 3px 6px;
+                    padding: 6px;
+                    background-color: $xibo-color-primary-l30;
+                    border-radius: 6px;
+                }
+
+                .option-item {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                    background-color: $xibo-color-primary-l30;
+                    padding: 6px;
+                    border-radius: 6px;
+                    margin-bottom: 4px;
+                }
+
+                .test-container {
+                    .test-title, .condition-title {
+                        font-weight: bold;
+                    }
+
+                    .test-item {
+                        background-color: $xibo-color-primary-l30;
+                        border-radius: 6px;
+                        padding: 6px;
+                        margin-bottom: 6px;
+                    }
+
+                    .test-item-properties {
+                        display: flex;
+                        gap: 6px;
+                    }
+
+                    .condition-item {
+                        background-color: lighten($xibo-color-primary-l30, 5%);
+                        padding: 6px;
+                        border-radius: 8px;
+                        margin-bottom: 6px;
+                    }
+
+                    .test-conditions-container {
+                        margin: 6px 0 6px 34px;
+                    }
+
+                    .item-header {
+                        display: flex;
+                        justify-content: space-between;
+                        margin-bottom: 6px;
+                    }
+                }
+            }
+
+            .developer-template-control-item-controls {
+                width: 100%;
+                display: flex;
+                justify-content: space-between;
+
+                .item-move {
+                    cursor: col-resize;
+                    color: $xibo-color-primary-l60;
+                }
+
+                .delete-btn {
+                    padding: 0;
+                    color: $xibo-color-semantic-error;
+                }
+
+                .item-move, .delete-btn {
+                    font-size: 24px;
+                }
+            }
+        }
+    }
+}
+
+// Image replace control
+.image-replace-control .image-replace-control-area {
+    height: 80px;
+    border-radius: 4px;
+    text-align: center;
+    color: $xibo-color-neutral-1000;
+    background-color: $xibo-color-primary-l5;
+    padding: 18px;
+    border: 2px solid darken($xibo-color-primary-l5, 10%);
+
+    &.ui-droppable-active {
+        @include user-select-none();
+
+        cursor: pointer;
+        position: relative;
+        z-index: $designer-select-z-index;
+
+        &.ui-droppable-hover,
+        &:hover {
+            background-color: lighten($xibo-color-primary-l5, 10%);
+        }
+    }
+}
+
+// Colour gradient
+.color-gradient {
+    background-color: $xibo-color-primary-l5;
+    padding: 6px;
+    border-left: 8px solid $xibo-color-primary;
+
+    .color-gradient-colours {
+        display: flex;
+        gap: 6px;
+
+        .picker-container.colorpicker.colorpicker-with-alpha {
+            min-width: 150px;
+        }
+    }
+}
+
+// Fallback data
+.fallback-data-content {
+    margin-bottom: 1rem;
+
+    .fallback-data-record {
+        padding: 1rem;
+        background-color: $xibo-color-neutral-0;
+        border: 3px solid $xibo-color-primary-l60;
+        margin-bottom: 0.5rem;
+        border-radius: 0.5rem;
+        cursor: grab;
+
+        .fallback-data-record-previews {
+            margin-bottom: 0.6rem;
+        }
+
+        .fb-btn-edit, .fallback-data-record-previews {
+            display: block;
+        }
+
+        .fallback-data-record-preview {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.2rem;
+
+            .fallback-data-record-preview-title {
+                font-weight: bold;
+            }
+
+            .fallback-data-record-preview-title, .fallback-data-record-preview-value {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            &.hidden {
+                display: none;
+            }
+        }
+
+        .fb-btn-save, .fallback-data-record-fields {
+            display: none;
+        }
+
+        &.editing {
+            border-color: $xibo-color-accent;
+
+            .fb-btn-edit, .fallback-data-record-previews {
+                display: none;
+            }
+
+            .fb-btn-save, .fallback-data-record-fields {
+                display: block;
+            }
+        }
+
+        .fallback-property {
+            &[data-is-required="true"] {
+                color: $xibo-color-semantic-error;
+                font-weight: bold;
+            }
+        }
+
+        .fallback-data-record-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 1rem;
+
+            button {
+                flex: 1 1;
+            }
+        }
+    }
 }

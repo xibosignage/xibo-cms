@@ -37,6 +37,7 @@ use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\WidgetAudioFactory;
+use Xibo\Factory\WidgetDataFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -99,7 +100,8 @@ class Widget extends Base
         $widgetFactory,
         $transitionFactory,
         $regionFactory,
-        $widgetAudioFactory
+        $widgetAudioFactory,
+        private readonly WidgetDataFactory $widgetDataFactory
     ) {
         $this->moduleFactory = $moduleFactory;
         $this->moduleTemplateFactory = $moduleTemplateFactory;
@@ -189,6 +191,10 @@ class Widget extends Base
         // If we are a region Playlist, we need to check whether the owning Layout is a draft or editable
         if (!$playlist->isEditable()) {
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+        }
+
+        if ($playlist->isDynamic === 1) {
+            throw new InvalidArgumentException(__('This Playlist is dynamically managed so cannot accept manual assignments.'), 'isDynamic');
         }
 
         // Load some information about this playlist
@@ -359,6 +365,7 @@ class Widget extends Base
                 'name' => $widget->getOptionValue('name', null),
                 'enableStat' => $widget->getOptionValue('enableStat', null),
                 'isRepeatData' => $widget->getOptionValue('isRepeatData', null),
+                'showFallback' => $widget->getOptionValue('showFallback', null),
                 'duration' => $widget->duration,
                 'useDuration' => $widget->useDuration
             ],
@@ -420,6 +427,13 @@ class Widget extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="showFallback",
+     *      in="formData",
+     *      description="If this widget requires data and allows fallback data how should that data be returned? (never, always, empty, error)",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="properties",
      *      in="formData",
      *      description="Add an additional parameter for each of the properties required this module and its template. Use the moduleProperties and moduleTemplateProperties calls to get a list of properties needed",
@@ -456,6 +470,10 @@ class Widget extends Base
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
         }
 
+        if ($playlist->isDynamic === 1) {
+            throw new InvalidArgumentException(__('This Playlist is dynamically managed so cannot accept manual assignments.'), 'isDynamic');
+        }
+
         $module = $this->moduleFactory->getByType($widget->type);
 
         // Handle common parameters.
@@ -467,6 +485,10 @@ class Widget extends Base
         // Handle special common properties for widgets with data
         if ($module->isDataProviderExpected()) {
             $widget->setOptionValue('isRepeatData', 'attrib', $params->getCheckbox('isRepeatData'));
+
+            if ($module->fallbackData === 1) {
+                $widget->setOptionValue('showFallback', 'attrib', $params->getString('showFallback'));
+            }
         }
 
         // Validate common parameters if we don't have a validator present.
@@ -665,6 +687,10 @@ class Widget extends Base
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
         }
 
+        if ($playlist->isDynamic === 1) {
+            throw new InvalidArgumentException(__('This Playlist is dynamically managed so cannot accept manual assignments.'), 'isDynamic');
+        }
+
         // Delete clears these, so cache them.
         $widgetMedia = $widget->mediaIds;
 
@@ -821,6 +847,10 @@ class Widget extends Base
         // If we are a region Playlist, we need to check whether the owning Layout is a draft or editable
         if (!$playlist->isEditable()) {
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+        }
+
+        if ($playlist->isDynamic === 1) {
+            throw new InvalidArgumentException(__('This Playlist is dynamically managed so cannot accept manual assignments.'), 'isDynamic');
         }
 
         $widget->load();
@@ -988,6 +1018,10 @@ class Widget extends Base
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
         }
 
+        if ($playlist->isDynamic === 1) {
+            throw new InvalidArgumentException(__('This Playlist is dynamically managed so cannot accept manual assignments.'), 'isDynamic');
+        }
+
         // Are we allowed to do this?
         if ($widget->type === 'subplaylist') {
             throw new InvalidArgumentException(
@@ -1077,6 +1111,10 @@ class Widget extends Base
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
         }
 
+        if ($playlist->isDynamic === 1) {
+            throw new InvalidArgumentException(__('This Playlist is dynamically managed so cannot accept manual assignments.'), 'isDynamic');
+        }
+
         $widget->load();
 
         foreach ($widget->audio as $audio) {
@@ -1158,6 +1196,32 @@ class Widget extends Base
             }
         }
 
+        // Will we use fallback data if available?
+        $showFallback = $widget->getOptionValue('showFallback', 'never');
+        if ($showFallback !== 'never') {
+            // What data type are we dealing with?
+            try {
+                $dataTypeFields = [];
+                foreach ($this->moduleFactory->getDataTypeById($module->dataType)->fields as $field) {
+                    $dataTypeFields[$field->id] = $field->type;
+                }
+
+                // Potentially we will, so get the modifiedDt of this fallback data.
+                $fallbackModifiedDt = $this->widgetDataFactory->getModifiedDtForWidget($widget->widgetId);
+
+                if ($fallbackModifiedDt !== null) {
+                    $this->getLog()->debug('getData: fallback modifiedDt is ' . $fallbackModifiedDt->toAtomString());
+
+                    $dataModifiedDt = max($dataModifiedDt, $fallbackModifiedDt);
+                }
+            } catch (NotFoundException) {
+                $this->getLog()->info('getData: widget will fallback set where the module does not support it');
+                $dataTypeFields = null;
+            }
+        } else {
+            $dataTypeFields = null;
+        }
+
         // Use the cache if we can.
         if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey, $dataModifiedDt)
             || $widgetDataProviderCache->isCacheMissOrOld()
@@ -1166,6 +1230,7 @@ class Widget extends Base
 
             $dataProvider->clearData();
             $dataProvider->clearMeta();
+            $dataProvider->addOrUpdateMeta('showFallback', $showFallback);
 
             try {
                 if ($widgetInterface !== null) {
@@ -1179,6 +1244,47 @@ class Widget extends Base
                         new WidgetDataRequestEvent($dataProvider),
                         WidgetDataRequestEvent::$NAME
                     );
+                }
+
+                // Before caching images, check to see if the data provider is handled
+                $isFallback = false;
+                if ($showFallback !== 'never'
+                    && $dataTypeFields !== null
+                    && (
+                        count($dataProvider->getErrors()) > 0
+                        || count($dataProvider->getData()) <= 0
+                        || $showFallback === 'always'
+                    )
+                ) {
+                    // Error or no data.
+                    $this->getLog()->debug('getData: eligible for fallback data');
+
+                    // Pull in the fallback data
+                    foreach ($this->widgetDataFactory->getByWidgetId($dataProvider->getWidgetId()) as $item) {
+                        // Handle any special data types in the fallback data
+                        foreach ($item->data as $itemId => $itemData) {
+                            if (!empty($itemData)
+                                && array_key_exists($itemId, $dataTypeFields)
+                                && $dataTypeFields[$itemId] === 'image'
+                            ) {
+                                $item->data[$itemId] = $dataProvider->addLibraryFile($itemData);
+                            }
+                        }
+
+                        $dataProvider->addItem($item->data);
+
+                        // Indicate we've been handled by fallback data
+                        $isFallback = true;
+                    }
+
+                    if ($isFallback) {
+                        $dataProvider->addOrUpdateMeta('includesFallback', true);
+                    }
+                }
+
+                // Remove fallback data from the cache if no-longer needed
+                if (!$isFallback) {
+                    $dataProvider->addOrUpdateMeta('includesFallback', false);
                 }
 
                 // Do we have images?
@@ -1195,10 +1301,12 @@ class Widget extends Base
                 }
 
                 // Save to cache
-                if ($dataProvider->isHandled()) {
+                if ($dataProvider->isHandled() || $isFallback) {
                     $widgetDataProviderCache->saveToCache($dataProvider);
                 } else {
                     // Unhandled data provider.
+                    $this->getLog()->debug('getData: unhandled data provider and no fallback data');
+
                     $message = null;
                     foreach ($dataProvider->getErrors() as $error) {
                         $message .= $error . PHP_EOL;
@@ -1322,7 +1430,8 @@ class Widget extends Base
                     $resource,
                     function (string $route, array $data, array $params = []) use ($request) {
                         return $this->urlFor($request, $route, $data, $params);
-                    }
+                    },
+                    $request,
                 );
 
                 $response->getBody()->write($resource);
@@ -1442,6 +1551,10 @@ class Widget extends Base
         // If we are a region Playlist, we need to check whether the owning Layout is a draft or editable
         if (!$playlist->isEditable()) {
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+        }
+
+        if ($playlist->isDynamic === 1) {
+            throw new InvalidArgumentException(__('This Playlist is dynamically managed so cannot accept manual assignments.'), 'isDynamic');
         }
 
         $widget->load();

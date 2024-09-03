@@ -72,6 +72,21 @@ class ModuleTemplateFactory extends BaseFactory
     }
 
     /**
+     * @param int $id
+     * @return \Xibo\Entity\ModuleTemplate
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function getUserTemplateById(int $id): ModuleTemplate
+    {
+        $templates = $this->loadUserTemplates(null, ['id' => $id]);
+        if (count($templates) !== 1) {
+            throw new NotFoundException(sprintf(__('Template not found for %s'), $id));
+        }
+
+        return $templates[0];
+    }
+
+    /**
      * @param string $dataType
      * @param string $id
      * @return \Xibo\Entity\ModuleTemplate
@@ -96,6 +111,22 @@ class ModuleTemplateFactory extends BaseFactory
         $templates = [];
         foreach ($this->load() as $template) {
             if ($template->dataType === $dataType) {
+                $templates[] = $template;
+            }
+        }
+        return $templates;
+    }
+
+    /**
+     * @param string $type
+     * @param string $dataType
+     * @return ModuleTemplate[]
+     */
+    public function getByTypeAndDataType(string $type, string $dataType, bool $includeUserTemplates = true): array
+    {
+        $templates = [];
+        foreach ($this->load($includeUserTemplates) as $template) {
+            if ($template->dataType === $dataType && $template->type === $type) {
                 $templates[] = $template;
             }
         }
@@ -140,11 +171,25 @@ class ModuleTemplateFactory extends BaseFactory
 
     /**
      * Get an array of all modules
-     * @return \Xibo\Entity\ModuleTemplate[]
+     * @param string|null $ownership
+     * @param bool $includeUserTemplates
+     * @return ModuleTemplate[]
      */
-    public function getAll(): array
+    public function getAll(?string $ownership = null, bool $includeUserTemplates = true): array
     {
-        return $this->load();
+        $templates = $this->load($includeUserTemplates);
+
+        if ($ownership === null) {
+            return $templates;
+        } else {
+            $ownedBy = [];
+            foreach ($templates as $template) {
+                if ($ownership === $template->ownership) {
+                    $ownedBy[] = $template;
+                }
+            }
+            return $ownedBy;
+        }
     }
 
     /**
@@ -164,26 +209,30 @@ class ModuleTemplateFactory extends BaseFactory
 
     /**
      * Load templates
-     * @return \Xibo\Entity\ModuleTemplate[]
+     * @param bool $includeUserTemplates
+     * @return ModuleTemplate[]
      */
-    private function load(): array
+    private function load(bool $includeUserTemplates = true): array
     {
         if ($this->templates === null) {
-            $this->getLog()->debug('Loading templates');
+            $this->getLog()->debug('load: Loading templates');
 
-            $files = array_merge(
-                glob(PROJECT_ROOT . '/modules/templates/*.xml'),
-                glob(PROJECT_ROOT . '/custom/modules/templates/*.xml')
+            $this->templates = array_merge(
+                $this->loadFolder(
+                    PROJECT_ROOT . '/modules/templates/*.xml',
+                    'system',
+                ),
+                $this->loadFolder(
+                    PROJECT_ROOT . '/custom/modules/templates/*.xml',
+                    'custom'
+                ),
             );
 
-            foreach ($files as $file) {
-                // Create our module entity from this file
-                try {
-                    $this->createMultiFromXml($file);
-                } catch (\Exception $exception) {
-                    $this->getLog()->error('Unable to create template from '
-                        . basename($file) . ', skipping. e = ' . $exception->getMessage());
-                }
+            if ($includeUserTemplates) {
+                $this->templates = array_merge(
+                    $this->templates,
+                    $this->loadUserTemplates()
+                );
             }
         }
 
@@ -191,12 +240,147 @@ class ModuleTemplateFactory extends BaseFactory
     }
 
     /**
+     * Load templates
+     * @return \Xibo\Entity\ModuleTemplate[]
+     */
+    private function loadFolder(string $folder, string $ownership): array
+    {
+        $this->getLog()->debug('loadFolder: Loading templates from ' . $folder);
+        $templates = [];
+
+        foreach (glob($folder) as $file) {
+            // Create our module entity from this file
+            try {
+                $templates = array_merge($templates, $this->createMultiFromXml($file, $ownership));
+            } catch (\Exception $exception) {
+                $this->getLog()->error('Unable to create template from '
+                    . basename($file) . ', skipping. e = ' . $exception->getMessage());
+            }
+        }
+
+        return $templates;
+    }
+
+    /**
+     * Load user templates from the database.
+     * @return ModuleTemplate[]
+     */
+    public function loadUserTemplates($sortOrder = [], $filterBy = []): array
+    {
+        $this->getLog()->debug('load: Loading user templates');
+
+        if (empty($sortOrder)) {
+            $sortOrder = ['id'];
+        }
+
+        $templates = [];
+        $params = [];
+
+        $filter = $this->getSanitizer($filterBy);
+
+        $select = 'SELECT *,
+                (SELECT GROUP_CONCAT(DISTINCT `group`.group)
+                          FROM `permission`
+                            INNER JOIN `permissionentity`
+                            ON `permissionentity`.entityId = permission.entityId
+                            INNER JOIN `group`
+                            ON `group`.groupId = `permission`.groupId
+                         WHERE entity = :permissionEntityGroups
+                            AND objectId = `module_templates`.id
+                            AND view = 1
+                ) AS groupsWithPermissions';
+
+        $body = ' FROM `module_templates`
+                WHERE 1 = 1 ';
+
+        if ($filter->getInt('id') !== null) {
+            $body .= ' AND `id` = :id ';
+            $params['id'] = $filter->getInt('id');
+        }
+
+        if (!empty($filter->getString('templateId'))) {
+            $body .= ' AND `templateId` LIKE :templateId ';
+            $params['templateId'] = '%' . $filter->getString('templateId') . '%';
+        }
+
+        if (!empty($filter->getString('dataType'))) {
+            $body .= ' AND `dataType` = :dataType ';
+            $params['dataType'] = $filter->getString('dataType') ;
+        }
+
+        $params['permissionEntityGroups'] = 'Xibo\\Entity\\ModuleTemplate';
+
+        $this->viewPermissionSql(
+            'Xibo\Entity\ModuleTemplate',
+            $body,
+            $params,
+            'module_templates.id',
+            'module_templates.ownerId',
+            $filterBy,
+        );
+
+        $order = '';
+        if (is_array($sortOrder) && !empty($sortOrder)) {
+            $order .= ' ORDER BY ' . implode(',', $sortOrder);
+        }
+
+        // Paging
+        $limit = '';
+        if ($filterBy !== null && $filter->getInt('start') !== null && $filter->getInt('length') !== null) {
+            $limit .= ' LIMIT ' .
+                $filter->getInt('start', ['default' => 0]) . ', ' .
+                $filter->getInt('length', ['default' => 10]);
+        }
+
+        $sql = $select . $body . $order. $limit;
+
+        foreach ($this->getStore()->select($sql, $params) as $row) {
+            $template = $this->createUserTemplate($row['xml']);
+            $template->id = intval($row['id']);
+            $template->templateId = $row['templateId'];
+            $template->dataType = $row['dataType'];
+            $template->isEnabled = $row['enabled'] == 1;
+            $template->ownerId = intval($row['ownerId']);
+            $template->groupsWithPermissions = $row['groupsWithPermissions'];
+            $templates[] = $template;
+        }
+
+        // Paging
+        if (!empty($limit) && count($templates) > 0) {
+            unset($params['permissionEntityGroups']);
+            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
+            $this->_countLast = intval($results[0]['total']);
+        }
+
+        return $templates;
+    }
+
+    /**
+     * Create a user template from an XML string
+     * @param string $xmlString
+     * @return ModuleTemplate
+     */
+    public function createUserTemplate(string $xmlString): ModuleTemplate
+    {
+        $xml = new \DOMDocument();
+        $xml->loadXML($xmlString);
+
+        $template = $this->createFromXml($xml->documentElement, 'user', 'database');
+        $template->setXml($xmlString);
+        $template->setDocument($xml);
+        return $template;
+    }
+
+    /**
      * Create multiple templates from XML
      * @param string $file
-     * @return void
+     * @param string $ownership
+     * @return ModuleTemplate[]
      */
-    private function createMultiFromXml(string $file): void
+    private function createMultiFromXml(string $file, string $ownership): array
     {
+        $templates = [];
+
         $xml = new \DOMDocument();
         $xml->load($file);
 
@@ -206,21 +390,26 @@ class ModuleTemplateFactory extends BaseFactory
                     . ' templates in ' . $file);
                 foreach ($node->childNodes as $childNode) {
                     if ($childNode instanceof \DOMElement) {
-                        $this->templates[] = $this->createFromXml($childNode);
+                        $templates[] = $this->createFromXml($childNode, $ownership, $file);
                     }
                 }
             }
         }
+
+        return $templates;
     }
 
     /**
      * @param \DOMElement $xml
+     * @param string $ownership
+     * @param string $file
      * @return \Xibo\Entity\ModuleTemplate
      */
-    private function createFromXml(\DOMElement $xml): ModuleTemplate
+    private function createFromXml(\DOMElement $xml, string $ownership, string $file): ModuleTemplate
     {
         // TODO: cache this into Stash
-        $template = new ModuleTemplate($this->getStore(), $this->getLog(), $this->getDispatcher(), $this);
+        $template = new ModuleTemplate($this->getStore(), $this->getLog(), $this->getDispatcher(), $this, $file);
+        $template->ownership = $ownership;
         $template->templateId = $this->getFirstValueOrDefaultFromXmlNode($xml, 'id');
         $template->type = $this->getFirstValueOrDefaultFromXmlNode($xml, 'type');
         $template->dataType = $this->getFirstValueOrDefaultFromXmlNode($xml, 'dataType');
@@ -298,5 +487,157 @@ class ModuleTemplateFactory extends BaseFactory
         }
 
         return $template;
+    }
+
+    /**
+     * Parse properties json into xml node.
+     *
+     * @param string $properties
+     * @return \DOMDocument
+     * @throws \DOMException
+     */
+    public function parseJsonPropertiesToXml(string $properties): \DOMDocument
+    {
+        $newPropertiesXml = new \DOMDocument();
+        $newPropertiesNode = $newPropertiesXml->createElement('properties');
+        $attributes = [
+            'id',
+            'type',
+            'variant',
+            'format',
+            'mode',
+            'target',
+            'propertyGroupId',
+            'allowLibraryRefs',
+            'allowAssetRefs',
+            'parseTranslations',
+            'includeInXlf'
+        ];
+
+        $commonNodes = [
+            'title',
+            'helpText',
+            'default',
+            'dependsOn',
+            'customPopOver'
+        ];
+
+        $newProperties = json_decode($properties, true);
+        foreach ($newProperties as $property) {
+            // create property node
+            $propertyNode = $newPropertiesXml->createElement('property');
+
+            // go through possible attributes on the property node.
+            foreach ($attributes as $attribute) {
+                if (!empty($property[$attribute])) {
+                    $propertyNode->setAttribute($attribute, $property[$attribute]);
+                }
+            }
+
+            // go through common nodes on property add them if not empty
+            foreach ($commonNodes as $commonNode) {
+                if (!empty($property[$commonNode])) {
+                    $propertyNode->appendChild($newPropertiesXml->createElement($commonNode, $property[$commonNode]));
+                }
+            }
+
+            // do we have options?
+            if (!empty($property['options'])) {
+                $options = $property['options'];
+                if (!is_array($options)) {
+                    $options = json_decode($options, true);
+                }
+
+                $optionsNode = $newPropertiesXml->createElement('options');
+                foreach ($options as $option) {
+                    $optionNode = $newPropertiesXml->createElement('option', $option['title']);
+                    $optionNode->setAttribute('name', $option['name']);
+                    if (!empty($option['set'])) {
+                        $optionNode->setAttribute('set', $option['set']);
+                    }
+                    if (!empty($option['image'])) {
+                        $optionNode->setAttribute('image', $option['image']);
+                    }
+                    $optionsNode->appendChild($optionNode);
+                }
+                $propertyNode->appendChild($optionsNode);
+            }
+
+            // do we have visibility?
+            if (!empty($property['visibility'])) {
+                $visibility = $property['visibility'];
+                if (!is_array($visibility)) {
+                    $visibility = json_decode($visibility, true);
+                }
+
+                $visibilityNode = $newPropertiesXml->createElement('visibility');
+
+                foreach ($visibility as $testElement) {
+                    $testNode = $newPropertiesXml->createElement('test');
+                    $testNode->setAttribute('type', $testElement['type']);
+                    $testNode->setAttribute('message', $testElement['message']);
+                    foreach ($testElement['conditions'] as $condition) {
+                        $conditionNode = $newPropertiesXml->createElement('condition', $condition['value']);
+                        $conditionNode->setAttribute('field', $condition['field']);
+                        $conditionNode->setAttribute('type', $condition['type']);
+                        $testNode->appendChild($conditionNode);
+                    }
+                    $visibilityNode->appendChild($testNode);
+                }
+                $propertyNode->appendChild($visibilityNode);
+            }
+
+            // do we have validation rules?
+            if (!empty($property['validation'])) {
+                $validation = $property['validation'];
+                if (!is_array($validation)) {
+                    $validation = json_decode($property['validation'], true);
+                }
+
+                // xml uses rule node for this.
+                $ruleNode = $newPropertiesXml->createElement('rule');
+
+                // attributes on rule node;
+                $ruleNode->setAttribute('onSave', $validation['onSave'] ? 'true' : 'false');
+                $ruleNode->setAttribute('onStatus', $validation['onStatus'] ? 'true' : 'false');
+
+                // validation property has an array on tests in it
+                foreach ($validation['tests'] as $validationTest) {
+                    $ruleTestNode = $newPropertiesXml->createElement('test');
+                    $ruleTestNode->setAttribute('type', $validationTest['type']);
+                    $ruleTestNode->setAttribute('message', $validationTest['message']);
+
+                    foreach ($validationTest['conditions'] as $condition) {
+                        $conditionNode = $newPropertiesXml->createElement('condition', $condition['value']);
+                        $conditionNode->setAttribute('field', $condition['field']);
+                        $conditionNode->setAttribute('type', $condition['type']);
+                        $ruleTestNode->appendChild($conditionNode);
+                    }
+                    $ruleNode->appendChild($ruleTestNode);
+                }
+                $propertyNode->appendChild($ruleNode);
+            }
+
+            // do we have player compatibility?
+            if (!empty($property['playerCompatibility'])) {
+                $playerCompat = $property['playerCompatibility'];
+                if (!is_array($playerCompat)) {
+                    $playerCompat = json_decode($property['playerCompatibility'], true);
+                }
+
+                $playerCompatibilityNode = $newPropertiesXml->createElement('playerCompatibility');
+                foreach ($playerCompat as $player => $value) {
+                    $playerCompatibilityNode->setAttribute($player, $value);
+                }
+
+                $propertyNode->appendChild($playerCompatibilityNode);
+            }
+
+            $newPropertiesNode->appendChild($propertyNode);
+        }
+
+        $newPropertiesXml->appendChild($newPropertiesNode);
+
+        return $newPropertiesXml;
     }
 }

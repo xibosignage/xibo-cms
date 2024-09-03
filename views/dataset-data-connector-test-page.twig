@@ -1,0 +1,138 @@
+{#
+/*
+ * Copyright (C) 2024 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Data Connector Test</title>
+
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="public-path" content="{{ theme.rootUri() }}"/>
+
+        <link rel="shortcut icon" href="{{ theme.uri("img/favicon.ico") }}" />
+    </head>
+    <body>
+        <script type="text/javascript" nonce="{{ cspNonce }}">
+          window.xiboDC = (function() {
+            'use strict';
+
+            const mainLib = {
+              /**
+               * Inject the data connector event parameters and dataSetId
+               * @param {string} dataSetId - The id of the dataset
+               * @param {string} dataSetParameters - A url string of parameters
+               */
+              initialise: function(dataSetId, dataSetParameters) {
+                window.dataSetId = dataSetId;
+                new URLSearchParams(dataSetParameters).forEach(function (value, key) {
+                  window[key] = value;
+                });
+
+                if (typeof (window.onInit) == 'function') {
+                  window.onInit();
+                }
+              },
+
+              /**
+               * Set the realtime into the player. Called from Data Connector.
+               * @param {string} dataKey A dataKey to store this data
+               * @param {String} data The data as string
+               * @param {Object} options - Request options
+               * @param {callback} options.done Optional
+               * @param {callback} options.error Optional
+               */
+              setData: function(dataKey, data, {done, error} = {}) {
+                // Persist the data we've been given
+                window.parent.receiveData('set', {
+                  dataKey: dataKey,
+                  data: data
+                });
+                if (typeof (done) == 'function') {
+                  done(true);
+                }
+              },
+
+              /**
+               * Notify main application that we have new data. Called from data collector.
+               * @param {string} dataKey - The key of the data that has been changed.
+               */
+              notifyHost: function(dataKey) {
+                // Update the table.
+                window.parent.receiveData('notify', dataKey);
+              },
+
+              /**
+               * Make a request to the configured server/player
+               * @param  {string} path - Request path
+               * @param  {Object} [options] - Optional params
+               * @param  {string} [options.type]
+               * @param  {Object[]} [options.headers]
+               *  Request headers in the format {key: key, value: value}
+               * @param  {Object} [options.data]
+               * @param  {callback} [options.done]
+               * @param  {callback} [options.error]
+               */
+              makeRequest: function(path, {type, headers, data, done, error} = {}) {
+                window.parent.makeRequest(path, {type, headers, data, done, error});
+              },
+
+              /**
+               * Set Schedule Criteria
+               * @param {string} metric The Metric Name
+               * @param {string} value The Value
+               * @param {int} ttl A TTL in seconds
+               */
+              setCriteria: function(metric, value, ttl) {
+                window.parent.receiveData('criteria', {
+                  dataKey: metric,
+                  data: {
+                    metric: metric,
+                    value: value || null,
+                    ttl: ttl,
+                  }
+                });
+              },
+            }
+            return mainLib;
+          })();
+
+          // Capture console logs and report out.
+          (function () {
+            const log = console.log;
+            console.log = function () {
+              log.apply(this, Array.prototype.slice.call(arguments));
+              window.parent.receiveData('log', Array.prototype.slice.call(arguments));
+            };
+          }());
+
+          // Say when we're loaded.
+          window.onload = function () {
+            window.parent.receiveData('loaded', null);
+          }
+        </script>
+        <script type="text/javascript" nonce="{{ cspNonce }}">
+          {{ script|raw }}
+        </script>
+    </body>
+</html>

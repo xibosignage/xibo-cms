@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -21,6 +21,7 @@
  */
 namespace Xibo\Controller;
 
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Display;
@@ -36,6 +37,7 @@ use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Service\PlayerActionServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
@@ -43,7 +45,9 @@ use Xibo\XMR\ChangeLayoutAction;
 use Xibo\XMR\CollectNowAction;
 use Xibo\XMR\CommandAction;
 use Xibo\XMR\OverlayLayoutAction;
+use Xibo\XMR\PlayerActionException;
 use Xibo\XMR\RevertToSchedule;
+use Xibo\XMR\ScheduleCriteriaUpdateAction;
 use Xibo\XMR\TriggerWebhookAction;
 
 /**
@@ -262,6 +266,7 @@ class DisplayGroup extends Base
 
         $filter = [
             'displayGroupId' => $parsedQueryParams->getInt('displayGroupId'),
+            'displayGroupIds' => $parsedQueryParams->getIntArray('displayGroupIds'),
             'displayGroup' => $parsedQueryParams->getString('displayGroup'),
             'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
             'displayId' => $parsedQueryParams->getInt('displayId'),
@@ -394,11 +399,11 @@ class DisplayGroup extends Base
                 ];
             }
 
-            $group->buttons[] = ['divider' => true];
-
             if ($this->getUser()->featureEnabled('displaygroup.modify')
                 && $this->getUser()->checkEditable($group)
             ) {
+                $group->buttons[] = ['divider' => true];
+
                 // File Associations
                 $group->buttons[] = [
                     'id' => 'displaygroup_button_fileassociations',
@@ -455,11 +460,16 @@ class DisplayGroup extends Base
                 ];
             }
 
-            if ($this->getUser()->featureEnabled('displaygroup.modify')
-                && $this->getUser()->checkEditable($group)
+            // Check if limited view access is allowed
+            if (($this->getUser()->featureEnabled('displaygroup.modify') && $this->getUser()->checkEditable($group))
+                || $this->getUser()->featureEnabled('displaygroup.limitedView')
             ) {
-                $group->buttons[] = ['divider' => true];
 
+                if ($this->getUser()->checkEditable($group)) {
+                    $group->buttons[] = ['divider' => true];
+                }
+
+                // Send command
                 $group->buttons[] = [
                     'id' => 'displaygroup_button_command',
                     'url' => $this->urlFor($request, 'displayGroup.command.form', ['id' => $group->displayGroupId]),
@@ -483,6 +493,7 @@ class DisplayGroup extends Base
                     ]
                 ];
 
+                // Collect Now
                 $group->buttons[] = [
                     'id' => 'displaygroup_button_collectNow',
                     'url' => $this->urlFor($request, 'displayGroup.collectNow.form', ['id' => $group->displayGroupId]),
@@ -500,32 +511,34 @@ class DisplayGroup extends Base
                     ]
                 ];
 
-                // Trigger webhook
-                $group->buttons[] = [
-                    'id' => 'displaygroup_button_trigger_webhook',
-                    'url' => $this->urlFor(
-                        $request,
-                        'displayGroup.trigger.webhook.form',
-                        ['id' => $group->displayGroupId]
-                    ),
-                    'text' => __('Trigger a web hook'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        [
-                            'name' => 'commit-url',
-                            'value' => $this->urlFor(
-                                $request,
-                                'displayGroup.action.trigger.webhook',
-                                ['id' => $group->displayGroupId]
-                            )
-                        ],
-                        ['name' => 'commit-method', 'value' => 'post'],
-                        ['name' => 'id', 'value' => 'displaygroup_button_trigger_webhook'],
-                        ['name' => 'text', 'value' => __('Trigger a web hook')],
-                        ['name' => 'rowtitle', 'value' => $group->displayGroup],
-                        ['name' => 'form-callback', 'value' => 'triggerWebhookMultiSelectFormOpen']
-                    ]
-                ];
+                if ($this->getUser()->checkEditable($group)) {
+                    // Trigger webhook
+                    $group->buttons[] = [
+                        'id' => 'displaygroup_button_trigger_webhook',
+                        'url' => $this->urlFor(
+                            $request,
+                            'displayGroup.trigger.webhook.form',
+                            ['id' => $group->displayGroupId]
+                        ),
+                        'text' => __('Trigger a web hook'),
+                        'multi-select' => true,
+                        'dataAttributes' => [
+                            [
+                                'name' => 'commit-url',
+                                'value' => $this->urlFor(
+                                    $request,
+                                    'displayGroup.action.trigger.webhook',
+                                    ['id' => $group->displayGroupId]
+                                )
+                            ],
+                            ['name' => 'commit-method', 'value' => 'post'],
+                            ['name' => 'id', 'value' => 'displaygroup_button_trigger_webhook'],
+                            ['name' => 'text', 'value' => __('Trigger a web hook')],
+                            ['name' => 'rowtitle', 'value' => $group->displayGroup],
+                            ['name' => 'form-callback', 'value' => 'triggerWebhookMultiSelectFormOpen']
+                        ]
+                    ];
+                }
             }
         }
 
@@ -1944,7 +1957,12 @@ class DisplayGroup extends Base
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($displayGroup)) {
+        // Non-destructive edit-only feature; allow limited view access
+        if (
+            !$this->getUser()->checkEditable($displayGroup)
+            && !$this->getUser()->featureEnabled('displays.limitedView')
+            && !$this->getUser()->featureEnabled('displaygroup.limitedView')
+        ) {
             throw new AccessDeniedException();
         }
 
@@ -1990,7 +2008,12 @@ class DisplayGroup extends Base
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($displayGroup)) {
+        // Non-destructive edit-only feature; allow limited view access
+        if (
+            !$this->getUser()->checkEditable($displayGroup)
+            && !$this->getUser()->featureEnabled('displays.limitedView')
+            && !$this->getUser()->featureEnabled('displaygroup.limitedView')
+        ) {
             throw new AccessDeniedException();
         }
 
@@ -2418,7 +2441,11 @@ class DisplayGroup extends Base
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($displayGroup)) {
+        // Non-destructive edit-only feature; allow limited view access
+        if (
+            !$this->getUser()->checkEditable($displayGroup)
+            && !$this->getUser()->featureEnabled('displaygroup.limitedView')
+        ) {
             throw new AccessDeniedException();
         }
 
@@ -2479,7 +2506,11 @@ class DisplayGroup extends Base
         $displayGroup = $this->displayGroupFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($displayGroup)) {
+        // Non-destructive edit-only feature; allow limited view access
+        if (
+            !$this->getUser()->checkEditable($displayGroup)
+            && !$this->getUser()->featureEnabled('displaygroup.limitedView')
+        ) {
             throw new AccessDeniedException();
         }
 
@@ -2866,6 +2897,111 @@ class DisplayGroup extends Base
             'httpStatus' => 204,
             'message' => sprintf(__('Command Sent to %s'), $displayGroup->displayGroup),
             'id' => $displayGroup->displayGroupId
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * @SWG\Post(
+     *    path="/displaygroup/criteria[/{displayGroupId}]",
+     *    operationId="ScheduleCriteriaUpdate",
+     *    tags={"displayGroup"},
+     *    summary="Action: Push Criteria Update",
+     *    description="Send criteria updates to the specified DisplayGroup or to all displays if displayGroupId is not
+     *                  provided.",
+     *    @SWG\Parameter(
+     *        name="displayGroupId",
+     *        in="path",
+     *        description="The display group id",
+     *        type="integer",
+     *        required=true
+     *     ),
+     *    @SWG\Parameter(
+     *        name="criteriaUpdates",
+     *        in="body",
+     *        description="The criteria updates to send to the Player",
+     *        required=true,
+     *        @SWG\Schema(
+     *            type="array",
+     *            @SWG\Items(
+     *                type="object",
+     *                @SWG\Property(property="metric", type="string"),
+     *                @SWG\Property(property="value", type="string"),
+     *                @SWG\Property(property="ttl", type="integer")
+     *            )
+     *        )
+     *     ),
+     *    @SWG\Response(
+     *        response=204,
+     *        description="Successful operation"
+     *    ),
+     *    @SWG\Response(
+     *        response=400,
+     *        description="Invalid criteria format"
+     *    )
+     *   )
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param int $displayGroupId
+     * @return ResponseInterface|Response
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws PlayerActionException
+     */
+    public function pushCriteriaUpdate(Request $request, Response $response, int $displayGroupId): Response|ResponseInterface
+    {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        // Get criteria updates
+        $criteriaUpdates = $sanitizedParams->getArray('criteriaUpdates');
+
+        // ensure criteria updates exists
+        if (empty($criteriaUpdates)) {
+            throw new InvalidArgumentException(__('No criteria found.'), 'criteriaUpdates');
+        }
+
+        // Initialize array to hold sanitized criteria updates
+        $sanitizedCriteriaUpdates = [];
+
+        // Loop through each criterion and sanitize the input
+        foreach ($criteriaUpdates as $criteria) {
+            $criteriaSanitizer = $this->getSanitizer($criteria);
+
+            // Sanitize and retrieve the metric, value, and ttl
+            $metric = $criteriaSanitizer->getString('metric');
+            $value = $criteriaSanitizer->getString('value');
+            $ttl = $criteriaSanitizer->getInt('ttl');
+
+            // Ensure each criterion has metric, value, and ttl
+            if (empty($metric) || empty($value) || !isset($ttl)) {
+                // Throw an exception if any of the required fields are missing or empty
+                throw new PlayerActionException(
+                    __('Invalid criteria format. Metric, value, and ttl must all be present and not empty.')
+                );
+            }
+
+            // Add sanitized criteria
+            $sanitizedCriteriaUpdates[] = [
+                'metric' => $metric,
+                'value' => $value,
+                'ttl' => abs($ttl)
+            ];
+        }
+
+        // Create and send the player action to displays under the display group
+        $this->playerAction->sendAction(
+            $this->displayFactory->getByDisplayGroupId($displayGroupId),
+            (new ScheduleCriteriaUpdateAction())->setCriteriaUpdates($sanitizedCriteriaUpdates)
+        );
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => __('Schedule criteria updates sent to players.'),
+            'id' => $displayGroupId
         ]);
 
         return $this->render($request, $response);

@@ -25,11 +25,12 @@
 {% import "inline.twig" as inline %}
 
 {% block actionMenu %}
-    {% if currentUser.featureEnabled("playersoftware.add") %}
     <div class="widget-action-menu pull-right">
-        <button class="btn btn-success" href="#" id="playerSoftwareUploadForm" title="{% trans "Upload a new Player Software file" %}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Version" %}</button>
+        {% if currentUser.featureEnabled("playersoftware.add") %}
+            <button class="btn btn-success" href="#" id="playerSoftwareUploadForm" title="{% trans "Upload a new Player Software file" %}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Version" %}</button>
+        {% endif %}
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
     </div>
-    {% endif %}
 {% endblock %}
 
 
@@ -80,7 +81,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         var table;
         $(document).ready(function() {
             table = $("#playerSoftwareItems").DataTable({
@@ -135,6 +136,10 @@
             table.on('draw', dataTableDraw);
             table.on('processing.dt', dataTableProcessing);
             dataTableAddButtons(table, $('#playerSoftwareItems_wrapper').find('.dataTables_buttons'));
+
+            $("#refreshGrid").click(function () {
+                table.ajax.reload();
+            });
         });
 
         $("#playerSoftwareUploadForm").click(function(e) {

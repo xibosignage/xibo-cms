@@ -20,6 +20,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+global $app;
+
 use Slim\Routing\RouteCollectorProxy;
 use Xibo\Middleware\FeatureAuth;
 use Xibo\Middleware\LayoutLock;
@@ -211,8 +213,18 @@ $app->group('', function (RouteCollectorProxy $group) use ($app) {
     $group->put('/playlist/{id}', ['\Xibo\Controller\Playlist','edit'])->setName('playlist.edit');
     $group->delete('/playlist/{id}', ['\Xibo\Controller\Playlist','delete'])->setName('playlist.delete');
     $group->post('/playlist/copy/{id}', ['\Xibo\Controller\Playlist','copy'])->setName('playlist.copy');
-    $group->put('/playlist/setenablestat/{id}', ['\Xibo\Controller\Playlist','setEnableStat'])->setName('playlist.setenablestat');
-    $group->put('/playlist/{id}/selectfolder', ['\Xibo\Controller\Playlist','selectFolder'])->setName('playlist.selectfolder');
+    $group->put(
+        '/playlist/setenablestat/{id}',
+        ['\Xibo\Controller\Playlist','setEnableStat']
+    )->setName('playlist.setenablestat');
+    $group->put(
+        '/playlist/{id}/selectfolder',
+        ['\Xibo\Controller\Playlist','selectFolder']
+    )->setName('playlist.selectfolder');
+    $group->post(
+        '/playlist/{id}/convert',
+        ['\Xibo\Controller\Playlist','convert']
+    )->setName('playlist.convert');
 
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['playlist.modify']));
 
@@ -239,7 +251,8 @@ $app->group('/playlist/widget', function (RouteCollectorProxy $group) {
     $group->post('/{type}/{id}', ['\Xibo\Controller\Widget','addWidget'])->setName('module.widget.add');
     $group->put('/{id}', ['\Xibo\Controller\Widget','editWidget'])->setName('module.widget.edit');
     $group->delete('/{id}', ['\Xibo\Controller\Widget','deleteWidget'])->setName('module.widget.delete');
-    $group->put('/transition/{type}/{id}', ['\Xibo\Controller\Widget','editWidgetTransition'])->setName('module.widget.transition.edit');
+    $group->put('/transition/{type}/{id}', ['\Xibo\Controller\Widget','editWidgetTransition'])
+        ->setName('module.widget.transition.edit');
     $group->put('/{id}/audio', ['\Xibo\Controller\Widget','widgetAudio'])->setName('module.widget.audio');
     $group->delete('/{id}/audio', ['\Xibo\Controller\Widget','widgetAudioDelete']);
     $group->put('/{id}/expiry', ['\Xibo\Controller\Widget','widgetExpiry'])->setName('module.widget.expiry');
@@ -248,6 +261,18 @@ $app->group('/playlist/widget', function (RouteCollectorProxy $group) {
 
     // Drawer widgets Region
     $group->put('/{id}/target', ['\Xibo\Controller\Widget','widgetSetRegion'])->setName('module.widget.set.region');
+
+    // Widget Fallback Data APIs
+    $group->get('/fallback/data/{id}', ['\Xibo\Controller\WidgetData','get'])
+        ->setName('module.widget.data.get');
+    $group->post('/fallback/data/{id}', ['\Xibo\Controller\WidgetData','add'])
+        ->setName('module.widget.data.add');
+    $group->put('/fallback/data/{id}/{dataId}', ['\Xibo\Controller\WidgetData','edit'])
+        ->setName('module.widget.data.edit');
+    $group->delete('/fallback/data/{id}/{dataId}', ['\Xibo\Controller\WidgetData','delete'])
+        ->setName('module.widget.data.delete');
+    $group->post('/fallback/data/{id}/order', ['\Xibo\Controller\WidgetData','setOrder'])
+        ->setName('module.widget.data.set.order');
 })
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify', 'playlist.modify']))
     ->addMiddleware(new LayoutLock($app));
@@ -398,6 +423,7 @@ $app->get('/displaygroup', ['\Xibo\Controller\DisplayGroup','grid'])->setName('d
 $app->post('/displaygroup', ['\Xibo\Controller\DisplayGroup','add'])
     ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['displaygroup.add']))
     ->setName('displayGroup.add');
+$app->post('/displaygroup/criteria/{displayGroupId}', ['\Xibo\Controller\DisplayGroup','pushCriteriaUpdate'])->setName('displayGroup.criteria.push');
 
 $app->post('/displaygroup/{id}/action/collectNow', ['\Xibo\Controller\DisplayGroup','collectNow'])
     ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['displaygroup.view']))
@@ -463,11 +489,14 @@ $app->get('/rss/{psk}', ['\Xibo\Controller\DataSetRss','feed'])->setName('dataSe
 $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/dataset/{id}', ['\Xibo\Controller\DataSet','edit'])->setName('dataSet.edit');
     $group->delete('/dataset/{id}', ['\Xibo\Controller\DataSet','delete'])->setName('dataSet.delete');
+    $group->put('/dataset/{id}/selectfolder', ['\Xibo\Controller\DataSet', 'selectFolder'])->setName('dataSet.selectfolder');
+
     $group->post('/dataset/copy/{id}', ['\Xibo\Controller\DataSet','copy'])->setName('dataSet.copy');
     //$group->map(['HEAD'],'/dataset/import/{id}', ['\Xibo\Controller\DataSet','import');
     $group->post('/dataset/import/{id}', ['\Xibo\Controller\DataSet','import'])->setName('dataSet.import');
     $group->post('/dataset/importjson/{id}', ['\Xibo\Controller\DataSet','importJson'])->setName('dataSet.import.json');
     $group->post('/dataset/remote/test', ['\Xibo\Controller\DataSet','testRemoteRequest'])->setName('dataSet.test.remote');
+    $group->put('/dataset/dataConnector/{id}', ['\Xibo\Controller\DataSet','updateDataConnector'])->setName('dataSet.dataConnector.update');
     $group->get('/dataset/export/csv/{id}', ['\Xibo\Controller\DataSet', 'exportToCsv'])->setName('dataSet.export.csv');
 
     // Columns

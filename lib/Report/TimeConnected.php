@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022-2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -424,12 +424,13 @@ class TimeConnected implements ReportInterface
                             display.display
                           FROM displayevent
                             INNER JOIN display
-                            ON display.displayId = displayevent.displayId 
+                            ON display.displayId = displayevent.displayId
+                          WHERE `displayevent`.eventTypeId = 1 
             ';
 
         // Displays
         if (count($displayIds) > 0) {
-            $query .= ' WHERE display.displayID IN (' . implode(',', $displayIds) . ') ';
+            $query .= ' AND display.displayID IN (' . implode(',', $displayIds) . ') ';
         }
 
         $query .= '

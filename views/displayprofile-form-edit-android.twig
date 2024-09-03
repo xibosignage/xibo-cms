@@ -167,7 +167,7 @@
                     {{ forms.dropdown("orientation", "single", title, displayProfile.getSetting("orientation"), options, "id", "value", helpText) }}
 
                     {% set title = "Screen Dimensions"|trans %}
-                    {% set helpText = "Set dimensions to be used for the Player window ensuring that they do not exceed the actual screen size. Enter the following values representing the pixel sizings for; Left,Top,Width,Height. This requires a Player Restart to action."|trans %}
+                    {% set helpText = "Set dimensions to be used for the Player window ensuring that they do not exceed the actual screen size. Enter the following values representing the pixel sizings for; Top,Left,Width,Height. This requires a Player Restart to action."|trans %}
                     {{ forms.input("screenDimensions", title, displayProfile.getSetting("screenDimensions"), helpText) }}
 
                 </div>
@@ -187,13 +187,24 @@
                     {{ forms.checkbox("useSurfaceVideoView", title, displayProfile.getSetting("useSurfaceVideoView"), helpText) }}
 
                     {% set title = "Log Level"|trans %}
-                    {% set helpText = "The logging level that should be recorded by the Player."|trans %}
+                    {% set helpText = "The resting logging level that should be recorded by the Player."|trans %}
                     {% set options = [
-                        { id: 'audit', value: "Audit"|trans },
+                        { id: 'emergency', value: "Emergency"|trans },
+                        { id: 'alert', value: "Alert"|trans },
+                        { id: 'critical', value: "Critical"|trans },
                         { id: 'error', value: "Error"|trans },
                         { id: 'off', value: "Off"|trans }
                     ] %}
                     {{ forms.dropdown("logLevel", "single", title, displayProfile.getSetting("logLevel"), options, "id", "value", helpText) }}
+
+                    {% set title %}{% trans "Elevate Logging until" %}{% endset %}
+                    {% set helpText %}{% trans "Elevate log level for the specified time. Should only be used if there is a problem with the display." %}{% endset %}
+                    {% if displayProfile.isElevatedLogging() %}
+                        {% set elevatedLogs = displayProfile.getUnmatchedProperty("elevateLogsUntilIso") %}
+                    {% else %}
+                        {% set elevatedLogs = "" %}
+                    {% endif %}
+                    {{ forms.dateTime("elevateLogsUntil", title, elevatedLogs, helpText) }}
 
                 </div>
 

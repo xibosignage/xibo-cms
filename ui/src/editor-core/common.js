@@ -4,11 +4,14 @@ module.exports = {
   // Tooltips flag
   displayTooltips: true,
 
+  // Show delete confirmation modals
+  deleteConfirmation: true,
+
   /**
      * Show loading screen
      * @param {string} cloneName - Screen tag
      */
-  showLoadingScreen: function(cloneName = 'genericLoadingScreen') {
+  showLoadingScreen: function() {
     let bumpVal = $('.loading-overlay.loading').data('bump') || 0;
     bumpVal++;
 
@@ -26,7 +29,7 @@ module.exports = {
      * Hide loading screen
      * @param {string} cloneName - Screen tag
      */
-  hideLoadingScreen: function(cloneName = 'genericLoadingScreen') {
+  hideLoadingScreen: function() {
     let bumpVal = $('.loading-overlay.loading').data('bump') || 1;
     bumpVal--;
 
@@ -217,9 +220,75 @@ module.exports = {
     // CKEditor
     $container.find('.rich-text').each((_idx, fp) => {
       const richTextId = $(fp).attr('id');
-      if (CKEDITOR.instances[richTextId]) {
-        CKEDITOR.instances[richTextId].destroy();
-      }
+      formHelpers.destroyCKEditor(richTextId);
     });
+  },
+
+  /**
+   * Handle minimum dimensions for the editor
+   * @param {object} editor
+    */
+  handleEditorMinimumDimensions: function(editor) {
+    const resizeThrottle = 60;
+    const minWindowWidth = 1200;
+    const minWindowHeight = 600;
+    const toolbarLevelLimiter = 1600;
+
+    const updateEditor = function() {
+      const currentWidth = $(window).width();
+      const currentHeight = $(window).height();
+      const editorInitalState = editor.showMinDimensionsMessage;
+      const toolbarInitalState = editor.toolbar.levelLimiter;
+
+      // If editor container is empty object
+      // stop and detach event handler
+      if ($.isEmptyObject(editor.editorContainer)) {
+        $(window).off('resize.' + editor.mainObjectType);
+        return;
+      }
+
+      // Show editor or message?
+      editor.showMinDimensionsMessage = (
+        currentWidth < minWindowWidth ||
+        currentHeight < minWindowHeight
+      );
+
+      // Limit toolbar
+      editor.toolbar.levelLimiter = (currentWidth < toolbarLevelLimiter);
+
+      // If status changed, refresh editor
+      if (editorInitalState != editor.showMinDimensionsMessage) {
+        // Show the minimum dimensions message instead
+        if (editor.showMinDimensionsMessage) {
+          editor.editorContainer.append(`<div class="min-res-message">
+            <div>
+              <strong>${editorsTrans.minDimensionsMessageHeader}</strong>
+              <div>${editorsTrans.minDimensionsMessageBody}</div>
+            </div>
+          </div>`);
+
+          // Hide other containers
+          editor.editorContainer.find('> *:not(.min-res-message)')
+            .hide();
+        } else {
+          // Hide message container
+          editor.editorContainer.find('.min-res-message').remove();
+
+          // Re-show all other containers
+          editor.editorContainer.find('> *:not(.custom-overlay)')
+            .show();
+        }
+      } else if (toolbarInitalState != editor.toolbar.levelLimiter) {
+        // If toolbar changed, and we didn't refresh editor, reload it
+        editor.toolbar.render();
+      }
+    };
+
+    // Calculate on window resize
+    $(window).on('resize.' + editor.mainObjectType,
+      _.debounce(updateEditor, resizeThrottle));
+
+    // Calculate on first run
+    updateEditor();
   },
 };

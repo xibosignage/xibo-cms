@@ -26,13 +26,16 @@ use Illuminate\Support\Str;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 use Xibo\Entity\ScheduleReminder;
+use Xibo\Event\ScheduleCriteriaRequestEvent;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\ScheduleCriteriaFactory;
 use Xibo\Factory\ScheduleExclusionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\ScheduleReminderFactory;
@@ -121,7 +124,8 @@ class Schedule extends Base
         $dayPartFactory,
         $scheduleReminderFactory,
         $scheduleExclusionFactory,
-        SyncGroupFactory $syncGroupFactory
+        SyncGroupFactory $syncGroupFactory,
+        private readonly ScheduleCriteriaFactory $scheduleCriteriaFactory
     ) {
         $this->session = $session;
         $this->scheduleFactory = $scheduleFactory;
@@ -145,57 +149,11 @@ class Schedule extends Base
      */
     function displayPage(Request $request, Response $response)
     {
-        // We need to provide a list of displays
-        $displayGroupIds = $this->session->get('displayGroupIds');
-
-        if (!is_array($displayGroupIds)) {
-            $displayGroupIds = [];
-        }
-
-        $displayGroups = [];
-        $displaySpecificDisplayGroups = [];
-
-        // Boolean to check if the option show all was saved in session
-        $displayGroupsShowAll = false;
-
-        if (count($displayGroupIds) > 0) {
-            foreach ($displayGroupIds as $displayGroupId) {
-                if ($displayGroupId == -1) {
-                    // If we have the show all option selected, go no further.
-                    $displayGroupsShowAll = true;
-                    break;
-                }
-
-                try {
-                    $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
-
-                    if ($this->getUser()->checkViewable($displayGroup)) {
-                        if ($displayGroup->isDisplaySpecific === 1) {
-                            $displaySpecificDisplayGroups[] = $displayGroup;
-                        } else {
-                            $displayGroups[] = $displayGroup;
-                        }
-                    }
-                } catch (NotFoundException $e) {
-                    $this->getLog()->debug(
-                        sprintf(
-                            'Saved filter option for displayGroupId %d that no longer exists.',
-                            $displayGroupId
-                        )
-                    );
-                }
-            }
-        }
-
         // get the default longitude and latitude from CMS options
         $defaultLat = (float)$this->getConfig()->getSetting('DEFAULT_LAT');
         $defaultLong = (float)$this->getConfig()->getSetting('DEFAULT_LONG');
 
         $data = [
-            'displayGroupIds' => $displayGroupIds,
-            'displayGroups' => $displayGroups,
-            'displaySpecificDisplayGroups' => $displaySpecificDisplayGroups,
-            'displayGroupsShowAll' => $displayGroupsShowAll,
             'defaultLat' => $defaultLat,
             'defaultLong' => $defaultLong,
             'eventTypes' => \Xibo\Entity\Schedule::getEventTypesGrid(),
@@ -261,16 +219,14 @@ class Schedule extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         $displayGroupIds = $sanitizedParams->getIntArray('displayGroupIds', ['default' => []]);
+        $displaySpecificDisplayGroupIds = $sanitizedParams->getIntArray('displaySpecificGroupIds', ['default' => []]);
+        $originalDisplayGroupIds = array_merge($displayGroupIds, $displaySpecificDisplayGroupIds);
         $campaignId = $sanitizedParams->getInt('campaignId');
-        $originalDisplayGroupIds = $displayGroupIds;
 
         $start = $sanitizedParams->getDate('from', ['default' => Carbon::now()->startOfMonth()]);
         $end = $sanitizedParams->getDate('to', ['default' => Carbon::now()->addMonth()->startOfMonth()]);
 
-        // if we have some displayGroupIds then add them to the session info so we can default everything else.
-        $this->session->set('displayGroupIds', $displayGroupIds);
-
-        if (count($displayGroupIds) <= 0) {
+        if (count($originalDisplayGroupIds) <= 0) {
             return $response->withJson(['success' => 1, 'result' => []]);
         }
 
@@ -278,7 +234,7 @@ class Schedule extends Base
         $showLayoutName = ($this->getConfig()->getSetting('SCHEDULE_SHOW_LAYOUT_NAME') == 1);
 
         // Permissions check the list of display groups with the user accessible list of display groups
-        $displayGroupIds = array_diff($displayGroupIds, [-1]);
+        $resolvedDisplayGroupIds = array_diff($originalDisplayGroupIds, [-1]);
 
         if (!$this->getUser()->isSuperAdmin()) {
             $userDisplayGroupIds = array_map(function ($element) {
@@ -288,15 +244,15 @@ class Schedule extends Base
 
             // Reset the list to only those display groups that intersect and if 0 have been provided, only those from
             // the user list
-            $displayGroupIds = (count($displayGroupIds) > 0) ? array_intersect($displayGroupIds, $userDisplayGroupIds) : $userDisplayGroupIds;
+            $resolvedDisplayGroupIds = (count($originalDisplayGroupIds) > 0) ? array_intersect($originalDisplayGroupIds, $userDisplayGroupIds) : $userDisplayGroupIds;
 
             $this->getLog()->debug('Resolved list of display groups ['
-                . json_encode($displayGroupIds) . '] from provided list ['
+                . json_encode($resolvedDisplayGroupIds) . '] from provided list ['
                 . json_encode($originalDisplayGroupIds) . '] and user list ['
                 . json_encode($userDisplayGroupIds) . ']');
 
             // If we have none, then we do not return any events.
-            if (count($displayGroupIds) <= 0) {
+            if (count($resolvedDisplayGroupIds) <= 0) {
                 return $response->withJson(['success' => 1, 'result' => []]);
             }
         }
@@ -305,7 +261,7 @@ class Schedule extends Base
         $filter = [
             'futureSchedulesFrom' => $start->format('U'),
             'futureSchedulesTo' => $end->format('U'),
-            'displayGroupIds' => $displayGroupIds,
+            'displayGroupIds' => $resolvedDisplayGroupIds,
             'geoAware' => $sanitizedParams->getInt('geoAware'),
             'recurring' => $sanitizedParams->getInt('recurring'),
             'eventTypeId' => $sanitizedParams->getInt('eventTypeId'),
@@ -815,52 +771,27 @@ class Schedule extends Base
      */
     public function addForm(Request $request, Response $response, ?string $from, ?int $id): Response|ResponseInterface
     {
-        // Get the display groups added to the session (if there are some)
-        $displayGroupIds = $this->session->get('displayGroupIds');
-
-        if (!is_array($displayGroupIds)) {
-            $displayGroupIds = [];
-        }
-
-        $displayGroups = [];
-
-        if (count($displayGroupIds) > 0) {
-            foreach ($displayGroupIds as $displayGroupId) {
-                if ($displayGroupId == -1) {
-                    continue;
-                }
-
-                try {
-                    $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
-
-                    if ($this->getUser()->checkViewable($displayGroup)) {
-                        $displayGroups[] = $displayGroup;
-                    }
-                } catch (NotFoundException $e) {
-                    $this->getLog()->debug(
-                        sprintf(
-                            'Saved filter option for displayGroupId %d that no longer exists.',
-                            $displayGroupId
-                        )
-                    );
-                }
-            }
-        }
-
         // get the default longitude and latitude from CMS options
         $defaultLat = (float)$this->getConfig()->getSetting('DEFAULT_LAT');
         $defaultLong = (float)$this->getConfig()->getSetting('DEFAULT_LONG');
 
+        // Dispatch an event to initialize schedule criteria
+        $event = new ScheduleCriteriaRequestEvent();
+        $this->getDispatcher()->dispatch($event, ScheduleCriteriaRequestEvent::$NAME);
+
+        // Retrieve the criteria data from the event
+        $criteria = $event->getCriteria();
+
         $addFormData = [
             'dayParts' => $this->dayPartFactory->allWithSystem(),
-            'displayGroupIds' => $displayGroupIds,
-            'displayGroups' => $displayGroups,
             'reminders' => [],
             'defaultLat' => $defaultLat,
             'defaultLong' => $defaultLong,
             'eventTypes' => \Xibo\Entity\Schedule::getEventTypesForm(),
             'isScheduleNow' => false,
             'relativeTime' => 0,
+            'setDisplaysFromFilter' => true,
+            'scheduleCriteria' => $criteria
         ];
         $formNowData = [];
 
@@ -879,6 +810,7 @@ class Schedule extends Base
                 'readonlySelect' => !($from == 'DisplayGroup'),
                 'isScheduleNow' => true,
                 'relativeTime' => 1,
+                'setDisplaysFromFilter' => false,
             ];
         }
 
@@ -1089,6 +1021,20 @@ class Schedule extends Base
      *      type="string",
      *      required=false
      *   ),
+     *   @SWG\Parameter(
+     *      name="dataSetId",
+     *      in="formData",
+     *      description="For Data Connector eventTypeId, the DataSet ID",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="dataSetParams",
+     *      in="formData",
+     *      description="For Data Connector eventTypeId, the DataSet params",
+     *      type="string",
+     *      required=false
+     *   ),
      *   @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -1164,6 +1110,19 @@ class Schedule extends Base
             ]);
         } else {
             $schedule->shareOfVoice = null;
+        }
+
+        // Fields only collected for data connector events
+        if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$DATA_CONNECTOR_EVENT) {
+            $schedule->dataSetId = $sanitizedParams->getInt('dataSetId', [
+                'throw' => function () {
+                    new InvalidArgumentException(
+                        __('Please select a DataSet'),
+                        'dataSetId'
+                    );
+                }
+            ]);
+            $schedule->dataSetParams = $sanitizedParams->getString('dataSetParams');
         }
 
         // API request can provide an array of coordinates or valid GeoJSON, handle both cases here.
@@ -1268,6 +1227,20 @@ class Schedule extends Base
             );
         }
 
+        // Schedule Criteria
+        $criteria = $sanitizedParams->getArray('criteria');
+        if (is_array($criteria) && count($criteria) > 0) {
+            foreach ($criteria as $item) {
+                $itemParams = $this->getSanitizer($item);
+                $criterion = $this->scheduleCriteriaFactory->createEmpty();
+                $criterion->metric = $itemParams->getString('metric');
+                $criterion->type = $itemParams->getString('type');
+                $criterion->condition = $itemParams->getString('condition');
+                $criterion->value = $itemParams->getString('value');
+                $schedule->addOrUpdateCriteria($criterion);
+            }
+        }
+
         // Ready to do the add
         $schedule->setDisplayNotifyService($this->displayFactory->getDisplayNotifyService());
         if ($schedule->campaignId != null) {
@@ -1360,6 +1333,13 @@ class Schedule extends Base
         $schedule = $this->scheduleFactory->getById($id);
         $schedule->load();
 
+        // Dispatch an event to retrieve criteria for scheduling from the OpenWeatherMap connector.
+        $event = new ScheduleCriteriaRequestEvent();
+        $this->getDispatcher()->dispatch($event, ScheduleCriteriaRequestEvent::$NAME);
+
+        // Retrieve the data from the event
+        $criteria = $event->getCriteria();
+
         if (!$this->isEventEditable($schedule)) {
             throw new AccessDeniedException();
         }
@@ -1423,6 +1403,7 @@ class Schedule extends Base
             'eventStart' => $eventStart,
             'eventEnd' => $eventEnd,
             'eventTypes' => \Xibo\Entity\Schedule::getEventTypesForm(),
+            'scheduleCriteria' => $criteria
         ]);
 
         return $this->render($request, $response);
@@ -1703,6 +1684,20 @@ class Schedule extends Base
      *      type="string",
      *      required=false
      *   ),
+     *   @SWG\Parameter(
+     *      name="dataSetId",
+     *      in="formData",
+     *      description="For Data Connector eventTypeId, the DataSet ID",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="dataSetParams",
+     *      in="formData",
+     *      description="For Data Connector eventTypeId, the DataSet params",
+     *      type="string",
+     *      required=false
+     *   ),
      *   @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -1752,21 +1747,21 @@ class Schedule extends Base
         if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$ACTION_EVENT) {
             $schedule->actionType = $sanitizedParams->getString('actionType');
             $schedule->actionTriggerCode = $sanitizedParams->getString('actionTriggerCode');
+            $schedule->commandId = $sanitizedParams->getInt('commandId');
             $schedule->actionLayoutCode = $sanitizedParams->getString('actionLayoutCode');
             $schedule->campaignId = null;
         } else {
             $schedule->actionType = null;
             $schedule->actionTriggerCode = null;
+            $schedule->commandId = null;
             $schedule->actionLayoutCode = null;
         }
 
-        // collect commandId only on Command event
-        // null commandId otherwise
+        // collect commandId on Command event
+        // Retain existing commandId value otherwise
         if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$COMMAND_EVENT) {
             $schedule->commandId = $sanitizedParams->getInt('commandId');
             $schedule->campaignId = null;
-        } else {
-            $schedule->commandId = null;
         }
 
         // Set the parentCampaignId for campaign events
@@ -1815,6 +1810,19 @@ class Schedule extends Base
             ]);
         } else {
             $schedule->shareOfVoice = null;
+        }
+
+        // Fields only collected for data connector events
+        if ($schedule->eventTypeId === \Xibo\Entity\Schedule::$DATA_CONNECTOR_EVENT) {
+            $schedule->dataSetId = $sanitizedParams->getInt('dataSetId', [
+                'throw' => function () {
+                    new InvalidArgumentException(
+                        __('Please select a DataSet'),
+                        'dataSetId'
+                    );
+                }
+            ]);
+            $schedule->dataSetParams = $sanitizedParams->getString('dataSetParams');
         }
 
         // API request can provide an array of coordinates or valid GeoJSON, handle both cases here.
@@ -1897,6 +1905,21 @@ class Schedule extends Base
         } else {
             // This is an always day part, which cannot be recurring, make sure we clear the recurring type if it has been set
             $schedule->recurrenceType = null;
+        }
+
+        // Schedule Criteria
+        $schedule->criteria = [];
+        $criteria = $sanitizedParams->getArray('criteria');
+        if (is_array($criteria)) {
+            foreach ($criteria as $item) {
+                $itemParams = $this->getSanitizer($item);
+                $criterion = $this->scheduleCriteriaFactory->createEmpty();
+                $criterion->metric = $itemParams->getString('metric');
+                $criterion->type = $itemParams->getString('type');
+                $criterion->condition = $itemParams->getString('condition');
+                $criterion->value = $itemParams->getString('value');
+                $schedule->addOrUpdateCriteria($criterion, $itemParams->getInt('id'));
+            }
         }
 
         // Ready to do the add
@@ -2236,7 +2259,8 @@ class Schedule extends Base
         $params = $this->getSanitizer($request->getParams());
 
         $displayGroupIds = $params->getIntArray('displayGroupIds', ['default' => []]);
-        $originalDisplayGroupIds = $displayGroupIds;
+        $displaySpecificDisplayGroupIds = $params->getIntArray('displaySpecificGroupIds', ['default' => []]);
+        $originalDisplayGroupIds = array_merge($displayGroupIds, $displaySpecificDisplayGroupIds);
 
         if (!$this->getUser()->isSuperAdmin()) {
             $userDisplayGroupIds = array_map(function ($element) {
@@ -2246,8 +2270,8 @@ class Schedule extends Base
 
             // Reset the list to only those display groups that intersect and if 0 have been provided, only those from
             // the user list
-            $displayGroupIds = (count($displayGroupIds) > 0)
-                    ? array_intersect($displayGroupIds, $userDisplayGroupIds)
+            $resolvedDisplayGroupIds = (count($originalDisplayGroupIds) > 0)
+                    ? array_intersect($originalDisplayGroupIds, $userDisplayGroupIds)
                     : $userDisplayGroupIds;
 
             $this->getLog()->debug('Resolved list of display groups ['
@@ -2256,13 +2280,15 @@ class Schedule extends Base
                 . json_encode($userDisplayGroupIds) . ']');
 
             // If we have none, then we do not return any events.
-            if (count($displayGroupIds) <= 0) {
+            if (count($resolvedDisplayGroupIds) <= 0) {
                 $this->getState()->template = 'grid';
                 $this->getState()->recordsTotal = $this->scheduleFactory->countLast();
                 $this->getState()->setData([]);
 
                 return $this->render($request, $response);
             }
+        } else {
+            $resolvedDisplayGroupIds = $originalDisplayGroupIds;
         }
 
         $events = $this->scheduleFactory->query(
@@ -2274,7 +2300,7 @@ class Schedule extends Base
                 'geoAware' => $params->getInt('geoAware'),
                 'recurring' => $params->getInt('recurring'),
                 'campaignId' => $params->getInt('campaignId'),
-                'displayGroupIds' => $displayGroupIds,
+                'displayGroupIds' => $resolvedDisplayGroupIds,
                 'name' => $params->getString('name'),
                 'useRegexForName' => $params->getCheckbox('useRegexForName'),
                 'logicalOperatorName' => $params->getString('logicalOperatorName'),

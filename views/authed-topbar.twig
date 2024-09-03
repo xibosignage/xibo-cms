@@ -326,4 +326,16 @@
         {% endif %}
         </li>
     {% endif %}
+
+    {% set countViewable = currentUser.featureEnabledCount(["developer.edit"]) %}
+    {% if countViewable > 0 %}
+        <li class="nav-item dropdown">
+            <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{% trans "Developer" %} <span class="caret"></span></a>
+            <div class="dropdown-menu">
+            {% if currentUser.featureEnabled("developer.edit") %}
+                <a class="dropdown-item" href="{{ url_for("developer.templates.view") }}">{% trans "Module Templates" %}</a>
+            {% endif %}
+            </div>
+        </li>
+    {% endif %}
 </ul>

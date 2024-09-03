@@ -46,7 +46,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         $(function () {
             var foldersInputPanelTemplate = Handlebars.compile($('#folders-info-panel').html());
             var $folderInfo = $('#container-folder-info');

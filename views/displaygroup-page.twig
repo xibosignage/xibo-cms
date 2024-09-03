@@ -26,12 +26,12 @@
 {% block title %}{{ "Display Groups"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    {% if currentUser.featureEnabled("displaygroup.add") %}
     <div class="widget-action-menu pull-right">
-        <button class="btn btn-success XiboFormButton" title="{% trans "Add a new Display Group" %}" href="{{ url_for("displayGroup.add.form") }}"> <i class="fa fa-desktop" aria-hidden="true"></i> {% trans "Add Display Group" %}</button>
-        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</button>
+        {% if currentUser.featureEnabled("displaygroup.add") %}
+            <button class="btn btn-success XiboFormButton" title="{% trans "Add a new Display Group" %}" href="{{ url_for("displayGroup.add.form") }}"> <i class="fa fa-desktop" aria-hidden="true"></i> {% trans "Add Display Group" %}</button>
+        {% endif %}
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
     </div>
-    {% endif %}
 {% endblock %}
 
 {% block pageContent %}
@@ -83,26 +83,25 @@
                         </form>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-sm-2 grid-folder-tree-container" id="grid-folder-filter">
-                        <div class="p-3 mr-2">
-                            <input id="jstree-search" class="form-control" type="text" placeholder="{% trans "Search" %}">
-                            <div class="form-check">
-                                <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
-                                <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "All Folders" %}</label>
-                            </div>
-                            <div class="folder-search-no-results d-none">
-                                <p>{% trans 'No Folders matching the search term' %}</p>
-                            </div>
-                            <div id="container-folder-tree"></div>
+                <div class="grid-with-folders-container">
+                    <div class="grid-folder-tree-container p-3" id="grid-folder-filter">
+                        <input id="jstree-search" class="form-control" type="text" placeholder="{% trans "Search" %}">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
+                            <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "All Folders" %}</label>
                         </div>
+                        <div class="folder-search-no-results d-none">
+                            <p>{% trans 'No Folders matching the search term' %}</p>
+                        </div>
+                        <div id="container-folder-tree"></div>
                     </div>
                     <div class="folder-controller d-none">
                         <button type="button" id="folder-tree-select-folder-button" class="btn btn-outline-secondary" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-folder fa-1x"></i></button>
                         <div id="breadcrumbs" class="mt-2 pl-2"></div>
                     </div>
-                    <div id="datatable-container" class="col-sm-10 pr-0">
-                        <div class="XiboData card pt-4 px-2">
+
+                    <div id="datatable-container">
+                        <div class="XiboData card py-3">
                             <table id="displaygroups" class="table table-striped" data-content-type="displayGroup" data-content-id-name="displayGroupId" data-state-preference-name="displayGroupGrid" style="width: 100%;">
                                 <thead>
                                     <tr>
@@ -139,7 +138,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
       var displayGroupTable;
       var displayTable;
       var criteria;
@@ -209,13 +208,17 @@
         });
 
         $("#refreshGrid").click(function () {
-          displayGroupTable.ajax.reload();
+            displayGroupTable.ajax.reload();
         });
 
         displayGroupTable.on('draw', dataTableDraw);
         displayGroupTable.on('draw', { form: $("#displaygroups").closest(".XiboGrid").find(".FilterDiv form") }, dataTableCreateTagEvents);
         displayGroupTable.on('processing.dt', dataTableProcessing);
         dataTableAddButtons(displayGroupTable, $('#displaygroups_wrapper').find('.dataTables_buttons'));
+
+        $("#refreshGrid").click(function () {
+            displayGroupTable.ajax.reload();
+        });
       });
 
         function setDeleteMultiSelectFormOpen(dialog) {

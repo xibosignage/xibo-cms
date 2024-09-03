@@ -1,0 +1,56 @@
+{#
+/**
+ * Copyright (C) 2024 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+{% extends "base-report.twig" %}
+
+{% block content %}
+    <div>
+        <span class="small">{% trans "From" %} {{ metadata.periodStart }} {% trans "To" %} {{ metadata.periodEnd }}</span>
+    </div>
+    <p></p>
+
+    <table class="saved-report-table">
+        <tr>
+            <th>{% trans "Date" %}</th>
+            <th>{% trans "User Name" %}</th>
+            <th>{% trans "User ID" %}</th>
+            <th>{% trans "IP Address" %}</th>
+            <th>{% trans "Session ID" %}</th>
+            <th>{% trans "Message" %}</th>
+            <th>{% trans "Object" %}</th>
+        </tr>
+        {% for item in tableData %}
+            <tr>
+                <td>{{ item.logDate }}</td>
+                <td>{{ item.userName }}</td>
+                <td>{{ item.userId }}</td>
+                <td>{{ item.ipAddress }}</td>
+                <td>{{ item.sessionHistoryId }}</td>
+                <td>{{ item.message }}</td>
+                <td>{{ item.objectAfter }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+    <br/>
+    <span>{{ placeholder }}</span>
+    <img src="{{ src|raw }}" >
+{% endblock %}

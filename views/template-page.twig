@@ -26,11 +26,12 @@
 {% block title %}{{ "Templates"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    {% if currentUser.featureEnabled("template.add") %}
-        <div class="widget-action-menu pull-right">
-            <button class="btn btn-success XiboFormButton btns" title="{% trans "Add a new Template and jump to the layout designer." %}" href="{{ url_for("template.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Template" %}</button>
-        </div>
-    {% endif %}
+    <div class="widget-action-menu pull-right">
+        {% if currentUser.featureEnabled("template.add") %}
+            <button class="btn btn-success XiboFormButton btns" title="{% trans "Add a new Template and jump to the layout editor." %}" href="{{ url_for("template.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Template" %}</button>
+        {% endif %}
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
+    </div>
 {% endblock %}
 
 {% block pageContent %}
@@ -56,27 +57,25 @@
                         </form>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-sm-2 grid-folder-tree-container" id="grid-folder-filter">
-                        <div class="p-3 mr-2">
-                            <input id="jstree-search" class="form-control" type="text" placeholder="{% trans "Search" %}">
-                            <div class="form-check">
-                                <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
-                                <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "All Folders" %}</label>
-                            </div>
-                            <div class="folder-search-no-results d-none">
-                                <p>{% trans 'No Folders matching the search term' %}</p>
-                            </div>
-                            <div id="container-folder-tree"></div>
+                <div class="grid-with-folders-container">
+                    <div class="grid-folder-tree-container p-3" id="grid-folder-filter">
+                        <input id="jstree-search" class="form-control" type="text" placeholder="{% trans "Search" %}">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
+                            <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "All Folders" %}</label>
                         </div>
+                        <div class="folder-search-no-results d-none">
+                            <p>{% trans 'No Folders matching the search term' %}</p>
+                        </div>
+                        <div id="container-folder-tree"></div>
                     </div>
                     <div class="folder-controller d-none">
                         <button type="button" id="folder-tree-select-folder-button" class="btn btn-outline-secondary" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-folder fa-1x"></i></button>
                         <div id="breadcrumbs" class="mt-2 pl-2"></div>
                     </div>
-                    <div id="datatable-container" class="col-sm-10 pr-0">
-                        <div class="XiboData card pt-4 px-2">
-                            <table id="templates" class="table table-striped" data-content-type="layout" data-content-id-name="layoutId" data-state-preference-name="templateGrid">
+                    <div id="datatable-container">
+                        <div class="XiboData card py-3">
+                            <table id="templates" class="table table-striped" data-content-type="layout" data-content-id-name="layoutId" data-state-preference-name="templateGrid" style="width: 100%;">
                                 <thead>
                                     <tr>
                                         <th>{% trans "Name" %}</th>
@@ -103,7 +102,7 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script type="text/javascript">
+    <script type="text/javascript" nonce="{{ cspNonce }}">
         {% if not currentUser.featureEnabled("folder.view") %}
             disableFolders();
         {% endif %}
@@ -214,6 +213,10 @@
         });
         table.on('processing.dt', dataTableProcessing);
         dataTableAddButtons(table, $('#templates_wrapper').find('.dataTables_buttons'));
+
+        $("#refreshGrid").click(function () {
+            table.ajax.reload();
+        });
 
         function templateFormOpen() {
             if ($('#folder-tree-form-modal').length === 0) {

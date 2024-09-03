@@ -33,7 +33,7 @@
 
         <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item"><a class="nav-link active" href="#generalTab" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-            <li class="nav-item"><a class="nav-link" href="#positioningTab" role="tab" data-toggle="tab"><span>{% trans "Positioning" %}</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="#positionTab" role="tab" data-toggle="tab"><span>{% trans "Positioning" %}</span></a></li>
             <li class="nav-item"><a class="nav-link" href="#transitionTab" role="tab" data-toggle="tab"><span>{% trans "Transition" %}</span></a></li>
         </ul>
 
@@ -60,7 +60,7 @@
 
                     </div>
 
-                    <div class="tab-pane" id="positioningTab">
+                    <div class="tab-pane" id="positionTab">
                         {% set title %}{% trans "Top" %}{% endset %}
                         {% set helpText %}{% trans "Offset from the Top Corner" %}{% endset %}
                         {{ forms.number("top", title, region.top, helpText) }}

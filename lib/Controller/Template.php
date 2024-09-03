@@ -113,7 +113,9 @@ class Template extends Base
     {
         $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
         // Embed?
-        $embed = ($sanitizedQueryParams->getString('embed') != null) ? explode(',', $sanitizedQueryParams->getString('embed')) : [];
+        $embed = ($sanitizedQueryParams->getString('embed') != null)
+            ? explode(',', $sanitizedQueryParams->getString('embed'))
+            : [];
 
         $templates = $this->layoutFactory->query($this->gridRenderSort($sanitizedQueryParams), $this->gridRenderFilter([
             'excludeTemplates' => 0,
@@ -164,12 +166,16 @@ class Template extends Base
                 && $this->getUser()->checkEditable($template)
             ) {
                 // Design Button
-                $template->buttons[] = array(
+                $template->buttons[] = [
                     'id' => 'layout_button_design',
                     'linkType' => '_self', 'external' => true,
-                    'url' => $this->urlFor($request, 'layout.designer', array('id' => $template->layoutId)) . '?isTemplateEditor=1',
+                    'url' => $this->urlFor(
+                        $request,
+                        'layout.designer',
+                        ['id' => $template->layoutId]
+                    ) . '?isTemplateEditor=1',
                     'text' => __('Alter Template')
-                );
+                ];
 
                 if ($template->isEditable()) {
                     $template->buttons[] = ['divider' => true];
@@ -197,7 +203,14 @@ class Template extends Base
                         'text' => __('Checkout'),
                         'dataAttributes' => [
                             ['name' => 'auto-submit', 'value' => true],
-                            ['name' => 'commit-url', 'value' => $this->urlFor($request, 'layout.checkout', ['id' => $template->layoutId])],
+                            [
+                                'name' => 'commit-url',
+                                'value' => $this->urlFor(
+                                    $request,
+                                    'layout.checkout',
+                                    ['id' => $template->layoutId]
+                                )
+                            ],
                             ['name' => 'commit-method', 'value' => 'PUT']
                         ]
                     );
@@ -220,7 +233,14 @@ class Template extends Base
                         'text' => __('Select Folder'),
                         'multi-select' => true,
                         'dataAttributes' => [
-                            ['name' => 'commit-url', 'value' => $this->urlFor($request, 'campaign.selectfolder', ['id' => $template->campaignId])],
+                            [
+                                'name' => 'commit-url',
+                                'value' => $this->urlFor(
+                                    $request,
+                                    'campaign.selectfolder',
+                                    ['id' => $template->campaignId]
+                                )
+                            ],
                             ['name' => 'commit-method', 'value' => 'put'],
                             ['name' => 'id', 'value' => 'campaign_button_selectfolder'],
                             ['name' => 'text', 'value' => __('Move to Folder')],
@@ -248,7 +268,14 @@ class Template extends Base
                     'text' => __('Delete'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'layout.delete', ['id' => $template->layoutId])],
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'layout.delete',
+                                ['id' => $template->layoutId]
+                            )
+                        ],
                         ['name' => 'commit-method', 'value' => 'delete'],
                         ['name' => 'id', 'value' => 'layout_button_delete'],
                         ['name' => 'text', 'value' => __('Delete')],
@@ -266,18 +293,36 @@ class Template extends Base
                 // Permissions button
                 $template->buttons[] = [
                     'id' => 'layout_button_permissions',
-                    'url' => $this->urlFor($request, 'user.permissions.form', ['entity' => 'Campaign', 'id' => $template->campaignId]) . '?nameOverride=' . __('Template'),
+                    'url' => $this->urlFor(
+                        $request,
+                        'user.permissions.form',
+                        ['entity' => 'Campaign', 'id' => $template->campaignId]
+                    ) . '?nameOverride=' . __('Template'),
                     'text' => __('Share'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'user.permissions.multi', ['entity' => 'Campaign', 'id' => $template->campaignId])],
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'user.permissions.multi',
+                                ['entity' => 'Campaign', 'id' => $template->campaignId]
+                            )
+                        ],
                         ['name' => 'commit-method', 'value' => 'post'],
                         ['name' => 'id', 'value' => 'layout_button_permissions'],
                         ['name' => 'text', 'value' => __('Share')],
                         ['name' => 'rowtitle', 'value' => $template->layout],
                         ['name' => 'sort-group', 'value' => 2],
                         ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request, 'user.permissions.multi.form', ['entity' => 'Campaign'])],
+                        [
+                            'name' => 'custom-handler-url',
+                            'value' => $this->urlFor(
+                                $request,
+                                'user.permissions.multi.form',
+                                ['entity' => 'Campaign']
+                            )
+                        ],
                         ['name' => 'content-id-name', 'value' => 'campaignId']
                     ]
                 ];
@@ -338,6 +383,7 @@ class Template extends Base
                 'excludeTemplates' => 0,
                 'layout' => $sanitizedQueryParams->getString('template'),
                 'folderId' => $sanitizedQueryParams->getInt('folderId'),
+                'orientation' => $sanitizedQueryParams->getString('orientation', ['defaultOnEmptyString' => true]),
                 'publishedStatusId' => 1
             ], $sanitizedQueryParams));
 
@@ -385,7 +431,8 @@ class Template extends Base
                 $searchResults,
                 $sanitizedQueryParams->getInt('start', ['default' => 0]),
                 $sanitizedQueryParams->getInt('length', ['default' => 15]),
-                $sanitizedQueryParams->getString('template')
+                $sanitizedQueryParams->getString('template'),
+                $sanitizedQueryParams->getString('orientation'),
             );
 
             $this->getLog()->debug('Dispatching event. ' . $event->getName());

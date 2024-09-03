@@ -21,6 +21,7 @@ window.templates = {
     number: require('./src/templates/forms/inputs/number.hbs'),
     dropdown: require('./src/templates/forms/inputs/dropdown.hbs'),
     color: require('./src/templates/forms/inputs/color.hbs'),
+    colorGradient: require('./src/templates/forms/inputs/colorGradient.hbs'),
     code: require('./src/templates/forms/inputs/code.hbs'),
     message: require('./src/templates/forms/inputs/message.hbs'),
     hidden: require('./src/templates/forms/inputs/hidden.hbs'),
@@ -68,5 +69,13 @@ window.templates = {
       require('./src/templates/forms/inputs/datasetColStyleSelector.hbs'),
     datasetColStyle:
       require('./src/templates/forms/inputs/datasetColStyle.hbs'),
+    imageReplaceControl:
+        require('./src/templates/forms/inputs/imageReplace.hbs'),
+    fallbackDataContent:
+        require('./src/templates/fallback-data-content.hbs'),
+    fallbackDataRecord:
+        require('./src/templates/fallback-data-record.hbs'),
+    fallbackDataRecordPreview:
+      require('./src/templates/fallback-data-record-preview.hbs'),
   },
 };

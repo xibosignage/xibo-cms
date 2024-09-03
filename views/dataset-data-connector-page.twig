@@ -1,0 +1,273 @@
+{#
+/*
+ * Copyright (C) 2024 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+{% import "forms.twig" as forms %}
+
+{% block title %}{% set dataSetName = dataSet.dataSet %}{% trans %}{{ dataSetName }} - Data Connector{% endtrans %} | {% endblock %}
+
+{% set hideNavigation = "1" %}
+
+{% block pageContent %}
+    <div id="data-connector-builder"
+         data-data-set-id="{{ dataSet.dataSetId }}">
+        <div class="back-button">
+            <a id="backBtn" class="btn btn-primary" href="{{ url_for("dataset.view") }}">
+                <i class="fa fa-angle-left"></i>
+                <span>{{ "Back"|trans }}</span>
+            </a>
+        </div>
+
+        <div class="widget mt-3">
+            <div class="widget-body">
+                <div class="row">
+                    <div class="col-12">
+                        <div class="data-set-title">
+                            <h1>{{ dataSetName }}</h1>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-6 {% if dataSet.dataConnectorSource != 'user_defined'  %}hidden{% endif %}">
+                        <form id="dataconnector-builder-form" class="XiboForm form-horizontal"
+                             method="put"
+                             action="{{ url_for("dataSet.dataConnector.update", {id: dataSet.dataSetId}) }}"
+                             data-submit-call-back="onSubmitCallback"
+                        >
+                            <div class="form-group row code-input-group xibo-code-input">
+                                <div class="col-sm-12">
+                                    <small class="form-text text-muted">{{ "Data Connector JavaScript"|trans }}</small>
+                                    <textarea class="form-control d-none code-input" id="input_script" name="dataConnectorScript" rows="30" data-code-type="javascript">{% if script %}{{ script }}{% else %}window.onInit = function() {
+
+}{% endif %}</textarea>
+
+                                    <div class="code-input-editor-container" style="height: 70vh;">
+                                        <div class="code-input-editor"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{ forms.button("Save"|trans, "submit", null, null, null, "btn-success " ~ (dataSet.dataConnectorSource != 'user_defined' ? 'disabled' : '')) }}
+                        </form>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <ul class="nav nav-tabs" role="tablist">
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="#tab-testParams" role="tab" data-toggle="tab">
+                                            <span>{% trans "Test Params" %}</span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link active" href="#tab-logs" role="tab" data-toggle="tab">
+                                            <span>{% trans "Logs" %}</span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="#tab-dataSet" role="tab" data-toggle="tab">
+                                            <span>{% trans "DataSet Data" %}</span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="#tab-otherData" role="tab" data-toggle="tab">
+                                            <span>{% trans "Other Data" %}</span>
+                                        </a>
+                                    </li>
+                                    <li class="nav-item">
+                                        <a class="nav-link" href="#tab-scheduleCriteria" role="tab" data-toggle="tab">
+                                            <span>{% trans "Schedule Criteria" %}</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                                <div class="tab-content">
+                                    <div class="tab-pane" id="tab-testParams">
+                                        {{ inline.message("You can test passing parameters that would otherwise be set when this Data Connector is scheduled."|trans, "alert alert-info") }}
+
+                                        {{ inline.input("dataSetRealtimeTestParams", "Test Parameters"|trans) }}
+                                    </div>
+                                    <div class="tab-pane active" id="tab-logs">
+                                        <pre id="dataconnector-logs"></pre>
+                                    </div>
+                                    <div class="tab-pane" id="tab-dataSet">
+                                        <div class="table-container">
+                                            <table id="dataconnector-main-data" class="table">
+                                                <thead>
+                                                {% for column in dataSet.getColumn() %}
+                                                    <th>{{ column.heading }}</th>
+                                                {% endfor %}
+                                                <th>Unmapped</th>
+                                                </thead>
+                                                <tbody>
+
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane" id="tab-otherData">
+                                        <pre id="dataconnector-other-data"></pre>
+                                    </div>
+                                    <div class="tab-pane" id="tab-scheduleCriteria">
+                                        <div class="table-container">
+                                            <table id="dataconnector-schedule-criteria" class="table">
+                                                <thead>
+                                                    <th>{{ "Metric"|trans }}</th>
+                                                    <th>{{ "Value"|trans }}</th>
+                                                    <th>TTL</th>
+                                                </thead>
+                                                <tbody>
+
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row" style="display: none;" id="dataconnector-script"></div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript" nonce="{{ cspNonce }}">
+        $(function() {
+          const $script = $('#dataconnector-script');
+          const $scriptParams = $('#dataSetRealtimeTestParams');
+          const $mainData = $('#dataconnector-main-data');
+          const $otherData = $('#dataconnector-other-data');
+          const $scheduleCriteria = $('#dataconnector-schedule-criteria');
+          const $logs = $('#dataconnector-logs');
+          let otherData = {};
+          let criteria = {};
+
+          // Set up a channel which will broadcast data
+          const channel = new BroadcastChannel('xiboDC');
+
+          // Set our script params from local storage if we have them
+          $scriptParams.val(localStorage.getItem('dataSetRealtimeTestParams'));
+
+          // Output the iframe containing the window
+          $script.html('<iframe src="{{ url_for("dataSet.dataConnector.test", {id: dataSet.dataSetId}) }}" />');
+
+          // Window message to receive data and logs.
+          window.receiveData = function(type, data) {
+            if (type === 'loaded') {
+              console.debug('Script loaded');
+              $script.find('iframe')[0].contentWindow.xiboDC.initialise({{ dataSet.dataSetId }}, $scriptParams.val());
+            } else if (type === 'log') {
+              $logs.prepend('[' + moment().format('YY-MM-DD HH:mm:ss') + '] ' + data + '\n');
+            } else if (type === 'set') {
+              // Update the table
+              // if the dataKey matches my connector's DataSetId, then render out a table
+              if (data.dataKey == '{{ dataSet.dataSetId }}') {
+                // Data is always set as a string
+                const events = JSON.parse(data.data);
+
+                if (Array.isArray(events)) {
+                  const $tableBody = $mainData.find('tbody');
+                  $tableBody.find('tr').remove();
+                  $.each(events, function (rowIndex, row) {
+                    // Make a new row
+                    let html = '<tr>';
+                      {% for column in dataSet.getColumn() %}
+                    html += '<td data-id="{{ column.heading }}"></td>';
+                      {% endfor %}
+                    html += '<td data-id="unmatched"></td></tr>';
+                    const $newRow = $(html);
+                    $tableBody.append($newRow);
+
+                    // Do we have a column for this item
+                    $.each(row, function (colIndex, col) {
+                      if ($newRow.find('td[data-id=' + colIndex).length > 0) {
+                        $newRow.find('td[data-id=' + colIndex).append(row[colIndex]);
+                      } else {
+                        $newRow.find('td[data-id=unmatched').append(colIndex + ': ' + row[colIndex] + '<br/>');
+                      }
+                    });
+                  });
+                } else {
+                  // Treat it as other data.
+                  otherData[data.dataKey] = data.data;
+                  $otherData.html(JSON.stringify(otherData, null, 4));
+                }
+              } else {
+                // Grab the existing "other data" and see if there is a matching key.
+                otherData[data.dataKey] = data.data;
+                $otherData.html(JSON.stringify(otherData, null, 4));
+              }
+
+              // Broadcast to interested parties.
+              // Use the original data.data (which is a string)
+              channel.postMessage({type: 'xiboDC_data', dataKey: data.dataKey, data: data.data});
+            } else if (type === 'notify') {
+              // Log
+              $logs.prepend('[' + moment().format('YY-MM-DD HH:mm:ss') + '] Notify for ' + data + '\n');
+
+              channel.postMessage({type: "xiboDC_notify", dataKey: data});
+            } else if (type === 'criteria') {
+              // Schedule criteria, update in the table.
+              criteria[data.dataKey] = data.data;
+              const $tableBody = $scheduleCriteria.find('tbody');
+              $.each(criteria, function (key, value) {
+                $tableBody.append('<tr><td>' + key + '</td><td>' + value.value + '</td><td>' + value.ttl + '</td></tr>');
+              });
+            }
+          }
+
+          window.makeRequest = function (path, {type, headers, data, done, error} = {}) {
+            $.ajax('{{ url_for("dataSet.dataConnector.request", {id: dataSet.dataSetId}) }}', {
+              data: {
+                url: path,
+                method: type,
+                headers: headers,
+                body: data
+              },
+              success: function(data, textStatus, jqXHR) {
+                if (typeof(done) == 'function') {
+                  done(jqXHR.status, data);
+                }
+              },
+              error: function(jqXHR, textStatus, errorThrown) {
+                if (typeof(done) == 'function') {
+                  error(jqXHR.status, jqXHR.responseText);
+                }
+              }
+            });
+          }
+
+          // Refresh the iframe.
+          window.onSubmitCallback = function(xhr, form) {
+            $script.find('iframe')[0].contentWindow.location.reload();
+          }
+
+          $scriptParams.on('change', function() {
+            $script.find('iframe')[0].contentWindow.xiboDC.initialise({{ dataSet.dataSetId }}, $scriptParams.val());
+            localStorage.setItem('dataSetRealtimeTestParams', $scriptParams.val());
+          });
+        });
+    </script>
+{% endblock %}

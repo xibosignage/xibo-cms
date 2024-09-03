@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -61,13 +61,13 @@ class LogProcessor
     }
 
     /**
-     * @param $displayId
+     * @param int $displayId
      * @param bool $isAuditing
      */
     public function setDisplay($displayId, $isAuditing)
     {
         if ($isAuditing) {
-            foreach($this->log->getHandlers() as $handler) {
+            foreach ($this->log->getHandlers() as $handler) {
                 if ($handler instanceof DatabaseLogHandler) {
                     $handler->setLevel(\Xibo\Service\LogService::resolveLogLevel('debug'));
                 }
@@ -85,11 +85,11 @@ class LogProcessor
     {
         $level = Logger::ERROR;
 
-        foreach($this->log->getHandlers() as $handler) {
+        foreach ($this->log->getHandlers() as $handler) {
             if ($handler instanceof DatabaseLogHandler) {
                 $level = $handler->getLevel();
             } else {
-                $this->log->error('Log level not set in DabaseLogHandler');
+                $this->log->error('Log level not set in DatabaseLogHandler');
             }
         }
 

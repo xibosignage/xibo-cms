@@ -1,0 +1,112 @@
+{#
+/**
+ * Copyright (C) 2024 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+{% extends "base-report.twig" %}
+
+{% block content %}
+    <div>
+        <span class="small">{% trans "From" %} {{ metadata.periodStart }} {% trans "To" %} {{ metadata.periodEnd }}</span>
+    </div>
+    <p></p>
+
+    <table class="saved-report-table">
+        {% if metadata.logType == 'audit' %}
+            <tr>
+                <th>{% trans "Date" %}</th>
+                <th>{% trans "User Name" %}</th>
+                <th>{% trans "User ID" %}</th>
+                <th>{% trans "Application" %}</th>
+                <th>{% trans "Request ID" %}</th>
+                <th>{% trans "Method" %}</th>
+                <th>{% trans "Url" %}</th>
+                <th>{% trans "Entity" %}</th>
+                <th>{% trans "Entity ID" %}</th>
+                <th>{% trans "Message" %}</th>
+                <th>{% trans "Details" %}</th>
+            </tr>
+            {% for item in tableData %}
+                <tr>
+                    <td>{{ item.logDate }}</td>
+                    <td>{{ item.userName }}</td>
+                    <td>{{ item.userId }}</td>
+                    <td>{{ item.applicationName }}</td>
+                    <td>{{ item.requestId }}</td>
+                    <td>{{ item.method }}</td>
+                    <td>{{ item.url }}</td>
+                    <td>{{ item.entity }}</td>
+                    <td>{{ item.entityId }}</td>
+                    <td>{{ item.message }}</td>
+                    <td>{{ item.objectAfter }}</td>
+                </tr>
+            {% endfor %}
+        {% elseif metadata.logType == 'debug' %}
+            <tr>
+                <th>{% trans "Date" %}</th>
+                <th>{% trans "UserName" %}</th>
+                <th>{% trans "User ID" %}</th>
+                <th>{% trans "Application" %}</th>
+                <th>{% trans "Request ID" %}</th>
+                <th>{% trans "Method" %}</th>
+                <th>{% trans "Url" %}</th>
+                <th>{% trans "Level" %}</th>
+                <th>{% trans "Details" %}</th>
+            </tr>
+            {% for item in tableData %}
+                <tr>
+                    <td>{{ item.logDate }}</td>
+                    <td>{{ item.userName }}</td>
+                    <td>{{ item.userId }}</td>
+                    <td>{{ item.applicationName }}</td>
+                    <td>{{ item.requestId }}</td>
+                    <td>{{ item.method }}</td>
+                    <td>{{ item.url }}</td>
+                    <td>{{ item.type }}</td>
+                    <td>{{ item.message }}</td>
+                </tr>
+            {% endfor %}
+        {% else %}
+            <tr>
+                <th>{% trans "Date" %}</th>
+                <th>{% trans "UserName" %}</th>
+                <th>{% trans "User ID" %}</th>
+                <th>{% trans "Application" %}</th>
+                <th>{% trans "Request ID" %}</th>
+                <th>{% trans "Method" %}</th>
+                <th>{% trans "Url" %}</th>
+            </tr>
+            {% for item in tableData %}
+                <tr>
+                    <td>{{ item.startTime }}</td>
+                    <td>{{ item.userName }}</td>
+                    <td>{{ item.userId }}</td>
+                    <td>{{ item.applicationName }}</td>
+                    <td>{{ item.requestId }}</td>
+                    <td>{{ item.method }}</td>
+                    <td>{{ item.url }}</td>
+                </tr>
+            {% endfor %}
+        {% endif %}
+    </table>
+    <br/>
+    <span>{{ placeholder }}</span>
+    <img src="{{ src|raw }}" >
+{% endblock %}

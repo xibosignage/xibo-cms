@@ -56,6 +56,23 @@
                     {% set title %}{% trans "Validation" %}{% endset %}
                     {% set helpText %}{% trans "The Validation String for this Command on this display" %}{% endset %}
                     {{ forms.input(fieldId, title, field.validationStringDisplayProfile, helpText) }}
+
+                    {% if field.createAlertOn != "" %}
+                        {{ forms.disabled("", "", "This Command has a default setting for creating alerts."|trans, field.createAlertOn) }}
+                    {% endif %}
+
+                    {% set fieldId = "createAlertOn_" ~ field.commandId %}
+                    {% set options = [
+                        { optionid: "", option: "" },
+                        { optionid: "never", option: "Never" },
+                        { optionid: "success", option: "Success" },
+                        { optionid: "failure", option: "Failure" },
+                        { optionid: "always", option: "Always" },
+                    ] %}
+                    {% set title %}{% trans "Create Alert On" %}{% endset %}
+                    {% set helpText %}{% trans "On command execution, when should a Display alert be created?" %}{% endset %}
+
+                    {{ forms.dropdown(fieldId, "single", title, field.createAlertOnDisplayProfile, options, "optionid", "option", helpText) }}
                 </div>
             </div>
         </div>

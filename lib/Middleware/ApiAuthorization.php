@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -21,6 +21,7 @@
  */
 namespace Xibo\Middleware;
 
+use Carbon\Carbon;
 use League\OAuth2\Server\Exception\OAuthServerException;
 use League\OAuth2\Server\ResourceServer;
 use Psr\Container\ContainerInterface;
@@ -31,9 +32,9 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App as App;
 use Slim\Routing\RouteContext;
 use Xibo\Factory\ApplicationScopeFactory;
+use Xibo\Helper\UserLogProcessor;
 use Xibo\OAuth\AccessTokenRepository;
 use Xibo\Support\Exception\AccessDeniedException;
-use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class ApiAuthenticationOAuth
@@ -76,7 +77,11 @@ class ApiAuthorization implements Middleware
             // oAuth Resource
             $apiKeyPaths = $container->get('configService')->getApiKeyDetails();
 
-            $accessTokenRepository = new AccessTokenRepository($logger, $container->get('pool'), $container->get('applicationFactory'));
+            $accessTokenRepository = new AccessTokenRepository(
+                $logger,
+                $container->get('pool'),
+                $container->get('applicationFactory')
+            );
             return new ResourceServer(
                 $accessTokenRepository,
                 $apiKeyPaths['publicKeyPath']
@@ -141,7 +146,10 @@ class ApiAuthorization implements Middleware
                         // Check the route and request method
                         try {
                             $i++;
-                            $checkRoute = $applicationScopeFactory->getById($scope)->checkRoute($request->getMethod(), $resource);
+                            $checkRoute = $applicationScopeFactory->getById($scope)->checkRoute(
+                                $request->getMethod(),
+                                $resource
+                            );
 
                             // if we have access to the requested route, break the loop
                             if ($checkRoute) {
@@ -163,8 +171,47 @@ class ApiAuthorization implements Middleware
             $validatedRequest = $validatedRequest->withAttribute('public', true);
         }
 
+        $requestId = $this->app->getContainer()->get('store')->insert('
+            INSERT INTO `application_requests_history` (
+                userId,
+                applicationId,
+                url,
+                method,
+                startTime,
+                endTime,
+                duration
+            ) 
+            VALUES (
+                :userId,
+                :applicationId,
+                :url,
+                :method,
+                :startTime,
+                :endTime,
+                :duration
+            )
+        ', [
+            'userId' => $user->userId,
+            'applicationId' => $validatedRequest->getAttribute('oauth_client_id'),
+            'url' => htmlspecialchars($request->getUri()->getPath()),
+            'method' => $request->getMethod(),
+            'startTime' => Carbon::now(),
+            'endTime' => Carbon::now(),
+            'duration' => 0
+        ], 'api_requests_history');
+
+        $this->app->getContainer()->get('store')->commitIfNecessary('api_requests_history');
+
         $logger->setUserId($user->userId);
         $this->app->getContainer()->set('user', $user);
+        $logger->setRequestId($requestId);
+
+        // Add this request information to the logger.
+        $logger->getLoggerInterface()->pushProcessor(new UserLogProcessor(
+            $user->userId,
+            null,
+            $requestId,
+        ));
 
         return $handler->handle($validatedRequest->withAttribute('name', 'API'));
     }

@@ -1,0 +1,29 @@
+<div class="toolbar-card hide-content"
+    data-type="widgets"
+    data-target="layout zone {{#if editingPlaylist}}playlist{{/if}}"
+    data-sub-type="{{#if editingPlaylist}}subplaylist{{else}}playlist{{/if}}"
+    data-sub-playlist-id="{{playlistId}}"
+    data-name="{{name}}">
+
+    <div class="toolbar-card-preview">
+        <span class="media-title tooltip-always-on" data-toggle="tooltip" data-title="{{name}}" data-placement="right">{{name}}</span>
+
+        {{#if playlistDuration}}
+            <div class="media-duration" data-title="{{trans.duration}}" data-toggle="tooltip" data-placement="top">
+                {{playlistDuration}}
+            </div>
+        {{/if}}
+
+        {{#if isDynamic}}
+            <div class="dynamic-logo tooltip-always-on" data-title="{{trans.dynamicPlaylist}}" data-toggle="tooltip" data-placement="top">
+                <i class="fa fa-magic"></i>
+            </div>
+        {{/if}}
+    </div>
+
+    <div class="badges">
+        {{#each tags}}
+            <span class="badge badge-pill badge-info">{{this.tag}}</span>
+        {{/each}}
+    </div>
+</div>

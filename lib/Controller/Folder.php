@@ -97,6 +97,13 @@ class Folder extends Base
      *       type="string",
      *       required=false
      *    ),
+     *   @SWG\Parameter(
+     *       name="exactFolderName",
+     *       in="query",
+     *       description="Use with gridView, Filter by exact Folder name match",
+     *       type="integer",
+     *       required=false
+     *    ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -118,6 +125,7 @@ class Folder extends Base
             $folders = $this->folderFactory->query($this->gridRenderSort($params), $this->gridRenderFilter([
                 'folderName' => $params->getString('folderName'),
                 'folderId' => $params->getInt('folderId'),
+                'exactFolderName' => $params->getInt('exactFolderName'),
             ], $params));
 
             $this->getState()->template = 'grid';

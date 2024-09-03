@@ -40,7 +40,7 @@ if (!String.prototype.endsWith) {
 
 // Configure a global error handler for data tables
 $.fn.dataTable.ext.errMode = function (settings, helpPage, message) {
-    console.log(message);
+    console.error(message);
 };
 
 // Set up the light boxes
@@ -98,7 +98,6 @@ function XiboInitialise(scope, options) {
 
     // Search for any grids on the page and render them
     $(scope + " .XiboGrid").each(function() {
-
         var gridName = $(this).data().gridName;
         var form = $(this).find(".XiboFilter form");
 
@@ -117,15 +116,25 @@ function XiboInitialise(scope, options) {
                 formValues = [];
             }
 
+            // flatten the array
+            // if we have multiple items with the same name.
+            let formValuesUpdated = [];
+            formValues.forEach(element => {
+                if (element.name in formValuesUpdated) {
+                    formValuesUpdated[element.name].value = [element.value, formValuesUpdated[element.name].value]
+                } else {
+                    formValuesUpdated[element.name] = element
+                }
+            })
+
             const url = new URL(window.location.href);
             var params = new URLSearchParams(url.search.slice(1));
 
-
-            $.each(formValues, function(key, element) {
+            $.each(Object.values(formValuesUpdated), function(key, element) {
                 // Does this field exist in the form
                 var fieldName = element.name.replace(/\[\]/, '\\\\[\\\\]');
                 try {
-                    var field = form.find("input[name=" + fieldName + "], select[name=" + fieldName + "]");
+                    var field = form.find('input[name="' + fieldName + '"], select[name="' + fieldName + '"], select[name="' + element.name + '"]');
 
                     if (params.get(fieldName) !== null) {
                         field.val(params.get(fieldName))
@@ -139,7 +148,7 @@ function XiboInitialise(scope, options) {
                         field.data('initial-value', element.value)
                     }
                 } catch (e) {
-                    console.log("Error populating form saved value with selector input[name=" + element.name + "], select[name=" + element.name + "]");
+                    console.error("Error populating form saved value with selector input[name=" + element.name + "], select[name=" + element.name + "]");
                 }
             });
         }
@@ -267,7 +276,19 @@ function XiboInitialise(scope, options) {
     // NOTE: The validation plugin does not like binding to multiple forms at once.
     $(scope + ' .XiboForm').validate({
         submitHandler: XiboFormSubmit,
-        errorElement: "span",
+        // Ignore the date picker helpers
+        // and input groups that are hidden
+        ignore: '.datePickerHelper, :hidden>*:not(.flatpickr-input)',
+        errorElement: 'span',
+        errorPlacement: function(error, element) {
+            if($(element).hasClass('dateControl')) {
+                // Places the error label date controller
+                error.insertAfter(element.parent());
+            } else {
+                // Places the error label after the invalid element
+                error.insertAfter(element);
+            }
+        },
         highlight: function(element) {
             $(element).closest('.form-group').removeClass('has-success').addClass('has-error');
         },
@@ -2335,7 +2356,7 @@ function formRenderDetectSpacingIssues(element) {
 
     if (value !== '' && (value.startsWith(" ") || value.endsWith(" ") || value.indexOf("  ") > -1)) {
         // Add a little icon to the fields parent to inform of this issue
-        console.log("Field with strange spacing: " + $el.attr("name"));
+        console.debug("Field with strange spacing: " + $el.attr("name"));
 
         var warning = $("<span></span>").addClass("fa fa-exclamation-circle spacing-warning-icon").attr("title", translations.spacesWarning);
 
@@ -2786,25 +2807,8 @@ function XiboFormSubmit(form, e, callBack) {
     var $form = $(form);
     var url = $form.attr("action");
 
-    // Pull any text editor instances we have
-    for (var editor in CKEDITOR.instances) {
-
-        //console.log("Name: " + editor);
-        //console.log("Content: " + CKEDITOR.instances[editor].getData());
-
-        // Parse the data for library preview references, and replace those with their original values
-        // /\/library\/download\/(.[0-9]+)\?preview=1/;
-        var regex = new RegExp(CKEDITOR_DEFAULT_CONFIG.imageDownloadUrl.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&").replace(":id", "([0-9]+)"), "g");
-
-        var data = CKEDITOR.instances[editor].getData().replace(regex, function (match, group1) {
-            var replacement = "[" + group1 + "]";
-            //console.log("match = " + match + ". replacement = " + replacement);
-            return replacement;
-        });
-
-        // Set the appropriate text editor field with this data.
-        $("#" + editor).val(data);
-    }
+    // Update any text editor instances we have
+    formHelpers.updateCKEditor();
 
     $.ajax({
         type:$form.attr("method"),
@@ -2996,8 +3000,14 @@ function XiboHoverRender(url, x, y)
 /**
  * Closes the dialog window
  */
-function XiboDialogClose() {
+function XiboDialogClose(refreshTable) {
+    refreshTable = refreshTable !== undefined;
+
     bootbox.hideAll();
+
+    if (refreshTable) {
+        XiboRefreshAllGrids();
+    }
 }
 
 /**
@@ -3157,10 +3167,21 @@ function ToggleFilterView(div) {
  * Make a Paged Layout Selector from a Select Element and its parent (which can be null)
  * @param element
  * @param parent
+ * @param dataFormatter
+ * @param addRandomId
  */
-function makePagedSelect(element, parent) {
+function makePagedSelect(element, parent, dataFormatter, addRandomId = false) {
+    // If we need to append random id
+    if (addRandomId === true) {
+        const randomNum = Math.floor(1000000000 + Math.random() * 9000000000);
+        const previousId = $(element).attr('id');
+        const newId = previousId ? previousId + '_' + randomNum : randomNum;
+        $(element).attr('data-select2-id', newId);
+    }
+
     element.select2({
         dropdownParent: ((parent == null) ? $("body") : $(parent)),
+        minimumResultsForSearch: (element.data('hideSearch')) ? Infinity : 1,
         ajax: {
             url: element.data("searchUrl"),
             dataType: "json",
@@ -3211,6 +3232,14 @@ function makePagedSelect(element, parent) {
             processResults: function(data, params) {
                 var results = [];
                 var $element = element;
+
+                // If we have a custom data formatter
+                if (
+                    dataFormatter &&
+                    typeof dataFormatter === 'function'
+                ) {
+                    data = dataFormatter(data);
+                }
 
                 $.each(data.data, function(index, el) {
                     var result = {
@@ -3270,6 +3299,8 @@ function makePagedSelect(element, parent) {
     ) {
         var initialValue = element.data("initialValue");
         var initialKey = element.data("initialKey");
+        var textProperty = element.data("textProperty");
+        var idProperty = element.data("idProperty");
         var dataObj = {};
         dataObj[initialKey] = initialValue;
 
@@ -3284,10 +3315,41 @@ function makePagedSelect(element, parent) {
             type: 'GET',
             data: dataObj
         }).then(function(data) {
+            // Do we need to check if it's selected
+            var checkSelected = false;
+
+            // If we have a custom data formatter
+            if (
+                dataFormatter &&
+                typeof dataFormatter === 'function'
+            ) {
+                data = dataFormatter(data);
+                checkSelected = true;
+            }
+
             // create the option and append to Select2
-            var option = new Option(data.data[0][element.data("textProperty")], data.data[0][element.data("idProperty")], true, true);
+            data.data.forEach(object => {
+                var isSelected = true;
+
+                // Check if it's selected if needed
+                if(checkSelected) {
+                    isSelected = (initialValue == object[idProperty]);
+                }
+
+                // Only had if the option is selected
+                if (isSelected) {
+                    var option = new Option(
+                        object[textProperty],
+                        object[idProperty],
+                        isSelected,
+                        isSelected
+                    );
+                    element.append(option)
+                }
+            });
+
             // Trigger change but skip auto save
-            element.append(option).trigger(
+            element.trigger(
                 'change',
                 [{
                     skipSave: true,
@@ -3309,8 +3371,17 @@ function makePagedSelect(element, parent) {
  * Make a dropwdown with a search field for option's text and tag datafield (data-tags)
  * @param element
  * @param parent
+ * @param addRandomId
  */
-function makeLocalSelect(element, parent) {
+function makeLocalSelect(element, parent, addRandomId = false) {
+    // If we need to append random id
+    if (addRandomId === true) {
+        const randomNum = Math.floor(1000000000 + Math.random() * 9000000000);
+        const previousId = $(element).attr('id');
+        const newId = previousId ? previousId + '_' + randomNum : randomNum;
+        $(element).attr('data-select2-id', newId);
+    }
+
     element.select2({
         dropdownParent: ((parent == null) ? $("body") : $(parent)),
         matcher: function(params, data) {
@@ -3996,10 +4067,16 @@ function initJsTreeAjax(container, id, isForm, ttl, onReady = null, onSelected =
         $('#jstree-search').on('keyup', folderSearch);
         $('#jstree-search-form').on('keyup', folderSearch)
     }
+
+    // Make container resizable
+    $('#grid-folder-filter').resizable({
+        handles: 'e',
+        minWidth: 200,
+        maxWidth: 500,
+    });
 }
 
 function adjustDatatableSize (reload) {
-
     // Display Map Resize
     function resizeDisplayMap() {
         if (typeof refreshDisplayMap === "function") {
@@ -4010,7 +4087,6 @@ function adjustDatatableSize (reload) {
     reload = (typeof reload == 'undefined') ? true : reload;
     // Shrink table to ease animation
     if($('#grid-folder-filter').is(":hidden")) {
-        $('#datatable-container').addClass('col-sm-10').removeClass('col-sm-12');
         resizeDisplayMap();
     }
 
@@ -4020,12 +4096,9 @@ function adjustDatatableSize (reload) {
                 // if folder tree is hidden and select everywhere is not checked, then show breadcrumbs
                 $("#breadcrumbs").show('slow');
             }
-
-            // if the folder tree is hidden, then make it so datatable can take whole available width
-            $('#datatable-container').addClass('col-sm-12').removeClass('col-sm-10');
             resizeDisplayMap();
         } else {
-            // if the tree folder view is visible, then hide breadcrumbs and adjust col-sm class on datatable
+            // if the tree folder view is visible, then hide breadcrumbs
             $("#breadcrumbs").hide('slow');
         }
 
@@ -4044,7 +4117,6 @@ function disableFolders () {
     $('#folder-tree-select-folder-button').parent().remove();
     $('#container-folder-tree').remove();
     $('#grid-folder-filter').remove();
-    $('#datatable-container').addClass('col-sm-12').removeClass('col-sm-10');
 }
 
 /**

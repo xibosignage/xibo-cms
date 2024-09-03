@@ -21,7 +21,7 @@
  */
 #}
 {% import "forms.twig" as forms %}
-<script type="text/javascript">
+<script type="text/javascript" nonce="{{ cspNonce }}">
   {% autoescape "js" %}
   window.audienceDaysOfWeek = {
       1: "{{ "Monday"|trans }}",
@@ -123,8 +123,8 @@
             if (type !== 'display') {
               return '';
             }
-            return '<a class="btn btn-sm" href="#" onclick="openDmaForm(' + meta.row + ')"><span class="fa fa-pencil" title="{% trans %}Edit{% endtrans %}"></span></a>'
-              + '<a class="btn btn-sm" href="#" onclick="deleteDmaForm(' + meta.row + ')"><span class="fa fa-trash" title="{% trans %}Delete{% endtrans %}"></span></a>';
+            return '<a class="btn btn-sm" href="#" id="addDmaBtn"><span class="fa fa-pencil" title="{% trans %}Edit{% endtrans %}"></span></a>'
+              + '<a class="btn btn-sm" href="#" id="delDmaBtn"><span class="fa fa-trash" title="{% trans %}Delete{% endtrans %}"></span></a>';
           },
           responsivePriority: 1,
         }
@@ -151,6 +151,18 @@
     setTimeout(function() {
       audienceDmaTable.columns.adjust()
     }, 500);
+
+    // Handle btn click
+    $('#ssp-activity tbody').on('click', 'a', function (e) {
+        let btnType = $(this).attr('id');
+        let id = table.row(e.target.closest('tr')).index();
+
+        if (btnType === 'addDmaBtn') {
+            openDmaForm(id);
+        } else if (btnType === 'delDmaBtn') {
+            deleteDmaForm(id);
+        }
+    });
 
     // Add an add button.
     var dmaTemplate = Handlebars.compile($('#xibo-audience-connector-dma-form').html());

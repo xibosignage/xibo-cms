@@ -1,0 +1,216 @@
+{#
+/**
+ * Copyright (C) 2024 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <div class="widget-action-menu pull-right">
+        <button class="btn btn-info XiboRedirectButton" href="{{ url_for("savedreport.view") }}"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</button>
+    </div>
+{% endblock %}
+
+{% block pageContent %}
+
+    <div class="widget">
+        <div class="widget-title">
+            <i class="fa fa-list"></i>
+            {{ metadata.title }}
+            <span class="small">({% trans "Generated on: " %}{{ metadata.generatedOn }})</span>
+            <div><span class="small">{% trans "From" %} {{ metadata.periodStart }} {% trans "To" %} {{ metadata.periodEnd }}</span></div>
+            <div class="clearfix"></div>
+        </div>
+
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+                {% if metadata.logType == 'audit' %}
+                <div class="XiboData card pt-3">
+                    <table id="apiRequestsHistoryAuditReportPreview" class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>{% trans "Date" %}</th>
+                            <th>{% trans "User Name" %}</th>
+                            <th>{% trans "User ID" %}</th>
+                            <th>{% trans "Application" %}</th>
+                            <th>{% trans "Request ID" %}</th>
+                            <th>{% trans "Method" %}</th>
+                            <th>{% trans "Url" %}</th>
+                            <th>{% trans "Entity" %}</th>
+                            <th>{% trans "Entity ID" %}</th>
+                            <th>{% trans "Message" %}</th>
+                            <th>{% trans "Details" %}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+                {% elseif metadata.logType == 'debug' %}
+                    <div class="XiboData card pt-3">
+                        <table id="apiRequestsHistoryDebugReportPreview" class="table table-striped">
+                            <thead>
+                            <tr>
+                                <th>{% trans "Date" %}</th>
+                                <th>{% trans "UserName" %}</th>
+                                <th>{% trans "User ID" %}</th>
+                                <th>{% trans "Application" %}</th>
+                                <th>{% trans "Request ID" %}</th>
+                                <th>{% trans "Method" %}</th>
+                                <th>{% trans "Url" %}</th>
+                                <th>{% trans "Level" %}</th>
+                                <th>{% trans "Details" %}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="XiboData card pt-3">
+                        <table id="apiRequestsHistoryReportPreview" class="table table-striped">
+                            <thead>
+                            <tr>
+                                <th>{% trans "Date" %}</th>
+                                <th>{% trans "UserName" %}</th>
+                                <th>{% trans "User ID" %}</th>
+                                <th>{% trans "Application" %}</th>
+                                <th>{% trans "Request ID" %}</th>
+                                <th>{% trans "Method" %}</th>
+                                <th>{% trans "Url" %}</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript" nonce="{{ cspNonce }}">
+      $(function() {
+        const outputData = {{ table|json_encode|raw }};
+
+        const type = '{{ metadata.logType }}';
+        if (type === 'audit') {
+          const auditTable = $("#apiRequestsHistoryAuditReportPreview").DataTable({
+            language: dataTablesLanguage,
+            dom: dataTablesTemplate,
+            paging:   false,
+            ordering: false,
+            info:     false,
+            order: [[0, 'desc']],
+            searching: false,
+            data: outputData,
+            columns: [
+              {data: 'logDate', "render": dataTableDateFromIso},
+              {data: 'userName'},
+              {data: 'userId'},
+              {data: 'applicationName'},
+              {data: 'requestId'},
+              {data: 'method'},
+              {data: 'url'},
+              {data: 'entity'},
+              {
+                name: 'entityId',
+                responsivePriority: 2,
+                data : function (data) {
+                  if (data.entityId === 0) {
+                    return ''
+                  }
+
+                  return data.entityId;
+                }
+              },
+              {data: 'message'},
+              {data: 'objectAfter'}
+            ]
+          });
+
+          auditTable.on('draw', dataTableDraw);
+          auditTable.on('processing.dt', function(e, settings, processing) {
+            dataTableProcessing(e, settings, processing);
+          });
+        } else if (type === 'debug') {
+          const debugTable = $("#apiRequestsHistoryAuditReportPreview").DataTable({
+            language: dataTablesLanguage,
+            dom: dataTablesTemplate,
+            paging:   false,
+            ordering: false,
+            info:     false,
+            order: [[0, 'desc']],
+            searching: false,
+            data: outputData,
+            columns: [
+              {data: 'logDate', "render": dataTableDateFromIso},
+              {data: 'userName'},
+              {data: 'userId'},
+              {data: 'applicationName'},
+              {data: 'requestId'},
+              {data: 'method'},
+              {data: 'url'},
+              {data: 'type'},
+              {data: 'message'},
+            ]
+          });
+
+          debugTable.on('draw', dataTableDraw);
+          debugTable.on('processing.dt', function(e, settings, processing) {
+            dataTableProcessing(e, settings, processing);
+          });
+        } else {
+          const requestsTable = $("#apiRequestsHistoryReportPreview").DataTable({
+            language: dataTablesLanguage,
+            dom: dataTablesTemplate,
+            paging:   false,
+            ordering: false,
+            info:     false,
+            order: [[0, 'desc']],
+            searching: false,
+            data: outputData,
+            columns: [
+              {data: 'startTime'},
+              {data: 'userName'},
+              {data: 'userId'},
+              {data: 'applicationName'},
+              {data: 'requestId'},
+              {data: 'method'},
+              {data: 'url'},
+            ]
+          });
+
+          requestsTable.on('draw', dataTableDraw);
+          requestsTable.on('processing.dt', function(e, settings, processing) {
+            dataTableProcessing(e, settings, processing);
+          });
+        }
+      });
+    </script>
+{% endblock %}

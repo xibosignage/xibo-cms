@@ -1,0 +1,14 @@
+{
+  "name": "sessionhistory",
+  "description": "Session History",
+  "class": "\\Xibo\\Report\\SessionHistory",
+  "type": "Report",
+  "output_type": "table",
+  "color":"orange",
+  "fa_icon": "fa-th",
+  "sort_order": 5,
+  "hidden": 0,
+  "category": "Audit",
+  "feature": "admin",
+  "adminOnly": 1
+}

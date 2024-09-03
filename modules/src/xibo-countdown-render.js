@@ -23,7 +23,7 @@ jQuery.fn.extend({
     // Check if the given input is a number/offset
     // or a date, and return the object
     const getDate = function(inputDate) {
-      if ($.isNumeric(inputDate)) {
+      if (!isNaN(inputDate)) {
         return moment().add(inputDate, 's');
       } else if (moment(inputDate).isValid()) {
         return moment(inputDate);
@@ -34,13 +34,14 @@ jQuery.fn.extend({
 
     // Ge remaining time
     const getTimeRemaining = function(endtime) {
-      const timeNow = moment();
-      const duration = moment.duration(endtime.diff(timeNow));
+      const timeNow = moment().startOf('seconds');
+      const duration =
+        moment.duration(endtime.startOf('seconds').diff(timeNow));
 
       return {
         now: timeNow,
         total: Math.floor(duration.asMilliseconds()),
-        seconds: Math.round(duration.seconds()),
+        seconds: Math.floor(duration.seconds()),
         secondsAll: Math.floor(duration.asSeconds()),
         minutes: Math.floor(duration.minutes()),
         minutesAll: Math.floor(duration.asMinutes()),
@@ -65,6 +66,14 @@ jQuery.fn.extend({
       const minutesAllSpan = clock.find('.minutesAll');
       const secondsSpan = clock.find('.seconds');
       const secondsAllSpan = clock.find('.secondsAll');
+
+      // Remove warning and finished classes on init
+      $(clock).removeClass('warning finished');
+
+      // Clear interval if exists
+      if (window.timeinterval) {
+        clearInterval(window.timeinterval);
+      }
 
       /**
        * Update clock
@@ -91,7 +100,7 @@ jQuery.fn.extend({
 
         if (t.total <= 0) {
           $(clock).removeClass('warning').addClass('finished');
-          clearInterval(timeinterval);
+          clearInterval(window.timeinterval);
           yearsSpan.html('0');
           monthsSpan.html('0');
           daysSpan.html('0');
@@ -107,7 +116,7 @@ jQuery.fn.extend({
       updateClock(); // run function once at first to avoid delay
 
       // Update every second
-      const timeinterval = setInterval(updateClock, 1000);
+      window.timeinterval = setInterval(updateClock, 1000);
     };
 
     // Default options
