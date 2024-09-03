@@ -1,0 +1,154 @@
+<!--
+  ~ Copyright (C) 2024 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - https://xibosignage.com
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<templates>
+    <template>
+        <id>source</id>
+        <extends override="text" with="data.source">text</extends>
+        <title>Source</title>
+        <type>element</type>
+        <dataType>emergency-alert</dataType>
+        <icon>fas fa-external-link-alt</icon>
+        <canRotate>true</canRotate>
+        <startWidth>500</startWidth>
+        <startHeight>80</startHeight>
+    </template>
+    <template>
+        <id>note</id>
+        <extends override="text" with="data.note">text</extends>
+        <title>Note</title>
+        <type>element</type>
+        <dataType>emergency-alert</dataType>
+        <icon>fas fa-sticky-note</icon>
+        <canRotate>true</canRotate>
+        <startWidth>500</startWidth>
+        <startHeight>80</startHeight>
+    </template>
+    <template>
+        <id>event</id>
+        <extends override="text" with="data.event">text</extends>
+        <title>Event</title>
+        <type>element</type>
+        <dataType>emergency-alert</dataType>
+        <icon>fas fa-calendar-o</icon>
+        <canRotate>true</canRotate>
+        <startWidth>500</startWidth>
+        <startHeight>80</startHeight>
+    </template>
+    <template>
+        <id>dateTimeEffective</id>
+        <extends override="date" with="data.dateTimeEffective">date</extends>
+        <title>Date &amp; Time Effective</title>
+        <type>element</type>
+        <dataType>emergency-alert</dataType>
+        <icon>fas fa-clock</icon>
+        <canRotate>true</canRotate>
+        <startWidth>450</startWidth>
+        <startHeight>80</startHeight>
+    </template>
+    <template>
+        <id>dateTimeOnset</id>
+        <extends override="date" with="data.dateTimeOnset">date</extends>
+        <title>Date &amp; Time Onset</title>
+        <type>element</type>
+        <dataType>emergency-alert</dataType>
+        <icon>fas fa-clock</icon>
+        <canRotate>true</canRotate>
+        <startWidth>450</startWidth>
+        <startHeight>80</startHeight>
+    </template>
+    <template>
+        <id>dateTimeExpires</id>
+        <extends override="date" with="data.dateTimeExpires">date</extends>
+        <title>Date &amp; Time Expires</title>
+        <type>element</type>
+        <dataType>emergency-alert</dataType>
+        <icon>fas fa-clock</icon>
+        <canRotate>true</canRotate>
+        <startWidth>450</startWidth>
+        <startHeight>80</startHeight>
+    </template>
+    <template>
+        <id>senderName</id>
+        <extends override="text" with="data.senderName">text</extends>
+        <title>Sender Name</title>
+        <type>element</type>
+        <dataType>emergency-alert</dataType>
+        <icon>fas fa-address-card</icon>
+        <canRotate>true</canRotate>
+        <startWidth>500</startWidth>
+        <startHeight>80</startHeight>
+    </template>
+    <template>
+        <id>headline</id>
+        <extends override="text" with="data.headline">text</extends>
+        <title>Headline</title>
+        <type>element</type>
+        <dataType>emergency-alert</dataType>
+        <icon>fas fa-newspaper-o</icon>
+        <canRotate>true</canRotate>
+        <startWidth>500</startWidth>
+        <startHeight>80</startHeight>
+    </template>
+    <template>
+        <id>description</id>
+        <extends override="text" with="data.description">text</extends>
+        <title>Description</title>
+        <type>element</type>
+        <dataType>emergency-alert</dataType>
+        <icon>fas fa-align-justify</icon>
+        <canRotate>true</canRotate>
+        <startWidth>700</startWidth>
+        <startHeight>350</startHeight>
+    </template>
+    <template>
+        <id>instructions</id>
+        <extends override="text" with="data.instructions">text</extends>
+        <title>Instructions</title>
+        <type>element</type>
+        <dataType>emergency-alert</dataType>
+        <icon>fas fa-list</icon>
+        <canRotate>true</canRotate>
+        <startWidth>500</startWidth>
+        <startHeight>80</startHeight>
+    </template>
+    <template>
+        <id>contact</id>
+        <extends override="text" with="data.contact">text</extends>
+        <title>Contact</title>
+        <type>element</type>
+        <dataType>emergency-alert</dataType>
+        <icon>fas fa-phone-square</icon>
+        <canRotate>true</canRotate>
+        <startWidth>500</startWidth>
+        <startHeight>80</startHeight>
+    </template>
+    <template>
+        <id>areaDesc</id>
+        <extends override="text" with="data.areaDesc">text</extends>
+        <title>Area Description</title>
+        <type>element</type>
+        <dataType>emergency-alert</dataType>
+        <icon>fas fa-map</icon>
+        <canRotate>true</canRotate>
+        <startWidth>700</startWidth>
+        <startHeight>80</startHeight>
+    </template>
+</templates>

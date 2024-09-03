@@ -29,6 +29,7 @@ use Xibo\Connector\ConnectorInterface;
 use Xibo\Entity\Connector;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\JwtServiceInterface;
+use Xibo\Service\PlayerActionServiceInterface;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -49,21 +50,27 @@ class ConnectorFactory extends BaseFactory
     /** @var \Psr\Container\ContainerInterface */
     private $container;
 
+    /** @var \Xibo\Service\PlayerActionServiceInterface */
+    private $playerActionService;
+
     /**
      * @param \Stash\Interfaces\PoolInterface $pool
      * @param \Xibo\Service\ConfigServiceInterface $config
      * @param \Xibo\Service\JwtServiceInterface $jwtService
      * @param \Psr\Container\ContainerInterface $container
-     */
+     * @param \Xibo\Service\PlayerActionServiceInterface $playerActionService
+    */
     public function __construct(
         PoolInterface $pool,
         ConfigServiceInterface $config,
         JwtServiceInterface $jwtService,
+        PlayerActionServiceInterface $playerActionService,
         ContainerInterface $container
     ) {
         $this->pool = $pool;
         $this->config = $config;
         $this->jwtService = $jwtService;
+        $this->playerActionService = $playerActionService;
         $this->container = $container;
     }
 
@@ -93,6 +100,7 @@ class ConnectorFactory extends BaseFactory
             ->useSettings($this->config->getConnectorSettings($out->getSourceName()), true)
             ->useHttpOptions($this->config->getGuzzleProxy())
             ->useJwtService($this->jwtService)
+            ->usePlayerActionService($this->playerActionService)
             ->usePool($this->pool);
     }
 

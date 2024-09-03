@@ -27,6 +27,7 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Service\JwtServiceInterface;
+use Xibo\Service\PlayerActionServiceInterface;
 
 /**
  * Connector trait to assist with basic scaffolding and utility methods.
@@ -54,6 +55,9 @@ trait ConnectorTrait
 
     /** @var JwtServiceInterface */
     private $jwtService;
+
+    /** @var PlayerActionServiceInterface */
+    private $playerActionService;
 
     /**
      * @param \Psr\Log\LoggerInterface $logger
@@ -153,6 +157,17 @@ trait ConnectorTrait
     protected function getJwtService(): JwtServiceInterface
     {
         return $this->jwtService;
+    }
+
+    public function usePlayerActionService(PlayerActionServiceInterface $playerActionService): ConnectorInterface
+    {
+        $this->playerActionService = $playerActionService;
+        return $this;
+    }
+
+    protected function getPlayerActionService(): PlayerActionServiceInterface
+    {
+        return $this->playerActionService;
     }
 
     public function setFactories($container): ConnectorInterface
