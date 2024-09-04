@@ -59,7 +59,7 @@ class ConnectorFactory extends BaseFactory
      * @param \Xibo\Service\JwtServiceInterface $jwtService
      * @param \Psr\Container\ContainerInterface $container
      * @param \Xibo\Service\PlayerActionServiceInterface $playerActionService
-    */
+     */
     public function __construct(
         PoolInterface $pool,
         ConfigServiceInterface $config,

@@ -121,7 +121,6 @@ class CapConnector implements ConnectorInterface
     public function onDataRequest(WidgetDataRequestEvent $event): void
     {
         if ($event->getDataProvider()->getDataSource() === 'emergency-alert') {
-
             $event->stopPropagation();
 
             try {
@@ -153,7 +152,6 @@ class CapConnector implements ConnectorInterface
 
                 // Criteria push message
                 $this->getPlayerActionService()->sendAction($display, $action);
-
             } catch (Exception $exception) {
                 $this->getLogger()
                     ->error('onDataRequest: Failed to get results. e = ' . $exception->getMessage());
@@ -375,7 +373,6 @@ class CapConnector implements ConnectorInterface
         // Check for a circle area element
         $circle = $this->getAreaData('circle');
         if ($circle) {
-
             // Split the circle data into center coordinates and radius
             $circleParts = explode(' ', $circle);
             $center = explode(',', $circleParts[0]);  // "latitude,longitude"
