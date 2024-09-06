@@ -193,30 +193,25 @@ class PixabayConnector implements ConnectorInterface
                     $searchResult->thumbnail = $result->videos->tiny->url;
                     $searchResult->duration = $result->duration;
 
-                    if ($this->isDefaultVideoResolution($result, 'large')) {
-                        $searchResult->download = $result->videos->large->url;
-                        $searchResult->width = $result->videos->large->width;
-                        $searchResult->height = $result->videos->large->height;
-                        $searchResult->fileSize = $result->videos->large->size;
-                        $searchResult->videoThumbnailUrl = $result->videos->large->thumbnail;
-                    } else if ($this->isDefaultVideoResolution($result, 'medium')) {
+                    // As per Pixabay, medium videos are usually 1080p but in some cases,
+                    // it might be larger (ie 2560x1440) so we need to do an additional validation
+                    if (!empty($result->videos->medium) && $result->videos->medium->width <= 1920
+                        && $result->videos->medium->height <= 1920
+                    ) {
                         $searchResult->download = $result->videos->medium->url;
                         $searchResult->width = $result->videos->medium->width;
                         $searchResult->height = $result->videos->medium->height;
                         $searchResult->fileSize = $result->videos->medium->size;
-                        $searchResult->videoThumbnailUrl = $result->videos->medium->thumbnail;
-                    } else if ($this->isDefaultVideoResolution($result, 'small')) {
+                    } else if (!empty($result->videos->small)) {
                         $searchResult->download = $result->videos->small->url;
                         $searchResult->width = $result->videos->small->width;
                         $searchResult->height = $result->videos->small->height;
                         $searchResult->fileSize = $result->videos->small->size;
-                        $searchResult->videoThumbnailUrl = $result->videos->small->thumbnail;
                     } else {
                         $searchResult->download = $result->videos->tiny->url;
                         $searchResult->width = $result->videos->tiny->width;
                         $searchResult->height = $result->videos->tiny->height;
                         $searchResult->fileSize = $result->videos->tiny->size;
-                        $searchResult->videoThumbnailUrl = $result->videos->tiny->thumbnail;
                     }
 
                     if (!empty($result->picture_id ?? null)) {
@@ -226,6 +221,10 @@ class PixabayConnector implements ConnectorInterface
                             $result->picture_id,
                             'https://i.vimeocdn.com/video/pictureId_960x540.png'
                         );
+                    } else {
+                        // Use the medium thumbnail if we have it, otherwise the tiny one.
+                        $searchResult->videoThumbnailUrl = $result->videos->medium->thumbnail
+                            ?? $result->videos->tiny->thumbnail;
                     }
                 } else {
                     $searchResult->type = 'image';
@@ -271,19 +270,5 @@ class PixabayConnector implements ConnectorInterface
         $providerDetails->mediaTypes = ['image', 'video'];
 
         $event->addProvider($providerDetails);
-    }
-
-    /**
-     * Checks if the Pixabay video size is within the 1080p default resolution
-     * @param $result
-     * @param string $size
-     * @return bool
-     */
-    private function isDefaultVideoResolution($result, string $size) : bool
-    {
-        return (!empty($result->videos->$size)
-            && $result->videos->$size->width <= 1920
-            && $result->videos->$size->height <= 1920
-        );
     }
 }
