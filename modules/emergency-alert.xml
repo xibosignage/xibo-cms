@@ -25,6 +25,7 @@
     <description>A module for displaying emergency alert elements based on an CAP feed</description>
     <icon>fa fa-exclamation-circle</icon>
     <class></class>
+    <dataCacheKey>%displayId%</dataCacheKey>
     <type>emergency-alert</type>
     <dataType>emergency-alert</dataType>
     <schemaVersion>1</schemaVersion>
@@ -175,10 +176,7 @@
     </properties>
     <preview></preview>
     <stencil>
-        <twig><![CDATA[
-<h1>Your message is.....</h1>
-<p>{{message}}</p>
-        ]]></twig>
+        <twig></twig>
     </stencil>
     <onRender><![CDATA[
 // Scale the element every time

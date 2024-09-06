@@ -22,10 +22,12 @@
 
 namespace Xibo\Connector;
 
+use Carbon\Carbon;
 use DOMDocument;
 use DOMElement;
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Exception\RequestException;
 use Location\Coordinate;
 use Location\Polygon;
 use Psr\Container\ContainerExceptionInterface;
@@ -39,6 +41,7 @@ use Xibo\Event\ScheduleCriteriaRequestInterface;
 use Xibo\Event\WidgetDataRequestEvent;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 use Xibo\Widget\Provider\DataProviderInterface;
 use Xibo\XMR\ScheduleCriteriaUpdateAction;
@@ -88,7 +91,7 @@ class CapConnector implements ConnectorInterface
 
     public function getTitle(): string
     {
-        return 'Cap Connector';
+        return 'CAP Connector';
     }
 
     public function getDescription(): string
@@ -172,7 +175,6 @@ class CapConnector implements ConnectorInterface
         $config = [];
 
         // Initialize configuration data
-        $emergencyAlertUrl = $dataProvider->getProperty('emergencyAlertUri');
         $config['status'] = $dataProvider->getProperty('status');
         $config['msgType'] = $dataProvider->getProperty('msgType');
         $config['scope'] = $dataProvider->getProperty('scope');
@@ -183,20 +185,11 @@ class CapConnector implements ConnectorInterface
         $config['certainty'] = $dataProvider->getProperty('certainty');
         $config['isAreaSpecific'] = $dataProvider->getProperty('isAreaSpecific');
 
-        $httpOptions = [
-            'timeout' => 20, // Wait no more than 20 seconds
-        ];
+        // Set cache expiry date to 3 minutes from now
+        $cacheExpire = Carbon::now()->addMinutes(3);
 
-        // Make a GET request to the CAP URL using Guzzle HTTP client with defined options
-        $response = $dataProvider
-            ->getGuzzleClient($httpOptions)
-            ->get($emergencyAlertUrl);
-
-        $this->getLogger()
-            ->debug('CAP Feed: uri: ' . $emergencyAlertUrl . ' httpOptions: ' . json_encode($httpOptions));
-
-        // Get the response body as a string
-        $xmlContent = $response->getBody()->getContents();
+        // Fetch the CAP XML content from the given URL
+        $xmlContent = $this->fetchCapAlertFromUrl($dataProvider, $cacheExpire);
 
         // Initialize DOMDocument and load the XML content
         $this->capXML = new DOMDocument();
@@ -292,6 +285,62 @@ class CapConnector implements ConnectorInterface
                 }
             }
         }
+    }
+
+
+    /**
+     * Fetches the CAP (Common Alert Protocol) XML data from the provided emergency alert URL.
+     *
+     * @param DataProviderInterface $dataProvider
+     * @param Carbon $cacheExpiresAt
+     *
+     * @return string
+     * @throws GeneralException|GuzzleException
+     */
+    private function fetchCapAlertFromUrl(DataProviderInterface $dataProvider, Carbon $cacheExpiresAt): string
+    {
+        $emergencyAlertUrl = $dataProvider->getProperty('emergencyAlertUri');
+
+        $cache = $this->pool->getItem('/emergency-alert/cap/' . md5($emergencyAlertUrl));
+        $data = $cache->get();
+
+        if ($cache->isMiss()) {
+            $cache->lock();
+            $this->getLogger()->debug('Getting CAP data from CAP Feed');
+
+            $httpOptions = [
+                'timeout' => 20, // Wait no more than 20 seconds
+            ];
+
+            try {
+                // Make a GET request to the CAP URL using Guzzle HTTP client with defined options
+                $response = $dataProvider
+                    ->getGuzzleClient($httpOptions)
+                    ->get($emergencyAlertUrl);
+
+                $this->getLogger()->debug('CAP Feed: uri: ' . $emergencyAlertUrl . ' httpOptions: '
+                        . json_encode($httpOptions));
+
+                // Get the response body as a string
+                $data = $response->getBody()->getContents();
+
+                // Cache
+                $cache->set($data);
+                $cache->expiresAt($cacheExpiresAt);
+                $this->pool->saveDeferred($cache);
+            } catch (RequestException $e) {
+                // Log the error with a message specific to CAP data fetching
+                $this->getLogger()->error('Unable to reach the CAP feed URL: '
+                    . $emergencyAlertUrl . ' Error: ' . $e->getMessage());
+
+                // Throw a more specific exception message
+                throw new GeneralException('Failed to retrieve CAP data from the specified URL.');
+            }
+        } else {
+            $this->getLogger()->debug('Getting CAP data from cache');
+        }
+
+        return $data;
     }
 
     /**
@@ -461,7 +510,12 @@ class CapConnector implements ConnectorInterface
     {
         // Initialize Emergency Alerts schedule criteria parameters
         $event->addType('emergency_alerts', __('Emergency Alerts'))
-                ->addMetric('status', __('Status'))
+                ->addMetric('isEmergencyAlertActive', __('Is emergency alert active?'))
+                    ->addValues('dropdown', [
+                        '1' => __('Yes'),
+                        '0' => __('No'),
+                    ])
+                ->addMetric('emergency_alert_status', __('Status'))
                     ->addValues('dropdown', [
                         'Actual' => __('Actual'),
                         'Exercise' => __('Exercise'),

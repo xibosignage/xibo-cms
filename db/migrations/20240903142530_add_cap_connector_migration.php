@@ -33,7 +33,7 @@ class AddCapConnectorMigration extends AbstractMigration
         $this->table('connectors')
             ->insert([
                 'className' => '\\Xibo\\Connector\\CapConnector',
-                'isEnabled' => 0,
+                'isEnabled' => 1,
                 'isVisible' => 1
             ])
             ->save();
