@@ -703,16 +703,18 @@ class Playlist extends Base
             $playlist->updateTagLinks($tags);
         }
 
-        // Do we have a tag or name filter?
+        // Do we have a tag, name or folder filter?
         $nameFilter = $sanitizedParams->getString('filterMediaName');
         $nameFilterLogicalOperator = $sanitizedParams->getString('logicalOperatorName');
         $tagFilter = $this->getUser()->featureEnabled('tag.tagging') ? $sanitizedParams->getString('filterMediaTag') : null;
         $logicalOperator = $this->getUser()->featureEnabled('tag.tagging') ? $sanitizedParams->getString('logicalOperator') : 'OR';
         $exactTags = $this->getUser()->featureEnabled('tag.tagging') ? $sanitizedParams->getCheckbox('exactTags') : 0;
+        $isFilterByFolder = $this->getUser()->featureEnabled('folder.view') ? $sanitizedParams->getCheckbox('isFilterByFolder') : null;
+        $folderIdFilter = $this->getUser()->featureEnabled('folder.view') ? $sanitizedParams->getInt('filterFolderId') : null;
 
         // Capture these as dynamic filter criteria
         if ($playlist->isDynamic === 1) {
-            if (empty($nameFilter) && empty($tagFilter)) {
+            if (empty($nameFilter) && empty($tagFilter) && empty($isFilterByFolder)) {
                 throw new InvalidArgumentException(__('No filters have been set for this dynamic Playlist, please click the Filters tab to define'));
             }
             $playlist->filterMediaName = $nameFilter;
@@ -722,18 +724,25 @@ class Playlist extends Base
                 $playlist->filterExactTags = $exactTags;
                 $playlist->filterMediaTagsLogicalOperator = $logicalOperator;
             }
+
+            if ($this->getUser()->featureEnabled('folder.view')) {
+                $playlist->isFilterByFolder = $isFilterByFolder;
+                $playlist->filterFolderId = $folderIdFilter;
+            }
+
             $playlist->maxNumberOfItems = $sanitizedParams->getInt('maxNumberOfItems', ['default' => $this->getConfig()->getSetting('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER')]);
         }
 
         $playlist->save();
 
         // Should we assign any existing media
-        if (!empty($nameFilter) || !empty($tagFilter)) {
+        if (!empty($nameFilter) || !empty($tagFilter) || !empty($tagFilter)) {
             $media = $this->mediaFactory->query(
                 null,
                 [
                     'name' => $nameFilter,
                     'tags' => $tagFilter,
+                    'folderId' => $folderIdFilter,
                     'assignable' => 1,
                     'exactTags' => $exactTags,
                     'logicalOperator' => $logicalOperator,
@@ -960,17 +969,28 @@ class Playlist extends Base
         // Do we have a tag or name filter?
         // Capture these as dynamic filter criteria
         if ($playlist->isDynamic === 1) {
-            if (empty($sanitizedParams->getString('filterMediaName')) && empty($sanitizedParams->getString('filterMediaTag'))) {
+            $filterMediaName = $sanitizedParams->getString('filterMediaName');
+            $filterMediaTag = $sanitizedParams->getString('filterMediaTag');
+            $isFilterByFolder = $sanitizedParams->getCheckbox('isFilterByFolder');
+            $filterFolderId = $isFilterByFolder ? $sanitizedParams->getString('filterFolderId') : null;
+
+            if (empty($filterMediaName) && empty($filterMediaTag) && empty($filterFolderId)) {
                 throw new InvalidArgumentException(__('No filters have been set for this dynamic Playlist, please click the Filters tab to define'));
             }
-            $playlist->filterMediaName = $sanitizedParams->getString('filterMediaName');
+            $playlist->filterMediaName = $filterMediaName;
             $playlist->filterMediaNameLogicalOperator = $sanitizedParams->getString('logicalOperatorName');
 
             if ($this->getUser()->featureEnabled('tag.tagging')) {
-                $playlist->filterMediaTags = $sanitizedParams->getString('filterMediaTag');
+                $playlist->filterMediaTags = $filterMediaTag;
                 $playlist->filterExactTags = $sanitizedParams->getCheckbox('exactTags');
                 $playlist->filterMediaTagsLogicalOperator = $sanitizedParams->getString('logicalOperator');
             }
+
+            if ($this->getUser()->featureEnabled('folder.view')) {
+                $playlist->isFilterByFolder = $isFilterByFolder;
+                $playlist->filterFolderId = $filterFolderId;
+            }
+
             $playlist->maxNumberOfItems = $sanitizedParams->getInt('maxNumberOfItems');
         }
 
