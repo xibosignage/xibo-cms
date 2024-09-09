@@ -109,7 +109,8 @@
     {% set helpLinks = helpService.getLinksForPage(route) %}
     {% set isXiboThemed = theme.getThemeConfig("app_name") == "Xibo" %}
     {% if helpLinks|length > 0 %}
-        <div id="help-pane" class="help-pane">
+        {# Hide in mobile view (sm/<768px)  #}
+        <div id="help-pane" class="d-none d-md-block help-pane">
             <div class="card help-pane-card border-dark">
                 <div class="card-header">{{ "Help"|trans }} <i class="close-icon fa fa-times"></i></div>
                 <ul class="list-group list-group-flush">
