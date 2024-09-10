@@ -709,12 +709,11 @@ class Playlist extends Base
         $tagFilter = $this->getUser()->featureEnabled('tag.tagging') ? $sanitizedParams->getString('filterMediaTag') : null;
         $logicalOperator = $this->getUser()->featureEnabled('tag.tagging') ? $sanitizedParams->getString('logicalOperator') : 'OR';
         $exactTags = $this->getUser()->featureEnabled('tag.tagging') ? $sanitizedParams->getCheckbox('exactTags') : 0;
-        $isFilterByFolder = $this->getUser()->featureEnabled('folder.view') ? $sanitizedParams->getCheckbox('isFilterByFolder') : null;
         $folderIdFilter = $this->getUser()->featureEnabled('folder.view') ? $sanitizedParams->getInt('filterFolderId') : null;
 
         // Capture these as dynamic filter criteria
         if ($playlist->isDynamic === 1) {
-            if (empty($nameFilter) && empty($tagFilter) && empty($isFilterByFolder)) {
+            if (empty($nameFilter) && empty($tagFilter) && empty($folderIdFilter)) {
                 throw new InvalidArgumentException(__('No filters have been set for this dynamic Playlist, please click the Filters tab to define'));
             }
             $playlist->filterMediaName = $nameFilter;
@@ -726,7 +725,6 @@ class Playlist extends Base
             }
 
             if ($this->getUser()->featureEnabled('folder.view')) {
-                $playlist->isFilterByFolder = $isFilterByFolder;
                 $playlist->filterFolderId = $folderIdFilter;
             }
 
@@ -971,8 +969,7 @@ class Playlist extends Base
         if ($playlist->isDynamic === 1) {
             $filterMediaName = $sanitizedParams->getString('filterMediaName');
             $filterMediaTag = $sanitizedParams->getString('filterMediaTag');
-            $isFilterByFolder = $sanitizedParams->getCheckbox('isFilterByFolder');
-            $filterFolderId = $isFilterByFolder ? $sanitizedParams->getString('filterFolderId') : null;
+            $filterFolderId = $sanitizedParams->getString('filterFolderId');
 
             if (empty($filterMediaName) && empty($filterMediaTag) && empty($filterFolderId)) {
                 throw new InvalidArgumentException(__('No filters have been set for this dynamic Playlist, please click the Filters tab to define'));
@@ -987,7 +984,6 @@ class Playlist extends Base
             }
 
             if ($this->getUser()->featureEnabled('folder.view')) {
-                $playlist->isFilterByFolder = $isFilterByFolder;
                 $playlist->filterFolderId = $filterFolderId;
             }
 

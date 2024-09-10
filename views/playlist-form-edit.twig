@@ -165,10 +165,6 @@
                                     {% endif %}
 
                                     {% if currentUser.featureEnabled("folder.view") %}
-                                        {% set title %}{% trans "Filter by Folder?" %}{% endset %}
-                                        {% set helpText %}{% trans "Select this option to filter the Playlist media by the selected folder." %}{% endset %}
-                                        {{ forms.checkbox("isFilterByFolder", title, playlist.isFilterByFolder, helpText) }}
-
                                         {% set title %}{% trans "Folder Filter" %}{% endset %}
                                         {% set helpText %}{% trans "Select a folder to filter the media items." %}{% endset %}
                                         {% set attributes = [
@@ -179,7 +175,10 @@
                                             { name: "data-id-property", value: "folderId" },
                                             { name: "data-text-property", value: "text" },
                                             { name: "data-initial-key", value: "folderId" },
-                                            { name: "data-initial-value", value: playlist.filterFolderId }
+                                            { name: "data-initial-value", value: playlist.filterFolderId },
+                                            { name: "data-allow-clear", value: "true" },
+                                            { name: "data-placeholder--id", value: null },
+                                            { name: "data-placeholder--value", value: "" }
                                         ] %}
                                         {{ forms.dropdown("filterFolderId", "single", title, playlist.filterFolderId, null, "", "", helpText, "pagedSelect", "", "", "", attributes) }}
                                     {% endif %}

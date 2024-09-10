@@ -303,7 +303,6 @@
         var exactTags;
         var logicalOperator;
         var logicalOperatorName;
-        var isFilterByFolder;
         var filterFolderId;
 
         function playlistEditorFormOpen(formData) {
@@ -325,25 +324,6 @@
             $(dialog).find("input[name=filterMediaTag], input[name=exactTags], select[name=logicalOperator], select[name=logicalOperatorName], select[name=filterFolderId]").on("change", function () {
                 playlistFormPopulateMediaTable(dialog);
             });
-
-            // Initialize folder filter div
-            var folderFilterDiv = $(dialog).find("select[name=filterFolderId]").closest('div').parent('div');
-
-            // Show or hide the folder filter dropdown based on checkbox state
-            $(dialog).find("input[name=isFilterByFolder]").on("change", function () {
-                if ($(this).is(":checked")) {
-                    folderFilterDiv.show();
-                } else {
-                    folderFilterDiv.hide();
-                }
-            });
-
-            // Initialize visibility based on checkbox state
-            if ($(dialog).find("input[name=isFilterByFolder]").is(":checked")) {
-                folderFilterDiv.show();
-            } else {
-                folderFilterDiv.hide();
-            }
 
             // First time in there
             playlistFormPopulateMediaTable(dialog);
@@ -415,8 +395,7 @@
             exactTags = $(dialog).find("input[name=exactTags]").is(':checked')
             logicalOperator = $(dialog).find("select[name=logicalOperator]").val();
             logicalOperatorName = $(dialog).find("select[name=logicalOperatorName]").val();
-            isFilterByFolder = $(dialog).find("input[name=isFilterByFolder]").is(':checked');
-            filterFolderId = isFilterByFolder ? $(dialog).find("select[name=filterFolderId]").val() : "";
+            filterFolderId = $(dialog).find("select[name=filterFolderId]").val() ?? "";
 
             if (nameFilter === "" && tagFilter === "" && filterFolderId === "") {
                 if (mediaTable != null) {

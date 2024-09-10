@@ -196,7 +196,6 @@ class PlaylistFactory extends BaseFactory
                 `playlist`.filterMediaTags,
                 `playlist`.filterExactTags,
                 `playlist`.filterMediaTagsLogicalOperator,
-                `playlist`.isFilterByFolder,
                 `playlist`.filterFolderId,
                 `playlist`.maxNumberOfItems,
                 `playlist`.requiresDurationUpdate,
@@ -458,11 +457,6 @@ class PlaylistFactory extends BaseFactory
             ';
 
             $params['mediaLike'] = '%' . $parsedFilter->getString('mediaLike') . '%';
-        }
-
-        if ($parsedFilter->getInt('isFilterByFolder') !== null) {
-            $body .= " AND `playlist`.isFilterByFolder = :isFilterByFolder ";
-            $params['isFilterByFolder'] = $parsedFilter->getInt('isFilterByFolder');
         }
 
         if ($parsedFilter->getInt('filterFolderId') !== null) {

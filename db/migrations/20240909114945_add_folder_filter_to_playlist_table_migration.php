@@ -31,8 +31,6 @@ class AddFolderFilterToPlaylistTableMigration extends AbstractMigration
     public function change()
     {
         $this->table('playlist')
-            ->addColumn('isFilterByFolder', 'integer', ['after' => 'filterMediaTagsLogicalOperator',
-                'default' => null, 'limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
             ->addColumn('filterFolderId', 'integer', ['after' => 'isFilterByFolder', 'default' => null,
                 'null' => true])
             ->save();
