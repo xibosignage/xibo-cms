@@ -127,6 +127,13 @@ class CapConnector implements ConnectorInterface
             $event->stopPropagation();
 
             try {
+                // check if CAP URL is present
+                if (empty($event->getDataProvider()->getProperty('emergencyAlertUrl'))) {
+                    $this->getLogger()->debug('onDataRequest: Emergency alert not configured.');
+                    $event->getDataProvider()->addError(__('Missing CAP URL'));
+                    return;
+                }
+
                 // Process and initialize CAP data
                 $this->processCapData($event->getDataProvider());
 
@@ -295,7 +302,7 @@ class CapConnector implements ConnectorInterface
      * @param Carbon $cacheExpiresAt
      *
      * @return string
-     * @throws GeneralException|GuzzleException
+     * @throws GuzzleException
      */
     private function fetchCapAlertFromUrl(DataProviderInterface $dataProvider, Carbon $cacheExpiresAt): string
     {
@@ -334,7 +341,7 @@ class CapConnector implements ConnectorInterface
                     . $emergencyAlertUrl . ' Error: ' . $e->getMessage());
 
                 // Throw a more specific exception message
-                throw new GeneralException('Failed to retrieve CAP data from the specified URL.');
+                $dataProvider->addError(__('Failed to retrieve CAP data from the specified URL.'));
             }
         } else {
             $this->getLogger()->debug('Getting CAP data from cache');
