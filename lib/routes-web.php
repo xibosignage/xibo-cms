@@ -378,6 +378,8 @@ $app->get('/campaign/{id}/preview', ['\Xibo\Controller\Campaign','preview'])
 //
 // template
 //
+$app->get('/template/connector/list', ['\Xibo\Controller\Template','providersList'])
+    ->setName('template.search.providers');
 $app->get('/template/search', ['\Xibo\Controller\Template', 'search'])->setName('template.search.all');
 $app->get('/template/view', ['\Xibo\Controller\Template','displayPage'])
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['template.view']))
