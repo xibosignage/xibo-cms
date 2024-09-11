@@ -142,6 +142,10 @@
                 list: {
                     url: "{{ url_for("template.view") }}"
                 },
+                getProviders: {
+                    url: "{{ url_for("template.search.providers") }}",
+                    type: 'GET'
+                },
             },
             region: {
                 transform: {
@@ -765,8 +769,7 @@
                     actionsTitle: "{{ "Interactive actions"|trans }}",
                     layoutTemplateName: "{{ "Layout Templates" |trans }}",
                     layoutTemplateTitle: "{{ "Search for Layout Templates"|trans }}",
-                    layoutExchangeName: "{{ "Xibo Layout Exchange" |trans }}",
-                    layoutExchangeTitle: "{{ "Search for templates available from the Xibo Exchange."|trans }}",
+                    layoutExchangeTitle: "{{ "Search for templates available from the %obj%."|trans }}",
                     playlistsName: "{{ "Playlists" |trans }}",
                     playlistsTitle: "{{ "Add Playlists"|trans }}",
                     providerTitle: "{{ "Provider: %obj%"|trans }}",
@@ -816,7 +819,7 @@
                 layout: "{{ "Layout"|trans }}",
                 region: "{{ "Zone"|trans }}",
                 layoutTemplatesMessage: "{{ "Replace your Layout with a template?"|trans }}",
-                layoutExchangeTemplatesMessage: "{{ "Replace your Layout with a Xibo Exchange template?"|trans }}",
+                layoutExchangeTemplatesMessage: "{{ "Replace your Layout with a %obj% template?"|trans }}",
                 isRequired: "{{ "Required"|trans }}",
                 libraryTypes: {
                     image: "{{ "Image" |trans }}",
