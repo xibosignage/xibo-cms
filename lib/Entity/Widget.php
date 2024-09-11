@@ -1270,7 +1270,7 @@ class Widget implements \JsonSerializable
                 'mediaId2' => $mediaId
             ));
 
-            // audit the image being added
+            // audit the media being added
             $this->getLog()->audit('Media', $mediaId, 'Media Added', ['mediaId' => $mediaId, 'widgetId' => $this->widgetId]);
         }
     }
@@ -1300,8 +1300,8 @@ class Widget implements \JsonSerializable
             $sql .= ',:mediaId' . $i;
             $params['mediaId' . $i] = $mediaId;
 
-            // audit the image being deleted
-            $this->getLog()->audit('Media', $mediaId, 'Media Deleted', ['mediaId' => $mediaId, 'widgetId' => $this->widgetId]);
+            // audit the media being deleted
+            $this->getLog()->audit('Media', $mediaId, 'Media Removed', ['mediaId' => $mediaId, 'widgetId' => $this->widgetId]);
         }
 
         $sql .= ')';
