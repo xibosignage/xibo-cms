@@ -1104,8 +1104,12 @@ class Widget implements \JsonSerializable
             ['widgetId' => $this->widgetId]
         );
         
-        // Unlink Media
         $this->mediaIds = [];
+
+        // initialize media Ids to unlink
+        $mediaIdsToUnlink = $this->getMediaIdsToUnlink();
+
+        // Unlink Media
         $this->unlinkMedia();
 
         // Delete any fallback data
@@ -1124,7 +1128,13 @@ class Widget implements \JsonSerializable
         $this->getLog()->debug('Delete Widget Complete');
 
         // Audit
-        $this->audit($this->widgetId, 'Deleted', ['widgetId' => $this->widgetId, 'playlistId' => $this->playlistId]);
+        $this->audit($this->widgetId,
+            'Deleted',
+            array_merge(
+                ['widgetId' => $this->widgetId, 'playlistId' => $this->playlistId],
+                $mediaIdsToUnlink
+            )
+        );
     }
 
     /**
@@ -1271,7 +1281,7 @@ class Widget implements \JsonSerializable
             ));
 
             // audit the media being added
-            $this->getLog()->audit('Media', $mediaId, 'Media Added', ['mediaId' => $mediaId, 'widgetId' => $this->widgetId]);
+            $this->getLog()->audit('Media', $mediaId, 'Media added to widget', ['mediaId' => $mediaId, 'widgetId' => $this->widgetId]);
         }
     }
 
@@ -1301,11 +1311,43 @@ class Widget implements \JsonSerializable
             $params['mediaId' . $i] = $mediaId;
 
             // audit the media being deleted
-            $this->getLog()->audit('Media', $mediaId, 'Media Removed', ['mediaId' => $mediaId, 'widgetId' => $this->widgetId]);
+            $this->getLog()->audit('Media', $mediaId, 'Media removed from widget', ['mediaId' => $mediaId, 'widgetId' => $this->widgetId]);
         }
 
         $sql .= ')';
 
         $this->getStore()->update($sql, $params);
+    }
+
+    /**
+     * Returns an array of MediaIds to unlink
+     *
+     * @return array
+     */
+    private function getMediaIdsToUnlink(): array
+    {
+        // Calculate the difference between the current assignments and the original.
+        $mediaToUnlink = array_diff($this->originalMediaIds, $this->mediaIds);
+
+        if (count($mediaToUnlink) <= 0) {
+            return [];
+        }
+
+        // If there is only one mediaId, add it without a suffix
+        if (count($mediaToUnlink) === 1) {
+            $mediaId = reset($mediaToUnlink);
+            return ['mediaId' => $mediaId];
+        }
+
+        // More than one mediaId, append a suffix to the key
+        $mediaIdsToUnlink = [];
+        $i = 1;
+
+        foreach ($mediaToUnlink as $mediaId) {
+            $mediaIdsToUnlink['mediaId_' . $i] = $mediaId;
+            $i++;
+        }
+
+        return $mediaIdsToUnlink;
     }
 }
