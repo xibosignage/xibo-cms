@@ -30,6 +30,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\SearchResult;
 use Xibo\Event\TemplateProviderEvent;
 use Xibo\Event\TemplateProviderImportEvent;
+use Xibo\Event\TemplateProviderListEvent;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
@@ -50,6 +51,7 @@ class XiboExchangeConnector implements ConnectorInterface
     {
         $dispatcher->addListener('connector.provider.template', [$this, 'onTemplateProvider']);
         $dispatcher->addListener('connector.provider.template.import', [$this, 'onTemplateProviderImport']);
+        $dispatcher->addListener('connector.provider.template.list', [$this, 'onTemplateList']);
         return $this;
     }
 
@@ -238,5 +240,26 @@ class XiboExchangeConnector implements ConnectorInterface
         $searchResult->thumbnail = $template->thumbnailUrl;
         $searchResult->download = $template->downloadUrl;
         return $searchResult;
+    }
+
+    /**
+     * Add this connector to the list of providers.
+     * @param \Xibo\Event\TemplateProviderListEvent $event
+     * @return void
+     */
+    public function onTemplateList(TemplateProviderListEvent $event): void
+    {
+        $this->getLogger()->debug('onTemplateList:event');
+
+        $providerDetails = new ProviderDetails();
+        $providerDetails->id = $this->getSourceName();
+        $providerDetails->link = 'https://xibosignage.com';
+        $providerDetails->logoUrl = $this->getThumbnail();
+        $providerDetails->iconUrl = 'exchange-alt';
+        $providerDetails->message = $this->getTitle();
+        $providerDetails->backgroundColor = '';
+        $providerDetails->mediaTypes = ['xlf'];
+
+        $event->addProvider($providerDetails);
     }
 }
