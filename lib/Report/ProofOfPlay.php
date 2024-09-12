@@ -853,8 +853,10 @@ class ProofOfPlay implements ReportInterface
                 stat.displayId 
         ';
 
-        // Group the data by display group
-        if ($groupBy === 'displayGroup') {
+        // Optional groupings
+        if ($groupBy === 'display') {
+            $body .= ', display.Display';
+        } else if ($groupBy === 'displayGroup') {
             $body .= ', displaydg.displayGroupId';
         }
 
@@ -892,8 +894,6 @@ class ProofOfPlay implements ReportInterface
 
         if ($groupBy === 'tag') {
             $rows = $this->getByDisplayGroup($rows, 'tag', $displayGroupIds);
-        } else if ($groupBy === 'displayGroup') {
-            $rows = $this->getByDisplayGroup($rows, 'displayGroupId', $displayGroupIds);
         }
 
         return [
