@@ -128,7 +128,7 @@ class CapConnector implements ConnectorInterface
 
             try {
                 // check if CAP URL is present
-                if (empty($event->getDataProvider()->getProperty('emergencyAlertUrl'))) {
+                if (empty($event->getDataProvider()->getProperty('emergencyAlertUri'))) {
                     $this->getLogger()->debug('onDataRequest: Emergency alert not configured.');
                     $event->getDataProvider()->addError(__('Missing CAP URL'));
                     return;
