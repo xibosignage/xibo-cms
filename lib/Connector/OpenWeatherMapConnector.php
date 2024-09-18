@@ -664,56 +664,34 @@ class OpenWeatherMapConnector implements ConnectorInterface
     public function onScheduleCriteriaRequest(ScheduleCriteriaRequestInterface $event): void
     {
         // Initialize Open Weather Schedule Criteria parameters
-        $event->addType('weather', __('Weather'))
-                ->addMetric('weather_condition', __('Weather Condition'))
-                    ->addValues('dropdown', [
-                        'clear_sky' => __('Clear Sky'),
-                        'few_clouds' => __('Few Clouds'),
-                        'scattered_clouds' => __('Scattered Clouds'),
-                        'broken_clouds' => __('Broken Clouds'),
-                        'shower_rain' => __('Shower Rain'),
-                        'rain' => __('Rain'),
-                        'thunderstorm' => __('Thunderstorm'),
-                        'snow' => __('Snow'),
-                        'mist' => __('Mist')
-                    ])
-                ->addMetric('temperature_imperial', __('Temperature (Imperial)'))
-                    ->addValues('number', [])
-                ->addMetric('temperature_metric', __('Temperature (Metric)'))
-                    ->addValues('number', [])
-                ->addMetric('apparent_temperature_imperial', __('Apparent Temperature (Imperial)'))
-                    ->addValues('number', [])
-                ->addMetric('apparent_temperature_metric', __('Apparent Temperature (Metric)'))
-                    ->addValues('number', [])
-                ->addMetric('wind_speed', __('Wind Speed'))
-                    ->addValues('number', [])
-                ->addMetric('wind_direction', __('Wind Direction'))
-                    ->addValues('dropdown', [
-                        'N' => __('North'),
-                        'NNE ' => __('North-Northeast'),
-                        'NE' => __('Northeast'),
-                        'ENE' => __('East-Northeast'),
-                        'E' => __('East'),
-                        'ESE' => __('East-Southeast'),
-                        'SE' => __('Southeast'),
-                        'SSE' => __('South-Southeast'),
-                        'S' => __('South'),
-                        'SSW' => __('South-Southwest'),
-                        'SW' => __('Southwest'),
-                        'WSW' => __('West-Southwest'),
-                        'W' => __('West'),
-                        'WNW' => __('West-Northwest'),
-                        'NW' => __('Northwest'),
-                        'NNW' => __('North-Northwest'),
-                    ])
-                ->addMetric('wind_bearing', __('Wind Bearing'))
-                    ->addValues('number', [])
-                ->addMetric('humidity', __('Humidity (Percent)'))
-                    ->addValues('number', [])
-                ->addMetric('pressure', __('Pressure'))
-                    ->addValues('number', [])
-                ->addMetric('visibility', __('Visibility'))
-                    ->addValues('number', []);
+        $event->addType('openweathermap', __('Weather'))
+            ->addMetric('owm_weather_main', __('Weather Condition'))
+                ->addValues('dropdown', [
+                    'Thunderstorm' => __('Thunderstorm'),
+                    'Drizzle' => __('Drizzle'),
+                    'Rain' => __('Rain'),
+                    'Snow' => __('Snow'),
+                    'Clear' => __('Clear'),
+                    'Clouds' => __('Clouds')
+                ])
+            ->addMetric('owm_temp_imperial', __('Temperature (Imperial)'))
+                ->addValues('number', [])
+            ->addMetric('owm_temp_metric', __('Temperature (Metric)'))
+                ->addValues('number', [])
+            ->addMetric('owm_feels_like_imperial', __('Apparent Temperature (Imperial)'))
+                ->addValues('number', [])
+            ->addMetric('owm_feels_like_metric', __('Apparent Temperature (Metric)'))
+                ->addValues('number', [])
+            ->addMetric('owm_wind_speed', __('Wind Speed'))
+                ->addValues('number', [])
+            ->addMetric('owm_wind_deg', __('Wind Direction (degrees)'))
+                ->addValues('number', [])
+            ->addMetric('owm_humidity', __('Humidity (Percent)'))
+                ->addValues('number', [])
+            ->addMetric('owm_pressure', __('Pressure'))
+                ->addValues('number', [])
+            ->addMetric('owm_visibility', __('Visibility (meters)'))
+                ->addValues('number', []);
     }
 
     /**
