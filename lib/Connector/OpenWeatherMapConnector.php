@@ -684,6 +684,17 @@ class OpenWeatherMapConnector implements ConnectorInterface
                 ->addValues('number', [])
             ->addMetric('owm_wind_speed', __('Wind Speed'))
                 ->addValues('number', [])
+            ->addMetric('owm_wind_direction', __('Wind Direction'))
+                ->addValues('dropdown', [
+                    'N' => __('North'),
+                    'NE' => __('Northeast'),
+                    'E' => __('East'),
+                    'SE' => __('Southeast'),
+                    'S' => __('South'),
+                    'SW' => __('Southwest'),
+                    'W' => __('West'),
+                    'NW' => __('Northwest'),
+                ])
             ->addMetric('owm_wind_deg', __('Wind Direction (degrees)'))
                 ->addValues('number', [])
             ->addMetric('owm_humidity', __('Humidity (Percent)'))
@@ -709,7 +720,7 @@ class OpenWeatherMapConnector implements ConnectorInterface
         $data = array();
 
         // format the weather condition
-        $data['weather_condition'] = str_replace(' ', '_', strtolower($item['weather'][0]['main']));
+        $data['owm_weather_main'] = str_replace(' ', '_', strtolower($item['weather'][0]['main']));
 
         // Temperature
         // imperial = F
@@ -722,50 +733,50 @@ class OpenWeatherMapConnector implements ConnectorInterface
         $apparentTempMetric = ($apparentTempImperial - 32) * 5 / 9;
 
         // Round those temperature values
-        $data['temperature_imperial'] = round($tempImperial, 0);
-        $data['apparent_temperature_imperial'] = round($apparentTempImperial, 0);
-        $data['temperature_metric'] = round($tempMetric, 0);
-        $data['apparent_temperature_metric'] = round($apparentTempMetric, 0);
+        $data['owm_temp_imperial'] = round($tempImperial, 0);
+        $data['owm_feels_like_imperial'] = round($apparentTempImperial, 0);
+        $data['owm_temp_metric'] = round($tempMetric, 0);
+        $data['owm_feels_like_metric'] = round($apparentTempMetric, 0);
 
 
         // Humidity
-        $data['humidity'] = $item['humidity'];
+        $data['owm_humidity'] = $item['humidity'];
 
         // Pressure
         // received in hPa, display in mB
-        $data['pressure'] = $item['pressure'] / 100;
+        $data['owm_pressure'] = $item['pressure'] / 100;
 
         // Wind
         // metric = meters per second
         // imperial = miles per hour
-        $data['wind_speed'] = $item['wind_speed'] ?? $item['speed'] ?? null;
-        $data['wind_bearing'] = $item['wind_deg'] ?? $item['deg'] ?? null;
+        $data['owm_wind_speed'] = $item['wind_speed'] ?? $item['speed'] ?? null;
+        $data['owm_wind_deg'] = $item['wind_deg'] ?? $item['deg'] ?? null;
 
         if ($requestUnit === 'metric' && $windSpeedUnit !== 'MPS') {
             // We have MPS and need to go to something else
             if ($windSpeedUnit === 'MPH') {
                 // Convert MPS to MPH
-                $data['wind_speed'] = round($data['wind_speed'] * 2.237, 2);
+                $data['owm_wind_deg'] = round($data['owm_wind_deg'] * 2.237, 2);
             } else if ($windSpeedUnit === 'KPH') {
                 // Convert MPS to KPH
-                $data['wind_speed'] = round($data['wind_speed'] * 3.6, 2);
+                $data['owm_wind_deg'] = round($data['owm_wind_deg'] * 3.6, 2);
             }
         } else if ($requestUnit === 'imperial' && $windSpeedUnit !== 'MPH') {
             if ($windSpeedUnit === 'MPS') {
                 // Convert MPH to MPS
-                $data['wind_speed'] = round($data['wind_speed'] / 2.237, 2);
+                $data['owm_wind_deg'] = round($data['owm_wind_deg'] / 2.237, 2);
             } else if ($windSpeedUnit === 'KPH') {
                 // Convert MPH to KPH
-                $data['wind_speed'] = round($data['wind_speed'] * 1.609344, 2);
+                $data['owm_wind_deg'] = round($data['owm_wind_deg'] * 1.609344, 2);
             }
         }
 
         // Wind direction
-        $data['wind_direction'] = '--';
-        if ($data['wind_bearing'] !== null && $data['wind_bearing'] !== 0) {
+        $data['owm_wind_direction'] = '--';
+        if ($data['owm_wind_deg'] !== null && $data['owm_wind_deg'] !== 0) {
             foreach (self::cardinalDirections() as $dir => $angles) {
-                if ($data['wind_bearing'] >= $angles[0] && $data['wind_bearing'] < $angles[1]) {
-                    $data['wind_direction'] = $dir;
+                if ($data['owm_wind_deg'] >= $angles[0] && $data['owm_wind_deg'] < $angles[1]) {
+                    $data['owm_wind_direction'] = $dir;
                     break;
                 }
             }
@@ -774,17 +785,17 @@ class OpenWeatherMapConnector implements ConnectorInterface
         // Visibility
         // metric = meters
         // imperial = meters?
-        $data['visibility'] = $item['visibility'] ?? '--';
+        $data['owm_visibility'] = $item['visibility'] ?? '--';
 
-        if ($data['visibility'] !== '--') {
+        if ($data['owm_visibility'] !== '--') {
             // Always in meters
             if ($visibilityDistanceUnit === 'mi') {
                 // Convert meters to miles
-                $data['visibility'] = $data['visibility'] / 1609;
+                $data['owm_visibility'] = $data['owm_visibility'] / 1609;
             } else {
                 if ($visibilityDistanceUnit === 'km') {
                     // Convert meters to KM
-                    $data['visibility'] = $data['visibility'] / 1000;
+                    $data['owm_visibility'] = $data['owm_visibility'] / 1000;
                 }
             }
         }
