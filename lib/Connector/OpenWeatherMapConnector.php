@@ -665,7 +665,7 @@ class OpenWeatherMapConnector implements ConnectorInterface
     {
         // Initialize Open Weather Schedule Criteria parameters
         $event->addType('openweathermap', __('Weather'))
-            ->addMetric('owm_weather_main', __('Weather Condition'))
+            ->addMetric('owm_weather_condition', __('Weather Condition'))
                 ->addValues('dropdown', [
                     'Thunderstorm' => __('Thunderstorm'),
                     'Drizzle' => __('Drizzle'),
@@ -695,7 +695,7 @@ class OpenWeatherMapConnector implements ConnectorInterface
                     'W' => __('West'),
                     'NW' => __('Northwest'),
                 ])
-            ->addMetric('owm_wind_deg', __('Wind Direction (degrees)'))
+            ->addMetric('owm_wind_degrees', __('Wind Direction (degrees)'))
                 ->addValues('number', [])
             ->addMetric('owm_humidity', __('Humidity (Percent)'))
                 ->addValues('number', [])
@@ -720,7 +720,7 @@ class OpenWeatherMapConnector implements ConnectorInterface
         $data = array();
 
         // format the weather condition
-        $data['owm_weather_main'] = str_replace(' ', '_', strtolower($item['weather'][0]['main']));
+        $data['owm_weather_condition'] = str_replace(' ', '_', strtolower($item['weather'][0]['main']));
 
         // Temperature
         // imperial = F
@@ -750,32 +750,32 @@ class OpenWeatherMapConnector implements ConnectorInterface
         // metric = meters per second
         // imperial = miles per hour
         $data['owm_wind_speed'] = $item['wind_speed'] ?? $item['speed'] ?? null;
-        $data['owm_wind_deg'] = $item['wind_deg'] ?? $item['deg'] ?? null;
+        $data['owm_wind_degrees'] = $item['wind_deg'] ?? $item['deg'] ?? null;
 
         if ($requestUnit === 'metric' && $windSpeedUnit !== 'MPS') {
             // We have MPS and need to go to something else
             if ($windSpeedUnit === 'MPH') {
                 // Convert MPS to MPH
-                $data['owm_wind_deg'] = round($data['owm_wind_deg'] * 2.237, 2);
+                $data['owm_wind_degrees'] = round($data['owm_wind_degrees'] * 2.237, 2);
             } else if ($windSpeedUnit === 'KPH') {
                 // Convert MPS to KPH
-                $data['owm_wind_deg'] = round($data['owm_wind_deg'] * 3.6, 2);
+                $data['owm_wind_degrees'] = round($data['owm_wind_degrees'] * 3.6, 2);
             }
         } else if ($requestUnit === 'imperial' && $windSpeedUnit !== 'MPH') {
             if ($windSpeedUnit === 'MPS') {
                 // Convert MPH to MPS
-                $data['owm_wind_deg'] = round($data['owm_wind_deg'] / 2.237, 2);
+                $data['owm_wind_degrees'] = round($data['owm_wind_degrees'] / 2.237, 2);
             } else if ($windSpeedUnit === 'KPH') {
                 // Convert MPH to KPH
-                $data['owm_wind_deg'] = round($data['owm_wind_deg'] * 1.609344, 2);
+                $data['owm_wind_degrees'] = round($data['owm_wind_degrees'] * 1.609344, 2);
             }
         }
 
         // Wind direction
         $data['owm_wind_direction'] = '--';
-        if ($data['owm_wind_deg'] !== null && $data['owm_wind_deg'] !== 0) {
+        if ($data['owm_wind_degrees'] !== null && $data['owm_wind_degrees'] !== 0) {
             foreach (self::cardinalDirections() as $dir => $angles) {
-                if ($data['owm_wind_deg'] >= $angles[0] && $data['owm_wind_deg'] < $angles[1]) {
+                if ($data['owm_wind_degrees'] >= $angles[0] && $data['owm_wind_degrees'] < $angles[1]) {
                     $data['owm_wind_direction'] = $dir;
                     break;
                 }
