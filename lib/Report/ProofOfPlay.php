@@ -32,6 +32,7 @@ use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ReportScheduleFactory;
+use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
@@ -70,6 +71,11 @@ class ProofOfPlay implements ReportInterface
     private $reportScheduleFactory;
 
     /**
+     * @var DisplayGroupFactory
+     */
+    private $displayGroupFactory;
+
+    /**
      * @var SanitizerService
      */
     private $sanitizer;
@@ -94,6 +100,7 @@ class ProofOfPlay implements ReportInterface
         $this->mediaFactory = $container->get('mediaFactory');
         $this->layoutFactory = $container->get('layoutFactory');
         $this->reportScheduleFactory = $container->get('reportScheduleFactory');
+        $this->displayGroupFactory = $container->get('displayGroupFactory');
         $this->sanitizer = $container->get('sanitizerService');
 
         return $this;
@@ -325,6 +332,12 @@ class ProofOfPlay implements ReportInterface
         $operator = $sanitizedParams->getString('logicalOperator', ['default' => 'OR']);
         $parentCampaignId = $sanitizedParams->getInt('parentCampaignId');
 
+        // Group the data by display, display group, or by tag
+        $groupBy = $sanitizedParams->getString('groupBy');
+
+        // Used with groupBy in case we want to filter by specific display groups only
+        $displayGroupIds = $sanitizedParams->getIntArray('displayGroupId', ['default' => []]);
+
         // Display filter.
         try {
             // Get an array of display id this user has access to.
@@ -472,7 +485,8 @@ class ProofOfPlay implements ReportInterface
                 $tags,
                 $tagsType,
                 $exactTags,
-                $operator
+                $operator,
+                $groupBy
             );
         }
 
@@ -505,7 +519,10 @@ class ProofOfPlay implements ReportInterface
             $entry['minStart'] = Carbon::createFromTimestamp($row['minStart'])->format(DateFormatHelper::getSystemFormat());
             $entry['maxEnd'] =  Carbon::createFromTimestamp($row['maxEnd'])->format(DateFormatHelper::getSystemFormat());
             $entry['mediaId'] = $sanitizedRow->getInt('mediaId');
-
+            $entry['displayGroup'] = $sanitizedRow->getString('displayGroup');
+            $entry['displayGroupId'] = $sanitizedRow->getInt('displayGroupId');
+            $entry['tagName'] = $sanitizedRow->getString('tagName');
+            $entry['tagId'] = $sanitizedRow->getInt('tagId');
             $rows[] = $entry;
         }
 
@@ -541,6 +558,7 @@ class ProofOfPlay implements ReportInterface
      * @param $tags string
      * @param $tagsType string
      * @param $exactTags mixed
+     * @param $groupBy string
      * @return array[array result, date periodStart, date periodEnd, int count, int totalStats]
      */
     private function getProofOfPlayReportMySql(
@@ -555,7 +573,8 @@ class ProofOfPlay implements ReportInterface
         $tags,
         $tagsType,
         $exactTags,
-        $logicalOperator
+        $logicalOperator,
+        $groupBy
     ) {
         $fromDt = $fromDt->format('U');
         $toDt = $toDt->format('U');
@@ -563,7 +582,6 @@ class ProofOfPlay implements ReportInterface
         // Media on Layouts Ran
         $select = '
           SELECT stat.type,
-              display.Display,
               stat.parentCampaignId,
               campaign.campaign as parentCampaign,
               IFNULL(layout.Layout, 
@@ -581,9 +599,22 @@ class ProofOfPlay implements ReportInterface
               stat.tag,
               stat.layoutId,
               stat.mediaId,
-              stat.widgetId,
-              stat.displayId
+              stat.widgetId
         ';
+
+        // We get the ID and name - either by display, display group or tag
+        if ($groupBy === 'display') {
+            $select .= ', display.Display, stat.displayId ';
+        } else if ($groupBy === 'displayGroup') {
+            $select .= ', displaydg.displayGroup, displaydg.displayGroupId ';
+        } else if ($groupBy === 'tag') {
+            if ($tagsType === 'dg' || $tagsType === 'media') {
+                $select .= ', taglink.value, taglink.tagId ';
+            } else {
+                // For layouts, we need to manually select taglink.tag
+                $select .= ', taglink.tag AS value, taglink.tagId ';
+            }
+        }
 
         $body = '
             FROM stat
@@ -613,6 +644,17 @@ class ProofOfPlay implements ReportInterface
                         ON displaygroup.displaygroupId = lkdisplaydg.displaygroupId
                          AND `displaygroup`.isDisplaySpecific = 1 ';
             }
+        }
+
+        if ($groupBy === 'displayGroup') {
+            // Group the data by display group
+            $body .= 'INNER JOIN `lkdisplaydg` AS linkdg
+                        ON linkdg.DisplayID = display.displayid
+                     INNER JOIN `displaygroup` AS displaydg
+                        ON displaydg.displaygroupId = linkdg.displaygroupId
+                         AND `displaydg`.isDisplaySpecific = 0 ';
+        } else if ($groupBy === 'tag') {
+            $body .= $this->groupByTagType($tagsType);
         }
 
         $body .= ' WHERE stat.type <> \'displaydown\'
@@ -799,22 +841,28 @@ class ProofOfPlay implements ReportInterface
             $body .= ' AND `media`.mediaId IN (' . trim($mediaSql, ',') . ')';
         }
 
+        // We first implement default groupings
         $body .= '
             GROUP BY stat.type, 
                 stat.tag, 
-                display.Display, 
                 stat.parentCampaignId,
-                stat.displayId, 
                 stat.campaignId,
                 layout.layout, 
                 IFNULL(stat.mediaId, stat.widgetId), 
                 IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)),
-                stat.tag,
                 stat.layoutId,
                 stat.mediaId,
-                stat.widgetId,
-                stat.displayId 
+                stat.widgetId
         ';
+
+        // Then add the optional groupings
+        if ($groupBy === 'display') {
+            $body .= ', display.Display, stat.displayId';
+        } else if ($groupBy === 'displayGroup') {
+            $body .= ', displaydg.displayGroupId, displaydg.displayGroup';
+        } else if ($groupBy === 'tag') {
+            $body .= ', value, taglink.tagId';
+        }
 
         $order = '';
         if ($columns != null) {
@@ -829,8 +877,8 @@ class ProofOfPlay implements ReportInterface
             $entry = [];
 
             $entry['type'] = $row['type'];
-            $entry['displayId'] = $row['displayId'];
-            $entry['display'] = $row['Display'];
+            $entry['displayId'] = $row['displayId'] ?? '';
+            $entry['display'] = $row['Display'] ?? '';
             $entry['layout'] = $row['Layout'];
             $entry['parentCampaignId'] = $row['parentCampaignId'];
             $entry['parentCampaign'] = $row['parentCampaign'];
@@ -843,7 +891,10 @@ class ProofOfPlay implements ReportInterface
             $entry['widgetId'] = $row['widgetId'];
             $entry['mediaId'] = $row['mediaId'];
             $entry['tag'] = $row['tag'];
-
+            $entry['displayGroupId'] = $row['displayGroupId'] ?? '';
+            $entry['displayGroup'] = $row['displayGroup'] ?? '';
+            $entry['tagId'] = $row['tagId'] ?? '';
+            $entry['tagName'] = $row['value'] ?? '';
             $rows[] = $entry;
         }
 
@@ -1156,5 +1207,25 @@ class ProofOfPlay implements ReportInterface
             'result' => $rows,
             'count' => count($rows)
         ];
+    }
+
+    /**
+     * Add grouping by tag type
+     * @param string $tagType
+     * @return string
+     */
+    private function groupByTagType(string $tagType) : string
+    {
+        return match ($tagType) {
+            'media' => 'INNER JOIN `lktagmedia` AS taglink ON taglink.mediaId = stat.mediaId',
+            'layout' => 'INNER JOIN `lktaglayout` ON `lktaglayout`.layoutId = stat.layoutId
+                         INNER JOIN `tag` AS taglink ON taglink.tagId = `lktaglayout`.tagId',
+            'dg' => 'INNER JOIN `lkdisplaydg` AS linkdg
+                        ON linkdg.DisplayID = display.displayid
+                     INNER JOIN `displaygroup` AS displaydg
+                        ON displaydg.displaygroupId = linkdg.displaygroupId
+                         AND `displaydg`.isDisplaySpecific = 1 INNER JOIN
+                         `lktagdisplaygroup` AS taglink ON taglink.displaygroupId = displaydg.displaygroupId',
+        };
     }
 }
