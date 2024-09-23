@@ -1938,17 +1938,18 @@ PropertiesPanel.prototype.initFields = function(
           );
         }
       });
+  }
 
-    // Render action tab
-    if (
-      app.mainObjectType === 'layout' &&
-      !targetIsElement
-    ) {
-      self.renderActionTab(target, {
-        reattach: actionEditMode || selectActionTab,
-        selectAfterRender: selectActionTab,
-      });
-    }
+  // Render action tab
+  if (
+    app.mainObjectType === 'layout' &&
+    !targetIsElement // Filter out elements for now
+  ) {
+    self.renderActionTab(target, {
+      reattach: actionEditMode || selectActionTab,
+      selectAfterRender: selectActionTab,
+      readOnlyMode: readOnlyModeOn,
+    });
   }
 
   // Xibo Init options
@@ -2236,6 +2237,8 @@ PropertiesPanel.prototype.saveRegion = function(
  * @param {object/boolean=} [options.selectAfterRender = false]
  *   - select the tab when rendered
  * @param {object/string=} [options.openEditActionAfterRender = null]
+ *   - read only mode
+ * @param {object/boolean=} [options.readOnlyMode = false]
  */
 PropertiesPanel.prototype.renderActionTab = function(
   object,
@@ -2244,6 +2247,7 @@ PropertiesPanel.prototype.renderActionTab = function(
     clearPrevious = false,
     selectAfterRender = false,
     openEditActionAfterRender = null,
+    readOnlyMode = false,
   } = {},
 ) {
   const self = this;
@@ -2311,6 +2315,8 @@ PropertiesPanel.prototype.renderActionTab = function(
             object,
             $itemActionsContainer,
             $otherActionsContainer,
+            null,
+            !readOnlyMode,
           );
         });
       }
@@ -2362,6 +2368,7 @@ PropertiesPanel.prototype.renderActionTab = function(
  * @param {object} $containerSelected
  * @param {object} $containerOther
  * @param {object} $elementToBeReplaced
+ * @param {boolean} editMode
  */
 PropertiesPanel.prototype.addActionToContainer = function(
   action,
@@ -2369,6 +2376,7 @@ PropertiesPanel.prototype.addActionToContainer = function(
   $containerSelected = null,
   $containerOther = null,
   $elementToBeReplaced = null,
+  editMode = true,
 ) {
   const self = this;
   const app = this.parent;
@@ -2440,6 +2448,7 @@ PropertiesPanel.prototype.addActionToContainer = function(
   // Create action and add to container
   const newAction = actionFormObjectTemplate($.extend({}, action, {
     trans: propertiesPanelTrans.actions,
+    editMode: editMode,
   }));
 
   // Save data and add to container
@@ -2466,19 +2475,21 @@ PropertiesPanel.prototype.addActionToContainer = function(
   );
 
   // Handle buttons
-  $newAction.find('.action-btn').click(function(e) {
-    const btnAction = $(e.currentTarget).data('action');
+  if (editMode) {
+    $newAction.find('.action-btn').click(function(e) {
+      const btnAction = $(e.currentTarget).data('action');
 
-    if (btnAction == 'delete') {
-      app.deleteAction(
-        $(e.currentTarget).parents('.action-element'),
-      );
-    }
+      if (btnAction == 'delete') {
+        app.deleteAction(
+          $(e.currentTarget).parents('.action-element'),
+        );
+      }
 
-    if (btnAction == 'edit') {
-      self.openEditAction($(e.currentTarget).parents('.action-element'));
-    }
-  });
+      if (btnAction == 'edit') {
+        self.openEditAction($(e.currentTarget).parents('.action-element'));
+      }
+    });
+  }
 
   // Replace or add element
   if ($elementToBeReplaced) {
