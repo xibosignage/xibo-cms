@@ -1199,7 +1199,7 @@ Toolbar.prototype.render = function({savePrefs = true} = {}) {
     });
 
   this.DOMObject.find('.toolbar-level-control-select')
-    .on('click', (ev) => {
+    .on('click', '.toolbar-level-control', (ev) => {
       const newLevel = $(ev.target).data('level');
 
       // Close menu
