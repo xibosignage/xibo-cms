@@ -33,6 +33,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ReportScheduleFactory;
 use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\TagFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
@@ -76,6 +77,11 @@ class ProofOfPlay implements ReportInterface
     private $displayGroupFactory;
 
     /**
+     * @var TagFactory
+     */
+    private $tagFactory;
+
+    /**
      * @var SanitizerService
      */
     private $sanitizer;
@@ -101,6 +107,7 @@ class ProofOfPlay implements ReportInterface
         $this->layoutFactory = $container->get('layoutFactory');
         $this->reportScheduleFactory = $container->get('reportScheduleFactory');
         $this->displayGroupFactory = $container->get('displayGroupFactory');
+        $this->tagFactory = $container->get('tagFactory');
         $this->sanitizer = $container->get('sanitizerService');
 
         return $this;
@@ -470,7 +477,9 @@ class ProofOfPlay implements ReportInterface
                 $tags,
                 $tagsType,
                 $exactTags,
-                $operator
+                $operator,
+                $groupBy,
+                $displayGroupIds
             );
         } else {
             $result = $this->getProofOfPlayReportMySql(
@@ -952,6 +961,8 @@ class ProofOfPlay implements ReportInterface
      * @param $tags string
      * @param $tagsType string
      * @param $exactTags mixed
+     * @param $groupBy string
+     * @param $displayGroupIds array
      * @return array[array result, date periodStart, date periodEnd, int count, int totalStats]
      * @throws InvalidArgumentException
      * @throws \Xibo\Support\Exception\GeneralException
@@ -968,7 +979,9 @@ class ProofOfPlay implements ReportInterface
         $tags,
         $tagsType,
         $exactTags,
-        $operator
+        $operator,
+        $groupBy,
+        $displayGroupIds
     ) {
         $fromDt = new UTCDateTime($filterFromDt->format('U')*1000);
         $toDt = new UTCDateTime($filterToDt->format('U')*1000);
@@ -1196,9 +1209,19 @@ class ProofOfPlay implements ReportInterface
                 $entry['widgetId'] = $row['widgetId'];
                 $entry['mediaId'] = $row['mediaId'];
                 $entry['tag'] = $row['eventName'];
+                $entry['displayGroupId'] = '';
+                $entry['displayGroup'] = '';
+                $entry['tagId'] = '';
+                $entry['tagName'] = '';
 
                 $rows[] = $entry;
             }
+        }
+
+        if ($groupBy === 'tag') {
+            $rows = $this->groupByTagMongoDb($rows, $tagsType);
+        } else if ($groupBy === 'displayGroup') {
+            $rows = $this->groupByDisplayGroupMongoDb($rows, $displayGroupIds);
         }
 
         return [
@@ -1227,5 +1250,116 @@ class ProofOfPlay implements ReportInterface
                          AND `displaydg`.isDisplaySpecific = 1 INNER JOIN
                          `lktagdisplaygroup` AS taglink ON taglink.displaygroupId = displaydg.displaygroupId',
         };
+    }
+
+    /**
+     * Group by display group in MongoDB
+     * @param array $rows
+     * @param array $displayIds
+     * @return array
+     * @throws NotFoundException
+     */
+    private function groupByDisplayGroupMongoDb(array $rows, array $displayIds = []) : array
+    {
+        $data = [];
+
+        // Get the display groups
+        foreach ($rows as $row) {
+            foreach ($this->displayGroupFactory->query(null, ['displayId' => $row['displayId']]) as $dg) {
+
+                // Do we have a filter?
+                if (!$displayIds || in_array($dg->displayGroupId, $displayIds)) {
+                    // Create a temporary key to group by multiple columns at once
+                    // and save memory instead of checking each column recursively
+                    $key = $dg->displayGroupId . '_' . $row['layoutId'] . '_' . $row['mediaId'] . '_' .
+                        $row['tag'] . '_' . $row['widgetId'] . '_' . $row['parentCampaignId'] . '_' . $row['type'];
+
+                    if (!isset($data[$key])) {
+                        // Since we already have the display group as the grouping option, we can remove the display info
+                        $row['display'] = null;
+                        $row['displayId'] = null;
+                        $row['displayGroupId'] = $dg->displayGroupId;
+                        $row['displayGroup'] = $dg->displayGroup;
+
+                        $data[$key] = $row;
+                    } else {
+                        $data[$key]['duration'] += $row['duration'];
+                        $data[$key]['numberPlays'] += $row['numberPlays'];
+                    }
+                }
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * Group by tag in MongoDB
+     * @param array $rows
+     * @param string $tagsType
+     * @return array
+     */
+    private function groupByTagMongoDb(array $rows, string $tagsType) : array
+    {
+        $data = [];
+        $tags = $this->filterByTagType($tagsType);
+        $type = match ($tagsType) {
+            'media' => 'mediaId',
+            'layout' => 'layoutId',
+            'dg' => 'displayId',
+        };;
+
+        foreach ($rows as $row) {
+            foreach ($tags as $tag) {
+                if ($row[$type] == $tag['entityId']) {
+                    // Create a temporary key to group by multiple columns at once
+                    // and save memory instead of checking each column recursively
+                    $key = $tag['tagId'] . '_' . $row['layoutId'] . '_' . $row['mediaId'] . '_' .
+                        $row['tag'] . '_' . $row['widgetId'] . '_' . $row['parentCampaignId'] . '_' . $row['type'];
+
+                    if (!isset($data[$key])) {
+                        // Since we already have the tags as the grouping option, we can remove the display info
+                        $row['display'] = null;
+                        $row['displayId'] = null;
+                        $row['tagName'] = $tag['tag'];
+                        $row['tagId'] = $tag['tagId'];
+
+                        $data[$key] = $row;
+                    } else {
+                        $data[$key]['duration'] += $row['duration'];
+                        $data[$key]['numberPlays'] += $row['numberPlays'];
+                    }
+                }
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * @param string $tagsType
+     * @return array
+     */
+    private function filterByTagType(string $tagsType): array
+    {
+        $tags = [];
+        $filter = match ($tagsType) {
+            'media' => 'Media',
+            'layout' => 'Layout',
+            'dg' => 'Display',
+        };
+
+        // What type of tags are looking for?
+        foreach ($this->tagFactory->query() as $tag) {
+            foreach ($this->tagFactory->getAllLinks(null, ['tagId' => $tag->tagId]) as $filteredTag) {
+                if ($filteredTag['type'] == $filter) {
+                    $filteredTag['tagId'] = $tag->tagId;
+                    $filteredTag['tag'] = $tag->tag;
+                    $tags[] = $filteredTag;
+                }
+            }
+        }
+        
+        return $tags;
     }
 }
