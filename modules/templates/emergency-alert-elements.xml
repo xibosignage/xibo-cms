@@ -119,9 +119,9 @@
         <startHeight>350</startHeight>
     </template>
     <template>
-        <id>instructions</id>
-        <extends override="text" with="data.instructions">text</extends>
-        <title>Instructions</title>
+        <id>instruction</id>
+        <extends override="text" with="data.instruction">text</extends>
+        <title>Instruction</title>
         <type>element</type>
         <dataType>emergency-alert</dataType>
         <icon>fas fa-list</icon>
