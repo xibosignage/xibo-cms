@@ -734,7 +734,7 @@ class Playlist extends Base
         $playlist->save();
 
         // Should we assign any existing media
-        if (!empty($nameFilter) || !empty($tagFilter) || !empty($tagFilter)) {
+        if (!empty($nameFilter) || !empty($tagFilter) || !empty($folderIdFilter)) {
             $media = $this->mediaFactory->query(
                 null,
                 [
