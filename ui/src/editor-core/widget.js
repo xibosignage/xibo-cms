@@ -824,7 +824,7 @@ Widget.prototype.saveElements = function(
       return;
     }
 
-    app.reloadData(app.layout,
+    return app.reloadData(app.layout,
       {
         refreshEditor: updateEditor,
       });
@@ -1069,7 +1069,7 @@ Widget.prototype.saveElements = function(
       self.saveElementsRequest = undefined;
 
       if (res.success) {
-        reloadLayout();
+        return reloadLayout();
       } else {
         // Login Form needed?
         if (res.login) {

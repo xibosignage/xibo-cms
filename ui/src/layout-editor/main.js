@@ -119,6 +119,10 @@ window.lD = {
 
   // Show minimum dimensions message
   showMinDimensionsMessage: false,
+
+  // Is there a request for a item being added?
+  addItemPromise: null,
+  pendingAddedItems: 0,
 };
 
 // Load Layout and build app structure
@@ -690,7 +694,7 @@ lD.selectObject =
  * Refresh designer
  * @param {boolean} [reloadToolbar=false] - Update toolbar
  * @param {boolean} [reloadViewer=false] - Reload viewer
- * @param {object} [reloadViewerTarget={}] - Reload viewer target
+ * @param {object} [reloadViewerTargets={}] - Reload viewer targets
  * @param {boolean} [reloadPropertiesPanel=false] - Reload properties panel
  * @param {boolean} [reloadLayerManager=true] - Reload layer manager
  */
@@ -698,7 +702,7 @@ lD.refreshEditor = function(
   {
     reloadToolbar = false,
     reloadViewer = false,
-    reloadViewerTarget = {},
+    reloadViewerTargets = {},
     reloadPropertiesPanel = false,
     reloadLayerManager = true,
   } = {},
@@ -716,7 +720,7 @@ lD.refreshEditor = function(
 
   // Properties panel and viewer
   (reloadPropertiesPanel) && this.propertiesPanel.render(this.selectedObject);
-  (reloadViewer) && this.viewer.render(reloadViewer, reloadViewerTarget);
+  (reloadViewer) && this.viewer.render(reloadViewer, reloadViewerTargets);
   (reloadLayerManager) && this.viewer.layerManager.render();
 };
 
@@ -745,6 +749,13 @@ lD.reloadData = function(
     resetPropertiesPanelOpenedTab = false,
   } = {},
 ) {
+  // If we're still adding items, don't reload yet
+  if (lD.pendingAddedItems > 0) {
+    return Promise.reject(
+      'Another item being added, don\'t reload now!',
+    );
+  }
+
   const layoutId =
     (typeof layout.layoutId == 'undefined') ? layout : layout.layoutId;
 
@@ -755,91 +766,99 @@ lD.reloadData = function(
     lD.propertiesPanel.openTabOnRender = '';
   }
 
-  return $.get(
-    urlsForApi.layout.get.url + '?layoutId=' + layoutId +
-    '&embed=regions,playlists,widgets,widget_validity,tags,permissions,actions',
-  ).done(function(res) {
-    if (res.data != null && res.data.length > 0) {
-      lD.layout = new Layout(layoutId, res.data[0]);
+  return new Promise((resolve, reject) => {
+    $.get(
+      urlsForApi.layout.get.url + '?layoutId=' + layoutId +
+      '&embed=regions,playlists,widgets,widget_validity,' +
+      'tags,permissions,actions',
+    ).done(function(res) {
+      if (res.data != null && res.data.length > 0) {
+        lD.layout = new Layout(layoutId, res.data[0]);
 
-      // Update main object id
-      lD.mainObjectId = lD.layout.layoutId;
-      // get Layout folder id
-      lD.folderId = lD.layout.folderId;
+        // Update main object id
+        lD.mainObjectId = lD.layout.layoutId;
+        // get Layout folder id
+        lD.folderId = lD.layout.folderId;
 
-      // Select the same object
-      const selectObjectId = (lD.selectedObject.type === 'element') ?
-        lD.selectedObject.elementId :
-        lD.selectedObject.id;
+        // Select the same object
+        const selectObjectId = (lD.selectedObject.type === 'element') ?
+          lD.selectedObject.elementId :
+          lD.selectedObject.id;
 
-      const $selectedDOMTarget = $('#' + selectObjectId);
+        const $selectedDOMTarget = $('#' + selectObjectId);
 
-      lD.selectObject({
-        target: $selectedDOMTarget,
-        forceSelect: true,
-        refreshEditor: false, // Don't refresh the editor here
-        reloadPropertiesPanel: false,
-      });
+        lD.selectObject({
+          target: $selectedDOMTarget,
+          forceSelect: true,
+          refreshEditor: false, // Don't refresh the editor here
+          reloadPropertiesPanel: false,
+        });
 
-      // Check if the selected object is a temporary one
-      const targetToRender =
-        $selectedDOMTarget.hasClass('viewer-temporary-object') ?
-          lD.selectedObject :
-          {};
+        // Check if the selected object is a temporary one
+        const targetsToRender =
+          lD.viewer.DOMObject.find('.viewer-temporary-object').length > 0 ?
+            lD.viewer.DOMObject.find('.viewer-temporary-object') :
+            {};
 
-      // Reload the form helper connection
-      formHelpers.setup(lD, lD.layout);
+        // Reload the form helper connection
+        formHelpers.setup(lD, lD.layout);
 
-      // Check layout status
-      lD.checkLayoutStatus();
+        // Check layout status
+        lD.checkLayoutStatus();
 
-      // Add thumbnail
-      captureThumbnail && lD.uploadThumbnail();
+        // Add thumbnail
+        captureThumbnail && lD.uploadThumbnail();
 
-      // Update topbar jumplist if changed
-      if (
-        lD.topbar.jumpList.layoutId != lD.layout.layoutId ||
-        lD.topbar.jumpList.layoutName != lD.layout.name
-      ) {
-        lD.topbar.jumpList.layoutId = lD.layout.layoutId;
-        lD.topbar.jumpList.layoutName = lD.layout.name;
+        // Update topbar jumplist if changed
+        if (
+          lD.topbar.jumpList.layoutId != lD.layout.layoutId ||
+          lD.topbar.jumpList.layoutName != lD.layout.name
+        ) {
+          lD.topbar.jumpList.layoutId = lD.layout.layoutId;
+          lD.topbar.jumpList.layoutName = lD.layout.name;
 
-        // Update jumplist
-        lD.topbar.setupJumpList($('#layoutJumpListContainer'));
-      }
+          // Update jumplist
+          lD.topbar.setupJumpList($('#layoutJumpListContainer'));
+        }
 
-      // Refresh designer
-      refreshEditor && lD.refreshEditor({
-        reloadToolbar: reloadToolbar,
-        reloadViewer: reloadViewer,
-        reloadViewerTarget: targetToRender,
-        reloadPropertiesPanel: reloadPropertiesPanel,
-      });
+        // Refresh designer
+        refreshEditor && lD.refreshEditor({
+          reloadToolbar: reloadToolbar,
+          reloadViewer: reloadViewer,
+          reloadViewerTargets: targetsToRender,
+          reloadPropertiesPanel: reloadPropertiesPanel,
+        });
 
-      // We always reload the layer manager after reloading data
-      lD.viewer.layerManager.render();
+        // We always reload the layer manager after reloading data
+        lD.viewer.layerManager.render();
 
-      // Call callback function
-      callBack && callBack();
-    } else {
-      // Login Form needed?
-      if (res.login) {
-        window.location.reload();
+        // Call callback function
+        callBack && callBack();
+
+        resolve();
       } else {
-        lD.showErrorMessage();
+        // Login Form needed?
+        if (res.login) {
+          window.location.reload();
+        } else {
+          lD.showErrorMessage();
+        }
+
+        reject();
       }
-    }
 
-    lD.common.hideLoadingScreen();
-  }).fail(function(jqXHR, textStatus, errorThrown) {
-    lD.common.hideLoadingScreen();
+      lD.common.hideLoadingScreen();
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+      lD.common.hideLoadingScreen();
 
-    // Output error to console
-    console.error(jqXHR, textStatus, errorThrown);
+      // Output error to console
+      console.error(jqXHR, textStatus, errorThrown);
 
-    lD.showErrorMessage();
-  },
-  );
+      lD.showErrorMessage();
+
+      reject();
+    });
+  });
 };
 
 /**
@@ -1318,7 +1337,7 @@ lD.deleteSelectedObject = function() {
     const showConfirmationModal = (
       widget.subType != 'global' &&
       Object.values(widget.elements).length ===
-        Object.values(lD.selectedObject.elements).length
+      Object.values(lD.selectedObject.elements).length
     );
 
     // Delete element group
@@ -1799,6 +1818,7 @@ lD.duplicateObject = function(objectToDuplicate) {
  * @param {object} droppable - Target drop object
  * @param {object} draggable - Dragged object
  * @param {object=} dropPosition - Position of the drop
+ * @return {Boolean}
  */
 lD.dropItemAdd = function(droppable, draggable, dropPosition) {
   let draggableType = $(draggable).data('type');
@@ -1815,998 +1835,1047 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
     $(droppable).hasClass('designer-element-group');
   let getTemplateBeforeAdding = '';
   const fromProvider = $(draggable).hasClass('from-provider');
+  const self = this;
 
-  /**
-   * Import from provider or add media from library
-   * @param {*} playlistId - Playlist id
-   * @param {*} draggable - Dragged object
-   * @param {string} mediaId - Media id
-   * @param {boolean} drawerWidget - Is a drawer widget
-   * @return {Promise}
-   */
-  const importOrAddMedia = function(
-    playlistId,
-    draggable,
-    mediaId,
-    drawerWidget = false,
-  ) {
-    return new Promise((resolve, reject) => {
-      if (fromProvider) {
-        lD.importFromProvider(
-          [$(draggable).data('providerData')],
-        ).then((res) => {
-          // If res is empty, it means that the import failed
-          if (res.length === 0) {
-            reject(res);
-          } else {
-            lD.addMediaToPlaylist(playlistId, res, null, drawerWidget)
-              .then((_res) => {
-                resolve(_res);
-              });
-          }
-        });
-      } else {
-        lD.addMediaToPlaylist(playlistId, mediaId, null, drawerWidget)
-          .then((_res) => {
-            resolve(_res);
-          });
-      }
+  // Check if we have any pending item drop
+  if (self.addItemPromise != null) {
+    self.pendingAddedItems++;
+
+    // Run when last promise ends
+    self.addItemPromise.then(() => {
+      self.pendingAddedItems--;
+      lD.dropItemAdd(droppable, draggable, dropPosition);
     });
-  };
 
-  const reloadRegion = function(regionId) {
-    // Save zone or playlist to a temp object
-    // so it can be selected after refreshing
-    lD.viewer.saveTemporaryObject(
-      'region_' + regionId,
-      'region',
-      {
-        type: 'region',
-      },
-    );
-
-    // Reload data ( and viewer )
-    lD.reloadData(lD.layout,
-      {
-        refreshEditor: true,
-      });
-  };
-
-  const createSubplaylistInPlaylist = function(regionId, playlistId) {
-    lD.addModuleToPlaylist(
-      regionId,
-      playlistId,
-      'subplaylist',
-      draggableData,
-      null,
-      false,
-      false,
-      false,
-      false,
-      false,
-    ).then((res) => {
-      // Update playlist values in the new widget
-      lD.historyManager.addChange(
-        'saveForm',
-        'widget', // targetType
-        res.data.widgetId, // targetId
-        null, // oldValues
-        {
-          subPlaylists: JSON.stringify([
-            {
-              rowNo: 1,
-              playlistId: draggableData.subPlaylistId,
-              spots: '',
-              spotLength: '',
-              spotFill: 'repeat',
-            },
-          ]),
-        }, // newValues
-        {
-          addToHistory: false,
-        },
-      ).then((_res) => {
-        reloadRegion(regionId);
-      }).catch((_error) => {
-        toastr.error(_error);
-      });
-    });
-  };
-
-  // If draggable is a media image, we need to choose
-  // if it's going to be added as static widget or element
-  if (
-    draggableSubType === 'image' &&
-    // If droppable is a playlist, drawer or zone, do nothing
-    !(
-      droppableIsPlaylist ||
-      droppableIsZone ||
-      droppableIsDrawer
-    )
-  ) {
-    // Make a fake image element so it can go to the add element flow
-    draggableType = 'element';
-    droppableIsElement = true;
-    draggableSubType = 'global';
-    getTemplateBeforeAdding = 'global_library_image';
+    // Stop for now
+    return false;
   }
 
-  if (draggableType === 'media') {
-    // Adding media
-    const mediaId = $(draggable).data('mediaId');
-
-    // Deselect cards and drop zones
-    lD.toolbar.deselectCardsAndDropZones();
-
-    // If droppable is a drawer
-    if (droppableIsDrawer) {
-      importOrAddMedia(
-        lD.layout.drawer.playlists.playlistId,
-        draggable,
-        mediaId,
-        true,
-      );
-    } else if (droppableIsZone || droppableIsPlaylist) {
-      // Get region
-      const region =
-        lD.getObjectByTypeAndId(
-          'region',
-          'region_' + $(droppable).data('regionId'),
-        );
-
-      importOrAddMedia(
-        region.playlists.playlistId,
-        draggable,
-        mediaId,
-        false,
-      ).then((_res) => {
-        // Open playlist editor if it's a playlist
-        if (droppableIsPlaylist) {
-          lD.openPlaylistEditor(region.playlists.playlistId, region);
-        }
-      });
-    } else if (droppableIsPlaylist) {
-      // Get playlist id
-      const playlistId = $(droppable).data('playlistId');
-
-      importOrAddMedia(
-        playlistId,
-        draggable,
-        mediaId,
-        false,
-      ).then((res) => {
-        // Open playlist editor
-        lD.openPlaylistEditor(res.data.regionPlaylist.playlistId);
-      });
-    } else {
-      // Get dimensions of the draggable
-      const startWidth = $(draggable).data('startWidth');
-      const startHeight = $(draggable).data('startHeight');
-
-      // If both dimensions exist and are not 0
-      // add them to options
-      const dimensions = {};
-      if (startWidth && startHeight) {
-        dimensions.width = startWidth;
-        dimensions.height = startHeight;
-      }
-
-      // Add to layout, but create a new region
-      lD.addRegion(dropPosition, 'frame', dimensions).then((res) => {
-        // Add media to new region
-        importOrAddMedia(
-          res.data.regionPlaylist.playlistId,
-          draggable,
-          mediaId,
-        ).catch((_error) => {
-          // Delete new region
-          lD.layout.deleteObject('region', res.data.regionPlaylist.regionId);
-        });
-      });
-    }
-  } else if (draggableType == 'actions') {
-    // Get target type
-    const targetType = (
-      $(droppable).hasClass('layout') || droppable === null
-    ) ?
-      'screen' :
-      $(droppable).data('type');
-
-    // Get target id
-    const targetId = $(droppable).data(targetType + 'Id');
-
-    let actionType = draggableSubType;
-
-    // If action type is nextWidget or nextLayout
-    // change to next
-    actionType =
-      (['nextWidget', 'nextLayout'].includes(draggableSubType)) ?
-        'next' :
-        actionType;
-
-    // If action type is previousWidget or previousLayout
-    // change to previous
-    actionType =
-      (['previousWidget', 'previousLayout'].includes(draggableSubType)) ?
-        'previous' :
-        actionType;
-
-    // Adding action
-    lD.addAction({
-      actionType: actionType,
-      layoutId: lD.layout.layoutId,
-      target: targetType,
-      targetId: targetId,
-    });
-  } else if (
-    draggableType == 'element' ||
-    draggableType == 'element-group'
-  ) {
-    const isGroup = (draggableType == 'element-group');
-    const self = this;
-    let addToGroupId = null;
-    let addToGroupWidgetId = null;
-    let addToExistingElementId = null;
-    let placeholderElement = {};
-
-    if (droppableIsImagePlaceholder) {
-      placeholderElement = {
-        id: $(droppable).attr('id'),
-        widgetId: $(droppable).data('widgetId'),
-        regionId: $(droppable).data('regionId'),
-      };
-    }
-
-    // If target is type global ( and being edited )
-    // if draggable is type global or if both are the same type
-    const canBeAddedToGroup = function() {
-      return $(droppable).hasClass('editing') &&
-        (
-          draggableData.dataType == 'global' ||
-          draggableData.dataType == $(droppable).data('elementType')
-        );
+  this.addItemPromise = new Promise(function(resolve, reject) {
+    // When items finished being added
+    // mark as resolved on the main promise
+    const itemAdded = function() {
+      resolve();
     };
 
-    // Create group if group is type global
-    // if draggable is type global or if both are the same type
-    if (droppableIsElement) {
-      if (canBeAddedToGroup()) {
-        addToExistingElementId = $(droppable).attr('id');
-        addToGroupWidgetId = 'widget_' + $(droppable).data('regionId') +
-          '_' + $(droppable).data('widgetId');
-      }
-    }
-
-    // Add to group if group is type global
-    // if draggable is type global or if both are the same type
-    if (droppableIsElementGroup) {
-      if (canBeAddedToGroup()) {
-        addToGroupId = $(droppable).attr('id');
-        addToGroupWidgetId = 'widget_' + $(droppable).data('regionId') +
-          '_' + $(droppable).data('widgetId');
-      }
-    }
-
-    // Calculate next available top layer
-    const topLayer = lD.calculateLayers().availableTop;
-
-    // Get canvas
-    this.layout.getCanvas(topLayer).then((canvas) => {
-      // Create element
-      const createElement = function({
-        id,
-        type,
-        left,
-        top,
-        width,
-        height,
-        layer,
-        rotation,
-        extendsTemplate,
-        extendsOverride,
-        extendsOverrideId,
-        groupId,
-        properties,
-        groupProperties,
-        mediaId,
-        mediaName,
-        isVisible,
-      } = {},
-      ) {
-        // Create element object
-        const element =
-        {
-          id: id,
-          type: type,
-          left: left,
-          top: top,
-          width: width,
-          height: height,
-          properties: properties,
-          layer: layer,
-          rotation: rotation,
-          mediaId: mediaId,
-          mediaName: mediaName,
-          isVisible: isVisible,
-        };
-
-        // Add group id if it belongs to a group
-        if (groupId) {
-          element.groupId = groupId;
-          element.groupProperties = groupProperties;
-        }
-
-        // Check if the element is extending a template
-        if (extendsTemplate) {
-          element.extends = {
-            templateId: extendsTemplate,
-            override: extendsOverride,
-            overrideId: extendsOverrideId,
-          };
-        }
-
-        return element;
-      };
-
-      const createWidgetAndAddElements = function(
-        elements,
-        inGroup = false,
-        newGroupType,
-        recalculateGroupBeforeSaving,
-      ) {
-        // Widget type
-        (!newGroupType) && (newGroupType = draggableSubType);
-
-        const addToWidget = function(widget) {
-          self.addElementsToWidget(
-            elements,
-            widget,
-            inGroup,
-            recalculateGroupBeforeSaving,
-          );
-        };
-
-        // Create new widget and add to it
-        const createNewWidget = function() {
-          lD.addModuleToPlaylist(
-            canvas.regionId,
-            canvas.playlists.playlistId,
-            newGroupType,
-            draggableData,
-            null,
-            false,
-            false,
-            false,
-            false,
-            false, // don't save to history
+    /**
+     * Import from provider or add media from library
+     * @param {*} playlistId - Playlist id
+     * @param {*} draggable - Dragged object
+     * @param {string} mediaId - Media id
+     * @param {boolean} drawerWidget - Is a drawer widget
+     * @return {Promise}
+     */
+    const importOrAddMedia = function(
+      playlistId,
+      draggable,
+      mediaId,
+      drawerWidget = false,
+    ) {
+      return new Promise((resolve, reject) => {
+        if (fromProvider) {
+          lD.importFromProvider(
+            [$(draggable).data('providerData')],
           ).then((res) => {
-            // Create new temporary widget for the elements
-            const newWidget = new Widget(
-              res.data.widgetId,
-              res.data,
-              canvas.regionId,
-              self,
-            );
-
-            newWidget.editorObject = lD;
-
-            // Add element to the new widget
-            addToWidget(newWidget);
-          });
-        };
-
-        // Get a target widget
-        const targetWidget = canvas.getActiveWidgetOfType(newGroupType);
-
-        if (newGroupType === 'global') {
-          // If it's type global, add to canvas widget
-          const canvasWidget = self.getObjectByTypeAndId(
-            'canvasWidget',
-          );
-          addToWidget(canvasWidget);
-        } else if ($.isEmptyObject(targetWidget)) {
-          // If we don't have a widget, create a new one
-          createNewWidget();
-        } else {
-          // Add element to the target widget
-          addToWidget(targetWidget);
-        }
-      };
-
-      // Elements to add
-      const elements = [];
-
-      // If group, get all elements by templates and overrides
-      if (isGroup) {
-        // Generate a random group id
-        const groupId = 'group_' + Math.floor(Math.random() * 1000000);
-
-        // Get template
-        lD.templateManager.getTemplateById(
-          draggableData.templateId,
-          draggableData.dataType,
-        ).then((template) => {
-          // Check if we have elements in stencil
-          if (template?.stencil?.elements) {
-            let skipSelect = false;
-
-            // Loop through elements
-            template.stencil.elements.forEach((element) => {
-              let elementGroupId = groupId;
-              const elementGroupProperties = {
-                width: draggableData.templateStartWidth,
-                height: draggableData.templateStartHeight,
-                top: (dropPosition) ? dropPosition.top : 0,
-                left: (dropPosition) ? dropPosition.left : 0,
-              };
-              const elementPositions = {
-                left: (dropPosition) ?
-                  dropPosition.left + element.left :
-                  element.left,
-                top: (dropPosition) ?
-                  dropPosition.top + element.top :
-                  element.top,
-              };
-
-              // If element has a subgroup
-              if (
-                element.elementGroupId &&
-                template?.stencil?.elementGroups
-              ) {
-                skipSelect = true;
-                elementGroupId = element.elementGroupId + groupId;
-
-                template?.stencil?.elementGroups.forEach((group) => {
-                  if (group.id === element.elementGroupId) {
-                    elementGroupProperties.top += group.top;
-                    elementGroupProperties.left += group.left;
-                    elementGroupProperties.width = group.width;
-                    elementGroupProperties.height = group.height;
-                    elementGroupProperties.layer = group.layer;
-                    elementGroupProperties.slot = group.slot;
-                    elementGroupProperties.pinSlot = group.pinSlot;
-
-                    elementPositions.top =
-                      elementGroupProperties.top + element.top;
-                    elementPositions.left =
-                      elementGroupProperties.left + element.left;
-                  }
+            // If res is empty, it means that the import failed
+            if (res.length === 0) {
+              reject(res);
+            } else {
+              lD.addMediaToPlaylist(playlistId, res, null, drawerWidget)
+                .then((_res) => {
+                  resolve(_res);
                 });
-              }
-
-              // Create element
-              const newElement = createElement({
-                id: element.id,
-                type: draggableData.dataType,
-                left: elementPositions.left,
-                top: elementPositions.top,
-                width: element.width,
-                height: element.height,
-                layer: element.layer,
-                rotation: element.rotation,
-                properties: element.properties,
-                groupId: elementGroupId,
-                groupProperties: elementGroupProperties,
-                mediaId: draggableData.mediaId,
-                isVisible: draggableData.isVisible,
-              });
-
-              // Mark to skip select after add
-              newElement.skipSelect = skipSelect;
-
-              // Add element to elements array
-              elements.push(newElement);
+            }
+          });
+        } else {
+          lD.addMediaToPlaylist(playlistId, mediaId, null, drawerWidget)
+            .then((_res) => {
+              resolve(_res);
             });
+        }
+      });
+    };
 
-            // Create widget and add elements
-            createWidgetAndAddElements(
-              elements,
-              true,
-            );
+    const reloadRegion = function(regionId, regionType) {
+      // Save zone or playlist to a temp object
+      // so it can be selected after refreshing
+      lD.viewer.saveTemporaryObject(
+        'region_' + regionId,
+        'region',
+        {
+          type: 'region',
+          subType: regionType,
+        },
+      );
+
+      // Reload data ( and viewer )
+      lD.reloadData(lD.layout,
+        {
+          refreshEditor: true,
+        });
+    };
+
+    const createSubplaylistInPlaylist = function(regionId, playlistId) {
+      return lD.addModuleToPlaylist(
+        regionId,
+        playlistId,
+        'subplaylist',
+        draggableData,
+        null,
+        false,
+        false,
+        false,
+        false,
+        false,
+      ).then((res) => {
+        // Update playlist values in the new widget
+        lD.historyManager.addChange(
+          'saveForm',
+          'widget', // targetType
+          res.data.widgetId, // targetId
+          null, // oldValues
+          {
+            subPlaylists: JSON.stringify([
+              {
+                rowNo: 1,
+                playlistId: draggableData.subPlaylistId,
+                spots: '',
+                spotLength: '',
+                spotFill: 'repeat',
+              },
+            ]),
+          }, // newValues
+          {
+            addToHistory: false,
+          },
+        ).then((_res) => {
+          reloadRegion(regionId);
+        }).catch((_error) => {
+          toastr.error(_error);
+        });
+      });
+    };
+
+    // If draggable is a media image, we need to choose
+    // if it's going to be added as static widget or element
+    if (
+      draggableSubType === 'image' &&
+      // If droppable is a playlist, drawer or zone, do nothing
+      !(
+        droppableIsPlaylist ||
+        droppableIsZone ||
+        droppableIsDrawer
+      )
+    ) {
+      // Make a fake image element so it can go to the add element flow
+      draggableType = 'element';
+      droppableIsElement = true;
+      draggableSubType = 'global';
+      getTemplateBeforeAdding = 'global_library_image';
+    }
+
+    if (draggableType === 'media') {
+      // Adding media
+      const mediaId = $(draggable).data('mediaId');
+
+      // Deselect cards and drop zones
+      lD.toolbar.deselectCardsAndDropZones();
+
+      // If droppable is a drawer
+      if (droppableIsDrawer) {
+        importOrAddMedia(
+          lD.layout.drawer.playlists.playlistId,
+          draggable,
+          mediaId,
+          true,
+        ).then(itemAdded);
+      } else if (droppableIsZone || droppableIsPlaylist) {
+        // Get region
+        const region =
+          lD.getObjectByTypeAndId(
+            'region',
+            'region_' + $(droppable).data('regionId'),
+          );
+
+        importOrAddMedia(
+          region.playlists.playlistId,
+          draggable,
+          mediaId,
+          false,
+        ).then((_res) => {
+          // Open playlist editor if it's a playlist
+          if (droppableIsPlaylist) {
+            lD.openPlaylistEditor(region.playlists.playlistId, region);
           }
+
+          itemAdded();
+        });
+      } else if (droppableIsPlaylist) {
+        // Get playlist id
+        const playlistId = $(droppable).data('playlistId');
+
+        importOrAddMedia(
+          playlistId,
+          draggable,
+          mediaId,
+          false,
+        ).then((res) => {
+          // Open playlist editor
+          lD.openPlaylistEditor(res.data.regionPlaylist.playlistId);
+
+          itemAdded();
         });
       } else {
-        const addElement = function() {
-          // Element options
-          const elementOptions = {
-            id: draggableData.templateId,
-            type: draggableData.dataType,
-            left: (dropPosition) ? dropPosition.left : 0,
-            top: (dropPosition) ? dropPosition.top : 0,
-            width: draggableData.templateStartWidth,
-            height: draggableData.templateStartHeight,
-            layer: 0,
-            rotation: 0,
-            extendsTemplate: draggableData.extendsTemplate,
-            extendsOverride: draggableData.extendsOverride,
-            extendsOverrideId: draggableData.extendsOverrideId,
-            mediaId: draggableData.mediaId,
-            mediaName: draggableData.title,
-            isVisible: draggableData.isVisible,
+        // Get dimensions of the draggable
+        const startWidth = $(draggable).data('startWidth');
+        const startHeight = $(draggable).data('startHeight');
+
+        // If both dimensions exist and are not 0
+        // add them to options
+        const dimensions = {};
+        if (startWidth && startHeight) {
+          dimensions.width = startWidth;
+          dimensions.height = startHeight;
+        }
+
+        // Add to layout, but create a new region
+        lD.addRegion(dropPosition, 'frame', dimensions).then((res) => {
+          // Add media to new region
+          importOrAddMedia(
+            res.data.regionPlaylist.playlistId,
+            draggable,
+            mediaId,
+          ).catch((_error) => {
+            // Delete new region
+            lD.layout.deleteObject('region', res.data.regionPlaylist.regionId);
+
+            reject();
+          }).then(itemAdded);
+        });
+      }
+    } else if (draggableType == 'actions') {
+      // Get target type
+      const targetType = (
+        $(droppable).hasClass('layout') || droppable === null
+      ) ?
+        'screen' :
+        $(droppable).data('type');
+
+      // Get target id
+      const targetId = $(droppable).data(targetType + 'Id');
+
+      let actionType = draggableSubType;
+
+      // If action type is nextWidget or nextLayout
+      // change to next
+      actionType =
+        (['nextWidget', 'nextLayout'].includes(draggableSubType)) ?
+          'next' :
+          actionType;
+
+      // If action type is previousWidget or previousLayout
+      // change to previous
+      actionType =
+        (['previousWidget', 'previousLayout'].includes(draggableSubType)) ?
+          'previous' :
+          actionType;
+
+      // Adding action
+      lD.addAction({
+        actionType: actionType,
+        layoutId: lD.layout.layoutId,
+        target: targetType,
+        targetId: targetId,
+      });
+
+      itemAdded();
+    } else if (
+      draggableType == 'element' ||
+      draggableType == 'element-group'
+    ) {
+      const isGroup = (draggableType == 'element-group');
+      let addToGroupId = null;
+      let addToGroupWidgetId = null;
+      let addToExistingElementId = null;
+      let placeholderElement = {};
+
+      if (droppableIsImagePlaceholder) {
+        placeholderElement = {
+          id: $(droppable).attr('id'),
+          widgetId: $(droppable).data('widgetId'),
+          regionId: $(droppable).data('regionId'),
+        };
+      }
+
+      // If target is type global ( and being edited )
+      // if draggable is type global or if both are the same type
+      const canBeAddedToGroup = function() {
+        return $(droppable).hasClass('editing') &&
+          (
+            draggableData.dataType == 'global' ||
+            draggableData.dataType == $(droppable).data('elementType')
+          );
+      };
+
+      // Create group if group is type global
+      // if draggable is type global or if both are the same type
+      if (droppableIsElement) {
+        if (canBeAddedToGroup()) {
+          addToExistingElementId = $(droppable).attr('id');
+          addToGroupWidgetId = 'widget_' + $(droppable).data('regionId') +
+            '_' + $(droppable).data('widgetId');
+        }
+      }
+
+      // Add to group if group is type global
+      // if draggable is type global or if both are the same type
+      if (droppableIsElementGroup) {
+        if (canBeAddedToGroup()) {
+          addToGroupId = $(droppable).attr('id');
+          addToGroupWidgetId = 'widget_' + $(droppable).data('regionId') +
+            '_' + $(droppable).data('widgetId');
+        }
+      }
+
+      // Calculate next available top layer
+      const topLayer = lD.calculateLayers().availableTop;
+
+      // Get canvas
+      self.layout.getCanvas(topLayer).then((canvas) => {
+        // Create element
+        const createElement = function({
+          id,
+          type,
+          left,
+          top,
+          width,
+          height,
+          layer,
+          rotation,
+          extendsTemplate,
+          extendsOverride,
+          extendsOverrideId,
+          groupId,
+          properties,
+          groupProperties,
+          mediaId,
+          mediaName,
+          isVisible,
+        } = {},
+        ) {
+          // Create element object
+          const element =
+          {
+            id: id,
+            type: type,
+            left: left,
+            top: top,
+            width: width,
+            height: height,
+            properties: properties,
+            layer: layer,
+            rotation: rotation,
+            mediaId: mediaId,
+            mediaName: mediaName,
+            isVisible: isVisible,
           };
 
-          let addToGroup = false;
-          let addToGroupType = null;
-
-          // If element has a group, add to it
-          if (addToGroupId) {
-            elementOptions.groupId = addToGroupId;
-
-            // Get group
-            const elementGroup = lD.getObjectByTypeAndId(
-              'element-group',
-              addToGroupId,
-              addToGroupWidgetId,
-            );
-
-            const targetWidget = lD.getObjectByTypeAndId(
-              'widget',
-              'widget_' + $(droppable).data('regionId') + '_' +
-              $(droppable).data('widgetId'),
-              'canvas',
-            );
-
-            // Set group type as the same as the target widget
-            addToGroupType = targetWidget.subType;
-
-            // Add group object
-            elementOptions.group = elementGroup;
-
-            addToGroup = true;
+          // Add group id if it belongs to a group
+          if (groupId) {
+            element.groupId = groupId;
+            element.groupProperties = groupProperties;
           }
 
-          // If we want to create a new element group
-          if (addToExistingElementId) {
-            // Generate a random group id
-            const groupId = 'group_' + Math.floor(Math.random() * 1000000);
-
-            // Get previous element
-            const previousElement = lD.getObjectByTypeAndId(
-              'element',
-              addToExistingElementId,
-              addToGroupWidgetId,
-            );
-
-            const targetWidget = lD.getObjectByTypeAndId(
-              'widget',
-              'widget_' + $(droppable).data('regionId') + '_' +
-              $(droppable).data('widgetId'),
-              'canvas',
-            );
-
-            // Create new element group
-            targetWidget.elementGroups[groupId] = new ElementGroup(
-              Object.assign(
-                {
-                  width: previousElement.width,
-                  height: previousElement.height,
-                  top: previousElement.top,
-                  left: previousElement.left,
-                },
-                {
-                  id: groupId,
-                },
-              ),
-              $(droppable).data('widgetId'),
-              $(droppable).data('regionId'),
-              targetWidget,
-            );
-
-            // Set group if for the elements
-            previousElement.groupId = groupId;
-            previousElement.group = targetWidget.elementGroups[groupId];
-            elementOptions.groupId = groupId;
-
-            // Check group type
-            addToGroupType = targetWidget.subType;
-
-            // Set new element layer to be the top layer
-            elementOptions.layer = previousElement.layer + 1;
-
-            // Add previous widget to the elements array
-            // and to element group
-            elements.push(previousElement);
-            targetWidget.elementGroups[groupId]
-              .elements[previousElement.elementId] = previousElement;
-
-            addToGroup = true;
+          // Check if the element is extending a template
+          if (extendsTemplate) {
+            element.extends = {
+              templateId: extendsTemplate,
+              override: extendsOverride,
+              overrideId: extendsOverrideId,
+            };
           }
 
-          // If we have a placeholder, change new element
-          // dimensions to match it
-          if (!$.isEmptyObject(placeholderElement)) {
-            const widgetId =
-              'widget_' +
-              placeholderElement.regionId +
-              '_' +
-              placeholderElement.widgetId;
+          return element;
+        };
 
-            const placeholder = lD.getObjectByTypeAndId(
-              'element',
-              placeholderElement.id,
-              widgetId,
+        const createWidgetAndAddElements = function(
+          elements,
+          inGroup = false,
+          newGroupType,
+          recalculateGroupBeforeSaving,
+        ) {
+          // Widget type
+          (!newGroupType) && (newGroupType = draggableSubType);
+
+          const addToWidget = function(widget) {
+            self.addElementsToWidget(
+              elements,
+              widget,
+              inGroup,
+              recalculateGroupBeforeSaving,
+            ).then(itemAdded);
+          };
+
+          // Create new widget and add to it
+          const createNewWidget = function() {
+            lD.addModuleToPlaylist(
+              canvas.regionId,
+              canvas.playlists.playlistId,
+              newGroupType,
+              draggableData,
+              null,
+              false,
+              false,
+              false,
+              false,
+              false, // don't save to history
+            ).then((res) => {
+              // Create new temporary widget for the elements
+              const newWidget = new Widget(
+                res.data.widgetId,
+                res.data,
+                canvas.regionId,
+                self,
+              );
+
+              newWidget.editorObject = lD;
+
+              // Add element to the new widget
+              addToWidget(newWidget);
+            });
+          };
+
+          // Get a target widget
+          const targetWidget = canvas.getActiveWidgetOfType(newGroupType);
+
+          if (newGroupType === 'global') {
+            // If it's type global, add to canvas widget
+            const canvasWidget = self.getObjectByTypeAndId(
+              'canvasWidget',
             );
+            addToWidget(canvasWidget);
+          } else if ($.isEmptyObject(targetWidget)) {
+            // If we don't have a widget, create a new one
+            createNewWidget();
+          } else {
+            // Add element to the target widget
+            addToWidget(targetWidget);
+          }
+        };
 
-            const widget = lD.getObjectByTypeAndId(
-              'widget',
-              widgetId,
-              'canvas',
-            );
+        // Elements to add
+        const elements = [];
 
-            // Position options
-            elementOptions.top = placeholder.top;
-            elementOptions.left = placeholder.left;
-            elementOptions.width = placeholder.width;
-            elementOptions.height = placeholder.height;
-            elementOptions.layer = placeholder.layer;
+        // If group, get all elements by templates and overrides
+        if (isGroup) {
+          // Generate a random group id
+          const groupId = 'group_' + Math.floor(Math.random() * 1000000);
 
-            // Properties
-            elementOptions.properties = placeholder.properties;
+          // Get template
+          lD.templateManager.getTemplateById(
+            draggableData.templateId,
+            draggableData.dataType,
+          ).then((template) => {
+            // Check if we have elements in stencil
+            if (template?.stencil?.elements) {
+              let skipSelect = false;
 
-            // If placeholder was in a group, add to same
-            if (
-              placeholder.groupId != '' &&
-              placeholder.groupId != undefined
-            ) {
+              // Loop through elements
+              template.stencil.elements.forEach((element) => {
+                let elementGroupId = groupId;
+                const elementGroupProperties = {
+                  width: draggableData.templateStartWidth,
+                  height: draggableData.templateStartHeight,
+                  top: (dropPosition) ? dropPosition.top : 0,
+                  left: (dropPosition) ? dropPosition.left : 0,
+                };
+                const elementPositions = {
+                  left: (dropPosition) ?
+                    dropPosition.left + element.left :
+                    element.left,
+                  top: (dropPosition) ?
+                    dropPosition.top + element.top :
+                    element.top,
+                };
+
+                // If element has a subgroup
+                if (
+                  element.elementGroupId &&
+                  template?.stencil?.elementGroups
+                ) {
+                  skipSelect = true;
+                  elementGroupId = element.elementGroupId + groupId;
+
+                  template?.stencil?.elementGroups.forEach((group) => {
+                    if (group.id === element.elementGroupId) {
+                      elementGroupProperties.top += group.top;
+                      elementGroupProperties.left += group.left;
+                      elementGroupProperties.width = group.width;
+                      elementGroupProperties.height = group.height;
+                      elementGroupProperties.layer = group.layer;
+                      elementGroupProperties.slot = group.slot;
+                      elementGroupProperties.pinSlot = group.pinSlot;
+
+                      elementPositions.top =
+                        elementGroupProperties.top + element.top;
+                      elementPositions.left =
+                        elementGroupProperties.left + element.left;
+                    }
+                  });
+                }
+
+                // Create element
+                const newElement = createElement({
+                  id: element.id,
+                  type: draggableData.dataType,
+                  left: elementPositions.left,
+                  top: elementPositions.top,
+                  width: element.width,
+                  height: element.height,
+                  layer: element.layer,
+                  rotation: element.rotation,
+                  properties: element.properties,
+                  groupId: elementGroupId,
+                  groupProperties: elementGroupProperties,
+                  mediaId: draggableData.mediaId,
+                  isVisible: draggableData.isVisible,
+                });
+
+                // Mark to skip select after add
+                newElement.skipSelect = skipSelect;
+
+                // Add element to elements array
+                elements.push(newElement);
+              });
+
+              // Create widget and add elements
+              createWidgetAndAddElements(
+                elements,
+                true,
+              );
+            }
+          });
+        } else {
+          const addElement = function() {
+            // Element options
+            const elementOptions = {
+              id: draggableData.templateId,
+              type: draggableData.dataType,
+              left: (dropPosition) ? dropPosition.left : 0,
+              top: (dropPosition) ? dropPosition.top : 0,
+              width: draggableData.templateStartWidth,
+              height: draggableData.templateStartHeight,
+              layer: 0,
+              rotation: 0,
+              extendsTemplate: draggableData.extendsTemplate,
+              extendsOverride: draggableData.extendsOverride,
+              extendsOverrideId: draggableData.extendsOverrideId,
+              mediaId: draggableData.mediaId,
+              mediaName: draggableData.title,
+              isVisible: draggableData.isVisible,
+            };
+
+            let addToGroup = false;
+            let addToGroupType = null;
+
+            // If element has a group, add to it
+            if (addToGroupId) {
+              elementOptions.groupId = addToGroupId;
+
+              // Get group
+              const elementGroup = lD.getObjectByTypeAndId(
+                'element-group',
+                addToGroupId,
+                addToGroupWidgetId,
+              );
+
+              const targetWidget = lD.getObjectByTypeAndId(
+                'widget',
+                'widget_' + $(droppable).data('regionId') + '_' +
+                $(droppable).data('widgetId'),
+                'canvas',
+              );
+
               // Set group type as the same as the target widget
-              addToGroupType = widget.subType;
+              addToGroupType = targetWidget.subType;
 
               // Add group object
-              elementOptions.groupId = placeholder.groupId;
+              elementOptions.group = elementGroup;
 
               addToGroup = true;
             }
 
-            // Remove placeholder
-            widget.removeElement(
-              placeholderElement.id,
-              {
-                save: (elementOptions.type != 'global'),
-                reloadLayerManager: false,
-                reload: false,
-              },
+            // If we want to create a new element group
+            if (addToExistingElementId) {
+              // Generate a random group id
+              const groupId = 'group_' + Math.floor(Math.random() * 1000000);
+
+              // Get previous element
+              const previousElement = lD.getObjectByTypeAndId(
+                'element',
+                addToExistingElementId,
+                addToGroupWidgetId,
+              );
+
+              const targetWidget = lD.getObjectByTypeAndId(
+                'widget',
+                'widget_' + $(droppable).data('regionId') + '_' +
+                $(droppable).data('widgetId'),
+                'canvas',
+              );
+
+              // Create new element group
+              targetWidget.elementGroups[groupId] = new ElementGroup(
+                Object.assign(
+                  {
+                    width: previousElement.width,
+                    height: previousElement.height,
+                    top: previousElement.top,
+                    left: previousElement.left,
+                  },
+                  {
+                    id: groupId,
+                  },
+                ),
+                $(droppable).data('widgetId'),
+                $(droppable).data('regionId'),
+                targetWidget,
+              );
+
+              // Set group if for the elements
+              previousElement.groupId = groupId;
+              previousElement.group = targetWidget.elementGroups[groupId];
+              elementOptions.groupId = groupId;
+
+              // Check group type
+              addToGroupType = targetWidget.subType;
+
+              // Set new element layer to be the top layer
+              elementOptions.layer = previousElement.layer + 1;
+
+              // Add previous widget to the elements array
+              // and to element group
+              elements.push(previousElement);
+              targetWidget.elementGroups[groupId]
+                .elements[previousElement.elementId] = previousElement;
+
+              addToGroup = true;
+            }
+
+            // If we have a placeholder, change new element
+            // dimensions to match it
+            if (!$.isEmptyObject(placeholderElement)) {
+              const widgetId =
+                'widget_' +
+                placeholderElement.regionId +
+                '_' +
+                placeholderElement.widgetId;
+
+              const placeholder = lD.getObjectByTypeAndId(
+                'element',
+                placeholderElement.id,
+                widgetId,
+              );
+
+              const widget = lD.getObjectByTypeAndId(
+                'widget',
+                widgetId,
+                'canvas',
+              );
+
+              // Position options
+              elementOptions.top = placeholder.top;
+              elementOptions.left = placeholder.left;
+              elementOptions.width = placeholder.width;
+              elementOptions.height = placeholder.height;
+              elementOptions.layer = placeholder.layer;
+
+              // Properties
+              elementOptions.properties = placeholder.properties;
+
+              // If placeholder was in a group, add to same
+              if (
+                placeholder.groupId != '' &&
+                placeholder.groupId != undefined
+              ) {
+                // Set group type as the same as the target widget
+                addToGroupType = widget.subType;
+
+                // Add group object
+                elementOptions.groupId = placeholder.groupId;
+
+                addToGroup = true;
+              }
+
+              // Remove placeholder
+              widget.removeElement(
+                placeholderElement.id,
+                {
+                  save: (elementOptions.type != 'global'),
+                  reloadLayerManager: false,
+                  reload: false,
+                },
+              );
+            }
+
+            // Create element
+            const element = createElement(elementOptions);
+
+            // Add element to elements array
+            elements.push(element);
+
+            // Create widget and add elements
+            createWidgetAndAddElements(
+              elements,
+              addToGroup,
+              addToGroupType,
+              addToGroup,
             );
-          }
-
-          // Create element
-          const element = createElement(elementOptions);
-
-          // Add element to elements array
-          elements.push(element);
-
-          // Create widget and add elements
-          createWidgetAndAddElements(
-            elements,
-            addToGroup,
-            addToGroupType,
-            addToGroup,
-          );
-        };
-
-        // If we need to get template first
-        if (getTemplateBeforeAdding != '') {
-          // Get template, create a fake image to data and add
-          const getTemplateAndAdd = function() {
-            lD.templateManager.getTemplateById(getTemplateBeforeAdding)
-              .then((template) => {
-                // Make a fake image element so
-                // it can go to the add element flow
-                draggableData.templateId = 'global_library_image';
-                draggableData.dataType = 'global';
-                draggableData.subType = 'global';
-                draggableData.extendsTemplate = 'global_image';
-                draggableData.extendsOverride = 'url';
-                draggableData.templateStartWidth = template.startWidth;
-                draggableData.templateStartHeight = template.startHeight;
-
-                addElement();
-              });
           };
 
-          // If we need to upload media
-          if (draggableData.regionSpecific == 0) {
-            // On hide callback
-            const onHide = function(numUploads) {
-              if (numUploads > 0) {
-                getTemplateAndAdd();
-              }
+          // If we need to get template first
+          if (getTemplateBeforeAdding != '') {
+            // Get template, create a fake image to data and add
+            const getTemplateAndAdd = function() {
+              lD.templateManager.getTemplateById(getTemplateBeforeAdding)
+                .then((template) => {
+                  // Make a fake image element so
+                  // it can go to the add element flow
+                  draggableData.templateId = 'global_library_image';
+                  draggableData.dataType = 'global';
+                  draggableData.subType = 'global';
+                  draggableData.extendsTemplate = 'global_image';
+                  draggableData.extendsOverride = 'url';
+                  draggableData.templateStartWidth = template.startWidth;
+                  draggableData.templateStartHeight = template.startHeight;
+
+                  addElement();
+                });
             };
 
-            // On upload done callback
-            const onUploadDone = function(data) {
-              // Add media id to data
-              draggableData.mediaId = data.response().result.files[0].mediaId;
-              draggableData.title = data.response().result.files[0].name;
-            };
+            // If we need to upload media
+            if (draggableData.regionSpecific == 0) {
+              // On hide callback
+              const onHide = function(numUploads) {
+                if (numUploads > 0) {
+                  getTemplateAndAdd();
+                }
+              };
 
-            lD.openUploadForm({
-              moduleData: draggableData,
-              onHide: onHide,
-              onUploadDone: onUploadDone,
-            });
-          } else if (fromProvider) {
-            lD.importFromProvider(
-              [draggableData.providerData],
-            ).then((res) => {
-              // If res is empty, it means that the import failed
-              if (res.length === 0) {
-                console.error(errorMessagesTrans.failedToImportMedia);
-              } else {
-                // Add media to draggableData
-                draggableData.mediaId = res[0];
+              // On upload done callback
+              const onUploadDone = function(data) {
+                // Add media id to data
+                draggableData.mediaId = data.response().result.files[0].mediaId;
+                draggableData.title = data.response().result.files[0].name;
+              };
 
-                getTemplateAndAdd();
-              }
-            });
-          } else {
-            // We don't need to upload, add right away
-            getTemplateAndAdd();
-          }
-        } else {
-          // Just add the element
-          addElement();
-        }
-      }
-    });
-  } else if (
-    draggableSubType === 'playlist' &&
-    (
-      droppableIsWidget ||
-      droppableIsZone
-    )
-  ) {
-    // Convert region to playlist
-    const regionId = (droppableIsWidget) ?
-      $(droppable).data('widgetRegion') :
-      $(droppable).attr('id');
-
-    const region =
-      lD.getObjectByTypeAndId(
-        'region',
-        regionId,
-      );
-
-    region.subType = 'playlist';
-
-    let requestPath = urlsForApi.region.saveForm.url;
-    requestPath = requestPath.replace(
-      ':id',
-      region['regionId'],
-    );
-
-    $.ajax({
-      url: requestPath,
-      type: urlsForApi.region.saveForm.type,
-      data: jQuery.param({
-        type: region.subType,
-        name: region.name,
-        top: region.dimensions.top,
-        left: region.dimensions.left,
-        width: region.dimensions.width,
-        height: region.dimensions.height,
-        zIndex: region.zIndex,
-      }),
-      contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
-    }).done(function(res) {
-      if (!res.success) {
-        // Login Form needed?
-        if (res.login) {
-          window.location.reload();
-        } else {
-          // Just an error we dont know about
-          if (res.message == undefined) {
-            console.error(res);
-          } else {
-            console.error(res.message);
-          }
-        }
-      } else {
-        if (draggableData.subPlaylistId) {
-          createSubplaylistInPlaylist(
-            res.data.regionId,
-            res.data.regionPlaylist.playlistId,
-          );
-        } else {
-          // Reload Data
-          lD.reloadData(lD.layout,
-            {
-              refreshEditor: true,
-              resetPropertiesPanelOpenedTab: true,
-            });
-        }
-      }
-    }).fail(function(jqXHR, textStatus, errorThrown) {
-      // Output error to console
-      console.error(jqXHR, textStatus, errorThrown);
-    });
-  } else if (draggableType === 'layout_template') {
-    const addTemplateToLayout = function() {
-      // Show loading screen
-      lD.common.showLoadingScreen();
-
-      // Call the replace function and reload on success.
-      $.ajax({
-        method: urlsForApi.layout.applyTemplate.type,
-        url: urlsForApi.layout.applyTemplate.url
-          .replace(':id', lD.layout.layoutId),
-        cache: false,
-        dataType: 'json',
-        data: {
-          templateId: draggableData?.templateId,
-          source: draggableData?.source,
-          download: draggableData?.download,
-        },
-        success: function(response) {
-          // Hide loading screen
-          lD.common.hideLoadingScreen();
-
-          if (response.success && response.id) {
-            // Deselect previous object
-            lD.selectObject();
-
-            // eslint-disable-next-line new-cap
-            lD.reloadData(response.data,
-              {
-                refreshEditor: true,
-                resetPropertiesPanelOpenedTab: true,
+              lD.openUploadForm({
+                moduleData: draggableData,
+                onHide: onHide,
+                onUploadDone: onUploadDone,
               });
-          } else if (response.login) {
-            // eslint-disable-next-line new-cap
-            LoginBox();
+            } else if (fromProvider) {
+              lD.importFromProvider(
+                [draggableData.providerData],
+              ).then((res) => {
+                // If res is empty, it means that the import failed
+                if (res.length === 0) {
+                  console.error(errorMessagesTrans.failedToImportMedia);
+                } else {
+                  // Add media to draggableData
+                  draggableData.mediaId = res[0];
+
+                  getTemplateAndAdd();
+                }
+              });
+            } else {
+              // We don't need to upload, add right away
+              getTemplateAndAdd();
+            }
           } else {
-            // eslint-disable-next-line new-cap
-            SystemMessage(response.message || errorMessagesTrans.unknown);
+            // Just add the element
+            addElement();
           }
-        },
-        error: function(xhr) {
-          // Hide loading screen
-          lD.common.hideLoadingScreen();
-
-          console.error(xhr);
-        },
+        }
       });
-    };
-
-    // Check if we have content on the layout
-    if (lD.layout.isEmpty()) {
-      addTemplateToLayout();
-    } else {
-      // Layout not empty, show modal
-      // Show confirmation modal
-      const $modal = $(confirmationModalTemplate(
-        {
-          title: editorsTrans.layoutTemplateReplace.title,
-          message: editorsTrans.layoutTemplateReplace.message,
-          buttons: {
-            cancel: {
-              label: editorsTrans.layoutTemplateReplace.buttons.cancel,
-              class: 'btn-default cancel',
-            },
-            delete: {
-              label: editorsTrans.layoutTemplateReplace.buttons.delete,
-              class: 'btn-primary confirm',
-            },
-          },
-        },
-      ));
-
-      const removeModal = function() {
-        $modal.modal('hide');
-        // Remove modal
-        $modal.remove();
-
-        // Remove backdrop
-        $('.modal-backdrop.show').remove();
-      };
-
-      // Add modal to the DOM
-      this.editorContainer.append($modal);
-
-      // Show modal
-      $modal.modal('show');
-
-      // Confirm button
-      $modal.find('button.confirm').on('click', function() {
-        // Remove modal
-        removeModal();
-
-        // Add template and replace content
-        addTemplateToLayout();
-      });
-
-      // Cancel button
-      $modal.find('button.cancel').on('click', removeModal);
-    }
-  } else {
-    // Adding a module, zone or playlist
-    let regionType = 'frame';
-
-    if (
-      draggableSubType === 'playlist' ||
-      draggableSubType === 'zone'
+    } else if (
+      draggableSubType === 'playlist' &&
+      (
+        droppableIsWidget ||
+        droppableIsZone
+      )
     ) {
-      regionType = draggableSubType;
-    }
+      // Convert region to playlist
+      const regionId = (droppableIsWidget) ?
+        $(droppable).data('widgetRegion') :
+        $(droppable).attr('id');
 
-    // Deselect cards and drop zones
-    lD.toolbar.deselectCardsAndDropZones();
-
-    // If droppable is a drawer
-    if (droppableIsDrawer) {
-      lD.addModuleToPlaylist(
-        lD.layout.drawer.regionId,
-        lD.layout.drawer.playlists.playlistId,
-        draggableSubType,
-        draggableData,
-        null,
-        true,
-      );
-    } else if (droppableIsZone || droppableIsPlaylist) {
-      // Get zone region
       const region =
         lD.getObjectByTypeAndId(
           'region',
-          'region_' + $(droppable).data('regionId'),
+          regionId,
         );
 
-      // Add module to zone
-      lD.addModuleToPlaylist(
-        region.regionId,
-        region.playlists.playlistId,
-        draggableSubType,
-        draggableData,
-        null,
-        false,
-        true,
-      ).then((_res) => {
-        // Open playlist editor if it's a playlist
-        if (droppableIsPlaylist) {
-          lD.openPlaylistEditor(region.playlists.playlistId, region);
-        }
-      });
-    } else {
-      // Get dimensions of the draggable
-      const startWidth = $(draggable).data('startWidth');
-      const startHeight = $(draggable).data('startHeight');
+      region.subType = 'playlist';
 
-      // If both dimensions exist and are not 0
-      // add them to options
-      const dimensions = {};
-      if (startWidth && startHeight) {
-        dimensions.width = startWidth;
-        dimensions.height = startHeight;
-      }
-      // Add module to layout, but create a region first
-      lD.addRegion(dropPosition, regionType, dimensions).then((res) => {
-        // Add module to new region if it's not a playlist
-        if (regionType === 'frame') {
-          lD.addModuleToPlaylist(
-            res.data.regionId,
-            res.data.regionPlaylist.playlistId,
-            draggableSubType,
-            draggableData,
-            null,
-            false,
-            false,
-            true,
-            true,
-            false,
-          );
+      let requestPath = urlsForApi.region.saveForm.url;
+      requestPath = requestPath.replace(
+        ':id',
+        region['regionId'],
+      );
+
+      $.ajax({
+        url: requestPath,
+        type: urlsForApi.region.saveForm.type,
+        data: jQuery.param({
+          type: region.subType,
+          name: region.name,
+          top: region.dimensions.top,
+          left: region.dimensions.left,
+          width: region.dimensions.width,
+          height: region.dimensions.height,
+          zIndex: region.zIndex,
+        }),
+        contentType: 'application/x-www-form-urlencoded; charset=UTF-8',
+      }).done(function(res) {
+        if (!res.success) {
+          // Login Form needed?
+          if (res.login) {
+            window.location.reload();
+          } else {
+            // Just an error we dont know about
+            if (res.message == undefined) {
+              console.error(res);
+            } else {
+              console.error(res.message);
+            }
+          }
+
+          reject();
         } else {
-          // If we're adding a specific playlist, we need to create a
-          // subplaylist inside the new playlist
           if (draggableData.subPlaylistId) {
             createSubplaylistInPlaylist(
               res.data.regionId,
               res.data.regionPlaylist.playlistId,
             );
           } else {
-            reloadRegion(res.data.regionId);
+            // Reload Data
+            lD.reloadData(lD.layout,
+              {
+                refreshEditor: true,
+                resetPropertiesPanelOpenedTab: true,
+              });
           }
+
+          itemAdded();
         }
+      }).fail(function(jqXHR, textStatus, errorThrown) {
+        // Output error to console
+        console.error(jqXHR, textStatus, errorThrown);
+
+        reject();
       });
+    } else if (draggableType === 'layout_template') {
+      const addTemplateToLayout = function() {
+        // Show loading screen
+        lD.common.showLoadingScreen();
+
+        // Call the replace function and reload on success.
+        return $.ajax({
+          method: urlsForApi.layout.applyTemplate.type,
+          url: urlsForApi.layout.applyTemplate.url
+            .replace(':id', lD.layout.layoutId),
+          cache: false,
+          dataType: 'json',
+          data: {
+            templateId: draggableData?.templateId,
+            source: draggableData?.source,
+            download: draggableData?.download,
+          },
+          success: function(response) {
+            // Hide loading screen
+            lD.common.hideLoadingScreen();
+
+            if (response.success && response.id) {
+              // Deselect previous object
+              lD.selectObject();
+
+              // eslint-disable-next-line new-cap
+              lD.reloadData(response.data,
+                {
+                  refreshEditor: true,
+                  resetPropertiesPanelOpenedTab: true,
+                });
+            } else if (response.login) {
+              // eslint-disable-next-line new-cap
+              LoginBox();
+            } else {
+              // eslint-disable-next-line new-cap
+              SystemMessage(response.message || errorMessagesTrans.unknown);
+            }
+          },
+          error: function(xhr) {
+            // Hide loading screen
+            lD.common.hideLoadingScreen();
+
+            console.error(xhr);
+          },
+        });
+      };
+
+      // Check if we have content on the layout
+      if (lD.layout.isEmpty()) {
+        addTemplateToLayout().then(itemAdded);
+      } else {
+        // Layout not empty, show modal
+        // Show confirmation modal
+        const $modal = $(confirmationModalTemplate(
+          {
+            title: editorsTrans.layoutTemplateReplace.title,
+            message: editorsTrans.layoutTemplateReplace.message,
+            buttons: {
+              cancel: {
+                label: editorsTrans.layoutTemplateReplace.buttons.cancel,
+                class: 'btn-default cancel',
+              },
+              delete: {
+                label: editorsTrans.layoutTemplateReplace.buttons.delete,
+                class: 'btn-primary confirm',
+              },
+            },
+          },
+        ));
+
+        const removeModal = function() {
+          $modal.modal('hide');
+          // Remove modal
+          $modal.remove();
+
+          // Remove backdrop
+          $('.modal-backdrop.show').remove();
+        };
+
+        // Add modal to the DOM
+        self.editorContainer.append($modal);
+
+        // Show modal
+        $modal.modal('show');
+
+        // Confirm button
+        $modal.find('button.confirm').on('click', function() {
+          // Remove modal
+          removeModal();
+
+          // Add template and replace content
+          addTemplateToLayout().then(itemAdded);
+        });
+
+        // Cancel button
+        $modal.find('button.cancel').on('click', removeModal);
+      }
+    } else {
+      // Adding a module, zone or playlist
+      let regionType = 'frame';
+
+      if (
+        draggableSubType === 'playlist' ||
+        draggableSubType === 'zone'
+      ) {
+        regionType = draggableSubType;
+      }
+
+      // Deselect cards and drop zones
+      lD.toolbar.deselectCardsAndDropZones();
+
+      // If droppable is a drawer
+      if (droppableIsDrawer) {
+        lD.addModuleToPlaylist(
+          lD.layout.drawer.regionId,
+          lD.layout.drawer.playlists.playlistId,
+          draggableSubType,
+          draggableData,
+          null,
+          true,
+        ).then(itemAdded);
+      } else if (droppableIsZone || droppableIsPlaylist) {
+        // Get zone region
+        const region =
+          lD.getObjectByTypeAndId(
+            'region',
+            'region_' + $(droppable).data('regionId'),
+          );
+
+        // Add module to zone
+        lD.addModuleToPlaylist(
+          region.regionId,
+          region.playlists.playlistId,
+          draggableSubType,
+          draggableData,
+          null,
+          false,
+          true,
+        ).then((_res) => {
+          // Open playlist editor if it's a playlist
+          if (droppableIsPlaylist) {
+            lD.openPlaylistEditor(region.playlists.playlistId, region);
+          }
+
+          itemAdded();
+        });
+      } else {
+        // Get dimensions of the draggable
+        const startWidth = $(draggable).data('startWidth');
+        const startHeight = $(draggable).data('startHeight');
+
+        // If both dimensions exist and are not 0
+        // add them to options
+        const dimensions = {};
+        if (startWidth && startHeight) {
+          dimensions.width = startWidth;
+          dimensions.height = startHeight;
+        }
+        // Add module to layout, but create a region first
+        lD.addRegion(dropPosition, regionType, dimensions).then((res) => {
+          // Add module to new region if it's not a playlist
+          if (regionType === 'frame') {
+            lD.addModuleToPlaylist(
+              res.data.regionId,
+              res.data.regionPlaylist.playlistId,
+              draggableSubType,
+              draggableData,
+              null,
+              false,
+              false,
+              true,
+              true,
+              false,
+            ).then(itemAdded);
+          } else {
+            // If we're adding a specific playlist, we need to create a
+            // subplaylist inside the new playlist
+            if (draggableData.subPlaylistId) {
+              createSubplaylistInPlaylist(
+                res.data.regionId,
+                res.data.regionPlaylist.playlistId,
+              ).then(itemAdded);
+            } else {
+              reloadRegion(res.data.regionId, res.data.type);
+
+              itemAdded();
+            }
+          }
+        });
+      }
     }
-  }
+  });
+
+  // When promise resolves, always mark it as done
+  this.addItemPromise.then(() => {
+    self.addItemPromise = null;
+  });
+
+  // Return flag to show it was executed
+  return true;
 };
 
 /**
@@ -3069,7 +3138,7 @@ lD.openUploadForm = function({
       },
     },
     onHideCallback: function() {
-      if ( typeof onHide === 'function') {
+      if (typeof onHide === 'function') {
         onHide(numUploads);
       }
     },
@@ -3092,7 +3161,7 @@ lD.openUploadForm = function({
       // If the upload is successful, increase the number of uploads
       numUploads += 1;
 
-      if ( typeof onUploadDone === 'function') {
+      if (typeof onUploadDone === 'function') {
         onUploadDone(data);
       }
     },
@@ -3714,7 +3783,7 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
         showConfirmationModal = (
           elementGroupWidget.subType != 'global' &&
           Object.values(elementGroupWidget.elements).length ===
-            Object.values(layoutObject.elements).length
+          Object.values(layoutObject.elements).length
         );
         deleteObjectType = 'elementGroup';
       }
@@ -4318,7 +4387,7 @@ lD.openGroupContextMenu = function(objs, position = {x: 0, y: 0}) {
       let targetWidget = lD.getObjectByTypeAndId(
         'widget',
         'widget_' + $originalGroup.data('regionId') + '_' +
-          $originalGroup.data('widgetId'),
+        $originalGroup.data('widgetId'),
         'canvas',
       );
 
@@ -5566,6 +5635,7 @@ lD.closeDrawerWidget = function() {
  * @param {boolean} isGroup
  * @param {boolean} addingToExistingGroup
  *  - Adding to existing group, we need to recalculate group dimensions
+ * @return {Promise}
  */
 lD.addElementsToWidget = function(
   elements,
@@ -5614,7 +5684,7 @@ lD.addElementsToWidget = function(
         element.groupId
       ) {
         (element.groupProperties) &&
-         (element.groupProperties.layer = topLayer);
+          (element.groupProperties.layer = topLayer);
       } else {
         // Add element to the top layer
         element.layer = topLayer;
@@ -5637,8 +5707,10 @@ lD.addElementsToWidget = function(
 
   // Save JSON with new element into the widget
   // after all the promises are completed
-  Promise.all(addElementPromise).then(() => {
-    widget.saveElements().then((_res) => {
+  return Promise.all(addElementPromise).then(() => {
+    return widget.saveElements({
+      reloadData: false,
+    }).then((_res) => {
       const firstElement = elements[0];
 
       if (firstElement.skipSelect) {
