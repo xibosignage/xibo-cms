@@ -1068,6 +1068,8 @@ Widget.prototype.saveElements = function(
       // Clear request var after response
       self.saveElementsRequest = undefined;
 
+      lD.common.hideLoadingScreen();
+
       if (res.success) {
         return reloadLayout();
       } else {
@@ -1085,7 +1087,6 @@ Widget.prototype.saveElements = function(
           }
         }
       }
-      lD.common.hideLoadingScreen();
     });
 
     // If this request is forced, save flag and return request

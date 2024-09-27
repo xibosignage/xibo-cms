@@ -2928,7 +2928,7 @@ lD.addModuleToPlaylist = function(
               {
                 refreshEditor: true,
                 resetPropertiesPanelOpenedTab: true,
-              });
+              }).catch(console.debug);
 
             resolve();
           });
@@ -2938,7 +2938,7 @@ lD.addModuleToPlaylist = function(
             {
               refreshEditor: true,
               resetPropertiesPanelOpenedTab: true,
-            });
+            }).catch(console.debug);
 
           resolve();
         }
@@ -3052,7 +3052,7 @@ lD.addModuleToPlaylist = function(
           {
             refreshEditor: true,
             resetPropertiesPanelOpenedTab: true,
-          });
+          }).catch(console.debug);
       } else {
         const newWidgetId = res.data.widgetId;
         // Reload data ( and viewer )
@@ -3074,7 +3074,7 @@ lD.addModuleToPlaylist = function(
               );
             },
           },
-        );
+        ).catch(console.debug);
       }
 
       lD.common.hideLoadingScreen();
@@ -5759,7 +5759,7 @@ lD.addElementsToWidget = function(
 
         // Update viewer to revalidate all elements
         lD.viewer.update();
-      });
+      }).catch(console.debug);
     });
   });
 };
