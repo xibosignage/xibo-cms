@@ -40,7 +40,7 @@ body.editor-opened {
 }
 
 // Change top bar to match layout editor
-.row.header.header-side {
+body.editor-opened .row.header.header-side {
     position: relative;
     background-color: $xibo-color-neutral-0;
     @include box-shadow(0px 2px 2px $xibo-color-shadow);
@@ -123,7 +123,7 @@ body.editor-opened {
 }
 
 /* Page content wrapper */
-#content-wrapper .page-content>.row {
+body.editor-opened #content-wrapper .page-content>.row {
     >div {
         margin: 0;
     }
