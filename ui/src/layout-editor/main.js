@@ -3996,7 +3996,7 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
           {
             reloadPropertiesPanel: false,
           },
-        ).done(() => {
+        ).then(() => {
           // Get new widget
           const newWidget =
             lD.getObjectByTypeAndId(

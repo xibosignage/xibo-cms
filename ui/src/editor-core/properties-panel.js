@@ -231,7 +231,8 @@ PropertiesPanel.prototype.save = function(
             mainObject,
             {
               reloadPropertiesPanel: false,
-            }).done(() => {
+            },
+          ).then(() => {
             if (!target.drawerWidget) {
               app.viewer.renderRegion(
                 app.getObjectByTypeAndId('region', target.regionId),
@@ -1784,7 +1785,7 @@ PropertiesPanel.prototype.render = function(
                 mainObject,
                 {
                   reloadPropertiesPanel: false,
-                }).done(() => {
+                }).then(() => {
                 if (!target.drawerWidget) {
                   app.viewer.renderRegion(
                     app.getObjectByTypeAndId('region', target.regionId),
@@ -2850,7 +2851,7 @@ PropertiesPanel.prototype.showWidgetControl = function(target) {
             {
               reloadPropertiesPanel: false,
             },
-          ).done(() => {
+          ).then(() => {
             // Add options to dropdown
             const $select =
               $canvasWidgetSelectorControl.find('select');
