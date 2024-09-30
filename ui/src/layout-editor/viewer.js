@@ -636,8 +636,13 @@ Viewer.prototype.handleInteractions = function() {
       tolerance: 'pointer',
       accept: (draggable) => {
         return (
-          $(draggable).data('type') === 'media' &&
-          $(draggable).data('subType') === 'image'
+          (
+            $(draggable).data('type') === 'media' &&
+            $(draggable).data('subType') === 'image'
+          ) || (
+            $(draggable).data('type') === 'widget' &&
+            $(draggable).data('subType') === 'image'
+          )
         );
       },
       drop: _.debounce(function(event, ui) {

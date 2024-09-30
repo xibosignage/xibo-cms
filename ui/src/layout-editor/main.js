@@ -457,6 +457,9 @@ lD.selectObject =
         (
           $(card).data('type') === 'media' &&
           $(card).data('subType') === 'image'
+        ) || (
+          $(card).data('type') === 'widget' &&
+          $(card).data('subType') === 'image'
         )
       );
 
