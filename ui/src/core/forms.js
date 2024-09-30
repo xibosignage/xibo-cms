@@ -215,6 +215,14 @@ window.forms = {
           property.playlistId = playlistId;
         }
 
+        // Colour format
+        if (
+          property.type === 'color' &&
+          property.format != ''
+        ) {
+          property.colorFormat = property.format;
+        }
+
         // dashboards available services
         if (property.type === 'connectorProperties') {
           property.connectorPropertiesUrl =

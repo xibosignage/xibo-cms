@@ -76,7 +76,7 @@
             <title>Flip Card Text Colour</title>
             <default>#ccc</default>
         </property>
-        <property id="flipCardBackgroundColor" type="color">
+        <property id="flipCardBackgroundColor" type="color" format="hex">
             <title>Flip Card Background Colour</title>
             <default>#333</default>
         </property>
