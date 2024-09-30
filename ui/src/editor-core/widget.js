@@ -824,7 +824,7 @@ Widget.prototype.saveElements = function(
       return;
     }
 
-    app.reloadData(app.layout,
+    return app.reloadData(app.layout,
       {
         refreshEditor: updateEditor,
       });
@@ -1068,8 +1068,10 @@ Widget.prototype.saveElements = function(
       // Clear request var after response
       self.saveElementsRequest = undefined;
 
+      lD.common.hideLoadingScreen();
+
       if (res.success) {
-        reloadLayout();
+        return reloadLayout();
       } else {
         // Login Form needed?
         if (res.login) {
@@ -1085,7 +1087,6 @@ Widget.prototype.saveElements = function(
           }
         }
       }
-      lD.common.hideLoadingScreen();
     });
 
     // If this request is forced, save flag and return request
