@@ -4209,7 +4209,7 @@ Viewer.prototype.getMultipleSelected = function() {
         lD.getObjectByTypeAndId(objData.type, objId);
 
       // Can't be deleted, mark flag as false and break loop
-      if (auxObj.isDeletable === false) {
+      if (auxObj === undefined || auxObj.isDeletable === false) {
         canBeDeleted = false;
         return false;
       }
