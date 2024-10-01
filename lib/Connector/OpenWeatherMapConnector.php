@@ -664,8 +664,8 @@ class OpenWeatherMapConnector implements ConnectorInterface
     public function onScheduleCriteriaRequest(ScheduleCriteriaRequestInterface $event): void
     {
         // Initialize Open Weather Schedule Criteria parameters
-        $event->addType('openweathermap', __('Weather'))
-            ->addMetric('owm_weather_condition', __('Weather Condition'))
+        $event->addType('weather', __('Weather'))
+            ->addMetric('weather_condition', __('Weather Condition'))
                 ->addValues('dropdown', [
                     'Thunderstorm' => __('Thunderstorm'),
                     'Drizzle' => __('Drizzle'),
@@ -674,17 +674,17 @@ class OpenWeatherMapConnector implements ConnectorInterface
                     'Clear' => __('Clear'),
                     'Clouds' => __('Clouds')
                 ])
-            ->addMetric('owm_temp_imperial', __('Temperature (Imperial)'))
+            ->addMetric('weather_temp_imperial', __('Temperature (Imperial)'))
                 ->addValues('number', [])
-            ->addMetric('owm_temp_metric', __('Temperature (Metric)'))
+            ->addMetric('weather_temp_metric', __('Temperature (Metric)'))
                 ->addValues('number', [])
-            ->addMetric('owm_feels_like_imperial', __('Apparent Temperature (Imperial)'))
+            ->addMetric('weather_feels_like_imperial', __('Apparent Temperature (Imperial)'))
                 ->addValues('number', [])
-            ->addMetric('owm_feels_like_metric', __('Apparent Temperature (Metric)'))
+            ->addMetric('weather_feels_like_metric', __('Apparent Temperature (Metric)'))
                 ->addValues('number', [])
-            ->addMetric('owm_wind_speed', __('Wind Speed'))
+            ->addMetric('weather_wind_speed', __('Wind Speed'))
                 ->addValues('number', [])
-            ->addMetric('owm_wind_direction', __('Wind Direction'))
+            ->addMetric('weather_wind_direction', __('Wind Direction'))
                 ->addValues('dropdown', [
                     'N' => __('North'),
                     'NE' => __('Northeast'),
@@ -695,13 +695,13 @@ class OpenWeatherMapConnector implements ConnectorInterface
                     'W' => __('West'),
                     'NW' => __('Northwest'),
                 ])
-            ->addMetric('owm_wind_degrees', __('Wind Direction (degrees)'))
+            ->addMetric('weather_wind_degrees', __('Wind Direction (degrees)'))
                 ->addValues('number', [])
-            ->addMetric('owm_humidity', __('Humidity (Percent)'))
+            ->addMetric('weather_humidity', __('Humidity (Percent)'))
                 ->addValues('number', [])
-            ->addMetric('owm_pressure', __('Pressure'))
+            ->addMetric('weather_pressure', __('Pressure'))
                 ->addValues('number', [])
-            ->addMetric('owm_visibility', __('Visibility (meters)'))
+            ->addMetric('weather_visibility', __('Visibility (meters)'))
                 ->addValues('number', []);
     }
 
@@ -720,7 +720,7 @@ class OpenWeatherMapConnector implements ConnectorInterface
         $data = array();
 
         // format the weather condition
-        $data['owm_weather_condition'] = str_replace(' ', '_', strtolower($item['weather'][0]['main']));
+        $data['weather_condition'] = str_replace(' ', '_', strtolower($item['weather'][0]['main']));
 
         // Temperature
         // imperial = F
@@ -733,50 +733,50 @@ class OpenWeatherMapConnector implements ConnectorInterface
         $apparentTempMetric = ($apparentTempImperial - 32) * 5 / 9;
 
         // Round those temperature values
-        $data['owm_temp_imperial'] = round($tempImperial, 0);
-        $data['owm_feels_like_imperial'] = round($apparentTempImperial, 0);
-        $data['owm_temp_metric'] = round($tempMetric, 0);
-        $data['owm_feels_like_metric'] = round($apparentTempMetric, 0);
+        $data['weather_temp_imperial'] = round($tempImperial, 0);
+        $data['weather_feels_like_imperial'] = round($apparentTempImperial, 0);
+        $data['weather_temp_metric'] = round($tempMetric, 0);
+        $data['weather_feels_like_metric'] = round($apparentTempMetric, 0);
 
 
         // Humidity
-        $data['owm_humidity'] = $item['humidity'];
+        $data['weather_humidity'] = $item['humidity'];
 
         // Pressure
         // received in hPa, display in mB
-        $data['owm_pressure'] = $item['pressure'] / 100;
+        $data['weather_pressure'] = $item['pressure'] / 100;
 
         // Wind
         // metric = meters per second
         // imperial = miles per hour
-        $data['owm_wind_speed'] = $item['wind_speed'] ?? $item['speed'] ?? null;
-        $data['owm_wind_degrees'] = $item['wind_deg'] ?? $item['deg'] ?? null;
+        $data['weather_wind_speed'] = $item['wind_speed'] ?? $item['speed'] ?? null;
+        $data['weather_wind_degrees'] = $item['wind_deg'] ?? $item['deg'] ?? null;
 
         if ($requestUnit === 'metric' && $windSpeedUnit !== 'MPS') {
             // We have MPS and need to go to something else
             if ($windSpeedUnit === 'MPH') {
                 // Convert MPS to MPH
-                $data['owm_wind_degrees'] = round($data['owm_wind_degrees'] * 2.237, 2);
+                $data['weather_wind_degrees'] = round($data['weather_wind_degrees'] * 2.237, 2);
             } else if ($windSpeedUnit === 'KPH') {
                 // Convert MPS to KPH
-                $data['owm_wind_degrees'] = round($data['owm_wind_degrees'] * 3.6, 2);
+                $data['weather_wind_degrees'] = round($data['weather_wind_degrees'] * 3.6, 2);
             }
         } else if ($requestUnit === 'imperial' && $windSpeedUnit !== 'MPH') {
             if ($windSpeedUnit === 'MPS') {
                 // Convert MPH to MPS
-                $data['owm_wind_degrees'] = round($data['owm_wind_degrees'] / 2.237, 2);
+                $data['weather_wind_degrees'] = round($data['weather_wind_degrees'] / 2.237, 2);
             } else if ($windSpeedUnit === 'KPH') {
                 // Convert MPH to KPH
-                $data['owm_wind_degrees'] = round($data['owm_wind_degrees'] * 1.609344, 2);
+                $data['weather_wind_degrees'] = round($data['weather_wind_degrees'] * 1.609344, 2);
             }
         }
 
         // Wind direction
-        $data['owm_wind_direction'] = '--';
-        if ($data['owm_wind_degrees'] !== null && $data['owm_wind_degrees'] !== 0) {
+        $data['weather_wind_direction'] = '--';
+        if ($data['weather_wind_degrees'] !== null && $data['weather_wind_degrees'] !== 0) {
             foreach (self::cardinalDirections() as $dir => $angles) {
-                if ($data['owm_wind_degrees'] >= $angles[0] && $data['owm_wind_degrees'] < $angles[1]) {
-                    $data['owm_wind_direction'] = $dir;
+                if ($data['weather_wind_degrees'] >= $angles[0] && $data['weather_wind_degrees'] < $angles[1]) {
+                    $data['weather_wind_direction'] = $dir;
                     break;
                 }
             }
@@ -785,17 +785,17 @@ class OpenWeatherMapConnector implements ConnectorInterface
         // Visibility
         // metric = meters
         // imperial = meters?
-        $data['owm_visibility'] = $item['visibility'] ?? '--';
+        $data['weather_visibility'] = $item['visibility'] ?? '--';
 
-        if ($data['owm_visibility'] !== '--') {
+        if ($data['weather_visibility'] !== '--') {
             // Always in meters
             if ($visibilityDistanceUnit === 'mi') {
                 // Convert meters to miles
-                $data['owm_visibility'] = $data['owm_visibility'] / 1609;
+                $data['weather_visibility'] = $data['weather_visibility'] / 1609;
             } else {
                 if ($visibilityDistanceUnit === 'km') {
                     // Convert meters to KM
-                    $data['owm_visibility'] = $data['owm_visibility'] / 1000;
+                    $data['weather_visibility'] = $data['weather_visibility'] / 1000;
                 }
             }
         }
