@@ -7,7 +7,7 @@
             )
     }}
 {{else}}
-    {{> dropdown id=id name=name value=value title=title selectType="localSelect"
+    {{> dropdown id=id name=name value=value title=title selectType="pagedSelect"
             options=(arr (obj name='' title='')) optionsTitle="title" optionsValue="name"
             customData=(arr
                     (obj name='width' value='100%')
@@ -21,6 +21,7 @@
                     (obj name='selected-property' value='selected')
                     (obj name='initial-value' value=initialValue)
                     (obj name='initial-key' value=initialKey)
+                    (obj name='display-all' value=true)
             )
             helpText=helpText
     }}

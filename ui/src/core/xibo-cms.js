@@ -3241,6 +3241,9 @@ function makePagedSelect(element, parent, dataFormatter, addRandomId = false) {
                     data = dataFormatter(data);
                 }
 
+                // Check if we have a display all option
+                var displayAll = $element.data('displayAll') ?? false;
+
                 $.each(data.data, function(index, el) {
                     var result = {
                         "id": el[$element.data("idProperty")],
@@ -3267,7 +3270,7 @@ function makePagedSelect(element, parent, dataFormatter, addRandomId = false) {
                 return {
                     results: results,
                     pagination: {
-                        more: (page * 10 < data.recordsTotal)
+                        more: !displayAll && (page * 10 < data.recordsTotal)
                     }
                 };
             }
