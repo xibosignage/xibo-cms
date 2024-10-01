@@ -1255,20 +1255,20 @@ class ProofOfPlay implements ReportInterface
     /**
      * Group by display group in MongoDB
      * @param array $rows
-     * @param array $displayIds
+     * @param array $filteredDisplayGroupIds
      * @return array
      * @throws NotFoundException
      */
-    private function groupByDisplayGroupMongoDb(array $rows, array $displayIds = []) : array
+    private function groupByDisplayGroupMongoDb(array $rows, array $filteredDisplayGroupIds) : array
     {
         $data = [];
+        $displayInfoArr = $this->displayGroupFactory->query();
 
         // Get the display groups
         foreach ($rows as $row) {
-            foreach ($this->displayGroupFactory->query(null, ['displayId' => $row['displayId']]) as $dg) {
-
+            foreach ($displayInfoArr as $dg) {
                 // Do we have a filter?
-                if (!$displayIds || in_array($dg->displayGroupId, $displayIds)) {
+                if (!$filteredDisplayGroupIds || in_array($dg->displayGroupId, $filteredDisplayGroupIds)) {
                     // Create a temporary key to group by multiple columns at once
                     // and save memory instead of checking each column recursively
                     $key = $dg->displayGroupId . '_' . $row['layoutId'] . '_' . $row['mediaId'] . '_' .
@@ -1349,8 +1349,11 @@ class ProofOfPlay implements ReportInterface
             'dg' => 'Display',
         };
 
-        // What type of tags are looking for?
-        foreach ($this->tagFactory->query() as $tag) {
+        // Get the list of tags to get the tag type (ie media tag, layout tag, or display tag)
+        $tagInfoArr = $this->tagFactory->query();
+
+        foreach ($tagInfoArr as $tag) {
+            // What type of tags are we looking for?
             foreach ($this->tagFactory->getAllLinks(null, ['tagId' => $tag->tagId]) as $filteredTag) {
                 if ($filteredTag['type'] == $filter) {
                     $filteredTag['tagId'] = $tag->tagId;
