@@ -619,11 +619,11 @@ class Soap
         foreach ($layouts as $layoutId) {
             // this is recursive function, as we need to get 2nd level nesting and beyond
             $this->layoutFactory->getActionPublishedLayoutIds($layoutId, $actionLayoutIds, $processedLayoutIds);
+        }
 
-            // merge the Action layouts to our array, we need the player to download all resources on them
-            if (!empty($actionLayoutIds)) {
-                $layouts = array_unique(array_merge($layouts, $actionLayoutIds));
-            }
+        // merge the Action layouts to our array, we need the player to download all resources on them
+        if (!empty($actionLayoutIds)) {
+            $layouts = array_unique(array_merge($layouts, $actionLayoutIds));
         }
 
         // Create a comma separated list to pass into the query which gets file nodes
