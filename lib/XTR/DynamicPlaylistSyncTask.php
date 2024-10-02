@@ -144,7 +144,7 @@ class DynamicPlaylistSyncTask implements TaskInterface
                     'tags' => $playlist->filterMediaTags,
                     'exactTags' => $playlist->filterExactTags,
                     'logicalOperator' => $playlist->filterMediaTagsLogicalOperator,
-                    'folderId' => $playlist->filterFolderId,
+                    'folderId' => !empty($playlist->filterFolderId) ? $playlist->filterFolderId : null,
                     'userCheckUserId' => $playlist->getOwnerId(),
                     'start' => 0,
                     'length' => $playlist->maxNumberOfItems
