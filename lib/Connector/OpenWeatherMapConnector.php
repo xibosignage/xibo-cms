@@ -665,26 +665,26 @@ class OpenWeatherMapConnector implements ConnectorInterface
     {
         // Initialize Open Weather Schedule Criteria parameters
         $event->addType('weather', __('Weather'))
-            ->addMetric('weather_condition', __('Weather Condition'))
+            ->addMetric('condition', __('Weather Condition'))
                 ->addValues('dropdown', [
-                    'Thunderstorm' => __('Thunderstorm'),
-                    'Drizzle' => __('Drizzle'),
-                    'Rain' => __('Rain'),
-                    'Snow' => __('Snow'),
-                    'Clear' => __('Clear'),
-                    'Clouds' => __('Clouds')
+                    'thunderstorm' => __('Thunderstorm'),
+                    'drizzle' => __('Drizzle'),
+                    'rain' => __('Rain'),
+                    'snow' => __('Snow'),
+                    'clear' => __('Clear'),
+                    'clouds' => __('Clouds')
                 ])
-            ->addMetric('weather_temp_imperial', __('Temperature (Imperial)'))
+            ->addMetric('temp_imperial', __('Temperature (Imperial)'))
                 ->addValues('number', [])
-            ->addMetric('weather_temp_metric', __('Temperature (Metric)'))
+            ->addMetric('temp_metric', __('Temperature (Metric)'))
                 ->addValues('number', [])
-            ->addMetric('weather_feels_like_imperial', __('Apparent Temperature (Imperial)'))
+            ->addMetric('feels_like_imperial', __('Apparent Temperature (Imperial)'))
                 ->addValues('number', [])
-            ->addMetric('weather_feels_like_metric', __('Apparent Temperature (Metric)'))
+            ->addMetric('feels_like_metric', __('Apparent Temperature (Metric)'))
                 ->addValues('number', [])
-            ->addMetric('weather_wind_speed', __('Wind Speed'))
+            ->addMetric('wind_speed', __('Wind Speed'))
                 ->addValues('number', [])
-            ->addMetric('weather_wind_direction', __('Wind Direction'))
+            ->addMetric('wind_direction', __('Wind Direction'))
                 ->addValues('dropdown', [
                     'N' => __('North'),
                     'NE' => __('Northeast'),
@@ -695,13 +695,13 @@ class OpenWeatherMapConnector implements ConnectorInterface
                     'W' => __('West'),
                     'NW' => __('Northwest'),
                 ])
-            ->addMetric('weather_wind_degrees', __('Wind Direction (degrees)'))
+            ->addMetric('wind_degrees', __('Wind Direction (degrees)'))
                 ->addValues('number', [])
-            ->addMetric('weather_humidity', __('Humidity (Percent)'))
+            ->addMetric('humidity', __('Humidity (Percent)'))
                 ->addValues('number', [])
-            ->addMetric('weather_pressure', __('Pressure'))
+            ->addMetric('pressure', __('Pressure'))
                 ->addValues('number', [])
-            ->addMetric('weather_visibility', __('Visibility (meters)'))
+            ->addMetric('visibility', __('Visibility (meters)'))
                 ->addValues('number', []);
     }
 
@@ -737,7 +737,6 @@ class OpenWeatherMapConnector implements ConnectorInterface
         $data['weather_feels_like_imperial'] = round($apparentTempImperial, 0);
         $data['weather_temp_metric'] = round($tempMetric, 0);
         $data['weather_feels_like_metric'] = round($apparentTempMetric, 0);
-
 
         // Humidity
         $data['weather_humidity'] = $item['humidity'];

@@ -1329,7 +1329,7 @@ class Soap
 
                     foreach ($schedule->criteria as $scheduleCriteria) {
                         $criteriaNode = $scheduleXml->createElement('criteria');
-                        $criteriaNode->setAttribute('metric', $scheduleCriteria->metric);
+                        $criteriaNode->setAttribute('metric', $scheduleCriteria->type . '_' . $scheduleCriteria->metric);
                         $criteriaNode->setAttribute('condition', $scheduleCriteria->condition);
                         $criteriaNode->setAttribute('type', $scheduleCriteria->type);
                         $criteriaNode->textContent = $scheduleCriteria->value;
