@@ -1621,8 +1621,13 @@ Toolbar.prototype.handleDroppables = function(draggable, customClasses = '') {
 
     // Image placeholder
     if (
-      $(draggable).data('type') === 'media' &&
-      $(draggable).data('subType') === 'image'
+      (
+        $(draggable).data('type') === 'media' &&
+        $(draggable).data('subType') === 'image'
+      ) || (
+        $(draggable).data('type') === 'widget' &&
+        $(draggable).data('subType') === 'image'
+      )
     ) {
       selectorBuild.push(
         '.designer-element[data-sub-type="image_placeholder"]',
