@@ -665,55 +665,44 @@ class OpenWeatherMapConnector implements ConnectorInterface
     {
         // Initialize Open Weather Schedule Criteria parameters
         $event->addType('weather', __('Weather'))
-                ->addMetric('weather_condition', __('Weather Condition'))
-                    ->addValues('dropdown', [
-                        'clear_sky' => __('Clear Sky'),
-                        'few_clouds' => __('Few Clouds'),
-                        'scattered_clouds' => __('Scattered Clouds'),
-                        'broken_clouds' => __('Broken Clouds'),
-                        'shower_rain' => __('Shower Rain'),
-                        'rain' => __('Rain'),
-                        'thunderstorm' => __('Thunderstorm'),
-                        'snow' => __('Snow'),
-                        'mist' => __('Mist')
-                    ])
-                ->addMetric('temperature_imperial', __('Temperature (Imperial)'))
-                    ->addValues('number', [])
-                ->addMetric('temperature_metric', __('Temperature (Metric)'))
-                    ->addValues('number', [])
-                ->addMetric('apparent_temperature_imperial', __('Apparent Temperature (Imperial)'))
-                    ->addValues('number', [])
-                ->addMetric('apparent_temperature_metric', __('Apparent Temperature (Metric)'))
-                    ->addValues('number', [])
-                ->addMetric('wind_speed', __('Wind Speed'))
-                    ->addValues('number', [])
-                ->addMetric('wind_direction', __('Wind Direction'))
-                    ->addValues('dropdown', [
-                        'N' => __('North'),
-                        'NNE ' => __('North-Northeast'),
-                        'NE' => __('Northeast'),
-                        'ENE' => __('East-Northeast'),
-                        'E' => __('East'),
-                        'ESE' => __('East-Southeast'),
-                        'SE' => __('Southeast'),
-                        'SSE' => __('South-Southeast'),
-                        'S' => __('South'),
-                        'SSW' => __('South-Southwest'),
-                        'SW' => __('Southwest'),
-                        'WSW' => __('West-Southwest'),
-                        'W' => __('West'),
-                        'WNW' => __('West-Northwest'),
-                        'NW' => __('Northwest'),
-                        'NNW' => __('North-Northwest'),
-                    ])
-                ->addMetric('wind_bearing', __('Wind Bearing'))
-                    ->addValues('number', [])
-                ->addMetric('humidity', __('Humidity (Percent)'))
-                    ->addValues('number', [])
-                ->addMetric('pressure', __('Pressure'))
-                    ->addValues('number', [])
-                ->addMetric('visibility', __('Visibility'))
-                    ->addValues('number', []);
+            ->addMetric('condition', __('Weather Condition'))
+                ->addValues('dropdown', [
+                    'thunderstorm' => __('Thunderstorm'),
+                    'drizzle' => __('Drizzle'),
+                    'rain' => __('Rain'),
+                    'snow' => __('Snow'),
+                    'clear' => __('Clear'),
+                    'clouds' => __('Clouds')
+                ])
+            ->addMetric('temp_imperial', __('Temperature (Imperial)'))
+                ->addValues('number', [])
+            ->addMetric('temp_metric', __('Temperature (Metric)'))
+                ->addValues('number', [])
+            ->addMetric('feels_like_imperial', __('Apparent Temperature (Imperial)'))
+                ->addValues('number', [])
+            ->addMetric('feels_like_metric', __('Apparent Temperature (Metric)'))
+                ->addValues('number', [])
+            ->addMetric('wind_speed', __('Wind Speed'))
+                ->addValues('number', [])
+            ->addMetric('wind_direction', __('Wind Direction'))
+                ->addValues('dropdown', [
+                    'N' => __('North'),
+                    'NE' => __('Northeast'),
+                    'E' => __('East'),
+                    'SE' => __('Southeast'),
+                    'S' => __('South'),
+                    'SW' => __('Southwest'),
+                    'W' => __('West'),
+                    'NW' => __('Northwest'),
+                ])
+            ->addMetric('wind_degrees', __('Wind Direction (degrees)'))
+                ->addValues('number', [])
+            ->addMetric('humidity', __('Humidity (Percent)'))
+                ->addValues('number', [])
+            ->addMetric('pressure', __('Pressure'))
+                ->addValues('number', [])
+            ->addMetric('visibility', __('Visibility (meters)'))
+                ->addValues('number', []);
     }
 
     /**
@@ -744,50 +733,49 @@ class OpenWeatherMapConnector implements ConnectorInterface
         $apparentTempMetric = ($apparentTempImperial - 32) * 5 / 9;
 
         // Round those temperature values
-        $data['temperature_imperial'] = round($tempImperial, 0);
-        $data['apparent_temperature_imperial'] = round($apparentTempImperial, 0);
-        $data['temperature_metric'] = round($tempMetric, 0);
-        $data['apparent_temperature_metric'] = round($apparentTempMetric, 0);
-
+        $data['weather_temp_imperial'] = round($tempImperial, 0);
+        $data['weather_feels_like_imperial'] = round($apparentTempImperial, 0);
+        $data['weather_temp_metric'] = round($tempMetric, 0);
+        $data['weather_feels_like_metric'] = round($apparentTempMetric, 0);
 
         // Humidity
-        $data['humidity'] = $item['humidity'];
+        $data['weather_humidity'] = $item['humidity'];
 
         // Pressure
         // received in hPa, display in mB
-        $data['pressure'] = $item['pressure'] / 100;
+        $data['weather_pressure'] = $item['pressure'] / 100;
 
         // Wind
         // metric = meters per second
         // imperial = miles per hour
-        $data['wind_speed'] = $item['wind_speed'] ?? $item['speed'] ?? null;
-        $data['wind_bearing'] = $item['wind_deg'] ?? $item['deg'] ?? null;
+        $data['weather_wind_speed'] = $item['wind_speed'] ?? $item['speed'] ?? null;
+        $data['weather_wind_degrees'] = $item['wind_deg'] ?? $item['deg'] ?? null;
 
         if ($requestUnit === 'metric' && $windSpeedUnit !== 'MPS') {
             // We have MPS and need to go to something else
             if ($windSpeedUnit === 'MPH') {
                 // Convert MPS to MPH
-                $data['wind_speed'] = round($data['wind_speed'] * 2.237, 2);
+                $data['weather_wind_degrees'] = round($data['weather_wind_degrees'] * 2.237, 2);
             } else if ($windSpeedUnit === 'KPH') {
                 // Convert MPS to KPH
-                $data['wind_speed'] = round($data['wind_speed'] * 3.6, 2);
+                $data['weather_wind_degrees'] = round($data['weather_wind_degrees'] * 3.6, 2);
             }
         } else if ($requestUnit === 'imperial' && $windSpeedUnit !== 'MPH') {
             if ($windSpeedUnit === 'MPS') {
                 // Convert MPH to MPS
-                $data['wind_speed'] = round($data['wind_speed'] / 2.237, 2);
+                $data['weather_wind_degrees'] = round($data['weather_wind_degrees'] / 2.237, 2);
             } else if ($windSpeedUnit === 'KPH') {
                 // Convert MPH to KPH
-                $data['wind_speed'] = round($data['wind_speed'] * 1.609344, 2);
+                $data['weather_wind_degrees'] = round($data['weather_wind_degrees'] * 1.609344, 2);
             }
         }
 
         // Wind direction
-        $data['wind_direction'] = '--';
-        if ($data['wind_bearing'] !== null && $data['wind_bearing'] !== 0) {
+        $data['weather_wind_direction'] = '--';
+        if ($data['weather_wind_degrees'] !== null && $data['weather_wind_degrees'] !== 0) {
             foreach (self::cardinalDirections() as $dir => $angles) {
-                if ($data['wind_bearing'] >= $angles[0] && $data['wind_bearing'] < $angles[1]) {
-                    $data['wind_direction'] = $dir;
+                if ($data['weather_wind_degrees'] >= $angles[0] && $data['weather_wind_degrees'] < $angles[1]) {
+                    $data['weather_wind_direction'] = $dir;
                     break;
                 }
             }
@@ -796,17 +784,17 @@ class OpenWeatherMapConnector implements ConnectorInterface
         // Visibility
         // metric = meters
         // imperial = meters?
-        $data['visibility'] = $item['visibility'] ?? '--';
+        $data['weather_visibility'] = $item['visibility'] ?? '--';
 
-        if ($data['visibility'] !== '--') {
+        if ($data['weather_visibility'] !== '--') {
             // Always in meters
             if ($visibilityDistanceUnit === 'mi') {
                 // Convert meters to miles
-                $data['visibility'] = $data['visibility'] / 1609;
+                $data['weather_visibility'] = $data['weather_visibility'] / 1609;
             } else {
                 if ($visibilityDistanceUnit === 'km') {
                     // Convert meters to KM
-                    $data['visibility'] = $data['visibility'] / 1000;
+                    $data['weather_visibility'] = $data['weather_visibility'] / 1000;
                 }
             }
         }
