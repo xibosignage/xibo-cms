@@ -98,7 +98,6 @@ $errorMiddleware->setDefaultErrorHandler(\Xibo\Middleware\Handlers::jsonErrorHan
 // All application routes
 $app->get('/getResource', ['\Xibo\Controller\Pwa', 'getResource'])->setName('pwa.getResource');
 $app->get('/getData', ['\Xibo\Controller\Pwa', 'getData'])->setName('pwa.getData');
-$app->get('/getWeather', ['\Xibo\Controller\Pwa', 'getWeather'])->setName('pwa.getWeather');
 
 // Run App
 try {

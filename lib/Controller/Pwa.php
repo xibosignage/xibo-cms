@@ -165,61 +165,6 @@ class Pwa extends Base
 
     /**
      * @throws \Xibo\Support\Exception\InvalidArgumentException
-     * @throws \Psr\Container\NotFoundExceptionInterface
-     * @throws \Psr\Container\ContainerExceptionInterface
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    public function getWeather(Request $request, Response $response): Response
-    {
-        $params = $this->getSanitizer($request->getParams());
-
-        try {
-            $version = $params->getInt('v', [
-                'default' => 7,
-                'throw' => function () {
-                    throw new InvalidArgumentException(__('Missing Version'), 'v');
-                }
-            ]);
-
-            if ($version < 7) {
-                throw new InvalidArgumentException(__('PWA supported from XMDS schema 7 onward.'), 'v');
-            }
-
-            // Validate that this display should call this service.
-            $hardwareKey = $params->getString('hardwareKey');
-            $display = $this->displayFactory->getByLicence($hardwareKey);
-            if (!$display->isPwa()) {
-                throw new AccessDeniedException(__('Please use XMDS API'), 'hardwareKey');
-            }
-
-            // Check it is still authorised.
-            if ($display->licensed == 0) {
-                throw new AccessDeniedException(__('Display unauthorised'));
-            }
-
-            /** @var Soap7 $soap */
-            $soap = $this->getSoap($version);
-            $body = $soap->GetWeather(
-                $params->getString('serverKey'),
-                $params->getString('hardwareKey'),
-            );
-
-            $response->getBody()->write($body);
-
-            return $response
-                ->withHeader('Access-Control-Allow-Origin', '*')
-                ->withHeader('Access-Control-Allow-Methods', '*')
-                ->withHeader(
-                    'Access-Control-Allow-Headers',
-                    'append,delete,entries,foreach,get,has,keys,set,values,Origin,Authorization'
-                );
-        } catch (\SoapFault $e) {
-            throw new GeneralException($e->getMessage());
-        }
-    }
-
-    /**
-     * @throws \Xibo\Support\Exception\InvalidArgumentException
      * @throws \Psr\Container\ContainerExceptionInterface
      * @throws \Psr\Container\NotFoundExceptionInterface
      */
