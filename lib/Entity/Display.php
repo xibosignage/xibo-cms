@@ -735,7 +735,7 @@ class Display implements \JsonSerializable
         $restingLogLevel = $this->getSetting('logLevel', 'error');
         $isElevated = $this->isElevatedLogging();
 
-        return $isElevated ? 'debug' : $restingLogLevel;
+        return $isElevated ? 'audit' : $restingLogLevel;
     }
 
     /**
