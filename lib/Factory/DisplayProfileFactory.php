@@ -396,11 +396,13 @@ class DisplayProfileFactory extends BaseFactory
                     'default' => $this->config->getSetting('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT'),
                     'type' => 'string',
                 ],
-                ['name' => 'orientation', 'default' => 0],
                 ['name' => 'logLevel', 'default' => 'error'],
                 ['name' => 'elevateLogsUntil', 'default' => 0, 'type' => 'int'],
                 ['name' => 'screenShotRequestInterval', 'default' => 0, 'type' => 'int'],
-                ['name' => 'screenShotSize', 'default' => 1],
+                [
+                    'name' => 'screenShotSize',
+                    'default' => (int)$this->config->getSetting('DISPLAY_PROFILE_SCREENSHOT_SIZE_DEFAULT', 200),
+                ],
             ]
         ];
 
