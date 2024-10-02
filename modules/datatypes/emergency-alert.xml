@@ -1,0 +1,73 @@
+<!--
+  ~ Copyright (C) 2024 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - https://xibosignage.com
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<datatypes>
+    <datatype>
+        <id>emergency-alert</id>
+        <name>Emergency Alert</name>
+        <fields>
+            <field id="event" type="string">
+                <title>Type of emergency event being reported</title>
+            </field>
+            <field id="urgency" type="string">
+                <title>Level of urgency indicating how soon action is needed</title>
+            </field>
+            <field id="severity" type="string">
+                <title>Indicates the severity of the emergency situation</title>
+            </field>
+            <field id="certainty" type="string">
+                <title>Certainty level of the reported event's occurrence</title>
+            </field>
+            <field id="dateTimeEffective" type="datetime">
+                <title>Date and time when the alert becomes effective</title>
+            </field>
+            <field id="dateTimeOnset" type="datetime">
+                <title>Expected starting time of the emergency event</title>
+            </field>
+            <field id="dateTimeExpires" type="datetime">
+                <title>Time when the emergency alert expires</title>
+            </field>
+            <field id="senderName" type="string">
+                <title>Name of the entity issuing the alert</title>
+            </field>
+            <field id="headline" type="string">
+                <title>Brief headline summarizing the emergency alert</title>
+            </field>
+            <field id="description" type="string">
+                <title>Detailed explanation of the emergency situation</title>
+            </field>
+            <field id="instruction" type="string">
+                <title>Guidance or instructions for those affected by the alert</title>
+            </field>
+            <field id="contact" type="string">
+                <title>Contact details for more information about the alert</title>
+            </field>
+            <field id="source" type="string">
+                <title>Origin or source from which the alert information is derived</title>
+            </field>
+            <field id="note" type="string">
+                <title>Supplementary notes providing additional context</title>
+            </field>
+            <field id="areaDesc" type="string">
+                <title>Description of the geographical area affected by the alert</title>
+            </field>
+        </fields>
+    </datatype>
+</datatypes>
