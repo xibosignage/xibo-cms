@@ -98,16 +98,15 @@ class DisplayProfileFactory extends BaseFactory
      * @return DisplayProfile
      * @throws NotFoundException
      */
-    public function getDefaultByType($type)
+    public function getDefaultByType(string $type): DisplayProfile
     {
         $profiles = $this->query(null, ['disableUserCheck' => 1, 'type' => $type, 'isDefault' => 1]);
 
         if (count($profiles) <= 0) {
-            throw new NotFoundException();
+            throw new NotFoundException(sprintf(__('No default display profile for %s'), $type));
         }
 
         $profile = $profiles[0];
-        /* @var DisplayProfile $profile */
         $profile->load();
         return $profile;
     }
@@ -398,6 +397,7 @@ class DisplayProfileFactory extends BaseFactory
                 ],
                 ['name' => 'logLevel', 'default' => 'error'],
                 ['name' => 'elevateLogsUntil', 'default' => 0, 'type' => 'int'],
+                ['name' => 'versionMediaId', 'default' => null],
                 ['name' => 'screenShotRequestInterval', 'default' => 0, 'type' => 'int'],
                 [
                     'name' => 'screenShotSize',

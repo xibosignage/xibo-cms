@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -294,6 +294,10 @@ class MediaService implements MediaServiceInterface
 
         if (!file_exists($libraryFolder . '/playersoftware')) {
             mkdir($libraryFolder . '/playersoftware', 0777, true);
+        }
+
+        if (!file_exists($libraryFolder . '/playersoftware/chromeOS')) {
+            mkdir($libraryFolder . '/playersoftware/chromeOS', 0777, true);
         }
 
         if (!file_exists($libraryFolder . '/savedreport')) {

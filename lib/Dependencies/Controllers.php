@@ -418,6 +418,8 @@ class Controllers
             '\Xibo\Controller\Pwa' => function (ContainerInterface $c) {
                 $controller = new \Xibo\Controller\Pwa(
                     $c->get('displayFactory'),
+                    $c->get('displayProfileFactory'),
+                    $c->get('playerVersionFactory'),
                     $c,
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
