@@ -296,8 +296,8 @@ class MediaService implements MediaServiceInterface
             mkdir($libraryFolder . '/playersoftware', 0777, true);
         }
 
-        if (!file_exists($libraryFolder . '/playersoftware/chromeOS')) {
-            mkdir($libraryFolder . '/playersoftware/chromeOS', 0777, true);
+        if (!file_exists($libraryFolder . '/playersoftware/chromeos')) {
+            mkdir($libraryFolder . '/playersoftware/chromeos', 0777, true);
         }
 
         if (!file_exists($libraryFolder . '/savedreport')) {

@@ -207,8 +207,8 @@ class PlayerVersion implements \JsonSerializable
         }
 
         // delete unpacked file
-        if (is_dir($libraryLocation . 'playersoftware/chromeOS/' . $this->versionId)) {
-            (new Filesystem())->remove($libraryLocation . 'playersoftware/chromeOS/' . $this->versionId);
+        if (is_dir($libraryLocation . 'playersoftware/chromeos/' . $this->versionId)) {
+            (new Filesystem())->remove($libraryLocation . 'playersoftware/chromeos/' . $this->versionId);
         }
     }
 
@@ -222,13 +222,15 @@ class PlayerVersion implements \JsonSerializable
         if ($this->type === 'chromeOS') {
             $this->getLog()->debug('add: handling chromeOS upload');
 
+            // TODO: check the signature of the file to make sure it comes from a verified source.
+
             $zip = new \ZipArchive();
             if (!$zip->open($libraryFolder . 'playersoftware/' . $this->fileName)) {
                 throw new InvalidArgumentException(__('Unable to open ZIP'));
             }
 
             // Make a folder for this
-            $folder = $libraryFolder . 'playersoftware/chromeOS/' . $this->versionId;
+            $folder = $libraryFolder . 'playersoftware/chromeos/' . $this->versionId;
             if (is_dir($folder)) {
                 unlink($folder);
             }
@@ -237,6 +239,21 @@ class PlayerVersion implements \JsonSerializable
             // Extract to that folder
             $zip->extractTo($folder);
             $zip->close();
+        }
+
+        return $this;
+    }
+
+    public function setActive(): static
+    {
+        if ($this->type === 'chromeOS') {
+            $this->getLog()->debug('setActive: set this version to be the latest');
+
+            $chromeLocation = $this->config->getSetting('LIBRARY_LOCATION') . 'playersoftware/chromeos';
+            if (is_link($chromeLocation . '/latest')) {
+                unlink($chromeLocation . '/latest');
+            }
+            symlink($chromeLocation . '/' . $this->versionId, $chromeLocation . '/latest');
         }
 
         return $this;

@@ -381,9 +381,8 @@ class DisplayProfileFactory extends BaseFactory
                 ['name' => 'serverPort', 'default' => 9696],
             ],
             'chromeOS' => [
-                ['name' => 'emailAddress', 'default' => ''],
+                ['name' => 'licenceCode', 'default' => ''],
                 ['name' => 'collectInterval', 'default' => 300],
-                ['name' => 'dayPartId', 'default' => null],
                 ['name' => 'xmrNetworkAddress', 'default' => ''],
                 [
                     'name' => 'statsEnabled',
@@ -395,9 +394,10 @@ class DisplayProfileFactory extends BaseFactory
                     'default' => $this->config->getSetting('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT'),
                     'type' => 'string',
                 ],
+                ['name' => 'playerVersionId', 'default' => null],
+                ['name' => 'dayPartId', 'default' => null],
                 ['name' => 'logLevel', 'default' => 'error'],
                 ['name' => 'elevateLogsUntil', 'default' => 0, 'type' => 'int'],
-                ['name' => 'versionMediaId', 'default' => null],
                 ['name' => 'screenShotRequestInterval', 'default' => 0, 'type' => 'int'],
                 [
                     'name' => 'screenShotSize',

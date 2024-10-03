@@ -259,11 +259,18 @@ class PlayerSoftware extends Base
         $displayProfiles = $this->displayProfileFactory->query();
 
         foreach ($displayProfiles as $displayProfile) {
-            if (in_array($displayProfile->type, ['android', 'lg', 'sssp', 'chromeOS'])) {
+            if (in_array($displayProfile->type, ['android', 'lg', 'sssp'])) {
                 $currentVersionId = $displayProfile->getSetting('versionMediaId');
 
                 if ($currentVersionId === $version->versionId) {
                     $displayProfile->setSetting('versionMediaId', null);
+                    $displayProfile->save();
+                }
+            } else if ($displayProfile->type === 'chromeOS') {
+                $currentVersionId = $displayProfile->getSetting('playerVersionId');
+
+                if ($currentVersionId === $version->versionId) {
+                    $displayProfile->setSetting('playerVersionId', null);
                     $displayProfile->save();
                 }
             }
