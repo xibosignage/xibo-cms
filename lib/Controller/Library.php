@@ -2512,6 +2512,11 @@ class Library extends Base
             $ext = $downloadInfo['extension'];
         }
 
+        // Unsupported links (ie Youtube links, etc) will return a null extension, thus, throw an error
+        if (is_null($ext)) {
+            throw new NotFoundException(sprintf(__('Extension %s is not supported.'), $ext));
+        }
+
         // Initialise the library and do some checks
         $this->getMediaService()
             ->initLibrary()
