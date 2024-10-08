@@ -23,6 +23,7 @@ namespace Xibo\Entity;
 
 
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 use Symfony\Component\Filesystem\Filesystem;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PlayerVersionFactory;
@@ -229,6 +230,11 @@ class PlayerVersion implements \JsonSerializable
                 throw new InvalidArgumentException(__('Unable to open ZIP'));
             }
 
+            // Make sure the ZIP file contains a manifest.json file.
+            if ($zip->locateName('manifest.json') === false) {
+                throw new InvalidArgumentException(__('Software package does not contain a manifest'));
+            }
+
             // Make a folder for this
             $folder = $libraryFolder . 'playersoftware/chromeos/' . $this->versionId;
             if (is_dir($folder)) {
@@ -239,6 +245,34 @@ class PlayerVersion implements \JsonSerializable
             // Extract to that folder
             $zip->extractTo($folder);
             $zip->close();
+
+            // Update manifest.json
+            $manifest = file_get_contents($folder . '/manifest.json');
+
+            $isXiboThemed = $this->config->getThemeConfig('app_name', 'Xibo') === 'Xibo';
+            if (!$isXiboThemed) {
+                $manifest = Str::replace(
+                    'Xibo Digital Signage',
+                    $this->config->getThemeConfig('theme_title'),
+                    $manifest
+                );
+            }
+
+            // Update asset URLs
+            $logoUrl = $this->config->uri('img/xibologo.png');
+
+            $manifest = Str::replace(
+                [
+                    'assets/icons/512x512.png',
+                    'assets/icons/192x192.png',
+                    'assets/icons/48x48.png',
+                    'assets/icons/24x24.png',
+                ],
+                $logoUrl,
+                $manifest
+            );
+
+            file_put_contents($folder . '/manifest.json', $manifest);
         }
 
         return $this;
