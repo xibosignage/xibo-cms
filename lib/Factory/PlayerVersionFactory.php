@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -126,12 +126,13 @@ class PlayerVersionFactory extends BaseFactory
      * @return PlayerVersion
      * @throws NotFoundException
      */
-    public function getByType($type)
+    public function getByType(string $type): PlayerVersion
     {
         $versions = $this->query(null, array('disableUserCheck' => 1, 'playerType' => $type));
 
-        if (count($versions) <= 0)
+        if (count($versions) <= 0) {
             throw new NotFoundException(__('Cannot find Player Version'));
+        }
 
         return $versions[0];
     }

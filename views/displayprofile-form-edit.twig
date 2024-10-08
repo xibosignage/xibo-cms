@@ -65,8 +65,10 @@
         {{ include('displayprofile-form-edit-windows.twig') }}
     {% elseif displayProfile.getClientType() == "linux" %}
         {{ include('displayprofile-form-edit-linux.twig') }}
-    {% elseif displayProfile.getClientType() == "lg" or displayProfile.getClientType() == "sssp"  %}
+    {% elseif displayProfile.getClientType() == "lg" or displayProfile.getClientType() == "sssp" %}
         {{ include('displayprofile-form-edit-soc.twig') }}
+    {% elseif displayProfile.getClientType() == "chromeOS" %}
+        {{ include('displayprofile-form-edit-chromeos.twig') }}
     {% elseif displayProfile.isCustom() %}
         {{ include(displayProfile.getCustomEditTemplate()) }}
     {% else %}

@@ -892,6 +892,71 @@ trait DisplayProfileConfigFields
 
                 break;
 
+            case 'chromeOS':
+                if ($sanitizedParams->hasParam('licenceCode')) {
+                    $this->handleChangedSettings('licenceCode', ($ownConfig) ? $displayProfile->getSetting('licenceCode') : $display->getSetting('licenceCode'), $sanitizedParams->getString('licenceCode'), $changedSettings);
+                    $displayProfile->setSetting('licenceCode', $sanitizedParams->getString('licenceCode'), $ownConfig, $config);
+                }
+
+                if ($sanitizedParams->hasParam('collectInterval')) {
+                    $this->handleChangedSettings('collectInterval', ($ownConfig) ? $displayProfile->getSetting('collectInterval') : $display->getSetting('collectInterval'), $sanitizedParams->getInt('collectInterval'), $changedSettings);
+                    $displayProfile->setSetting('collectInterval', $sanitizedParams->getInt('collectInterval'), $ownConfig, $config);
+                }
+
+                if ($sanitizedParams->hasParam('dayPartId')) {
+                    $this->handleChangedSettings('dayPartId', ($ownConfig) ? $displayProfile->getSetting('dayPartId') : $display->getSetting('dayPartId'), $sanitizedParams->getInt('dayPartId'), $changedSettings);
+                    $displayProfile->setSetting('dayPartId', $sanitizedParams->getInt('dayPartId'), $ownConfig, $config);
+                }
+
+                if ($sanitizedParams->hasParam('xmrNetworkAddress')) {
+                    $this->handleChangedSettings('xmrNetworkAddress',($ownConfig) ? $displayProfile->getSetting('xmrNetworkAddress') : $display->getSetting('xmrNetworkAddress'), $sanitizedParams->getString('xmrNetworkAddress'), $changedSettings);
+                    $displayProfile->setSetting('xmrNetworkAddress', $sanitizedParams->getString('xmrNetworkAddress'), $ownConfig, $config);
+                }
+
+                if ($sanitizedParams->hasParam('statsEnabled')) {
+                    $this->handleChangedSettings('statsEnabled', ($ownConfig) ? $displayProfile->getSetting('statsEnabled') : $display->getSetting('statsEnabled'), $sanitizedParams->getCheckbox('statsEnabled'), $changedSettings);
+                    $displayProfile->setSetting('statsEnabled', $sanitizedParams->getCheckbox('statsEnabled'), $ownConfig, $config);
+                }
+
+                if ($sanitizedParams->hasParam('aggregationLevel')) {
+                    $this->handleChangedSettings('aggregationLevel', ($ownConfig) ? $displayProfile->getSetting('aggregationLevel') : $display->getSetting('aggregationLevel'), $sanitizedParams->getString('aggregationLevel'), $changedSettings);
+                    $displayProfile->setSetting('aggregationLevel', $sanitizedParams->getString('aggregationLevel'), $ownConfig, $config);
+                }
+
+                if ($sanitizedParams->hasParam('logLevel')) {
+                    $this->handleChangedSettings('logLevel', ($ownConfig) ? $displayProfile->getSetting('logLevel') : $display->getSetting('logLevel'), $sanitizedParams->getString('logLevel'), $changedSettings);
+                    $displayProfile->setSetting('logLevel', $sanitizedParams->getString('logLevel'), $ownConfig, $config);
+                }
+
+                if ($sanitizedParams->hasParam('elevateLogsUntil')) {
+                    $this->handleChangedSettings(
+                        'elevateLogsUntil',
+                        ($ownConfig)
+                            ? $displayProfile->getSetting('elevateLogsUntil')
+                            : $display->getSetting('elevateLogsUntil'),
+                        $sanitizedParams->getDate('elevateLogsUntil')?->format('U'),
+                        $changedSettings
+                    );
+                    $displayProfile->setSetting(
+                        'elevateLogsUntil',
+                        $sanitizedParams->getDate('elevateLogsUntil')?->format('U'),
+                        $ownConfig,
+                        $config
+                    );
+                }
+
+                if ($sanitizedParams->hasParam('playerVersionId')) {
+                    $this->handleChangedSettings('playerVersionId', ($ownConfig) ? $displayProfile->getSetting('playerVersionId') : $display->getSetting('playerVersionId'), $sanitizedParams->getInt('playerVersionId'), $changedSettings);
+                    $displayProfile->setSetting('playerVersionId', $sanitizedParams->getInt('playerVersionId'), $ownConfig, $config);
+                }
+
+                if ($sanitizedParams->hasParam('screenShotSize')) {
+                    $this->handleChangedSettings('screenShotSize', ($ownConfig) ? $displayProfile->getSetting('screenShotSize') : $display->getSetting('screenShotSize'), $sanitizedParams->getInt('screenShotSize'), $changedSettings);
+                    $displayProfile->setSetting('screenShotSize', $sanitizedParams->getInt('screenShotSize'), $ownConfig, $config);
+                }
+
+                break;
+
             default:
                 if ($displayProfile->isCustom()) {
                     $this->getLog()->info('Edit for custom Display profile type ' . $displayProfile->getClientType());

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,12 +22,70 @@
 
 namespace Xibo\Helper;
 
+use Xibo\Entity\Display;
+
 /**
  * S3 style links
  *  inspired by https://gist.github.com/kelvinmo/d78be66c4f36415a6b80
  */
 class LinkSigner
 {
+    /**
+     * @param \Xibo\Entity\Display $display
+     * @param string $encryptionKey
+     * @param string|null $cdnUrl
+     * @param $type
+     * @param $itemId
+     * @param string $storedAs
+     * @param string|null $fileType
+     * @param string|null $suffix
+     * @return string
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public static function generateSignedLink(
+        Display $display,
+        string $encryptionKey,
+        ?string $cdnUrl,
+        $type,
+        $itemId,
+        string $storedAs,
+        string $fileType = null,
+    ): string {
+        $xmdsRoot = (new HttpsDetect())->getUrl() . '/xmds.php';
+        $saveAsPath = $xmdsRoot
+            . '?file=' . $storedAs
+            . '&displayId=' . $display->displayId
+            . '&type=' . $type
+            . '&itemId=' . $itemId;
+
+        if ($fileType !== null) {
+            $saveAsPath .= '&fileType=' . $fileType;
+        }
+
+        $saveAsPath .= '&' . LinkSigner::getSignature(
+            parse_url($xmdsRoot, PHP_URL_HOST),
+            $storedAs,
+            time() + ($display->getSetting('collectionInterval', 300) * 2),
+            $encryptionKey,
+        );
+
+        // CDN?
+        if (!empty($cdnUrl)) {
+            // Serve a link to the CDN
+            // CDN_URL has a `?dl=` parameter on the end already, so we just encode our string and concatenate it
+            return 'http' . (
+                (
+                    (isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on') ||
+                    (isset($_SERVER['HTTP_X_FORWARDED_PROTO'])
+                        && strtolower($_SERVER['HTTP_X_FORWARDED_PROTO']) == 'https')
+                ) ? 's' : '')
+                . '://' . $cdnUrl . urlencode($saveAsPath);
+        } else {
+            // Serve a HTTP link to XMDS
+            return $saveAsPath;
+        }
+    }
+
     /**
      * Get a S3 compatible signature
      */

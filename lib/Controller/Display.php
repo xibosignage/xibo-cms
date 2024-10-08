@@ -961,7 +961,7 @@ class Display extends Base
                     ];
                 }
 
-                if (in_array($display->clientType, ['android', 'lg', 'sssp'])) {
+                if (in_array($display->clientType, ['android', 'lg', 'sssp', 'chromeOS'])) {
                     $display->buttons[] = array(
                         'id' => 'display_button_checkLicence',
                         'url' => $this->urlFor($request, 'display.licencecheck.form', ['id' => $display->displayId]),

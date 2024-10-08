@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -29,7 +29,9 @@ use Psr\Log\NullLogger;
 use Stash\Interfaces\PoolInterface;
 use Stash\Invalidation;
 use Stash\Item;
+use Xibo\Entity\Display;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\LinkSigner;
 use Xibo\Helper\ObjectVars;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Widget\Provider\DataProvider;
@@ -322,11 +324,16 @@ class WidgetDataProviderCache
 
     /**
      * Decorate for a player
+     * @param \Xibo\Entity\Display $display
+     * @param string $encryptionKey
      * @param array $data The data
      * @param array $storedAs A keyed array of module files this widget has access to
      * @return array
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function decorateForPlayer(
+        Display $display,
+        string $encryptionKey,
         array $data,
         array $storedAs
     ): array {
@@ -337,13 +344,13 @@ class WidgetDataProviderCache
             if (is_array($item)) {
                 foreach ($item as $key => $value) {
                     if (is_string($value)) {
-                        $data[$row][$key] = $this->decorateMediaForPlayer($storedAs, $value);
+                        $data[$row][$key] = $this->decorateMediaForPlayer($display, $encryptionKey, $storedAs, $value);
                     }
                 }
             } else if (is_object($item)) {
                 foreach (ObjectVars::getObjectVars($item) as $key => $value) {
                     if (is_string($value)) {
-                        $item->{$key} = $this->decorateMediaForPlayer($storedAs, $value);
+                        $item->{$key} = $this->decorateMediaForPlayer($display, $encryptionKey, $storedAs, $value);
                     }
                 }
             }
@@ -352,15 +359,25 @@ class WidgetDataProviderCache
     }
 
     /**
+     * @param \Xibo\Entity\Display $display
+     * @param string $encryptionKey
      * @param array $storedAs
      * @param string|null $data
      * @return string|null
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
-    private function decorateMediaForPlayer(array $storedAs, ?string $data): ?string
-    {
+    private function decorateMediaForPlayer(
+        Display $display,
+        string $encryptionKey,
+        array $storedAs,
+        ?string $data,
+    ): ?string {
         if ($data === null) {
             return null;
         }
+
+        // Do we need to add a URL prefix to the requests?
+        $prefix = $display->isPwa() ? '/pwa/' : '';
 
         // Media substitutes
         $matches = [];
@@ -369,7 +386,19 @@ class WidgetDataProviderCache
             if (Str::startsWith($match, 'mediaId')) {
                 $value = explode('=', $match);
                 if (array_key_exists($value[1], $storedAs)) {
-                    $data = str_replace('[[' . $match . ']]', $storedAs[$value[1]], $data);
+                    if ($display->isPwa()) {
+                        $url = LinkSigner::generateSignedLink(
+                            $display,
+                            $encryptionKey,
+                            null,
+                            'M',
+                            $value[1],
+                            $storedAs[$value[1]]
+                        );
+                    } else {
+                        $url = $storedAs[$value[1]];
+                    }
+                    $data = str_replace('[[' . $match . ']]', $prefix . $url, $data);
                 } else {
                     $data = str_replace('[[' . $match . ']]', '', $data);
                 }

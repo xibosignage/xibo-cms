@@ -258,12 +258,19 @@ class PlayerSoftware extends Base
         // Unset player version from Display Profile
         $displayProfiles = $this->displayProfileFactory->query();
 
-        foreach($displayProfiles as $displayProfile) {
+        foreach ($displayProfiles as $displayProfile) {
             if (in_array($displayProfile->type, ['android', 'lg', 'sssp'])) {
                 $currentVersionId = $displayProfile->getSetting('versionMediaId');
 
                 if ($currentVersionId === $version->versionId) {
                     $displayProfile->setSetting('versionMediaId', null);
+                    $displayProfile->save();
+                }
+            } else if ($displayProfile->type === 'chromeOS') {
+                $currentVersionId = $displayProfile->getSetting('playerVersionId');
+
+                if ($currentVersionId === $version->versionId) {
+                    $displayProfile->setSetting('playerVersionId', null);
                     $displayProfile->save();
                 }
             }
@@ -630,6 +637,9 @@ class PlayerSoftware extends Base
             // everything is fine, move the file from temp folder.
             rename($filePath, $libraryFolder . 'playersoftware/' . $playerSoftware->fileName);
 
+            // Unpack if necessary
+            $playerSoftware->unpack($libraryFolder);
+
             // return
             $file->id = $playerSoftware->versionId;
             $file->md5 = $playerSoftware->md5;
@@ -737,6 +747,6 @@ class PlayerSoftware extends Base
      */
     private function getValidExtensions()
     {
-        return ['apk','ipk','wgt'];
+        return ['apk', 'ipk', 'wgt', 'chrome'];
     }
 }

@@ -347,7 +347,10 @@ class DisplayProfile extends Base
         }
 
         // Player Version Setting
-        $versionId = $displayProfile->getSetting('versionMediaId');
+        $versionId = $displayProfile->type === 'chromeOS'
+            ? $displayProfile->getSetting('playerVersionId')
+            : $displayProfile->getSetting('versionMediaId');
+
         $playerVersions = [];
 
         // Daypart - Operating Hours
@@ -358,8 +361,9 @@ class DisplayProfile extends Base
         if ($versionId !== null) {
             try {
                 $playerVersions[] = $this->playerVersionFactory->getById($versionId);
-            } catch (NotFoundException $e) {
-                $this->getLog()->debug('Unknown versionId set on Display Profile. ' . $displayProfile->displayProfileId);
+            } catch (NotFoundException) {
+                $this->getLog()->debug('Unknown versionId set on Display Profile. '
+                    . $displayProfile->displayProfileId);
             }
         }
 
@@ -456,12 +460,14 @@ class DisplayProfile extends Base
         $displayProfile->name = $parsedParams->getString('name');
         $displayProfile->isDefault = $parsedParams->getCheckbox('isDefault');
 
+        // Track changes to versionMediaId
+        $originalPlayerVersionId = $displayProfile->getSetting('playerVersionId');
+
         // Different fields for each client type
         $this->editConfigFields($displayProfile, $parsedParams);
 
         // Capture and update commands
         foreach ($this->commandFactory->query() as $command) {
-            /* @var \Xibo\Entity\Command $command */
             if ($parsedParams->getString('commandString_' . $command->commandId) != null) {
                 // Set and assign the command
                 $command->commandString = $parsedParams->getString('commandString_' . $command->commandId);
@@ -471,6 +477,22 @@ class DisplayProfile extends Base
                 $displayProfile->assignCommand($command);
             } else {
                 $displayProfile->unassignCommand($command);
+            }
+        }
+
+        // If we are chromeOS and the default profile, has the player version changed?
+        if ($displayProfile->type === 'chromeOS'
+            && ($displayProfile->isDefault || $displayProfile->hasPropertyChanged('isDefault'))
+            && ($originalPlayerVersionId !== $displayProfile->getSetting('playerVersionId'))
+        ) {
+            $this->getLog()->debug('edit: updating symlink to the latest chromeOS version');
+
+            // Update a symlink to the new player version.
+            try {
+                $version = $this->playerVersionFactory->getById($displayProfile->getSetting('playerVersionId'));
+                $version->setActive();
+            } catch (NotFoundException) {
+                $this->getLog()->error('edit: Player version does not exist');
             }
         }
 
