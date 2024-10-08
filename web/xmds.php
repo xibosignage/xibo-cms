@@ -190,15 +190,16 @@ if (isset($_GET['file'])) {
 
         // Issue magic packet
         $libraryLocation = $container->get('configService')->getSetting('LIBRARY_LOCATION');
-        $logger->info('HTTP GetFile request redirecting to ' . $libraryLocation . $file->path);
 
         // Issue content type header
+        $isCss = false;
         if ($file->type === 'L') {
             // Layouts are always XML
             header('Content-Type: text/xml');
         } else if ($file->fileType === 'bundle') {
             header('Content-Type: application/javascript');
-        } else if ($file->fileType === 'fontCss') {
+        } else if ($file->fileType === 'fontCss' || \Illuminate\Support\Str::endsWith($file->path, '.css')) {
+            $isCss = true;
             header('Content-Type: text/css');
         } else {
             $contentType = mime_content_type($libraryLocation . $file->path);
@@ -207,33 +208,45 @@ if (isset($_GET['file'])) {
             }
         }
 
-        // Are we a special request that needs modification before sending.
-        if ($display->isPwa() && $file->fileType === 'fontCss') {
-            // Rewrite font file for PWAs
-            $fontCss = file_get_contents($libraryLocation . $file->path);
+        // Are we a special request that needs modification before sending?
+        // For CSS, we look up the files to replace in required files using their stored path
+        if ($display->isPwa() && $isCss) {
+            $logger->debug('Rewriting CSS for PWA: ' . $file->path);
+
+            // Rewrite CSS for PWAs
+            $cssFile = file_get_contents($libraryLocation . $file->path);
             $matches = [];
-            preg_match_all('/url\(\'(.*?)\'\);/', $fontCss, $matches);
+            preg_match_all('/url\(\'?(.*?)\'?\)/', $cssFile, $matches);
             foreach ($matches[1] as $match) {
-                $url = LinkSigner::generateSignedLink(
-                    $display,
-                    $encryptionKey,
-                    null,
-                    'P',
-                    $file->realId,
-                    $file->path,
-                    'font',
-                );
-                $fontCss = str_replace(
-                    $match,
-                    $url,
-                    $fontCss,
-                );
+                // Look up the file to get the right ID/path.
+                try {
+                    $replacementFile = $requiredFileFactory->getByDisplayAndDependencyPath($displayId, $match);
+
+                    $url = LinkSigner::generateSignedLink(
+                        $display,
+                        $encryptionKey,
+                        null,
+                        'P',
+                        $replacementFile->realId,
+                        $replacementFile->path,
+                        $file->fileType === 'fontCss' ? 'font' : 'asset',
+                    );
+                    $cssFile = str_replace(
+                        $match,
+                        $url,
+                        $cssFile,
+                    );
+                } catch (Exception $exception) {
+                    $logger->error('CSS has dependency which does not exist in Required Files: ' . $match);
+                }
             }
 
-            $file->size = strlen($fontCss);
+            $file->size = strlen($cssFile);
 
-            echo $fontCss;
+            echo $cssFile;
         } else {
+            $logger->info('HTTP GetFile request redirecting to ' . $libraryLocation . $file->path);
+
             // Normal send
             if ($sendFileMode == 'Apache') {
                 // Send via Apache X-Sendfile header
