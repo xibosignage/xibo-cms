@@ -331,16 +331,19 @@ class Soap5 extends Soap4
                             }
 
                             $node = $return->createElement($command->code);
-                            $node->setAttribute('createAlertOn', $command->getCreateAlertOn());
                             $commandString = $return->createElement('commandString');
                             $commandStringCData = $return->createCDATASection($command->getCommandString());
                             $commandString->appendChild($commandStringCData);
                             $validationString = $return->createElement('validationString');
                             $validationStringCData = $return->createCDATASection($command->getValidationString());
                             $validationString->appendChild($validationStringCData);
+                            $alertOnString = $return->createElement('createAlertOn');
+                            $alertOnStringCData = $return->createCDATASection($command->getCreateAlertOn());
+                            $alertOnString->appendChild($alertOnStringCData);
 
                             $node->appendChild($commandString);
                             $node->appendChild($validationString);
+                            $node->appendChild($alertOnString);
 
                             $commandElement->appendChild($node);
                         } catch (\DOMException $DOMException) {

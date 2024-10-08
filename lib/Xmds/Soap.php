@@ -619,11 +619,11 @@ class Soap
         foreach ($layouts as $layoutId) {
             // this is recursive function, as we need to get 2nd level nesting and beyond
             $this->layoutFactory->getActionPublishedLayoutIds($layoutId, $actionLayoutIds, $processedLayoutIds);
+        }
 
-            // merge the Action layouts to our array, we need the player to download all resources on them
-            if (!empty($actionLayoutIds)) {
-                $layouts = array_unique(array_merge($layouts, $actionLayoutIds));
-            }
+        // merge the Action layouts to our array, we need the player to download all resources on them
+        if (!empty($actionLayoutIds)) {
+            $layouts = array_unique(array_merge($layouts, $actionLayoutIds));
         }
 
         // Create a comma separated list to pass into the query which gets file nodes
@@ -1329,7 +1329,7 @@ class Soap
 
                     foreach ($schedule->criteria as $scheduleCriteria) {
                         $criteriaNode = $scheduleXml->createElement('criteria');
-                        $criteriaNode->setAttribute('metric', $scheduleCriteria->metric);
+                        $criteriaNode->setAttribute('metric', $scheduleCriteria->type . '_' . $scheduleCriteria->metric);
                         $criteriaNode->setAttribute('condition', $scheduleCriteria->condition);
                         $criteriaNode->setAttribute('type', $scheduleCriteria->type);
                         $criteriaNode->textContent = $scheduleCriteria->value;

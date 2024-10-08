@@ -80,6 +80,14 @@
                             {% set title %}{% trans "Time" %}{% endset %}
                             {{ inline.time("statsToDtTime", title, "00:00", "", "stats-to-dt-time") }}
 
+                            {% set title %}{% trans "Group By" %}{% endset %}
+                            {% set options = [
+                                { id: "display", name: "Display" },
+                                { id: "displayGroup", name: "Display Group"|trans },
+                                { id: "tag", name: "Tag"|trans }
+                            ] %}
+                            {{ inline.dropdown("groupBy", "single", title, "", options, "id", "name", "") }}
+
                             {% set title %}{% trans "Display" %}{% endset %}
                             {% set attributes = [
                                 { name: "data-width", value: "200px" },
@@ -164,7 +172,7 @@
                             {{ inline.dropdown("type", "single", title, "", options, "typeid", "type") }}
 
                             {% set title %}{% trans "Tags from" %}{% endset %}
-                            {% set dg %}{% trans "Display Group" %}{% endset %}
+                            {% set dg %}{% trans "Display" %}{% endset %}
                             {% set layout %}{% trans "Layout" %}{% endset %}
                             {% set media %}{% trans "Media" %}{% endset %}
                             {% set options = [
@@ -219,6 +227,10 @@
                                         <th>{% trans "Type" %}</th>
                                         <th>{% trans "Display ID" %}</th>
                                         <th>{% trans "Display" %}</th>
+                                        <th>{% trans "Display Group ID" %}</th>
+                                        <th>{% trans "Display Group" %}</th>
+                                        <th>{% trans "Tag ID" %}</th>
+                                        <th>{% trans "Tag Name" %}</th>
                                         <th>{% trans "Campaign" %}</th>
                                         <th>{% trans "Layout ID" %}</th>
                                         <th>{% trans "Layout" %}</th>
@@ -237,6 +249,10 @@
                                     </tbody>
                                     <tfoot>
                                     <tr>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
+                                        <th></th>
                                         <th></th>
                                         <th></th>
                                         <th></th>
@@ -290,6 +306,21 @@
                     setTimeout(function() {
                         $("#applyBtn").removeClass('disabled');
                     }, 300);
+
+                    // We hide empty columns and display appropriate columns (ie ID and name)
+                    switch ($('select[name="groupBy"]').val()) {
+                        case 'displayGroup':
+                            $(this.api().columns([1, 2, 5, 6]).visible(false));
+                            $(this.api().columns([3, 4]).visible(true));
+                            break;
+                        case 'tag':
+                            $(this.api().columns([1,2, 3, 4]).visible(false));
+                            $(this.api().columns([5, 6]).visible(true));
+                            break;
+                        default:
+                            $(this.api().columns([3, 4, 5, 6]).visible(false));
+                            $(this.api().columns([1, 2]).visible(true));
+                    }
                 },
                 filter: false,
                 "order": [[1, "asc"]],
@@ -298,6 +329,10 @@
                     {"data": "type"},
                     {"data": "displayId"},
                     {"data": "display"},
+                    {"data": "displayGroupId"},
+                    {"data": "displayGroup"},
+                    {"data": "tagId"},
+                    {"data": "tagName"},
                     {"data": "parentCampaign"},
                     {"data": "layoutId"},
                     {"data": "layout"},
@@ -341,28 +376,27 @@
                     {"data": "duration"},
                     {"data": "minStart"},
                     {"data": "maxEnd"}
-
                 ],
                 footerCallback: function (row, data, start, end, display) {
                     let api = this.api();
 
                     // Total over all pages
-                    let totalNumberPlays = api.column(9).data().reduce(function (a, b) {
+                    let totalNumberPlays = api.column(13).data().reduce(function (a, b) {
                         return a + b;
                     }, 0);
-                    let totalDuration = api.column(11).data().reduce(function (a, b) {
+                    let totalDuration = api.column(15).data().reduce(function (a, b) {
                         return a + b;
                     }, 0);
-                    let totalNumberPlaysPage = api.column(9, { page: 'current'}).data().reduce(function (a, b) {
+                    let totalNumberPlaysPage = api.column(13, { page: 'current'}).data().reduce(function (a, b) {
                         return a + b;
                     }, 0);
-                    let totalDurationPage = api.column(11, { page: 'current'}).data().reduce(function (a, b) {
+                    let totalDurationPage = api.column(15, { page: 'current'}).data().reduce(function (a, b) {
                         return a + b;
                     }, 0);
 
                     // Update footer
-                    $(api.column(9).footer()).html(totalNumberPlaysPage + ' (' + totalNumberPlays + ' total)');
-                    $(api.column(11).footer()).html(Math.floor(totalDurationPage) + ' (' + Math.floor(totalDuration) + ' total)');
+                    $(api.column(13).footer()).html(totalNumberPlaysPage + ' (' + totalNumberPlays + ' total)');
+                    $(api.column(15).footer()).html(Math.floor(totalDurationPage) + ' (' + Math.floor(totalDuration) + ' total)');
                 },
             });
 
@@ -442,16 +476,38 @@
                 getData($dataTable.data().url);
             });
 
-            // If we select a displayId we hide the display group filter
+            // If we select a displayId, we hide the display group filter
             $('#displayId').off('change').change( function() {
-
                 let displayId = $('#displayId').val();
+
                 if (displayId) {
                     $('select[name="displayGroupId[]"] option').remove();
                     $('select[name="displayGroupId[]"]').next(".select2-container").parent().hide();
+                    $('select[name="groupBy[]"] option').remove();
+                    $('select[name="groupBy"]').parent().hide();
                 } else {
                     $('#displayId option').remove();
                     $('select[name="displayGroupId[]"]').next(".select2-container").parent().show();
+                    $('select[name="groupBy"]').parent().show();
+                }
+            });
+
+            // If we select a groupBy data, we hide the display filter
+            $("select[name='groupBy']").on('change', function() {
+                let optionSelected = $(this).find("option:selected").val();
+
+                if (optionSelected === 'displayGroup') {
+                    $('select[name="groupBy"]').parent().show();
+                    $('select[name="displayGroupId[]"]').next(".select2-container").parent().show();
+                } else {
+                    $('select[name="displayGroupId[]"] option').remove();
+                    $('select[name="displayGroupId[]"]').next(".select2-container").parent().hide();
+                }
+
+                if (optionSelected === 'display') {
+                    $("select[name='displayId']").parent().show();
+                } else {
+                    $("select[name='displayId']").parent().hide();
                 }
             });
 

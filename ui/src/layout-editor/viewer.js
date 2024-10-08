@@ -191,10 +191,10 @@ Viewer.prototype.getLayoutOrientation = function(width, height) {
 /**
  * Render viewer
  * @param {object} forceReload - Force reload
- * @param {object} target - Reload only target
+ * @param {object} targets - Reload only targets
 */
-Viewer.prototype.render = function(forceReload = false, target = {}) {
-  const renderSingleObject = (!$.isEmptyObject(target));
+Viewer.prototype.render = function(forceReload = false, targets = {}) {
+  const renderOnlyTargets = (!$.isEmptyObject(targets));
 
   // Check background colour and set theme
   const hsvColor =
@@ -231,64 +231,89 @@ Viewer.prototype.render = function(forceReload = false, target = {}) {
   // Set reload to false
   this.reload = false;
 
-  if (renderSingleObject) {
+  if (renderOnlyTargets) {
+    const self = this;
+
     // Initialise moveable
     this.initMoveable();
 
-    const self = this;
-    const createCanvas = function() {
+    // Render targets
+    $(targets).each((_idx, target) => {
+      const $target = $(target);
+      const targetType = $target.data('type');
+      const createCanvas = function() {
+        if (
+          lD.layout.canvas &&
+          self.DOMObject.find('.designer-region-canvas').length === 0
+        ) {
+          self.DOMObject.find('.layout-live-preview').append(
+            `<div id="${lD.layout.canvas.id}" 
+              class="designer-region-canvas"
+              style="
+                position:absolute;
+                z-index: ${lD.layout.canvas.zIndex};">
+              </div>`,
+          );
+        }
+      };
+
+      // Render single target
       if (
-        lD.layout.canvas &&
-        self.DOMObject.find('.designer-region-canvas').length === 0
+        targetType === 'widget' ||
+        targetType === 'region'
       ) {
-        self.DOMObject.find('.layout-live-preview').append(
-          `<div id="${lD.layout.canvas.id}" 
-            class="designer-region-canvas"
-            style="
-              position:absolute;
-              z-index: ${lD.layout.canvas.zIndex};">
-            </div>`,
+        const regionId = (targetType === 'region') ?
+          $target.attr('id') :
+          $target.data('widgetRegion');
+        const regionToRender = lD.layout.regions[regionId];
+
+        // Add region template to viewer
+        this.DOMObject.find('#regions').append(viewerRegionTemplate(
+          regionToRender,
+        ));
+
+        // If it's a zone, just update the region dimensions
+        if (
+          targetType === 'region' &&
+          $target.data('subType') === 'zone'
+        ) {
+          this.updateRegion(regionToRender);
+        } else {
+          this.renderRegion(regionToRender);
+        }
+      } else if (targetType === 'element') {
+        createCanvas();
+
+        // Get element
+        const element = lD.getObjectByTypeAndId(
+          'element',
+          $target.attr('id'),
+          'widget_' + $target.data('regionId') + '_' + $target.data('widgetId'),
         );
+
+        // Render element
+        this.renderElement(element, lD.layout.canvas);
+      } else if (targetType === 'element-group') {
+        createCanvas();
+
+        // Get element group
+        const elementGroup = lD.getObjectByTypeAndId(
+          'element-group',
+          $target.attr('id'),
+          'widget_' + $target.data('regionId') + '_' + $target.data('widgetId'),
+        );
+
+        // Render all elements from group
+        Object.values(elementGroup.elements).forEach((element) => {
+          self.renderElement(element, lD.layout.canvas);
+        });
       }
-    };
 
-    // Render single object
-    if (
-      target.type === 'widget' ||
-      target.type === 'region'
-    ) {
-      const regionId = (target.type === 'region') ?
-        target.id :
-        target.regionId;
-      const regionToRender = lD.layout.regions[regionId];
-
-      // Add region template to viewer
-      this.DOMObject.find('#regions').append(viewerRegionTemplate(
-        regionToRender,
-      ));
-
-      // If it's a zone, just update the region dimensions
-      if (
-        target.type === 'region' &&
-        target.subType === 'zone'
-      ) {
-        this.updateRegion(regionToRender);
-      } else {
-        this.renderRegion(regionToRender);
+      // Delete temporary target
+      if ($target.hasClass('viewer-temporary-object')) {
+        $target.remove();
       }
-    } else if (target.type === 'element') {
-      createCanvas();
-
-      // Render element
-      this.renderElement(target, lD.layout.canvas);
-    } else if (target.type === 'element-group') {
-      createCanvas();
-
-      // Render all elements from group
-      Object.values(target.elements).forEach((element) => {
-        self.renderElement(element, lD.layout.canvas);
-      });
-    }
+    });
   } else {
     // Render full layout
     const $viewerContainer = this.DOMObject;
@@ -611,8 +636,13 @@ Viewer.prototype.handleInteractions = function() {
       tolerance: 'pointer',
       accept: (draggable) => {
         return (
-          $(draggable).data('type') === 'media' &&
-          $(draggable).data('subType') === 'image'
+          (
+            $(draggable).data('type') === 'media' &&
+            $(draggable).data('subType') === 'image'
+          ) || (
+            $(draggable).data('type') === 'widget' &&
+            $(draggable).data('subType') === 'image'
+          )
         );
       },
       drop: _.debounce(function(event, ui) {
@@ -3367,8 +3397,12 @@ Viewer.prototype.selectObject = function(
 Viewer.prototype.updateMoveable = function(
   updateTarget = false,
 ) {
-  // On read only mode, don't update moveable
-  if (this.parent.readOnlyMode) {
+  // On read only mode, or moveable is not defined
+  //  don't update
+  if (
+    this.moveable === null ||
+    this.parent.readOnlyMode
+  ) {
     return;
   }
 
@@ -4209,7 +4243,7 @@ Viewer.prototype.getMultipleSelected = function() {
         lD.getObjectByTypeAndId(objData.type, objId);
 
       // Can't be deleted, mark flag as false and break loop
-      if (auxObj.isDeletable === false) {
+      if (auxObj === undefined || auxObj.isDeletable === false) {
         canBeDeleted = false;
         return false;
       }

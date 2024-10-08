@@ -1235,6 +1235,15 @@ var processScheduleFormElements = function(el) {
                 $startTime.find('small.text-muted').html($startTime.closest('form').data().daypartMessage);
             }
 
+            // if dayparting is set to always, disable start time and end time
+            if (meta.isAlways === 0) {
+                $startTime.find('input[name=fromDt]').prop('disabled', false);
+                $endTime.find('input[name=toDt]').prop('disabled', false);
+            } else {
+                $startTime.find('input[name=fromDt]').prop('disabled', true);
+                $endTime.find('input[name=toDt]').prop('disabled', true);
+            }
+
             break;
 
         case 'campaignId':

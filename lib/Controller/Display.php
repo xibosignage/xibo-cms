@@ -2167,6 +2167,9 @@ class Display extends Base
             $displayGroup->save(['validate' => false]);
         }
 
+        // Queue display to check for cache updates
+        $display->notify();
+
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
