@@ -256,21 +256,21 @@ class PlayerVersion implements \JsonSerializable
                     $this->config->getThemeConfig('theme_title'),
                     $manifest
                 );
+                $manifest = Str::replace(
+                    'https://xibosignage.com/chromeos',
+                    $this->config->getThemeConfig('theme_url'),
+                    $manifest
+                );
+                $manifest = Str::replace(
+                    'xibo-chromeos',
+                    $this->config->getThemeConfig('app_name') . '-chromeos',
+                    $manifest
+                );
             }
 
             // Update asset URLs
-            $logoUrl = $this->config->uri('img/xibologo.png');
-
-            $manifest = Str::replace(
-                [
-                    'assets/icons/512x512.png',
-                    'assets/icons/192x192.png',
-                    'assets/icons/48x48.png',
-                    'assets/icons/24x24.png',
-                ],
-                $logoUrl,
-                $manifest
-            );
+            $manifest = Str::replace('assets/icons/512x512.png', $this->config->uri('img/512x512.png'), $manifest);
+            $manifest = Str::replace('assets/icons/192x192.png', $this->config->uri('img/192x192.png'), $manifest);
 
             file_put_contents($folder . '/manifest.json', $manifest);
         }
