@@ -44,12 +44,9 @@
         {# Import libraries copied to dist #}
         <script src="{{ theme.rootUri() }}dist/vendor/ckeditor/build/ckeditor.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
         {# Import XIBO js files #}
+        <script src="{{ theme.rootUri() }}dist/datatables.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
         <script src="{{ theme.rootUri() }}dist/xibo.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
-        <script src="{{ theme.rootUri() }}dist/core/xibo-cms.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
-        <script src="{{ theme.rootUri() }}dist/core/xibo-forms.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
         <script src="{{ theme.rootUri() }}dist/core/xibo-calendar.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
-        <script src="{{ theme.rootUri() }}dist/core/xibo-datasets.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
-
         {# Dates #}
         {% if settings.CALENDAR_TYPE == "Jalali" %}
             <script src="{{ theme.rootUri() }}dist/vendor/calendar/js/calendar-jalali.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
@@ -84,6 +81,7 @@
             translations.success = "{{ "Success"|trans }}";
             translations.failure = "{{ "Failure"|trans }}";
             translations.enterText = "{{ "Enter text..."|trans }}";
+            translations.rowMenu = "{{ "Row Menu"|trans }}";
             translations.noDataMessage = "{{ "No Data returned from the source"|trans }}";
             translations.statusPending = "{{ "Status Pending"|trans }}";
             translations.duplicate = "{{ "Duplicate"|trans }}";
@@ -115,7 +113,172 @@
             translations.defaultSorting = "{{ "Default Sorting"|trans }}";
             translations.unlimited = "{{ "Unlimited"|trans }}";
             translations.imagePixelSizeTooLarge = "{{ "Warning : Image is too large and will not be displayed on the Players. Please check the allowed Resize Limit in Administration -> Settings"|trans }}"
+            translations.schedule = {
+                criteriaFields: {
+                    custom: "{{ "Custom"|trans }}",
+                    isSet: "{{ "Is set"|trans }}",
+                    lessThan: "{{ "Less than"|trans }}",
+                    lessThanOrEqualTo: "{{ "Less than or equal to"|trans }}",
+                    equalTo: "{{ "Equal to"|trans }}",
+                    notEqualTo: "{{ "Not equal to"|trans }}",
+                    greaterThanOrEqualTo: "{{ "Greater than or equal to"|trans }}",
+                    greaterThan: "{{ "Greater than"|trans }}",
+                    contains: "{{ "Contains"|trans }}",
+                    notContains: "{{ "Not contains"|trans }}",
+                },
+                fullscreen: {
+                    header: {
+                        media: "{{ "Select Media"|trans }}",
+                        playlist: "{{ "Select Playlist"|trans }}",
+                    },
+                    mediaInput: {
+                        title: "{{ "Media"|trans }}",
+                        helpText: "{{ "Select a Media file from the Library to use. The selected file will be shown full screen for this event."|trans }}",
+                    },
+                    playlistInput: {
+                        title: "{{ "Playlist"|trans }}",
+                        helpText: "{{ "Select a Playlist to use. The selected playlist will be shown full screen for this event."|trans }}",
+                    },
+                    resolutionInput: {
+                        title: "{{ "Resolution"|trans }}",
+                        helpText: "{{ "Optionally select a Resolution to use for the selected Media. Leave blank to match with an existing Resolution closest in size to the selected media."|trans }}",
+                        mediaHelp: "{{ "Optionally select a Resolution to use for the selected Media. Leave blank to match with an existing Resolution closest in size to the selected media."|trans }}",
+                        playlistHelp: "{{ "Optionally select a Resolution to use for the selected Playlist. Leave blank to default to a 1080p Resolution."|trans }}",
+                    },
+                    layoutDuration: {
+                        title: "{{ "Duration in loop"|trans }}",
+                        helpText: "{{ "Set how long this item should be shown each time it appears in the schedule. Leave blank to use the Media Duration set in the Library."|trans }}",
+                    },
+                    backgroundColor: {
+                        title: "{{ "Background Colour"|trans }}",
+                        helpText: "{{ "Optionally set a colour to use as a background for if the item selected does not fill the entire screen."|trans }}",
+                    },
+                    saveForm: "{{ "Save"|trans }}",
+                },
+                reminder: {
+                    type: {
+                        minute: "{{ "Minute"|trans }}",
+                        hour: "{{ "Hour"|trans }}",
+                        day: "{{ "Day"|trans }}",
+                        week: "{{ "Week"|trans }}",
+                        month: "{{ "Month"|trans }}",
+                    },
+                    option: {
+                        beforeScheduleStarts: "{{ "Before schedule starts"|trans }}",
+                        afterScheduleStarts: "{{ "After schedule starts"|trans }}",
+                        beforeScheduleEnds: "{{ "Before schedule ends"|trans }}",
+                        afterScheduleEnds: "{{ "After schedule ends"|trans }}",
+                    },
+                    notifyByEmail: "{{ "Notify by email?"|trans }}",
+                },
+                syncEventSelector: {
+                    lead: "{{ "Lead"|trans }}",
+                    mirror: "{{ "Mirror"|trans }}",
+                    setOnAllDisplays: "{{ "Set The same Layout on all displays?"|trans }}",
+                },
+                calendar: {
+                    campaigns: "{{ "Campaigns"|trans }}",
+                    id: "{{ "ID"|trans }}",
+                    name: "{{ "Name"|trans }}",
+                    cyclePlayback: "{{ "Cycle Playback?"|trans }}",
+                    displayGroups: "{{ "Display Groups"|trans }}",
+                    layoutName: "{{ "Layout Name"|trans }}",
+                    status: "{{ "Status"|trans }}",
+                    fromDate: "{{ "From Date"|trans }}",
+                    toDate: "{{ "To Date"|trans }}",
+                    layoutDuration: "{{ "Layout Duration"|trans }}",
+                    shareOfVoice: "{{ "Share of Voice"|trans }}",
+                    displayOrder: "{{ "Display Order"|trans }}",
+                    priority: "{{ "Priority"|trans }}",
+                    visible: "{{ "Visible"|trans }}",
+                    layouts: "{{ "Layouts"|trans }}",
+                    overlayLayouts: "{{ "Overlay Layouts"|trans }}",
+                    interruptLayouts: "{{ "Interrupt Layouts"|trans }}",
+                    campaignLayouts: "{{ "Campaign Layouts"|trans }}",
+                    fullscreenVideoImage: "{{ "Full Screen Video/Image"|trans }}",
+                    fullscreenPlaylist: "{{ "Full Screen Playlist"|trans }}",
+                    synchronised: "{{ "Synchronised"|trans }}",
+                    numberLayouts: "{{ "Number of Layouts"|trans }}",
+                    layoutWontBeShown: "{{ "This layout will not be shown as there are higher priority layouts scheduled at this time"|trans }}",
+                    always: "{{ "Always"|trans }}",
+                    displayNotSelected: "{{ "Display not selected!"|trans }}",
+                    showAllOptionsDNW: "{{ "Show All option does not work for this filter, one or more specific Display/Display Group need to be selected!"|trans }}",
+                    noEventsForTheChosen: "{{ "No events for the chosen Display/Display Group on the selected date!"|trans }}",
+                    dataRequestFailed: "{{ "Data request failed!"|trans }}",
+                    schedule: "{{ "Schedule"|trans }}",
+                    numberOfEvents: "{{ "Number of events"|trans }}",
+                },
+            };
+            translations.commandInput = {
+                showCommandPreview: "{{ "Show command preview!"|trans }}",
+                invalidCommand: "{{ "Invalid command!"|trans }}",
+                off: "{{ "Off"|trans }}",
+                red: "{{ "Red"|trans }}",
+                green: "{{ "Green"|trans }}",
+                blue: "{{ "Blue"|trans }}",
+                white: "{{ "White"|trans }}",
+                name: "{{ "Name"|trans }}",
+                key: "{{ "Key"|trans }}",
+                value: "{{ "Value"|trans }}",
+                type: "{{ "Type"|trans }}",
+                intent: "{{ "Intent"|trans }}",
+                extra: "{{ "Extra"|trans }}",
+                deviceNameCOM: "{{ "Device Name/COM"|trans }}",
+                baudRate: "{{ "Baud Rate"|trans }}",
+                dateBits: "{{ "Data Bits"|trans }}",
+                parity: "{{ "Parity"|trans }}",
+                stopBits: "{{ "Stop Bits"|trans }}",
+                handshake: "{{ "Handshake"|trans }}",
+                hexSupport: "{{ "HexSupport"|trans }}",
+                command: "{{ "Command"|trans }}",
+                url: "{{ "URL"|trans }}",
+                queryParamBuilder: "{{ "Query params builder"|trans }}",
+                queryBuilder: "{{ "Query builder"|trans }}",
+                queryParams: "{{ "Query params"|trans }}",
+                requestMethod: "{{ "Request method"|trans }}",
+                showRawHeaders: "{{ "Show raw headers"|trans }}",
+                headers: "{{ "Headers"|trans }}",
+                contentType: "{{ "Content Type"|trans }}",
+                showRawBodyData: "{{ "Show raw body data"|trans }}",
+                showRawData: "{{ "Show raw data"|trans }}",
+                bodyData: "{{ "Body data"|trans }}",
+            };
+            translations.multiSelectTagEditForm = {
+                newTags: "{{ "New tags"|trans }}",
+                newTagsHelp: "{{ "A comma separated list of tags to add to the selected elements."|trans }}",
+                tagValue: "{{ "Tag value"|trans }}",
+                tagValueHelp: "{{ "Provide an optional Value for this Tag. If no Value is required, this field can be left blank."|trans }}",
+                tagValueRequired: "{{ "This tag requires a set value, please select one from the Tag value dropdown or provide Tag value in the dedicated field."|trans }}",
+                existingTags: "{{ "Existing tags"|trans }}",
+                existingTagsHelp: "{{ "Remove tags from the list to remove them from elements that contain them."|trans }}",
+            };
+            translations.clearFilters = "{{ "Clear Filters"|trans }}";
+            translations.folderTree = {
+                selectFolder: "{{ "Select Folder"|trans }}",
+                search: "{{ "Search"|trans }}",
+                noFolderMatch: "{{ "No Folders matching the search term"|trans }}",
+                done: "{{ "Done"|trans }}",
+            };
+            translations.autoSubmitField = {
+                label: "{{ "Automatically submit this form?"|trans }}",
+                helpText: "{{ "When enabled, this form will automatically submit in future. Reset this in your User Profile."|trans }}",
+            };
+            translations.miniPlayer = {
+                play: "{{ "Play Preview"|trans }}",
+                close: "{{ "Close Preview"|trans }}",
+                changeSize: "{{ "Change window size"|trans }}",
+                newWindow: "{{ "Preview in new window"|trans }}",
+            };
             {% endautoescape %}
+
+            var fullscreenSchedule = {
+                urlForLibrarySearch: "{{ url_for("library.search") }}?fullScreenScheduleCheck=true&types[]=image&types[]=video",
+                urlForPlaylistSearch: "{{ url_for("playlist.search") }}?fullScreenScheduleCheck=true",
+                urlForResolutionSearch: "{{ url_for("resolution.search") }}",
+                urlForLayoutAddFullscreenSchedule: "{{ url_for("layout.add.full.screen.schedule") }}",
+            };
+
+            var urlForLayoutSearch = "{{ url_for("layout.search") }}";
 
             var calendarType = "{{ settings.CALENDAR_TYPE }}";
             var language = "{{ translate.jsLocale }}";

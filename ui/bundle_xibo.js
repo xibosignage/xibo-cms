@@ -27,3 +27,6 @@ require('./src/core/forms.js');
 // Xibo help
 require('./src/core/help-pane.js');
 require('./src/style/help-pane.scss');
+
+// Xibo core
+require('./src/core/xibo-cms.js');

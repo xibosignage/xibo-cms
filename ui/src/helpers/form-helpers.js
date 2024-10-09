@@ -1,5 +1,3 @@
-/* eslint-disable no-extend-native */
-/* eslint-disable new-cap */
 /* eslint-disable no-invalid-this */
 // Include templates
 const templates = {
@@ -1465,7 +1463,7 @@ const formHelpers = function() {
 
       // Bind to the checkboxes change event
       const target = $('#' + e.target.id);
-      target.find('input[type=checkbox]').change(function() {
+      target.find('input[type=checkbox]').on('change', function() {
         // Update our global permissions data with this
         const groupId = $(this).data().groupId;
         const permission = $(this).data().permission;
@@ -1585,7 +1583,7 @@ const formHelpers = function() {
 
                 extrabutton.attr('id', index);
 
-                extrabutton.click(function(e) {
+                extrabutton.on('click', function(e) {
                   e.preventDefault();
 
                   self.widgetFormEditAction(dialog,
@@ -1754,6 +1752,7 @@ const formHelpers = function() {
               $newButton.trigger('copied', [editorsTrans.couldNotCopy]);
             }
           } catch (err) {
+            console.log(err);
             $newButton.trigger('copied', [editorsTrans.couldNotCopy]);
           }
 
@@ -2338,6 +2337,7 @@ const formHelpers = function() {
   * @return {string} - Processed data string
   */
   this.revertLibraryReferences = function(data) {
+    // eslint-disable-next-line no-extend-native
     String.prototype.replaceAll = function(search, replacement) {
       const target = this;
       return target.split(search).join(replacement);
@@ -2352,8 +2352,7 @@ const formHelpers = function() {
   };
 
   this.setupPhpDateFormatPopover = function($dialog) {
-    const phpDateFormatTable =
-      Handlebars.compile($('#php-date-format-table').html());
+    const phpDateFormatTable = templates['php-date-format-table'];
     $dialog.find('form .date-format-table').popover({
       content: phpDateFormatTable,
       html: true,

@@ -1,0 +1,97 @@
+<table class="table agenda-table agenda-table-layouts" data-type="layouts" style="width: 100%;">
+    <thead>
+        <tr class="table-title">
+            <% if (layouts.type == 4) { %>
+            <th colspan="11" class="pr-2">
+            <% } else { %>
+            <th colspan="10" class="pr-2">
+            <% } %>
+                <% if (layouts.type == 1) { %>
+                    <span>{{trans.layouts}}</span>
+                <% } else if (layouts.type == 3) { %>
+                    <span>{{trans.overlayLayouts}}</span>
+                <% } else if (layouts.type == 4) { %>
+                    <span>{{trans.interruptLayouts}}</span>
+                <% } else if (layouts.type == 5) { %>
+                    <span>{{trans.campaignLayouts}}</span>
+                <% } else if (layouts.type == 7) { %>
+                    <span>{{trans.fullscreenVideoImage}}</span>
+                <% } else if (layouts.type == 8) { %>
+                    <span>{{trans.fullscreenPlaylist}}</span>
+                <% } else if (layouts.type == 9) { %>
+                    <span>{{trans.synchronised}}</span>
+                <% } %>
+                
+                <span class="pull-right badge badge-light" title="{{trans.numberLayouts}}" data-toggle="tooltip" data-placement="top">
+                    <%= layouts.length %>
+                </span>
+            </th>
+        </tr>
+        <tr>
+        <th></th>
+        <th>{{trans.id}}</th>
+        <th>{{trans.layoutName}}</th>
+        <th>{{trans.status}}</th>
+        <th>{{trans.fromDate}}</th>
+        <th>{{trans.toDate}}</th>
+        <th>{{trans.layoutDuration}}</th>
+        <% if (layouts.type == 4) { %>
+            <th>{{trans.shareOfVoice}}</th>
+        <% } %>
+        <th>{{trans.displayOrder}}</th>
+        <th>{{trans.priority}}</th>
+        <th>{{trans.visible}}</th>
+        </tr>
+    </thead>
+    <tbody>
+        <% _.each(layouts, function(layout){ %>
+            <tr 
+                class="<%= layout.itemClass %>"
+                data-elem-id="<%= layout.layoutId %>" 
+                data-event-id="<%= layout.eventId %>" 
+                data-toggle="tooltip"
+                <% if (layout.itemClass == 'low-priority') { %>
+                    title="{{trans.layoutWontBeShown}}"
+                <% } %> 
+            >
+                <td><span class="fa <%= layout.itemIcon %>"></span></td>
+                <td><%= layout.layoutId %></td>
+                <td><%= layout.layoutName %></td>
+                <%
+                    var icon = "";
+                    if (layout.layoutStatus == 1)
+                        icon = "fa-check";
+                    else if (layout.layoutStatus == 0)
+                        icon = "fa-times";
+                    else if (layout.layoutStatus == 3)
+                        icon = "fa-cogs";
+                    else
+                        icon = "fa-exclamation";
+                %>
+                <td><span class="fa <%= icon %>"></span></td>
+                <% if (layout.isAlways == 1) { %>
+                    <td>{{trans.always}}</td>
+                    <td><span class="fa fa-retweet"></span></td>
+                <% } else { %> 
+                    <td><%= layout.eventFromDt %></td>
+                    <td><%= layout.eventToDt %></td>
+                <% } %> 
+                
+                <td><%= layout.layoutDuration %></td>
+                <% if (layouts.type == 4) { %>
+                <td><%= layout.shareOfVoice %></td>
+                <% } %>
+                <td><%= layout.layoutDisplayOrder %></td>
+                <td><%= layout.eventPriority %></td>
+                <%
+                    var icon = "";
+                    if (layout.itemClass == 'low-priority')
+                        icon = "fa-times";
+                    else
+                        icon = "fa-check";
+                %>
+                <td><span class="fa <%= icon %>"></span></td>
+            </tr>
+        <% }); %>
+    </tbody>
+</table>

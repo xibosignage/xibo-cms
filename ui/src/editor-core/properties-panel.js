@@ -19,7 +19,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* eslint-disable new-cap */
 // PROPERTIES PANEL Module
 
 const loadingTemplate = require('../templates/loading.hbs');
@@ -1930,7 +1929,7 @@ PropertiesPanel.prototype.initFields = function(
   if (!readOnlyModeOn) {
     // Handle buttons
     self.DOMObject.find('.properties-panel-btn:not(.inline-btn)')
-      .off().click(function(e) {
+      .off().on('click', function(e) {
         if ($(e.target).data('action')) {
           self[$(e.target).data('action')](
             target,
@@ -2466,7 +2465,7 @@ PropertiesPanel.prototype.addActionToContainer = function(
   );
 
   // Handle buttons
-  $newAction.find('.action-btn').click(function(e) {
+  $newAction.find('.action-btn').on('click', function(e) {
     const btnAction = $(e.currentTarget).data('action');
 
     if (btnAction == 'delete') {
@@ -2624,7 +2623,7 @@ PropertiesPanel.prototype.openEditAction = function(action) {
     },
   );
 
-  // Run XiboInitialise on form
+  // Run xiboInitialise on form
   XiboInitialise('.action-element-form');
 
   return true;

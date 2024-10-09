@@ -71,7 +71,7 @@
 
 {% block javaScript %}
     <script src="{{ theme.rootUri() }}dist/vendor/html5preloader/html5Preloader.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
-    <script src="{{ theme.rootUri() }}dist/preview/html-preview.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+    <script src="{{ theme.rootUri() }}dist/legacyPreview.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
     <script type="text/javascript" nonce="{{ cspNonce }}">
         var previewTranslations = {};
         // Translations we want always available
@@ -96,9 +96,4 @@
           });
         }(jQuery));
     </script>
-{% endblock %}
-
-{% block headContent %}
-        <link rel="stylesheet" type="text/css" href="{{ theme.rootUri() }}dist/preview/html-preview.css" />
-        <link rel="stylesheet" type="text/css" href="{{ theme.uri("css/html-preview.css") }}" />
 {% endblock %}

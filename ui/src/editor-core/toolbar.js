@@ -19,7 +19,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* eslint-disable new-cap */
 // Load templates
 const ToolbarTemplate = require('../templates/toolbar.hbs');
 const ToolbarCardMediaTemplate = require('../templates/toolbar-card-media.hbs');
@@ -1118,7 +1117,7 @@ Toolbar.prototype.render = function({savePrefs = true} = {}) {
         const toolbar = self;
         const index = i;
 
-        this.DOMObject.find('#btn-menu-' + index).click(function() {
+        this.DOMObject.find('#btn-menu-' + index).on('click', function() {
           toolbar.openMenu(index);
         });
       }
@@ -2287,7 +2286,7 @@ Toolbar.prototype.mediaContentPopulateTable = function(menu) {
     dataTableDraw(e, settings);
 
     // Clicky on the +spans
-    self.DOMObject.find('.assignItem').click(function(ev) {
+    self.DOMObject.find('.assignItem').on('click', function(ev) {
       const $target = $(ev.currentTarget);
       // Get the row that this is in.
       const data = mediaTable.row($target.closest('tr')).data();
@@ -3220,7 +3219,7 @@ Toolbar.prototype.handleCardsBehaviour = function() {
       '#media-content-' +
       this.openedMenu +
       ' .select-button:not(.select-upload)').off('click')
-      .click(function(e) {
+      .on('click', function(e) {
         // Stop propagation
         e.stopPropagation();
 
@@ -3247,7 +3246,7 @@ Toolbar.prototype.handleCardsBehaviour = function() {
       '#media-content-' +
       this.openedMenu +
       ' .preview-button',
-    ).off('click').click(function(e) {
+    ).off('click').on('click', function(e) {
       // Stop propagation
       e.stopPropagation();
 

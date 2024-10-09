@@ -143,9 +143,9 @@ class Preview extends Base
         $params = $this->getSanitizer($request->getParams());
         $isMap = $params->getCheckbox('map');
         if ($isMap) {
-            $bundle = file_get_contents(PROJECT_ROOT . '/modules/bundle.min.js.map');
+            $bundle = file_get_contents(PROJECT_ROOT . '/modules/player.bundle.min.js.map');
         } else {
-            $bundle = file_get_contents(PROJECT_ROOT . '/modules/bundle.min.js');
+            $bundle = file_get_contents(PROJECT_ROOT . '/modules/player.bundle.min.js');
         }
 
         $response->getBody()->write($bundle);
