@@ -1321,9 +1321,9 @@ function XiboInitialise(scope, options) {
 
                     if (!response.data[0]?.hasFullScreenLayout) {
                         if (eventTypeId == 7) {
-                            $form.find('#fullScreenControl_media').click();
+                            $form.find('#fullScreenControl_media').trigger('autoOpen');
                         } else if (eventTypeId == 8) {
-                            $form.find('#fullScreenControl_playlist').click();
+                            $form.find('#fullScreenControl_playlist').trigger('autoOpen');
                         }
                     }
                 }, (xhr) => {
@@ -1332,15 +1332,17 @@ function XiboInitialise(scope, options) {
         }
     })
 
-    $(scope + ' .full-screen-layout-form').click(function() {
+    $(scope + ' .full-screen-layout-form').on('click autoOpen', function(ev) {
         if ($('#full-screen-schedule-modal').length != 0) {
             $('#full-screen-schedule-modal').remove();
         }
 
-        let eventTypeId = $(this).closest('form').find('#eventTypeId').val()
-        let mediaId = $(this).closest('form').find('#fullScreen-mediaId').val();
-        let playlistId = $(this).closest('form').find('#fullScreen-playlistId').val();
-        let readOnlySelect = $(this).data('readonly');
+        let $target = $(ev.currentTarget);
+        let $mainModal = $target.parents(scope);
+        let eventTypeId = $target.closest('form').find('#eventTypeId').val()
+        let mediaId = $target.closest('form').find('#fullScreen-mediaId').val();
+        let playlistId = $target.closest('form').find('#fullScreen-playlistId').val();
+        let readOnlySelect = $target.data('readonly');
 
         if ($('#full-screen-schedule-modal').length === 0) {
             // compile full screen schedule modal template
@@ -1353,6 +1355,14 @@ function XiboInitialise(scope, options) {
 
             $('body').append(fullScreenSchedule(config));
             const $modal = $('#full-screen-schedule-modal');
+
+            // If form was opened automatically
+            // close background modal if we close this one
+            if(ev.type === 'autoOpen') {
+                $modal.find('button.close').on('click', function() {
+                    $mainModal.modal('hide');
+                });
+            }
 
             $modal
               .on('show.bs.modal', function() {
@@ -1434,6 +1444,13 @@ function XiboInitialise(scope, options) {
 
                   $(this).data('bs.modal', null);
               });
+
+            // Open modal programmatically
+            $modal.modal({
+                backdrop: 'static',
+                keyboard: false,
+                show: true,
+            });
         }
     })
 
