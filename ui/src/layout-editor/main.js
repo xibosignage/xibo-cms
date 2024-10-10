@@ -2245,7 +2245,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
 
               // Add element to the new widget
               addToWidget(newWidget);
-            });
+            }).catch(itemAdded);
           };
 
           // Get a target widget
