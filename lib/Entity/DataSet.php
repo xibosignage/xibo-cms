@@ -887,6 +887,11 @@ class DataSet implements \JsonSerializable
             if ($this->rowLimit > $this->config->getSetting('DATASET_HARD_ROW_LIMIT')) {
                 throw new InvalidArgumentException(__('DataSet row limit cannot be larger than the CMS dataSet row limit'));
             }
+
+            // Check if the length is within the current URI character limit
+            if (!v::stringType()->length(null, 250)->validate($this->uri)) {
+                throw new InvalidArgumentException(__('URI can not be longer than 250 characters'), 'uri');
+            }
         }
 
         try {

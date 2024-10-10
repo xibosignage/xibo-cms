@@ -1705,6 +1705,11 @@ class DataSet extends Base
         $dataSet->sourceId = $sanitizedParams->getInt('sourceId');
         $dataSet->ignoreFirstRow = $sanitizedParams->getCheckbox('ignoreFirstRow');
 
+        // Before running the test, check if the length is within the current URI character limit
+        if (strlen($dataSet->uri) > 250) {
+            throw new InvalidArgumentException(__('URI can not be longer than 250 characters'), 'uri');
+        }
+
         // Set this DataSet as active.
         $dataSet->setActive();
 
