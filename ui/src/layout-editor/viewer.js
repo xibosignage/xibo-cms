@@ -19,7 +19,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* eslint-disable new-cap */
 // VIEWER Module
 
 // Load templates
@@ -992,20 +991,20 @@ Viewer.prototype.handleInteractions = function() {
     });
 
   // Handle fullscreen button
-  $viewerContainer.siblings('#fullscreenBtn').off('click').click(function() {
+  $viewerContainer.siblings('#fullscreenBtn').off('click').on('click', function() {
     this.reload = true;
     this.toggleFullscreen();
   }.bind(this));
 
   // Handle layer manager button
   $viewerContainer.siblings('#layerManagerBtn')
-    .off('click').click(function() {
+    .off('click').on('click', function() {
       this.layerManager.setVisible();
     }.bind(this));
 
   // Handle snap buttons
   $viewerContainerParent.find('#snapToGrid')
-    .off('click').click(function() {
+    .off('click').on('click', function() {
       this.moveableOptions.snapToGrid = !this.moveableOptions.snapToGrid;
 
       // Turn off snap to element if grid is on
@@ -1021,7 +1020,7 @@ Viewer.prototype.handleInteractions = function() {
     }.bind(this));
 
   $viewerContainerParent.find('#snapToBorders')
-    .off('click').click(function() {
+    .off('click').on('click', function() {
       this.moveableOptions.snapToBorders = !this.moveableOptions.snapToBorders;
 
       // Update moveable options
@@ -1032,7 +1031,7 @@ Viewer.prototype.handleInteractions = function() {
     }.bind(this));
 
   $viewerContainerParent.find('#snapToElements')
-    .off('click').click(function() {
+    .off('click').on('click', function() {
       this.moveableOptions.snapToElements =
         !this.moveableOptions.snapToElements;
 

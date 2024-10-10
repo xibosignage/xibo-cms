@@ -1,0 +1,11 @@
+<div class="intent-extra-element">
+    <input class="form-control form-control-inline validated-element extra-name" placeholder="{{trans.name}}" value="{{ name }}">
+    <select class="form-control form-control-inline extra-type">
+        <option value="string" {{#eq type "string"}}selected="selected"{{/eq}}>string</option>
+        <option value="int" {{#eq type "int"}}selected="selected"{{/eq}}>int</option>
+        <option value="bool" {{#eq type "bool"}}selected="selected"{{/eq}}>bool</option>
+        <option value="intArray" {{#eq type "intArray"}}selected="selected"{{/eq}}>intArray</option
+    </select>
+    <input class="form-control form-control-inline validated-element extra-value" placeholder="{{trans.value}}" value="{{ value }}">
+    <button type="button" class="btn btn-sm btn-warning pull-right intent-remove-extra"><i class="fa fa-minus"></i></button>
+</div>

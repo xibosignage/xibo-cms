@@ -33,6 +33,7 @@ export default [...compat.extends('google'), {
     'linebreak-style': [0, 'error', 'windows'],
     'valid-jsdoc': 'off',
     'require-jsdoc': 'off',
+    'new-cap': 'off',
   },
 }, {
   files: ['**/*.js'],

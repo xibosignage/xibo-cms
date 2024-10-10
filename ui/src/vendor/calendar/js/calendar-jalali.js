@@ -1364,7 +1364,7 @@ if(!String.prototype.formatNum) {
 		if(this.options.templates[name]) {
 			return;
 		}
-        this.options.templates[name] = _.template($('#' + this._templatePath(name)).html());
+        this.options.templates[name] = _.template($('#' + this._templatePath(name)).text());
 	};
 
 	Calendar.prototype._update = function() {

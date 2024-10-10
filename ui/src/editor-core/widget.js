@@ -19,7 +19,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* eslint-disable new-cap */
 // WIDGET Module
 const EXPIRE_STATUS_MSG_MAP = [
   '',
@@ -261,6 +260,8 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
           try {
             options[currOption.option] = JSON.parse(currOption.value);
           } catch (e) {
+            console.warn(e);
+
             // If we can't parse the JSON, just set the value as a string
             options[currOption.option] = currOption.value;
           }

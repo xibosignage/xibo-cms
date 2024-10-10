@@ -955,15 +955,12 @@ lD.addLayout = function() {
       lD.common.hideLoadingScreen();
 
       if (response.success && response.id) {
-        // eslint-disable-next-line new-cap
         XiboRedirect(urlsForApi.layout.designer.url
           .replace(':id', response.id));
       } else {
         if (response.login) {
-          // eslint-disable-next-line new-cap
           LoginBox(response.message);
         } else {
-          // eslint-disable-next-line new-cap
           SystemMessage(response.message, false);
         }
       }
@@ -971,7 +968,6 @@ lD.addLayout = function() {
     error: function(xhr, textStatus, errorThrown) {
       lD.common.hideLoadingScreen();
 
-      // eslint-disable-next-line new-cap
       SystemMessage(xhr.responseText, false);
     },
   });
@@ -1147,7 +1143,6 @@ lD.loadFormFromAPI = function(
       }
 
       // Call Xibo Init for this form
-      // eslint-disable-next-line new-cap
       XiboInitialise('#' + dialog.attr('id'));
 
       if (apiFormCallback != null) {
@@ -2644,17 +2639,14 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
             // Deselect previous object
             lD.selectObject();
 
-            // eslint-disable-next-line new-cap
             lD.reloadData(response.data,
               {
                 refreshEditor: true,
                 resetPropertiesPanelOpenedTab: true,
               });
           } else if (response.login) {
-            // eslint-disable-next-line new-cap
             LoginBox();
           } else {
-            // eslint-disable-next-line new-cap
             SystemMessage(response.message || errorMessagesTrans.unknown);
           }
         },

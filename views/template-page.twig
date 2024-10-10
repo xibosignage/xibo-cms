@@ -221,7 +221,7 @@
         function templateFormOpen() {
             if ($('#folder-tree-form-modal').length === 0) {
                 // compile tree folder modal and append it to Form
-                var folderTreeModal = Handlebars.compile($('#folder-tree-template').html());
+                var folderTreeModal = templates['folder-tree'];
                 var treeConfig = {"container": "container-folder-form-tree", "modal": "folder-tree-form-modal"};
                 $("body").append(folderTreeModal(treeConfig));
 

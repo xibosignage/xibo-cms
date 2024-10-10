@@ -24,6 +24,8 @@ const webpack = require('webpack');
 const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
+// const BundleAnalyzerPlugin =
+// require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 const config = {
   // Add common Configurations
@@ -40,7 +42,12 @@ const mainConfig = Object.assign({}, config, {
     layoutEditor: './ui/src/layout-editor/main.js',
     playlistEditor: './ui/src/playlist-editor/main.js',
     campaignBuilder: './ui/src/campaign-builder/main.js',
+    editorCommon: './ui/bundle_editor_common.js',
     preview: './ui/bundle_preview.js',
+    legacyPreview: './ui/bundle_legacy_preview.js',
+    datatables: './ui/bundle_datatables.js',
+    monacoEditor: './ui/bundle_monaco_editor.js',
+    leaflet: './ui/bundle_leaflet.js',
   },
   output: {
     path: path.resolve(__dirname, 'web/dist'),
@@ -85,7 +92,7 @@ const mainConfig = Object.assign({}, config, {
             postcssOptions: {
               plugins: [
                 'autoprefixer',
-              ]
+              ],
             },
           },
         }, {
@@ -96,8 +103,150 @@ const mainConfig = Object.assign({}, config, {
         test: /\.(woff(2)?|ttf|eot|svg|jpg|gif|png)$/,
         type: 'asset/resource',
         generator: {
-          filename: 'assets/[hash][ext][query]'
-        }
+          filename: 'assets/[hash][ext][query]',
+        },
+      },
+      {
+        test: /\.(csv|tsv)$/,
+        use: [
+          'csv-loader',
+        ],
+      },
+      {
+        test: /\.xml$/,
+        use: [
+          'xml-loader',
+        ],
+      },
+      {
+        test: /\.hbs$/,
+        use: [{
+          loader: 'handlebars-loader',
+          options: {
+            helperDirs: path.join(__dirname, 'ui/src/helpers/handlebars'),
+            precompileOptions: {
+              knownHelpersOnly: false,
+            },
+          },
+        }],
+      },
+      {
+        test: /\.js$/,
+        exclude: /(node_modules|bower_components)/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: [
+              ['@babel/preset-env', {targets: 'defaults'}],
+            ],
+          },
+        },
+      },
+    ],
+  },
+  plugins: [
+    // new BundleAnalyzerPlugin(),
+    new CleanWebpackPlugin({
+      // To make sure it runs only on the first config
+      cleanOnceBeforeBuildPatterns: ['**/*', '!pages/**'],
+    }),
+    new CopyWebpackPlugin({
+      patterns: [
+        // Copy directory contents to {output}/
+        {
+          from: 'ui/src/core',
+          to: 'core',
+          globOptions: {
+            ignore: [
+              'forms.js',
+              'help-pane.js',
+              'xibo-cms.js',
+            ],
+          },
+        },
+        {
+          from: 'ui/src/preview',
+          to: 'preview',
+        },
+        {
+          from: 'ui/src/assets',
+          to: 'assets',
+        },
+        {
+          from: 'ui/src/vendor',
+          to: 'vendor',
+        },
+      ],
+    }),
+    new MonacoWebpackPlugin({
+      languages: ['typescript', 'javascript', 'css', 'html'],
+    }),
+  ],
+});
+
+const pageConfig = Object.assign({}, config, {
+  entry: {
+    'display-page': './ui/src/pages/display/display-page.js',
+    'schedule-page': './ui/src/pages/schedule/schedule-page.js',
+    'campaign-page': './ui/src/pages/campaign/campaing-page.js',
+  },
+  output: {
+    path: path.resolve(__dirname, 'web/dist/pages'),
+    filename: '[name].bundle.min.js',
+    libraryTarget: 'window', // Expose the library to the window object
+  },
+  target: ['web', 'es5'],
+  module: {
+    rules: [
+      {
+        test: /datatables\.net.*/,
+        use: [{
+          loader: 'imports-loader',
+          options: {
+            additionalCode: 'var define = false;',
+          },
+        }],
+      },
+      {
+        test: /\.(css)$/,
+        use: [
+          'style-loader',
+          'css-loader',
+        ],
+      },
+      {
+        test: /\.less$/,
+        use: [
+          'style-loader',
+          'css-loader',
+          'less-loader',
+        ],
+      },
+      {
+        test: /\.s[ac]ss$/i,
+        use: [{
+          loader: 'style-loader', // inject CSS to page
+        }, {
+          loader: 'css-loader', // translates CSS into CommonJS modules
+        }, {
+          loader: 'postcss-loader', // Run post css actions
+          options: {
+            postcssOptions: {
+              plugins: [
+                'autoprefixer',
+              ],
+            },
+          },
+        }, {
+          loader: 'sass-loader', // compiles Sass to CSS
+        }],
+      },
+      {
+        test: /\.(woff(2)?|ttf|eot|svg|jpg|gif|png)$/,
+        type: 'asset/resource',
+        generator: {
+          filename: 'assets/[hash][ext][query]',
+        },
       },
       {
         test: /\.(csv|tsv)$/,
@@ -139,40 +288,16 @@ const mainConfig = Object.assign({}, config, {
   },
   plugins: [
     new CleanWebpackPlugin(),
-    new CopyWebpackPlugin({
-      patterns: [
-        // Copy directory contents to {output}/
-        {
-          from: 'ui/src/core',
-          to: 'core',
-        },
-        {
-          from: 'ui/src/preview',
-          to: 'preview',
-        },
-        {
-          from: 'ui/src/assets',
-          to: 'assets',
-        },
-        {
-          from: 'ui/src/vendor',
-          to: 'vendor',
-        },
-      ],
-    }),
-    new MonacoWebpackPlugin({
-      languages: ['typescript', 'javascript', 'css', 'html'],
-    }),
   ],
 });
 
 const moduleConfig = Object.assign({}, config, {
   entry: {
-    bundle: './modules/src/player-bundle.js',
+    player: './modules/src/player_bundle.js',
   },
   output: {
     path: path.resolve(__dirname, 'modules'),
-    filename: '[name].min.js',
+    filename: '[name].bundle.min.js',
   },
   target: ['web', 'es5'],
   module: {
@@ -249,12 +374,14 @@ module.exports = (env, argv) => {
   if (argv.mode === 'development') {
     mainConfig.devtool = 'source-map';
     moduleConfig.devtool = 'source-map';
+    pageConfig.devtool = 'source-map';
   }
 
   if (argv.mode === 'production') {
     mainConfig.devtool = false;
     moduleConfig.devtool = false;
+    pageConfig.devtool = false;
   }
 
-  return [moduleConfig, mainConfig];
+  return [mainConfig, pageConfig, moduleConfig];
 };
