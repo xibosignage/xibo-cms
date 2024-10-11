@@ -227,18 +227,24 @@ module.exports = {
   /**
    * Handle minimum dimensions for the editor
    * @param {object} editor
+   * @param {boolean} forceReload
     */
-  handleEditorMinimumDimensions: function(editor) {
+  handleEditorMinimumDimensions: function(editor, forceReload) {
     const resizeThrottle = 60;
     const minWindowWidth = 1200;
     const minWindowHeight = 600;
     const toolbarLevelLimiter = 1600;
 
     const updateEditor = function() {
-      const currentWidth = $(window).width();
-      const currentHeight = $(window).height();
+      // Calculate dimensions
+      // ( using device scale to match the real dimensions )
+      const currentWidth = $(window).width() * window.devicePixelRatio;
+      const currentHeight = $(window).height() * window.devicePixelRatio;
       const editorInitalState = editor.showMinDimensionsMessage;
       const toolbarInitalState = editor.toolbar.levelLimiter;
+
+      // Check if option is disabled in local storage
+      const minSizeWarningOff = localStorage.getItem('minSizeWarningOff');
 
       // If editor container is empty object
       // stop and detach event handler
@@ -257,26 +263,48 @@ module.exports = {
       editor.toolbar.levelLimiter = (currentWidth < toolbarLevelLimiter);
 
       // If status changed, refresh editor
-      if (editorInitalState != editor.showMinDimensionsMessage) {
+      if (editorInitalState != editor.showMinDimensionsMessage || forceReload) {
         // Show the minimum dimensions message instead
-        if (editor.showMinDimensionsMessage) {
+        if (
+          editor.showMinDimensionsMessage &&
+          !minSizeWarningOff
+        ) {
           editor.editorContainer.append(`<div class="min-res-message">
             <div>
-              <strong>${editorsTrans.minDimensionsMessageHeader}</strong>
+              <h4>${editorsTrans.minDimensionsMessageHeader}</h4>
               <div>${editorsTrans.minDimensionsMessageBody}</div>
+              <button class="close-res-message-button btn btn-outline-primary">
+                  ${editorsTrans.minDimensionsMessageHide}
+              </button>
             </div>
           </div>`);
 
-          // Hide other containers
-          editor.editorContainer.find('> *:not(.min-res-message)')
-            .hide();
+          // Create overlay
+          const $customOverlay = $('.custom-overlay').clone();
+          $customOverlay.removeClass('custom-overlay')
+            .addClass('custom-overlay-clone min-res-overlay');
+          $customOverlay.appendTo(editor.editorContainer);
+
+          // Click X button to dismiss and save preference
+          editor.editorContainer.find(
+            '.min-res-message .close-res-message-button',
+          ).on('click', function() {
+            editor.minSizeWarningOff = true;
+            // Save preference to local storage
+            localStorage.setItem('minSizeWarningOff', true);
+
+            // Reload message function to close it
+            editor.common.handleEditorMinimumDimensions(editor, true);
+
+            // Reload viewer if exists
+            (editor.viewer) && editor.viewer.render();
+          });
         } else {
           // Hide message container
           editor.editorContainer.find('.min-res-message').remove();
 
-          // Re-show all other containers
-          editor.editorContainer.find('> *:not(.custom-overlay)')
-            .show();
+          // Remove overlay
+          editor.editorContainer.find('.min-res-overlay').remove();
         }
       } else if (toolbarInitalState != editor.toolbar.levelLimiter) {
         // If toolbar changed, and we didn't refresh editor, reload it
