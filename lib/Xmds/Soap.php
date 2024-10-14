@@ -3217,10 +3217,10 @@ class Soap
     {
         if ($collectionInterval <= 60) {
             $offset = $this->display->displayId % 10;
-            return $collectionInterval + ($offset < 5 ? (($offset * -1) - 5) : $offset);
+            return $collectionInterval + ($offset < 5 ? $offset * -1 : $offset - 5);
         } else {
             $offset = $this->display->displayId % 20;
-            return $collectionInterval + ($offset < 10 ? (($offset * -1) -10) : $offset);
+            return $collectionInterval + ($offset < 10 ? $offset * -1 : $offset - 10);
         }
     }
 }
