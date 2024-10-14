@@ -155,9 +155,9 @@ class Soap4 extends Soap
                         }
                     }
 
-                    // Apply an offset to the collectionInterval
+                    // Apply an offset to the collectInterval
                     // https://github.com/xibosignage/xibo/issues/3530
-                    if (strtolower($arrayItem['name']) == 'collectioninterval') {
+                    if (strtolower($arrayItem['name']) == 'collectinterval') {
                         $arrayItem['value'] = $this->collectionIntervalWithOffset($arrayItem['value']);
                     }
 
