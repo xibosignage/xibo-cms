@@ -208,6 +208,12 @@ class Soap5 extends Soap4
                         $value = $timeParts[0] . ':' . $timeParts[1];
                     }
 
+                    // Apply an offset to the collectionInterval
+                    // https://github.com/xibosignage/xibo/issues/3530
+                    if (strtolower($arrayItem['name']) == 'collectioninterval') {
+                        $value = $this->collectionIntervalWithOffset($value);
+                    }
+
                     $node = $return->createElement($settingName, $value);
 
                     if (isset($arrayItem['type'])) {

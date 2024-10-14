@@ -3205,4 +3205,17 @@ class Soap
                 : $displayEvent->eventEndByReference($this->display->displayId, $eventTypeId, $refId, $detail);
         }
     }
+
+    /**
+     * Collection Interval with offset
+     *  calculates an offset for the collection interval based on the displayId and returns it
+     *  the offset is plus or minus 10 seconds and will always be the same when given the same displayId
+     * @param int $collectionInterval
+     * @return int
+     */
+    protected function collectionIntervalWithOffset(int $collectionInterval): int
+    {
+        $offset = $this->display->displayId % 20;
+        return $collectionInterval + ($offset < 10 ? ($offset * -1) : $offset);
+    }
 }
