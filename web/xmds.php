@@ -196,7 +196,7 @@ if (isset($_GET['file'])) {
         if ($file->type === 'L') {
             // Layouts are always XML
             header('Content-Type: text/xml');
-        } else if ($file->fileType === 'bundle') {
+        } else if ($file->fileType === 'bundle' || \Illuminate\Support\Str::endsWith($file->path, '.js')) {
             header('Content-Type: application/javascript');
         } else if ($file->fileType === 'fontCss' || \Illuminate\Support\Str::endsWith($file->path, '.css')) {
             $isCss = true;
