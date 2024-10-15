@@ -237,9 +237,8 @@ module.exports = {
 
     const updateEditor = function() {
       // Calculate dimensions
-      // ( using device scale to match the real dimensions )
-      const currentWidth = $(window).width() * window.devicePixelRatio;
-      const currentHeight = $(window).height() * window.devicePixelRatio;
+      const currentWidth = $(window).width();
+      const currentHeight = $(window).height();
       const editorInitalState = editor.showMinDimensionsMessage;
       const toolbarInitalState = editor.toolbar.levelLimiter;
 
