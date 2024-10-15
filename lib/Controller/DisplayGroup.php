@@ -2511,6 +2511,7 @@ class DisplayGroup extends Base
         if (
             !$this->getUser()->checkEditable($displayGroup)
             && !$this->getUser()->featureEnabled('displaygroup.limitedView')
+            && !$this->getUser()->featureEnabled('displays.limitedView')
         ) {
             throw new AccessDeniedException();
         }
