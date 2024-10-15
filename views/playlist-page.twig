@@ -305,6 +305,7 @@
         var exactTags;
         var logicalOperator;
         var logicalOperatorName;
+        var filterFolderId;
 
         function playlistEditorFormOpen(formData) {
 
@@ -322,7 +323,7 @@
                 playlistFormPopulateMediaTable(dialog);
             }, 500));
 
-            $(dialog).find("input[name=filterMediaTag], input[name=exactTags], select[name=logicalOperator], select[name=logicalOperatorName]").on("change", function () {
+            $(dialog).find("input[name=filterMediaTag], input[name=exactTags], select[name=logicalOperator], select[name=logicalOperatorName], select[name=filterFolderId]").on("change", function () {
                 playlistFormPopulateMediaTable(dialog);
             });
 
@@ -396,8 +397,9 @@
             exactTags = $(dialog).find("input[name=exactTags]").is(':checked')
             logicalOperator = $(dialog).find("select[name=logicalOperator]").val();
             logicalOperatorName = $(dialog).find("select[name=logicalOperatorName]").val();
+            filterFolderId = $(dialog).find("select[name=filterFolderId]").val() ?? "";
 
-            if (nameFilter === "" && tagFilter === "") {
+            if (nameFilter === "" && tagFilter === "" && filterFolderId === "") {
                 if (mediaTable != null) {
                     mediaTable.destroy();
                     mediaTable = null;
@@ -427,6 +429,7 @@
                               {
                                 media: nameFilter,
                                 tags: tagFilter,
+                                folderId: filterFolderId,
                                 assignable: 1,
                                 exactTags: exactTags,
                                 logicalOperator: logicalOperator,

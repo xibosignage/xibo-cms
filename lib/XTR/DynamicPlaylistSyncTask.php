@@ -118,7 +118,7 @@ class DynamicPlaylistSyncTask implements TaskInterface
 
                 $this->log->debug('Assessing Playlist: ' . $playlist->name);
 
-                if (empty($playlist->filterMediaName) && empty($playlist->filterMediaTags)) {
+                if (empty($playlist->filterMediaName) && empty($playlist->filterMediaTags) && empty($playlist->filterFolderId)) {
                     // if this Dynamic Playlist was populated will all Media in the system
                     // before we introduced measures against it, we need to go through and unassign all Widgets from it.
                     // if it is fresh Playlist added recently, it will not have any Widgets on it with empty filters.
@@ -144,6 +144,7 @@ class DynamicPlaylistSyncTask implements TaskInterface
                     'tags' => $playlist->filterMediaTags,
                     'exactTags' => $playlist->filterExactTags,
                     'logicalOperator' => $playlist->filterMediaTagsLogicalOperator,
+                    'folderId' => !empty($playlist->filterFolderId) ? $playlist->filterFolderId : null,
                     'userCheckUserId' => $playlist->getOwnerId(),
                     'start' => 0,
                     'length' => $playlist->maxNumberOfItems
