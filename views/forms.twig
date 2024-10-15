@@ -383,8 +383,8 @@
                 <input type="hidden" id="fullScreen-{{ name }}Id" value="{{ idValue }}"/>
                 <div class="input-group-append input-group-addon">
                     <button class="btn btn-outline-secondary full-screen-layout-form" type="button"
-                            data-toggle="modal" data-target="#full-screen-schedule-modal" id="fullScreenControl_{{ name }}"
-                            data-no-layout="{% trans "Choose" %}" data-has-layout="{% trans "Change" %}" data-readonly="{{ readonly }}">
+                        id="fullScreenControl_{{ name }}"
+                        data-no-layout="{% trans "Choose" %}" data-has-layout="{% trans "Change" %}" data-readonly="{{ readonly }}">
                         {% if idValue %}{% trans "Change" %}{% else %}{% trans "Choose" %}{% endif %}
                     </button>
                 </div>
