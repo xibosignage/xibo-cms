@@ -93,26 +93,33 @@ jQuery.fn.extend({
 
         const canvas = document.createElement('canvas');
         const context = canvas.getContext('2d');
-        const text = $fitTarget.html();
+        const text = $fitTarget.html().trim();
+        const fontStyle = $fitTarget.css('font-style');
+        const fontWeight = $fitTarget.css('font-weight');
 
         // If text is empty, dont resize
-        if (text.trim().length === 0) {
+        if (text.length === 0) {
           return $(el);
         }
 
         // Set a low font size to begin with
-        $(el).css('font-size', fontSize);
-        $(el).hide();
+        $fitTarget.css('font-size', fontSize);
+        $fitTarget.hide();
 
         // Wait for font to load, then run resize
-        waitForFontToLoad(fontSize + 'px ' + fontFamily, function() {
-          context.font = fontSize + 'px ' + fontFamily;
+        waitForFontToLoad(fontWeight + ' ' + fontStyle + ' ' +
+          fontSize + 'px ' + fontFamily, function() {
+          context.font =
+            fontWeight + ' ' + fontStyle + ' ' +
+            fontSize + 'px ' + fontFamily;
 
           while (fontSize < maxFontSize) {
             const auxFontSize = fontSize + 1;
 
             // Increase font
-            context.font = auxFontSize + 'px ' + fontFamily;
+            context.font =
+              fontWeight + ' ' + fontStyle + ' ' +
+              auxFontSize + 'px ' + fontFamily;
 
             const doesItBreak = (options.fitScaleAxis === 'y') ?
               context.measureText(text).height > elHeight :
@@ -128,8 +135,8 @@ jQuery.fn.extend({
           }
 
           // Set font size to element
-          $(el).css('font-size', fontSize);
-          $(el).show();
+          $fitTarget.css('font-size', fontSize);
+          $fitTarget.show();
         });
       }
     });
