@@ -97,9 +97,8 @@ PropertiesPanel.prototype.save = function(
     target = app.selectedObject;
   }
 
-  // Check if target is playlist
-  const isPlaylist =
-    (target.type === 'region' && target.subType === 'playlist');
+  // Check if target is region
+  const isRegion = target.type === 'region';
 
   // Save original target
   const originalTarget = target;
@@ -167,7 +166,8 @@ PropertiesPanel.prototype.save = function(
     form.find('[name]');
 
   // Filter out position related fields
-  formFieldsToSave = (isPlaylist) ? formFieldsToSave :
+  // if not region
+  formFieldsToSave = (isRegion) ? formFieldsToSave :
     formFieldsToSave.filter('.tab-pane:not(#positionTab) [name]');
 
   // Get form old data
@@ -632,7 +632,7 @@ PropertiesPanel.prototype.render = function(
     // and exit transition
     if (target.type === 'region') {
       const regionType = (target.subType === 'frame') ?
-        'widget' : target.subType;
+        'widgetType' : target.subType;
       dataToRender.regionType = propertiesPanelTrans[regionType];
 
       if (
