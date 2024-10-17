@@ -30,7 +30,7 @@
     <legacyType>calendaradvanced</legacyType>
     <legacyType>calendar</legacyType>
     <dataType>event</dataType>
-    <dataCacheKey>%uri%_%useDateRange%_%startIntervalFrom%_%customInterval%_%rangeStart%_%rangeEnd%_%useEventTimezone%_%useCalendarTimezone%_%windowsFormatCalendar%</dataCacheKey>
+    <dataCacheKey>%uri%_%useDateRange%_%startIntervalFrom%_%customInterval%_%rangeStart%_%rangeEnd%_%useEventTimezone%_%useCalendarTimezone%_%windowsFormatCalendar%_%excludeAllDay%</dataCacheKey>
     <fallbackData>1</fallbackData>
     <schemaVersion>2</schemaVersion>
     <assignable>1</assignable>
