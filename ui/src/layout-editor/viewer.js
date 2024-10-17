@@ -2821,10 +2821,20 @@ Viewer.prototype.initMoveable = function() {
     e.target.style.transform = e.drag.transform;
 
     // If selected object is a widget, get parent instead
-    const selectedObject = (lD.selectedObject.type == 'widget') ?
+    let selectedObject = (lD.selectedObject.type == 'widget') ?
       lD.selectedObject.parent : lD.selectedObject;
 
-    // Update element dimension properties
+    // If it's an element, we need to get the object from the actual structure
+    if (selectedObject.type == 'element') {
+      selectedObject =
+        lD.getObjectByTypeAndId(
+          'element',
+          selectedObject.elementId,
+          'widget_' + selectedObject.regionId + '_' + selectedObject.widgetId,
+        );
+    }
+
+    // Update object dimension properties
     selectedObject.transform({
       width: parseFloat(e.width / self.containerObjectDimensions.scale),
       height: parseFloat(e.height / self.containerObjectDimensions.scale),
