@@ -77,6 +77,20 @@
                             ] %}
                             {{ inline.dropdown("displayGroupId[]", "dropdownmulti", title, "", null, "displayGroupId", "displayGroup", "", "pagedSelect", "", "d", "", attributes) }}
 
+                            {% set title %}{% trans "Event Type" %}{% endset %}
+                            {% set options = [
+                                { id: -1, value: "" },
+                                { id: 1, value: "Display Up/down" },
+                                { id: 2, value: "App Start" },
+                                { id: 3, value: "Power Cycle" },
+                                { id: 4, value: "Network Cycle" },
+                                { id: 5, value: "TV Monitoring" },
+                                { id: 6, value: "Player Fault" },
+                                { id: 7, value: "Command" },
+                                { id: 8, value: "Other" }
+                            ] %}
+                            {{ inline.dropdown("eventType", "single", title, -1, options, "id", "value") }}
+
                             {% if currentUser.featureEnabled("tag.tagging") %}
                                 {% set title %}{% trans "Tags" %}{% endset %}
                                 {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
@@ -114,6 +128,7 @@
                                 <th>{% trans "Event Type" %}</th>
                                 <th>{% trans "Start" %}</th>
                                 <th>{% trans "End" %}</th>
+                                <th>{% trans "Duration" %}</th>
                                 <th>{% trans "Reference" %}</th>
                                 <th>{% trans "Detail" %}</th>
                             </tr>
@@ -123,6 +138,8 @@
                             </tbody>
                             <tfoot>
                             <tr>
+                                <th></th>
+                                <th></th>
                                 <th></th>
                                 <th></th>
                                 <th></th>
@@ -188,6 +205,40 @@
                 } else {
                   return '';
                 }
+              }
+            },
+            {
+              name: 'duration',
+              data: function(data) {
+                if (data.start && data.end) {
+                  let durationData = moment.duration(data.end - data.start, "seconds");
+                  let dataM = '';
+
+                  let months = durationData.months();
+                  if (months > 0) {
+                    durationData.subtract(moment.duration(months, 'months'));
+                    dataM += months + '{% trans "month" %} ';
+                  }
+
+                  let days = durationData.days();
+                  durationData.subtract(moment.duration(days, 'days'));
+                  dataM += days + '{% trans "day" %} ';
+
+                  let hours = durationData.hours();
+                  durationData.subtract(moment.duration(hours, 'hours'));
+                  dataM += hours + '{% trans "hr" %} ';
+
+                  let minutes = durationData.minutes();
+                  durationData.subtract(moment.duration(minutes, 'minutes'));
+                  dataM += minutes + '{% trans "min" %} ';
+
+                  let seconds = durationData.seconds();
+                  dataM += seconds + '{% trans "sec" %} ';
+
+                  return dataM;
+                }
+
+                return '';
               }
             },
             {data: 'refId'},
