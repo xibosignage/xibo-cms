@@ -1357,11 +1357,6 @@ class Layout implements \JsonSerializable
                     // Pull out the global widget, if we have one (we should)
                     if ($item->type === 'global') {
                         $widget = $item;
-
-                        // For canvas-only region without custom duration, use the media duration or default to 10
-                        if (count($allRegions) === 1 && $widget->useDuration !== 1) {
-                            $widgetDuration = $widget->getDurationForMedia() ?? 10;
-                        }
                     }
 
                     // Get the highest duration.
