@@ -204,7 +204,10 @@ $(document).ready(function() {
             if(calendar != undefined) {
                 let selectedDate = moment(moment($('#fromDt').val()).format(systemDateFormat));
                 // Add event to the picker to update the calendar
-                calendar.navigate('date', selectedDate);
+                // only if the selected date is valid
+                if (selectedDate.isValid()) {
+                    calendar.navigate('date', selectedDate);
+                }
             }
         };
 
