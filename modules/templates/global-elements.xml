@@ -86,16 +86,31 @@
                 <title>Bold</title>
                 <helpText>Should the text be bold?</helpText>
                 <default>0</default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">0</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="italics" type="checkbox">
                 <title>Italics</title>
                 <helpText>Should the text be italicised?</helpText>
                 <default>0</default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">0</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="underline" type="checkbox">
                 <title>Underline</title>
                 <helpText>Should the text be underlined?</helpText>
                 <default>0</default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">0</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="textWrap" type="checkbox">
                 <title>Text Wrap</title>
@@ -132,11 +147,17 @@
                 <title>Text Shadow</title>
                 <default>0</default>
                 <helpText>Should the text have a shadow?</helpText>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">0</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="textShadowColor" type="color">
                 <title>Text Shadow Colour</title>
                 <visibility>
-                    <test>
+                    <test type="and">
+                        <condition field="useGradient" type="eq">0</condition>
                         <condition field="textShadow" type="eq">1</condition>
                     </test>
                 </visibility>
@@ -145,7 +166,8 @@
                 <title>Shadow X Offset</title>
                 <default>1</default>
                 <visibility>
-                    <test>
+                    <test type="and">
+                        <condition field="useGradient" type="eq">0</condition>
                         <condition field="textShadow" type="eq">1</condition>
                     </test>
                 </visibility>
@@ -154,7 +176,8 @@
                 <title>Shadow Y Offset</title>
                 <default>1</default>
                 <visibility>
-                    <test>
+                    <test type="and">
+                        <condition field="useGradient" type="eq">0</condition>
                         <condition field="textShadow" type="eq">1</condition>
                     </test>
                 </visibility>
@@ -163,7 +186,8 @@
                 <title>Shadow Blur</title>
                 <default>2</default>
                 <visibility>
-                    <test>
+                    <test type="and">
+                        <condition field="useGradient" type="eq">0</condition>
                         <condition field="textShadow" type="eq">1</condition>
                     </test>
                 </visibility>
@@ -196,23 +220,8 @@
             <hbs><![CDATA[
 <div class="global-elements-text"
     style="
+    display: -webkit-flex;
     display: flex;
-    {{#if fontFamily}}font-family: {{fontFamily}};{{/if}}
-    {{#if useGradient}}
-        {{parseJSON "gb" gradient}}
-        background-clip: text;
-        color: transparent;
-        {{#eq gb.type 'linear'}}
-            background-image: linear-gradient({{gb.angle}}deg, {{gb.color1}}, {{gb.color2}});
-        {{else}}
-            background-image: radial-gradient(circle, {{gb.color1}}, {{gb.color2}});
-        {{/eq}}
-    {{else}}
-        {{#if fontColor}}color: {{fontColor}};{{/if}}
-    {{/if}}
-    {{#if bold}}font-weight: bold;{{/if}}
-    {{#if italics}}font-style: italic;{{/if}}
-    {{#if underline}}text-decoration: underline;{{/if}}
     {{#if verticalAlign}}align-items: {{verticalAlign}};{{/if}}
     {{#if fitToArea}}
         white-space: nowrap;
@@ -225,25 +234,44 @@
         {{#eq horizontalAlign "flex-start"}}text-align: left;{{/eq}}
         {{#eq horizontalAlign "center"}}text-align: center;{{/eq}}
         {{#eq horizontalAlign "flex-end"}}text-align: right;{{/eq}}
-            {{#if lineHeight}}line-height: {{lineHeight}};{{/if}}
-        {{#if textWrap}}
-            white-space: break-spaces;
-            {{#if justify}}
-                text-align: justify;
-            {{/if}}
-        {{else}}
-            white-space: nowrap;
-        {{/if}}
     {{/if}}
-    {{#if verticalAlign}}align-items: {{verticalAlign}};{{/if}}
-    {{#if textShadow}}text-shadow: {{shadowX}}px {{shadowY}}px {{shadowBlur}}px {{textShadowColor}};{{/if}}
     width: 100%; height: 100%;"
 >
+<div style="
+    {{#if fontFamily}}font-family: {{fontFamily}};{{/if}}
+    {{#if useGradient}}
+        {{parseJSON "gb" gradient}}
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent !important;
+        color: transparent;
+        {{#eq gb.type 'linear'}}
+            background-image: linear-gradient({{gb.angle}}deg, {{gb.color1}}, {{gb.color2}});
+        {{else}}
+            background-image: radial-gradient(circle, {{gb.color1}}, {{gb.color2}});
+        {{/eq}}
+    {{else}}
+        {{#if bold}}font-weight: bold;{{/if}}
+        {{#if italics}}font-style: italic;{{/if}}
+        {{#if underline}}text-decoration: underline;{{/if}}
+        {{#if fontColor}}color: {{fontColor}};{{/if}}
+        {{#if textShadow}}text-shadow: {{shadowX}}px {{shadowY}}px {{shadowBlur}}px {{textShadowColor}};{{/if}}
+    {{/if}}
+    {{#if lineHeight}}line-height: {{lineHeight}};{{/if}}
+    {{#if textWrap}}
+        {{#if justify}}
+            text-align: justify;
+        {{/if}}
+    {{else}}
+        white-space: nowrap;
+    {{/if}}
+">
 {{#if escapeHtml}}
-    <div>{{text}}</div>
+    {{text}}
 {{else}}
-    <div>{{{text}}}</div>
+    {{{text}}}
 {{/if}}
+</div>
 </div>
             ]]></hbs>
         <onTemplateRender><![CDATA[
@@ -339,16 +367,31 @@ if(properties.fitToArea) {
                 <title>Bold</title>
                 <helpText>Should the text be bold?</helpText>
                 <default>0</default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">0</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="italics" type="checkbox">
                 <title>Italics</title>
                 <helpText>Should the text be italicised?</helpText>
                 <default>0</default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">0</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="underline" type="checkbox">
                 <title>Underline</title>
                 <helpText>Should the text be underlined?</helpText>
                 <default>0</default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">0</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="textWrap" type="checkbox">
                 <title>Text Wrap</title>
@@ -374,11 +417,17 @@ if(properties.fitToArea) {
                 <title>Text Shadow</title>
                 <default>0</default>
                 <helpText>Should the text have a shadow?</helpText>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">0</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="textShadowColor" type="color">
                 <title>Text Shadow Colour</title>
                 <visibility>
-                    <test>
+                    <test type="and">
+                        <condition field="useGradient" type="eq">0</condition>
                         <condition field="textShadow" type="eq">1</condition>
                     </test>
                 </visibility>
@@ -387,7 +436,8 @@ if(properties.fitToArea) {
                 <title>Shadow X Offset</title>
                 <default>1</default>
                 <visibility>
-                    <test>
+                    <test type="and">
+                        <condition field="useGradient" type="eq">0</condition>
                         <condition field="textShadow" type="eq">1</condition>
                     </test>
                 </visibility>
@@ -396,7 +446,8 @@ if(properties.fitToArea) {
                 <title>Shadow Y Offset</title>
                 <default>1</default>
                 <visibility>
-                    <test>
+                    <test type="and">
+                        <condition field="useGradient" type="eq">0</condition>
                         <condition field="textShadow" type="eq">1</condition>
                     </test>
                 </visibility>
@@ -405,7 +456,8 @@ if(properties.fitToArea) {
                 <title>Shadow Blur</title>
                 <default>2</default>
                 <visibility>
-                    <test>
+                    <test type="and">
+                        <condition field="useGradient" type="eq">0</condition>
                         <condition field="textShadow" type="eq">1</condition>
                     </test>
                 </visibility>
@@ -438,11 +490,27 @@ if(properties.fitToArea) {
             <hbs><![CDATA[
 <div class="global-elements-date"
     style="
+    display: -webkit-flex;
     display: flex;
+    {{#if verticalAlign}}align-items: {{verticalAlign}};{{/if}}
+    {{#if fitToArea}}
+        white-space: nowrap;
+    {{else}}
+        {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
+        {{#if showOverflow}}overflow: visible;{{else}}overflow: hidden;{{/if}}
+        {{#if lineHeight}}line-height: {{lineHeight}};{{/if}}
+        {{#if horizontalAlign}}justify-content: {{horizontalAlign}};{{/if}}
+    {{/if}}
+    width: 100%; height: 100%;"
+>
+<div class="date" data-date="{{date}}"
+style="
     {{#if fontFamily}}font-family: {{fontFamily}};{{/if}}
     {{#if useGradient}}
         {{parseJSON "gb" gradient}}
+        -webkit-background-clip: text;
         background-clip: text;
+        -webkit-text-fill-color: transparent !important;
         color: transparent;
         {{#eq gb.type 'linear'}}
             background-image: linear-gradient({{gb.angle}}deg, {{gb.color1}}, {{gb.color2}});
@@ -450,25 +518,14 @@ if(properties.fitToArea) {
             background-image: radial-gradient(circle, {{gb.color1}}, {{gb.color2}});
         {{/eq}}
     {{else}}
+        {{#if bold}}font-weight: bold;{{/if}}
+        {{#if italics}}font-style: italic;{{/if}}
+        {{#if underline}}text-decoration: underline;{{/if}}
         {{#if fontColor}}color: {{fontColor}};{{/if}}
+        {{#if textShadow}}text-shadow: {{shadowX}}px {{shadowY}}px {{shadowBlur}}px {{textShadowColor}};{{/if}}
     {{/if}}
-    {{#if bold}}font-weight: bold;{{/if}}
-    {{#if italics}}font-style: italic;{{/if}}
-    {{#if underline}}text-decoration: underline;{{/if}}
-    {{#if showOverflow}}overflow: visible;{{else}}overflow: hidden;{{/if}}
-    {{#if verticalAlign}}align-items: {{verticalAlign}};{{/if}}
-    {{#if fitToArea}}
-        white-space: nowrap;
-    {{else}}
-        {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
-        {{#if lineHeight}}line-height: {{lineHeight}};{{/if}}
-        {{#if horizontalAlign}}justify-content: {{horizontalAlign}};{{/if}}
     {{#if textWrap}}white-space: break-spaces;{{else}}white-space: nowrap;{{/if}}
-    {{/if}}
-    {{#if textShadow}}text-shadow: {{shadowX}}px {{shadowY}}px {{shadowBlur}}px {{textShadowColor}};{{/if}}
-    width: 100%; height: 100%;"
->
-<div class="date" data-date="{{date}}">{{date}}</div>
+">{{date}}</div>
 </div>
             ]]></hbs>
         </stencil>
@@ -608,16 +665,31 @@ $(target).find('.date').each(function(_idx, dateEl){
                 <title>Bold</title>
                 <helpText>Should the text be bold?</helpText>
                 <default>0</default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">0</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="italics" type="checkbox">
                 <title>Italics</title>
                 <helpText>Should the text be italicised?</helpText>
                 <default>0</default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">0</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="underline" type="checkbox">
                 <title>Underline</title>
                 <helpText>Should the text be underlined?</helpText>
                 <default>0</default>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">0</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="textWrap" type="checkbox">
                 <title>Text Wrap</title>
@@ -638,11 +710,17 @@ $(target).find('.date').each(function(_idx, dateEl){
                 <title>Text Shadow</title>
                 <default>0</default>
                 <helpText>Should the text have a shadow?</helpText>
+                <visibility>
+                    <test>
+                        <condition field="useGradient" type="eq">0</condition>
+                    </test>
+                </visibility>
             </property>
             <property id="textShadowColor" type="color">
                 <title>Text Shadow Colour</title>
                 <visibility>
-                    <test>
+                    <test type="and">
+                        <condition field="useGradient" type="eq">0</condition>
                         <condition field="textShadow" type="eq">1</condition>
                     </test>
                 </visibility>
@@ -651,7 +729,8 @@ $(target).find('.date').each(function(_idx, dateEl){
                 <title>Shadow X Offset</title>
                 <default>1</default>
                 <visibility>
-                    <test>
+                    <test type="and">
+                        <condition field="useGradient" type="eq">0</condition>
                         <condition field="textShadow" type="eq">1</condition>
                     </test>
                 </visibility>
@@ -660,7 +739,8 @@ $(target).find('.date').each(function(_idx, dateEl){
                 <title>Shadow Y Offset</title>
                 <default>1</default>
                 <visibility>
-                    <test>
+                    <test type="and">
+                        <condition field="useGradient" type="eq">0</condition>
                         <condition field="textShadow" type="eq">1</condition>
                     </test>
                 </visibility>
@@ -669,7 +749,8 @@ $(target).find('.date').each(function(_idx, dateEl){
                 <title>Shadow Blur</title>
                 <default>2</default>
                 <visibility>
-                    <test>
+                    <test type="and">
+                        <condition field="useGradient" type="eq">0</condition>
                         <condition field="textShadow" type="eq">1</condition>
                     </test>
                 </visibility>
@@ -702,11 +783,26 @@ $(target).find('.date').each(function(_idx, dateEl){
             <hbs><![CDATA[
 <div class="global-elements-date-advanced"
     style="
+    display: -webkit-flex;
     display: flex;
+    {{#if fitToArea}}
+        white-space: nowrap;
+    {{else}}
+        {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
+        {{#if showOverflow}}overflow: visible;{{else}}overflow: hidden;{{/if}}
+        {{#if horizontalAlign}}justify-content: {{horizontalAlign}};{{/if}}
+    {{/if}}
+    {{#if verticalAlign}}align-items: {{verticalAlign}};{{/if}}
+    width: 100%; height: 100%;"
+>
+<div class="date-advanced"
+style="
     {{#if fontFamily}}font-family: {{fontFamily}};{{/if}}
     {{#if useGradient}}
         {{parseJSON "gb" gradient}}
+        -webkit-background-clip: text;
         background-clip: text;
+        -webkit-text-fill-color: transparent !important;
         color: transparent;
         {{#eq gb.type 'linear'}}
             background-image: linear-gradient({{gb.angle}}deg, {{gb.color1}}, {{gb.color2}});
@@ -714,25 +810,15 @@ $(target).find('.date').each(function(_idx, dateEl){
             background-image: radial-gradient(circle, {{gb.color1}}, {{gb.color2}});
         {{/eq}}
     {{else}}
+        {{#if bold}}font-weight: bold;{{/if}}
+        {{#if italics}}font-style: italic;{{/if}}
+        {{#if underline}}text-decoration: underline;{{/if}}
         {{#if fontColor}}color: {{fontColor}};{{/if}}
+        {{#if textShadow}}text-shadow: {{shadowX}}px {{shadowY}}px {{shadowBlur}}px {{textShadowColor}};{{/if}}
     {{/if}}
-    {{#if bold}}font-weight: bold;{{/if}}
-    {{#if italics}}font-style: italic;{{/if}}
-    {{#if underline}}text-decoration: underline;{{/if}}
-    {{#if fitToArea}}
-        white-space: nowrap;
-    {{else}}
-        {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
-        {{#if lineHeight}}line-height: {{lineHeight}};{{/if}}
-        {{#if showOverflow}}overflow: visible;{{else}}overflow: hidden;{{/if}}
-        {{#if horizontalAlign}}justify-content: {{horizontalAlign}};{{/if}}
-        {{#if textWrap}}white-space: break-spaces;{{else}}white-space: nowrap;{{/if}}
-    {{/if}}
-    {{#if verticalAlign}}align-items: {{verticalAlign}};{{/if}}
-    {{#if textShadow}}text-shadow: {{shadowX}}px {{shadowY}}px {{shadowBlur}}px {{textShadowColor}};{{/if}}
-    width: 100%; height: 100%;"
->
-<div class="date-advanced"></div>
+    {{#if lineHeight}}line-height: {{lineHeight}};{{/if}}
+    {{#if textWrap}}white-space: break-spaces;{{else}}white-space: nowrap;{{/if}}
+"></div>
 </div>
             ]]></hbs>
         </stencil>
@@ -1042,7 +1128,7 @@ $(target).find('img').xiboImageRender(properties);
     left: 0;
     width: 100%;
     height: 100%;"
-><svg version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+><svg version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     {{#eq tip1Type "diamond"}}
         <g fill="{{lineColor}}" style="
                 transform:
@@ -1319,7 +1405,7 @@ $(target).find('img').xiboImageRender(properties);
     left: 0;
     width: 100%;
     height: 100%;"
-><svg version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+><svg version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <defs>
         {{{createGradientInSVG gradient uniqueID}}}
 
@@ -1347,7 +1433,7 @@ $(target).find('img').xiboImageRender(properties);
             ></circle>
         </symbol>
     </defs>
-    <use href="#circle_{{uniqueID}}" width="100%" height="100%" />
+    <use xlink:href="#circle_{{uniqueID}}" width="100%" height="100%" />
 </svg></div>
             ]]></hbs>
         </stencil>
@@ -1408,7 +1494,7 @@ $(target).find('img').xiboImageRender(properties);
     left: 0;
     width: 100%;
     height: 100%;"
-><svg version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+><svg version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <defs>
         <symbol id="ellipse_{{uniqueID}}" viewBox="0 0 100 100" preserveAspectRatio="none">
             <ellipse
@@ -1432,7 +1518,7 @@ $(target).find('img').xiboImageRender(properties);
             ></ellipse>
         </symbol>
     </defs>
-    <use href="#ellipse_{{uniqueID}}" width="100%" height="100%" />
+    <use xlink:href="#ellipse_{{uniqueID}}" width="100%" height="100%" />
 </svg></div>
             ]]></hbs>
         </stencil>
@@ -1509,7 +1595,7 @@ $(target).find('img').xiboImageRender(properties);
     left: 0;
     width: 100%;
     height: 100%;"
-><svg version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+><svg version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <defs>
         {{{createGradientInSVG gradient uniqueID}}}
 
@@ -1536,7 +1622,7 @@ $(target).find('img').xiboImageRender(properties);
             ></polygon>
         </symbol>
     </defs>
-    <use href="#triangle_{{uniqueID}}" width="100%" height="100%" />
+    <use xlink:href="#triangle_{{uniqueID}}" width="100%" height="100%" />
 </svg></div>
             ]]></hbs>
         </stencil>
@@ -1625,7 +1711,7 @@ if(properties.outline == 1) {
     left: 0;
     width: 100%;
     height: 100%;"
-><svg version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+><svg version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <defs>
         {{{createGradientInSVG gradient uniqueID}}}
 
@@ -1651,7 +1737,7 @@ if(properties.outline == 1) {
             />
         </symbol>
     </defs>
-    <use href="#pentagon_{{uniqueID}}" width="100%" height="100%"></use>
+    <use xlink:href="#pentagon_{{uniqueID}}" width="100%" height="100%"></use>
 </svg></div>
             ]]></hbs>
         </stencil>
@@ -1740,7 +1826,7 @@ if(properties.outline == 1) {
     left: 0;
     width: 100%;
     height: 100%;"
-><svg version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+><svg version="1.1" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <defs>
         {{{createGradientInSVG gradient uniqueID}}}
 
@@ -1766,7 +1852,7 @@ if(properties.outline == 1) {
             />
         </symbol>
     </defs>
-    <use href="#hexagon_{{uniqueID}}" width="100%" height="100%"></use>
+    <use xlink:href="#hexagon_{{uniqueID}}" width="100%" height="100%"></use>
 </svg></div>
             ]]></hbs>
         </stencil>
