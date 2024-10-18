@@ -1213,6 +1213,10 @@ body.editor-opened #content-wrapper .page-content>.row {
             }
         }
 
+        &:not(.editable) .group-edit-btn {
+            display: none;
+        }
+
         .group-edit-btn {
             position: absolute;
             top: 2px;
