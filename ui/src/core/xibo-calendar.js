@@ -2012,13 +2012,14 @@ const configureCriteriaFields = function(dialog) {
 
     // Existing criteria?
     const existingCriteria = $fields.data('criteria');
-    if (existingCriteria && existingCriteria.length >= 0) {
+    if (existingCriteria && existingCriteria.length > 0) {
         // Yes there are existing criteria
         // Go through each one and add a field row to the form.
         let i = 0;
         $.each(existingCriteria, function(index, element) {
             i++;
-            element.isAdd = false;
+            // Only the first element should have the 'Add' btn functionality
+            element.isAdd = i === 1;
             element.i = i;
             const $newField = $(templateScheduleCriteriaFields(element));
             $fields.append($newField);
@@ -2033,31 +2034,32 @@ const configureCriteriaFields = function(dialog) {
             // Update metrics and value fields based on the selected type and metric
             updateMetricsField($newField, element.type, element.metric, element.value);
         });
+    } else {
+        // If no existing criterion, add an empty field at top
+        const $newRow = $(templateScheduleCriteriaFields({
+            isAdd: true,
+        }));
+        const $newTypeSelect = $newRow.find('select[name="criteria_type[]"]');
+
+        // Populate type dropdown based on scheduleCriteria
+        populateTypeDropdown($newTypeSelect);
+        $fields.append($newRow);
     }
-
-    // Add a row at the end for configuring a new criterion
-    const $newRow = $(templateScheduleCriteriaFields({
-        isAdd: true,
-    }));
-    const $newTypeSelect = $newRow.find('select[name="criteria_type[]"]');
-
-    // populate type dropdown based on scheduleCriteria
-    populateTypeDropdown($newTypeSelect);
-    $fields.append($newRow);
 
     // Buttons we've added should be bound
     $fields.on('click', 'button', function(e) {
         e.preventDefault();
         const $button = $(this);
         if ($button.data('isAdd')) {
-            const newField = $(templateScheduleCriteriaFields({ isAdd: true }));
+            // Only the first element should have the 'Add' btn functionality
+            const newField = $(templateScheduleCriteriaFields({ isAdd: false }));
             $fields.append(newField);
 
             // Populate the type field for the new row
             const $newTypeSelect = newField.find('select[name="criteria_type[]"]');
             populateTypeDropdown($newTypeSelect);
 
-            $button.data('isAdd', false);
+            $button.data('isAdd', true);
         } else {
             $button.closest('.form-group').remove();
         }
