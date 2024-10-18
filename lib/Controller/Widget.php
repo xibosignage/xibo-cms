@@ -1782,6 +1782,9 @@ class Widget extends Base
         // Parse the element JSON to see if we need to set `itemsPerPage`
         $slots = [];
         $uniqueSlots = 0;
+        $isMediaOnlyWidget = true;
+        $maxDuration = 1;
+
         foreach ($elementJson as $widgetElement) {
             foreach ($widgetElement['elements'] ?? [] as $element) {
                 $slotNo = 'slot_' . ($element['slot'] ?? 0);
@@ -1796,10 +1799,13 @@ class Widget extends Base
 
                     if (!in_array($mediaId, $existingMediaIds)) {
                         // Make sure it exists, and we have permission to use it.
-                        $this->mediaFactory->getById($mediaId, false);
+                        $media = $this->mediaFactory->getById($mediaId, false);
+                        $maxDuration = $media->duration ?? 10;
                     }
                     $widget->assignMedia($mediaId);
                     $newMediaIds[] = $mediaId;
+                } else {
+                    $isMediaOnlyWidget = false;
                 }
             }
         }
@@ -1827,6 +1833,21 @@ class Widget extends Base
             if (!in_array($existingMediaId, $newMediaIds)) {
                 $widget->unassignMedia($existingMediaId);
             }
+        }
+
+        // Canvas-only layout without a custom duration
+        if ($widget->type == 'global' && $isMediaOnlyWidget && $widget->useDuration == 0) {
+            // Do we need to recalculate the duration?
+            if (count($newMediaIds) < count($existingMediaIds)) {
+                foreach ($newMediaIds as $newMediaId) {
+                    $media = $this->mediaFactory->getById($newMediaId, false);
+                    $maxDuration = max($media->duration, $maxDuration);
+                }
+            } else {
+                $maxDuration = max($widget->calculatedDuration, $maxDuration);
+            }
+
+            $widget->calculatedDuration = $maxDuration;
         }
 
         // Save, without auditing widget options.
