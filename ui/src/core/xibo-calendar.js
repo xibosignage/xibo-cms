@@ -849,9 +849,9 @@ var setupScheduleForm = function(dialog) {
     }, 500);
 
     // Bind to the H:i:s fields
-    $form.find("#hours").on("keyup", evaluateDates);
-    $form.find("#minutes").on("keyup", evaluateDates);
-    $form.find("#seconds").on("keyup", evaluateDates);
+    $form.find("#hours").on("change", evaluateDates);
+    $form.find("#minutes").on("change", evaluateDates);
+    $form.find("#seconds").on("change", evaluateDates);
 
     // Handle the repeating monthly selector
     // Run when the tab changes
