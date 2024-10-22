@@ -53,6 +53,7 @@
             </property>
             <property id="useGradient" type="checkbox">
                 <title>Use gradient for the text?</title>
+                <helpText>Gradients work well with most fonts. If you use a custom font please ensure you test the Layout on your player.</helpText>
                 <default>0</default>
             </property>
             <property id="gradient" type="colorGradient">
@@ -334,6 +335,7 @@ if(properties.fitToArea) {
             </property>
             <property id="useGradient" type="checkbox">
                 <title>Use gradient for the text?</title>
+                <helpText>Gradients work well with most fonts. If you use a custom font please ensure you test the Layout on your player.</helpText>
                 <default>0</default>
             </property>
             <property id="gradient" type="colorGradient">
@@ -632,6 +634,7 @@ $(target).find('.date').each(function(_idx, dateEl){
             </property>
             <property id="useGradient" type="checkbox">
                 <title>Use gradient for the text?</title>
+                <helpText>Gradients work well with most fonts. If you use a custom font please ensure you test the Layout on your player.</helpText>
                 <default>0</default>
             </property>
             <property id="gradient" type="colorGradient">
