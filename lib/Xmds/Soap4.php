@@ -138,12 +138,6 @@ class Soap4 extends Soap
                     // Upper case the setting name for windows
                     $settingName = ($clientType == 'windows') ? ucfirst($arrayItem['name']) : $arrayItem['name'];
 
-                    $node = $return->createElement($settingName, (isset($arrayItem['value']) ? $arrayItem['value'] : $arrayItem['default']));
-
-                    if (isset($arrayItem['type'])) {
-                        $node->setAttribute('type', $arrayItem['type']);
-                    }
-
                     // Patch download and update windows to make sure they are unix time stamps
                     // XMDS schema 4 sent down unix time
                     // https://github.com/xibosignage/xibo/issues/1791
@@ -161,7 +155,13 @@ class Soap4 extends Soap
                         }
                     }
 
-                    $node = $return->createElement($arrayItem['name'], (isset($arrayItem['value']) ? $arrayItem['value'] : $arrayItem['default']));
+                    // Apply an offset to the collectInterval
+                    // https://github.com/xibosignage/xibo/issues/3530
+                    if (strtolower($arrayItem['name']) == 'collectinterval') {
+                        $arrayItem['value'] = $this->collectionIntervalWithOffset($arrayItem['value']);
+                    }
+
+                    $node = $return->createElement($arrayItem['name'], $arrayItem['value'] ?? $arrayItem['default']);
                     $node->setAttribute('type', $arrayItem['type']);
                     $displayElement->appendChild($node);
                 }
