@@ -213,7 +213,7 @@
           submitHandler: attachmentFormSubmit,
           errorElement: "span",
           // Ignore the date picker helpers
-          ignore: '.datePickerHelper',
+          ignore: '.datePickerHelper, :hidden>*:not(.flatpickr-input)',
           errorPlacement: function(error, element) {
               if($(element).hasClass('dateControl')) {
                   // Places the error label date controller
@@ -291,4 +291,7 @@
         });
       }
     </script>
+
+    {# CKEDITOR #}
+    <script src="{{ theme.rootUri() }}dist/vendor/ckeditor/build/ckeditor.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
 {% endblock %}

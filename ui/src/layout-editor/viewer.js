@@ -991,10 +991,11 @@ Viewer.prototype.handleInteractions = function() {
     });
 
   // Handle fullscreen button
-  $viewerContainer.siblings('#fullscreenBtn').off('click').on('click', function() {
-    this.reload = true;
-    this.toggleFullscreen();
-  }.bind(this));
+  $viewerContainer.siblings('#fullscreenBtn').off('click')
+    .on('click', function() {
+      this.reload = true;
+      this.toggleFullscreen();
+    }.bind(this));
 
   // Handle layer manager button
   $viewerContainer.siblings('#layerManagerBtn')
@@ -3024,24 +3025,14 @@ Viewer.prototype.saveRegionProperties = function(
   // if we just want to transform the region
   if (justTransform) {
     regionObject.transform(transform, true);
-  } else if (regionId == lD.selectedObject.id) {
-    // If we're saving the region, update it
-    regionObject.transform(transform, false);
-
-    if (typeof window.regionChangesForm === 'function') {
-      window.regionChangesForm();
-
-      // Save region form
-      lD.propertiesPanel.saveRegion();
-      (updateRegion) &&
-        lD.viewer.updateRegion(regionObject);
-    }
   } else if (
-    lD.selectedObject.parent &&
-    regionId == lD.selectedObject.parent.id
+    regionId == lD.selectedObject.id ||
+    (
+      lD.selectedObject.parent &&
+      regionId == lD.selectedObject.parent.id
+    )
   ) {
-    // If we're saving the region through the widget
-    // update parent region and update the position values on the form
+    // Update region
     regionObject.transform(transform, false);
 
     // Update position form values
@@ -3051,7 +3042,10 @@ Viewer.prototype.saveRegionProperties = function(
     forms.reloadRichTextFields(lD.propertiesPanel.DOMObject);
 
     // Save region but just the position properties
-    lD.propertiesPanel.saveRegion(true);
+    // save position form flag only for widget
+    lD.propertiesPanel.saveRegion(
+      !(regionId == lD.selectedObject.id),
+    );
     (updateRegion) &&
       lD.viewer.updateRegion(regionObject);
   }

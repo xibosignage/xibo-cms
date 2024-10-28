@@ -1229,7 +1229,7 @@ PropertiesPanel.prototype.render = function(
       }
     }
 
-    // If target is a widget or element
+    // If target is a widget, element, element-group or region
     // and we are in the Layout Editor
     // render position tab with region or element position
     if (
@@ -1240,7 +1240,7 @@ PropertiesPanel.prototype.render = function(
           // Don't show for drawer widget
           target.drawerWidget != true
         ) ||
-        target.subType === 'playlist' ||
+        target.type === 'region' ||
         isElementGroup
       )
     ) {
@@ -1250,34 +1250,34 @@ PropertiesPanel.prototype.render = function(
         if (isElementGroup) {
           positionProperties = {
             type: 'element-group',
-            top: targetAux.top,
-            left: targetAux.left,
-            width: targetAux.width,
-            height: targetAux.height,
+            top: Math.round(targetAux.top),
+            left: Math.round(targetAux.left),
+            width: Math.round(targetAux.width),
+            height: Math.round(targetAux.height),
             zIndex: targetAux.layer,
           };
         } else if (targetAux?.type === 'element') {
           positionProperties = {
             type: 'element',
-            top: targetAux.top,
-            left: targetAux.left,
-            width: targetAux.width,
-            height: targetAux.height,
+            top: Math.round(targetAux.top),
+            left: Math.round(targetAux.left),
+            width: Math.round(targetAux.width),
+            height: Math.round(targetAux.height),
             zIndex: targetAux.layer,
           };
 
           if (targetAux.canRotate) {
             positionProperties.rotation = targetAux.rotation;
           }
-        } else if (target.subType === 'playlist') {
+        } else if (target.type === 'region') {
           positionProperties = {
             type: 'region',
             regionType: target.subType,
             regionName: target.name,
-            top: target.dimensions.top,
-            left: target.dimensions.left,
-            width: target.dimensions.width,
-            height: target.dimensions.height,
+            top: Math.round(target.dimensions.top),
+            left: Math.round(target.dimensions.left),
+            width: Math.round(target.dimensions.width),
+            height: Math.round(target.dimensions.height),
             zIndex: target.zIndex,
           };
         } else {
@@ -1285,10 +1285,10 @@ PropertiesPanel.prototype.render = function(
             type: 'region',
             regionType: target.parent.subType,
             regionName: target.parent.name,
-            top: target.parent.dimensions.top,
-            left: target.parent.dimensions.left,
-            width: target.parent.dimensions.width,
-            height: target.parent.dimensions.height,
+            top: Math.round(target.parent.dimensions.top),
+            left: Math.round(target.parent.dimensions.left),
+            width: Math.round(target.parent.dimensions.width),
+            height: Math.round(target.parent.dimensions.height),
             zIndex: target.parent.zIndex,
           };
         }
@@ -1297,7 +1297,9 @@ PropertiesPanel.prototype.render = function(
         const positionTemplate = formTemplates.position;
 
         // Add position tab after advanced tab
-        self.DOMObject.find('[href="#advancedTab"]').parent()
+        self.DOMObject.find(
+          '[href="#advancedTab"], [href="#transitionTab"]',
+        ).parent()
           .after(`<li class="nav-item">
             <a class="nav-link" href="#positionTab"
               data-toggle="tab">
@@ -1331,7 +1333,7 @@ PropertiesPanel.prototype.render = function(
               (positionProperties.showElementGroupLayer = true);
         }
 
-        self.DOMObject.find('#advancedTab').after(
+        self.DOMObject.find('#advancedTab, #transitionTab').after(
           positionTemplate(
             Object.assign(positionProperties, {trans: propertiesPanelTrans}),
           ),
@@ -1533,8 +1535,9 @@ PropertiesPanel.prototype.render = function(
             const viewerScale = lD.viewer.containerObjectDimensions.scale;
 
             if (targetAux == undefined) {
-              // Widget
-              const regionId = target.parent.id;
+              // Widget or region
+              const regionId = (target.type === 'region') ?
+                target.id : target.parent.id;
 
               lD.layout.regions[regionId].transform({
                 width: lD.layout.width,
@@ -1609,7 +1612,9 @@ PropertiesPanel.prototype.render = function(
 
             if (targetAux == undefined) {
               // Widget
-              const regionId = target.parent.id;
+              const regionId = (target.type === 'region') ?
+                target.id :
+                target.parent.id;
 
               newPosition =
                 calculateNewPosition(lD.layout.regions[regionId].dimensions);
@@ -2173,7 +2178,10 @@ PropertiesPanel.prototype.saveRegion = function(
     return false;
   }
 
-  const region = (savePositionForm) ?
+  const region = (
+    savePositionForm &&
+    app.selectedObject.type != 'region'
+  ) ?
     app.selectedObject.parent :
     app.selectedObject;
   const formNewData = form.serialize();
