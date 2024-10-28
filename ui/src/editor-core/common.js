@@ -198,25 +198,6 @@ module.exports = {
     // Masonry
     $container.find('.masonry-container').masonry('destroy');
 
-    // Monaco code editor
-    $container.find('.xibo-code-input .code-input').each((_idx, fp) => {
-      const codeInputId = $(fp).attr('id');
-      // Unset events from text area
-      $(fp).off('change');
-
-      if (window.codeEditors[codeInputId]) {
-        // Dispose of model
-        window.codeEditors[codeInputId].getModel().dispose();
-
-        // Dispose of editor
-        window.codeEditors[codeInputId].dispose();
-
-        // Remove array element
-        window.codeEditors[codeInputId] = null;
-        delete window.codeEditors[codeInputId];
-      }
-    });
-
     // CKEditor
     $container.find('.rich-text').each((_idx, fp) => {
       const richTextId = $(fp).attr('id');

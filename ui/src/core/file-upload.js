@@ -252,9 +252,7 @@ window.openUploadForm = function(options) {
       }
 
       if ($('#folder-tree-form-modal').length === 0) {
-        const folderTreeModal = Handlebars.compile(
-          $('#folder-tree-template').html(),
-        );
+        const folderTreeModal = templates['folder-tree'];
         $('body').append(folderTreeModal({
           container: 'container-folder-form-tree',
           modal: 'folder-tree-form-modal',

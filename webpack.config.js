@@ -23,9 +23,6 @@ const path = require('path');
 const webpack = require('webpack');
 const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
-const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
-// const BundleAnalyzerPlugin =
-// require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
 
 const config = {
   // Add common Configurations
@@ -46,8 +43,9 @@ const mainConfig = Object.assign({}, config, {
     preview: './ui/bundle_preview.js',
     legacyPreview: './ui/bundle_legacy_preview.js',
     datatables: './ui/bundle_datatables.js',
-    monacoEditor: './ui/bundle_monaco_editor.js',
+    codeEditor: './ui/bundle_code_editor.js',
     leaflet: './ui/bundle_leaflet.js',
+    fileUpload: './ui/src/core/file-upload.js',
   },
   output: {
     path: path.resolve(__dirname, 'web/dist'),
@@ -145,7 +143,6 @@ const mainConfig = Object.assign({}, config, {
     ],
   },
   plugins: [
-    // new BundleAnalyzerPlugin(),
     new CleanWebpackPlugin({
       // To make sure it runs only on the first config
       cleanOnceBeforeBuildPatterns: ['**/*', '!pages/**'],
@@ -153,21 +150,6 @@ const mainConfig = Object.assign({}, config, {
     new CopyWebpackPlugin({
       patterns: [
         // Copy directory contents to {output}/
-        {
-          from: 'ui/src/core',
-          to: 'core',
-          globOptions: {
-            ignore: [
-              'forms.js',
-              'help-pane.js',
-              'xibo-cms.js',
-            ],
-          },
-        },
-        {
-          from: 'ui/src/preview',
-          to: 'preview',
-        },
         {
           from: 'ui/src/assets',
           to: 'assets',
@@ -178,9 +160,6 @@ const mainConfig = Object.assign({}, config, {
         },
       ],
     }),
-    new MonacoWebpackPlugin({
-      languages: ['typescript', 'javascript', 'css', 'html'],
-    }),
   ],
 });
 
@@ -189,6 +168,8 @@ const pageConfig = Object.assign({}, config, {
     'display-page': './ui/src/pages/display/display-page.js',
     'schedule-page': './ui/src/pages/schedule/schedule-page.js',
     'campaign-page': './ui/src/pages/campaign/campaing-page.js',
+    'developer-template-page':
+      './ui/src/pages/developer-template/developer-template-page.js',
   },
   output: {
     path: path.resolve(__dirname, 'web/dist/pages'),

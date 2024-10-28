@@ -22,7 +22,6 @@
 const Common = require('../editor-core/common.js');
 const PlayerHelper = require('../helpers/player-helper.js');
 
-
 // LOCAL FUNCTIONS
 
 // Check condition
@@ -1989,38 +1988,40 @@ window.forms = {
       const $textArea = $(el).find('.code-input');
       const inputValue = $textArea.val();
       const codeType = $textArea.data('codeType');
+      let valueChanged = false;
 
-      // Create code editor object if it doesn't exist
-      if (window.codeEditors === undefined) {
-        window.codeEditors = {};
-      }
+      // Get code type, defaults to HTML
+      const codeTypeFunc = (CodeMirror[codeType]) ?
+        CodeMirror[codeType] : CodeMirror.html;
 
-      const newEditor =
-        window.codeEditors[$textArea.attr('id')] =
-        monaco.editor.create($(el).find('.code-input-editor')[0], {
-          value: inputValue,
-          fontSize: 12,
-          theme: 'vs-dark',
-          language: codeType,
-          lineNumbers: 'off',
-          glyphMargin: false,
-          folding: false,
-          lineDecorationsWidth: 0,
-          lineNumbersMinChars: 0,
-          automaticLayout: true,
-          minimap: {
-            enabled: false,
-          },
-        });
+      new CodeMirror.EditorView({
+        doc: inputValue,
+        extensions: [
+          CodeMirror.basicSetup,
+          CodeMirror.keymap.of([CodeMirror.indentWithTab]),
+          codeTypeFunc(),
+          CodeMirror.EditorView.updateListener.of((update) => {
+            if (
+              update.docChanged &&
+              update.state.doc.toString() != $textArea.val()
+            ) {
+              $textArea.val(update.state.doc.toString()).trigger('inputChange');
 
-      // Update the textarea when the editor changes
-      newEditor.onDidChangeModelContent(() => {
-        $textArea.val(newEditor.getValue()).trigger('inputChange');
-      });
+              // Trigger to enable auto save on element blur
+              $textArea.trigger('editorFocus');
 
-      // Update the editor when the textarea changes
-      $textArea.on('change', function() {
-        newEditor.setValue($textArea.val());
+              // Mark value as changed
+              valueChanged = true;
+            }
+
+            // If value and focus changed
+            if (valueChanged && update.focusChanged) {
+              valueChanged = false;
+              $textArea.trigger('change');
+            }
+          }),
+        ],
+        parent: $(el).find('.code-input-editor')[0],
       });
     });
 
@@ -2538,22 +2539,24 @@ window.forms = {
                 text,
               );
             } else if ($targetField.hasClass('code-input')) {
-              // Monaco editor
+              // Code editor
               const editor =
-                window.codeEditors['input_' + targetId + '_' + targetFieldId];
+                CodeMirror.EditorView.findFromDOM(
+                  $targetField.next('.code-input-editor-container')[0],
+                );
 
-              const selection = editor.getSelection();
-              const id = {
-                major: 1,
-                minor: 1,
-              };
-              const op = {
-                identifier: id,
-                range: selection,
-                text: text,
-                forceMoveMarkers: true,
-              };
-              editor.executeEdits('custom-code', [op]);
+              // Get range
+              const range = editor.viewState.state.selection.ranges[0];
+
+              // Insert text
+              editor.dispatch({
+                changes: {
+                  from: range.from,
+                  to: range.to,
+                  insert: text,
+                },
+                selection: {anchor: range.from + 1},
+              });
 
               // Trigger change event
               $targetField.trigger('change');

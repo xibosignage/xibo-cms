@@ -172,11 +172,13 @@
 {% endblock %}
 
 {% block javaScript %}
-    {# Add common file #}
-    {% include "common.twig" %}
+    {# Add common files #}
+    {% include "editorTranslations.twig" %}
+    {% include "editorVars.twig" %}
 
     <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js?v={{ version }}&rev={{ revision }}" nonce="{{ cspNonce }}"></script>
-    <script src="{{ theme.rootUri() }}dist/monacoEditor.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+    <script src="{{ theme.rootUri() }}dist/codeEditor.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+    <script src="{{ theme.rootUri() }}dist/vendor/ckeditor/build/ckeditor.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
     <script src="{{ theme.rootUri() }}dist/editorCommon.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
     <script type="text/javascript" nonce="{{ cspNonce }}">
 
