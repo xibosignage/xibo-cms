@@ -1985,7 +1985,8 @@ window.forms = {
       '.xibo-code-input',
       target,
     ).each(function(_k, el) {
-      const $textArea = $(el).find('.code-input');
+      const $container = $(el);
+      const $textArea = $container.find('.code-input');
       const inputValue = $textArea.val();
       const codeType = $textArea.data('codeType');
       let valueChanged = false;
@@ -2021,8 +2022,51 @@ window.forms = {
             }
           }),
         ],
-        parent: $(el).find('.code-input-editor')[0],
+        parent: $container.find('.code-input-editor')[0],
       });
+
+      // Expand functionality
+      const $codeEditor = $container.find('.code-input-editor-container');
+      const toggleEditor = function() {
+        const isOpened = $codeEditor.hasClass('code-input-fs');
+        const codeEditorHeight = $codeEditor.height();
+
+        // Toggle class
+        $codeEditor.toggleClass('code-input-fs');
+
+        // If it's opened
+        if (isOpened) {
+          // Remove overlay
+          $('.code-fs-overlay').remove();
+
+          // Move editor back to original container
+          $codeEditor.appendTo($container);
+
+          // Remove placeholder
+          $container.find('.code-fs-placeholder').remove();
+        } else {
+          // Add overlay
+          const $codeFSOverlay = $('.custom-overlay:first').clone();
+          $codeFSOverlay
+            .removeClass('custom-overlay')
+            .addClass('code-fs-overlay custom-overlay-clone')
+            .appendTo($('body'))
+            .on('click', toggleEditor);
+          $codeFSOverlay
+            .show();
+
+          // Move editor to body
+          $codeEditor.appendTo($('body'));
+
+          // Add placeholder
+          const $codeFSPlaceholder = $('<div>')
+            .addClass('code-fs-placeholder')
+            .css('height', codeEditorHeight);
+          $codeFSPlaceholder.appendTo($container);
+        }
+      };
+
+      $container.find('.code-input-fs-btn').on('click', toggleEditor);
     });
 
     // Colour picker
