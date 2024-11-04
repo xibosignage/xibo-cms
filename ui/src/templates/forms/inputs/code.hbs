@@ -13,7 +13,13 @@
             data-{{this.name}}="{{this.value}}"
         {{/each}}
     >{{value}}</textarea>
-    <div class="code-input-editor-container">
-        <div class="code-input-editor"></div>
+    <div class="code-input-editor-container non-scroll">
+        <div class="code-input-editor-scrollable">
+            <div class="code-input-editor"></div>
+        </div>
+        <button type="button" class="code-input-fs-btn btn btn-sm btn-white">
+            <i class="fas fa-arrows-alt hide-on-code-fs"></i>
+            <i class="fas fa-compress-arrows-alt show-on-code-fs"></i>
+        </button>
     </div>
 </div>
