@@ -83,6 +83,29 @@ $fa-font-path: "~font-awesome/fonts";
     }
 }
 
+/* Tooltip colour */
+div.tooltip.bs-tooltip-auto {
+    .tooltip-inner {
+        background-color: darken($xibo-color-secondary, 10%);
+    }
+
+    &[x-placement^=right] .arrow::before {
+        border-right-color: darken($xibo-color-secondary, 10%);
+    }
+
+    &[x-placement^=left] .arrow::before {
+        border-left-color: darken($xibo-color-secondary, 10%);
+    }
+
+    &[x-placement^=top] .arrow::before {
+        border-top-color: darken($xibo-color-secondary, 10%);
+    }
+
+    &[x-placement^=bottom] .arrow::before {
+        border-bottom-color: darken($xibo-color-secondary, 10%);
+    }
+}
+
 .no-user-select {
     @include user-select-none();
 }
