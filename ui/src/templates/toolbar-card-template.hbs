@@ -6,6 +6,8 @@
     data-template-id="{{templateId}}"
     data-start-width="{{startWidth}}"
     data-start-height="{{startHeight}}"
+    data-card-title="{{title}}"
+    data-toggle="tooltip" data-title="{{description}}"
 >
 
 {{#if thumbnail}}
@@ -18,7 +20,7 @@
     {{/if}}
 {{/if}}
 
-    <div class="toolbar-content tooltip-always-on" data-toggle="tooltip" data-title="{{title}}">
+    <div class="toolbar-content" title="{{title}}">
         <span class="card-title">{{title}}</span>
     </div>
 </div>

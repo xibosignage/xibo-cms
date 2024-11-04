@@ -1,5 +1,4 @@
-<div class="toolbar-card tooltip-always-on {{#eq cardType "moduleGroup"}}toolbar-card-group{{/eq}} {{#neq dataType ""}}toolbar-card-menu{{/neq}} {{#if favourited}}favourited{{/if}} {{#if thumbnail}}has-thumb{{/if}}" 
-    data-toggle="tooltip" 
+<div class="toolbar-card  {{#eq cardType "moduleGroup"}}toolbar-card-group{{/eq}} {{#neq dataType ""}}toolbar-card-menu{{/neq}} {{#if favourited}}favourited{{/if}} {{#if thumbnail}}has-thumb{{/if}}" 
     data-type="{{contentType}}" 
     data-sub-type="{{type}}"
     data-data-type="{{dataType}}"
@@ -8,10 +7,11 @@
     data-valid-ext="{{ validExtensions }}"
     data-max-size="{{ maxSize }}" 
     data-max-size-message="{{ maxSizeMessage }}"
-    data-title="{{name}}"
     data-description="{{description}}"
     data-start-width="{{startWidth}}"
     data-start-height="{{startHeight}}"
+    data-card-title="{{name}}"
+    data-toggle="tooltip" data-title="{{description}}"
 >
     
     {{#eq contentType "widgets"}}
@@ -38,7 +38,7 @@
         <i class="{{iconType}}-icon {{icon}} card-icon"></i>
     {{/if}}
     
-    <div class="toolbar-content tooltip-always-on" data-toggle="tooltip" data-title="{{title}}">
+    <div class="toolbar-content">
         <span class="card-title">{{name}}</span>
     </div>
 </div>
