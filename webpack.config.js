@@ -44,6 +44,7 @@ const mainConfig = Object.assign({}, config, {
     legacyPreview: './ui/bundle_legacy_preview.js',
     datatables: './ui/bundle_datatables.js',
     codeEditor: './ui/bundle_code_editor.js',
+    wysiwygEditor: './ui/bundle_wysiwyg_editor.js',
     leaflet: './ui/bundle_leaflet.js',
     fileUpload: './ui/src/core/file-upload.js',
   },

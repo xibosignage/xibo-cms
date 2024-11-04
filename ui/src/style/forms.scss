@@ -152,6 +152,7 @@
     .ck-editor__editable_inline {
         outline-color: $xibo-color-accent;
         outline-style: solid;
+        border-radius: 0 !important;
     }
 
     &.source {
