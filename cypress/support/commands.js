@@ -865,6 +865,28 @@ Cypress.Commands.add('openToolbarMenuForPlaylist', function(menuIdx) {
   });
 });
 
+// Open Options Menu within the Layout Editor
+Cypress.Commands.add('openOptionsMenu', () => {
+  cy.get('.navbar-submenu')
+  .should('be.visible')
+  .within(() => {
+    cy.get('#optionsContainerTop')
+      .should('be.visible')
+      .and('not.be.disabled')
+      .click({force: true})
+      .should('have.attr', 'aria-expanded', 'true');
+  });
+});
+
+// Open Row Menu of the first item on the Layouts page
+Cypress.Commands.add('openRowMenu', () => {
+  cy.get('#layouts tbody tr').first().within(() => {
+    cy.get('.btn-group .btn.dropdown-toggle')
+      .click()
+      .should('have.attr', 'aria-expanded', 'true');
+  });
+});
+
 
 /**
  * Update data on CKEditor instance
