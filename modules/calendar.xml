@@ -233,7 +233,7 @@ var numItems = properties.numItems && properties.numItems < items.length
   ? properties.numItems
   : items.length;
 
-return {dataItems: items.slice(0, (numItems - 1))};
+return {dataItems: items.slice(0, numItems)};
     ]]></onDataLoad>
     <onRender>
         <![CDATA[
