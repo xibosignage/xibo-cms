@@ -185,6 +185,10 @@
 // meta: Metadata
 // properties: The properties for the widget
 
+// Track whether there is an event currently ongoing
+window.ongoingEvent = false;
+
+// Process events
 var now = moment();
 
 for(var idx = 0; idx < items.length; idx++) {
@@ -194,9 +198,7 @@ for(var idx = 0; idx < items.length; idx++) {
     var endDate = moment(item.endDate);
 
     // Check if there is an event ongoing and change it if the variable isn't set or is false
-    if ((typeof ongoingEvent != 'undefined' || !window.ongoingEvent) && startDate.isBefore(now) && endDate.isAfter(now)) {
-        window.ongoingEvent = true;
-    }
+    window.ongoingEvent = window.ongoingEvent || (startDate.isBefore(now) && endDate.isAfter(now));
 
     if (endDate.isAfter(now)) {
         if (moment(items[idx].startDate).isBefore(now)) {
@@ -206,7 +208,7 @@ for(var idx = 0; idx < items.length; idx++) {
         }
     }
 
-    if(endDate.isBefore(now)) {
+    if (endDate.isBefore(now)) {
         items[idx].pastEvent = true;
     } else {
         items[idx].pastEvent = false;
@@ -234,12 +236,14 @@ return {dataItems: items};
 // id: The id of the widget
 // target: The target element to render
 // properties: The properties for the <widget></widget>
-if(typeof ongoingEvent != 'undefined' && ongoingEvent && properties.currentEventTrigger) {
-    // If there is an event now, send the Current Event trigger ( if exists )
-    xiboIC.trigger(properties.currentEventTrigger);
-} else if(properties.noEventTrigger) {
+
+// Event triggers
+if (properties.currentEventTrigger && window.ongoingEvent) {
+    // If there is an event now, send the Current Event trigger (if exists)
+    xiboIC.trigger(properties.currentEventTrigger, {targetId: 0});
+} else if (properties.noEventTrigger) {
     // If there is no event now, send the No Event trigger
-    xiboIC.trigger(properties.noEventTrigger);
+    xiboIC.trigger(properties.noEventTrigger, {targetId: 0});
 }
     ]]></onRender>
     <sampleData><![CDATA[
