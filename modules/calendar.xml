@@ -228,7 +228,12 @@ for(var idx = 0; idx < items.length; idx++) {
     }
 }
 
-return {dataItems: items};
+// If we have numItems, send only that number
+var numItems = properties.numItems && properties.numItems < items.length
+  ? properties.numItems
+  : items.length;
+
+return {dataItems: items.slice(0, (numItems - 1))};
     ]]></onDataLoad>
     <onRender>
         <![CDATA[
