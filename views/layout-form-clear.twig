@@ -1,0 +1,27 @@
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% set layout = layout.layout %}
+    {% trans %}Clear Layout - {{ layout }}{% endtrans %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "No" %}, XiboDialogClose()
+    {% trans "Yes" %}, $("#layoutClearForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="layoutClearForm" class="XiboForm form-horizontal" method="clear" action="{{ url_for("layout.clear", {id: layout.layoutId}) }}">
+                {% set message %}{% trans "Are you sure you want to clear this item?" %}{% endset %}
+                {{ forms.message(message) }}
+                
+                {% set message %}{% trans "All media will be unassigned and any widgets such as text/rss will be lost, unless they are on playlists." %}{% endset %}
+                {{ forms.message(message) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

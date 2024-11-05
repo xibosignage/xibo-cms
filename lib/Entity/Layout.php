@@ -1072,6 +1072,17 @@ class Layout implements \JsonSerializable
     }
 
     /**
+     * Clear Layout
+     * @param array $options
+     * @throws GeneralException
+     */
+    public function clear($options = [])
+    {
+        // TODO: Clear layout here
+        $this->getLog()->debug('WIP: Clear Layout');
+    }
+
+    /**
      * Validate this layout
      * @throws GeneralException
      */

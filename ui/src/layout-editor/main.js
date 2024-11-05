@@ -218,7 +218,7 @@ $(() => {
           {
             id: 'publishLayout',
             title: layoutEditorTrans.publishTitle,
-            logo: 'fa-check-square-o',
+            logo: 'fa fa-check-square-o',
             class: 'btn-success',
             action: lD.showPublishScreen,
             inactiveCheck: function() {
@@ -229,7 +229,7 @@ $(() => {
           {
             id: 'checkoutLayout',
             title: layoutEditorTrans.checkoutTitle,
-            logo: 'fa-edit',
+            logo: 'fa fa-edit',
             action: lD.layout.checkout,
             inactiveCheck: function() {
               return (lD.layout.editable == true);
@@ -239,7 +239,7 @@ $(() => {
           {
             id: 'discardLayout',
             title: layoutEditorTrans.discardTitle,
-            logo: 'fa-times-circle-o',
+            logo: 'fa fa-times-circle-o',
             action: lD.showDiscardScreen,
             inactiveCheck: function() {
               return (lD.layout.editable == false);
@@ -252,7 +252,7 @@ $(() => {
           {
             id: 'newLayout',
             title: layoutEditorTrans.newTitle,
-            logo: 'fa-file',
+            logo: 'fa fa-file',
             action: lD.addLayout,
             inactiveCheck: function() {
               return lD.templateEditMode;
@@ -262,7 +262,7 @@ $(() => {
           {
             id: 'deleteLayout',
             title: layoutEditorTrans.deleteTitle,
-            logo: 'fa-times-circle-o',
+            logo: 'fa fa-times-circle-o',
             action: lD.showDeleteScreen,
             inactiveCheck: function() {
               return (
@@ -275,7 +275,7 @@ $(() => {
           {
             id: 'saveTemplate',
             title: layoutEditorTrans.saveTemplateTitle,
-            logo: 'fa-floppy-o',
+            logo: 'fa fa-floppy-o',
             action: lD.showSaveTemplateScreen,
             inactiveCheck: function() {
               return lD.templateEditMode ||
@@ -286,19 +286,29 @@ $(() => {
           {
             id: 'unlockLayout',
             title: layoutEditorTrans.unlockTitle,
-            logo: 'fa-unlock',
-            class: 'btn-info show-on-lock',
+            logo: 'fa fa-unlock',
+            class: 'show-on-lock',
             action: lD.showUnlockScreen,
           },
           {
             id: 'scheduleLayout',
             title: layoutEditorTrans.scheduleTitle,
-            logo: 'fa-clock-o',
+            logo: 'fa fa-clock-o',
             action: lD.showScheduleScreen,
             inactiveCheck: function() {
               return lD.templateEditMode ||
                 (lD.layout.editable ||
                   !lD.layout.scheduleNowPermission);
+            },
+            inactiveCheckClass: 'd-none',
+          },
+          {
+            id: 'clearLayout',
+            title: layoutEditorTrans.clearLayout,
+            logo: 'fas fa-broom',
+            action: lD.showClearScreen,
+            inactiveCheck: function() {
+              return !lD.layout.editable;
             },
             inactiveCheckClass: 'd-none',
           },
@@ -1010,6 +1020,18 @@ lD.showDiscardScreen = function() {
  */
 lD.showScheduleScreen = function() {
   lD.loadFormFromAPI('schedule', lD.layout.campaignId);
+};
+
+/**
+ * Layout clear screen
+ */
+lD.showClearScreen = function() {
+  lD.loadFormFromAPI(
+    'clearForm',
+    lD.layout.layoutId,
+    '',
+    'lD.layout.clear();',
+  );
 };
 
 /**
