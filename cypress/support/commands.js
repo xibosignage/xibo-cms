@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -819,17 +819,14 @@ Cypress.Commands.add('displayStatusEquals', function(displayName, statusId) {
 /**
  * Force open toolbar menu
  * @param {number} menuIdx
+ * @param {boolean} load
  */
-Cypress.Commands.add('openToolbarMenu', function(menuIdx, load) {
+Cypress.Commands.add('openToolbarMenu', function(menuIdx, load = true) {
   cy.intercept('GET', '/user/pref?preference=toolbar').as('toolbarPrefsLoad');
   cy.intercept('GET', '/user/pref?preference=editor').as('editorPrefsLoad');
   cy.intercept('POST', '/user/pref?preference=toolbar').as('toolbarPrefsLoad');
 
-  // Wait for the toolbar to reload when getting prefs at start
-  //cy.wait('@toolbarPrefsLoad');
-  //cy.wait('@editorPrefsLoad');
-
-// Wait for the toolbar to reload when getting prefs at start, based on the load parameter
+  // Wait for the toolbar to reload when getting prefs at start, based on the load parameter
   if (load) {
     cy.wait('@toolbarPrefsLoad');
     cy.wait('@editorPrefsLoad');
