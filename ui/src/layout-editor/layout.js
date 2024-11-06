@@ -593,6 +593,55 @@ Layout.prototype.delete = function() {
 };
 
 /**
+ * Clear layout
+ */
+Layout.prototype.clear = function() {
+  const linkToAPI = urlsForApi.layout.clear;
+  let requestPath = linkToAPI.url;
+
+  lD.common.showLoadingScreen();
+
+  // Deselect previous selected object
+  lD.selectObject();
+
+  // replace id if necessary/exists
+  requestPath = requestPath.replace(':id', this.layoutId);
+
+  $.ajax({
+    url: requestPath,
+    type: linkToAPI.type,
+  }).done(function(res) {
+    if (res.success) {
+      bootbox.hideAll();
+
+      toastr.success(res.message);
+
+      lD.reloadData(lD.layout);
+    } else {
+      // Login Form needed?
+      if (res.login) {
+        window.location.reload();
+      } else {
+        toastr.error(res.message);
+
+        // Remove loading icon from publish dialog
+        $(
+          '[data-test="clearFormLayoutForm"] ' +
+          '.btn-bb-Yes i.fa-cog',
+        ).remove();
+      }
+    }
+
+    lD.common.hideLoadingScreen();
+  }).fail(function(jqXHR, textStatus, errorThrown) {
+    lD.common.hideLoadingScreen();
+
+    // Output error to console
+    console.error(jqXHR, textStatus, errorThrown);
+  });
+};
+
+/**
  * Add a new empty object to the layout
  * @param {string} objectType - object type (widget, region, ...)
  * @param {object} options - Position to add the object to

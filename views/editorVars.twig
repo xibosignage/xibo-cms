@@ -78,6 +78,10 @@
                     url: "{{ url_for("layout.discard", {id: ':id'}) }}",
                     type: 'PUT'
                 },
+                clear: {
+                    url: "{{ url_for("layout.clear", {id: ':id'}) }}",
+                    type: 'PUT'
+                },
                 delete: {
                     url: "{{ url_for("layout.delete", {id: ':id'}) }}",
                     type: 'DELETE'
@@ -113,6 +117,10 @@
                 },
                 discardForm: {
                     url: "{{ url_for("layout.discard.form", {id: ':id'}) }}",
+                    type: 'GET'
+                },
+                clearForm: {
+                    url: "{{ url_for("layout.clear.form", {id: ':id'}) }}",
                     type: 'GET'
                 },
                 deleteForm: {
