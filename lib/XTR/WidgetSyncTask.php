@@ -298,6 +298,8 @@ class WidgetSyncTask implements TaskInterface
                             }
                         }
 
+                        $dataProvider->addItem($item->data);
+
                         // Indicate we've been handled by fallback data
                         $isFallback = true;
                     }
