@@ -820,14 +820,20 @@ Cypress.Commands.add('displayStatusEquals', function(displayName, statusId) {
  * Force open toolbar menu
  * @param {number} menuIdx
  */
-Cypress.Commands.add('openToolbarMenu', function(menuIdx) {
+Cypress.Commands.add('openToolbarMenu', function(menuIdx, load) {
   cy.intercept('GET', '/user/pref?preference=toolbar').as('toolbarPrefsLoad');
   cy.intercept('GET', '/user/pref?preference=editor').as('editorPrefsLoad');
   cy.intercept('POST', '/user/pref?preference=toolbar').as('toolbarPrefsLoad');
 
   // Wait for the toolbar to reload when getting prefs at start
-  cy.wait('@toolbarPrefsLoad');
-  cy.wait('@editorPrefsLoad');
+  //cy.wait('@toolbarPrefsLoad');
+  //cy.wait('@editorPrefsLoad');
+
+// Wait for the toolbar to reload when getting prefs at start, based on the load parameter
+  if (load) {
+    cy.wait('@toolbarPrefsLoad');
+    cy.wait('@editorPrefsLoad');
+    }
 
   cy.get('.editor-toolbar').then(($toolbar) => {
     if ($toolbar.find('#content-' + menuIdx + ' .close-submenu').length > 0) {
@@ -840,6 +846,7 @@ Cypress.Commands.add('openToolbarMenu', function(menuIdx) {
       cy.log('Do nothing!');
     }
   });
+
 });
 
 /**

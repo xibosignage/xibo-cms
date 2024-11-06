@@ -94,7 +94,7 @@ describe('Layout Editor', function() {
         cy.intercept('PUT', '/layout/publish/*').as('publishLayout');
         
         // Open widgets toolbox
-        cy.openToolbarMenu(0);
+        cy.openToolbarMenu(0, false);
         cy.get('[data-sub-type="ics-calendar"]').click();
         cy.get('[data-template-id="daily_light"]').click();
         cy.get('.viewer-object').click();
@@ -161,7 +161,7 @@ describe('Layout Editor', function() {
                 cy.log(`Layout Name: ${layoutName}`);
                 
                 // Open global elements toolbox
-                cy.openToolbarMenu(1);
+                cy.openToolbarMenu(1, false);
                 cy.get('[data-template-id="text"]').click();
                 cy.get('.viewer-object').click();
 
@@ -232,7 +232,7 @@ describe('Layout Editor', function() {
         // Verify that tooltips are present
         cy.get('.navbar-nav .btn-menu-option[data-toggle="tooltip"]').each(($element) => {
             // Trigger hover to show tooltip
-            cy.wrap($element).trigger('mouseenter');
+            cy.wrap($element).trigger('mouseover');
         
             // Check that the tooltip is visible for each button
             cy.get('.tooltip').should('be.visible'); // Expect tooltip to be present
@@ -261,7 +261,7 @@ describe('Layout Editor', function() {
 
         // Verify that tooltips are gone
         cy.get('.navbar-nav .btn-menu-option[data-toggle="tooltip"]').each(($element) => {
-            cy.wrap($element).trigger('mouseenter'); // Trigger hover to show tooltip        
+            cy.wrap($element).trigger('mouseover'); // Trigger hover to show tooltip        
             cy.get('.tooltip').should('not.exist'); // Check if tooltip is gone for each button on the toolbox
         });
 
@@ -286,7 +286,7 @@ describe('Layout Editor', function() {
         });
 
         // Add an element then attempt to delete
-        cy.openToolbarMenu(0);
+        cy.openToolbarMenu(0, false);
         cy.get('[data-sub-type="clock"]').click();
         cy.get('[data-sub-type="clock-analogue"]').click();
         cy.get('.viewer-object').click();
@@ -319,7 +319,7 @@ describe('Layout Editor', function() {
         cy.intercept('DELETE', '/region/*').as('deleteElement');
 
         // Add an element then attempt to delete
-        cy.openToolbarMenu(0);
+        cy.openToolbarMenu(0, false);
         cy.get('[data-sub-type="clock"]').click();
         cy.get('[data-sub-type="clock-analogue"]').click();
         cy.get('.viewer-object').click();
