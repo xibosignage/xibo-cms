@@ -35,6 +35,7 @@ describe('Layout Editor', function() {
         cy.intercept('PUT', '/layout/discard/*').as('discardLayout');
        
         // Publish layout
+        cy.wait(1000);
         cy.openOptionsMenu();
         cy.get('#publishLayout').click();
         cy.get('button.btn-bb-Publish').click();
@@ -64,7 +65,8 @@ describe('Layout Editor', function() {
             .then((name) => {
                 layoutName = name.trim().replace(/^"|"$/g, ''); // Remove double quotes
                 cy.log(`Layout Name: ${layoutName}`);
-                    
+                
+                cy.wait(1000);
                 cy.openOptionsMenu();
                 cy.get('#discardLayout').click();
                 cy.get('button.btn-bb-Discard').click();
@@ -105,6 +107,7 @@ describe('Layout Editor', function() {
         });
 
         // Publish layout
+        cy.wait(1000);
         cy.openOptionsMenu();
         cy.get('#publishLayout').click();
         cy.get('button.btn-bb-Publish').click();
@@ -130,6 +133,7 @@ describe('Layout Editor', function() {
             .then((initialLayoutId) => {
 
             //Create new layout
+            cy.wait(1000);
             cy.openOptionsMenu();
             cy.get('#newLayout').click();
 
@@ -180,6 +184,7 @@ describe('Layout Editor', function() {
                 cy.intercept('PUT', '/layout/lock/release/*').as('unlock');
 
                 // Unlock layout
+                cy.wait(1000);
                 cy.openOptionsMenu();
                 cy.get('#unlockLayout').should('be.visible').click();
                 cy.get('button.btn-bb-unlock').click();
