@@ -73,6 +73,20 @@ $(function() {
     }());
   }
 
+  // Highlight navigation
+  const $sideBarWrapperScroll = $('#sidebar-wrapper ul.sidebar');
+  const $selectedMenu = $sideBarWrapperScroll.find('li.sidebar-list a[href="' +
+    window.location.pathname +
+    '"]').addClass('sidebar-list-selected');
+
+  // Scroll into view if needed
+  if (
+    $selectedMenu.offset().top + $selectedMenu.height() >
+    $sideBarWrapperScroll.height() - $sideBarWrapperScroll[0].scrollTop
+  ) {
+    $selectedMenu[0].scrollIntoView();
+  }
+
   // Every minute
   setInterval('XiboPing(\'' + clockUrl + '\')', 1000 * 60);
 
