@@ -61,7 +61,7 @@
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.13.0",
     "@mapbox/leaflet-pip": "^1.1.0",
-    "@xibosignage/xibo-layout-renderer": "^1.0.3",
+    "@xibosignage/xibo-layout-renderer": "^1.0.4",
     "ajax-bootstrap-select": "^1.4.5",
     "ajv": "^6.12.2",
     "blueimp-file-upload": "^9.34.0",
