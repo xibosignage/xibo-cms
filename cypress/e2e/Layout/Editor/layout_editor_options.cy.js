@@ -95,7 +95,7 @@ describe('Layout Editor', function() {
     cy.intercept('PUT', '/layout/publish/*').as('publishLayout');
 
     // Open widgets toolbox
-    cy.openToolbarMenu(0);
+    cy.openToolbarMenu(0, false);
     cy.get('[data-sub-type="ics-calendar"]').click();
     cy.get('[data-template-id="daily_light"]').click();
     cy.get('.viewer-object').click();
