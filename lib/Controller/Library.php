@@ -2731,6 +2731,10 @@ class Library extends Base
 
         $media->save(['saveTags' => false]);
 
+        if ($media->parentId != 0) {
+            $this->updateMediaRevision($media, $folderId);
+        }
+
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
@@ -2900,5 +2904,20 @@ class Library extends Base
     private function hasFullScreenLayout(Media $media): ?int
     {
         return $this->layoutFactory->getLinkedFullScreenLayout('media', $media->mediaId)?->campaignId;
+    }
+
+    /**
+     * Update media files with revisions
+     * @param Media $media
+     * @param $folderId
+     */
+    private function updateMediaRevision(Media $media, $folderId)
+    {
+        $oldMedia = $this->mediaFactory->getParentById($media->mediaId);
+        $oldMedia->folderId = $folderId;
+        $folder = $this->folderFactory->getById($oldMedia->folderId);
+        $folder->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+
+        $oldMedia->save(['saveTags' => false, 'validate' => false]);
     }
 }
