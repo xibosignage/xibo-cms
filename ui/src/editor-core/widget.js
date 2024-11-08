@@ -1438,7 +1438,7 @@ Widget.prototype.getData = function() {
             const properties = {};
             const options = self.getOptions();
             $.each(modulesList[item].properties, function(i, property) {
-              if (options[property.id]) {
+              if (options[property.id] !== undefined) {
                 const propertyValue = (property.type === 'number') ?
                   Number(options[property.id]) :
                   options[property.id];
