@@ -260,19 +260,14 @@
     {{/if}}
     {{#if lineHeight}}line-height: {{lineHeight}};{{/if}}
     {{#if textWrap}}
+        white-space: break-spaces;
         {{#if justify}}
             text-align: justify;
         {{/if}}
     {{else}}
         white-space: nowrap;
     {{/if}}
-">
-{{#if escapeHtml}}
-    {{text}}
-{{else}}
-    {{{text}}}
-{{/if}}
-</div>
+">{{#if escapeHtml}}{{text}}{{else}}{{{text}}}{{/if}}</div>
 </div>
             ]]></hbs>
         <onTemplateRender><![CDATA[
