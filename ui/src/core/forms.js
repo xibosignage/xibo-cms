@@ -5009,4 +5009,68 @@ window.forms = {
       }
     });
   },
+
+  validateForm: function(
+    form,
+    container,
+    options,
+  ) {
+    const defaultOptions = {
+      submitHandler: options.submitHandler,
+      errorElement: 'span',
+      // Ignore the date picker helpers
+      ignore: '.datePickerHelper',
+      errorPlacement: function(error, element) {
+        if ($(element).hasClass('dateControl')) {
+          // Places the error label date controller
+          error.insertAfter(element.parent());
+        } else {
+          // Places the error label after the invalid element
+          error.insertAfter(element);
+        }
+      },
+      highlight: function(element) {
+        $(element).closest('.form-group')
+          .removeClass('has-success')
+          .addClass('has-error');
+      },
+      success: function(element) {
+        $(element).closest('.form-group')
+          .removeClass('has-error')
+          .addClass('has-success');
+      },
+      invalidHandler: function(event, validator) {
+        // Mark non active tabs with error if they have an invalid element
+        $('.nav-item a.nav-link').removeClass('has-error');
+        validator.errorList.forEach((error) => {
+          const element = error.element;
+          $(element).parents('.tab-pane').each((_id, tab) => {
+            $('.nav-item a.nav-link[href="#' +
+              $(tab).attr('id') + '"]:not(.active)')
+              .addClass('has-error');
+          });
+        });
+
+        // Remove the spinner
+        $(this).closest('.modal-dialog').find('.saving').remove();
+        // https://github.com/xibosignage/xibo/issues/1589
+        $(this).closest('.modal-dialog').find('.save-button')
+          .removeClass('disabled');
+      },
+    };
+
+    // Merge options with defaults
+    Object.assign(
+      defaultOptions,
+      options,
+    );
+
+    // Init validator
+    const validatorObj = form.validate(defaultOptions);
+
+    // If we are in a modal, validate on tab change
+    container.find('.nav-link').on('shown.bs.tab', () => {
+      validatorObj.form();
+    });
+  },
 };

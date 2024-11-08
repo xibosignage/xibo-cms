@@ -190,7 +190,15 @@
 
       var attachmentFormSetup = function(dialog) {
         // Conjure up a text editor
-        formHelpers.createCKEditor('notificationMessage', $('#body'));
+        formHelpers.createCKEditor('notificationMessage', $('#body')).then((editor) => {
+          // Update text area when unfocusing editor
+          editor.ui.focusTracker.on('change:isFocused', (evt, name, isFocused ) => {
+            if (!isFocused) {
+              // Update editor
+              formHelpers.updateCKEditor('notificationMessage');
+            }
+          });
+        });
 
         // Make sure when we close the dialog we also destroy the editor
         dialog.on("hide.bs.modal", function(event) {
@@ -207,35 +215,14 @@
           notificationAddFormAttachmentButtonClicked(e, dialog);
         });
 
-        // Search for any forms that will need submitting
-        // NOTE: The validation plugin does not like binding to multiple forms at once.
-        dialog.find("#notificationForm").validate({
-          submitHandler: attachmentFormSubmit,
-          errorElement: "span",
-          // Ignore the date picker helpers
-          ignore: '.datePickerHelper, :hidden>*:not(.flatpickr-input)',
-          errorPlacement: function(error, element) {
-              if($(element).hasClass('dateControl')) {
-                  // Places the error label date controller
-                  error.insertAfter(element.parent());
-              } else {
-                  // Places the error label after the invalid element
-                  error.insertAfter(element);
-              }
+        // Validate form
+        forms.validateForm(
+          dialog.find('#notificationForm'), // form
+          dialog, // container
+          {
+            submitHandler: attachmentFormSubmit,
           },
-          highlight: function(element) {
-            $(element).closest('.form-group').removeClass('has-success').addClass('has-error');
-          },
-          success: function(element) {
-            $(element).closest('.form-group').removeClass('has-error').addClass('has-success');
-          },
-          invalidHandler: function(event, validator) {
-            // Remove the spinner
-            $(this).closest(".modal-dialog").find(".saving").remove();
-            // https://github.com/xibosignage/xibo/issues/1589
-            $(this).closest(".modal-dialog").find(".save-button").removeClass("disabled");
-          }
-        });
+        );
       };
 
       /**
