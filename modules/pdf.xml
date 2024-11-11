@@ -167,7 +167,7 @@ function onFirstPage() {
 /**
 * Asynchronously downloads PDF.
 */
-pdfjsLib.getDocument(url).promise.then(function(pdfDoc_) {
+pdfjsLib.getDocument({url: url, isEvalSupported: false}).promise.then(function(pdfDoc_) {
   pdfDoc = pdfDoc_;
   pdfLoaded = true;
 
