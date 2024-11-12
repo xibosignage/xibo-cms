@@ -71,6 +71,12 @@ class ModuleTemplate implements \JsonSerializable
     public $title;
 
     /**
+     * @SWG\Property(description="Description of the Module Template")
+     * @var string
+     */
+    public $description;
+
+    /**
      * @SWG\Property()
      * @var string Icon
      */

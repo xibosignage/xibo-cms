@@ -1,5 +1,4 @@
 <div class="toolbar-card toolbar-card-item {{#if thumbnail}}has-thumb{{/if}} {{#if isRequired}}required-element{{/if}}" 
-    data-toggle="tooltip" 
     data-type="{{type}}" 
     data-sub-type="{{#if subType}}{{subType}}{{else}}{{dataType}}{{/if}}"
     data-data-type="{{dataType}}"
@@ -8,6 +7,8 @@
     data-template-id="{{templateId}}"
     data-template-start-width="{{startWidth}}"
     data-template-start-height="{{startHeight}}"
+    data-card-title="{{title}}"
+    data-toggle="tooltip" data-title="{{description}}"
     {{#with extends as | extend |}}
         data-extends-template="{{extend.template}}"
         data-extends-override="{{extend.override}}"
@@ -28,7 +29,7 @@
         data-toggle="tooltip" data-title="{{trans.isRequired}}"></i>
 {{/if}}
 
-    <div class="toolbar-content tooltip-always-on" data-toggle="tooltip" data-title="{{title}}">
+    <div class="toolbar-content" title="{{title}}">
         <span class="card-title">{{title}}</span>
     </div>
 </div>

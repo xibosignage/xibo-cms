@@ -2338,7 +2338,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
             extendsOverride: draggableData.extendsOverride,
             extendsOverrideId: draggableData.extendsOverrideId,
             mediaId: draggableData.mediaId,
-            mediaName: draggableData.title,
+            mediaName: draggableData.cardTitle,
             isVisible: draggableData.isVisible,
           };
 
@@ -2533,7 +2533,7 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
             const onUploadDone = function(data) {
               // Add media id to data
               draggableData.mediaId = data.response().result.files[0].mediaId;
-              draggableData.title = data.response().result.files[0].name;
+              draggableData.cardTitle = data.response().result.files[0].name;
             };
 
             lD.openUploadForm({

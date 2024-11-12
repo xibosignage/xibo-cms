@@ -3,9 +3,10 @@
     data-target="layout"
     data-template-id="{{id}}"
     data-data-type="{{dataType}}"
-    data-title="{{title}}"
     data-source="{{#if provider}}remote{{else}}local{{/if}}"
-    data-download="{{download}}">
+    data-download="{{download}}"
+    data-card-title="{{title}}"
+    data-toggle="tooltip" data-title="{{description}}">
 
     <div class="toolbar-card-preview">
         <img class="thumb" src="{{thumbnail}}" alt="{{title}}">
@@ -28,7 +29,7 @@
             </div>
         {{/if}}
     </div>
-    <span class="media-title tooltip-always-on" data-toggle="tooltip" data-title="{{title}}" data-placement="right">{{title}}</span>
+    <span class="media-title" title="{{title}}">{{title}}</span>
 
     <div class="badges">
         {{#if orientation}}
