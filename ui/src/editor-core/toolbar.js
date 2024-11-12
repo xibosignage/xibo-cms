@@ -1309,6 +1309,11 @@ Toolbar.prototype.loadContent = function(
   // Create content
   this.createContent(menu, forceReload);
 
+  // Prevent default form submit
+  this.DOMObject.find('#content-' + menu + ' form').submit(function(e) {
+    e.preventDefault();
+  });
+
   // Save user preferences
   (savePrefs) && this.savePrefs();
 };
