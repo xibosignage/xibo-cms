@@ -1,5 +1,4 @@
 <div class="toolbar-card upload-card toolbar-card-special"
-    data-toggle="tooltip" 
     data-type="widget" 
     data-sub-type="{{type}}"
     data-target="{{#if target}}{{target}}{{else}}layout playlist zone{{/if}}"
@@ -7,7 +6,8 @@
     data-valid-ext="{{ validExtensions }}"
     data-max-size="{{ maxSize }}" 
     data-max-size-message="{{ maxSizeMessage }}"
-    data-title="{{description}}">
+    data-card-title="{{title}}"
+    data-toggle="tooltip" data-title="{{description}}">
 
     <div class="toolbar-card-preview">
         <div class="select-button select-upload">

@@ -243,6 +243,14 @@ class DisplayAlerts implements ReportInterface
                                           AND `displaygroup`.isDisplaySpecific = 1
             WHERE `displayevent`.eventDate BETWEEN :start AND :end   ';
 
+        $eventTypeIdFilter = $sanitizedParams->getString('eventType');
+
+        if ($eventTypeIdFilter != -1) {
+            $params['eventTypeId'] = $eventTypeIdFilter;
+
+            $sql .= 'AND `displayevent`.eventTypeId = :eventTypeId ';
+        }
+
         if (count($displayIds) > 0) {
             $sql .= 'AND `displayevent`.displayId IN (' . implode(',', $displayIds) . ')';
         }
