@@ -1,5 +1,4 @@
 <div class="toolbar-card toolbar-card-stencil {{#if thumbnail}}has-thumb{{/if}}" 
-    data-toggle="tooltip" 
     data-type="{{type}}" 
     data-sub-type="{{#if subType}}{{subType}}{{else}}{{dataType}}{{/if}}"
     data-data-type="{{dataType}}"
@@ -12,6 +11,8 @@
         data-extends-override="{{extend.override}}"
         data-extends-with="{{extend.with}}"
     {{/with}}
+    data-card-title="{{title}}"
+    data-toggle="tooltip" data-title="{{description}}"
     >
 
 {{#if thumbnail}}
@@ -20,7 +21,7 @@
     </div>
 {{/if}}
     
-    <div class="toolbar-content tooltip-always-on" data-toggle="tooltip" data-title="{{title}}">
+    <div class="toolbar-content" title="{{title}}">
         <span class="card-title">{{title}}</span>
     </div>
 </div>

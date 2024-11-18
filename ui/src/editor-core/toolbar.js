@@ -1352,6 +1352,9 @@ Toolbar.prototype.createContent = function(
     // Adapt card behaviour to current tab
     self.handleCardsBehaviour();
 
+    // Reload tooltips
+    app.common.reloadTooltips(self.DOMObject);
+
     return;
   }
 
@@ -3287,6 +3290,9 @@ Toolbar.prototype.handleCardsBehaviour = function() {
         }
       });
   }
+
+  // Reload tooltips
+  app.common.reloadTooltips(self.DOMObject);
 };
 
 /**
