@@ -31,15 +31,12 @@
         <meta name="public-path" content="{{ theme.rootUri() }}"/>
         
         <link rel="shortcut icon" href="{{ theme.uri("img/favicon.ico") }}" />
-        <link rel="stylesheet" type="text/css" href="{{ theme.rootUri() }}dist/preview/html-preview.css" />
-        <link rel="stylesheet" type="text/css" href="{{ theme.uri("css/html-preview.css") }}" />
     </head>
     <body>
         {% include 'layout-preview-partial.twig' with {'layout': layout, 'previewOptions': previewOptions} %}
         {# Import JS bundle from dist #}
         <script src="{{ theme.rootUri() }}dist/vendor.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
         <script src="{{ theme.rootUri() }}dist/vendor/html5preloader/html5Preloader.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
-        <script src="{{ theme.rootUri() }}dist/preview/html-preview.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
         <script type="text/javascript" nonce="{{ cspNonce }}">
 
             var previewTranslations = {};

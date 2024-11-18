@@ -148,10 +148,6 @@ const mainConfig = Object.assign({}, config, {
           to: 'core',
         },
         {
-          from: 'ui/src/preview',
-          to: 'preview',
-        },
-        {
           from: 'ui/src/assets',
           to: 'assets',
         },
