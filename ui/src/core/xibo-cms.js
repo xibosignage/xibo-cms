@@ -81,6 +81,8 @@ $(function() {
 
   // Scroll into view if needed
   if (
+    $selectedMenu.length > 0 &&
+    $sideBarWrapperScroll.length > 0 &&
     $selectedMenu.offset().top + $selectedMenu.height() >
     $sideBarWrapperScroll.height() - $sideBarWrapperScroll[0].scrollTop
   ) {
