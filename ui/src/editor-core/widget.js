@@ -513,9 +513,13 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
         // Save group scale type if exists
         if (element.groupScale) {
           elementObject.groupScale = 1;
-        } else if (element.groupScaleType) {
+        } else if (
+          element.groupScaleTypeH &&
+          element.groupScaleTypeV
+        ) {
           elementObject.groupScale = 0;
-          elementObject.groupScaleType = element.groupScaleType;
+          elementObject.groupScaleTypeH = element.groupScaleTypeH;
+          elementObject.groupScaleTypeV = element.groupScaleTypeV;
         }
       } else {
         // Save effect if exists

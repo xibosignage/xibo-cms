@@ -29,6 +29,7 @@ window.templates = {
     header: require('./src/templates/forms/inputs/header.hbs'),
     richText: require('./src/templates/forms/inputs/richText.hbs'),
     divider: require('./src/templates/forms/inputs/divider.hbs'),
+    buttonSwitch: require('./src/templates/forms/inputs/buttonSwitch.hbs'),
     custom: require('./src/templates/forms/inputs/custom.hbs'),
     datasetSelector:
       require('./src/templates/forms/inputs/datasetSelector.hbs'),

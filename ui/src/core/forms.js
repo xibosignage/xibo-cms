@@ -725,6 +725,29 @@ window.forms = {
       });
     });
 
+    // Button group switch
+    findElements(
+      '.button-switch-input-group',
+      target,
+    ).each(function(_k, el) {
+      const $buttonGroup = $(el).find('.btn-group');
+      const $hiddenInput = $(el).find('input[type="hidden"]');
+
+      $buttonGroup.find('button').on('click', function(ev) {
+        const $button = $(ev.currentTarget);
+
+        // Deselect all other buttons
+        $buttonGroup.find('button')
+          .removeClass('selected');
+        // Add selected to target button
+        $button.addClass('selected');
+
+        // Update hidden input with chosen button value
+        $hiddenInput.val($button.data('value'))
+          .trigger('change');
+      });
+    });
+
     // Dataset order clause
     findElements(
       '.dataset-order-clause',

@@ -866,3 +866,21 @@ select[readonly].select2-hidden-accessible + .select2-container .select2-selecti
         }
     }
 }
+
+// Button switch
+.button-switch-input-group {
+    button {
+        color: $xibo-color-primary;
+        border-color: $xibo-color-primary;
+
+        &:not(.selected):hover {
+            color: $xibo-color-primary;
+            background-color: lighten($xibo-color-primary, 35%);
+        }
+
+        &.selected {
+            background-color: $xibo-color-primary;
+            color: $xibo-color-neutral-0;
+        }
+    }
+}
