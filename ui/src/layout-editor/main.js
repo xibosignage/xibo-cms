@@ -1889,6 +1889,36 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
       });
   };
 
+  const calculateDimensionsWithRatio = function(
+    startWidth = 250,
+    startHeight = 250,
+    originalWidth,
+    originalHeight,
+  ) {
+    // Check if media had original dimensions
+    // and adjust template dimensions to keep the original ratio
+    if (
+      originalWidth &&
+      originalHeight &&
+      originalWidth != originalHeight
+    ) {
+      const ratioWH =
+        originalWidth / originalHeight;
+
+      if (
+        ratioWH > 1
+      ) {
+        // Landscape
+        startHeight /= ratioWH;
+      } else {
+        // Portrait
+        startWidth *= ratioWH;
+      }
+    }
+
+    return [startWidth, startHeight];
+  };
+
   const createSubplaylistInPlaylist = function(regionId, playlistId) {
     lD.addModuleToPlaylist(
       regionId,
@@ -1996,16 +2026,21 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
         lD.openPlaylistEditor(res.data.regionPlaylist.playlistId);
       });
     } else {
-      // Get dimensions of the draggable
-      const startWidth = $(draggable).data('startWidth');
-      const startHeight = $(draggable).data('startHeight');
+      // Calculate dimensions with original ratio
+      const [startWidth, startHeight] =
+      calculateDimensionsWithRatio(
+        draggableData.templateStartWidth,
+        draggableData.templateStartHeight,
+        draggableData.originalWidth,
+        draggableData.originalHeight,
+      );
 
       // If both dimensions exist and are not 0
       // add them to options
       const dimensions = {};
       if (startWidth && startHeight) {
-        dimensions.width = startWidth;
-        dimensions.height = startHeight;
+        dimensions.width = Math.round(startWidth);
+        dimensions.height = Math.round(startHeight);
       }
 
       // Add to layout, but create a new region
@@ -2324,14 +2359,23 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
         });
       } else {
         const addElement = function() {
+          // Calculate dimensions with original ratio
+          const [startWidth, startHeight] =
+            calculateDimensionsWithRatio(
+              draggableData.templateStartWidth,
+              draggableData.templateStartHeight,
+              draggableData.originalWidth,
+              draggableData.originalHeight,
+            );
+
           // Element options
           const elementOptions = {
             id: draggableData.templateId,
             type: draggableData.dataType,
             left: (dropPosition) ? dropPosition.left : 0,
             top: (dropPosition) ? dropPosition.top : 0,
-            width: draggableData.templateStartWidth,
-            height: draggableData.templateStartHeight,
+            width: startWidth,
+            height: startHeight,
             layer: 0,
             rotation: 0,
             extendsTemplate: draggableData.extendsTemplate,
