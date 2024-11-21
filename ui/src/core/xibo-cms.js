@@ -155,38 +155,16 @@ window.XiboInitialise = function(scope, options) {
       return false;
     });
 
-  // Search for any forms that will need submitting
-  // NOTE: The validation plugin does not like binding
-  // to multiple forms at once.
-  $(scope + ' .XiboForm').validate({
-    submitHandler: XiboFormSubmit,
-    // Ignore the date picker helpers
-    ignore: '.datePickerHelper, :hidden>*:not(.flatpickr-input)',
-    errorElement: 'span',
-    errorPlacement: function(error, element) {
-      if ($(element).hasClass('dateControl')) {
-        // Places the error label date controller
-        error.insertAfter(element.parent());
-      } else {
-        // Places the error label after the invalid element
-        error.insertAfter(element);
-      }
-    },
-    highlight: function(element) {
-      $(element).closest('.form-group').removeClass('has-success')
-        .addClass('has-error');
-    },
-    success: function(element) {
-      $(element).closest('.form-group').removeClass('has-error')
-        .addClass('has-success');
-    },
-    invalidHandler: function(event, validator) {
-      // Remove the spinner
-      $(this).closest('.modal-dialog').find('.saving').remove();
-      // https://github.com/xibosignage/xibo/issues/1589
-      $(this).closest('.modal-dialog').find('.save-button')
-        .removeClass('disabled');
-    },
+  // Form validation
+  $(scope + ' .XiboForm').each((_idx, form) => {
+    const $form = $(form);
+    forms.validateForm(
+      $form, // form
+      $form.parent(), // container
+      {
+        submitHandler: XiboFormSubmit,
+      },
+    );
   });
 
   // Links that just need to be submitted as forms
@@ -209,18 +187,17 @@ window.XiboInitialise = function(scope, options) {
     return false;
   });
 
-  // Search for any text forms that will need submitting
-  $(scope + ' .XiboTextForm').validate({
-    submitHandler: XiboFormSubmit,
-    errorElement: 'span',
-    highlight: function(element) {
-      $(element).closest('.form-group').removeClass('has-success')
-        .addClass('has-error');
-    },
-    success: function(element) {
-      $(element).closest('.form-group').removeClass('has-error')
-        .addClass('has-success');
-    },
+  // Text Form validation
+  $(scope + ' .XiboTextForm').each((_idx, form) => {
+    const $form = $(form);
+    console.log('validateForm XiboTextForm');
+    forms.validateForm(
+      $form, // form
+      $form.parent(), // container
+      {
+        submitHandler: XiboFormSubmit,
+      },
+    );
   });
 
   // Search for any help enabled elements

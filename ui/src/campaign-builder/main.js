@@ -283,44 +283,32 @@ window.cB = {
       // Load a map
       cB.initialiseMap('campaign-builder-map', $dialog);
 
-      $dialog.find('.XiboForm').validate({
-        submitHandler: function(form) {
-          XiboFormSubmit($(form), null, () => {
-            // Is this an add or an edit?
-            const displayOrder = $form.data('existingDisplayOrder');
-            if (displayOrder && parseInt(displayOrder) > 0) {
-              // Delete the existing assignment
-              $.ajax({
-                method: 'delete',
-                url: $form.data('assignmentRemoveUrl') +
-                  '&displayOrder=' + displayOrder,
-                complete: () => {
-                  refreshLayoutAssignmentsTable();
-                },
-              });
-            } else {
-              refreshLayoutAssignmentsTable();
-            }
-          });
+      // Validate form
+      forms.validateForm(
+        $dialog.find('.XiboForm'), // form
+        $dialog, // container
+        {
+          submitHandler: function(form) {
+            XiboFormSubmit($(form), null, () => {
+              // Is this an add or an edit?
+              const displayOrder = $form.data('existingDisplayOrder');
+              if (displayOrder && parseInt(displayOrder) > 0) {
+                // Delete the existing assignment
+                $.ajax({
+                  method: 'delete',
+                  url: $form.data('assignmentRemoveUrl') +
+                    '&displayOrder=' + displayOrder,
+                  complete: () => {
+                    refreshLayoutAssignmentsTable();
+                  },
+                });
+              } else {
+                refreshLayoutAssignmentsTable();
+              }
+            });
+          },
         },
-        errorElement: 'span',
-        highlight: function(element) {
-          $(element).closest('.form-group')
-            .removeClass('has-success')
-            .addClass('has-error');
-        },
-        success: function(element) {
-          $(element).closest('.form-group')
-            .removeClass('has-error')
-            .addClass('has-success');
-        },
-        invalidHandler: function(event, validator) {
-          // Remove the spinner
-          $(this).closest('.modal-dialog').find('.saving').remove();
-          $(this).closest('.modal-dialog').find('.save-button')
-            .removeClass('disabled');
-        },
-      });
+      );
     }).on('hidden.bs.modal', function() {
       // Clear the layout select
       if (cB.$layoutSelect) {
@@ -409,7 +397,7 @@ window.cB = {
               {
                 id: 'assignment_button_delete',
                 text: campaignBuilderTrans.assignmentDeleteButton,
-                url: $selector.data('assignmentDeleteUrl')+
+                url: $selector.data('assignmentDeleteUrl') +
                   '?displayOrder=' + data.displayOrder,
               },
             ];

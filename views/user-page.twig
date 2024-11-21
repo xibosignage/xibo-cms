@@ -242,39 +242,31 @@
 
             initFolderPanel(dialog, true);
 
-            // Bind to the add form submit
-            $(".UserForm").validate({
-                submitHandler: function (form) {
-                    // Grab and alter the value in the library quota field
-                    var libraryQuotaField = $(form).find("input[name=libraryQuota]");
-                    var libraryQuotaUnitsField = $(form).find("select[name=libraryQuotaUnits]");
-                    var libraryQuota = libraryQuotaField.val();
+            // Validate form
+            var $userForm = $('.UserForm');
+            forms.validateForm(
+                $userForm, // form
+                $userForm.parents('.modal-body'), // container
+                {
+                    submitHandler: function (form) {
+                        // Grab and alter the value in the library quota field
+                        var libraryQuotaField = $(form).find('input[name=libraryQuota]');
+                        var libraryQuotaUnitsField = $(form).find('select[name=libraryQuotaUnits]');
+                        var libraryQuota = libraryQuotaField.val();
 
-                    if (libraryQuotaUnitsField.val() === 'mb') {
-                        libraryQuota = libraryQuota * 1024;
-                    } else if (libraryQuotaUnitsField.val() === 'gb') {
-                        libraryQuota = libraryQuota * 1024 * 1024;
-                    }
+                        if (libraryQuotaUnitsField.val() === 'mb') {
+                            libraryQuota = libraryQuota * 1024;
+                        } else if (libraryQuotaUnitsField.val() === 'gb') {
+                            libraryQuota = libraryQuota * 1024 * 1024;
+                        }
 
-                    // Set the field
-                    libraryQuotaField.prop('value', libraryQuota);
+                        // Set the field
+                        libraryQuotaField.prop('value', libraryQuota);
 
-                    XiboFormSubmit(form);
+                        XiboFormSubmit(form);
+                    },
                 },
-                errorElement: "span",
-                highlight: function(element) {
-                    $(element).closest('.form-group').removeClass('has-success').addClass('has-error');
-                },
-                success: function(element) {
-                    $(element).closest('.form-group').removeClass('has-error').addClass('has-success');
-                },
-                invalidHandler: function(event, validator) {
-                    // Remove the spinner
-                    $(this).closest(".modal-dialog").find(".saving").remove();
-                    // https://github.com/xibosignage/xibo/issues/1589
-                    $(this).closest(".modal-dialog").find(".save-button").removeClass("disabled");
-                }
-            });
+            );
         }
 
         /**

@@ -1392,6 +1392,11 @@ div.dataTables_wrapper div.dataTables_info {
     background-color: #eee;
 }
 
+.nav-tabs .nav-link.has-error {
+    background-color: #ff000005;
+    color: red;
+}
+
 /* Colour picker */
 .colorpicker-input .input-group-prepend > i{
     cursor: pointer;
