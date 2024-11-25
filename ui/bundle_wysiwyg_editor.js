@@ -151,6 +151,7 @@ const config = {
     TableCaption,
     TableCellProperties,
     TableColumnResize,
+    TableCellProperties,
     TableProperties,
     TableToolbar,
     TextTransformation,
@@ -174,6 +175,7 @@ const config = {
       'tableRow',
       'mergeTableCells',
       'tableProperties',
+      'tableCellProperties',
     ],
   },
 };
