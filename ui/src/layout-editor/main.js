@@ -2578,6 +2578,10 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
               // Add media id to data
               draggableData.mediaId = data.response().result.files[0].mediaId;
               draggableData.cardTitle = data.response().result.files[0].name;
+              draggableData.originalWidth =
+                data.response().result.files[0].width;
+              draggableData.originalHeight =
+                  data.response().result.files[0].height;
             };
 
             lD.openUploadForm({
