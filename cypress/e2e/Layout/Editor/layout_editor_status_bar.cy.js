@@ -20,51 +20,47 @@
  */
 
 describe('Layout Editor', function() {
-    beforeEach(function() {
-      cy.login();
-      cy.visit('/layout/view');
-      cy.get('button.layout-add-button').click();
-      cy.get('#layout-viewer').should('be.visible');  // Assert that the URL has changed to the layout editor
-    });
-  
-    it('should display the correct Layout status icon and tooltip', function() {  
-        //Verify tooltip displays on hover with correct status
-        //Check if the status icon with the correct class is displayed
-        cy.get("#layout-info-status")
-          .should("be.visible")
-          .and("have.class", "badge-danger")
-          .trigger("mouseover");
+  beforeEach(function() {
+    cy.login();
+    cy.visit('/layout/view');
+    cy.get('button.layout-add-button').click();
+    cy.get('#layout-viewer').should('be.visible');
+  });
 
-        cy.get(".popover")
-          .should("be.visible")
-          .and("contain", "This Layout is invalid"); // Replace with expected tooltip text
-        
-        cy.get("#layout-info-status")
-          .trigger("mouseout");
-    });
+  it('should display the correct Layout status icon and tooltip', function() {
+    // Verify tooltip displays on hover with correct status
+    // Check if the status icon with the correct class is displayed
+    cy.get('#layout-info-status')
+      .should('be.visible')
+      .and('have.class', 'badge-danger')
+      .trigger('mouseover');
 
-    it("should display the correct Layout name", () => {
+    cy.get('.popover')
+      .should('be.visible')
+      .and('contain', 'This Layout is invalid');
 
-        // Verify the Layout name text
-        cy.get(".layout-info-name span")
-          .should("be.visible")
-          .and("contain", "Untitled");
-    });
+    cy.get('#layout-info-status')
+      .trigger('mouseout');
+  });
 
-    it("should display the correct Layout duration", () => {
-        // Verify the duration is correctly displayed
-        cy.get(".layout-info-duration .layout-info-duration-value")
-          .should("be.visible")
-          .and("contain", "00:00");
-    });
+  it('should display the correct Layout name', () => {
+    // Verify the Layout name text
+    cy.get('.layout-info-name span')
+      .should('be.visible')
+      .and('contain', 'Untitled');
+  });
 
-    it("should display the correct Layout dimensions", () => {
-        // Verify the dimensions are correctly displayed
-        cy.get(".layout-info-dimensions span")
-          .should("be.visible")
-          .and("contain", "1920x1080"); 
-    });
-  
-  
- 
+  it('should display the correct Layout duration', () => {
+    // Verify the duration is correctly displayed
+    cy.get('.layout-info-duration .layout-info-duration-value')
+      .should('be.visible')
+      .and('contain', '00:00');
+  });
+
+  it('should display the correct Layout dimensions', () => {
+    // Verify the dimensions are correctly displayed
+    cy.get('.layout-info-dimensions span')
+      .should('be.visible')
+      .and('contain', '1920x1080');
+  });
 });
