@@ -1,3 +1,5 @@
+/* eslint-disable new-cap */
+/* eslint-disable max-len */
 /*
  * Copyright (C) 2024 Xibo Signage Ltd
  *
@@ -830,7 +832,7 @@ Cypress.Commands.add('openToolbarMenu', function(menuIdx, load = true) {
   if (load) {
     cy.wait('@toolbarPrefsLoad');
     cy.wait('@editorPrefsLoad');
-    }
+  }
 
   cy.get('.editor-toolbar').then(($toolbar) => {
     if ($toolbar.find('#content-' + menuIdx + ' .close-submenu').length > 0) {
@@ -843,7 +845,6 @@ Cypress.Commands.add('openToolbarMenu', function(menuIdx, load = true) {
       cy.log('Do nothing!');
     }
   });
-
 });
 
 /**
@@ -869,17 +870,40 @@ Cypress.Commands.add('openToolbarMenuForPlaylist', function(menuIdx) {
   });
 });
 
+Cypress.Commands.add('toolbarSearch', (textToType) => {
+  cy.intercept('POST', '/user/pref').as('updatePreferences');
+
+  // Clear the search box first
+  cy.get('input#input-name')
+    .filter(':visible')
+    .should('have.length', 1)
+    .invoke('val')
+    .then((value) => {
+      if (value !== '') {
+        cy.get('input#input-name')
+          .filter(':visible')
+          .clear();
+        cy.wait('@updatePreferences');
+      }
+    });
+  // Type keyword to search
+  cy.get('input#input-name')
+    .filter(':visible')
+    .type(textToType);
+  cy.wait('@updatePreferences');
+});
+
 // Open Options Menu within the Layout Editor
 Cypress.Commands.add('openOptionsMenu', () => {
   cy.get('.navbar-submenu')
-  .should('be.visible')
-  .within(() => {
-    cy.get('#optionsContainerTop')
-      .should('be.visible')
-      .and('not.be.disabled')
-      .click({force: true})
-      .should('have.attr', 'aria-expanded', 'true');
-  });
+    .should('be.visible')
+    .within(() => {
+      cy.get('#optionsContainerTop')
+        .should('be.visible')
+        .and('not.be.disabled')
+        .click({force: true})
+        .should('have.attr', 'aria-expanded', 'true');
+    });
 });
 
 // Open Row Menu of the first item on the Layouts page
