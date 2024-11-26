@@ -2813,6 +2813,11 @@ Viewer.prototype.initMoveable = function() {
     // Save transformation
     transformSplit = saveTransformation(e.target);
 
+    // Check if item was not resized
+    if (transformSplit.length === 1) {
+      return;
+    }
+
     // Check if the region moved when resizing
     const moved = (
       parseFloat(transformSplit[1]) != 0 ||
@@ -2850,7 +2855,7 @@ Viewer.prototype.initMoveable = function() {
       lD.selectedObject.type == 'element-group'
     ) && self.saveElementGroupProperties(
       e.target,
-      false,
+      true,
       true,
     );
   });

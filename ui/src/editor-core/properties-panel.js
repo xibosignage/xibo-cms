@@ -916,16 +916,15 @@ PropertiesPanel.prototype.render = function(
           // Create common fields
           const commonFields = [];
 
-          // TODO: for now we disable scaling type
           // Show scaling type if element is in a group
           if (
-            false &&
             targetAux.groupId != '' &&
             targetAux.groupId != undefined
           ) {
             commonFields.unshift(
               {
                 id: 'groupScale',
+                customClass: 'group-scale-properties',
                 title: propertiesPanelTrans.groupScale,
                 helpText: propertiesPanelTrans.groupScaleHelpText,
                 value: targetAux.groupScale,
@@ -933,31 +932,59 @@ PropertiesPanel.prototype.render = function(
                 visibility: [],
               },
               {
-                id: 'groupScaleType',
-                title: propertiesPanelTrans.groupScaleType,
-                helpText: propertiesPanelTrans.groupScaleTypeHelpText,
-                value: targetAux.groupScaleType,
+                id: 'groupScaleTypeH',
+                customClass: 'group-scale-properties',
+                title: propertiesPanelTrans.groupScaleTypeH,
+                helpText: propertiesPanelTrans.groupScaleTypeHHelpText,
+                value: targetAux.groupScaleTypeH,
                 options: [
                   {
-                    title: propertiesPanelTrans.groupScaleTypeOptions.topLeft,
-                    name: 'top_left',
+                    title: propertiesPanelTrans.groupScaleTypeOptions.left,
+                    name: 'left',
                   },
                   {
-                    title: propertiesPanelTrans.groupScaleTypeOptions.topRight,
-                    name: 'top_right',
+                    title: propertiesPanelTrans.groupScaleTypeOptions.center,
+                    name: 'center',
                   },
                   {
-                    title: propertiesPanelTrans
-                      .groupScaleTypeOptions.bottomLeft,
-                    name: 'bottom_left',
-                  },
-                  {
-                    title: propertiesPanelTrans
-                      .groupScaleTypeOptions.bottomRight,
-                    name: 'bottom_right',
+                    title: propertiesPanelTrans.groupScaleTypeOptions.right,
+                    name: 'right',
                   },
                 ],
-                type: 'dropdown',
+                type: 'buttonSwitch',
+                visibility: [
+                  {
+                    conditions: [
+                      {
+                        field: 'groupScale',
+                        type: 'eq',
+                        value: '0',
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                id: 'groupScaleTypeV',
+                customClass: 'group-scale-properties',
+                title: propertiesPanelTrans.groupScaleTypeV,
+                helpText: propertiesPanelTrans.groupScaleTypeVHelpText,
+                value: targetAux.groupScaleTypeV,
+                options: [
+                  {
+                    title: propertiesPanelTrans.groupScaleTypeOptions.top,
+                    name: 'top',
+                  },
+                  {
+                    title: propertiesPanelTrans.groupScaleTypeOptions.middle,
+                    name: 'middle',
+                  },
+                  {
+                    title: propertiesPanelTrans.groupScaleTypeOptions.bottom,
+                    name: 'bottom',
+                  },
+                ],
+                type: 'buttonSwitch',
                 visibility: [
                   {
                     conditions: [
@@ -1700,6 +1727,11 @@ PropertiesPanel.prototype.render = function(
             // Update moveable
             lD.viewer.updateMoveable();
           });
+
+        // Check if we have group scale properties for elements
+        // and move them to the top of the position tab
+        self.DOMObject.find('#appearanceTab .group-scale-properties')
+          .prependTo(self.DOMObject.find('#positionTab'));
       };
 
       // If it's an element, get properties, first to update it
