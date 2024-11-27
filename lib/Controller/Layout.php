@@ -1086,45 +1086,74 @@ class Layout extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @return \Slim\Http\Response
+     * @throws \Xibo\Support\Exception\GeneralException
+     *
      * @SWG\Clear(
      *  path="/layout/{layoutId}",
      *  operationId="layoutClear",
      *  tags={"layout"},
      *  summary="Clear Layout",
-     *  description="Clears a Layout",
+     *  description="Clear a draft layouts canvas of all widgets and elements, leaving it blank.",
      *  @SWG\Parameter(
      *      name="layoutId",
      *      in="path",
-     *      description="The Layout ID to Clear",
+     *      description="The Layout ID to Clear, must be a draft.",
      *      type="integer",
      *      required=true
      *   ),
      *  @SWG\Response(
-     *      response=204,
-     *      description="successful operation"
-     *  )
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Layout"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new record",
+     *          type="string"
+     *      )
      * )
      */
-    function clear(Request $request, Response $response, $id)
+    public function clear(Request $request, Response $response, $id): Response
     {
-        $layout = $this->layoutFactory->loadById($id);
+        // Get the existing layout
+        $layout = $this->layoutFactory->getById($id);
 
+        // Make sure we have permission
         if (!$this->getUser()->checkEditable($layout)) {
-            throw new AccessDeniedException(__('You do not have permissions to clear this layout'));
+            throw new AccessDeniedException();
         }
 
-        $layout->clear();
+        // Check that this Layout is a Draft
+        if (!$layout->isChild()) {
+            throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+        }
+
+        // Discard the current draft and replace it
+        $layout->discardDraft(false);
+
+        // Blank
+        $resolution = $this->resolutionFactory->getClosestMatchingResolution($layout->width, $layout->height);
+        $blank = $this->layoutFactory->createFromResolution(
+            $resolution->resolutionId,
+            $layout->ownerId,
+            $layout->layout,
+            null,
+            null,
+            null,
+            false
+        );
+
+        // Persist the parentId
+        $blank->parentId = $layout->parentId;
+        $blank->campaignId = $layout->campaignId;
+        $blank->publishedStatusId = 2;
+        $blank->save(['validate' => false, 'auditMessage', 'Canvas Cleared']);
 
         // Return
         $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => sprintf(__('Cleared %s'), $layout->layout)
+            'message' => sprintf(__('Cleared %s'), $layout->layout),
+            'id' => $blank->layoutId,
+            'data' => $blank,
         ]);
 
         return $this->render($request, $response);
