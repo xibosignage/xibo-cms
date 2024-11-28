@@ -1421,7 +1421,11 @@ class Library extends Base
             || $media->hasPropertyChanged('enableStat')
         ) {
             foreach ($this->widgetFactory->getByMediaId($media->mediaId, 0) as $widget) {
-                $widget->calculateDuration($this->moduleFactory->getByType($widget->type));
+                if ($widget->useDuration == 1) {
+                    $widget->calculateDuration($this->moduleFactory->getByType($widget->type));
+                } else {
+                    $widget->calculatedDuration = $media->duration;
+                }
                 $widget->save();
             }
         }
