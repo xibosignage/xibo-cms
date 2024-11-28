@@ -105,11 +105,28 @@
     z-index: calc($properties-panel-rich-text-container-z-index + 1) !important;
 }
 
-.ck-editor-body-detached .ck-body-wrapper .ck-balloon-panel.ck-toolbar-container.ck-balloon-panel_toolbar_east {
+.ck-editor-body-detached .ck-body-wrapper .ck-balloon-panel[data-main-toolbar] {
     right: 150px !important;
     left: auto !important;
-    top: 66px ! important;
+    top: auto !important;
+    bottom: calc(100vh - 100px) !important;
     width: calc(100vw - 300px) !important;
+    display: block;
+    overflow: auto;
+}
+
+.ck-editor-body-detached .ck-body-wrapper .ck-balloon-panel:not(.ck-powered-by-balloon):not([data-main-toolbar]) {
+    top: 148px !important;
+    left: 160px !important;
+    opacity: 0.95;
+}
+
+.ck-editor-body-detached .ck-body-wrapper .ck-balloon-panel.ck-powered-by-balloon {
+    top: auto !important;
+    left: auto !important;
+    bottom: 16px !important;
+    right: 16px !important;
+    display: block;
 }
 
 .rich-text-main-container {
