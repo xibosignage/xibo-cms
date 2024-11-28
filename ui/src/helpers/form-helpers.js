@@ -927,6 +927,15 @@ const formHelpers = function() {
               });
           }
 
+          // If we have a detached editor, we need to add a property
+          // to the main bar to help with CSS styling
+          $(
+            '.ck-editor-body-detached .ck-body-wrapper ' +
+            '.ck-balloon-panel > .ck-toolbar',
+          ).each((_idx, el) => {
+            $(el).parent().attr('data-main-toolbar', 1);
+          });
+
           return false;
         });
       });
