@@ -893,6 +893,59 @@ Cypress.Commands.add('toolbarSearch', (textToType) => {
   cy.wait('@updatePreferences');
 });
 
+Cypress.Commands.add('toolbarSearchWithActiveFilter', (textToType) => {
+  cy.intercept('POST', '/user/pref').as('updatePreferences');
+  cy.intercept('GET', '/library/search*').as('librarySearch');
+
+  // Clear the search box first
+  cy.get('input#input-name')
+    .filter(':visible')
+    .should('have.length', 1)
+    .invoke('val')
+    .then((value) => {
+      if (value !== '') {
+        cy.get('input#input-name')
+          .filter(':visible')
+          .clear();
+        cy.wait('@updatePreferences');
+        cy.wait('@librarySearch');
+      }
+    });
+  // Type keyword to search
+  cy.get('input#input-name')
+    .filter(':visible')
+    .type(textToType);
+  cy.wait('@updatePreferences');
+  cy.wait('@librarySearch');
+});
+
+Cypress.Commands.add('toolbarFilterByFolder', (folderName, folderId) => {
+  cy.intercept('POST', '/user/pref').as('updatePreferences');
+  cy.intercept('GET', '/folders?start=0&length=10').as('loadFolders');
+  cy.intercept('GET', '/library/search*').as('librarySearch');
+
+  // Open folder dropdown
+  cy.get('#input-folder')
+    .parent()
+    .find('.select2-selection')
+    .click();
+  cy.wait('@loadFolders');
+
+  // Select the specified folder
+  cy.get('.select2-results__option')
+    .contains(folderName)
+    .should('be.visible')
+    .click();
+
+  cy.wait('@updatePreferences');
+
+  // Verify library search response
+  cy.wait('@librarySearch').then(({response}) => {
+    expect(response.statusCode).to.eq(200);
+    expect(response.url).to.include(`folderId=${folderId}`);
+  });
+});
+
 // Open Options Menu within the Layout Editor
 Cypress.Commands.add('openOptionsMenu', () => {
   cy.get('.navbar-submenu')
