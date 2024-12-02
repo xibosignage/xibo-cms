@@ -1366,10 +1366,10 @@ class Playlist extends Base
             if ($duration !== null || $sanitizedParams->getCheckbox('useDuration') == 1) {
                 $widget->useDuration = 1;
                 $widget->duration = $itemDuration;
+                $widget->calculateDuration($module);
+            } else {
+                $widget->calculatedDuration = $itemDuration;
             }
-
-            // Calculate the duration
-            $widget->calculateDuration($module);
 
             // Assign the widget to the playlist
             $playlist->assignWidget($widget, $displayOrder);
