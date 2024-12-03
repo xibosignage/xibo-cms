@@ -201,6 +201,8 @@ PropertiesPanel.prototype.save = function(
         customRequestPath: requestPath,
       },
     ).then((_res) => {
+      const data = _res;
+
       // Success
       app.common.hideLoadingScreen();
 
@@ -251,6 +253,15 @@ PropertiesPanel.prototype.save = function(
               reloadPropertiesPanel: false,
             },
           );
+        } else if (target.type === 'layout') {
+          // Update resolution id
+          app.layout.resolutionId = resolutionId;
+
+          // Update layout
+          app.layout.updateData(data.data);
+
+          // Render viewer to reflect changes
+          app.viewer.render(true);
         } else {
           // Reload data, and refresh viewer if layout
           // or if we're saving an element
@@ -296,11 +307,6 @@ PropertiesPanel.prototype.save = function(
               // If we're saving an element group, update bottom bar
               (savingElementGroup) &&
                 app.bottombar.render(originalTarget);
-            }
-
-            // If target was layout, update resolution id
-            if (originalTarget.type === 'layout') {
-              app.layout.resolutionId = resolutionId;
             }
 
             // If we're saving a region, update bottom bar
