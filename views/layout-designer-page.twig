@@ -193,6 +193,7 @@
                 var saveButton = $('button#save', dialog);
                 var initialBackgroundImageId = $backgroundImageId.val();
                 var backgroundChanged = false;
+                var mediaName = '';
 
                 function backgroundImageChange() {
                     // Want to attach an onchange event to the drop down for the bg-image
@@ -212,6 +213,10 @@
                         // Hide not found icon and show image
                         notFoundIcon.hide();
                         bgImageFileName.show();
+
+                        if(mediaName) {
+                            bgImageFileName.html(mediaName);
+                        }
 
                         // Auto-submit form
                         if (id !== initialBackgroundImageId) {
@@ -269,6 +274,10 @@
                         // Change file name
                         bgImageFileName.html($draggable.data('title'));
 
+                        // Set media name
+                        mediaName = $draggable.data('cardTitle');
+
+
                         if($draggable.hasClass('from-provider')) {
                             backgroundImageHandleDrop($draggable.data('providerData'), true);
                         } else {
@@ -284,7 +293,10 @@
                     var cardData = (fromProvider) ? selectedCard.data('providerData') : selectedCard.data('mediaId');
 
                     // Change file name
-                    bgImageFileName.html(selectedCard.data('title'));
+                    bgImageFileName.html(selectedCard.data('cardTitle'));
+
+                    // Set media name
+                    mediaName = selectedCard.data('cardTitle');
 
                     backgroundImageHandleDrop(cardData, fromProvider);
                 });

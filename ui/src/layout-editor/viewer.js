@@ -3125,7 +3125,9 @@ Viewer.prototype.saveElementProperties = function(
 
   // Save elements
   if (save) {
-    parentWidget.saveElements();
+    parentWidget.saveElements({
+      reloadData: false,
+    });
   }
 };
 
