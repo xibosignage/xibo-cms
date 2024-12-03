@@ -1569,6 +1569,15 @@ div.dataTables_wrapper div.dataTables_info {
 /* CKEditor */
 .ck-editor__editable_inline {
     min-height: 100px;
+
+    p {
+        margin: 0 0 16px !important;
+    }
+
+    figure {
+        margin-top: 0.9em !important;
+        width: auto;
+    }
 }
 
 .ck-fontsize-option span {
