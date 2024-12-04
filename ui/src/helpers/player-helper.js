@@ -302,11 +302,22 @@ const PlayerHelper = function() {
         }
       }
 
+      const $elementContent = $(self.renderElement(
+        item.hbs,
+        props,
+      ));
+
+      // Add style scope to container
+      const $elementContentContainer = $('<div>');
+      $elementContentContainer.append($elementContent).attr(
+        'data-style-scope',
+        'element_' +
+        props.type + '__' +
+        props.id,
+      );
+
       $itemContainer.append(
-        self.renderElement(
-          item.hbs,
-          props,
-        ),
+        $elementContentContainer,
       );
 
       const itemID = item.uniqueID || item.templateData?.uniqueID;

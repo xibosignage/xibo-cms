@@ -50,11 +50,17 @@
             }
         </style>
         {% if style|length > 0 %}
-        <style type="text/css">
             {% for item in style %}
-            {{ item|raw }}
+                {% if item.content %}
+                    <style type="text/css" data-style-scope="{{item.type}}_{{item.dataType}}__{{item.templateId}}">
+                        {{ item.content|raw }}
+                    </style>
+                {% else %}
+                    <style type="text/css">
+                        {{ item|raw }}
+                    </style>
+                {% endif %}
             {% endfor %}
-        </style>
         {% endif %}
     </head>
     <body>

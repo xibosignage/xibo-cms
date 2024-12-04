@@ -774,7 +774,14 @@ class WidgetHtmlRenderer
                 && !$isExtensionHasStyle
                 && $moduleTemplate->type === 'element'
             ) {
-                $twig['style'][] = $moduleTemplate->stencil->style;
+                // Add more info to the element style
+                // so we can use it to create CSS scope
+                $twig['style'][] = [
+                    'content' => $moduleTemplate->stencil->style,
+                    'type' => $moduleTemplate->type,
+                    'dataType' => $moduleTemplate->dataType,
+                    'templateId' => $moduleTemplate->templateId,
+                ];
             }
 
             if ($moduleTemplate->onTemplateRender !== null) {
