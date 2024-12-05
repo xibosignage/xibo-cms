@@ -1147,7 +1147,7 @@ class Layout extends Base
         $blank->parentId = $layout->parentId;
         $blank->campaignId = $layout->campaignId;
         $blank->publishedStatusId = 2;
-        $blank->save(['validate' => false, 'auditMessage', 'Canvas Cleared']);
+        $blank->save(['validate' => false, 'auditMessage' => 'Canvas Cleared']);
 
         // Return
         $this->getState()->hydrate([

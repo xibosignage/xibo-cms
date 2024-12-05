@@ -616,7 +616,7 @@ Layout.prototype.clear = function() {
 
       toastr.success(res.message);
 
-      lD.reloadData(res.id);
+      lD.reloadData(res.id, {refreshEditor: true});
     } else {
       // Login Form needed?
       if (res.login) {
