@@ -641,9 +641,8 @@ class WidgetHtmlRenderer
                             $module->stencil->style,
                             $modulePropertyValues,
                         ),
-                        'type' => $moduleTemplate->type,
-                        'dataType' => $moduleTemplate->dataType,
-                        'templateId' => $moduleTemplate->templateId,
+                        'type' => $module->type,
+                        'dataType' => $module->dataType,
                     ];
                 }
             }
