@@ -588,10 +588,15 @@ class WidgetHtmlRenderer
                                 );
                             }
                             if ($moduleTemplate->stencil->style !== null) {
-                                $twig['style'][] = $this->twig->fetchFromString(
-                                    $moduleTemplate->stencil->style,
-                                    $widgetData['templateProperties'],
-                                );
+                                $twig['style'][] = [
+                                    'content' => $this->twig->fetchFromString(
+                                        $moduleTemplate->stencil->style,
+                                        $widgetData['templateProperties'],
+                                    ),
+                                    'type' => $moduleTemplate->type,
+                                    'dataType' => $moduleTemplate->dataType,
+                                    'templateId' => $moduleTemplate->templateId,
+                                ];
                             }
                         }
                         break;
@@ -631,10 +636,15 @@ class WidgetHtmlRenderer
                     );
                 }
                 if ($module->stencil->style !== null) {
-                    $twig['style'][] = $this->twig->fetchFromString(
-                        $module->stencil->style,
-                        $modulePropertyValues,
-                    );
+                    $twig['style'][] = [
+                        'content' => $this->twig->fetchFromString(
+                            $module->stencil->style,
+                            $modulePropertyValues,
+                        ),
+                        'type' => $moduleTemplate->type,
+                        'dataType' => $moduleTemplate->dataType,
+                        'templateId' => $moduleTemplate->templateId,
+                    ];
                 }
             }
 
@@ -755,7 +765,12 @@ class WidgetHtmlRenderer
                 }
 
                 if ($extension->stencil->style !== null) {
-                    $twig['style'][] = $extension->stencil->style;
+                    $twig['style'][] = [
+                        'content' => $extension->stencil->style,
+                        'type' => $moduleTemplate->type,
+                        'dataType' => $moduleTemplate->dataType,
+                        'templateId' => $moduleTemplate->templateId,
+                    ];
                     $isExtensionHasStyle = true;
                 }
             }

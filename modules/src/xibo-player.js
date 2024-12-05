@@ -704,9 +704,11 @@ XiboPlayer.prototype.init = function() {
   // Create global render array of functions
   window.renders = [];
 
-  // If we have scoped styles
+  // If we have scoped styles for elements
   // convert the CSS rules to use it
-  $('[data-style-scope]').each((_idx, styleEl) => {
+  $(
+    'style[data-style-scope][data-style-target="element"]',
+  ).each((_idx, styleEl) => {
     const scopeName = $(styleEl).data('style-scope');
     const styleContent = $(styleEl).html();
 
