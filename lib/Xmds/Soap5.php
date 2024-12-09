@@ -315,6 +315,11 @@ class Soap5 extends Soap4
                     $displayElement->setAttribute('localDate', $dateNow->format(DateFormatHelper::getSystemFormat()));
                 }
 
+                // XMR key (this is the key a player should use the intialise a connection to XMR
+                $node = $return->createElement('xmrCmsKey', $this->getConfig()->getSetting('XMR_CMS_KEY'));
+                $node->setAttribute('type', 'string');
+                $displayElement->appendChild($node);
+
                 // Commands
                 $commands = $display->getCommands();
 

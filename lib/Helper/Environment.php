@@ -264,15 +264,6 @@ class Environment
         return true;
     }
 
-    /**
-     * @inheritdoc
-     */
-    public static function checkZmq()
-    {
-        return class_exists('ZMQSocket');
-    }
-
-
     public static function getMaxUploadSize()
     {
         return ini_get('upload_max_filesize');

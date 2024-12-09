@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -21,6 +21,7 @@
  */
 namespace Xibo\Tests\Helper;
 
+use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\PlayerActionServiceInterface;
 
 /**
@@ -35,7 +36,7 @@ class NullPlayerActionService implements PlayerActionServiceInterface
     /**
      * @inheritdoc
      */
-    public function __construct($config, $log, $triggerPlayerActions)
+    public function __construct(ConfigServiceInterface $config, $log, $triggerPlayerActions)
     {
         $this->log = $log;
     }
@@ -43,7 +44,7 @@ class NullPlayerActionService implements PlayerActionServiceInterface
     /**
      * @inheritdoc
      */
-    public function sendAction($displays, $action)
+    public function sendAction($displays, $action): void
     {
         $this->log->debug('NullPlayerActionService: sendAction');
     }
@@ -60,7 +61,7 @@ class NullPlayerActionService implements PlayerActionServiceInterface
     /**
      * @inheritdoc
      */
-    public function processQueue()
+    public function processQueue(): void
     {
         $this->log->debug('NullPlayerActionService: processQueue');
     }

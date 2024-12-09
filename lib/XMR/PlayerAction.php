@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -50,19 +50,27 @@ abstract class PlayerAction implements PlayerActionInterface
     /** @var string Public Key */
     private $publicKey;
 
+    /** @var bool Should the message be encrypted? */
+    private bool $isEncrypted;
+
     /**
      * Set the identity of this Player Action
      * @param string $channel
-     * @param string $key
+     * @param bool $isEncrypted
+     * @param string|null $key
      * @return $this
-     * @throws PlayerActionException if the key is invalid
+     * @throws \Xibo\XMR\PlayerActionException if the key is invalid
      */
-    final public function setIdentity(string $channel, string $key): PlayerActionInterface
+    final public function setIdentity(string $channel, bool $isEncrypted, ?string $key): PlayerActionInterface
     {
         $this->channel = $channel;
-        $this->publicKey = openssl_get_publickey($key);
-        if (!$this->publicKey) {
-            throw new PlayerActionException('Invalid Public Key');
+        $this->isEncrypted = $isEncrypted;
+
+        if ($isEncrypted) {
+            $this->publicKey = openssl_get_publickey($key);
+            if (!$this->publicKey) {
+                throw new PlayerActionException('Invalid Public Key');
+            }
         }
 
         return $this;
@@ -113,7 +121,7 @@ abstract class PlayerAction implements PlayerActionInterface
      * @return array
      * @throws PlayerActionException
      */
-    final public function getEncryptedMessage(): array
+    private function getEncryptedMessage(): array
     {
         $message = null;
 
@@ -129,79 +137,42 @@ abstract class PlayerAction implements PlayerActionInterface
     }
 
     /**
-     * Send the action to the specified connection and wait for a reply (acknowledgement)
-     * @param string $connection
-     * @return bool
-     * @throws PlayerActionException
+     * Finalise the message to be sent
+     * @throws \Xibo\XMR\PlayerActionException
      */
-    final public function send($connection): bool
+    final public function finaliseMessage(): array
     {
-        try {
-            // Set the message create date
-            $this->createdDt = date('c');
+        // Set the message create date
+        $this->createdDt = date('c');
 
-            // Set the TTL if not already set
-            if (empty($this->ttl)) {
-                $this->setTtl();
-            }
-
-            // Set the QOS if not already set
-            if (empty($this->qos)) {
-                $this->setQos();
-            }
-
-            // Get the encrypted message
-            $encrypted = $this->getEncryptedMessage();
-
-            // Envelope our message
-            $message = [
-                'channel' => $this->channel,
-                'message' => $encrypted['message'],
-                'key' => $encrypted['key'],
-                'qos' => $this->qos
-            ];
-
-            // Issue a message payload to XMR.
-            $context = new \ZMQContext();
-
-            // Connect to socket
-            $socket = new \ZMQSocket($context, \ZMQ::SOCKET_REQ);
-            $socket->setSockOpt(\ZMQ::SOCKOPT_LINGER, 2000);
-            $socket->connect($connection);
-
-            // Send the message to the socket
-            $socket->send(json_encode($message));
-
-            // Need to replace this with a non-blocking recv() with a retry loop
-            $retries = 15;
-            $reply = false;
-
-            do {
-                try {
-                    // Try and receive
-                    // if ZMQ::MODE_NOBLOCK/MODE_DONTWAIT is used and the operation would block boolean false
-                    // shall be returned.
-                    $reply = $socket->recv(\ZMQ::MODE_DONTWAIT);
-
-                    if ($reply !== false) {
-                        break;
-                    }
-                } catch (\ZMQSocketException $sockEx) {
-                    if ($sockEx->getCode() !== \ZMQ::ERR_EAGAIN) {
-                        throw $sockEx;
-                    }
-                }
-
-                usleep(100000);
-            } while (--$retries);
-
-            // Disconnect socket
-            $socket->disconnect($connection);
-
-            // Return the reply, if we couldn't connect then the reply will be false
-            return $reply !== false;
-        } catch (\ZMQSocketException $ex) {
-            throw new PlayerActionException('XMR connection failed. Error = ' . $ex->getMessage());
+        // Set the TTL if not already set
+        if (empty($this->ttl)) {
+            $this->setTtl();
         }
+
+        // Set the QOS if not already set
+        if (empty($this->qos)) {
+            $this->setQos();
+        }
+
+        // Envelope our message
+        $message = [
+            'channel' => $this->channel,
+            'qos' => $this->qos,
+        ];
+
+        // Encrypt the message if needed.
+        if ($this->isEncrypted) {
+            $encrypted = $this->getEncryptedMessage();
+            $message['message'] = $encrypted['message'];
+            $message['key'] = $encrypted['key'];
+            $message['isWebSocket'] = false;
+        } else {
+            $message['message'] = $this->getMessage();
+            $message['key'] = 'none';
+            $message['isWebSocket'] = true;
+        }
+
+        return $message;
     }
 }
