@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# Copyright (C) 2023 Xibo Signage Ltd
+# Copyright (C) 2024 Xibo Signage Ltd
 #
 # Xibo - Digital Signage - https://xibosignage.com
 #
@@ -32,7 +32,6 @@ then
   echo ""
   echo "XMR Connection Details:"
   echo "Host: $XMR_HOST"
-  echo "CMS Port: 50001"
   echo "Player Port: 9505"
   echo ""
   echo "Starting Webserver"
@@ -120,7 +119,7 @@ then
   mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='Apache', \`userChange\`=0, \`userSee\`=0 WHERE \`setting\`='SENDFILE_MODE' LIMIT 1"
 
   # Set XMR public/private address
-  mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='tcp://$XMR_HOST:50001', \`userChange\`=0, \`userSee\`=0 WHERE \`setting\`='XMR_ADDRESS' LIMIT 1"
+  mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='http://$XMR_HOST:8081', \`userChange\`=0, \`userSee\`=0 WHERE \`setting\`='XMR_ADDRESS' LIMIT 1"
 
   # Configure Maintenance
   echo "Setting up Maintenance"
@@ -194,7 +193,7 @@ then
   mysql -D $MYSQL_DATABASE -e "UPDATE \`user\` SET \`UserName\`='xibo_admin', \`UserPassword\`='5f4dcc3b5aa765d61d8327deb882cf99' WHERE \`UserID\` = 1 LIMIT 1"
 
   # Set XMR public/private address
-  mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='tcp://$XMR_HOST:50001', \`userChange\`=0, \`userSee\`=0 WHERE \`setting\`='XMR_ADDRESS' LIMIT 1"
+  mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='http://$XMR_HOST:8081', \`userChange\`=0, \`userSee\`=0 WHERE \`setting\`='XMR_ADDRESS' LIMIT 1"
   mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='tcp://cms.example.org:9505' WHERE \`setting\`='XMR_PUB_ADDRESS' LIMIT 1"
 
   # Set CMS Key

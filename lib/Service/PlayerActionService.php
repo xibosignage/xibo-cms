@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -23,8 +23,9 @@
 
 namespace Xibo\Service;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 use Xibo\Entity\Display;
-use Xibo\Helper\Environment;
 use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\XMR\PlayerAction;
@@ -36,38 +37,27 @@ use Xibo\XMR\PlayerActionException;
  */
 class PlayerActionService implements PlayerActionServiceInterface
 {
-    /**
-     * @var ConfigServiceInterface
-     */
-    private $config;
+    private ?string $xmrAddress;
 
-    /** @var  LogServiceInterface */
-    private $log;
-
-    /** @var bool */
-    private $triggerPlayerActions = true;
-
-    /** @var string  */
-    private $xmrAddress;
-
-    /** @var array[PlayerAction] */
-    private $actions = [];
+    /** @var PlayerAction[] */
+    private array $actions = [];
 
     /**
      * @inheritdoc
      */
-    public function __construct($config, $log, $triggerPlayerActions)
-    {
-        $this->config = $config;
-        $this->log = $log;
-        $this->triggerPlayerActions = $triggerPlayerActions;
+    public function __construct(
+        private readonly ConfigServiceInterface $config,
+        private readonly LogServiceInterface $log,
+        private readonly bool $triggerPlayerActions
+    ) {
+        $this->xmrAddress = null;
     }
 
     /**
      * Get Config
      * @return ConfigServiceInterface
      */
-    private function getConfig()
+    private function getConfig(): ConfigServiceInterface
     {
         return $this->config;
     }
@@ -75,7 +65,7 @@ class PlayerActionService implements PlayerActionServiceInterface
     /**
      * @inheritdoc
      */
-    public function sendAction($displays, $action)
+    public function sendAction($displays, $action): void
     {
         if (!$this->triggerPlayerActions) {
             return;
@@ -86,38 +76,48 @@ class PlayerActionService implements PlayerActionServiceInterface
             $this->xmrAddress = $this->getConfig()->getSetting('XMR_ADDRESS');
         }
 
+        if (empty($this->xmrAddress)) {
+            throw new InvalidArgumentException(__('XMR address is not set'), 'xmrAddress');
+        }
+
         if (!is_array($displays)) {
             $displays = [$displays];
-        }
-
-        // Check ZMQ
-        if (!Environment::checkZmq()) {
-            throw new ConfigurationException(
-                __('ZeroMQ is required to send Player Actions. Please check your configuration.')
-            );
-        }
-
-        if ($this->xmrAddress == '') {
-            throw new InvalidArgumentException(__('XMR address is not set'), 'xmrAddress');
         }
 
         // Send a message to all displays
         foreach ($displays as $display) {
             /* @var Display $display */
-            if ($display->xmrChannel == '' || $display->xmrPubKey == '') {
+            $isEncrypt = false;
+
+            if ($display->xmrChannel == '') {
                 throw new InvalidArgumentException(
                     sprintf(
                         __('%s is not configured or ready to receive push commands over XMR. Please contact your administrator.'),//phpcs:ignore
                         $display->display
                     ),
-                    'xmrRegistered'
+                    'xmrChannel'
                 );
+            }
+
+            if ($display->clientType !== 'chromeOS') {
+                // We also need a xmrPubKey
+                $isEncrypt = true;
+
+                if ($display->xmrPubKey == '') {
+                    throw new InvalidArgumentException(
+                        sprintf(
+                            __('%s is not configured or ready to receive push commands over XMR. Please contact your administrator.'),//phpcs:ignore
+                            $display->display
+                        ),
+                        'xmrPubKey'
+                    );
+                }
             }
 
             $displayAction = clone $action;
 
             try {
-                $displayAction->setIdentity($display->xmrChannel, $display->xmrPubKey);
+                $displayAction->setIdentity($display->xmrChannel, $isEncrypt, $display->xmrPubKey ?? null);
             } catch (\Exception $exception) {
                 throw new InvalidArgumentException(
                     sprintf(
@@ -142,7 +142,7 @@ class PlayerActionService implements PlayerActionServiceInterface
     /**
      * @inheritdoc
      */
-    public function processQueue()
+    public function processQueue(): void
     {
         if (count($this->actions) > 0) {
             $this->log->debug('Player Action Service is looking to send %d actions', count($this->actions));
@@ -154,18 +154,23 @@ class PlayerActionService implements PlayerActionServiceInterface
         if ($this->xmrAddress == null) {
             $this->xmrAddress = $this->getConfig()->getSetting('XMR_ADDRESS');
         }
+
+        $client = new Client($this->config->getGuzzleProxy([
+            'base_uri' => $this->getConfig()->getSetting('XMR_ADDRESS'),
+        ]));
+
         $failures = 0;
 
+        // TODO: could I send them all in one request instead?
         foreach ($this->actions as $action) {
             /** @var PlayerAction $action */
             try {
                 // Send each action
-                if ($action->send($this->xmrAddress) === false) {
-                    $this->log->error('Player action refused by XMR (connected but XMR returned false).');
-                    $failures++;
-                }
-            } catch (PlayerActionException $sockEx) {
-                $this->log->error('Player action connection failed. E = ' . $sockEx->getMessage());
+                $client->post('/', [
+                    'json' => $action->finaliseMessage(),
+                ]);
+            } catch (GuzzleException | PlayerActionException $e) {
+                $this->log->error('Player action connection failed. E = ' . $e->getMessage());
                 $failures++;
             }
         }
