@@ -187,6 +187,13 @@ class Soap5 extends Soap4
                         $arrayItem['value'] = $this->getConfig()->getSetting('XMR_PUB_ADDRESS');
                     }
 
+                    // Override the XMR address if empty
+                    if (strtolower($settingName) == 'xmrwebsocketaddress' &&
+                        (!isset($arrayItem['value']) || $arrayItem['value'] == '')
+                    ) {
+                        $arrayItem['value'] = $this->getConfig()->getSetting('XMR_WS_ADDRESS');
+                    }
+
                     // logLevels
                     if (strtolower($settingName) == 'loglevel') {
                         // return resting log level

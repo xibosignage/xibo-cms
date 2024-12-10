@@ -80,6 +80,23 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('xmrNetworkAddress', $sanitizedParams->getString('xmrNetworkAddress'), $ownConfig, $config);
                 }
 
+                if ($sanitizedParams->hasParam('xmrWebSocketAddress')) {
+                    $this->handleChangedSettings(
+                        'xmrWebSocketAddress',
+                        ($ownConfig)
+                            ? $displayProfile->getSetting('xmrWebSocketAddress')
+                            : $display->getSetting('xmrWebSocketAddress'),
+                        $sanitizedParams->getString('xmrWebSocketAddress'),
+                        $changedSettings
+                    );
+                    $displayProfile->setSetting(
+                        'xmrWebSocketAddress',
+                        $sanitizedParams->getString('xmrWebSocketAddress'),
+                        $ownConfig,
+                        $config
+                    );
+                }
+
                 if ($sanitizedParams->hasParam('statsEnabled')) {
                     $this->handleChangedSettings('statsEnabled', ($ownConfig) ? $displayProfile->getSetting('statsEnabled') : $display->getSetting('statsEnabled'), $sanitizedParams->getCheckbox('statsEnabled'), $changedSettings);
                     $displayProfile->setSetting('statsEnabled', $sanitizedParams->getCheckbox('statsEnabled'), $ownConfig, $config);

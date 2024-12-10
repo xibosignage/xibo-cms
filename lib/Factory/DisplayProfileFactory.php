@@ -168,6 +168,7 @@ class DisplayProfileFactory extends BaseFactory
                 ['name' => 'downloadEndWindow', 'default' => '00:00', 'type' => 'string'],
                 ['name' => 'dayPartId', 'default' => null],
                 ['name' => 'xmrNetworkAddress', 'default' => '', 'type' => 'string'],
+                ['name' => 'xmrWebSocketAddress', 'default' => '', 'type' => 'string'],
                 [
                     'name' => 'statsEnabled',
                     'default' => (int)$this->config->getSetting('DISPLAY_PROFILE_STATS_DEFAULT', 0),
@@ -220,6 +221,7 @@ class DisplayProfileFactory extends BaseFactory
                 ['name' => 'downloadStartWindow', 'default' => '00:00'],
                 ['name' => 'downloadEndWindow', 'default' => '00:00'],
                 ['name' => 'xmrNetworkAddress', 'default' => ''],
+                ['name' => 'xmrWebSocketAddress', 'default' => ''],
                 [
                     'name' => 'statsEnabled',
                     'default' => (int)$this->config->getSetting('DISPLAY_PROFILE_STATS_DEFAULT', 0),
@@ -276,6 +278,7 @@ class DisplayProfileFactory extends BaseFactory
                 ['name' => 'downloadEndWindow', 'default' => '00:00'],
                 ['name' => 'dayPartId', 'default' => null],
                 ['name' => 'xmrNetworkAddress', 'default' => ''],
+                ['name' => 'xmrWebSocketAddress', 'default' => ''],
                 [
                     'name' => 'statsEnabled',
                     'default' => (int)$this->config->getSetting('DISPLAY_PROFILE_STATS_DEFAULT', 0),
@@ -315,6 +318,7 @@ class DisplayProfileFactory extends BaseFactory
                 ['name' => 'downloadEndWindow', 'default' => '00:00'],
                 ['name' => 'dayPartId', 'default' => null],
                 ['name' => 'xmrNetworkAddress', 'default' => ''],
+                ['name' => 'xmrWebSocketAddress', 'default' => ''],
                 [
                     'name' => 'statsEnabled',
                     'default' => (int)$this->config->getSetting('DISPLAY_PROFILE_STATS_DEFAULT', 0),
@@ -351,6 +355,7 @@ class DisplayProfileFactory extends BaseFactory
                 ['name' => 'downloadEndWindow', 'default' => '00:00'],
                 ['name' => 'dayPartId', 'default' => null],
                 ['name' => 'xmrNetworkAddress', 'default' => ''],
+                ['name' => 'xmrWebSocketAddress', 'default' => ''],
                 [
                     'name' => 'statsEnabled',
                     'default' => (int)$this->config->getSetting('DISPLAY_PROFILE_STATS_DEFAULT', 0),
@@ -384,6 +389,7 @@ class DisplayProfileFactory extends BaseFactory
                 ['name' => 'licenceCode', 'default' => ''],
                 ['name' => 'collectInterval', 'default' => 300],
                 ['name' => 'xmrNetworkAddress', 'default' => ''],
+                ['name' => 'xmrWebSocketAddress', 'default' => ''],
                 [
                     'name' => 'statsEnabled',
                     'default' => (int)$this->config->getSetting('DISPLAY_PROFILE_STATS_DEFAULT', 0),

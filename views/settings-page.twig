@@ -303,6 +303,17 @@
                                     {% endif %}
                                 {% endif %}
 
+                                {% if theme.isSettingVisible("XMR_WS_ADDRESS") %}
+                                    {% set title %}{% trans "XMR WebSocket Address" %}{% endset %}
+                                    {% set helpText %}{% trans "Please enter the WebSocket address for XMR. Leaving this empty will mean the Player app connects to /xmr" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("XMR_WS_ADDRESS") %}
+                                        {{ forms.input("XMR_WS_ADDRESS", title, theme.getSetting("XMR_WS_ADDRESS"), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("XMR_WS_ADDRESS", title, theme.getSetting("XMR_WS_ADDRESS"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
                                 {% if theme.isSettingVisible("XMR_PUB_ADDRESS") %}
                                     {% set title %}{% trans "XMR Public Address" %}{% endset %}
                                     {% set helpText %}{% trans "Please enter the public address for XMR." %}{% endset %}

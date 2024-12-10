@@ -2308,7 +2308,7 @@ class Display extends Base
      *  )
      * )
      */
-    public function requestScreenShot(Request $request, Response $response, $id)
+    public function requestScreenShot(Request $request, Response $response, $id): Response
     {
         $display = $this->displayFactory->getById($id);
 
@@ -2320,9 +2320,7 @@ class Display extends Base
         $display->screenShotRequested = 1;
         $display->save(['validate' => false, 'audit' => false]);
 
-        $xmrPubAddress = $this->getConfig()->getSetting('XMR_PUB_ADDRESS');
-
-        if (!empty($display->xmrChannel) && !empty($xmrPubAddress) && $xmrPubAddress !== 'DISABLED') {
+        if (!empty($display->xmrChannel)) {
             $this->playerAction->sendAction($display, new ScreenShotAction());
         }
 

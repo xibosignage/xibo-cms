@@ -114,6 +114,13 @@ class PlayerActionService implements PlayerActionServiceInterface
                 }
             }
 
+            // Do not send anything if XMR is disabled.
+            if (($isEncrypt && $this->getConfig()->getSetting('XMR_WS_ADDRESS') === 'DISABLED')
+                || (!$isEncrypt && $this->getConfig()->getSetting('XMR_PUB_ADDRESS') === 'DISABLED')
+            ) {
+                continue;
+            }
+
             $displayAction = clone $action;
 
             try {
