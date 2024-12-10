@@ -1183,7 +1183,9 @@ Widget.prototype.addElement = function(
   return newElement.getProperties().then(() => {
     // Save changes to widget and return promise
     if (save) {
-      return this.saveElements();
+      return this.saveElements({
+        reloadData: false,
+      });
     } else {
       return Promise.resolve();
     }
@@ -1255,6 +1257,7 @@ Widget.prototype.removeElement = function(
   // Save changes to widget
   (save && !savedAlready) && this.saveElements({
     updateEditor: reload,
+    reloadData: false,
   });
 
   // If object is selected, remove it from selection

@@ -1507,11 +1507,15 @@ lD.deleteObject = function(
           objectId,
         );
 
-        // Reload data ( if not a drawer widget)
-        lD.reloadData(lD.layout,
-          {
-            refreshEditor: false,
-          });
+        // Remove object from structure
+        lD.layout.removeFromStructure(
+          objectType,
+          objectId,
+          objectAuxId,
+        );
+
+        // Check layout status
+        lD.checkLayoutStatus();
       }
 
       lD.common.hideLoadingScreen();
@@ -5700,7 +5704,9 @@ lD.addElementsToWidget = function(
   // Save JSON with new element into the widget
   // after all the promises are completed
   Promise.all(addElementPromise).then(() => {
-    widget.saveElements().then((_res) => {
+    widget.saveElements({
+      reloadData: false,
+    }).then((_res) => {
       const firstElement = elements[0];
 
       if (firstElement.skipSelect) {
