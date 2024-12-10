@@ -3,6 +3,7 @@
     data-type="element"
     data-element-type="{{#if element.elementType}}{{element.elementType}}{{else}}global{{/if}}"
     data-sub-type="{{element.id}}"
+    data-style-scope="element_{{#if element.elementType}}{{element.elementType}}{{else}}global{{/if}}__{{element.id}}"
     data-widget-id="{{element.widgetId}}"
     data-region-id="{{element.regionId}}"
     style="
