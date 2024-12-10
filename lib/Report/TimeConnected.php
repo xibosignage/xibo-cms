@@ -218,73 +218,13 @@ class TimeConnected implements ReportInterface
         // --------------------------
         // Our report has a range filter which determines whether the user has to enter their own from / to dates
         // check the range filter first and set from/to dates accordingly.
+
+        // Range
         $reportFilter = $sanitizedParams->getString('reportFilter');
-        // Use the current date as a helper
-        $now = Carbon::now();
 
-        switch ($reportFilter) {
-            case 'today':
-                $fromDt = $now->copy()->startOfDay();
-                $toDt = $fromDt->copy()->addDay();
-                break;
-
-            case 'yesterday':
-                $fromDt = $now->copy()->startOfDay()->subDay();
-                $toDt = $now->copy()->startOfDay();
-                break;
-
-            case 'thisweek':
-                $fromDt = $now->copy()->locale(Translate::GetLocale())->startOfWeek();
-                $toDt = $fromDt->copy()->addWeek();
-                break;
-
-            case 'thismonth':
-                $fromDt = $now->copy()->startOfMonth();
-                $toDt = $fromDt->copy()->addMonth();
-                break;
-
-            case 'thisyear':
-                $fromDt = $now->copy()->startOfYear();
-                $toDt = $fromDt->copy()->addYear();
-                break;
-
-            case 'lastweek':
-                $fromDt = $now->copy()->locale(Translate::GetLocale())->startOfWeek()->subWeek();
-                $toDt = $fromDt->copy()->addWeek();
-                break;
-
-            case 'lastmonth':
-                $fromDt = $now->copy()->startOfMonth()->subMonth();
-                $toDt = $fromDt->copy()->addMonth();
-                break;
-
-            case 'lastyear':
-                $fromDt = $now->copy()->startOfYear()->subYear();
-                $toDt = $fromDt->copy()->addYear();
-                break;
-
-            case '':
-            default:
-                // Expect dates to be provided.
-                $fromDt = $sanitizedParams->getDate('statsFromDt', ['default' => Carbon::now()->subDay()]);
-                $fromDt->startOfDay();
-
-                $toDt = $sanitizedParams->getDate('statsToDt', ['default' =>  Carbon::now()]);
-                $toDt->addDay()->startOfDay();
-
-                // What if the fromdt and todt are exactly the same?
-                // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
-                if ($fromDt == $toDt) {
-                    $toDt->addDay();
-                }
-
-                // No need to execute the query if fromdt/todt range is not correct
-                if ($fromDt > $toDt) {
-                    return [];
-                }
-
-                break;
-        }
+        // Expect dates to be provided.
+        $fromDt = $sanitizedParams->getDate('fromDt');
+        $toDt = $sanitizedParams->getDate('toDt');
 
         // Use the group by filter provided
         // NB: this differs from the Summary Report where we set the group by according to the range selected

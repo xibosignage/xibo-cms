@@ -77,33 +77,13 @@
                     <div class="FilterDiv card-body" id="timeconnected">
                         <form class="form-inline">
                             {% set title %}{% trans "Range" %}{% endset %}
-                            {% set range %}{% trans "Select a range" %}{% endset %}
-                            {% set today %}{% trans "Today" %}{% endset %}
-                            {% set yesterday %}{% trans "Yesterday" %}{% endset %}
-                            {% set thisweek %}{% trans "This Week" %}{% endset %}
-                            {% set thismonth %}{% trans "This Month" %}{% endset %}
-                            {% set thisyear %}{% trans "This Year" %}{% endset %}
-                            {% set lastweek %}{% trans "Last Week" %}{% endset %}
-                            {% set lastmonth %}{% trans "Last Month" %}{% endset %}
-                            {% set lastyear %}{% trans "Last Year" %}{% endset %}
-                            {% set options = [
-                                { filterName: "", reportFilter: range },
-                                { filterName: "today", reportFilter: today },
-                                { filterName: "yesterday", reportFilter: yesterday },
-                                { filterName: "thisweek", reportFilter: thisweek },
-                                { filterName: "thismonth", reportFilter: thismonth },
-                                { filterName: "thisyear", reportFilter: thisyear },
-                                { filterName: "lastweek", reportFilter: lastweek },
-                                { filterName: "lastmonth", reportFilter: lastmonth },
-                                { filterName: "lastyear", reportFilter: lastyear },
-                            ] %}
-                            {{ inline.dropdown("reportFilter", "single", title, "today", options, "filterName", "reportFilter") }}
+                            {{ inline.dateRangeFilter("reportFilter", title, "", "", "", "", "") }}
 
                             {% set title %}{% trans "From Date" %}{% endset %}
-                            {{ inline.date("statsFromDt", title, defaults.fromDateOneDay, "", "stats-from-dt", "", "") }}
+                            {{ inline.date("fromDt", title, defaults.fromDateOneDay, "", "fromDt", "", "") }}
 
                             {% set title %}{% trans "To Date" %}{% endset %}
-                            {{ inline.date("statsToDt", title, defaults.toDate, "", "stats-to-dt", "", "") }}
+                            {{ inline.date("toDt", title, defaults.toDate, "", "toDt", "", "") }}
 
                             {% set title %}{% trans "Group by" %}{% endset %}
                             {% set byhour %}{% trans "Hour" %}{% endset %}
@@ -154,6 +134,8 @@
         });
 
         let imageLoader = $("#imageLoader");
+        let $report = $('#timeconnected');
+        let reportData = '';
 
         function setReport() {
             $("#records_table").empty();
@@ -162,7 +144,7 @@
                 url: "{{ url_for("report.data", {name: reportName}) }}",
                 cache: false,
                 dataType: "json",
-                data: $("#timeconnected").find("form").serialize(),
+                data: reportData,
                 success: function(response) {
 
                     setTimeout(function() {
@@ -227,44 +209,50 @@
 
 
             // Report Filter
-            var reportFilter = $("#reportFilter");
-
-            // Hide / Show FromDt and ToDt
-            function checkReportFilter(reportFilter) {
-                if (reportFilter.val() === '' || reportFilter.val() === undefined) {
-                    $(".stats-from-dt").show();
-                    $(".stats-to-dt").show();
-                } else {
-                    $(".stats-from-dt").hide();
-                    $(".stats-to-dt").hide();
-                }
-            }
-
-            var checkFilterAndApply = function() {
-                reportFilter.off('change').change( function() {
-                    var value = reportFilter.val();
-                    // Hide / Show FromDt and ToDt
-                    checkReportFilter(reportFilter);
-                });
-            };
-
-            checkReportFilter(reportFilter);
-            checkFilterAndApply();
+            setDateRange();
 
             checkEnableSchedule();
 
             // Bind to form change
             $("#timeconnected").on('change', function() {
                 checkEnableSchedule();
+                setDateRange();
             });
 
             // Apply
             applyBtn.click(function () {
                 $(this).addClass('disabled');
                 imageLoader.addClass('fa fa-spinner fa-spin loading-icon');
-                checkFilterAndApply();
                 setReport();
             });
+
+            function setDateRange() {
+                let rangeFilter = $('#XiboDateRangeFilter').val();
+                let startDate = $("#fromDt").val();
+                let endDate = $("#toDt").val();
+
+                if (rangeFilter === 'today') {
+                    $report.find('div.toDt, div.fromDt').hide();
+                    startDate = moment().startOf('day');
+                    endDate = moment().endOf('day');
+                } else if (rangeFilter === '') {
+                    let dateDiff = moment(endDate).diff(moment(startDate), 'days');
+
+                    // Validation for same date
+                    if (dateDiff <= 0) {
+                        startDate = moment(startDate).startOf('day').format()
+                        endDate = moment(startDate).endOf('day').format()
+                    }
+                }
+
+                let values = $report.find('form').serializeArray();
+
+                values.find(input => input.name === 'fromDt').value = moment(startDate).format('YYYY-MM-DD HH:mm:ss');
+                values.find(input => input.name === 'toDt').value = moment(endDate).format('YYYY-MM-DD HH:mm:ss');
+
+                reportData = jQuery.param(values);
+            }
+
         });
 
     </script>

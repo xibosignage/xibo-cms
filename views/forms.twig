@@ -393,3 +393,20 @@
         </div>
     </div>
 {% endmacro %}
+
+{% macro dateRangeFilter(name, title, value, helpText, groupClass, validation, accessKey) %}
+    <div class="form-group mr-1 mb-1 {{ groupClass }}">
+        <label class="control-label mr-1" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+        <select class="form-control XiboDateRangeFilter" name="{{ name }}" id="XiboDateRangeFilter">
+            <option value="" >Select a range</option>
+            <option value="today" selected>Today</option>
+            <option value="yesterday">Yesterday</option>
+            <option value="thisweek">This Week</option>
+            <option value="thismonth">This Month</option>
+            <option value="thisyear">This Year</option>
+            <option value="lastweek">Last Week</option>
+            <option value="lastmonth">Last Month</option>
+            <option value="lastyear">Last Year</option>
+        </select>
+    </div>
+{% endmacro %}

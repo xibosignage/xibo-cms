@@ -224,13 +224,13 @@
     <div class="form-group {{ groupClass }}">
         <div class="checkbox">
             <input type="checkbox" class="bootstrap-switch-target" id="{{ name }}" name="{{ name }}" accesskey="{{ accessKey }}"
-                    {% if value == 1 %}checked{% endif %}
-                    {% if disabled == 1 %}disabled{% endif %}
-                    data-label-text="{{ title }}"
-                    {% if onText not in [null, undefined, ""] %} data-on-text="{{ onText }}"{% endif %}
-                    {% if offText not in [null, undefined, ""] %} data-off-text="{{ offText }}"{% endif %}
-                    {% if switchSize not in [null, undefined, ""] %}data-size="{{ switchSize }}"{% else %}data-size="small"{% endif %}
-                    {% if labelWidth not in [null, undefined, ""] %} data-label-width="{{ labelWidth }}"{% endif %}
+                {% if value == 1 %}checked{% endif %}
+                {% if disabled == 1 %}disabled{% endif %}
+                data-label-text="{{ title }}"
+                {% if onText not in [null, undefined, ""] %} data-on-text="{{ onText }}"{% endif %}
+                {% if offText not in [null, undefined, ""] %} data-off-text="{{ offText }}"{% endif %}
+                {% if switchSize not in [null, undefined, ""] %}data-size="{{ switchSize }}"{% else %}data-size="small"{% endif %}
+                {% if labelWidth not in [null, undefined, ""] %} data-label-width="{{ labelWidth }}"{% endif %}
             >
         </div>
     </div>
@@ -261,5 +261,22 @@
                 </div>
             </div>
         </div>
+    </div>
+{% endmacro %}
+
+{% macro dateRangeFilter(name, title, value, helpText, groupClass, validation, accessKey) %}
+    <div class="form-group mr-1 mb-1 {{ groupClass }}">
+        <label class="control-label mr-1" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+        <select class="form-control XiboDateRangeFilter" name="{{ name }}" id="XiboDateRangeFilter">
+            <option value="" >Select a range</option>
+            <option value="today" selected>Today</option>
+            <option value="yesterday">Yesterday</option>
+            <option value="thisweek">This Week</option>
+            <option value="thismonth">This Month</option>
+            <option value="thisyear">This Year</option>
+            <option value="lastweek">Last Week</option>
+            <option value="lastmonth">Last Month</option>
+            <option value="lastyear">Last Year</option>
+        </select>
     </div>
 {% endmacro %}

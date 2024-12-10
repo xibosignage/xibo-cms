@@ -109,6 +109,14 @@ window.XiboInitialise = function(scope, options) {
     scope = ' ';
   }
 
+  // Search for any grids on the page and render them
+  $(scope + " .XiboGrid").each(function() {
+  // Custom Date Range Filter
+      $(this).find('#XiboDateRangeFilter').on('change', function() {
+        updateDateRangeFilter(this);
+      });
+  });
+
   // Search for any Buttons / Links on the page that are used to load forms
   $(scope + ' .XiboFormButton').on('click', function(ev) {
     const $target = $(ev.currentTarget);
@@ -3077,6 +3085,62 @@ function createColorPicker(element, options) {
   $self.colorpicker(Object.assign({
     format: 'hex',
   }, options));
+}
+
+
+/**
+ * Create custom date range filter
+ * @param {object} element jquery object or CSS selector
+ */
+function updateDateRangeFilter(element) {
+  const selected = $(element).find('option:selected').val();
+  const $form = $(element).closest('form');
+  let fromDt = '';
+  let toDt = '';
+
+  if (selected === '' || selected === undefined) {
+    $(element).closest('form').find('div.toDt, div.fromDt').show();
+  } else {
+    $(element).closest('form').find('div.toDt, div.fromDt').hide();
+
+      switch (selected) {
+        case 'yesterday':
+          fromDt = moment().startOf('day').subtract(1, 'days');
+          toDt = moment().endOf('day').subtract(1, 'days');
+          break;
+        case 'thisweek':
+          fromDt = moment().startOf('week');
+          toDt = moment().endOf('week');
+          break;
+        case 'thismonth':
+          fromDt = moment().startOf('month');
+          toDt = moment().endOf('month');
+          break;
+        case 'thisyear':
+          fromDt = moment().startOf('year');
+          toDt = moment().endOf('year');
+          break;
+        case 'lastweek':
+          fromDt = moment().startOf('week').subtract(1, 'weeks');
+          toDt = moment().endOf('week').subtract(1, 'weeks');
+          break;
+        case 'lastmonth':
+          fromDt = moment().startOf('month').subtract(1, 'months');
+          toDt = moment().endOf('month').subtract(1, 'months');
+          break;
+        case 'lastyear':
+          fromDt = moment().startOf('year').subtract(1, 'years');
+          toDt = moment().endOf('year').subtract(1, 'years');
+          break;
+        default:
+          fromDt = moment().startOf('day');
+          toDt = moment().endOf('day');
+          break;
+      }
+
+      $form.find('input#fromDt').val(moment(fromDt).format('YYYY-MM-DD HH:mm:ss'));
+      $form.find('input#toDt').val(moment(toDt).format('YYYY-MM-DD HH:mm:ss'));
+  }
 }
 
 window.moveFolderMultiSelectFormOpen = function(dialog) {

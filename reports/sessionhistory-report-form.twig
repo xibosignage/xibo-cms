@@ -44,11 +44,14 @@
                 <div class="XiboFilterCustom">
                     <div class="FilterDiv card-body" id="sessionHistoryFilter">
                         <form class="form-inline">
+                            {% set title %}{% trans "Range" %}{% endset %}
+                            {{ inline.dateRangeFilter("reportFilter", title, "", "", "", "", "") }}
+
                             {% set title %}{% trans "From Date" %}{% endset %}
-                            {{ inline.date("fromDt", title, defaults.fromDate, "", "", "", "") }}
+                            {{ inline.date("fromDt", title, defaults.fromDate, "", "fromDt", "", "") }}
 
                             {% set title %}{% trans "To Date" %}{% endset %}
-                            {{ inline.date("toDt", title, defaults.toDate, "", "", "", "") }}
+                            {{ inline.date("toDt", title, defaults.toDate, "", "toDt", "", "") }}
 
                             {% set title %}{% trans "User" %}{% endset %}
                             {% set attributes = [
@@ -241,6 +244,7 @@
         let imageLoader = $("#imageLoader");
         let $warning = $("#applyWarning");
         let $applyBtn = $("#applyBtn");
+        let reportData = '';
 
         // Get Data
         function getData(url) {
@@ -248,7 +252,7 @@
             url: url,
             method: 'GET',
             dataType: 'json',
-            data: $report.find('form').serialize(),
+            data: reportData,
             success: function success(data) {
               result = data;
               reportType = $report.find('#type').val();
@@ -291,6 +295,14 @@
             });
           }
         }
+
+        // Report Filter
+        setDateRange();
+
+        // Bind to form change
+        $($report).on('change', function() {
+            setDateRange();
+        });
 
         // Apply
         $applyBtn.click(function () {
@@ -408,6 +420,33 @@
               {data: 'userAgent'},
             ]
           })
+        }
+
+        function setDateRange() {
+          let rangeFilter = $('#XiboDateRangeFilter').val();
+          let startDate = $("#fromDt").val();
+          let endDate = $("#toDt").val();
+
+          if (rangeFilter === 'today') {
+            $report.find('div.toDt, div.fromDt').hide();
+            startDate = moment().startOf('day');
+            endDate = moment().endOf('day');
+          } else if (rangeFilter === '') {
+            let dateDiff = moment(endDate).diff(moment(startDate), 'days');
+
+            // Validation for same date
+            if (dateDiff <= 0) {
+              startDate = moment(startDate).startOf('day').format()
+              endDate = moment(startDate).endOf('day').format()
+            }
+          }
+
+          let values = $report.find('form').serializeArray();
+
+          values.find(input => input.name === 'fromDt').value = moment(startDate).format('YYYY-MM-DD HH:mm:ss');
+          values.find(input => input.name === 'toDt').value = moment(endDate).format('YYYY-MM-DD HH:mm:ss');
+
+          reportData = jQuery.param(values);
         }
       });
     </script>
