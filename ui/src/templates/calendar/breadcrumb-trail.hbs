@@ -1,0 +1,42 @@
+<!-- Layout -->
+<span>
+        <% if (layout.link != '') { %>
+            <a href="<%= layout.link %>"><%= layout.name %></a>
+        <% } else { %>
+            <%= layout.name %>
+        <% } %>
+</span>
+
+<span>&nbsp;<i class="fa fa-arrow-right" aria-hidden="true"></i>&nbsp;</span>
+
+<!-- Campaign -->
+<% if (typeof campaign != 'undefined') { %>
+    <span>
+        <% if (campaign.link != '') { %>
+            <a href="<%= campaign.link %>"><%= campaign.name %></a>
+        <% } else { %>   
+            <%= campaign.name %>
+        <% } %> 
+    </span>
+    <span>&nbsp;<i class="fa fa-arrow-right" aria-hidden="true"></i>&nbsp;</span>
+<% } %> 
+
+<!-- Schedule -->
+<span>
+    <a href="<%= schedule.link %>" class="XiboFormButton" data-event-start="<%= schedule.fromDt %>" data-event-end="<%= schedule.toDt %>">
+        {{trans.schedule}}
+    </a>
+</span>
+
+<!-- Display Groups -->
+<% _.each(displayGroups, function(displayGroup){ %>
+    <span>&nbsp;<i class="fa fa-arrow-right" aria-hidden="true"></i>&nbsp;</span>
+    <span>
+        <% if (displayGroup.link != '') { %>
+        <a href="<%= displayGroup.link %>"><%= displayGroup.name %></a>
+        <% } else { %>   
+        <%= displayGroup.name %>
+        <% } %> 
+    </span>
+<% }); %>
+            

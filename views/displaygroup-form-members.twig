@@ -34,10 +34,10 @@
 
 {% block formButtons %}
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, membersFormSubmit("{{ randomId }}")
+    {% trans "Save" %}, forms.membersFormSubmit("{{ randomId }}")
 {% endblock %}
 
-{% block callBack %}membersFormOpen{% endblock %}
+{% block callBack %}forms.membersFormOpen{% endblock %}
 
 {% block extra %}{{ extra|json_encode|raw }}{% endblock %}
 

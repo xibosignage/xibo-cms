@@ -1,4 +1,3 @@
-// eslint-disable-next-line valid-jsdoc
 /**
  * String | Number transformer
  */
@@ -21,5 +20,4 @@ const transformer = function() {
   };
 };
 
-// eslint-disable-next-line new-cap
 module.exports = new transformer();

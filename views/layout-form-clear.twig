@@ -1,0 +1,23 @@
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans %}Clear Canvas{% endtrans %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "No" %}, XiboDialogClose()
+    {% trans "Yes" %}, $("#layoutClearForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="layoutClearForm" class="XiboForm form-horizontal" method="clear" action="{{ url_for("layout.clear", {id: layout.layoutId}) }}">
+                {% set message %}{% trans "Are you sure you want to start again with a blank canvas? All elements and widgets will be removed from your draft layout." %}{% endset %}
+                {{ forms.message(message) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

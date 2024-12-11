@@ -31,10 +31,10 @@
 
 {% block formButtons %}
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, layoutAssignSubmit()
+    {% trans "Save" %}, forms.layoutAssignSubmit()
 {% endblock %}
 
-{% block callBack %}layoutFormCallBack{% endblock %}
+{% block callBack %}forms.layoutFormCallBack{% endblock %}
 
 {% block formHtml %}
     <div class="row">

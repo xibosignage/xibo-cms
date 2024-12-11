@@ -192,12 +192,12 @@ class PixabayConnector implements ConnectorInterface
                     $searchResult->type = 'video';
                     $searchResult->thumbnail = $result->videos->tiny->url;
                     $searchResult->duration = $result->duration;
-                    if (!empty($result->videos->large)) {
-                        $searchResult->download = $result->videos->large->url;
-                        $searchResult->width = $result->videos->large->width;
-                        $searchResult->height = $result->videos->large->height;
-                        $searchResult->fileSize = $result->videos->large->size;
-                    } else if (!empty($result->videos->medium)) {
+
+                    // As per Pixabay, medium videos are usually 1080p but in some cases,
+                    // it might be larger (ie 2560x1440) so we need to do an additional validation
+                    if (!empty($result->videos->medium) && $result->videos->medium->width <= 1920
+                        && $result->videos->medium->height <= 1920
+                    ) {
                         $searchResult->download = $result->videos->medium->url;
                         $searchResult->width = $result->videos->medium->width;
                         $searchResult->height = $result->videos->medium->height;

@@ -1,0 +1,84 @@
+<div id="full-screen-schedule-modal" class="modal fade inner-modal" role="dialog">
+    <div class="modal-dialog modal-md modal-dialog-centered">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header bg-light">
+                <h4 class="modal-title">
+                    {{#eq type "Media"}}{{ trans.header.media }}{{/eq}}
+                    {{#eq type "Playlist"}}{{ trans.header.playlist }}{{/eq}}
+                </h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="scheduleFullScreenForm" autocomplete="off" class="form-horizontal" method="post"
+                    action="{{ fullscreenSchedule.urlForLayoutAddFullscreenSchedule }}"
+                    data-full-screen-url="{{ fullscreenSchedule.urlForLayoutAddFullscreenSchedule }}">
+
+                    {{> ../forms/inputs/hidden id="eventTypeId" value=eventTypeId forceId=true}}
+
+                    {{#eq type "Media"}}
+                        {{> ../forms/inputs/dropdown id="mediaId" title=trans.mediaInput.title selectType="pagedSelect"
+                            options=(arr (obj name='' title='')) optionsTitle="name" optionsValue="mediaId"
+                            customClass="media-control"
+                            forceId=true
+                            customData=(arr 
+                                (obj name='width' value='100%')
+                                (obj name='search-url' value=fullscreenSchedule.urlForLibrarySearch)
+                                (obj name='search-term' value='media')
+                                (obj name='id-property' value='mediaId')
+                                (obj name='text-property' value='name')
+                                (obj name='selected-property' value='selected')
+                                (obj name='additional-property' value='hasFullScreenLayout')
+                                (obj name='initial-value' value=mediaId)
+                                (obj name='initial-key' value="mediaId")
+                            )
+                            readonly=readonlySelect helpText=trans.mediaInput.helpText
+                        }}
+                    {{/eq}}
+
+                    {{#eq type "Playlist"}}
+                        {{> ../forms/inputs/dropdown id="playlistId" title=trans.playlistInput.title selectType="pagedSelect"
+                            options=(arr (obj name='' title='')) optionsTitle="name" optionsValue="playlistId"
+                            customClass="playlist-control"
+                            forceId=true
+                            customData=(arr 
+                                (obj name='width' value='100%')
+                                (obj name='search-url' value=fullscreenSchedule.urlForPlaylistSearch)
+                                (obj name='search-term' value='name')
+                                (obj name='id-property' value='playlistId')
+                                (obj name='text-property' value='name')
+                                (obj name='additional-property' value='hasFullScreenLayout')
+                                (obj name='initial-value' value=playlistId)
+                                (obj name='initial-key' value="playlistId")
+                            )
+                            readonly=readonlySelect helpText=trans.playlistInput.helpText
+                        }}
+                    {{/eq}}
+
+                    {{> ../forms/inputs/number id="layoutDuration" forceId=true title=trans.layoutDuration.title helpText=trans.layoutDuration.helpText customClass="media-control no-full-screen-layout" }}
+
+                    {{> ../forms/inputs/dropdown id="resolutionId" title=trans.resolutionInput.title selectType="pagedSelect"
+                        options=(arr (obj name='' title='')) optionsTitle="name" optionsValue="resolutionId"
+                        customClass="media-playlist-control resolution-control no-full-screen-layout"
+                        customData=(arr 
+                            (obj name='width' value='100%')
+                            (obj name='search-url' value=fullscreenSchedule.urlForResolutionSearch)
+                            (obj name='search-term' value='media')
+                            (obj name='id-property' value='resolutionId')
+                            (obj name='text-property' value='resolution')
+                            (obj name='trans-media-help-text' value=trans.resolutionInput.mediaHelp)
+                            (obj name='trans-playlist-help-text' value=trans.resolutionInput.playlistHelp)
+                        )
+                        forceId=true
+                        helpText=trans.playlistInput.helpText
+                    }}
+
+                    {{> ../forms/inputs/color id="backgroundColor" value="#000" forceId=true title=trans.backgroundColor.title helpText=trans.backgroundColor.helpText customClass="media-playlist-control no-full-screen-layout" }}
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-primary" id="btnFullScreenLayoutConfirm">{{trans.saveForm}}</button>
+            </div>
+        </div>
+    </div>
+</div>
