@@ -41,15 +41,9 @@
         {# Import JS templates #}
         <script src="{{ theme.rootUri() }}dist/templates.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
 
-        {# Import libraries copied to dist #}
-        <script src="{{ theme.rootUri() }}dist/vendor/ckeditor/build/ckeditor.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
         {# Import XIBO js files #}
+        <script src="{{ theme.rootUri() }}dist/datatables.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
         <script src="{{ theme.rootUri() }}dist/xibo.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
-        <script src="{{ theme.rootUri() }}dist/core/xibo-cms.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
-        <script src="{{ theme.rootUri() }}dist/core/xibo-forms.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
-        <script src="{{ theme.rootUri() }}dist/core/xibo-calendar.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
-        <script src="{{ theme.rootUri() }}dist/core/xibo-datasets.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
-
         {# Dates #}
         {% if settings.CALENDAR_TYPE == "Jalali" %}
             <script src="{{ theme.rootUri() }}dist/vendor/calendar/js/calendar-jalali.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
@@ -66,150 +60,13 @@
             <script src="{{ theme.rootUri() }}{{ calendarTranslation }}" nonce="{{ cspNonce }}"></script>
         {% endif %}
 
-        <script type="text/javascript" nonce="{{ cspNonce }}">
-
-            var translations = {{ translations|raw }};
-            // Translations we want always available
-            {% autoescape "js" %}
-            translations.withselected = "{{ "With Selected"|trans }}";
-            translations.selectAll = "{{ "Select All"|trans }}";
-            translations.multiselect = "{{ "Multiple Items Selected"|trans }}";
-            translations.indeterminate = "{{ "Indeterminate State"|trans }}";
-            translations.multiselectNoItemsMessage = "{{ "Sorry, no items have been selected."|trans }}";
-            translations.multiselectMessage = "{{ "Caution, you have selected %1 items. Clicking save will run the %2 transaction on all these items."|trans }}";
-            translations.validExtensions = "{{ "Valid extensions are %s"|trans }}";
-            translations.save = "{{ "Save"|trans }}";
-            translations.cancel = "{{ "Cancel"|trans }}";
-            translations.close = "{{ "Close"|trans }}";
-            translations.success = "{{ "Success"|trans }}";
-            translations.failure = "{{ "Failure"|trans }}";
-            translations.enterText = "{{ "Enter text..."|trans }}";
-            translations.noDataMessage = "{{ "No Data returned from the source"|trans }}";
-            translations.statusPending = "{{ "Status Pending"|trans }}";
-            translations.duplicate = "{{ "Duplicate"|trans }}";
-            translations.deleteRecurring = "{{ "Delete from Schedule"|trans }}";
-            translations.spacesWarning = "{{ "Warning - starts with or ends with a space, or contains double spaces"|trans }}";
-            translations.done = "{{ "Done"|trans }}";
-            translations.freeTextCommand = "{{ "Free Text"|trans }}";
-            translations.editTags = "{{ "Edit Tags"|trans }}";
-            translations.tagInputValueHelpText = "{{ "Provide an optional Value for this Tag. If no Value is required, this field can be left blank"|trans }}";
-            translations.tagInputValueRequiredHelpText = "{{ "Please provide the value for this Tag and confirm by pressing enter on your keyboard."|trans }}";
-            translations.videoImageCoverHelpText = "{{ "Before Uploading, scroll through the progress bar or play and pause to select a still to be used as the video file thumbnail."|trans }}";
-            translations.folderTreeCreate = "{{ "Create"|trans }}";
-            translations.folderTreeEdit = "{{ "Rename"|trans }}";
-            translations.folderTreeDelete = "{{ "Remove"|trans }}";
-            translations.folderTreeShare = "{{ "Share"|trans }}";
-            translations.folderTreeSetAsHome = "{{ "Set as Home"|trans }}";
-            translations.folderTreeError = "{{ "Cannot modify root folder."|trans }}";
-            translations.folderWithContent = "{{ "Cannot remove Folder with content"|trans }}";
-            translations.folderNew = "{{ "New Folder"|trans }}";
-            translations.folderTreeMove = "{{ "Move Folder"|trans }}";
-            translations.folderRootTitle = "{{ "Right click a Folder for further Options"|trans }}";
-            translations.dayPartExceptionErrorMessage = "{{ "You already set an exception for this day."|trans }}";
-            translations.online = "{{ "Online"|trans }}";
-            translations.offline = "{{ "Offline"|trans }}";
-            translations.upToDate = "{{ "Up to date"|trans }}";
-            translations.notUpToDate = "{{ "Not up to date"|trans }}";
-            translations.publishedStatusFuture = "{{ "Publishing"|trans }}";
-            translations.publishedStatusFailed = "{{ "Publish failed."|trans }}";
-            translations.defaultSorting = "{{ "Default Sorting"|trans }}";
-            translations.unlimited = "{{ "Unlimited"|trans }}";
-            translations.imagePixelSizeTooLarge = "{{ "Warning : Image is too large and will not be displayed on the Players. Please check the allowed Resize Limit in Administration -> Settings"|trans }}"
-            {% endautoescape %}
-
-            var calendarType = "{{ settings.CALENDAR_TYPE }}";
-            var language = "{{ translate.jsLocale }}";
-            var timezone = "{{ settings.defaultTimezone }}";
-            var dateFormat = "{{ settings.DATE_FORMAT }}";
-            var jsDateFormat = (CALENDAR_TYPE == "Jalali") ? "{{ settings.DATE_FORMAT_JALALI_JS }}" : "{{ settings.DATE_FORMAT_JS }}";
-            var timeFormat = "{{ settings.TIME_FORMAT }}";
-            var jsTimeFormat = "{{ settings.TIME_FORMAT_JS }}";
-            var dateOnlyFormat = "{{ settings.DATE_ONLY_FORMAT }}";
-            var jsDateOnlyFormat = (CALENDAR_TYPE == "Jalali") ? "{{ settings.DATE_ONLY_FORMAT_JALALI_JS }}" : "{{ settings.DATE_ONLY_FORMAT_JS }}";
-            var systemDateFormat = "{{ settings.systemDateFormat }}";
-            var systemTimeFormat = "{{ settings.systemTimeFormat }}";
-            var clockUrl = "{{ url_for("clock") }}";
-            var calendarLanguage = "{{ translate.jsShortLocale }}";
-            var pingUrl = "{{ url_for("ping") }}";
-            var foldersUrl = "{{ url_for("folders.search") }}";
-            var permissionsUrl = "{{ url_for("user.set.permissions.multi", {entity: ":entity"}) }}";
-            var addMediaThumbnailUrl = "{{ url_for("library.thumbnail.add") }}";
-            var revokeApplicationAccess = "{{ url_for('application.revoke', {id:":id", userId:":userId"}) }}";
-            var getFontsUrl = "{{ url_for("font.search") }}";
-            var libraryFontCSS = "{{ url_for("library.font.css") }}";
-            var imageDownloadUrl = "{{ url_for("library.download", {id: ':id'}) }}?preview=1";
-            var CKEDITOR_DEFAULT_CONFIG = {
-                contentsCss: ['styles.css', libraryFontCSS],
-                imageDownloadUrl: imageDownloadUrl,
-                fontFamily: {
-                    options: ['default'],
-                },
-                fontSize: {
-                    options: [
-                    'default',
-                    8, 9, 10, 11, 12, 16, 18, 20,
-                    22, 24, 26, 28, 36, 48, 72, 80,
-                    88, 96, 128, 144, 168, 186, 200,
-                    244, 288, 300,
-                    ],
-                },
-            };
-
-            {% autoescape "js" %}
-            var dataTablesLanguage = {
-                "decimal":        "",
-                "emptyTable":     "{{ "No data available in table"|trans }}",
-                "info":           "{{ "Showing _START_ to _END_ of _TOTAL_ entries"|trans }}",
-                "infoEmpty":      "{{ "Showing 0 to 0 of 0 entries"|trans }}",
-                "infoFiltered":   "{{ "(filtered from _MAX_ total entries)"|trans }}",
-                "infoPostFix":    "",
-                "thousands":      ",",
-                "lengthMenu":     "{{ "Show _MENU_ entries"|trans }}",
-                "loadingRecords": "{{ "Loading..."|trans }}",
-                "processing":     "{{ "Processing..."|trans }}",
-                "search":         "{{ "Search:"|trans }}",
-                "zeroRecords":    "{{ "No matching records found"|trans }}",
-                "paginate": {
-                    "first":      "{{ "First"|trans }}",
-                    "last":       "{{ "Last"|trans }}",
-                    "next":       "{{ "Next"|trans }}",
-                    "previous":   "{{ "Previous"|trans }}"
-                },
-                "aria": {
-                    "sortAscending":  "{{ ": activate to sort column ascending"|trans }}",
-                    "sortDescending": "{{ ": activate to sort column descending"|trans }}"
-                },
-                "buttons": {
-                    "colvis":  "{{ "Column visibility"|trans }}",
-                    "print": "{{ "Print"|trans }}"
-                }
-            };
-            var dataTablesTemplate = "<'row'<'dataTables_folder col-sm-12 col-lg-5'><'col-sm-12 col-lg-7 text-right'<'d-inline-block mr-2'l><'dataTables_buttons d-inline-block'>>>" +
-                "<'row'<'col-sm-12'tr>>" +
-                "<'row'<'col-sm-12 col-lg-5'i><'col-lg-7 col-sm-12'p>>";
-            {% endautoescape %}
-
-            moment.locale("{{ translate.jsLocale }}");
-
-            $(function() {
-                var csrf_token = $('meta[name="token"]').attr('content');
-                $.ajaxSetup({
-                    headers: {
-                        'X-XSRF-TOKEN': csrf_token
-                    }
-                });
-            });
-
-            toastr.options.positionClass = "toast-bottom-center";
-
-            // User preference regarding Folder tree state
-            var rememberFolderTreeStateGlobally = {{ currentUser.getOptionValue("rememberFolderTreeStateGlobally", "1") }}
-        </script>
-
+        {% include "globalTranslations.twig" %}
+        {% include "globalVars.twig" %}
+        {% include "globalConfig.twig" %}
+        
         {% block javaScriptTemplates %}{% endblock %}
         {% block javaScript %}{% endblock %}
 
         {% include "theme-javascript.twig" ignore missing %}
-
     </body>
 </html>

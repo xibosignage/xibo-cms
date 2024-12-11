@@ -117,7 +117,7 @@ Bottombar.prototype.render = function(object, renderMultiple = true) {
     ));
 
     // Handle play button ( play or pause )
-    this.DOMObject.find('#play-btn').click(function() {
+    this.DOMObject.find('#play-btn').on('click', function() {
       if (lD.viewer.previewPlaying) {
         app.viewer.stopPreview();
       } else {
@@ -188,15 +188,15 @@ Bottombar.prototype.render = function(object, renderMultiple = true) {
   }
 
   // Button handlers
-  this.DOMObject.find('#delete-btn').click(function() {
+  this.DOMObject.find('#delete-btn').on('click', function() {
     lD.deleteSelectedObject();
   });
 
-  this.DOMObject.find('#undo-btn').click(function() {
+  this.DOMObject.find('#undo-btn').on('click', function() {
     app.undoLastAction();
   });
 
-  this.DOMObject.find('.properties-btn').click(function(e) {
+  this.DOMObject.find('.properties-btn').on('click', function(e) {
     const buttonData = $(e.currentTarget).data();
     object.editPropertyForm(
       buttonData['property'],

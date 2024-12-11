@@ -1,0 +1,20 @@
+<div class="toolbar-card upload-card toolbar-row-special"
+    data-toggle="tooltip" 
+    data-type="widget" 
+    data-sub-type="{{type}}"
+    data-target="{{#if target}}{{target}}{{else}}layout playlist zone{{/if}}"
+    data-region-specific="{{regionSpecific}}"
+    data-valid-ext="{{ validExtensions }}"
+    data-max-size="{{ maxSize }}" 
+    data-max-size-message="{{ maxSizeMessage }}"
+    data-title="{{description}}">
+
+    <div class="toolbar-card-preview">
+        <div class="select-button select-upload">
+            <i class="fa fa-check selectedShow"></i>
+        </div>
+
+        <i class="fa fa-upload card-icon"></i>
+        <span class="media-title">{{trans.upload}}</span>
+    </div>
+</div>

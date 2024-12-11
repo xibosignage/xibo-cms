@@ -101,6 +101,7 @@ class Factories
                     $c->get('pool'),
                     $c->get('configService'),
                     $c->get('jwtService'),
+                    $c->get('playerActionService'),
                     $c
                 );
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));

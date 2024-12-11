@@ -1,0 +1,41 @@
+<form id="multiselectTagEditForm" data-gettag="{{tagGetByNameUrl}}">
+    <input type="hidden" id="requestURL" name="requestURL" value="{{tagEditMultipleUrl}}">
+    <div class="form-group tags-with-value tags-input-wide row">
+        <label class="col-sm-2 control-label" for="tagsToAdd">{{trans.newTags}}</label>
+        <div class="col-sm-10">
+            <input class="form-control" name="tagsToAdd" type="email" id="tagsToAdd" data-role="tagsInputForm" data-auto-complete-url="{{tagSearchUrl}}" />
+            <span class="help-block">{{trans.newTagsHelp}}</span>
+        </div>
+    </div>
+
+    <p id="loadingValues" style="margin-left: 17%"></p>
+
+    <div class="form-group row">
+        <label class="col-sm-2 control-label" for="tagValue" title="" accesskey="">{{trans.tagValue}}</label>
+        <div class="col-sm-10">
+            <select class="form-control" name="tagValue" id="tagValue"></select>
+        </div>
+    </div>
+
+    <div id="tagValueContainer" style="display: none;">
+        <div class="form-group row">
+            <label class="col-sm-2 control-label" for="tagValueInput" accesskey="">{{trans.tagValue}}</label>
+            <div class="col-sm-10">
+                <input class="form-control" name="tagValueInput" type="text" id="tagValueInput" value="">
+                <span class="help-block">{{trans.tagValueHelp}}</span>
+            </div>
+        </div>
+    </div>
+
+    <div id="tagValueRequired" class="alert alert-info d-none">
+        <p>{{trans.tagValueRequired}}</p>
+    </div>
+
+    <div id="tagsToRemoveContainer" class="form-group tags-with-value tags-input-wide row">
+        <label class="col-sm-2 control-label" for="tagsToRemove">{{trans.existingTags}}</label>
+        <div class="col-sm-10">
+            <input class="form-control" name="tagsToRemove" type="email" id="tagsToRemove" data-role="tagsInputForm" data-auto-complete-url="{{tagSearchUrl}}" />
+            <span class="help-block">{{trans.existingTagsHelp}}</span>
+        </div>
+    </div>
+</form>

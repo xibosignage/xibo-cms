@@ -50,10 +50,10 @@
 
 {% block formButtons %}
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, permissionsFormSubmit("{{ randomId }}")
+    {% trans "Save" %}, forms.permissionsFormSubmit("{{ randomId }}")
 {% endblock %}
 
-{% block callBack %}permissionsFormOpen{% endblock %}
+{% block callBack %}forms.permissionsFormOpen{% endblock %}
 
 {% block formHtml %}
     <div class="permissions-form" id="permissionsForm">

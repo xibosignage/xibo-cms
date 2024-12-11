@@ -1145,7 +1145,7 @@ pE.handleInputs = function() {
   // Editor container select ( faking drag and drop )
   // to add a object to the playlist
   $playlistTimeline
-    .click(function(e) {
+    .on('click', function(e) {
       if (
         !$.isEmptyObject(pE.toolbar.selectedCard) ||
         !$.isEmptyObject(pE.toolbar.selectedQueue)
@@ -1157,7 +1157,7 @@ pE.handleInputs = function() {
 
   // Delete object
   pE.editorContainer.find('.footer-actions [data-action="remove-widget"]')
-    .click(function(e) {
+    .on('click', function(e) {
       if (!$(e.currentTarget).hasClass('inactive')) {
         pE.deleteSelectedObject();
       }
@@ -1165,7 +1165,7 @@ pE.handleInputs = function() {
 
   // Revert last action
   pE.editorContainer.find('.footer-actions [data-action="undo"]')
-    .click(function(e) {
+    .on('click', function(e) {
       if (!$(e.currentTarget).hasClass('inactive')) {
         pE.undoLastAction();
       }
@@ -1173,29 +1173,29 @@ pE.handleInputs = function() {
 
   // Enable multi select mode
   pE.editorContainer.find('.footer-actions [data-action="multi-select"]')
-    .click(function() {
+    .on('click', function() {
       pE.toggleMultiselectMode();
     });
 
   // Timeline zoom controls
   pE.editorContainer.find('.footer-controls .btn[data-action="zoom-in"]')
-    .click(function() {
+    .on('click', function() {
       pE.timeline.changeZoomLevel(1);
     });
 
   pE.editorContainer.find('.footer-controls .btn[data-action="zoom-out"]')
-    .click(function() {
+    .on('click', function() {
       pE.timeline.changeZoomLevel(-1);
     });
 
   pE.editorContainer.find('.footer-controls .btn[data-action="zoom-reset"]')
-    .click(function() {
+    .on('click', function() {
       pE.timeline.changeZoomLevel(0);
     });
 
   pE.editorContainer
     .find('.footer-controls .btn[data-action="toggle-scale-mode"]')
-    .click(function() {
+    .on('click', function() {
       pE.timeline.switchScaleMode();
     });
 };
@@ -1220,7 +1220,7 @@ pE.updateObjects = function() {
 
   // Delete object - Widget button
   pE.editorContainer.find('#playlist-timeline .playlist-widget .widgetDelete')
-    .click(function(e) {
+    .on('click', function(e) {
       e.stopPropagation();
       pE.deleteObject(
         'widget',

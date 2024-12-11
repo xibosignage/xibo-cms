@@ -431,6 +431,8 @@ class XiboUploadHandler extends BlueImpUploadHandler
             $file->fileSize = $media->fileSize;
             $file->md5 = $media->md5;
             $file->enableStat = $media->enableStat;
+            $file->width = $media->width;
+            $file->height = $media->height;
             $file->mediaType = $module->type;
             $file->fileName = $fileName;
 

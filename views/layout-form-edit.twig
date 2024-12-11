@@ -67,7 +67,7 @@
 
                         {% set title %}{% trans "Name" %}{% endset %}
                         {% set helpText %}{% trans "The Name of the Layout - (1 - 50 characters)" %}{% endset %}
-                        {{ forms.input("name", title, layout.layout, helpText) }}
+                        {{ forms.input("name", title, layout.layout, helpText, "", "required") }}
 
                         {% if currentUser.featureEnabled("tag.tagging") %}
                             {% set title %}{% trans "Tags" %}{% endset %}

@@ -64,7 +64,7 @@
                         {% set title %}{% trans "Add the body of your message in the box below. If you are going to target this message to a Display/DisplayGroup be aware that the formatting you apply here will be removed." %}{% endset %}
                         {{ forms.message(title) }}
 
-                        {{ forms.textarea("body", "", "", "", "", 10) }}
+                        {{ forms.textarea("body", "", "", "", "", "required", 10) }}
                     </div>
                     <div class="tab-pane" id="audience">
                         {% set title %}{% trans "Users" %}{% endset %}

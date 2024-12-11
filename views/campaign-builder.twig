@@ -250,12 +250,21 @@
 {% endblock %}
 
 {% block javaScript %}
-    <script src="{{ theme.rootUri() }}dist/campaignBuilder.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
-    <script type="text/javascript" nonce="{{ cspNonce }}">
+    {# Initialise JS variables and translations #}
+    <script type="text/javascript" nonce="{{ cspNonce }}" defer>
+        {# JS variables #}
+        var campaignBuilderDefaultVars = {
+            campaignAssignLayoutURL: "{{ url_for('campaign.assign.layout', {id: campaign.campaignId}) }}",
+            campaignRemoveLayoutURL: "{{ url_for('campaign.remove.layout', {id: campaign.campaignId}) }}",
+            defaultLat: "{{ settings.DEFAULT_LAT }}",
+            defaultLong: "{{ settings.DEFAULT_LONG }}",
+            dayPartSearchURL:  "{{ url_for('daypart.search')}}" + "?isAlways=0&isCustom=0",
+        };
+
         {# Custom translations #}
         {% autoescape "js" %}
             {# Insert custom translations here #}
-            const campaignBuilderTrans = {
+            var campaignBuilderTrans = {
               saveButton: '{{ "Save"|trans }}',
               cancelButton: '{{ "Cancel"|trans }}',
               addLayoutFormTitle: '{{ "Add Layout"|trans }}',
@@ -263,67 +272,23 @@
               assignmentEditButton: '{{ "Edit"|trans }}',
               assignmentDeleteButton: '{{ "Delete"|trans }}',
               daysOfWeek: {
-                1: "{{ "Monday"|trans }}",
-                2: "{{ "Tuesday"|trans }}",
-                3: "{{ "Wednesday"|trans }}",
-                4: "{{ "Thursday"|trans }}",
-                5: "{{ "Friday"|trans }}",
-                6: "{{ "Saturday"|trans }}",
-                7: "{{ "Sunday"|trans }}",
+                monday: '{{ "Monday"|trans }}',
+                tuesday: '{{ "Tuesday"|trans }}',
+                wednesday: '{{ "Wednesday"|trans }}',
+                thursday: '{{ "Thursday"|trans }}',
+                friday: '{{ "Friday"|trans }}',
+                saturday: '{{ "Saturday"|trans }}',
+                sunday: '{{ "Sunday"|trans }}',
               },
+              daysOfWeekDropdownTitle: '{{ "Days of the week"|trans }}',
+              daysOfWeekDropdownHelpText: '{{ "Which days of the week should the layout be active?"|trans }}',
+              dayPartDropdownTitle: '{{ "Dayparting"|trans }}',
+              dayPartDropdownHelpText:'{{ "Should this layout only be shown on selected day parts?"|trans }}',
+              builderMessage: '{{ "Draw areas on the map where you want this layout to play"|trans }}',
             };
         {% endautoescape %}
     </script>
-{% endblock %}
 
-{% block javaScriptTemplates %}
-    {{ parent() }}
-    <script type="text/x-handlebars-template" id="campaign-builder-layout-add-form-template">
-        <form action="{{ url_for("campaign.assign.layout", {id: campaign.campaignId}) }}"
-            data-assignment-remove-url="{{ url_for("campaign.remove.layout", {id: campaign.campaignId}) }}?layoutId={% verbatim %}{{layoutId}}{% endverbatim %}"
-            data-existing-display-order="{% verbatim %}{{displayOrder}}{% endverbatim %}"
-            method="POST"
-            class="form-horizontal XiboForm">
-            <input type="hidden" name="layoutId" value="{% verbatim %}{{layoutId}}{% endverbatim %}">
-
-                {% set title %}{% trans "Days of the week" %}{% endset %}
-                {% set helpText %}{% trans "Which days of the week should the layout be active?" %}{% endset %}
-                {% set options = [
-                    { id: 1, name: "Monday"|trans },
-                    { id: 2, name: "Tuesday"|trans },
-                    { id: 3, name: "Wednesday"|trans },
-                    { id: 4, name: "Thursday"|trans },
-                    { id: 5, name: "Friday"|trans },
-                    { id: 6, name: "Saturday"|trans },
-                    { id: 7, name: "Sunday"|trans },
-                ] %}
-            {{ forms.dropdown("daysOfWeek[]", "dropdownmulti", title, null, options, "id", "name", helpText) }}
-
-            {# Day Part #}
-            {% set attributes = [
-                { name: "data-search-url", value:  url_for("daypart.search") ~ "?isAlways=0&isCustom=0" },
-                { name: "data-search-term", value: "name" },
-                { name: "data-id-property", value: "dayPartId" },
-                { name: "data-text-property", value: "name" },
-                { name: "data-initial-key", value: "dayPartId" },
-                { name: "data-placeholder--id", value: null },
-                { name: "data-placeholder--value", value: "" },
-                { name: "data-allow-clear", value: "true" },
-            ] %}
-            {% set title %}{% trans "Dayparting" %}{% endset %}
-            {% set helpText %}{% trans "Should this layout only be shown on selected day parts?" %}{% endset %}
-            {{ forms.dropdown("dayPartId", "single", title, null, null, "dayPartId", "name", helpText, "", "", "", "", attributes) }}
-
-            {{ forms.hidden("geoFence", "{{geoFence}}") }}
-
-            {{ forms.message("Draw areas on the map where you want this layout to play."|trans) }}
-
-            <div id="campaign-builder-map"
-                 data-map-tile-server="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                 data-map-lat="{{ settings.DEFAULT_LAT }}"
-                 data-map-long="{{ settings.DEFAULT_LONG }}"
-                 data-map-zoom="13"
-                 style="height: 500px; width: 100%"></div>
-        </form>
-    </script>
+    <script src="{{ theme.rootUri() }}dist/leaflet.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+    <script src="{{ theme.rootUri() }}dist/campaignBuilder.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
 {% endblock %}

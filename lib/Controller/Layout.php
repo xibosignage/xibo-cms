@@ -970,6 +970,34 @@ class Layout extends Base
     }
 
     /**
+     * Clear Layout Form
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    function clearForm(Request $request, Response $response, $id)
+    {
+        $layout = $this->layoutFactory->getById($id);
+
+        if (!$this->getUser()->checkDeleteable($layout))
+            throw new AccessDeniedException(__('You do not have permissions to clear this layout'));
+
+        $data = [
+            'layout' => $layout,
+        ];
+
+        $this->getState()->template = 'layout-form-clear';
+        $this->getState()->setData($data);
+
+        return $this->render($request, $response);
+    }
+
+    /**
      * Retire Layout Form
      * @param Request $request
      * @param Response $response
@@ -1053,6 +1081,54 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
+    /**
+     * Clears a layout
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @SWG\Clear(
+     *  path="/layout/{layoutId}",
+     *  operationId="layoutClear",
+     *  tags={"layout"},
+     *  summary="Clear Layout",
+     *  description="Clears a Layout",
+     *  @SWG\Parameter(
+     *      name="layoutId",
+     *      in="path",
+     *      description="The Layout ID to Clear",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     */
+    function clear(Request $request, Response $response, $id)
+    {
+        $layout = $this->layoutFactory->loadById($id);
+
+        if (!$this->getUser()->checkEditable($layout)) {
+            throw new AccessDeniedException(__('You do not have permissions to clear this layout'));
+        }
+
+        $layout->clear();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Cleared %s'), $layout->layout)
+        ]);
+
+        return $this->render($request, $response);
+    }
     /**
      * Retires a layout
      * @param Request $request

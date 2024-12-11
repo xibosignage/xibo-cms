@@ -1,0 +1,46 @@
+<form action="{{campaignAssignLayoutURL}}"
+    data-assignment-remove-url="{{campaignRemoveLayoutURL}}?layoutId={{layoutId}}"
+    data-existing-display-order="{{displayOrder}}"
+    method="POST"
+    class="form-horizontal XiboForm">
+
+    {{> forms/inputs/hidden id="layoutId" value=layoutId }}
+
+    {{> forms/inputs/dropdown id="daysOfWeek[]" value=null title=trans.daysOfWeekDropdownTitle selectType="customSelect"
+        options=(arr
+            (obj id=1 name=trans.daysOfWeek.monday)
+            (obj id=2 name=trans.daysOfWeek.tuesday)
+            (obj id=3 name=trans.daysOfWeek.wednesday)
+            (obj id=4 name=trans.daysOfWeek.thursday)
+            (obj id=5 name=trans.daysOfWeek.friday)
+            (obj id=6 name=trans.daysOfWeek.saturday)
+            (obj id=7 name=trans.daysOfWeek.sunday)
+        )
+        optionsTitle="name" optionsValue="id" multiple="true"
+        helpText=trans.daysOfWeekDropdownHelpText
+    }}
+
+    {{> forms/inputs/dropdown id="dayPartId" value=null title=trans.dayPartDropdownTitle selectType="customSelect" 
+        customData=(arr
+            (obj name="search-url" value=dayPartSearchURL)
+            (obj name="search-term" value="name")
+            (obj name="id-property" value="dayPartId")
+            (obj name="text-property" value="name")
+            (obj name="initial-key" value="dayPartId")
+            (obj name="placeholder--id" value=null)
+            (obj name="placeholder--value" value="")
+            (obj name="allow-clear" value="true")
+        )
+        helpText=trans.dayPartDropdownHelpText
+    }}
+
+    {{> forms/inputs/hidden id="geoFence" value=geoFence }}
+    {{> forms/inputs/message title=trans.builderMessage}}
+
+    <div id="campaign-builder-map"
+            data-map-tile-server="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            data-map-lat="{{defaultLat}}"
+            data-map-long="{{defaultLong}}"
+            data-map-zoom="13"
+            style="height: 500px; width: 100%"></div>
+</form>

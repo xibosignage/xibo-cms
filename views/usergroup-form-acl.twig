@@ -34,7 +34,7 @@
     {% trans "Save" %}, $("#AclForm").submit()
 {% endblock %}
 
-{% block callBack %}featureAclFormOpen{% endblock %}
+{% block callBack %}forms.featureAclFormOpen{% endblock %}
 
 {% macro hasFeature(features, feature) %}
     {% if feature in features %}

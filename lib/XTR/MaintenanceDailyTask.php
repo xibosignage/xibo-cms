@@ -298,10 +298,10 @@ class MaintenanceDailyTask implements TaskInterface
     private function cachePlayerBundle(): void
     {
         // Output the player bundle
-        $bundlePath = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'assets/bundle.min.js';
+        $bundlePath = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'assets/player.bundle.min.js';
         $bundleMd5CachePath = $bundlePath . '.md5';
 
-        copy(PROJECT_ROOT . '/modules/bundle.min.js', $bundlePath);
+        copy(PROJECT_ROOT . '/modules/player.bundle.min.js', $bundlePath);
         file_put_contents($bundleMd5CachePath, md5_file($bundlePath));
 
         $this->appendRunMessage(__('Player bundle cached'));

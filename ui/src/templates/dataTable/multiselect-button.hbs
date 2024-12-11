@@ -1,0 +1,17 @@
+ <div class="btn-group dropup mr-2"></div>
+    <button class="btn btn-primary select-all" data-toggle="selectAll">
+        {{ selectAll }}
+    </button>
+    <button class="btn btn-white dropdown-toggle" data-toggle="dropdown">
+        {{ withSelected }}
+    </button>
+    <div class="dropdown-menu">
+        {{#each buttons}}
+            {{#if divider}}
+                <div class="dropdown-divider"></div>
+            {{else}}
+                <a class="dropdown-item XiboMultiSelectFormButton" data-custom-handler="{{ customHandler }}" data-custom-handler-url="{{ customHandlerUrl }}" data-button-id="{{ id }}" data-grid-id="{{ gridId }}" data-content-type="{{ contentType }}" data-content-id-name="{{ contentIdName }}" tabindex="-1" href="#">{{ text }}</a>
+            {{/if}}
+        {{/each}}
+    </div>
+</div>

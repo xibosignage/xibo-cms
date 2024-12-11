@@ -172,10 +172,14 @@
 {% endblock %}
 
 {% block javaScript %}
-    {# Add common file #}
-    {% include "common.twig" %}
+    {# Add common files #}
+    {% include "editorTranslations.twig" %}
+    {% include "editorVars.twig" %}
 
     <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js?v={{ version }}&rev={{ revision }}" nonce="{{ cspNonce }}"></script>
+    <script src="{{ theme.rootUri() }}dist/codeEditor.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+    <script src="{{ theme.rootUri() }}dist/vendor/ckeditor/build/ckeditor.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+    <script src="{{ theme.rootUri() }}dist/editorCommon.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
     <script type="text/javascript" nonce="{{ cspNonce }}">
 
         {# Custom translations #}
@@ -303,6 +307,7 @@
         var exactTags;
         var logicalOperator;
         var logicalOperatorName;
+        var filterFolderId;
 
         function playlistEditorFormOpen(formData) {
 
@@ -320,7 +325,7 @@
                 playlistFormPopulateMediaTable(dialog);
             }, 500));
 
-            $(dialog).find("input[name=filterMediaTag], input[name=exactTags], select[name=logicalOperator], select[name=logicalOperatorName]").on("change", function () {
+            $(dialog).find("input[name=filterMediaTag], input[name=exactTags], select[name=logicalOperator], select[name=logicalOperatorName], select[name=filterFolderId]").on("change", function () {
                 playlistFormPopulateMediaTable(dialog);
             });
 
@@ -394,8 +399,9 @@
             exactTags = $(dialog).find("input[name=exactTags]").is(':checked')
             logicalOperator = $(dialog).find("select[name=logicalOperator]").val();
             logicalOperatorName = $(dialog).find("select[name=logicalOperatorName]").val();
+            filterFolderId = $(dialog).find("select[name=filterFolderId]").val() ?? "";
 
-            if (nameFilter === "" && tagFilter === "") {
+            if (nameFilter === "" && tagFilter === "" && filterFolderId === "") {
                 if (mediaTable != null) {
                     mediaTable.destroy();
                     mediaTable = null;
@@ -425,6 +431,7 @@
                               {
                                 media: nameFilter,
                                 tags: tagFilter,
+                                folderId: filterFolderId,
                                 assignable: 1,
                                 exactTags: exactTags,
                                 logicalOperator: logicalOperator,
@@ -531,11 +538,4 @@
             });
         }
     </script>
-
-    {% for module in modules %}
-        {% if module.layoutDesignerJavaScript() != "" %}
-            {% include module.layoutDesignerJavaScript() ~ ".twig" %}
-        {% endif %}
-    {% endfor %}
-
 {% endblock %}

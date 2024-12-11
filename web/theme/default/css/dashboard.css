@@ -133,6 +133,12 @@ ul.sidebar .sidebar-list a {
 ul.sidebar .sidebar-list a:hover {
   color: #fff;
   border-left: 3px solid #e99d1a;
+  text-indent: 13px;
+}
+ul.sidebar .sidebar-list a.sidebar-list-selected {
+  color: #fff;
+  border-left: 3px solid #e99d1a;
+  text-indent: 13px;
 }
 #page-wrapper:not(.active) ul.sidebar .sidebar-list a:hover span {
   border-left: 3px solid #e99d1a;
@@ -416,6 +422,10 @@ ul.sidebar .sidebar-list a:hover,
 #page-wrapper:not(.active) ul.sidebar .sidebar-title.separator {
   /* Sidebar header and footer color */
   background: #273759;
+}
+.sidebar-list a.sidebar-list-selected {
+  /* Sidebar selected */
+  background: #2c3d63;
 }
 #sidebar-wrapper {
   /* Sidebar background color */

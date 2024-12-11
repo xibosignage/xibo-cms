@@ -454,7 +454,6 @@ Canvas.prototype.editPropertyForm = function(property) {
       }
 
       // Call Xibo Init for this form
-      // eslint-disable-next-line new-cap
       XiboInitialise('#' + dialog.attr('id'));
     } else {
       // Login Form needed?

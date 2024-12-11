@@ -1,0 +1,22 @@
+{{#each displays}}
+    <tr>
+        <td>{{displayId}} {{#eq displayId leadDisplayId}}{{trans.lead}}{{/eq}}</td>
+        <td>{{display}}</td>
+        <td>
+            <div class="form-group pagedSelect">
+                <select class="form-control syncContentSelect single-select" name="layoutId_{{displayId}}" id="layoutId_{{displayId}}" data-search-url="{{urlForLayoutSearch}}"
+                data-search-term="layout" data-width="100%" data-id-property="layoutId" data-text-property="layout" data-anchor-element="#contentSelectorTable"
+                data-initial-key="layoutId" data-initial-value="{{layoutId}}" data-display-id="{{displayId}}" data-lead-display-id="{{leadDisplayId}}">
+                <option></option>
+                </select>
+            </div>
+        {{#eq displayId leadDisplayId}}
+        <button data-display-id="{{displayId}}" id="setMirrorContent" type="button" class="btn btn-success d-none"
+            title="{{trans.setOnAllDisplays}}">
+            {{trans.mirror}}
+        </button>
+        {{/eq}}
+        <input name="displayGroupIds[]" type="hidden" id="displayGroupIds[]" value="{{displayGroupId}}">
+        </td>
+    </tr>
+{{/each}}

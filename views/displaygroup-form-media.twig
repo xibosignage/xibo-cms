@@ -31,10 +31,10 @@
 
 {% block formButtons %}
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, mediaAssignSubmit()
+    {% trans "Save" %}, forms.mediaAssignSubmit()
 {% endblock %}
 
-{% block callBack %}mediaDisplayGroupFormCallBack{% endblock %}
+{% block callBack %}forms.mediaDisplayGroupFormCallBack{% endblock %}
 
 {% block formHtml %}
     <div class="row">

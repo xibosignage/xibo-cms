@@ -1,0 +1,81 @@
+<span id="cal-slide-tick" style="display: none"></span>
+<div id="cal-slide-content" class="cal-event-list">
+    <ul class="unstyled list-unstyled">
+        <% _.each(events, function(event) { %>
+        <%
+        var title = event.title;
+        var eventIcon = "fa-desktop";
+        var eventClass = "event-warning";
+        var eventPriority = "";
+
+        if (event.event.isAlways != 1) {
+            if (event.event.eventTypeId == 2) {
+                title = "[" + moment(event.scheduleEvent.fromDt, systemDateFormat).format(jsTimeFormat) + "] " + event.title;
+            } else if (event.sameDay) {
+                title = "[" + moment(event.scheduleEvent.fromDt, systemDateFormat).format(jsTimeFormat) + " - " + moment(event.scheduleEvent.toDt, systemDateFormat).format(jsTimeFormat) + "] " + event.title;
+            } else {
+                title = "[" + moment(event.scheduleEvent.fromDt, systemDateFormat).format(jsDateFormat) + " - " + moment(event.scheduleEvent.toDt, systemDateFormat).format(jsDateFormat) + "] " + event.title;
+            }
+        }
+
+        if (event.event.displayOrder > 0)
+            title = title + " (" + event.event.displayOrder + ")";
+
+        if (event.event.displayGroups.length <= 1) {
+            eventClass = "event-info";
+        }
+        else {
+            eventClass = "event-success";
+        }
+
+        if (event.event.isAlways == 1) {
+            eventIcon = "fa-retweet";
+        }
+
+        if (event.event.recurrenceType != null && event.event.recurrenceType != "") {
+            eventClass = "event-special";
+            eventIcon = "fa-repeat";
+        }
+
+        if (event.event.isPriority >= 1) {
+            eventClass = "event-important";
+            eventIcon = "fa-bullseye";
+            eventPriority = event.event.isPriority;
+        }
+
+        if (event.event.eventTypeId == 2) {
+            eventIcon = "fa-wrench";
+        }
+
+        if (event.event.eventTypeId == 4) {
+            eventIcon = "fa-hand-paper";
+        }
+
+        if (event.event.isGeoAware === 1) {
+            eventIcon = "fa-map-marker";
+        }
+
+        if (event.event.eventTypeId == 6) {
+            eventIcon = "fa-paper-plane";
+        }
+
+        if (event.event.eventTypeId == 9) {
+            eventIcon = "fa-refresh";
+        }
+
+        if (!event.editable) {
+            event.url = null;
+            eventIcon = "fa-lock";
+            eventClass = "event-inverse";
+        }
+        %>
+        <li>
+            <span class="pull-left event <%= event['class'] %>"></span>&nbsp;
+            <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>"
+                data-event-start="<%= event.start %>" data-event-end="<%= event.end %>"
+                data-event-class="<%= eventClass %>" class="event-item">
+                <span class="fa <%= eventIcon %>"><span class="event-priority"><%= eventPriority %></span></span> <%= title %></a>
+        </li>
+        <% }) %>
+    </ul>
+</div>

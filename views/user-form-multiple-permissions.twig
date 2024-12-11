@@ -40,10 +40,10 @@
 
 {% block formButtons %}
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, permissionsMultiFormSubmit("{{ randomId }}")
+    {% trans "Save" %}, forms.permissionsMultiFormSubmit("{{ randomId }}")
 {% endblock %}
 
-{% block callBack %}permissionsMultiFormOpen{% endblock %}
+{% block callBack %}forms.permissionsMultiFormOpen{% endblock %}
 
 {% block formHtml %}
     <div class="multiple-permissions-form">

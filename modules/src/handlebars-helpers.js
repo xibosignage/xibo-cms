@@ -31,6 +31,7 @@ Handlebars.registerHelper('parseJSON', function(varName, varValue, opts) {
   try {
     opts.data.root[varName] = JSON.parse(varValue);
   } catch (error) {
+    console.warn(error);
     opts.data.root = {};
   }
 });

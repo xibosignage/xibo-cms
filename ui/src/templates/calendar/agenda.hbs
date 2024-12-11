@@ -1,0 +1,95 @@
+<div class="container-fluid">
+    <!-- Content panel with tabs -->
+    <div class="card with-nav-tabs bg-white agenda-panel">
+    
+        <!-- Tab Panel -->
+        <% if (typeof agenda.displayGroupList != 'undefined' && agenda.displayGroupList.length > 1) { %>
+            <div class="card-heading">
+                    <ul class="nav nav-tabs">
+                        <% _.each(agenda.displayGroupList, function(displayGroup){ %>
+                            <% if (displayGroup['id'] == agenda.selectedDisplayGroup) { %>
+                                <li class="nav-item active">
+                            <% } else { %>
+                                <li class="nav-item">
+                            <% }; %>
+                            
+                                <%
+                                    // If it is a simple display show an 
+                                    var displayGroupIcon = "";
+                                    if (displayGroup['isDisplaySpecific'] == 0)
+                                        displayGroupIcon = "<span class='fa fa-television'></span> ";
+                                %>
+                            
+                                <a class="nav-link" data-toggle="tab" data-id="<%= displayGroup['id'] %>" href="#tab_<%= displayGroup['id'] %>">
+                                    <%= (displayGroupIcon + displayGroup['name']) %>
+                                </a>
+                            </li>
+                        <% }); %>
+                    </ul> 
+            </div>
+        <% } %>
+    
+        <!-- Tab Content -->
+        <div class="card-body p-1">
+        
+        <% if (agenda.errorMessage != '') { %>
+            <!-- Request failed - Show Error Message -->
+            <div class="text-danger text-center">
+            <% if (agenda.errorMessage == 'display_not_selected') { %>
+            <p>{{trans.displayNotSelected}}</p>
+            <% } else if (agenda.errorMessage == 'all_displays_selected') { %>
+            <p>{{trans.showAllOptionsDNW}}</p>
+            <% } else if (agenda.errorMessage == 'no_events') { %>
+            <p>{{trans.noEventsForTheChosen}}</p>
+            <% } else if (agenda.errorMessage == 'request_failed') { %>
+            <p>{{trans.dataRequestFailed}}</p>
+            <% } %>
+            </div>
+        <% } else if(!jQuery.isEmptyObject(agenda.results)) { %>
+            <!-- Request successful - Show Data -->
+                
+            <!-- Breadcrumb trail -->
+            <div class="cal-event-breadcrumb-trail col-12">
+                <div id="content"></div>
+            </div>     
+            
+            <!-- Agenda Data Content -->
+            <div class="tab-content">
+                <% _.each(agenda.displayGroupList, function(displayGroup){ %>
+                    <% if (typeof agenda.results[(displayGroup['id'])] != 'undefined') { %>
+                        <% 
+                            var resultItem = agenda.results[displayGroup['id']]; 
+                            var isActive = (displayGroup['id'] == agenda.selectedDisplayGroup) ? 'active' : '';
+                        %>
+                        <div id="tab_<%= displayGroup['id'] %>" class="tab-pane <%= isActive %> container-fluid">
+                            <div class="row">
+                                <% if(typeof resultItem.events != 'undefined') { %>
+                                    <div class="col-lg-9 agenda-col">
+                                        <%= cal._layouts(resultItem.events, resultItem.layouts, 1) %>
+                                        <%= cal._layouts(resultItem.events, resultItem.layouts, 3) %>
+                                        <%= cal._layouts(resultItem.events, resultItem.layouts, 4) %>
+                                        <%= cal._layouts(resultItem.events, resultItem.layouts, 5) %>
+                                        <%= cal._layouts(resultItem.events, resultItem.layouts, 7) %>
+                                        <%= cal._layouts(resultItem.events, resultItem.layouts, 8) %>
+                                        <%= cal._layouts(resultItem.events, resultItem.layouts, 9) %>
+                                    </div>
+                                    <div class="col-lg-3 agenda-col">
+                                        <div class="row">
+                                            <div class="col-6 col-lg-12 agenda-col">
+                                                <%= cal._displaygroups(resultItem.events, resultItem.displayGroups) %>
+                                            </div> 
+                                            <div class="col-6 col-lg-12 agenda-col">
+                                                <%= cal._campaigns(resultItem.events, resultItem.campaigns) %>
+                                            </div>
+                                        </div>
+                                    </div>
+                                <% } %>
+                            </div>
+                        </div>
+                    <% } %>
+                <% }); %>
+            </div>
+        <% } %>   
+        </div>
+    </div>
+</div>

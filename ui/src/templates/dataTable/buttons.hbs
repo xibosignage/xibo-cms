@@ -1,0 +1,30 @@
+<div class="btn-group pull-right dropdown-menu-container" title="{{translations.rowMenu}}">
+    <button class="btn btn-white dropdown-toggle" data-toggle="dropdown"></button>
+    <div class="dropdown-menu dropdown-menu-right" id="dropdown-menu-right-container">
+        {{#each buttons}}
+            {{#if divider}}
+                <div class="dropdown-divider"></div>
+            {{else multiSelectOnly}}
+                <a {{#each dataAttributes}} data-{{ name }}="{{ value }}" {{/each}}
+                    class="dropdown-item multi-select-button {{#if class}}{{ class }}{{else}}XiboMultiHiddenButton{{/if}} {{ id }}"
+                    style="display: none;" tabindex="-1" href="#">
+                    {{ text }}
+                </a>
+            {{else}}
+                {{#if external}}
+                    <a class="dropdown-item {{ id }}" id="{{ id }}" tabindex="-1" data-custom-handler="{{ onclick }}"
+                        data-custom-handler-url="{{ onclickParam }}" target="{{ linkType }}" href="{{ url }}" {{#if
+                        title}} title="{{title}}" {{/if}}>{{ text }}</a>
+                {{/if}}
+
+                {{#unless external}}
+                    <a {{#each dataAttributes}} data-{{ name }}="{{ value }}" {{/each}}
+                        class="dropdown-item {{#if multi-select}}multi-select-button{{/if}} {{#if class}}{{ class }}{{else}}XiboFormButton{{/if}} {{ id }}"
+                        href="{{ url }}" {{#if title}} title="{{title}}" {{/if}} tabindex="-1" href="#">
+                        {{ text }}
+                    </a>
+                {{/unless}}
+            {{/if}}
+        {{/each}}
+    </div>
+</div>

@@ -1,0 +1,15 @@
+<div class="form-check pull-right">
+    <input type="checkbox" class="show-command-preview form-check-input" id="showCommandPreview{{ unique }}" name="showCommandPreview{{ unique }}" title="{{trans.showCommandPreview}}">
+    <label for="showCommandPreview{{ unique }}" class="show-command-preview-label form-check-label">{{trans.showCommandPreview}}</label>
+</div>
+
+<select class="command-type form-control form-control-inline">
+    {{#each types}}
+        <option value="{{ @key }}" {{#eq @key ../type}}selected="selected"{{/eq}}>{{ this }}</option>
+    {{/each}}
+</select>
+<div class="command-inputs panel panel-default"></div>
+
+<div disabled="disabled" class="command-preview bg-primary p-2 w-100" data-invalid-message="{{trans.invalidCommand}}">
+    <code class="text-white"></code>
+</div>

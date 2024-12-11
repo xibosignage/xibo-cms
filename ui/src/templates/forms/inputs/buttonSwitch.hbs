@@ -1,0 +1,36 @@
+<div class="form-group xibo-form-input button-switch-input-group
+    {{customClass}}
+    {{variant}}" 
+    {{#if visibility}}data-visibility="{{visibility}}"{{/if}}
+    {{#if dependsOn}}data-depends-on="{{dependsOn}}"{{/if}}
+    {{#if isRequired}}data-is-required="{{isRequired}}"{{/if}}
+>
+    <label for="{{#unless forceId}}input_{{/unless}}{{id}}" class="control-label"><strong>{{title}}</strong></label>
+    <div class="input-info-container">
+        {{#if helpText}}
+            {{> add-ons/helpText helpText=helpText}}
+        {{/if}}
+    </div>
+    <input id="{{#unless forceId}}input_{{/unless}}{{id}}" name="{{#if name}}{{name}}{{else}}{{id}}{{/if}}" value="{{value}}" type="hidden"/>
+    <div class="btn-group btn-block" role="group"
+        {{#each customData}}
+            data-{{this.name}}="{{this.value}}"
+        {{/each}}
+        {{#if readonly}}readonly{{/if}}
+    >
+        {{!-- Set default property values --}}
+        {{#unless optionsValue}}
+            {{set "optionsValue" "name"}}
+        {{/unless}}
+        {{#unless optionsTitle}}
+            {{set "optionsTitle" "title"}}
+        {{/unless}}
+
+        {{!-- Render options --}}
+        {{#each options}}
+            <button type="button" class="btn btn-sm {{#eq (lookup this ../optionsValue) ../value}}selected{{/eq}}"
+                data-value="{{lookup this ../optionsValue}}"
+            >{{lookup this ../optionsTitle}}</button>
+        {{/each}}
+    </div>
+</div>

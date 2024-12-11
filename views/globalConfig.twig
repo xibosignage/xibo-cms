@@ -1,0 +1,32 @@
+{# GLOBAL CONFIG #}
+<script type="text/javascript" nonce="{{ cspNonce }}">
+    var CKEDITOR_DEFAULT_CONFIG = {
+        contentsCss: ['styles.css', libraryFontCSS],
+        imageDownloadUrl: imageDownloadUrl,
+        fontFamily: {
+            options: ['default'],
+        },
+        fontSize: {
+            options: [
+            'default',
+            8, 9, 10, 11, 12, 16, 18, 20,
+            22, 24, 26, 28, 36, 48, 72, 80,
+            88, 96, 128, 144, 168, 186, 200,
+            244, 288, 300,
+            ],
+        },
+    };
+
+    moment.locale("{{ translate.jsLocale }}");
+
+    $(function() {
+        var csrf_token = $('meta[name="token"]').attr('content');
+        $.ajaxSetup({
+            headers: {
+                'X-XSRF-TOKEN': csrf_token
+            }
+        });
+    });
+
+    toastr.options.positionClass = "toast-bottom-center";
+</script>

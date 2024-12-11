@@ -28,6 +28,7 @@ use Psr\Log\LoggerInterface;
 use Stash\Interfaces\PoolInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Service\JwtServiceInterface;
+use Xibo\Service\PlayerActionServiceInterface;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
@@ -42,6 +43,7 @@ interface ConnectorInterface
     public function usePool(PoolInterface $pool): ConnectorInterface;
     public function useHttpOptions(array $httpOptions): ConnectorInterface;
     public function useJwtService(JwtServiceInterface $jwtService): ConnectorInterface;
+    public function usePlayerActionService(PlayerActionServiceInterface $playerActionService): ConnectorInterface;
     public function getClient(): Client;
     public function getSourceName(): string;
     public function getTitle(): string;

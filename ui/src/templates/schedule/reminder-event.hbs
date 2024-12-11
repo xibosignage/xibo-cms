@@ -1,0 +1,40 @@
+<div class="form-group row">
+    <input class="form-control" name="reminder_scheduleReminderId[]" type="hidden" value="{{ scheduleReminderId }}" />
+
+    <div class="col-sm-2">
+        <label for="reminder_value[]">
+            <input class="form-control" name="reminder_value[]" type="number" value="{{ value }}" />
+        </label>
+    </div>
+    <div class="col-sm-2">
+        <label for="reminder_type[]">
+            <select class="form-control" name="reminder_type[]">
+                <option value="1" {{#eq type 1}}selected{{/eq}}>{{ trans.type.minute }}</option>
+                <option value="2" {{#eq type 2}}selected{{/eq}}>{{ trans.type.hour }}</option>
+                <option value="3" {{#eq type 3}}selected{{/eq}}>{{ trans.type.day }}</option>
+                <option value="4" {{#eq type 4}}selected{{/eq}}>{{ trans.type.week }}</option>
+                <option value="5" {{#eq type 5}}selected{{/eq}}>{{ trans.type.month }}</option>
+            </select>
+        </label>
+    </div>
+    <div class="col-sm-3">
+        <label for="reminder_option[]">
+            <select class="form-control" name="reminder_option[]">
+                <option value="1" {{#eq option 1}}selected{{/eq}}>{{ trans.option.beforeScheduleStarts }}</option>
+                <option value="2" {{#eq option 2}}selected{{/eq}}>{{ trans.option.afterScheduleStarts }}</option>
+                <option value="3" {{#eq option 3}}selected{{/eq}}>{{ trans.option.beforeScheduleEnds }}</option>
+                <option value="4" {{#eq option 4}}selected{{/eq}}>{{ trans.option.afterScheduleEnds }}</option>
+            </select>
+        </label>
+    </div>
+    <div class="col-sm-3">
+        <label for="reminder_isEmail[]">
+            <input type="checkbox" name="reminder_isEmail[]" {{#eq isEmail 1}}checked{{/eq}}/>
+            {{ trans.notifyByEmail }}
+            <input type="hidden" name="reminder_isEmailHidden[]" />
+        </label>
+    </div>
+    <div class="col-sm-2">
+        <button class="btn btn-white"><i class="fa {{ buttonGlyph }}"></i></button>
+    </div>
+</div>

@@ -120,7 +120,6 @@ Topbar.prototype.render = function() {
   // Setup layout edit form.
   this.DOMObject.find('#layoutInfo').off('click').on('click', function() {
     // Pop open the layout edit form.
-    // eslint-disable-next-line new-cap
     XiboFormRender(urlsForApi.layout.editForm.url.replace(
       ':id',
       self.parent.layout.parentLayoutId || self.parent.layout.layoutId),
@@ -171,12 +170,12 @@ Topbar.prototype.render = function() {
   // Options menu
   if (self.showOptions) {
     self.DOMObject.find('.navbar-submenu-options-container').off()
-      .click(function(e) {
+      .on('click', function(e) {
         e.stopPropagation();
       });
 
     // Toggle tooltips
-    self.DOMObject.find('#displayTooltips').off().click(function() {
+    self.DOMObject.find('#displayTooltips').off().on('click', function() {
       app.common.displayTooltips = $('#displayTooltips').prop('checked');
 
       app.toolbar.savePrefs();
@@ -185,7 +184,7 @@ Topbar.prototype.render = function() {
     });
 
     // Show delete confirmation modals
-    self.DOMObject.find('#deleteConfirmation').off().click(function() {
+    self.DOMObject.find('#deleteConfirmation').off().on('click', function() {
       app.common.deleteConfirmation = $('#deleteConfirmation').prop('checked');
       app.toolbar.savePrefs();
     });

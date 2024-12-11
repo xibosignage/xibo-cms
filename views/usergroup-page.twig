@@ -180,31 +180,23 @@
         }
 
         function userGroupFormOpen() {
-            // Bind to the add form submit
-            $(".UserGroupForm").validate({
-                submitHandler: function (form) {
-                    // Grab and alter the value in the library quota field
-                    handleLibraryQuotaField(
-                        $(form).find("input[name=libraryQuota]"),
-                        $(form).find("select[name=libraryQuotaUnits]")
-                    );
+            // Validate form
+            var $userGroupForm = $('.UserGroupForm');
+            forms.validateForm(
+                $userGroupForm, // form
+                $userGroupForm.parents('.modal-body'), // container
+                {
+                    submitHandler: function (form) {
+                        // Grab and alter the value in the library quota field
+                        handleLibraryQuotaField(
+                            $(form).find('input[name=libraryQuota]'),
+                            $(form).find('select[name=libraryQuotaUnits]')
+                        );
 
-                    XiboFormSubmit(form);
+                        XiboFormSubmit(form);
+                    },
                 },
-                errorElement: "span",
-                highlight: function(element) {
-                    $(element).closest('.form-group').removeClass('has-success').addClass('has-error');
-                },
-                success: function(element) {
-                    $(element).closest('.form-group').removeClass('has-error').addClass('has-success');
-                },
-                invalidHandler: function(event, validator) {
-                    // Remove the spinner
-                    $(this).closest(".modal-dialog").find(".saving").remove();
-                    // https://github.com/xibosignage/xibo/issues/1589
-                    $(this).closest(".modal-dialog").find(".save-button").removeClass("disabled");
-                }
-            });
+            );
         }
     </script>
 {% endblock %}

@@ -142,6 +142,9 @@
                                 <div class="XiboGrid" id="{{ random() }}" data-grid-name="layoutAssignView">
                                     <div class="layoutAssignFilterOptions XiboFilter">
                                         <div class="form-inline">
+                                            {% set title %}{% trans "ID" %}{% endset %}
+                                            {{ inline.number("campaignId", title) }}
+
                                             {% set title %}{% trans "Name" %}{% endset %}
                                             {{ inline.input("layout", title) }}
 
@@ -152,6 +155,46 @@
                                                 {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a tag|tag value to filter tags with values. Enter --no-tag to filter all items without tags. Enter - before a tag or tag value to exclude from results." %}{% endset %}
                                                 {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle, logicalOperatorTitle) }}
                                             {% endif %}
+
+                                            {% if currentUser.featureEnabled("folder.view") %}
+                                                {% set title %}{% trans "Folder Filter" %}{% endset %}
+                                                {% set attributes = [
+                                                    { name: "data-width", value: "100%" },
+                                                    { name: "data-search-url", value: url_for("folders.search") },
+                                                    { name: "data-filter-options", value: '{"gridView":1}' },
+                                                    { name: "data-search-term", value: "folderName" },
+                                                    { name: "data-id-property", value: "folderId" },
+                                                    { name: "data-text-property", value: "text" },
+                                                    { name: "data-initial-key", value: "folderId" },
+                                                    { name: "data-allow-clear", value: "true" },
+                                                    { name: "data-placeholder--id", value: null },
+                                                    { name: "data-placeholder--value", value: "" }
+                                                ] %}
+                                                {{ inline.dropdown("folderId", "single", title, "", null, "", "", helpText, "pagedSelect", "", "", "", attributes) }}
+                                            {% endif %}
+
+                                            {% set title %}{% trans "Owner" %}{% endset %}
+                                            {% set helpText %}{% trans "Show items owned by the selected User." %}{% endset %}
+                                            {% set attributes = [
+                                                { name: "data-width", value: "200px" },
+                                                { name: "data-allow-clear", value: "true" },
+                                                { name: "data-placeholder--id", value: null },
+                                                { name: "data-placeholder--value", value: "" },
+                                                { name: "data-search-url", value: url_for("user.search") },
+                                                { name: "data-search-term", value: "userName" },
+                                                { name: "data-search-term-tags", value: "tags" },
+                                                { name: "data-id-property", value: "userId" },
+                                                { name: "data-text-property", value: "userName" },
+                                                { name: "data-initial-key", value: "userId" },
+                                            ] %}
+                                            {{ inline.dropdown("userId", "single", title, "", null, "userId", "userName", helpText, "pagedSelect", "", "", "", attributes) }}
+
+                                            {% set title %}{% trans "Orientation" %}{% endset %}
+                                            {% set option1 = "All"|trans %}
+                                            {% set option2 = "Landscape"|trans %}
+                                            {% set option3 = "Portrait"|trans %}
+                                            {% set values = [{id: '', value: option1}, {id: 'landscape', value: option2}, {id: 'portrait', value: option3}] %}
+                                            {{ inline.dropdown("orientation", "single", title, '', values, "id", "value") }}
                                         </div>
                                     </div>
 
