@@ -3095,19 +3095,23 @@ function createColorPicker(element, options) {
 function updateDateRangeFilter(element) {
   const selected = $(element).find('option:selected').val();
   const $form = $(element).closest('form');
+
+  // This would allow us to target this specific element in case there are multiple range filters used
+  const selectFilterId = $(element).attr('id');
+
   let fromDt = moment().startOf('day');
   let toDt = moment().endOf('day');
 
   // Remove the hidden attribute
-  $('.rangeFilterInput').removeClass('hidden');
+  $(`.rangeFilterInput_${selectFilterId}`).removeClass('hidden');
 
   // Hide/Show From/To Date
   if (selected === '' || selected === undefined) {
-    $(element).closest('form').find('.rangeFilterInput').show();
+    $form.find(`.rangeFilterInput_${selectFilterId}`).show();
 
-    updateDateRangeSelection($form);
+    updateDateRangeSelection($form, selectFilterId);
   } else {
-    $(element).closest('form').find('.rangeFilterInput').hide();
+    $form.find(`.rangeFilterInput_${selectFilterId}`).hide();
 
     switch (selected) {
       case 'yesterday':
@@ -3141,20 +3145,21 @@ function updateDateRangeFilter(element) {
     }
   }
 
-  formatInputFields($form, fromDt, toDt);
+  formatInputFields($form, selectFilterId, fromDt, toDt);
 }
 
 /**
  * Calculates from/to date range selection
  * @param {object} $form jquery object or CSS selector
+ * @param {string} selectFilterId filter ID selector
  */
-function updateDateRangeSelection($form) {
+function updateDateRangeSelection($form, selectFilterId) {
   let fromDt = moment().startOf('day');
   let toDt = moment().endOf('day');
 
-  $('.rangeInput').on('change', function(){
-    fromDt = moment($('#fromDt').val()).startOf('day').format();
-    toDt = moment($('#toDt').val()).endOf('day').format();
+  $(`.rangeFilterInput_${selectFilterId}`).on('change', function() {
+    fromDt = moment($(`#fromDt_${selectFilterId}`).val()).startOf('day').format();
+    toDt = moment($(`#toDt_${selectFilterId}`).val()).endOf('day').format();
 
     const dateDiff = moment(toDt).diff(moment(fromDt), 'days');
 
@@ -3163,21 +3168,20 @@ function updateDateRangeSelection($form) {
       toDt = moment(fromDt).endOf('day').format();
     }
 
-    formatInputFields($form, fromDt, toDt);
+    formatInputFields($form, selectFilterId, fromDt, toDt);
   });
-
-  formatInputFields($form, fromDt, toDt);
 }
 
 /**
  * Updates the range filter form fields
  * @param {object} $form jquery object or CSS selector
+ * @param {string} selectFilterId filter ID selector
  * @param {object} fromDt dateTime object
  * @param {object} toDt dateTime object
  */
-function formatInputFields($form, fromDt, toDt) {
-  $form.find('input#fromDt').val(moment(fromDt).format('YYYY-MM-DD HH:mm:ss'));
-  $form.find('input#toDt').val(moment(toDt).format('YYYY-MM-DD HH:mm:ss'));
+function formatInputFields($form, selectFilterId, fromDt, toDt) {
+  $form.find(`#fromDt_${selectFilterId}`).val(moment(fromDt).format('YYYY-MM-DD HH:mm:ss'));
+  $form.find(`#toDt_${selectFilterId}`).val(moment(toDt).format('YYYY-MM-DD HH:mm:ss'));
 }
 
 window.moveFolderMultiSelectFormOpen = function(dialog) {
