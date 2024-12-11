@@ -79,12 +79,6 @@
                             {% set title %}{% trans "Range" %}{% endset %}
                             {{ inline.dateRangeFilter("reportFilter", title, "", "", "", "", "") }}
 
-                            {% set title %}{% trans "From Date" %}{% endset %}
-                            {{ inline.date("fromDt", title, defaults.fromDateOneDay, "", "fromDt", "", "") }}
-
-                            {% set title %}{% trans "To Date" %}{% endset %}
-                            {{ inline.date("toDt", title, defaults.toDate, "", "toDt", "", "") }}
-
                             {% set title %}{% trans "Group by" %}{% endset %}
                             {% set byhour %}{% trans "Hour" %}{% endset %}
                             {% set bydayofmonth %}{% trans "Day of month" %}{% endset %}
@@ -134,8 +128,6 @@
         });
 
         let imageLoader = $("#imageLoader");
-        let $report = $('#timeconnected');
-        let reportData = '';
 
         function setReport() {
             $("#records_table").empty();
@@ -144,7 +136,7 @@
                 url: "{{ url_for("report.data", {name: reportName}) }}",
                 cache: false,
                 dataType: "json",
-                data: reportData,
+                data: $("#timeconnected").find("form").serialize(),
                 success: function(response) {
 
                     setTimeout(function() {
@@ -209,14 +201,11 @@
 
 
             // Report Filter
-            setDateRange();
-
             checkEnableSchedule();
 
             // Bind to form change
             $("#timeconnected").on('change', function() {
                 checkEnableSchedule();
-                setDateRange();
             });
 
             // Apply
@@ -225,34 +214,6 @@
                 imageLoader.addClass('fa fa-spinner fa-spin loading-icon');
                 setReport();
             });
-
-            function setDateRange() {
-                let rangeFilter = $('#XiboDateRangeFilter').val();
-                let startDate = $("#fromDt").val();
-                let endDate = $("#toDt").val();
-
-                if (rangeFilter === 'today') {
-                    $report.find('div.toDt, div.fromDt').hide();
-                    startDate = moment().startOf('day');
-                    endDate = moment().endOf('day');
-                } else if (rangeFilter === '') {
-                    let dateDiff = moment(endDate).diff(moment(startDate), 'days');
-
-                    // Validation for same date
-                    if (dateDiff <= 0) {
-                        startDate = moment(startDate).startOf('day').format()
-                        endDate = moment(startDate).endOf('day').format()
-                    }
-                }
-
-                let values = $report.find('form').serializeArray();
-
-                values.find(input => input.name === 'fromDt').value = moment(startDate).format('YYYY-MM-DD HH:mm:ss');
-                values.find(input => input.name === 'toDt').value = moment(endDate).format('YYYY-MM-DD HH:mm:ss');
-
-                reportData = jQuery.param(values);
-            }
-
         });
 
     </script>

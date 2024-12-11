@@ -111,10 +111,10 @@ window.XiboInitialise = function(scope, options) {
 
   // Search for any grids on the page and render them
   $(scope + " .XiboGrid").each(function() {
-  // Custom Date Range Filter
-      $(this).find('#XiboDateRangeFilter').on('change', function() {
-        updateDateRangeFilter(this);
-      });
+    // Custom Date Range Filter
+    $(this).find('select.XiboDateRangeFilter').on('change', function() {
+      updateDateRangeFilter(this);
+    });
   });
 
   // Search for any Buttons / Links on the page that are used to load forms
@@ -3095,52 +3095,89 @@ function createColorPicker(element, options) {
 function updateDateRangeFilter(element) {
   const selected = $(element).find('option:selected').val();
   const $form = $(element).closest('form');
-  let fromDt = '';
-  let toDt = '';
+  let fromDt = moment().startOf('day');
+  let toDt = moment().endOf('day');
 
+  // Remove the hidden attribute
+  $('.rangeFilterInput').removeClass('hidden');
+
+  // Hide/Show From/To Date
   if (selected === '' || selected === undefined) {
-    $(element).closest('form').find('div.toDt, div.fromDt').show();
+    $(element).closest('form').find('.rangeFilterInput').show();
+
+    updateDateRangeSelection($form);
   } else {
-    $(element).closest('form').find('div.toDt, div.fromDt').hide();
+    $(element).closest('form').find('.rangeFilterInput').hide();
 
-      switch (selected) {
-        case 'yesterday':
-          fromDt = moment().startOf('day').subtract(1, 'days');
-          toDt = moment().endOf('day').subtract(1, 'days');
-          break;
-        case 'thisweek':
-          fromDt = moment().startOf('week');
-          toDt = moment().endOf('week');
-          break;
-        case 'thismonth':
-          fromDt = moment().startOf('month');
-          toDt = moment().endOf('month');
-          break;
-        case 'thisyear':
-          fromDt = moment().startOf('year');
-          toDt = moment().endOf('year');
-          break;
-        case 'lastweek':
-          fromDt = moment().startOf('week').subtract(1, 'weeks');
-          toDt = moment().endOf('week').subtract(1, 'weeks');
-          break;
-        case 'lastmonth':
-          fromDt = moment().startOf('month').subtract(1, 'months');
-          toDt = moment().endOf('month').subtract(1, 'months');
-          break;
-        case 'lastyear':
-          fromDt = moment().startOf('year').subtract(1, 'years');
-          toDt = moment().endOf('year').subtract(1, 'years');
-          break;
-        default:
-          fromDt = moment().startOf('day');
-          toDt = moment().endOf('day');
-          break;
-      }
-
-      $form.find('input#fromDt').val(moment(fromDt).format('YYYY-MM-DD HH:mm:ss'));
-      $form.find('input#toDt').val(moment(toDt).format('YYYY-MM-DD HH:mm:ss'));
+    switch (selected) {
+      case 'yesterday':
+        fromDt = moment().startOf('day').subtract(1, 'days');
+        toDt = moment().endOf('day').subtract(1, 'days');
+        break;
+      case 'thisweek':
+        fromDt = moment().startOf('week');
+        toDt = moment().endOf('week');
+        break;
+      case 'thismonth':
+        fromDt = moment().startOf('month');
+        toDt = moment().endOf('month');
+        break;
+      case 'thisyear':
+        fromDt = moment().startOf('year');
+        toDt = moment().endOf('year');
+        break;
+      case 'lastweek':
+        fromDt = moment().startOf('week').subtract(1, 'weeks');
+        toDt = moment().endOf('week').subtract(1, 'weeks');
+        break;
+      case 'lastmonth':
+        fromDt = moment().startOf('month').subtract(1, 'months');
+        toDt = moment().endOf('month').subtract(1, 'months');
+        break;
+      case 'lastyear':
+        fromDt = moment().startOf('year').subtract(1, 'years');
+        toDt = moment().endOf('year').subtract(1, 'years');
+        break;
+    }
   }
+
+  formatInputFields($form, fromDt, toDt);
+}
+
+/**
+ * Calculates from/to date range selection
+ * @param {object} $form jquery object or CSS selector
+ */
+function updateDateRangeSelection($form) {
+  let fromDt = moment().startOf('day');
+  let toDt = moment().endOf('day');
+
+  $('.rangeInput').on('change', function(){
+    fromDt = moment($('#fromDt').val()).startOf('day').format();
+    toDt = moment($('#toDt').val()).endOf('day').format();
+
+    const dateDiff = moment(toDt).diff(moment(fromDt), 'days');
+
+    if (dateDiff <= 0) {
+      fromDt = moment(fromDt).startOf('day').format();
+      toDt = moment(fromDt).endOf('day').format();
+    }
+
+    formatInputFields($form, fromDt, toDt);
+  });
+
+  formatInputFields($form, fromDt, toDt);
+}
+
+/**
+ * Updates the range filter form fields
+ * @param {object} $form jquery object or CSS selector
+ * @param {object} fromDt dateTime object
+ * @param {object} toDt dateTime object
+ */
+function formatInputFields($form, fromDt, toDt) {
+  $form.find('input#fromDt').val(moment(fromDt).format('YYYY-MM-DD HH:mm:ss'));
+  $form.find('input#toDt').val(moment(toDt).format('YYYY-MM-DD HH:mm:ss'));
 }
 
 window.moveFolderMultiSelectFormOpen = function(dialog) {

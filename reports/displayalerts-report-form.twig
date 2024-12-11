@@ -47,12 +47,6 @@
                             {% set title %}{% trans "Range" %}{% endset %}
                             {{ inline.dateRangeFilter("reportFilter", title, "", "", "", "", "") }}
 
-                            {% set title %}{% trans "From Date" %}{% endset %}
-                            {{ inline.date("fromDt", title, defaults.fromDate, "", "fromDt", "", "") }}
-
-                            {% set title %}{% trans "To Date" %}{% endset %}
-                            {{ inline.date("toDt", title, defaults.toDate, "", "toDt", "", "") }}
-
                             {% set title %}{% trans "Display" %}{% endset %}
                             {% set attributes = [
                                 { name: "data-width", value: "200px" },
@@ -205,7 +199,7 @@
             url: url,
             method: 'GET',
             dataType: 'json',
-            data: reportData,
+            data: $report.find("form").serialize(),
             success: function success(data) {
               result = data;
               $applyBtn.removeClass('disabled');
@@ -226,14 +220,6 @@
             table.rows.add( data ).draw()
           }
         }
-
-        // Report Filter
-        setDateRange();
-
-        // Bind to form change
-        $($report).on('change', function() {
-            setDateRange();
-        });
 
         // Apply
         $applyBtn.click(function () {
@@ -274,31 +260,5 @@
         });
       }
 
-      function setDateRange() {
-          let rangeFilter = $('#XiboDateRangeFilter').val();
-          let startDate = $("#fromDt").val();
-          let endDate = $("#toDt").val();
-
-          if (rangeFilter === 'today') {
-              $report.find('div.toDt, div.fromDt').hide();
-              startDate = moment().startOf('day');
-              endDate = moment().endOf('day');
-          } else if (rangeFilter === '') {
-            let dateDiff = moment(endDate).diff(moment(startDate), 'days');
-
-            // Validation for same date
-            if (dateDiff <= 0) {
-              startDate = moment(startDate).startOf('day').format()
-              endDate = moment(startDate).endOf('day').format()
-            }
-          }
-
-          let values = $report.find('form').serializeArray();
-
-          values.find(input => input.name === 'fromDt').value = moment(startDate).format('YYYY-MM-DD HH:mm:ss');
-          values.find(input => input.name === 'toDt').value = moment(endDate).format('YYYY-MM-DD HH:mm:ss');
-
-          reportData = jQuery.param(values);
-      }
     </script>
 {% endblock %}
