@@ -177,13 +177,8 @@ class ApiRequests implements ReportInterface
         //
         // From and To Date Selection
         // --------------------------
-        // Our report has a range filter which determines whether the user has to enter their own from / to dates
-        // check the range filter first and set from/to dates accordingly.
-
-        // Range
-        $reportFilter = $sanitizedParams->getString('reportFilter');
-
-        // Expect dates to be provided.
+        // The report uses a custom range filter that automatically calculates the from/to dates
+        // depending on the date range selected.
         $fromDt = $sanitizedParams->getDate('fromDt');
         $toDt = $sanitizedParams->getDate('toDt');
 

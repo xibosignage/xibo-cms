@@ -398,15 +398,15 @@
     <div class="form-group mr-1 mb-1 {{ groupClass }}">
         <label class="control-label mr-1" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <select class="form-control XiboDateRangeFilter" name="{{ name }}" id="XiboDateRangeFilter">
-            <option value="" >Select a range</option>
-            <option value="today" selected>Today</option>
-            <option value="yesterday">Yesterday</option>
-            <option value="thisweek">This Week</option>
-            <option value="thismonth">This Month</option>
-            <option value="thisyear">This Year</option>
-            <option value="lastweek">Last Week</option>
-            <option value="lastmonth">Last Month</option>
-            <option value="lastyear">Last Year</option>
+            <option value="" >{% trans "Select a range" %}</option>
+            <option value="today" selected>{% trans "Today" %}</option>
+            <option value="yesterday">{% trans "Yesterday" %}</option>
+            <option value="thisweek">{% trans "This Week" %}</option>
+            <option value="thismonth">{% trans "This Month" %}</option>
+            <option value="thisyear">{% trans "This Year" %}</option>
+            <option value="lastweek">{% trans "Last Week" %}</option>
+            <option value="lastmonth">{% trans "Last Month" %}</option>
+            <option value="lastyear">{% trans "Last Year" %}</option>
         </select>
     </div>
 {% endmacro %}
