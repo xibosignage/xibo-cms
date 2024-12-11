@@ -1469,16 +1469,16 @@ const processScheduleFormElements = function(el) {
         );
       }
 
-            // if dayparting is set to always, disable start time and end time
-            if (meta.isAlways === 0) {
-                $startTime.find('input[name=fromDt]').prop('disabled', false);
-                $endTime.find('input[name=toDt]').prop('disabled', false);
-            } else {
-                $startTime.find('input[name=fromDt]').prop('disabled', true);
-                $endTime.find('input[name=toDt]').prop('disabled', true);
-            }
+      // if dayparting is set to always, disable start time and end time
+      if (meta.isAlways === 0) {
+        $startTime.find('input[name=fromDt]').prop('disabled', false);
+        $endTime.find('input[name=toDt]').prop('disabled', false);
+      } else {
+        $startTime.find('input[name=fromDt]').prop('disabled', true);
+        $endTime.find('input[name=toDt]').prop('disabled', true);
+      }
 
-            break;
+      break;
 
     case 'campaignId':
     case 'fullScreenCampaignId':
@@ -2340,8 +2340,9 @@ const configureCriteriaFields = function(dialog) {
     });
   } else {
     // If no existing criterion, add an empty field at top
-    const $newRow = $(templateScheduleCriteriaFields({
+    const $newRow = $(templates.schedule.criteriaFields({
       isAdd: true,
+      trans: translations.schedule.criteriaFields,
     }));
     const $newTypeSelect = $newRow.find('select[name="criteria_type[]"]');
 
@@ -2350,24 +2351,16 @@ const configureCriteriaFields = function(dialog) {
     $fields.append($newRow);
   }
 
-  // Add a row at the end for configuring a new criterion
-  const $newRow = $(templates.schedule.criteriaFields({
-    isAdd: true,
-    trans: translations.schedule.criteriaFields,
-  }));
-  const $newTypeSelect = $newRow.find('select[name="criteria_type[]"]');
-
-  // populate type dropdown based on scheduleCriteria
-  populateTypeDropdown($newTypeSelect);
-  $fields.append($newRow);
-
   // Buttons we've added should be bound
   $fields.on('click', 'button', function(e) {
     e.preventDefault();
     const $button = $(e.currentTarget);
     if ($button.data('isAdd')) {
       // Only the first element should have the 'Add' btn functionality
-      const newField = $(templateScheduleCriteriaFields({isAdd: false}));
+      const newField = $(templates.schedule.criteriaFields({
+        isAdd: false,
+        trans: translations.schedule.criteriaFields,
+      }));
       $fields.append(newField);
 
       // Populate the type field for the new row

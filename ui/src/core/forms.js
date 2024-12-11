@@ -4129,7 +4129,7 @@ window.forms = {
 
       // Bind to the checkboxes change event
       const target = $('#' + e.target.id);
-      target.find('input[type=checkbox]').on('change', function() {
+      target.find('input[type=checkbox]').on('change', function(ev) {
         const $checkbox = $(ev.currentTarget);
 
         // Update our global permissions data with this

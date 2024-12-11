@@ -89,7 +89,7 @@ window.openUploadForm = function(options) {
       maxFileSize: options.templateOptions.upload.maxSize,
       includeTagsInput: options.templateOptions.includeTagsInput,
       uploadTemplateId: options.uploadTemplateId,
-      limitConcurrentUploads: 3
+      limitConcurrentUploads: 3,
     };
     let refreshSessionInterval;
 
