@@ -110,9 +110,9 @@ window.XiboInitialise = function(scope, options) {
   }
 
   // Search for any grids on the page and render them
-  $(scope + " .XiboGrid").each(function() {
+  $(scope + ' .XiboGrid').each(function(_idx, el) {
     // Custom Date Range Filter
-    $(this).find('select.XiboDateRangeFilter').on('change', function() {
+    $(el).find('select.XiboDateRangeFilter').on('change', function() {
       updateDateRangeFilter(this);
     });
   });
@@ -3096,7 +3096,8 @@ function updateDateRangeFilter(element) {
   const selected = $(element).find('option:selected').val();
   const $form = $(element).closest('form');
 
-  // This would allow us to target this specific element in case there are multiple range filters used
+  // This would allow us to target this specific element
+  // in case there are multiple range filters used
   const selectFilterId = $(element).attr('id');
 
   let fromDt = moment().startOf('day');
@@ -3158,8 +3159,12 @@ function updateDateRangeSelection($form, selectFilterId) {
   let toDt = moment().endOf('day');
 
   $(`.rangeFilterInput_${selectFilterId}`).on('change', function() {
-    fromDt = moment($(`#fromDt_${selectFilterId}`).val()).startOf('day').format();
-    toDt = moment($(`#toDt_${selectFilterId}`).val()).endOf('day').format();
+    fromDt = moment($(`#fromDt_${selectFilterId}`).val())
+            .startOf('day')
+            .format();
+    toDt = moment($(`#toDt_${selectFilterId}`).val())
+            .endOf('day')
+            .format();
 
     const dateDiff = moment(toDt).diff(moment(fromDt), 'days');
 
@@ -3180,8 +3185,12 @@ function updateDateRangeSelection($form, selectFilterId) {
  * @param {object} toDt dateTime object
  */
 function formatInputFields($form, selectFilterId, fromDt, toDt) {
-  $form.find(`#fromDt_${selectFilterId}`).val(moment(fromDt).format('YYYY-MM-DD HH:mm:ss'));
-  $form.find(`#toDt_${selectFilterId}`).val(moment(toDt).format('YYYY-MM-DD HH:mm:ss'));
+  $form.find(`#fromDt_${selectFilterId}`)
+       .val(moment(fromDt)
+       .format('YYYY-MM-DD HH:mm:ss'));
+  $form.find(`#toDt_${selectFilterId}`)
+       .val(moment(toDt)
+       .format('YYYY-MM-DD HH:mm:ss'));
 }
 
 window.moveFolderMultiSelectFormOpen = function(dialog) {
