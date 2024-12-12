@@ -44,11 +44,8 @@
                 <div class="XiboFilterCustom">
                     <div class="FilterDiv card-body" id="timeDisconnectedReport">
                         <form class="form-inline">
-                            {% set title %}{% trans "From Date" %}{% endset %}
-                            {{ inline.date("availabilityFromDt", title, defaults.fromDate, "", "", "", "") }}
-
-                            {% set title %}{% trans "To Date" %}{% endset %}
-                            {{ inline.date("availabilityToDt", title, defaults.toDate, "", "", "", "") }}
+                            {% set title %}{% trans "Range" %}{% endset %}
+                            {{ inline.dateRangeFilter("reportFilter", title, "", "", "", "", "") }}
 
                             {% set title %}{% trans "Group By" %}{% endset %}
                             {% set options = [
