@@ -112,8 +112,8 @@ window.XiboInitialise = function(scope, options) {
   // Search for any grids on the page and render them
   $(scope + ' .XiboGrid').each(function(_idx, el) {
     // Custom Date Range Filter
-    $(el).find('select.XiboDateRangeFilter').on('change', function() {
-      updateDateRangeFilter(this);
+    $(el).find('select.XiboDateRangeFilter').on('change', function(ev) {
+      updateDateRangeFilter(ev.currentTarget);
     });
   });
 
@@ -3160,11 +3160,9 @@ function updateDateRangeSelection($form, selectFilterId) {
 
   $(`.rangeFilterInput_${selectFilterId}`).on('change', function() {
     fromDt = moment($(`#fromDt_${selectFilterId}`).val())
-            .startOf('day')
-            .format();
+      .startOf('day').format();
     toDt = moment($(`#toDt_${selectFilterId}`).val())
-            .endOf('day')
-            .format();
+      .endOf('day').format();
 
     const dateDiff = moment(toDt).diff(moment(fromDt), 'days');
 
@@ -3186,11 +3184,9 @@ function updateDateRangeSelection($form, selectFilterId) {
  */
 function formatInputFields($form, selectFilterId, fromDt, toDt) {
   $form.find(`#fromDt_${selectFilterId}`)
-       .val(moment(fromDt)
-       .format('YYYY-MM-DD HH:mm:ss'));
+    .val(moment(fromDt).format('YYYY-MM-DD HH:mm:ss'));
   $form.find(`#toDt_${selectFilterId}`)
-       .val(moment(toDt)
-       .format('YYYY-MM-DD HH:mm:ss'));
+    .val(moment(toDt).format('YYYY-MM-DD HH:mm:ss'));
 }
 
 window.moveFolderMultiSelectFormOpen = function(dialog) {
