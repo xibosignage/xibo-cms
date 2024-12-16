@@ -229,11 +229,11 @@
 
                         {% set title %}{% trans "Display Order" %}{% endset %}
                         {% set helpText %}{% trans "Please select the order this event should appear in relation to others when there is more than one event scheduled" %}{% endset %}
-                        {{ forms.number("displayOrder", title, "", helpText, 'displayOrder-control') }}
+                        {{ forms.number("displayOrder", title, "", helpText, 'displayOrder-control', "", "", "", "0") }}
 
                         {% set title %}{% trans "Priority" %}{% endset %}
                         {% set helpText %}{% trans "Sets the event priority - events with the highest priority play in preference to lower priority events." %}{% endset %}
-                        {{ forms.number("isPriority", title, "", helpText, 'priority-control') }}
+                        {{ forms.number("isPriority", title, "", helpText, 'priority-control', "", "", "", "0") }}
 
                         {% set title %}{% trans "Maximum plays per hour" %}{% endset %}
                         {% set helpText %}{% trans "Limit the number of times this event will play per hour on each display. For unlimited plays set to 0." %}{{ forms.playerCompat("R308", "", "", "", "R306", "") }}{% endset %}
@@ -297,7 +297,7 @@
                             <label class="col-sm-2 control-label" for="recurrenceDetail">{{ title }}</label>
                             <div class="col-sm-10">
                                 <div class="input-group">
-                                    <input class="form-control" name="recurrenceDetail" type="number" id="recurrenceDetail" value="{{ event.recurrenceDetail }}" />
+                                    <input class="form-control" name="recurrenceDetail" min="0" type="number" id="recurrenceDetail" value="{{ event.recurrenceDetail }}" />
                                     <div class="input-group-append">
                                         <span class="input-group-text input-group-addon"></span>
                                     </div>

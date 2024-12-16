@@ -67,10 +67,10 @@
     </div>
 {% endmacro %}
 
-{% macro number(name, title, value, helpText, groupClass, validation, accessKey, maxNumber) %}
+{% macro number(name, title, value, helpText, groupClass, validation, accessKey, maxNumber, minNumber) %}
     <div class="form-group mr-1 mb-1 {{ groupClass }}">
         <label class="control-label mr-1" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
-        <input class="form-control" name="{{ name }}" {% if maxNumber %}max="{{maxNumber}}" {% endif %}type="number" id="{{ name }}" value="{{ value }}" {{ validation }} />
+        <input class="form-control" name="{{ name }}" {% if maxNumber %}max="{{maxNumber}}" {% endif %}{% if minNumber %}min="{{minNumber}}" {% endif %}type="number" id="{{ name }}" value="{{ value }}" {{ validation }} />
     </div>
 {% endmacro %}
 
