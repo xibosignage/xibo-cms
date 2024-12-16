@@ -19,10 +19,11 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-
 namespace Xibo\XTR;
+
 use Carbon\Carbon;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 use Xibo\Controller\Display;
 use Xibo\Event\DisplayGroupLoadEvent;
 use Xibo\Event\MaintenanceRegularEvent;
@@ -128,6 +129,8 @@ class MaintenanceRegularTask implements TaskInterface
         $this->assessDynamicDisplayGroups();
 
         $this->tidyAdCampaignSchedules();
+
+        $this->assertXmrKey();
 
         // Dispatch an event so that consumers can hook into regular maintenance.
         $event = new MaintenanceRegularEvent();
@@ -615,5 +618,35 @@ class MaintenanceRegularTask implements TaskInterface
         Profiler::end('RegularMaintenance::tidyAdCampaignSchedules', $this->log);
         $this->runMessage .= ' - Done ' . $count . PHP_EOL . PHP_EOL;
     }
-}
 
+    /**
+     * Once per hour assert the current XMR to push its expiry time with XMR
+     *  this also reseeds the key if XMR restarts
+     * @return void
+     */
+    private function assertXmrKey(): void
+    {
+        $this->log->debug('assertXmrKey: asserting key');
+        try {
+            $key = $this->getConfig()->getSetting('XMR_CMS_KEY');
+            if (!empty($key)) {
+                $client = new Client($this->config->getGuzzleProxy([
+                    'base_uri' => $this->getConfig()->getSetting('XMR_ADDRESS'),
+                ]));
+
+                $client->post('/', [
+                    'json' => [
+                        'id' => constant('SECRET_KEY'),
+                        'type' => 'keys',
+                        'key' => $key,
+                    ],
+                ]);
+                $this->log->debug('assertXmrKey: asserted key');
+            } else {
+                $this->log->error('assertXmrKey: key empty');
+            }
+        } catch (GuzzleException | \Exception $e) {
+            $this->log->error('cycleXmrKey: failed. E = ' . $e->getMessage());
+        }
+    }
+}

@@ -313,6 +313,11 @@ class MaintenanceDailyTask implements TaskInterface
         $this->appendRunMessage(__('Player bundle cached'));
     }
 
+    /**
+     * Once per day we cycle the XMR CMS key
+     *  the old key should remain valid in XMR for up to 1 hour further to allow for cross over
+     * @return void
+     */
     private function cycleXmrKey(): void
     {
         $this->log->debug('cycleXmrKey: adding new key');
