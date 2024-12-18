@@ -46,24 +46,98 @@
 }
 
 /* Code input */
-.code-input-group {
-    .code-input-editor-container {
-        background-color: $xibo-color-neutral-900;
-        padding: 6px;
-        height: 250px;
-        border: 2px solid $xibo-color-neutral-700;
-        border-radius: 0.25rem;
+.code-input-editor-container {
+    border: 2px solid $xibo-color-neutral-600;
+    border-radius: 0.25rem;
+    position: relative;
+    overflow-y: auto;
 
-        .code-input-editor {
-            width: 100%;
-            height: 100%;
+    &.non-scroll {
+        overflow-y: unset;
+    }
+
+    .code-input-editor-scrollable {
+        overflow-y: auto;
+        min-height: 160px;
+        max-height: 300px;
+    }
+
+    .code-input-fs-btn {
+        display: none;
+        position: absolute;
+        right: 6px;
+        top: 6px;
+
+        .hide-on-code-fs {
+            display: block;
+        }
+
+        .show-on-code-fs {
+            display: none;
         }
     }
 
-    /* Fix for monaco editor helper */
-    .monaco-editor .editor-widget.suggest-widget {
-        left: 0 !important;
+    .code-input-editor {
+        width: 100%;
+        height: 100%;
+
+        .cm-focused {
+            outline: none !important;
+        }
     }
+
+    .cm-gutters {
+        display: none;
+    }
+
+    &:hover {
+        .code-input-fs-btn {
+            display: block;
+            opacity: 0.4;
+
+            &:hover {
+                opacity: 0.8;
+            }
+        }
+    }
+
+    &.code-input-fs {
+        position: fixed;
+        width: 60vw;
+        height: 60vh;
+        left: 20vw;
+        top: 20vh;
+        z-index: $code-editor-fullscreen-z-index;
+        background-color: $xibo-color-neutral-0;
+
+        .code-input-editor-scrollable {
+            max-height: 100%;
+        }
+
+        .code-input-fs-btn {
+            display: block;
+        }
+
+        .hide-on-code-fs {
+            display: none;
+        }
+
+        .show-on-code-fs {
+            display: block;
+        }
+    }
+}
+
+.code-fs-placeholder {
+    border: 2px solid $xibo-color-neutral-600;
+    border-radius: 0.25rem;
+    background-color: $xibo-color-neutral-300;
+    min-height: 160px;
+    max-height: 400px;
+}
+
+.code-fs-overlay {
+    z-index: $code-editor-fullscreen-overlay-z-index !important;
 }
 
 /* Data input */
@@ -192,6 +266,15 @@
     }
 
     &.detached {
+        z-index: $properties-panel-rich-text-container-z-index;
+        position: fixed;
+        top: 100px;
+        right: 150px;
+        outline-width: 1px;
+        width: calc(100vw - 300px) !important;
+        height: calc(100vh - 200px) !important;
+        overflow: hidden;
+
         .rich-text-container-wrapper {
             height: calc(100% - 28.5px) !important;
             max-height: none;
@@ -209,15 +292,6 @@
                 display: inline-block;
             }
         }
-
-        z-index: $properties-panel-rich-text-container-z-index;
-        position: fixed;
-        top: 100px;
-        right: 150px;
-        outline-width: 1px;
-        width: calc(100vw - 300px) !important;
-        height: calc(100vh - 200px) !important;
-        overflow: hidden;
 
         .text-area-buttons {
             border-radius: 0.25rem 0.25rem 0 0;
@@ -789,6 +863,24 @@ select[readonly].select2-hidden-accessible + .select2-container .select2-selecti
             button {
                 flex: 1 1;
             }
+        }
+    }
+}
+
+// Button switch
+.button-switch-input-group {
+    button {
+        color: $xibo-color-primary;
+        border-color: $xibo-color-primary;
+
+        &:not(.selected):hover {
+            color: $xibo-color-primary;
+            background-color: lighten($xibo-color-primary, 35%);
+        }
+
+        &.selected {
+            background-color: $xibo-color-primary;
+            color: $xibo-color-neutral-0;
         }
     }
 }

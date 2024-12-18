@@ -862,6 +862,8 @@ class Library extends Base
                 $searchResult->source = 'local';
                 $searchResult->type = $media->mediaType;
                 $searchResult->title = $media->name;
+                $searchResult->width = $media->width;
+                $searchResult->height = $media->height;
                 $searchResult->description = '';
                 $searchResult->duration = $media->duration;
 

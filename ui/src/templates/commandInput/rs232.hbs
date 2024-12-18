@@ -1,0 +1,49 @@
+<div class="form-group-command form-group-device form-group-rs232">
+    <input class="form-control form-control-inline validated-element rs232-text-input rs232-device-name" placeholder="{{trans.deviceNameCOM}}" value="{{ value.cs.deviceName }}">
+    <input class="form-control form-control-inline validated-element rs232-text-input rs232-baud-rate" placeholder="{{trans.baudRate}}" value="{{ value.cs.baudRate }}">
+    <input class="form-control form-control-inline validated-element rs232-text-input rs232-data-bits" placeholder="{{trans.dateBits}}" value="{{ value.cs.dataBits }}">
+</div>
+<div class="form-group-command form-group-rs232">
+    <div class="col-12 col-sm-6">
+        <label for="rs232Parity{{ unique }}">{{trans.parity}}:</label>
+        <select name="rs232Parity{{ unique }}" id="rs232Parity{{ unique }}" class="rs232-parity form-control">
+            <option value="None" {{#eq value.cs.parity "None"}}selected="selected"{{/eq}}>None</option>
+            <option value="Odd" {{#eq value.cs.parity "Odd"}}selected="selected"{{/eq}}>Odd</option>
+            <option value="Even" {{#eq value.cs.parity "Even"}}selected="selected"{{/eq}}>Even</option>
+            <option value="Mark" {{#eq value.cs.parity "Mark"}}selected="selected"{{/eq}}>Mark</option>
+            <option value="Space" {{#eq value.cs.parity "Space"}}selected="selected"{{/eq}}>Space</option>
+        </select>
+    </div>
+
+    <div class="col-12 col-sm-6">
+        <label for="rs232StopBits{{ unique }}">{{trans.stopBits}}:</label>
+        <select name="rs232StopBits{{ unique }}" id="rs232StopBits{{ unique }}" class="rs232-stop-bits form-control">
+            <option value="None" {{#eq value.cs.stopBits "None"}}selected="selected"{{/eq}}>None</option>
+            <option value="One" {{#eq value.cs.stopBits "One"}}selected="selected"{{/eq}}>One</option>
+            <option value="Two" {{#eq value.cs.stopBits "Two"}}selected="selected"{{/eq}}>Two</option>
+            <option value="OnePointFive" {{#eq value.cs.stopBits "OnePointFive"}}selected="selected"{{/eq}}>OnePointFive</option>
+        </select>
+    </div>
+
+    <div class="col-12 col-sm-6">
+        <label for="rs232Handshake{{ unique }}">{{trans.handshake}}:</label>
+        <select name="rs232Handshake{{ unique }}" id="rs232Handshake{{ unique }}" class="rs232-handshake form-control">
+            <option value="None" {{#eq value.cs.handshake "None"}}selected="selected"{{/eq}}>None</option>
+            <option value="XOnXOff" {{#eq value.cs.handshake "XOnXOff"}}selected="selected"{{/eq}}>XOnXOff</option>
+            <option value="RequestToSend" {{#eq value.cs.handshake "RequestToSend"}}selected="selected"{{/eq}}>RequestToSend</option>
+            <option value="RequestToSendXOnXOff" {{#eq value.cs.handshake "RequestToSendXOnXOff"}}selected="selected"{{/eq}}>RequestToSendXOnXOff</option>
+        </select>
+    </div>
+    
+    <div class="col-12 col-sm-6">
+        <label for="rs232HexSupport{{ unique }}">{{trans.hexSupport}}:</label>
+        <select name="rs232HexSupport{{ unique }}" id="rs232HexSupport{{ unique }}" class="rs232-hex-support form-control">
+            <option value="0" {{#eq value.cs.hexSupport "0"}}selected="selected"{{/eq}}>0</option>
+            <option value="1" {{#eq value.cs.hexSupport "1"}}selected="selected"{{/eq}}>1</option>
+            <option value="default 0" {{#eq value.cs.hexSupport "default 0"}}selected="selected"{{/eq}}>default 0</option>
+        </select>
+    </div>
+</div>
+<div class="form-group-command form-group-rs232 command-group">
+    <input class="form-control rs232-command" placeholder="{{trans.command}}" value="{{ value.command }}">
+</div>

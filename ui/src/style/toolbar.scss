@@ -58,11 +58,11 @@
             padding: 0.5rem 1rem;
 
             .form-group {
+                margin-bottom: 0;
+
                 label {
                     font-weight: bold;
                 }
-
-                margin-bottom: 0;
             }
 
             &.media-search-form, &.layout_tempates-search-form {
@@ -274,6 +274,17 @@
                         .table {
                             table-layout: fixed;
                         }
+                    }
+
+                    .upload-container {
+                        display: flex;
+                        width: 100%;
+                        gap: 8px;
+                        margin-bottom: 8px;
+                        border: 1px solid $xibo-color-neutral-600;
+                        background-color: $xibo-color-neutral-0;
+                        padding: 12px;
+                        border-radius: 4px;
                     }
                 }
             }
@@ -588,6 +599,26 @@
                         }
                     }
 
+                    &.upload-card.toolbar-row-special {
+                        min-height: 60px;
+
+                        .toolbar-card-preview {
+                            gap: 8px;
+                            padding: 12px;
+                            flex-direction: column;
+                            justify-content: center;
+
+                            .card-icon {
+                                margin: inherit;
+                            }
+
+                            .media-title {
+                                color: $xibo-color-neutral-0;
+                                text-align: center;
+                            }
+                        }
+                    }
+
                     &:hover {
                         .toolbar-card-preview {
                             border-color: $xibo-color-primary-l60;
@@ -681,6 +712,13 @@
                     }
 
                     .toolbar-card-preview {
+                        background: $xibo-color-primary-l20;
+                        color: $xibo-color-primary-d60;
+                        border: 1px solid $xibo-color-primary-l30;
+                        min-height: $toolbar-widgets-card-height;
+                        padding: 4px;
+                        margin-bottom: 2px;
+
                         .media-title {
                             font-weight: normal;
                         }
@@ -697,12 +735,6 @@
                             opacity: 0.9;
                             line-height: 20px;
                         }
-                        background: $xibo-color-primary-l20;
-                        color: $xibo-color-primary-d60;
-                        border: 1px solid $xibo-color-primary-l30;
-                        min-height: $toolbar-widgets-card-height;
-                        padding: 4px;
-                        margin-bottom: 2px;
                     }
 
                     .badges {
@@ -908,11 +940,6 @@
         padding: 10px;
         line-height: 30px;
         height: $toolbar-tab-menu-height;
-
-        .material-icons {
-            font-size: 1.85rem;
-            line-height: 30px;
-        }
 
         &.btn-menu-option-custom-icon {
             padding: 8px;
@@ -1163,8 +1190,12 @@
             .toolbar-menu-content .toolbar-pane {
                 width: $toolbar-content-level-4-width;
 
-                .toolbar-card:not(tr), .toolbar-card-sizer {
+                .toolbar-card:not(tr):not(.toolbar-row-special), .toolbar-card-sizer {
                     width: calc(calc(100%/4) - 4.5px) !important;
+                }
+
+                .toolbar-row-special {
+                    width: calc(calc(100%/3) - 4px) !important;
                 }
 
                 /* Filter form */

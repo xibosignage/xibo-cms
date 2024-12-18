@@ -270,4 +270,7 @@
           });
         });
     </script>
+
+    {# Add code editor bundle #}
+    <script type="text/javascript" src="{{ theme.rootUri() }}dist/codeEditor.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}" defer></script>
 {% endblock %}

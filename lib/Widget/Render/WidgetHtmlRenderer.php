@@ -359,7 +359,7 @@ class WidgetHtmlRenderer
         preg_match_all('/\[\[(.*?)\]\]/', $output, $matches);
         foreach ($matches[1] as $match) {
             if ($match === 'PlayerBundle') {
-                $output = str_replace('[[PlayerBundle]]', 'bundle.min.js', $output);
+                $output = str_replace('[[PlayerBundle]]', 'player.bundle.min.js', $output);
             } else if ($match === 'FontBundle') {
                 $output = str_replace('[[FontBundle]]', 'fonts.css', $output);
             } else if ($match === 'ViewPortWidth') {

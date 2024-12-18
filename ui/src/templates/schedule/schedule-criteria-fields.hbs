@@ -1,0 +1,38 @@
+<div class="form-group row">
+    <input class="form-control" name="criteria_id[]" type="hidden" value="{{ id }}" />
+    <div class="col-sm-2">
+        <label for="criteria_type[]">
+            <select class="form-control" name="criteria_type[]">
+                <option value="custom" {{#eq type "custom"}}selected{{/eq}}>{{ trans.custom }}</option>
+            </select>
+        </label>
+    </div>
+    <div class="col-sm-2">
+        <label for="criteria_metric[]">
+            <input class="form-control" name="criteria_metric[]" type="text" value="{{ metric }}" />
+        </label>
+    </div>
+    <div class="col-sm-3">
+        <label for="criteria_condition[]">
+            <select class="form-control" name="criteria_condition[]">
+                <option value="set" {{#eq condition "set"}}selected{{/eq}}>{{ trans.isSet }}</option>
+                <option value="lt" {{#eq condition "lt"}}selected{{/eq}}>{{ trans.lessThan }}</option>
+                <option value="lte" {{#eq condition "lte"}}selected{{/eq}}>{{ trans.lessThanOrEqualTo }}</option>
+                <option value="eq" {{#eq condition "eq"}}selected{{/eq}}>{{ trans.equalTo }}</option>
+                <option value="neq" {{#eq condition "neq"}}selected{{/eq}}>{{ trans.notEqualTo }}</option>
+                <option value="gte" {{#eq condition "gte"}}selected{{/eq}}>{{ trans.greaterThanOrEqualTo }}</option>
+                <option value="gt" {{#eq condition "gt"}}selected{{/eq}}>{{ trans.greaterThan }}</option>
+                <option value="contains" {{#eq condition "contains"}}selected{{/eq}}>{{ trans.contains }}</option>
+                <option value="ncontains" {{#eq condition "ncontains"}}selected{{/eq}}>{{ trans.notContains }}</option>
+            </select>
+        </label>
+    </div>
+    <div class="col-sm-2">
+        <label for="criteria_value[]">
+            <input class="form-control" name="criteria_value[]" type="text" value="{{ value }}" />
+        </label>
+    </div>
+    <div class="col-sm-2">
+        <button class="btn btn-white" data-is-add="{{isAdd}}"><i class="fa {{#if isAdd}}fa-plus{{else}}fa-minus{{/if}}"></i></button>
+    </div>
+</div>

@@ -1,0 +1,24 @@
+<!-- Modal -->
+<div id="{{ modal }}" class="modal fade inner-modal" role="dialog">
+    <div class="modal-dialog modal-sm" style="width:450px;">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">{{trans.selectFolder}}</h4>
+                <button type="button" class="close btnCloseInnerModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group card p-3 mb-3 bg-light">
+                <input id="jstree-search-form" class="form-control" type="text" placeholder="{{trans.search}}">
+                <div class="folder-search-no-results d-none">
+                    <p>{{trans.noFolderMatch}}</p>
+                </div>
+                    <div id="{{ container }}"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-white btnCloseInnerModal">{{trans.done}}</button>
+            </div>
+        </div>
+    </div>
+</div>

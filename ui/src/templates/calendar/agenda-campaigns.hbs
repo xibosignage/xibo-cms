@@ -1,0 +1,34 @@
+<table id="campaigns" class="table agenda-table" data-type="campaigns" width="100%">
+    <thead>
+        <tr class="table-title">
+            <th colspan="4">{{trans.campaigns}}</th>
+        </tr>
+        <tr>
+            <th></th>
+            <th>{{trans.id}}</th>
+            <th>{{trans.name}}</th>
+            <th>{{trans.cyclePlayback}}</th>
+        </tr>
+    </thead>
+    <tbody>
+        <% _.each(campaigns, function(campaign){ %>
+            <tr data-elem-id="<%= campaign.campaignId %>">
+                <td></td>
+                <td>
+                    <%= campaign.campaignId %>
+                </td>
+                <td>
+                    <%= campaign.campaign %>
+                </td>
+                <%
+                var icon = "";
+                if (campaign.cyclePlaybackEnabled == 0)
+                    icon = "fa-times";
+                else
+                    icon = "fa-check";
+                %>
+                <td><span class="fa <%= icon %>"></span></td>
+            </tr>
+        <% }); %>
+    </tbody>
+</table>

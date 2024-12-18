@@ -167,6 +167,24 @@
                                         {{ forms.inputWithTags("filterMediaTag", title, "", helpText, "", null, null, "exactTags", exactTagTitle, logicalOperatorTitle) }}
                                     {% endif %}
 
+                                    {% if currentUser.featureEnabled("folder.view") %}
+                                        {% set title %}{% trans "Folder Filter" %}{% endset %}
+                                        {% set helpText %}{% trans "Select a folder to filter the media items." %}{% endset %}
+                                        {% set attributes = [
+                                            { name: "data-width", value: "100%" },
+                                            { name: "data-search-url", value: url_for("folders.search") },
+                                            { name: "data-filter-options", value: '{"gridView":1}' },
+                                            { name: "data-search-term", value: "folderName" },
+                                            { name: "data-id-property", value: "folderId" },
+                                            { name: "data-text-property", value: "text" },
+                                            { name: "data-initial-key", value: "folderId" },
+                                            { name: "data-allow-clear", value: "true" },
+                                            { name: "data-placeholder--id", value: null },
+                                            { name: "data-placeholder--value", value: "" }
+                                        ] %}
+                                        {{ forms.dropdown("filterFolderId", "single", title, "", null, "", "", helpText, "pagedSelect", "", "", "", attributes) }}
+                                    {% endif %}
+
                                     {% set title %}{% trans "Max number of Items" %}{% endset %}
                                     {% set helpText %}{% trans "The upper limit on number of Media items that can be dynamically assigned to this Playlist" %}{% endset %}
                                     {{ forms.number("maxNumberOfItems", title, settings.DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER, helpText, 'dynamic-message', '', '', settings.DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT) }}

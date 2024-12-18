@@ -90,7 +90,7 @@ class Region extends Base
     }
 
     /**
-     * Edit Form
+     * Get region by id
      * @param Request $request
      * @param Response $response
      * @param $id
@@ -100,7 +100,7 @@ class Region extends Base
      * @throws NotFoundException
      * @throws ControllerNotImplemented
      */
-    public function editForm(Request $request, Response $response, $id)
+    public function get(Request $request, Response $response, $id)
     {
         $region = $this->regionFactory->getById($id);
 
@@ -108,38 +108,10 @@ class Region extends Base
             throw new AccessDeniedException();
         }
 
-        $this->getState()->template = 'region-form-edit';
         $this->getState()->setData([
             'region' => $region,
             'layout' => $this->layoutFactory->getById($region->layoutId),
             'transitions' => $this->transitionData(),
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Delete Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws ControllerNotImplemented
-     */
-    public function deleteForm(Request $request, Response $response, $id)
-    {
-        $region = $this->regionFactory->getById($id);
-
-        if (!$this->getUser()->checkDeleteable($region))
-            throw new AccessDeniedException();
-
-        $this->getState()->template = 'region-form-delete';
-        $this->getState()->setData([
-            'region' => $region,
-            'layout' => $this->layoutFactory->getById($region->layoutId),
         ]);
 
         return $this->render($request, $response);

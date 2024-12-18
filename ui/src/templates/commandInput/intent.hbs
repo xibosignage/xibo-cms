@@ -1,0 +1,19 @@
+<div class="form-group-command intent-type-container">
+    <label for="intentType{{ unique }}" class="intent-type-label">{{trans.type}}:</label>
+    <select name="intentType{{ unique }}" id="intentType{{ unique }}" class="intent-type form-control form-control-inline">
+        <option value="activity" {{#eq value.type "activity"}}selected="selected"{{/eq}}>activity</option>
+        <option value="service" {{#eq value.type "service"}}selected="selected"{{/eq}}>service</option>
+        <option value="broadcast" {{#eq value.type "broadcast"}}selected="selected"{{/eq}}>broadcast</option>
+    </select>
+</div>
+
+<input name="intentName{{ unique }}" id="intentName{{ unique }}" class="intent-name form-control validated-element form-control-inline" placeholder="{{trans.intent}}" value="{{ value.name }}">
+
+<div class="form-group-command">
+    <label for="intentExtraContainer{{ unique }}" class="intent-extra-container-label">{{trans.extra}}:</label>
+    <button class="intent-add-extra btn btn-info btn-sm pull-right" type="button">
+        <i class="fa fa-plus"></i>
+    </button>
+
+    <div id="intentExtraContainer{{ unique }}" class="intent-extra-container"></div>
+</div>
