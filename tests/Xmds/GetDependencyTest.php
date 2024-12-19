@@ -126,7 +126,7 @@ class GetDependencyTest extends XmdsTestCase
             foreach ($item as $file) {
                 if (!empty($file['@attributes'])
                     && !empty($file['@attributes']['saveAs'])
-                    && $file['@attributes']['saveAs'] === 'player.bundle.min.js'
+                    && $file['@attributes']['saveAs'] === 'bundle.min.js'
                 ) {
                     $size = $file['@attributes']['size'];
                     $type = $file['@attributes']['fileType'];
@@ -191,7 +191,7 @@ class GetDependencyTest extends XmdsTestCase
             foreach ($item as $file) {
                 if (!empty($file['@attributes'])
                     && !empty($file['@attributes']['saveAs'])
-                    && $file['@attributes']['saveAs'] === 'player.bundle.min.js'
+                    && $file['@attributes']['saveAs'] === 'bundle.min.js'
                 ) {
                     $size = $file['@attributes']['size'];
                     $type = $file['@attributes']['type'];
