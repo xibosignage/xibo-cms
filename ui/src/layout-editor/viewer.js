@@ -1892,10 +1892,22 @@ Viewer.prototype.renderElementContent = function(
       $assetContainer.find('[data-style-template=' + template.templateId + ']')
         .length === 0
     ) {
+      function scopeCSS(css, scope) {
+        return css
+          .split('}')
+          .map((rule) => rule.trim() ? `${scope} ${rule.trim()}}` : '')
+          .join('\n')
+          .trim();
+      }
+
       const styleTemplate = Handlebars.compile(
         (stencil?.style) ?
-          stencil.style :
-          '',
+          scopeCSS(
+            stencil.style,
+            '[data-style-scope="' +
+            template.type + '_' + template.dataType +
+            '__' + template.templateId + '"]',
+          ) : '',
       );
 
       $(`<style data-style-template="${template.templateId}">`)

@@ -77,33 +77,7 @@
                     <div class="FilterDiv card-body" id="timeconnected">
                         <form class="form-inline">
                             {% set title %}{% trans "Range" %}{% endset %}
-                            {% set range %}{% trans "Select a range" %}{% endset %}
-                            {% set today %}{% trans "Today" %}{% endset %}
-                            {% set yesterday %}{% trans "Yesterday" %}{% endset %}
-                            {% set thisweek %}{% trans "This Week" %}{% endset %}
-                            {% set thismonth %}{% trans "This Month" %}{% endset %}
-                            {% set thisyear %}{% trans "This Year" %}{% endset %}
-                            {% set lastweek %}{% trans "Last Week" %}{% endset %}
-                            {% set lastmonth %}{% trans "Last Month" %}{% endset %}
-                            {% set lastyear %}{% trans "Last Year" %}{% endset %}
-                            {% set options = [
-                                { filterName: "", reportFilter: range },
-                                { filterName: "today", reportFilter: today },
-                                { filterName: "yesterday", reportFilter: yesterday },
-                                { filterName: "thisweek", reportFilter: thisweek },
-                                { filterName: "thismonth", reportFilter: thismonth },
-                                { filterName: "thisyear", reportFilter: thisyear },
-                                { filterName: "lastweek", reportFilter: lastweek },
-                                { filterName: "lastmonth", reportFilter: lastmonth },
-                                { filterName: "lastyear", reportFilter: lastyear },
-                            ] %}
-                            {{ inline.dropdown("reportFilter", "single", title, "today", options, "filterName", "reportFilter") }}
-
-                            {% set title %}{% trans "From Date" %}{% endset %}
-                            {{ inline.date("statsFromDt", title, defaults.fromDateOneDay, "", "stats-from-dt", "", "") }}
-
-                            {% set title %}{% trans "To Date" %}{% endset %}
-                            {{ inline.date("statsToDt", title, defaults.toDate, "", "stats-to-dt", "", "") }}
+                            {{ inline.dateRangeFilter("reportFilter", title, "", "", "", "", "") }}
 
                             {% set title %}{% trans "Group by" %}{% endset %}
                             {% set byhour %}{% trans "Hour" %}{% endset %}
@@ -227,30 +201,6 @@
 
 
             // Report Filter
-            var reportFilter = $("#reportFilter");
-
-            // Hide / Show FromDt and ToDt
-            function checkReportFilter(reportFilter) {
-                if (reportFilter.val() === '' || reportFilter.val() === undefined) {
-                    $(".stats-from-dt").show();
-                    $(".stats-to-dt").show();
-                } else {
-                    $(".stats-from-dt").hide();
-                    $(".stats-to-dt").hide();
-                }
-            }
-
-            var checkFilterAndApply = function() {
-                reportFilter.off('change').change( function() {
-                    var value = reportFilter.val();
-                    // Hide / Show FromDt and ToDt
-                    checkReportFilter(reportFilter);
-                });
-            };
-
-            checkReportFilter(reportFilter);
-            checkFilterAndApply();
-
             checkEnableSchedule();
 
             // Bind to form change
@@ -262,7 +212,6 @@
             applyBtn.click(function () {
                 $(this).addClass('disabled');
                 imageLoader.addClass('fa fa-spinner fa-spin loading-icon');
-                checkFilterAndApply();
                 setReport();
             });
         });
