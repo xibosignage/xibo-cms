@@ -45,7 +45,7 @@
                 <li class="nav-item tabForRemoteDataSet"><a class="nav-link" href="#data" role="tab" data-toggle="tab"><span>{% trans "Data" %}</span></a></li>
                 <li class="nav-item tabForRemoteDataSet"><a class="nav-link" href="#params" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
             </ul>
-            <form id="dataSetEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("dataSet.edit", {id: dataSet.dataSetId}) }}">
+            <form id="dataSetEditForm" class="XiboForm custom-validation form-horizontal" method="put" action="{{ url_for("dataSet.edit", {id: dataSet.dataSetId}) }}">
                 <input type="hidden" name="testDataSetId" value="{{ dataSet.dataSetId }}"/>
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
