@@ -156,7 +156,7 @@ window.XiboInitialise = function(scope, options) {
     });
 
   // Form validation
-  $(scope + ' .XiboForm').each((_idx, form) => {
+  $(scope + ' .XiboForm:not(.custom-validation)').each((_idx, form) => {
     const $form = $(form);
     forms.validateForm(
       $form, // form
