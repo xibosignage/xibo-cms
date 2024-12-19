@@ -704,6 +704,30 @@ XiboPlayer.prototype.init = function() {
   // Create global render array of functions
   window.renders = [];
 
+  // If we have scoped styles for elements
+  // convert the CSS rules to use it
+  $(
+    'style[data-style-scope][data-style-target="element"]',
+  ).each((_idx, styleEl) => {
+    const scopeName = $(styleEl).data('style-scope');
+    const styleContent = $(styleEl).html();
+
+    function scopeCSS(css, scope) {
+      return css
+        .split('}')
+        .map((rule) => rule.trim() ? `${scope} ${rule.trim()}}` : '')
+        .join('\n')
+        .trim();
+    }
+
+    $(styleEl).html(
+      scopeCSS(
+        styleContent,
+        '[data-style-scope="' + scopeName + '"]',
+      ),
+    );
+  });
+
   // Loop through each widget from widgetData
   if (widgetData.length > 0) {
     widgetData.forEach(function(inputWidget, widgetIndex) {
@@ -1393,13 +1417,27 @@ XiboPlayer.prototype.renderGlobalElements = function(currentWidget) {
             // Load element functions
             self.loadElementFunctions(groupItem, {});
 
-            (groupItem.hbs) ($groupContent) && $groupContent.append(
-              PlayerHelper.renderElement(
+            if (groupItem.hbs && $groupContent) {
+              const $elementContent = $(PlayerHelper.renderElement(
                 groupItem.hbs,
                 groupItem.templateData,
                 true,
-              ),
-            );
+              ));
+
+              // Add style scope to container
+              const $elementContentContainer = $('<div>');
+              $elementContentContainer.append($elementContent).attr(
+                'data-style-scope',
+                'element_' +
+                groupItem.templateData.type + '__' +
+                groupItem.templateData.id,
+              );
+
+              // Append to main container
+              $content.append(
+                $elementContentContainer,
+              );
+            }
 
             const itemID =
                 groupItem.uniqueID || groupItem.templateData?.uniqueID;
@@ -1427,13 +1465,25 @@ XiboPlayer.prototype.renderGlobalElements = function(currentWidget) {
         // Load element functions
         self.loadElementFunctions(elemObj, {});
 
-        (elemObj.hbs) && $content.append(
-          PlayerHelper.renderElement(
+        if (elemObj.hbs) {
+          const $elementContent = $(PlayerHelper.renderElement(
             elemObj.hbs,
             elemObj.templateData,
             true,
-          ),
-        );
+          ));
+
+          // Add style scope to container
+          const $elementContentContainer = $('<div>');
+          $elementContentContainer.append($elementContent).attr(
+            'data-style-scope',
+            `element_${elemObj.templateData.type}__${elemObj.templateData.id}`,
+          );
+
+          // Append to main container
+          $content.append(
+            $elementContentContainer,
+          );
+        }
 
         const itemID =
           elemObj.uniqueID || elemObj.templateData?.uniqueID;
