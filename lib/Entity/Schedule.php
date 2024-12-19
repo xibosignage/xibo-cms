@@ -765,6 +765,10 @@ class Schedule implements \JsonSerializable
         if ($this->isPriority < 0) {
             throw new InvalidArgumentException(__('Priority must be 0 or a positive number'), 'isPriority');
         }
+        // Check max plays per hour is positive
+        if ($this->maxPlaysPerHour < 0) {
+            throw new InvalidArgumentException(__('Maximum plays per hour must be 0 or a positive number'), 'maxPlaysPerHour');
+        }
 
         // Run some additional validation if we have a recurrence type set.
         if (!empty($this->recurrenceType)) {

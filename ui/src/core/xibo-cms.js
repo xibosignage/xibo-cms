@@ -303,6 +303,23 @@ function XiboInitialise(scope, options) {
         }
     });
 
+    // Prevent manual numbers input outside of min/max
+    $(
+        scope + ' input[type="number"][min], ' +
+        scope + ' input[type="number"][max]',
+    ).each((_idx, input) => {
+        const $input = $(input);
+        const max = $input.attr('max');
+        const min = $input.attr('min');
+
+        $input.on('blur', () => {
+        (max && $input.val() > max) &&
+            ($input.val(max).trigger('change'));
+        (min && $input.val() < min) &&
+            ($input.val(min).trigger('change'));
+        });
+    });
+
     // Links that just need to be submitted as forms
     $(scope + ' .XiboAjaxSubmit').click(function(){
 
