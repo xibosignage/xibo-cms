@@ -393,3 +393,65 @@
         </div>
     </div>
 {% endmacro %}
+
+{% macro dateRangeFilter(name, title, value, helpText, groupClass, validation, accessKey) %}
+    <div class="form-group mr-1 mb-1 d-flex flex-row {{ groupClass }}">
+        {% set today =  now | date_modify('today') | date("Y-m-d H:i:s") %}
+        <div class="form-group mr-1">
+            <label class="control-label mr-1" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">
+                {{ title }}
+            </label>
+            <div class="d-inline-flex">
+                <select class="form-control XiboDateRangeFilter" name="{{ name }}" id="{{ name }}">
+                    <option value="" >{% trans "Select a range" %}</option>
+                    <option value="today" selected>{% trans "Today" %}</option>
+                    <option value="yesterday">{% trans "Yesterday" %}</option>
+                    <option value="thisweek">{% trans "This Week" %}</option>
+                    <option value="thismonth">{% trans "This Month" %}</option>
+                    <option value="thisyear">{% trans "This Year" %}</option>
+                    <option value="lastweek">{% trans "Last Week" %}</option>
+                    <option value="lastmonth">{% trans "Last Month" %}</option>
+                    <option value="lastyear">{% trans "Last Year" %}</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group hidden mr-1 {{ 'rangeFilterInput_' ~ name }}">
+            <label class="control-label mr-1" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">
+                {% trans "From Date" %}
+            </label>
+            <div class="input-group">
+                <div class="input-group-prepend input-group-text date-open-button" role="button">
+                    <i class="fa fa-calendar"></i>
+                </div>
+                <input class="form-control dateControl date rangeInput"
+                       type="text" name="fromDt" id="{{ 'fromDt_' ~ name }}"
+                       value="{{ today }}"
+                />
+                <span class="input-group-append input-group-addon input-group-text date-clear-button d-none"
+                      role="button"
+                >
+                    <i class="fa fa-times"></i>
+                </span>
+            </div>
+        </div>
+        <div class="form-group hidden {{ 'rangeFilterInput_' ~ name }}">
+            <label class="control-label mr-1" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">
+                {% trans "To Date" %}
+            </label>
+            <div class="input-group">
+                <div class="input-group-prepend input-group-text date-open-button" role="button">
+                    <i class="fa fa-calendar"></i>
+                </div>
+                <input class="form-control dateControl date rangeInput"
+                       type="text" name="toDt" id="{{ 'toDt_' ~ name }}"
+                       value="{{ today | date_modify('+1 day -1 second') | date("Y-m-d H:i:s") }}"
+                />
+                <span class="input-group-append input-group-addon input-group-text date-clear-button d-none"
+                      role="button"
+                >
+                    <i class="fa fa-times"></i>
+                </span>
+            </div>
+        </div>
+    </div>
+{% endmacro %}
