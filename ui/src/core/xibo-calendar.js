@@ -20,7 +20,7 @@
  */
 
 // Global calendar object
-let calendar;
+window.calendar;
 let events = [];
 let mymap;
 let mymapmarker;
