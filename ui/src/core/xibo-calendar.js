@@ -231,7 +231,10 @@ $(function() {
         const selectedDate =
           moment(moment($('#fromDt').val()).format(systemDateFormat));
         // Add event to the picker to update the calendar
-        calendar.navigate('date', selectedDate);
+        // only if the selected date is valid
+        if (selectedDate.isValid()) {
+          calendar.navigate('date', selectedDate);
+        }
       }
     };
 
@@ -996,9 +999,9 @@ window.setupScheduleForm = function(dialog) {
   }, 500);
 
   // Bind to the H:i:s fields
-  $form.find('#hours').on('keyup', evaluateDates);
-  $form.find('#minutes').on('keyup', evaluateDates);
-  $form.find('#seconds').on('keyup', evaluateDates);
+  $form.find('#hours').on('change keyup', evaluateDates);
+  $form.find('#minutes').on('change keyup', evaluateDates);
+  $form.find('#seconds').on('change keyup', evaluateDates);
 
   // Handle the repeating monthly selector
   // Run when the tab changes
@@ -1464,6 +1467,15 @@ const processScheduleFormElements = function(el) {
         $startTime.find('small.text-muted').html(
           $startTime.closest('form').data().daypartMessage,
         );
+      }
+
+      // if dayparting is set to always, disable start time and end time
+      if (meta.isAlways === 0) {
+        $startTime.find('input[name=fromDt]').prop('disabled', false);
+        $endTime.find('input[name=toDt]').prop('disabled', false);
+      } else {
+        $startTime.find('input[name=fromDt]').prop('disabled', true);
+        $endTime.find('input[name=toDt]').prop('disabled', true);
       }
 
       break;
@@ -2294,13 +2306,14 @@ const configureCriteriaFields = function(dialog) {
 
   // Existing criteria?
   const existingCriteria = $fields.data('criteria');
-  if (existingCriteria && existingCriteria.length >= 0) {
+  if (existingCriteria && existingCriteria.length > 0) {
     // Yes there are existing criteria
     // Go through each one and add a field row to the form.
     let i = 0;
     $.each(existingCriteria, function(index, element) {
       i++;
-      element.isAdd = false;
+      // Only the first element should have the 'Add' btn functionality
+      element.isAdd = i === 1;
       element.i = i;
       const $newField = $(templates.schedule.criteriaFields({
         ...element,
@@ -2325,26 +2338,27 @@ const configureCriteriaFields = function(dialog) {
         element.value,
       );
     });
+  } else {
+    // If no existing criterion, add an empty field at top
+    const $newRow = $(templates.schedule.criteriaFields({
+      isAdd: true,
+      trans: translations.schedule.criteriaFields,
+    }));
+    const $newTypeSelect = $newRow.find('select[name="criteria_type[]"]');
+
+    // Populate type dropdown based on scheduleCriteria
+    populateTypeDropdown($newTypeSelect);
+    $fields.append($newRow);
   }
-
-  // Add a row at the end for configuring a new criterion
-  const $newRow = $(templates.schedule.criteriaFields({
-    isAdd: true,
-    trans: translations.schedule.criteriaFields,
-  }));
-  const $newTypeSelect = $newRow.find('select[name="criteria_type[]"]');
-
-  // populate type dropdown based on scheduleCriteria
-  populateTypeDropdown($newTypeSelect);
-  $fields.append($newRow);
 
   // Buttons we've added should be bound
   $fields.on('click', 'button', function(e) {
     e.preventDefault();
     const $button = $(e.currentTarget);
     if ($button.data('isAdd')) {
+      // Only the first element should have the 'Add' btn functionality
       const newField = $(templates.schedule.criteriaFields({
-        isAdd: true,
+        isAdd: false,
         trans: translations.schedule.criteriaFields,
       }));
       $fields.append(newField);
@@ -2353,7 +2367,7 @@ const configureCriteriaFields = function(dialog) {
       const $newTypeSelect = newField.find('select[name="criteria_type[]"]');
       populateTypeDropdown($newTypeSelect);
 
-      $button.data('isAdd', false);
+      $button.data('isAdd', true);
     } else {
       $button.closest('.form-group').remove();
     }

@@ -1182,9 +1182,9 @@ $(target).find('.date').each(function(_idx, dateEl){
         </stencil>
         <assets>
             <asset id="forecast-current-3" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/forecast-current-3.png" />
-            <asset id="icon-humidity" type="path" mimeType="image/png" path="/modules/assets/forecastio/stencils/icon_humidity.png"></asset>
-            <asset id="icon-weather" type="path" mimeType="image/png" path="/modules/assets/forecastio/stencils/icon_weather.png"></asset>
-            <asset id="icon-wind" type="path" mimeType="image/png" path="/modules/assets/forecastio/stencils/icon_wind.png"></asset>
+            <asset id="icon-humidity" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/icon_humidity.png"></asset>
+            <asset id="icon-weather" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/icon_weather.png"></asset>
+            <asset id="icon-wind" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/icon_wind.png"></asset>
         </assets>
     </template>
     <template>

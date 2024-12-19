@@ -133,7 +133,10 @@ const PlayerHelper = function() {
     const hbsTemplate = hbs(Object.assign(props, globalOptions));
     let topPos = props.top;
     let leftPos = props.left;
+    const hasGroup = Boolean(props.groupId);
+    const hasGroupProps = Boolean(props.groupProperties);
 
+    // @NOTE: I think this is deprecated but needs more checking
     if (props.group) {
       if (props.group.isMarquee) {
         topPos = (props.top - props.group.top);
@@ -165,6 +168,14 @@ const PlayerHelper = function() {
         left: props.left,
         zIndex: props.layer,
       };
+
+      if (hasGroup && hasGroupProps) {
+        cssStyles.top = (props.top >= props.groupProperties.top) ?
+          (props.top - props.groupProperties.top) : 0;
+        cssStyles.left = (props.left >= props.groupProperties.left) ?
+          (props.left - props.groupProperties.left) : 0;
+        cssStyles.zIndex = 'none';
+      }
     }
 
     if (!props.isGroup && props.dataOverride === 'text' &&

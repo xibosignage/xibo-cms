@@ -133,6 +133,14 @@ class Folder extends Base
             $this->getState()->setData($folders);
 
             return $this->render($request, $response);
+        } else if ($params->getString('folderName') !== null) {
+            // Search all folders by name
+            $folders = $this->folderFactory->query($this->gridRenderSort($params), $this->gridRenderFilter([
+                'folderName' => $params->getString('folderName'),
+                'exactFolderName' => $params->getInt('exactFolderName'),
+            ], $params));
+
+            return $response->withJson($folders);
         } else if ($folderId !== null) {
             // Should we return information for a specific folder?
             $folder = $this->folderFactory->getById($folderId);

@@ -22,8 +22,7 @@
 window.jQuery = window.$ = require('jquery');
 
 // XLR
-require('xibo-layout-renderer/dist/styles.css');
+import 'xibo-layout-renderer/dist/styles.css';
 
 import XiboLayoutRenderer from 'xibo-layout-renderer';
-
 window.XiboLayoutRenderer = XiboLayoutRenderer;

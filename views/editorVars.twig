@@ -148,6 +148,10 @@
                 list: {
                     url: "{{ url_for("template.view") }}"
                 },
+                getProviders: {
+                    url: "{{ url_for("template.search.providers") }}",
+                    type: 'GET'
+                },
             },
             region: {
                 transform: {

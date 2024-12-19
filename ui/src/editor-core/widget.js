@@ -829,7 +829,7 @@ Widget.prototype.saveElements = function(
       return;
     }
 
-    app.reloadData(app.layout,
+    return app.reloadData(app.layout,
       {
         refreshEditor: updateEditor,
       });
@@ -1073,8 +1073,10 @@ Widget.prototype.saveElements = function(
       // Clear request var after response
       self.saveElementsRequest = undefined;
 
+      lD.common.hideLoadingScreen();
+
       if (res.success) {
-        reloadLayout();
+        return reloadLayout();
       } else {
         // Login Form needed?
         if (res.login) {
@@ -1090,7 +1092,6 @@ Widget.prototype.saveElements = function(
           }
         }
       }
-      lD.common.hideLoadingScreen();
     });
 
     // If this request is forced, save flag and return request
@@ -1183,7 +1184,9 @@ Widget.prototype.addElement = function(
   return newElement.getProperties().then(() => {
     // Save changes to widget and return promise
     if (save) {
-      return this.saveElements();
+      return this.saveElements({
+        reloadData: false,
+      });
     } else {
       return Promise.resolve();
     }
@@ -1255,6 +1258,7 @@ Widget.prototype.removeElement = function(
   // Save changes to widget
   (save && !savedAlready) && this.saveElements({
     updateEditor: reload,
+    reloadData: false,
   });
 
   // If object is selected, remove it from selection
@@ -1442,8 +1446,11 @@ Widget.prototype.getData = function() {
             const properties = {};
             const options = self.getOptions();
             $.each(modulesList[item].properties, function(i, property) {
-              if (options[property.id]) {
-                properties[property.id] = options[property.id];
+              if (options[property.id] !== undefined) {
+                const propertyValue = (property.type === 'number') ?
+                  Number(options[property.id]) :
+                  options[property.id];
+                properties[property.id] = propertyValue;
               } else {
                 properties[property.id] = property.default || null;
               }

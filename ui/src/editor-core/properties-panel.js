@@ -96,9 +96,8 @@ PropertiesPanel.prototype.save = function(
     target = app.selectedObject;
   }
 
-  // Check if target is playlist
-  const isPlaylist =
-    (target.type === 'region' && target.subType === 'playlist');
+  // Check if target is region
+  const isRegion = target.type === 'region';
 
   // Save original target
   const originalTarget = target;
@@ -166,7 +165,8 @@ PropertiesPanel.prototype.save = function(
     form.find('[name]');
 
   // Filter out position related fields
-  formFieldsToSave = (isPlaylist) ? formFieldsToSave :
+  // if not region
+  formFieldsToSave = (isRegion) ? formFieldsToSave :
     formFieldsToSave.filter('.tab-pane:not(#positionTab) [name]');
 
   // Get form old data
@@ -201,6 +201,8 @@ PropertiesPanel.prototype.save = function(
         customRequestPath: requestPath,
       },
     ).then((_res) => {
+      const data = _res;
+
       // Success
       app.common.hideLoadingScreen();
 
@@ -230,7 +232,8 @@ PropertiesPanel.prototype.save = function(
             mainObject,
             {
               reloadPropertiesPanel: false,
-            }).done(() => {
+            },
+          ).then(() => {
             if (!target.drawerWidget) {
               app.viewer.renderRegion(
                 app.getObjectByTypeAndId('region', target.regionId),
@@ -251,6 +254,15 @@ PropertiesPanel.prototype.save = function(
               reloadPropertiesPanel: false,
             },
           );
+        } else if (target.type === 'layout') {
+          // Update resolution id
+          app.layout.resolutionId = resolutionId;
+
+          // Update layout
+          app.layout.updateData(data.data);
+
+          // Render viewer to reflect changes
+          app.viewer.render(true);
         } else {
           // Reload data, and refresh viewer if layout
           // or if we're saving an element
@@ -296,11 +308,6 @@ PropertiesPanel.prototype.save = function(
               // If we're saving an element group, update bottom bar
               (savingElementGroup) &&
                 app.bottombar.render(originalTarget);
-            }
-
-            // If target was layout, update resolution id
-            if (originalTarget.type === 'layout') {
-              app.layout.resolutionId = resolutionId;
             }
 
             // If we're saving a region, update bottom bar
@@ -630,7 +637,7 @@ PropertiesPanel.prototype.render = function(
     // and exit transition
     if (target.type === 'region') {
       const regionType = (target.subType === 'frame') ?
-        'widget' : target.subType;
+        'widgetType' : target.subType;
       dataToRender.regionType = propertiesPanelTrans[regionType];
 
       if (
@@ -1820,7 +1827,7 @@ PropertiesPanel.prototype.render = function(
                 mainObject,
                 {
                   reloadPropertiesPanel: false,
-                }).done(() => {
+                }).then(() => {
                 if (!target.drawerWidget) {
                   app.viewer.renderRegion(
                     app.getObjectByTypeAndId('region', target.regionId),
@@ -1974,17 +1981,18 @@ PropertiesPanel.prototype.initFields = function(
           );
         }
       });
+  }
 
-    // Render action tab
-    if (
-      app.mainObjectType === 'layout' &&
-      !targetIsElement
-    ) {
-      self.renderActionTab(target, {
-        reattach: actionEditMode || selectActionTab,
-        selectAfterRender: selectActionTab,
-      });
-    }
+  // Render action tab
+  if (
+    app.mainObjectType === 'layout' &&
+    !targetIsElement // Filter out elements for now
+  ) {
+    self.renderActionTab(target, {
+      reattach: actionEditMode || selectActionTab,
+      selectAfterRender: selectActionTab,
+      readOnlyMode: readOnlyModeOn,
+    });
   }
 
   // Xibo Init options
@@ -2275,6 +2283,8 @@ PropertiesPanel.prototype.saveRegion = function(
  * @param {object/boolean=} [options.selectAfterRender = false]
  *   - select the tab when rendered
  * @param {object/string=} [options.openEditActionAfterRender = null]
+ *   - read only mode
+ * @param {object/boolean=} [options.readOnlyMode = false]
  */
 PropertiesPanel.prototype.renderActionTab = function(
   object,
@@ -2283,6 +2293,7 @@ PropertiesPanel.prototype.renderActionTab = function(
     clearPrevious = false,
     selectAfterRender = false,
     openEditActionAfterRender = null,
+    readOnlyMode = false,
   } = {},
 ) {
   const self = this;
@@ -2350,6 +2361,8 @@ PropertiesPanel.prototype.renderActionTab = function(
             object,
             $itemActionsContainer,
             $otherActionsContainer,
+            null,
+            !readOnlyMode,
           );
         });
       }
@@ -2401,6 +2414,7 @@ PropertiesPanel.prototype.renderActionTab = function(
  * @param {object} $containerSelected
  * @param {object} $containerOther
  * @param {object} $elementToBeReplaced
+ * @param {boolean} editMode
  */
 PropertiesPanel.prototype.addActionToContainer = function(
   action,
@@ -2408,6 +2422,7 @@ PropertiesPanel.prototype.addActionToContainer = function(
   $containerSelected = null,
   $containerOther = null,
   $elementToBeReplaced = null,
+  editMode = true,
 ) {
   const self = this;
   const app = this.parent;
@@ -2479,6 +2494,7 @@ PropertiesPanel.prototype.addActionToContainer = function(
   // Create action and add to container
   const newAction = actionFormObjectTemplate($.extend({}, action, {
     trans: propertiesPanelTrans.actions,
+    editMode: editMode,
   }));
 
   // Save data and add to container
@@ -2505,19 +2521,21 @@ PropertiesPanel.prototype.addActionToContainer = function(
   );
 
   // Handle buttons
-  $newAction.find('.action-btn').on('click', function(e) {
-    const btnAction = $(e.currentTarget).data('action');
+  if (editMode) {
+    $newAction.find('.action-btn').on('click', function(e) {
+      const btnAction = $(e.currentTarget).data('action');
 
-    if (btnAction == 'delete') {
-      app.deleteAction(
-        $(e.currentTarget).parents('.action-element'),
-      );
-    }
+      if (btnAction == 'delete') {
+        app.deleteAction(
+          $(e.currentTarget).parents('.action-element'),
+        );
+      }
 
-    if (btnAction == 'edit') {
-      self.openEditAction($(e.currentTarget).parents('.action-element'));
-    }
-  });
+      if (btnAction == 'edit') {
+        self.openEditAction($(e.currentTarget).parents('.action-element'));
+      }
+    });
+  }
 
   // Replace or add element
   if ($elementToBeReplaced) {
@@ -2889,7 +2907,7 @@ PropertiesPanel.prototype.showWidgetControl = function(target) {
             {
               reloadPropertiesPanel: false,
             },
-          ).done(() => {
+          ).then(() => {
             // Add options to dropdown
             const $select =
               $canvasWidgetSelectorControl.find('select');

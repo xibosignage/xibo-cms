@@ -112,17 +112,22 @@ div.tooltip.bs-tooltip-auto {
 
 // Minimum resolution message
 .min-res-message {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: $min-res-message-z-index;
     height: calc(100vh - 50px);
     align-content: center;
-    margin-left: 10vw;
+    margin-left: 20vw;
     width: 80vw;
 
     &>div {
+        position: relative;
         text-align: center;
-        height: 60%;
-        width: 100%;
+        height: 40%;
+        width: 80%;
         color: $xibo-color-neutral-900;
-        background-color: $xibo-color-primary-l10;
+        background-color: $xibo-color-neutral-0;
         padding: 40px;
         border-radius: 8px;
         display: flex;
@@ -130,7 +135,21 @@ div.tooltip.bs-tooltip-auto {
         align-items: center;
         justify-content: center;
         flex-direction: column;
+        outline: 4px solid $xibo-color-primary;
+
+        h4 {
+            margin-bottom: 8px;
+        }
+
+        .close-res-message-button {
+            margin-top: 32px;
+        }
     }
+}
+
+.min-res-overlay {
+    display: block !important;
+    z-index: $min-res-message-overlay-z-index !important;
 }
 
 @media (max-width: 768px) {

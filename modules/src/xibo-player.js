@@ -1396,12 +1396,28 @@ XiboPlayer.prototype.renderGlobalElements = function(currentWidget) {
       if (isGroup) {
         // Grouped elements
         if (elemObj.items.length > 0) {
+          // Check if group element exists
+          // If not, then create
+          let $groupContent;
+          if ($content.find(`.${itemKey}`).length === 0) {
+            $groupContent = $(`<div class="${itemKey}"></div>`);
+
+            $groupContent.css({
+              width: elemObj.width,
+              height: elemObj.height,
+              position: 'absolute',
+              top: elemObj.top,
+              left: elemObj.left,
+              zIndex: elemObj.layer,
+            });
+          }
+
           // Loop through group items
           elemObj.items.forEach(function(groupItem) {
             // Load element functions
             self.loadElementFunctions(groupItem, {});
 
-            if (groupItem.hbs) {
+            if (groupItem.hbs && $groupContent) {
               const $elementContent = $(PlayerHelper.renderElement(
                 groupItem.hbs,
                 groupItem.templateData,
@@ -1437,6 +1453,12 @@ XiboPlayer.prototype.renderGlobalElements = function(currentWidget) {
               meta,
             );
           });
+
+          // If there's a group content element
+          // Append it to the page
+          if ($groupContent) {
+            $content.append($groupContent);
+          }
         }
       } else {
         // Single elements

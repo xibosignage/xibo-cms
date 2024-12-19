@@ -2692,29 +2692,34 @@ class Layout implements \JsonSerializable
                         $child = $assignedPlaylistIds;
                     }
                 }
-            }
-        }
 
-        if (isset($parentId) && isset($child)) {
-            foreach ($child as $childId) {
-                $this->getLog()->debug('Manage closure table for parent ' . $parentId . ' and child ' . $childId);
+                if (isset($parentId) && isset($child)) {
+                    foreach ($child as $childId) {
+                        $this->getLog()->debug(
+                            'Manage closure table for parent ' . $parentId . ' and child ' . $childId
+                        );
 
-                if ($this->getStore()->exists('SELECT parentId, childId, depth FROM lkplaylistplaylist WHERE childId = :childId AND parentId = :parentId ', [//phpcs:ignore
-                    'parentId' => $parentId,
-                    'childId' => $childId
-                ])) {
-                    throw new InvalidArgumentException(__('Cannot add the same SubPlaylist twice.'), 'playlistId');
-                }
+                        if ($this->getStore()->exists('SELECT parentId, childId, depth FROM lkplaylistplaylist WHERE childId = :childId AND parentId = :parentId ', [//phpcs:ignore
+                            'parentId' => $parentId,
+                            'childId' => $childId
+                        ])) {
+                            throw new InvalidArgumentException(
+                                __('Cannot add the same SubPlaylist twice.'),
+                                'playlistId'
+                            );
+                        }
 
-                $this->getStore()->insert('
+                        $this->getStore()->insert('
                         INSERT INTO `lkplaylistplaylist` (parentId, childId, depth)
                         SELECT p.parentId, c.childId, p.depth + c.depth + 1
                           FROM lkplaylistplaylist p, lkplaylistplaylist c
                          WHERE p.childId = :parentId AND c.parentId = :childId
                     ', [
-                    'parentId' => $parentId,
-                    'childId' => $childId
-                ]);
+                            'parentId' => $parentId,
+                            'childId' => $childId
+                        ]);
+                    }
+                }
             }
         }
     }

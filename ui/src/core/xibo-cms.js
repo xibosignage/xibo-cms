@@ -1251,9 +1251,9 @@ window.XiboInitialise = function(scope, options) {
 
             if (!response.data[0]?.hasFullScreenLayout) {
               if (eventTypeId == 7) {
-                $form.find('#fullScreenControl_media').click();
+                $form.find('#fullScreenControl_media').trigger('autoOpen');
               } else if (eventTypeId == 8) {
-                $form.find('#fullScreenControl_playlist').click();
+                $form.find('#fullScreenControl_playlist').trigger('autoOpen');
               }
             }
           }, (xhr) => {
@@ -1262,13 +1262,14 @@ window.XiboInitialise = function(scope, options) {
     }
   });
 
-  $(scope + ' .full-screen-layout-form').on('click', function(ev) {
+  $(scope + ' .full-screen-layout-form').on('click autoOpen', function(ev) {
     const $target = $(ev.currentTarget);
 
     if ($('#full-screen-schedule-modal').length != 0) {
       $('#full-screen-schedule-modal').remove();
     }
 
+    const $mainModal = $target.parents(scope);
     const eventTypeId = $target.closest('form').find('#eventTypeId').val();
     const mediaId = $target.closest('form').find('#fullScreen-mediaId').val();
     const playlistId =
@@ -1293,6 +1294,14 @@ window.XiboInitialise = function(scope, options) {
           },
         }));
       const $modal = $('#full-screen-schedule-modal');
+
+      // If form was opened automatically
+      // close background modal if we close this one
+      if (ev.type === 'autoOpen') {
+        $modal.find('button.close').on('click', function() {
+          $mainModal.modal('hide');
+        });
+      }
 
       $modal
         .on('show.bs.modal', function() {
@@ -1388,6 +1397,13 @@ window.XiboInitialise = function(scope, options) {
 
           $(ev.currentTarget).data('bs.modal', null);
         });
+
+      // Open modal programmatically
+      $modal.modal({
+        backdrop: 'static',
+        keyboard: false,
+        show: true,
+      });
     }
   });
 
@@ -2488,6 +2504,9 @@ window.makePagedSelect = function(
           data = dataFormatter(data);
         }
 
+        // Check if we have a display all option
+        const displayAll = $element.data('displayAll') ?? false;
+
         $.each(data.data, function(index, el) {
           const result = {
             id: el[$element.data('idProperty')],
@@ -2515,7 +2534,7 @@ window.makePagedSelect = function(
         return {
           results: results,
           pagination: {
-            more: (page * 10 < data.recordsTotal),
+            more: !displayAll && (page * 10 < data.recordsTotal),
           },
         };
       },

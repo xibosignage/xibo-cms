@@ -411,7 +411,8 @@ class ScheduleFactory extends BaseFactory
             `schedule`.updatedOn,
             `schedule`.name,
             `schedule`.dataSetId,
-            `schedule`.dataSetParams
+            `schedule`.dataSetParams,
+            `sc`.eventId AS criteria
         ';
 
         $body = ' FROM `schedule`
@@ -427,6 +428,9 @@ class ScheduleFactory extends BaseFactory
             ON `syncgroup`.syncGroupId = `schedule`.syncGroupId
             LEFT OUTER JOIN `user`
             ON `user`.userId = `schedule`.modifiedBy
+            LEFT OUTER JOIN (
+                SELECT DISTINCT `eventId` FROM schedule_criteria
+            ) AS sc ON `schedule`.eventId = sc.eventId
           WHERE 1 = 1';
 
         if ($parsedFilter->getInt('eventId') !== null) {
