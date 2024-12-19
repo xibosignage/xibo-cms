@@ -63,6 +63,7 @@
     "@codemirror/state": "^6.4.1",
     "@fortawesome/fontawesome-free": "^6.6.0",
     "@mapbox/leaflet-pip": "^1.1.0",
+    "@xibosignage/xibo-layout-renderer": "^1.0.4",
     "@popperjs/core": "^2.11.8",
     "@ssddanbrown/codemirror-lang-twig": "^1.0.0",
     "@xiechao/codemirror-lang-handlebars": "^1.0.4",

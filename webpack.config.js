@@ -41,7 +41,6 @@ const mainConfig = Object.assign({}, config, {
     campaignBuilder: './ui/src/campaign-builder/main.js',
     editorCommon: './ui/bundle_editor_common.js',
     preview: './ui/bundle_preview.js',
-    legacyPreview: './ui/bundle_legacy_preview.js',
     datatables: './ui/bundle_datatables.js',
     codeEditor: './ui/bundle_code_editor.js',
     leaflet: './ui/bundle_leaflet.js',

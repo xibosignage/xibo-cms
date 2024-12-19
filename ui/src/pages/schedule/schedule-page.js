@@ -382,15 +382,12 @@ $(function() {
         responsivePriority: 2,
       },
       {
-        data: 'criteria',
+        name: 'criteria',
         className: 'align-middle',
         responsivePriority: 2,
         data: function(data, type, row) {
-          if (data.criteria && data.criteria.length > 0) {
-            return dataTableTickCrossColumn(1, type, row);
-          } else {
-            return '';
-          }
+          return (data.criteria && data.criteria.length > 0) ?
+            dataTableTickCrossColumn(1, type, row) : '';
         },
       },
       {

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -183,7 +183,7 @@ class MediaFactory extends BaseFactory
             $media->enableStat = $requestOptions['enableStat'];
             $media->folderId = $requestOptions['folderId'];
             $media->permissionsFolderId = $requestOptions['permissionsFolderId'];
-            $media->apiRef = $requestOptions['apiRef'];
+            $media->apiRef = $requestOptions['apiRef'] ?? null;
         }
 
         $this->getLog()->debug('Queue download of: ' . $uri . ', current mediaId for this download is '

@@ -66,12 +66,14 @@
             {{/eq}}
         </div>
     </div>
-    <div class="edit-hover-menu">
-        <button class="btn btn-default action-btn" type="button" title="{{trans.editAction}}" data-action="edit">
-            <i class="fa fa-pencil"></i>
-        </button>
-        <button class="btn btn-default action-btn" type="button" title="{{trans.deleteAction}}" data-action="delete">
-            <i class="fa fa-trash"></i>
-        </button>
-    </div>
+    {{#if editMode}}
+        <div class="edit-hover-menu">
+            <button class="btn btn-default action-btn" type="button" title="{{trans.editAction}}" data-action="edit">
+                <i class="fa fa-pencil"></i>
+            </button>
+            <button class="btn btn-default action-btn" type="button" title="{{trans.deleteAction}}" data-action="delete">
+                <i class="fa fa-trash"></i>
+            </button>
+        </div>
+    {{/if}}
 </div>

@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -29,13 +29,15 @@
 
 use Slim\Flash\Messages;
 use Slim\Views\Twig;
-use Slim\Views\TwigExtension;
 use Twig\TwigFilter;
 use Xibo\Service\ConfigService;
 use Xibo\Twig\ByteFormatterTwigExtension;
 use Xibo\Twig\DateFormatTwigExtension;
 use Xibo\Twig\TransExtension;
 use Xibo\Twig\TwigMessages;
+
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 
 define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
 require_once PROJECT_ROOT . '/vendor/autoload.php';
@@ -57,8 +59,6 @@ $storage = [];
 $view->addExtension(new TwigMessages(new Messages($storage)));
 
 foreach (glob(PROJECT_ROOT . '/views/*.twig') as $file) {
-    echo var_export($file, true) . PHP_EOL;
-
     $view->getEnvironment()->load(str_replace(PROJECT_ROOT . '/views/', '', $file));
 }
 
@@ -137,7 +137,7 @@ foreach ($modules as $module) {
         }
         if (!empty($setting->helpText)) {
             // replaces any single quote within the value with a backslash followed by a single quote
-            $helpText = addslashes($setting->helpText);
+            $helpText = addslashes(trim($setting->helpText));
             $content .= 'echo __(\''.$helpText.'\');' . PHP_EOL;
         }
 
@@ -153,7 +153,7 @@ foreach ($modules as $module) {
     // Properties translation
     foreach ($module->properties as $property) {
         if (!empty($property->title)) {
-            $content .= 'echo __(\''.$property->title.'\');' . PHP_EOL;
+            $content .= 'echo __(\''.addslashes(trim($property->title)).'\');' . PHP_EOL;
         }
         if (!empty($property->helpText)) {
             // replaces any single quote within the value with a backslash followed by a single quote
@@ -167,7 +167,7 @@ foreach ($modules as $module) {
                 // Property rule test message
                 $message = $test->message;
                 if (!empty($message)) {
-                    $content .= 'echo __(\''.$message.'\');' . PHP_EOL;
+                    $content .= 'echo __(\''.addslashes(trim($message)).'\');' . PHP_EOL;
                 }
             }
         }
@@ -190,11 +190,11 @@ foreach ($moduleTemplates as $moduleTemplate) {
     // Properties Translation
     foreach ($moduleTemplate->properties as $property) {
         if (!empty($property->title)) {
-            $content .= 'echo __(\''.$property->title.'\');' . PHP_EOL;
+            $content .= 'echo __(\''.addslashes(trim($property->title)).'\');' . PHP_EOL;
         }
         if (!empty($property->helpText)) {
             // replaces any single quote within the value with a backslash followed by a single quote
-            $helpText = addslashes($property->helpText);
+            $helpText = addslashes(trim($property->helpText));
             $content .= 'echo __(\''.$helpText.'\');' . PHP_EOL;
         }
 
@@ -219,6 +219,5 @@ foreach ($moduleTemplates as $moduleTemplate) {
     }
 }
 
-$content .= '?>';
 file_put_contents($file, $content);
 echo 'moduletranslate.file created and data written successfully.';

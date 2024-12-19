@@ -1499,17 +1499,16 @@ class User extends Base
      * Force User Password Change
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @return \Slim\Http\Response
+     * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function forceChangePasswordPage(Request $request, Response $response)
+    public function forceChangePasswordPage(Request $request, Response $response): Response
     {
         $user = $this->getUser();
 
         // if the flag to force change password is not set to 1 then redirect to the Homepage
         if ($user->isPasswordChangeRequired != 1) {
-            $response->withRedirect('home');
+            return $response->withRedirect($this->urlFor($request, 'home'));
         }
 
         $this->getState()->template = 'user-force-change-password-page';
@@ -1521,25 +1520,30 @@ class User extends Base
      * Force change my Password
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     * @return \Slim\Http\Response
+     * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function forceChangePassword(Request $request, Response $response)
+    public function forceChangePassword(Request $request, Response $response): Response
     {
-        // Save the user
         $user = $this->getUser();
+
+        // This is only valid if the user has that option set on their account
+        if ($user->isPasswordChangeRequired != 1) {
+            throw new AccessDeniedException();
+        }
+
+        // Save the user
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $newPassword = $sanitizedParams->getString('newPassword');
         $retypeNewPassword = $sanitizedParams->getString('retypeNewPassword');
 
-        if ($newPassword == null || $retypeNewPassword == '')
+        if ($newPassword == null || $retypeNewPassword == '') {
             throw new InvalidArgumentException(__('Please enter the password'), 'password');
+        }
 
-        if ($newPassword != $retypeNewPassword)
+        if ($newPassword != $retypeNewPassword) {
             throw new InvalidArgumentException(__('Passwords do not match'), 'password');
+        }
 
         // Make sure that the new password doesn't verify against the existing hash
         try {

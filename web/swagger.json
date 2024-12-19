@@ -13703,6 +13703,10 @@
                     "description": "The title",
                     "type": "string"
                 },
+                "description": {
+                    "description": "Description of the Module Template",
+                    "type": "string"
+                },
                 "icon": {
                     "description": "Icon",
                     "type": "string"

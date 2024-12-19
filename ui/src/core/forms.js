@@ -474,6 +474,14 @@ window.forms = {
           property.playlistId = playlistId;
         }
 
+        // Colour format
+        if (
+          property.type === 'color' &&
+          property.format != ''
+        ) {
+          property.colorFormat = property.format;
+        }
+
         // dashboards available services
         if (property.type === 'connectorProperties') {
           property.connectorPropertiesUrl =
@@ -4121,7 +4129,7 @@ window.forms = {
 
       // Bind to the checkboxes change event
       const target = $('#' + e.target.id);
-      target.find('input[type=checkbox]').on('change', function() {
+      target.find('input[type=checkbox]').on('change', function(ev) {
         const $checkbox = $(ev.currentTarget);
 
         // Update our global permissions data with this

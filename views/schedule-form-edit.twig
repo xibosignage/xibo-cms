@@ -91,6 +91,26 @@
                             </div>
                         </div>
 
+                        {% set title %}{% trans "Use Relative time?" %}{% endset %}
+                        {% set helpText %}{% trans "Switch between relative time inputs and Date pickers for start and end time." %}{% endset %}
+                        {{ forms.checkbox("relativeTime", title, relativeTime, helpText, 'relative-time-checkbox') }}
+
+                        {% set title %}{% trans "Hours" %}{% endset %}
+                        {% set helpText %}{% trans "Hours this event should be scheduled for" %}{% endset %}
+                        {{ forms.number("hours", title, "", helpText, "duration-part relative-time-control") }}
+
+                        {% set title %}{% trans "Minutes" %}{% endset %}
+                        {% set helpText %}{% trans "Minutes this event should be scheduled for" %}{% endset %}
+                        {{ forms.number("minutes", title, "", helpText, "duration-part relative-time-control") }}
+
+                        {% set title %}{% trans "Seconds" %}{% endset %}
+                        {% set helpText %}{% trans "Seconds this event should be scheduled for" %}{% endset %}
+                        {{ forms.number("seconds", title, "", helpText, "schedule-now-seconds-field duration-part relative-time-control") }}
+
+                        {% set messageNoSyncTimezone %}{% trans %}Your event will be scheduled from [fromDt] to [toDt] in each of your selected Displays respective timezones{% endtrans %}{% endset %}
+                        {% set messageSyncTimezone %}{% trans %}Your event will be scheduled from [fromDt] to [toDt] in the CMS timezone, please check this covers each of your Displays in their respective timezones.{% endtrans %}{% endset %}
+                        <div class="alert alert-info scheduleNowMessage d-none relative-time-control" data-template-sync="{{ messageSyncTimezone }}" data-template-no-sync="{{ messageNoSyncTimezone }}"></div>
+
                         {% set title %}{% trans "Start Time" %}{% endset %}
                         {% set helpText %}{% trans "Select the start time for this event" %}{% endset %}
                         {{ forms.dateTime("fromDt", title, event.fromDt, helpText, "starttime-control", "required", "") }}

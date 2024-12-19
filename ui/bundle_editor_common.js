@@ -1,4 +1,3 @@
-/* eslint-disable no-unused-vars */
 /*
  * Copyright (C) 2024 Xibo Signage Ltd
  *

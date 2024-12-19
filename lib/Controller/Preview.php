@@ -79,7 +79,6 @@ class Preview extends Base
             $layout = $this->layoutFactory->getByParentId($layout->layoutId);
         }
 
-        // $this->getState()->template = 'layout-preview';
         $this->getState()->template = 'layout-renderer';
         $this->getState()->setData([
             'layout' => $layout,
