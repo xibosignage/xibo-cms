@@ -739,6 +739,7 @@ const formHelpers = function() {
           $container.css('transform-origin', '0 0');
           $container.css('word-wrap', 'inherit');
           $container.css('line-height', 'normal');
+          $container.css('padding', '0');
           $container
             .css('outline-width', (CKEDITOR_OVERLAY_WIDTH / scale));
 
@@ -749,7 +750,10 @@ const formHelpers = function() {
             scale: scale,
           });
 
-          $container.find('p').css('margin', '0 0 16px');
+          $container.find('p')
+            .css('margin', '0 0 16px')
+            .css('margin-top', 0);
+
           $container.show();
         } else {
           $('#cke_' + field + ' iframe').contents().find('head').append(
@@ -921,6 +925,15 @@ const formHelpers = function() {
                 }
               });
           }
+
+          // If we have a detached editor, we need to add a property
+          // to the main bar to help with CSS styling
+          $(
+            '.ck-editor-body-detached .ck-body-wrapper ' +
+            '.ck-balloon-panel > .ck-toolbar',
+          ).each((_idx, el) => {
+            $(el).parent().attr('data-main-toolbar', 1);
+          });
 
           return false;
         });
@@ -1120,6 +1133,82 @@ const formHelpers = function() {
     if ($(editor.sourceElement).hasClass('ck-editor__editable_inline')) {
       $sourceElement = $sourceElement.siblings('textarea');
     }
+
+    // Add CKEditor default CSS to the content to match the editor
+    // Convert into temporary DOM element
+    const $tempObj = $('<div>' + data + '</div>');
+
+    // Inject necessary CSS
+    const setCSSDefaultRules = function(els, rules) {
+      $(els).each(function(_idx, el) {
+        const $el = $(el);
+
+        for (const rule in rules) {
+          if (Object.hasOwn(rules, rule)) {
+            const value = rules[rule];
+            const oldStyle = $el.attr('style');
+
+            $el.attr('style', `${rule}: ${value}; ${oldStyle}`);
+          }
+        }
+      });
+    };
+
+    // Tables
+    $tempObj.find('.table').each((_idx, table) => {
+      const $table = $(table);
+
+      setCSSDefaultRules(
+        $table,
+        {
+          margin: '0.9em auto',
+          display: 'table',
+        },
+      );
+
+      setCSSDefaultRules(
+        $table.find('.ck-table-resized'),
+        {
+          'table-layout': 'fixed',
+        },
+      );
+
+      setCSSDefaultRules(
+        $table.find('table'),
+        {
+          overflow: 'hidden',
+          'border-collapse': 'collapse',
+          'border-spacing': '0',
+          width: '100%',
+          height: '100%',
+          border: '1px double hsl(0, 0%, 70%)',
+        },
+      );
+
+      setCSSDefaultRules(
+        $table.find('td, th'),
+        {
+          'text-align': 'left',
+          'overflow-wrap': 'break-word',
+          position: 'relative',
+          'min-width': '2em',
+          padding: '.4em',
+          border: '1px solid hsl(0, 0%, 75%)',
+        },
+      );
+
+      setCSSDefaultRules(
+        $table.find('th'),
+        {
+          'font-weight': 'bold',
+          'background-color': 'hsla(0, 0%, 0%, 5%)',
+        },
+      );
+    });
+
+    // Save object back to data string
+    // and inhect necessary CSS
+    data = $tempObj.html();
 
     $sourceElement.val(data);
 
