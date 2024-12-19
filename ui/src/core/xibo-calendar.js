@@ -975,11 +975,11 @@ window.setupScheduleForm = function(dialog) {
 
   // Hide/Show form elements according to the selected options
   // Initial state of the components
-  processScheduleFormElements($('#recurrenceType', dialog));
-  processScheduleFormElements($('#eventTypeId', dialog));
-  processScheduleFormElements($('#campaignId', dialog));
-  processScheduleFormElements($('#actionType', dialog));
-  processScheduleFormElements($('#relativeTime', dialog));
+  processScheduleFormElements($('#recurrenceType', dialog), dialog);
+  processScheduleFormElements($('#eventTypeId', dialog), dialog);
+  processScheduleFormElements($('#campaignId', dialog), dialog);
+  processScheduleFormElements($('#actionType', dialog), dialog);
+  processScheduleFormElements($('#relativeTime', dialog), dialog);
 
   // Events on change
   $('#recurrenceType, ' +
@@ -991,7 +991,7 @@ window.setupScheduleForm = function(dialog) {
     '#relativeTime, ' +
     '#syncTimezone', dialog)
     .on('change', function(ev) {
-      processScheduleFormElements($(ev.currentTarget));
+      processScheduleFormElements($(ev.currentTarget), dialog);
     });
 
   const evaluateDates = _.debounce(function() {
@@ -1277,7 +1277,7 @@ const configReminderFields = function(dialog) {
  * Process schedule form elements for the purpose of showing/hiding them
  * @param el jQuery element
  */
-const processScheduleFormElements = function(el) {
+const processScheduleFormElements = function(el, dialog) {
   const fieldVal = el.val();
   const relativeTime = $('#relativeTime').is(':checked');
   let endTimeControlDisplay;
@@ -1341,33 +1341,36 @@ const processScheduleFormElements = function(el) {
       relativeTimeCheckboxDisplay = (fieldVal == 2) ? 'none' : '';
       const dataConnectorDisplay = fieldVal == 10 ? '' : 'none';
 
-      $('.layout-control').css('display', layoutControlDisplay);
-      $('.endtime-control').css('display', endTimeControlDisplay);
-      $('.starttime-control').css('display', startTimeControlDisplay);
-      $('.day-part-control').css('display', dayPartControlDisplay);
-      $('.command-control').css('display', commandControlDisplay);
-      $('.interrupt-control').css('display', interruptControlDisplay);
-      $('.action-control').css('display', actionControlDisplay);
-      $('.max-plays-control').css('display', maxPlaysControlDisplay);
-      $('.media-control').css('display', mediaScheduleControlDisplay);
-      $('.playlist-control').css('display', playlistScheduleControlDisplay);
-      $('.media-playlist-control').css(
+      $('.layout-control', dialog).css('display', layoutControlDisplay);
+      $('.endtime-control', dialog).css('display', endTimeControlDisplay);
+      $('.starttime-control', dialog).css('display', startTimeControlDisplay);
+      $('.day-part-control', dialog).css('display', dayPartControlDisplay);
+      $('.command-control', dialog).css('display', commandControlDisplay);
+      $('.interrupt-control', dialog).css('display', interruptControlDisplay);
+      $('.action-control', dialog).css('display', actionControlDisplay);
+      $('.max-plays-control', dialog).css('display', maxPlaysControlDisplay);
+      $('.media-control', dialog).css('display', mediaScheduleControlDisplay);
+      $('.playlist-control', dialog)
+        .css('display', playlistScheduleControlDisplay);
+      $('.media-playlist-control', dialog).css(
         'display',
         playlistMediaScheduleControlDisplay);
-      $('.relative-time-control').css('display', relativeTimeControlDisplay);
-      $('.relative-time-checkbox').css('display', relativeTimeCheckboxDisplay);
-      $('.data-connector-control').css('display', dataConnectorDisplay);
+      $('.relative-time-control', dialog)
+        .css('display', relativeTimeControlDisplay);
+      $('.relative-time-checkbox', dialog)
+        .css('display', relativeTimeCheckboxDisplay);
+      $('.data-connector-control', dialog).css('display', dataConnectorDisplay);
 
       // action event type
       if (fieldVal === 6) {
-        $('.displayOrder-control').css('display', 'none');
+        $('.displayOrder-control', dialog).css('display', 'none');
       }
 
       // If the fieldVal is 2 (command)
       // then we should set the dayPartId to be 0 (custom)
       if (fieldVal == 2) {
         // Determine what the custom day part is.
-        const $dayPartId = $('#dayPartId');
+        const $dayPartId = $('#dayPartId', dialog);
         let customDayPartId = 0;
         $dayPartId.find('option').each(function(i, el) {
           if ($(el).data('isCustom') === 1) {
@@ -1378,23 +1381,23 @@ const processScheduleFormElements = function(el) {
         // console.log('Setting dayPartId to custom: ' + customDayPartId);
         $dayPartId.val(customDayPartId);
 
-        $startTime = $('.starttime-control');
+        $startTime = $('.starttime-control', dialog);
         $startTime.find('input[name=fromDt_Link2]').show();
         $startTime.find('.help-block').html(
           $startTime.closest('form').data().daypartMessage,
         );
 
         // Set the repeats/reminders tabs to visible.
-        $('li.repeats').css('display', 'block');
-        $('li.reminders').css('display', 'block');
+        $('li.repeats', dialog).css('display', 'block');
+        $('li.reminders', dialog).css('display', 'block');
       }
 
       // Call function for the daypart ID
-      processScheduleFormElements($('#dayPartId'));
+      processScheduleFormElements($('#dayPartId', dialog), dialog);
 
       // Change the help text and label of the campaignId dropdown
       const $campaignSelect = el.closest('form').find('#campaignId');
-      const $layoutControl = $('.layout-control');
+      const $layoutControl = $('.layout-control', dialog);
       let searchIsLayoutSpecific = -1;
 
       if (fieldVal === '1' || fieldVal === '3' || fieldVal === '4') {
@@ -1439,12 +1442,12 @@ const processScheduleFormElements = function(el) {
         (meta.isCustom === 0 || !relativeTime) ? 'none' : '';
       relativeTimeCheckboxDisplay = (meta.isCustom === 0) ? 'none' : '';
 
-      $startTime = $('.starttime-control');
-      $endTime = $('.endtime-control');
-      const $repeats = $('li.repeats');
-      const $reminder = $('li.reminders');
-      $relative = $('.relative-time-control');
-      const $relativeCheckbox = $('.relative-time-checkbox');
+      $startTime = $('.starttime-control', dialog);
+      $endTime = $('.endtime-control', dialog);
+      const $repeats = $('li.repeats', dialog);
+      const $reminder = $('li.reminders', dialog);
+      $relative = $('.relative-time-control', dialog);
+      const $relativeCheckbox = $('.relative-time-checkbox', dialog);
 
       // Set control visibility
       $startTime.css('display', startTimeControlDisplay);
@@ -1483,7 +1486,7 @@ const processScheduleFormElements = function(el) {
     case 'campaignId':
     case 'fullScreenCampaignId':
       // Update the preview button URL
-      const $previewButton = $('#previewButton');
+      const $previewButton = $('#previewButton', dialog);
 
       if (fieldVal === null || fieldVal === '' || fieldVal === 0) {
         $previewButton.closest('.preview-button-container').hide();
@@ -1506,8 +1509,8 @@ const processScheduleFormElements = function(el) {
         (fieldVal == 'navLayout' && el.is(':visible')) ? '' : 'none';
       commandControlDisplay = (fieldVal == 'command') ? '' : 'none';
 
-      $('.layout-code-control').css('display', layoutCodeControl);
-      $('.command-control').css('display', commandControlDisplay);
+      $('.layout-code-control', dialog).css('display', layoutCodeControl);
+      $('.command-control', dialog).css('display', commandControlDisplay);
 
       break;
     case 'relativeTime':
@@ -1517,12 +1520,15 @@ const processScheduleFormElements = function(el) {
 
       const datePickerStartControlDisplay = $(el).is(':checked') ? 'none' : '';
       const datePickerEndControlDisplay =
-        ($(el).is(':checked') || $('#eventTypeId').val() == 2) ? 'none' : '';
+        (
+          $(el).is(':checked') ||
+          $('#eventTypeId', dialog).val() == 2
+        ) ? 'none' : '';
       relativeTimeControlDisplay = $(el).is(':checked') ? '' : 'none';
 
-      $startTime = $('.starttime-control');
-      $endTime = $('.endtime-control');
-      $relative = $('.relative-time-control');
+      $startTime = $('.starttime-control', dialog);
+      $endTime = $('.endtime-control', dialog);
+      $relative = $('.relative-time-control', dialog);
 
       if (dateFormat.indexOf('s') <= -1) {
         $('.schedule-now-seconds-field').remove();
@@ -1538,7 +1544,7 @@ const processScheduleFormElements = function(el) {
 
       break;
     case 'syncTimezone':
-      const relativeTimeChecked = $('#relativeTime').is(':checked');
+      const relativeTimeChecked = $('#relativeTime', dialog).is(':checked');
 
       if (relativeTimeChecked) {
         scheduleEvaluateRelativeDateTime($(el).closest('form'));
