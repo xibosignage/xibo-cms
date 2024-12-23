@@ -650,6 +650,13 @@ class Login extends Base
         ]);
     }
 
+    /**
+     * Get a redirect link from the given request and prior route
+     *  validate the prior route by only taking its path
+     * @param \Slim\Http\ServerRequest $request
+     * @param string|null $priorRoute
+     * @return string
+     */
     private function getRedirect(Request $request, ?string $priorRoute): string
     {
         $home = $this->urlFor($request, 'home');
@@ -671,7 +678,7 @@ class Login extends Base
         } else {
             $redirectTo = $priorRoute;
         }
-        
+
         return $redirectTo;
     }
 }
