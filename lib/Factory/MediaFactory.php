@@ -791,9 +791,14 @@ class MediaFactory extends BaseFactory
                         ON widget.widgetId = lkwidgetmedia.widgetId
                      WHERE region.layoutId = :layoutId ';
 
-            // include Media only for non dynamic Playlists #2392
+            // include Media only for non-dynamic Playlists #2392
             if ($sanitizedFilter->getInt('excludeDynamicPlaylistMedia') === 1) {
-                $body .= ' AND lkplaylistplaylist.childId IN (SELECT playlistId FROM playlist WHERE playlist.playlistId = lkplaylistplaylist.childId AND playlist.isDynamic = 0) ';
+                $body .= ' AND lkplaylistplaylist.childId IN (
+                    SELECT playlistId 
+                      FROM playlist
+                     WHERE playlist.playlistId = lkplaylistplaylist.childId 
+                       AND playlist.isDynamic = 0
+                    ) ';
             }
 
             if ($sanitizedFilter->getInt('widgetId') !== null) {
@@ -801,13 +806,17 @@ class MediaFactory extends BaseFactory
                 $params['widgetId'] = $sanitizedFilter->getInt('widgetId');
             }
 
+            if ($sanitizedFilter->getInt('includeLayoutBackgroundImage') === 1) {
+                $body .= ' UNION ALL
+                    SELECT `layout`.backgroundImageId AS mediaId
+                      FROM `layout`
+                     WHERE `layout`.layoutId = :layoutId
+                    ';
+            }
+
             $body .= '    )
                 AND media.type <> \'module\'
             ';
-
-            if ($sanitizedFilter->getInt('includeLayoutBackgroundImage') === 1) {
-                $body .= ' OR media.mediaId IN ( SELECT `layout`.backgroundImageId FROM `layout` WHERE `layout`.layoutId = :layoutId ) ';
-            }
 
             $params['layoutId'] = $sanitizedFilter->getInt('layoutId');
         }
