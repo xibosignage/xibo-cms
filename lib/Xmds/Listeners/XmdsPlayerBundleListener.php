@@ -45,9 +45,9 @@ class XmdsPlayerBundleListener
 
         // Output the player bundle
         $forceUpdate = false;
-        $bundlePath = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'assets/player.bundle.min.js';
+        $bundlePath = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'assets/bundle.min.js';
         if (!file_exists($bundlePath)) {
-            $result = @copy(PROJECT_ROOT . '/modules/player.bundle.min.js', $bundlePath);
+            $result = @copy(PROJECT_ROOT . '/modules/bundle.min.js', $bundlePath);
             if (!$result) {
                 throw new GeneralException('Unable to copy asset');
             }
@@ -66,7 +66,7 @@ class XmdsPlayerBundleListener
         $event->addDependency(
             'bundle',
             1,
-            'assets/player.bundle.min.js',
+            'assets/bundle.min.js',
             filesize($bundlePath),
             $bundleMd5,
             true,
@@ -79,7 +79,7 @@ class XmdsPlayerBundleListener
         // Can we return this type of file?
         if ($event->getFileType() === 'bundle' && $event->getRealId() == 1) {
             // Set the path
-            $event->setRelativePathToLibrary('assets/player.bundle.min.js');
+            $event->setRelativePathToLibrary('assets/bundle.min.js');
 
             // No need to carry on, we've found it.
             $event->stopPropagation();

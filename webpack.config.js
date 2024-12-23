@@ -274,11 +274,11 @@ const pageConfig = Object.assign({}, config, {
 
 const moduleConfig = Object.assign({}, config, {
   entry: {
-    player: './modules/src/player_bundle.js',
+    bundle: './modules/src/player_bundle.js',
   },
   output: {
     path: path.resolve(__dirname, 'modules'),
-    filename: '[name].bundle.min.js',
+    filename: '[name].min.js',
   },
   target: ['web', 'es5'],
   module: {
