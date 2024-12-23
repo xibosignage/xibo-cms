@@ -181,19 +181,18 @@ class Login extends Base
      * Login
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws InvalidArgumentException
+     * @return \Slim\Http\Response
      * @throws \Xibo\Support\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
-    public function login(Request $request, Response $response)
+    public function login(Request $request, Response $response): Response
     {
         $parsedRequest = $this->getSanitizer($request->getParsedBody());
         $routeParser = RouteContext::fromRequest($request)->getRouteParser();
 
         // Capture the prior route (if there is one)
-        $user = null;
-        $redirect = 'login';
-        $priorRoute = ($parsedRequest->getString('priorRoute'));
+        $redirect = $this->urlFor($request, 'login');
+        $priorRoute = $parsedRequest->getString('priorRoute');
 
         try {
             // Get our username and password
@@ -208,7 +207,9 @@ class Login extends Base
 
                 // Retired user
                 if ($user->retired === 1) {
-                    throw new AccessDeniedException(__('Sorry this account does not exist or does not have permission to access the web portal.'));
+                    throw new AccessDeniedException(
+                        __('Sorry this account does not exist or does not have permission to access the web portal.')
+                    );
                 }
 
                 // Check password
@@ -223,19 +224,16 @@ class Login extends Base
 
                 // We are logged in, so complete the login flow
                 $this->completeLoginFlow($user, $request);
-            }
-            catch (NotFoundException $e) {
+            } catch (NotFoundException) {
                 throw new AccessDeniedException(__('User not found'));
             }
 
-            $redirect = ($priorRoute == '' || $priorRoute == '/' || stripos($priorRoute, $routeParser->urlFor('login'))) ? $routeParser->urlFor('home') : $priorRoute;
-        }
-        catch (AccessDeniedException $e) {
+            $redirect = $this->getRedirect($request, $priorRoute);
+        } catch (AccessDeniedException $e) {
             $this->getLog()->warning($e->getMessage());
             $this->getFlash()->addMessage('login_message', __('Username or Password incorrect'));
             $this->getFlash()->addMessage('priorRoute', $priorRoute);
-        }
-        catch (ExpiredException $e) {
+        } catch (ExpiredException $e) {
             $this->getFlash()->addMessage('priorRoute', $priorRoute);
         }
         $this->setNoOutput(true);
@@ -559,18 +557,16 @@ class Login extends Base
     /**
      * @param Request $request
      * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @return \Slim\Http\Response
      * @throws \RobThree\Auth\TwoFactorAuthException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function twoFactorAuthValidate(Request $request, Response $response)
+    public function twoFactorAuthValidate(Request $request, Response $response): Response
     {
         $user = $this->userFactory->getByName($_SESSION['tfaUsername']);
         $result = false;
         $updatedCodes = [];
         $sanitizedParams = $this->getSanitizer($request->getParams());
-        // prior route
-        $priorRoute = ($sanitizedParams->getString('priorRoute'));
 
         if (isset($_POST['code'])) {
             $issuerSettings = $this->getConfig()->getSetting('TWOFACTOR_ISSUER');
@@ -594,7 +590,6 @@ class Login extends Base
             $codes = $user->twoFactorRecoveryCodes;
 
             foreach (json_decode($codes) as $code) {
-
                 // if the provided recovery code matches one stored in the database, we want to log in the user
                 if ($code === $sanitizedParams->getString('recoveryCode')) {
                     $result = true;
@@ -603,13 +598,12 @@ class Login extends Base
                 if ($code !== $sanitizedParams->getString('recoveryCode')) {
                     $updatedCodes[] = $code;
                 }
-
             }
-            // recovery codes are one time use, as such we want to update user recovery codes and remove the one that was just used.
+
+            // recovery codes are one time use, as such we want to update user recovery codes and remove the one that
+            // was just used.
             $user->updateRecoveryCodes(json_encode($updatedCodes));
         }
-
-        $redirect = ($priorRoute == '' || $priorRoute == '/' || stripos($priorRoute, $this->urlFor($request,'login'))) ? $this->urlFor($request,'home') : $priorRoute;
 
         if ($result) {
             // We are logged in at this point
@@ -620,7 +614,7 @@ class Login extends Base
             //unset the session tfaUsername
             unset($_SESSION['tfaUsername']);
 
-            return $response->withRedirect($redirect);
+            return $response->withRedirect($this->getRedirect($request, $sanitizedParams->getString('priorRoute')));
         } else {
             $this->getLog()->error('Authentication code incorrect, redirecting to login page');
             $this->getFlash()->addMessage('login_message', __('Authentication code incorrect'));
@@ -632,7 +626,7 @@ class Login extends Base
      * @param \Xibo\Entity\User $user
      * @param Request $request
      */
-    private function completeLoginFlow($user, Request $request)
+    private function completeLoginFlow(User $user, Request $request): void
     {
         $user->touch();
 
@@ -654,5 +648,30 @@ class Login extends Base
         $this->getLog()->audit('User', $user->userId, 'Login Granted', [
                 'UserAgent' => $request->getHeader('User-Agent')
         ]);
+    }
+
+    private function getRedirect(Request $request, ?string $priorRoute): string
+    {
+        $home = $this->urlFor($request, 'home');
+
+        // Parse the prior route
+        $parsedPriorRoute = parse_url($priorRoute);
+        if (!$parsedPriorRoute) {
+            $priorRoute = $home;
+        } else {
+            $priorRoute = $parsedPriorRoute['path'];
+        }
+
+        // Certain routes always lead home
+        if ($priorRoute == ''
+            || $priorRoute == '/'
+            || str_contains($priorRoute, $this->urlFor($request, 'login'))
+        ) {
+            $redirectTo = $home;
+        } else {
+            $redirectTo = $priorRoute;
+        }
+        
+        return $redirectTo;
     }
 }
