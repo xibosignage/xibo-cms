@@ -340,7 +340,7 @@ class ModuleTemplateFactory extends BaseFactory
             $template->templateId = $row['templateId'];
             $template->dataType = $row['dataType'];
             $template->isEnabled = $row['enabled'] == 1;
-            $template->ownerId = intval($row['ownerId']);
+            $template->ownerId = intval($row['ownerId'] ?? 0);
             $template->groupsWithPermissions = $row['groupsWithPermissions'];
             $templates[] = $template;
         }
