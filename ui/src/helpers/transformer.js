@@ -20,5 +20,4 @@ const transformer = function() {
   };
 };
 
-// eslint-disable-next-line new-cap
 module.exports = new transformer();

@@ -1,4 +1,3 @@
-/* eslint-disable new-cap */
 // ELEMENT Module
 
 /**
@@ -31,7 +30,12 @@ const ElementGroup = function(data, widgetId, regionId, parentWidget) {
 
   // Set element to have same properties for edit and delete as parent widget
   this.isEditable = (parentWidget) ? parentWidget.isEditable : true;
-  this.isDeletable = (parentWidget) ? parentWidget.isDeletable : true;
+  // For elements to be deletable, the parent widget also needs to be editable
+  this.isDeletable = (parentWidget) ?
+    (
+      parentWidget.isDeletable &&
+      parentWidget.isEditable
+    ) : true;
   this.isViewable = (parentWidget) ? parentWidget.isViewable : true;
   this.effect = data.effect || 'noTransition';
 
@@ -239,6 +243,11 @@ ElementGroup.prototype.transform = function(transform) {
     scaleY: 0,
   };
 
+  const originalDimensions = {
+    width: this.width,
+    height: this.height,
+  };
+
   // Apply changes to the group ( updating values )
   if (transform.width) {
     transformation.scaleX = transform.width / this.width;
@@ -276,7 +285,66 @@ ElementGroup.prototype.transform = function(transform) {
         left: elGroup.left + elRelativePositionScaled.left,
       });
     } else {
-      // TODO: Don't scale, but stick to corners
+      // Keep top and left on the same place by default
+      let newTop = el.top - elGroup.top;
+      let newLeft = el.left - elGroup.left;
+
+      // If bottom bound
+      if (
+        el.groupScaleTypeV === 'bottom'
+      ) {
+        // Distance to bottom
+        const distToBottom = originalDimensions.height - el.height;
+
+        // Calculate top based on bottom position
+        newTop = newTop - (distToBottom - (elGroup.height - el.height));
+      } else if (
+        el.groupScaleTypeV === 'middle'
+      ) {
+        // Group middle
+        const groupMiddle = originalDimensions.height / 2;
+
+        const newGroupMiddle = elGroup.height /2;
+
+        // Element middle
+        const elMiddle = el.height / 2;
+
+        // Distance to middle
+        const distMiddleToMiddle = groupMiddle - elMiddle;
+
+        // Calculate top based on bottom position
+        newTop = newTop + (newGroupMiddle - distMiddleToMiddle - elMiddle);
+      }
+
+      // If right bound
+      if (
+        el.groupScaleTypeH === 'right'
+      ) {
+        // Calculate left based on right position
+        newLeft = newLeft - (originalDimensions.width - elGroup.width);
+      } else if (
+        el.groupScaleTypeV === 'middle'
+      ) {
+        // Group center
+        const groupCenter = originalDimensions.width / 2;
+
+        const newGroupCenter = elGroup.width /2;
+
+        // Element center
+        const elCenter = el.width / 2;
+
+        // Distance to center
+        const distCenterToCenter = groupCenter - elCenter;
+
+        // Calculate top based on bottom position
+        newLeft = newLeft + (newGroupCenter - distCenterToCenter - elCenter);
+      }
+
+      // Transform without scaling
+      el.transform({
+        top: elGroup.top + newTop,
+        left: elGroup.left + newLeft,
+      });
     }
   });
 };

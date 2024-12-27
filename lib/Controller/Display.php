@@ -1177,20 +1177,24 @@ class Display extends Base
                 ];
             }
 
-            if ($this->getUser()->featureEnabled('displays.modify')
-                && $this->getUser()->checkEditable($display)
+            // Check if limited view access is allowed
+            if (($this->getUser()->featureEnabled('displays.modify') && $this->getUser()->checkEditable($display))
+                || $this->getUser()->featureEnabled('displays.limitedView')
             ) {
                 if ($this->getUser()->checkPermissionsModifyable($display)) {
                     $display->buttons[] = ['divider' => true];
                 }
 
-                // Wake On LAN
-                $display->buttons[] = array(
-                    'id' => 'display_button_wol',
-                    'url' => $this->urlFor($request, 'display.wol.form', ['id' => $display->displayId]),
-                    'text' => __('Wake on LAN')
-                );
+                if ($this->getUser()->checkEditable($display)) {
+                    // Wake On LAN
+                    $display->buttons[] = array(
+                        'id' => 'display_button_wol',
+                        'url' => $this->urlFor($request, 'display.wol.form', ['id' => $display->displayId]),
+                        'text' => __('Wake on LAN')
+                    );
+                }
 
+                // Send Command
                 $display->buttons[] = [
                     'id' => 'displaygroup_button_command',
                     'url' => $this->urlFor($request, 'displayGroup.command.form', ['id' => $display->displayGroupId]),
@@ -1214,62 +1218,64 @@ class Display extends Base
                     ]
                 ];
 
-                $display->buttons[] = ['divider' => true];
+                if ($this->getUser()->checkEditable($display)) {
+                    $display->buttons[] = ['divider' => true];
 
-                $display->buttons[] = [
-                    'id' => 'display_button_move_cms',
-                    'url' => $this->urlFor($request, 'display.moveCms.form', ['id' => $display->displayId]),
-                    'text' => __('Transfer to another CMS'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        [
-                            'name' => 'commit-url',
-                            'value' => $this->urlFor(
-                                $request,
-                                'display.moveCms',
-                                ['id' => $display->displayId]
-                            )
-                        ],
-                        ['name' => 'commit-method', 'value' => 'put'],
-                        ['name' => 'id', 'value' => 'display_button_move_cms'],
-                        ['name' => 'text', 'value' => __('Transfer to another CMS')],
-                        ['name' => 'sort-group', 'value' => 5],
-                        ['name' => 'rowtitle', 'value' => $display->display],
-                        ['name' => 'form-callback', 'value' => 'setMoveCmsMultiSelectFormOpen']
-                    ]
-                ];
-
-                $display->buttons[] = [
-                    'multi-select' => true,
-                    'multiSelectOnly' => true, // Show button only on multi-select menu
-                    'id' => 'display_button_set_bandwidth',
-                    'dataAttributes' => [
-                        [
-                            'name' => 'commit-url',
-                            'value' => $this->urlFor(
-                                $request,
-                                'display.setBandwidthLimitMultiple'
-                            )
-                        ],
-                        ['name' => 'commit-method', 'value' => 'post'],
-                        ['name' => 'id', 'value' => 'display_button_set_bandwidth'],
-                        ['name' => 'text', 'value' => __('Set Bandwidth')],
-                        ['name' => 'rowtitle', 'value' => $display->display],
-                        ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                        [
-                            'name' => 'custom-handler-url',
-                            'value' => $this->urlFor($request, 'display.setBandwidthLimitMultiple.form')
-                        ],
-                        ['name' => 'content-id-name', 'value' => 'displayId']
-                    ]
-                ];
-
-                if ($display->getUnmatchedProperty('isCmsTransferInProgress', false)) {
                     $display->buttons[] = [
-                        'id' => 'display_button_move_cancel',
-                        'url' => $this->urlFor($request, 'display.moveCmsCancel.form', ['id' => $display->displayId]),
-                        'text' => __('Cancel CMS Transfer'),
+                        'id' => 'display_button_move_cms',
+                        'url' => $this->urlFor($request, 'display.moveCms.form', ['id' => $display->displayId]),
+                        'text' => __('Transfer to another CMS'),
+                        'multi-select' => true,
+                        'dataAttributes' => [
+                            [
+                                'name' => 'commit-url',
+                                'value' => $this->urlFor(
+                                    $request,
+                                    'display.moveCms',
+                                    ['id' => $display->displayId]
+                                )
+                            ],
+                            ['name' => 'commit-method', 'value' => 'put'],
+                            ['name' => 'id', 'value' => 'display_button_move_cms'],
+                            ['name' => 'text', 'value' => __('Transfer to another CMS')],
+                            ['name' => 'sort-group', 'value' => 5],
+                            ['name' => 'rowtitle', 'value' => $display->display],
+                            ['name' => 'form-callback', 'value' => 'setMoveCmsMultiSelectFormOpen']
+                        ]
                     ];
+
+                    $display->buttons[] = [
+                        'multi-select' => true,
+                        'multiSelectOnly' => true, // Show button only on multi-select menu
+                        'id' => 'display_button_set_bandwidth',
+                        'dataAttributes' => [
+                            [
+                                'name' => 'commit-url',
+                                'value' => $this->urlFor(
+                                    $request,
+                                    'display.setBandwidthLimitMultiple'
+                                )
+                            ],
+                            ['name' => 'commit-method', 'value' => 'post'],
+                            ['name' => 'id', 'value' => 'display_button_set_bandwidth'],
+                            ['name' => 'text', 'value' => __('Set Bandwidth')],
+                            ['name' => 'rowtitle', 'value' => $display->display],
+                            ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
+                            [
+                                'name' => 'custom-handler-url',
+                                'value' => $this->urlFor($request, 'display.setBandwidthLimitMultiple.form')
+                            ],
+                            ['name' => 'content-id-name', 'value' => 'displayId']
+                        ]
+                    ];
+
+                    if ($display->getUnmatchedProperty('isCmsTransferInProgress', false)) {
+                        $display->buttons[] = [
+                            'id' => 'display_button_move_cancel',
+                            'url' => $this->urlFor($request, 'display.moveCmsCancel.form', ['id' => $display->displayId]),
+                            'text' => __('Cancel CMS Transfer'),
+                        ];
+                    }
                 }
             }
         }
@@ -2166,6 +2172,9 @@ class Display extends Base
             $displayGroup->unassignDisplay($display);
             $displayGroup->save(['validate' => false]);
         }
+
+        // Queue display to check for cache updates
+        $display->notify();
 
         // Return
         $this->getState()->hydrate([

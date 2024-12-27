@@ -215,6 +215,12 @@ class Soap5 extends Soap4
                         $value = $timeParts[0] . ':' . $timeParts[1];
                     }
 
+                    // Apply an offset to the collectInterval
+                    // https://github.com/xibosignage/xibo/issues/3530
+                    if (strtolower($arrayItem['name']) == 'collectinterval') {
+                        $value = $this->collectionIntervalWithOffset($value);
+                    }
+
                     $node = $return->createElement($settingName, $value);
 
                     if (isset($arrayItem['type'])) {
@@ -343,16 +349,19 @@ class Soap5 extends Soap4
                             }
 
                             $node = $return->createElement($command->code);
-                            $node->setAttribute('createAlertOn', $command->getCreateAlertOn());
                             $commandString = $return->createElement('commandString');
                             $commandStringCData = $return->createCDATASection($command->getCommandString());
                             $commandString->appendChild($commandStringCData);
                             $validationString = $return->createElement('validationString');
                             $validationStringCData = $return->createCDATASection($command->getValidationString());
                             $validationString->appendChild($validationStringCData);
+                            $alertOnString = $return->createElement('createAlertOn');
+                            $alertOnStringCData = $return->createCDATASection($command->getCreateAlertOn());
+                            $alertOnString->appendChild($alertOnStringCData);
 
                             $node->appendChild($commandString);
                             $node->appendChild($validationString);
+                            $node->appendChild($alertOnString);
 
                             $commandElement->appendChild($node);
                         } catch (\DOMException $DOMException) {

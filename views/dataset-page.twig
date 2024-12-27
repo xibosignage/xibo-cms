@@ -353,6 +353,26 @@
             $(dialog).find('#sourceId').on('change', function() {
                 onSourceFieldChanged(dialog);
             });
+
+            // Validate form manually because
+            // uri field depends on isRemote being checked
+            if (forms != undefined) {
+                const $form = $(dialog).find('form');
+                forms.validateForm(
+                    $form, // form
+                    $form.parent(), // container
+                    {
+                        submitHandler: XiboFormSubmit,
+                        rules: {
+                            uri: {
+                                required: function(element) {
+                                    return $form.find('#isRemote').is(':checked')
+                                },
+                            },
+                        },
+                    },
+                );
+            }
         }
 
         function onIsRealTimeFieldChanged(dialog) {

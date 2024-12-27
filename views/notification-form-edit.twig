@@ -44,7 +44,7 @@
                 <li class="nav-item"><a class="nav-link" href="#audience" role="tab" data-toggle="tab"><span>{% trans "Audience" %}</span></a></li>
                 <li class="nav-item"><a class="nav-link" href="#attachment" role="tab" data-toggle="tab"><span>{% trans "Attachment" %}</span></a></li>
             </ul>
-            <form id="notificationForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("notification.edit", {id: notification.notificationId}) }}">
+            <form id="notificationForm" class="form-horizontal" method="put" action="{{ url_for("notification.edit", {id: notification.notificationId}) }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Subject" %}{% endset %}
@@ -64,7 +64,7 @@
                         {% set title %}{% trans "Add the body of your message in the box below. If you are going to target this message to a Display/DisplayGroup be aware that the formatting you apply here will be removed." %}{% endset %}
                         {{ forms.message(title) }}
 
-                        {{ forms.textarea("body", "", notification.body, "", "", 10) }}
+                        {{ forms.textarea("body", "", notification.body, "", "", "required", 10) }}
                     </div>
                     <div class="tab-pane" id="audience">
                         {% set title %}{% trans "Users" %}{% endset %}

@@ -164,57 +164,13 @@ class DisplayAlerts implements ReportInterface
         $displayIds = $this->getDisplayIdFilter($sanitizedParams);
         $onlyLoggedIn = $sanitizedParams->getCheckbox('onlyLoggedIn') == 1;
 
-        $currentDate = Carbon::now()->startOfDay();
-
         //
         // From and To Date Selection
         // --------------------------
-        // Our report has a range filter which determines whether the user has to enter their own from / to dates
-        // check the range filter first and set from/to dates accordingly.
-        $reportFilter = $sanitizedParams->getString('reportFilter');
-
-        // Use the current date as a helper
-        $now = Carbon::now();
-
-        switch ($reportFilter) {
-            // the monthly data starts from yesterday
-            case 'yesterday':
-                $fromDt = $now->copy()->startOfDay()->subDay();
-                $toDt = $now->copy()->startOfDay();
-                break;
-
-            case 'lastweek':
-                $fromDt = $now->copy()->locale(Translate::GetLocale())->startOfWeek()->subWeek();
-                $toDt = $fromDt->copy()->addWeek();
-                break;
-
-            case 'lastmonth':
-                $fromDt = $now->copy()->startOfMonth()->subMonth();
-                $toDt = $fromDt->copy()->addMonth();
-                break;
-
-            case 'lastyear':
-                $fromDt = $now->copy()->startOfYear()->subYear();
-                $toDt = $fromDt->copy()->addYear();
-                break;
-
-            case '':
-            default:
-                // Expect dates to be provided.
-                $fromDt = $sanitizedParams->getDate('fromDt');
-                $toDt = $sanitizedParams->getDate('toDt');
-
-                $fromDt = $fromDt->startOfDay();
-
-                // If toDt is current date then make it current datetime
-                if ($toDt->format('Y-m-d') == $currentDate->format('Y-m-d')) {
-                    $toDt = Carbon::now();
-                } else {
-                    $toDt = $toDt->addDay()->startOfDay();
-                }
-
-                break;
-        }
+        // The report uses a custom range filter that automatically calculates the from/to dates
+        // depending on the date range selected.
+        $fromDt = $sanitizedParams->getDate('fromDt');
+        $toDt = $sanitizedParams->getDate('toDt');
 
         $metadata = [
             'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))
@@ -242,6 +198,14 @@ class DisplayAlerts implements ReportInterface
                 INNER JOIN `displaygroup` ON `displaygroup`.displayGroupId = `lkdisplaydg`.displayGroupId
                                           AND `displaygroup`.isDisplaySpecific = 1
             WHERE `displayevent`.eventDate BETWEEN :start AND :end   ';
+
+        $eventTypeIdFilter = $sanitizedParams->getString('eventType');
+
+        if ($eventTypeIdFilter != -1) {
+            $params['eventTypeId'] = $eventTypeIdFilter;
+
+            $sql .= 'AND `displayevent`.eventTypeId = :eventTypeId ';
+        }
 
         if (count($displayIds) > 0) {
             $sql .= 'AND `displayevent`.displayId IN (' . implode(',', $displayIds) . ')';

@@ -3,10 +3,12 @@
     data-target="layout zone {{#if editingPlaylist}}playlist{{/if}}"
     data-sub-type="{{#if editingPlaylist}}subplaylist{{else}}playlist{{/if}}"
     data-sub-playlist-id="{{playlistId}}"
-    data-name="{{name}}">
+    data-name="{{name}}"
+    data-card-title="{{title}}"
+    data-toggle="tooltip" data-title="{{description}}">
 
     <div class="toolbar-card-preview">
-        <span class="media-title tooltip-always-on" data-toggle="tooltip" data-title="{{name}}" data-placement="right">{{name}}</span>
+        <span class="media-title" title="{{name}}">{{name}}</span>
 
         {{#if playlistDuration}}
             <div class="media-duration" data-title="{{trans.duration}}" data-toggle="tooltip" data-placement="top">
@@ -15,7 +17,7 @@
         {{/if}}
 
         {{#if isDynamic}}
-            <div class="dynamic-logo tooltip-always-on" data-title="{{trans.dynamicPlaylist}}" data-toggle="tooltip" data-placement="top">
+            <div class="dynamic-logo" data-title="{{trans.dynamicPlaylist}}" data-toggle="tooltip" data-placement="top">
                 <i class="fa fa-magic"></i>
             </div>
         {{/if}}

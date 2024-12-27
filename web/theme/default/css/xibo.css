@@ -1392,6 +1392,11 @@ div.dataTables_wrapper div.dataTables_info {
     background-color: #eee;
 }
 
+.nav-tabs .nav-link.has-error {
+    background-color: #ff000005;
+    color: red;
+}
+
 /* Colour picker */
 .colorpicker-input .input-group-prepend > i{
     cursor: pointer;
@@ -1569,6 +1574,15 @@ div.dataTables_wrapper div.dataTables_info {
 /* CKEditor */
 .ck-editor__editable_inline {
     min-height: 100px;
+
+    p {
+        margin: 0 0 16px !important;
+    }
+
+    figure {
+        margin-top: 0.9em !important;
+        width: auto;
+    }
 }
 
 .ck-fontsize-option span {

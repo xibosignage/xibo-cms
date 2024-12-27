@@ -32,6 +32,8 @@ use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ReportScheduleFactory;
+use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\TagFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
@@ -70,6 +72,16 @@ class ProofOfPlay implements ReportInterface
     private $reportScheduleFactory;
 
     /**
+     * @var DisplayGroupFactory
+     */
+    private $displayGroupFactory;
+
+    /**
+     * @var TagFactory
+     */
+    private $tagFactory;
+
+    /**
      * @var SanitizerService
      */
     private $sanitizer;
@@ -94,6 +106,8 @@ class ProofOfPlay implements ReportInterface
         $this->mediaFactory = $container->get('mediaFactory');
         $this->layoutFactory = $container->get('layoutFactory');
         $this->reportScheduleFactory = $container->get('reportScheduleFactory');
+        $this->displayGroupFactory = $container->get('displayGroupFactory');
+        $this->tagFactory = $container->get('tagFactory');
         $this->sanitizer = $container->get('sanitizerService');
 
         return $this;
@@ -325,6 +339,12 @@ class ProofOfPlay implements ReportInterface
         $operator = $sanitizedParams->getString('logicalOperator', ['default' => 'OR']);
         $parentCampaignId = $sanitizedParams->getInt('parentCampaignId');
 
+        // Group the data by display, display group, or by tag
+        $groupBy = $sanitizedParams->getString('groupBy');
+
+        // Used with groupBy in case we want to filter by specific display groups only
+        $displayGroupIds = $sanitizedParams->getIntArray('displayGroupId', ['default' => []]);
+
         // Display filter.
         try {
             // Get an array of display id this user has access to.
@@ -457,7 +477,9 @@ class ProofOfPlay implements ReportInterface
                 $tags,
                 $tagsType,
                 $exactTags,
-                $operator
+                $operator,
+                $groupBy,
+                $displayGroupIds
             );
         } else {
             $result = $this->getProofOfPlayReportMySql(
@@ -472,7 +494,8 @@ class ProofOfPlay implements ReportInterface
                 $tags,
                 $tagsType,
                 $exactTags,
-                $operator
+                $operator,
+                $groupBy
             );
         }
 
@@ -505,7 +528,10 @@ class ProofOfPlay implements ReportInterface
             $entry['minStart'] = Carbon::createFromTimestamp($row['minStart'])->format(DateFormatHelper::getSystemFormat());
             $entry['maxEnd'] =  Carbon::createFromTimestamp($row['maxEnd'])->format(DateFormatHelper::getSystemFormat());
             $entry['mediaId'] = $sanitizedRow->getInt('mediaId');
-
+            $entry['displayGroup'] = $sanitizedRow->getString('displayGroup');
+            $entry['displayGroupId'] = $sanitizedRow->getInt('displayGroupId');
+            $entry['tagName'] = $sanitizedRow->getString('tagName');
+            $entry['tagId'] = $sanitizedRow->getInt('tagId');
             $rows[] = $entry;
         }
 
@@ -541,6 +567,7 @@ class ProofOfPlay implements ReportInterface
      * @param $tags string
      * @param $tagsType string
      * @param $exactTags mixed
+     * @param $groupBy string
      * @return array[array result, date periodStart, date periodEnd, int count, int totalStats]
      */
     private function getProofOfPlayReportMySql(
@@ -555,7 +582,8 @@ class ProofOfPlay implements ReportInterface
         $tags,
         $tagsType,
         $exactTags,
-        $logicalOperator
+        $logicalOperator,
+        $groupBy
     ) {
         $fromDt = $fromDt->format('U');
         $toDt = $toDt->format('U');
@@ -563,7 +591,6 @@ class ProofOfPlay implements ReportInterface
         // Media on Layouts Ran
         $select = '
           SELECT stat.type,
-              display.Display,
               stat.parentCampaignId,
               campaign.campaign as parentCampaign,
               IFNULL(layout.Layout, 
@@ -581,9 +608,22 @@ class ProofOfPlay implements ReportInterface
               stat.tag,
               stat.layoutId,
               stat.mediaId,
-              stat.widgetId,
-              stat.displayId
+              stat.widgetId
         ';
+
+        // We get the ID and name - either by display, display group or tag
+        if ($groupBy === 'display') {
+            $select .= ', display.Display, stat.displayId ';
+        } else if ($groupBy === 'displayGroup') {
+            $select .= ', displaydg.displayGroup, displaydg.displayGroupId ';
+        } else if ($groupBy === 'tag') {
+            if ($tagsType === 'dg' || $tagsType === 'media') {
+                $select .= ', taglink.value, taglink.tagId ';
+            } else {
+                // For layouts, we need to manually select taglink.tag
+                $select .= ', taglink.tag AS value, taglink.tagId ';
+            }
+        }
 
         $body = '
             FROM stat
@@ -613,6 +653,17 @@ class ProofOfPlay implements ReportInterface
                         ON displaygroup.displaygroupId = lkdisplaydg.displaygroupId
                          AND `displaygroup`.isDisplaySpecific = 1 ';
             }
+        }
+
+        if ($groupBy === 'displayGroup') {
+            // Group the data by display group
+            $body .= 'INNER JOIN `lkdisplaydg` AS linkdg
+                        ON linkdg.DisplayID = display.displayid
+                     INNER JOIN `displaygroup` AS displaydg
+                        ON displaydg.displaygroupId = linkdg.displaygroupId
+                         AND `displaydg`.isDisplaySpecific = 0 ';
+        } else if ($groupBy === 'tag') {
+            $body .= $this->groupByTagType($tagsType);
         }
 
         $body .= ' WHERE stat.type <> \'displaydown\'
@@ -799,22 +850,28 @@ class ProofOfPlay implements ReportInterface
             $body .= ' AND `media`.mediaId IN (' . trim($mediaSql, ',') . ')';
         }
 
+        // We first implement default groupings
         $body .= '
             GROUP BY stat.type, 
                 stat.tag, 
-                display.Display, 
                 stat.parentCampaignId,
-                stat.displayId, 
                 stat.campaignId,
                 layout.layout, 
                 IFNULL(stat.mediaId, stat.widgetId), 
                 IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)),
-                stat.tag,
                 stat.layoutId,
                 stat.mediaId,
-                stat.widgetId,
-                stat.displayId 
+                stat.widgetId
         ';
+
+        // Then add the optional groupings
+        if ($groupBy === 'display') {
+            $body .= ', display.Display, stat.displayId';
+        } else if ($groupBy === 'displayGroup') {
+            $body .= ', displaydg.displayGroupId, displaydg.displayGroup';
+        } else if ($groupBy === 'tag') {
+            $body .= ', value, taglink.tagId';
+        }
 
         $order = '';
         if ($columns != null) {
@@ -829,8 +886,8 @@ class ProofOfPlay implements ReportInterface
             $entry = [];
 
             $entry['type'] = $row['type'];
-            $entry['displayId'] = $row['displayId'];
-            $entry['display'] = $row['Display'];
+            $entry['displayId'] = $row['displayId'] ?? '';
+            $entry['display'] = $row['Display'] ?? '';
             $entry['layout'] = $row['Layout'];
             $entry['parentCampaignId'] = $row['parentCampaignId'];
             $entry['parentCampaign'] = $row['parentCampaign'];
@@ -843,7 +900,10 @@ class ProofOfPlay implements ReportInterface
             $entry['widgetId'] = $row['widgetId'];
             $entry['mediaId'] = $row['mediaId'];
             $entry['tag'] = $row['tag'];
-
+            $entry['displayGroupId'] = $row['displayGroupId'] ?? '';
+            $entry['displayGroup'] = $row['displayGroup'] ?? '';
+            $entry['tagId'] = $row['tagId'] ?? '';
+            $entry['tagName'] = $row['value'] ?? '';
             $rows[] = $entry;
         }
 
@@ -901,6 +961,8 @@ class ProofOfPlay implements ReportInterface
      * @param $tags string
      * @param $tagsType string
      * @param $exactTags mixed
+     * @param $groupBy string
+     * @param $displayGroupIds array
      * @return array[array result, date periodStart, date periodEnd, int count, int totalStats]
      * @throws InvalidArgumentException
      * @throws \Xibo\Support\Exception\GeneralException
@@ -917,7 +979,9 @@ class ProofOfPlay implements ReportInterface
         $tags,
         $tagsType,
         $exactTags,
-        $operator
+        $operator,
+        $groupBy,
+        $displayGroupIds
     ) {
         $fromDt = new UTCDateTime($filterFromDt->format('U')*1000);
         $toDt = new UTCDateTime($filterToDt->format('U')*1000);
@@ -1145,9 +1209,19 @@ class ProofOfPlay implements ReportInterface
                 $entry['widgetId'] = $row['widgetId'];
                 $entry['mediaId'] = $row['mediaId'];
                 $entry['tag'] = $row['eventName'];
+                $entry['displayGroupId'] = '';
+                $entry['displayGroup'] = '';
+                $entry['tagId'] = '';
+                $entry['tagName'] = '';
 
                 $rows[] = $entry;
             }
+        }
+
+        if ($groupBy === 'tag') {
+            $rows = $this->groupByTagMongoDb($rows, $tagsType);
+        } else if ($groupBy === 'displayGroup') {
+            $rows = $this->groupByDisplayGroupMongoDb($rows, $displayGroupIds);
         }
 
         return [
@@ -1156,5 +1230,139 @@ class ProofOfPlay implements ReportInterface
             'result' => $rows,
             'count' => count($rows)
         ];
+    }
+
+    /**
+     * Add grouping by tag type
+     * @param string $tagType
+     * @return string
+     */
+    private function groupByTagType(string $tagType) : string
+    {
+        return match ($tagType) {
+            'media' => 'INNER JOIN `lktagmedia` AS taglink ON taglink.mediaId = stat.mediaId',
+            'layout' => 'INNER JOIN `lktaglayout` ON `lktaglayout`.layoutId = stat.layoutId
+                         INNER JOIN `tag` AS taglink ON taglink.tagId = `lktaglayout`.tagId',
+            'dg' => 'INNER JOIN `lkdisplaydg` AS linkdg
+                        ON linkdg.DisplayID = display.displayid
+                     INNER JOIN `displaygroup` AS displaydg
+                        ON displaydg.displaygroupId = linkdg.displaygroupId
+                         AND `displaydg`.isDisplaySpecific = 1 INNER JOIN
+                         `lktagdisplaygroup` AS taglink ON taglink.displaygroupId = displaydg.displaygroupId',
+        };
+    }
+
+    /**
+     * Group by display group in MongoDB
+     * @param array $rows
+     * @param array $filteredDisplayGroupIds
+     * @return array
+     * @throws NotFoundException
+     */
+    private function groupByDisplayGroupMongoDb(array $rows, array $filteredDisplayGroupIds) : array
+    {
+        $data = [];
+        $displayInfoArr = $this->displayGroupFactory->query();
+
+        // Get the display groups
+        foreach ($rows as $row) {
+            foreach ($displayInfoArr as $dg) {
+                // Do we have a filter?
+                if (!$filteredDisplayGroupIds || in_array($dg->displayGroupId, $filteredDisplayGroupIds)) {
+                    // Create a temporary key to group by multiple columns at once
+                    // and save memory instead of checking each column recursively
+                    $key = $dg->displayGroupId . '_' . $row['layoutId'] . '_' . $row['mediaId'] . '_' .
+                        $row['tag'] . '_' . $row['widgetId'] . '_' . $row['parentCampaignId'] . '_' . $row['type'];
+
+                    if (!isset($data[$key])) {
+                        // Since we already have the display group as the grouping option, we can remove the display info
+                        $row['display'] = null;
+                        $row['displayId'] = null;
+                        $row['displayGroupId'] = $dg->displayGroupId;
+                        $row['displayGroup'] = $dg->displayGroup;
+
+                        $data[$key] = $row;
+                    } else {
+                        $data[$key]['duration'] += $row['duration'];
+                        $data[$key]['numberPlays'] += $row['numberPlays'];
+                    }
+                }
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * Group by tag in MongoDB
+     * @param array $rows
+     * @param string $tagsType
+     * @return array
+     */
+    private function groupByTagMongoDb(array $rows, string $tagsType) : array
+    {
+        $data = [];
+        $tags = $this->filterByTagType($tagsType);
+        $type = match ($tagsType) {
+            'media' => 'mediaId',
+            'layout' => 'layoutId',
+            'dg' => 'displayId',
+        };;
+
+        foreach ($rows as $row) {
+            foreach ($tags as $tag) {
+                if ($row[$type] == $tag['entityId']) {
+                    // Create a temporary key to group by multiple columns at once
+                    // and save memory instead of checking each column recursively
+                    $key = $tag['tagId'] . '_' . $row['layoutId'] . '_' . $row['mediaId'] . '_' .
+                        $row['tag'] . '_' . $row['widgetId'] . '_' . $row['parentCampaignId'] . '_' . $row['type'];
+
+                    if (!isset($data[$key])) {
+                        // Since we already have the tags as the grouping option, we can remove the display info
+                        $row['display'] = null;
+                        $row['displayId'] = null;
+                        $row['tagName'] = $tag['tag'];
+                        $row['tagId'] = $tag['tagId'];
+
+                        $data[$key] = $row;
+                    } else {
+                        $data[$key]['duration'] += $row['duration'];
+                        $data[$key]['numberPlays'] += $row['numberPlays'];
+                    }
+                }
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * @param string $tagsType
+     * @return array
+     */
+    private function filterByTagType(string $tagsType): array
+    {
+        $tags = [];
+        $filter = match ($tagsType) {
+            'media' => 'Media',
+            'layout' => 'Layout',
+            'dg' => 'Display',
+        };
+
+        // Get the list of tags to get the tag type (ie media tag, layout tag, or display tag)
+        $tagInfoArr = $this->tagFactory->query();
+
+        foreach ($tagInfoArr as $tag) {
+            // What type of tags are we looking for?
+            foreach ($this->tagFactory->getAllLinks(null, ['tagId' => $tag->tagId]) as $filteredTag) {
+                if ($filteredTag['type'] == $filter) {
+                    $filteredTag['tagId'] = $tag->tagId;
+                    $filteredTag['tag'] = $tag->tag;
+                    $tags[] = $filteredTag;
+                }
+            }
+        }
+        
+        return $tags;
     }
 }

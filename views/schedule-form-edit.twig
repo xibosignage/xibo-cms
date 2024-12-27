@@ -91,6 +91,26 @@
                             </div>
                         </div>
 
+                        {% set title %}{% trans "Use Relative time?" %}{% endset %}
+                        {% set helpText %}{% trans "Switch between relative time inputs and Date pickers for start and end time." %}{% endset %}
+                        {{ forms.checkbox("relativeTime", title, relativeTime, helpText, 'relative-time-checkbox') }}
+
+                        {% set title %}{% trans "Hours" %}{% endset %}
+                        {% set helpText %}{% trans "Hours this event should be scheduled for" %}{% endset %}
+                        {{ forms.number("hours", title, "", helpText, "duration-part relative-time-control") }}
+
+                        {% set title %}{% trans "Minutes" %}{% endset %}
+                        {% set helpText %}{% trans "Minutes this event should be scheduled for" %}{% endset %}
+                        {{ forms.number("minutes", title, "", helpText, "duration-part relative-time-control") }}
+
+                        {% set title %}{% trans "Seconds" %}{% endset %}
+                        {% set helpText %}{% trans "Seconds this event should be scheduled for" %}{% endset %}
+                        {{ forms.number("seconds", title, "", helpText, "schedule-now-seconds-field duration-part relative-time-control") }}
+
+                        {% set messageNoSyncTimezone %}{% trans %}Your event will be scheduled from [fromDt] to [toDt] in each of your selected Displays respective timezones{% endtrans %}{% endset %}
+                        {% set messageSyncTimezone %}{% trans %}Your event will be scheduled from [fromDt] to [toDt] in the CMS timezone, please check this covers each of your Displays in their respective timezones.{% endtrans %}{% endset %}
+                        <div class="alert alert-info scheduleNowMessage d-none relative-time-control" data-template-sync="{{ messageSyncTimezone }}" data-template-no-sync="{{ messageNoSyncTimezone }}"></div>
+
                         {% set title %}{% trans "Start Time" %}{% endset %}
                         {% set helpText %}{% trans "Select the start time for this event" %}{% endset %}
                         {{ forms.dateTime("fromDt", title, event.fromDt, helpText, "starttime-control", "required", "") }}
@@ -206,15 +226,15 @@
 
                         {% set title %}{% trans "Display Order" %}{% endset %}
                         {% set helpText %}{% trans "Please select the order this event should appear in relation to others when there is more than one event scheduled" %}{% endset %}
-                        {{ forms.number("displayOrder", title, event.displayOrder, helpText, 'displayOrder-control') }}
+                        {{ forms.number("displayOrder", title, event.displayOrder, helpText, 'displayOrder-control', "", "", "", "0") }}
 
                         {% set title %}{% trans "Priority" %}{% endset %}
                         {% set helpText %}{% trans "Sets the event priority - events with the highest priority play in preference to lower priority events." %}{% endset %}
-                        {{ forms.number("isPriority", title, event.isPriority, helpText, 'priority-control') }}
+                        {{ forms.number("isPriority", title, event.isPriority, helpText, 'priority-control', "", "", "", "0") }}
 
                         {% set title %}{% trans "Maximum plays per hour" %}{% endset %}
                         {% set helpText %}{% trans "Limit the number of times this event will play per hour on each display. For unlimited plays set to 0." %}{{ forms.playerCompat("R308", "", "", "", "R306", "") }}{% endset %}
-                        {{ forms.number("maxPlaysPerHour", title, event.maxPlaysPerHour, helpText, 'max-plays-control') }}
+                        {{ forms.number("maxPlaysPerHour", title, event.maxPlaysPerHour, helpText, 'max-plays-control', "", "", "", "0") }}
 
                         {% set title %}{% trans "Run at CMS Time?" %}{% endset %}
                         {% set helpText %}{% trans "When selected, your event will run according to the timezone set on the CMS, otherwise the event will run at Display local time" %}{% endset %}
@@ -291,7 +311,7 @@
                             <label class="col-sm-2 control-label" for="recurrenceDetail">{{ title }}</label>
                             <div class="col-sm-10">
                                 <div class="input-group">
-                                    <input class="form-control" name="recurrenceDetail" type="number" id="recurrenceDetail" value="{{ event.recurrenceDetail }}" />
+                                    <input class="form-control" name="recurrenceDetail" min="0" type="number" id="recurrenceDetail" value="{{ event.recurrenceDetail }}" />
                                     <div class="input-group-append">
                                         <span class="input-group-text input-group-addon"></span>
                                     </div>

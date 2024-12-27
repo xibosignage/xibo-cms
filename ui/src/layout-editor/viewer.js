@@ -19,7 +19,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* eslint-disable new-cap */
 // VIEWER Module
 
 // Load templates
@@ -191,10 +190,10 @@ Viewer.prototype.getLayoutOrientation = function(width, height) {
 /**
  * Render viewer
  * @param {object} forceReload - Force reload
- * @param {object} target - Reload only target
+ * @param {object} targets - Reload only targets
 */
-Viewer.prototype.render = function(forceReload = false, target = {}) {
-  const renderSingleObject = (!$.isEmptyObject(target));
+Viewer.prototype.render = function(forceReload = false, targets = {}) {
+  const renderOnlyTargets = (!$.isEmptyObject(targets));
 
   // Check background colour and set theme
   const hsvColor =
@@ -231,64 +230,89 @@ Viewer.prototype.render = function(forceReload = false, target = {}) {
   // Set reload to false
   this.reload = false;
 
-  if (renderSingleObject) {
+  if (renderOnlyTargets) {
+    const self = this;
+
     // Initialise moveable
     this.initMoveable();
 
-    const self = this;
-    const createCanvas = function() {
+    // Render targets
+    $(targets).each((_idx, target) => {
+      const $target = $(target);
+      const targetType = $target.data('type');
+      const createCanvas = function() {
+        if (
+          lD.layout.canvas &&
+          self.DOMObject.find('.designer-region-canvas').length === 0
+        ) {
+          self.DOMObject.find('.layout-live-preview').append(
+            `<div id="${lD.layout.canvas.id}" 
+              class="designer-region-canvas"
+              style="
+                position:absolute;
+                z-index: ${lD.layout.canvas.zIndex};">
+              </div>`,
+          );
+        }
+      };
+
+      // Render single target
       if (
-        lD.layout.canvas &&
-        self.DOMObject.find('.designer-region-canvas').length === 0
+        targetType === 'widget' ||
+        targetType === 'region'
       ) {
-        self.DOMObject.find('.layout-live-preview').append(
-          `<div id="${lD.layout.canvas.id}" 
-            class="designer-region-canvas"
-            style="
-              position:absolute;
-              z-index: ${lD.layout.canvas.zIndex};">
-            </div>`,
+        const regionId = (targetType === 'region') ?
+          $target.attr('id') :
+          $target.data('widgetRegion');
+        const regionToRender = lD.layout.regions[regionId];
+
+        // Add region template to viewer
+        this.DOMObject.find('#regions').append(viewerRegionTemplate(
+          regionToRender,
+        ));
+
+        // If it's a zone, just update the region dimensions
+        if (
+          targetType === 'region' &&
+          $target.data('subType') === 'zone'
+        ) {
+          this.updateRegion(regionToRender);
+        } else {
+          this.renderRegion(regionToRender);
+        }
+      } else if (targetType === 'element') {
+        createCanvas();
+
+        // Get element
+        const element = lD.getObjectByTypeAndId(
+          'element',
+          $target.attr('id'),
+          'widget_' + $target.data('regionId') + '_' + $target.data('widgetId'),
         );
+
+        // Render element
+        this.renderElement(element, lD.layout.canvas);
+      } else if (targetType === 'element-group') {
+        createCanvas();
+
+        // Get element group
+        const elementGroup = lD.getObjectByTypeAndId(
+          'element-group',
+          $target.attr('id'),
+          'widget_' + $target.data('regionId') + '_' + $target.data('widgetId'),
+        );
+
+        // Render all elements from group
+        Object.values(elementGroup.elements).forEach((element) => {
+          self.renderElement(element, lD.layout.canvas);
+        });
       }
-    };
 
-    // Render single object
-    if (
-      target.type === 'widget' ||
-      target.type === 'region'
-    ) {
-      const regionId = (target.type === 'region') ?
-        target.id :
-        target.regionId;
-      const regionToRender = lD.layout.regions[regionId];
-
-      // Add region template to viewer
-      this.DOMObject.find('#regions').append(viewerRegionTemplate(
-        regionToRender,
-      ));
-
-      // If it's a zone, just update the region dimensions
-      if (
-        target.type === 'region' &&
-        target.subType === 'zone'
-      ) {
-        this.updateRegion(regionToRender);
-      } else {
-        this.renderRegion(regionToRender);
+      // Delete temporary target
+      if ($target.hasClass('viewer-temporary-object')) {
+        $target.remove();
       }
-    } else if (target.type === 'element') {
-      createCanvas();
-
-      // Render element
-      this.renderElement(target, lD.layout.canvas);
-    } else if (target.type === 'element-group') {
-      createCanvas();
-
-      // Render all elements from group
-      Object.values(target.elements).forEach((element) => {
-        self.renderElement(element, lD.layout.canvas);
-      });
-    }
+    });
   } else {
     // Render full layout
     const $viewerContainer = this.DOMObject;
@@ -611,8 +635,13 @@ Viewer.prototype.handleInteractions = function() {
       tolerance: 'pointer',
       accept: (draggable) => {
         return (
-          $(draggable).data('type') === 'media' &&
-          $(draggable).data('subType') === 'image'
+          (
+            $(draggable).data('type') === 'media' &&
+            $(draggable).data('subType') === 'image'
+          ) || (
+            $(draggable).data('type') === 'widget' &&
+            $(draggable).data('subType') === 'image'
+          )
         );
       },
       drop: _.debounce(function(event, ui) {
@@ -992,20 +1021,21 @@ Viewer.prototype.handleInteractions = function() {
     });
 
   // Handle fullscreen button
-  $viewerContainer.siblings('#fullscreenBtn').off('click').click(function() {
-    this.reload = true;
-    this.toggleFullscreen();
-  }.bind(this));
+  $viewerContainer.siblings('#fullscreenBtn').off('click')
+    .on('click', function() {
+      this.reload = true;
+      this.toggleFullscreen();
+    }.bind(this));
 
   // Handle layer manager button
   $viewerContainer.siblings('#layerManagerBtn')
-    .off('click').click(function() {
+    .off('click').on('click', function() {
       this.layerManager.setVisible();
     }.bind(this));
 
   // Handle snap buttons
   $viewerContainerParent.find('#snapToGrid')
-    .off('click').click(function() {
+    .off('click').on('click', function() {
       this.moveableOptions.snapToGrid = !this.moveableOptions.snapToGrid;
 
       // Turn off snap to element if grid is on
@@ -1021,7 +1051,7 @@ Viewer.prototype.handleInteractions = function() {
     }.bind(this));
 
   $viewerContainerParent.find('#snapToBorders')
-    .off('click').click(function() {
+    .off('click').on('click', function() {
       this.moveableOptions.snapToBorders = !this.moveableOptions.snapToBorders;
 
       // Update moveable options
@@ -1032,7 +1062,7 @@ Viewer.prototype.handleInteractions = function() {
     }.bind(this));
 
   $viewerContainerParent.find('#snapToElements')
-    .off('click').click(function() {
+    .off('click').on('click', function() {
       this.moveableOptions.snapToElements =
         !this.moveableOptions.snapToElements;
 
@@ -1862,10 +1892,22 @@ Viewer.prototype.renderElementContent = function(
       $assetContainer.find('[data-style-template=' + template.templateId + ']')
         .length === 0
     ) {
+      function scopeCSS(css, scope) {
+        return css
+          .split('}')
+          .map((rule) => rule.trim() ? `${scope} ${rule.trim()}}` : '')
+          .join('\n')
+          .trim();
+      }
+
       const styleTemplate = Handlebars.compile(
         (stencil?.style) ?
-          stencil.style :
-          '',
+          scopeCSS(
+            stencil.style,
+            '[data-style-scope="' +
+            template.type + '_' + template.dataType +
+            '__' + template.templateId + '"]',
+          ) : '',
       );
 
       $(`<style data-style-template="${template.templateId}">`)
@@ -2790,10 +2832,20 @@ Viewer.prototype.initMoveable = function() {
     e.target.style.transform = e.drag.transform;
 
     // If selected object is a widget, get parent instead
-    const selectedObject = (lD.selectedObject.type == 'widget') ?
+    let selectedObject = (lD.selectedObject.type == 'widget') ?
       lD.selectedObject.parent : lD.selectedObject;
 
-    // Update element dimension properties
+    // If it's an element, we need to get the object from the actual structure
+    if (selectedObject.type == 'element') {
+      selectedObject =
+        lD.getObjectByTypeAndId(
+          'element',
+          selectedObject.elementId,
+          'widget_' + selectedObject.regionId + '_' + selectedObject.widgetId,
+        );
+    }
+
+    // Update object dimension properties
     selectedObject.transform({
       width: parseFloat(e.width / self.containerObjectDimensions.scale),
       height: parseFloat(e.height / self.containerObjectDimensions.scale),
@@ -2812,6 +2864,11 @@ Viewer.prototype.initMoveable = function() {
   }).on('resizeEnd', (e) => {
     // Save transformation
     transformSplit = saveTransformation(e.target);
+
+    // Check if item was not resized
+    if (transformSplit.length === 1) {
+      return;
+    }
 
     // Check if the region moved when resizing
     const moved = (
@@ -2850,7 +2907,7 @@ Viewer.prototype.initMoveable = function() {
       lD.selectedObject.type == 'element-group'
     ) && self.saveElementGroupProperties(
       e.target,
-      false,
+      true,
       true,
     );
   });
@@ -3025,24 +3082,14 @@ Viewer.prototype.saveRegionProperties = function(
   // if we just want to transform the region
   if (justTransform) {
     regionObject.transform(transform, true);
-  } else if (regionId == lD.selectedObject.id) {
-    // If we're saving the region, update it
-    regionObject.transform(transform, false);
-
-    if (typeof window.regionChangesForm === 'function') {
-      window.regionChangesForm();
-
-      // Save region form
-      lD.propertiesPanel.saveRegion();
-      (updateRegion) &&
-        lD.viewer.updateRegion(regionObject);
-    }
   } else if (
-    lD.selectedObject.parent &&
-    regionId == lD.selectedObject.parent.id
+    regionId == lD.selectedObject.id ||
+    (
+      lD.selectedObject.parent &&
+      regionId == lD.selectedObject.parent.id
+    )
   ) {
-    // If we're saving the region through the widget
-    // update parent region and update the position values on the form
+    // Update region
     regionObject.transform(transform, false);
 
     // Update position form values
@@ -3052,7 +3099,10 @@ Viewer.prototype.saveRegionProperties = function(
     forms.reloadRichTextFields(lD.propertiesPanel.DOMObject);
 
     // Save region but just the position properties
-    lD.propertiesPanel.saveRegion(true);
+    // save position form flag only for widget
+    lD.propertiesPanel.saveRegion(
+      !(regionId == lD.selectedObject.id),
+    );
     (updateRegion) &&
       lD.viewer.updateRegion(regionObject);
   }
@@ -3127,7 +3177,9 @@ Viewer.prototype.saveElementProperties = function(
 
   // Save elements
   if (save) {
-    parentWidget.saveElements();
+    parentWidget.saveElements({
+      reloadData: false,
+    });
   }
 };
 
@@ -3366,8 +3418,12 @@ Viewer.prototype.selectObject = function(
 Viewer.prototype.updateMoveable = function(
   updateTarget = false,
 ) {
-  // On read only mode, don't update moveable
-  if (this.parent.readOnlyMode) {
+  // On read only mode, or moveable is not defined
+  //  don't update
+  if (
+    this.moveable === null ||
+    this.parent.readOnlyMode
+  ) {
     return;
   }
 
@@ -4208,7 +4264,7 @@ Viewer.prototype.getMultipleSelected = function() {
         lD.getObjectByTypeAndId(objData.type, objId);
 
       // Can't be deleted, mark flag as false and break loop
-      if (auxObj.isDeletable === false) {
+      if (auxObj === undefined || auxObj.isDeletable === false) {
         canBeDeleted = false;
         return false;
       }

@@ -891,6 +891,7 @@ class Layout implements \JsonSerializable
             'import' => false,
             'appendCountOnDuplicate' => false,
             'setModifiedDt' => true,
+            'auditMessage' => null,
         ], $options);
 
         if ($options['validate']) {
@@ -909,12 +910,27 @@ class Layout implements \JsonSerializable
 
             if ($options['audit']) {
                 if ($this->parentId === null) {
-                    $this->audit($this->layoutId, 'Added', ['layoutId' => $this->layoutId, 'layout' => $this->layout, 'campaignId' => $this->campaignId]);
+                    $this->audit(
+                        $this->layoutId,
+                        $options['auditMessage'] ?? 'Added',
+                        [
+                            'layoutId' => $this->layoutId,
+                            'layout' => $this->layout,
+                            'campaignId' => $this->campaignId,
+                        ]
+                    );
                 } else {
-                    $this->audit($this->layoutId, 'Checked out', ['layoutId' => $this->parentId, 'layout' => $this->layout, 'campaignId' => $this->campaignId]);
+                    $this->audit(
+                        $this->layoutId,
+                        $options['auditMessage'] ?? 'Checked out',
+                        [
+                            'layoutId' => $this->parentId,
+                            'layout' => $this->layout,
+                            'campaignId' => $this->campaignId,
+                        ]
+                    );
                 }
             }
-
         } else if (($this->hash() != $this->hash && $options['saveLayout']) || $options['setBuildRequired']) {
             $this->update($options);
 
@@ -923,14 +939,14 @@ class Layout implements \JsonSerializable
                 $change['campaignId'][] = $this->campaignId;
 
                 if ($this->parentId === null) {
-                    $this->audit($this->layoutId, 'Updated', $change);
+                    $this->audit($this->layoutId, $options['auditMessage'] ?? 'Updated', $change);
                 } else {
-                    $this->audit($this->layoutId, 'Updated Draft', $change);
+                    $this->audit($this->layoutId, $options['auditMessage'] ?? 'Updated Draft', $change);
                 }
             }
-
         } else {
-            $this->getLog()->info('Save layout properties unchanged for layoutId ' . $this->layoutId . ', status = ' . $this->status);
+            $this->getLog()->info('Save layout properties unchanged for layoutId ' . $this->layoutId
+                . ', status = ' . $this->status);
         }
 
         if ($options['saveRegions']) {
@@ -2681,29 +2697,34 @@ class Layout implements \JsonSerializable
                         $child = $assignedPlaylistIds;
                     }
                 }
-            }
-        }
 
-        if (isset($parentId) && isset($child)) {
-            foreach ($child as $childId) {
-                $this->getLog()->debug('Manage closure table for parent ' . $parentId . ' and child ' . $childId);
+                if (isset($parentId) && isset($child)) {
+                    foreach ($child as $childId) {
+                        $this->getLog()->debug(
+                            'Manage closure table for parent ' . $parentId . ' and child ' . $childId
+                        );
 
-                if ($this->getStore()->exists('SELECT parentId, childId, depth FROM lkplaylistplaylist WHERE childId = :childId AND parentId = :parentId ', [//phpcs:ignore
-                    'parentId' => $parentId,
-                    'childId' => $childId
-                ])) {
-                    throw new InvalidArgumentException(__('Cannot add the same SubPlaylist twice.'), 'playlistId');
-                }
+                        if ($this->getStore()->exists('SELECT parentId, childId, depth FROM lkplaylistplaylist WHERE childId = :childId AND parentId = :parentId ', [//phpcs:ignore
+                            'parentId' => $parentId,
+                            'childId' => $childId
+                        ])) {
+                            throw new InvalidArgumentException(
+                                __('Cannot add the same SubPlaylist twice.'),
+                                'playlistId'
+                            );
+                        }
 
-                $this->getStore()->insert('
+                        $this->getStore()->insert('
                         INSERT INTO `lkplaylistplaylist` (parentId, childId, depth)
                         SELECT p.parentId, c.childId, p.depth + c.depth + 1
                           FROM lkplaylistplaylist p, lkplaylistplaylist c
                          WHERE p.childId = :parentId AND c.parentId = :childId
                     ', [
-                    'parentId' => $parentId,
-                    'childId' => $childId
-                ]);
+                            'parentId' => $parentId,
+                            'childId' => $childId
+                        ]);
+                    }
+                }
             }
         }
     }

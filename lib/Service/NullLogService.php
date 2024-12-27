@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -83,9 +83,12 @@ class NullLogService implements LogServiceInterface
     }
 
     /**
+     * @param $sql
+     * @param $params
+     * @param false $logAsError
      * @inheritdoc
      */
-    public function sql($sql, $params)
+    public function sql($sql, $params, $logAsError = false)
     {
        //
     }
@@ -206,6 +209,31 @@ class NullLogService implements LogServiceInterface
 
     /** @inheritDoc */
     public function setLevel($level)
+    {
+        //
+    }
+
+    public function getUserId(): ?int
+    {
+        return null;
+    }
+
+    public function getSessionHistoryId(): ?int
+    {
+        return null;
+    }
+
+    public function getRequestId(): ?int
+    {
+        return null;
+    }
+
+    public function setSessionHistoryId($sessionHistoryId)
+    {
+        //
+    }
+
+    public function setRequestId($requestId)
     {
         //
     }

@@ -19,7 +19,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* eslint-disable new-cap */
 // PROPERTIES PANEL Module
 
 const loadingTemplate = require('../templates/loading.hbs');
@@ -97,9 +96,8 @@ PropertiesPanel.prototype.save = function(
     target = app.selectedObject;
   }
 
-  // Check if target is playlist
-  const isPlaylist =
-    (target.type === 'region' && target.subType === 'playlist');
+  // Check if target is region
+  const isRegion = target.type === 'region';
 
   // Save original target
   const originalTarget = target;
@@ -167,7 +165,8 @@ PropertiesPanel.prototype.save = function(
     form.find('[name]');
 
   // Filter out position related fields
-  formFieldsToSave = (isPlaylist) ? formFieldsToSave :
+  // if not region
+  formFieldsToSave = (isRegion) ? formFieldsToSave :
     formFieldsToSave.filter('.tab-pane:not(#positionTab) [name]');
 
   // Get form old data
@@ -202,6 +201,8 @@ PropertiesPanel.prototype.save = function(
         customRequestPath: requestPath,
       },
     ).then((_res) => {
+      const data = _res;
+
       // Success
       app.common.hideLoadingScreen();
 
@@ -231,7 +232,8 @@ PropertiesPanel.prototype.save = function(
             mainObject,
             {
               reloadPropertiesPanel: false,
-            }).done(() => {
+            },
+          ).then(() => {
             if (!target.drawerWidget) {
               app.viewer.renderRegion(
                 app.getObjectByTypeAndId('region', target.regionId),
@@ -252,6 +254,15 @@ PropertiesPanel.prototype.save = function(
               reloadPropertiesPanel: false,
             },
           );
+        } else if (target.type === 'layout') {
+          // Update resolution id
+          app.layout.resolutionId = resolutionId;
+
+          // Update layout
+          app.layout.updateData(data.data);
+
+          // Render viewer to reflect changes
+          app.viewer.render(true);
         } else {
           // Reload data, and refresh viewer if layout
           // or if we're saving an element
@@ -297,11 +308,6 @@ PropertiesPanel.prototype.save = function(
               // If we're saving an element group, update bottom bar
               (savingElementGroup) &&
                 app.bottombar.render(originalTarget);
-            }
-
-            // If target was layout, update resolution id
-            if (originalTarget.type === 'layout') {
-              app.layout.resolutionId = resolutionId;
             }
 
             // If we're saving a region, update bottom bar
@@ -631,7 +637,7 @@ PropertiesPanel.prototype.render = function(
     // and exit transition
     if (target.type === 'region') {
       const regionType = (target.subType === 'frame') ?
-        'widget' : target.subType;
+        'widgetType' : target.subType;
       dataToRender.regionType = propertiesPanelTrans[regionType];
 
       if (
@@ -917,16 +923,15 @@ PropertiesPanel.prototype.render = function(
           // Create common fields
           const commonFields = [];
 
-          // TODO: for now we disable scaling type
           // Show scaling type if element is in a group
           if (
-            false &&
             targetAux.groupId != '' &&
             targetAux.groupId != undefined
           ) {
             commonFields.unshift(
               {
                 id: 'groupScale',
+                customClass: 'group-scale-properties',
                 title: propertiesPanelTrans.groupScale,
                 helpText: propertiesPanelTrans.groupScaleHelpText,
                 value: targetAux.groupScale,
@@ -934,31 +939,59 @@ PropertiesPanel.prototype.render = function(
                 visibility: [],
               },
               {
-                id: 'groupScaleType',
-                title: propertiesPanelTrans.groupScaleType,
-                helpText: propertiesPanelTrans.groupScaleTypeHelpText,
-                value: targetAux.groupScaleType,
+                id: 'groupScaleTypeH',
+                customClass: 'group-scale-properties',
+                title: propertiesPanelTrans.groupScaleTypeH,
+                helpText: propertiesPanelTrans.groupScaleTypeHHelpText,
+                value: targetAux.groupScaleTypeH,
                 options: [
                   {
-                    title: propertiesPanelTrans.groupScaleTypeOptions.topLeft,
-                    name: 'top_left',
+                    title: propertiesPanelTrans.groupScaleTypeOptions.left,
+                    name: 'left',
                   },
                   {
-                    title: propertiesPanelTrans.groupScaleTypeOptions.topRight,
-                    name: 'top_right',
+                    title: propertiesPanelTrans.groupScaleTypeOptions.center,
+                    name: 'center',
                   },
                   {
-                    title: propertiesPanelTrans
-                      .groupScaleTypeOptions.bottomLeft,
-                    name: 'bottom_left',
-                  },
-                  {
-                    title: propertiesPanelTrans
-                      .groupScaleTypeOptions.bottomRight,
-                    name: 'bottom_right',
+                    title: propertiesPanelTrans.groupScaleTypeOptions.right,
+                    name: 'right',
                   },
                 ],
-                type: 'dropdown',
+                type: 'buttonSwitch',
+                visibility: [
+                  {
+                    conditions: [
+                      {
+                        field: 'groupScale',
+                        type: 'eq',
+                        value: '0',
+                      },
+                    ],
+                  },
+                ],
+              },
+              {
+                id: 'groupScaleTypeV',
+                customClass: 'group-scale-properties',
+                title: propertiesPanelTrans.groupScaleTypeV,
+                helpText: propertiesPanelTrans.groupScaleTypeVHelpText,
+                value: targetAux.groupScaleTypeV,
+                options: [
+                  {
+                    title: propertiesPanelTrans.groupScaleTypeOptions.top,
+                    name: 'top',
+                  },
+                  {
+                    title: propertiesPanelTrans.groupScaleTypeOptions.middle,
+                    name: 'middle',
+                  },
+                  {
+                    title: propertiesPanelTrans.groupScaleTypeOptions.bottom,
+                    name: 'bottom',
+                  },
+                ],
+                type: 'buttonSwitch',
                 visibility: [
                   {
                     conditions: [
@@ -1230,7 +1263,7 @@ PropertiesPanel.prototype.render = function(
       }
     }
 
-    // If target is a widget or element
+    // If target is a widget, element, element-group or region
     // and we are in the Layout Editor
     // render position tab with region or element position
     if (
@@ -1241,7 +1274,7 @@ PropertiesPanel.prototype.render = function(
           // Don't show for drawer widget
           target.drawerWidget != true
         ) ||
-        target.subType === 'playlist' ||
+        target.type === 'region' ||
         isElementGroup
       )
     ) {
@@ -1251,34 +1284,34 @@ PropertiesPanel.prototype.render = function(
         if (isElementGroup) {
           positionProperties = {
             type: 'element-group',
-            top: targetAux.top,
-            left: targetAux.left,
-            width: targetAux.width,
-            height: targetAux.height,
+            top: Math.round(targetAux.top),
+            left: Math.round(targetAux.left),
+            width: Math.round(targetAux.width),
+            height: Math.round(targetAux.height),
             zIndex: targetAux.layer,
           };
         } else if (targetAux?.type === 'element') {
           positionProperties = {
             type: 'element',
-            top: targetAux.top,
-            left: targetAux.left,
-            width: targetAux.width,
-            height: targetAux.height,
+            top: Math.round(targetAux.top),
+            left: Math.round(targetAux.left),
+            width: Math.round(targetAux.width),
+            height: Math.round(targetAux.height),
             zIndex: targetAux.layer,
           };
 
           if (targetAux.canRotate) {
             positionProperties.rotation = targetAux.rotation;
           }
-        } else if (target.subType === 'playlist') {
+        } else if (target.type === 'region') {
           positionProperties = {
             type: 'region',
             regionType: target.subType,
             regionName: target.name,
-            top: target.dimensions.top,
-            left: target.dimensions.left,
-            width: target.dimensions.width,
-            height: target.dimensions.height,
+            top: Math.round(target.dimensions.top),
+            left: Math.round(target.dimensions.left),
+            width: Math.round(target.dimensions.width),
+            height: Math.round(target.dimensions.height),
             zIndex: target.zIndex,
           };
         } else {
@@ -1286,10 +1319,10 @@ PropertiesPanel.prototype.render = function(
             type: 'region',
             regionType: target.parent.subType,
             regionName: target.parent.name,
-            top: target.parent.dimensions.top,
-            left: target.parent.dimensions.left,
-            width: target.parent.dimensions.width,
-            height: target.parent.dimensions.height,
+            top: Math.round(target.parent.dimensions.top),
+            left: Math.round(target.parent.dimensions.left),
+            width: Math.round(target.parent.dimensions.width),
+            height: Math.round(target.parent.dimensions.height),
             zIndex: target.parent.zIndex,
           };
         }
@@ -1298,7 +1331,9 @@ PropertiesPanel.prototype.render = function(
         const positionTemplate = formTemplates.position;
 
         // Add position tab after advanced tab
-        self.DOMObject.find('[href="#advancedTab"]').parent()
+        self.DOMObject.find(
+          '[href="#advancedTab"], [href="#transitionTab"]',
+        ).parent()
           .after(`<li class="nav-item">
             <a class="nav-link" href="#positionTab"
               data-toggle="tab">
@@ -1332,7 +1367,7 @@ PropertiesPanel.prototype.render = function(
               (positionProperties.showElementGroupLayer = true);
         }
 
-        self.DOMObject.find('#advancedTab').after(
+        self.DOMObject.find('#advancedTab, #transitionTab').after(
           positionTemplate(
             Object.assign(positionProperties, {trans: propertiesPanelTrans}),
           ),
@@ -1534,8 +1569,9 @@ PropertiesPanel.prototype.render = function(
             const viewerScale = lD.viewer.containerObjectDimensions.scale;
 
             if (targetAux == undefined) {
-              // Widget
-              const regionId = target.parent.id;
+              // Widget or region
+              const regionId = (target.type === 'region') ?
+                target.id : target.parent.id;
 
               lD.layout.regions[regionId].transform({
                 width: lD.layout.width,
@@ -1610,7 +1646,9 @@ PropertiesPanel.prototype.render = function(
 
             if (targetAux == undefined) {
               // Widget
-              const regionId = target.parent.id;
+              const regionId = (target.type === 'region') ?
+                target.id :
+                target.parent.id;
 
               newPosition =
                 calculateNewPosition(lD.layout.regions[regionId].dimensions);
@@ -1696,6 +1734,11 @@ PropertiesPanel.prototype.render = function(
             // Update moveable
             lD.viewer.updateMoveable();
           });
+
+        // Check if we have group scale properties for elements
+        // and move them to the top of the position tab
+        self.DOMObject.find('#appearanceTab .group-scale-properties')
+          .prependTo(self.DOMObject.find('#positionTab'));
       };
 
       // If it's an element, get properties, first to update it
@@ -1784,7 +1827,7 @@ PropertiesPanel.prototype.render = function(
                 mainObject,
                 {
                   reloadPropertiesPanel: false,
-                }).done(() => {
+                }).then(() => {
                 if (!target.drawerWidget) {
                   app.viewer.renderRegion(
                     app.getObjectByTypeAndId('region', target.regionId),
@@ -1930,7 +1973,7 @@ PropertiesPanel.prototype.initFields = function(
   if (!readOnlyModeOn) {
     // Handle buttons
     self.DOMObject.find('.properties-panel-btn:not(.inline-btn)')
-      .off().click(function(e) {
+      .off().on('click', function(e) {
         if ($(e.target).data('action')) {
           self[$(e.target).data('action')](
             target,
@@ -1938,17 +1981,18 @@ PropertiesPanel.prototype.initFields = function(
           );
         }
       });
+  }
 
-    // Render action tab
-    if (
-      app.mainObjectType === 'layout' &&
-      !targetIsElement
-    ) {
-      self.renderActionTab(target, {
-        reattach: actionEditMode || selectActionTab,
-        selectAfterRender: selectActionTab,
-      });
-    }
+  // Render action tab
+  if (
+    app.mainObjectType === 'layout' &&
+    !targetIsElement // Filter out elements for now
+  ) {
+    self.renderActionTab(target, {
+      reattach: actionEditMode || selectActionTab,
+      selectAfterRender: selectActionTab,
+      readOnlyMode: readOnlyModeOn,
+    });
   }
 
   // Xibo Init options
@@ -2174,7 +2218,10 @@ PropertiesPanel.prototype.saveRegion = function(
     return false;
   }
 
-  const region = (savePositionForm) ?
+  const region = (
+    savePositionForm &&
+    app.selectedObject.type != 'region'
+  ) ?
     app.selectedObject.parent :
     app.selectedObject;
   const formNewData = form.serialize();
@@ -2236,6 +2283,8 @@ PropertiesPanel.prototype.saveRegion = function(
  * @param {object/boolean=} [options.selectAfterRender = false]
  *   - select the tab when rendered
  * @param {object/string=} [options.openEditActionAfterRender = null]
+ *   - read only mode
+ * @param {object/boolean=} [options.readOnlyMode = false]
  */
 PropertiesPanel.prototype.renderActionTab = function(
   object,
@@ -2244,6 +2293,7 @@ PropertiesPanel.prototype.renderActionTab = function(
     clearPrevious = false,
     selectAfterRender = false,
     openEditActionAfterRender = null,
+    readOnlyMode = false,
   } = {},
 ) {
   const self = this;
@@ -2311,6 +2361,8 @@ PropertiesPanel.prototype.renderActionTab = function(
             object,
             $itemActionsContainer,
             $otherActionsContainer,
+            null,
+            !readOnlyMode,
           );
         });
       }
@@ -2362,6 +2414,7 @@ PropertiesPanel.prototype.renderActionTab = function(
  * @param {object} $containerSelected
  * @param {object} $containerOther
  * @param {object} $elementToBeReplaced
+ * @param {boolean} editMode
  */
 PropertiesPanel.prototype.addActionToContainer = function(
   action,
@@ -2369,6 +2422,7 @@ PropertiesPanel.prototype.addActionToContainer = function(
   $containerSelected = null,
   $containerOther = null,
   $elementToBeReplaced = null,
+  editMode = true,
 ) {
   const self = this;
   const app = this.parent;
@@ -2440,6 +2494,7 @@ PropertiesPanel.prototype.addActionToContainer = function(
   // Create action and add to container
   const newAction = actionFormObjectTemplate($.extend({}, action, {
     trans: propertiesPanelTrans.actions,
+    editMode: editMode,
   }));
 
   // Save data and add to container
@@ -2466,19 +2521,21 @@ PropertiesPanel.prototype.addActionToContainer = function(
   );
 
   // Handle buttons
-  $newAction.find('.action-btn').click(function(e) {
-    const btnAction = $(e.currentTarget).data('action');
+  if (editMode) {
+    $newAction.find('.action-btn').on('click', function(e) {
+      const btnAction = $(e.currentTarget).data('action');
 
-    if (btnAction == 'delete') {
-      app.deleteAction(
-        $(e.currentTarget).parents('.action-element'),
-      );
-    }
+      if (btnAction == 'delete') {
+        app.deleteAction(
+          $(e.currentTarget).parents('.action-element'),
+        );
+      }
 
-    if (btnAction == 'edit') {
-      self.openEditAction($(e.currentTarget).parents('.action-element'));
-    }
-  });
+      if (btnAction == 'edit') {
+        self.openEditAction($(e.currentTarget).parents('.action-element'));
+      }
+    });
+  }
 
   // Replace or add element
   if ($elementToBeReplaced) {
@@ -2624,7 +2681,7 @@ PropertiesPanel.prototype.openEditAction = function(action) {
     },
   );
 
-  // Run XiboInitialise on form
+  // Run xiboInitialise on form
   XiboInitialise('.action-element-form');
 
   return true;
@@ -2850,7 +2907,7 @@ PropertiesPanel.prototype.showWidgetControl = function(target) {
             {
               reloadPropertiesPanel: false,
             },
-          ).done(() => {
+          ).then(() => {
             // Add options to dropdown
             const $select =
               $canvasWidgetSelectorControl.find('select');

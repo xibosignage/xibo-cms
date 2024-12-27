@@ -1,7 +1,7 @@
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -19,6 +19,10 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+// Import templates
+const templateLayoutAddForm =
+  require('../templates/campaign-builder-layout-add-form-template.hbs');
+
 // Include public path for webpack
 require('../../public_path');
 require('../style/campaign-builder.scss');
@@ -27,7 +31,6 @@ require('../style/campaign-builder.scss');
 window.cB = {
   $container: null,
   $layoutSelect: null,
-  templateLayoutAddForm: null,
   layoutAssignments: null,
   map: null,
 
@@ -227,15 +230,16 @@ window.cB = {
   },
 
   openLayoutForm: function(layout, title) {
-    if (this.templateLayoutAddForm === null) {
-      this.templateLayoutAddForm =
-        Handlebars.compile(
-          $('#campaign-builder-layout-add-form-template').html(),
-        );
-    }
-
     // Open a modal
-    const formHtml = this.templateLayoutAddForm(layout);
+    // with default vars, layout info and translations
+    const formHtml = templateLayoutAddForm(
+      {
+        ...campaignBuilderDefaultVars,
+        ...layout,
+        ...{
+          trans: campaignBuilderTrans,
+        },
+      });
     const $dialog = bootbox.dialog({
       title: title,
       message: formHtml,
@@ -245,7 +249,6 @@ window.cB = {
           label: campaignBuilderTrans.cancelButton,
           className: 'btn-white',
           callback: () => {
-            // eslint-disable-next-line new-cap
             XiboDialogClose();
           },
         },
@@ -280,45 +283,32 @@ window.cB = {
       // Load a map
       cB.initialiseMap('campaign-builder-map', $dialog);
 
-      $dialog.find('.XiboForm').validate({
-        submitHandler: function(form) {
-          // eslint-disable-next-line new-cap
-          XiboFormSubmit($(form), null, () => {
-            // Is this an add or an edit?
-            const displayOrder = $form.data('existingDisplayOrder');
-            if (displayOrder && parseInt(displayOrder) > 0) {
-              // Delete the existing assignment
-              $.ajax({
-                method: 'delete',
-                url: $form.data('assignmentRemoveUrl') +
-                  '&displayOrder=' + displayOrder,
-                complete: () => {
-                  refreshLayoutAssignmentsTable();
-                },
-              });
-            } else {
-              refreshLayoutAssignmentsTable();
-            }
-          });
+      // Validate form
+      forms.validateForm(
+        $dialog.find('.XiboForm'), // form
+        $dialog, // container
+        {
+          submitHandler: function(form) {
+            XiboFormSubmit($(form), null, () => {
+              // Is this an add or an edit?
+              const displayOrder = $form.data('existingDisplayOrder');
+              if (displayOrder && parseInt(displayOrder) > 0) {
+                // Delete the existing assignment
+                $.ajax({
+                  method: 'delete',
+                  url: $form.data('assignmentRemoveUrl') +
+                    '&displayOrder=' + displayOrder,
+                  complete: () => {
+                    refreshLayoutAssignmentsTable();
+                  },
+                });
+              } else {
+                refreshLayoutAssignmentsTable();
+              }
+            });
+          },
         },
-        errorElement: 'span',
-        highlight: function(element) {
-          $(element).closest('.form-group')
-            .removeClass('has-success')
-            .addClass('has-error');
-        },
-        success: function(element) {
-          $(element).closest('.form-group')
-            .removeClass('has-error')
-            .addClass('has-success');
-        },
-        invalidHandler: function(event, validator) {
-          // Remove the spinner
-          $(this).closest('.modal-dialog').find('.saving').remove();
-          $(this).closest('.modal-dialog').find('.save-button')
-            .removeClass('disabled');
-        },
-      });
+      );
     }).on('hidden.bs.modal', function() {
       // Clear the layout select
       if (cB.$layoutSelect) {
@@ -328,7 +318,6 @@ window.cB = {
   },
 
   initialiseLayoutAssignmentsTable: function($selector) {
-    // eslint-disable-next-line new-cap
     this.layoutAssignments = $selector.DataTable({
       language: dataTablesLanguage,
       responsive: true,
@@ -408,7 +397,7 @@ window.cB = {
               {
                 id: 'assignment_button_delete',
                 text: campaignBuilderTrans.assignmentDeleteButton,
-                url: $selector.data('assignmentDeleteUrl')+
+                url: $selector.data('assignmentDeleteUrl') +
                   '?displayOrder=' + data.displayOrder,
               },
             ];
@@ -423,8 +412,7 @@ window.cB = {
       const $target = $('#' + e.target.id);
       $target.find('.button-assignment-remove').on('click', function(e) {
         e.preventDefault();
-        // eslint-disable-next-line no-invalid-this
-        const $button = $(this);
+        const $button = $(e.currentTarget);
         if ($button.hasClass('assignment_button_edit')) {
           // Open a form.
           cB.openLayoutForm(
@@ -435,7 +423,6 @@ window.cB = {
         return false;
       });
 
-      // eslint-disable-next-line new-cap
       XiboInitialise('#' + e.target.id);
     });
   },

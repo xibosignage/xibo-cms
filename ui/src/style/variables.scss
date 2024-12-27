@@ -75,9 +75,16 @@ $properties-panel-rich-text-container-z-index: 1050;
 
 $preview-playing-z-index: 2000;
 
+
+$code-editor-fullscreen-overlay-z-index: 2030;
+$code-editor-fullscreen-z-index: 2040;
+
 $bootbox-second-dialog-z-index: 3100;
 $context-menu-overlay-z-index: 3000;
 $loading-overlay-z-index: 3000;
+
+$min-res-message-overlay-z-index: 4000;
+$min-res-message-z-index: 4010;
 
 // DIMENSIONS
 $toolbar-width: 60px;

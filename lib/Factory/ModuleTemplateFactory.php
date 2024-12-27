@@ -340,7 +340,7 @@ class ModuleTemplateFactory extends BaseFactory
             $template->templateId = $row['templateId'];
             $template->dataType = $row['dataType'];
             $template->isEnabled = $row['enabled'] == 1;
-            $template->ownerId = intval($row['ownerId']);
+            $template->ownerId = intval($row['ownerId'] ?? 0);
             $template->groupsWithPermissions = $row['groupsWithPermissions'];
             $templates[] = $template;
         }
@@ -414,6 +414,7 @@ class ModuleTemplateFactory extends BaseFactory
         $template->type = $this->getFirstValueOrDefaultFromXmlNode($xml, 'type');
         $template->dataType = $this->getFirstValueOrDefaultFromXmlNode($xml, 'dataType');
         $template->title = __($this->getFirstValueOrDefaultFromXmlNode($xml, 'title'));
+        $template->description = __($this->getFirstValueOrDefaultFromXmlNode($xml, 'description'));
         $template->thumbnail = $this->getFirstValueOrDefaultFromXmlNode($xml, 'thumbnail');
         $template->icon = $this->getFirstValueOrDefaultFromXmlNode($xml, 'icon');
         $template->isVisible = $this->getFirstValueOrDefaultFromXmlNode($xml, 'isVisible') !== 'false';

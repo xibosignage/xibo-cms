@@ -19,7 +19,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* eslint-disable new-cap */
 // Load templates
 const ToolbarTemplate = require('../templates/toolbar.hbs');
 const ToolbarCardMediaTemplate = require('../templates/toolbar-card-media.hbs');
@@ -614,29 +613,6 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
       state: '',
       itemCount: 0,
     },
-    {
-      name: 'layout_exchange',
-      disabled: isPlaylist,
-      itemName: toolbarTrans.menuItems.layoutExchangeName,
-      itemIcon: 'exchange-alt', // TODO: Change icon!
-      itemTitle: toolbarTrans.menuItems.layoutExchangeTitle,
-      contentType: 'layout_exchange',
-      filters: {
-        name: {
-          value: '',
-          key: 'template',
-        },
-        provider: {
-          value: 'remote',
-          locked: true,
-        },
-        orientation: {
-          value: '',
-        },
-      },
-      state: '',
-      itemCount: 0,
-    },
   ];
 
   // Menu items
@@ -668,7 +644,71 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
   this.moduleListOtherTypes = moduleListOtherTypes;
   this.moduleGroups = moduleGroups;
 
-  // Get providers
+  // Get template providers
+  $.ajax(urlsForApi.template.getProviders).done(function(res) {
+    // Stop if not available
+    if (Object.keys(self).length === 0) {
+      return;
+    }
+
+    if (
+      Array.isArray(res)
+    ) {
+      res.forEach((provider) => {
+        // Add provider to menu items
+        self.menuItems.push(
+          {
+            name: provider.id,
+            disabled: isPlaylist,
+            itemName: provider.message,
+            // link: provider.link,
+            itemTitle: toolbarTrans.menuItems
+              .layoutExchangeTitle.replace('%obj%', provider.message),
+            itemIcon: provider.iconUrl,
+            contentType: 'template_exchange',
+            filters: {
+              name: {
+                value: '',
+                key: 'template',
+              },
+              provider: {
+                value: 'remote',
+                locked: true,
+              },
+              orientation: {
+                value: '',
+              },
+            },
+            state: '',
+            itemCount: 0,
+          });
+      });
+    } else {
+      // Login Form needed?
+      if (res.login) {
+        window.location.href = window.location.href;
+        location.reload();
+      } else {
+        // Just an error we dont know about
+        if (res.message == undefined) {
+          console.error(res);
+        } else {
+          console.error(res.message);
+        }
+      }
+    }
+
+    // Render
+    self.render();
+  }).catch(function(jqXHR, textStatus, errorThrown) {
+    console.error(jqXHR, textStatus, errorThrown);
+    console.error(errorMessagesTrans.getProvidersFailed);
+
+    // Render
+    self.render();
+  });
+
+  // Get media providers
   $.ajax(urlsForApi.media.getProviders).done(function(res) {
     // Stop if not available
     if (Object.keys(self).length === 0) {
@@ -1118,7 +1158,7 @@ Toolbar.prototype.render = function({savePrefs = true} = {}) {
         const toolbar = self;
         const index = i;
 
-        this.DOMObject.find('#btn-menu-' + index).click(function() {
+        this.DOMObject.find('#btn-menu-' + index).on('click', function() {
           toolbar.openMenu(index);
         });
       }
@@ -1160,7 +1200,7 @@ Toolbar.prototype.render = function({savePrefs = true} = {}) {
     });
 
   this.DOMObject.find('.toolbar-level-control-select')
-    .on('click', (ev) => {
+    .on('click', '.toolbar-level-control', (ev) => {
       const newLevel = $(ev.target).data('level');
 
       // Close menu
@@ -1270,6 +1310,11 @@ Toolbar.prototype.loadContent = function(
   // Create content
   this.createContent(menu, forceReload);
 
+  // Prevent default form submit
+  this.DOMObject.find('#content-' + menu + ' form').submit(function(e) {
+    e.preventDefault();
+  });
+
   // Save user preferences
   (savePrefs) && this.savePrefs();
 };
@@ -1313,6 +1358,9 @@ Toolbar.prototype.createContent = function(
     // Adapt card behaviour to current tab
     self.handleCardsBehaviour();
 
+    // Reload tooltips
+    app.common.reloadTooltips(self.DOMObject);
+
     return;
   }
 
@@ -1328,7 +1376,7 @@ Toolbar.prototype.createContent = function(
     this.elementsContentCreateWindow(menu, savePrefs);
   } else if (
     content.contentType === 'layout_templates' ||
-    content.contentType === 'layout_exchange'
+    content.contentType === 'template_exchange'
   ) {
     this.layoutTemplatesContentCreateWindow(menu);
   } else if (content.contentType === 'playlists') {
@@ -1582,8 +1630,13 @@ Toolbar.prototype.handleDroppables = function(draggable, customClasses = '') {
 
     // Image placeholder
     if (
-      $(draggable).data('type') === 'media' &&
-      $(draggable).data('subType') === 'image'
+      (
+        $(draggable).data('type') === 'media' &&
+        $(draggable).data('subType') === 'image'
+      ) || (
+        $(draggable).data('type') === 'widget' &&
+        $(draggable).data('subType') === 'image'
+      )
     ) {
       selectorBuild.push(
         '.designer-element[data-sub-type="image_placeholder"]',
@@ -2287,7 +2340,7 @@ Toolbar.prototype.mediaContentPopulateTable = function(menu) {
     dataTableDraw(e, settings);
 
     // Clicky on the +spans
-    self.DOMObject.find('.assignItem').click(function(ev) {
+    self.DOMObject.find('.assignItem').on('click', function(ev) {
       const $target = $(ev.currentTarget);
       // Get the row that this is in.
       const data = mediaTable.row($target.closest('tr')).data();
@@ -2459,7 +2512,7 @@ Toolbar.prototype.elementsContentCreateWindow = function(
 Toolbar.prototype.layoutTemplatesContentCreateWindow = function(menu) {
   const self = this;
   const app = this.parent;
-  const tabContentName = this.menuItems[menu].name;
+  const tabContentType = this.menuItems[menu].contentType;
 
   // Deselect previous selections
   self.deselectCardsAndDropZones();
@@ -2470,18 +2523,19 @@ Toolbar.prototype.layoutTemplatesContentCreateWindow = function(menu) {
     filters: this.menuItems[menu].filters,
     trans: toolbarTrans,
     formClass: 'layout_tempates-search-form',
-    headerMessage: (tabContentName == 'layout_exchange') ?
-      toolbarTrans.layoutExchangeTemplatesMessage :
+    headerMessage: (tabContentType == 'template_exchange') ?
+      toolbarTrans.layoutExchangeTemplatesMessage
+        .replace('%obj%', this.menuItems[menu].itemName) :
       toolbarTrans.layoutTemplatesMessage,
   });
 
   // Clear temp data
   app.common.clearContainer(
-    self.DOMObject.find('#' + tabContentName + '-container-' + menu),
+    self.DOMObject.find('#' + tabContentType + '-container-' + menu),
   );
 
   // Append template to the search main div
-  self.DOMObject.find('#' + tabContentName + '-container-' + menu).html(html);
+  self.DOMObject.find('#' + tabContentType + '-container-' + menu).html(html);
 
   // Load content
   this.layoutTemplatesContentPopulate(menu);
@@ -2519,9 +2573,9 @@ Toolbar.prototype.playlistsContentCreateWindow = function(menu) {
 Toolbar.prototype.layoutTemplatesContentPopulate = function(menu) {
   const app = this.parent;
   const self = this;
-  const tabContentName = this.menuItems[menu].name;
+  const tabContentType = this.menuItems[menu].contentType;
   const $container = self.DOMObject.find(
-    '#' + tabContentName + '-container-' + menu,
+    '#' + tabContentType + '-container-' + menu,
   );
   const $content = self.DOMObject.find('#media-content-' + menu);
   const $searchForm = $container.parent().find('.toolbar-search-form');
@@ -3220,7 +3274,7 @@ Toolbar.prototype.handleCardsBehaviour = function() {
       '#media-content-' +
       this.openedMenu +
       ' .select-button:not(.select-upload)').off('click')
-      .click(function(e) {
+      .on('click', function(e) {
         // Stop propagation
         e.stopPropagation();
 
@@ -3247,7 +3301,7 @@ Toolbar.prototype.handleCardsBehaviour = function() {
       '#media-content-' +
       this.openedMenu +
       ' .preview-button',
-    ).off('click').click(function(e) {
+    ).off('click').on('click', function(e) {
       // Stop propagation
       e.stopPropagation();
 
@@ -3286,6 +3340,9 @@ Toolbar.prototype.handleCardsBehaviour = function() {
         }
       });
   }
+
+  // Reload tooltips
+  app.common.reloadTooltips(self.DOMObject);
 };
 
 /**

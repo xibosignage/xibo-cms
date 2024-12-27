@@ -310,14 +310,14 @@ class Widget extends Base
     }
 
     /**
-     * Edit Widget Form
+     * Get Widget
      * @param Request $request
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function editWidgetForm(Request $request, Response $response, $id)
+    public function getWidget(Request $request, Response $response, $id)
     {
         // Load the widget
         $widget = $this->widgetFactory->loadByWidgetId($id);
@@ -595,44 +595,6 @@ class Widget extends Base
             'message' => sprintf(__('Edited %s'), $module->name),
             'id' => $widget->widgetId,
             'data' => $widget
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Delete Widget Form
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     */
-    public function deleteWidgetForm(Request $request, Response $response, $id)
-    {
-        $widget = $this->widgetFactory->loadByWidgetId($id);
-
-        if (!$this->getUser()->checkDeleteable($widget)) {
-            throw new AccessDeniedException(__('This Widget is not shared with you with delete permission'));
-        }
-
-        $error = false;
-        $module = null;
-        try {
-            $module = $this->moduleFactory->getByType($widget->type);
-        } catch (NotFoundException $notFoundException) {
-            $error = true;
-        }
-
-        // Pass to view
-        $this->getState()->template = 'module-form-delete';
-        $this->getState()->setData([
-            'widgetId' => $id,
-            'module' => $module,
-            'error' => $error,
         ]);
 
         return $this->render($request, $response);
@@ -1782,6 +1744,9 @@ class Widget extends Base
         // Parse the element JSON to see if we need to set `itemsPerPage`
         $slots = [];
         $uniqueSlots = 0;
+        $isMediaOnlyWidget = true;
+        $maxDuration = 1;
+
         foreach ($elementJson as $widgetElement) {
             foreach ($widgetElement['elements'] ?? [] as $element) {
                 $slotNo = 'slot_' . ($element['slot'] ?? 0);
@@ -1796,10 +1761,13 @@ class Widget extends Base
 
                     if (!in_array($mediaId, $existingMediaIds)) {
                         // Make sure it exists, and we have permission to use it.
-                        $this->mediaFactory->getById($mediaId, false);
+                        $media = $this->mediaFactory->getById($mediaId, false);
+                        $maxDuration = $media->duration ?? 10;
                     }
                     $widget->assignMedia($mediaId);
                     $newMediaIds[] = $mediaId;
+                } else {
+                    $isMediaOnlyWidget = false;
                 }
             }
         }
@@ -1827,6 +1795,21 @@ class Widget extends Base
             if (!in_array($existingMediaId, $newMediaIds)) {
                 $widget->unassignMedia($existingMediaId);
             }
+        }
+
+        // Canvas-only layout without a custom duration
+        if ($widget->type == 'global' && $isMediaOnlyWidget && $widget->useDuration == 0) {
+            // Do we need to recalculate the duration?
+            if (count($newMediaIds) < count($existingMediaIds)) {
+                foreach ($newMediaIds as $newMediaId) {
+                    $media = $this->mediaFactory->getById($newMediaId, false);
+                    $maxDuration = max($media->duration, $maxDuration);
+                }
+            } else {
+                $maxDuration = max($widget->calculatedDuration, $maxDuration);
+            }
+
+            $widget->calculatedDuration = $maxDuration;
         }
 
         // Save, without auditing widget options.

@@ -1,4 +1,3 @@
-/* eslint-disable new-cap */
 // ELEMENT Module
 
 /**
@@ -40,7 +39,12 @@ const Element = function(data, widgetId, regionId, parentWidget) {
 
   // Set element to have same properties for edit and delete as parent widget
   this.isEditable = (parentWidget) ? parentWidget.isEditable : true;
-  this.isDeletable = (parentWidget) ? parentWidget.isDeletable : true;
+  // For elements to be deletable, the parent widget also needs to be editable
+  this.isDeletable = (parentWidget) ?
+    (
+      parentWidget.isDeletable &&
+      parentWidget.isEditable
+    ) : true;
   this.isViewable = (parentWidget) ? parentWidget.isViewable : true;
 
   // Check if the element is visible on rendering ( true by default )
@@ -62,8 +66,10 @@ const Element = function(data, widgetId, regionId, parentWidget) {
   // Group scale
   this.groupScale = (data.groupScale != undefined) ?
     data.groupScale : 1;
-  this.groupScaleType = (data.groupScaleType != undefined) ?
-    data.groupScaleType : 'top_left';
+  this.groupScaleTypeV = (data.groupScaleTypeV != undefined) ?
+    data.groupScaleTypeV : 'top';
+  this.groupScaleTypeH = (data.groupScaleTypeH != undefined) ?
+    data.groupScaleTypeH : 'left';
 
   // Animation effect
   this.effect = data.effect || 'noTransition';

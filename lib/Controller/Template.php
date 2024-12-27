@@ -22,11 +22,13 @@
 namespace Xibo\Controller;
 
 use Parsedown;
+use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\SearchResult;
 use Xibo\Entity\SearchResults;
 use Xibo\Event\TemplateProviderEvent;
+use Xibo\Event\TemplateProviderListEvent;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -766,5 +768,22 @@ class Template extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Get list of Template providers with their details.
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return Response|ResponseInterface
+     */
+    public function providersList(Request $request, Response $response): Response|\Psr\Http\Message\ResponseInterface
+    {
+        $event = new TemplateProviderListEvent();
+        $this->getDispatcher()->dispatch($event, $event->getName());
+
+        $providers = $event->getProviders();
+
+        return $response->withJson($providers);
     }
 }

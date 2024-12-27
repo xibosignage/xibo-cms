@@ -52,7 +52,7 @@ PlaylistTimeline.prototype.render = function() {
   this.updateInfo();
 
   // Enable select for each widget
-  this.DOMObject.find('.playlist-widget.selectable').click(function(e) {
+  this.DOMObject.find('.playlist-widget.selectable').on('click', function(e) {
     e.stopPropagation();
     if (!$(e.currentTarget).hasClass('to-be-saved')) {
       pE.selectObject({target: $(e.currentTarget)});
@@ -73,7 +73,7 @@ PlaylistTimeline.prototype.render = function() {
     },
   });
 
-  this.DOMObject.find('.timeline-overlay-step').click(function(e) {
+  this.DOMObject.find('.timeline-overlay-step').on('click', function(e) {
     if (
       !$.isEmptyObject(pE.toolbar.selectedCard) ||
       !$.isEmptyObject(pE.toolbar.selectedQueue)
@@ -111,7 +111,7 @@ PlaylistTimeline.prototype.render = function() {
   // Handle widget attached audio click
   this.DOMObject.find(
     '.playlist-widget.editable .editProperty',
-  ).click(function(e) {
+  ).on('click', function(e) {
     e.stopPropagation();
 
     const widget =
