@@ -9,7 +9,6 @@ on:
       - release23
       - release33
       - release40
-      - kopff_chromeos
 
 jobs:
   build:

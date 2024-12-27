@@ -26,55 +26,21 @@ use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\DisplayFactory;
-use Xibo\Factory\DisplayProfileFactory;
-use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Xmds\Soap7;
 
+/**
+ * PWA
+ *  routes for a PWA to download resources which live in an iframe
+ */
 class Pwa extends Base
 {
     public function __construct(
         private readonly DisplayFactory $displayFactory,
-        private readonly DisplayProfileFactory $displayProfileFactory,
-        private readonly PlayerVersionFactory $playerVersionFactory,
         private readonly ContainerInterface $container
     ) {
-    }
-
-    /**
-     * @throws \Xibo\Support\Exception\NotFoundException
-     * @throws \Xibo\Support\Exception\AccessDeniedException
-     */
-    public function home(Request $request, Response $response): Response
-    {
-        $params = $this->getSanitizer($request->getParams());
-
-        // See if we have a specific display profile we want to use.
-        $displayProfileId = $params->getInt('displayProfileId');
-        if (!empty($displayProfileId)) {
-            $displayProfile = $this->displayProfileFactory->getById($displayProfileId);
-
-            if ($displayProfile->type !== 'chromeOS') {
-                throw new AccessDeniedException(__('This type of display is not allowed to access this API'));
-            }
-        } else {
-            $displayProfile = $this->displayProfileFactory->getDefaultByType('chromeOS');
-        }
-
-        // We have the display profile.
-        // use that to get the player version
-        $versionId = $displayProfile->getSetting('versionMediaId');
-        if (!empty($versionId)) {
-            $version = $this->playerVersionFactory->getById($versionId);
-        } else {
-            $version = $this->playerVersionFactory->getByType('chromeOS');
-        }
-
-        // Output the index.html file from the relevant bundle.
-        $response->getBody()->write('<html></html>');
-        return $response;
     }
 
     /**
@@ -131,13 +97,7 @@ class Pwa extends Base
             $response->getBody()->write($body);
 
             return $response
-                ->withoutHeader('Content-Security-Policy')
-                ->withHeader('Access-Control-Allow-Origin', '*')
-                ->withHeader('Access-Control-Allow-Methods', '*')
-                ->withHeader(
-                    'Access-Control-Allow-Headers',
-                    'append,delete,entries,foreach,get,has,keys,set,values,Origin,Authorization'
-                );
+                ->withoutHeader('Content-Security-Policy');
         } catch (\SoapFault $e) {
             throw new GeneralException($e->getMessage());
         }
@@ -189,13 +149,7 @@ class Pwa extends Base
             $response->getBody()->write($body);
 
             return $response
-                ->withoutHeader('Content-Security-Policy')
-                ->withHeader('Access-Control-Allow-Origin', '*')
-                ->withHeader('Access-Control-Allow-Methods', '*')
-                ->withHeader(
-                    'Access-Control-Allow-Headers',
-                    'append,delete,entries,foreach,get,has,keys,set,values,Origin,Authorization'
-                );
+                ->withoutHeader('Content-Security-Policy');
         } catch (\SoapFault $e) {
             throw new GeneralException($e->getMessage());
         }
