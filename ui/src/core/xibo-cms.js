@@ -39,7 +39,7 @@ if (!String.prototype.endsWith) {
 }
 
 // Set up the light boxes
-$(document).on('*[data-toggle="lightbox"]', 'click', function(event) {
+$(document).on('click', '*[data-toggle="lightbox"]', function(event) {
   event.preventDefault();
   $(event.currentTarget).ekkoLightbox({
     onContentLoaded: function() {
