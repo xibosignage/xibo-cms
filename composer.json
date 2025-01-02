@@ -20,9 +20,6 @@
   ],
   "repositories": [{
     "type": "vcs",
-    "url": "https://github.com/xibosignage/support"
-  },{
-    "type": "vcs",
     "url": "https://github.com/dasgarner/picofeed"
   }],
   "config": {
@@ -59,7 +56,7 @@
     "flynsarmy/slim-monolog": "~1.0",
     "sallar/jdatetime": "dev-master",
     "gettext/gettext": "~4.0",
-    "twig/twig": "3.x",
+    "twig/twig": "3.11.*",
     "respect/validation": "2.2.*",
     "intervention/image": "2.7.2",
     "phpmailer/phpmailer": "6.5.*",
@@ -72,7 +69,7 @@
     "tedivm/stash": "^v0.17.6",
     "phenx/php-font-lib": "^0.5.0",
     "symfony/event-dispatcher": "^4.1",
-    "xibosignage/support": "dev-php8",
+    "xibosignage/support": "0.*",
     "xibosignage/oauth2-xibo-cms": "dev-feature/3.0",
     "mtdowling/cron-expression": "^1.1",
     "ralouphie/mimey": "^1.0",
