@@ -29,12 +29,14 @@ use Psr\Http\Message\RequestInterface;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Slim\Views\Twig;
+use Xibo\Entity\Display;
 use Xibo\Entity\Module;
 use Xibo\Entity\ModuleTemplate;
 use Xibo\Entity\Region;
 use Xibo\Entity\Widget;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\LinkSigner;
 use Xibo\Helper\Translate;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -341,58 +343,176 @@ class WidgetHtmlRenderer
 
     /**
      * Decorate the HTML output for a player
+     * @param \Xibo\Entity\Display $display
      * @param string $output
      * @param array $storedAs A keyed array of library media this widget has access to
      * @param bool $isSupportsDataUrl
      * @param array $data A keyed array of data this widget has access to
      * @param \Xibo\Widget\Definition\Asset[] $assets A keyed array of assets this widget has access to
      * @return string
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function decorateForPlayer(
+        Display $display,
         string $output,
         array $storedAs,
         bool $isSupportsDataUrl = true,
         array $data = [],
         array $assets = []
     ): string {
+        // Do we need to add a URL prefix to the requests?
+        $auth = $display->isPwa()
+            ? '&v=7&serverKey=' . $this->config->getSetting('serverKey') . '&hardwareKey=' . $display->license
+            : null;
+        $encryptionKey = $this->config->getApiKeyDetails()['encryptionKey'];
+
         $matches = [];
         preg_match_all('/\[\[(.*?)\]\]/', $output, $matches);
         foreach ($matches[1] as $match) {
             if ($match === 'PlayerBundle') {
-                $output = str_replace('[[PlayerBundle]]', 'bundle.min.js', $output);
+                if ($display->isPwa()) {
+                    $url = LinkSigner::generateSignedLink(
+                        $display,
+                        $encryptionKey,
+                        null,
+                        'P',
+                        1,
+                        'bundle.min.js',
+                        'bundle',
+                    );
+                } else {
+                    $url = 'bundle.min.js';
+                }
+                $output = str_replace(
+                    '[[PlayerBundle]]',
+                    $url,
+                    $output,
+                );
             } else if ($match === 'FontBundle') {
-                $output = str_replace('[[FontBundle]]', 'fonts.css', $output);
+                if ($display->isPwa()) {
+                    $url = LinkSigner::generateSignedLink(
+                        $display,
+                        $encryptionKey,
+                        null,
+                        'P',
+                        1,
+                        'fonts.css',
+                        'fontCss',
+                    );
+                } else {
+                    $url = 'fonts.css';
+                }
+                $output = str_replace(
+                    '[[FontBundle]]',
+                    $url,
+                    $output,
+                );
             } else if ($match === 'ViewPortWidth') {
-                // Player does this itself.
-                continue;
+                if ($display->isPwa()) {
+                    $output = str_replace(
+                        '[[ViewPortWidth]]',
+                        explode('x', ($display->resolution ?: 'x'))[0],
+                        $output,
+                    );
+                }
             } else if (Str::startsWith($match, 'dataUrl')) {
                 $value = explode('=', $match);
-                $replace = $isSupportsDataUrl ? $value[1] . '.json' : 'null';
-                $output = str_replace('[[' . $match . ']]', $replace, $output);
+                $output = str_replace(
+                    '[[' . $match . ']]',
+                    $isSupportsDataUrl
+                        ? ($display->isPwa()
+                            ? '/pwa/getData?widgetId=' . $value[1] . $auth
+                            : '/' . $value[1] . '.json')
+                        : 'null',
+                    $output,
+                );
             } else if (Str::startsWith($match, 'data=')) {
                 $value = explode('=', $match);
-                $output = str_replace('"[[' . $match . ']]"', isset($data[$value[1]])
-                    ? json_encode($data[$value[1]])
-                    : 'null', $output);
+                $output = str_replace(
+                    '"[[' . $match . ']]"',
+                    isset($data[$value[1]])
+                        ? json_encode($data[$value[1]])
+                        : 'null',
+                    $output,
+                );
             } else if (Str::startsWith($match, 'mediaId') || Str::startsWith($match, 'libraryId')) {
                 $value = explode('=', $match);
                 if (array_key_exists($value[1], $storedAs)) {
-                    $output = str_replace('[[' . $match . ']]', $storedAs[$value[1]], $output);
+                    if ($display->isPwa()) {
+                        $url = LinkSigner::generateSignedLink(
+                            $display,
+                            $encryptionKey,
+                            null,
+                            'M',
+                            $value[1],
+                            $storedAs[$value[1]]
+                        );
+                    } else {
+                        $url = $storedAs[$value[1]];
+                    }
+                    $output = str_replace(
+                        '[[' . $match . ']]',
+                        $url,
+                        $output,
+                    );
                 } else {
-                    $output = str_replace('[[' . $match . ']]', '', $output);
+                    $output = str_replace(
+                        '[[' . $match . ']]',
+                        '',
+                        $output,
+                    );
                 }
             } else if (Str::startsWith($match, 'assetId')) {
                 $value = explode('=', $match);
                 if (array_key_exists($value[1], $assets)) {
-                    $output = str_replace('[[' . $match . ']]', $assets[$value[1]]->getFilename(), $output);
+                    $asset = $assets[$value[1]];
+                    if ($display->isPwa()) {
+                        $url = LinkSigner::generateSignedLink(
+                            $display,
+                            $encryptionKey,
+                            null,
+                            'P',
+                            $asset->id,
+                            $asset->getFilename(),
+                            'asset',
+                        );
+                    } else {
+                        $url = $asset->getFilename();
+                    }
+                    $output = str_replace(
+                        '[[' . $match . ']]',
+                        $url,
+                        $output,
+                    );
                 } else {
-                    $output = str_replace('[[' . $match . ']]', '', $output);
+                    $output = str_replace(
+                        '[[' . $match . ']]',
+                        '',
+                        $output,
+                    );
                 }
             } else if (Str::startsWith($match, 'assetAlias')) {
                 $value = explode('=', $match);
                 foreach ($assets as $asset) {
                     if ($asset->alias === $value[1]) {
-                        $output = str_replace('[[' . $match . ']]', $asset->getFilename(), $output);
+                        if ($display->isPwa()) {
+                            $url = LinkSigner::generateSignedLink(
+                                $display,
+                                $encryptionKey,
+                                null,
+                                'P',
+                                $asset->id,
+                                $asset->getFilename(),
+                                'asset',
+                            );
+                        } else {
+                            $url = $asset->getFilename();
+                        }
+                        $output = str_replace(
+                            '[[' . $match . ']]',
+                            $url,
+                            $output,
+                        );
                         continue 2;
                     }
                 }

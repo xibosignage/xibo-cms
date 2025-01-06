@@ -20,34 +20,27 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Xibo\Helper;
+use Phinx\Migration\AbstractMigration;
 
-
-use Xibo\Support\Sanitizer\RespectSanitizer;
-use Xibo\Support\Sanitizer\SanitizerInterface;
-use Xibo\Support\Validator\RespectValidator;
-use Xibo\Support\Validator\ValidatorInterface;
-
-class SanitizerService
+/**
+ * @phpcs:disable PSR1.Classes.ClassDeclaration.MissingNamespace
+ */
+class AddDefaultChromeOSDisplayProfileMigration extends AbstractMigration
 {
-    /**
-     * @param $array
-     * @return SanitizerInterface
-     */
-    public function getSanitizer($array)
+    public function change(): void
     {
-        return (new RespectSanitizer())
-            ->setCollection($array)
-            ->setDefaultOptions([
-                'checkboxReturnInteger' => true
-            ]);
-    }
+        // add default display profile for tizen
+        if (!$this->fetchRow('SELECT * FROM displayprofile WHERE type = \'chromeOS\' AND isDefault = 1')) {
+            // Get system user
+            $user = $this->fetchRow('SELECT userId FROM `user` WHERE userTypeId = 1');
 
-    /**
-     * @return ValidatorInterface
-     */
-    public function getValidator()
-    {
-        return new RespectValidator();
+            $this->table('displayprofile')->insert([
+                'name' => 'ChromeOS',
+                'type' => 'chromeOS',
+                'config' => '[]',
+                'userId' => $user['userId'],
+                'isDefault' => 1
+            ])->save();
+        }
     }
 }

@@ -326,6 +326,11 @@ class Settings extends Base
             $this->getConfig()->changeSetting('XMR_PUB_ADDRESS', $sanitizedParams->getString('XMR_PUB_ADDRESS'));
         }
 
+        if ($this->getConfig()->isSettingEditable('XMR_WS_ADDRESS')) {
+            $this->handleChangedSettings('XMR_WS_ADDRESS', $this->getConfig()->getSetting('XMR_WS_ADDRESS'), $sanitizedParams->getString('XMR_WS_ADDRESS'), $changedSettings);
+            $this->getConfig()->changeSetting('XMR_WS_ADDRESS', $sanitizedParams->getString('XMR_WS_ADDRESS'), 1);
+        }
+
         if ($this->getConfig()->isSettingEditable('DEFAULT_LAT')) {
             $value = $sanitizedParams->getString('DEFAULT_LAT');
             $this->handleChangedSettings('DEFAULT_LAT', $this->getConfig()->getSetting('DEFAULT_LAT'), $value, $changedSettings);

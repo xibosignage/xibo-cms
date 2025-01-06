@@ -24,6 +24,7 @@ use Monolog\Logger;
 use Nyholm\Psr7\ServerRequest;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\ContainerFactory;
+use Xibo\Helper\LinkSigner;
 use Xibo\Support\Exception\NotFoundException;
 
 define('XIBO', true);
@@ -137,12 +138,13 @@ if (isset($_GET['file'])) {
         }
 
         // Validate the URL.
+        $encryptionKey = $container->get('configService')->getApiKeyDetails()['encryptionKey'];
         $signature = $_REQUEST['X-Amz-Signature'];
         $calculatedSignature = \Xibo\Helper\LinkSigner::getSignature(
             parse_url(\Xibo\Xmds\Wsdl::getRoot(), PHP_URL_HOST),
             $_GET['file'],
             $_REQUEST['X-Amz-Expires'],
-            $container->get('configService')->getApiKeyDetails()['encryptionKey'],
+            $encryptionKey,
             $_REQUEST['X-Amz-Date'],
             true,
         );
@@ -188,24 +190,81 @@ if (isset($_GET['file'])) {
 
         // Issue magic packet
         $libraryLocation = $container->get('configService')->getSetting('LIBRARY_LOCATION');
-        $logger->info('HTTP GetFile request redirecting to ' . $libraryLocation . $file->path);
 
-        if ($sendFileMode == 'Apache') {
-            // Send via Apache X-Sendfile header
-            header('X-Sendfile: ' . $libraryLocation . $file->path);
-        } else if ($sendFileMode == 'Nginx') {
-            // Send via Nginx X-Accel-Redirect
-            header('X-Accel-Redirect: /download/' . $file->path);
+        // Issue content type header
+        $isCss = false;
+        if ($file->type === 'L') {
+            // Layouts are always XML
+            header('Content-Type: text/xml');
+        } else if ($file->fileType === 'bundle' || \Illuminate\Support\Str::endsWith($file->path, '.js')) {
+            header('Content-Type: application/javascript');
+        } else if ($file->fileType === 'fontCss' || \Illuminate\Support\Str::endsWith($file->path, '.css')) {
+            $isCss = true;
+            header('Content-Type: text/css');
         } else {
-            header('HTTP/1.0 404 Not Found');
+            $contentType = mime_content_type($libraryLocation . $file->path);
+            if ($contentType !== false) {
+                header('Content-Type: ' . $contentType);
+            }
         }
 
-        // Also add to the overall bandwidth used by get file
-        $container->get('bandwidthFactory')->createAndSave(
-            \Xibo\Entity\Bandwidth::$GETFILE,
-            $file->displayId,
-            $file->size
-        );
+        // Are we a special request that needs modification before sending?
+        // For CSS, we look up the files to replace in required files using their stored path
+        if ($display->isPwa() && $isCss) {
+            $logger->debug('Rewriting CSS for PWA: ' . $file->path);
+
+            // Rewrite CSS for PWAs
+            $cssFile = file_get_contents($libraryLocation . $file->path);
+            $matches = [];
+            preg_match_all('/url\(\'?(.*?)\'?\)/', $cssFile, $matches);
+            foreach ($matches[1] as $match) {
+                // Look up the file to get the right ID/path.
+                try {
+                    $replacementFile = $requiredFileFactory->getByDisplayAndDependencyPath($displayId, $match);
+
+                    $url = LinkSigner::generateSignedLink(
+                        $display,
+                        $encryptionKey,
+                        null,
+                        'P',
+                        $replacementFile->realId,
+                        $replacementFile->path,
+                        $file->fileType === 'fontCss' ? 'font' : 'asset',
+                    );
+                    $cssFile = str_replace(
+                        $match,
+                        $url,
+                        $cssFile,
+                    );
+                } catch (Exception $exception) {
+                    $logger->error('CSS has dependency which does not exist in Required Files: ' . $match);
+                }
+            }
+
+            $file->size = strlen($cssFile);
+
+            echo $cssFile;
+        } else {
+            $logger->info('HTTP GetFile request redirecting to ' . $libraryLocation . $file->path);
+
+            // Normal send
+            if ($sendFileMode == 'Apache') {
+                // Send via Apache X-Sendfile header
+                header('X-Sendfile: ' . $libraryLocation . $file->path);
+            } else if ($sendFileMode == 'Nginx') {
+                // Send via Nginx X-Accel-Redirect
+                header('X-Accel-Redirect: /download/' . $file->path);
+            } else {
+                header('HTTP/1.0 404 Not Found');
+            }
+
+            // Also add to the overall bandwidth used by get file
+            $container->get('bandwidthFactory')->createAndSave(
+                \Xibo\Entity\Bandwidth::$GETFILE,
+                $file->displayId,
+                $file->size
+            );
+        }
     } catch (\Xibo\Support\Exception\NotFoundException|\Xibo\Support\Exception\ExpiredException $e) {
         $logger->notice('HTTP GetFile request received but unable to find XMDS Nonce. Issuing 404. '
             . $e->getMessage());

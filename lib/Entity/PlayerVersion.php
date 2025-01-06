@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -23,6 +23,8 @@ namespace Xibo\Entity;
 
 
 use Carbon\Carbon;
+use Illuminate\Support\Str;
+use Symfony\Component\Filesystem\Filesystem;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Helper\DateFormatHelper;
@@ -30,6 +32,7 @@ use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\DuplicateEntityException;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class PlayerVersion
@@ -200,9 +203,94 @@ class PlayerVersion implements \JsonSerializable
         $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
 
         // delete file
-        if (file_exists($libraryLocation . 'playersoftware/'. $this->fileName)) {
-            unlink($libraryLocation  . 'playersoftware/'. $this->fileName);
+        if (file_exists($libraryLocation . 'playersoftware/' . $this->fileName)) {
+            unlink($libraryLocation  . 'playersoftware/' . $this->fileName);
         }
+
+        // delete unpacked file
+        if (is_dir($libraryLocation . 'playersoftware/chromeos/' . $this->versionId)) {
+            (new Filesystem())->remove($libraryLocation . 'playersoftware/chromeos/' . $this->versionId);
+        }
+    }
+
+    /**
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     */
+    public function unpack(string $libraryFolder): static
+    {
+        // ChromeOS
+        // Unpack the `.chrome` file as a tar/gz, validate its signature, extract it into the library folder
+        if ($this->type === 'chromeOS') {
+            $this->getLog()->debug('add: handling chromeOS upload');
+
+            // TODO: check the signature of the file to make sure it comes from a verified source.
+
+            $zip = new \ZipArchive();
+            if (!$zip->open($libraryFolder . 'playersoftware/' . $this->fileName)) {
+                throw new InvalidArgumentException(__('Unable to open ZIP'));
+            }
+
+            // Make sure the ZIP file contains a manifest.json file.
+            if ($zip->locateName('manifest.json') === false) {
+                throw new InvalidArgumentException(__('Software package does not contain a manifest'));
+            }
+
+            // Make a folder for this
+            $folder = $libraryFolder . 'playersoftware/chromeos/' . $this->versionId;
+            if (is_dir($folder)) {
+                unlink($folder);
+            }
+            mkdir($folder);
+
+            // Extract to that folder
+            $zip->extractTo($folder);
+            $zip->close();
+
+            // Update manifest.json
+            $manifest = file_get_contents($folder . '/manifest.json');
+
+            $isXiboThemed = $this->config->getThemeConfig('app_name', 'Xibo') === 'Xibo';
+            if (!$isXiboThemed) {
+                $manifest = Str::replace(
+                    'Xibo Digital Signage',
+                    $this->config->getThemeConfig('theme_title'),
+                    $manifest
+                );
+                $manifest = Str::replace(
+                    'https://xibosignage.com/chromeos',
+                    $this->config->getThemeConfig('theme_url'),
+                    $manifest
+                );
+                $manifest = Str::replace(
+                    'xibo-chromeos',
+                    $this->config->getThemeConfig('app_name') . '-chromeos',
+                    $manifest
+                );
+            }
+
+            // Update asset URLs
+            $manifest = Str::replace('assets/icons/512x512.png', $this->config->uri('img/512x512.png'), $manifest);
+            $manifest = Str::replace('assets/icons/192x192.png', $this->config->uri('img/192x192.png'), $manifest);
+
+            file_put_contents($folder . '/manifest.json', $manifest);
+        }
+
+        return $this;
+    }
+
+    public function setActive(): static
+    {
+        if ($this->type === 'chromeOS') {
+            $this->getLog()->debug('setActive: set this version to be the latest');
+
+            $chromeLocation = $this->config->getSetting('LIBRARY_LOCATION') . 'playersoftware/chromeos';
+            if (is_link($chromeLocation . '/latest')) {
+                unlink($chromeLocation . '/latest');
+            }
+            symlink($chromeLocation . '/' . $this->versionId, $chromeLocation . '/latest');
+        }
+
+        return $this;
     }
 
     /**
@@ -256,7 +344,10 @@ class PlayerVersion implements \JsonSerializable
         }
     }
 
-    public function decorateRecord()
+    /**
+     * @return $this
+     */
+    public function decorateRecord(): static
     {
         $version = '';
         $code = null;
@@ -267,41 +358,41 @@ class PlayerVersion implements \JsonSerializable
 
         // standard releases
         if (count($explode) === 5) {
-            if (strpos($explode[4], '.') !== false) {
+            if (str_contains($explode[4], '.')) {
                 $explodeExtension = explode('.', $explode[4]);
                 $explode[4] = $explodeExtension[0];
             }
 
-            if (strpos($explode[3], 'v') !== false) {
+            if (str_contains($explode[3], 'v')) {
                 $version = strtolower(substr(strrchr($explode[3], 'v'), 1, 3)) ;
             }
-            if (strpos($explode[4], 'R') !== false) {
+            if (str_contains($explode[4], 'R')) {
                 $code = strtolower(substr(strrchr($explode[4], 'R'), 1, 3)) ;
             }
             $playerShowVersion = $version . ' Revision ' . $code;
             // for DSDevices specific apk
         } elseif (count($explode) === 6) {
-            if (strpos($explode[5], '.') !== false) {
+            if (str_contains($explode[5], '.')) {
                 $explodeExtension = explode('.', $explode[5]);
                 $explode[5] = $explodeExtension[0];
             }
-            if (strpos($explode[3], 'v') !== false) {
+            if (str_contains($explode[3], 'v')) {
                 $version = strtolower(substr(strrchr($explode[3], 'v'), 1, 3)) ;
             }
-            if (strpos($explode[4], 'R') !== false) {
+            if (str_contains($explode[4], 'R')) {
                 $code = strtolower(substr(strrchr($explode[4], 'R'), 1, 3)) ;
             }
             $playerShowVersion = $version . ' Revision ' . $code . ' ' . $explode[5];
             // for white labels
         } elseif (count($explode) === 3) {
-            if (strpos($explode[2], '.') !== false) {
+            if (str_contains($explode[2], '.')) {
                 $explodeExtension = explode('.', $explode[2]);
                 $explode[2] = $explodeExtension[0];
             }
-            if (strpos($explode[1], 'v') !== false) {
+            if (str_contains($explode[1], 'v')) {
                 $version = strtolower(substr(strrchr($explode[1], 'v'), 1, 3)) ;
             }
-            if (strpos($explode[2], 'R') !== false) {
+            if (str_contains($explode[2], 'R')) {
                 $code = strtolower(substr(strrchr($explode[2], 'R'), 1, 3)) ;
             }
             $playerShowVersion = $version . ' Revision ' . $code . ' ' . $explode[0];
@@ -311,10 +402,12 @@ class PlayerVersion implements \JsonSerializable
 
         if ($extension == 'apk') {
             $type = 'android';
-        } elseif ($extension == 'ipk') {
+        } else if ($extension == 'ipk') {
             $type = 'lg';
-        } elseif ($extension == 'wgt') {
+        } else if ($extension == 'wgt') {
             $type = 'sssp';
+        } else if ($extension == 'chrome') {
+            $type = 'chromeOS';
         }
 
         $this->version = $version;

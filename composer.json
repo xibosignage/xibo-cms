@@ -25,14 +25,14 @@
   "config": {
       "platform": {
         "php": "8.1",
-        "ext-zmq": "1",
         "ext-mongodb": "1.15.0",
         "ext-gd": "1",
         "ext-dom": "1",
         "ext-pdo": "1",
         "ext-json": "1",
         "ext-soap": "1",
-        "ext-zip": "1"
+        "ext-zip": "1",
+        "ext-fileinfo": "*"
       }
   },
   "minimum-stability": "dev",
@@ -45,6 +45,7 @@
     "ext-soap": "*",
     "ext-zip": "*",
     "ext-openssl": "*",
+    "ext-fileinfo": "*",
     "slim/slim": "^4.3",
     "slim/http": "^1.2",
     "slim/flash": "^0.4",

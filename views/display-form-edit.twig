@@ -338,6 +338,8 @@
                     {% include "displayprofile-form-edit-linux.twig" %}
                 {% elseif displayProfile.getClientType() == "lg" or displayProfile.getClientType() == "sssp"  %}
                     {% include "displayprofile-form-edit-soc.twig" %}
+                {% elseif displayProfile.getClientType() == "chromeOS" %}
+                    {% include "displayprofile-form-edit-chromeos.twig" %}
                 {% elseif displayProfile.isCustom() %}
                     {{ include(displayProfile.getCustomEditTemplate()) }}
                 {% endif %}
