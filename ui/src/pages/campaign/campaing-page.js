@@ -44,7 +44,7 @@ $(document).ready(function() {
             } else if (data === 'list') {
               return campaignPageTrans.list;
             } else if (data === 'ad') {
-              return '{{ "Ad"|trans }}';
+              return campaignPageTrans.ad;
             }
             return data;
           },
@@ -112,11 +112,11 @@ $(document).ready(function() {
           responsivePriority: 3,
           render: function(data, type) {
             if (data === 'plays') {
-              return '{{ "Plays"|trans }}';
+              return campaignPageTrans.plays;
             } else if (data === 'budget') {
-              return '{{ "Budget"|trans }}';
+              return campaignPageTrans.budget;
             } else if (data === 'imp') {
-              return '{{ "Impressions"|trans }}';
+              return campaignPageTrans.impressions;
             }
             return data;
           },
