@@ -974,8 +974,8 @@ window.adjustDatatableSize = function(reload) {
     resizeDisplayMap();
   }
 
-  $('#grid-folder-filter').toggle('fast', function(ev) {
-    if ($(ev.currentTarget).is(':hidden')) {
+  $('#grid-folder-filter').toggle('fast', function() {
+    if ($('#grid-folder-filter').is(':hidden')) {
       if (!$('#folder-tree-clear-selection-button').is(':checked')) {
         // if folder tree is hidden and select everywhere
         // is not checked, then show breadcrumbs
@@ -988,7 +988,7 @@ window.adjustDatatableSize = function(reload) {
     }
 
     if (reload) {
-      $(ev.currentTarget).closest('.XiboGrid').find('table.dataTable')
+      $('#grid-folder-filter').closest('.XiboGrid').find('table.dataTable')
         .DataTable().ajax.reload();
     }
     // set current state of the folder tree visibility to local storage,
