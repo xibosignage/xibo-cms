@@ -1434,7 +1434,7 @@ XiboPlayer.prototype.renderGlobalElements = function(currentWidget) {
               );
 
               // Append to main container
-              $content.append(
+              $groupContent.append(
                 $elementContentContainer,
               );
             }
