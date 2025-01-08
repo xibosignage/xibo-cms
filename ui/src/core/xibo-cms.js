@@ -1705,8 +1705,9 @@ window.XiboFormRender = function(sourceObj, data = null) {
           $('#folder-tree-form-modal').remove();
         }
 
-        // Call Xibo Init for this form
+        // Call Xibo Init and Init Datatables for this form
         XiboInitialise('#' + dialog.attr('id'));
+        XiboInitDatatables('#' + dialog.attr('id'));
 
         if (dialog.find('.XiboForm').attr('id') != undefined) {
           // if this is add form and we have some folderId
