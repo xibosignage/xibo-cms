@@ -146,7 +146,7 @@ window.XiboInitDatatables = function(scope, options) {
       }
     }
 
-    // Prevent enter key to submit form
+    // Handle clear filter
     $target.find('.XiboFilter .clear-filter-btn').off()
       .on('click', function() {
         // Reset fields
