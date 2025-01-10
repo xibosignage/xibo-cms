@@ -31,8 +31,8 @@ require('./src/style/help-pane.scss');
 // Xibo calendar
 require('./src/core/xibo-calendar.js');
 
-// Xibo core
-require('./src/core/xibo-cms.js');
-
 // Xibo datatables and folders
 require('./src/core/xibo-datatables.js');
+
+// Xibo core
+require('./src/core/xibo-cms.js');
