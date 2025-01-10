@@ -328,6 +328,7 @@ class LogService implements LogServiceInterface
                 return Logger::INFO;
 
             case 'debug':
+            case 'audit' :
                 return Logger::DEBUG;
 
             case 'error':
