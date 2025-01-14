@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# Copyright (C) 2024 Xibo Signage Ltd
+# Copyright (C) 2025 Xibo Signage Ltd
 #
 # Xibo - Digital Signage - https://xibosignage.com
 #
@@ -192,8 +192,7 @@ then
   # Set admin username/password
   mysql -D $MYSQL_DATABASE -e "UPDATE \`user\` SET \`UserName\`='xibo_admin', \`UserPassword\`='5f4dcc3b5aa765d61d8327deb882cf99' WHERE \`UserID\` = 1 LIMIT 1"
 
-  # Set XMR public/private address
-  mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='http://$XMR_HOST:8081', \`userChange\`=0, \`userSee\`=0 WHERE \`setting\`='XMR_ADDRESS' LIMIT 1"
+  # Set XMR public address
   mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='tcp://cms.example.org:9505' WHERE \`setting\`='XMR_PUB_ADDRESS' LIMIT 1"
 
   # Set CMS Key
@@ -219,6 +218,10 @@ then
     cp -v /var/www/cms/ca-certs/*.pem /usr/local/share/ca-certificates
     cp -v /var/www/cms/ca-certs/*.crt /usr/local/share/ca-certificates
     /usr/sbin/update-ca-certificates
+
+    # Configure XMR private API
+    echo "Setting up XMR private API"
+    mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='http://$XMR_HOST:8081', \`userChange\`=0, \`userSee\`=0 WHERE \`setting\`='XMR_ADDRESS' LIMIT 1"
 
     # Configure Quick Chart
     echo "Setting up Quickchart"
