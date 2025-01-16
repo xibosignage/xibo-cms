@@ -299,9 +299,6 @@ class NationalWeatherServiceConnector implements ConnectorInterface
             $cap['contact'] = $this->getEntryData('contact');
             $cap['areaDesc'] = $this->getEntryData('areaDesc');
 
-            // Extract <author> node from the entry
-            $authorNode = $this->getEntryData('author');
-
             // Provide CAP data if area-specific filter is disabled
             $dataProvider->addItem($cap);
 
