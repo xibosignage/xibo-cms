@@ -184,8 +184,10 @@ class NationalWeatherServiceConnector implements ConnectorInterface, EmergencyAl
                     }
 
                     $capStatus = $highestStatus;
+                    $category = 'Met';
                 } else {
                     $capStatus = 'No Alerts';
+                    $category = '';
                     $event->getDataProvider()->addError(__('No alerts are available for the selected area at the 
                     moment.'));
                 }
@@ -200,14 +202,14 @@ class NationalWeatherServiceConnector implements ConnectorInterface, EmergencyAl
                 }
 
                 $this->getLogger()->debug('Schedule criteria push message: status = ' . $status
-                    . ', category = Met');
+                    . ', category = ' . $category);
 
                 // Set schedule criteria update
                 $action = new ScheduleCriteriaUpdateAction();
                 $action->setCriteriaUpdates([
                     'isNwsActive' => 1,
                     'emergency_alert_status' => $status,
-                    'emergency_alert_category' => 'Met'
+                    'emergency_alert_category' => $category
                 ]);
 
                 // Initialize the display
@@ -295,10 +297,10 @@ class NationalWeatherServiceConnector implements ConnectorInterface, EmergencyAl
      * @param DataProviderInterface $dataProvider
      * @param Carbon $cacheExpiresAt
      *
-     * @return string
+     * @return string|null
      * @throws GuzzleException
      */
-    private function getFeedFromUrl(DataProviderInterface $dataProvider, Carbon $cacheExpiresAt): string
+    private function getFeedFromUrl(DataProviderInterface $dataProvider, Carbon $cacheExpiresAt): string|null
     {
         $atomFeedUri = $this->getSetting('atomFeedUri');
         $area = $dataProvider->getProperty('area');
