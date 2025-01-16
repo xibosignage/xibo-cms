@@ -1,0 +1,42 @@
+{#
+/**
+ * Copyright (C) 2025 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "connector-form-edit.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block connectorFormFields %}
+    <h3>National Weather Service</h3>
+    <p>Access real-time weather alerts provided by the National Weather Service (NWS).</p>
+    <p>The data includes weather warnings, watches, and advisories delivered in Atom feed format.</p>
+    <p>Weather alert data is sourced directly from the <a href="https://www.weather.gov/" target="_blank">National Weather Service</a>.</p>
+
+    {% if interface.isProviderSetting("atomFeedUri") %}
+        <p>{{ "Your platform provider has configured this connector for you."|trans }}</p>
+    {% else %}
+        {% set title %}{% trans "NWS Atom Feed URL" %}{% endset %}
+        {% set helpText %}{% trans "This is the default URL for the NWS Atom Feed. You can update
+        it if the URL changes in the future." %}{% endset %}
+        {{ forms.input("atomFeedUri", title, interface.getSetting("atomFeedUri",
+            "https://api.weather.gov/alerts/active.atom"), helpText) }}
+    {% endif %}
+{% endblock %}
