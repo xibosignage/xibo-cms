@@ -200,8 +200,6 @@ class TimeDisconnectedSummary implements ReportInterface
         $onlyLoggedIn = $sanitizedParams->getCheckbox('onlyLoggedIn') == 1;
         $groupBy = $sanitizedParams->getString('groupBy');
 
-        $currentDate = Carbon::now()->startOfDay();
-
         //
         // From and To Date Selection
         // --------------------------
@@ -209,6 +207,12 @@ class TimeDisconnectedSummary implements ReportInterface
         // depending on the date range selected.
         $fromDt = $sanitizedParams->getDate('fromDt');
         $toDt = $sanitizedParams->getDate('toDt');
+        $currentDate = Carbon::now()->startOfDay();
+
+        // If toDt is current date then make it current datetime
+        if ($toDt->format('Y-m-d') == $currentDate->format('Y-m-d')) {
+            $toDt = Carbon::now();
+        }
 
         // Get an array of display groups this user has access to
         $displayGroupIds = [];
