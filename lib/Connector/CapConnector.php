@@ -34,14 +34,11 @@ use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Xibo\Connector\ConnectorInterface;
-use Xibo\Connector\ConnectorTrait;
 use Xibo\Event\ScheduleCriteriaRequestEvent;
 use Xibo\Event\ScheduleCriteriaRequestInterface;
 use Xibo\Event\WidgetDataRequestEvent;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Support\Exception\ConfigurationException;
-use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 use Xibo\Widget\Provider\DataProviderInterface;
 use Xibo\XMR\ScheduleCriteriaUpdateAction;
@@ -49,7 +46,7 @@ use Xibo\XMR\ScheduleCriteriaUpdateAction;
 /**
  * A connector to process Common Alert Protocol (CAP) Data
  */
-class CapConnector implements ConnectorInterface
+class CapConnector implements ConnectorInterface, EmergencyAlertInterface
 {
     use ConnectorTrait;
 
@@ -134,26 +131,54 @@ class CapConnector implements ConnectorInterface
                     return;
                 }
 
-                // Process and initialize CAP data
-                $this->processCapData($event->getDataProvider());
+                // Set cache expiry date to 3 minutes from now
+                $cacheExpire = Carbon::now()->addMinutes(3);
 
-                // Initialize update interval
-                $updateIntervalMinute = $event->getDataProvider()->getProperty('updateInterval');
+                // Fetch the CAP XML content from the given URL
+                $xmlContent = $this->fetchCapAlertFromUrl($event->getDataProvider(), $cacheExpire);
 
-                // Convert the $updateIntervalMinute to seconds
-                $updateInterval = $updateIntervalMinute * 60;
+                if ($xmlContent) {
+                    // Initialize DOMDocument and load the XML content
+                    $this->capXML = new DOMDocument();
+                    $this->capXML->loadXML($xmlContent);
 
-                // If we've got data, then set our cache period.
-                $event->getDataProvider()->setCacheTtl($updateInterval);
-                $event->getDataProvider()->setIsHandled();
+                    // Process and initialize CAP data
+                    $this->processCapData($event->getDataProvider());
+
+                    // Initialize update interval
+                    $updateIntervalMinute = $event->getDataProvider()->getProperty('updateInterval');
+
+                    // Convert the $updateIntervalMinute to seconds
+                    $updateInterval = $updateIntervalMinute * 60;
+
+                    // If we've got data, then set our cache period.
+                    $event->getDataProvider()->setCacheTtl($updateInterval);
+                    $event->getDataProvider()->setIsHandled();
+
+                    $capStatus = $this->getCapXmlData('status');
+                    $category = $this->getCapXmlData('category');
+                } else {
+                    $capStatus = 'No Alerts';
+                    $category = '';
+                }
+
+                // initialize status for schedule criteria push message
+                if ($capStatus == 'Actual') {
+                    $status = self::ACTUAL_ALERT;
+                } elseif ($capStatus == 'No Alerts') {
+                    $status = self::NO_ALERT;
+                } else {
+                    $status = self::TEST_ALERT;
+                }
+
+                $this->getLogger()->debug('Schedule criteria push message: status = ' . $status
+                    . ', category = ' . $category);
 
                 // Set schedule criteria update
                 $action = new ScheduleCriteriaUpdateAction();
                 $action->setCriteriaUpdates([
-                    'isEmergencyAlertActive' => 1,
-                    'status' => $this->getCapXmlData('status'),
-                    'msgType' => $this->getCapXmlData('msgType'),
-                    'scope' => $this->getCapXmlData('scope')
+                    'emergency_alert_status' => $status,
+                    'emergency_alert_category' => $category,
                 ]);
 
                 // Initialize the display
@@ -173,7 +198,6 @@ class CapConnector implements ConnectorInterface
     /**
      * Get and process the CAP data
      *
-     * @throws GuzzleException
      * @throws Exception
      */
     private function processCapData(DataProviderInterface $dataProvider): void
@@ -191,16 +215,6 @@ class CapConnector implements ConnectorInterface
         $config['severity'] = $dataProvider->getProperty('severity');
         $config['certainty'] = $dataProvider->getProperty('certainty');
         $config['isAreaSpecific'] = $dataProvider->getProperty('isAreaSpecific');
-
-        // Set cache expiry date to 3 minutes from now
-        $cacheExpire = Carbon::now()->addMinutes(3);
-
-        // Fetch the CAP XML content from the given URL
-        $xmlContent = $this->fetchCapAlertFromUrl($dataProvider, $cacheExpire);
-
-        // Initialize DOMDocument and load the XML content
-        $this->capXML = new DOMDocument();
-        $this->capXML->loadXML($xmlContent);
 
         // Retrieve specific values from the CAP XML for filtering
         $status = $this->getCapXmlData('status');
@@ -301,10 +315,10 @@ class CapConnector implements ConnectorInterface
      * @param DataProviderInterface $dataProvider
      * @param Carbon $cacheExpiresAt
      *
-     * @return string
+     * @return string|null
      * @throws GuzzleException
      */
-    private function fetchCapAlertFromUrl(DataProviderInterface $dataProvider, Carbon $cacheExpiresAt): string
+    private function fetchCapAlertFromUrl(DataProviderInterface $dataProvider, Carbon $cacheExpiresAt): string|null
     {
         $emergencyAlertUrl = $dataProvider->getProperty('emergencyAlertUri');
 
@@ -517,32 +531,26 @@ class CapConnector implements ConnectorInterface
     {
         // Initialize Emergency Alerts schedule criteria parameters
         $event->addType('emergency_alerts', __('Emergency Alerts'))
-                ->addMetric('isEmergencyAlertActive', __('Is emergency alert active?'))
-                    ->addValues('dropdown', [
-                        '1' => __('Yes'),
-                        '0' => __('No'),
-                    ])
                 ->addMetric('emergency_alert_status', __('Status'))
                     ->addValues('dropdown', [
-                        'Actual' => __('Actual'),
-                        'Exercise' => __('Exercise'),
-                        'System' => __('System'),
-                        'Test' => __('Test'),
-                        'Draft' => __('Draft')
+                        self::ACTUAL_ALERT => __('Actual Alerts'),
+                        self::TEST_ALERT => __('Test Alerts'),
+                        self::NO_ALERT => __('No Alerts')
                     ])
-                ->addMetric('msgType', __('Message Type'))
+                ->addMetric('emergency_alert_category', __('Category'))
                     ->addValues('dropdown', [
-                        'Alert' => __('Alert'),
-                        'Update' => __('Update'),
-                        'Cancel' => __('Cancel'),
-                        'Ack' => __('Ack'),
-                        'Error' => __('Error')
-                    ])
-                ->addMetric('scope', __('Scope'))
-                    ->addValues('dropdown', [
-                        'Public' => __('Public'),
-                        'Restricted' => __('Restricted'),
-                        'Private' => __('Private')
+                        'Geo' => __('Geo'),
+                        'Met' => __('Met'),
+                        'Safety' => __('Safety'),
+                        'Security' => __('Security'),
+                        'Rescue' => __('Rescue'),
+                        'Fire' => __('Fire'),
+                        'Health' => __('Health'),
+                        'Env' => __('Env'),
+                        'Transport' => __('Transport'),
+                        'Infra' => __('Infra'),
+                        'CBRNE' => __('CBRNE'),
+                        'Other' => __('Other'),
                     ]);
     }
 }
