@@ -32,11 +32,8 @@ use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Xibo\Event\ScheduleCriteriaRequestEvent;
-use Xibo\Event\ScheduleCriteriaRequestInterface;
 use Xibo\Event\WidgetDataRequestEvent;
 use Xibo\Factory\DisplayFactory;
-use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 use Xibo\Widget\Provider\DataProviderInterface;
 use Xibo\XMR\ScheduleCriteriaUpdateAction;
@@ -44,7 +41,7 @@ use Xibo\XMR\ScheduleCriteriaUpdateAction;
 /**
  * A connector to process National Weather Alert (NWS) - Atom feed data
  */
-class NationalWeatherServiceConnector implements ConnectorInterface
+class NationalWeatherServiceConnector implements ConnectorInterface, EmergencyAlertInterface
 {
     use ConnectorTrait;
 
@@ -75,7 +72,6 @@ class NationalWeatherServiceConnector implements ConnectorInterface
     public function registerWithDispatcher(EventDispatcherInterface $dispatcher): ConnectorInterface
     {
         $dispatcher->addListener(WidgetDataRequestEvent::$NAME, [$this, 'onDataRequest']);
-        $dispatcher->addListener(ScheduleCriteriaRequestEvent::$NAME, [$this, 'onScheduleCriteriaRequest']);
         return $this;
     }
 
@@ -113,7 +109,7 @@ class NationalWeatherServiceConnector implements ConnectorInterface
     }
 
     /**
-     * If the requested dataSource is emergency-alert, get the data, process it and add to dataProvider
+     * If the requested dataSource is national-weather-service, get the data, process it and add to dataProvider
      *
      * @param WidgetDataRequestEvent $event
      * @return void
@@ -130,85 +126,99 @@ class NationalWeatherServiceConnector implements ConnectorInterface
             $event->stopPropagation();
 
             try {
-                // Process and initialize Atom Feed data
-                $this->processAtomFeedData($event->getDataProvider());
+                // Set cache expiry date to 3 minutes from now
+                $cacheExpire = Carbon::now()->addMinutes(3);
 
-                // Initialize update interval
-                $updateIntervalMinute = $event->getDataProvider()->getProperty('updateInterval');
+                // Fetch the Atom Feed XML content
+                $xmlContent = $this->getFeedFromUrl($event->getDataProvider(), $cacheExpire);
 
-                // Convert the $updateIntervalMinute to seconds
-                $updateInterval = $updateIntervalMinute * 60;
+                // Initialize DOMDocument and load the XML content
+                $this->atomFeedXML = new DOMDocument();
+                $this->atomFeedXML->loadXML($xmlContent);
 
-                // If we've got data, then set our cache period.
-                $event->getDataProvider()->setCacheTtl($updateInterval);
-                $event->getDataProvider()->setIsHandled();
+                // Ensure the root element is <feed>
+                $feedNode = $this->atomFeedXML->getElementsByTagName('feed')->item(0);
+                if ($feedNode instanceof DOMElement) {
+                    $this->feedNode = $feedNode;
+                } else {
+                    throw new \Exception('The root <feed> element is missing.');
+                }
 
                 // Get all <entry> nodes within the <feed> element
                 $entryNodes = $this->feedNode->getElementsByTagName('entry');
 
-                // Define priority arrays for status and msgType (higher priority = lower index)
-                $statusPriority = ['Actual', 'Exercise', 'System', 'Test', 'Draft'];
-                $msgTypePriority = ['Alert', 'Update', 'Cancel', 'Ack', 'Error'];
+                // Are there any?
+                if ($entryNodes->length) {
+                    // Process and initialize Atom Feed data
+                    $this->processAtomFeedData($event->getDataProvider());
 
-                // Initialize placeholders for the highest-priority status and msgType
-                $highestStatus = null;
-                $highestMsgType = null;
+                    // Initialize update interval
+                    $updateIntervalMinute = $event->getDataProvider()->getProperty('updateInterval');
 
-                // Iterate through each <entry> node to find the highest-priority status and msgType
-                foreach ($entryNodes as $entryNode) {
-                    $this->entryNode = $entryNode;
+                    // Convert the $updateIntervalMinute to seconds
+                    $updateInterval = $updateIntervalMinute * 60;
 
-                    // Get the status and msgType for the current entry
-                    $status = $this->getEntryData('status');
-                    $msgType = $this->getEntryData('msgType');
+                    // If we've got data, then set our cache period.
+                    $event->getDataProvider()->setCacheTtl($updateInterval);
+                    $event->getDataProvider()->setIsHandled();
 
-                    // Check if the current status has a higher priority
-                    if ($status !== null && (
+                    // Define priority arrays for status (higher priority = lower index)
+                    $statusPriority = ['Actual', 'Exercise', 'System', 'Test', 'Draft'];
+
+                    $highestStatus = null;
+
+                    // Iterate through each <entry> node to find the highest-priority status
+                    foreach ($entryNodes as $entryNode) {
+                        $this->entryNode = $entryNode;
+
+                        // Get the status for the current entry
+                        $entryStatus = $this->getEntryData('status');
+
+                        // Check if the current status has a higher priority
+                        if ($entryStatus !== null && (
                             $highestStatus === null ||
-                            array_search($status, $statusPriority) < array_search($highestStatus, $statusPriority)
+                            array_search($entryStatus, $statusPriority) < array_search($highestStatus, $statusPriority)
                         )) {
-                        $highestStatus = $status;
+                            $highestStatus = $entryStatus;
+                        }
                     }
 
-                    // Check if the current msgType has a higher priority
-                    if ($msgType !== null && (
-                            $highestMsgType === null ||
-                            array_search($msgType, $msgTypePriority) < array_search($highestMsgType, $msgTypePriority)
-                        )) {
-                        $highestMsgType = $msgType;
-                    }
+                    $capStatus = $highestStatus;
+                } else {
+                    $capStatus = 'No Alerts';
+                    $event->getDataProvider()->addError(__('No alerts are available for the selected area at the 
+                    moment.'));
                 }
 
-                // Ensure default values if no valid status/msgType is found
-                $highestStatus = $highestStatus ?? '';
-                $highestMsgType = $highestMsgType ?? '';
-
-                If ($highestStatus || $highestMsgType) {
-                    $this->getLogger()->debug(
-                        'Schedule criteria push message: status=' . $highestStatus .
-                        ', msgType=' . $highestMsgType,
-                        ['status' => $highestStatus, 'msgType' => $highestMsgType]
-                    );
-
-                    // Set schedule criteria update
-                    $action = new ScheduleCriteriaUpdateAction();
-                    $action->setCriteriaUpdates([
-                        'isNwsActive' => 1,
-                        'status' => $highestStatus,
-                        'msgType' => $highestMsgType
-                    ]);
-
-                    // Initialize the display
-                    $displayId = $event->getDataProvider()->getDisplayId();
-                    $display = $this->displayFactory->getById($displayId);
-
-                    // Criteria push message
-                    $this->getPlayerActionService()->sendAction($display, $action);
+                // initialize status for schedule criteria push message
+                if ($capStatus == 'Actual') {
+                    $status = self::ACTUAL_ALERT;
+                } elseif ($capStatus == 'No Alerts') {
+                    $status = self::NO_ALERT;
+                } else {
+                    $status = self::TEST_ALERT;
                 }
+
+                $this->getLogger()->debug('Schedule criteria push message: status = ' . $status
+                    . ', category = Met');
+
+                // Set schedule criteria update
+                $action = new ScheduleCriteriaUpdateAction();
+                $action->setCriteriaUpdates([
+                    'isNwsActive' => 1,
+                    'emergency_alert_status' => $status,
+                    'emergency_alert_category' => 'Met'
+                ]);
+
+                // Initialize the display
+                $displayId = $event->getDataProvider()->getDisplayId();
+                $display = $this->displayFactory->getById($displayId);
+
+                // Criteria push message
+                $this->getPlayerActionService()->sendAction($display, $action);
             } catch (Exception $exception) {
                 $this->getLogger()
                     ->error('onDataRequest: Failed to get results. e = ' . $exception->getMessage());
-                $event->getDataProvider()->addError(__('Unable to get National Weather Service results.'));
             }
         }
     }
@@ -216,7 +226,6 @@ class NationalWeatherServiceConnector implements ConnectorInterface
     /**
      * Get and process the NWS Atom Feed data
      *
-     * @throws GuzzleException
      * @throws Exception
      */
     private function processAtomFeedData(DataProviderInterface $dataProvider): void
@@ -231,24 +240,6 @@ class NationalWeatherServiceConnector implements ConnectorInterface
         $config['severity'] = $dataProvider->getProperty('severity');
         $config['certainty'] = $dataProvider->getProperty('certainty');
 
-        // Set cache expiry date to 3 minutes from now
-        $cacheExpire = Carbon::now()->addMinutes(3);
-
-        // Fetch the Atom Feed XML content
-        $xmlContent = $this->getFeedFromUrl($dataProvider, $cacheExpire);
-
-        // Initialize DOMDocument and load the XML content
-        $this->atomFeedXML = new DOMDocument();
-        $this->atomFeedXML->loadXML($xmlContent);
-
-        // Ensure the root element is <feed>
-        $feedNode = $this->atomFeedXML->getElementsByTagName('feed')->item(0);
-        if ($feedNode instanceof DOMElement) {
-            $this->feedNode = $feedNode;
-        } else {
-            throw new \Exception('The root <feed> element is missing.');
-        }
-
         // Get all <entry> nodes within the <feed> element
         $entryNodes = $this->feedNode->getElementsByTagName('entry');
 
@@ -259,10 +250,18 @@ class NationalWeatherServiceConnector implements ConnectorInterface
             // Retrieve specific values from the CAP XML for filtering
             $status = $this->getEntryData('status');
             $msgType = $this->getEntryData('msgType');
+            $urgency = $this->getEntryData('urgency');
+            $severity = $this->getEntryData('severity');
+            $certainty = $this->getEntryData('certainty');
 
             // Check if the retrieved CAP data matches the configuration filters
-            if (!$this->matchesFilter($status, $config['status']) ||
-                !$this->matchesFilter($msgType, $config['msgType'])) {
+            if (
+                !$this->matchesFilter($status, $config['status']) ||
+                !$this->matchesFilter($msgType, $config['msgType']) ||
+                !$this->matchesFilter($urgency, $config['urgency']) ||
+                !$this->matchesFilter($severity, $config['severity']) ||
+                !$this->matchesFilter($certainty, $config['certainty'])
+            ) {
                 continue;
             }
 
@@ -272,20 +271,6 @@ class NationalWeatherServiceConnector implements ConnectorInterface
             // Initialize CAP values
             $cap['source'] = $this->getEntryData('source');
             $cap['note'] = $this->getEntryData('note');
-
-            // Extract values from the current <info> node for filtering
-            $urgency = $this->getEntryData('urgency');
-            $severity = $this->getEntryData('severity');
-            $certainty = $this->getEntryData('certainty');
-
-            // Check if the current <info> node matches all filters
-            if (!$this->matchesFilter($urgency, $config['urgency']) ||
-                !$this->matchesFilter($severity, $config['severity']) ||
-                !$this->matchesFilter($certainty, $config['certainty'])) {
-                continue;
-            }
-
-            // Initialize the rest of the CAP values
             $cap['event'] = $this->getEntryData('event');
             $cap['urgency'] = $this->getEntryData('urgency');
             $cap['severity'] = $this->getEntryData('severity');
@@ -299,9 +284,8 @@ class NationalWeatherServiceConnector implements ConnectorInterface
             $cap['contact'] = $this->getEntryData('contact');
             $cap['areaDesc'] = $this->getEntryData('areaDesc');
 
-            // Provide CAP data if area-specific filter is disabled
+            // Add CAP data to data provider
             $dataProvider->addItem($cap);
-
         }
     }
 
@@ -370,14 +354,14 @@ class NationalWeatherServiceConnector implements ConnectorInterface
     }
 
     /**
-     * Get the value of a specified tag from the current <info> node.
+     * Get the value of a specified tag from the current <entry> node.
      *
      * @param string $tagName
      * @return string|null
      */
     private function getEntryData(string $tagName): ?string
     {
-        // Ensure the tag exists within the provided <info> node
+        // Ensure the tag exists within the provided <entry> node
         $node = $this->entryNode->getElementsByTagName($tagName)->item(0);
 
         // Return the node value if the node exists, otherwise return an empty string
@@ -400,37 +384,5 @@ class NationalWeatherServiceConnector implements ConnectorInterface
         }
 
         return false;
-    }
-
-    /**
-     * @param ScheduleCriteriaRequestInterface $event
-     * @return void
-     * @throws ConfigurationException
-     */
-    public function onScheduleCriteriaRequest(ScheduleCriteriaRequestInterface $event): void
-    {
-        // Initialize Emergency Alerts schedule criteria parameters
-        $event->addType('nws_alerts', __('National Weather Service Alerts'))
-            ->addMetric('isNwsActive', __('Is NWS alert active?'))
-                ->addValues('dropdown', [
-                    '1' => __('Yes'),
-                    '0' => __('No'),
-                ])
-            ->addMetric('emergency_alert_status', __('Status'))
-                ->addValues('dropdown', [
-                    'Actual' => __('Actual'),
-                    'Exercise' => __('Exercise'),
-                    'System' => __('System'),
-                    'Test' => __('Test'),
-                    'Draft' => __('Draft')
-                ])
-            ->addMetric('msgType', __('Message Type'))
-                ->addValues('dropdown', [
-                    'Alert' => __('Alert'),
-                    'Update' => __('Update'),
-                    'Cancel' => __('Cancel'),
-                    'Ack' => __('Ack'),
-                    'Error' => __('Error')
-                ]);
     }
 }
