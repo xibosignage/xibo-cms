@@ -255,8 +255,7 @@ class NationalWeatherServiceConnector implements ConnectorInterface, EmergencyAl
             $certainty = $this->getEntryData('certainty');
 
             // Check if the retrieved CAP data matches the configuration filters
-            if (
-                !$this->matchesFilter($status, $config['status']) ||
+            if (!$this->matchesFilter($status, $config['status']) ||
                 !$this->matchesFilter($msgType, $config['msgType']) ||
                 !$this->matchesFilter($urgency, $config['urgency']) ||
                 !$this->matchesFilter($severity, $config['severity']) ||
