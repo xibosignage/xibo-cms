@@ -177,6 +177,12 @@ class SessionHistory implements ReportInterface
         // depending on the date range selected.
         $fromDt = $sanitizedParams->getDate('fromDt');
         $toDt = $sanitizedParams->getDate('toDt');
+        $currentDate = Carbon::now()->startOfDay();
+
+        // If toDt is current date then make it current datetime
+        if ($toDt->format('Y-m-d') == $currentDate->format('Y-m-d')) {
+            $toDt = Carbon::now();
+        }
 
         $metadata = [
             'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))
