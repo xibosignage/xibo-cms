@@ -12,7 +12,19 @@
             <p class="card-text">{% trans "Date Modified" %} : {{ media.modifiedDt }}</p>
             <a href="{{ url_for("library.view")}}" class="btn btn-primary">{% trans "Go back to Library page" %}</a>
             <hr>
-            <img src="{{ url_for("library.download", {id: media.mediaId}) }}" class="img-fluid" alt="{{ media.fileName }}" style="width: 100%;">
+            {% if media.mediaType == 'image' %}
+                <img src="{{ url_for("library.download", {id: media.mediaId}) }}" class="img-fluid" alt="{{ media.fileName }}">
+            {% elseif media.mediaType == 'video' %}
+                <video class="w-100" controls autoplay muted>
+                    <source src="{{ url_for("library.download", {id: media.mediaId}) }}">
+                    Your browser does not support the video tag.
+                </video>
+            {% elseif media.mediaType == 'audio' %}
+                <audio class="w-100" controls>
+                    <source src="{{ url_for("library.download", {id: media.mediaId}) }}">
+                    Your browser does not support the audio tag.
+                </audio>
+            {% endif %}
         </div>
     </div>
 {% endblock %}
