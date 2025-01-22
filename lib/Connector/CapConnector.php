@@ -532,12 +532,18 @@ class CapConnector implements ConnectorInterface, EmergencyAlertInterface
         // Initialize Emergency Alerts schedule criteria parameters
         $event->addType('emergency_alerts', __('Emergency Alerts'))
                 ->addMetric('emergency_alert_status', __('Status'))
+                    ->addCondition([
+                        'eq' => __('Equal to')
+                    ])
                     ->addValues('dropdown', [
                         self::ACTUAL_ALERT => __('Actual Alerts'),
                         self::TEST_ALERT => __('Test Alerts'),
                         self::NO_ALERT => __('No Alerts')
                     ])
                 ->addMetric('emergency_alert_category', __('Category'))
+                    ->addCondition([
+                        'eq' => __('Equal to')
+                    ])
                     ->addValues('dropdown', [
                         'Geo' => __('Geo'),
                         'Met' => __('Met'),

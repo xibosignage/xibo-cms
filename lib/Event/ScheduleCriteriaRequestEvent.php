@@ -27,7 +27,7 @@ use Xibo\Support\Exception\ConfigurationException;
 /**
  * This class represents a schedule criteria request event. It is responsible for initializing,
  * managing, and retrieving schedule criteria. The class provides methods for adding types,
- * metrics, and their associated values.
+ * metrics, and their associated conditions and values.
  */
 class ScheduleCriteriaRequestEvent extends Event implements ScheduleCriteriaRequestInterface
 {
@@ -35,6 +35,23 @@ class ScheduleCriteriaRequestEvent extends Event implements ScheduleCriteriaRequ
     private $criteria = [];
     private $currentTypeIndex = null;
     private $currentMetric = null;
+    private array $defaultConditions = [];
+
+    public function __construct()
+    {
+        // Initialize default conditions in key-value format
+        $this->defaultConditions = [
+            'set' => __('Is set'),
+            'lt' => __('Less than'),
+            'lte' => __('Less than or equal to'),
+            'eq' => __('Equal to'),
+            'neq' => __('Not equal to'),
+            'gte' => __('Greater than or equal to'),
+            'gt' => __('Greater than'),
+            'contains' => __('Contains'),
+            'ncontains' => __('Not contains'),
+        ];
+    }
 
     /**
      * @inheritDoc
@@ -61,6 +78,7 @@ class ScheduleCriteriaRequestEvent extends Event implements ScheduleCriteriaRequ
         $metric = [
             'id' => $id,
             'name' => $name,
+            'conditions' => $this->formatConditions($this->defaultConditions),
             'values' => null
         ];
 
@@ -73,6 +91,54 @@ class ScheduleCriteriaRequestEvent extends Event implements ScheduleCriteriaRequ
         }
 
         return $this;
+    }
+
+
+    /**
+     * @inheritDoc
+     */
+    public function addCondition(array $conditions): self
+    {
+        // Ensure current type is set
+        if (!isset($this->criteria['types'][$this->currentTypeIndex])) {
+            throw new ConfigurationException(__('Current type is not set.'));
+        }
+
+        // Validate conditions
+        foreach ($conditions as $id => $name) {
+            if (!array_key_exists($id, $this->defaultConditions)) {
+                throw new ConfigurationException(__('Invalid condition ID: %s', $id));
+            }
+        }
+
+        // Assign conditions to the current metric
+        foreach ($this->criteria['types'][$this->currentTypeIndex]['metrics'] as &$metric) {
+            if ($metric['name'] === $this->currentMetric['name']) {
+                $metric['conditions'] = $this->formatConditions($conditions);
+                break;
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * Format conditions from key-value to the required array structure.
+     *
+     * @param array $conditions
+     * @return array
+     */
+    private function formatConditions(array $conditions): array
+    {
+        $formattedConditions = [];
+        foreach ($conditions as $id => $name) {
+            $formattedConditions[] = [
+                'id' => $id,
+                'name' => $name,
+            ];
+        }
+
+        return $formattedConditions;
     }
 
     /**
@@ -121,5 +187,15 @@ class ScheduleCriteriaRequestEvent extends Event implements ScheduleCriteriaRequ
     public function getCriteria(): array
     {
         return $this->criteria;
+    }
+
+    /**
+     * Get the default conditions array.
+     *
+     * @return array
+     */
+    public function getCriteriaDefaultCondition(): array
+    {
+        return $this->formatConditions($this->defaultConditions);
     }
 }
