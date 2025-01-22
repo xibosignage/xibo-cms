@@ -27,6 +27,9 @@
                                             <i title="{{templateName}}" class="module-icon {{#if moduleIcon}}{{moduleIcon}}{{else}}fas fa-object-group{{/if}}"></i>
                                         {{/if}}
                                         {{#if name}}<span class="name" title="{{../../../../trans.group}}">"{{name}}"</span>{{else}}<span class="label">{{../../../../trans.group}}</span>{{/if}}
+                                        {{#if outsideView}}
+                                            <i title="{{../../../../trans.outsideViewArea}}" class="fa fa-warning"></i>
+                                        {{/if}}
                                         <button class="btn btn-sm expand-group-button">
                                             <i class="fa fa-chevron-down hide-expanded" title="{{../../../../trans.expand}}"></i>
                                             <i class="fa fa-chevron-up show-expanded" title="{{../../../../trans.shrink}}"></i>
@@ -68,6 +71,9 @@
                                     {{else}}
                                         <span class="name" title="{{../../../../../../trans.template}}">{{templateName}}</span>
                                     {{/if}}
+                                    {{#if outsideView}}
+                                        <i title="{{../../../../trans.outsideViewArea}}" class="fa fa-warning"></i>
+                                    {{/if}}
                                     {{#if duration}}
                                         <span class="duration" title="{{../../../../trans.duration}}">{{duration}}</span>
                                     {{/if}}
@@ -102,6 +108,10 @@
                             {{../../trans.invalidRegion}}
                         {{/eq}}
                     </span>
+
+                    {{#if outsideView}}
+                        <i title="{{../../trans.outsideViewArea}}" class="fa fa-warning"></i>
+                    {{/if}}
 
                     {{#if duration}}
                         <span class="duration" title="{{../../trans.duration}}">{{duration}}</span>

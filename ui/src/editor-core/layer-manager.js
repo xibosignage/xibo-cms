@@ -75,6 +75,16 @@ LayerManager.prototype.createStructure = function() {
     );
   };
 
+  // Check if object is outside view
+  const isOutsideView = function(pos) {
+    return (
+      pos.left > lD.layout.width ||
+      (pos.left + pos.width) < 0 ||
+      pos.top > lD.layout.height ||
+      (pos.top + pos.height) < 0
+    );
+  };
+
   // Get canvas
   const canvasObject = {};
 
@@ -113,6 +123,12 @@ LayerManager.prototype.createStructure = function() {
             moduleIcon: module.icon,
             selected: group.selected,
             expanded: group.expanded,
+            outsideView: isOutsideView({
+              width: group.width,
+              height: group.height,
+              top: group.top,
+              left: group.left,
+            }),
             layers: [],
           },
           canvasObject.subLayers,
@@ -161,6 +177,12 @@ LayerManager.prototype.createStructure = function() {
               groupId: layerManagerTrans.inGroup
                 .replace('%groupId%', element.groupId),
               selected: element.selected,
+              outsideView: !hasGroup && isOutsideView({
+                width: element.width,
+                height: element.height,
+                top: element.top,
+                left: element.left,
+              }),
             },
             arrayToAddTo,
           );
@@ -199,6 +221,7 @@ LayerManager.prototype.createStructure = function() {
         duration: parseDuration(region.duration),
         id: region.id,
         selected: region.selected,
+        outsideView: isOutsideView(region.dimensions),
       });
     } else {
       // If we have an empty zone or frame, show it on the control
@@ -210,6 +233,7 @@ LayerManager.prototype.createStructure = function() {
           duration: parseDuration(region.duration),
           id: region.id,
           selected: region.selected,
+          outsideView: isOutsideView(region.dimensions),
         });
       }
 
@@ -224,6 +248,7 @@ LayerManager.prototype.createStructure = function() {
           id: widget.id,
           auxId: widget.regionId,
           selected: widget.selected,
+          outsideView: isOutsideView(region.dimensions),
         });
       });
     }
