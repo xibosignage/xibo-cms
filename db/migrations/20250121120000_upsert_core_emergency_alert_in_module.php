@@ -32,13 +32,13 @@ class UpsertCoreEmergencyAlertInModule extends AbstractMigration
     {
         // Insert or update core-emergency-alert into the module table
         $this->execute('
-            INSERT INTO `module` (`moduleId`, `enabled`, `previewEnabled`, `defaultDuration`, `settings`) VALUES
-              (\'core-emergency-alert\', \'1\', \'1\', \'60\', NULL)
+            INSERT INTO `module` (`moduleId`, `enabled`, `previewEnabled`, `defaultDuration`, `settings`)
+            VALUES (\'core-emergency-alert\', \'1\', \'1\', \'60\', NULL) AS newRow
             ON DUPLICATE KEY UPDATE
-                `enabled` = VALUES(`enabled`),
-                `previewEnabled` = VALUES(`previewEnabled`),
-                `defaultDuration` = VALUES(`defaultDuration`),
-                `settings` = VALUES(`settings`);
+                `enabled` = newRow.enabled,
+                `previewEnabled` = newRow.previewEnabled,
+                `defaultDuration` = newRow.defaultDuration,
+                `settings` = newRow.settings;
         ');
     }
 }
