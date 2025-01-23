@@ -65,7 +65,7 @@
     "@mapbox/leaflet-pip": "^1.1.0",
     "@popperjs/core": "^2.11.8",
     "@ssddanbrown/codemirror-lang-twig": "^1.0.0",
-    "@xibosignage/xibo-layout-renderer": "^1.0.6",
+    "@xibosignage/xibo-layout-renderer": "^1.0.10",
     "@xiechao/codemirror-lang-handlebars": "^1.0.4",
     "ajax-bootstrap-select": "^1.4.5",
     "blueimp-file-upload": "^10.32.0",
