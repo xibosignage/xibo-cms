@@ -4,11 +4,27 @@
         {% if media.thumbnail %}<img src="{{ media.thumbnail }}" class="card-img-top" alt="{{ media.name }}">{% endif %}
         <div class="card-body">
             <h5 class="card-title">{% trans "Name" %} : {{ media.name }}</h5>
-            <p class="card-text">{% trans "Tags" %} : {{ media.tags }}</p>
+            <p class="card-text">{% trans "Tags" %} : {{ media.getTagString() }}</p>
             <p class="card-text">{% trans "Type" %} : {{ media.mediaType }}</p>
             {% if media.orientation %}<p class="card-text">{% trans "Orientation" %} : {{ media.orientation }}</p>{% endif %}
-            <p class="card-text">{% trans "File Size" %} : {{ media.fileSizeFormatted }}</p>
+            <p class="card-text">{% trans "File Size" %} : {{ media.getUnmatchedProperty("fileSizeFormatted") }}</p>
+            <p class="card-text">{% trans "Date Created" %} : {{ media.createdDt }}</p>
+            <p class="card-text">{% trans "Date Modified" %} : {{ media.modifiedDt }}</p>
             <a href="{{ url_for("library.view")}}" class="btn btn-primary">{% trans "Go back to Library page" %}</a>
+            <hr>
+            {% if media.mediaType == 'image' %}
+                <img src="{{ url_for("library.download", {id: media.mediaId}) }}" class="img-fluid" alt="{{ media.fileName }}">
+            {% elseif media.mediaType == 'video' %}
+                <video class="w-100" controls autoplay muted>
+                    <source src="{{ url_for("library.download", {id: media.mediaId}) }}">
+                    Your browser does not support the video tag.
+                </video>
+            {% elseif media.mediaType == 'audio' %}
+                <audio class="w-100" controls>
+                    <source src="{{ url_for("library.download", {id: media.mediaId}) }}">
+                    Your browser does not support the audio tag.
+                </audio>
+            {% endif %}
         </div>
     </div>
 {% endblock %}
