@@ -328,13 +328,13 @@ $(function() {
           if (data.recurringEvent) {
             if (data.recurrenceType === 'Week' && data.recurrenceRepeatsOn) {
               const daysOfTheWeek = [
-                displayPageTrans.daysOfTheWeek.monday,
-                displayPageTrans.daysOfTheWeek.tuesday,
-                displayPageTrans.daysOfTheWeek.wednesday,
-                displayPageTrans.daysOfTheWeek.thursday,
-                displayPageTrans.daysOfTheWeek.friday,
-                displayPageTrans.daysOfTheWeek.saturday,
-                displayPageTrans.daysOfTheWeek.sunday,
+                schedulePageTrans.daysOfTheWeek.monday,
+                schedulePageTrans.daysOfTheWeek.tuesday,
+                schedulePageTrans.daysOfTheWeek.wednesday,
+                schedulePageTrans.daysOfTheWeek.thursday,
+                schedulePageTrans.daysOfTheWeek.friday,
+                schedulePageTrans.daysOfTheWeek.saturday,
+                schedulePageTrans.daysOfTheWeek.sunday,
               ];
 
               const recurrenceArray = data.recurrenceRepeatsOn.split(',');
