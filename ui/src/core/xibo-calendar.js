@@ -869,6 +869,9 @@ $(function() {
       $('.cal-context tbody tr').removeClass('selected');
       $('.cal-context tbody tr').removeClass('selected-linked');
 
+      // Remove previous layout preview
+      destroyMiniLayoutPreview();
+
       // If the element was already selected return
       // so that it can deselect everything
       if (alreadySelected) {
@@ -896,7 +899,8 @@ $(function() {
           layoutPreviewUrl.replace(':id', $self.data('elemId')),
         );
 
-        XiboInitialise('');
+        // Initialize container for the Schedule modal handling
+        XiboInitialise('#CalendarContainer');
       }
 
       // Select the clicked element and the linked elements
@@ -1052,8 +1056,11 @@ window.setupScheduleForm = function(dialog) {
           XiboSubmitResponse(xhr, $form);
 
           if (xhr.success && calendar !== undefined) {
-            // Reload the Calendar
+            // Clear option cache
             calendar.options['clearCache'] = true;
+            // Make sure we remove mini layout preview
+            destroyMiniLayoutPreview();
+            // Reload the Calendar
             calendar.view();
           }
         },
