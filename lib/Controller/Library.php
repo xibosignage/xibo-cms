@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -2818,9 +2818,14 @@ class Library extends Base
 
                     // Queue this for upload.
                     // Use a module to make sure our type, etc is supported.
+                    // make sure the name is not longer than 100 characters.
+                    $name = $import->searchResult->title;
+                    if (strlen($name) >= 100) {
+                        $name = trim(preg_replace('/\s+?(\S+)?$/', '', substr($name, 0, 95)), ', ');
+                    }
                     $module = $this->getModuleFactory()->getByType($import->searchResult->type);
                     $import->media = $this->mediaFactory->queueDownload(
-                        $import->searchResult->title,
+                        $name,
                         str_replace(' ', '%20', htmlspecialchars_decode($import->url)),
                         0,
                         [
