@@ -56,6 +56,7 @@ $(function() {
       const selectedType = $target.val();
       const $fields = $('#scheduleCriteriaFields');
       const scheduleCriteria = $fields.data('scheduleCriteria');
+      const criteriaDefaultCondition = $fields.data('criteriaDefaultCondition');
 
       if (scheduleCriteria) {
         if (selectedType === 'custom') {
@@ -63,6 +64,8 @@ $(function() {
           updateMetricsFieldAsText($row);
           // Use a text input for values
           updateValueFieldAsText($row);
+          // Revert condition field to default
+          updateConditionFieldToDefault($row, criteriaDefaultCondition);
         } else if (scheduleCriteria) {
           // Update metrics based on the selected type
           // and change text field to dropdown
@@ -76,6 +79,8 @@ $(function() {
     const $metricLabel = $row.find('label[for="criteria_metric[]"]');
     const $metricSelect =
       $('<select class="form-control" name="criteria_metric[]"></select>');
+    const $fields = $('#scheduleCriteriaFields');
+    const criteriaDefaultCondition = $fields.data('criteriaDefaultCondition');
 
     // Check if scheduleCriteria has types
     if (scheduleCriteria.types) {
@@ -96,6 +101,14 @@ $(function() {
           updateValueField($row, metricData.values);
         } else {
           updateValueFieldAsText($row);
+        }
+
+        // Update the condition field based on the selected metric
+        if (metricData && metricData.conditions) {
+          updateConditionField($row, metricData.conditions);
+        } else {
+          // If no conditions are defined, use the default conditions
+          updateConditionFieldToDefault($row, criteriaDefaultCondition);
         }
       }
     }
@@ -128,6 +141,7 @@ $(function() {
       const selectedMetric = $target.val();
       const $fields = $('#scheduleCriteriaFields');
       const scheduleCriteria = $fields.data('scheduleCriteria');
+      const criteriaDefaultCondition = $fields.data('criteriaDefaultCondition');
       const selectedType = $row.find('select[name="criteria_type[]"]').val();
 
       if (scheduleCriteria && selectedType) {
@@ -142,6 +156,14 @@ $(function() {
             updateValueField($row, metricData.values);
           } else {
             updateValueFieldAsText($row);
+          }
+
+          // Update the condition field based on the selected metric
+          if (metricData && metricData.conditions) {
+            updateConditionField($row, metricData.conditions);
+          } else {
+            // If no conditions are defined, use the default conditions
+            updateConditionFieldToDefault($row, criteriaDefaultCondition);
           }
         }
       }
@@ -908,6 +930,46 @@ $(function() {
     });
   }
 });
+
+// Function to update the Condition dropdown according to the selected metric's available condition
+function updateConditionField($row, conditions, selectedCondition) {
+  const $conditionField = $row.find('select[name="criteria_condition[]"]');
+
+  if ($conditionField.length > 0) {
+    // Clear existing options
+    $conditionField.empty();
+
+    // Populate with provided conditions
+    conditions.forEach((condition) => {
+      $conditionField.append(
+          $('<option>', { value: condition.id }).text(condition.name)
+      );
+    });
+
+    // Pre-select the condition if provided, otherwise select the first condition
+    $conditionField.val(selectedCondition || conditions[0]?.id || '');
+  }
+}
+
+// Function to revert the Condition dropdown to its default selection
+function updateConditionFieldToDefault($row, defaultConditions, selectedCondition) {
+  const $conditionField = $row.find('select[name="criteria_condition[]"]');
+
+  if ($conditionField.length > 0 && defaultConditions) {
+    // Clear existing options
+    $conditionField.empty();
+
+    // Populate with default conditions
+    defaultConditions.forEach((condition) => {
+      $conditionField.append(
+          $('<option>', { value: condition.id }).text(condition.name)
+      );
+    });
+
+    // Pre-select the condition if provided, otherwise select the first condition
+    $conditionField.val(selectedCondition || defaultConditions[0]?.id || '');
+  }
+}
 
 /**
  * Callback for the schedule form
@@ -2205,7 +2267,6 @@ const setupSelectForSchedule = function(dialog) {
  * Configure criteria fields on the schedule add/edit forms.
  * @param {object} dialog - Dialog object
  */
-
 const configureCriteriaFields = function(dialog) {
   const $fields = dialog.find('#scheduleCriteriaFields');
   if ($fields.length <= 0) {
@@ -2233,6 +2294,7 @@ const configureCriteriaFields = function(dialog) {
     typeId,
     selectedMetric,
     elementValue,
+    selectedCondition
   ) {
     const $metricLabel = $row.find('label[for="criteria_metric[]"]');
     let $metricSelect;
@@ -2272,9 +2334,18 @@ const configureCriteriaFields = function(dialog) {
       const type = types ? types.find((t) => t.id === typeId) : null;
       if (type) {
         const metric = type.metrics.find((m) => m.id === selectedMetric);
-        // update value field if metric is present
+        // update value and condition fields if metric is present
         if (metric) {
           updateValueField($row, metric, elementValue);
+
+          // Update the condition field based on the selected metric
+          if (metric.conditions) {
+            updateConditionField($row, metric.conditions, selectedCondition);
+          } else {
+            // Use default conditions if none are defined
+            const criteriaDefaultCondition = $('#scheduleCriteriaFields').data('criteriaDefaultCondition');
+            updateConditionFieldToDefault($row, criteriaDefaultCondition, selectedCondition);
+          }
         }
       }
     }
@@ -2342,6 +2413,7 @@ const configureCriteriaFields = function(dialog) {
         element.type,
         element.metric,
         element.value,
+        element.condition
       );
     });
   } else {

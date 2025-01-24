@@ -25,17 +25,19 @@ namespace Xibo\Event;
 use Xibo\Support\Exception\ConfigurationException;
 
 /**
- * Interface for managing schedule criteria types, metrics, and values.
+ * Interface for managing schedule criteria types, metrics, conditions, and values.
  *
- * Allows the addition of types, metrics, and values in a chained manner:
- * - Start with addType() to add a new type. Call addType() multiple times to add multiple types.
- * - Follow with addMetric() to add metrics under the specified type. Call addMetric() multiple times to add multiple
+ * Allows the addition of types, metrics, conditions, and values in a chained manner:
+ * - Start with `addType()` to add a new type. Call `addType()` multiple times to add multiple types.
+ * - Follow with `addMetric()` to add metrics under the specified type. Call `addMetric()` multiple times to add multiple
  * metrics to the current type.
- * - Conclude with addValues() immediately after addMetric() to specify a set of values for the metric. Each metric can
+ * - Optionally, call `addCondition()` after `addMetric()` to specify a set of conditions for the metric. If not called,
+ * the system will automatically apply default conditions, which include all supported conditions.
+ * - Conclude with `addValues()` immediately after `addMetric()` or `addCondition()` to specify a set of values for the metric. Each metric can
  * have one set of values.
  *
  * The added criteria are then parsed and displayed in the Schedule Criteria Form, enabling users to configure
- * scheduling conditions based on the specified types, metrics, and values.
+ * scheduling conditions based on the specified parameters.
  */
 interface ScheduleCriteriaRequestInterface
 {
@@ -57,6 +59,42 @@ interface ScheduleCriteriaRequestInterface
      * @throws ConfigurationException If the current type is not set.
      */
     public function addMetric(string $id, string $name): self;
+
+    /**
+     * Add conditions to the current metric.
+     *
+     * This method allows you to specify conditions for the currently added metric.
+     * The list of accepted conditions includes:
+     * - 'set' => 'Is set'
+     * - 'lt' => 'Less than'
+     * - 'lte' => 'Less than or equal to'
+     * - 'eq' => 'Equal to'
+     * - 'neq' => 'Not equal to'
+     * - 'gte' => 'Greater than or equal to'
+     * - 'gt' => 'Greater than'
+     * - 'contains' => 'Contains'
+     * - 'ncontains' => 'Not contains'
+     *
+     * **Important Notes:**
+     * - The `addMetric` method **must** be called before using `addCondition`.
+     *   If no metric is currently set, this method will throw a `ConfigurationException`.
+     * - If this method is **not called** for a metric, the system will automatically
+     *   provide the default conditions, which include **all the accepted conditions** listed above.
+     *
+     * Example usage:
+     * ```
+     * $event->addMetric('temp', 'Temperature')
+     *        ->addCondition([
+     *            'eq' => 'Equal to',
+     *            'gt' => 'Greater than',
+     *        ]);
+     * ```
+     *
+     * @param array $conditions An associative array of conditions, where the key is the condition ID and the value is its name.
+     * @return $this
+     * @throws ConfigurationException If the current metric is not set.
+     */
+    public function addCondition(array $conditions): self;
 
     /**
      * Add values to the current metric. The input type must be either "dropdown", "string", "date", or "number".

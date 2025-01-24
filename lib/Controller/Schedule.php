@@ -781,6 +781,7 @@ class Schedule extends Base
 
         // Retrieve the criteria data from the event
         $criteria = $event->getCriteria();
+        $criteriaDefaultCondition = $event->getCriteriaDefaultCondition();
 
         $addFormData = [
             'dayParts' => $this->dayPartFactory->allWithSystem(),
@@ -791,7 +792,8 @@ class Schedule extends Base
             'isScheduleNow' => false,
             'relativeTime' => 0,
             'setDisplaysFromFilter' => true,
-            'scheduleCriteria' => $criteria
+            'scheduleCriteria' => $criteria,
+            'criteriaDefaultCondition' => $criteriaDefaultCondition
         ];
         $formNowData = [];
 
@@ -1339,6 +1341,7 @@ class Schedule extends Base
 
         // Retrieve the data from the event
         $criteria = $event->getCriteria();
+        $criteriaDefaultCondition = $event->getCriteriaDefaultCondition();
 
         if (!$this->isEventEditable($schedule)) {
             throw new AccessDeniedException();
@@ -1403,7 +1406,8 @@ class Schedule extends Base
             'eventStart' => $eventStart,
             'eventEnd' => $eventEnd,
             'eventTypes' => \Xibo\Entity\Schedule::getEventTypesForm(),
-            'scheduleCriteria' => $criteria
+            'scheduleCriteria' => $criteria,
+            'criteriaDefaultCondition' => $criteriaDefaultCondition
         ]);
 
         return $this->render($request, $response);
