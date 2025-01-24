@@ -32,8 +32,11 @@ use Psr\Container\ContainerExceptionInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Container\NotFoundExceptionInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Xibo\Event\ScheduleCriteriaRequestEvent;
+use Xibo\Event\ScheduleCriteriaRequestInterface;
 use Xibo\Event\WidgetDataRequestEvent;
 use Xibo\Factory\DisplayFactory;
+use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 use Xibo\Widget\Provider\DataProviderInterface;
 use Xibo\XMR\ScheduleCriteriaUpdateAction;
@@ -72,6 +75,7 @@ class NationalWeatherServiceConnector implements ConnectorInterface, EmergencyAl
     public function registerWithDispatcher(EventDispatcherInterface $dispatcher): ConnectorInterface
     {
         $dispatcher->addListener(WidgetDataRequestEvent::$NAME, [$this, 'onDataRequest']);
+        $dispatcher->addListener(ScheduleCriteriaRequestEvent::$NAME, [$this, 'onScheduleCriteriaRequest']);
         return $this;
     }
 
@@ -385,5 +389,32 @@ class NationalWeatherServiceConnector implements ConnectorInterface, EmergencyAl
         }
 
         return false;
+    }
+
+    /**
+     * @param ScheduleCriteriaRequestInterface $event
+     * @return void
+     * @throws ConfigurationException
+     */
+    public function onScheduleCriteriaRequest(ScheduleCriteriaRequestInterface $event): void
+    {
+        // Initialize Emergency Alerts schedule criteria parameters but with limited category
+        $event->addType('emergency_alerts', __('Emergency Alerts'))
+                ->addMetric('emergency_alert_status', __('Status'))
+                    ->addCondition([
+                        'eq' => __('Equal to')
+                    ])
+                    ->addValues('dropdown', [
+                        self::ACTUAL_ALERT => __('Actual Alerts'),
+                        self::TEST_ALERT => __('Test Alerts'),
+                        self::NO_ALERT => __('No Alerts')
+                    ])
+                ->addMetric('emergency_alert_category', __('Category'))
+                    ->addCondition([
+                        'eq' => __('Equal to')
+                    ])
+                    ->addValues('dropdown', [
+                        'Met' => __('Met')
+                    ]);
     }
 }
