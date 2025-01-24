@@ -55,6 +55,7 @@ const XiboPlayer = function() {
         $.ajax({
           method: 'GET',
           url: currentWidget.url,
+          dataType: 'json',
         }).done(function(data) {
           // The contents of the JSON file will be an object with data and meta
           // add in local data.
@@ -62,8 +63,14 @@ const XiboPlayer = function() {
             data.data = localData;
           }
 
+          let widgetData = data;
+
+          if (typeof widgetData === 'string') {
+            widgetData = JSON.parse(data);
+          }
+
           resolve({
-            ...data,
+            ...widgetData,
             isDataReady: true,
           });
         }).fail(function(jqXHR, textStatus, errorThrown) {

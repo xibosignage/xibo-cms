@@ -362,7 +362,7 @@ class WidgetHtmlRenderer
     ): string {
         // Do we need to add a URL prefix to the requests?
         $auth = $display->isPwa()
-            ? '&v=7&serverKey=' . $this->config->getSetting('serverKey') . '&hardwareKey=' . $display->license
+            ? '&v=7&serverKey=' . $this->config->getSetting('SERVER_KEY') . '&hardwareKey=' . $display->license
             : null;
         $encryptionKey = $this->config->getApiKeyDetails()['encryptionKey'];
 
