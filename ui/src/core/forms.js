@@ -4590,7 +4590,7 @@ window.forms = {
       dataTableDraw(e, settings);
 
       // Clicky on the +spans
-      $('.assignItem', '#layoutAssignments').on('click', function() {
+      $('.assignItem', '#layoutAssignments').on('click', function(ev) {
         // Get the row that this is in.
         const data = layoutTable.row($(ev.currentTarget).closest('tr')).data();
 
@@ -4623,7 +4623,7 @@ window.forms = {
     $('#FileAssociationsSortable').sortable();
 
     // Bind to the existing items in the list
-    $('#FileAssociationsSortable').find('li span').on('click', function() {
+    $('#FileAssociationsSortable').find('li span').on('click', function(ev) {
       container.data().layout[$(ev.currentTarget).parent().data().layoutId] = 0;
       $(ev.currentTarget).parent().remove();
     });
