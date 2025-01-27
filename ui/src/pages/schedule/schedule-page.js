@@ -1,6 +1,4 @@
 $(function() {
-  $('.custom-date-range').addClass('d-none');
-
   // Select lists
   const dialog = 'body';
 
