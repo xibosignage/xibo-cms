@@ -1712,8 +1712,6 @@ PropertiesPanel.prototype.render = function(
                 left: newPosition.left,
               });
 
-              lD.viewer.updateElementGroup(targetAux);
-
               // Save properties
               lD.viewer.saveElementGroupProperties(
                 $targetElementGroup,
@@ -1733,6 +1731,9 @@ PropertiesPanel.prototype.render = function(
 
             // Update moveable
             lD.viewer.updateMoveable();
+
+            // Update layer manager
+            lD.viewer.layerManager.render();
           });
 
         // Check if we have group scale properties for elements

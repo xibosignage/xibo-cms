@@ -1520,6 +1520,7 @@ Viewer.prototype.updateElement = function(
   // Update element content
   lD.viewer.renderElementContent(
     realElement,
+    lD.viewer.layerManager.renderWithDebounce, // callback
   );
 };
 
@@ -1568,6 +1569,7 @@ Viewer.prototype.updateElementGroup = function(
     // Update element content
     lD.viewer.renderElementContent(
       element,
+      lD.viewer.layerManager.renderWithDebounce, // callback
     );
   });
 };
