@@ -3059,10 +3059,7 @@ window.createMiniLayoutPreview = function(previewUrl) {
   });
 
   $layoutPreview.find('#closeBtn').off().on('click', function() {
-    // Close preview and empty content
-    $layoutPreview.find('#content').html('');
-    $layoutPreview.removeClass('show');
-    $layoutPreview.remove();
+    destroyMiniLayoutPreview();
   });
 
   $layoutPreview.find('#newTabBtn').off().on('click', function() {
@@ -3090,6 +3087,18 @@ window.createMiniLayoutPreview = function(previewUrl) {
 
   // Show layout preview element
   $layoutPreview.addClass('show');
+};
+
+/**
+ * Destroy mini layout preview
+ */
+window.destroyMiniLayoutPreview = function() {
+  const $layoutPreview = $('.mini-layout-preview');
+
+  // Close preview and empty content
+  $layoutPreview.find('#content').html('');
+  $layoutPreview.removeClass('show');
+  $layoutPreview.remove();
 };
 
 /**
