@@ -20,6 +20,7 @@
  */
 
 const managerTemplate = require('../templates/layer-manager.hbs');
+const renderLayerManagerDebounce = 200;
 
 /**
  * Layer Manager
@@ -278,6 +279,15 @@ LayerManager.prototype.setVisible = function(force, savePrefs = true) {
   // Save editor preferences
   (savePrefs) && lD.savePrefs();
 };
+
+/**
+ * Update layer manager with debounce
+ */
+LayerManager.prototype.renderWithDebounce = _.debounce(function(
+  reset,
+) {
+  lD.viewer.layerManager.render(reset);
+}, renderLayerManagerDebounce);
 
 /**
  * Render Manager
