@@ -44,7 +44,7 @@ use Xibo\Widget\Provider\DataProviderInterface;
 use Xibo\XMR\ScheduleCriteriaUpdateAction;
 
 /**
- * A connector to process Common Alert Protocol (CAP) Data
+ * A connector to process Common Alerting Protocol (CAP) Data
  */
 class CapConnector implements ConnectorInterface, EmergencyAlertInterface
 {
@@ -93,7 +93,7 @@ class CapConnector implements ConnectorInterface, EmergencyAlertInterface
 
     public function getDescription(): string
     {
-        return 'Common Alert Protocol';
+        return 'Common Alerting Protocol';
     }
 
     public function getThumbnail(): string
@@ -190,7 +190,7 @@ class CapConnector implements ConnectorInterface, EmergencyAlertInterface
             } catch (Exception $exception) {
                 $this->getLogger()
                     ->error('onDataRequest: Failed to get results. e = ' . $exception->getMessage());
-                $event->getDataProvider()->addError(__('Unable to get Common Alert Protocol (CAP) results.'));
+                $event->getDataProvider()->addError(__('Unable to get Common Alerting Protocol (CAP) results.'));
             }
         }
     }
@@ -310,7 +310,7 @@ class CapConnector implements ConnectorInterface, EmergencyAlertInterface
 
 
     /**
-     * Fetches the CAP (Common Alert Protocol) XML data from the provided emergency alert URL.
+     * Fetches the CAP (Common Alerting Protocol) XML data from the provided emergency alert URL.
      *
      * @param DataProviderInterface $dataProvider
      * @param Carbon $cacheExpiresAt
