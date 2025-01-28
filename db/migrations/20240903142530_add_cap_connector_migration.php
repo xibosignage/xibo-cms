@@ -23,7 +23,7 @@
 use Phinx\Migration\AbstractMigration;
 
 /**
- * Add a new connector (Common Alert Protocol - CAP) to connectors table
+ * Add a new connector (Common Alerting Protocol - CAP) to connectors table
  * @phpcs:disable PSR1.Classes.ClassDeclaration.MissingNamespace
  */
 class AddCapConnectorMigration extends AbstractMigration
