@@ -2739,7 +2739,9 @@ window.makeLocalSelect = function(element, parent, addRandomId = false) {
       }
 
       // Remove whitespaces and split by comma
-      queryText = queryText.replace(' ', '').split(',');
+      queryText = queryText.trim()
+        .split(',').map((subStr) => subStr.trim())
+        .filter((subStr) => subStr !== '');
       queryTags = queryTags.replace(' ', '').split(',');
 
       // Find by text
