@@ -935,7 +935,8 @@ $(function() {
   }
 });
 
-// Function to update the Condition dropdown according to the selected metric's available condition
+// Function to update the Condition dropdown
+// according to the selected metric's available condition
 function updateConditionField($row, conditions, selectedCondition) {
   const $conditionField = $row.find('select[name="criteria_condition[]"]');
 
@@ -946,17 +947,22 @@ function updateConditionField($row, conditions, selectedCondition) {
     // Populate with provided conditions
     conditions.forEach((condition) => {
       $conditionField.append(
-          $('<option>', { value: condition.id }).text(condition.name)
+        $('<option>', {value: condition.id}).text(condition.name),
       );
     });
 
-    // Pre-select the condition if provided, otherwise select the first condition
+    // Pre-select the condition if provided
+    // otherwise select the first condition
     $conditionField.val(selectedCondition || conditions[0]?.id || '');
   }
 }
 
 // Function to revert the Condition dropdown to its default selection
-function updateConditionFieldToDefault($row, defaultConditions, selectedCondition) {
+function updateConditionFieldToDefault(
+  $row,
+  defaultConditions,
+  selectedCondition,
+) {
   const $conditionField = $row.find('select[name="criteria_condition[]"]');
 
   if ($conditionField.length > 0 && defaultConditions) {
@@ -966,11 +972,12 @@ function updateConditionFieldToDefault($row, defaultConditions, selectedConditio
     // Populate with default conditions
     defaultConditions.forEach((condition) => {
       $conditionField.append(
-          $('<option>', { value: condition.id }).text(condition.name)
+        $('<option>', {value: condition.id}).text(condition.name),
       );
     });
 
-    // Pre-select the condition if provided, otherwise select the first condition
+    // Pre-select the condition if provided
+    // otherwise select the first condition
     $conditionField.val(selectedCondition || defaultConditions[0]?.id || '');
   }
 }
@@ -2233,7 +2240,13 @@ const setupSelectForSchedule = function(dialog) {
 
           dialog.find('#contentSelectorTable tbody')
             .html('').append(
-              templates.calendar.syncEventContentSelector(response.data),
+              templates.calendar.syncEventContentSelector({
+                ...response.data,
+                ...{
+                  urlForLayoutSearch: urlForLayoutSearch,
+                  trans: translations.schedule.syncEventSelector,
+                },
+              }),
             );
           const formId = dialog.find('form').attr('id');
           dialog.find('.pagedSelect select.form-control.syncContentSelect')
@@ -2258,10 +2271,10 @@ const setupSelectForSchedule = function(dialog) {
 
             dialog
               .find('.pagedSelect select.form-control.syncContentSelect')
-              .not('#layout_' + leadDisplayId)
-              .each(function() {
-                $(ev.currentTarget).data().initialValue = leadLayoutId;
-                makePagedSelect($(ev.currentTarget), '#' + formId);
+              .not('#layoutId_' + leadDisplayId)
+              .each(function(_idx, el) {
+                $(el).data().initialValue = leadLayoutId;
+                makePagedSelect($(el), '#' + formId);
               });
           });
         }, (xhr) => {
@@ -2301,7 +2314,7 @@ const configureCriteriaFields = function(dialog) {
     typeId,
     selectedMetric,
     elementValue,
-    selectedCondition
+    selectedCondition,
   ) {
     const $metricLabel = $row.find('label[for="criteria_metric[]"]');
     let $metricSelect;
@@ -2350,8 +2363,13 @@ const configureCriteriaFields = function(dialog) {
             updateConditionField($row, metric.conditions, selectedCondition);
           } else {
             // Use default conditions if none are defined
-            const criteriaDefaultCondition = $('#scheduleCriteriaFields').data('criteriaDefaultCondition');
-            updateConditionFieldToDefault($row, criteriaDefaultCondition, selectedCondition);
+            const criteriaDefaultCondition =
+              $('#scheduleCriteriaFields').data('criteriaDefaultCondition');
+            updateConditionFieldToDefault(
+              $row,
+              criteriaDefaultCondition,
+              selectedCondition,
+            );
           }
         }
       }
@@ -2420,7 +2438,7 @@ const configureCriteriaFields = function(dialog) {
         element.type,
         element.metric,
         element.value,
-        element.condition
+        element.condition,
       );
     });
   } else {
