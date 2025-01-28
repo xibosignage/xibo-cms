@@ -1445,9 +1445,18 @@ XiboPlayer.prototype.renderGlobalElements = function(currentWidget) {
                 $elementContentContainer,
               );
             }
+          });
 
+          // If there's a group content element
+          // Append it to the page
+          if ($groupContent) {
+            $content.append($groupContent);
+          }
+
+          // Invoke groupItem onTemplateRender if present
+          Promise.all(Array.from(elemObj.items).map(function(groupItem) {
             const itemID =
-                groupItem.uniqueID || groupItem.templateData?.uniqueID;
+            groupItem.uniqueID || groupItem.templateData?.uniqueID;
 
             // Call onTemplateRender
             // Handle the rendering of the template
@@ -1459,13 +1468,7 @@ XiboPlayer.prototype.renderGlobalElements = function(currentWidget) {
               {groupItem, ...groupItem.templateData, data: {}},
               meta,
             );
-          });
-
-          // If there's a group content element
-          // Append it to the page
-          if ($groupContent) {
-            $content.append($groupContent);
-          }
+          }));
         }
       } else {
         // Single elements
