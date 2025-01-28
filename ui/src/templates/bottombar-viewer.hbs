@@ -12,7 +12,7 @@
         {{else eq object.type "element"}}
             <div class="info">
                 <div class="label-name">
-                    <strong>{{objectTypeName}}</strong> | <div title="{{trans.templateName}}">{{object.template.title}}</div>
+                    <strong>{{objectTypeName}}</strong> | <div class="mediaTemplate" title="{{trans.templateName}}">{{object.template.title}}</div>
                     {{#if object.elementName}} - <div class="name" title="{{trans.elementName}}">"{{object.elementName}}"</div>{{/if}}
                     {{#if object.elementMediaInfo}}
                         - <div class="mediaInfo">[

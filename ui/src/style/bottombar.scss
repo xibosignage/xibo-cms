@@ -107,9 +107,21 @@
                         text-overflow: ellipsis;
                     }
 
+
+                    & > .mediaTemplate {
+                        white-space: nowrap;
+                    }
+
                     & > .mediaInfo {
                         display: inline-flex;
                         gap: 6px;
+                        overflow: hidden;
+
+                        .mediaInfoName {
+                            white-space: nowrap;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+                        }
                     }
                 }
             }

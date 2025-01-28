@@ -2423,6 +2423,37 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
               draggableData.originalHeight,
             );
 
+            // Limit name for an element
+            const limitStringLength = function(
+              originalString,
+              maxLength,
+            ) {
+              const words =
+                originalString.split(',').map((word) => word.trim());
+              let result = '';
+
+              for (let word of words) {
+                // Check if single words exceeds max lenght
+                // and trim it
+                if (word.length > maxLength) {
+                  // If it does, trim it to maxLength
+                  word = word.slice(0, maxLength);
+                }
+
+                // Check if adding the next word would exceed the maxLength
+                if (
+                  (result + (result ? ', ' : '') + word).length <=
+                  maxLength
+                ) {
+                  result += (result ? ', ' : '') + word;
+                } else {
+                  break;
+                }
+              }
+
+              return result;
+            };
+
             // Element options
             const elementOptions = {
               id: draggableData.templateId,
@@ -2437,7 +2468,10 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
               extendsOverride: draggableData.extendsOverride,
               extendsOverrideId: draggableData.extendsOverrideId,
               mediaId: draggableData.mediaId,
-              mediaName: draggableData.cardTitle,
+              mediaName: limitStringLength(
+                draggableData.cardTitle,
+                95,
+              ),
               isVisible: draggableData.isVisible,
             };
 
