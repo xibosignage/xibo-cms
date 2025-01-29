@@ -127,7 +127,8 @@ class DayPart extends Base
             'name' => $sanitizedParams->getString('name'),
             'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
             'isAlways' => $sanitizedParams->getInt('isAlways'),
-            'isCustom' => $sanitizedParams->getInt('isCustom')
+            'isCustom' => $sanitizedParams->getInt('isCustom'),
+            'isRetired' => $sanitizedParams->getInt('isRetired')
         ];
 
         $dayParts = $this->dayPartFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter($filter, $sanitizedParams));

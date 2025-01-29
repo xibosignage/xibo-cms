@@ -53,7 +53,7 @@
 
                         {% set title %}{% trans "Retired" %}{% endset %}
                         {% set helpText %}{% trans "Retire? It will no longer be visible when scheduling" %}{% endset %}
-                        {{ forms.checkbox("retired", title, dayPart.isRetired, helpText) }}
+                        {{ forms.checkbox("isRetired", title, dayPart.isRetired, helpText) }}
 
                         {% set title %}{% trans "Start Time" %}{% endset %}
                         {% set helpText %}{% trans "Enter the start time for this daypart" %}{% endset %}
