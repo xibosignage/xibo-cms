@@ -1636,13 +1636,13 @@ div.dataTables_wrapper div.dataTables_info {
     align-items: center;
 }
 
-.text-left {
+.welcome-header .text-left {
     display: flex;
     flex-direction: column;
     width: 50%;
 }
 
-.welcome-image-box {
+.welcome-header .welcome-image-box {
     display: flex;
     flex-grow: 1;
     width: 50%;
@@ -1655,11 +1655,12 @@ div.dataTables_wrapper div.dataTables_info {
     .welcome-header{
         flex-direction: column;
     }
-    .welcome-image-box {
+
+    .welcome-header .welcome-image-box {
         margin-top: 80px;
         width: 100%;
     }
-    .text-left{
+    .welcome-header .text-left{
         width: 100%;
     }
 }
