@@ -111,7 +111,7 @@
             {% set secondLink_schedule = helpService.getLandingPage() ~ "scheduling_events.html" %}
             {% set iconName_schedule = 'schedule' %}
             
-            <div class="container-fluid d-flex flex-column" style="row-gap: 40px; margin-top: 80px;">
+            <div class="d-flex flex-column" style="row-gap: 40px; margin-top: 80px;">
                 {% if currentUser.featureEnabled("displays.view") %}
                     {{ components.serviceCard(title_displays, text_displays, firstLink_displays, secondLink_displays, iconName_displays) }}
                 {% endif %}
@@ -150,7 +150,7 @@
                 {% endif %}
             {% endset %}
 
-            <div class="container-fluid others-card-container">
+            <div class="others-card-container">
                 {{ components.othersCard(documentationTitle, documentationText, documentationLinks, "documentation") }}
                 {% if isXiboThemed %}
                     {{ components.othersCard(trainingTitle, trainingText, trainingLinks, "training") }}

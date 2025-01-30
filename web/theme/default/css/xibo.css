@@ -1627,7 +1627,7 @@ div.dataTables_wrapper div.dataTables_info {
     overflow: hidden;
     position: relative;
     top: -15px;
-    right: -8px
+    right: -8px;
 }
 
 .welcome-header {
@@ -1737,19 +1737,19 @@ div.dataTables_wrapper div.dataTables_info {
 }
 
 
-.onboarding-card  h3{
+.onboarding-card  h3 {
     font-size: 24px;
     line-height: 16px;
     margin-bottom: 0;
     font-weight: 600;
 }
 
-.onboarding-card:hover{
+.onboarding-card:hover {
     background-color: #0E70F6;
     color: #ffffff;
 }
 
-.onboarding-welcome-image{
+.onboarding-welcome-image {
     border-radius: 20px;
     box-shadow: 0px 5px 30px 0px rgba(0, 0, 0, 0.10);
     width: 100%;
@@ -1837,19 +1837,19 @@ div.dataTables_wrapper div.dataTables_info {
     line-height: normal
 }
 
-.others-card a{
+.others-card a {
     color: #1775F6;
     font-size: 16px;
     font-weight: 500;
 }
 
-.links-list{
+.links-list {
     display: flex;
     column-gap: 24px;
     margin-top: auto;
 }
 
-.optional-link{
+.optional-link {
     color: #1775F6;
     text-decoration: underline;
     position: relative;
@@ -1871,8 +1871,5 @@ div.dataTables_wrapper div.dataTables_info {
     margin: 30px;
     bottom: 0;
     right: 0;
-}
-
-html {
-    scroll-behavior: smooth;
+    z-index: 3;
 }
