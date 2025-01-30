@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -422,7 +422,7 @@ class WidgetHtmlRenderer
                     $isSupportsDataUrl
                         ? ($display->isPwa()
                             ? '/pwa/getData?widgetId=' . $value[1] . $auth
-                            : '/' . $value[1] . '.json')
+                            : $value[1] . '.json')
                         : 'null',
                     $output,
                 );
