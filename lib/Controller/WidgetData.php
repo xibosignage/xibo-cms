@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -44,7 +44,7 @@ class WidgetData extends Base
 
     // phpcs:disable
     /**
-     * @SWG\Post(
+     * @SWG\Get(
      *  path="/playlist/widget/data/{id}",
      *  operationId="getWidgetData",
      *  tags={"widget"},
