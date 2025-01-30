@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -415,7 +415,7 @@ class Soap
                         $newUrl = LinkSigner::generateSignedLink(
                             $this->display,
                             $this->configService->getApiKeyDetails()['encryptionKey'],
-                            null,
+                            $this->configService->getSetting('CDN_URL'),
                             $type,
                             $realId,
                             $node->getAttribute('saveAs'),
@@ -768,7 +768,7 @@ class Soap
                     $file->setAttribute('path', LinkSigner::generateSignedLink(
                         $this->display,
                         $this->configService->getApiKeyDetails()['encryptionKey'],
-                        null,
+                        $this->configService->getSetting('CDN_URL'),
                         'M',
                         $id,
                         $path,
@@ -856,7 +856,7 @@ class Soap
                     $file->setAttribute('path', LinkSigner::generateSignedLink(
                         $this->display,
                         $this->configService->getApiKeyDetails()['encryptionKey'],
-                        null,
+                        $this->configService->getSetting('CDN_URL'),
                         'L',
                         $layoutId,
                         $fileName,
@@ -2523,6 +2523,7 @@ class Soap
                             }
 
                             $widgetData = $widgetDataProviderCache->decorateForPlayer(
+                                $this->configService,
                                 $this->display,
                                 $this->configService->getApiKeyDetails()['encryptionKey'],
                                 $dataProvider->getData(),
@@ -2995,7 +2996,7 @@ class Soap
             $httpFilePath = LinkSigner::generateSignedLink(
                 $this->display,
                 $this->configService->getApiKeyDetails()['encryptionKey'],
-                null,
+                $this->configService->getSetting('CDN_URL'),
                 RequiredFile::$TYPE_DEPENDENCY,
                 $dependency->id,
                 $dependencyBasePath,

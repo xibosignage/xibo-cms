@@ -374,7 +374,7 @@ class WidgetHtmlRenderer
                     $url = LinkSigner::generateSignedLink(
                         $display,
                         $encryptionKey,
-                        null,
+                        $this->config->getSetting('CDN_URL'),
                         'P',
                         1,
                         'bundle.min.js',
@@ -393,7 +393,7 @@ class WidgetHtmlRenderer
                     $url = LinkSigner::generateSignedLink(
                         $display,
                         $encryptionKey,
-                        null,
+                        $this->config->getSetting('CDN_URL'),
                         'P',
                         1,
                         'fonts.css',
@@ -442,7 +442,7 @@ class WidgetHtmlRenderer
                         $url = LinkSigner::generateSignedLink(
                             $display,
                             $encryptionKey,
-                            null,
+                            $this->config->getSetting('CDN_URL'),
                             'M',
                             $value[1],
                             $storedAs[$value[1]]
@@ -470,7 +470,7 @@ class WidgetHtmlRenderer
                         $url = LinkSigner::generateSignedLink(
                             $display,
                             $encryptionKey,
-                            null,
+                            $this->config->getSetting('CDN_URL'),
                             'P',
                             $asset->id,
                             $asset->getFilename(),
@@ -499,7 +499,7 @@ class WidgetHtmlRenderer
                             $url = LinkSigner::generateSignedLink(
                                 $display,
                                 $encryptionKey,
-                                null,
+                                $this->config->getSetting('CDN_URL'),
                                 'P',
                                 $asset->id,
                                 $asset->getFilename(),
