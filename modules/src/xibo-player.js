@@ -34,6 +34,7 @@ const XiboPlayer = function() {
     // if we are a dataset type, then first check to see if there
     // is realtime data.
     console.debug('getWidgetData: ' + currentWidget.widgetId);
+    console.debug('getWidgetData: windowLocation:', window.location);
 
     let localData;
     if (currentWidget.properties?.dataSetId) {
@@ -49,14 +50,20 @@ const XiboPlayer = function() {
       // or if we are not in preview and have empty data on Widget (like text)
       // do not run ajax use that data instead
       if (String(currentWidget.url) !== 'null') {
+        let ajaxOptions = {
+          method: 'GET',
+          url: currentWidget.url,
+        };
+
+        // We include dataType for ChromeOS player consumer
+        if (window.location && window.location.pathname === '/pwa/') {
+          ajaxOptions.dataType = 'json';
+        }
+
         // else get data from widget.url,
         // this will be either getData for preview
         // or new json file for v4 players
-        $.ajax({
-          method: 'GET',
-          url: currentWidget.url,
-          dataType: 'json',
-        }).done(function(data) {
+        $.ajax(ajaxOptions).done(function(data) {
           // The contents of the JSON file will be an object with data and meta
           // add in local data.
           if (localData) {
