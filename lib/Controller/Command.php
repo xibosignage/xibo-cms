@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -98,7 +98,7 @@ class Command extends Base
      *  @SWG\Parameter(
      *      name="useRegexForName",
      *      in="query",
-     *      description="Flag (0,1). When filtering by multiple commands in command filter, should we use regex?,
+     *      description="Flag (0,1). When filtering by multiple commands in command filter, should we use regex?",
      *      type="integer",
      *      required=false
      *   ),

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -1676,8 +1676,14 @@ class Widget extends Base
      *      type="integer",
      *      required=true
      *  ),
-     *  @SWG\RequestBody(
-     *      description="JSON representing the elements assigned to this widget"
+     *  @SWG\Parameter(
+     *      name="elements",
+     *      in="body",
+     *      description="JSON representing the elements assigned to this widget",
+     *      @SWG\Schema(
+     *          type="string"
+     *      ),
+     *      required=true
      *  ),
      *  @SWG\Response(
      *      response=204,
@@ -1887,8 +1893,14 @@ class Widget extends Base
      *      type="integer",
      *      required=true
      *  ),
-     *  @SWG\RequestBody(
-     *      description="A datatype"
+     *  @SWG\Parameter(
+     *      name="dataType",
+     *      in="body",
+     *      description="A JSON representation of your dataType",
+     *      @SWG\Schema(
+     *          type="string"
+     *      ),
+     *      required=true
      *  ),
      *  @SWG\Response(
      *      response=200,

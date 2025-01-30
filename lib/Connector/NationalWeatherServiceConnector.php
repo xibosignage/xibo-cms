@@ -192,8 +192,7 @@ class NationalWeatherServiceConnector implements ConnectorInterface, EmergencyAl
                 } else {
                     $capStatus = 'No Alerts';
                     $category = '';
-                    $event->getDataProvider()->addError(__('No alerts are available for the selected area at the 
-                    moment.'));
+                    $event->getDataProvider()->addError(__('No alerts are available for the selected area at the moment.'));//phpcs:ignore
                 }
 
                 // initialize status for schedule criteria push message

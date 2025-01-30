@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -1089,7 +1089,7 @@ class Layout extends Base
      * @return \Slim\Http\Response
      * @throws \Xibo\Support\Exception\GeneralException
      *
-     * @SWG\Clear(
+     * @SWG\Post(
      *  path="/layout/{layoutId}",
      *  operationId="layoutClear",
      *  tags={"layout"},
@@ -1111,6 +1111,7 @@ class Layout extends Base
      *          description="Location of the new record",
      *          type="string"
      *      )
+     *  )
      * )
      */
     public function clear(Request $request, Response $response, $id): Response

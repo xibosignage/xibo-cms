@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -26,6 +26,10 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
+/**
+ * Application Request
+ * @SWG\Definition()
+ */
 class ApplicationRequest implements \JsonSerializable
 {
     use EntityTrait;
