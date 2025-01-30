@@ -29,15 +29,15 @@
 
 {% block pageContent %}
     <div id="top" class="welcome-page flex-column" style="background-image: url('{{ theme.rootUri() }}theme/default/img/vector-bg.png');">
-        <div class="container-fluid">
+        <div class="container-fluid" style="max-width: 1500px;">
             <div class="welcome-header" style="column-gap: 145px;">
                 <div class="text-left">
                     {% set productName = theme.getThemeConfig('theme_title') %}
                     <h2 style="font-size: 48px; color: #0E70F6; margin-bottom: 16px;">{% trans %}Welcome to the {{productName}} CMS{% endtrans %}</h2>
                     <p style="font-size: 24px;">{% trans %}The Content Management System (CMS) lets you create, manage, and update content. You can upload images and videos, design layouts, schedule content timing and location, and control the whole display network.{% endtrans %}</p>
                     <div class="d-flex" style="column-gap: 8px;">
-                        <button type="button" class="btn-rounded btn-orange">Documentation</button>
-                        <button type="button" class="btn-rounded btn-outlined">Training</button>
+                        <a href="{{ helpService.getLandingPage() }}" type="button" class="btn-rounded btn-orange">Documentation</a>
+                        <a href="https://xibosignage.com/training" type="button" class="btn-rounded btn-outlined">Training</a>
                     </div>
                 </div>
                 <div class="welcome-image-box">
