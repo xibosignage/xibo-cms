@@ -1127,7 +1127,6 @@ ul li.active.tab-design:hover a {
 .override-input {
     padding: 6px !important;
     position: relative !important;
-    opacity: 0.8;
 }
 
 .override-input button.button-close-override {
