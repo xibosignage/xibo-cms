@@ -21,147 +21,145 @@
  */
 #}
 {% extends "authed.twig" %}
-{% import "inline.twig" as inline %}
+{% import "components.twig" as components %}
 
 {% set isXiboThemed = theme.getThemeConfig("app_name") == "Xibo" %}
 
 {% block title %}{{ "Welcome"|trans }} | {% endblock %}
 
 {% block pageContent %}
-    <div class="container-fluid">
-        <div class="widget">
-            <div class="widget-body">
-                <div class="container-fluid">
-                    <div class="row">
-                        <div class="col-12 text-center">
-                            {% set productName = theme.getThemeConfig('theme_title') %}
-                            <h2>{% trans %}Welcome to the {{productName}} CMS{% endtrans %}</h2>
-                            <p>{% trans %}This is the content management system, or CMS for short, where you upload your images/videos, create and schedule your layouts, and manage your display network.{% endtrans %}</p>
-                        </div>
+    <div id="top" class="welcome-page flex-column" style="background-image: url('{{ theme.rootUri() }}theme/default/img/vector-bg.png');">
+        <div class="container-fluid" style="max-width: 1500px;">
+            <div class="welcome-header" style="column-gap: 145px;">
+                <div class="text-left">
+                    {% set productName = theme.getThemeConfig('theme_title') %}
+                    <h2 style="font-size: 48px; color: #0E70F6; margin-bottom: 16px;">{% trans %}Welcome to the {{productName}} CMS{% endtrans %}</h2>
+                    <p style="font-size: 24px;">{% trans %}The Content Management System (CMS) lets you create, manage, and update content. You can upload images and videos, design layouts, schedule content timing and location, and control the whole display network.{% endtrans %}</p>
+                    <div class="d-flex" style="column-gap: 8px;">
+                        <a href="{{ helpService.getLandingPage() }}" type="button" class="btn-rounded btn-orange">Documentation</a>
+                        <a href="https://xibosignage.com/training" type="button" class="btn-rounded btn-outlined">Training</a>
                     </div>
                 </div>
-                <div class="container-fluid">
-                    <div class="row">
-                        {% if currentUser.featureEnabled("displays.view") %}
-                        <div class="col-4">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5 class="card-title">{{ "Overview"|trans }} <i class="fas fa-list-alt float-right"></i></h5>
-                                    <p class="card-text">{{ "The Content Management System (CMS) is where content is created/uploaded and scheduled to Displays. A Player application downloads new content and schedules from the CMS to display on screens."|trans }}</p>
-                                </div>
-                                <ul class="list-group list-group-flush">
-                                    <li class="list-group-item">{{ "The player application needs to run on a device attached a screen and a network so that is can connector to the CMS to download new content at regular defined intervals."|trans }}</li>
-                                    <li class="list-group-item">{{ "Downloaded content from the CMS is cached to the Player so if there is a problem connecting to the CMS, it can continue to show the stored content until the connection between the CMS and Player is re-established."|trans }}</li>
-                                    <li class="list-group-item">{{ "Once downloaded, the player checks the schedule it has been sent and will show the appropriate content based on the local date and time."|trans }}</li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="col-4">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5 class="card-title">{{ "Install / Upgrade"|trans }} <i class="fas fa-download float-right"></i></h5>
-                                    {% if isXiboThemed %}
-                                        <p class="card-text">{{ "We have player software available for Android, LG webOS, Samsung Tizen, and Windows."|trans }}</p>
-                                        <p class="card-text">{{ "There are installation and upgrade guides for all these options in our documentation."|trans }}</p>
-                                        <p class="card-text">{{ "If you are undecided which device to use, our installation documentation is a good place to see what options are available."|trans }}</p>
-                                        <a href="https://xibosignage.com/install-upgrade#install" target="_blank"  class="card-link">Install</a>
-                                        <a href="https://xibosignage.com/install-upgrade#upgrade" target="_blank"  class="card-link">Upgrade</a>
-                                    {% else %}
-                                        <p class="card-text">{{ "Your service provider can help you with installation and upgrade."|trans }}</p>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        {% endif %}
-                        {% if currentUser.featureEnabled("library.view") or currentUser.featureEnabled("layout.view") %}
-                        <div class="col-4">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5 class="card-title">{{ "Content"|trans }} <i class="fas fa-icons float-right"></i></h5>
-                                    <p class="card-text">{{ "A Layout is the complete content design to be shown on Displays. With a powerful Layout Editor Users can easily create eye catching content without having to leave the Xibo CMS."|trans }}</p>
-                                    <p class="card-text">{{ "Media is the content we want to show on Displays, such as images and videos."|trans }}</p>
-                                    {% if currentUser.featureEnabled("layout.view") %}
-                                    <a class="card-link" href="{{ url_for("layout.view") }}">{% trans "Layouts" %}</a>
-                                    {% endif %}
-
-                                    {% if currentUser.featureEnabled("library.view") %}
-                                    <a class="card-link" href="{{ url_for("library.view") }}">{% trans "Media" %}</a>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        {% endif %}
-                        {% if currentUser.featureEnabled("schedule.view") %}
-                        <div class="col-4">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5 class="card-title">{{ "Schedule"|trans }} <i class="fas fa-calendar-alt float-right"></i></h5>
-                                    <p class="card-text">{{ "Scheduling is highly flexible and supports scheduling to single Displays as well as to Display Groups. Displays check for new scheduled content periodically and will download new items in advance of playback."|trans }}</p>
-                                    <a class="card-link" href="{{ url_for("schedule.view") }}">{% trans "Schedule" %}</a>
-                                </div>
-                            </div>
-                        </div>
-                        {% endif %}
-                        {% if currentUser.featureEnabled("displays.view") %}
-                        <div class="col-4">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5 class="card-title">{{ "Displays"|trans }} <i class="fa fa-tv float-right"></i></h5>
-                                    <p class="card-text">{{ "A Display is the connection from the Player to the CMS which groups together content and schedule information. Each Display is uniquely identified in the CMS so that each Display can have its own Media content, Layout designs and Schedules available each with uniquely identified Reporting statistics."|trans }}</p>
-                                    <a class="card-link" href="{{ url_for("display.view") }}">{% trans "Displays" %}</a>
-                                </div>
-                            </div>
-                        </div>
-                        {% endif %}
-                    </div>
-                    <div class="row">
-                        <div class="col-12">
-                            <hr>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-4">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5 class="card-title">{{ "Documentation"|trans }} <i class="fas fa-book-open float-right"></i></h5>
-                                    <p class="card-text">{% trans "Documentation for administrators, developers and users." %}</p>
-                                    <p class="card-text">{% trans "All of our documentation is regularly updated to reflect changes and additions to the platform, and so a valuable reference tool for all users!" %}</p>
-                                    <a class="card-link" href="{{ helpService.getLandingPage() }}" target="_blank">{{ "User Manual"|trans }}</a>
-                                    {% if isXiboThemed and currentUser.isSuperAdmin() %}
-                                        <a class="card-link" href="https://xibosignage.com/docs/setup" target="_blank">{{ "Admin"|trans }}</a>
-                                        <a class="card-link" href="https://xibosignage.com/docs/developer" target="_blank">{{ "Developer"|trans }}</a>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                        {% if isXiboThemed %}
-                        <div class="col-4">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5 class="card-title">{{ "Training"|trans }} <i class="fas fa-user-alt float-right"></i></h5>
-                                    <p class="card-text">{% trans "Self-paced online training videos designed to get you up and running with Xibo in no time." %}</p>
-                                    <a class="card-link" href="https://xibosignage.com/training" target="_blank">{{ "New User Training"|trans }}</a>
-                                </div>
-                            </div>
-                        </div>
-                        {% endif %}
-                        <div class="col-4">
-                            <div class="card">
-                                <div class="card-body">
-                                    <h5 class="card-title">{{ "Help"|trans }} <i class="fa fa-question-circle float-right"></i></h5>
-                                    <p class="card-text">{% trans "We are here to help! All the support you’re looking for, at your fingertips." %}</p>
-                                    {% if isXiboThemed %}
-                                        <a href="https://xibosignage.com/install-upgrade#install" target="_blank"  class="card-link">{{ "Help Center"|trans }}</a>
-                                        <a href="https://community.xibo.org.uk" target="_blank"  class="card-link">Community</a>
-                                    {% else %}
-                                        <p class="card-text">{{ "Contact your service provider for assistance."|trans }}</p>
-                                    {% endif %}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="welcome-image-box">
+                    <img class="onboarding-welcome-image" src="{{ theme.rootUri() }}theme/default/img/onboarding.png" alt="Welcome Image">
                 </div>
             </div>
+            {% set onboardingCard = [
+                {
+                    title: 'Displays' | trans,
+                    iconName: 'displays-icon'
+                },
+                {
+                    title: 'Existing <br></br> Content' | trans,
+                    iconName: 'existing-content-icon'
+                },
+                {
+                    title: 'Playlists' | trans,
+                    iconName: 'playlist-icon'
+                },
+                {
+                    title: 'Create <br></br> Content' | trans,
+                    iconName: 'create-content-icon'
+                },
+                {
+                    title: 'Schedule' | trans,
+                    iconName: 'schedule-icon'
+                },                         
+            ] %}
+            <div class="onboarding-cards-container">
+                {% for card in onboardingCard %}
+                    {{ components.welcomeCard(
+                        card.title,
+                        card.iconName,
+                    ) }}
+                {% endfor %}
+                <img class="line-curve" src="{{ theme.rootUri() }}theme/default/img/line-curve-vector.svg" alt="Welcome Image">
+            </div>
+            {% set title_displays = 'Displays'|trans %}
+            {% set text_displays = 'Get started by installing one of our Players and entering the pairing code into the <a class="text-link">Displays page</a> so that you can show your content.
+                If you don’t have a device to use as a Player you can preview and test scheduling in your web browser.'|trans %}
+            {% set firstLink_displays = url_for("display.view") %}
+            {% set secondLink_displays = helpService.getLandingPage() ~ "displays.html" %}
+            {% set iconName_displays = 'displays' %}
+
+            {% set title_existing_content = 'Existing Content'|trans %}
+            {% set text_existing_content = 'Do you already have content ready to show? Get started showing that in 2 easy steps. Upload any existing full-screen 
+                images or videos to the <a class="text-link">Media Library</a>, and then schedule those to be shown when you want on your display from the <a class="text-link">Schedule page</a>.'|trans %}
+            {% set firstLink_existing_content = url_for("library.view") %}
+            {% set secondLink_existing_content = url_for("schedule.view") %}
+            {% set secondLink_existing_otherLink = helpService.getLandingPage() ~ "media_library.html" %}
+            {% set iconName_existing_content = 'existing-content' %}
+
+            {% set title_playlists = 'Playlists'|trans %}
+            {% set text_playlists = 'If you’ve got lots of images or videos to show, then put them into a 
+                Playlist and then schedule the Playlist on your display for easier management.'|trans %}
+            {% set firstLink_playlists = url_for("playlist.view") %}
+            {% set secondLink_playlists = helpService.getLandingPage() ~ "media_playlists.html" %}
+            {% set iconName_playlists = 'playlists' %}
+
+            {% set title_create_content = 'Create Content'|trans %}
+            {% set text_create_content = 'If you need to create more complex content, the Layout Editor is there to help you create something stunning. 
+                                        There are pre-designed templates that you can work from, or you can create something from scratch.'|trans %}
+            {% set firstLink_create_content = url_for("layout.view") %}
+            {% set secondLink_create_content = helpService.getLandingPage() ~ "layouts_editor.html" %}
+            {% set iconName_create_content = 'create-content' %}
+
+            {% set title_schedule = 'Schedule'|trans %}
+            {% set text_schedule = 'You can mix and match between scheduling media items, layouts, and campaigns as you want. 
+                                    If you schedule multiple things at the same time, they’ll be shown one after the other.'|trans %}
+            {% set firstLink_schedule = url_for("schedule.view") %}
+            {% set secondLink_schedule = helpService.getLandingPage() ~ "scheduling_events.html" %}
+            {% set iconName_schedule = 'schedule' %}
+            
+            <div class="d-flex flex-column" style="row-gap: 40px; margin-top: 80px;">
+                {% if currentUser.featureEnabled("displays.view") %}
+                    {{ components.serviceCard(title_displays, text_displays, firstLink_displays, secondLink_displays, iconName_displays) }}
+                {% endif %}
+                {% if currentUser.featureEnabled("library.view") or currentUser.featureEnabled("layout.view") %}
+                    {{ components.serviceCard(title_existing_content, text_existing_content, firstLink_existing_content, secondLink_existing_content, iconName_existing_content, secondLink_existing_otherLink ) }}
+                    {{ components.serviceCard(title_playlists, text_playlists, firstLink_playlists, secondLink_playlists, iconName_playlists) }}
+                    {{ components.serviceCard(title_create_content, text_create_content, firstLink_create_content, secondLink_create_content, iconName_create_content) }}
+                {% endif %}
+                {% if currentUser.featureEnabled("schedule.view") %}
+                    {{ components.serviceCard(title_schedule, text_schedule, firstLink_schedule, secondLink_schedule, iconName_schedule) }}
+                {% endif %}
+
+            </div>
+            {% set documentationTitle %}{{ 'Documentation'|trans }}{% endset %}
+            {% set documentationText %}{{ 'Our documentation is there to help you at every turn. It’s updated regularly to reflect changes and additions to the platform, and so it’s a valuable reference tool for all users.'|trans }}{% endset %}
+            {% set documentationLinks %}
+                <a href="{{ helpService.getLandingPage() }}" target="_blank">{{ 'User Manual'|trans }}</a>
+                {% if isXiboThemed and currentUser.isSuperAdmin() %}
+                    <a href="https://xibosignage.com/docs/setup" target="_blank">{{ 'Admin'|trans }}</a>
+                    <a href="https://xibosignage.com/docs/developer" target="_blank">{{ 'Developer'|trans }}</a>
+                {% endif %}
+                {% endset %}
+
+            {% set trainingTitle %}{{ 'Training'|trans }}{% endset %}
+            {% set trainingText %}{{ 'Self-paced online training videos designed to get you up and running with Xibo in no time.'|trans }}{% endset %}
+            {% set trainingLinks %}
+                <a href="https://xibosignage.com/training" target="_blank">{{ 'New User Training'|trans }}</a>
+            {% endset %}
+
+            {% set helpTitle %}{{ 'Help'|trans }}{% endset %}
+            {% set helpText %}{{ 'We are here to help! All the support you’re looking for, at your fingertips.'|trans }}{% endset %}
+            {% set helpLinks %}
+                {% if isXiboThemed %}
+                <a href="https://xibosignage.com/install-upgrade#install" target="_blank">{{ 'Help Centre'|trans }}</a>
+                <a href="https://community.xibo.org.uk" target="_blank">{{ 'Community'|trans }}</a>
+                {% endif %}
+            {% endset %}
+
+            <div class="others-card-container">
+                {{ components.othersCard(documentationTitle, documentationText, documentationLinks, "documentation") }}
+                {% if isXiboThemed %}
+                    {{ components.othersCard(trainingTitle, trainingText, trainingLinks, "training") }}
+                {% endif %}
+                {{ components.othersCard(helpTitle, helpText, helpLinks, "help") }}
+            </div>
         </div>
+        <a class="scroll-up" href="#top">
+            <img style="height:30px; width: 30px;" src="{{ theme.rootUri() }}theme/default/img/onboarding/back-to-top-icon.svg" alt="Welcome Image">
+        </a>
     </div>
 {% endblock %}
