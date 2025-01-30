@@ -34,7 +34,6 @@ const XiboPlayer = function() {
     // if we are a dataset type, then first check to see if there
     // is realtime data.
     console.debug('getWidgetData: ' + currentWidget.widgetId);
-    console.debug('getWidgetData: windowLocation:', window.location);
 
     let localData;
     if (currentWidget.properties?.dataSetId) {
