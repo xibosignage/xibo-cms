@@ -891,6 +891,7 @@ class Layout implements \JsonSerializable
             'import' => false,
             'appendCountOnDuplicate' => false,
             'setModifiedDt' => true,
+            'auditMessage' => null,
         ], $options);
 
         if ($options['validate']) {
@@ -909,12 +910,27 @@ class Layout implements \JsonSerializable
 
             if ($options['audit']) {
                 if ($this->parentId === null) {
-                    $this->audit($this->layoutId, 'Added', ['layoutId' => $this->layoutId, 'layout' => $this->layout, 'campaignId' => $this->campaignId]);
+                    $this->audit(
+                        $this->layoutId,
+                        $options['auditMessage'] ?? 'Added',
+                        [
+                            'layoutId' => $this->layoutId,
+                            'layout' => $this->layout,
+                            'campaignId' => $this->campaignId,
+                        ]
+                    );
                 } else {
-                    $this->audit($this->layoutId, 'Checked out', ['layoutId' => $this->parentId, 'layout' => $this->layout, 'campaignId' => $this->campaignId]);
+                    $this->audit(
+                        $this->layoutId,
+                        $options['auditMessage'] ?? 'Checked out',
+                        [
+                            'layoutId' => $this->parentId,
+                            'layout' => $this->layout,
+                            'campaignId' => $this->campaignId,
+                        ]
+                    );
                 }
             }
-
         } else if (($this->hash() != $this->hash && $options['saveLayout']) || $options['setBuildRequired']) {
             $this->update($options);
 
@@ -923,14 +939,14 @@ class Layout implements \JsonSerializable
                 $change['campaignId'][] = $this->campaignId;
 
                 if ($this->parentId === null) {
-                    $this->audit($this->layoutId, 'Updated', $change);
+                    $this->audit($this->layoutId, $options['auditMessage'] ?? 'Updated', $change);
                 } else {
-                    $this->audit($this->layoutId, 'Updated Draft', $change);
+                    $this->audit($this->layoutId, $options['auditMessage'] ?? 'Updated Draft', $change);
                 }
             }
-
         } else {
-            $this->getLog()->info('Save layout properties unchanged for layoutId ' . $this->layoutId . ', status = ' . $this->status);
+            $this->getLog()->info('Save layout properties unchanged for layoutId ' . $this->layoutId
+                . ', status = ' . $this->status);
         }
 
         if ($options['saveRegions']) {

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -23,6 +23,8 @@
 namespace Xibo\XTR;
 
 use Carbon\Carbon;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 use Xibo\Controller\Module;
 use Xibo\Event\MaintenanceDailyEvent;
 use Xibo\Factory\DataSetFactory;
@@ -33,6 +35,7 @@ use Xibo\Factory\ModuleTemplateFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\DatabaseLogHandler;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\Random;
 use Xibo\Service\MediaService;
 use Xibo\Service\MediaServiceInterface;
 use Xibo\Support\Exception\GeneralException;
@@ -106,6 +109,9 @@ class MaintenanceDailyTask implements TaskInterface
 
         // Import layouts
         $this->importLayouts();
+
+        // Cycle the XMR Key
+        $this->cycleXmrKey();
 
         try {
             $this->appendRunMessage(__('## Build caches'));
@@ -305,5 +311,34 @@ class MaintenanceDailyTask implements TaskInterface
         file_put_contents($bundleMd5CachePath, md5_file($bundlePath));
 
         $this->appendRunMessage(__('Player bundle cached'));
+    }
+
+    /**
+     * Once per day we cycle the XMR CMS key
+     *  the old key should remain valid in XMR for up to 1 hour further to allow for cross over
+     * @return void
+     */
+    private function cycleXmrKey(): void
+    {
+        $this->log->debug('cycleXmrKey: adding new key');
+        try {
+            $key = Random::generateString(20, 'xmr_');
+
+            $this->getConfig()->changeSetting('XMR_CMS_KEY', $key);
+            $client = new Client($this->config->getGuzzleProxy([
+                'base_uri' => $this->getConfig()->getSetting('XMR_ADDRESS'),
+            ]));
+
+            $client->post('/', [
+                'json' => [
+                    'id' => constant('SECRET_KEY'),
+                    'type' => 'keys',
+                    'key' => $key,
+                ],
+            ]);
+            $this->log->debug('cycleXmrKey: added new key');
+        } catch (GuzzleException | \Exception $e) {
+            $this->log->error('cycleXmrKey: failed. E = ' . $e->getMessage());
+        }
     }
 }

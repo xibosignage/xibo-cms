@@ -67,6 +67,8 @@ class Csp implements Middleware
         $response = $handler->handle($request);
 
         // Add our header
-        return $response->withAddedHeader('Content-Security-Policy', $csp);
+        return $response
+            ->withAddedHeader('X-Frame-Options', 'SAMEORIGIN')
+            ->withAddedHeader('Content-Security-Policy', $csp);
     }
 }

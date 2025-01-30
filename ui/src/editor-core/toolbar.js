@@ -19,12 +19,13 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* eslint-disable new-cap */
 // Load templates
 const ToolbarTemplate = require('../templates/toolbar.hbs');
 const ToolbarCardMediaTemplate = require('../templates/toolbar-card-media.hbs');
 const ToolbarCardMediaUploadTemplate =
   require('../templates/toolbar-card-media-upload.hbs');
+const ToolbaRowMediaUploadTemplate =
+  require('../templates/toolbar-row-media-upload.hbs');
 const ToolbarCardMediaPlaceholderTemplate =
   require('../templates/toolbar-card-media-placeholder.hbs');
 const ToolbarCardLayoutTemplateTemplate =
@@ -1157,7 +1158,7 @@ Toolbar.prototype.render = function({savePrefs = true} = {}) {
         const toolbar = self;
         const index = i;
 
-        this.DOMObject.find('#btn-menu-' + index).click(function() {
+        this.DOMObject.find('#btn-menu-' + index).on('click', function() {
           toolbar.openMenu(index);
         });
       }
@@ -1308,6 +1309,11 @@ Toolbar.prototype.loadContent = function(
 
   // Create content
   this.createContent(menu, forceReload);
+
+  // Prevent default form submit
+  this.DOMObject.find('#content-' + menu + ' form').submit(function(e) {
+    e.preventDefault();
+  });
 
   // Save user preferences
   (savePrefs) && this.savePrefs();
@@ -2170,6 +2176,9 @@ Toolbar.prototype.mediaContentPopulateTable = function(menu) {
     trans: toolbarTrans.mediaTable,
   }));
 
+  // Add upload container
+  $mediaContent.prepend('<div class="upload-container"></div>');
+
   // Media form
   const $mediaForm = $mediaContainer.find('.media-search-form');
 
@@ -2194,6 +2203,47 @@ Toolbar.prototype.mediaContentPopulateTable = function(menu) {
           filter.type == ''
         ) {
           filter.types = self.moduleListOtherFiltered.map((el) => el.type);
+        }
+
+        // Show upload card
+        const addUploadCard = function(module, removeOthers) {
+          if (removeOthers) {
+            $mediaContent.find('.upload-container').empty();
+          }
+
+          if (
+            module &&
+            $mediaContent.find('.upload-card[data-sub-type="' +
+              module.type +
+              '"]').length == 0
+          ) {
+            module.trans = toolbarTrans;
+
+            module.trans.upload =
+              module.trans.uploadType.replace('%obj%', module.name);
+
+            const $uploadCard = $(ToolbaRowMediaUploadTemplate(
+              Object.assign(
+                {},
+                module,
+                {
+                  editingPlaylist: self.isPlaylist,
+                })),
+            );
+
+            $mediaContent.find('.upload-container').append($uploadCard);
+          }
+        };
+
+        // Add upload card
+        // If we have a specific module type
+        if (filter.type != '') {
+          addUploadCard(app.common.getModuleByType(filter.type), true);
+        } else {
+          // Show one upload card for each media type
+          self.moduleListOtherTypes.forEach((moduleType) => {
+            addUploadCard(app.common.getModuleByType(moduleType), false);
+          });
         }
 
         $.extend(
@@ -2290,7 +2340,7 @@ Toolbar.prototype.mediaContentPopulateTable = function(menu) {
     dataTableDraw(e, settings);
 
     // Clicky on the +spans
-    self.DOMObject.find('.assignItem').click(function(ev) {
+    self.DOMObject.find('.assignItem').on('click', function(ev) {
       const $target = $(ev.currentTarget);
       // Get the row that this is in.
       const data = mediaTable.row($target.closest('tr')).data();
@@ -3224,7 +3274,7 @@ Toolbar.prototype.handleCardsBehaviour = function() {
       '#media-content-' +
       this.openedMenu +
       ' .select-button:not(.select-upload)').off('click')
-      .click(function(e) {
+      .on('click', function(e) {
         // Stop propagation
         e.stopPropagation();
 
@@ -3251,7 +3301,7 @@ Toolbar.prototype.handleCardsBehaviour = function() {
       '#media-content-' +
       this.openedMenu +
       ' .preview-button',
-    ).off('click').click(function(e) {
+    ).off('click').on('click', function(e) {
       // Stop propagation
       e.stopPropagation();
 

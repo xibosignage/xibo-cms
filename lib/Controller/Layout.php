@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -970,6 +970,34 @@ class Layout extends Base
     }
 
     /**
+     * Clear Layout Form
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    function clearForm(Request $request, Response $response, $id)
+    {
+        $layout = $this->layoutFactory->getById($id);
+
+        if (!$this->getUser()->checkDeleteable($layout))
+            throw new AccessDeniedException(__('You do not have permissions to clear this layout'));
+
+        $data = [
+            'layout' => $layout,
+        ];
+
+        $this->getState()->template = 'layout-form-clear';
+        $this->getState()->setData($data);
+
+        return $this->render($request, $response);
+    }
+
+    /**
      * Retire Layout Form
      * @param Request $request
      * @param Response $response
@@ -1053,6 +1081,84 @@ class Layout extends Base
         return $this->render($request, $response);
     }
 
+    /**
+     * Clears a layout
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Slim\Http\Response
+     * @throws \Xibo\Support\Exception\GeneralException
+     *
+     * @SWG\Post(
+     *  path="/layout/{layoutId}",
+     *  operationId="layoutClear",
+     *  tags={"layout"},
+     *  summary="Clear Layout",
+     *  description="Clear a draft layouts canvas of all widgets and elements, leaving it blank.",
+     *  @SWG\Parameter(
+     *      name="layoutId",
+     *      in="path",
+     *      description="The Layout ID to Clear, must be a draft.",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Layout"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new record",
+     *          type="string"
+     *      )
+     *  )
+     * )
+     */
+    public function clear(Request $request, Response $response, $id): Response
+    {
+        // Get the existing layout
+        $layout = $this->layoutFactory->getById($id);
+
+        // Make sure we have permission
+        if (!$this->getUser()->checkEditable($layout)) {
+            throw new AccessDeniedException();
+        }
+
+        // Check that this Layout is a Draft
+        if (!$layout->isChild()) {
+            throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+        }
+
+        // Discard the current draft and replace it
+        $layout->discardDraft(false);
+
+        // Blank
+        $resolution = $this->resolutionFactory->getClosestMatchingResolution($layout->width, $layout->height);
+        $blank = $this->layoutFactory->createFromResolution(
+            $resolution->resolutionId,
+            $layout->ownerId,
+            $layout->layout,
+            null,
+            null,
+            null,
+            false
+        );
+
+        // Persist the parentId
+        $blank->parentId = $layout->parentId;
+        $blank->campaignId = $layout->campaignId;
+        $blank->publishedStatusId = 2;
+        $blank->save(['validate' => false, 'auditMessage' => 'Canvas Cleared']);
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Cleared %s'), $layout->layout),
+            'id' => $blank->layoutId,
+            'data' => $blank,
+        ]);
+
+        return $this->render($request, $response);
+    }
     /**
      * Retires a layout
      * @param Request $request

@@ -732,12 +732,6 @@ class ConfigService implements ConfigServiceInterface
             __('cURL is used to fetch data from the Internet or Local Network')
         );
 
-        $this->testItem($rows, __('ZeroMQ'),
-            Environment::checkZmq(),
-            __('ZeroMQ is used to send messages to XMR which allows push communications with player'),
-            false
-        );
-
         $this->testItem($rows, __('OpenSSL'),
             Environment::checkOpenSsl(),
             __('OpenSSL is used to seal and verify messages sent to XMR'),

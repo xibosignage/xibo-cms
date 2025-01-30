@@ -25,7 +25,7 @@ RUN find -type d -name '.git' -exec rm -r {} + && \
 
 # Stage 2
 # Run webpack
-FROM node:12 AS webpack
+FROM node:22 AS webpack
 WORKDIR /app
 
 # Copy package.json and the webpack config file
@@ -72,7 +72,6 @@ RUN LC_ALL=C.UTF-8 DEBIAN_FRONTEND=noninteractive apt update && apt upgrade -y &
     iputils-ping \
     php8.2 \
     libapache2-mod-php8.2 \
-    php8.2-zmq \
     php8.2-gd \
     php8.2-dom \
     php8.2-pdo \
@@ -103,7 +102,10 @@ RUN update-alternatives --set php /usr/bin/php8.2
 
 # Enable Apache module
 RUN a2enmod rewrite \
-    && a2enmod headers
+    && a2enmod headers \
+    && a2enmod proxy \
+    && a2enmod proxy_http \
+    && a2enmod proxy_wstunnel
 
 # Add all necessary config files in one layer
 ADD docker/ /

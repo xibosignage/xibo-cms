@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2024 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -151,7 +151,7 @@ class Handlers
             } else {
                 // Make a friendly message
                 if ($displayErrorDetails || $exception instanceof GeneralException) {
-                    $message = $exception->getMessage();
+                    $message = htmlspecialchars($exception->getMessage());
                 } else {
                     $message = __('Unexpected Error, please contact support.');
                 }

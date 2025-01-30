@@ -1,0 +1,180 @@
+{#
+/**
+ * Copyright (C) 2024 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+{% import "forms.twig" as forms %}
+
+{% block formHtml %}
+<div class="row">
+    <div class="col-md-12">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab">{% trans "General" %}</a></li>
+            <li class="nav-item"><a class="nav-link" href="#advanced" role="tab" data-toggle="tab">{% trans "Advanced" %}</a></li>
+            {% if commands|length > 0 %}
+                <li class="nav-item"><a class="nav-link" href="#commands" role="tab" data-toggle="tab">{% trans "Commands" %}</a></li>
+            {% endif %}
+        </ul>
+        <form id="displayProfileForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("displayProfile.edit", {id: displayProfile.displayProfileId}) }}">
+            <div class="tab-content">
+                <div class="tab-pane active" id="general">
+                    {% include "displayprofile-form-edit-common-fields.twig" %}
+
+                    {% set title = "Licence Code"|trans %}
+                    {% set helpText = "Provide the Licence Code to license Players using this Display Profile."|trans %}
+                    {{ forms.email("licenceCode", title, displayProfile.getSetting("licenceCode"), helpText) }}
+
+                    {% set title = "Collect interval"|trans %}
+                    {% set helpText = "How often should the Player check for new content."|trans %}
+                    {% set options = [
+                        { id: 60, value: "1 minute"|trans },
+                        { id: 300, value: "5 minutes"|trans },
+                        { id: 600, value: "10 minutes"|trans },
+                        { id: 1800, value: "30 minutes"|trans },
+                        { id: 3600, value: "1 hour"|trans },
+                        { id: 5400, value: "1 hour 30 minutes"|trans },
+                        { id: 7200, value: "2 hours"|trans },
+                        { id: 9000, value: "2 hours 30 minutes"|trans },
+                        { id: 10800, value: "3 hours"|trans },
+                        { id: 12600, value: "3 hours 30 minutes"|trans },
+                        { id: 14400, value: "4 hours"|trans },
+                        { id: 18000, value: "5 hours"|trans },
+                        { id: 21600, value: "6 hours"|trans },
+                        { id: 25200, value: "7 hours"|trans },
+                        { id: 28800, value: "8 hours"|trans },
+                        { id: 32400, value: "9 hours"|trans },
+                        { id: 36000, value: "10 hours"|trans },
+                        { id: 39600, value: "11 hours"|trans },
+                        { id: 43200, value: "12 hours"|trans },
+                        { id: 86400, value: "24 hours"|trans }
+                    ] %}
+                    {{ forms.dropdown("collectInterval", "single", title, displayProfile.getSetting("collectInterval"), options, "id", "value", helpText) }}
+
+                    {% set title = "XMR WebSocket Address"|trans %}
+                    {% set helpText = "Override the CMS WebSocket address for XMR."|trans %}
+                    {{ forms.input("xmrWebSocketAddress", title, displayProfile.getSetting("xmrWebSocketAddress"), helpText) }}
+
+                    {% set title = "XMR Public Address"|trans %}
+                    {% set helpText = "Override the CMS public address for XMR."|trans %}
+                    {{ forms.input("xmrNetworkAddress", title, displayProfile.getSetting("xmrNetworkAddress"), helpText) }}
+
+                    {% set title = "Enable stats reporting?"|trans %}
+                    {% set helpText = "Should the application send proof of play stats to the CMS."|trans %}
+                    {{ forms.checkbox("statsEnabled", title, displayProfile.getSetting("statsEnabled"), helpText) }}
+
+                    {% set title = "Aggregation level"|trans %}
+                    {% set helpText = "Set the level of collection for Proof of Play Statistics to be applied to selected Layouts / Media and Widget items."|trans %}
+                    {% set options = [
+                        { id: 'Individual', value: "Individual"|trans },
+                        { id: 'Hourly', value: "Hourly"|trans },
+                        { id: 'Daily', value: "Daily"|trans },
+                    ] %}
+                    {{ forms.dropdown("aggregationLevel", "single", title, displayProfile.getSetting("aggregationLevel"), options, "id", "value", helpText, "aggregation-level") }}
+
+                    {% set title = "Player Version"|trans %}
+                    {% set helpText = "Set the Player Version to install, making sure that the selected version is suitable for your device"|trans %}
+                    {% set attributes = [
+                        { name: "data-width", value: "300px" },
+                        { name: "data-allow-clear", value: "true" },
+                        { name: "data-placeholder--id", value: null },
+                        { name: "data-placeholder--value", value: "" },
+                        { name: "data-search-url", value: url_for("playersoftware.search") },
+                        { name: "data-search-term", value: "playerShowVersion" },
+                        { name: "data-id-property", value: "versionId" },
+                        { name: "data-text-property", value: "playerShowVersion" },
+                        { name: "data-filter-options", value: '{"playerType":"chromeOS"}' }
+                    ] %}
+                    {{ forms.dropdown("playerVersionId", "single", title, displayProfile.getSetting("playerVersionId"), [{versionId:null, playerShowVersion:""}]|merge(versions), "versionId", "playerShowVersion", helpText, "pagedSelect", "", "", "", attributes) }}
+
+                    {% set title = "Operating Hours"|trans %}
+                    {% set helpText = "Select a day part that should act as operating hours for this display - email alerts will not be sent outside of operating hours"|trans %}
+                    {% set attributes = [
+                        { name: "data-width", value: "300px" },
+                        { name: "data-allow-clear", value: "true" },
+                        { name: "data-placeholder--id", value: null },
+                        { name: "data-placeholder--value", value: "" },
+                        { name: "data-search-url", value: url_for("daypart.search") },
+                        { name: "data-search-term", value: "name" },
+                        { name: "data-id-property", value: "dayPartId" },
+                        { name: "data-text-property", value: "name" },
+                        { name: "data-filter-options", value: '{"isAlways":"0", "isCustom":"0"}' }
+                    ] %}
+                    {{ forms.dropdown("dayPartId", "single", title, displayProfile.getSetting("dayPartId"), [{dayPartId:null, name:""}]|merge(dayParts), "dayPartId", "name", helpText, "pagedSelect", "", "", "", attributes) }}
+
+                </div>
+
+                <div class="tab-pane" id="advanced">
+
+                    {% set title = "Log Level"|trans %}
+                    {% set helpText = "The resting logging level that should be recorded by the Player."|trans %}
+                    {% set options = [
+                        { id: 'emergency', value: "Emergency"|trans },
+                        { id: 'alert', value: "Alert"|trans },
+                        { id: 'critical', value: "Critical"|trans },
+                        { id: 'error', value: "Error"|trans },
+                        { id: 'off', value: "Off"|trans }
+                    ] %}
+                    {{ forms.dropdown("logLevel", "single", title, displayProfile.getSetting("logLevel"), options, "id", "value", helpText) }}
+
+                    {% set title %}{% trans "Elevate Logging until" %}{% endset %}
+                    {% set helpText %}{% trans "Elevate log level for the specified time. Should only be used if there is a problem with the display." %}{% endset %}
+                    {% if displayProfile.isElevatedLogging() %}
+                        {% set elevatedLogs = displayProfile.getUnmatchedProperty("elevateLogsUntilIso") %}
+                    {% else %}
+                        {% set elevatedLogs = "" %}
+                    {% endif %}
+                    {{ forms.dateTime("elevateLogsUntil", title, elevatedLogs, helpText) }}
+
+                    {% if theme.getSetting('DISPLAY_PROFILE_SCREENSHOT_INTERVAL_ENABLED', 0) == 1 %}
+                        {% set title %}
+                            {% trans "Screen shot interval"%}
+                            {{ forms.playerCompat("", "", "R204+", "R208+", "") }}
+                        {% endset %}
+                        {% set helpText = "The duration between status screen shots in minutes. 0 to disable. Warning: This is bandwidth intensive."|trans %}
+                        {{ forms.number("screenShotRequestInterval", title, displayProfile.getSetting("screenShotRequestInterval"), helpText) }}
+                    {% endif %}
+
+                    {% set title = "Screen Shot Size"|trans %}
+                    {% set helpText = "The size of the screenshot to return when requested."|trans %}
+                    {% if displayProfile.type == "lg" %}
+                    {% set options = [
+                        { id: 1, value: "Thumbnail"|trans },
+                        { id: 2, value: "HD"|trans },
+                        { id: 3, value: "FHD"|trans }
+                    ] %}
+                    {% else %}
+                        {% set options = [
+                            { id: 1, value: "Thumbnail"|trans },
+                            { id: 2, value: "Standard"|trans }
+                        ] %}
+                    {% endif %}
+                    {{ forms.dropdown("screenShotSize", "single", title, displayProfile.getSetting("screenShotSize"), options, "id", "value", helpText) }}
+                </div>
+
+                {% if commands|length > 0 %}
+                    <div class="tab-pane" id="commands">
+                        {% include "displayprofile-form-edit-command-fields.twig" %}
+                    </div>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

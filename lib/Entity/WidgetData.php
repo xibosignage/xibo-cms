@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -84,7 +84,7 @@ class WidgetData implements \JsonSerializable
 
     /**
      * @SWG\Property(
-     *     property="createdDt",
+     *     property="modifiedDt",
      *     description="The datetime this entity was last modified"
      * )
      * @var ?string

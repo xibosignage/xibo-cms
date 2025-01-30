@@ -222,7 +222,7 @@ $(() => {
           {
             id: 'publishLayout',
             title: layoutEditorTrans.publishTitle,
-            logo: 'fa-check-square-o',
+            logo: 'fa fa-check-square-o',
             class: 'btn-success',
             action: lD.showPublishScreen,
             inactiveCheck: function() {
@@ -233,7 +233,7 @@ $(() => {
           {
             id: 'checkoutLayout',
             title: layoutEditorTrans.checkoutTitle,
-            logo: 'fa-edit',
+            logo: 'fa fa-edit',
             action: lD.layout.checkout,
             inactiveCheck: function() {
               return (lD.layout.editable == true);
@@ -243,7 +243,7 @@ $(() => {
           {
             id: 'discardLayout',
             title: layoutEditorTrans.discardTitle,
-            logo: 'fa-times-circle-o',
+            logo: 'fa fa-times-circle-o',
             action: lD.showDiscardScreen,
             inactiveCheck: function() {
               return (lD.layout.editable == false);
@@ -256,7 +256,7 @@ $(() => {
           {
             id: 'newLayout',
             title: layoutEditorTrans.newTitle,
-            logo: 'fa-file',
+            logo: 'fa fa-file',
             action: lD.addLayout,
             inactiveCheck: function() {
               return lD.templateEditMode;
@@ -266,7 +266,7 @@ $(() => {
           {
             id: 'deleteLayout',
             title: layoutEditorTrans.deleteTitle,
-            logo: 'fa-times-circle-o',
+            logo: 'fa fa-times-circle-o',
             action: lD.showDeleteScreen,
             inactiveCheck: function() {
               return (
@@ -279,7 +279,7 @@ $(() => {
           {
             id: 'saveTemplate',
             title: layoutEditorTrans.saveTemplateTitle,
-            logo: 'fa-floppy-o',
+            logo: 'fa fa-floppy-o',
             action: lD.showSaveTemplateScreen,
             inactiveCheck: function() {
               return lD.templateEditMode ||
@@ -290,19 +290,29 @@ $(() => {
           {
             id: 'unlockLayout',
             title: layoutEditorTrans.unlockTitle,
-            logo: 'fa-unlock',
-            class: 'btn-info show-on-lock',
+            logo: 'fa fa-unlock',
+            class: 'show-on-lock',
             action: lD.showUnlockScreen,
           },
           {
             id: 'scheduleLayout',
             title: layoutEditorTrans.scheduleTitle,
-            logo: 'fa-clock-o',
+            logo: 'fa fa-clock-o',
             action: lD.showScheduleScreen,
             inactiveCheck: function() {
               return lD.templateEditMode ||
                 (lD.layout.editable ||
                   !lD.layout.scheduleNowPermission);
+            },
+            inactiveCheckClass: 'd-none',
+          },
+          {
+            id: 'clearLayout',
+            title: layoutEditorTrans.clearLayout,
+            logo: 'fas fa-broom',
+            action: lD.showClearScreen,
+            inactiveCheck: function() {
+              return !lD.layout.editable;
             },
             inactiveCheckClass: 'd-none',
           },
@@ -977,15 +987,12 @@ lD.addLayout = function() {
       lD.common.hideLoadingScreen();
 
       if (response.success && response.id) {
-        // eslint-disable-next-line new-cap
         XiboRedirect(urlsForApi.layout.designer.url
           .replace(':id', response.id));
       } else {
         if (response.login) {
-          // eslint-disable-next-line new-cap
           LoginBox(response.message);
         } else {
-          // eslint-disable-next-line new-cap
           SystemMessage(response.message, false);
         }
       }
@@ -993,7 +1000,6 @@ lD.addLayout = function() {
     error: function(xhr, textStatus, errorThrown) {
       lD.common.hideLoadingScreen();
 
-      // eslint-disable-next-line new-cap
       SystemMessage(xhr.responseText, false);
     },
   });
@@ -1036,6 +1042,18 @@ lD.showDiscardScreen = function() {
  */
 lD.showScheduleScreen = function() {
   lD.loadFormFromAPI('schedule', lD.layout.campaignId);
+};
+
+/**
+ * Layout clear screen
+ */
+lD.showClearScreen = function() {
+  lD.loadFormFromAPI(
+    'clearForm',
+    lD.layout.layoutId,
+    '',
+    'lD.layout.clear();',
+  );
 };
 
 /**
@@ -1169,7 +1187,6 @@ lD.loadFormFromAPI = function(
       }
 
       // Call Xibo Init for this form
-      // eslint-disable-next-line new-cap
       XiboInitialise('#' + dialog.attr('id'));
 
       if (apiFormCallback != null) {
@@ -1512,11 +1529,15 @@ lD.deleteObject = function(
           objectId,
         );
 
-        // Reload data ( if not a drawer widget)
-        lD.reloadData(lD.layout,
-          {
-            refreshEditor: false,
-          });
+        // Remove object from structure
+        lD.layout.removeFromStructure(
+          objectType,
+          objectId,
+          objectAuxId,
+        );
+
+        // Check layout status
+        lD.checkLayoutStatus();
       }
 
       lD.common.hideLoadingScreen();
@@ -1918,6 +1939,34 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
         });
     };
 
+    const calculateDimensionsWithRatio = function(
+      startWidth = 250,
+      startHeight = 250,
+      originalWidth,
+      originalHeight,
+    ) {
+      // Check if media had original dimensions
+      // and adjust template dimensions to keep the original ratio
+      if (
+        originalWidth &&
+        originalHeight &&
+        originalWidth != originalHeight
+      ) {
+        const ratioWH =
+          originalWidth / originalHeight;
+        if (
+          ratioWH > 1
+        ) {
+          // Landscape
+          startHeight /= ratioWH;
+        } else {
+          // Portrait
+          startWidth *= ratioWH;
+        }
+      }
+      return [startWidth, startHeight];
+    };
+
     const createSubplaylistInPlaylist = function(regionId, playlistId) {
       return lD.addModuleToPlaylist(
         regionId,
@@ -2029,16 +2078,21 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           itemAdded();
         });
       } else {
-        // Get dimensions of the draggable
-        const startWidth = $(draggable).data('startWidth');
-        const startHeight = $(draggable).data('startHeight');
+        // Calculate dimensions with original ratio
+        const [startWidth, startHeight] =
+        calculateDimensionsWithRatio(
+          draggableData.templateStartWidth,
+          draggableData.templateStartHeight,
+          draggableData.originalWidth,
+          draggableData.originalHeight,
+        );
 
         // If both dimensions exist and are not 0
         // add them to options
         const dimensions = {};
         if (startWidth && startHeight) {
-          dimensions.width = startWidth;
-          dimensions.height = startHeight;
+          dimensions.width = Math.round(startWidth);
+          dimensions.height = Math.round(startHeight);
         }
 
         // Add to layout, but create a new region
@@ -2360,21 +2414,64 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           });
         } else {
           const addElement = function() {
+            // Calculate dimensions with original ratio
+            const [startWidth, startHeight] =
+            calculateDimensionsWithRatio(
+              draggableData.templateStartWidth,
+              draggableData.templateStartHeight,
+              draggableData.originalWidth,
+              draggableData.originalHeight,
+            );
+
+            // Limit name for an element
+            const limitStringLength = function(
+              originalString,
+              maxLength,
+            ) {
+              const words =
+                originalString.split(',').map((word) => word.trim());
+              let result = '';
+
+              for (let word of words) {
+                // Check if single words exceeds max lenght
+                // and trim it
+                if (word.length > maxLength) {
+                  // If it does, trim it to maxLength
+                  word = word.slice(0, maxLength);
+                }
+
+                // Check if adding the next word would exceed the maxLength
+                if (
+                  (result + (result ? ', ' : '') + word).length <=
+                  maxLength
+                ) {
+                  result += (result ? ', ' : '') + word;
+                } else {
+                  break;
+                }
+              }
+
+              return result;
+            };
+
             // Element options
             const elementOptions = {
               id: draggableData.templateId,
               type: draggableData.dataType,
               left: (dropPosition) ? dropPosition.left : 0,
               top: (dropPosition) ? dropPosition.top : 0,
-              width: draggableData.templateStartWidth,
-              height: draggableData.templateStartHeight,
+              width: startWidth,
+              height: startHeight,
               layer: 0,
               rotation: 0,
               extendsTemplate: draggableData.extendsTemplate,
               extendsOverride: draggableData.extendsOverride,
               extendsOverrideId: draggableData.extendsOverrideId,
               mediaId: draggableData.mediaId,
-              mediaName: draggableData.cardTitle,
+              mediaName: limitStringLength(
+                draggableData.cardTitle,
+                95,
+              ),
               isVisible: draggableData.isVisible,
             };
 
@@ -2570,6 +2667,10 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
                 // Add media id to data
                 draggableData.mediaId = data.response().result.files[0].mediaId;
                 draggableData.cardTitle = data.response().result.files[0].name;
+                draggableData.originalWidth =
+                  data.response().result.files[0].width;
+                draggableData.originalHeight =
+                    data.response().result.files[0].height;
               };
 
               lD.openUploadForm({
@@ -2703,17 +2804,14 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
               // Deselect previous object
               lD.selectObject();
 
-              // eslint-disable-next-line new-cap
               lD.reloadData(response.data,
                 {
                   refreshEditor: true,
                   resetPropertiesPanelOpenedTab: true,
                 });
             } else if (response.login) {
-              // eslint-disable-next-line new-cap
               LoginBox();
             } else {
-              // eslint-disable-next-line new-cap
               SystemMessage(response.message || errorMessagesTrans.unknown);
             }
           },

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -30,7 +30,7 @@ use Phinx\Wrapper\TextWrapper;
  */
 class Environment
 {
-    public static $WEBSITE_VERSION_NAME = '4.1.2';
+    public static $WEBSITE_VERSION_NAME = '4.2.0';
     public static $XMDS_VERSION = '7';
     public static $XLF_VERSION = 4;
     public static $VERSION_REQUIRED = '8.1.0';
@@ -263,15 +263,6 @@ class Environment
         // All passed
         return true;
     }
-
-    /**
-     * @inheritdoc
-     */
-    public static function checkZmq()
-    {
-        return class_exists('ZMQSocket');
-    }
-
 
     public static function getMaxUploadSize()
     {

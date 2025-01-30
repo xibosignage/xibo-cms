@@ -44,11 +44,8 @@
                 <div class="XiboFilterCustom">
                     <div class="FilterDiv card-body" id="displayAlertsFilter">
                         <form class="form-inline">
-                            {% set title %}{% trans "From Date" %}{% endset %}
-                            {{ inline.date("fromDt", title, defaults.fromDate, "", "", "", "") }}
-
-                            {% set title %}{% trans "To Date" %}{% endset %}
-                            {{ inline.date("toDt", title, defaults.toDate, "", "", "", "") }}
+                            {% set title %}{% trans "Range" %}{% endset %}
+                            {{ inline.dateRangeFilter("reportFilter", title, "", "", "", "", "") }}
 
                             {% set title %}{% trans "Display" %}{% endset %}
                             {% set attributes = [
@@ -166,6 +163,7 @@
         let $report = $("#displayAlertsFilter");
         let $dataTable = $('#displayAlertsGrid'); // Datatable
         let result; // XHR get data result
+        let reportData = '';
 
         let imageLoader = $("#imageLoader");
         let $warning = $("#applyWarning");
@@ -299,7 +297,6 @@
       });
 
       function displayAlertsReportScheduleFormOpen(dialog) {
-
         // If we select a displayId we hide the display group filter
         $('#reportScheduleAddForm #displayId').off('change').change( function() {
 

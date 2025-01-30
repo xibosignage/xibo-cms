@@ -1,4 +1,3 @@
-/* eslint-disable new-cap */
 // ELEMENT Module
 
 /**
@@ -67,8 +66,10 @@ const Element = function(data, widgetId, regionId, parentWidget) {
   // Group scale
   this.groupScale = (data.groupScale != undefined) ?
     data.groupScale : 1;
-  this.groupScaleType = (data.groupScaleType != undefined) ?
-    data.groupScaleType : 'top_left';
+  this.groupScaleTypeV = (data.groupScaleTypeV != undefined) ?
+    data.groupScaleTypeV : 'top';
+  this.groupScaleTypeH = (data.groupScaleTypeH != undefined) ?
+    data.groupScaleTypeH : 'left';
 
   // Animation effect
   this.effect = data.effect || 'noTransition';

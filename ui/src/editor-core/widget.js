@@ -19,7 +19,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* eslint-disable new-cap */
 // WIDGET Module
 const EXPIRE_STATUS_MSG_MAP = [
   '',
@@ -261,6 +260,8 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
           try {
             options[currOption.option] = JSON.parse(currOption.value);
           } catch (e) {
+            console.warn(e);
+
             // If we can't parse the JSON, just set the value as a string
             options[currOption.option] = currOption.value;
           }
@@ -512,9 +513,13 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
         // Save group scale type if exists
         if (element.groupScale) {
           elementObject.groupScale = 1;
-        } else if (element.groupScaleType) {
+        } else if (
+          element.groupScaleTypeH &&
+          element.groupScaleTypeV
+        ) {
           elementObject.groupScale = 0;
-          elementObject.groupScaleType = element.groupScaleType;
+          elementObject.groupScaleTypeH = element.groupScaleTypeH;
+          elementObject.groupScaleTypeV = element.groupScaleTypeV;
         }
       } else {
         // Save effect if exists
@@ -1179,7 +1184,9 @@ Widget.prototype.addElement = function(
   return newElement.getProperties().then(() => {
     // Save changes to widget and return promise
     if (save) {
-      return this.saveElements();
+      return this.saveElements({
+        reloadData: false,
+      });
     } else {
       return Promise.resolve();
     }
@@ -1251,6 +1258,7 @@ Widget.prototype.removeElement = function(
   // Save changes to widget
   (save && !savedAlready) && this.saveElements({
     updateEditor: reload,
+    reloadData: false,
   });
 
   // If object is selected, remove it from selection

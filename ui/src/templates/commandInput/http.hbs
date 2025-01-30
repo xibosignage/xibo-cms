@@ -1,0 +1,80 @@
+{{! URL }}
+<label for="httpURL{{ unique }}" class="http-url-label form-check-label">{{trans.url}}</label>
+<input name="httpURL{{ unique }}" id="httpURL{{ unique }}" class="http-url w-100 validated-element form-control form-control-inline" placeholder="{{trans.url}}" value="{{ value.url }}">
+
+{{! Query params }}
+<div class="request-params request-section mt-2">
+    <div class="form-check w-100">
+        <input type="checkbox" data-toggle-element=".query-builder-container"  data-toggle-class="d-inline-block" class="show-query-builder ignore-change form-check-input" id="queryParamsBuilder{{ unique }}" name="queryParamsBuilder{{ unique }}" title="{{trans.queryParamBuilder}}" checked>
+        <label for="queryParamsBuilder{{ unique }}" class="show-query-builder-label form-check-label">{{trans.queryBuilder}}</label>
+    </div>
+    <div class="form-group-command query-builder-container w-100 bg-white p-2 d-none d-inline-block">
+        <label for="queryBuilderContainer{{ unique }}" class="http-key-value-container-label">{{trans.queryParams}}:</label>
+        <button class="http-key-value-add btn btn-info btn-sm pull-right" type="button">
+            <i class="fa fa-plus"></i>
+        </button>
+
+        <div id="queryBuilderContainer{{ unique }}" class="http-key-value-container"></div>
+    </div>
+</div>
+
+{{! Method }}
+<div class="form-group-command mt-2">
+    <label for="httpMethod{{ unique }}">{{trans.requestMethod}}:</label>
+    <select name="httpMethod{{ unique }}" id="httpMethod{{ unique }}" class="http-method pl-1 form-control form-control-inline">
+        <option value="GET" {{#eq value.requestOptions.method "GET"}}selected="selected"{{/eq}}>GET</option>
+        <option value="POST" {{#eq value.requestOptions.method "POST"}}selected="selected"{{/eq}}>POST</option>
+        <option value="PUT" {{#eq value.requestOptions.method "PUT"}}selected="selected"{{/eq}}>PUT</option>
+        <option value="DELETE" {{#eq value.requestOptions.method "DELETE"}}selected="selected"{{/eq}}>DELETE</option>
+        <option value="CONNECT" {{#eq value.requestOptions.method "CONNECT"}}selected="selected"{{/eq}}>CONNECT</option>
+        <option value="HEAD" {{#eq value.requestOptions.method "HEAD"}}selected="selected"{{/eq}}>HEAD</option>
+        <option value="OPTIONS" {{#eq value.requestOptions.method "OPTIONS"}}selected="selected"{{/eq}}>OPTIONS</option>
+        <option value="PATCH" {{#eq value.requestOptions.method "PATCH"}}selected="selected"{{/eq}}>PATCH</option>
+        <option value="TRACE" {{#eq value.requestOptions.method "TRACE"}}selected="selected"{{/eq}}>TRACE</option>
+    </select>
+</div>
+
+{{! Headers }}
+<div class="request-headers request-section mt-2">
+    <div class="form-check w-100">
+        <input type="checkbox" data-toggle-element=".http-headers" data-toggle-element-reverse=".http-headers-container" data-toggle-class="d-inline-block" class="show-raw-headers ignore-change form-check-input" id="showRawHeaders{{ unique }}" name="showRawHeaders{{ unique }}" title="{{trans.showRawHeaders}}">
+        <label for="showRawHeaders{{ unique }}" class="show-raw-headers-label form-check-label">{{trans.showRawHeaders}}</label>
+    </div>
+    <textarea name="httpHeaders{{ unique }}" id="httpHeaders{{ unique }}" class="http-headers w-100 d-none form-control validated-element form-control-inline" placeholder="{{trans.headers}}"></textarea>
+    <div class="form-group-command http-headers-container w-100 bg-white p-2 d-none d-inline-block">
+        <label for="httpHeadersContainer{{ unique }}" class="http-key-value-container-label">{{trans.headers}}</label>
+        <button class="http-key-value-add btn btn-info btn-sm pull-right" type="button">
+            <i class="fa fa-plus"></i>
+        </button>
+
+        <div id="httpHeadersContainer{{ unique }}" class="http-key-value-container"></div>
+    </div>
+</div>
+
+{{! Body }}
+<div class="request-body request-section mt-2">
+    {{! Content type }}
+    <div class="form-group-command">
+        <label for="httpContentType{{ unique }}" class="pl-1">{{trans.contentType}}:</label>
+        <select name="httpContentType{{ unique }}" id="httpContentType{{ unique }}" class="http-contenttype form-control form-control-inline">
+            <option value="application/x-www-form-urlencoded" {{#eq value.contenttype "application/x-www-form-urlencoded"}}selected="selected"{{/eq}}>urlencoded</option>
+            <option value="application/json" {{#eq value.contenttype "application/json"}}selected="selected"{{/eq}}>json</option>
+            <option value="text/plain" {{#eq value.contenttype "text/plain"}}selected="selected"{{/eq}}>textplain</option>
+        </select>
+    </div>
+
+    {{! Body data }}
+    <div class="form-check w-100 mt-2">
+        <input type="checkbox" data-toggle-element=".http-data" data-toggle-element-reverse=".http-data-container" data-toggle-class="d-inline-block" class="show-raw-data ignore-change form-check-input" id="showRawData{{ unique }}" name="showRawData{{ unique }}" title="{{trans.showRawBodyData}}">
+        <label for="showRawData{{ unique }}" class="show-raw-data-label form-check-label">{{trans.showRawData}}</label>
+    </div>
+    <textarea name="httpData{{ unique }}" id="httpData{{ unique }}" class="http-data w-100 validated-element d-none form-control form-control-inline" placeholder="{{trans.bodyData}}"></textarea>
+    <div class="form-group-command http-data-container w-100 bg-white p-2 d-none d-inline-block">
+        <label for="httpDataContainer{{ unique }}" class="http-key-value-container-label">{{trans.bodyData}}</label>
+        <button class="http-key-value-add btn btn-info btn-sm pull-right" type="button">
+            <i class="fa fa-plus"></i>
+        </button>
+
+        <div id="httpDataContainer{{ unique }}" class="http-key-value-container"></div>
+    </div>
+</div>

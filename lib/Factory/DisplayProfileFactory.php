@@ -98,16 +98,15 @@ class DisplayProfileFactory extends BaseFactory
      * @return DisplayProfile
      * @throws NotFoundException
      */
-    public function getDefaultByType($type)
+    public function getDefaultByType(string $type): DisplayProfile
     {
         $profiles = $this->query(null, ['disableUserCheck' => 1, 'type' => $type, 'isDefault' => 1]);
 
         if (count($profiles) <= 0) {
-            throw new NotFoundException();
+            throw new NotFoundException(sprintf(__('No default display profile for %s'), $type));
         }
 
         $profile = $profiles[0];
-        /* @var DisplayProfile $profile */
         $profile->load();
         return $profile;
     }
@@ -169,6 +168,7 @@ class DisplayProfileFactory extends BaseFactory
                 ['name' => 'downloadEndWindow', 'default' => '00:00', 'type' => 'string'],
                 ['name' => 'dayPartId', 'default' => null],
                 ['name' => 'xmrNetworkAddress', 'default' => '', 'type' => 'string'],
+                ['name' => 'xmrWebSocketAddress', 'default' => '', 'type' => 'string'],
                 [
                     'name' => 'statsEnabled',
                     'default' => (int)$this->config->getSetting('DISPLAY_PROFILE_STATS_DEFAULT', 0),
@@ -221,6 +221,7 @@ class DisplayProfileFactory extends BaseFactory
                 ['name' => 'downloadStartWindow', 'default' => '00:00'],
                 ['name' => 'downloadEndWindow', 'default' => '00:00'],
                 ['name' => 'xmrNetworkAddress', 'default' => ''],
+                ['name' => 'xmrWebSocketAddress', 'default' => ''],
                 [
                     'name' => 'statsEnabled',
                     'default' => (int)$this->config->getSetting('DISPLAY_PROFILE_STATS_DEFAULT', 0),
@@ -277,6 +278,7 @@ class DisplayProfileFactory extends BaseFactory
                 ['name' => 'downloadEndWindow', 'default' => '00:00'],
                 ['name' => 'dayPartId', 'default' => null],
                 ['name' => 'xmrNetworkAddress', 'default' => ''],
+                ['name' => 'xmrWebSocketAddress', 'default' => ''],
                 [
                     'name' => 'statsEnabled',
                     'default' => (int)$this->config->getSetting('DISPLAY_PROFILE_STATS_DEFAULT', 0),
@@ -316,6 +318,7 @@ class DisplayProfileFactory extends BaseFactory
                 ['name' => 'downloadEndWindow', 'default' => '00:00'],
                 ['name' => 'dayPartId', 'default' => null],
                 ['name' => 'xmrNetworkAddress', 'default' => ''],
+                ['name' => 'xmrWebSocketAddress', 'default' => ''],
                 [
                     'name' => 'statsEnabled',
                     'default' => (int)$this->config->getSetting('DISPLAY_PROFILE_STATS_DEFAULT', 0),
@@ -352,6 +355,7 @@ class DisplayProfileFactory extends BaseFactory
                 ['name' => 'downloadEndWindow', 'default' => '00:00'],
                 ['name' => 'dayPartId', 'default' => null],
                 ['name' => 'xmrNetworkAddress', 'default' => ''],
+                ['name' => 'xmrWebSocketAddress', 'default' => ''],
                 [
                     'name' => 'statsEnabled',
                     'default' => (int)$this->config->getSetting('DISPLAY_PROFILE_STATS_DEFAULT', 0),
@@ -380,6 +384,31 @@ class DisplayProfileFactory extends BaseFactory
                 ['name' => 'updateEndWindow', 'default' => '00:00'],
                 ['name' => 'embeddedServerAllowWan', 'default' => 0, 'type' => 'checkbox'],
                 ['name' => 'serverPort', 'default' => 9696],
+            ],
+            'chromeOS' => [
+                ['name' => 'licenceCode', 'default' => ''],
+                ['name' => 'collectInterval', 'default' => 300],
+                ['name' => 'xmrNetworkAddress', 'default' => ''],
+                ['name' => 'xmrWebSocketAddress', 'default' => ''],
+                [
+                    'name' => 'statsEnabled',
+                    'default' => (int)$this->config->getSetting('DISPLAY_PROFILE_STATS_DEFAULT', 0),
+                    'type' => 'checkbox',
+                ],
+                [
+                    'name' => 'aggregationLevel',
+                    'default' => $this->config->getSetting('DISPLAY_PROFILE_AGGREGATION_LEVEL_DEFAULT'),
+                    'type' => 'string',
+                ],
+                ['name' => 'playerVersionId', 'default' => null],
+                ['name' => 'dayPartId', 'default' => null],
+                ['name' => 'logLevel', 'default' => 'error'],
+                ['name' => 'elevateLogsUntil', 'default' => 0, 'type' => 'int'],
+                ['name' => 'screenShotRequestInterval', 'default' => 0, 'type' => 'int'],
+                [
+                    'name' => 'screenShotSize',
+                    'default' => (int)$this->config->getSetting('DISPLAY_PROFILE_SCREENSHOT_SIZE_DEFAULT', 200),
+                ],
             ]
         ];
 

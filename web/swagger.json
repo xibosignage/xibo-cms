@@ -755,6 +755,76 @@
             }
         },
         "/command": {
+            "get": {
+                "tags": [
+                    "command"
+                ],
+                "summary": "Command Search",
+                "description": "Search this users Commands",
+                "operationId": "commandSearch",
+                "parameters": [
+                    {
+                        "name": "commandId",
+                        "in": "query",
+                        "description": "Filter by Command Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "command",
+                        "in": "query",
+                        "description": "Filter by Command Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "code",
+                        "in": "query",
+                        "description": "Filter by Command Code",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "useRegexForName",
+                        "in": "query",
+                        "description": "Flag (0,1). When filtering by multiple commands in command filter, should we use regex?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useRegexForCode",
+                        "in": "query",
+                        "description": "Flag (0,1). When filtering by multiple codes in code filter, should we use regex?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "logicalOperatorName",
+                        "in": "query",
+                        "description": "When filtering by multiple commands in command filter,\r\n     * which logical operator should be used? AND|OR",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "logicalOperatorCode",
+                        "in": "query",
+                        "description": "When filtering by multiple codes in code filter,\r\n     * which logical operator should be used? AND|OR",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Command"
+                            }
+                        }
+                    }
+                }
+            },
             "post": {
                 "tags": [
                     "command"
@@ -5080,6 +5150,37 @@
                         "description": "successful operation",
                         "schema": {
                             "$ref": "#/definitions/Layout"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "layout"
+                ],
+                "summary": "Clear Layout",
+                "description": "Clear a draft layouts canvas of all widgets and elements, leaving it blank.",
+                "operationId": "layoutClear",
+                "parameters": [
+                    {
+                        "name": "layoutId",
+                        "in": "path",
+                        "description": "The Layout ID to Clear, must be a draft.",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Layout"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new record",
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -11559,8 +11660,74 @@
                 }
             }
         },
+        "/playlist/widget/{widgetId}/elements": {
+            "put": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Save elements to a widget",
+                "description": "Update a widget with elements associated with it",
+                "operationId": "widgetSaveElements",
+                "parameters": [
+                    {
+                        "name": "widgetId",
+                        "in": "path",
+                        "description": "Id of the Widget to set region on",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "elements",
+                        "in": "body",
+                        "description": "JSON representing the elements assigned to this widget",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/playlist/widget/{widgetId}/dataType": {
+            "put": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Widget DataType",
+                "description": "Get DataType for a Widget according to the widgets module definition",
+                "operationId": "widgetGetDataType",
+                "parameters": [
+                    {
+                        "name": "widgetId",
+                        "in": "path",
+                        "description": "Id of the Widget",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "dataType",
+                        "in": "body",
+                        "description": "A JSON representation of your dataType",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
         "/playlist/widget/data/{id}": {
-            "post": {
+            "get": {
                 "tags": [
                     "widget"
                 ],
@@ -11583,6 +11750,48 @@
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/WidgetData"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Add a data to a Widget",
+                "description": "Add fallback data to a data Widget",
+                "operationId": "addWidgetData",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "The Widget ID that this data should be added to",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "data",
+                        "in": "path",
+                        "description": "A JSON formatted string containing a single data item for this widget's data type",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "displayOrder",
+                        "in": "formData",
+                        "description": "Optional integer to say which position this data should appear if there is more than one data item",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new record",
+                                "type": "string"
                             }
                         }
                     }
@@ -11999,6 +12208,42 @@
                 "privacyUrl": {
                     "description": "URL to Application privacy policy",
                     "type": "string"
+                }
+            }
+        },
+        "ApplicationRequest": {
+            "properties": {
+                "requestId": {
+                    "description": "The request ID",
+                    "type": "integer"
+                },
+                "userId": {
+                    "description": "The user ID",
+                    "type": "integer"
+                },
+                "applicationId": {
+                    "description": "The application ID",
+                    "type": "string"
+                },
+                "url": {
+                    "description": "The request route",
+                    "type": "string"
+                },
+                "method": {
+                    "description": "The request method",
+                    "type": "string"
+                },
+                "startTime": {
+                    "description": "The request start time",
+                    "type": "string"
+                },
+                "endTime": {
+                    "description": "The request end time",
+                    "type": "string"
+                },
+                "duration": {
+                    "description": "The request duration",
+                    "type": "integer"
                 }
             }
         },
@@ -14012,6 +14257,10 @@
                     "description": "Which logical operator should be used when filtering by multiple Tags? OR|AND",
                     "type": "string"
                 },
+                "filterFolderId": {
+                    "description": "The ID of the folder to filter media items by",
+                    "type": "integer"
+                },
                 "maxNumberOfItems": {
                     "description": "Maximum number of Media items matching dynamic Playlist filters",
                     "type": "integer"
@@ -15127,6 +15376,9 @@
                 },
                 "createdDt": {
                     "description": "The datetime this entity was created"
+                },
+                "modifiedDt": {
+                    "description": "The datetime this entity was last modified"
                 }
             }
         },

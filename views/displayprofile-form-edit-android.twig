@@ -74,8 +74,12 @@
                     ] %}
                     {{ forms.dropdown("collectInterval", "single", title, displayProfile.getSetting("collectInterval"), options, "id", "value", helpText) }}
 
+                    {% set title = "XMR WebSocket Address"|trans %}
+                    {% set helpText = "Override the CMS WebSocket address for XMR."|trans %}
+                    {{ forms.input("xmrWebSocketAddress", title, displayProfile.getSetting("xmrWebSocketAddress"), helpText) }}
+
                     {% set title = "XMR Public Address"|trans %}
-                    {% set helpText = "Please enter the public address for XMR."|trans %}
+                    {% set helpText = "Override the CMS public address for XMR."|trans %}
                     {{ forms.input("xmrNetworkAddress", title, displayProfile.getSetting("xmrNetworkAddress"), helpText) }}
 
                     {% set title = "Enable stats reporting?"|trans %}

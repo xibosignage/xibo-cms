@@ -187,6 +187,13 @@ class Soap5 extends Soap4
                         $arrayItem['value'] = $this->getConfig()->getSetting('XMR_PUB_ADDRESS');
                     }
 
+                    // Override the XMR address if empty
+                    if (strtolower($settingName) == 'xmrwebsocketaddress' &&
+                        (!isset($arrayItem['value']) || $arrayItem['value'] == '')
+                    ) {
+                        $arrayItem['value'] = $this->getConfig()->getSetting('XMR_WS_ADDRESS');
+                    }
+
                     // logLevels
                     if (strtolower($settingName) == 'loglevel') {
                         // return resting log level
@@ -320,6 +327,11 @@ class Soap5 extends Soap4
                     $displayElement->setAttribute('localTimezone', $display->timeZone);
                     $displayElement->setAttribute('localDate', $dateNow->format(DateFormatHelper::getSystemFormat()));
                 }
+
+                // XMR key (this is the key a player should use the intialise a connection to XMR
+                $node = $return->createElement('xmrCmsKey', $this->getConfig()->getSetting('XMR_CMS_KEY'));
+                $node->setAttribute('type', 'string');
+                $displayElement->appendChild($node);
 
                 // Commands
                 $commands = $display->getCommands();

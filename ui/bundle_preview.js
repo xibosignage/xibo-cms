@@ -25,5 +25,4 @@ window.jQuery = window.$ = require('jquery');
 import '@xibosignage/xibo-layout-renderer/dist/styles.css';
 
 import XiboLayoutRenderer from '@xibosignage/xibo-layout-renderer';
-
 window.XiboLayoutRenderer = XiboLayoutRenderer;

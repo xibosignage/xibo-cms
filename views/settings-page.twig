@@ -297,9 +297,20 @@
                                     {% set helpText %}{% trans "Please enter the private address for XMR." %}{% endset %}
 
                                     {% if theme.isSettingEditable("XMR_ADDRESS") %}
-                                        {{ forms.input("XMR_ADDRESS", title, theme.getSetting("XMR_ADDRESS", "tcp:://localhost:5555"), helpText, "required") }}
+                                        {{ forms.input("XMR_ADDRESS", title, theme.getSetting("XMR_ADDRESS", "http:://localhost:8081"), helpText, "required") }}
                                     {% else %}
-                                        {{ forms.disabled("XMR_ADDRESS", title, theme.getSetting("XMR_ADDRESS", "tcp:://localhost:5555"), helpText) }}
+                                        {{ forms.disabled("XMR_ADDRESS", title, theme.getSetting("XMR_ADDRESS", "http:://localhost:8081"), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("XMR_WS_ADDRESS") %}
+                                    {% set title %}{% trans "XMR WebSocket Address" %}{% endset %}
+                                    {% set helpText %}{% trans "Please enter the WebSocket address for XMR. Leaving this empty will mean the Player app connects to /xmr" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("XMR_WS_ADDRESS") %}
+                                        {{ forms.input("XMR_WS_ADDRESS", title, theme.getSetting("XMR_WS_ADDRESS"), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("XMR_WS_ADDRESS", title, theme.getSetting("XMR_WS_ADDRESS"), helpText) }}
                                     {% endif %}
                                 {% endif %}
 
@@ -1222,7 +1233,7 @@
 {% block javaScript %}
     <script type="text/javascript" nonce="{{ cspNonce }}">
         $(function () {
-            var phpDateFormatTable = Handlebars.compile($('#php-date-format-table').html());
+            var phpDateFormatTable = templates['php-date-format-table'];
             $('#date-format-table').popover({
                 content: phpDateFormatTable,
                 html: true,

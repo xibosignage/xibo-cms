@@ -19,7 +19,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/* eslint-disable new-cap */
 // VIEWER Module
 
 // Load templates
@@ -1022,20 +1021,21 @@ Viewer.prototype.handleInteractions = function() {
     });
 
   // Handle fullscreen button
-  $viewerContainer.siblings('#fullscreenBtn').off('click').click(function() {
-    this.reload = true;
-    this.toggleFullscreen();
-  }.bind(this));
+  $viewerContainer.siblings('#fullscreenBtn').off('click')
+    .on('click', function() {
+      this.reload = true;
+      this.toggleFullscreen();
+    }.bind(this));
 
   // Handle layer manager button
   $viewerContainer.siblings('#layerManagerBtn')
-    .off('click').click(function() {
+    .off('click').on('click', function() {
       this.layerManager.setVisible();
     }.bind(this));
 
   // Handle snap buttons
   $viewerContainerParent.find('#snapToGrid')
-    .off('click').click(function() {
+    .off('click').on('click', function() {
       this.moveableOptions.snapToGrid = !this.moveableOptions.snapToGrid;
 
       // Turn off snap to element if grid is on
@@ -1051,7 +1051,7 @@ Viewer.prototype.handleInteractions = function() {
     }.bind(this));
 
   $viewerContainerParent.find('#snapToBorders')
-    .off('click').click(function() {
+    .off('click').on('click', function() {
       this.moveableOptions.snapToBorders = !this.moveableOptions.snapToBorders;
 
       // Update moveable options
@@ -1062,7 +1062,7 @@ Viewer.prototype.handleInteractions = function() {
     }.bind(this));
 
   $viewerContainerParent.find('#snapToElements')
-    .off('click').click(function() {
+    .off('click').on('click', function() {
       this.moveableOptions.snapToElements =
         !this.moveableOptions.snapToElements;
 
@@ -1120,7 +1120,6 @@ Viewer.prototype.update = function() {
     height: this.containerObjectDimensions.height,
     top: this.containerObjectDimensions.top,
     left: this.containerObjectDimensions.left,
-    scale: this.containerObjectDimensions.scale,
   });
 
   // Show viewer element
@@ -1521,6 +1520,7 @@ Viewer.prototype.updateElement = function(
   // Update element content
   lD.viewer.renderElementContent(
     realElement,
+    lD.viewer.layerManager.renderWithDebounce, // callback
   );
 };
 
@@ -1569,6 +1569,7 @@ Viewer.prototype.updateElementGroup = function(
     // Update element content
     lD.viewer.renderElementContent(
       element,
+      lD.viewer.layerManager.renderWithDebounce, // callback
     );
   });
 };
@@ -1893,10 +1894,22 @@ Viewer.prototype.renderElementContent = function(
       $assetContainer.find('[data-style-template=' + template.templateId + ']')
         .length === 0
     ) {
+      function scopeCSS(css, scope) {
+        return css
+          .split('}')
+          .map((rule) => rule.trim() ? `${scope} ${rule.trim()}}` : '')
+          .join('\n')
+          .trim();
+      }
+
       const styleTemplate = Handlebars.compile(
         (stencil?.style) ?
-          stencil.style :
-          '',
+          scopeCSS(
+            stencil.style,
+            '[data-style-scope="' +
+            template.type + '_' + template.dataType +
+            '__' + template.templateId + '"]',
+          ) : '',
       );
 
       $(`<style data-style-template="${template.templateId}">`)
@@ -2854,6 +2867,11 @@ Viewer.prototype.initMoveable = function() {
     // Save transformation
     transformSplit = saveTransformation(e.target);
 
+    // Check if item was not resized
+    if (transformSplit.length === 1) {
+      return;
+    }
+
     // Check if the region moved when resizing
     const moved = (
       parseFloat(transformSplit[1]) != 0 ||
@@ -2891,7 +2909,7 @@ Viewer.prototype.initMoveable = function() {
       lD.selectedObject.type == 'element-group'
     ) && self.saveElementGroupProperties(
       e.target,
-      false,
+      true,
       true,
     );
   });
@@ -3066,24 +3084,14 @@ Viewer.prototype.saveRegionProperties = function(
   // if we just want to transform the region
   if (justTransform) {
     regionObject.transform(transform, true);
-  } else if (regionId == lD.selectedObject.id) {
-    // If we're saving the region, update it
-    regionObject.transform(transform, false);
-
-    if (typeof window.regionChangesForm === 'function') {
-      window.regionChangesForm();
-
-      // Save region form
-      lD.propertiesPanel.saveRegion();
-      (updateRegion) &&
-        lD.viewer.updateRegion(regionObject);
-    }
   } else if (
-    lD.selectedObject.parent &&
-    regionId == lD.selectedObject.parent.id
+    regionId == lD.selectedObject.id ||
+    (
+      lD.selectedObject.parent &&
+      regionId == lD.selectedObject.parent.id
+    )
   ) {
-    // If we're saving the region through the widget
-    // update parent region and update the position values on the form
+    // Update region
     regionObject.transform(transform, false);
 
     // Update position form values
@@ -3093,7 +3101,10 @@ Viewer.prototype.saveRegionProperties = function(
     forms.reloadRichTextFields(lD.propertiesPanel.DOMObject);
 
     // Save region but just the position properties
-    lD.propertiesPanel.saveRegion(true);
+    // save position form flag only for widget
+    lD.propertiesPanel.saveRegion(
+      !(regionId == lD.selectedObject.id),
+    );
     (updateRegion) &&
       lD.viewer.updateRegion(regionObject);
   }
@@ -3168,7 +3179,9 @@ Viewer.prototype.saveElementProperties = function(
 
   // Save elements
   if (save) {
-    parentWidget.saveElements();
+    parentWidget.saveElements({
+      reloadData: false,
+    });
   }
 };
 

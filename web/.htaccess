@@ -22,6 +22,17 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_URI} ^/install/.*$
 RewriteRule ^ install/index.php [QSA,L]
 
+# pwa
+RewriteCond %{REQUEST_URI} ^/pwa/getResource.*$
+RewriteRule ^ pwa/index.php [QSA,L]
+
+RewriteCond %{REQUEST_URI} ^/pwa/getData.*$
+RewriteRule ^ pwa/index.php [QSA,L]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_URI} ^/pwa.*$
+RewriteRule ^pwa/(.*)$ chromeos/$1 [NC,L]
+
 # all others - i.e. web
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d

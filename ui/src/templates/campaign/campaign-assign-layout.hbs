@@ -1,0 +1,5 @@
+<li data-layout-id="{{ layoutId }}" class="btn btn-sm btn-white {{#if locked}}ui-state-disabled{{/if}}">
+    <div class="float-left text-left layout-order">{{index}}</div>
+    <div class="layout-name float-left" title="{{ layoutName }}">{{ layoutName }}</div>
+    <div class="layout-icon fa {{#if locked}}fa-lock{{else}}fa-minus layout-remove{{/if}}"></div>
+</li>

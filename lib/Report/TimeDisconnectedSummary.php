@@ -200,56 +200,18 @@ class TimeDisconnectedSummary implements ReportInterface
         $onlyLoggedIn = $sanitizedParams->getCheckbox('onlyLoggedIn') == 1;
         $groupBy = $sanitizedParams->getString('groupBy');
 
-        $currentDate = Carbon::now()->startOfDay();
-
         //
         // From and To Date Selection
         // --------------------------
-        // Our report has a range filter which determins whether or not the user has to enter their own from / to dates
-        // check the range filter first and set from/to dates accordingly.
-        $reportFilter = $sanitizedParams->getString('reportFilter');
+        // The report uses a custom range filter that automatically calculates the from/to dates
+        // depending on the date range selected.
+        $fromDt = $sanitizedParams->getDate('fromDt');
+        $toDt = $sanitizedParams->getDate('toDt');
+        $currentDate = Carbon::now()->startOfDay();
 
-        // Use the current date as a helper
-        $now = Carbon::now();
-
-        switch ($reportFilter) {
-            // the monthly data starts from yesterday
-            case 'yesterday':
-                $fromDt = $now->copy()->startOfDay()->subDay();
-                $toDt = $now->copy()->startOfDay();
-                break;
-
-            case 'lastweek':
-                $fromDt = $now->copy()->locale(Translate::GetLocale())->startOfWeek()->subWeek();
-                $toDt = $fromDt->copy()->addWeek();
-                break;
-
-            case 'lastmonth':
-                $fromDt = $now->copy()->startOfMonth()->subMonth();
-                $toDt = $fromDt->copy()->addMonth();
-                break;
-
-            case 'lastyear':
-                $fromDt = $now->copy()->startOfYear()->subYear();
-                $toDt = $fromDt->copy()->addYear();
-                break;
-
-            case '':
-            default:
-                // Expect dates to be provided.
-                $fromDt = $sanitizedParams->getDate('fromDt', ['default' => $sanitizedParams->getDate('availabilityFromDt')]);
-                $toDt = $sanitizedParams->getDate('toDt', ['default' => $sanitizedParams->getDate('availabilityToDt')]);
-
-                $fromDt = $fromDt->startOfDay();
-
-                // If toDt is current date then make it current datetime
-                if ($toDt->format('Y-m-d') == $currentDate->format('Y-m-d')) {
-                    $toDt = Carbon::now();
-                } else {
-                    $toDt = $toDt->addDay()->startOfDay();
-                }
-
-                break;
+        // If toDt is current date then make it current datetime
+        if ($toDt->format('Y-m-d') == $currentDate->format('Y-m-d')) {
+            $toDt = Carbon::now();
         }
 
         // Get an array of display groups this user has access to

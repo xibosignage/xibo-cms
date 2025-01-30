@@ -781,9 +781,10 @@ class Schedule extends Base
 
         // Retrieve the criteria data from the event
         $criteria = $event->getCriteria();
+        $criteriaDefaultCondition = $event->getCriteriaDefaultCondition();
 
         $addFormData = [
-            'dayParts' => $this->dayPartFactory->allWithSystem(),
+            'dayParts' => $this->dayPartFactory->allWithSystem(['isRetired' => 0]),
             'reminders' => [],
             'defaultLat' => $defaultLat,
             'defaultLong' => $defaultLong,
@@ -791,7 +792,8 @@ class Schedule extends Base
             'isScheduleNow' => false,
             'relativeTime' => 0,
             'setDisplaysFromFilter' => true,
-            'scheduleCriteria' => $criteria
+            'scheduleCriteria' => $criteria,
+            'criteriaDefaultCondition' => $criteriaDefaultCondition
         ];
         $formNowData = [];
 
@@ -1339,6 +1341,7 @@ class Schedule extends Base
 
         // Retrieve the data from the event
         $criteria = $event->getCriteria();
+        $criteriaDefaultCondition = $event->getCriteriaDefaultCondition();
 
         if (!$this->isEventEditable($schedule)) {
             throw new AccessDeniedException();
@@ -1390,7 +1393,7 @@ class Schedule extends Base
         $this->getState()->template = 'schedule-form-edit';
         $this->getState()->setData([
             'event' => $schedule,
-            'dayParts' => $this->dayPartFactory->allWithSystem(),
+            'dayParts' => $this->dayPartFactory->allWithSystem(['isRetired' => 0]),
             'displayGroups' => $schedule->displayGroups,
             'campaign' => !empty($schedule->campaignId) ? $this->campaignFactory->getById($schedule->campaignId) : null,
             'displayGroupIds' => array_map(function ($element) {
@@ -1403,7 +1406,8 @@ class Schedule extends Base
             'eventStart' => $eventStart,
             'eventEnd' => $eventEnd,
             'eventTypes' => \Xibo\Entity\Schedule::getEventTypesForm(),
-            'scheduleCriteria' => $criteria
+            'scheduleCriteria' => $criteria,
+            'criteriaDefaultCondition' => $criteriaDefaultCondition
         ]);
 
         return $this->render($request, $response);
@@ -2663,7 +2667,7 @@ class Schedule extends Base
         $this->getState()->template = 'schedule-form-sync-add';
         $this->getState()->setData([
             'eventTypeId' => \Xibo\Entity\Schedule::$SYNC_EVENT,
-            'dayParts' => $this->dayPartFactory->allWithSystem(),
+            'dayParts' => $this->dayPartFactory->allWithSystem(['isRetired' => 0]),
             'defaultLat' => $defaultLat,
             'defaultLong' => $defaultLong,
             'reminders' => [],
@@ -2724,7 +2728,7 @@ class Schedule extends Base
         $this->getState()->setData([
             'eventTypeId' => \Xibo\Entity\Schedule::$SYNC_EVENT,
             'event' => $schedule,
-            'dayParts' => $this->dayPartFactory->allWithSystem(),
+            'dayParts' => $this->dayPartFactory->allWithSystem(['isRetired' => 0]),
             'defaultLat' => $defaultLat,
             'defaultLong' => $defaultLong,
             'eventStart' => $eventStart,

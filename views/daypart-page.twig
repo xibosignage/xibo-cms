@@ -44,6 +44,12 @@
                         <form class="form-inline">
                             {% set title %}{% trans "Name" %}{% endset %}
                             {{ inline.inputNameGrid('name', title) }}
+
+                            {% set title %}{% trans "Retired" %}{% endset %}
+                            {% set option1 = "Yes"|trans %}
+                            {% set option2 = "No"|trans %}
+                            {% set values = [{id: 1, value: option1}, {id: 0, value: option2}] %}
+                            {{ inline.dropdown("isRetired", "single", title, 0, values, "id", "value") }}
                         </form>
                     </div>
                 </div>

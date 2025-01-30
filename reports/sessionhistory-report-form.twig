@@ -44,11 +44,8 @@
                 <div class="XiboFilterCustom">
                     <div class="FilterDiv card-body" id="sessionHistoryFilter">
                         <form class="form-inline">
-                            {% set title %}{% trans "From Date" %}{% endset %}
-                            {{ inline.date("fromDt", title, defaults.fromDate, "", "", "", "") }}
-
-                            {% set title %}{% trans "To Date" %}{% endset %}
-                            {{ inline.date("toDt", title, defaults.toDate, "", "", "", "") }}
+                            {% set title %}{% trans "Range" %}{% endset %}
+                            {{ inline.dateRangeFilter("reportFilter", title, "", "", "", "", "") }}
 
                             {% set title %}{% trans "User" %}{% endset %}
                             {% set attributes = [
@@ -72,7 +69,7 @@
                                 { id: 'debug', value: "Debug"|trans },
                                 { id: 'sessions', value: "Sessions"|trans },
                             ] %}
-                            {{ inline.dropdown("type", "single", title, "audit", options, "id", "value", helpText) }}
+                            {{ inline.dropdown("type", "single", title, "sessions", options, "id", "value", helpText) }}
 
                             <div class="w-100">
                                 <a id="applyBtn" class="btn btn-success">

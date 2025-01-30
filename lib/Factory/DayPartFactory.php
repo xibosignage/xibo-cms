@@ -106,12 +106,13 @@ class DayPartFactory extends BaseFactory
 
     /**
      * Get all dayparts with the system entries (always and custom)
+     * @param array $filter
      * @return DayPart[]
      * @throws NotFoundException
      */
-    public function allWithSystem()
+    public function allWithSystem($filter = [])
     {
-        $dayParts = $this->query(['isAlways DESC', 'isCustom DESC', 'name']);
+        $dayParts = $this->query(['isAlways DESC', 'isCustom DESC', 'name'], $filter);
 
         return $dayParts;
     }
@@ -163,6 +164,12 @@ class DayPartFactory extends BaseFactory
             $body .= ' AND `daypart`.isCustom = :isCustom ';
             $params['isCustom'] = $sanitizedFilter->getInt('isCustom');
         }
+
+        if ($sanitizedFilter->getInt('isRetired', ['default'=> -1]) == 1)
+            $body .= ' AND daypart.isRetired = 1 ';
+
+        if ($sanitizedFilter->getInt('isRetired', ['default'=> -1]) == 0)
+            $body .= ' AND daypart.isRetired = 0 ';
 
         if ($sanitizedFilter->getString('name') != null) {
             $terms = explode(',', $sanitizedFilter->getString('name'));

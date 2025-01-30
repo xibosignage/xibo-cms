@@ -40,11 +40,15 @@
 {% endblock %}
 
     {% block javaScript %}
-        {# Add common file #}
-        {% include "common.twig" %}
+        {# Add common files #}
+        {% include "editorTranslations.twig" %}
+        {% include "editorVars.twig" %}
 
         <script src="{{ theme.rootUri() }}dist/layoutEditor.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
         <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+        <script src="{{ theme.rootUri() }}dist/codeEditor.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+        <script src="{{ theme.rootUri() }}dist/wysiwygEditor.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
+        <script src="{{ theme.rootUri() }}dist/editorCommon.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
         <script type="text/javascript" nonce="{{ cspNonce }}">
 
             {# Custom translations #}
@@ -54,6 +58,7 @@
                 var layoutEditorTrans = {
                     back: "{% trans "Back" %}",
                     exit: "{% trans "Exit" %}",
+                    cancel: "{% trans "Cancel" %}",
                     toggleFullscreen: "{% trans "Toggle Fullscreen Mode" %}",
                     layerManager: "{% trans "Layer Manager" %}",
                     snapToGrid: "{% trans "Snap to Grid" %}",
@@ -66,6 +71,7 @@
                     publishMessage: "{% trans "Are you sure you want to publish this Layout? If it is already in use the update will automatically get pushed." %}",
                     checkoutTitle: "{% trans "Checkout" %}",
                     scheduleTitle: "{% trans "Schedule" %}",
+                    clearLayout: "{% trans "Clear Canvas" %}",
                     unlockTitle: "{% trans "Unlock" %}",
                     saveTemplateTitle: "{% trans "Save Template" %}",
                     readOnlyModeTitle: "{% trans "Read Only" %}",
@@ -187,6 +193,7 @@
                 var saveButton = $('button#save', dialog);
                 var initialBackgroundImageId = $backgroundImageId.val();
                 var backgroundChanged = false;
+                var mediaName = '';
 
                 function backgroundImageChange() {
                     // Want to attach an onchange event to the drop down for the bg-image
@@ -206,6 +213,10 @@
                         // Hide not found icon and show image
                         notFoundIcon.hide();
                         bgImageFileName.show();
+
+                        if(mediaName) {
+                            bgImageFileName.html(mediaName);
+                        }
 
                         // Auto-submit form
                         if (id !== initialBackgroundImageId) {
@@ -263,6 +274,10 @@
                         // Change file name
                         bgImageFileName.html($draggable.data('title'));
 
+                        // Set media name
+                        mediaName = $draggable.data('cardTitle');
+
+
                         if($draggable.hasClass('from-provider')) {
                             backgroundImageHandleDrop($draggable.data('providerData'), true);
                         } else {
@@ -278,7 +293,10 @@
                     var cardData = (fromProvider) ? selectedCard.data('providerData') : selectedCard.data('mediaId');
 
                     // Change file name
-                    bgImageFileName.html(selectedCard.data('title'));
+                    bgImageFileName.html(selectedCard.data('cardTitle'));
+
+                    // Set media name
+                    mediaName = selectedCard.data('cardTitle');
 
                     backgroundImageHandleDrop(cardData, fromProvider);
                 });
@@ -399,12 +417,4 @@
                 });
             }
         </script>
-
-        {% for module in modules %}
-            {% if module.layoutDesignerJavaScript() != "" %}
-                {% include module.layoutDesignerJavaScript() ~ ".twig" %}
-            {% endif %}
-        {% endfor %}
-
-        {% include "region-designer-javascript.twig" %}
     {% endblock %}

@@ -44,7 +44,7 @@
                                 <div class="embed-responsive embed-responsive-4by3">
                                     <div class="embed-responsive-item preview-container"
                                          data-url="{{ url_for('layout.preview', { "id": extendedLayout.layout.layoutId }) }}">
-                                        {% include 'layout-preview-partial.twig' with {'layout': extendedLayout.layout, 'previewOptions': extendedLayout.previewOptions } %}
+                                        <div id="preview_canvas_container_{{extendedLayout.layout.layoutId}}" style="width: 100%; height: 100%;"></div>
                                     </div>
                                 </div>
                             </div>
@@ -70,8 +70,8 @@
 {% endblock %}
 
 {% block javaScript %}
+    <script src="{{ theme.rootUri() }}dist/preview.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
     <script src="{{ theme.rootUri() }}dist/vendor/html5preloader/html5Preloader.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
-    <script src="{{ theme.rootUri() }}dist/preview/html-preview.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
     <script type="text/javascript" nonce="{{ cspNonce }}">
         var previewTranslations = {};
         // Translations we want always available
@@ -91,14 +91,22 @@
         (function($){
           $(document).ready(function(){
             {% for extendedLayout in extendedLayouts %}
-              dsInit({{ extendedLayout.layout.layoutId }}, {{ extendedLayout.previewOptions|json_encode()|raw }}, false);
+                var iframe = $('<iframe>', {
+                    src: '{{ url_for("layout.preview", {id: extendedLayout.layout.layoutId}) }}', // URL to load in the iframe
+                    id: 'player_frame_{{extendedLayout.layout.layoutId}}',
+                    frameborder: 0,
+                    css: {
+                        position: 'absolute',
+                        'pointer-events': 'unset',
+                        top: 0,
+                        left: 0
+                    }
+                });
+
+                // Append the iframe to the container
+                $('#preview_canvas_container_{{extendedLayout.layout.layoutId}}').append(iframe);
             {% endfor %}
           });
         }(jQuery));
     </script>
-{% endblock %}
-
-{% block headContent %}
-        <link rel="stylesheet" type="text/css" href="{{ theme.rootUri() }}dist/preview/html-preview.css" />
-        <link rel="stylesheet" type="text/css" href="{{ theme.uri("css/html-preview.css") }}" />
 {% endblock %}

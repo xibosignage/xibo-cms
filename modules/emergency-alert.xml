@@ -1,0 +1,185 @@
+<!--
+  ~ Copyright (C) 2024 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - https://xibosignage.com
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<module>
+    <id>core-emergency-alert</id>
+    <name>Emergency Alert</name>
+    <author>Core</author>
+    <description>A module for displaying emergency alert elements based on an CAP feed</description>
+    <icon>fa fa-exclamation-circle</icon>
+    <class></class>
+    <dataCacheKey>%emergencyAlertUri%_%isAreaSpecific%_%status%_%msgType%_%scope%_%category%_%responseType%_%urgency%_%severity%_%certainty%</dataCacheKey>
+    <type>emergency-alert</type>
+    <dataType>emergency-alert</dataType>
+    <schemaVersion>1</schemaVersion>
+    <assignable>1</assignable>
+    <regionSpecific>1</regionSpecific>
+    <renderAs>html</renderAs>
+    <defaultDuration>60</defaultDuration>
+    <settings></settings>
+    <properties>
+        <property id="emergencyAlertUri" type="text" variant="uri">
+            <title>CAP URL</title>
+            <helpText>The Link for the CAP feed</helpText>
+            <default></default>
+            <rule>
+                <test>
+                    <condition type="required"></condition>
+                </test>
+            </rule>
+        </property>
+        <property id="isAreaSpecific" type="checkbox">
+            <title>Area-Specific Alert Delivery</title>
+            <helpText>Send this alert only to displays matching the alert's area?</helpText>
+            <default>0</default>
+        </property>
+        <property id="status" type="dropdown" mode="single">
+            <title>Filter by Status</title>
+            <helpText>Only show Emergency Alerts in this layout if the status matches the selected option.</helpText>
+            <default></default>
+            <options>
+                <option name="">Any</option>
+                <option name="Actual">Actual</option>
+                <option name="Exercise">Exercise</option>
+                <option name="System">System</option>
+                <option name="Test">Test</option>
+                <option name="Draft">Draft</option>
+            </options>
+        </property>
+        <property id="msgType" type="dropdown" mode="single">
+            <title>Filter by Message Type</title>
+            <helpText>Only show Emergency Alerts in this layout if the message type matches the selected option.</helpText>
+            <default></default>
+            <options>
+                <option name="">Any</option>
+                <option name="Alert">Alert</option>
+                <option name="Update">Update</option>
+                <option name="Cancel">Cancel</option>
+                <option name="Ack">Ack</option>
+                <option name="Error">Error</option>
+            </options>
+        </property>
+        <property id="scope" type="dropdown" mode="single">
+            <title>Filter by Scope</title>
+            <helpText>Only show Emergency Alerts in this layout if the scope matches the selected option.</helpText>
+            <default></default>
+            <options>
+                <option name="">Any</option>
+                <option name="Public">Public</option>
+                <option name="Restricted">Restricted</option>
+                <option name="Private">Private</option>
+            </options>
+        </property>
+        <property id="category" type="dropdown" mode="single">
+            <title>Filter by Event Category</title>
+            <helpText>Only show Emergency Alerts in this layout if the category matches the selected option.</helpText>
+            <default></default>
+            <options>
+                <option name="">Any</option>
+                <option name="Geo">Geo - Geophysical (including landslides)</option>
+                <option name="Met">Met - Meteorological (including floods)</option>
+                <option name="Safety">Safety - General emergency and public safety</option>
+                <option name="Security">Security - Law enforcement, military, homeland and local/private security</option>
+                <option name="Rescue">Rescue - Rescue and recovery</option>
+                <option name="Fire">Fire - Fire suppression and rescue</option>
+                <option name="Health">Health - Medical and public health</option>
+                <option name="Env">Env - Pollution and other environmental</option>
+                <option name="Transport">Transport - Public and private transportation</option>
+                <option name="Infra">Infra - Utility, telecommunication, other non-transport infrastructure</option>
+                <option name="CBRNE">CBRNE - Chemical, Biological, Radiological, Nuclear or High-Yield Explosive threat or attack</option>
+                <option name="Other">Other - Other events</option>
+            </options>
+        </property>
+        <property id="responseType" type="dropdown" mode="single">
+            <title>Filter by Response Type</title>
+            <helpText>Only show Emergency Alerts in this layout if the response type matches the selected option.</helpText>
+            <default></default>
+            <options>
+                <option name="">Any</option>
+                <option name="Shelter">Shelter</option>
+                <option name="Evacuate">Evacuate</option>
+                <option name="Prepare">Prepare</option>
+                <option name="Execute">Execute</option>
+                <option name="Avoid">Avoid</option>
+                <option name="Monitor">Monitor</option>
+                <option name="Assess">Assess</option>
+                <option name="AllClear">AllClear</option>
+                <option name="None">None</option>
+            </options>
+        </property>
+        <property id="urgency" type="dropdown" mode="single">
+            <title>Filter by Urgency</title>
+            <helpText>Only show Emergency Alerts in this layout if the urgency matches the selected option.</helpText>
+            <default></default>
+            <options>
+                <option name="">Any</option>
+                <option name="Immediate">Immediate</option>
+                <option name="Expected">Expected</option>
+                <option name="Future">Future</option>
+                <option name="Past">Past</option>
+                <option name="Unknown">Unknown</option>
+            </options>
+        </property>
+        <property id="severity" type="dropdown" mode="single">
+            <title>Filter by Severity</title>
+            <helpText>Only show Emergency Alerts in this layout if the severity matches the selected option.</helpText>
+            <default></default>
+            <options>
+                <option name="">Any</option>
+                <option name="Extreme">Extreme</option>
+                <option name="Severe">Severe</option>
+                <option name="Moderate">Moderate</option>
+                <option name="Minor">Minor</option>
+                <option name="Unknown">Unknown</option>
+            </options>
+        </property>
+        <property id="certainty" type="dropdown" mode="single">
+            <title>Filter by certainty</title>
+            <helpText>Only show Emergency Alerts in this layout if the certainty matches the selected option.</helpText>
+            <default></default>
+            <options>
+                <option name="">Any</option>
+                <option name="Observed">Observed</option>
+                <option name="Likely">Likely</option>
+                <option name="Possible">Possible</option>
+                <option name="Unlikely">Unlikely</option>
+                <option name="Unknown">Unknown</option>
+            </options>
+        </property>
+        <property id="updateInterval" type="number">
+            <title>Update Interval (mins)</title>
+            <helpText>Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60.</helpText>
+            <default>1</default>
+            <rule>
+                <test type="and">
+                    <condition type="required"></condition>
+                </test>
+            </rule>
+        </property>
+    </properties>
+    <preview></preview>
+    <stencil>
+        <twig></twig>
+    </stencil>
+    <onRender><![CDATA[
+// Scale the element every time
+$(target).xiboLayoutScaler(properties);
+    ]]></onRender>
+</module>

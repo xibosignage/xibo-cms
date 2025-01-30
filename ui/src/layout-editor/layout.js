@@ -311,7 +311,7 @@ Layout.prototype.removeFromStructure = function(objectType, objectId, auxId) {
     // Set canvas as empty object
     self.canvas = {};
   } else if (objectType === 'region') {
-    delete self.regions[objectId];
+    delete self.regions['region_' + objectId];
   } else if (objectType === 'widget' && auxId === 'canvas') {
     delete self.canvas.widgets[
       'widget' + '_' + self.canvas.regionId + '_' + objectId
@@ -578,6 +578,78 @@ Layout.prototype.delete = function() {
         // Remove loading icon from publish dialog
         $(
           '[data-test="deleteFormLayoutForm"] ' +
+          '.btn-bb-Yes i.fa-cog',
+        ).remove();
+      }
+    }
+
+    lD.common.hideLoadingScreen();
+  }).fail(function(jqXHR, textStatus, errorThrown) {
+    lD.common.hideLoadingScreen();
+
+    // Output error to console
+    console.error(jqXHR, textStatus, errorThrown);
+  });
+};
+
+
+/**
+ * Update layout data
+ */
+Layout.prototype.updateData = function(data) {
+  // Is it editable? ( check if status is draft )
+  this.editable = (data.publishedStatusId == 2);
+
+  // Does user have permission to schedule now page?
+  this.scheduleNowPermission = data.scheduleNowPermission;
+
+  // Does user have permission to delete layout
+  this.deletePermission = data.deletePermission;
+
+  this.width = data.width;
+  this.height = data.height;
+
+  this.backgroundImage = data.backgroundImageId;
+  this.backgroundColor = data.backgroundColor;
+  this.backgroundzIndex = data.backgroundzIndex;
+  this.resolutionId = null;
+};
+
+/**
+ * Clear layout
+ */
+Layout.prototype.clear = function() {
+  const linkToAPI = urlsForApi.layout.clear;
+  let requestPath = linkToAPI.url;
+
+  lD.common.showLoadingScreen();
+
+  // Deselect previous selected object
+  lD.selectObject();
+
+  // replace id if necessary/exists
+  requestPath = requestPath.replace(':id', this.layoutId);
+
+  $.ajax({
+    url: requestPath,
+    type: linkToAPI.type,
+  }).done(function(res) {
+    if (res.success) {
+      bootbox.hideAll();
+
+      toastr.success(res.message);
+
+      lD.reloadData(res.id, {refreshEditor: true});
+    } else {
+      // Login Form needed?
+      if (res.login) {
+        window.location.reload();
+      } else {
+        toastr.error(res.message);
+
+        // Remove loading icon from publish dialog
+        $(
+          '[data-test="clearFormLayoutForm"] ' +
           '.btn-bb-Yes i.fa-cog',
         ).remove();
       }
