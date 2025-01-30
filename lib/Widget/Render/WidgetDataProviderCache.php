@@ -342,13 +342,15 @@ class WidgetDataProviderCache
     ): array {
         $this->getLog()->debug('decorateForPlayer');
 
+        $cdnUrl = $configService->getSetting('CDN_URL');
+
         foreach ($data as $row => $item) {
             // Each data item can be an array or an object
             if (is_array($item)) {
                 foreach ($item as $key => $value) {
                     if (is_string($value)) {
                         $data[$row][$key] = $this->decorateMediaForPlayer(
-                            $configService,
+                            $cdnUrl,
                             $display,
                             $encryptionKey,
                             $storedAs,
@@ -360,7 +362,7 @@ class WidgetDataProviderCache
                 foreach (ObjectVars::getObjectVars($item) as $key => $value) {
                     if (is_string($value)) {
                         $item->{$key} = $this->decorateMediaForPlayer(
-                            $configService,
+                            $cdnUrl,
                             $display,
                             $encryptionKey,
                             $storedAs,
@@ -374,16 +376,16 @@ class WidgetDataProviderCache
     }
 
     /**
+     * @param string|null $cdnUrl
      * @param \Xibo\Entity\Display $display
      * @param string $encryptionKey
      * @param array $storedAs
      * @param string|null $data
-     * @param \Xibo\Service\ConfigServiceInterface $configService
      * @return string|null
      * @throws \Xibo\Support\Exception\NotFoundException
      */
     private function decorateMediaForPlayer(
-        ConfigServiceInterface $configService,
+        ?string $cdnUrl,
         Display $display,
         string $encryptionKey,
         array $storedAs,
@@ -407,7 +409,7 @@ class WidgetDataProviderCache
                         $url = LinkSigner::generateSignedLink(
                             $display,
                             $encryptionKey,
-                            $configService->getSetting('CDN_URL'),
+                            $cdnUrl,
                             'M',
                             $value[1],
                             $storedAs[$value[1]]

@@ -159,6 +159,7 @@ class Soap7 extends Soap6
                     $media = [];
                     $requiredFiles = [];
                     $mediaIds = $widgetDataProviderCache->getCachedMediaIds();
+                    $cdnUrl = $this->configService->getSetting('CDN_URL');
 
                     if (count($mediaIds) > 0) {
                         $this->getLog()->debug('Processing media links');
@@ -217,7 +218,7 @@ class Soap7 extends Soap6
                                 'path' => LinkSigner::generateSignedLink(
                                     $this->display,
                                     $this->configService->getApiKeyDetails()['encryptionKey'],
-                                    $this->configService->getSetting('CDN_URL'),
+                                    $cdnUrl,
                                     'M',
                                     intval($row['mediaId']),
                                     $row['storedAs'],
