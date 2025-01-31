@@ -211,7 +211,6 @@ class NationalWeatherServiceConnector implements ConnectorInterface, EmergencyAl
                 // Set schedule criteria update
                 $action = new ScheduleCriteriaUpdateAction();
                 $action->setCriteriaUpdates([
-                    'isNwsActive' => 1,
                     'emergency_alert_status' => $status,
                     'emergency_alert_category' => $category
                 ]);
@@ -399,8 +398,8 @@ class NationalWeatherServiceConnector implements ConnectorInterface, EmergencyAl
     public function onScheduleCriteriaRequest(ScheduleCriteriaRequestInterface $event): void
     {
         // Initialize Emergency Alerts schedule criteria parameters but with limited category
-        $event->addType('emergency_alerts', __('Emergency Alerts'))
-                ->addMetric('emergency_alert_status', __('Status'))
+        $event->addType('emergency_alert', __('Emergency Alerts'))
+                ->addMetric('status', __('Status'))
                     ->addCondition([
                         'eq' => __('Equal to')
                     ])
@@ -409,7 +408,7 @@ class NationalWeatherServiceConnector implements ConnectorInterface, EmergencyAl
                         self::TEST_ALERT => __('Test Alerts'),
                         self::NO_ALERT => __('No Alerts')
                     ])
-                ->addMetric('emergency_alert_category', __('Category'))
+                ->addMetric('category', __('Category'))
                     ->addCondition([
                         'eq' => __('Equal to')
                     ])
