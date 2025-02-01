@@ -320,6 +320,14 @@ class Environment
     }
 
     /**
+     * @return bool
+     */
+    public static function checkGnu()
+    {
+        return extension_loaded('gnupg');
+    }
+
+    /**
      * @param $url
      * @return bool
      */

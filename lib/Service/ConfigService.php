@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -741,6 +741,11 @@ class ConfigService implements ConfigServiceInterface
         $this->testItem($rows, __('SimpleXML'),
             Environment::checkSimpleXml(),
             __('SimpleXML is used to parse RSS feeds and other XML data sources')
+        );
+
+        $this->testItem($rows, __('GNUPG'),
+            Environment::checkGnu(),
+            __('checkGnu is used to verify the integrity of Player Software versions uploaded to the CMS')
         );
 
         $this->envTested = true;
