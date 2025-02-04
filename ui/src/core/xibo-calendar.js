@@ -20,7 +20,7 @@
  */
 
 // Global calendar object
-window.calendar;
+window.calendar = undefined;
 let events = [];
 let mymap;
 let mymapmarker;
@@ -1123,6 +1123,8 @@ window.setupScheduleForm = function(dialog) {
         dataType: 'json',
         success: function(xhr, textStatus, error) {
           XiboSubmitResponse(xhr, $form);
+
+          // if (xhr.success && typeof calendar !== 'undefined') {
 
           if (xhr.success && calendar !== undefined) {
             // Clear option cache
