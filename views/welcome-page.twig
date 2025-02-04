@@ -23,8 +23,6 @@
 {% extends "authed.twig" %}
 {% import "components.twig" as components %}
 
-{% set isXiboThemed = theme.getThemeConfig("app_name") == "Xibo" %}
-
 {% block title %}{{ "Welcome"|trans }} | {% endblock %}
 
 {% block pageContent %}
@@ -44,37 +42,11 @@
                     <img class="onboarding-welcome-image" src="{{ theme.rootUri() }}theme/default/img/onboarding.png" alt="Welcome Image">
                 </div>
             </div>
-            {% set onboardingCard = [
-                {
-                    title: 'Displays' | trans,
-                    iconName: 'displays-icon'
-                },
-                {
-                    title: 'Existing <br></br> Content' | trans,
-                    iconName: 'existing-content-icon'
-                },
-                {
-                    title: 'Playlists' | trans,
-                    iconName: 'playlist-icon'
-                },
-                {
-                    title: 'Create <br></br> Content' | trans,
-                    iconName: 'create-content-icon'
-                },
-                {
-                    title: 'Schedule' | trans,
-                    iconName: 'schedule-icon'
-                },                         
-            ] %}
+
             <div class="onboarding-cards-container">
-                {% for card in onboardingCard %}
-                    {{ components.welcomeCard(
-                        card.title,
-                        card.iconName,
-                    ) }}
-                {% endfor %}
                 <img class="line-curve" src="{{ theme.rootUri() }}theme/default/img/line-curve-vector.svg" alt="Welcome Image">
             </div>
+
             {% set title_displays = 'Displays'|trans %}
             {% set text_displays = 'Get started by installing one of our Players and entering the pairing code into the <a class="text-link">Displays page</a> so that you can show your content.
                 If you don’t have a device to use as a Player you can preview and test scheduling in your web browser.'|trans %}
@@ -123,7 +95,6 @@
                 {% if currentUser.featureEnabled("schedule.view") %}
                     {{ components.serviceCard(title_schedule, text_schedule, firstLink_schedule, secondLink_schedule, iconName_schedule) }}
                 {% endif %}
-
             </div>
             {% set documentationTitle %}{{ 'Documentation'|trans }}{% endset %}
             {% set documentationText %}{{ 'Our documentation is there to help you at every turn. It’s updated regularly to reflect changes and additions to the platform, and so it’s a valuable reference tool for all users.'|trans }}{% endset %}
@@ -162,4 +133,43 @@
             <img style="height:30px; width: 30px;" src="{{ theme.rootUri() }}theme/default/img/onboarding/back-to-top-icon.svg" alt="Welcome Image">
         </a>
     </div>
+{% endblock %}
+
+{% block javaScript %}
+    {# Initialise JS variables and translations #}
+    <script type="text/javascript" nonce="{{ cspNonce }}" defer>
+        var isXiboThemed = '{{ theme.getThemeConfig("app_name") }}' === 'Xibo';
+
+        // Onboarding cards data
+        var onboardingCard = [
+            {
+                title: '{% trans "Displays" %}',
+                iconName: 'displays-icon',
+                iconURL: '{{ theme.rootUri() }}theme/default/img/onboarding/displays-icon.svg',
+            },
+            {
+                title: "{% trans "Existing Content" %}",
+                iconName: 'existing-content-icon',
+                iconURL: '{{ theme.rootUri() }}theme/default/img/onboarding/existing-content-icon.svg',
+            },
+            {
+                title: "{% trans "Playlists" %}",
+                iconName: 'playlist-icon',
+                iconURL: '{{ theme.rootUri() }}theme/default/img/onboarding/playlist-icon.svg',
+            },
+            {
+                title: "{% trans "Create Content" %}",
+                iconName: 'create-content-icon',
+                iconURL: '{{ theme.rootUri() }}theme/default/img/onboarding/create-content-icon.svg',
+            },
+            {
+                title: "{% trans "Schedule" %}",
+                iconName: 'schedule-icon',
+                iconURL: '{{ theme.rootUri() }}theme/default/img/onboarding/schedule-icon.svg',
+            },
+        ];
+    </script>
+
+    {# Add page source code bundle ( JS and CSS ) #}
+    <script src="{{ theme.rootUri() }}dist/pages/welcome-page.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
 {% endblock %}
