@@ -1124,8 +1124,6 @@ window.setupScheduleForm = function(dialog) {
         success: function(xhr, textStatus, error) {
           XiboSubmitResponse(xhr, $form);
 
-          // if (xhr.success && typeof calendar !== 'undefined') {
-
           if (xhr.success && calendar !== undefined) {
             // Clear option cache
             calendar.options['clearCache'] = true;
