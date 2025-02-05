@@ -1874,3 +1874,77 @@ div.dataTables_wrapper div.dataTables_info {
     right: 0;
     z-index: 3;
 }
+
+/* Reminder Events and Schedule Criteria */
+.reminder-event-row, .schedule-criteria-row {
+    display: inline-flex !important;
+    width: 100%;
+    gap: 12px;
+    padding: 0 15px;
+    margin-bottom: 8px;
+}
+
+.reminder-event-cell label, .schedule-criteria-cell label {
+    width: 100%;
+}
+
+.reminder-event-btn, .schedule-criteria-btn {
+    flex-grow: 1;
+    text-align: right;
+}
+
+.schedule-criteria-type, .schedule-criteria-condition, .schedule-criteria-metric {
+    flex-basis: 165px;
+}
+
+.schedule-criteria-value {
+    flex-basis: 130px;
+}
+
+.reminder-event-value {
+    flex-basis: 100px;
+}
+
+.reminder-event-type {
+    flex-basis: 120px;
+}
+
+.reminder-event-option {
+    flex-basis: 200px;
+}
+
+.reminder-event-email {
+    flex-basis: 180px;
+}
+
+@media screen and (max-width: 992px) {
+    .reminder-event-row, .schedule-criteria-row {
+        gap: 8px;
+        padding: 0;
+    }
+
+    .schedule-criteria-type, .schedule-criteria-condition, .schedule-criteria-metric {
+        flex-basis: 95px;
+    }
+    
+    .schedule-criteria-value {
+        flex-basis: 85px;
+    }
+
+    .reminder-event-value {
+        flex-basis: 60px;
+    }
+    
+    .reminder-event-type {
+        flex-basis: 85px;
+    }
+    
+    .reminder-event-option {
+        flex-basis: 140px;
+    }
+    
+    .reminder-event-email {
+        flex-basis: 80px;
+        line-height: 1.2rem;
+    }
+}
