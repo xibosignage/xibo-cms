@@ -25,7 +25,7 @@
     <description>A module for displaying weather alert elements based on National Weather Service's Atom feed</description>
     <icon>fa fa-exclamation-circle</icon>
     <class></class>
-    <dataCacheKey>%area%_%status%_%msgType%_%urgency%_%severity%_%certainty%</dataCacheKey>
+    <dataCacheKey>%area%_%status%_%msgType%_%urgency%_%severity%_%certainty%_%displayId%</dataCacheKey>
     <type>national-weather-service</type>
     <dataType>emergency-alert</dataType>
     <schemaVersion>1</schemaVersion>
