@@ -1,12 +1,12 @@
-<div class="form-group row">
+<div class="form-group reminder-event-row">
     <input class="form-control" name="reminder_scheduleReminderId[]" type="hidden" value="{{ scheduleReminderId }}" />
 
-    <div class="col-sm-2">
+    <div class="reminder-event-cell reminder-event-value">
         <label for="reminder_value[]">
             <input class="form-control" name="reminder_value[]" type="number" value="{{ value }}" />
         </label>
     </div>
-    <div class="col-sm-2">
+    <div class="reminder-event-cell reminder-event-type">
         <label for="reminder_type[]">
             <select class="form-control" name="reminder_type[]">
                 <option value="1" {{#eq type 1}}selected{{/eq}}>{{ trans.type.minute }}</option>
@@ -17,7 +17,7 @@
             </select>
         </label>
     </div>
-    <div class="col-sm-3">
+    <div class="reminder-event-cell reminder-event-option">
         <label for="reminder_option[]">
             <select class="form-control" name="reminder_option[]">
                 <option value="1" {{#eq option 1}}selected{{/eq}}>{{ trans.option.beforeScheduleStarts }}</option>
@@ -27,14 +27,14 @@
             </select>
         </label>
     </div>
-    <div class="col-sm-3">
+    <div class="reminder-event-cell reminder-event-email">
         <label for="reminder_isEmail[]">
             <input type="checkbox" name="reminder_isEmail[]" {{#eq isEmail 1}}checked{{/eq}}/>
             {{ trans.notifyByEmail }}
             <input type="hidden" name="reminder_isEmailHidden[]" />
         </label>
     </div>
-    <div class="col-sm-2">
+    <div class="reminder-event-cell reminder-event-btn">
         <button class="btn btn-white"><i class="fa {{ buttonGlyph }}"></i></button>
     </div>
 </div>
