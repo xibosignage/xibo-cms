@@ -32,7 +32,7 @@
         "ext-json": "1",
         "ext-soap": "1",
         "ext-zip": "1",
-        "ext-fileinfo": "*"
+        "ext-fileinfo": "1"
       }
   },
   "minimum-stability": "dev",
@@ -66,7 +66,6 @@
     "james-heinrich/getid3": "^1.9",
     "onelogin/php-saml": "4.1.*",
     "infostars/picofeed": "dev-westphal/php8",
-    "xibosignage/xibo-xmr": "0.*",
     "tedivm/stash": "^v0.17.6",
     "phenx/php-font-lib": "^0.5.0",
     "symfony/event-dispatcher": "^4.1",

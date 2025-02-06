@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -32,7 +32,9 @@ use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\DuplicateEntityException;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class PlayerVersion
@@ -223,10 +225,53 @@ class PlayerVersion implements \JsonSerializable
         if ($this->type === 'chromeOS') {
             $this->getLog()->debug('add: handling chromeOS upload');
 
-            // TODO: check the signature of the file to make sure it comes from a verified source.
+            $fullFileName = $libraryFolder . 'playersoftware/' . $this->fileName;
+
+            // Check the signature of the file to make sure it comes from a verified source.
+            try {
+                $this->getLog()->debug('unpack: loading gnupg to verify the signature');
+
+                $gpg = new \gnupg();
+                $gpg->seterrormode(\gnupg::ERROR_EXCEPTION);
+                $info = $gpg->verify(
+                    file_get_contents($fullFileName),
+                    false,
+                );
+
+                if ($info === false
+                    || $info[0]['fingerprint'] !== '10415C506BE63E70BAF1D58BC1EF165A0F880F75'
+                    || $info[0]['status'] !== 0
+                    || $info[0]['summary'] !== 0
+                ) {
+                    $this->getLog()->error('unpack: unable to verify GPG. file = ' . $this->fileName);
+                    throw new GeneralException();
+                }
+
+                $this->getLog()->debug('unpack: signature verified');
+
+                // Signature verified, move the file, so we can decrypt it.
+                rename($fullFileName, $libraryFolder . 'playersoftware/' . $this->versionId . '.gpg');
+
+                $this->getLog()->debug('unpack: using the shell to decrypt the file');
+
+                // Go to the shell to decrypt it.
+                shell_exec('gpg --decrypt --output ' . $libraryFolder . 'playersoftware/' . $this->versionId
+                    . ' ' . $libraryFolder . 'playersoftware/' . $this->versionId . '.gpg');
+
+                // Was this successful?
+                if (!file_exists($libraryFolder . 'playersoftware/' . $this->versionId)) {
+                    throw new NotFoundException('Not found after decryption');
+                }
+
+                // Rename the GPG file back to its original name.
+                rename($libraryFolder . 'playersoftware/' . $this->versionId . '.gpg', $fullFileName);
+            } catch (\Exception $e) {
+                $this->getLog()->error('unpack: ' . $e->getMessage());
+                throw new InvalidArgumentException(__('Package file unsupported or invalid'));
+            }
 
             $zip = new \ZipArchive();
-            if (!$zip->open($libraryFolder . 'playersoftware/' . $this->fileName)) {
+            if (!$zip->open($libraryFolder . 'playersoftware/' . $this->versionId)) {
                 throw new InvalidArgumentException(__('Unable to open ZIP'));
             }
 
@@ -273,6 +318,9 @@ class PlayerVersion implements \JsonSerializable
             $manifest = Str::replace('assets/icons/192x192.png', $this->config->uri('img/192x192.png'), $manifest);
 
             file_put_contents($folder . '/manifest.json', $manifest);
+
+            // Unlink our decrypted file
+            unlink($libraryFolder . 'playersoftware/' . $this->versionId);
         }
 
         return $this;
