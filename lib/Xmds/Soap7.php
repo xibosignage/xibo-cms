@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -23,8 +23,8 @@
 namespace Xibo\Xmds;
 
 use Xibo\Entity\Bandwidth;
-use Xibo\Helper\LinkSigner;
 use Xibo\Event\XmdsWeatherRequestEvent;
+use Xibo\Helper\LinkSigner;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -159,6 +159,7 @@ class Soap7 extends Soap6
                     $media = [];
                     $requiredFiles = [];
                     $mediaIds = $widgetDataProviderCache->getCachedMediaIds();
+                    $cdnUrl = $this->configService->getSetting('CDN_URL');
 
                     if (count($mediaIds) > 0) {
                         $this->getLog()->debug('Processing media links');
@@ -217,7 +218,7 @@ class Soap7 extends Soap6
                                 'path' => LinkSigner::generateSignedLink(
                                     $this->display,
                                     $this->configService->getApiKeyDetails()['encryptionKey'],
-                                    null,
+                                    $cdnUrl,
                                     'M',
                                     intval($row['mediaId']),
                                     $row['storedAs'],
@@ -230,6 +231,7 @@ class Soap7 extends Soap6
 
                     $resource = json_encode([
                         'data' => $widgetDataProviderCache->decorateForPlayer(
+                            $this->configService,
                             $this->display,
                             $this->configService->getApiKeyDetails()['encryptionKey'],
                             $dataProvider->getData(),
