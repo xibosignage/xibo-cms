@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -447,8 +447,6 @@ class UserGroupFactory extends BaseFactory
         foreach ($this->getStore()->select('
                 SELECT `group`.groupId, `group`.features 
                   FROM `group`
-                    INNER JOIN `lkusergroup`
-                    ON `lkusergroup`.groupId = `group`.groupId
                  WHERE `group`.groupId = :groupId
                     OR `group`.groupId IN (SELECT groupId FROM lkusergroup WHERE userId = :userId)
             ', [
