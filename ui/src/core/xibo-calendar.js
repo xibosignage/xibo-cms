@@ -77,23 +77,53 @@ $(function() {
   // Function to update the metrics field based on the selected type
   function updateMetricsField($row, scheduleCriteria, type) {
     const $metricLabel = $row.find('label[for="criteria_metric[]"]');
-    const $metricSelect =
-      $('<select class="form-control" name="criteria_metric[]"></select>');
     const $fields = $('#scheduleCriteriaFields');
     const criteriaDefaultCondition = $fields.data('criteriaDefaultCondition');
+    let $metricField;
+    let selectedMetric;
 
     // Check if scheduleCriteria has types
     if (scheduleCriteria.types) {
       const typeData = scheduleCriteria.types.find((t) => t.id === type);
       if (typeData) {
         const metrics = typeData.metrics;
-        metrics.forEach(function(metric) {
-          $metricSelect.append(new Option(metric.name, metric.id));
-        });
 
-        // Check for the currently selected metric
-        // and update the value field accordingly
-        const selectedMetric = $metricSelect.val();
+        // If only one metric is available, show readonly input
+        if (metrics.length === 1) {
+          const metric = metrics[0];
+          selectedMetric = metric.id;
+
+          // Create a readonly input for display
+          const $readonlyInput = $('<input>', {
+            type: 'text',
+            value: metric.name,
+            readonly: true,
+            class: 'form-control',
+          }).css('background-color', '#fff');
+
+          // Create a hidden input for submission
+          const $hiddenInput = $('<input>', {
+            type: 'hidden',
+            name: 'criteria_metric[]',
+            value: metric.id,
+          });
+
+          $metricField = $readonlyInput.add($hiddenInput);
+        } else {
+          // Create a dropdown for multiple metrics
+          $metricField = $('<select class="form-control" name="criteria_metric[]"></select>');
+
+          // populate the dropdown
+          metrics.forEach(function (metric) {
+            $metricField.append(new Option(metric.name, metric.id));
+          });
+
+          // Select the first metric by default
+          selectedMetric = metrics[0]?.id;
+          $metricField.val(selectedMetric);
+        }
+
+        // Find the selected metric's data
         const metricData = metrics.find((m) => m.id === selectedMetric);
 
         // Update the value field based on the selected metric
@@ -115,7 +145,7 @@ $(function() {
 
     // Remove only input or select elements inside the label
     $metricLabel.find('input, select').remove();
-    $metricLabel.append($metricSelect);
+    $metricLabel.append($metricField);
   }
 
   // Function to revert the metrics field to a text input
@@ -178,13 +208,38 @@ $(function() {
 
     // Check the inputType in the values object
     if (values.inputType === 'dropdown') {
-      // change to dropdown and populate
-      const $valueSelect =
-        $('<select class="form-control" name="criteria_value[]"></select>');
-      values.values.forEach(function(value) {
-        $valueSelect.append(new Option(value.title, value.id));
-      });
-      $valueLabel.append($valueSelect);
+
+      // If only one metric is available, show readonly input
+      if (values.values.length === 1) {
+        const value = values.values[0];
+
+        // Create a readonly input for display
+        const $readonlyInput = $('<input>', {
+          type: 'text',
+          value: value.title,
+          readonly: true,
+          class: 'form-control',
+        }).css('background-color', '#fff');
+
+        // Create a hidden input for submission
+        const $hiddenInput = $('<input>', {
+          type: 'hidden',
+          name: 'criteria_value[]',
+          value: value.id,
+        });
+
+        $valueLabel.append($readonlyInput).append($hiddenInput);
+      } else {
+        // change to dropdown and populate
+        const $valueSelect =
+          $('<select class="form-control" name="criteria_value[]"></select>');
+
+        values.values.forEach(function(value) {
+          $valueSelect.append(new Option(value.title, value.id));
+        });
+
+        $valueLabel.append($valueSelect);
+      }
     } else {
       // change to either text or number field
       let $valueInput;
@@ -938,9 +993,54 @@ $(function() {
 // Function to update the Condition dropdown
 // according to the selected metric's available condition
 function updateConditionField($row, conditions, selectedCondition) {
-  const $conditionField = $row.find('select[name="criteria_condition[]"]');
+  let $conditionField = $row.find('[name="criteria_condition[]"]');
+  let $readonlyInput = $row.find('.readonly-condition-name');
 
-  if ($conditionField.length > 0) {
+  if (conditions.length === 1) {
+    const condition = conditions[0];
+
+    // Create or update text inputs
+    if ($readonlyInput.length === 0) {
+      $readonlyInput = $('<input>', {
+        type: 'text',
+        readonly: true,
+        class: 'form-control readonly-condition-name',
+      }).css('background-color', '#fff');
+      $conditionField.replaceWith($readonlyInput);
+    }
+    $readonlyInput.val(condition.name);
+
+    let $hiddenInput = $row.find('input[name="criteria_condition[]"]');
+    if ($hiddenInput.length === 0) {
+      $hiddenInput = $('<input>', {
+        type: 'hidden',
+        name: 'criteria_condition[]',
+      });
+      $readonlyInput.after($hiddenInput);
+    }
+    $hiddenInput.val(condition.id);
+  } else {
+    // Restore dropdown for multiple conditions
+    if (!$conditionField.is('select')) {
+      // If it's a readonly field, replace with a new dropdown
+      const $newSelect = $('<select>', {
+        name: 'criteria_condition[]',
+        class: 'form-control',
+      });
+
+      // Remove readonly and hidden inputs
+      $readonlyInput.remove();
+      $conditionField.remove();
+
+      // Append the dropdown inside the <label> element
+      const $label = $row.find('.schedule-criteria-cell.schedule-criteria-condition label');
+      $label.empty();
+      $label.append($newSelect);
+
+      // Update reference to the new select field
+      $conditionField = $newSelect;
+    }
+
     // Clear existing options
     $conditionField.empty();
 
@@ -963,13 +1063,39 @@ function updateConditionFieldToDefault(
   defaultConditions,
   selectedCondition,
 ) {
-  const $conditionField = $row.find('select[name="criteria_condition[]"]');
+  let $conditionField = $row.find('[name="criteria_condition[]"]');
+  let $readonlyInput = $row.find('.readonly-condition-name');
 
-  if ($conditionField.length > 0 && defaultConditions) {
+  if ($readonlyInput.length > 0 || ($conditionField.length > 0 && $conditionField.is('input[type="hidden"]'))) {
+    // If the field is readonly (text + hidden input), remove them
+    if ($readonlyInput.length > 0) {
+      $readonlyInput.remove();
+    }
+
+    // Replace hidden input with a dropdown
+    const $newSelect = $('<select>', {
+      name: 'criteria_condition[]',
+      class: 'form-control',
+    });
+
+    // Populate with default conditions
+    defaultConditions.forEach((condition) => {
+      $newSelect.append(
+          $('<option>', {value: condition.id}).text(condition.name),
+      );
+    });
+
+    // Pre-select the condition if provided
+    // otherwise select the first condition
+    $newSelect.val(selectedCondition || defaultConditions[0]?.id || '');
+
+    // Replace the hidden input with the dropdown
+    $conditionField.replaceWith($newSelect);
+  } else if ($conditionField.length > 0 && $conditionField.is('select')) {
     // Clear existing options
     $conditionField.empty();
 
-    // Populate with default conditions
+    // Populate with provided conditions
     defaultConditions.forEach((condition) => {
       $conditionField.append(
         $('<option>', {value: condition.id}).text(condition.name),
@@ -2317,93 +2443,154 @@ const configureCriteriaFields = function(dialog) {
     selectedCondition,
   ) {
     const $metricLabel = $row.find('label[for="criteria_metric[]"]');
-    let $metricSelect;
+    let $metricField;
 
     if (typeId === 'custom') {
       // change the input type to text
-      $metricSelect =
-        $(
-          '<input class="form-control" name="criteria_metric[]"' +
-          ' type="text" value="" />',
-        );
+      $metricField = $('<input>', {
+        class: 'form-control',
+        name: 'criteria_metric[]',
+        type: 'text',
+        value: '',
+      });
     } else {
-      // change input type to dropdown
-      $metricSelect =
-        $('<select class="form-control" name="criteria_metric[]"></select>');
+      // Create a dropdown or handle as a text input if only one metric
       const type = types ? types.find((t) => t.id === typeId) : null;
+
       if (type) {
-        type.metrics.forEach((metric) => {
-          $metricSelect.append(new Option(metric.name, metric.id));
-        });
+        const metrics = type.metrics;
+
+        if (metrics.length === 1) {
+          const metric = metrics[0];
+          selectedMetric = metric.id;
+
+          // Create readonly input for display
+          const $readonlyInput = $('<input>', {
+            type: 'text',
+            value: metric.name,
+            readonly: true,
+            class: 'form-control',
+          }).css('background-color', '#fff');
+
+          // Create hidden input for submission
+          const $hiddenInput = $('<input>', {
+            type: 'hidden',
+            name: 'criteria_metric[]',
+            value: metric.id,
+          });
+
+          $metricField = $readonlyInput.add($hiddenInput);
+        } else {
+          // Create a dropdown for multiple metrics
+          $metricField = $('<select>', {
+            class: 'form-control',
+            name: 'criteria_metric[]',
+          });
+
+          metrics.forEach((metric) => {
+            $metricField.append(new Option(metric.name, metric.id));
+          });
+
+          // Set the selected metric if provided, otherwise default to the first
+          selectedMetric = selectedMetric || metrics[0]?.id;
+          $metricField.val(selectedMetric);
+        }
+
+        // Find the selected metric's data
+        const metric = metrics.find((m) => m.id === selectedMetric);
+
+        if (metric) {
+          // Update the value field based on the selected metric
+          updateValueField($row, metric, elementValue);
+
+          // Update the condition field based on the selected metric
+          if (metric.conditions) {
+            // use defined conditions
+            updateConditionField($row, metric.conditions, selectedCondition);
+          } else {
+            // Use default conditions if none are defined
+            const criteriaDefaultCondition = $('#scheduleCriteriaFields').data(
+                'criteriaDefaultCondition'
+            );
+            updateConditionFieldToDefault(
+                $row,
+                criteriaDefaultCondition,
+                selectedCondition
+            );
+          }
+        }
       } else {
         // change the input type back to text
-        $metricSelect =
-          $(
-            '<input class="form-control" name="criteria_metric[]" ' +
-            'type="text" value="' + selectedMetric + '" />');
+        $metricField = $('<input>', {
+          class: 'form-control',
+          name: 'criteria_metric[]',
+          type: 'text',
+          value: '',
+        });
       }
     }
 
     // Remove only input or select elements inside the label
     $metricLabel.find('input, select').remove();
-    $metricLabel.append($metricSelect);
-
-    // Set the selected metric if provided
-    if (selectedMetric) {
-      $metricSelect.val(selectedMetric);
-      const type = types ? types.find((t) => t.id === typeId) : null;
-      if (type) {
-        const metric = type.metrics.find((m) => m.id === selectedMetric);
-        // update value and condition fields if metric is present
-        if (metric) {
-          updateValueField($row, metric, elementValue);
-
-          // Update the condition field based on the selected metric
-          if (metric.conditions) {
-            updateConditionField($row, metric.conditions, selectedCondition);
-          } else {
-            // Use default conditions if none are defined
-            const criteriaDefaultCondition =
-              $('#scheduleCriteriaFields').data('criteriaDefaultCondition');
-            updateConditionFieldToDefault(
-              $row,
-              criteriaDefaultCondition,
-              selectedCondition,
-            );
-          }
-        }
-      }
-    }
+    $metricLabel.append($metricField);
   };
 
   // Function to update value field
   const updateValueField = function($row, metric, elementValue) {
     const $valueLabel = $row.find('label[for="criteria_value[]"]');
-    let $valueInput;
+    let $valueField;
 
     if (metric.values && metric.values.inputType === 'dropdown') {
-      // change input type to dropdown
-      $valueInput =
-        $('<select class="form-control" name="criteria_value[]"></select>');
-      if (metric.values.values) {
-        metric.values.values.forEach((value) => {
-          $valueInput.append(new Option(value.title, value.id));
+      // Create a dropdown or handle as a text input if only one metric
+      if (metric.values.values.length === 1) {
+        const value = metric.values.values[0];
+
+        // Create a readonly input for display
+        const $readonlyInput = $('<input>', {
+          type: 'text',
+          value: value.title,
+          readonly: true,
+          class: 'form-control',
+        }).css('background-color', '#fff');
+
+        // Create a hidden input for submission
+        const $hiddenInput = $('<input>', {
+          type: 'hidden',
+          name: 'criteria_value[]',
+          value: value.id,
         });
+
+        $valueField = $readonlyInput.add($hiddenInput);
+      } else {
+        // change input type to dropdown
+        $valueField = $('<select>', {
+          name: 'criteria_value[]',
+          class: 'form-control',
+        });
+        if (metric.values.values) {
+          metric.values.values.forEach((value) => {
+            $valueField.append(new Option(value.title, value.id));
+          });
+        }
+
+        // Set the selected value
+        $valueField.val(elementValue);
       }
-      // Set the selected value
-      $valueInput.val(elementValue);
     } else {
       // change input type according to inputType's value
       const inputType = metric.values ? metric.values.inputType : 'text';
       const value = elementValue || '';
-      $valueInput =
-        $('<input class="form-control" name="criteria_value[]" ' +
-          'type="' + inputType + '" value="' + value + '" />');
+      $valueField = $('<input>', {
+        class: 'form-control',
+        name: 'criteria_value[]',
+        type: inputType,
+        value: value,
+      });
     }
 
     // Remove only input or select elements inside the label
     $valueLabel.find('input, select').remove();
-    $valueLabel.append($valueInput);
+    $valueLabel.append($valueField);
   };
 
   // Existing criteria?
