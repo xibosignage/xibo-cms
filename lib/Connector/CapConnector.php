@@ -177,8 +177,8 @@ class CapConnector implements ConnectorInterface, EmergencyAlertInterface
                 // Set schedule criteria update
                 $action = new ScheduleCriteriaUpdateAction();
                 $action->setCriteriaUpdates([
-                    ['metric' => 'emergency_alert_status', 'value' => $status],
-                    ['metric' => 'emergency_alert_category', 'value' => $category]
+                    ['metric' => 'emergency_alert_status', 'value' => $status, 'ttl' => 60],
+                    ['metric' => 'emergency_alert_category', 'value' => $category, 'ttl' => 60]
                 ]);
 
                 // Initialize the display
