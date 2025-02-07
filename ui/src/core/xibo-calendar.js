@@ -93,28 +93,21 @@ $(function() {
           const metric = metrics[0];
           selectedMetric = metric.id;
 
-          // Create a readonly input for display
-          const $readonlyInput = $('<input>', {
-            type: 'text',
-            value: metric.name,
-            readonly: true,
-            class: 'form-control',
-          }).css('background-color', '#fff');
-
-          // Create a hidden input for submission
-          const $hiddenInput = $('<input>', {
-            type: 'hidden',
-            name: 'criteria_metric[]',
-            value: metric.id,
-          });
-
-          $metricField = $readonlyInput.add($hiddenInput);
+          // initialize new text input fields
+          $metricField = createReadonlyAndHiddenFields(
+            metric.name,
+            metric.id,
+            'criteria_metric[]',
+          );
         } else {
           // Create a dropdown for multiple metrics
-          $metricField = $('<select class="form-control" name="criteria_metric[]"></select>');
+          $metricField = $('<select>', {
+            name: 'criteria_metric[]',
+            class: 'form-control',
+          });
 
           // populate the dropdown
-          metrics.forEach(function (metric) {
+          metrics.forEach(function(metric) {
             $metricField.append(new Option(metric.name, metric.id));
           });
 
@@ -208,27 +201,16 @@ $(function() {
 
     // Check the inputType in the values object
     if (values.inputType === 'dropdown') {
-
       // If only one metric is available, show readonly input
       if (values.values.length === 1) {
         const value = values.values[0];
 
-        // Create a readonly input for display
-        const $readonlyInput = $('<input>', {
-          type: 'text',
-          value: value.title,
-          readonly: true,
-          class: 'form-control',
-        }).css('background-color', '#fff');
-
-        // Create a hidden input for submission
-        const $hiddenInput = $('<input>', {
-          type: 'hidden',
-          name: 'criteria_value[]',
-          value: value.id,
-        });
-
-        $valueLabel.append($readonlyInput).append($hiddenInput);
+        // append the text input fields
+        $valueLabel.append(createReadonlyAndHiddenFields(
+          value.title,
+          value.id,
+          'criteria_value[]',
+        ));
       } else {
         // change to dropdown and populate
         const $valueSelect =
@@ -990,70 +972,65 @@ $(function() {
   }
 });
 
+// Creates a readonly text input for display and a hidden input for submission.
+function createReadonlyAndHiddenFields(
+  readonlyValue,
+  hiddenValue,
+  hiddenName,
+) {
+  // Create readonly input for display
+  const $readonlyInput = $('<input>', {
+    type: 'text',
+    value: readonlyValue,
+    readonly: true,
+    class: 'form-control',
+  }).css('background-color', '#fff');
+
+  // Create hidden input for submission
+  const $hiddenInput = $('<input>', {
+    type: 'hidden',
+    name: hiddenName,
+    value: hiddenValue,
+  });
+
+  // Return both inputs
+  return $readonlyInput.add($hiddenInput);
+}
+
 // Function to update the Condition dropdown
 // according to the selected metric's available condition
 function updateConditionField($row, conditions, selectedCondition) {
-  let $conditionField = $row.find('[name="criteria_condition[]"]');
-  let $readonlyInput = $row.find('.readonly-condition-name');
+  const $conditionLabel = $row.find('label[for="criteria_condition[]"]');
+  $conditionLabel.empty();
 
   if (conditions.length === 1) {
     const condition = conditions[0];
 
-    // Create or update text inputs
-    if ($readonlyInput.length === 0) {
-      $readonlyInput = $('<input>', {
-        type: 'text',
-        readonly: true,
-        class: 'form-control readonly-condition-name',
-      }).css('background-color', '#fff');
-      $conditionField.replaceWith($readonlyInput);
-    }
-    $readonlyInput.val(condition.name);
-
-    let $hiddenInput = $row.find('input[name="criteria_condition[]"]');
-    if ($hiddenInput.length === 0) {
-      $hiddenInput = $('<input>', {
-        type: 'hidden',
-        name: 'criteria_condition[]',
-      });
-      $readonlyInput.after($hiddenInput);
-    }
-    $hiddenInput.val(condition.id);
+    // Create and append the text fields
+    $conditionLabel.append(createReadonlyAndHiddenFields(
+      condition.name,
+      condition.id,
+      'criteria_condition[]',
+    ));
   } else {
-    // Restore dropdown for multiple conditions
-    if (!$conditionField.is('select')) {
-      // If it's a readonly field, replace with a new dropdown
-      const $newSelect = $('<select>', {
-        name: 'criteria_condition[]',
-        class: 'form-control',
-      });
-
-      // Remove readonly and hidden inputs
-      $readonlyInput.remove();
-      $conditionField.remove();
-
-      // Append the dropdown inside the <label> element
-      const $label = $row.find('.schedule-criteria-cell.schedule-criteria-condition label');
-      $label.empty();
-      $label.append($newSelect);
-
-      // Update reference to the new select field
-      $conditionField = $newSelect;
-    }
-
-    // Clear existing options
-    $conditionField.empty();
+    // Initialize a new dropdown
+    const $newSelect = $('<select>', {
+      name: 'criteria_condition[]',
+      class: 'form-control',
+    });
 
     // Populate with provided conditions
     conditions.forEach((condition) => {
-      $conditionField.append(
+      $newSelect.append(
         $('<option>', {value: condition.id}).text(condition.name),
       );
     });
 
     // Pre-select the condition if provided
     // otherwise select the first condition
-    $conditionField.val(selectedCondition || conditions[0]?.id || '');
+    $newSelect.val(selectedCondition || conditions[0]?.id || '');
+
+    $conditionLabel.append($newSelect);
   }
 }
 
@@ -1063,49 +1040,27 @@ function updateConditionFieldToDefault(
   defaultConditions,
   selectedCondition,
 ) {
-  let $conditionField = $row.find('[name="criteria_condition[]"]');
-  let $readonlyInput = $row.find('.readonly-condition-name');
+  const $conditionLabel = $row.find('label[for="criteria_condition[]"]');
+  $conditionLabel.empty();
 
-  if ($readonlyInput.length > 0 || ($conditionField.length > 0 && $conditionField.is('input[type="hidden"]'))) {
-    // If the field is readonly (text + hidden input), remove them
-    if ($readonlyInput.length > 0) {
-      $readonlyInput.remove();
-    }
+  // Initialize a new dropdown
+  const $newSelect = $('<select>', {
+    name: 'criteria_condition[]',
+    class: 'form-control',
+  });
 
-    // Replace hidden input with a dropdown
-    const $newSelect = $('<select>', {
-      name: 'criteria_condition[]',
-      class: 'form-control',
-    });
+  // Populate with default conditions
+  defaultConditions.forEach((condition) => {
+    $newSelect.append(
+      $('<option>', {value: condition.id}).text(condition.name),
+    );
+  });
 
-    // Populate with default conditions
-    defaultConditions.forEach((condition) => {
-      $newSelect.append(
-          $('<option>', {value: condition.id}).text(condition.name),
-      );
-    });
+  // Pre-select the condition if provided
+  // otherwise select the first condition
+  $newSelect.val(selectedCondition || defaultConditions[0]?.id || '');
 
-    // Pre-select the condition if provided
-    // otherwise select the first condition
-    $newSelect.val(selectedCondition || defaultConditions[0]?.id || '');
-
-    // Replace the hidden input with the dropdown
-    $conditionField.replaceWith($newSelect);
-  } else if ($conditionField.length > 0 && $conditionField.is('select')) {
-    // Clear existing options
-    $conditionField.empty();
-
-    // Populate with provided conditions
-    defaultConditions.forEach((condition) => {
-      $conditionField.append(
-        $('<option>', {value: condition.id}).text(condition.name),
-      );
-    });
-
-    // Pre-select the condition if provided
-    // otherwise select the first condition
-    $conditionField.val(selectedCondition || defaultConditions[0]?.id || '');
-  }
+  $conditionLabel.append($newSelect);
 }
 
 /**
@@ -2464,22 +2419,12 @@ const configureCriteriaFields = function(dialog) {
           const metric = metrics[0];
           selectedMetric = metric.id;
 
-          // Create readonly input for display
-          const $readonlyInput = $('<input>', {
-            type: 'text',
-            value: metric.name,
-            readonly: true,
-            class: 'form-control',
-          }).css('background-color', '#fff');
-
-          // Create hidden input for submission
-          const $hiddenInput = $('<input>', {
-            type: 'hidden',
-            name: 'criteria_metric[]',
-            value: metric.id,
-          });
-
-          $metricField = $readonlyInput.add($hiddenInput);
+          // Initialize new text fields
+          $metricField = createReadonlyAndHiddenFields(
+            metric.name,
+            metric.id,
+            'criteria_metric[]',
+          );
         } else {
           // Create a dropdown for multiple metrics
           $metricField = $('<select>', {
@@ -2510,12 +2455,12 @@ const configureCriteriaFields = function(dialog) {
           } else {
             // Use default conditions if none are defined
             const criteriaDefaultCondition = $('#scheduleCriteriaFields').data(
-                'criteriaDefaultCondition'
+              'criteriaDefaultCondition',
             );
             updateConditionFieldToDefault(
-                $row,
-                criteriaDefaultCondition,
-                selectedCondition
+              $row,
+              criteriaDefaultCondition,
+              selectedCondition,
             );
           }
         }
@@ -2545,22 +2490,12 @@ const configureCriteriaFields = function(dialog) {
       if (metric.values.values.length === 1) {
         const value = metric.values.values[0];
 
-        // Create a readonly input for display
-        const $readonlyInput = $('<input>', {
-          type: 'text',
-          value: value.title,
-          readonly: true,
-          class: 'form-control',
-        }).css('background-color', '#fff');
-
-        // Create a hidden input for submission
-        const $hiddenInput = $('<input>', {
-          type: 'hidden',
-          name: 'criteria_value[]',
-          value: value.id,
-        });
-
-        $valueField = $readonlyInput.add($hiddenInput);
+        // Initialize the text fields
+        $valueField = createReadonlyAndHiddenFields(
+          value.title,
+          value.id,
+          'criteria_value[]',
+        );
       } else {
         // change input type to dropdown
         $valueField = $('<select>', {
