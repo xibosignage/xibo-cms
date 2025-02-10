@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -170,11 +170,15 @@ class Connector extends Base
 
         // Is this an uninstallation request
         if ($params->getCheckbox('shouldUninstall')) {
-            $event = new ConnectorDeletingEvent($connector, $this->getConfig());
-            if ($connector->isEnabled == 1) {
-                $this->getDispatcher()->dispatch($event, ConnectorDeletingEvent::$NAME);
-            } else if (method_exists($interface, 'onDeleting')) {
-                $interface->onDeleting($event);
+            // Others
+            $this->getDispatcher()->dispatch(
+                new ConnectorDeletingEvent($connector, $this->getConfig()),
+                ConnectorDeletingEvent::$NAME
+            );
+
+            // Ourselves
+            if (method_exists($interface, 'delete')) {
+                $interface->delete($this->getConfig());
             }
 
             $connector->delete();
@@ -187,13 +191,20 @@ class Connector extends Base
             // Core properties
             $connector->isEnabled = $params->getCheckbox('isEnabled');
 
+            // Enabled state change.
+            // Update ourselves, and any others that might be interested.
             if ($connector->hasPropertyChanged('isEnabled')) {
-                $event = new ConnectorEnabledChangeEvent($connector, $this->getConfig());
+                // Others
+                $this->getDispatcher()->dispatch(
+                    new ConnectorEnabledChangeEvent($connector, $this->getConfig()),
+                    ConnectorEnabledChangeEvent::$NAME
+                );
 
-                if ($connector->getOriginalValue('isEnabled') == 1) {
-                    $this->getDispatcher()->dispatch($event, ConnectorEnabledChangeEvent::$NAME);
-                } else if (method_exists($interface, 'onEnabledChange')) {
-                    $interface->onEnabledChange($event);
+                // Ourselves
+                if ($connector->isEnabled && method_exists($interface, 'enable')) {
+                    $interface->enable($this->getConfig());
+                } else if (!$connector->isEnabled && method_exists($interface, 'disable')) {
+                    $interface->disable($this->getConfig());
                 }
             }
 
