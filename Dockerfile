@@ -70,6 +70,7 @@ RUN LC_ALL=C.UTF-8 DEBIAN_FRONTEND=noninteractive apt update && apt upgrade -y &
     libapache2-mod-xsendfile \
     netcat \
     iputils-ping \
+    gnupg \
     php8.2 \
     libapache2-mod-php8.2 \
     php8.2-gd \
@@ -90,6 +91,7 @@ RUN LC_ALL=C.UTF-8 DEBIAN_FRONTEND=noninteractive apt update && apt upgrade -y &
     php8.2-phar \
     php8.2-opcache \
     php8.2-mongodb \
+    php8.2-gnupg \
     tzdata \
     msmtp \
     openssl \
@@ -173,7 +175,8 @@ ENV CMS_DEV_MODE=false \
     MEMCACHED_PORT=11211 \
     CMS_USAGE_REPORT=true \
     XTR_ENABLED=true \
-    GIT_COMMIT=$GIT_COMMIT
+    GIT_COMMIT=$GIT_COMMIT \
+    GNUPGHOME=/var/www/.gnupg
 
 # Expose port 80
 EXPOSE 80
@@ -228,7 +231,8 @@ RUN mkdir -p /var/www/cms/library/temp &&  \
     /etc/periodic/15min/cms-db-backup && \
     mkdir -p /run/apache2 && \
     ln -sf /usr/bin/msmtp /usr/sbin/sendmail && \
-    chmod 777 /tmp
+    chmod 777 /tmp && \
+    chown -R www-data:www-data /var/www/.gnupg
 
 # Expose volume mount points
 VOLUME /var/www/cms/library

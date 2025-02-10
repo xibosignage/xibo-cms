@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -386,6 +386,8 @@ class Soap
             $document = new \DOMDocument('1.0');
             $document->loadXML($output);
 
+            $cdnUrl = $this->configService->getSetting('CDN_URL');
+
             foreach ($document->documentElement->childNodes as $node) {
                 if ($node instanceof \DOMElement) {
                     if ($node->getAttribute('download') === 'http') {
@@ -415,7 +417,7 @@ class Soap
                         $newUrl = LinkSigner::generateSignedLink(
                             $this->display,
                             $this->configService->getApiKeyDetails()['encryptionKey'],
-                            null,
+                            $cdnUrl,
                             $type,
                             $realId,
                             $node->getAttribute('saveAs'),
@@ -719,6 +721,7 @@ class Soap
 
             // Keep a list of path names added to RF to prevent duplicates
             $pathsAdded = [];
+            $cdnUrl = $this->configService->getSetting('CDN_URL');
 
             foreach ($sth->fetchAll() as $row) {
                 $parsedRow = $this->getSanitizer($row);
@@ -768,7 +771,7 @@ class Soap
                     $file->setAttribute('path', LinkSigner::generateSignedLink(
                         $this->display,
                         $this->configService->getApiKeyDetails()['encryptionKey'],
-                        null,
+                        $cdnUrl,
                         'M',
                         $id,
                         $path,
@@ -796,6 +799,8 @@ class Soap
 
         // Reset the paths added array to start again with layouts
         $pathsAdded = [];
+
+        $cdnUrl = $this->configService->getSetting('CDN_URL');
 
         // Go through each layout and see if we need to supply any resource nodes.
         foreach ($layouts as $layoutId) {
@@ -856,7 +861,7 @@ class Soap
                     $file->setAttribute('path', LinkSigner::generateSignedLink(
                         $this->display,
                         $this->configService->getApiKeyDetails()['encryptionKey'],
-                        null,
+                        $cdnUrl,
                         'L',
                         $layoutId,
                         $fileName,
@@ -2523,6 +2528,7 @@ class Soap
                             }
 
                             $widgetData = $widgetDataProviderCache->decorateForPlayer(
+                                $this->configService,
                                 $this->display,
                                 $this->configService->getApiKeyDetails()['encryptionKey'],
                                 $dataProvider->getData(),
@@ -2995,7 +3001,7 @@ class Soap
             $httpFilePath = LinkSigner::generateSignedLink(
                 $this->display,
                 $this->configService->getApiKeyDetails()['encryptionKey'],
-                null,
+                $this->configService->getSetting('CDN_URL'),
                 RequiredFile::$TYPE_DEPENDENCY,
                 $dependency->id,
                 $dependencyBasePath,

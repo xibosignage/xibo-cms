@@ -1,18 +1,18 @@
-<div class="form-group row">
+<div class="form-group schedule-criteria-row">
     <input class="form-control" name="criteria_id[]" type="hidden" value="{{ id }}" />
-    <div class="col-sm-2">
+    <div class="schedule-criteria-cell schedule-criteria-type">
         <label for="criteria_type[]">
             <select class="form-control" name="criteria_type[]">
                 <option value="custom" {{#eq type "custom"}}selected{{/eq}}>{{ trans.custom }}</option>
             </select>
         </label>
     </div>
-    <div class="col-sm-2">
+    <div class="schedule-criteria-cell schedule-criteria-metric">
         <label for="criteria_metric[]">
             <input class="form-control" name="criteria_metric[]" type="text" value="{{ metric }}" />
         </label>
     </div>
-    <div class="col-sm-3">
+    <div class="schedule-criteria-cell schedule-criteria-condition">
         <label for="criteria_condition[]">
             <select class="form-control" name="criteria_condition[]">
                 <option value="set" {{#eq condition "set"}}selected{{/eq}}>{{ trans.isSet }}</option>
@@ -27,12 +27,12 @@
             </select>
         </label>
     </div>
-    <div class="col-sm-2">
+    <div class="schedule-criteria-cell schedule-criteria-value">
         <label for="criteria_value[]">
             <input class="form-control" name="criteria_value[]" type="text" value="{{ value }}" />
         </label>
     </div>
-    <div class="col-sm-2">
+    <div class="schedule-criteria-cell schedule-criteria-btn">
         <button class="btn btn-white" data-is-add="{{isAdd}}"><i class="fa {{#if isAdd}}fa-plus{{else}}fa-minus{{/if}}"></i></button>
     </div>
 </div>

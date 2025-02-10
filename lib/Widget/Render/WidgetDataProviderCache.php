@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -33,6 +33,7 @@ use Xibo\Entity\Display;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\LinkSigner;
 use Xibo\Helper\ObjectVars;
+use Xibo\Service\ConfigServiceInterface;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Widget\Provider\DataProvider;
 use Xibo\Widget\Provider\DataProviderInterface;
@@ -324,6 +325,7 @@ class WidgetDataProviderCache
 
     /**
      * Decorate for a player
+     * @param \Xibo\Service\ConfigServiceInterface $configService
      * @param \Xibo\Entity\Display $display
      * @param string $encryptionKey
      * @param array $data The data
@@ -332,25 +334,40 @@ class WidgetDataProviderCache
      * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function decorateForPlayer(
+        ConfigServiceInterface $configService,
         Display $display,
         string $encryptionKey,
         array $data,
-        array $storedAs
+        array $storedAs,
     ): array {
         $this->getLog()->debug('decorateForPlayer');
+
+        $cdnUrl = $configService->getSetting('CDN_URL');
 
         foreach ($data as $row => $item) {
             // Each data item can be an array or an object
             if (is_array($item)) {
                 foreach ($item as $key => $value) {
                     if (is_string($value)) {
-                        $data[$row][$key] = $this->decorateMediaForPlayer($display, $encryptionKey, $storedAs, $value);
+                        $data[$row][$key] = $this->decorateMediaForPlayer(
+                            $cdnUrl,
+                            $display,
+                            $encryptionKey,
+                            $storedAs,
+                            $value,
+                        );
                     }
                 }
             } else if (is_object($item)) {
                 foreach (ObjectVars::getObjectVars($item) as $key => $value) {
                     if (is_string($value)) {
-                        $item->{$key} = $this->decorateMediaForPlayer($display, $encryptionKey, $storedAs, $value);
+                        $item->{$key} = $this->decorateMediaForPlayer(
+                            $cdnUrl,
+                            $display,
+                            $encryptionKey,
+                            $storedAs,
+                            $value
+                        );
                     }
                 }
             }
@@ -359,6 +376,7 @@ class WidgetDataProviderCache
     }
 
     /**
+     * @param string|null $cdnUrl
      * @param \Xibo\Entity\Display $display
      * @param string $encryptionKey
      * @param array $storedAs
@@ -367,6 +385,7 @@ class WidgetDataProviderCache
      * @throws \Xibo\Support\Exception\NotFoundException
      */
     private function decorateMediaForPlayer(
+        ?string $cdnUrl,
         Display $display,
         string $encryptionKey,
         array $storedAs,
@@ -390,7 +409,7 @@ class WidgetDataProviderCache
                         $url = LinkSigner::generateSignedLink(
                             $display,
                             $encryptionKey,
-                            null,
+                            $cdnUrl,
                             'M',
                             $value[1],
                             $storedAs[$value[1]]
