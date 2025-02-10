@@ -656,7 +656,7 @@ class Template extends Base
      *  )
      * )
      */
-    function addFromLayout(Request $request, Response $response, $id)
+    public function addFromLayout(Request $request, Response $response, $id): Response
     {
         // Get the layout
         $layout = $this->layoutFactory->getById($id);
