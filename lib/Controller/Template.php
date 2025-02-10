@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -696,6 +696,23 @@ class Template extends Base
 
         if ($layout->folderId === 1) {
             $this->checkRootFolderAllowSave();
+        }
+
+        // When saving a layout as a template, we should not include the empty canva region as that requires
+        // a widget to be inside it.
+        // https://github.com/xibosignage/xibo/issues/3574
+        if (!$includeWidgets) {
+            $this->getLog()->debug('addFromLayout: widgets have not been included, checking for empty regions');
+
+            $regionsWithWidgets = [];
+            foreach ($layout->regions as $region) {
+                if ($region->type === 'canvas') {
+                    $this->getLog()->debug('addFromLayout: Canvas region excluded from export');
+                } else {
+                    $regionsWithWidgets[] = $region;
+                }
+            }
+            $layout->regions = $regionsWithWidgets;
         }
 
         $layout->setOwner($this->getUser()->userId, true);
