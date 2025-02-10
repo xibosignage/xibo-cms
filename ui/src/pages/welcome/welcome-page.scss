@@ -51,11 +51,11 @@ $orange-dark: #bc6046;
 
 @media (max-width: 1400px) {
   .welcome-page {
-    padding: 80px 20px;
+    padding: 60px 40px;
   }
   .welcome-header {
     flex-direction: column;
-    row-gap: 80px;
+    row-gap: 40px;
 
     .header-text-content {
       width: 100%;
@@ -65,6 +65,14 @@ $orange-dark: #bc6046;
       width: 100%;
     }
   }
+
+  .onboarding-cards-container {
+    margin-top: 40px !important;
+  }
+
+  .service-card-container {
+    margin-top: 40px !important;
+  }
 }
 
 @media (max-width: 1290px) {
@@ -73,7 +81,11 @@ $orange-dark: #bc6046;
   }
 }
 
-@media (max-width: 1175px) {
+@media (max-width: 1215px) {
+  .welcome-page {
+    padding: 35px 30px;
+  }
+
   .service-card {
     flex-direction: column;
     flex-wrap: wrap;
@@ -95,7 +107,11 @@ $orange-dark: #bc6046;
   }
 
   .line-curve {
-    bottom: -15%;
+    bottom: -15% !important;
+  }
+
+  .welcome-page {
+    right: -4px;
   }
 }
 
