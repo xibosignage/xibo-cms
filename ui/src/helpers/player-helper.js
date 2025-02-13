@@ -335,8 +335,8 @@ const PlayerHelper = function() {
       // Handle the rendering of the template
       (item.onTemplateRender() !== undefined) && item.onTemplateRender()(
         item.elementId,
-        $itemContainer.find(`.${itemID}--item`),
-        $content.find(`.${itemID}--item`),
+        $itemContainer.find(`.${itemID}--item`).parent(),
+        dataItem,
         {item, ...item.templateData, data: dataItem},
         meta,
       );
