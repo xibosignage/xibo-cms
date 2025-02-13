@@ -144,6 +144,12 @@ PropertiesPanel.prototype.save = function(
       const errorMessage = Object.values(errors).join('</br>');
       // Display message in form
       formHelpers.displayErrorMessage(form, errorMessage, 'danger');
+
+      // Call callback without waiting for the request
+      (callbackNoWait) && callbackNoWait();
+
+      // Mark form as not needed to be saved anymore
+      this.toSave = false;
       return false;
     } else {
       formHelpers.clearErrorMessage(form);
