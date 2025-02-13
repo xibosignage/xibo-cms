@@ -27,16 +27,6 @@
 
 {% block actionMenu %}
     <div class="widget-action-menu pull-right">
-        {% if currentUser.featureEnabled("schedule.add") %}
-            {% if currentUser.featureEnabled("schedule.sync") %}
-                <button class="btn btn-white XiboFormButton btns" title="{% trans "Add a new Sync event" %}"
-                        href="{{ url_for("schedule.add.sync.form") }}"><span
-                            class="fa fa-plus"></span> {% trans "Add Synchronised Event" %}</button>
-            {% endif %}
-            <button class="btn btn-success XiboFormButton btns" title="{% trans "Add a new Scheduled event" %}"
-                    href="{{ url_for("schedule.add.form") }}"><span class="fa fa-plus"></span> {% trans "Add Event" %}
-            </button>
-        {% endif %}
         <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i></button>
     </div>
 {% endblock %}
