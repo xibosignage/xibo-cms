@@ -1094,8 +1094,12 @@ class Soap
 
                 // Add to paths added
                 $pathsAdded[] = $layoutId;
+            } catch (NotFoundException) {
+                $this->getLog()->error('Layout not found - ID: ' . $layoutId . ', skipping');
+                continue;
             } catch (GeneralException $e) {
-                $this->getLog()->error('Layout not found - ID: ' . $layoutId . ', skipping.');
+                $this->getLog()->error('Cannot generate layout - ID: ' . $layoutId
+                    . ', skipping, e = ' . $e->getMessage());
                 continue;
             }
         }

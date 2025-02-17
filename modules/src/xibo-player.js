@@ -1469,8 +1469,8 @@ XiboPlayer.prototype.renderGlobalElements = function(currentWidget) {
             (groupItem.onTemplateRender() !== undefined) &&
             groupItem.onTemplateRender()(
               groupItem.elementId,
-              $content.find(`#${itemID}`),
-              $content.find(`.${itemID}--item`),
+              $content.find(`#${itemID}`).parent(),
+              {},
               {groupItem, ...groupItem.templateData, data: {}},
               meta,
             );
@@ -1509,8 +1509,8 @@ XiboPlayer.prototype.renderGlobalElements = function(currentWidget) {
         (elemObj.onTemplateRender() !== undefined) &&
           elemObj.onTemplateRender()(
             elemObj.elementId,
-            $content.find(`#${itemID}`),
-            $content.find(`.${itemID}--item`),
+            $content.find(`#${itemID}`).parent(),
+            {},
             {elemObj, ...elemObj.templateData, data: {}},
             meta,
           );

@@ -23,6 +23,7 @@ jQuery.fn.extend({
     // Default options
     const defaults = {
       fitTarget: '',
+      fontFamily: '',
       fitScaleAxis: 'x',
       isIcon: false,
     };
@@ -54,7 +55,8 @@ jQuery.fn.extend({
       };
 
       if (options.isIcon) {
-        const fontFamily = $fitTarget.css('font-family');
+        const fontFamily = (options.fontFamily) ?
+          options.fontFamily : $fitTarget.css('font-family');
         const maxFontSize = 1000;
         let fontSize = 1;
 
