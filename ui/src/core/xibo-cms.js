@@ -1655,7 +1655,7 @@ window.XiboFormRender = function(sourceObj, data = null) {
             } else {
               $('#' + fieldAction.field).on(fieldAction.trigger, function(ev) {
                 // Process the actions straight away.
-                const fieldVal = $(ev.currentState).val();
+                const fieldVal = $(ev.currentTarget).val();
 
                 // console.log("Init action with value " + fieldVal);
                 let valueMatch = false;
