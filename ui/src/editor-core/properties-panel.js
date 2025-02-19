@@ -452,14 +452,10 @@ PropertiesPanel.prototype.delete = function(element) {
 /**
  * Render panel
  * @param {Object} target - the element object to be rendered
- * @param {boolean} actionEditMode - render while editing an action
- * @param {boolean} openActionTab - open action tab after rendering
  * @return {boolean} - result status
  */
 PropertiesPanel.prototype.render = function(
   target,
-  actionEditMode = false,
-  openActionTab = false,
 ) {
   const self = this;
   const app = this.parent;
@@ -681,9 +677,6 @@ PropertiesPanel.prototype.render = function(
 
     // Append layout html to the main div
     self.DOMObject.html(html);
-
-    // Mark container as action edit mode
-    self.DOMObject.toggleClass('action-edit-mode', actionEditMode);
 
     // Store the extra data
     self.DOMObject.data('extra', res.extra);
@@ -1134,12 +1127,10 @@ PropertiesPanel.prototype.render = function(
           );
 
           // Also Init fields for the element
-          self.initFields(
+          self.initPanelFields(
             targetAux,
             res.data,
-            actionEditMode,
             true,
-            openActionTab,
           );
 
           // Save element
@@ -1869,7 +1860,7 @@ PropertiesPanel.prototype.render = function(
 
     // Init fields ( for non elements )
     (!isElement) &&
-      self.initFields(target, res.data, actionEditMode, false, openActionTab);
+      self.initPanelFields(target, res.data, false);
   }).fail(function(data) {
     // Clear request var after response
     self.renderRequest = undefined;
@@ -1884,16 +1875,12 @@ PropertiesPanel.prototype.render = function(
  * Initialise the form fields
  * @param {*} target The target object
  * @param {*} data The data to be used
- * @param {boolean} actionEditMode - render while editing an action
  * @param {boolean} elementProperties - render element properties
- * @param {boolean} selectActionTab - select tab for actions
  */
-PropertiesPanel.prototype.initFields = function(
+PropertiesPanel.prototype.initPanelFields = function(
   target,
   data,
-  actionEditMode = false,
   elementProperties = false,
-  selectActionTab = false,
 ) {
   const self = this;
   const app = this.parent;
@@ -1988,18 +1975,6 @@ PropertiesPanel.prototype.initFields = function(
           );
         }
       });
-  }
-
-  // Render action tab
-  if (
-    app.mainObjectType === 'layout' &&
-    !targetIsElement // Filter out elements for now
-  ) {
-    self.renderActionTab(target, {
-      reattach: actionEditMode || selectActionTab,
-      selectAfterRender: selectActionTab,
-      readOnlyMode: readOnlyModeOn,
-    });
   }
 
   // Xibo Init options

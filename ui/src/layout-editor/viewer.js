@@ -517,12 +517,6 @@ Viewer.prototype.handleInteractions = function() {
 
       lD.dropItemAdd(event.target, ui.draggable[0], position);
     }, 200),
-    activate: function(_event, ui) {
-      // if draggable is an action, add special class
-      if ($(ui.draggable).data('type') == 'actions') {
-        $(this).addClass('ui-droppable-actions-target');
-      }
-    },
   });
 
   // Handle droppable on the main container
@@ -536,12 +530,6 @@ Viewer.prototype.handleInteractions = function() {
     drop: _.debounce(function(event, ui) {
       lD.dropItemAdd(event.target, ui.draggable[0]);
     }, 200),
-    activate: function(_event, ui) {
-      // if draggable is an action, add special class
-      if ($(ui.draggable).data('type') == 'actions') {
-        $(this).addClass('ui-droppable-actions-target');
-      }
-    },
   });
 
   // Handle droppable empty regions ( zones )
@@ -1464,12 +1452,6 @@ Viewer.prototype.renderRegion = function(
       drop: _.debounce(function(event, ui) {
         lD.dropItemAdd(event.target, ui.draggable[0]);
       }, 200),
-      activate: function(_event, ui) {
-        // if draggable is an action, add special class
-        if ($(ui.draggable).data('type') == 'actions') {
-          $(this).addClass('ui-droppable-actions-target');
-        }
-      },
     });
 
     // If inline editor is on, show the controls for it
