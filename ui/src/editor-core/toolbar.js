@@ -230,52 +230,6 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
     return (a.name < b.name) ? -1 : 1;
   });
 
-  // Actions
-  this.interactiveList = [
-    {
-      name: toolbarTrans.interactive.actions.navWidget,
-      icon: 'fa fa-square-o',
-      type: 'navWidget',
-      target: '["frame"]',
-      dataType: '',
-    },
-    {
-      name: toolbarTrans.interactive.actions.navLayout,
-      icon: 'fa fa-desktop',
-      type: 'navLayout',
-      target: '["layout"]',
-      dataType: '',
-    },
-    {
-      name: toolbarTrans.interactive.actions.previousWidget,
-      icon: 'fa fa-caret-square-o-left',
-      type: 'previousWidget',
-      target: '["playlist"]',
-      dataType: '',
-    },
-    {
-      name: toolbarTrans.interactive.actions.nextWidget,
-      icon: 'fa fa-caret-square-o-right',
-      type: 'nextWidget',
-      target: '["playlist"]',
-      dataType: '',
-    },
-    {
-      name: toolbarTrans.interactive.actions.previousLayout,
-      icon: 'fa fa-arrow-circle-left',
-      type: 'previousLayout',
-      target: '["layout"]',
-      dataType: '',
-    },
-    {
-      name: toolbarTrans.interactive.actions.nextLayout,
-      icon: 'fa fa-arrow-circle-right',
-      type: 'nextLayout',
-      target: '["layout"]',
-      dataType: '',
-    },
-  ];
-
   this.defaultFilters = {
     name: {
       value: '',
@@ -561,24 +515,6 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
           key: 'users',
           dataRole: 'usersList',
           searchUrl: urlsForApi.user.get.url,
-        },
-      },
-      state: '',
-      itemCount: 0,
-    },
-    {
-      name: 'actions',
-      disabled: isPlaylist ? true : false,
-      iconType: 'actions',
-      itemName: toolbarTrans.menuItems.actionsName,
-      itemIcon: 'paper-plane',
-      itemTitle: toolbarTrans.menuItems.actionsTitle,
-      contentType: 'actions',
-      content: [],
-      filters: {
-        name: {
-          value: '',
-          title: toolbarTrans.searchFilters.search,
         },
       },
       state: '',
@@ -1277,31 +1213,6 @@ Toolbar.prototype.loadContent = function(
       contentAlternativeHeader: toolbarTrans.dataWidgets,
       noCardsToShow: toolbarTrans.noWidgetsToShow,
     };
-  } else if (this.menuItems[menu].name === 'actions') {
-    const actionsFiltered = [];
-
-    for (let index = 0; index < this.interactiveList.length; index++) {
-      const item = this.interactiveList[index];
-
-      // Filter items
-      if (
-        this.menuItems[menu].filters.name.value &&
-        !item.name.toLowerCase().includes(
-          this.menuItems[menu].filters.name.value.toLowerCase(),
-        )
-      ) {
-        continue;
-      }
-
-      actionsFiltered.push(item);
-    }
-
-    // Add card to menu content
-    this.menuItems[menu].content = {
-      cards: actionsFiltered,
-      contentHeader: toolbarTrans.actions,
-      noCardsToShow: toolbarTrans.noActionsToShow,
-    };
   }
 
   this.DOMObject.find('#content-' + menu + ', #btn-menu-' + menu)
@@ -1347,7 +1258,6 @@ Toolbar.prototype.createContent = function(
     !forceReload &&
     this.menuItems[menu].contentType != 'modules' &&
     this.menuItems[menu].contentType != 'playlists' &&
-    this.menuItems[menu].contentType != 'actions' &&
     self.DOMObject
       .find(
         '#content-' +
@@ -1531,8 +1441,6 @@ Toolbar.prototype.selectCard = function(card) {
     // For actions, add an extra class
     this.handleDroppables(
       $(card),
-      $(card).data('type') == 'actions' ?
-        'ui-droppable-active ui-droppable-actions-target' : '',
     );
   }
 };
@@ -1686,7 +1594,7 @@ Toolbar.prototype.deselectCardsAndDropZones = function() {
 
   // Remove drop class from droppable elements
   $('.ui-droppable, .droppable')
-    .removeClass('ui-droppable-active ui-droppable-actions-target');
+    .removeClass('ui-droppable-active');
 
   // Disable multi-select mode
   if (app.editorContainer.hasClass('multi-select')) {

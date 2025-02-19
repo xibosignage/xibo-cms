@@ -1519,8 +1519,6 @@ lD.deleteObject = function(
         // Render properties panel with action tab
         lD.propertiesPanel.render(
           lD.selectedObject,
-          false, // Action edit mode
-          true, // Open action tab
         );
       } else {
         // Remove widget from viewer
@@ -5708,8 +5706,6 @@ lD.editDrawerWidget = function(actionData, actionEditMode = true) {
   // 4. Open property panel with drawer widget or same object
   lD.propertiesPanel.render(
     actionEditMode ? widget : lD.previousSelectedObject,
-    actionEditMode,
-    true,
   );
 };
 
