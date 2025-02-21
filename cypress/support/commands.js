@@ -663,8 +663,7 @@ Cypress.Commands.add('deleteMenuboard', function(id) {
  * @param {String} playlistName
  */
 Cypress.Commands.add('openPlaylistEditorAndLoadPrefs', function(playlistId) {
-  cy.server();
-  cy.route('/user/pref?preference=toolbar').as('userPrefsLoad');
+  cy.intercept('GET', '/user/pref?preference=toolbar').as('userPrefsLoad');
 
   // Reload playlist table page
   cy.visit('/playlist/view');
@@ -723,8 +722,7 @@ Cypress.Commands.add('dragToElement', function(draggableSelector, dropableSelect
  * @param {number} layoutId
  */
 Cypress.Commands.add('goToLayoutAndLoadPrefs', function(layoutId) {
-  cy.server();
-  cy.route('/user/pref?preference=toolbar').as('userPrefsLoad');
+  cy.intercept('GET', '/user/pref?preference=toolbar').as('userPrefsLoad');
 
   cy.clearToolbarPrefs();
 

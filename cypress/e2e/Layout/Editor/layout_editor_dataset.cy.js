@@ -25,42 +25,27 @@ describe('Layout Designer', function() {
     cy.login();
   });
 
-  it('should create a new layout and be redirected to the layout designer, add/delete dataset widget', function() {
-    // Create and alias for load dataset
+  it('should create a new layout, add/delete dataset widget', function() {
     cy.intercept('/dataset?start=*').as('loadDatasets');
-
-    cy.intercept({
-      method: 'DELETE',
-      url: '/region/*',
-    }).as('deleteWidget');
+    cy.intercept('DELETE', '/region/*').as('deleteWidget');
 
     cy.visit('/layout/view');
-
     cy.get('button[href="/layout"]').click();
 
-    // Open widget menu
+    // Open widget menu and add dataset widget
     cy.openToolbarMenu(0);
-
     cy.get('[data-sub-type="dataset"]').click();
     cy.get('[data-template-id="dataset_table_1"]').click();
     cy.get('.viewer-object.layout.ui-droppable-active').click();
 
-    // // Check if the widget is in the viewer
+    // Verify widget exists in the layout viewer
     cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_dataset"]').should('exist');
 
-    // Select the dataset
-    cy.get('#configureTab > .dropdown-input-group > .select2 > .selection > .select2-selection').click();
-
-    // Wait for datasets to load
+    // Select and configure the dataset
+    cy.get('#configureTab .select2-selection').click();
     cy.wait('@loadDatasets');
-
-    // Type the dataset name
     cy.get('.select2-container--open input[type="search"]').type('8 items');
-
-    // Wait for datasets to load
-    cy.wait('@loadDatasets');
-    cy.get('.select2-container--open').contains('8 items');
-    cy.get('.select2-container--open .select2-results > ul > li:first').contains('8 items').click();
+    cy.get('.select2-container--open').contains('8 items').click();
 
     cy.get('[name="lowerLimit"]').clear().type('1');
     cy.get('[name="upperLimit"]').clear().type('10');
@@ -68,48 +53,39 @@ describe('Layout Designer', function() {
     cy.get('.order-clause-row > .btn').click();
     cy.get(':nth-child(2) > :nth-child(2) > .form-control').select('Col2', {force: true});
 
-    // -------------
-    // -------------Appearance Tab
+    // Open Appearance Tab
     cy.get('.nav-link[href="#appearanceTab"]').click();
 
-    // Check if dataset exists exactly two columns
-    cy.get('#columnsOut')
-        .find('li')
-        .should('have.length', 2)
+    // Ensure dataset has exactly two columns
+    cy.get('#columnsOut li').should('have.length', 2);
 
-    // Select columns available/ move them to columns selected
-    cy.get('#columnsOut>li:first')
-      .trigger('mousedown', {
-        which: 1,
-      })
-      .trigger('mousemove', {
-        which: 1,
-        pageX: 583,
-        pageY: 440,
-      });
+    // Move columns to "Columns Selected"
+    cy.get('#columnsOut li:first').trigger('mousedown', {which: 1}).trigger('mousemove', {which: 1, pageX: 583, pageY: 440});
+    cy.get('#columnsIn').click();
+    cy.get('#columnsOut li:first').trigger('mousedown', {which: 1}).trigger('mousemove', {which: 1, pageX: 583, pageY: 440});
     cy.get('#columnsIn').click();
 
-    cy.get('#columnsOut>li:first')
-      .trigger('mousedown', {
-        which: 1,
-      })
-      .trigger('mousemove', {
-        which: 1,
-        pageX: 583,
-        pageY: 440,
-      });
-    cy.get('#columnsIn').click();
-
+    // Customize appearance settings
     cy.get('[name="showHeadings"]').check();
     cy.get('[name="rowsPerPage"]').clear().type('5');
     cy.get('[name="fontSize"]').clear().type('48');
     cy.get('[name="backgroundColor"]').clear().type('#333333');
 
-    cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_dataset"]').parents('.designer-region').rightclick();
+    // Delete dataset widget
+    // The .moveable-control-box overlay obstructing the right-click interaction on the designer region, causing the test to fail.
+    // By invoking .hide(), we remove the overlay temporarily to allow uninterrupted interaction with the underlying elements.
+    cy.get('.moveable-control-box').invoke('hide');
+
+    cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_dataset"]')
+      .parents('.designer-region')
+      .scrollIntoView()
+      .should('be.visible')
+      .rightclick();
+
     cy.get('[data-title="Delete"]').click();
     cy.contains('Yes').click();
 
-    // Wait until the widget has been deleted
+    // Verify deletion
     cy.wait('@deleteWidget');
     cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_dataset"]').should('not.exist');
   });

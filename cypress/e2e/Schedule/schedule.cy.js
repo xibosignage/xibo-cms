@@ -68,45 +68,54 @@ describe('Campaigns', function() {
 
     // Visit the page and click on the Add Event button
     cy.visit('/schedule/view');
-    // Wait for schedule draw 2
-    cy.wait('@scheduleLoad');
+
     cy.contains('Clear Filters').should('be.visible').click();
     cy.contains('Add Event').click();
-    cy.wait('@scheduleAddForm');
 
-    // Fill in Add form
-    cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection .select2-search__field')
-      .type(display1);
-    cy.wait('@loadDisplaygroupAfterSearch');
-    cy.get('.select2-container--open').contains(display1);
-    cy.get('.select2-container--open .select2-dropdown .select2-results > ul > li').should('have.length', 2);
-    cy.get('#select2-displayGroupIds-results > li > ul > li:first').contains(display1).click();
+    cy.get('.bootbox.modal')
+      .should('be.visible') // essential: Ensure the modal is visible
+      .then(() => {
+        // Clear the display filter and select a specific display (display1)
+        cy.get('.select2-selection__clear > span').click();
+        cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection .select2-search__field')
+          .type(display1)
+          .should('have.value', display1);
 
-    // Select day part and campaign
-    cy.get('.modal-content [name="dayPartId"]').select('Always');
+        // Wait for the display group to load after search
+        cy.wait('@loadDisplaygroupAfterSearch');
 
-    cy.get('.modal-content #eventTypeId').select('Campaign');
-    cy.get('.layout-control > .col-sm-10 > .select2 > .selection > .select2-selection').type(campaignSchedule1);
-    // Wait for campaigns to load
-    cy.wait('@loadListCampaignsAfterSearch');
-    cy.get('.select2-container--open .select2-dropdown .select2-results > ul')
-      .should('contain', campaignSchedule1);
-    cy.get('.select2-container--open .select2-dropdown .select2-results > ul > li')
-      .should('have.length', 1)
-      .first()
-      .click();
+        // Verify the display appears in the dropdown and select it
+        cy.get('.select2-container--open').contains(display1);
+        cy.get('.select2-container--open .select2-dropdown .select2-results > ul > li').should('have.length', 2);
+        cy.get('#select2-displayGroupIds-results > li > ul > li:first').contains(display1).click();
 
-    // Click Next and check toast message
-    cy.get('.modal .modal-footer').contains('Next').click();
-    cy.contains('Added Event');
+        // Select day part and campaign
+        cy.get('.modal-content [name="dayPartId"]').select('Always');
+
+        cy.get('.modal-content #eventTypeId').select('Campaign');
+        cy.get('.layout-control > .col-sm-10 > .select2 > .selection > .select2-selection').type(campaignSchedule1);
+        // Wait for campaigns to load
+        cy.wait('@loadListCampaignsAfterSearch');
+        cy.get('.select2-container--open .select2-dropdown .select2-results > ul')
+          .should('contain', campaignSchedule1);
+        cy.get('.select2-container--open .select2-dropdown .select2-results > ul > li')
+          .should('have.length', 1)
+          .first()
+          .click();
+
+        // Click Next and check toast message
+        cy.get('.modal .modal-footer').contains('Next').click();
+        cy.contains('Added Event');
+      });
 
     // Validate - schedule creation should be successful
     cy.visit('/schedule/view');
-    //cy.get('.select2-selection__clear').click();
     cy.contains('Clear Filters').should('be.visible').click();
 
 
     cy.get('#DisplayList + span .select2-selection').click();
+    cy.wait('@scheduleLoad');
+
     // Type the display name
     cy.get('.select2-container--open textarea[type="search"]').type(display1);
 
@@ -114,8 +123,11 @@ describe('Campaigns', function() {
     cy.wait('@loadDisplayAfterSearch');
     cy.get('.select2-container--open').contains(display1);
     cy.get('.select2-container--open .select2-results > ul > li').should('have.length', 1);
+
+    // Select the display from the dropdown
     cy.get('.select2-container--open .select2-results > ul > li:first').contains(display1).click();
 
+    // Verify that the schedule is successfully created and listed in the grid
     cy.get('#schedule-grid').contains(campaignSchedule1);
   });
 
@@ -138,39 +150,43 @@ describe('Campaigns', function() {
 
     // Click on the Add Event button
     cy.visit('/schedule/view');
-    // Wait for schedule draw 2
-    cy.wait('@scheduleLoad');
+
     cy.contains('Clear Filters').should('be.visible').click();
     cy.contains('Add Event').click();
-    cy.wait('@scheduleAddForm');
+    cy.get('.bootbox.modal')
+      .should('be.visible') // essential: Ensure the modal is visible
+      .then(() => {
+        // Clear the display filter and select a specific display (display1)
+        cy.get('.select2-selection__clear > span').click();
+        cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection .select2-search__field')
+          .type(display1)
+          .should('have.value', display1);
+        // Wait for the display group to load after search
+        cy.wait('@loadDisplaygroupAfterSearch');
+        cy.get('.select2-container--open').contains(display1);
+        cy.get('.select2-container--open .select2-dropdown .select2-results > ul > li').should('have.length', 2);
+        cy.get('#select2-displayGroupIds-results > li > ul > li:first').contains(display1).click();
 
-    // display
-    cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection .select2-search__field')
-      .type(display1);
-    cy.wait('@loadDisplaygroupAfterSearch');
-    cy.get('.select2-container--open').contains(display1);
-    cy.get('.select2-container--open .select2-dropdown .select2-results > ul > li').should('have.length', 2);
-    cy.get('#select2-displayGroupIds-results > li > ul > li:first').contains(display1).click();
+        // Select day part
+        cy.get('.modal-content [name="dayPartId"]').select('Always');
 
-    // Select day part
-    cy.get('.modal-content [name="dayPartId"]').select('Always');
+        cy.get('.modal-content #eventTypeId').select('Layout');
+        // Select Layout
+        cy.get('.layout-control > .col-sm-10 > .select2 > .selection > .select2-selection')
+          .type(layoutSchedule1);
+        // Wait for Campaign to load
+        cy.wait('@loadListCampaignsAfterSearch');
+        cy.get('.select2-container--open .select2-dropdown .select2-results > ul')
+          .should('contain', layoutSchedule1);
+        cy.get('.select2-container--open .select2-dropdown .select2-results > ul > li')
+          .should('have.length', 1)
+          .first()
+          .click();
 
-    cy.get('.modal-content #eventTypeId').select('Layout');
-    // Select Layout
-    cy.get('.layout-control > .col-sm-10 > .select2 > .selection > .select2-selection')
-      .type(layoutSchedule1);
-    // Wait for Campaign to load
-    cy.wait('@loadListCampaignsAfterSearch');
-    cy.get('.select2-container--open .select2-dropdown .select2-results > ul')
-      .should('contain', layoutSchedule1);
-    cy.get('.select2-container--open .select2-dropdown .select2-results > ul > li')
-      .should('have.length', 1)
-      .first()
-      .click();
-
-    // Save
-    cy.get('.modal .modal-footer').contains('Next').click();
-    cy.contains('Added Event');
+        // Save
+        cy.get('.modal .modal-footer').contains('Next').click();
+        cy.contains('Added Event');
+      });
   });
 
   it('should schedule an event command/overlay layout that has no priority, no recurrence', function() {
@@ -193,61 +209,68 @@ describe('Campaigns', function() {
 
     // Click on the Add Event button
     cy.visit('/schedule/view');
-    // Wait for schedule draw 2
-    cy.wait('@scheduleLoad');
+
     cy.contains('Clear Filters').should('be.visible').click();
     cy.contains('Add Event').click();
-    cy.wait('@scheduleAddForm');
 
-    // display
-    cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection .select2-search__field')
-      .type(display1);
-    cy.wait('@loadDisplaygroupAfterSearch');
-    cy.get('.select2-container--open').contains(display1);
-    cy.get('.select2-container--open .select2-dropdown .select2-results > ul > li').should('have.length', 2);
-    cy.get('#select2-displayGroupIds-results > li > ul > li:first').contains(display1).click();
+    cy.get('.bootbox.modal')
+      .should('be.visible') // essential: Ensure the modal is visible
+      .then(() => {
+        // Clear the display filter and select a specific display (display1)
+        cy.get('.select2-selection__clear > span').click();
+        cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection .select2-search__field')
+          .type(display1)
+          .should('have.value', display1);
 
-    // command
-    cy.get('.modal-content #eventTypeId').select('Command');
-    cy.get('.command-control > .col-sm-10 > .select2 > .selection > .select2-selection')
-      .type(command1);
-    cy.wait('@loadCommandAfterSearch');
-    cy.get('.select2-container--open').contains(command1);
-    cy.get('.select2-container--open .select2-results > ul > li').should('have.length', 1);
-    cy.get('.select2-container--open .select2-results > ul > li:first').contains(command1).click();
+        // Wait for the display group to load after search
+        cy.wait('@loadDisplaygroupAfterSearch');
 
-    cy.get('.starttime-control > .col-sm-10 > .input-group > .datePickerHelper').click();
-    cy.get('.open > .flatpickr-innerContainer > .flatpickr-rContainer > .flatpickr-days > .dayContainer > .today').click();
-    cy.get('.open > .flatpickr-time > :nth-child(3) > .arrowUp').click();
-    cy.get('.modal .modal-footer').contains('Next').click();
+        // Verify the display appears in the dropdown and select it
+        cy.get('.select2-container--open').contains(display1);
+        cy.get('.select2-container--open .select2-dropdown .select2-results > ul > li').should('have.length', 2);
+        cy.get('#select2-displayGroupIds-results > li > ul > li:first').contains(display1).click();
 
-    // ---------
-    // Create Overlay Layout Schedule
-    cy.get('.modal-content #eventTypeId').select('Overlay Layout');
-    cy.get('.modal-content [name="dayPartId"]').select('Always');
+        // command
+        cy.get('.modal-content #eventTypeId').select('Command');
+        cy.get('.command-control > .col-sm-10 > .select2 > .selection > .select2-selection')
+          .type(command1);
+        cy.wait('@loadCommandAfterSearch');
+        cy.get('.select2-container--open').contains(command1);
+        cy.get('.select2-container--open .select2-results > ul > li').should('have.length', 1);
+        cy.get('.select2-container--open .select2-results > ul > li:first').contains(command1).click();
 
-    // Select Layout
-    cy.get('.layout-control > .col-sm-10 > .select2 > .selection > .select2-selection').type(layoutSchedule1);
-    // Wait for Display to load
-    cy.wait('@loadListCampaignsAfterSearch');
-    cy.get('.select2-container--open').contains(layoutSchedule1);
-    cy.get('.select2-container--open .select2-results > ul > li').should('have.length', 1);
-    cy.get('.select2-container--open .select2-results > ul > li:first').contains(layoutSchedule1).click();
+        cy.get('.starttime-control > .col-sm-10 > .input-group > .flatpickr-wrapper > .datePickerHelper').click();
+        cy.get('.open > .flatpickr-innerContainer > .flatpickr-rContainer > .flatpickr-days > .dayContainer > .today').click();
+        cy.get('.open > .flatpickr-time > :nth-child(3) > .arrowUp').click();
+        cy.get('.modal .modal-footer').contains('Next').click();
 
-    // display
-    cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection .select2-search__field')
-      .type(display1);
-    cy.wait('@loadDisplaygroupAfterSearch');
-    cy.get('.select2-container--open').contains(display1);
-    cy.get('.select2-container--open .select2-dropdown .select2-results > ul > li').should('have.length', 2);
-    cy.get('#select2-displayGroupIds-results > li > ul > li:first').contains(display1).click();
+        // ---------
+        // Create Overlay Layout Schedule
+        cy.get('.modal-content #eventTypeId').select('Overlay Layout');
+        cy.get('.modal-content [name="dayPartId"]').select('Always');
 
-    cy.get('.modal .modal-footer').contains('Save').click();
+        // Select Layout
+        cy.get('.layout-control > .col-sm-10 > .select2 > .selection > .select2-selection').type(layoutSchedule1);
+        // Wait for Display to load
+        cy.wait('@loadListCampaignsAfterSearch');
+        cy.get('.select2-container--open').contains(layoutSchedule1);
+        cy.get('.select2-container--open .select2-results > ul > li').should('have.length', 1);
+        cy.get('.select2-container--open .select2-results > ul > li:first').contains(layoutSchedule1).click();
+
+        // display
+        cy.get(':nth-child(3) > .col-sm-10 > .select2 > .selection .select2-search__field')
+          .type(display1);
+        cy.wait('@loadDisplaygroupAfterSearch');
+        cy.get('.select2-container--open').contains(display1);
+        cy.get('.select2-container--open .select2-dropdown .select2-results > ul > li').should('have.length', 2);
+        cy.get('#select2-displayGroupIds-results > li > ul > li:first').contains(display1).click();
+
+        cy.get('.modal .modal-footer').contains('Save').click();
+      });
   });
 
-  it.skip('should edit a scheduled event', function() {
+  it('should edit a scheduled event', function() {
     cy.intercept('GET', '/schedule/data/events?*').as('scheduleDataEvent');
-    cy.intercept('GET', '/schedule?draw=2*').as('scheduleLoad2');
     cy.intercept('GET', '/schedule?draw=3*').as('scheduleLoad3');
     cy.intercept('GET', '/schedule/form/add?*').as('scheduleAddForm');
     cy.intercept({
@@ -261,14 +284,13 @@ describe('Campaigns', function() {
     }).as('loadLayoutSpecificCampaign');
 
     cy.visit('/schedule/view');
-    // Wait for schedule draw 2
-    cy.wait('@scheduleLoad2');
+
     cy.contains('Clear Filters').should('be.visible').click();
 
     // ---------
     // Edit a schedule - add another display
     cy.get('#campaignIdFilter + span .select2-selection').click();
-    cy.get('.select2-container--open textarea[type="search"]').type(layoutSchedule1); // Type the layout name
+    cy.get('.select2-container--open .select2-search__field').type(layoutSchedule1); // Type the layout name
     cy.wait('@loadLayoutSpecificCampaign');
     cy.selectOption(layoutSchedule1);
 
