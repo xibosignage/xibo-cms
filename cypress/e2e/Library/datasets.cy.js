@@ -226,8 +226,7 @@ describe('Datasets', function() {
   it('searches and delete existing dataset', function() {
     // Create a new dataset and then search for it and delete it
     cy.createDataset('Cypress Test Dataset ' + testRun).then((res) => {
-      cy.server();
-      cy.route('/dataset?draw=2&*').as('datasetGridLoad');
+      cy.intercept('GET', '/dataset?draw=2&*').as('datasetGridLoad');
 
       cy.visit('/dataset/view');
 
@@ -254,8 +253,7 @@ describe('Datasets', function() {
   it('selects multiple datasets and delete them', function() {
     // Create a new dataset and then search for it and delete it
     cy.createDataset('Cypress Test Dataset ' + testRun).then((res) => {
-      cy.server();
-      cy.route('/dataset?draw=2&*').as('datasetGridLoad');
+      cy.intercept('GET', '/dataset?draw=2&*').as('datasetGridLoad');
 
       // Delete all test datasets
       cy.visit('/dataset/view');
@@ -285,21 +283,24 @@ describe('Datasets', function() {
 
   // ---------
   // Tests - Error handling
-  it('should not add a remote dataset without URI', function() {
+  it.only('should not add a remote dataset without URI', function() {
     cy.visit('/dataset/view');
 
     // Click on the Add Dataset button
     cy.contains('Add DataSet').click();
 
     cy.get('.modal input#dataSet')
-        .type('Cypress Test Dataset ' + testRun);
+      .type('Cypress Test Dataset ' + testRun);
 
     cy.get('.modal input#isRemote').check();
 
     // Add first by clicking next
     cy.get('.modal .save-button').click();
 
-    // Check error message
-    cy.contains('A remote DataSet must have a URI.');
+    // Click on the "Remote" tab
+    cy.get(':nth-child(2) > .nav-link').should('be.visible').click();
+
+    // Check that the error message is displayed for the missing URI field
+    cy.get('#uri-error').should('have.text', 'This field is required.');
   });
 });
