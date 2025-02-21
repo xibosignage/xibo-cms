@@ -283,7 +283,7 @@ describe('Datasets', function() {
 
   // ---------
   // Tests - Error handling
-  it.only('should not add a remote dataset without URI', function() {
+  it('should not add a remote dataset without URI', function() {
     cy.visit('/dataset/view');
 
     // Click on the Add Dataset button
