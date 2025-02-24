@@ -65,7 +65,7 @@ class SyncTest extends XmdsTestCase
         $i = 0;
         foreach ($layouts as $layout) {
             if ($i === 0) {
-                $this->assertSame('7', $layout->getAttribute('file'));
+                $this->assertSame('8', $layout->getAttribute('file'));
                 $this->assertSame('1', $layout->getAttribute('syncEvent'));
                 $this->assertSame('2', $layout->getAttribute('scheduleid'));
             } else if ($i === 1) {
