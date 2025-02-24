@@ -828,7 +828,7 @@ Cypress.Commands.add('openToolbarMenu', function(menuIdx, load = true) {
   if (load) {
     cy.wait('@toolbarPrefsLoad');
     cy.wait('@editorPrefsLoad');
-    }
+  }
 
   cy.get('.editor-toolbar').then(($toolbar) => {
     if ($toolbar.find('#content-' + menuIdx + ' .close-submenu').length > 0) {
@@ -841,7 +841,6 @@ Cypress.Commands.add('openToolbarMenu', function(menuIdx, load = true) {
       cy.log('Do nothing!');
     }
   });
-
 });
 
 /**
@@ -870,14 +869,14 @@ Cypress.Commands.add('openToolbarMenuForPlaylist', function(menuIdx) {
 // Open Options Menu within the Layout Editor
 Cypress.Commands.add('openOptionsMenu', () => {
   cy.get('.navbar-submenu')
-  .should('be.visible')
-  .within(() => {
-    cy.get('#optionsContainerTop')
-      .should('be.visible')
-      .and('not.be.disabled')
-      .click({force: true})
-      .should('have.attr', 'aria-expanded', 'true');
-  });
+    .should('be.visible')
+    .within(() => {
+      cy.get('#optionsContainerTop')
+        .should('be.visible')
+        .and('not.be.disabled')
+        .click({force: true})
+        .should('have.attr', 'aria-expanded', 'true');
+    });
 });
 
 // Open Row Menu of the first item on the Layouts page
@@ -888,7 +887,81 @@ Cypress.Commands.add('openRowMenu', () => {
       .should('have.attr', 'aria-expanded', 'true');
   });
 });
+Cypress.Commands.add('toolbarSearch', (textToType) => {
+  cy.intercept('POST', '/user/pref').as('updatePreferences');
 
+  // Clear the search box first
+  cy.get('input#input-name')
+    .filter(':visible')
+    .should('have.length', 1)
+    .invoke('val')
+    .then((value) => {
+      if (value !== '') {
+        cy.get('input#input-name')
+          .filter(':visible')
+          .clear();
+        cy.wait('@updatePreferences');
+      }
+    });
+  // Type keyword to search
+  cy.get('input#input-name')
+    .filter(':visible')
+    .type(textToType);
+  cy.wait('@updatePreferences');
+});
+
+Cypress.Commands.add('toolbarSearchWithActiveFilter', (textToType) => {
+  cy.intercept('POST', '/user/pref').as('updatePreferences');
+  cy.intercept('GET', '/library/search*').as('librarySearch');
+
+  // Clear the search box first
+  cy.get('input#input-name')
+    .filter(':visible')
+    .should('have.length', 1)
+    .invoke('val')
+    .then((value) => {
+      if (value !== '') {
+        cy.get('input#input-name')
+          .filter(':visible')
+          .clear();
+        cy.wait('@updatePreferences');
+        cy.wait('@librarySearch');
+      }
+    });
+  // Type keyword to search
+  cy.get('input#input-name')
+    .filter(':visible')
+    .type(textToType);
+  cy.wait('@updatePreferences');
+  cy.wait('@librarySearch');
+});
+
+Cypress.Commands.add('toolbarFilterByFolder', (folderName, folderId) => {
+  cy.intercept('POST', '/user/pref').as('updatePreferences');
+  cy.intercept('GET', '/folders?start=0&length=10').as('loadFolders');
+  cy.intercept('GET', '/library/search*').as('librarySearch');
+
+  // Open folder dropdown
+  cy.get('#input-folder')
+    .parent()
+    .find('.select2-selection')
+    .click();
+  cy.wait('@loadFolders');
+
+  // Select the specified folder
+  cy.get('.select2-results__option')
+    .contains(folderName)
+    .should('be.visible')
+    .click();
+
+  cy.wait('@updatePreferences');
+
+  // Verify library search response
+  cy.wait('@librarySearch').then(({response}) => {
+    expect(response.statusCode).to.eq(200);
+    expect(response.url).to.include(`folderId=${folderId}`);
+  });
+});
 
 /**
  * Update data on CKEditor instance

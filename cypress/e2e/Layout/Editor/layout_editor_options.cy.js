@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -20,7 +20,7 @@
  */
 
 /* eslint-disable max-len */
-describe('Layout Editor', function() {
+describe('Layout Editor Options', function() {
   beforeEach(function() {
     cy.login();
     cy.visit('/layout/view');
@@ -35,7 +35,7 @@ describe('Layout Editor', function() {
     cy.intercept('PUT', '/layout/discard/*').as('discardLayout');
 
     // Publish layout
-    cy.wait(1000);
+    // cy.wait(1000);
     cy.openOptionsMenu();
     cy.get('#publishLayout').click();
     cy.get('button.btn-bb-Publish').click();
@@ -48,7 +48,7 @@ describe('Layout Editor', function() {
     });
 
     // Checkout published layout
-    cy.wait(1000);
+    // cy.wait(1000);
     cy.openOptionsMenu();
     cy.get('#checkoutLayout').click();
 
