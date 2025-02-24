@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-01-30 07:48+0000\n"
+"POT-Creation-Date: 2025-02-20 08:59+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1140,7 +1140,7 @@ msgstr ""
 
 #: locale/moduletranslate.php:321
 #: cache/55/55c98fd97562c03f815b3331e503f3f2.php:131
-#: cache/36/36a9081c5fdfcd84a39063b4437f0c7e.php:141
+#: cache/36/36a9081c5fdfcd84a39063b4437f0c7e.php:108
 #: cache/3c/3c1fa79a7b77f42d6209210a75b63812.php:224
 #: cache/3c/3c1fa79a7b77f42d6209210a75b63812.php:380
 #: cache/f9/f94739d77632ff2785eb7f60400f9cff.php:208
@@ -2409,7 +2409,7 @@ msgstr ""
 #: cache/92/92d279215473b6ebe601f34c34930382.php:108
 #: cache/ef/efc5d2fea64ff1cec16d51f2fbbaad06.php:108
 #: lib/Connector/CapConnector.php:543
-#: lib/Connector/NationalWeatherServiceConnector.php:411
+#: lib/Connector/NationalWeatherServiceConnector.php:410
 msgid "Category"
 msgstr ""
 
@@ -2765,7 +2765,6 @@ msgstr ""
 #: cache/d3/d38e557b6d25029a63d9d9e5fa0c54f0.php:212
 #: cache/d1/d10814ee3dd19888fef200639442fd26.php:255
 #: cache/11/1166151ca61185a39a692ab3eb99064f.php:368
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:197
 msgid "Media"
 msgstr ""
 
@@ -3358,7 +3357,6 @@ msgstr ""
 #: cache/61/615bc932a2e18537d5fa3d21154ad53e.php:2326
 #: cache/2e/2e7cf65479feac6f2abf2dca6b37d28e.php:111
 #: cache/d9/d9bb1395733b568ad7daf560b7033171.php:278
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:167
 #: lib/Widget/DataType/Article.php:71
 msgid "Content"
 msgstr ""
@@ -6230,11 +6228,11 @@ msgstr ""
 msgid "December"
 msgstr ""
 
-#: locale/dbtranslate.php:119 lib/Factory/UserGroupFactory.php:989
+#: locale/dbtranslate.php:119 lib/Factory/UserGroupFactory.php:987
 msgid "Icon Dashboard"
 msgstr ""
 
-#: locale/dbtranslate.php:120 lib/Factory/UserGroupFactory.php:983
+#: locale/dbtranslate.php:120 lib/Factory/UserGroupFactory.php:981
 msgid "Status Dashboard"
 msgstr ""
 
@@ -6619,7 +6617,7 @@ msgstr ""
 #: lib/Controller/Template.php:235 lib/Controller/DisplayGroup.php:352
 #: lib/Controller/DataSet.php:282 lib/Controller/Campaign.php:348
 #: lib/Controller/MenuBoard.php:170 lib/Controller/Playlist.php:411
-#: lib/Controller/Library.php:667 lib/Controller/Layout.php:1916
+#: lib/Controller/Library.php:667 lib/Controller/Layout.php:1917
 #: lib/Controller/Display.php:943
 msgid "Select Folder"
 msgstr ""
@@ -7370,7 +7368,7 @@ msgstr ""
 #: cache/55/55c98fd97562c03f815b3331e503f3f2.php:71
 #: cache/a0/a08d35232aeb73f99b2b364078cce4c0.php:82
 #: cache/e7/e7a55afa5802d90ff130b21054502509.php:69
-#: cache/36/36a9081c5fdfcd84a39063b4437f0c7e.php:102
+#: cache/36/36a9081c5fdfcd84a39063b4437f0c7e.php:69
 #: cache/14/14bb6e98f6948b95336492e93123ea66.php:77
 #: cache/1d/1d4d60123f584d2cb4e7c5af85f76cdf.php:82
 #: cache/84/84359f589ba8915a7c7a9b5ebb5f3561.php:97
@@ -7579,7 +7577,7 @@ msgstr ""
 #: cache/6b/6b319a6cc03029920a920f24719ee547.php:112
 #: cache/11/1166151ca61185a39a692ab3eb99064f.php:453
 #: lib/Connector/CapConnector.php:534
-#: lib/Connector/NationalWeatherServiceConnector.php:402
+#: lib/Connector/NationalWeatherServiceConnector.php:401
 msgid "Status"
 msgstr ""
 
@@ -8227,7 +8225,7 @@ msgstr ""
 #: cache/d0/d0f93bd70d03aad181d81f1e0c3c46d2.php:3764
 #: cache/8e/8e6f77c3d5f13012bdd306a830c2cc41.php:281
 #: cache/11/11647a3c18d902dd179d3cb9b3b7ec76.php:108
-#: lib/Controller/Layout.php:1378
+#: lib/Controller/Layout.php:1379
 msgid "Off"
 msgstr ""
 
@@ -8508,8 +8506,8 @@ msgstr ""
 #: cache/d1/d10814ee3dd19888fef200639442fd26.php:336
 #: cache/d0/d0f93bd70d03aad181d81f1e0c3c46d2.php:110
 #: cache/d0/d0f93bd70d03aad181d81f1e0c3c46d2.php:807
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:242
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:252
+#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:164
+#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:222
 msgid "Displays"
 msgstr ""
 
@@ -8526,7 +8524,6 @@ msgstr ""
 #: cache/d1/d10814ee3dd19888fef200639442fd26.php:159
 #: cache/11/1166151ca61185a39a692ab3eb99064f.php:56
 #: cache/11/1166151ca61185a39a692ab3eb99064f.php:110
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:184
 msgid "Layouts"
 msgstr ""
 
@@ -8550,7 +8547,7 @@ msgid ""
 msgstr ""
 
 #: cache/bd/bd181ede1d0afe0f39ee56af2ea42aab.php:139
-#: cache/36/36a9081c5fdfcd84a39063b4437f0c7e.php:130
+#: cache/36/36a9081c5fdfcd84a39063b4437f0c7e.php:97
 #: cache/cf/cffabfeef57943ab38af08d828420e2d.php:100
 #: cache/14/14bb6e98f6948b95336492e93123ea66.php:106
 #: cache/92/9237e31852b595e9eb59e8434735d717.php:204
@@ -9014,8 +9011,8 @@ msgstr ""
 #: lib/Controller/Playlist.php:472 lib/Controller/Library.php:692
 #: lib/Controller/Library.php:698 lib/Controller/SyncGroup.php:184
 #: lib/Controller/DataSetColumn.php:181 lib/Controller/Tag.php:238
-#: lib/Controller/Tag.php:244 lib/Controller/Layout.php:1966
-#: lib/Controller/Layout.php:1972 lib/Controller/MenuBoardCategory.php:201
+#: lib/Controller/Tag.php:244 lib/Controller/Layout.php:1967
+#: lib/Controller/Layout.php:1973 lib/Controller/MenuBoardCategory.php:201
 #: lib/Controller/Font.php:172 lib/Controller/Font.php:181
 #: lib/Controller/DisplayProfile.php:223 lib/Controller/User.php:351
 #: lib/Controller/Applications.php:185 lib/Controller/Resolution.php:172
@@ -9123,65 +9120,49 @@ msgid "Errors"
 msgstr ""
 
 #: cache/7e/7ebabda5480d88651340523f453cf0ea.php:58
-#: cache/36/36a9081c5fdfcd84a39063b4437f0c7e.php:83
 #: cache/10/10fd044330899bf16e5c496d43db4cb0.php:85
 msgid "Add Synchronised Event"
 msgstr ""
 
 #: cache/36/36a9081c5fdfcd84a39063b4437f0c7e.php:56
-#: cache/36/36a9081c5fdfcd84a39063b4437f0c7e.php:117
+#: cache/36/36a9081c5fdfcd84a39063b4437f0c7e.php:84
 #: cache/7c/7c83e34565b8f2b468cd031ae65008ae.php:541
 #: cache/d1/d10814ee3dd19888fef200639442fd26.php:917
 msgid "Sessions"
 msgstr ""
 
-#: cache/36/36a9081c5fdfcd84a39063b4437f0c7e.php:75
-#: cache/10/10fd044330899bf16e5c496d43db4cb0.php:77
-msgid "Add a new Sync event"
-msgstr ""
-
-#: cache/36/36a9081c5fdfcd84a39063b4437f0c7e.php:89
-#: cache/10/10fd044330899bf16e5c496d43db4cb0.php:91
-msgid "Add a new Scheduled event"
-msgstr ""
-
-#: cache/36/36a9081c5fdfcd84a39063b4437f0c7e.php:95
-#: cache/10/10fd044330899bf16e5c496d43db4cb0.php:97
-msgid "Add Event"
-msgstr ""
-
-#: cache/36/36a9081c5fdfcd84a39063b4437f0c7e.php:147
-#: cache/36/36a9081c5fdfcd84a39063b4437f0c7e.php:186
+#: cache/36/36a9081c5fdfcd84a39063b4437f0c7e.php:114
+#: cache/36/36a9081c5fdfcd84a39063b4437f0c7e.php:153
 #: cache/96/96affd0a9256a5f771c300eac126b41f.php:123
 #: cache/4a/4a4278fd57892a9180e837c6b9b78f8b.php:211
 #: cache/85/85ec384d80a4ea0b703e4c2372ebb08e.php:137
 msgid "Active"
 msgstr ""
 
-#: cache/36/36a9081c5fdfcd84a39063b4437f0c7e.php:153
+#: cache/36/36a9081c5fdfcd84a39063b4437f0c7e.php:120
 msgid "Guest"
 msgstr ""
 
-#: cache/36/36a9081c5fdfcd84a39063b4437f0c7e.php:159
+#: cache/36/36a9081c5fdfcd84a39063b4437f0c7e.php:126
 #: cache/61/615bc932a2e18537d5fa3d21154ad53e.php:1972 web/xmds.php:137
 msgid "Expired"
 msgstr ""
 
-#: cache/36/36a9081c5fdfcd84a39063b4437f0c7e.php:182
+#: cache/36/36a9081c5fdfcd84a39063b4437f0c7e.php:149
 #: cache/40/40934d1cc21621783800143e32bfb38c.php:342
 #: cache/40/40934d1cc21621783800143e32bfb38c.php:677
 #: cache/59/59f0058495a6a779727bbfe19dd6898f.php:527
 msgid "Last Accessed"
 msgstr ""
 
-#: cache/36/36a9081c5fdfcd84a39063b4437f0c7e.php:190
+#: cache/36/36a9081c5fdfcd84a39063b4437f0c7e.php:157
 #: cache/1e/1e0f418be5a8d787e2b1cde17302439d.php:108
 #: cache/f7/f70ed361faa0170fa31657f995e86484.php:72
 #: cache/d9/d9bb1395733b568ad7daf560b7033171.php:224
 msgid "User Name"
 msgstr ""
 
-#: cache/36/36a9081c5fdfcd84a39063b4437f0c7e.php:194
+#: cache/36/36a9081c5fdfcd84a39063b4437f0c7e.php:161
 #: cache/14/14bb6e98f6948b95336492e93123ea66.php:161
 #: cache/14/14bb6e98f6948b95336492e93123ea66.php:208
 #: cache/40/40934d1cc21621783800143e32bfb38c.php:442
@@ -9190,11 +9171,11 @@ msgstr ""
 msgid "IP Address"
 msgstr ""
 
-#: cache/36/36a9081c5fdfcd84a39063b4437f0c7e.php:198
+#: cache/36/36a9081c5fdfcd84a39063b4437f0c7e.php:165
 msgid "Browser"
 msgstr ""
 
-#: cache/36/36a9081c5fdfcd84a39063b4437f0c7e.php:202
+#: cache/36/36a9081c5fdfcd84a39063b4437f0c7e.php:169
 msgid "Expires At"
 msgstr ""
 
@@ -9607,7 +9588,7 @@ msgstr ""
 #: cache/f2/f2b0cf2ff27af65e38d0d5f4755db1db.php:71
 #: cache/ce/ce588b2450168ec579146b9f4779dc3f.php:57
 #: cache/ce/ce588b2450168ec579146b9f4779dc3f.php:71
-#: lib/Controller/Template.php:342 lib/Controller/Layout.php:2011
+#: lib/Controller/Template.php:342 lib/Controller/Layout.php:2012
 msgid "Export"
 msgstr ""
 
@@ -10156,7 +10137,7 @@ msgstr ""
 #: lib/Controller/MenuBoard.php:162 lib/Controller/Playlist.php:396
 #: lib/Controller/Transition.php:94 lib/Controller/Library.php:652
 #: lib/Controller/SyncGroup.php:170 lib/Controller/DataSetColumn.php:173
-#: lib/Controller/Tag.php:231 lib/Controller/Layout.php:1908
+#: lib/Controller/Tag.php:231 lib/Controller/Layout.php:1909
 #: lib/Controller/MenuBoardCategory.php:191
 #: lib/Controller/DisplayProfile.php:202 lib/Controller/User.php:337
 #: lib/Controller/Applications.php:178 lib/Controller/Resolution.php:161
@@ -10273,7 +10254,7 @@ msgstr ""
 #: cache/0f/0fd26627923450664db1a44a3d265559.php:76
 #: cache/ae/aede29170646eeec2459cefb297c2720.php:203
 #: cache/61/615bc932a2e18537d5fa3d21154ad53e.php:107
-#: lib/Controller/Template.php:188 lib/Controller/Layout.php:1796
+#: lib/Controller/Template.php:188 lib/Controller/Layout.php:1797
 msgid "Publish"
 msgstr ""
 
@@ -10518,7 +10499,7 @@ msgid "Enabled?"
 msgstr ""
 
 #: cache/1d/1d85cee5fa0d9e770a6def591b11e600.php:252
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:335
+#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:383
 msgid "Help"
 msgstr ""
 
@@ -10788,10 +10769,10 @@ msgstr ""
 #: cache/d1/d10814ee3dd19888fef200639442fd26.php:62
 #: cache/d1/d10814ee3dd19888fef200639442fd26.php:80
 #: cache/85/85ec384d80a4ea0b703e4c2372ebb08e.php:120
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:216
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:226
+#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:208
+#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:311
 #: lib/Controller/Campaign.php:297 lib/Controller/Playlist.php:541
-#: lib/Controller/Library.php:784 lib/Controller/Layout.php:1856
+#: lib/Controller/Library.php:784 lib/Controller/Layout.php:1857
 #: lib/Controller/Display.php:1004
 msgid "Schedule"
 msgstr ""
@@ -10799,7 +10780,7 @@ msgstr ""
 #: cache/7c/7c83e34565b8f2b468cd031ae65008ae.php:81
 #: cache/d1/d10814ee3dd19888fef200639442fd26.php:126
 #: lib/Controller/Playlist.php:1722 lib/Controller/Library.php:2158
-#: lib/Controller/Layout.php:1786
+#: lib/Controller/Layout.php:1787
 msgid "Design"
 msgstr ""
 
@@ -10830,6 +10811,8 @@ msgstr ""
 #: cache/6b/6b8f3b359fea543f836222f075be96fc.php:56
 #: cache/6b/6b8f3b359fea543f836222f075be96fc.php:95
 #: cache/d1/d10814ee3dd19888fef200639442fd26.php:240
+#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:186
+#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:269
 msgid "Playlists"
 msgstr ""
 
@@ -10970,7 +10953,7 @@ msgstr ""
 
 #: cache/7c/7c83e34565b8f2b468cd031ae65008ae.php:584
 #: cache/d1/d10814ee3dd19888fef200639442fd26.php:974
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:297
+#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:355
 msgid "Developer"
 msgstr ""
 
@@ -11140,7 +11123,7 @@ msgstr ""
 #: cache/d0/d0f93bd70d03aad181d81f1e0c3c46d2.php:3776
 #: cache/8e/8e6f77c3d5f13012bdd306a830c2cc41.php:287
 #: cache/11/11647a3c18d902dd179d3cb9b3b7ec76.php:114
-#: lib/Controller/Layout.php:1378
+#: lib/Controller/Layout.php:1379
 msgid "On"
 msgstr ""
 
@@ -11474,7 +11457,7 @@ msgstr ""
 #: lib/Controller/Template.php:259 lib/Controller/DisplayGroup.php:340
 #: lib/Controller/DataSet.php:264 lib/Controller/Campaign.php:376
 #: lib/Controller/Playlist.php:403 lib/Controller/Library.php:659
-#: lib/Controller/Layout.php:1933 lib/Controller/DisplayProfile.php:212
+#: lib/Controller/Layout.php:1934 lib/Controller/DisplayProfile.php:212
 #: lib/Controller/Developer.php:116 lib/Controller/UserGroup.php:174
 msgid "Copy"
 msgstr ""
@@ -12516,7 +12499,7 @@ msgstr ""
 
 #: cache/ae/aede29170646eeec2459cefb297c2720.php:219
 #: cache/78/784f79febaa5e76ca7d1688b05866bd3.php:74
-#: lib/Controller/Template.php:205 lib/Controller/Layout.php:1813
+#: lib/Controller/Template.php:205 lib/Controller/Layout.php:1814
 msgid "Checkout"
 msgstr ""
 
@@ -12530,7 +12513,7 @@ msgid "Unlock"
 msgstr ""
 
 #: cache/ae/aede29170646eeec2459cefb297c2720.php:235
-#: lib/Controller/Layout.php:2002
+#: lib/Controller/Layout.php:2003
 msgid "Save Template"
 msgstr ""
 
@@ -14050,6 +14033,21 @@ msgstr ""
 msgid "Player Status Window"
 msgstr ""
 
+#: cache/40/40934d1cc21621783800143e32bfb38c.php:993
+#: cache/59/59f0058495a6a779727bbfe19dd6898f.php:1269
+msgid "VNC to this Display"
+msgstr ""
+
+#: cache/40/40934d1cc21621783800143e32bfb38c.php:997
+#: cache/59/59f0058495a6a779727bbfe19dd6898f.php:1279
+msgid "TeamViewer to this Display"
+msgstr ""
+
+#: cache/40/40934d1cc21621783800143e32bfb38c.php:1001
+#: cache/59/59f0058495a6a779727bbfe19dd6898f.php:1290
+msgid "Webkey to this Display"
+msgstr ""
+
 #: cache/d7/d738c6cec202f802aab4bcafa279ed02.php:60
 #, no-php-format
 msgid "Copy %dataSetName%"
@@ -14197,13 +14195,13 @@ msgstr ""
 
 #: cache/61/615bc932a2e18537d5fa3d21154ad53e.php:103
 #: cache/5f/5fe28b2a296fd3dbc16a9b9af78ccc95.php:70
-#: lib/Controller/Layout.php:1941 lib/Controller/Layout.php:1947
+#: lib/Controller/Layout.php:1942 lib/Controller/Layout.php:1948
 msgid "Retire"
 msgstr ""
 
 #: cache/61/615bc932a2e18537d5fa3d21154ad53e.php:111
 #: cache/27/27081387c7b095a60dc9e1bfc169ce8d.php:74
-#: lib/Controller/Template.php:194 lib/Controller/Layout.php:1802
+#: lib/Controller/Template.php:194 lib/Controller/Layout.php:1803
 msgid "Discard"
 msgstr ""
 
@@ -17540,7 +17538,7 @@ msgstr ""
 #: cache/58/5827a58c854ad5a45c08da531d11366b.php:132
 #: cache/58/5827a58c854ad5a45c08da531d11366b.php:139
 #: cache/01/019a1b744a253c77c5764bd8cdfc415a.php:250
-#: lib/Connector/XiboSspConnector.php:102
+#: lib/Connector/XiboSspConnector.php:103
 msgid "Unknown error"
 msgstr ""
 
@@ -17801,18 +17799,6 @@ msgstr ""
 
 #: cache/59/59f0058495a6a779727bbfe19dd6898f.php:423
 msgid "Displays Page"
-msgstr ""
-
-#: cache/59/59f0058495a6a779727bbfe19dd6898f.php:1269
-msgid "VNC to this Display"
-msgstr ""
-
-#: cache/59/59f0058495a6a779727bbfe19dd6898f.php:1279
-msgid "TeamViewer to this Display"
-msgstr ""
-
-#: cache/59/59f0058495a6a779727bbfe19dd6898f.php:1290
-msgid "Webkey to this Display"
 msgstr ""
 
 #: cache/d6/d601b43ade56f366a4fe9923466d9cf7.php:58
@@ -18391,7 +18377,7 @@ msgstr ""
 #: lib/Controller/MenuBoard.php:194 lib/Controller/MenuBoard.php:202
 #: lib/Controller/Playlist.php:492 lib/Controller/Playlist.php:504
 #: lib/Controller/Library.php:713 lib/Controller/Library.php:719
-#: lib/Controller/Layout.php:2021 lib/Controller/Layout.php:2027
+#: lib/Controller/Layout.php:2022 lib/Controller/Layout.php:2028
 #: lib/Controller/Display.php:1150 lib/Controller/Display.php:1163
 #: lib/Controller/Developer.php:132 lib/Controller/Developer.php:145
 #: lib/Controller/Command.php:213 lib/Controller/Command.php:226
@@ -18494,8 +18480,8 @@ msgstr ""
 #: cache/5d/5ddc3b3a06dcb05f69b47d5cd8bae287.php:262
 #: lib/Event/ScheduleCriteriaRequestEvent.php:47
 #: lib/Connector/CapConnector.php:536 lib/Connector/CapConnector.php:545
-#: lib/Connector/NationalWeatherServiceConnector.php:404
-#: lib/Connector/NationalWeatherServiceConnector.php:413
+#: lib/Connector/NationalWeatherServiceConnector.php:403
+#: lib/Connector/NationalWeatherServiceConnector.php:412
 msgid "Equal to"
 msgstr ""
 
@@ -20135,6 +20121,18 @@ msgstr ""
 msgid "Data set %name%"
 msgstr ""
 
+#: cache/10/10fd044330899bf16e5c496d43db4cb0.php:77
+msgid "Add a new Sync event"
+msgstr ""
+
+#: cache/10/10fd044330899bf16e5c496d43db4cb0.php:91
+msgid "Add a new Scheduled event"
+msgstr ""
+
+#: cache/10/10fd044330899bf16e5c496d43db4cb0.php:97
+msgid "Add Event"
+msgstr ""
+
 #: cache/10/10fd044330899bf16e5c496d43db4cb0.php:132
 msgid "Range"
 msgstr ""
@@ -21692,153 +21690,78 @@ msgstr ""
 msgid "Change the name of the downloaded file if desired."
 msgstr ""
 
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:56
+#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:52
 msgid "Welcome"
 msgstr ""
 
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:77
+#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:73
 #, no-php-format
 msgid "Welcome to the %productName% CMS"
 msgstr ""
 
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:81
+#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:77
 msgid ""
-"This is the content management system, or CMS for short, where you upload "
-"your images/videos, create and schedule your layouts, and manage your "
-"display network."
-msgstr ""
-
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:97
-msgid "Overview"
-msgstr ""
-
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:101
-msgid ""
-"The Content Management System (CMS) is where content is created/uploaded and "
-"scheduled to Displays. A Player application downloads new content and "
-"schedules from the CMS to display on screens."
-msgstr ""
-
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:107
-msgid ""
-"The player application needs to run on a device attached a screen and a "
-"network so that is can connector to the CMS to download new content at "
-"regular defined intervals."
-msgstr ""
-
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:111
-msgid ""
-"Downloaded content from the CMS is cached to the Player so if there is a "
-"problem connecting to the CMS, it can continue to show the stored content "
-"until the connection between the CMS and Player is re-established."
-msgstr ""
-
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:115
-msgid ""
-"Once downloaded, the player checks the schedule it has been sent and will "
-"show the appropriate content based on the local date and time."
-msgstr ""
-
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:125
-msgid "Install / Upgrade"
-msgstr ""
-
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:132
-msgid ""
-"We have player software available for Android, LG webOS, Samsung Tizen, and "
-"Windows."
-msgstr ""
-
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:136
-msgid ""
-"There are installation and upgrade guides for all these options in our "
-"documentation."
-msgstr ""
-
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:140
-msgid ""
-"If you are undecided which device to use, our installation documentation is "
-"a good place to see what options are available."
-msgstr ""
-
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:148
-msgid "Your service provider can help you with installation and upgrade."
-msgstr ""
-
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:171
-msgid ""
-"A Layout is the complete content design to be shown on Displays. With a "
-"powerful Layout Editor Users can easily create eye catching content without "
-"having to leave the Xibo CMS."
+"The Content Management System (CMS) lets you create, manage, and update "
+"content. \n"
+"                        You can upload images and videos, design layouts, "
+"schedule content timing and location, \n"
+"                        and control the whole display network."
 msgstr ""
 
 #: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:175
-msgid ""
-"Media is the content we want to show on Displays, such as images and videos."
+#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:243
+msgid "Existing Content"
 msgstr ""
 
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:220
-msgid ""
-"Scheduling is highly flexible and supports scheduling to single Displays as "
-"well as to Display Groups. Displays check for new scheduled content "
-"periodically and will download new items in advance of playback."
+#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:197
+#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:290
+msgid "Create Content"
 msgstr ""
 
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:246
-msgid ""
-"A Display is the connection from the Player to the CMS which groups together "
-"content and schedule information. Each Display is uniquely identified in the "
-"CMS so that each Display can have its own Media content, Layout designs and "
-"Schedules available each with uniquely identified Reporting statistics."
-msgstr ""
-
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:272
+#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:335
 msgid "Documentation"
 msgstr ""
 
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:276
-msgid "Documentation for administrators, developers and users."
-msgstr ""
-
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:280
+#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:339
 msgid ""
-"All of our documentation is regularly updated to reflect changes and "
-"additions to the platform, and so a valuable reference tool for all users!"
+"Our documentation is there to help you at every turn. It’s updated regularly "
+"to reflect changes and additions to the platform, and so it’s a valuable "
+"reference tool for all users."
 msgstr ""
 
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:286
+#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:346
 msgid "User Manual"
 msgstr ""
 
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:293
+#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:351
 msgid "Admin"
 msgstr ""
 
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:314
+#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:366
 msgid "Training"
 msgstr ""
 
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:318
+#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:370
 msgid ""
 "Self-paced online training videos designed to get you up and running with "
 "Xibo in no time."
 msgstr ""
 
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:322
+#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:374
 msgid "New User Training"
 msgstr ""
 
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:339
+#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:387
 msgid ""
 "We are here to help! All the support you’re looking for, at your fingertips."
 msgstr ""
 
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:346
-msgid "Help Center"
+#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:392
+msgid "Help Centre"
 msgstr ""
 
-#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:353
-msgid "Contact your service provider for assistance."
+#: cache/ce/ceeec6bdf494687f7ffe028f7c6ac733.php:396
+msgid "Community"
 msgstr ""
 
 #: cache/98/98b375e50a36cec178f7233572922b1e.php:57
@@ -21903,7 +21826,7 @@ msgstr ""
 #: lib/Controller/Playlist.php:998 lib/Controller/Transition.php:158
 #: lib/Controller/Library.php:1439 lib/Controller/SyncGroup.php:575
 #: lib/Controller/DataSetColumn.php:596 lib/Controller/Tag.php:545
-#: lib/Controller/Connector.php:205 lib/Controller/Layout.php:669
+#: lib/Controller/Connector.php:216 lib/Controller/Layout.php:669
 #: lib/Controller/Layout.php:791 lib/Controller/Layout.php:936
 #: lib/Controller/MenuBoardCategory.php:437
 #: lib/Controller/DisplayProfile.php:507 lib/Controller/User.php:922
@@ -21961,10 +21884,10 @@ msgstr ""
 #: lib/Controller/Widget.php:649 lib/Controller/Widget.php:811
 #: lib/Controller/Widget.php:980 lib/Controller/Widget.php:1073
 #: lib/Controller/Widget.php:1515 lib/Controller/Widget.php:1628
-#: lib/Controller/Widget.php:1710 lib/Controller/Playlist.php:1330
+#: lib/Controller/Widget.php:1716 lib/Controller/Playlist.php:1330
 #: lib/Controller/Playlist.php:1495 lib/Controller/Playlist.php:2026
 #: lib/Controller/Layout.php:743 lib/Controller/Layout.php:846
-#: lib/Controller/Layout.php:1128 lib/Controller/Region.php:201
+#: lib/Controller/Layout.php:1129 lib/Controller/Region.php:201
 #: lib/Controller/Region.php:348 lib/Controller/Region.php:434
 #: lib/Controller/Region.php:499 lib/Controller/Region.php:720
 #: lib/Controller/Region.php:818 lib/Helper/XiboUploadHandler.php:457
@@ -22009,7 +21932,7 @@ msgstr ""
 #: lib/Controller/Widget.php:876 lib/Controller/Widget.php:972
 #: lib/Controller/Widget.php:1065 lib/Controller/Widget.php:1421
 #: lib/Controller/Widget.php:1507 lib/Controller/Widget.php:1620
-#: lib/Controller/Widget.php:1702 lib/Controller/WidgetData.php:76
+#: lib/Controller/Widget.php:1708 lib/Controller/WidgetData.php:76
 #: lib/Controller/WidgetData.php:129 lib/Controller/WidgetData.php:205
 #: lib/Controller/WidgetData.php:267 lib/Controller/WidgetData.php:345
 msgid "This Widget is not shared with you with edit permission"
@@ -22130,29 +22053,29 @@ msgstr ""
 msgid "Target region set"
 msgstr ""
 
-#: lib/Controller/Widget.php:1733
+#: lib/Controller/Widget.php:1739
 msgid "Invalid element JSON"
 msgstr ""
 
-#: lib/Controller/Widget.php:1739
+#: lib/Controller/Widget.php:1745
 msgid ""
 "At least one element is required for this Widget. Please delete it if you no "
 "longer need it."
 msgstr ""
 
-#: lib/Controller/Widget.php:1829
+#: lib/Controller/Widget.php:1844
 msgid "Saved elements"
 msgstr ""
 
-#: lib/Controller/Widget.php:1854
+#: lib/Controller/Widget.php:1869
 msgid "Please supply a propertyId"
 msgstr ""
 
-#: lib/Controller/Widget.php:1908
+#: lib/Controller/Widget.php:1929
 msgid "Please provide a widgetId"
 msgstr ""
 
-#: lib/Controller/Widget.php:1927
+#: lib/Controller/Widget.php:1948
 msgid "Widget does not have a data type"
 msgstr ""
 
@@ -22163,7 +22086,7 @@ msgstr ""
 #: lib/Controller/Template.php:248 lib/Controller/DisplayGroup.php:365
 #: lib/Controller/DataSet.php:291 lib/Controller/Campaign.php:361
 #: lib/Controller/MenuBoard.php:179 lib/Controller/Playlist.php:422
-#: lib/Controller/Library.php:677 lib/Controller/Layout.php:1922
+#: lib/Controller/Library.php:677 lib/Controller/Layout.php:1923
 #: lib/Controller/Display.php:957
 msgid "Move to Folder"
 msgstr ""
@@ -22172,7 +22095,7 @@ msgstr ""
 msgid "You do not have permissions to view this layout"
 msgstr ""
 
-#: lib/Controller/Template.php:718
+#: lib/Controller/Template.php:735
 #, php-format
 msgid "Saved %s"
 msgstr ""
@@ -22656,7 +22579,7 @@ msgid "Please provide LayoutId"
 msgstr ""
 
 #: lib/Controller/Action.php:348 lib/Controller/Action.php:498
-#: lib/Controller/Action.php:562 lib/Controller/Layout.php:3097
+#: lib/Controller/Action.php:562 lib/Controller/Layout.php:3098
 msgid "Layout is not checked out"
 msgstr ""
 
@@ -22811,7 +22734,7 @@ msgstr ""
 
 #: lib/Controller/Playlist.php:433 lib/Controller/Playlist.php:444
 #: lib/Controller/Library.php:748 lib/Controller/Library.php:754
-#: lib/Controller/Layout.php:1983 lib/Controller/Layout.php:1989
+#: lib/Controller/Layout.php:1984 lib/Controller/Layout.php:1990
 msgid "Enable stats collection?"
 msgstr ""
 
@@ -22830,7 +22753,7 @@ msgid ""
 msgstr ""
 
 #: lib/Controller/Playlist.php:1220 lib/Controller/Library.php:2310
-#: lib/Controller/Layout.php:2313 lib/Controller/Developer.php:632
+#: lib/Controller/Layout.php:2314 lib/Controller/Developer.php:632
 #, php-format
 msgid "Copied as %s"
 msgstr ""
@@ -22865,7 +22788,7 @@ msgid "Specified Playlist item is not in use."
 msgstr ""
 
 #: lib/Controller/Playlist.php:1733 lib/Controller/Library.php:2169
-#: lib/Controller/Layout.php:1833
+#: lib/Controller/Layout.php:1834
 msgid "Preview Layout"
 msgstr ""
 
@@ -22967,20 +22890,20 @@ msgstr ""
 msgid "Route is available through the API"
 msgstr ""
 
-#: lib/Controller/Library.php:1859 lib/Controller/Layout.php:2378
+#: lib/Controller/Library.php:1859 lib/Controller/Layout.php:2379
 msgid "No tags to assign"
 msgstr ""
 
-#: lib/Controller/Library.php:1870 lib/Controller/Layout.php:2389
+#: lib/Controller/Library.php:1870 lib/Controller/Layout.php:2390
 #, php-format
 msgid "Tagged %s"
 msgstr ""
 
-#: lib/Controller/Library.php:1933 lib/Controller/Layout.php:2454
+#: lib/Controller/Library.php:1933 lib/Controller/Layout.php:2455
 msgid "No tags to unassign"
 msgstr ""
 
-#: lib/Controller/Library.php:1944 lib/Controller/Layout.php:2464
+#: lib/Controller/Library.php:1944 lib/Controller/Layout.php:2465
 #, php-format
 msgid "Untagged %s"
 msgstr ""
@@ -23081,7 +23004,7 @@ msgstr ""
 msgid "Tags Edited"
 msgstr ""
 
-#: lib/Controller/Connector.php:184
+#: lib/Controller/Connector.php:188
 #, php-format
 msgid "Uninstalled %s"
 msgstr ""
@@ -23104,12 +23027,12 @@ msgstr ""
 msgid "You do not have permissions to clear this layout"
 msgstr ""
 
-#: lib/Controller/Layout.php:1017 lib/Controller/Layout.php:1196
-#: lib/Controller/Layout.php:1244 lib/Controller/Layout.php:1293
-#: lib/Controller/Layout.php:1362 lib/Controller/Layout.php:1401
-#: lib/Controller/Layout.php:2823 lib/Controller/Layout.php:2874
-#: lib/Controller/Layout.php:2913 lib/Controller/Layout.php:2982
-#: lib/Controller/Layout.php:3042 lib/Controller/Layout.php:3092
+#: lib/Controller/Layout.php:1017 lib/Controller/Layout.php:1197
+#: lib/Controller/Layout.php:1245 lib/Controller/Layout.php:1294
+#: lib/Controller/Layout.php:1363 lib/Controller/Layout.php:1402
+#: lib/Controller/Layout.php:2824 lib/Controller/Layout.php:2875
+#: lib/Controller/Layout.php:2914 lib/Controller/Layout.php:2983
+#: lib/Controller/Layout.php:3043 lib/Controller/Layout.php:3093
 msgid "You do not have permissions to edit this layout"
 msgstr ""
 
@@ -23117,155 +23040,155 @@ msgstr ""
 msgid "Cannot delete Layout from its Draft, delete the parent"
 msgstr ""
 
-#: lib/Controller/Layout.php:1154
+#: lib/Controller/Layout.php:1155
 #, php-format
 msgid "Cleared %s"
 msgstr ""
 
-#: lib/Controller/Layout.php:1201 lib/Controller/Layout.php:1298
-#: lib/Controller/Layout.php:1367
+#: lib/Controller/Layout.php:1202 lib/Controller/Layout.php:1299
+#: lib/Controller/Layout.php:1368
 msgid "Cannot modify Layout from its Draft"
 msgstr ""
 
-#: lib/Controller/Layout.php:1206
+#: lib/Controller/Layout.php:1207
 msgid "This Layout is used as the global default and cannot be retired"
 msgstr ""
 
-#: lib/Controller/Layout.php:1221
+#: lib/Controller/Layout.php:1222
 #, php-format
 msgid "Retired %s"
 msgstr ""
 
-#: lib/Controller/Layout.php:1313
+#: lib/Controller/Layout.php:1314
 #, php-format
 msgid "Unretired %s"
 msgstr ""
 
-#: lib/Controller/Layout.php:1378
+#: lib/Controller/Layout.php:1379
 #, php-format
 msgid "For Layout %s Enable Stats Collection is set to %s"
 msgstr ""
 
-#: lib/Controller/Layout.php:1616 lib/Controller/Layout.php:1617
+#: lib/Controller/Layout.php:1617 lib/Controller/Layout.php:1618
 msgid "Invalid Module"
 msgstr ""
 
-#: lib/Controller/Layout.php:1759 lib/Controller/Layout.php:2516
+#: lib/Controller/Layout.php:1760 lib/Controller/Layout.php:2517
 msgid "This Layout is ready to play"
 msgstr ""
 
-#: lib/Controller/Layout.php:1760 lib/Controller/Layout.php:2520
+#: lib/Controller/Layout.php:1761 lib/Controller/Layout.php:2521
 msgid "There are items on this Layout that can only be assessed by the Display"
 msgstr ""
 
-#: lib/Controller/Layout.php:1761 lib/Controller/Layout.php:2524
+#: lib/Controller/Layout.php:1762 lib/Controller/Layout.php:2525
 msgid "This Layout has not been built yet"
 msgstr ""
 
-#: lib/Controller/Layout.php:1762 lib/Controller/Layout.php:2528
+#: lib/Controller/Layout.php:1763 lib/Controller/Layout.php:2529
 msgid "This Layout is invalid and should not be scheduled"
 msgstr ""
 
-#: lib/Controller/Layout.php:1766
+#: lib/Controller/Layout.php:1767
 msgid "This Layout has enable stat collection set to ON"
 msgstr ""
 
-#: lib/Controller/Layout.php:1767
+#: lib/Controller/Layout.php:1768
 msgid "This Layout has enable stat collection set to OFF"
 msgstr ""
 
-#: lib/Controller/Layout.php:1844
+#: lib/Controller/Layout.php:1845
 msgid "Preview Draft Layout"
 msgstr ""
 
-#: lib/Controller/Layout.php:1865
+#: lib/Controller/Layout.php:1866
 msgid "Assign to Campaign"
 msgstr ""
 
-#: lib/Controller/Layout.php:1876
+#: lib/Controller/Layout.php:1877
 msgid "Jump to Playlists included on this Layout"
 msgstr ""
 
-#: lib/Controller/Layout.php:1885
+#: lib/Controller/Layout.php:1886
 msgid "Jump to Campaigns containing this Layout"
 msgstr ""
 
-#: lib/Controller/Layout.php:1894
+#: lib/Controller/Layout.php:1895
 msgid "Jump to Media included on this Layout"
 msgstr ""
 
-#: lib/Controller/Layout.php:1956
+#: lib/Controller/Layout.php:1957
 msgid "Unretire"
 msgstr ""
 
-#: lib/Controller/Layout.php:2227
+#: lib/Controller/Layout.php:2228
 msgid "Cannot copy a Draft Layout"
 msgstr ""
 
-#: lib/Controller/Layout.php:2373 lib/Controller/Layout.php:2449
+#: lib/Controller/Layout.php:2374 lib/Controller/Layout.php:2450
 msgid "Cannot manage tags on a Draft Layout"
 msgstr ""
 
-#: lib/Controller/Layout.php:2578 lib/Controller/Layout.php:2616
+#: lib/Controller/Layout.php:2579 lib/Controller/Layout.php:2617
 msgid "Cannot export Draft Layout"
 msgstr ""
 
-#: lib/Controller/Layout.php:2752
+#: lib/Controller/Layout.php:2753
 msgid "Layout background must be an image"
 msgstr ""
 
-#: lib/Controller/Layout.php:2879
+#: lib/Controller/Layout.php:2880
 msgid "Layout is already checked out"
 msgstr ""
 
-#: lib/Controller/Layout.php:2888
+#: lib/Controller/Layout.php:2889
 #, php-format
 msgid "Checked out %s"
 msgstr ""
 
-#: lib/Controller/Layout.php:3004
+#: lib/Controller/Layout.php:3005
 #, php-format
 msgid "Published %s"
 msgstr ""
 
-#: lib/Controller/Layout.php:3011
+#: lib/Controller/Layout.php:3012
 #, php-format
 msgid "Layout will be published on %s"
 msgstr ""
 
-#: lib/Controller/Layout.php:3109
+#: lib/Controller/Layout.php:3110
 #, php-format
 msgid "Discarded %s"
 msgstr ""
 
-#: lib/Controller/Layout.php:3160
+#: lib/Controller/Layout.php:3161
 msgid ""
 "This function is available only to User who originally locked this Layout."
 msgstr ""
 
-#: lib/Controller/Layout.php:3249 lib/Entity/Layout.php:2293
+#: lib/Controller/Layout.php:3250 lib/Entity/Layout.php:2293
 msgid "Empty Region"
 msgstr ""
 
-#: lib/Controller/Layout.php:3353
+#: lib/Controller/Layout.php:3354
 msgid "Incorrect image data"
 msgstr ""
 
-#: lib/Controller/Layout.php:3378
+#: lib/Controller/Layout.php:3379
 msgid "Thumbnail not found for Layout"
 msgstr ""
 
-#: lib/Controller/Layout.php:3470
+#: lib/Controller/Layout.php:3471
 #, php-format
 msgid "Please select %s"
 msgstr ""
 
-#: lib/Controller/Layout.php:3488
+#: lib/Controller/Layout.php:3489
 #, php-format
 msgid "Fetched %s"
 msgstr ""
 
-#: lib/Controller/Layout.php:3611
+#: lib/Controller/Layout.php:3612
 #, php-format
 msgid "Created %s"
 msgstr ""
@@ -23859,7 +23782,7 @@ msgid "Please use XMDS API"
 msgstr ""
 
 #: lib/Controller/Pwa.php:81 lib/Controller/Pwa.php:138 web/xmds.php:173
-#: web/xmds.php:359
+#: web/xmds.php:360
 msgid "Display unauthorised"
 msgstr ""
 
@@ -24262,16 +24185,20 @@ msgstr ""
 msgid "Please choose either round-robin or block play order for this list"
 msgstr ""
 
-#: lib/Entity/PlayerVersion.php:230 lib/Service/ReportService.php:305
+#: lib/Entity/PlayerVersion.php:270
+msgid "Package file unsupported or invalid"
+msgstr ""
+
+#: lib/Entity/PlayerVersion.php:275 lib/Service/ReportService.php:305
 #: lib/Service/ReportService.php:342 lib/Factory/LayoutFactory.php:1300
 msgid "Unable to open ZIP"
 msgstr ""
 
-#: lib/Entity/PlayerVersion.php:235
+#: lib/Entity/PlayerVersion.php:280
 msgid "Software package does not contain a manifest"
 msgstr ""
 
-#: lib/Entity/PlayerVersion.php:343
+#: lib/Entity/PlayerVersion.php:391
 msgid "You already own Player Version file with this name."
 msgstr ""
 
@@ -25146,6 +25073,16 @@ msgstr ""
 msgid "SimpleXML is used to parse RSS feeds and other XML data sources"
 msgstr ""
 
+#: lib/Service/ConfigService.php:746
+msgid "GNUPG"
+msgstr ""
+
+#: lib/Service/ConfigService.php:748
+msgid ""
+"checkGnu is used to verify the integrity of Player Software versions "
+"uploaded to the CMS"
+msgstr ""
+
 #: lib/Service/MediaService.php:143
 #, php-format
 msgid "Your library is full. Library Limit: %s MB"
@@ -25518,480 +25455,480 @@ msgstr ""
 msgid "Group not found"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:496
+#: lib/Factory/UserGroupFactory.php:494
 msgid ""
 "Page which shows all Events added to the Calendar for the purposes of "
 "Schedule Management"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:501
+#: lib/Factory/UserGroupFactory.php:499
 msgid "Include the Agenda View on the Calendar"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:506
+#: lib/Factory/UserGroupFactory.php:504
 msgid ""
 "Include \"Add Event\" button to allow for the creation of new Scheduled "
 "Events"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:511
+#: lib/Factory/UserGroupFactory.php:509
 msgid "Allow edits including deletion of existing Scheduled Events"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:516
+#: lib/Factory/UserGroupFactory.php:514
 msgid "Allow creation of Synchronised Schedules"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:521
+#: lib/Factory/UserGroupFactory.php:519
 msgid "Allow creation of Data Connector Schedules"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:526
+#: lib/Factory/UserGroupFactory.php:524
 msgid "Page which shows all Dayparts that have been created"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:531
+#: lib/Factory/UserGroupFactory.php:529
 msgid ""
 "Include \"Add Daypart\" button to allow for the creation of new Dayparts"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:536
+#: lib/Factory/UserGroupFactory.php:534
 msgid "Allow edits including deletion to be made to all created Dayparts"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:541
+#: lib/Factory/UserGroupFactory.php:539
 msgid ""
 "Page which shows all items that have been uploaded to the Library for the "
 "purposes of Media Management"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:546
+#: lib/Factory/UserGroupFactory.php:544
 msgid ""
 "Include \"Add Media\" buttons to allow for additional content to be uploaded "
 "to the Media Library"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:551
+#: lib/Factory/UserGroupFactory.php:549
 msgid ""
 "Allow edits including deletion to all items uploaded to the Media Library"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:556
+#: lib/Factory/UserGroupFactory.php:554
 msgid ""
 "Page which shows all DataSets that have been created which can be used in "
 "multiple Layouts"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:561
+#: lib/Factory/UserGroupFactory.php:559
 msgid ""
 "Include \"Add DataSet\" button to allow for additional DataSets to be "
 "created independently to Layouts"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:566
+#: lib/Factory/UserGroupFactory.php:564
 msgid ""
 "Allow edits including deletion to all created DataSets independently to "
 "Layouts"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:571
+#: lib/Factory/UserGroupFactory.php:569
 msgid ""
 "Allow edits including deletion to all data contained within a DataSet "
 "independently to Layouts"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:576
+#: lib/Factory/UserGroupFactory.php:574
 msgid "Create and update real time DataSets"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:581
+#: lib/Factory/UserGroupFactory.php:579
 msgid ""
 "Page which shows all Layouts that have been created for the purposes of "
 "Layout Management"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:586
+#: lib/Factory/UserGroupFactory.php:584
 msgid ""
 "Include \"Add Layout\" button to allow for additional Layouts to be created"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:591
+#: lib/Factory/UserGroupFactory.php:589
 msgid "Allow edits including deletion to be made to all created Layouts"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:596
+#: lib/Factory/UserGroupFactory.php:594
 msgid ""
 "Include the Export function for all editable Layouts to allow a User to "
 "export a Layout and its contents regardless of the share options that have "
 "been set"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:601
+#: lib/Factory/UserGroupFactory.php:599
 msgid ""
 "Page which shows all Campaigns that have been created for the purposes of "
 "Campaign Management"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:606
+#: lib/Factory/UserGroupFactory.php:604
 msgid ""
 "Include \"Add Campaign\" button to allow for additional Campaigns to be "
 "created"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:611
+#: lib/Factory/UserGroupFactory.php:609
 msgid "Allow edits including deletion to all created Campaigns"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:616
+#: lib/Factory/UserGroupFactory.php:614
 msgid "Access to Ad Campaigns"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:621
+#: lib/Factory/UserGroupFactory.php:619
 msgid "Page which shows all Templates that have been saved"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:626
+#: lib/Factory/UserGroupFactory.php:624
 msgid "Add \"Save Template\" function for all Layouts"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:631
+#: lib/Factory/UserGroupFactory.php:629
 msgid "Allow edits to be made to all saved Templates"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:636
+#: lib/Factory/UserGroupFactory.php:634
 msgid "Page which shows all Resolutions that have been added to the platform"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:641
+#: lib/Factory/UserGroupFactory.php:639
 msgid "Add Resolution button to allow for additional Resolutions to be added"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:646
+#: lib/Factory/UserGroupFactory.php:644
 msgid "Allow edits including deletion to all added Resolutions"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:651
+#: lib/Factory/UserGroupFactory.php:649
 msgid ""
 "Page which shows all Tags that have been added for the purposes of Tag "
 "Management"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:656
+#: lib/Factory/UserGroupFactory.php:654
 msgid "Ability to add and edit Tags when assigning to items"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:661
+#: lib/Factory/UserGroupFactory.php:659
 msgid ""
 "Page which shows all Playlists that have been created which can be used in "
 "multiple Layouts"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:666
+#: lib/Factory/UserGroupFactory.php:664
 msgid ""
 "Include \"Add Playlist\" button to allow for additional Playlists to be "
 "created independently to Layouts"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:671
+#: lib/Factory/UserGroupFactory.php:669
 msgid ""
 "Allow edits including deletion to all created Playlists independently to "
 "Layouts"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:676
+#: lib/Factory/UserGroupFactory.php:674
 msgid ""
 "Ability to update own Profile, including changing passwords and "
 "authentication preferences"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:681
+#: lib/Factory/UserGroupFactory.php:679
 msgid "Notifications appear in the navigation bar"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:686
+#: lib/Factory/UserGroupFactory.php:684
 msgid "Access to the Notification Centre to view past notifications"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:691
+#: lib/Factory/UserGroupFactory.php:689
 msgid "Access to API applications"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:696
+#: lib/Factory/UserGroupFactory.php:694
 msgid "Allow Sharing capabilities for all User objects"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:701
+#: lib/Factory/UserGroupFactory.php:699
 msgid ""
 "Include \"Add Notification\" button to allow for the creation of new "
 "notifications"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:706
+#: lib/Factory/UserGroupFactory.php:704
 msgid ""
 "Allow edits including deletion for all notifications in the Notification "
 "Centre"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:711
+#: lib/Factory/UserGroupFactory.php:709
 msgid ""
 "Page which shows all Users in the platform for the purposes of User "
 "Management"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:716
+#: lib/Factory/UserGroupFactory.php:714
 msgid ""
 "Include \"Add User\" button to allow for additional Users to be added to the "
 "platform"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:721
+#: lib/Factory/UserGroupFactory.php:719
 msgid ""
 "Allow Group Admins to edit including deletion, for all added Users within "
 "their group"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:726
+#: lib/Factory/UserGroupFactory.php:724
 msgid "Page which shows all User Groups that have been created"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:731
+#: lib/Factory/UserGroupFactory.php:729
 msgid "Allow edits including deletion for all created User Groups"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:736
+#: lib/Factory/UserGroupFactory.php:734
 msgid ""
 "Status Dashboard showing key platform metrics, suitable for an Administrator."
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:741
+#: lib/Factory/UserGroupFactory.php:739
 msgid ""
 "Media Manager Dashboard showing only the Widgets the user has access to "
 "modify."
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:746
+#: lib/Factory/UserGroupFactory.php:744
 msgid ""
 "Playlist Dashboard showing only the Playlists configured in Layouts the user "
 "has access to modify."
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:751
+#: lib/Factory/UserGroupFactory.php:749
 msgid ""
 "Page which shows all Displays added to the platform for the purposes of "
 "Display Management"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:756
+#: lib/Factory/UserGroupFactory.php:754
 msgid ""
 "Include \"Add Display\" button to allow additional Displays to be added to "
 "the platform"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:761
+#: lib/Factory/UserGroupFactory.php:759
 msgid "Allow edits including deletion for all added Displays"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:766
+#: lib/Factory/UserGroupFactory.php:764
 msgid "Allow access to non-destructive edit-only features"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:771
+#: lib/Factory/UserGroupFactory.php:769
 msgid "Page which shows all Display Groups that have been created"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:776
+#: lib/Factory/UserGroupFactory.php:774
 msgid ""
 "Include \"Add Display Group\" button to allow for the creation of additional "
 "Display Groups"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:781
+#: lib/Factory/UserGroupFactory.php:779
 msgid "Allow edits including deletion for all created Display Groups"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:786
+#: lib/Factory/UserGroupFactory.php:784
 msgid "Allow access to non-destructive edit-only features in a Display Group"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:791
+#: lib/Factory/UserGroupFactory.php:789
 msgid "Page which shows all Display Setting Profiles that have been added"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:796
+#: lib/Factory/UserGroupFactory.php:794
 msgid ""
 "Include \"Add Profile\" button to allow for additional Display Setting "
 "Profiles to be added to the platform"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:801
+#: lib/Factory/UserGroupFactory.php:799
 msgid "Allow edits including deletion for all created Display Setting Profiles"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:806
+#: lib/Factory/UserGroupFactory.php:804
 msgid "Page to view/add/edit/delete/download Player Software Versions"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:811
+#: lib/Factory/UserGroupFactory.php:809
 msgid "Page to view/add/edit/delete Commands"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:816
+#: lib/Factory/UserGroupFactory.php:814
 msgid ""
 "Page which shows all Sync Groups added to the platform for the purposes of "
 "Sync Group Management"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:821
+#: lib/Factory/UserGroupFactory.php:819
 msgid "Allow creation of Synchronised Groups"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:826
+#: lib/Factory/UserGroupFactory.php:824
 msgid "Allow edits of Synchronised Groups"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:831
+#: lib/Factory/UserGroupFactory.php:829
 msgid ""
 "Access to a Report Fault wizard for collecting reports to forward to the "
 "support team for analysis, which may contain sensitive data."
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:836
+#: lib/Factory/UserGroupFactory.php:834
 msgid "Page to show debug and error logging which may contain sensitive data"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:841
+#: lib/Factory/UserGroupFactory.php:839
 msgid "Page to show all User Sessions throughout the platform"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:846
+#: lib/Factory/UserGroupFactory.php:844
 msgid ""
 "Page to show the Audit Trail for all created/modified and removed items "
 "throughout the platform"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:851
+#: lib/Factory/UserGroupFactory.php:849
 msgid "Page which allows for Module Management for the platform"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:856
+#: lib/Factory/UserGroupFactory.php:854
 msgid "Add/Edit custom modules and templates"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:861
+#: lib/Factory/UserGroupFactory.php:859
 msgid "Delete custom modules and templates"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:866
+#: lib/Factory/UserGroupFactory.php:864
 msgid "Page which allows for Transition Management for the platform"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:871
+#: lib/Factory/UserGroupFactory.php:869
 msgid "Page which allows for Task Management for the platform"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:876
+#: lib/Factory/UserGroupFactory.php:874
 msgid "Dashboard which shows all available Reports"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:881
+#: lib/Factory/UserGroupFactory.php:879
 msgid ""
 "Display Reports to show bandwidth usage and time connected / disconnected"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:886
+#: lib/Factory/UserGroupFactory.php:884
 msgid ""
 "Proof of Play Reports which include summary and distribution by Layout, "
 "Media or Event"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:891
+#: lib/Factory/UserGroupFactory.php:889
 msgid "Page which shows all Reports that have been Scheduled"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:896
+#: lib/Factory/UserGroupFactory.php:894
 msgid "Page which shows all Reports that have been Saved"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:901
+#: lib/Factory/UserGroupFactory.php:899
 msgid "View Folder Tree on Grids and Forms"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:906
+#: lib/Factory/UserGroupFactory.php:904
 msgid ""
 "Allow users to create Sub-Folders under Folders they have access to. (Except "
 "the Root Folder)"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:911
+#: lib/Factory/UserGroupFactory.php:909
 msgid "Rename and Delete existing Folders"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:916
+#: lib/Factory/UserGroupFactory.php:914
 msgid "Set a home folder for a user"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:921
+#: lib/Factory/UserGroupFactory.php:919
 msgid "View the Menu Board page"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:926
+#: lib/Factory/UserGroupFactory.php:924
 msgid ""
 "Include \"Add Menu Board\" button to allow for additional Menu Boards to be "
 "added to the platform"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:931
+#: lib/Factory/UserGroupFactory.php:929
 msgid ""
 "Allow edits, creation of Menu Board Categories and Products including "
 "deletion for all created Menu Board content"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:936
+#: lib/Factory/UserGroupFactory.php:934
 msgid "View the Fonts page"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:941
+#: lib/Factory/UserGroupFactory.php:939
 msgid "Upload new Fonts"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:946
+#: lib/Factory/UserGroupFactory.php:944
 msgid "Delete existing Fonts"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:961
+#: lib/Factory/UserGroupFactory.php:959
 msgid "Homepage has not been set"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:967
+#: lib/Factory/UserGroupFactory.php:965
 #, php-format
 msgid "Homepage %s not found."
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:984
+#: lib/Factory/UserGroupFactory.php:982
 msgid ""
 "Status Dashboard showing key platform metrics, usually for an administrator."
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:990
+#: lib/Factory/UserGroupFactory.php:988
 msgid ""
 "Icon Dashboard showing an easy access set of feature icons the user can "
 "access."
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:995
+#: lib/Factory/UserGroupFactory.php:993
 msgid "Media Manager Dashboard"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:996
+#: lib/Factory/UserGroupFactory.php:994
 msgid ""
 "Media Manager Dashboard showing all Widgets the user has access to modify."
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:1001
+#: lib/Factory/UserGroupFactory.php:999
 msgid "Playlist Dashboard"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:1002
+#: lib/Factory/UserGroupFactory.php:1000
 msgid ""
 "Playlist Dashboard showing all Playlists configured in Layouts the user has "
 "access to modify."
@@ -26200,24 +26137,24 @@ msgstr ""
 msgid "Data Connector %s not found"
 msgstr ""
 
-#: lib/Xmds/Soap.php:589
+#: lib/Xmds/Soap.php:591
 #, php-format
 msgid ""
 "Scheduled Action Event ID %d contains an invalid Layout linked to it by the "
 "Layout code."
 msgstr ""
 
-#: lib/Xmds/Soap.php:2706
+#: lib/Xmds/Soap.php:2716
 #, php-format
 msgid "Recovery for Display %s"
 msgstr ""
 
-#: lib/Xmds/Soap.php:2708
+#: lib/Xmds/Soap.php:2718
 #, php-format
 msgid "Display ID %d is now back online %s"
 msgstr ""
 
-#: lib/Xmds/Soap.php:2848
+#: lib/Xmds/Soap.php:2858
 msgid "Bandwidth allowance exceeded"
 msgstr ""
 
@@ -26473,22 +26410,22 @@ msgid "Failed to retrieve CAP data from the specified URL."
 msgstr ""
 
 #: lib/Connector/CapConnector.php:533
-#: lib/Connector/NationalWeatherServiceConnector.php:401
+#: lib/Connector/NationalWeatherServiceConnector.php:400
 msgid "Emergency Alerts"
 msgstr ""
 
 #: lib/Connector/CapConnector.php:539
-#: lib/Connector/NationalWeatherServiceConnector.php:407
+#: lib/Connector/NationalWeatherServiceConnector.php:406
 msgid "Actual Alerts"
 msgstr ""
 
 #: lib/Connector/CapConnector.php:540
-#: lib/Connector/NationalWeatherServiceConnector.php:408
+#: lib/Connector/NationalWeatherServiceConnector.php:407
 msgid "Test Alerts"
 msgstr ""
 
 #: lib/Connector/CapConnector.php:541
-#: lib/Connector/NationalWeatherServiceConnector.php:409
+#: lib/Connector/NationalWeatherServiceConnector.php:408
 msgid "No Alerts"
 msgstr ""
 
@@ -26497,7 +26434,7 @@ msgid "Geo"
 msgstr ""
 
 #: lib/Connector/CapConnector.php:549
-#: lib/Connector/NationalWeatherServiceConnector.php:416
+#: lib/Connector/NationalWeatherServiceConnector.php:415
 msgid "Met"
 msgstr ""
 
@@ -26537,30 +26474,30 @@ msgstr ""
 msgid "CBRNE"
 msgstr ""
 
-#: lib/Connector/XiboSspConnector.php:118
+#: lib/Connector/XiboSspConnector.php:119
 msgid "Please enter a CMS URL, including http(s)://"
 msgstr ""
 
-#: lib/Connector/XiboSspConnector.php:212
+#: lib/Connector/XiboSspConnector.php:213
 #: lib/Connector/XiboDashboardConnector.php:205
 #: lib/Connector/XiboDashboardConnector.php:283
 msgid "Empty response from the dashboard service"
 msgstr ""
 
-#: lib/Connector/XiboSspConnector.php:221
+#: lib/Connector/XiboSspConnector.php:222
 msgid "API key not valid"
 msgstr ""
 
-#: lib/Connector/XiboSspConnector.php:232
-#: lib/Connector/XiboSspConnector.php:243
-#: lib/Connector/XiboSspConnector.php:309
-#: lib/Connector/XiboSspConnector.php:313
-#: lib/Connector/XiboSspConnector.php:402
-#: lib/Connector/XiboSspConnector.php:406
+#: lib/Connector/XiboSspConnector.php:233
+#: lib/Connector/XiboSspConnector.php:244
+#: lib/Connector/XiboSspConnector.php:310
+#: lib/Connector/XiboSspConnector.php:314
+#: lib/Connector/XiboSspConnector.php:403
+#: lib/Connector/XiboSspConnector.php:407
 msgid "Cannot contact SSP service, please try again shortly."
 msgstr ""
 
-#: lib/Connector/XiboSspConnector.php:452
+#: lib/Connector/XiboSspConnector.php:453
 #: lib/Connector/XiboAudienceReportingConnector.php:718
 #: lib/Connector/XiboAudienceReportingConnector.php:776
 #: lib/Connector/XiboAudienceReportingConnector.php:829
@@ -26684,7 +26621,7 @@ msgstr ""
 msgid "No alerts are available for the selected area at the moment."
 msgstr ""
 
-#: lib/Connector/NationalWeatherServiceConnector.php:351
+#: lib/Connector/NationalWeatherServiceConnector.php:350
 msgid "Failed to retrieve NWS alerts from specified Atom Feed URL."
 msgstr ""
 
@@ -27268,7 +27205,7 @@ msgstr ""
 msgid "Invalid URL"
 msgstr ""
 
-#: web/xmds.php:397
+#: web/xmds.php:398
 msgid "Your client is not the correct version to communicate with this CMS."
 msgstr ""
 
