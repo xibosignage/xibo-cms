@@ -36,9 +36,9 @@ describe('Proof of Play', function() {
     cy.visit('/report/view');
     cy.contains('Export').click();
 
-    cy.get(':nth-child(1) > .col-sm-10 > .input-group > .datePickerHelper').click();
+    cy.get(':nth-child(1) > .col-sm-10 > .input-group > .flatpickr-wrapper > .datePickerHelper').click();
     cy.get('.open > .flatpickr-innerContainer > .flatpickr-rContainer > .flatpickr-days > .dayContainer > .today').click();
-    cy.get(':nth-child(2) > .col-sm-10 > .input-group > .datePickerHelper').click();
+    cy.get(':nth-child(2) > .col-sm-10 > .input-group > .flatpickr-wrapper > .datePickerHelper').click();
     cy.get('.open > .flatpickr-innerContainer > .flatpickr-rContainer > .flatpickr-days > .dayContainer > .today').next().click();
 
     // Click on the select2 selection

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -19,44 +19,57 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-describe('Layout Editor', function() {
-    beforeEach(function() {
-      cy.login();
-      cy.visit('/layout/view');
-      cy.get('button.layout-add-button').click();
-      cy.get('#layout-viewer').should('be.visible');  // Assert that the URL has changed to the layout editor
-    });
-  
-    it('should update the background according to the colour set via colour picker', function() {  
-        cy.get('#properties-panel').should('be.visible'); //Verify properties panel is present
-        cy.get('.input-group-prepend').click(); //Open colour picker
-        cy.get('.colorpicker-saturation').click(68, 28);  //Select on a specific saturation
-        cy.get('#properties-panel').click(30, 60); //Click outside color picker to close
-        //Verify the selected color is applied to the background
-        cy.get('#layout-viewer').should('have.css', 'background-color', 'rgb(243, 248, 255)');
-    });
+/* eslint-disable max-len */
+describe('Layout Editor Background', function() {
+  const SELECTORS = {
+    layoutAddButton: 'button.layout-add-button',
+    layoutViewer: '#layout-viewer',
+    propertiesPanel: '#properties-panel',
+    colorPickerTrigger: '.input-group-prepend',
+    colorPickerSaturation: '.colorpicker-saturation',
+    backgroundColorInput: '#input_backgroundColor',
+    resolutionDropdown: '#input_resolutionId',
+    select2Selection: '.select2-selection',
+    select2SearchInput: '.select2-container--open input[type="search"]',
+    layoutInfoDimensions: '.layout-info-dimensions span'
+  };
 
-    it('should update the background according to the colour set via hex input', function() {  
-        cy.get('#properties-panel').should('be.visible');
-        cy.get('#input_backgroundColor').clear().type('#b53939{enter}'); 
-        //Verify the selected color is applied to the background
-        cy.get('#layout-viewer').should('have.css', 'background-color', 'rgb(243, 248, 255)');
-    });
-  
-    it('should update the layout resolution', function() {  
-        cy.get('#properties-panel').should('be.visible'); //Verify properties panel is present
-        const resName='cinema';
-        cy.get('#input_resolutionId')
-            .parent()
-            .find('.select2-selection')
-            .click();
-        cy.get('.select2-container--open input[type="search"]')
-            .type(resName);
-        cy.selectOption(resName);
-        cy.get(".layout-info-dimensions span")
-          .should("be.visible")
-          .and("contain", "4096x2304"); 
-   
-    });
- 
+  beforeEach(function() {
+    cy.login();
+    cy.visit('/layout/view');
+    cy.get(SELECTORS.layoutAddButton).click();
+    cy.get(SELECTORS.layoutViewer).should('be.visible'); // Assert that the URL has changed to the layout editor
+  });
+
+  it('should update the background according to the colour set via colour picker', function() {
+    cy.get(SELECTORS.propertiesPanel).should('be.visible'); // Verify properties panel is present
+    cy.get(SELECTORS.colorPickerTrigger).click(); // Open colour picker
+    cy.get(SELECTORS.colorPickerSaturation).click(68, 28); // Select on a specific saturation
+    cy.get(SELECTORS.propertiesPanel).click(30, 60); // Click outside color picker to close
+
+    // Verify the selected color is applied to the background
+    cy.get(SELECTORS.layoutViewer).should('have.css', 'background-color', 'rgb(243, 248, 255)');
+  });
+
+  it('should update the background according to the colour set via hex input', function() {
+    cy.get(SELECTORS.propertiesPanel).should('be.visible');
+    cy.get(SELECTORS.backgroundColorInput).clear().type('#b53939{enter}');
+
+    // Verify the selected color is applied to the background
+    cy.get(SELECTORS.layoutViewer).should('have.css', 'background-color', 'rgb(243, 248, 255)');
+  });
+
+  it('should update the layout resolution', function() {
+    cy.get(SELECTORS.propertiesPanel).should('be.visible');
+    const resName = 'cinema';
+
+    cy.get(SELECTORS.resolutionDropdown).parent().find(SELECTORS.select2Selection).click();
+    cy.get(SELECTORS.select2SearchInput).type(resName);
+    cy.selectOption(resName);
+
+    cy.get(SELECTORS.layoutInfoDimensions)
+      .should('be.visible')
+      .and('contain', '4096x2304');
+  });
 });
+
