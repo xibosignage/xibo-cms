@@ -170,9 +170,6 @@ Element.prototype.getTemplate = function() {
         self.id,
         self.elementType,
       ).then((template) => {
-        // Save the template
-        self.template = template;
-
         // If template is an extention of another template
         // load the parent template
         if (template.extends) {
@@ -180,6 +177,9 @@ Element.prototype.getTemplate = function() {
             template.extends.template,
             'global',
           ).then((parentTemplate) => {
+            // Save the template only after we get the parent
+            self.template = template;
+
             // Merge the parent template properties with the template properties
             // (if the template has a property with the same id as the parent
             // template, use the template's property instead)
@@ -234,6 +234,9 @@ Element.prototype.getTemplate = function() {
             return resolve(self.template);
           });
         } else {
+          // Save the template
+          self.template = template;
+
           // Resolve the promise
           resolve(template);
         }
