@@ -230,8 +230,8 @@
         return groups[key].reduce((acc, {key, campaignId, scheduledAt, displayId, errors, isPlayed, isErrored, impressions, impressionActual}) => {
           acc['key'] = key;
           acc['errorCount'] = errors + (acc['errorCount'] || 0);
-          acc['playCount'] = !isPlayed ? (acc['playCount'] || 0) : acc['playCount'] + 1
-          acc['missesCount'] = (!isPlayed && !isErrored) ? (acc['missesCount'] + 1 || 1) : acc['missesCount'] || 0
+          acc['playCount'] = (isPlayed ? 1 : 0) + (acc['playCount'] || 0);
+          acc['missesCount'] = (!isPlayed && !isErrored ? 1 : 0) + (acc['missesCount'] || 0);
           acc['impressions'] = impressions + (acc['impressions'] || 0);
           acc['impressionActual'] = impressionActual + (acc['impressionActual'] || 0);
           acc['campaignId'] = campaignId;
