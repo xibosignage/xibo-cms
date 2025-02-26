@@ -28,10 +28,11 @@ describe('Layout Editor Background', function() {
     colorPickerTrigger: '.input-group-prepend',
     colorPickerSaturation: '.colorpicker-saturation',
     backgroundColorInput: '#input_backgroundColor',
+    backgroundzIndex: '#input_backgroundzIndex',
     resolutionDropdown: '#input_resolutionId',
     select2Selection: '.select2-selection',
     select2SearchInput: '.select2-container--open input[type="search"]',
-    layoutInfoDimensions: '.layout-info-dimensions span'
+    layoutInfoDimensions: '.layout-info-dimensions span',
   };
 
   beforeEach(function() {
@@ -57,6 +58,14 @@ describe('Layout Editor Background', function() {
 
     // Verify the selected color is applied to the background
     cy.get(SELECTORS.layoutViewer).should('have.css', 'background-color', 'rgb(243, 248, 255)');
+  });
+
+  it('should update the layer according to the input', function() {
+    cy.get(SELECTORS.propertiesPanel).should('be.visible');
+    cy.get(SELECTORS.backgroundzIndex).clear().type('1{enter}');
+
+    // Verify the selected number is applied to the layer
+    cy.get(SELECTORS.backgroundzIndex).should('have.value', '1');
   });
 
   it('should update the layout resolution', function() {

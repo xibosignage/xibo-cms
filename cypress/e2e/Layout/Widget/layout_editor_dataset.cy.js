@@ -28,6 +28,7 @@ describe('Layout Designer', function() {
   it('should create a new layout, add/delete dataset widget', function() {
     cy.intercept('/dataset?start=*').as('loadDatasets');
     cy.intercept('DELETE', '/region/*').as('deleteWidget');
+    cy.intercept('POST', '/user/pref').as('userPref');
 
     cy.visit('/layout/view');
     cy.get('button[href="/layout"]').click();
@@ -35,6 +36,8 @@ describe('Layout Designer', function() {
     // Open widget menu and add dataset widget
     cy.openToolbarMenu(0);
     cy.get('[data-sub-type="dataset"]').click();
+    cy.wait('@userPref');
+
     cy.get('[data-template-id="dataset_table_1"]').click();
     cy.get('.viewer-object.layout.ui-droppable-active').click();
 
@@ -83,7 +86,6 @@ describe('Layout Designer', function() {
       .rightclick();
 
     cy.get('[data-title="Delete"]').click();
-    cy.contains('Yes').click();
 
     // Verify deletion
     cy.wait('@deleteWidget');

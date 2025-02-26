@@ -237,22 +237,4 @@ describe('Layout Designer (Populated)', function() {
       });
     });
   });
-
-  it.skip('should publish a layout and go into a published state', () => {
-    cy.intercept('PUT', '/layout/publish/*').as('layoutPublish');
-
-    cy.get('.editor-top-bar li.navbar-submenu-options a#optionsContainerTop').click();
-    cy.get('.editor-top-bar li.navbar-submenu-options #publishLayout').click();
-
-    cy.get('button.btn-bb-Publish').click();
-
-    // Get the id from the published layout and check if the designer reloaded to the Read Only Mode of that layout
-    cy.wait('@layoutPublish').then((res) => {
-      // Check if the page redirected to the layout designer with the new published layout
-      cy.url().should('include', '/layout/designer/' + res.response.body.data.layoutId);
-
-      // Check if the read only message appears
-      cy.get('#read-only-message').should('exist');
-    });
-  });
 });

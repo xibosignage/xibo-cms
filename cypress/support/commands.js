@@ -830,7 +830,7 @@ Cypress.Commands.add('openToolbarMenu', function(menuIdx, load = true) {
     cy.wait('@editorPrefsLoad');
   }
 
-  cy.get('.editor-toolbar').then(($toolbar) => {
+  cy.get('.editor-side-bar').then(($toolbar) => {
     if ($toolbar.find('#content-' + menuIdx + ' .close-submenu').length > 0) {
       cy.log('Just close sub-menu!');
       cy.get('.close-submenu').click();
