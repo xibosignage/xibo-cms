@@ -891,7 +891,7 @@ class Layout implements \JsonSerializable
             'import' => false,
             'appendCountOnDuplicate' => false,
             'setModifiedDt' => true,
-            'auditMessage' => null,
+            'auditMessage' => 'Saved',
         ], $options);
 
         if ($options['validate']) {
