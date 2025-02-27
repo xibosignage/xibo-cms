@@ -3990,9 +3990,9 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
       const $viewerRegion =
         lD.viewer.DOMObject.find('#' + layoutObject.id);
       lD.selectObject({
-        target: lD.viewer.DOMObject.find('#' + layoutObject.id),
+        target: $viewerRegion,
       });
-      lD.viewer.selectObject($viewerRegion);
+      lD.viewer.selectObject($viewerRegion, false, true, true);
     } else if (target.data('action') == 'Ungroup') {
       // Get widget
       const elementsWidget =
