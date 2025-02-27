@@ -27,7 +27,7 @@ describe('Dataset', function() {
 
   it('should create a new layout, add/delete dataset widget', function() {
     cy.intercept('/dataset?start=*').as('loadDatasets');
-    cy.intercept('DELETE', '/region/*').as('deleteWidget');
+    cy.intercept('DELETE', '**/region/**').as('deleteWidget');
     cy.intercept('POST', '/user/pref').as('userPref');
 
     cy.visit('/layout/view');
@@ -39,10 +39,12 @@ describe('Dataset', function() {
     cy.get('[data-sub-type="dataset"]')
       .should('be.visible')
       .click();
+    cy.wait('@userPref');
 
     cy.get('[data-template-id="dataset_table_1"]')
       .should('be.visible')
       .click();
+    cy.wait('@userPref');
 
     cy.get('.viewer-object.layout.ui-droppable-active')
       .should('be.visible')
@@ -81,7 +83,7 @@ describe('Dataset', function() {
     cy.get('[name="fontSize"]').clear().type('48');
     cy.get('[name="backgroundColor"]').clear().type('#333333');
 
-    // Delete dataset widget
+    // Delete widget
     // The .moveable-control-box overlay obstructing the right-click interaction on the designer region, causing the test to fail.
     // By invoking .hide(), we remove the overlay temporarily to allow uninterrupted interaction with the underlying elements.
     cy.get('.moveable-control-box').invoke('hide');
@@ -92,10 +94,11 @@ describe('Dataset', function() {
       .should('be.visible')
       .rightclick();
 
-    cy.get('[data-title="Delete"]').click();
-
-    // Verify deletion
-    cy.wait('@deleteWidget');
-    cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_dataset"]').should('not.exist');
+    // Wait until the widget has been deleted
+    cy.get('[data-title="Delete"]').click().then(() => {
+      cy.wait('@deleteWidget').its('response.statusCode').should('eq', 200);
+      cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_dataset"]')
+        .should('not.exist');
+    });
   });
 });
