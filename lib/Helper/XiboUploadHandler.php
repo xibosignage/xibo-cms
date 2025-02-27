@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -196,6 +196,9 @@ class XiboUploadHandler extends BlueImpUploadHandler
                                 ->getLog()->info('Media used on Widget that we cannot edit. Delete Old Revisions has been disabled.'); //phpcs:ignore
                         }
 
+                        // Load the module for this widget.
+                        $moduleToReplace = $controller->getModuleFactory()->getByType($widget->type);
+
                         // If we are replacing an audio media item,
                         // we should check to see if the widget we've found has any
                         // audio items assigned.
@@ -208,44 +211,6 @@ class XiboUploadHandler extends BlueImpUploadHandler
                             $widget->unassignAudioById($oldMedia->mediaId);
                             $widget->assignAudioById($media->mediaId);
                             $widget->save();
-                        } else if ($widget->type == 'global') {
-                            // This is a global widget and will have elements which refer to this media id.
-                            $this->getLogger()->debug('This is a global widget, checking for elements.');
-
-                            // We need to load options as that is where we store elements
-                            $widget->load(false);
-
-                            // Parse existing elements.
-                            $mediaFoundInElement = false;
-                            $elements = json_decode($widget->getOptionValue('elements', '[]'), true);
-                            foreach ($elements as $index => $widgetElement) {
-                                foreach ($widgetElement['elements'] ?? [] as $elementIndex => $element) {
-                                    if (!empty($element['mediaId']) && $element['mediaId'] == $oldMedia->mediaId) {
-                                        // We have found an element which uses the mediaId we are replacing
-                                        $elements[$index]['elements'][$elementIndex]['mediaId'] = $media->mediaId;
-
-                                        // Swap the ID on the link record
-                                        $widget->unassignMedia($oldMedia->mediaId);
-                                        $widget->assignMedia($media->mediaId);
-
-                                        $mediaFoundInElement = true;
-                                    }
-                                }
-                            }
-
-                            if ($mediaFoundInElement) {
-                                // Save the new elements
-                                $widget->setOptionValue('elements', 'raw', json_encode($elements));
-
-                                // Raise an event for this media item
-                                $controller->getDispatcher()->dispatch(
-                                    new LibraryReplaceWidgetEvent($module, $widget, $media, $oldMedia),
-                                    LibraryReplaceWidgetEvent::$NAME
-                                );
-
-                                // Save
-                                $widget->save(['alwaysUpdate' => true]);
-                            }
                         } else if (count($widget->getPrimaryMedia()) > 0
                             && $widget->getPrimaryMediaId() == $oldMedia->mediaId
                         ) {
@@ -253,7 +218,6 @@ class XiboUploadHandler extends BlueImpUploadHandler
                             // Check whether this widget is of the same type as our incoming media item
                             // This needs to be applicable only to non region specific Widgets,
                             // otherwise we would not be able to replace Media references in region specific Widgets.
-                            $moduleToReplace = $controller->getModuleFactory()->getByType($widget->type);
 
                             // If these types are different, and the module we're replacing isn't region specific
                             // then we need to see if we're allowed to change it.
@@ -294,6 +258,71 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                             // Save
                             $widget->save(['alwaysUpdate' => true]);
+                        }
+
+                        // Does this widget have any elements?
+                        if ($moduleToReplace->regionSpecific == 1) {
+                            // This is a global widget and will have elements which refer to this media id.
+                            $this->getLogger()
+                                ->debug('handleFormData: This is a region specific widget, checking for elements.');
+
+                            // We need to load options as that is where we store elements
+                            $widget->load(false);
+
+                            // Parse existing elements.
+                            $mediaFoundInElement = false;
+                            $elements = json_decode($widget->getOptionValue('elements', '[]'), true);
+                            foreach ($elements as $index => $widgetElement) {
+                                foreach ($widgetElement['elements'] ?? [] as $elementIndex => $element) {
+                                    // mediaId on the element, used for things like image element
+                                    if (!empty($element['mediaId']) && $element['mediaId'] == $oldMedia->mediaId) {
+                                        // We have found an element which uses the mediaId we are replacing
+                                        $elements[$index]['elements'][$elementIndex]['mediaId'] = $media->mediaId;
+
+                                        // Swap the ID on the link record
+                                        $widget->unassignMedia($oldMedia->mediaId);
+                                        $widget->assignMedia($media->mediaId);
+
+                                        $mediaFoundInElement = true;
+                                    }
+
+                                    // mediaId on the property, used for mediaSelector properties.
+                                    foreach ($element['properties'] ?? [] as $propertyIndex => $property) {
+                                        if (!empty($property['mediaId'])) {
+                                            // TODO: should we really load in all templates here and replace?
+                                            // Set the mediaId and value of this property
+                                            // this only works because mediaSelector is the only property which
+                                            // uses mediaId and it always has the value set.
+                                            $elements[$index]['elements'][$elementIndex]['properties']
+                                                [$propertyIndex]['mediaId'] = $media->mediaId;
+                                            $elements[$index]['elements'][$elementIndex]['properties']
+                                                [$propertyIndex]['value'] = $media->mediaId;
+
+                                            $widget->unassignMedia($oldMedia->mediaId);
+                                            $widget->assignMedia($media->mediaId);
+
+                                            $mediaFoundInElement = true;
+                                        }
+                                    }
+                                }
+                            }
+
+                            if ($mediaFoundInElement) {
+                                $this->getLogger()
+                                    ->debug('handleFormData: mediaId found in elements, replacing');
+
+                                // Save the new elements
+                                $widget->setOptionValue('elements', 'raw', json_encode($elements));
+
+                                // Raise an event for this media item
+                                $controller->getDispatcher()->dispatch(
+                                    new LibraryReplaceWidgetEvent($module, $widget, $media, $oldMedia),
+                                    LibraryReplaceWidgetEvent::$NAME
+                                );
+
+                                // Save
+                                $widget->save(['alwaysUpdate' => true]);
+                            }
                         }
                     }
 
