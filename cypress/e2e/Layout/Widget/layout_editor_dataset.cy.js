@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -20,7 +20,7 @@
  */
 
 /* eslint-disable max-len */
-describe('Layout Designer', function() {
+describe('Dataset', function() {
   beforeEach(function() {
     cy.login();
   });
@@ -35,11 +35,18 @@ describe('Layout Designer', function() {
 
     // Open widget menu and add dataset widget
     cy.openToolbarMenu(0);
-    cy.get('[data-sub-type="dataset"]').click();
-    cy.wait('@userPref');
 
-    cy.get('[data-template-id="dataset_table_1"]').click();
-    cy.get('.viewer-object.layout.ui-droppable-active').click();
+    cy.get('[data-sub-type="dataset"]')
+      .should('be.visible')
+      .click();
+
+    cy.get('[data-template-id="dataset_table_1"]')
+      .should('be.visible')
+      .click();
+
+    cy.get('.viewer-object.layout.ui-droppable-active')
+      .should('be.visible')
+      .click();
 
     // Verify widget exists in the layout viewer
     cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_dataset"]').should('exist');

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -20,7 +20,7 @@
  */
 
 /* eslint-disable max-len */
-describe('Layout Designer', function() {
+describe('Dataset Widget', function() {
   beforeEach(function() {
     cy.login();
   });
@@ -40,11 +40,17 @@ describe('Layout Designer', function() {
     // Open widget menu
     cy.openToolbarMenu(0);
 
-    cy.get('[data-sub-type="clock"]').click();
+    cy.get('[data-sub-type="clock"]')
+      .should('be.visible')
+      .click();
 
-    cy.get('[data-sub-type="clock-analogue"] > .toolbar-card-thumb').click();
+    cy.get('[data-sub-type="clock-analogue"] > .toolbar-card-thumb')
+      .should('be.visible')
+      .click();
 
-    cy.get('.viewer-object.layout.ui-droppable-active').click();
+    cy.get('.viewer-object.layout.ui-droppable-active')
+      .should('be.visible')
+      .click();
 
     // Check if the widget is in the viewer
     cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_clock-analogue"]').should('exist');
@@ -81,7 +87,6 @@ describe('Layout Designer', function() {
     // Delete
     cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_clock-analogue"]').parents('.designer-region').rightclick();
     cy.get('[data-title="Delete"]').click();
-    cy.contains('Yes').click();
 
     // Wait until the widget has been deleted
     cy.wait('@deleteWidget');
