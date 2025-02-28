@@ -41,6 +41,9 @@ describe('Time Connected', function() {
     cy.wait('@loadDisplayAfterSearch');
     cy.selectOption(display1);
 
+    // Select "Yesterday" from the dropdown
+    cy.get('#reportFilter').select('yesterday');
+
     // Click on the Apply button
     cy.contains('Apply').should('be.visible').click();
 
