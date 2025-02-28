@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -631,9 +631,12 @@ class Soap4 extends Soap
 
         // Commercial Licence Check,  0 - Not licensed, 1 - licensed, 2 - trial licence, 3 - not applicable
         if (!empty($commercialLicenceString)) {
-            if ($commercialLicenceString === 'Licensed fully') {
+            if ($commercialLicenceString === 'Licensed fully'
+                || $commercialLicenceString === 'licensed'
+                || $commercialLicenceString === 'full'
+            ) {
                 $commercialLicence = 1;
-            } elseif ($commercialLicenceString === 'Trial') {
+            } elseif ($commercialLicenceString === 'Trial' || $commercialLicenceString === 'trial') {
                 $commercialLicence = 2;
             } else {
                 $commercialLicence = 0;
