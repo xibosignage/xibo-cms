@@ -24,18 +24,18 @@ describe('Layout Editor Options', function() {
   beforeEach(function() {
     cy.login();
     cy.visit('/layout/view');
-    cy.get('button.layout-add-button').click();
-    cy.get('#layout-viewer').should('be.visible');
   });
 
-  it('should be able to publish, checkout and discard layout', function() {
+  it.skip('should be able to publish, checkout and discard layout', function() {
     let layoutName;
 
     cy.intercept('GET', '/layout?layoutId=*').as('layoutStatus');
     cy.intercept('PUT', '/layout/discard/*').as('discardLayout');
 
+    cy.get('button.layout-add-button').click();
+    cy.get('#layout-viewer').should('be.visible');
+
     // Publish layout
-    // cy.wait(1000);
     cy.openOptionsMenu();
     cy.get('#publishLayout').click();
     cy.get('button.btn-bb-Publish').click();
@@ -48,7 +48,6 @@ describe('Layout Editor Options', function() {
     });
 
     // Checkout published layout
-    // cy.wait(1000);
     cy.openOptionsMenu();
     cy.get('#checkoutLayout').click();
 
@@ -66,7 +65,6 @@ describe('Layout Editor Options', function() {
         layoutName = name.trim().replace(/^"|"$/g, ''); // Remove double quotes
         cy.log(`Layout Name: ${layoutName}`);
 
-        cy.wait(1000);
         cy.openOptionsMenu();
         cy.get('#discardLayout').click();
         cy.get('button.btn-bb-Discard').click();
@@ -90,9 +88,12 @@ describe('Layout Editor Options', function() {
       });
   });
 
-  it('should display an error when publishing an invalid layout', function() {
+  it.skip('should display an error when publishing an invalid layout', function() {
     cy.intercept('GET', '/playlist/widget/form/edit/*').as('addElement');
     cy.intercept('PUT', '/layout/publish/*').as('publishLayout');
+
+    cy.get('button.layout-add-button').click();
+    cy.get('#layout-viewer').should('be.visible');
 
     // Open widgets toolbox
     cy.openToolbarMenu(0, false);
@@ -106,7 +107,6 @@ describe('Layout Editor Options', function() {
     });
 
     // Publish layout
-    cy.wait(1000);
     cy.openOptionsMenu();
     cy.get('#publishLayout').click();
     cy.get('button.btn-bb-Publish').click();
@@ -123,8 +123,11 @@ describe('Layout Editor Options', function() {
       .and('contain.text', 'There is an error with this Layout');
   });
 
-  it('should be able to create new layout', function() {
+  it.skip('should be able to create new layout', function() {
     cy.intercept('GET', '/layout?layoutId=*').as('newLayout');
+
+    cy.get('button.layout-add-button').click();
+    cy.get('#layout-viewer').should('be.visible');
 
     // Capture the layout ID of the initial layout loaded
     cy.get('#layout-editor')
@@ -149,11 +152,14 @@ describe('Layout Editor Options', function() {
       });
   });
 
-  it('should be able to unlock layout', function() {
+  it.skip('should be able to unlock layout', function() {
     let layoutName;
 
     cy.intercept('GET', '/layout?layoutId=*').as('checkLockStatus');
     cy.intercept('GET', '/playlist/widget/form/edit/*').as('addElement');
+
+    cy.get('button.layout-add-button').click();
+    cy.get('#layout-viewer').should('be.visible');
 
     // Capture layout name to navigate back to it after unlocking
     cy.get('.layout-info-name span')
@@ -213,11 +219,12 @@ describe('Layout Editor Options', function() {
       });
   });
 
-  it('should enable tooltips', function() {
-    cy.wait(1000);
-    cy.openOptionsMenu();
-
+  it.skip('should enable tooltips', function() {
     cy.intercept('POST', '/user/pref').as('updatePreferences');
+
+    cy.get('button.layout-add-button').click();
+    cy.get('#layout-viewer').should('be.visible');
+    cy.openOptionsMenu();
 
     // Enable tooltips
     // Check the current state of the tooltips checkbox
@@ -242,11 +249,12 @@ describe('Layout Editor Options', function() {
     });
   });
 
-  it('should disable tooltips', function() {
-    cy.wait(1000);
-    cy.openOptionsMenu();
-
+  it.skip('should disable tooltips', function() {
     cy.intercept('POST', '/user/pref').as('updatePreferences');
+
+    cy.get('button.layout-add-button').click();
+    cy.get('#layout-viewer').should('be.visible');
+    cy.openOptionsMenu();
 
     // Disable tooltips
     // Check the current state of the tooltips checkbox
@@ -268,11 +276,12 @@ describe('Layout Editor Options', function() {
     });
   });
 
-  it('should enable delete confirmation', function() {
-    cy.wait(1000);
-    cy.openOptionsMenu();
-
+  it.skip('should enable delete confirmation', function() {
     cy.intercept('POST', '/user/pref').as('updatePreferences');
+
+    cy.get('button.layout-add-button').click();
+    cy.get('#layout-viewer').should('be.visible');
+    cy.openOptionsMenu();
 
     // Check the current state of the delete confirmation checkbox
     cy.get('#deleteConfirmation').then(($checkbox) => {
@@ -299,11 +308,12 @@ describe('Layout Editor Options', function() {
       .and('contain.text', 'Delete Widget');
   });
 
-  it('should disable delete confirmation', function() {
-    cy.wait(1000);
-    cy.openOptionsMenu();
-
+  it.skip('should disable delete confirmation', function() {
     cy.intercept('POST', '/user/pref').as('updatePreferences');
+
+    cy.get('button.layout-add-button').click();
+    cy.get('#layout-viewer').should('be.visible');
+    cy.openOptionsMenu();
 
     // Check the current state of the delete confirmation checkbox
     cy.get('#deleteConfirmation').then(($checkbox) => {

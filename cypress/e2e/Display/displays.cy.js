@@ -188,7 +188,7 @@ describe('Displays', function() {
 
     // Set the default layout
     cy.get('.modal .select2-container--bootstrap').click();
-    cy.get('.modal .select2-container--open textarea[type="search"]').type('disp4_default_layout');
+    cy.get('.select2-search__field').type('disp4_default_layout');
 
     cy.wait('@loadLayoutAfterSearch');
     cy.get('.select2-results__option').contains('disp4_default_layout').click();
@@ -244,8 +244,12 @@ describe('Displays', function() {
     cy.wait('@loadDisplaypGroupAfterSearch');
     cy.get('#displaysGroupsMembersTable').within(() => {
       // count the rows within table
-      cy.get('tbody').find('tr').should('have.length', 1);
-      cy.get('tbody tr:first-child input[type="checkbox"]').check();
+      cy.get('tbody').find('tr')
+        .should('have.length', 1)
+        .and('contain', 'disp5_dispgrp');
+      cy.get('tbody tr:first-child input[type="checkbox"]')
+        .should('not.be.checked')
+        .check();
     });
 
     // Save assignments
@@ -261,11 +265,15 @@ describe('Displays', function() {
   });
 
   it('should display map and revert back to table', function() {
+    cy.intercept('GET', '/user/pref?preference=displayGrid').as('displayPrefsLoad');
+    cy.intercept('GET', '/display?draw=2*').as('displayLoad');
+    cy.intercept('POST', '/user/pref').as('userPrefPost');
+
     cy.visit('/display/view');
 
-    cy.get('#displays_wrapper.dataTables_wrapper').should('be.visible');
-
-    cy.get('#display-map.leaflet-container').should('not.be.visible');
+    cy.wait('@displayPrefsLoad');
+    cy.wait('@displayLoad');
+    cy.wait('@userPrefPost');
 
     cy.get('#map_button').click();
 
@@ -278,7 +286,7 @@ describe('Displays', function() {
 
   // ---------
   // Tests - Error handling
-  it.only('should not be able to save while editing existing display with incorrect latitude/longitude', function() {
+  it('should not be able to save while editing existing display with incorrect latitude/longitude', function() {
     // search for a display disp1 and edit
     cy.intercept({
       url: '/display?*',

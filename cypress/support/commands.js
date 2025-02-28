@@ -819,24 +819,28 @@ Cypress.Commands.add('displayStatusEquals', function(displayName, statusId) {
  * @param {number} menuIdx
  * @param {boolean} load
  */
-Cypress.Commands.add('openToolbarMenu', function(menuIdx, load = true) {
+Cypress.Commands.add('openToolbarMenu', (menuIdx, load = true) => {
   cy.intercept('GET', '/user/pref?preference=toolbar').as('toolbarPrefsLoad');
   cy.intercept('GET', '/user/pref?preference=editor').as('editorPrefsLoad');
-  cy.intercept('POST', '/user/pref?preference=toolbar').as('toolbarPrefsLoad');
+  cy.intercept('POST', '/user/pref?preference=toolbar').as('toolbarPrefsSave');
 
-  // Wait for the toolbar to reload when getting prefs at start, based on the load parameter
   if (load) {
     cy.wait('@toolbarPrefsLoad');
     cy.wait('@editorPrefsLoad');
   }
 
-  cy.get('.editor-toolbar').then(($toolbar) => {
-    if ($toolbar.find('#content-' + menuIdx + ' .close-submenu').length > 0) {
+  cy.get('.editor-side-bar').then(($toolbar) => {
+    const $submenu = $toolbar.find('#content-' + menuIdx + ' .close-submenu');
+    const $menuButton = $toolbar.find('#btn-menu-' + menuIdx);
+
+    if ($submenu.length > 0) {
       cy.log('Just close sub-menu!');
-      cy.get('.close-submenu').click();
-    } else if ($toolbar.find('#btn-menu-' + menuIdx + '.active').length == 0) {
+      cy.get('#content-' + menuIdx + ' .close-submenu')
+        .should('be.visible')
+        .click();
+    } else if (!$menuButton.hasClass('active')) {
       cy.log('Open menu!');
-      cy.get('.editor-main-toolbar #btn-menu-' + menuIdx).click();
+      cy.get('[data-test="toolbarTabs"]').eq(menuIdx).click();
     } else {
       cy.log('Do nothing!');
     }

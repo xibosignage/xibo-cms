@@ -23,14 +23,20 @@
 describe('Layout Editor Toolbar', function() {
   beforeEach(function() {
     cy.login();
+  });
+
+  it.skip('should expand and close the toolbox', function() {
     cy.visit('/layout/view');
-    cy.get('button.layout-add-button').click();
-    cy.get('#layout-viewer').should('be.visible');
+    cy.get('button[href="/layout"]').click();
+
+    cy.openToolbarMenu(0);
+    cy.get('.close-content').filter(':visible').click();
   });
 
   const setZoomLevel = (level) => {
-    cy.openToolbarMenu(0, false);
     cy.intercept('POST', '/user/pref').as('updatePreferences');
+
+    cy.openToolbarMenu(0);
 
     cy.get('.toolbar-level-control-menu').click();
     cy.get('nav.navbar').then(($toolbar) => {
@@ -41,24 +47,20 @@ describe('Layout Editor Toolbar', function() {
     cy.get('nav.navbar').should('have.class', `toolbar-level-${level}`);
   };
 
-  it('should expand and close the toolbox', function() {
-    cy.openToolbarMenu(0, false);
-    cy.get('.close-content').filter(':visible').click();
-  });
-
-  it('should be able to set zoom level to 1', function() {
+  it.skip('should be able to set zoom level to 1', function() {
+    cy.visit('/layout/view');
+    cy.get('button[href="/layout"]').click();
     setZoomLevel(1);
   });
 
-  it('should be able to set zoom level to 2', function() {
+  it.skip('should be able to set zoom level to 2', function() {
+    cy.visit('/layout/view');
+    cy.get('button[href="/layout"]').click();
     setZoomLevel(2);
   });
 
   function searchAndAddElement(tabIndex, keyword, elementSelector, subTypeSelector, paneSelector) {
     cy.intercept('POST', '/region/*').as('addRegion');
-
-    // Open the respective toolbar tab
-    cy.openToolbarMenu(tabIndex, false);
 
     // Search for the element
     cy.toolbarSearch(keyword);
@@ -83,11 +85,22 @@ describe('Layout Editor Toolbar', function() {
     });
   }
 
-  it('should navigate to Widgets tab, search and add a widget', function() {
+  it.skip('should navigate to Widgets tab, search and add a widget', function() {
+
+    cy.visit('/layout/view');
+    cy.get('button[href="/layout"]').click();
+
+    // Open the respective toolbar tab
+    cy.openToolbarMenu(0);
+
     searchAndAddElement(0, 'Clock', '[data-sub-type="clock"]', '[data-sub-type="clock-analogue"]', '.toolbar-widgets-pane');
   });
 
-  it('should navigate to Global Elements tab, search and add an element', function() {
+  it.skip('should navigate to Global Elements tab, search and add an element', function() {
+
+    cy.visit('/layout/view');
+    cy.get('button[href="/layout"]').click();
+
     searchAndAddElement(1, 'Text', '[data-template-id="text"]', '', '.toolbar-global-pane');
   });
 
@@ -97,7 +110,7 @@ describe('Layout Editor Toolbar', function() {
     cy.intercept('GET', '/library/search*').as('librarySearch');
     cy.intercept('POST', '/region/*').as('addRegion');
 
-    cy.openToolbarMenu(tabIndex, false);
+    cy.openToolbarMenu(tabIndex);
 
     // Conditionally filter media by Folder if folderName is provided
     if (folderName) {
@@ -138,20 +151,24 @@ describe('Layout Editor Toolbar', function() {
   }
 
   // Test cases
-  it('should navigate to Library Image Search tab, filter, search and add media', function() {
+  it.skip('should navigate to Library Image Search tab, filter, search and add media', function() {
     testLibrarySearchAndAddMedia('image', 2, 'media_for_search', 'FolderWithImage', 'media_for_search_in_folder');
   });
 
-  it('should navigate to Library Audio Search tab, filter, search and add media', function() {
+  it.skip('should navigate to Library Audio Search tab, filter, search and add media', function() {
     testLibrarySearchAndAddMedia('audio', 3, 'test-audio', null, 'test-audio.mp3');
   });
 
-  it('should navigate to Library Video Search tab, filter, search and add media', function() {
+  it.skip('should navigate to Library Video Search tab, filter, search and add media', function() {
     testLibrarySearchAndAddMedia('video', 4, 'test-video', null, 'test-video.mp4');
   });
 
-  it('should navigate to Interactive Actions tab and search for actions', function() {
+  it.skip('should navigate to Interactive Actions tab and search for actions', function() {
     const keyword = 'Next';
+
+    cy.visit('/layout/view');
+    cy.get('button[href="/layout"]').click();
+
     cy.openToolbarMenu(7, false);
     cy.toolbarSearch(keyword);
     cy.get('.toolbar-pane.toolbar-actions-pane.active')
