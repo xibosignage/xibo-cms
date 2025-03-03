@@ -3029,6 +3029,7 @@ lD.addModuleToPlaylist = function(
               {
                 refreshEditor: true,
                 resetPropertiesPanelOpenedTab: true,
+                reloadToolbar: true,
               }).catch(console.debug);
 
             resolve();
@@ -3039,6 +3040,7 @@ lD.addModuleToPlaylist = function(
             {
               refreshEditor: true,
               resetPropertiesPanelOpenedTab: true,
+              reloadToolbar: true,
             }).catch(console.debug);
 
           resolve();
@@ -3257,6 +3259,7 @@ lD.openUploadForm = function({
       currentWorkingFolderId: lD.folderId,
       showWidgetDates: false,
       folderSelector: true,
+      multi: false,
     },
     uploadDoneEvent: function(data) {
       // If the upload is successful, increase the number of uploads

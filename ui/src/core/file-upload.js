@@ -29,6 +29,7 @@ window.openUploadForm = function(options) {
   options = $.extend(true, {}, {
     templateId: 'template-file-upload',
     uploadTemplateId: 'template-upload',
+    downloadTemplateId: 'template-download',
     videoImageCovers: true,
     className: '',
     animateDialog: true,
@@ -216,8 +217,26 @@ window.openUploadForm = function(options) {
           form.find('.fileupload-progress .progress-end').show();
         }
       })
-      .bind(
-        'fileuploadadded fileuploadcompleted fileuploadfinished',
+      .bind('fileuploadadd', function(e, data) {
+        if (uploadOptions.limitMultiFileUploads === 1) {
+          const totalFiles =
+            form.find('.files > tr.template-upload, tr.template-download')
+              .length;
+
+          // Check if the number of files exceeds the limit
+          if (totalFiles >= uploadOptions.maxNumberOfFiles) {
+            // Show toast error message
+            toastr.error(
+              translations.canOnlyUploadMax
+                .replace('%s', uploadOptions.maxNumberOfFiles),
+            );
+
+            // Prevent adding the file
+            return false;
+          }
+        }
+      })
+      .bind('fileuploadadded fileuploadcompleted fileuploadfinished',
         function(e, data) {
           // Get uploaded and downloaded files and toggle Done button
           const filesToUploadCount = form.find('tr.template-upload').length;
@@ -307,7 +326,7 @@ function handleVideoCoverImage(e, data) {
       // convert 2nd second of the video to an image
       // and register onseeked and onpause events
       Array.from(files).forEach(function(file, index) {
-        if (!file.error && file.type.includes('video')) {
+        if (!file.error && file.type.includes('video') && file.preview) {
           video = file.preview;
           video.name = file.name;
           video.setAttribute('id', file.name);

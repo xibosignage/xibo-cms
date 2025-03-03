@@ -250,7 +250,7 @@
                 </div>
             </div>
         </td>
-        <td class="btn-group">
+        <td class="btn-group text-right">
             {% if (!i && !o.options.autoUpload) { %}
                 <button class="btn btn-primary start" disabled>
                     <i class="fa fa-upload"></i>
@@ -306,7 +306,7 @@
                 </div>
             </div>
         </td>
-        <td>
+        <td class="text-right">
             <div class="btn-group">
                 {% if (!i && !o.options.autoUpload) { %}
                     <button class="btn btn-primary start" disabled>
@@ -341,6 +341,17 @@
         <td colspan="2">
             <span class="size">{%=o.formatFileSize(file.size)%}</span>
         </td>
+        {% if (file.error) { %}
+            <td class="text-right">
+                <div class="btn-group">
+                    {% if (!i) { %}
+                        <button class="btn btn-warning cancel">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    {% } %}
+                </div>
+            </td>
+        {% } %}
     </tr>
 {% } %}
 </script>
