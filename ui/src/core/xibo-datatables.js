@@ -803,6 +803,8 @@ window.XiboMultiSelectTagFormRender = function(button) {
 
     dialogContent = templates['multiselect-tag-edit-form']({
       trans: translations.multiSelectTagEditForm,
+      tagGetByNameUrl: tagGetByNameUrl,
+      tagEditMultipleUrl: tagEditMultipleUrl,
     });
   }
 

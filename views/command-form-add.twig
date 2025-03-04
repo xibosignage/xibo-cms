@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -63,10 +63,11 @@
 
                         {% set options = [
                             { optionid: "android", option: "Android" },
-                            { optionid: "windows", option: "Windows" },
-                            { optionid: "lg", option: "webOS" },
-                            { optionid: "sssp", option: "Tizen" },
+                            { optionid: "chromeOS", option: "ChromeOS" },
                             { optionid: "linux", option: "Linux" },
+                            { optionid: "sssp", option: "Tizen" },
+                            { optionid: "lg", option: "webOS" },
+                            { optionid: "windows", option: "Windows" },
                         ] %}
                         {% set title %}{% trans "Available on" %}{% endset %}
                         {% set helpText %}{% trans "Leave empty if this command should be available on all types of Display." %}{% endset %}

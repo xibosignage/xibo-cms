@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -19,52 +19,52 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-describe('Layout Editor', function() {
-    beforeEach(function() {
-      cy.login();
-      cy.visit('/layout/view');
-      cy.get('button.layout-add-button').click();
-      cy.get('#layout-viewer').should('be.visible');  // Assert that the URL has changed to the layout editor
-    });
-  
-    it('should display the correct Layout status icon and tooltip', function() {  
-        //Verify tooltip displays on hover with correct status
-        //Check if the status icon with the correct class is displayed
-        cy.get("#layout-info-status")
-          .should("be.visible")
-          .and("have.class", "badge-danger")
-          .trigger("mouseover");
+/* eslint-disable max-len */
+describe('Layout Editor Status Bar', function() {
+  const layoutStatusSelector = '#layout-info-status';
+  const layoutNameSelector = '.layout-info-name span';
+  const layoutDurationSelector = '.layout-info-duration .layout-info-duration-value';
+  const layoutDimensionsSelector = '.layout-info-dimensions span';
+  const tooltipSelector = '.popover';
 
-        cy.get(".popover")
-          .should("be.visible")
-          .and("contain", "This Layout is invalid"); // Replace with expected tooltip text
-        
-        cy.get("#layout-info-status")
-          .trigger("mouseout");
-    });
+  beforeEach(function() {
+    cy.login();
+    cy.visit('/layout/view');
+    cy.get('button.layout-add-button').click();
+    cy.get('#layout-viewer').should('be.visible');
+  });
 
-    it("should display the correct Layout name", () => {
+  it('should display the correct Layout status icon and tooltip', function() {
+    cy.get(layoutStatusSelector)
+      .should('be.visible')
+      .and('have.class', 'badge-danger')
+      .trigger('mouseover');
 
-        // Verify the Layout name text
-        cy.get(".layout-info-name span")
-          .should("be.visible")
-          .and("contain", "Untitled");
-    });
+    cy.get(tooltipSelector)
+      .should('be.visible')
+      .and('contain', 'This Layout is invalid');
 
-    it("should display the correct Layout duration", () => {
-        // Verify the duration is correctly displayed
-        cy.get(".layout-info-duration .layout-info-duration-value")
-          .should("be.visible")
-          .and("contain", "00:00");
-    });
+    cy.get(layoutStatusSelector).trigger('mouseout');
+  });
 
-    it("should display the correct Layout dimensions", () => {
-        // Verify the dimensions are correctly displayed
-        cy.get(".layout-info-dimensions span")
-          .should("be.visible")
-          .and("contain", "1920x1080"); 
-    });
-  
-  
- 
+  it('should display the correct Layout name', () => {
+    // Verify the Layout name text
+    cy.get(layoutNameSelector)
+      .should('be.visible')
+      .and('contain', 'Untitled');
+  });
+
+  it('should display the correct Layout duration', () => {
+    // Verify the duration is correctly displayed
+    cy.get(layoutDurationSelector)
+      .should('be.visible')
+      .and('contain', '00:00');
+  });
+
+  it('should display the correct Layout dimensions', () => {
+    // Verify the dimensions are correctly displayed
+    cy.get(layoutDimensionsSelector)
+      .should('be.visible')
+      .and('contain', '1920x1080');
+  });
 });

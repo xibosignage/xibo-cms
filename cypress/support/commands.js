@@ -663,8 +663,7 @@ Cypress.Commands.add('deleteMenuboard', function(id) {
  * @param {String} playlistName
  */
 Cypress.Commands.add('openPlaylistEditorAndLoadPrefs', function(playlistId) {
-  cy.server();
-  cy.route('/user/pref?preference=toolbar').as('userPrefsLoad');
+  cy.intercept('GET', '/user/pref?preference=toolbar').as('userPrefsLoad');
 
   // Reload playlist table page
   cy.visit('/playlist/view');
@@ -723,8 +722,7 @@ Cypress.Commands.add('dragToElement', function(draggableSelector, dropableSelect
  * @param {number} layoutId
  */
 Cypress.Commands.add('goToLayoutAndLoadPrefs', function(layoutId) {
-  cy.server();
-  cy.route('/user/pref?preference=toolbar').as('userPrefsLoad');
+  cy.intercept('GET', '/user/pref?preference=toolbar').as('userPrefsLoad');
 
   cy.clearToolbarPrefs();
 
@@ -821,29 +819,32 @@ Cypress.Commands.add('displayStatusEquals', function(displayName, statusId) {
  * @param {number} menuIdx
  * @param {boolean} load
  */
-Cypress.Commands.add('openToolbarMenu', function(menuIdx, load = true) {
+Cypress.Commands.add('openToolbarMenu', (menuIdx, load = true) => {
   cy.intercept('GET', '/user/pref?preference=toolbar').as('toolbarPrefsLoad');
   cy.intercept('GET', '/user/pref?preference=editor').as('editorPrefsLoad');
-  cy.intercept('POST', '/user/pref?preference=toolbar').as('toolbarPrefsLoad');
+  cy.intercept('POST', '/user/pref?preference=toolbar').as('toolbarPrefsSave');
 
-  // Wait for the toolbar to reload when getting prefs at start, based on the load parameter
   if (load) {
     cy.wait('@toolbarPrefsLoad');
     cy.wait('@editorPrefsLoad');
-    }
+  }
 
-  cy.get('.editor-toolbar').then(($toolbar) => {
-    if ($toolbar.find('#content-' + menuIdx + ' .close-submenu').length > 0) {
+  cy.get('.editor-side-bar').then(($toolbar) => {
+    const $submenu = $toolbar.find('#content-' + menuIdx + ' .close-submenu');
+    const $menuButton = $toolbar.find('#btn-menu-' + menuIdx);
+
+    if ($submenu.length > 0) {
       cy.log('Just close sub-menu!');
-      cy.get('.close-submenu').click();
-    } else if ($toolbar.find('#btn-menu-' + menuIdx + '.active').length == 0) {
+      cy.get('#content-' + menuIdx + ' .close-submenu')
+        .should('be.visible')
+        .click();
+    } else if (!$menuButton.hasClass('active')) {
       cy.log('Open menu!');
-      cy.get('.editor-main-toolbar #btn-menu-' + menuIdx).click();
+      cy.get('[data-test="toolbarTabs"]').eq(menuIdx).click();
     } else {
       cy.log('Do nothing!');
     }
   });
-
 });
 
 /**
@@ -872,14 +873,14 @@ Cypress.Commands.add('openToolbarMenuForPlaylist', function(menuIdx) {
 // Open Options Menu within the Layout Editor
 Cypress.Commands.add('openOptionsMenu', () => {
   cy.get('.navbar-submenu')
-  .should('be.visible')
-  .within(() => {
-    cy.get('#optionsContainerTop')
-      .should('be.visible')
-      .and('not.be.disabled')
-      .click({force: true})
-      .should('have.attr', 'aria-expanded', 'true');
-  });
+    .should('be.visible')
+    .within(() => {
+      cy.get('#optionsContainerTop')
+        .should('be.visible')
+        .and('not.be.disabled')
+        .click({force: true})
+        .should('have.attr', 'aria-expanded', 'true');
+    });
 });
 
 // Open Row Menu of the first item on the Layouts page
@@ -890,7 +891,81 @@ Cypress.Commands.add('openRowMenu', () => {
       .should('have.attr', 'aria-expanded', 'true');
   });
 });
+Cypress.Commands.add('toolbarSearch', (textToType) => {
+  cy.intercept('POST', '/user/pref').as('updatePreferences');
 
+  // Clear the search box first
+  cy.get('input#input-name')
+    .filter(':visible')
+    .should('have.length', 1)
+    .invoke('val')
+    .then((value) => {
+      if (value !== '') {
+        cy.get('input#input-name')
+          .filter(':visible')
+          .clear();
+        cy.wait('@updatePreferences');
+      }
+    });
+  // Type keyword to search
+  cy.get('input#input-name')
+    .filter(':visible')
+    .type(textToType);
+  cy.wait('@updatePreferences');
+});
+
+Cypress.Commands.add('toolbarSearchWithActiveFilter', (textToType) => {
+  cy.intercept('POST', '/user/pref').as('updatePreferences');
+  cy.intercept('GET', '/library/search*').as('librarySearch');
+
+  // Clear the search box first
+  cy.get('input#input-name')
+    .filter(':visible')
+    .should('have.length', 1)
+    .invoke('val')
+    .then((value) => {
+      if (value !== '') {
+        cy.get('input#input-name')
+          .filter(':visible')
+          .clear();
+        cy.wait('@updatePreferences');
+        cy.wait('@librarySearch');
+      }
+    });
+  // Type keyword to search
+  cy.get('input#input-name')
+    .filter(':visible')
+    .type(textToType);
+  cy.wait('@updatePreferences');
+  cy.wait('@librarySearch');
+});
+
+Cypress.Commands.add('toolbarFilterByFolder', (folderName, folderId) => {
+  cy.intercept('POST', '/user/pref').as('updatePreferences');
+  cy.intercept('GET', '/folders?start=0&length=10').as('loadFolders');
+  cy.intercept('GET', '/library/search*').as('librarySearch');
+
+  // Open folder dropdown
+  cy.get('#input-folder')
+    .parent()
+    .find('.select2-selection')
+    .click();
+  cy.wait('@loadFolders');
+
+  // Select the specified folder
+  cy.get('.select2-results__option')
+    .contains(folderName)
+    .should('be.visible')
+    .click();
+
+  cy.wait('@updatePreferences');
+
+  // Verify library search response
+  cy.wait('@librarySearch').then(({response}) => {
+    expect(response.statusCode).to.eq(200);
+    expect(response.url).to.include(`folderId=${folderId}`);
+  });
+});
 
 /**
  * Update data on CKEditor instance

@@ -177,8 +177,8 @@ class CapConnector implements ConnectorInterface, EmergencyAlertInterface
                 // Set schedule criteria update
                 $action = new ScheduleCriteriaUpdateAction();
                 $action->setCriteriaUpdates([
-                    'emergency_alert_status' => $status,
-                    'emergency_alert_category' => $category,
+                    ['metric' => 'emergency_alert_status', 'value' => $status, 'ttl' => 60],
+                    ['metric' => 'emergency_alert_category', 'value' => $category, 'ttl' => 60]
                 ]);
 
                 // Initialize the display
@@ -530,8 +530,8 @@ class CapConnector implements ConnectorInterface, EmergencyAlertInterface
     public function onScheduleCriteriaRequest(ScheduleCriteriaRequestInterface $event): void
     {
         // Initialize Emergency Alerts schedule criteria parameters
-        $event->addType('emergency_alerts', __('Emergency Alerts'))
-                ->addMetric('emergency_alert_status', __('Status'))
+        $event->addType('emergency_alert', __('Emergency Alerts'))
+                ->addMetric('status', __('Status'))
                     ->addCondition([
                         'eq' => __('Equal to')
                     ])
@@ -540,7 +540,7 @@ class CapConnector implements ConnectorInterface, EmergencyAlertInterface
                         self::TEST_ALERT => __('Test Alerts'),
                         self::NO_ALERT => __('No Alerts')
                     ])
-                ->addMetric('emergency_alert_category', __('Category'))
+                ->addMetric('category', __('Category'))
                     ->addCondition([
                         'eq' => __('Equal to')
                     ])

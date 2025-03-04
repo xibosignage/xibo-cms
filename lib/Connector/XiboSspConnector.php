@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -26,15 +26,18 @@ use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Str;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Xibo\Event\ConnectorDeletingEvent;
-use Xibo\Event\ConnectorEnabledChangeEvent;
 use Xibo\Event\MaintenanceRegularEvent;
 use Xibo\Event\WidgetEditOptionRequestEvent;
+use Xibo\Service\ConfigServiceInterface;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
+/**
+ * Xibo SSP Connector
+ *  communicates with the Xibo Ad Exchange to register displays with connected SSPs and manage ad requests
+ */
 class XiboSspConnector implements ConnectorInterface
 {
     use ConnectorTrait;
@@ -61,8 +64,6 @@ class XiboSspConnector implements ConnectorInterface
     public function registerWithDispatcher(EventDispatcherInterface $dispatcher): ConnectorInterface
     {
         $dispatcher->addListener(MaintenanceRegularEvent::$NAME, [$this, 'onRegularMaintenance']);
-        $dispatcher->addListener(ConnectorDeletingEvent::$NAME, [$this, 'onDeleting']);
-        $dispatcher->addListener(ConnectorEnabledChangeEvent::$NAME, [$this, 'onEnabledChange']);
         $dispatcher->addListener(WidgetEditOptionRequestEvent::$NAME, [$this, 'onWidgetEditOption']);
         return $this;
     }
@@ -507,16 +508,37 @@ class XiboSspConnector implements ConnectorInterface
         }
     }
 
-    public function onDeleting(ConnectorDeletingEvent $event)
+    /**
+     * Connector is being deleted
+     * @param \Xibo\Service\ConfigServiceInterface $configService
+     * @return void
+     */
+    public function delete(ConfigServiceInterface $configService): void
     {
-        $this->getLogger()->debug('onDeleting');
-        $event->getConfigService()->changeSetting('isAdspaceEnabled', 0);
+        $this->getLogger()->debug('delete');
+        $configService->changeSetting('isAdspaceEnabled', 0);
     }
 
-    public function onEnabledChange(ConnectorEnabledChangeEvent $event)
+    /**
+     * Connector is being enabled
+     * @param \Xibo\Service\ConfigServiceInterface $configService
+     * @return void
+     */
+    public function enable(ConfigServiceInterface $configService): void
     {
-        $this->getLogger()->debug('onEnabledChange');
-        $event->getConfigService()->changeSetting('isAdspaceEnabled', $event->getConnector()->isEnabled);
+        $this->getLogger()->debug('enable');
+        $configService->changeSetting('isAdspaceEnabled', 1);
+    }
+
+    /**
+     * Connector is being disabled
+     * @param \Xibo\Service\ConfigServiceInterface $configService
+     * @return void
+     */
+    public function disable(ConfigServiceInterface $configService): void
+    {
+        $this->getLogger()->debug('disable');
+        $configService->changeSetting('isAdspaceEnabled', 0);
     }
 
     public function onWidgetEditOption(WidgetEditOptionRequestEvent $event)

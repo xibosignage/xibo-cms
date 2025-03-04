@@ -37,10 +37,11 @@ describe('Dayparts', function() {
 
     cy.get('.modal input#name')
       .type('Cypress Test Daypart ' + testRun + '_1');
-    cy.get(':nth-child(3) > .col-sm-10 > .input-group > .datePickerHelper').click();
+
+    cy.get(':nth-child(3) > .col-sm-10 > .input-group > .flatpickr-wrapper > .datePickerHelper').click();
     // cy.get('.open > .flatpickr-time > :nth-child(1) > .arrowUp').click();
     cy.get('.open > .flatpickr-time > :nth-child(1) > .numInput').type('8');
-    cy.get(':nth-child(4) > .col-sm-10 > .input-group > .datePickerHelper').click();
+    cy.get(':nth-child(4) > .col-sm-10 > .input-group > .flatpickr-wrapper > .datePickerHelper').click();
     cy.get('.open > .flatpickr-time > :nth-child(1) > .numInput').type('17');
 
     // Add first by clicking next

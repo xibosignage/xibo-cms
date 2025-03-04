@@ -365,6 +365,7 @@ class WidgetHtmlRenderer
             ? '&v=7&serverKey=' . $this->config->getSetting('SERVER_KEY') . '&hardwareKey=' . $display->license
             : null;
         $encryptionKey = $this->config->getApiKeyDetails()['encryptionKey'];
+        $cdnUrl = $this->config->getSetting('CDN_URL');
 
         $matches = [];
         preg_match_all('/\[\[(.*?)\]\]/', $output, $matches);
@@ -374,7 +375,7 @@ class WidgetHtmlRenderer
                     $url = LinkSigner::generateSignedLink(
                         $display,
                         $encryptionKey,
-                        null,
+                        $cdnUrl,
                         'P',
                         1,
                         'bundle.min.js',
@@ -393,7 +394,7 @@ class WidgetHtmlRenderer
                     $url = LinkSigner::generateSignedLink(
                         $display,
                         $encryptionKey,
-                        null,
+                        $cdnUrl,
                         'P',
                         1,
                         'fonts.css',
@@ -442,7 +443,7 @@ class WidgetHtmlRenderer
                         $url = LinkSigner::generateSignedLink(
                             $display,
                             $encryptionKey,
-                            null,
+                            $cdnUrl,
                             'M',
                             $value[1],
                             $storedAs[$value[1]]
@@ -470,7 +471,7 @@ class WidgetHtmlRenderer
                         $url = LinkSigner::generateSignedLink(
                             $display,
                             $encryptionKey,
-                            null,
+                            $cdnUrl,
                             'P',
                             $asset->id,
                             $asset->getFilename(),
@@ -499,7 +500,7 @@ class WidgetHtmlRenderer
                             $url = LinkSigner::generateSignedLink(
                                 $display,
                                 $encryptionKey,
-                                null,
+                                $cdnUrl,
                                 'P',
                                 $asset->id,
                                 $asset->getFilename(),

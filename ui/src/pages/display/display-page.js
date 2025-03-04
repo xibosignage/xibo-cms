@@ -346,14 +346,15 @@ $(function() {
               const link = SHOW_DISPLAY_AS_VNCLINK
                 .replace('%s', row.clientAddress);
               html += '<a href="' + link + '" title="' +
-                VNCtoThisDisplay + '" target="' +
+              displayPageTrans.VNCtoThisDisplay + '" target="' +
                 SHOW_DISPLAY_AS_VNC_TGT + '">' +
                 '<i class="fa fa-eye"></i></a>';
             }
 
             if (row.teamViewerLink !== '') {
               html += '<a href="' + row.teamViewerLink +
-                '" title="' + TeamViewertoThisDisplay + '" target="_blank">' +
+                '" title="' + displayPageTrans.TeamViewertoThisDisplay +
+                '" target="_blank">' +
                 '<img src="' + publicPath +
                 'theme/default/img/remote_icons/teamviewer.png"' +
                 ' alt="TeamViewer Icon"></a>';
@@ -361,7 +362,7 @@ $(function() {
 
             if (row.webkeyLink !== '') {
               html += '<a href="' + row.webkeyLink + '" title="' +
-                WebkeytoThisDisplay + '" target="_blank">' +
+              displayPageTrans.WebkeytoThisDisplay + '" target="_blank">' +
                 '<img src="' + publicPath +
                 'theme/default/img/remote_icons/webkey.png" ' +
                 'alt="Webkey Icon"></a>';

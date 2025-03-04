@@ -170,6 +170,7 @@ const pageConfig = Object.assign({}, config, {
     'campaign-page': './ui/src/pages/campaign/campaing-page.js',
     'developer-template-page':
       './ui/src/pages/developer-template/developer-template-page.js',
+    'welcome-page': './ui/src/pages/welcome/welcome-page.js',
   },
   output: {
     path: path.resolve(__dirname, 'web/dist/pages'),

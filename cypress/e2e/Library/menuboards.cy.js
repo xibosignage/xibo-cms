@@ -126,7 +126,7 @@ describe('Menuboards', function() {
   });
 
   // -------------------
-  it.skip('should add categories and products to a menuboard', function() {
+  it('should add categories and products to a menuboard', function() {
     // Create a new menuboard and then search for it and delete it
     cy.createMenuboard('Cypress Test Menuboard ' + testRun).then((menuId) => {
       cy.intercept({
@@ -153,8 +153,6 @@ describe('Menuboards', function() {
 
       cy.get('.modal input#name')
         .type('Cypress Test Category ' + testRun + '_1');
-      cy.get('.modal input#description')
-        .type('Category description');
       cy.get('.modal input#code')
         .type('MENUBOARDCAT');
 
@@ -176,8 +174,6 @@ describe('Menuboards', function() {
 
       cy.get('.modal input#name')
         .type('Cypress Test Product ' + testRun + '_1');
-      cy.get('.modal input#description')
-        .type('Category description');
       cy.get('.modal input#code')
         .type('MENUBOARDPROD');
 
@@ -201,8 +197,6 @@ describe('Menuboards', function() {
 
       cy.get('.modal input#name')
         .type('Cypress Test Category ' + testRun + '_1');
-      cy.get('.modal input#description')
-        .type('Category description');
       cy.get('.modal input#code')
         .type('MENUBOARDCAT');
 
@@ -272,7 +266,7 @@ describe('Menuboards', function() {
     });
   });
 
-  it.only('searches and delete existing category', function() {
+  it('searches and delete existing category', function() {
     // Create a new menuboard and then search for it and delete it
     cy.createMenuboard('Cypress Test Menuboard ' + testRun).then((menuId) => {
       cy.createMenuboardCat('Cypress Test Category ' + testRun, menuId).then((menuCatId) => {
@@ -328,8 +322,6 @@ describe('Menuboards', function() {
 
         cy.get('.modal input#name')
           .type('Cypress Test Product ' + testRun);
-        cy.get('.modal input#description')
-          .type('Category description');
         cy.get('.modal input#code')
           .type('MENUBOARDPROD');
 

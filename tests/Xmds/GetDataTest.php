@@ -33,7 +33,7 @@ use Xibo\Tests\XmdsTestCase;
 class GetDataTest extends XmdsTestCase
 {
     // The widgetId of our expected widget (if we change the default layout this ID will change).
-    const WIDGET_ID = 4;
+    const WIDGET_ID = 7;
 
     use XmdsHelperTrait;
     public function setUp(): void

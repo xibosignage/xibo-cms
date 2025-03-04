@@ -30,15 +30,25 @@ class UpsertCoreEmergencyAlertInModule extends AbstractMigration
 {
     public function change(): void
     {
-        // Insert or update core-emergency-alert into the module table
-        $this->execute('
-            INSERT INTO `module` (`moduleId`, `enabled`, `previewEnabled`, `defaultDuration`, `settings`)
-            VALUES (\'core-emergency-alert\', \'1\', \'1\', \'60\', NULL) AS newRow
-            ON DUPLICATE KEY UPDATE
-                `enabled` = newRow.enabled,
-                `previewEnabled` = newRow.previewEnabled,
-                `defaultDuration` = newRow.defaultDuration,
-                `settings` = newRow.settings;
-        ');
+        // Check if the core-emergency-alert row exists
+        $row = $this->fetchRow("SELECT * FROM `module` WHERE `moduleId` = 'core-emergency-alert'");
+
+        if (!$row) {
+            // Row does not exist, insert new row
+            $this->execute("
+                INSERT INTO `module` (`moduleId`, `enabled`, `previewEnabled`, `defaultDuration`, `settings`)
+                VALUES ('core-emergency-alert', '1', '1', '60', NULL)
+            ");
+        } else {
+            // Row exists, update existing row
+            $this->execute("
+                UPDATE `module`
+                SET `enabled` = '1',
+                    `previewEnabled` = '1',
+                    `defaultDuration` = '60',
+                    `settings` = NULL
+                WHERE `moduleId` = 'core-emergency-alert'
+            ");
+        }
     }
 }

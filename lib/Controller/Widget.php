@@ -1775,6 +1775,15 @@ class Widget extends Base
                 } else {
                     $isMediaOnlyWidget = false;
                 }
+
+                // Temporary workaround to process properties from the mediaSelector component when used by elements
+                foreach ($element['properties'] ?? [] as $property) {
+                    if (!empty($property['mediaId'])) {
+                        $mediaId = intval($property['mediaId']);
+                        $widget->assignMedia($mediaId);
+                        $newMediaIds[] = $mediaId;
+                    }
+                }
             }
         }
 

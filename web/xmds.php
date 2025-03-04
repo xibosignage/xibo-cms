@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -190,6 +190,7 @@ if (isset($_GET['file'])) {
 
         // Issue magic packet
         $libraryLocation = $container->get('configService')->getSetting('LIBRARY_LOCATION');
+        $cdnUrl = $container->get('configService')->getSetting('CDN_URL');
 
         // Issue content type header
         $isCss = false;
@@ -225,7 +226,7 @@ if (isset($_GET['file'])) {
                     $url = LinkSigner::generateSignedLink(
                         $display,
                         $encryptionKey,
-                        null,
+                        $cdnUrl,
                         'P',
                         $replacementFile->realId,
                         $replacementFile->path,

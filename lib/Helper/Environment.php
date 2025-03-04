@@ -30,7 +30,7 @@ use Phinx\Wrapper\TextWrapper;
  */
 class Environment
 {
-    public static $WEBSITE_VERSION_NAME = '4.2.0';
+    public static $WEBSITE_VERSION_NAME = '4.2.1';
     public static $XMDS_VERSION = '7';
     public static $XLF_VERSION = 4;
     public static $VERSION_REQUIRED = '8.1.0';
@@ -317,6 +317,14 @@ class Environment
     public static function checkSimpleXml()
     {
         return extension_loaded('simplexml');
+    }
+
+    /**
+     * @return bool
+     */
+    public static function checkGnu()
+    {
+        return extension_loaded('gnupg');
     }
 
     /**

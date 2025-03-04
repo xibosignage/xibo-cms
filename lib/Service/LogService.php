@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -155,10 +155,55 @@ class LogService implements LogServiceInterface
         ));
 
         if ($this->_auditLogStatement == null) {
-            // Use the default connection
-            //  audit log should rollback on failure.
-            $dbh = PdoStorageService::newConnection('default');
-            $this->_auditLogStatement = $dbh->prepare('
+            $this->prepareAuditLogStatement();
+        }
+
+        // If we aren't a string then encode
+        if (!is_string($object)) {
+            $object = json_encode($object);
+        }
+
+        $params = [
+            'logDate' => Carbon::now()->format('U'),
+            'userId' => $this->userId,
+            'entity' => $entity,
+            'message' => $message,
+            'entityId' => $entityId,
+            'ipAddress' => $this->ipAddress,
+            'objectAfter' => $object,
+            'sessionHistoryId' => $this->sessionHistoryId,
+            'requestId' => $this->requestId
+        ];
+
+        try {
+            $this->_auditLogStatement->execute($params);
+        } catch (\PDOException $PDOException) {
+            $errorCode = $PDOException->errorInfo[1] ?? $PDOException->getCode();
+
+            // Catch 2006 errors (mysql gone away)
+            if ($errorCode != 2006) {
+                throw $PDOException;
+            } else {
+                $this->prepareAuditLogStatement();
+                $this->_auditLogStatement->execute($params);
+            }
+        }
+
+        // Although we use the default connection, track audit status separately.
+        PdoStorageService::incrementStat('audit', 'insert');
+    }
+
+    /**
+     * Helper function to prepare a PDO statement for inserting into the Audit Log.
+     *  sets $_auditLogStatement
+     * @return void
+     */
+    private function prepareAuditLogStatement(): void
+    {
+        // Use the default connection
+        //  audit log should rollback on failure.
+        $dbh = PdoStorageService::newConnection('default');
+        $this->_auditLogStatement = $dbh->prepare('
                 INSERT INTO `auditlog` (
                     `logDate`,
                     `userId`,
@@ -182,27 +227,6 @@ class LogService implements LogServiceInterface
                     :requestId
                 )
             ');
-        }
-
-        // If we aren't a string then encode
-        if (!is_string($object)) {
-            $object = json_encode($object);
-        }
-
-        // Although we use the default connection, track audit status separately.
-        PdoStorageService::incrementStat('audit', 'insert');
-
-        $this->_auditLogStatement->execute([
-            'logDate' => Carbon::now()->format('U'),
-            'userId' => $this->userId,
-            'entity' => $entity,
-            'message' => $message,
-            'entityId' => $entityId,
-            'ipAddress' => $this->ipAddress,
-            'objectAfter' => $object,
-            'sessionHistoryId' => $this->sessionHistoryId,
-            'requestId' => $this->requestId
-        ]);
     }
 
     /**

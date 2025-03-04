@@ -25,7 +25,7 @@
     <description>A module for displaying emergency alert elements based on an CAP feed</description>
     <icon>fa fa-exclamation-circle</icon>
     <class></class>
-    <dataCacheKey>%emergencyAlertUri%_%isAreaSpecific%_%status%_%msgType%_%scope%_%category%_%responseType%_%urgency%_%severity%_%certainty%</dataCacheKey>
+    <dataCacheKey>%emergencyAlertUri%_%isAreaSpecific%_%status%_%msgType%_%scope%_%category%_%responseType%_%urgency%_%severity%_%certainty%_%displayId%</dataCacheKey>
     <type>emergency-alert</type>
     <dataType>emergency-alert</dataType>
     <schemaVersion>1</schemaVersion>

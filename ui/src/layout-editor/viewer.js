@@ -660,6 +660,10 @@ Viewer.prototype.handleInteractions = function() {
 
       const shiftIsPressed = e.shiftKey;
 
+      // Are we adding a card from the toolbar?
+      const addingFromToolbar =
+        !$.isEmptyObject(self.parent.toolbar.selectedCard);
+
       // Right click open context menu
       if (e.which == 3) {
         return;
@@ -827,7 +831,10 @@ Viewer.prototype.handleInteractions = function() {
             if (
               $target.data('subType') === 'playlist' &&
               $target.hasClass('designer-region') &&
-              !$target.hasClass('selected')
+              (
+                !$target.hasClass('selected') ||
+                addingFromToolbar
+              )
             ) {
               // If we're multi selecting, deselect all
               if (shiftIsPressed) {
@@ -844,8 +851,12 @@ Viewer.prototype.handleInteractions = function() {
               self.selectObject($target, shiftIsPressed);
             } else if (
               $target.find('.designer-widget').length > 0 &&
-              !$target.find('.designer-widget').hasClass('selected') &&
-              !$target.hasClass('selected')
+              (
+                (
+                  !$target.find('.designer-widget').hasClass('selected') &&
+                  !$target.hasClass('selected')
+                ) || addingFromToolbar
+              )
             ) {
               // If we're multi selecting, deselect all
               if (shiftIsPressed) {
@@ -869,7 +880,10 @@ Viewer.prototype.handleInteractions = function() {
                 )
               ) &&
               $target.hasClass('designer-region') &&
-              !$target.hasClass('selected')
+              (
+                !$target.hasClass('selected') ||
+                addingFromToolbar
+              )
             ) {
               // If we're multi selecting, deselect all
               if (shiftIsPressed) {
@@ -888,7 +902,10 @@ Viewer.prototype.handleInteractions = function() {
                 $target.hasClass('designer-element') ||
                 $target.hasClass('designer-element-group')
               ) &&
-              !$target.hasClass('selected')
+              (
+                !$target.hasClass('selected') ||
+                addingFromToolbar
+              )
             ) {
               // If we're multi selecting, deselect all
               if (shiftIsPressed) {
@@ -905,7 +922,10 @@ Viewer.prototype.handleInteractions = function() {
               self.selectObject($target, shiftIsPressed);
             } else if (
               $target.hasClass('group-select-overlay') &&
-              !$target.parent().hasClass('selected')
+              (
+                !$target.parent().hasClass('selected') ||
+                addingFromToolbar
+              )
             ) {
               // If we're multi selecting, deselect all
               if (shiftIsPressed) {
@@ -933,6 +953,12 @@ Viewer.prototype.handleInteractions = function() {
           // Double click action
           clearTimeout(timer);
           clicks = 0;
+
+          // If we're adding from the toolbar
+          // don't use double click
+          if (addingFromToolbar) {
+            return;
+          }
 
           if (
             $target.data('subType') === 'playlist' &&
