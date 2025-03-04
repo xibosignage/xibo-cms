@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -906,6 +906,24 @@ trait DisplayProfileConfigFields
                 $this->handleChangedSettings('lockOptions', ($ownConfig) ? $displayProfile->getSetting('lockOptions') : $display->getSetting('lockOptions'), json_encode($lockOptions), $changedSettings);
                 // Encode option and save it as a string to the lock setting
                 $displayProfile->setSetting('lockOptions', json_encode($lockOptions), $ownConfig, $config);
+
+                // Multiple video decoders
+                if ($sanitizedParams->hasParam('isUseMultipleVideoDecoders')) {
+                    $this->handleChangedSettings(
+                        'isUseMultipleVideoDecoders',
+                        ($ownConfig)
+                            ? $displayProfile->getSetting('isUseMultipleVideoDecoders')
+                            : $display->getSetting('isUseMultipleVideoDecoders'),
+                        $sanitizedParams->getString('isUseMultipleVideoDecoders'),
+                        $changedSettings
+                    );
+                    $displayProfile->setSetting(
+                        'isUseMultipleVideoDecoders',
+                        $sanitizedParams->getString('isUseMultipleVideoDecoders'),
+                        $ownConfig,
+                        $config
+                    );
+                }
 
                 break;
 
