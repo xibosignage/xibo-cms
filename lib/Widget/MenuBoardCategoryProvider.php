@@ -24,6 +24,7 @@ namespace Xibo\Widget;
 
 use Carbon\Carbon;
 use Xibo\Event\MenuBoardCategoryRequest;
+use Xibo\Event\MenuBoardModifiedDtRequest;
 use Xibo\Widget\Provider\DataProviderInterface;
 use Xibo\Widget\Provider\DurationProviderInterface;
 use Xibo\Widget\Provider\WidgetProviderInterface;
@@ -55,6 +56,18 @@ class MenuBoardCategoryProvider implements WidgetProviderInterface
 
     public function getDataModifiedDt(DataProviderInterface $dataProvider): ?Carbon
     {
+        $this->getLog()->debug('fetchData: MenuBoardCategoryProvider passing to modifiedDt request event');
+
+        $menuId = $dataProvider->getProperty('menuId');
+
+        if ($menuId !== null) {
+            // Raise an event to get the modifiedDt of this dataSet
+            $event = new MenuBoardModifiedDtRequest($menuId);
+            $this->getDispatcher()->dispatch($event, MenuBoardModifiedDtRequest::$NAME);
+
+            return max($event->getModifiedDt(), $dataProvider->getWidgetModifiedDt());
+        }
+
         return null;
     }
 }

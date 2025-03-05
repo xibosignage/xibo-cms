@@ -316,6 +316,7 @@ class MenuBoardCategory extends Base
 
         $menuBoardCategory = $this->menuBoardCategoryFactory->create($id, $name, $mediaId, $code, $description);
         $menuBoardCategory->save();
+        $menuBoard->save(['audit' => false]);
 
         // Return
         $this->getState()->hydrate([
@@ -430,6 +431,7 @@ class MenuBoardCategory extends Base
         $menuBoardCategory->code = $sanitizedParams->getString('code');
         $menuBoardCategory->description = $sanitizedParams->getString('description');
         $menuBoardCategory->save();
+        $menuBoard->save();
 
         // Success
         $this->getState()->hydrate([
