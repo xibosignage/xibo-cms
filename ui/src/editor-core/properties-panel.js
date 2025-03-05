@@ -653,6 +653,8 @@ PropertiesPanel.prototype.render = function(
         dataToRender.showExitTransition = true;
       }
 
+      dataToRender.regionOptions = target.options;
+
       if (
         target.subType === 'frame' &&
         $.isEmptyObject(target.widgets)
