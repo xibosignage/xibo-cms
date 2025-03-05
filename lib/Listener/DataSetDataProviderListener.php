@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -236,10 +236,8 @@ class DataSetDataProviderListener
                 $item = [];
                 foreach ($mappings as $mapping) {
                     // This column is selected
-                    $cellValue = $row[$mapping['heading']];
-                    if (empty($cellValue)) {
-                        $item[$mapping['heading']] = null;
-                    } else if ($mapping['dataTypeId'] === 4) {
+                    $cellValue = $row[$mapping['heading']] ?? null;
+                    if ($mapping['dataTypeId'] === 4) {
                         // Grab the external image
                         $item[$mapping['heading']] = $dataProvider->addImage(
                             'dataset_' . md5($dataSet->dataSetId . $mapping['dataSetColumnId'] . $cellValue),
