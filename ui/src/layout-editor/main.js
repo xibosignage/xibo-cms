@@ -5691,12 +5691,15 @@ lD.editDrawerWidget = function(actionData, actionEditMode = true) {
   // Target
   const $target = actionEditMode ? $widgetInViewer : null;
 
-  lD.selectObject({
-    target: $target,
-    forceSelect: true,
-  });
+  // Select only if we have target
+  if ($target) {
+    lD.selectObject({
+      target: $target,
+      forceSelect: true,
+    });
+  }
 
-  // Select element in viewer
+  // Select element in viewer ( or deselect )
   lD.viewer.selectObject($target);
 
   // 4. Open property panel with drawer widget or same object
