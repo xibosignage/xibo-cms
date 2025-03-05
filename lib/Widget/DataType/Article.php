@@ -37,6 +37,7 @@ class Article implements \JsonSerializable, DataTypeInterface
     public $permalink;
     public $link;
     public $image;
+    public $categories = [];
 
     /** @var \Carbon\Carbon */
     public $date;
@@ -57,6 +58,7 @@ class Article implements \JsonSerializable, DataTypeInterface
             'date' => $this->date->format('c'),
             'publishedDate' => $this->publishedDate->format('c'),
             'image' => $this->image,
+            'categories' => $this->categories,
         ];
     }
 
@@ -74,7 +76,9 @@ class Article implements \JsonSerializable, DataTypeInterface
             ->addField('link', __('Link'), 'text')
             ->addField('date', __('Created Date'), 'datetime')
             ->addField('publishedDate', __('Published Date'), 'datetime')
-            ->addField('image', __('Image'), 'image');
+            ->addField('image', __('Image'), 'image')
+            ->addField('categories', __('Categories'), 'categories');
         return $dataType;
     }
 }
+
