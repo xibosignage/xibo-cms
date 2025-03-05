@@ -738,7 +738,7 @@ class Tag extends Base
                     $entity->assignTag($tag);
                 }
 
-                $entity->save();
+                $entity->save(['isTagEdit' => true]);
             }
 
             // Once we're done, and if we're a Display entity, we need to calculate the dynamic display groups
