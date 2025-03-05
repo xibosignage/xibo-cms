@@ -211,7 +211,8 @@ class XiboUploadHandler extends BlueImpUploadHandler
                             $widget->unassignAudioById($oldMedia->mediaId);
                             $widget->assignAudioById($media->mediaId);
                             $widget->save();
-                        } else if (count($widget->getPrimaryMedia()) > 0
+                        } else if ($widget->type !== 'global'
+                            && count($widget->getPrimaryMedia()) > 0
                             && $widget->getPrimaryMediaId() == $oldMedia->mediaId
                         ) {
                             // We're only interested in primary media at this point (no audio)
