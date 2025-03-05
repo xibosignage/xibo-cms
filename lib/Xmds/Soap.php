@@ -2768,6 +2768,8 @@ class Soap
     private function isInsideOperatingHours(): bool
     {
         $dayPartId = $this->display->getSetting('dayPartId', null, ['displayOverride' => true]);
+
+        // If dayPart is configured, check operating hours
         if ($dayPartId !== null) {
             try {
                 $dayPart = $this->dayPartFactory->getById($dayPartId);
@@ -2801,15 +2803,15 @@ class Soap
 
                 // check if we are inside the operating hours for this display - we use that flag to decide
                 // if we need to create a notification and send an email.
-                if (($now >= $startTime && $now <= $endTime)) {
-                    return true;
-                }
+                return ($now >= $startTime && $now <= $endTime);
             } catch (NotFoundException) {
                 $this->getLog()->debug('Unknown dayPartId set on Display Profile for displayId '
                     . $this->display->displayId);
             }
         }
-        return false;
+
+        // Otherwise, assume CMS is within operating hours.
+        return true;
     }
 
     /**
