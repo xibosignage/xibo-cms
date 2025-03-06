@@ -1,0 +1,56 @@
+<form class="action-edit-form">
+    {{#if actionTitle}}
+        {{> forms/inputs/header title=(lookup trans actionTitle) customClass="action-form-input" }}
+    {{/if}}
+
+    <strong>DEBUG_ID: {{actionId}}</strong>
+
+    {{> forms/inputs/hidden value=actionType id="actionType"}}
+    {{> forms/inputs/dropdown value=actionTypeHelper title=trans.actionType id="actionTypeHelper" customClass="action-form-input" options=actionTypeOptions optionsTitle="title" optionsValue="name"}}
+
+    {{> forms/inputs/dropdown id="triggerType" value=triggerType title=trans.triggerType customClass="action-edit-form-trigger action-form-input" options=(arr (obj name="touch" title=trans.touch) (obj name="webhook" title=trans.webhook)) optionsTitle="title" optionsValue="name" helpText=trans.triggerTypeHelpText }}
+    {{> forms/inputs/text id="triggerCode" value=triggerCode title=trans.triggerCode customClass="action-form-input" helpText=trans.triggerCodeHelpText visibility='{ "field": "triggerType", "type": "eq", "value": "webhook" }' }}
+
+    {{> forms/inputs/hidden id="source" value=source }}
+    {{> forms/inputs/dropdown id="sourceId" value=sourceId title=trans.triggerTarget customClass='action-edit-form-trigger action-form-input' options=(arr (obj name="" title="")) optionsTitle="title" optionsValue="name" helpText=trans.triggerTargetHelpText visibility='{ "field": "triggerType", "type": "neq", "value": "webhook" }' }}
+
+    {{!-- Set layout name as screen --}}
+    {{#eq target "layout"}}
+        {{set "targetValue" "screen"}}
+    {{else}}
+        {{set "targetValue" target}}
+    {{/eq}}
+
+    {{> forms/inputs/hidden id="target" value=targetValue customClass="action-form-input" }}
+    {{> forms/inputs/dropdown id="targetId" value=targetId title=trans.target customClass="action-edit-form-target action-form-input" options=(arr (obj name="" title="")) optionsTitle="title" optionsValue="name" helpText=trans.targetHelpText }}
+
+    {{!-- For nav widget only --}}
+    {{> forms/inputs/dropdown id="widgetId" value=widgetId title=trans.widgetToLoad customClass="action-edit-form-target action-form-input" options=(arr (obj name="" title="") (obj name="create" title=trans.createNewDrawerWidget)) optionsTitle="title" optionsValue="name" helpText=trans.widgetToLoadHelpText visibility='[{ "type": "and", "conditions": [{ "field": "actionType", "type": "eq", "value": "navWidget" }, { "field": "targetId", "type": "neq", "value": "" }] }]' }}
+
+    {{!-- For nav layout only --}}
+    {{> forms/inputs/dropdown id="layoutCode" value=layoutCode title=trans.layoutCode customClass="action-form-input" selectType="pagedSelect"
+        options=(arr (obj name="" title="")) optionsTitle="title" optionsValue="name"
+        visibility='{ "field": "actionType", "type": "eq", "value": "navLayout" }'
+        customData=(arr 
+            (obj name="width" value="100%")
+            (obj name="search-url" value=layoutCodeSearchURL)
+            (obj name="search-term" value="code")
+            (obj name="id-property" value="code")
+            (obj name="text-property" value="code")
+            (obj name='initial-value' value=layoutCode)
+            (obj name='initial-key' value="code")
+        )
+        helpText=trans.layoutCodeHelpText
+    }}
+
+    <div class="alert alert-danger error-message w-100"></div>
+
+    <div class="action-btn-container">
+        <button class="btn btn-block btn-success" type="button" data-action="save">
+            <i class="fa fa-save"></i>{{trans.saveAction}}
+        </button>
+        <button class="btn btn-block btn-outline-dark" type="button" data-action="close">
+            <i class="fa fa-times"></i>{{trans.cancelAction}}
+        </button>
+    </div>
+</form>

@@ -44,6 +44,7 @@ const confirmationModalTemplate =
 const Layout = require('../layout-editor/layout.js');
 const Viewer = require('../layout-editor/viewer.js');
 const PropertiesPanel = require('../editor-core/properties-panel.js');
+const ActionManager = require('../layout-editor/action-manager.js');
 const HistoryManager = require('../editor-core/history-manager.js');
 const TemplateManager = require('../layout-editor/template-manager.js');
 const Toolbar = require('../editor-core/toolbar.js');
@@ -70,6 +71,9 @@ window.lD = {
   // Template edit mode
   templateEditMode: false,
 
+  // Interactive mode
+  interactiveMode: false,
+
   // Exit url (based on layout or template editing)
   exitURL: urlsForApi.layout.list.url,
 
@@ -82,6 +86,9 @@ window.lD = {
 
   // Layout
   layout: {},
+
+  // Action Manager
+  actionManager: {},
 
   // History Manager
   historyManager: {},
@@ -174,6 +181,11 @@ $(() => {
           lD.welcomeScreen();
         }
       }
+
+      // Initialize action manager
+      lD.actionManager = new ActionManager(
+        lD,
+      );
 
       // Initialize template manager
       lD.templateManager = new TemplateManager(
@@ -3163,7 +3175,7 @@ lD.addModuleToPlaylist = function(
             resetPropertiesPanelOpenedTab: true,
             callBack: () => {
               const $actionForm =
-                lD.propertiesPanel.DOMObject.find('.action-element-form');
+                lD.propertiesPanel.DOMObject.find('.action-edit-form');
 
               lD.populateDropdownWithLayoutElements(
                 $actionForm.find('[name=widgetId]'),
@@ -3356,7 +3368,7 @@ lD.addMediaToPlaylist = function(
           resetPropertiesPanelOpenedTab: true,
           callBack: () => {
             const $actionForm =
-              lD.propertiesPanel.DOMObject.find('.action-element-form');
+              lD.propertiesPanel.DOMObject.find('.action-edit-form');
 
             lD.populateDropdownWithLayoutElements(
               $actionForm.find('[name=widgetId]'),
@@ -3400,7 +3412,7 @@ lD.clearTemporaryData = function() {
 
   // Clear action highlights on the viewer
   // if we don't have an action form open
-  if (lD.propertiesPanel.DOMObject.find('.action-element-form').length == 0) {
+  if (lD.propertiesPanel.DOMObject.find('.action-edit-form').length == 0) {
     lD.viewer.clearActionHighlights();
   }
 };
@@ -4664,6 +4676,34 @@ lD.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
 };
 
 /**
+ * Interactive mode
+ * @param {boolean} enable - True to lock, false to unlock
+ */
+lD.toggleInteractiveMode = function(enable = true) {
+  this.interactiveMode = enable;
+
+  if (enable) { // Enable
+    // Deselect all objects
+    this.selectObject();
+
+    // Mark main editor container as in Interactive mode
+    lD.editorContainer.addClass('interactive-mode');
+  } else { // Disable
+    // Remove Interactive mode from main editor container
+    lD.editorContainer.removeClass('interactive-mode');
+
+    // TODO: Remove action components
+  }
+
+  // Render editor and containers containers
+  this.refreshEditor({
+    reloadToolbar: true,
+    reloadViewer: true,
+    reloadPropertiesPanel: true,
+  });
+};
+
+/**
  * Locked mode
  * @param {boolean} enable - True to lock, false to unlock
  * @param {string} expiryDate - Expiration date
@@ -5198,177 +5238,6 @@ lD.initDrawer = function(data) {
 };
 
 /**
- * Add action
- * @param {object} options - Options for the action
- * @return {boolean} false if unsuccessful
-  */
-lD.addAction = function(options) {
-  const self = this;
-
-  $.ajax({
-    url: urlsForApi.actions.add.url,
-    type: urlsForApi.actions.add.type,
-    data: {
-      actionType: options.actionType,
-      layoutId: options.layoutId,
-      target: options.target,
-      targetId: options.targetId,
-    },
-  }).done(function(_res) {
-    // Render the action tab
-    self.propertiesPanel.renderActionTab(
-      self.selectedObject,
-      {
-        clearPrevious: true,
-        selectAfterRender: true,
-        openEditActionAfterRender: _res?.data?.actionId,
-        openActionTab: _res?.data?.actionId,
-      },
-    );
-  }).fail(function(_data) {
-    toastr.error(
-      errorMessagesTrans.deleteFailed,
-      errorMessagesTrans.error,
-    );
-  });
-
-  return true;
-};
-
-/**
- * Save action
- * @param {object} action - Action to save
- * @param {object} form - Form to get data from
- * @return {boolean} false if unsuccessful
- */
-lD.saveAction = function(action, form) {
-  const actionData = action.data();
-  const self = this;
-  const requestURL = urlsForApi.actions.edit.url.replace(
-    ':id',
-    actionData.actionId,
-  );
-
-  $.ajax({
-    url: requestURL,
-    type: urlsForApi.actions.edit.type,
-    data: $(form).serialize(),
-  }).done(function(_res) {
-    if (_res.success) {
-      // Hide error message
-      $(form).find('.error-message').hide();
-
-      const $hiddenAction =
-        $(form).parent().find('.action-element.hidden');
-      // Close edit form and open action
-      self.propertiesPanel.closeEditAction(
-        $(form),
-        $hiddenAction,
-      );
-
-      // Add new action ( to replace old one )
-      self.propertiesPanel.addActionToContainer(
-        _res.data,
-        lD.selectObject,
-        self.propertiesPanel.DOMObject.find('.item-actions'),
-        self.propertiesPanel.DOMObject.find('.other-actions'),
-        $hiddenAction,
-      );
-    } else {
-      // Add message to form
-      $(form).find('.error-message').html(_res.message).show();
-    }
-  }).fail(function(_data) {
-    // Show error message on console
-    toastr.error(
-      errorMessagesTrans.deleteFailed,
-      errorMessagesTrans.error,
-    );
-  });
-
-  return false;
-};
-
-/**
- * Delete action
- * @param {object} action
-  */
-lD.deleteAction = function(action) {
-  // Show confirmation modal
-  const $modal = $(confirmationModalTemplate(
-    {
-      title: editorsTrans.actions.deleteModal.title,
-      message: editorsTrans.actions.deleteModal.message,
-      buttons: {
-        cancel: {
-          label: editorsTrans.actions.deleteModal.buttons.cancel,
-          class: 'btn-default cancel',
-        },
-        delete: {
-          label: editorsTrans.actions.deleteModal.buttons.delete,
-          class: 'btn-danger confirm',
-        },
-      },
-    },
-  ));
-
-  const removeModal = function() {
-    $modal.modal('hide');
-    // Remove modal
-    $modal.remove();
-
-    // Remove backdrop
-    $('.modal-backdrop.show').remove();
-  };
-
-  // Add modal to the DOM
-  this.editorContainer.append($modal);
-
-  // Show modal
-  $modal.modal('show');
-
-  // Confirm button
-  $modal.find('button.confirm').on('click', function() {
-    const actionData = action.data();
-    const requestURL = urlsForApi.actions.delete.url.replace(
-      ':id',
-      actionData.actionId,
-    );
-
-    $.ajax({
-      url: requestURL,
-      type: urlsForApi.actions.delete.type,
-    }).done(function(_res) {
-      const $actionParent = $(action).parent();
-
-      // Delete action from the form
-      $(action).remove();
-
-      // Check if there are any actions left in the container
-      // and if not, show the "no actions" message
-      if ($actionParent.find('.action-element').length == 0) {
-        $actionParent.append(
-          $('<div />').addClass('text-center no-actions').text(
-            propertiesPanelTrans.actions.noActionsToShow,
-          ),
-        );
-      }
-
-      // Remove modal
-      removeModal();
-    }).fail(function(_data) {
-      toastr.error(
-        errorMessagesTrans.replace('%error%', _data.message),
-        errorMessagesTrans.error,
-      );
-    });
-  });
-
-  // Cancel button
-  $modal.find('button.cancel').on('click', removeModal);
-};
-
-/**
  * Populate dropdown with layout elements
  * @param {object} $dropdown - Dropdown to populate
  * @param {object} Options.$typeInput - Input type to be updated
@@ -5386,11 +5255,17 @@ lD.populateDropdownWithLayoutElements = function(
   } = {},
   actionData = null,
 ) {
-  const getRegions = filters.indexOf('regions') !== -1;
-  const getWidgets = filters.indexOf('widgets') !== -1;
-  const getLayouts = filters.indexOf('layout') !== -1;
-  const getPlaylists = filters.indexOf('playlist') !== -1;
-  const getDrawerWidgets = filters.indexOf('drawerWidgets') !== -1;
+  const filterSet = new Set(filters);
+  const getRegions = filterSet.has('regions');
+  const getWidgets = filterSet.has('widgets');
+  const getLayouts = filterSet.has('layout');
+  const getPlaylists = filterSet.has('playlist');
+  const getDrawerWidgets = filterSet.has('drawerWidgets');
+  const getElements = filterSet.has('elements');
+  const getElementGroups = filterSet.has('elementGroups');
+
+  // Clear non empty dropdown options
+  $dropdown.find('option:not([value=""]), optgroup').remove();
 
   const addGroupToDropdown = function(groupName) {
     // Add group to dropdown
@@ -5402,12 +5277,17 @@ lD.populateDropdownWithLayoutElements = function(
     $dropdown.append($group);
   };
 
-  const addElementToDropdown = function(element) {
+  const addObjectToDropdown = function(object) {
+    let objName = object.name;
+    (!objName) ?
+      objName = object.id :
+      objName += ' (' + object.id + ')';
+
     // Create option
     const $option = $('<option/>', {
-      value: element.id,
-      text: element.name + ' (' + element.id + ')',
-      'data-type': element.type,
+      value: object.id,
+      text: objName,
+      'data-type': object.type,
     });
 
     // Add to dropdown
@@ -5538,9 +5418,6 @@ lD.populateDropdownWithLayoutElements = function(
         $dropdownParent.addClass('delete-active');
       }
     } else {
-      // Remove edit area
-      lD.viewer.removeActionEditArea();
-
       removeDeleteButton();
     }
   };
@@ -5555,7 +5432,7 @@ lD.populateDropdownWithLayoutElements = function(
       editorsTrans.actions.layouts,
     );
 
-    addElementToDropdown({
+    addObjectToDropdown({
       id: lD.layout.layoutId,
       name: lD.layout.name,
       type: 'layout',
@@ -5591,7 +5468,7 @@ lD.populateDropdownWithLayoutElements = function(
           region.isPlaylist === true
         )
       ) {
-        addElementToDropdown({
+        addObjectToDropdown({
           id: region.regionId,
           name: region.name,
           type: 'region',
@@ -5620,7 +5497,7 @@ lD.populateDropdownWithLayoutElements = function(
 
     // Add widgets to dropdown
     for (const widget of widgets) {
-      addElementToDropdown(widget);
+      addObjectToDropdown(widget);
     }
   }
 
@@ -5630,7 +5507,7 @@ lD.populateDropdownWithLayoutElements = function(
     if (lD.layout.drawer.widgets) {
       // Add widgets to dropdown
       for (const widget of Object.values(lD.layout.drawer.widgets)) {
-        addElementToDropdown({
+        addObjectToDropdown({
           id: widget.widgetId,
           name: widget.widgetName,
           type: 'widget',
@@ -5639,6 +5516,46 @@ lD.populateDropdownWithLayoutElements = function(
     }
   }
 
+  // Add elements or groups to dropdown
+  if (getElements || getElementGroups) {
+    // We need to have a canvas region, with widgets
+    if (
+      !$.isEmptyObject(lD.layout.canvas) &&
+      Object.keys(lD.layout.canvas.widgets).length > 0
+    ) {
+      for (const widget of Object.values(lD.layout.canvas.widgets)) {
+        // Elements
+        if (getElements && Object.keys(widget.elements).length > 0) {
+          addGroupToDropdown(
+            editorsTrans.actions.elements,
+          );
+
+          for (const element of Object.values(widget.elements)) {
+            addObjectToDropdown({
+              id: element.elementId,
+              name: element.elementName,
+              type: 'element',
+            });
+          }
+        }
+
+        // Elements groups
+        if (getElementGroups && Object.keys(widget.elementGroups).length > 0) {
+          addGroupToDropdown(
+            editorsTrans.actions.elementGroups,
+          );
+
+          for (const elementGroup of Object.values(widget.elementGroups)) {
+            addObjectToDropdown({
+              id: elementGroup.id,
+              name: elementGroup.elementGroupName,
+              type: 'elementGroup',
+            });
+          }
+        }
+      }
+    }
+  }
 
   // Set initial value if provided
   if (value !== null) {
@@ -5652,7 +5569,7 @@ lD.populateDropdownWithLayoutElements = function(
 
   // Handle dropdown change
   // and update type
-  $dropdown.off('change').on('change', function() {
+  $dropdown.off('select2:select').on('select2:select', function() {
     if (getDrawerWidgets) {
       // Open/edit widget
       handleEditWidget($dropdown.val());

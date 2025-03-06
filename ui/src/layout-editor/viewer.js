@@ -78,6 +78,7 @@ const Viewer = function(parent, container) {
     snapToBorders: false,
     snapToElements: false,
   };
+  this.creatingAction = false;
 
   // Selecto
   this.selecto = null;
@@ -322,6 +323,14 @@ Viewer.prototype.render = function(forceReload = false, targets = {}) {
 
     // Show loading template
     $viewerContainer.html(loadingTemplate());
+
+    // Interactive mode
+    if (lD.interactiveMode) {
+      console.log('Viewer: Interactive mode');
+
+      // TODO: Create interactive components ( arrows for actions, etc )
+      return;
+    }
 
     // When rendering, preview is always set to false
     this.previewPlaying = false;
@@ -2967,6 +2976,11 @@ Viewer.prototype.initSelecto = function(groupEditing = false, groupContainer) {
   const self = this;
   const app = this.parent;
 
+  // If we're using interactive mode, don't use selecto
+  if (app.interactiveMode) {
+    return;
+  }
+
   const container = (groupEditing) ?
     groupContainer[0] :
     lD.viewer.DOMObject[0];
@@ -4025,9 +4039,6 @@ Viewer.prototype.addActionEditArea = function(
     return $actionArea;
   };
 
-  // Remove previous action create/edit area
-  this.removeActionEditArea();
-
   if (createOrEdit === 'create') {
     // Create add action area
     const $actionArea = createOverlayArea('create');
@@ -4131,14 +4142,6 @@ Viewer.prototype.toggleObject = function(objectType, objectId, hide) {
 
   // Remove from DOM
   $viewerObj.toggleClass('d-none', hide);
-};
-
-/**
- * Remove new widget action element
- */
-Viewer.prototype.removeActionEditArea = function() {
-  this.actionDropMode = false;
-  this.DOMObject.find('.designer-region-drawer').remove();
 };
 
 /**

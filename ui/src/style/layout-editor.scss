@@ -633,7 +633,6 @@ body.editor-opened #content-wrapper .page-content>.row {
             }
 
             .action-label {
-                @include set-transparent-color(background-color, $xibo-color-action-target, 0.8);
                 color: $xibo-color-neutral-0;
                 font-weight: bold;
                 width: 100%;
@@ -645,17 +644,6 @@ body.editor-opened #content-wrapper .page-content>.row {
 
             &.ui-droppable-active {
                 @include z-index-set($designer-select-z-index);
-
-                .action-label {
-                    @include set-transparent-color(background-color, $xibo-color-action-target, 0.9);
-                }
-
-                &.ui-droppable-hover,
-                &:hover {
-                    .action-label {
-                        @include set-transparent-color(background-color, $xibo-color-action-target, 1.0);
-                    }
-                }
             }
         }
 
@@ -789,10 +777,6 @@ body.editor-opened #content-wrapper .page-content>.row {
         }
     }
 
-    &.action-edit-mode #properties-panel-form-container {
-        background-color: $xibo-color-action-target-light;
-    }
-
     #properties-panel-form-container {
         background: $xibo-color-neutral-0;
         position: relative;
@@ -811,19 +795,73 @@ body.editor-opened #content-wrapper .page-content>.row {
 
         .form-container {
             overflow: hidden;
-            margin-top: 1rem;
+            margin-top: 8px;
             flex: 1;
 
-            & > form {
+            & > form, & > .actions-container {
                 height: 100%;
                 display: flex;
                 flex-direction: column;
 
-                .form-content {
+                .form-content, .actions-content {
                     overflow: hidden auto;
                     padding: 0 1rem;
                     margin-top: 0.5rem;
                     flex: 1;
+                }
+
+                .actions-content {
+                    margin-top: 0;
+                    button[data-action="add"] {
+                        color: $xibo-color-primary;
+                        background-color: $xibo-color-primary-l20;
+                        font-weight: bold;
+                        display: flex;
+                        gap: 8px;
+                        height: 40px;
+                        align-items: center;
+                        font-size: 16px;
+                        border-color: $xibo-color-primary-l30;
+                        margin-top: 8px;
+
+                        span.icon {
+                            font-size: 20px;
+                        }
+                    }
+
+                    .action-edit-form, .action-view {
+                        margin: 8px 0;
+                        padding: 8px;
+                        background: #FCFCFC;
+                        border: 2px solid #E9E9E9;
+                        border-radius: 4px;
+                
+                        .xibo-form-input .header {
+                            font-size: 20px;
+                            font-weight: bold;
+                            color: $xibo-color-secondary;
+                        }
+
+                        .action-btn-container {
+                            button i {
+                                margin-right: 8px;
+                            }
+                        }
+                
+                        .error-message, .warning-message {
+                            display: none;
+                        }
+                    }
+
+                    &.editing-action {
+                        button[data-action="add"], button[data-action="edit"], button[data-action="delete"] {
+                            display: none;
+                        }
+
+                        .action-view {
+                            display: none;
+                        }
+                    }
                 }
             }
 
@@ -1824,212 +1862,6 @@ div#bg_media_name {
                     border: 2px solid $xibo-color-neutral-0;
                 }
             }
-        }
-    }
-}
-
-#actionsTab {
-    .header {
-        margin-left: 0;
-        font-size: 16px;
-        color: $xibo-color-secondary;
-    }
-
-    .no-actions {
-        display: flex;
-        flex-direction: row;
-        justify-content: center;
-        align-items: center;
-        padding: 16px 2px;
-        border: 2px dashed #CECECE;
-        border-radius: 4px;
-        margin: 8px 0;
-    }
-
-    .action-element {
-        position: relative;
-        display: flex;
-        flex-direction: row;
-        align-items: flex-start;
-        padding: 0px;
-        gap: 3px;
-        margin: 8px 0;
-
-        & > div {
-            border-radius: 4px;
-            flex: 1;
-            padding: 6px;
-            font-size: 12px;
-            max-width: 50%;
-
-            & > div:not(.element-header) {
-                padding: 6px;
-                border-radius: 2px;
-                margin-bottom: 3px;
-                min-height: 30px;
-
-                &, & > p {
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                }
-            }
-        }
-
-        .element-header {
-            font-size: 16px;
-        }
-
-        .label {
-            font-weight: bold;
-            margin-right: 2px;
-        }
-
-        .type {
-            margin-bottom: 3px;
-        }
-
-        .action-element-trigger {
-            background: $xibo-color-action-trigger;
-            order: 0;
-
-            & > div:not(.element-header) {
-                background: $xibo-color-action-trigger-light;
-            }
-        }
-
-        .action-element-target {
-            background: $xibo-color-action-target;
-            order: 1;
-
-            & > div:not(.element-header) {
-                background: $xibo-color-action-target-light;
-            }
-        }
-
-        .not-defined {
-            opacity: 0.8;
-            margin-bottom: 3px;
-        }
-
-        .highlight {
-            .element-header {
-                font-weight: bold;
-            } 
-            
-            .target > *:first-of-type:before {
-                content: "";
-                background-color: $xibo-color-neutral-700;
-                width: 8px;
-                height: 8px;
-                margin-right: 3px;
-                border-radius: 2px;
-                display: inline-block;
-            }
-        }
-
-        .edit-hover-menu {
-            display: none;
-            height: 100%;
-            position: absolute;
-            top: 0;
-            right: 0;
-            z-index: 1;
-            padding: 6px;
-            margin: 0;
-            @include set-transparent-color(background, $xibo-color-neutral-1000, 0.6);
-            flex-direction: column;
-            justify-content: space-between;
-            gap: 6px;
-
-            .btn {
-                flex-grow: 1;
-                font-size: 16px;
-                padding: 6px;
-                border-radius: 4px;
-                color: $xibo-color-neutral-0;
-                background-color: $xibo-color-primary;
-                margin: 0;
-                border: 0;
-                box-shadow: none;
-                transition: none;
-                cursor: pointer;
-
-                &:hover {
-                    background-color: darken($xibo-color-primary, 10%);
-                }
-
-                &[data-action="delete"] {
-                    background-color: $xibo-color-semantic-error;
-
-                    &:hover {
-                        background-color: darken($xibo-color-semantic-error, 10%);
-                    }
-                }
-            }
-        }
-
-        &:hover {
-            .edit-hover-menu {
-                display: flex;
-            }
-        }
-    }
-
-    .action-element-form {
-        margin: 8px 0;
-        padding: 8px;
-        background: #FCFCFC;
-        border: 2px solid #E9E9E9;
-        border-radius: 4px;
-
-        .xibo-form-input .header {
-            font-size: 20px;
-            font-weight: bold;
-            color: $xibo-color-secondary;
-        }
-
-        .action-element-form-trigger .form-control,
-        .action-element-form-trigger span.select2 .select2-selection {
-            border-color: $xibo-color-action-trigger;
-            background-color: $xibo-color-action-trigger-light;
-        }
-
-        .action-element-form-target .form-control,
-        .action-element-form-target span.select2 .select2-selection {
-            border-color: $xibo-color-action-target;
-            background-color: $xibo-color-action-target-light;
-        }
-
-        .action-element-form-target.delete-active {
-            font-size: 0;
-
-            & > * {
-                font-size: 1rem;
-            }
-
-            .select2-container {
-                display: inline-block;
-                width: calc(100% - 80px) !important;
-
-                .select2-selection {
-                    border-radius: 4px 0 0 4px;
-                }
-            }
-
-            .delete-widget-btn {
-                display: inline-block;
-                height: 34px;
-                width: 80px;
-                border-radius: 0 4px 4px 0;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-        }
-
-        .error-message, .warning-message {
-            display: none;
         }
     }
 }

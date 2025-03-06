@@ -1025,6 +1025,10 @@ Toolbar.prototype.render = function({savePrefs = true} = {}) {
     (typeof (lD) != 'undefined' && lD?.readOnlyMode === true) ||
     (app?.readOnlyMode === true);
 
+  const interactiveModeOn =
+    (typeof (lD) != 'undefined' && lD?.interactiveMode === true) ||
+    (app?.interactiveMode === true);
+
   // Deselect selected card on render
   this.selectedCard = {};
 
@@ -1033,7 +1037,7 @@ Toolbar.prototype.render = function({savePrefs = true} = {}) {
 
   const toolbarOpened =
     (this.openedMenu != -1) &&
-    (!readOnlyModeOn);
+    (!readOnlyModeOn && !interactiveModeOn);
 
   // If we have a level limiter and we're over level 2
   // set level at 2
@@ -1062,7 +1066,8 @@ Toolbar.prototype.render = function({savePrefs = true} = {}) {
   this.DOMObject.html(html);
 
   // If read only mode is enabled
-  if (readOnlyModeOn) {
+  // or interactive mode
+  if (readOnlyModeOn || interactiveModeOn) {
     // Hide edit mode fields
     this.DOMObject.find('.hide-on-read-only').hide();
 
@@ -1070,20 +1075,22 @@ Toolbar.prototype.render = function({savePrefs = true} = {}) {
     this.DOMObject.hide();
 
     // Create the read only alert message
-    const $readOnlyMessage =
-      $(`<div id="read-only-message"
-        class="alert alert-info btn text-center navbar-nav"
-        data-container=".editor-bottom-bar" data-toggle="tooltip"
-        data-placement="bottom" data-title="` +
-        layoutEditorTrans.readOnlyModeMessage +
-        `" role="alert"><strong>` + layoutEditorTrans.readOnlyModeTitle +
-        `</strong>&nbsp;` + layoutEditorTrans.readOnlyModeMessage +
-        `</div>`);
+    if (readOnlyModeOn) {
+      const $readOnlyMessage =
+        $(`<div id="read-only-message"
+          class="alert alert-info btn text-center navbar-nav"
+          data-container=".editor-bottom-bar" data-toggle="tooltip"
+          data-placement="bottom" data-title="` +
+          layoutEditorTrans.readOnlyModeMessage +
+          `" role="alert"><strong>` + layoutEditorTrans.readOnlyModeTitle +
+          `</strong>&nbsp;` + layoutEditorTrans.readOnlyModeMessage +
+          `</div>`);
 
-    // Prepend the item to the bottom toolbar's content
-    $readOnlyMessage.prependTo(
-      this.DOMObject.find('.container-toolbar .navbar-collapse'),
-    ).click(lD.layout.checkout);
+      // Prepend the item to the bottom toolbar's content
+      $readOnlyMessage.prependTo(
+        this.DOMObject.find('.container-toolbar .navbar-collapse'),
+      ).click(lD.layout.checkout);
+    }
   } else {
     // Show toolbar
     this.DOMObject.show();

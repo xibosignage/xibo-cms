@@ -1,0 +1,46 @@
+<div class="action-view">
+    {{#if actionTitle}}
+        {{> forms/inputs/header title=(lookup trans actionTitle) customClass="action-form-input" }}
+    {{/if}}
+
+    <strong>DEBUG_ID: {{actionId}}</strong>
+
+    <div>{{trans.actionType}}: {{actionType}} {{target}}</div>
+    <div>{{trans.triggerType}}: {{triggerType}}</div>
+
+    {{#if triggerCode}}
+        <div>{{trans.triggerCode}}: {{triggerCode}}</div>
+    {{/if}}
+
+    {{#if sourceId}}
+        <div>{{trans.triggerTarget}}: {{sourceId}}</div>
+    {{/if}}
+
+    {{#if targetId}}
+        {{!-- Set layout name as screen --}}
+        {{#eq target "layout"}}
+            {{set "targetValue" "screen"}}
+        {{else}}
+            {{set "targetValue" target}}
+        {{/eq}}
+
+        <div>{{trans.target}}: {{targetValue}} - {{targetId}}</div>
+    {{/if}}
+
+    {{#if widgetId}}
+        <div>{{trans.widgetToLoad}}: {{widgetId}}</div>
+    {{/if}}
+
+    {{#if layoutCode}}
+        <div>{{trans.layoutCode}}: {{layoutCode}}</div>
+    {{/if}}
+
+    <div class="action-btn-container">
+        <button class="btn btn-block btn-primary" type="button" data-action="edit">
+            <i class="fa fa-edit"></i>{{trans.editAction}}
+        </button>
+        <button class="btn btn-block btn-danger" type="button" data-action="delete">
+            <i class="fa fa-trash"></i>{{trans.deleteAction}}
+        </button>
+    </div>
+</div>

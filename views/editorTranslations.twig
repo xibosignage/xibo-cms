@@ -39,6 +39,8 @@
                     regions: "{{ "Zones"|trans }}",
                     widgets: "{{ "Widgets"|trans }}",
                     playlists: "{{ "Playlists"|trans }}",
+                    elements: "{{ "Elements"|trans }}",
+                    elementGroups: "{{ "Element Groups"|trans }}",
                     deleteWidget: "{{ "Delete"|trans }}",
                     deleteModal: {
                         title: "{{ "Delete Action"|trans }}",
@@ -163,14 +165,7 @@
                 somethingWentWrong: "{{ "Something went wrong!"|trans }}",
                 somethingWentWrongEditPermissions: "{{ "Selected item is not shared with you with edit permission!"|trans }}",
                 actions: {
-                    noActionsToShow: "{{ "No actions to show"|trans }}",
-                    otherActions: "{{ "Other Actions" |trans }}",
                     notDefined: "{{ "* Not Defined"|trans }}",
-                    itemActions: {
-                        layout: "{{ "Layout Actions" |trans }}",
-                        region: "{{ "Zone Actions" |trans }}",
-                        widget: "{{ "Widget Actions" |trans }}",
-                    },
                     targetsAndSources: {
                         layout: "{{ "Layout" |trans }}",
                         region: "{{ "Zone" |trans }}",
@@ -183,10 +178,11 @@
                     targetHelpText: "{{ "If your Widget is a Shell Command you can select to target 'Screen' to run the command without affecting any Zones. For all other Widgets select 'Zone' as target." |trans }}",
                     touch: "{{ "Touch/Click" |trans }}",
                     webhook: "{{ "Web hook" |trans }}",
-                    save: "{{ "Save" |trans }}",
-                    cancel: "{{ "Cancel" |trans }}",
-                    editAction: "{{ "Edit Action" |trans }}",
-                    deleteAction: "{{ "Delete Action" |trans }}",
+                    addAction: "{{ "Add Action" |trans }}",
+                    editAction: "{{ "Edit" |trans }}",
+                    saveAction: "{{ "Save" |trans }}",
+                    cancelAction: "{{ "Cancel" |trans }}",
+                    deleteAction: "{{ "Delete" |trans }}",
                     nextLayout: "{{ "Next Layout" |trans }}",
                     previousLayout: "{{ "Previous Layout" |trans }}",
                     nextWidget: "{{ "Next Widget" |trans }}",
@@ -195,6 +191,7 @@
                     navWidget: "{{ "Navigate to Widget" |trans }}",
                     widgetToLoad: "{{ "Widget to Load" |trans }}",
                     widgetToLoadHelpText: "{{ "Select or create a Widget to be loaded" |trans }}",
+                    actionType: "{{ "Action Type" |trans }}",
                     triggerType: "{{ "Trigger Type" |trans }}",
                     triggerTypeHelpText: "{{ "How should the Player listen for this Action to be triggered?" |trans }}",
                     triggerCode: "{{ "Trigger Code" |trans }}",
@@ -556,6 +553,8 @@
                 failedToImportMedia: "{{ "Failed to import media!"|trans }}",
                 canvasWidgetNotShared: "{{ "This Canvas is not shared with you with edit permission!"|trans }}",
                 getProvidersFailed: "{{ "Failed to load media providers!"|trans }}",
+                actionCreateFailed: "{{ "Failed Action creation!"|trans }}",
+                actionsGetFailed: "{{ "Failed to get all actions!"|trans }}",
             };
 
             var widgetStatusTrans = {

@@ -58,6 +58,17 @@
                 </div>
             </li>
 
+            <li class="nav-item interactive-control p-2">
+                <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                    <label class="btn btn-outline-info active">
+                        <input type="radio" name="options" id="interactiveOn" autocomplete="off" checked>On
+                    </label>
+                    <label class="btn btn-outline-info">
+                        <input type="radio" name="options" id="interactiveOff" autocomplete="off">Off
+                    </label>
+                </div>
+            </li>
+
             {{!-- Options menu --}}
             {{#if showOptions}}
                 <li class="nav-item dropdown navbar-submenu navbar-submenu-options hide-on-lock">

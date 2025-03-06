@@ -47,11 +47,6 @@ $xibo-color-region-selected: lighten($xibo-color-accent, 15%);
 $xibo-color-widget-hover: lighten($xibo-color-semantic-success, 15%);
 $xibo-color-widget-selected: lighten($xibo-color-semantic-success, 15%);
 
-$xibo-color-action-target: #D07CEE;
-$xibo-color-action-target-light: #EFDDF5;
-$xibo-color-action-trigger: #86F4DA;
-$xibo-color-action-trigger-light: #E3FDF6;
-
 // ZINDEX
 $viewer-object-group-overlay-z-index: 1001;
 $viewer-object-group-bts-z-index: 1002;

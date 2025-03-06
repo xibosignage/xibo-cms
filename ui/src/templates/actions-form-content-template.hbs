@@ -1,8 +1,12 @@
-<div class="tab-pane" id="actionsTab">
-    <div class="item-actions">
-        <div class="header">{{lookup trans.itemActions objectType}}</div>
-    </div>
-    <div class="other-actions">
-        <div class="header">{{trans.otherActions}}</div>
+<div class="actions-container">
+    <div class="actions-content">
+        <button class="btn btn-outline-primary w-100" type="button" data-action="add">
+            <span class="icon">
+                <i class="fa fa-plus"></i>
+            </span>
+            <span>{{trans.addAction}}</span>
+        </button>
+
+        <div class="actions-list"></div>
     </div>
 </div>
