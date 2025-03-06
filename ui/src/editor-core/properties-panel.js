@@ -2403,7 +2403,6 @@ PropertiesPanel.prototype.createEditAction = function(
     }
 
     const subType = actionTypesAndRules[actionType].subType;
-    const actionTarget = actionTypesAndRules[actionType].targetType;
 
     // Update hidden field
     if (subType) {
