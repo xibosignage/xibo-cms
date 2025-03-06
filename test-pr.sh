@@ -21,7 +21,7 @@
 #
 
 # Default values
-SERVER_PORT=8080
+SERVER_PORT=80
 
 while getopts p:d:s: option; do
   case "${option}" in
