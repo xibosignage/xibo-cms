@@ -2345,6 +2345,9 @@ PropertiesPanel.prototype.renderActionTab = function(
       dataType: 'json',
       data: {
         layoutId: app.mainObjectId,
+        start: 0,
+        // set a maximum number of action to be returned
+        length: 100,
       },
     }).done(function(res) {
       // Filter actions by groups
