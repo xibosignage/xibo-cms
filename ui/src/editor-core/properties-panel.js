@@ -2600,10 +2600,10 @@ PropertiesPanel.prototype.openEditAction = function(action) {
   // Only show playlists?
   let targetFilters = ['layout', 'regions'];
   if (
-    ['next', 'previous'].indexOf(actionData.actionType) != -1 &&
-    actionData.target === 'region'
+    ['next', 'previous'].indexOf(actionData.actionType) != -1
   ) {
-    targetFilters = ['playlist'];
+    targetFilters = (actionData.target === 'region') ?
+      ['playlist'] : ['layout'];
   }
 
   app.populateDropdownWithLayoutElements(
