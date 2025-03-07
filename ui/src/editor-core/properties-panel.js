@@ -2428,7 +2428,8 @@ PropertiesPanel.prototype.createEditAction = function(
       ['next', 'previous'].indexOf(subType) != -1 &&
       actionTarget === 'playlist'
     ) {
-      targetFilters = ['playlist'];
+      targetFilters = (actionData.target === 'region') ?
+        ['playlist'] : ['layout'];
     }
 
     app.populateDropdownWithLayoutElements(
