@@ -267,7 +267,7 @@
     {{else}}
         white-space: nowrap;
     {{/if}}
-">{{#if escapeHtml}}{{text}}{{else}}{{{text}}}{{/if}}</div>
+">{{#unless escapeHtml}}{{{text}}}{{else}}{{text}}{{/unless}}</div>
 </div>
             ]]></hbs>
         <onTemplateRender><![CDATA[

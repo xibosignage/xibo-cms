@@ -2167,7 +2167,10 @@ Viewer.prototype.renderElementContent = function(
         }
 
         // Escape HTML
-        convertedProperties.escapeHtml = template?.extends?.escapeHtml;
+        convertedProperties.escapeHtml =
+          (template?.extends?.escapeHtml === undefined) ?
+            true : template.extends.escapeHtml;
+
 
         // Compile hbs template with data
         let hbsHtml = hbsTemplate(convertedProperties);
