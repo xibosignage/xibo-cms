@@ -288,8 +288,8 @@ const formHelpers = function() {
         dataType: 'json',
         delay: 250,
         data: function(params) {
-          const queryText = params.term;
-          const queryTags = '';
+          let queryText = params.term;
+          let queryTags = '';
 
           // Tags
           if (params.term != undefined) {
