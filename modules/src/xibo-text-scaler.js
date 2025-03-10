@@ -45,7 +45,13 @@ jQuery.fn.extend({
         $(el);
 
       const waitForFontToLoad = function(font, callback) {
-        if (document.fonts.check(font)) {
+        // Wait for font to load
+        // but also make sure target has any dimensions
+        if (
+          $fitTarget.width() > 0 &&
+          $fitTarget.height() > 0 &&
+          document.fonts.check(font)
+        ) {
           callback();
         } else {
           setTimeout(function() {
