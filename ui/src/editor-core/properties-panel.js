@@ -267,6 +267,9 @@ PropertiesPanel.prototype.save = function(
           // Update layout
           app.layout.updateData(data.data);
 
+          // Render top bar to update layout changes
+          app.topbar.render();
+
           // Render viewer to reflect changes
           app.viewer.render(true);
         } else {
