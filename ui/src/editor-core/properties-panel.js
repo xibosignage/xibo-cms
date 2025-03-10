@@ -2424,8 +2424,7 @@ PropertiesPanel.prototype.createEditAction = function(
     // Only show playlists?
     let targetFilters = ['layout', 'regions'];
     if (
-      ['next', 'previous'].indexOf(subType) != -1 &&
-      actionTarget === 'playlist'
+      ['next', 'previous'].indexOf(subType) != -1
     ) {
       targetFilters = (actionData.target === 'region') ?
         ['playlist'] : ['layout'];
