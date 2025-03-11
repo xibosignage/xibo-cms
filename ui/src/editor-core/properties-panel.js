@@ -2391,7 +2391,14 @@ PropertiesPanel.prototype.createEditAction = function(
     {
       $typeInput: $newActionContainer.find('[name="source"]'),
       value: actionData.sourceId,
-      filters: ['layout', 'regions', 'widgets', 'elements', 'elementGroups'],
+      filters: [
+        'layout',
+        'regions',
+        'playlist',
+        'widgets',
+        'elements',
+        'elementGroups',
+      ],
     },
     actionData,
   );

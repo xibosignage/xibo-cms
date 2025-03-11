@@ -5270,7 +5270,7 @@ lD.populateDropdownWithLayoutElements = function(
   const addGroupToDropdown = function(groupName) {
     // Add group to dropdown
     const $group = $('<optgroup/>', {
-      label: groupName,
+      label: `-- ${groupName} --`,
     });
 
     // Add group to dropdown
@@ -5439,36 +5439,28 @@ lD.populateDropdownWithLayoutElements = function(
     });
   }
 
-  // Regions
-  const widgets = [];
-  // Region group
-  if (getRegions) {
-    addGroupToDropdown(
-      editorsTrans.actions.regions,
-    );
-  }
-
-  // Playlists
-  if (getPlaylists) {
-    addGroupToDropdown(
-      editorsTrans.actions.playlists,
-    );
-  }
-
   // Get regions and/or widgets
   if (getRegions || getWidgets || getPlaylists) {
+    const widgetsToAdd = [];
+    const regionsToAdd = [];
+    const playlistsToAdd = [];
     for (const region of Object.values(lD.layout.regions)) {
       if (
-        (
-          getRegions &&
-          region.isPlaylist === false
-        ) ||
-        (
-          getPlaylists &&
-          region.isPlaylist === true
-        )
+        getRegions &&
+        region.isPlaylist === false
       ) {
-        addObjectToDropdown({
+        regionsToAdd.push({
+          id: region.regionId,
+          name: region.name,
+          type: 'region',
+        });
+      }
+
+      if (
+        getPlaylists &&
+        region.isPlaylist === true
+      ) {
+        playlistsToAdd.push({
           id: region.regionId,
           name: region.name,
           type: 'region',
@@ -5478,7 +5470,7 @@ lD.populateDropdownWithLayoutElements = function(
       // Save widgets
       for (const widget of Object.values(region.widgets)) {
         if (getWidgets && region.isPlaylist === false) {
-          widgets.push({
+          widgetsToAdd.push({
             id: widget.widgetId,
             name: widget.widgetName,
             type: 'widget',
@@ -5486,18 +5478,36 @@ lD.populateDropdownWithLayoutElements = function(
         }
       }
     }
-  }
 
-  // Add widgets to dropdown
-  if (getWidgets) {
-    // Widget group
-    addGroupToDropdown(
-      editorsTrans.actions.widgets,
-    );
+    // Widgets - Add header and add to dropdown
+    if (widgetsToAdd.length > 0) {
+      addGroupToDropdown(
+        editorsTrans.actions.widgets,
+      );
+      for (const widget of widgetsToAdd) {
+        addObjectToDropdown(widget);
+      }
+    }
 
-    // Add widgets to dropdown
-    for (const widget of widgets) {
-      addObjectToDropdown(widget);
+    // Regions - Add header and add to dropdown
+    if (regionsToAdd.length > 0) {
+      addGroupToDropdown(
+        editorsTrans.actions.regions,
+      );
+
+      for (const region of regionsToAdd) {
+        addObjectToDropdown(region);
+      }
+    }
+
+    // Playlists - Add header and add to dropdown
+    if (playlistsToAdd.length > 0) {
+      addGroupToDropdown(
+        editorsTrans.actions.playlists,
+      );
+      for (const playlist of playlistsToAdd) {
+        addObjectToDropdown(playlist);
+      }
     }
   }
 
