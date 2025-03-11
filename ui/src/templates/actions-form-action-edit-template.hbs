@@ -25,12 +25,12 @@
     {{> forms/inputs/dropdown id="targetId" value=targetId title=trans.target customClass="action-edit-form-target action-form-input" options=(arr (obj name="" title="")) optionsTitle="title" optionsValue="name" helpText=trans.targetHelpText }}
 
     {{!-- For nav widget only --}}
-    {{> forms/inputs/dropdown id="widgetId" value=widgetId title=trans.widgetToLoad customClass="action-edit-form-target action-form-input" options=(arr (obj name="" title="") (obj name="create" title=trans.createNewDrawerWidget)) optionsTitle="title" optionsValue="name" helpText=trans.widgetToLoadHelpText visibility='[{ "type": "and", "conditions": [{ "field": "actionType", "type": "eq", "value": "navWidget" }, { "field": "targetId", "type": "neq", "value": "" }] }]' }}
+    {{> forms/inputs/dropdown id="widgetId" value=widgetId title=trans.widgetToLoad customClass="action-edit-form-target action-form-input" options=(arr (obj name="" title="") (obj name="create" title=trans.createNewDrawerWidget)) optionsTitle="title" optionsValue="name" helpText=trans.widgetToLoadHelpText visibility='[{ "type": "and", "conditions": [{ "field": "actionTypeHelper", "type": "eq", "value": "navWidget" }, { "field": "targetId", "type": "neq", "value": "" }] }]' }}
 
     {{!-- For nav layout only --}}
     {{> forms/inputs/dropdown id="layoutCode" value=layoutCode title=trans.layoutCode customClass="action-form-input" selectType="pagedSelect"
         options=(arr (obj name="" title="")) optionsTitle="title" optionsValue="name"
-        visibility='{ "field": "actionType", "type": "eq", "value": "navLayout" }'
+        visibility='{ "field": "actionTypeHelper", "type": "eq", "value": "navLayout" }'
         customData=(arr 
             (obj name="width" value="100%")
             (obj name="search-url" value=layoutCodeSearchURL)

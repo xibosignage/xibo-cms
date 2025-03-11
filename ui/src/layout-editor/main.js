@@ -5523,36 +5523,55 @@ lD.populateDropdownWithLayoutElements = function(
       !$.isEmptyObject(lD.layout.canvas) &&
       Object.keys(lD.layout.canvas.widgets).length > 0
     ) {
+      const elementsToAdd = [];
+      const elementGroupsToAdd = [];
       for (const widget of Object.values(lD.layout.canvas.widgets)) {
-        // Elements
+        // Elements - filter and add to temp array
         if (getElements && Object.keys(widget.elements).length > 0) {
-          addGroupToDropdown(
-            editorsTrans.actions.elements,
-          );
-
           for (const element of Object.values(widget.elements)) {
-            addObjectToDropdown({
-              id: element.elementId,
-              name: element.elementName,
-              type: 'element',
-            });
+            // Check if element doesn't have a group before adding
+            if (!element.groupId) {
+              elementsToAdd.push({
+                id: element.elementId,
+                name: element.elementName,
+                type: 'element',
+              });
+            }
           }
         }
 
-        // Elements groups
+        // Elements groups - filter and add to temp array
         if (getElementGroups && Object.keys(widget.elementGroups).length > 0) {
-          addGroupToDropdown(
-            editorsTrans.actions.elementGroups,
-          );
-
           for (const elementGroup of Object.values(widget.elementGroups)) {
-            addObjectToDropdown({
+            elementGroupsToAdd.push({
               id: elementGroup.id,
               name: elementGroup.elementGroupName,
               type: 'elementGroup',
             });
           }
         }
+      }
+
+      // Elements - Add header and add to dropdown
+      if (elementsToAdd.length > 0) {
+        addGroupToDropdown(
+          editorsTrans.actions.elements,
+        );
+
+        elementsToAdd.forEach((el) => {
+          addObjectToDropdown(el);
+        });
+      }
+
+      // Elements groups - Add header and add to dropdown
+      if (elementGroupsToAdd.length > 0) {
+        addGroupToDropdown(
+          editorsTrans.actions.elementGroups,
+        );
+
+        elementGroupsToAdd.forEach((elGr) => {
+          addObjectToDropdown(elGr);
+        });
       }
     }
   }

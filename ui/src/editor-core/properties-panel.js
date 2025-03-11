@@ -56,11 +56,11 @@ const actionTypesAndRules = {
   },
   navLayout: {
     targetType: 'layout,region,playlist',
-    subType: 'navigate',
+    subType: 'navLayout',
   },
   navWidget: {
     targetType: 'layout,region,playlist',
-    subType: 'navigate',
+    subType: 'navWidget',
   },
 };
 
