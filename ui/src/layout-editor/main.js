@@ -5251,15 +5251,15 @@ lD.populateDropdownWithLayoutElements = function(
   {
     $typeInput = null,
     value = null,
-    filters = ['layout', 'regions', 'widgets'],
+    filters = ['layouts', 'regions', 'widgets'],
   } = {},
   actionData = null,
 ) {
   const filterSet = new Set(filters);
   const getRegions = filterSet.has('regions');
   const getWidgets = filterSet.has('widgets');
-  const getLayouts = filterSet.has('layout');
-  const getPlaylists = filterSet.has('playlist');
+  const getLayouts = filterSet.has('layouts');
+  const getPlaylists = filterSet.has('playlists');
   const getDrawerWidgets = filterSet.has('drawerWidgets');
   const getElements = filterSet.has('elements');
   const getElementGroups = filterSet.has('elementGroups');

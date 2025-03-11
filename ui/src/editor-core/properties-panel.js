@@ -39,27 +39,27 @@ const formTemplates = {
 };
 const actionTypesAndRules = {
   nextLayout: {
-    targetType: 'layout',
+    targetType: ['layouts'],
     subType: 'next',
   },
   previousLayout: {
-    targetType: 'layout',
+    targetType: ['layouts'],
     subType: 'previous',
   },
   nextWidget: {
-    targetType: 'playlist',
+    targetType: ['playlists'],
     subType: 'next',
   },
   previousWidget: {
-    targetType: 'playlist',
+    targetType: ['playlists'],
     subType: 'previous',
   },
   navLayout: {
-    targetType: 'layout,region,playlist',
+    targetType: ['layouts', 'regions', 'playlists'],
     subType: 'navLayout',
   },
   navWidget: {
-    targetType: 'layout,region,playlist',
+    targetType: ['layouts', 'regions'],
     subType: 'navWidget',
   },
 };
@@ -2392,9 +2392,9 @@ PropertiesPanel.prototype.createEditAction = function(
       $typeInput: $newActionContainer.find('[name="source"]'),
       value: actionData.sourceId,
       filters: [
-        'layout',
+        'layouts',
         'regions',
-        'playlist',
+        'playlists',
         'widgets',
         'elements',
         'elementGroups',
@@ -2410,6 +2410,7 @@ PropertiesPanel.prototype.createEditAction = function(
     }
 
     const subType = actionTypesAndRules[actionType].subType;
+    const targetTypeFilters = actionTypesAndRules[actionType].targetType;
 
     // Update hidden field
     if (subType) {
@@ -2428,21 +2429,12 @@ PropertiesPanel.prototype.createEditAction = function(
       );
     }
 
-    // Only show playlists?
-    let targetFilters = ['layout', 'regions'];
-    if (
-      ['next', 'previous'].indexOf(subType) != -1
-    ) {
-      targetFilters = (actionData.target === 'region') ?
-        ['playlist'] : ['layout'];
-    }
-
     app.populateDropdownWithLayoutElements(
       $newActionContainer.find('[name="targetId"]'),
       {
         $typeInput: $newActionContainer.find('[name="target"]'),
         value: actionData.targetId,
-        filters: targetFilters,
+        filters: targetTypeFilters,
       },
       actionData,
     );
