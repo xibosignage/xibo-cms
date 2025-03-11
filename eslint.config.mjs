@@ -34,6 +34,7 @@ export default [...compat.extends('google'), {
     'valid-jsdoc': 'off',
     'require-jsdoc': 'off',
     'new-cap': 'off',
+    'no-const-assign': 'error',
   },
 }, {
   files: ['**/*.js'],
