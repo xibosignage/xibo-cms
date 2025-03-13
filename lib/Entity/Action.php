@@ -178,6 +178,10 @@ class Action implements \JsonSerializable
             throw new InvalidArgumentException(__('Invalid action type'), 'actionType');
         }
 
+        if (!in_array(strtolower($this->source), ['layout', 'region', 'widget'])) {
+            throw new InvalidArgumentException(__('Invalid source'), 'source');
+        }
+
         if (!in_array(strtolower($this->target), ['region', 'screen'])) {
             throw new InvalidArgumentException(__('Invalid target'), 'target');
         }
@@ -194,10 +198,6 @@ class Action implements \JsonSerializable
 
             if (!in_array($this->triggerType, ['touch', 'webhook'])) {
                 throw new InvalidArgumentException(__('Invalid trigger type'), 'triggerType');
-            }
-
-            if (!in_array(strtolower($this->source), ['layout', 'region', 'widget'])) {
-                throw new InvalidArgumentException(__('Invalid source'), 'source');
             }
 
             if ($this->actionType === 'navLayout' && $this->layoutCode == '') {
