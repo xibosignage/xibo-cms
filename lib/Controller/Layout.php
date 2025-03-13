@@ -3590,6 +3590,12 @@ class Layout extends Base
         // Calculate the duration
         $widget->calculateDuration($module);
 
+        // Set loop for media items with custom duration
+        if ($type === 'media' && $media->mediaType === 'video' && $itemDuration > $media->duration) {
+            $widget->setOptionValue('loop', 'attrib', 1);
+            $widget->save();
+        }
+
         // Assign the widget to the playlist
         $region->getPlaylist()->assignWidget($widget);
         // Save the playlist
