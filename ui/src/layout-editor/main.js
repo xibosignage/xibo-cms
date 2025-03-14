@@ -1517,7 +1517,6 @@ lD.deleteObject = function(
             value: actionFormData.widgetId,
             filters: ['drawerWidgets'],
           },
-          actionFormData,
         );
 
         // Deselect object
@@ -2120,42 +2119,6 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           }).then(itemAdded);
         });
       }
-    } else if (draggableType == 'actions') {
-      // Get target type
-      const targetType = (
-        $(droppable).hasClass('layout') || droppable === null
-      ) ?
-        'screen' :
-        $(droppable).data('type');
-
-      // Get target id
-      const targetId = $(droppable).data(targetType + 'Id');
-
-      let actionType = draggableSubType;
-
-      // If action type is nextWidget or nextLayout
-      // change to next
-      actionType =
-        (['nextWidget', 'nextLayout'].includes(draggableSubType)) ?
-          'next' :
-          actionType;
-
-      // If action type is previousWidget or previousLayout
-      // change to previous
-      actionType =
-        (['previousWidget', 'previousLayout'].includes(draggableSubType)) ?
-          'previous' :
-          actionType;
-
-      // Adding action
-      lD.addAction({
-        actionType: actionType,
-        layoutId: lD.layout.layoutId,
-        target: targetType,
-        targetId: targetId,
-      });
-
-      itemAdded();
     } else if (
       draggableType == 'element' ||
       draggableType == 'element-group'
@@ -3183,7 +3146,6 @@ lD.addModuleToPlaylist = function(
                   value: newWidgetId,
                   filters: ['drawerWidgets'],
                 },
-                $actionForm.data(),
               );
             },
           },
@@ -3376,7 +3338,6 @@ lD.addMediaToPlaylist = function(
                 value: newWidgetId,
                 filters: ['drawerWidgets'],
               },
-              $actionForm.data(),
             );
           },
         },
@@ -3409,12 +3370,6 @@ lD.addMediaToPlaylist = function(
 lD.clearTemporaryData = function() {
   // Hide open tooltips
   lD.editorContainer.find('.tooltip').remove();
-
-  // Clear action highlights on the viewer
-  // if we don't have an action form open
-  if (lD.propertiesPanel.DOMObject.find('.action-edit-form').length == 0) {
-    lD.viewer.clearActionHighlights();
-  }
 };
 
 /**
@@ -3702,7 +3657,8 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
   let objAuxId = null;
 
   // Don't open context menu in read only mode
-  if (lD.readOnlyMode) {
+  // or interactive mode
+  if (lD.readOnlyMode || lD.interactiveMode) {
     return;
   }
 
@@ -4684,7 +4640,9 @@ lD.toggleInteractiveMode = function(enable = true) {
 
   if (enable) { // Enable
     // Deselect all objects
-    this.selectObject();
+    this.selectObject({
+      reloadPropertiesPanel: false,
+    });
 
     // Mark main editor container as in Interactive mode
     lD.editorContainer.addClass('interactive-mode');
@@ -4693,6 +4651,8 @@ lD.toggleInteractiveMode = function(enable = true) {
     lD.editorContainer.removeClass('interactive-mode');
 
     // TODO: Remove action components
+    // Remove action lines
+    this.viewer.removeActionLine();
   }
 
   // Render editor and containers containers
@@ -5240,20 +5200,18 @@ lD.initDrawer = function(data) {
 /**
  * Populate dropdown with layout elements
  * @param {object} $dropdown - Dropdown to populate
- * @param {object} Options.$typeInput - Input type to be updated
+ * @param {object} Options.typeInput - Input type to be updated
  * @param {string} Options.value - Initial value for the input
  * @param {string[]} Options.filters - Types to be included
- * @param {object} actionData - Data for the action
  * @return {boolean} false if unsuccessful
  */
 lD.populateDropdownWithLayoutElements = function(
   $dropdown,
   {
-    $typeInput = null,
     value = null,
+    typeInput = null,
     filters = ['layouts', 'regions', 'widgets'],
   } = {},
-  actionData = null,
 ) {
   const filterSet = new Set(filters);
   const getRegions = filterSet.has('regions');
@@ -5292,134 +5250,6 @@ lD.populateDropdownWithLayoutElements = function(
 
     // Add to dropdown
     $dropdown.append($option);
-  };
-
-  // Update type value
-  const updateTypeValue = function() {
-    // If there's no typeInput, stop
-    if (!$typeInput) {
-      return;
-    }
-
-    const $form = $typeInput.parents('form');
-    // If input is target, and widgetId has value
-    // then update the widget drawer edit element
-    const $widgetIDInput = $form.find('[name=widgetId]');
-
-    let typeInputValue = $dropdown.find(':selected').data('type');
-
-    // Update targetId and target
-    // Input fields are prepended with input_
-    if (
-      $typeInput.attr('id') === 'input_target'
-    ) {
-      const dropdownVal = $dropdown.val();
-      // Update targetId and target
-      actionData.targetId = dropdownVal;
-      actionData.target = typeInputValue;
-
-      // Update also on form
-      $form.data('targetId', dropdownVal);
-      $form.data('target', typeInputValue);
-    }
-
-    // Update sourceId and source
-    if (
-      $typeInput.attr('id') === 'input_source'
-    ) {
-      const dropdownVal = $dropdown.val();
-      // Update sourceId and source
-      actionData.sourceId = dropdownVal;
-      actionData.source = typeInputValue;
-
-      // Update also on form
-      $form.data('sourceId', dropdownVal);
-      $form.data('source', typeInputValue);
-    }
-
-    // Update widgetId
-    if (
-      $widgetIDInput.length > 0 &&
-      $widgetIDInput.val() != '' &&
-      getDrawerWidgets
-    ) {
-      // Call update widget drawer edit element
-      handleEditWidget($widgetIDInput.val());
-    }
-
-    // For target, if target is layout, change it to screen
-    if ($typeInput.attr('id') === 'input_target' &&
-      typeInputValue === 'layout'
-    ) {
-      typeInputValue = 'screen';
-    }
-
-    // Update type value
-    $typeInput.val(typeInputValue);
-  };
-
-  // Update highlight on viewer
-  const updateHighlightOnViewer = function() {
-    $typeInput && (actionData[$typeInput.attr('id')] = $typeInput.val());
-    actionData[$dropdown.attr('id')] = $dropdown.val();
-
-    lD.viewer.createActionHighlights(actionData, 1);
-  };
-
-  // Open or edit drawer widget
-  const handleEditWidget = function(dropdownValue) {
-    const $dropdownParent = $dropdown.parent();
-
-    const removeDeleteButton = function() {
-      // Remove delete widget button
-      $dropdown.siblings('.delete-widget-btn').remove();
-
-      // Remove class from container
-      $dropdownParent.removeClass('delete-active');
-    };
-
-    if (dropdownValue === 'create') {
-      // Create new
-      lD.viewer.addActionEditArea(actionData, 'create');
-
-      removeDeleteButton();
-    } else if (dropdownValue != '' && dropdownValue != null) {
-      // Update action widget data
-      actionData.widgetId = dropdownValue;
-
-      // Edit existing
-      lD.viewer.addActionEditArea(actionData, 'edit');
-
-      // Show delete button on dropdown
-      if ($dropdown.siblings('.delete-widget-btn').length === 0) {
-        const $deleteBtn = $(
-          '<div class="btn btn-danger delete-widget-btn" title="' +
-          editorsTrans.actions.deleteWidget + '">' +
-          editorsTrans.actions.deleteWidget +
-          '</div>',
-        ).on('click', function() {
-          const widgetId = $dropdown.val();
-          const drawerId = lD.getObjectByTypeAndId('drawer').regionId;
-
-          removeDeleteButton();
-
-          lD.deleteObject(
-            'widget',
-            widgetId,
-            drawerId,
-            true,
-          );
-        });
-
-        // Append to dropdown parent
-        $dropdownParent.append($deleteBtn);
-
-        // Add class to container
-        $dropdownParent.addClass('delete-active');
-      }
-    } else {
-      removeDeleteButton();
-    }
   };
 
   // Clear dropdown
@@ -5586,28 +5416,15 @@ lD.populateDropdownWithLayoutElements = function(
     }
   }
 
+  // Set typeInput if exists
+  if (typeInput) {
+    $dropdown.attr('data-type-input', typeInput);
+  }
+
   // Set initial value if provided
   if (value !== null) {
     $dropdown.val(value).trigger('change');
-    updateTypeValue();
-
-    if (getDrawerWidgets) {
-      handleEditWidget($dropdown.val());
-    }
   }
-
-  // Handle dropdown change
-  // and update type
-  $dropdown.off('select2:select').on('select2:select', function() {
-    if (getDrawerWidgets) {
-      // Open/edit widget
-      handleEditWidget($dropdown.val());
-    } else {
-      // Update type and highlight
-      updateTypeValue();
-      updateHighlightOnViewer();
-    }
-  });
 
   return true;
 };

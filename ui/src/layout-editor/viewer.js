@@ -41,6 +41,21 @@ const viewerPlaylistControlsTemplate =
   require('../templates/viewer-playlist-controls.hbs');
 const drawThrottle = 60;
 const drawElementThrottle = 30;
+const lineDef = {
+  normalWidth: 2,
+  hoverWidth: 4,
+  editedColor: '#EB7857',
+  normalLightThemeColor: '#74ACFA',
+  normalDarkThemeColor: '#1775F6',
+  circularStartPos: {x: '50%', y: '0%'},
+  circularEndPos: {x: '100%', y: '50%'},
+  circularStartSocket: 'top',
+  circularEndSocket: 'right',
+  pathNormal: 'grid',
+  pathCircular: 'grid',
+  gravityNormal: 10,
+  gravityCircular: 'auto',
+};
 
 /**
  * Viewer contructor
@@ -78,6 +93,10 @@ const Viewer = function(parent, container) {
     snapToBorders: false,
     snapToElements: false,
   };
+  this.creatingAction = false;
+
+  // Action lines
+  this.actionLines = {};
   this.creatingAction = false;
 
   // Selecto
@@ -324,14 +343,6 @@ Viewer.prototype.render = function(forceReload = false, targets = {}) {
     // Show loading template
     $viewerContainer.html(loadingTemplate());
 
-    // Interactive mode
-    if (lD.interactiveMode) {
-      console.log('Viewer: Interactive mode');
-
-      // TODO: Create interactive components ( arrows for actions, etc )
-      return;
-    }
-
     // When rendering, preview is always set to false
     this.previewPlaying = false;
 
@@ -424,7 +435,12 @@ Viewer.prototype.render = function(forceReload = false, targets = {}) {
   this.initSelecto();
 
   // Handle UI interactions
-  this.handleInteractions();
+  this.handleUI();
+
+  // Interactive controls
+  if (lD.interactiveMode) {
+    this.handleActionsUI();
+  }
 
   // If we are selecting an element in a group,
   // we need to put the group in edit mode
@@ -463,9 +479,9 @@ Viewer.prototype.render = function(forceReload = false, targets = {}) {
 };
 
 /**
- * Handle viewer interactions
+ * Handle viewer UI
  */
-Viewer.prototype.handleInteractions = function() {
+Viewer.prototype.handleUI = function() {
   const self = this;
   const $viewerContainer = this.DOMObject;
   const $viewerContainerParent = $viewerContainer.parent();
@@ -668,6 +684,21 @@ Viewer.prototype.handleInteractions = function() {
 
       const $target = $(e.target).hasClass('viewer-object-select') ?
         $(e.target) : $(e.currentTarget);
+
+      if (
+        lD.interactiveMode
+      ) {
+        if (self.creatingAction === false) {
+          self.creatingAction = true;
+
+          // Create temporary control for arrow
+          self.startCreatingActionLine(
+            $target.attr('id'),
+          );
+        }
+
+        return;
+      }
 
       const playlistEditorBtnClick = function(playlistId) {
         // Edit region if it's a playlist
@@ -1041,6 +1072,40 @@ Viewer.prototype.handleInteractions = function() {
       }
       // Prevent browser menu to open
       return false;
+    });
+
+
+  // Handle mouse up for creating actions
+  $viewerContainerParent
+    .off('mouseup.viewer')
+    .on('mouseup.viewer', function(e) {
+      if (
+        !lD.interactiveMode ||
+        !$(e.target).is('.viewer-object-select') ||
+        self.creatingAction === false
+      ) {
+        // Remove temp line
+        self.removeActionLine('action_line_tempAction');
+
+        // Finish creating action
+        self.stopCreatingActionLine();
+
+        return;
+      }
+
+      e.stopPropagation();
+
+      // Update target
+      const newLineId = self.updateActionLineTargets(
+        'action_line_tempAction',
+        null,
+        $(e.target).attr('id'),
+      );
+
+      self.updateActionLine(newLineId);
+
+      // Finish creating action
+      self.stopCreatingActionLine();
     });
 
   // Handle fullscreen button
@@ -1866,7 +1931,7 @@ Viewer.prototype.renderElement = function(
   // Render element content and handle interactions after
   this.renderElementContent(element, () => {
     // Handle viewer interactions
-    self.handleInteractions();
+    self.handleUI();
   });
 };
 
@@ -2730,6 +2795,8 @@ Viewer.prototype.initMoveable = function() {
     ) {
       e.target.style.top = `${e.top}px`;
     }
+
+    this.updateActionLine();
   }).on('dragEnd', (e) => {
     if (e.isDrag) {
       // Save transformation
@@ -2804,6 +2871,9 @@ Viewer.prototype.initMoveable = function() {
         e.target.style.top = `${e.top}px`;
       }
     });
+
+    this.updateActionLine();
+
     // Margin to prevent dragging outside of the container
   }).on('dragGroupEnd', (e) => {
     if (e.isDrag) {
@@ -2883,6 +2953,8 @@ Viewer.prototype.initMoveable = function() {
     } else if (selectedObject.type == 'element-group') {
       self.updateElementGroupWithThrottle(selectedObject);
     }
+
+    this.updateActionLine();
   }).on('resizeEnd', (e) => {
     // Save transformation
     transformSplit = saveTransformation(e.target);
@@ -3917,62 +3989,6 @@ Viewer.prototype.updateRegionContent = function(
 };
 
 /**
- * Highlight action targets on viewer
- * @param {string} actionData - Action data
- * @param {string} level - Highlight level (0 - Light, 1- Heavy)
- */
-Viewer.prototype.createActionHighlights = function(actionData, level) {
-  const self = this;
-
-  const typeSelectorMap = {
-    region: '.designer-region:not(.designer-region-playlist)',
-    widget: '.designer-region:not(.designer-region-playlist) .designer-widget',
-    layout: '.viewer-object.layout',
-  };
-
-  // Clear previous highlights
-  this.clearActionHighlights();
-
-  const highlightElement = function(objectType, elementId, highlightType) {
-    // Find element on viewer
-    const $viewerObject = self.DOMObject.find(
-      typeSelectorMap[objectType] +
-      '[data-' + objectType + '-id="' + elementId + '"]',
-    );
-
-    // Add highlight class
-    $viewerObject.addClass(
-      `action-highlight action-highlight-${highlightType} highlight-${level}`,
-    );
-  };
-
-  // Get target if exists
-  if (actionData.target) {
-    // If target is "screen", use "layout" to highlight
-    const targetType = (actionData.target === 'screen') ?
-      'layout' :
-      actionData.target;
-
-    highlightElement(targetType, actionData.targetId, 'target');
-  }
-
-  // Get trigger if exists
-  if (actionData.source) {
-    highlightElement(actionData.source, actionData.sourceId, 'trigger');
-  }
-};
-
-/**
- * Clear action highlights on viewer
- */
-Viewer.prototype.clearActionHighlights = function() {
-  this.DOMObject.find('.action-highlight').removeClass(
-    'action-highlight action-highlight-target ' +
-    'action-highlight-trigger highlight-0 highlight-1',
-  );
-};
-
-/**
  * Add new widget action element
  * @param {object} actionData - Action data
  * @param {string} createOrEdit - Create or edit action
@@ -4402,6 +4418,390 @@ Viewer.prototype.toggleLoader = function(
   } else {
     self.DOMObject.find('#' + target + ' > .loader')
       .remove();
+  }
+};
+
+/**
+ * Handle actions
+ */
+Viewer.prototype.handleActionsUI = function() {
+  const self = this;
+  const app = self.parent;
+
+  // Add screen control
+  self.DOMObject.append(
+    `<div 
+      class="action-screen-helper"
+      data-type="screen"
+      data-screen-id=${app.mainObjectId}>
+      Layout
+    </div>`,
+  );
+
+  // Create lines for existing actions
+  app.actionManager.getAllActions(app.mainObjectId)
+    .then(function(data) {
+      if (
+        !$.isEmptyObject(data)
+      ) {
+        Object.entries(data).forEach(([id, action]) => {
+          self.addActionLine(
+            {
+              type: action.source,
+              id: action.sourceId,
+            },
+            {
+              type: action.target,
+              id: action.targetId,
+            },
+            id,
+          );
+        });
+      }
+    });
+};
+
+/**
+ * Start to create Action Line
+ * @param {object} triggerId
+ */
+Viewer.prototype.startCreatingActionLine = function(
+  triggerId,
+) {
+  return;
+
+  const self = this;
+  const $trigger = $('#' + triggerId);
+  const $targetHelper = $('<div id="addActionTargetHelper"></div>')
+    .css({
+      width: '10px',
+      height: '10px',
+      position: 'absolute',
+    })
+    .appendTo('body');
+
+  self.addActionLine(
+    $trigger.attr('id'),
+    'addActionTargetHelper',
+    'action_line_tempAction',
+  );
+
+  $(document).on('mousemove.addActionLine', function(ev) {
+    $targetHelper.css({
+      left: ev.clientX + 'px',
+      top: ev.clientY + 'px',
+    });
+
+    // Update action
+    self.updateActionLine('action_line_tempAction');
+  });
+};
+
+
+/**
+ * Stop creating Action Line
+ */
+Viewer.prototype.stopCreatingActionLine = function() {
+  return;
+  this.creatingAction = false;
+
+  // Remove event
+  $(document).off('mousemove.addActionLine');
+
+  // Remove helper
+  $('#addActionTargetHelper')
+    .remove();
+};
+
+/**
+ * Add Action Line
+ * @param {object} trigger
+ * @param {object} target
+ * @param {string} actionId
+ */
+Viewer.prototype.addActionLine = function(
+  trigger,
+  target,
+  actionId,
+) {
+  const self = this;
+  const app = self.parent;
+  const triggerType = (trigger.type === 'layout') ?
+    'screen' : trigger.type;
+
+  const $trigger = (triggerType == 'element' || triggerType == 'elementGroup') ?
+    this.DOMObject.find('#' + trigger.id) :
+    this.DOMObject.find(`[data-type="${triggerType}"]` +
+      `[data-${triggerType}-id="${trigger.id}"]`);
+  const $target = (target.type == 'element' || target.type == 'elementGroup') ?
+    this.DOMObject.find('#' + target.id) :
+    this.DOMObject
+      .find(`[data-type="${target.type}"]` +
+        `[data-${target.type}-id="${target.id}"]`);
+
+  if (
+    $trigger.length === 0 ||
+    $target.length === 0
+  ) {
+    console.info('Invalid trigger or target!');
+    ($trigger.length === 0) &&
+      console.log(`[data-type="${triggerType}"]` +
+      `[data-${triggerType}-id="${trigger.id}"]`);
+    ($target.length === 0) &&
+      console.log(`[data-type="${target.type}"]` +
+        `[data-${target.type}-id="${target.id}"]`);
+    ($trigger[0] === $target[0]) &&
+        console.log(`Same: [data-type="${target.type}"]` +
+          `[data-${target.type}-id="${target.id}"]`);
+    return;
+  }
+
+  // Create line
+  if ($trigger[0] != $target[0]) {
+    this.actionLines[actionId] = {
+      line: new LeaderLine(
+        $trigger[0],
+        $target[0],
+        {
+          color: (this.theme === 'dark') ?
+            lineDef.normalDarkThemeColor :
+            lineDef.normalLightThemeColor,
+          size: 3,
+          startPlug: 'square',
+        },
+      ),
+      trigger: trigger,
+      target: target,
+      type: 'normal',
+    };
+  } else {
+    this.actionLines[actionId] = {
+      line: new LeaderLine(
+        LeaderLine.pointAnchor($target[0], lineDef.circularStartPos),
+        LeaderLine.pointAnchor($target[0], lineDef.circularEndPos),
+        {
+          color: (this.theme === 'dark') ?
+            lineDef.normalDarkThemeColor :
+            lineDef.normalLightThemeColor,
+          size: 3,
+          startSocket: lineDef.circularStartSocket,
+          endSocket: lineDef.circularEndSocket,
+          startPlug: 'square',
+          path: lineDef.pathCircular,
+        },
+      ),
+      trigger: trigger,
+      target: target,
+      type: 'circular',
+    };
+  }
+
+  // Add data to line SVG
+  const lineID = this.actionLines[actionId].line._id;
+  const $lineSVG = $('#leader-line-' + lineID + '-line-path').parents('svg');
+
+  // Handle line events
+  $lineSVG.addClass('xibo-editor-action-line')
+    .attr('data-action-id', actionId)
+    .on('mouseenter', () => {
+      this.actionLines[actionId].line.size =
+        lineDef.hoverWidth;
+    })
+    .on('mouseleave', () => {
+      this.actionLines[actionId].line.size =
+        lineDef.normalWidth;
+    })
+    .on('click', (ev) => {
+      const actionData = $(ev.currentTarget).data();
+
+      // Open action on Property Panel
+      // only if no action is being edited
+      if (
+        $.isEmptyObject(app.actionManager.editing) &&
+        actionData &&
+        actionData.actionId
+      ) {
+        lD.propertiesPanel.openEditAction(actionData.actionId);
+      }
+    });
+
+  // Update when creating
+  this.updateActionLine(actionId);
+};
+
+/**
+ * Update Action Line
+ * @param {string} actionLineId
+ */
+Viewer.prototype.updateActionLine = function(
+  actionLineId,
+) {
+  const self = this;
+  const app = self.parent;
+
+  let actionsToUpdate = [];
+  // If we have specific action
+  if (actionLineId) {
+    // Specific line only
+    actionsToUpdate.push(actionLineId);
+  } else {
+    // All lines
+    actionsToUpdate = Object.keys(this.actionLines);
+  }
+
+  for (let index = 0; index < actionsToUpdate.length; index++) {
+    const lineId = actionsToUpdate[index];
+    const isActionBeingEdited =
+      app.actionManager.editing.actionId === Number(lineId);
+    const ald = lineDef;
+
+    if (!this.actionLines[lineId]) {
+      return;
+    }
+
+    // Set defaults for normal and circular
+    if (this.actionLines[lineId].type === 'normal') {
+      this.actionLines[lineId].line.startSocket = 'auto';
+      this.actionLines[lineId].line.endSocket = 'auto';
+      this.actionLines[lineId].line.path = lineDef.pathNormal;
+      this.actionLines[lineId].line.startSocketGravity = lineDef.gravityNormal;
+      this.actionLines[lineId].line.endSocketGravity = lineDef.gravityNormal;
+    } else {
+      this.actionLines[lineId].line.startSocketGravity =
+        lineDef.gravityCircular;
+      this.actionLines[lineId].line.endSocketGravity =
+        lineDef.gravityCircular;
+    }
+
+    this.actionLines[lineId].line.size = ald.normalWidth;
+
+    // Update position
+    this.actionLines[lineId].line.position();
+
+    // Update color
+    const normalLineColor = ((this.theme === 'dark') ?
+      ald.normalDarkThemeColor : ald.normalLightThemeColor);
+    this.actionLines[lineId].line.color = (isActionBeingEdited) ?
+      ald.editedColor : normalLineColor;
+
+    // For normal line, if it's too small, set top as anchor
+    if (this.actionLines[lineId].type === 'normal') {
+      const minDimension = 100;
+      const boundingBox = $('svg.xibo-editor-action-line')[0].getBBox();
+      if (
+        boundingBox.width < minDimension &&
+        boundingBox.height < minDimension
+      ) {
+        this.actionLines[lineId].line.startSocket = 'top';
+        this.actionLines[lineId].line.endSocket = 'top';
+        this.actionLines[lineId].line.path = lineDef.pathCircular;
+      }
+    }
+  }
+};
+
+/**
+ * Update action line targets
+ * @param {string} actionLineId
+ * @param {object} trigger
+ * @param {object} target
+ */
+Viewer.prototype.updateActionLineTargets = function(
+  actionLineId,
+  trigger,
+  target,
+) {
+  // If action line doesn't exist
+  if (
+    !actionLineId ||
+    !this.actionLines[actionLineId]
+  ) {
+    return;
+  }
+
+  const triggerType = (trigger.type === 'layout') ?
+    'screen' : trigger.type;
+
+  const $trigger =(triggerType == 'element' || triggerType == 'elementGroup') ?
+    this.DOMObject.find('#' + trigger.id) :
+    this.DOMObject.find(`[data-type="${triggerType}"]` +
+      `[data-${triggerType}-id="${trigger.id}"]`);
+  const $target = (target.type == 'element' || target.type == 'elementGroup') ?
+    this.DOMObject.find('#' + target.id) :
+    this.DOMObject
+      .find(`[data-type="${target.type}"]` +
+        `[data-${target.type}-id="${target.id}"]`);
+
+  if (
+    $trigger.length === 0 ||
+    $target.length === 0
+  ) {
+    console.info('Invalid trigger or target!');
+    return;
+  }
+
+  // If target is same as trigger, set as circular line
+  if ($trigger[0] === $target[0]) {
+    this.actionLines[actionLineId].line.start =
+      LeaderLine.pointAnchor($target[0], lineDef.circularStartPos);
+    this.actionLines[actionLineId].line.end =
+      LeaderLine.pointAnchor($target[0], lineDef.circularEndPos);
+    this.actionLines[actionLineId].line.startSocket =
+      lineDef.circularStartSocket;
+    this.actionLines[actionLineId].line.endSocket =
+      lineDef.circularEndSocket;
+    this.actionLines[actionLineId].type = 'circular';
+    this.actionLines[actionLineId].line.path = lineDef.pathCircular;
+    this.actionLines[actionLineId].line.startSocketGravity =
+      lineDef.gravityCircular;
+    this.actionLines[actionLineId].line.endSocketGravity =
+      lineDef.gravityCircular;
+  } else {
+    // Normal line
+    this.actionLines[actionLineId].line.start = $trigger[0];
+    this.actionLines[actionLineId].line.end = $target[0];
+    this.actionLines[actionLineId].line.startSocket = 'auto',
+    this.actionLines[actionLineId].line.endSocket = 'auto',
+    this.actionLines[actionLineId].type = 'normal';
+    this.actionLines[actionLineId].line.path = lineDef.pathNormal;
+    this.actionLines[actionLineId].line.startSocketGravity =
+      lineDef.gravityNormal;
+    this.actionLines[actionLineId].line.endSocketGravity =
+      lineDef.gravityNormal;
+  }
+
+  return this.actionLines[actionLineId];
+};
+
+/**
+ * Remove Action Line
+ * @param {string} actionLineId
+ */
+Viewer.prototype.removeActionLine = function(actionLineId) {
+  const self = this;
+  const removeLine = function(lineId) {
+    // Remove action line if it exists
+    if (self.actionLines[lineId]) {
+      self.actionLines[lineId].line.remove();
+      delete self.actionLines[lineId];
+    }
+  };
+
+  // Make sure we're not creating an action line
+  if (self.creatingAction) {
+    self.stopCreatingActionLine();
+  }
+
+  // Remove specific line
+  if (actionLineId) {
+    removeLine(actionLineId);
+  } else {
+    const allLines = Object.keys(this.actionLines);
+
+    for (let index = 0; index < allLines.length; index++) {
+      const lineId = allLines[index];
+      removeLine(lineId);
+    }
   }
 };
 

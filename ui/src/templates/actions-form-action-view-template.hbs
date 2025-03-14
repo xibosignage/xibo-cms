@@ -13,7 +13,7 @@
     {{/if}}
 
     {{#if sourceId}}
-        <div>{{trans.triggerTarget}}: {{sourceId}}</div>
+        <div>{{trans.triggerTarget}}: {{source}} ({{sourceId}})</div>
     {{/if}}
 
     {{#if targetId}}
@@ -24,7 +24,7 @@
             {{set "targetValue" target}}
         {{/eq}}
 
-        <div>{{trans.target}}: {{targetValue}} - {{targetId}}</div>
+        <div>{{trans.target}}: {{targetValue}} ({{targetId}})</div>
     {{/if}}
 
     {{#if widgetId}}

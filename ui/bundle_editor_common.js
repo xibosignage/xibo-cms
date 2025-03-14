@@ -33,3 +33,8 @@ imagesLoaded.makeJQueryPlugin( window.$ );
 // moveable
 window.Moveable = require('moveable/dist/moveable.min.js');
 window.Selecto = require('selecto/dist/selecto.min.js');
+
+// Leader Line
+import {LeaderLine}
+  from 'exports-loader?exports=LeaderLine!leader-line/leader-line.min.js';
+window.LeaderLine = LeaderLine;

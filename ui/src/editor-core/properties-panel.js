@@ -39,27 +39,31 @@ const formTemplates = {
 };
 const actionTypesAndRules = {
   nextLayout: {
-    targetType: ['layouts'],
+    targetType: 'screen',
+    targetTypeFilter: ['layouts'],
     subType: 'next',
   },
   previousLayout: {
-    targetType: ['layouts'],
+    targetType: 'screen',
+    targetTypeFilter: ['layouts'],
     subType: 'previous',
   },
   nextWidget: {
-    targetType: ['playlists'],
+    targetType: 'region',
+    targetTypeFilter: ['playlists'],
     subType: 'next',
   },
   previousWidget: {
-    targetType: ['playlists'],
+    targetType: 'region',
+    targetTypeFilter: ['playlists'],
     subType: 'previous',
   },
   navLayout: {
-    targetType: ['layouts', 'regions', 'playlists'],
+    targetTypeFilter: ['layouts', 'regions', 'playlists'],
     subType: 'navLayout',
   },
   navWidget: {
-    targetType: ['layouts', 'regions'],
+    targetTypeFilter: ['layouts', 'regions'],
     subType: 'navWidget',
   },
 };
@@ -2330,8 +2334,10 @@ PropertiesPanel.prototype.renderActions = function(
   // Get actions and populate form containers
   app.actionManager.getAllActions(app.mainObjectId)
     .then(function(data) {
-      if (data && data.length > 0) {
-        data.forEach((action) => {
+      if (
+        !$.isEmptyObject(data)
+      ) {
+        Object.entries(data).forEach(([_id, action]) => {
           self.createPreviewAction(
             action,
           );
@@ -2367,6 +2373,14 @@ PropertiesPanel.prototype.createEditAction = function(
   // Add action types
   actionData.actionTypeOptions = Object.keys(actionTypesAndRules)
     .map((action) => {
+      // Set action type helper
+      if (
+        actionTypesAndRules[action].targetType === actionData.target &&
+        actionTypesAndRules[action].subType === actionData.actionType
+      ) {
+        actionData.actionTypeHelper = action;
+      }
+
       return {
         name: action,
         title: propertiesPanelTrans.actions[action],
@@ -2379,6 +2393,9 @@ PropertiesPanel.prototype.createEditAction = function(
       trans: propertiesPanelTrans.actions,
     })));
 
+  // Add action id to container
+  $newActionContainer.attr('data-action-id', actionData.actionId);
+
   // Add action to container
   // or replace target
   ($target) ?
@@ -2389,7 +2406,7 @@ PropertiesPanel.prototype.createEditAction = function(
   app.populateDropdownWithLayoutElements(
     $newActionContainer.find('[name="sourceId"]'),
     {
-      $typeInput: $newActionContainer.find('[name="source"]'),
+      typeInput: 'source',
       value: actionData.sourceId,
       filters: [
         'layouts',
@@ -2400,7 +2417,6 @@ PropertiesPanel.prototype.createEditAction = function(
         'elementGroups',
       ],
     },
-    actionData,
   );
 
   const updateActionType = function(actionType) {
@@ -2410,7 +2426,7 @@ PropertiesPanel.prototype.createEditAction = function(
     }
 
     const subType = actionTypesAndRules[actionType].subType;
-    const targetTypeFilters = actionTypesAndRules[actionType].targetType;
+    const targetTypeFilters = actionTypesAndRules[actionType].targetTypeFilter;
 
     // Update hidden field
     if (subType) {
@@ -2425,18 +2441,16 @@ PropertiesPanel.prototype.createEditAction = function(
           value: actionData.widgetId,
           filters: ['drawerWidgets'],
         },
-        actionData,
       );
     }
 
     app.populateDropdownWithLayoutElements(
       $newActionContainer.find('[name="targetId"]'),
       {
-        $typeInput: $newActionContainer.find('[name="target"]'),
+        typeInput: 'target',
         value: actionData.targetId,
         filters: targetTypeFilters,
       },
-      actionData,
     );
   };
 
@@ -2453,7 +2467,7 @@ PropertiesPanel.prototype.createEditAction = function(
   // set source as "screen"
   const updateSource = function(triggerType) {
     if (triggerType == 'webhook') {
-      $newActionContainer.find('[name="source"]').val('layout');
+      $newActionContainer.find('[name="source"]').val('screen');
       $newActionContainer.find('[name="sourceId"]').val(app.mainObjectId)
         .trigger('change');
     }
@@ -2469,6 +2483,127 @@ PropertiesPanel.prototype.createEditAction = function(
   updateSource(
     $triggerTypeInput.val(),
   );
+
+  // Update type value
+  const updateTypeValue = function($target) {
+    const typeInput = $target.data('type-input');
+    const $typeInput = self.DOMObject.find(`[name="${typeInput}"]`);
+
+    // If there's no typeInput, stop
+    if (
+      !typeInput &&
+      $typeInput.length === 0
+    ) {
+      return;
+    }
+
+    let typeInputValue = $target.find(':selected').data('type');
+
+    const $form = $typeInput.parents('form');
+    // If input is target, and widgetId has value
+    // then update the widget drawer edit element
+    const $widgetIDInput = $form.find('[name=widgetId]');
+
+    // Update widgetId
+    if (
+      $widgetIDInput.length > 0 &&
+      $widgetIDInput.val() != '' &&
+      getDrawerWidgets
+    ) {
+      // Call update widget drawer edit element
+      handleEditWidget($widgetIDInput.val());
+    }
+    // For target, if target is layout, change it to screen
+    if ($typeInput.attr('id') === 'input_target' &&
+      typeInputValue === 'layout'
+    ) {
+      typeInputValue = 'screen';
+    }
+
+    // Update type value
+    $typeInput.val(typeInputValue);
+  };
+
+  // TODO: Open or edit drawer widget
+  /*
+  const handleEditWidget = function(dropdownValue) {
+    const $dropdownParent = $dropdown.parent();
+
+    const removeDeleteButton = function() {
+      // Remove delete widget button
+      $dropdown.siblings('.delete-widget-btn').remove();
+
+      // Remove class from container
+      $dropdownParent.removeClass('delete-active');
+    };
+
+    if (dropdownValue === 'create') {
+      // Create new
+      lD.viewer.addActionEditArea(actionData, 'create');
+
+      removeDeleteButton();
+    } else if (dropdownValue != '' && dropdownValue != null) {
+      // Update action widget data
+      actionData.widgetId = dropdownValue;
+
+      // Edit existing
+      lD.viewer.addActionEditArea(actionData, 'edit');
+
+      // Show delete button on dropdown
+      if ($dropdown.siblings('.delete-widget-btn').length === 0) {
+        const $deleteBtn = $(
+          '<div class="btn btn-danger delete-widget-btn" title="' +
+          editorsTrans.actions.deleteWidget + '">' +
+          editorsTrans.actions.deleteWidget +
+          '</div>',
+        ).on('click', function() {
+          const widgetId = $dropdown.val();
+          const drawerId = lD.getObjectByTypeAndId('drawer').regionId;
+
+          removeDeleteButton();
+
+          lD.deleteObject(
+            'widget',
+            widgetId,
+            drawerId,
+            true,
+          );
+        });
+
+        // Append to dropdown parent
+        $dropdownParent.append($deleteBtn);
+
+        // Add class to container
+        $dropdownParent.addClass('delete-active');
+      }
+    } else {
+      removeDeleteButton();
+    }
+  };
+  */
+
+  // Handle trigger and target change
+  $newActionContainer.find('[name="sourceId"], [name="targetId"]')
+    .on('change', function(e) {
+      updateTypeValue($(e.currentTarget));
+
+      const source = $newActionContainer.find('[name="source"]').val();
+      const sourceId = $newActionContainer.find('[name="sourceId"]').val();
+      const target = $newActionContainer.find('[name="target"]').val();
+      const targetId = $newActionContainer.find('[name="targetId"]').val();
+
+      app.viewer.updateActionLineTargets(
+        actionData.actionId,
+        {
+          type: source,
+          id: sourceId,
+        },
+        {
+          type: target,
+          id: targetId,
+        },
+      );
+    });
 
   // Handle buttons
   $newActionContainer.find('[type="button"]').on('click', function(e) {
@@ -2500,6 +2635,10 @@ PropertiesPanel.prototype.createEditAction = function(
       position: 'left',
     },
   );
+
+  // Highlight on viewer
+  (actionData.actionId) &&
+    app.viewer.updateActionLine();
 
   // Run xiboInitialise on form
   XiboInitialise('.action-edit-form');
@@ -2537,6 +2676,9 @@ PropertiesPanel.prototype.createPreviewAction = function(
       trans: propertiesPanelTrans.actions,
     })));
 
+  // Add action id to container
+  $actionContainer.attr('data-action-id', actionData.actionId);
+
   // Add action to container
   // or replace target
   ($target) ?
@@ -2552,14 +2694,33 @@ PropertiesPanel.prototype.createPreviewAction = function(
         $actionContainer.data(),
       ).then((wasRemoved) => {
         if (wasRemoved) {
+          // Remove action line
+          app.viewer.removeActionLine($actionContainer.data('actionId'));
+
           // Remove action container
           $actionContainer.remove();
         }
       });
     } else if (btnAction === 'edit') {
-      self.openEditAction($actionContainer);
+      self.openEditAction(actionData.actionId);
     }
   });
+
+  // Update action line
+  if (actionData.actionId) {
+    app.viewer.updateActionLineTargets(
+      actionData.actionId,
+      {
+        type: actionData.source,
+        id: actionData.sourceId,
+      },
+      {
+        type: actionData.target,
+        id: actionData.targetId,
+      },
+    );
+    app.viewer.updateActionLine();
+  }
 
   // Set actionData to container
   $actionContainer.data(actionData);
@@ -2567,12 +2728,14 @@ PropertiesPanel.prototype.createPreviewAction = function(
 
 /**
  * Open action to be edited
- * @param {object} $action
+ * @param {number} actionId
  * @return {boolean} false if unsuccessful
  */
-PropertiesPanel.prototype.openEditAction = function($action) {
+PropertiesPanel.prototype.openEditAction = function(actionId) {
   const self = this;
   const app = self.parent;
+  const $action = self.DOMObject
+    .find('.action-view[data-action-id=' + actionId + ']');
   const $actionsContent = this.DOMObject.find('.actions-content');
   const actionData = $action.data();
 
@@ -2645,14 +2808,33 @@ PropertiesPanel.prototype.saveAction = function($actionForm) {
     // Save existing action
     app.actionManager.saveAction($actionForm, actionData.actionId)
       .then(
-        closeEditAndShowPreview,
+        (res) => {
+          // Close edit form and show preview
+          closeEditAndShowPreview(res);
+        },
         showErrorMessage,
       );
   } else {
     // Add new action
     app.actionManager.addAction($actionForm, app.mainObjectId)
       .then(
-        closeEditAndShowPreview,
+        (res) => {
+          // Create new action line
+          app.viewer.addActionLine(
+            {
+              type: res.data.source,
+              id: res.data.sourceId,
+            },
+            {
+              type: res.data.target,
+              id: res.data.targetId,
+            },
+            res.data.actionId,
+          );
+
+          // Close edit form and show preview
+          closeEditAndShowPreview(res);
+        },
         showErrorMessage,
       );
   }

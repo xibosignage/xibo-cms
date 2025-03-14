@@ -28,7 +28,7 @@ const confirmationModalTemplate =
  */
 const ActionManager = function(parent) {
   this.parent = parent;
-  this.actions = [];
+  this.actions = {};
 
   this.editing = {};
 };
@@ -49,7 +49,10 @@ ActionManager.prototype.getAllActions = function(layoutId) {
       },
     }).done(function(res) {
       // Add actions to array
-      self.actions = res.data;
+      self.actions = res.data.reduce((accumulator, action) => {
+        accumulator[action.actionId] = action;
+        return accumulator;
+      }, {});
 
       // Resolve with data
       resolve(self.actions);
@@ -106,7 +109,6 @@ ActionManager.prototype.saveAction = function($form, actionId) {
   );
 
   // TODO: Check if action hasn't changed
-  console.log('Check');
 
   return new Promise((resolve, reject) => {
     $.ajax({
