@@ -980,6 +980,11 @@ trait DisplayProfileConfigFields
                     );
                 }
 
+                if ($sanitizedParams->hasParam('sendCurrentLayoutAsStatusUpdate')) {
+                    $this->handleChangedSettings('sendCurrentLayoutAsStatusUpdate', ($ownConfig) ? $displayProfile->getSetting('sendCurrentLayoutAsStatusUpdate') : $display->getSetting('sendCurrentLayoutAsStatusUpdate'), $sanitizedParams->getCheckbox('sendCurrentLayoutAsStatusUpdate'), $changedSettings);
+                    $displayProfile->setSetting('sendCurrentLayoutAsStatusUpdate', $sanitizedParams->getCheckbox('sendCurrentLayoutAsStatusUpdate'), $ownConfig, $config);
+                }
+
                 if ($sanitizedParams->hasParam('playerVersionId')) {
                     $this->handleChangedSettings('playerVersionId', ($ownConfig) ? $displayProfile->getSetting('playerVersionId') : $display->getSetting('playerVersionId'), $sanitizedParams->getInt('playerVersionId'), $changedSettings);
                     $displayProfile->setSetting('playerVersionId', $sanitizedParams->getInt('playerVersionId'), $ownConfig, $config);
