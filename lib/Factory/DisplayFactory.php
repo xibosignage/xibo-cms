@@ -235,6 +235,7 @@ class DisplayFactory extends BaseFactory
               SELECT display.displayId,
                   display.display,
                   display.defaultLayoutId,
+                  display.rdmDeviceId,
                   display.displayTypeId,
                   display.venueId,
                   display.address,

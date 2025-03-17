@@ -192,6 +192,13 @@ class Display implements \JsonSerializable
      * @var int
      */
     public $licensed;
+
+    /**
+     * @SWG\Property(description="The RDM Device ID of this Display")
+     * @var int
+     */
+    public $rdmDeviceId;
+
     private $currentlyLicensed;
 
     /**
@@ -1047,6 +1054,7 @@ class Display implements \JsonSerializable
             'manufacturer' => $this->manufacturer,
             'brand' => $this->brand,
             'model' => $this->model,
+            'rdmDeviceId' => null
         ]);
 
 
@@ -1097,6 +1105,7 @@ class Display implements \JsonSerializable
             UPDATE display
                 SET display = :display,
                     defaultlayoutid = :defaultLayoutId,
+                    rdmDeviceId = :rdmDeviceId,
                     displayTypeId = :displayTypeId,
                     venueId = :venueId,
                     address = :address,
@@ -1158,6 +1167,7 @@ class Display implements \JsonSerializable
         ', [
             'display' => $this->display,
             'defaultLayoutId' => $this->defaultLayoutId,
+            'rdmDeviceId' => $this->rdmDeviceId,
             'displayTypeId' => $this->displayTypeId === 0 ? null : $this->displayTypeId,
             'venueId' => $this->venueId === 0 ? null : $this->venueId,
             'address' => $this->address,
