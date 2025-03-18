@@ -301,6 +301,12 @@ class FolderFactory extends BaseFactory
                 0 AS `size`
               FROM menu_board
              WHERE menu_board.folderId = :folderId
+            UNION ALL
+            SELECT \'Sync Groups\' AS `type`,
+                COUNT(*) AS cnt,
+                0 AS `size`
+              FROM syncgroup
+             WHERE syncgroup.folderId = :folderId
             ORDER BY 1
         ', [
             'folderId' => $folder->id,
