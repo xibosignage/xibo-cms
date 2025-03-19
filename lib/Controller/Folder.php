@@ -405,6 +405,26 @@ class Folder extends Base
             );
         }
 
+        // Check if the folder is in use
+        $this->folderFactory->decorateWithUsage($folder);
+        $usage = $folder->getUnmatchedProperty('usage');
+
+        // Prevent deletion if the folder has any usage
+        if (!empty($usage)) {
+            $usageDetails = [];
+
+            // Loop through usage data and construct the formatted message
+            foreach ($usage as $item) {
+                $usageDetails[] = $item['type'] . ' (' . $item['count'] . ')';
+            }
+
+            throw new InvalidArgumentException(
+                __('Cannot remove Folder with content: ' . implode(', ', $usageDetails)),
+                'folderId',
+                __('Reassign objects from this Folder before deleting.')
+            );
+        }
+
         try {
             $folder->delete();
         } catch (\Exception $exception) {
