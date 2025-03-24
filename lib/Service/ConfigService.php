@@ -745,7 +745,8 @@ class ConfigService implements ConfigServiceInterface
 
         $this->testItem($rows, __('GNUPG'),
             Environment::checkGnu(),
-            __('checkGnu is used to verify the integrity of Player Software versions uploaded to the CMS')
+            __('checkGnu is used to verify the integrity of Player Software versions uploaded to the CMS'),
+            false
         );
 
         $this->envTested = true;
