@@ -2375,6 +2375,7 @@ PropertiesPanel.prototype.createEditAction = function(
     .map((action) => {
       // Set action type helper
       if (
+        actionTypesAndRules[action].subType === actionData.actionType ||
         actionTypesAndRules[action].targetType === actionData.target &&
         actionTypesAndRules[action].subType === actionData.actionType
       ) {
@@ -2593,7 +2594,7 @@ PropertiesPanel.prototype.createEditAction = function(
       const targetId = $newActionContainer.find('[name="targetId"]').val();
 
       app.viewer.updateActionLineTargets(
-        actionData.actionId,
+        (actionData.actionId) ? actionData.actionId : 'action_line_temp',
         {
           type: source,
           id: sourceId,
@@ -2761,6 +2762,11 @@ PropertiesPanel.prototype.closeEditAction = function($action) {
   // Remove action form
   $action.remove();
 
+  // Remove line if temporary action
+  if (!actionData.actionId) {
+    app.viewer.removeActionLine('action_line_temp');
+  }
+
   // Remove editing status
   app.actionManager.editing = {};
   $actionsContent.removeClass('editing-action');
@@ -2770,6 +2776,9 @@ PropertiesPanel.prototype.closeEditAction = function($action) {
   if (actionData.actionId) {
     self.createPreviewAction(actionData);
   }
+
+  // Update all action lines
+  app.viewer.updateActionLine();
 };
 
 /**

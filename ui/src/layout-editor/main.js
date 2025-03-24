@@ -4650,6 +4650,9 @@ lD.toggleInteractiveMode = function(enable = true) {
     // Remove Interactive mode from main editor container
     lD.editorContainer.removeClass('interactive-mode');
 
+    // Remove action being edited from the action manager
+    lD.actionManager.editing = {};
+
     // TODO: Remove action components
     // Remove action lines
     this.viewer.removeActionLine();

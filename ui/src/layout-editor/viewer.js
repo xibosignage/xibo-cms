@@ -42,8 +42,8 @@ const viewerPlaylistControlsTemplate =
 const drawThrottle = 60;
 const drawElementThrottle = 30;
 const lineDef = {
-  normalWidth: 2,
-  hoverWidth: 4,
+  normalWidth: 3,
+  hoverWidth: 5,
   editedColor: '#EB7857',
   normalLightThemeColor: '#74ACFA',
   normalDarkThemeColor: '#1775F6',
@@ -51,9 +51,9 @@ const lineDef = {
   circularEndPos: {x: '100%', y: '50%'},
   circularStartSocket: 'top',
   circularEndSocket: 'right',
-  pathNormal: 'grid',
+  pathNormal: 'fluid',
   pathCircular: 'grid',
-  gravityNormal: 10,
+  gravityNormal: 'auto',
   gravityCircular: 'auto',
 };
 
@@ -483,6 +483,7 @@ Viewer.prototype.render = function(forceReload = false, targets = {}) {
  */
 Viewer.prototype.handleUI = function() {
   const self = this;
+  const app = self.parent;
   const $viewerContainer = this.DOMObject;
   const $viewerContainerParent = $viewerContainer.parent();
 
@@ -682,18 +683,23 @@ Viewer.prototype.handleUI = function() {
         return;
       }
 
-      const $target = $(e.target).hasClass('viewer-object-select') ?
+      const $trigger = $(e.target).hasClass('viewer-object-select') ?
         $(e.target) : $(e.currentTarget);
 
       if (
         lD.interactiveMode
       ) {
-        if (self.creatingAction === false) {
-          self.creatingAction = true;
-
+        if (
+          self.creatingAction === false &&
+          $.isEmptyObject(app.actionManager.editing)
+        ) {
           // Create temporary control for arrow
           self.startCreatingActionLine(
-            $target.attr('id'),
+            $trigger,
+            {
+              x: e.pageX,
+              y: e.pageY,
+            },
           );
         }
 
@@ -770,81 +776,81 @@ Viewer.prototype.handleUI = function() {
       // Click on layout or layout wrapper to clear selection
       // or add item to the layout
       if (
-        $target.hasClass('ui-droppable-actions-target')
+        $trigger.hasClass('ui-droppable-actions-target')
       ) {
         // Add action to the selected object
         lD.selectObject({
-          target: $target,
+          target: $trigger,
           forceSelect: true,
         });
       } else if (
         (
-          $target.hasClass('designer-region-zone') ||
-          $target.hasClass('designer-region-playlist') ||
-          $target.hasClass('designer-widget') ||
-          $target.hasClass('designer-element')
+          $trigger.hasClass('designer-region-zone') ||
+          $trigger.hasClass('designer-region-playlist') ||
+          $trigger.hasClass('designer-widget') ||
+          $trigger.hasClass('designer-element')
         ) &&
-        $target.hasClass('ui-droppable-active')
+        $trigger.hasClass('ui-droppable-active')
       ) {
         // Add item to the selected element
         lD.selectObject({
-          target: $target,
+          target: $trigger,
           forceSelect: true,
           clickPosition: clickPosition,
         });
       } else if (
-        $target.is('.designer-element-group.editing.ui-droppable-active')
+        $trigger.is('.designer-element-group.editing.ui-droppable-active')
       ) {
         // Add item to the selected element group
         lD.selectObject({
-          target: $target,
+          target: $trigger,
           forceSelect: true,
           clickPosition: clickPosition,
         });
       } else if (
-        $target.hasClass('layout-wrapper') ||
-        $target.hasClass('layout')
+        $trigger.hasClass('layout-wrapper') ||
+        $trigger.hasClass('layout')
       ) {
         // Clear selected object
         lD.selectObject({
           target: null,
           reloadViewer: false,
-          clickPosition: $target.hasClass('layout') ? clickPosition : null,
+          clickPosition: $trigger.hasClass('layout') ? clickPosition : null,
         });
         self.selectObject();
       } else if (
-        $target.hasClass('group-edit-btn')
+        $trigger.hasClass('group-edit-btn')
       ) {
         self.editGroup(
-          $target.parents('.designer-element-group'),
+          $trigger.parents('.designer-element-group'),
         );
       } else if (
-        $target.hasClass('playlist-edit-btn')
+        $trigger.hasClass('playlist-edit-btn')
       ) {
         // Edit subplaylist inside playlist
-        if ($target.hasClass('subplaylist-inline-edit-btn')) {
+        if ($trigger.hasClass('subplaylist-inline-edit-btn')) {
           // Edit subplaylist inside playlist
           playlistInlineEditorBtnClick(
-            $target.data('childPlaylistId'),
-            $target.parents('.designer-region-playlist').attr('id'),
+            $trigger.data('childPlaylistId'),
+            $trigger.parents('.designer-region-playlist').attr('id'),
           );
         } else {
           // Edit region if it's a playlist
           playlistEditorBtnClick(
-            $target.parents('.designer-region-playlist').attr('id'),
+            $trigger.parents('.designer-region-playlist').attr('id'),
           );
         }
       } else if (
-        $target.hasClass('playlist-preview-paging-prev')
+        $trigger.hasClass('playlist-preview-paging-prev')
       ) {
         // Somewhere in paging clicked.
-        playlistPreviewBtnClick($target
+        playlistPreviewBtnClick($trigger
           .parents('.designer-region-playlist').attr('id'), 'prev');
       } else if (
-        $target.hasClass('playlist-preview-paging-next')
+        $trigger.hasClass('playlist-preview-paging-next')
       ) {
         // Somewhere in paging clicked.
-        playlistPreviewBtnClick($target
+        playlistPreviewBtnClick($trigger
           .parents('.designer-region-playlist').attr('id'), 'next');
       } else {
         // Select elements inside the layout
@@ -857,10 +863,10 @@ Viewer.prototype.handleUI = function() {
             clicks = 0;
 
             if (
-              $target.data('subType') === 'playlist' &&
-              $target.hasClass('designer-region') &&
+              $trigger.data('subType') === 'playlist' &&
+              $trigger.hasClass('designer-region') &&
               (
-                !$target.hasClass('selected') ||
+                !$trigger.hasClass('selected') ||
                 addingFromToolbar
               )
             ) {
@@ -872,17 +878,17 @@ Viewer.prototype.handleUI = function() {
               } else {
                 // Select region
                 lD.selectObject({
-                  target: $target,
+                  target: $trigger,
                 });
               }
 
-              self.selectObject($target, shiftIsPressed);
+              self.selectObject($trigger, shiftIsPressed);
             } else if (
-              $target.find('.designer-widget').length > 0 &&
+              $trigger.find('.designer-widget').length > 0 &&
               (
                 (
-                  !$target.find('.designer-widget').hasClass('selected') &&
-                  !$target.hasClass('selected')
+                  !$trigger.find('.designer-widget').hasClass('selected') &&
+                  !$trigger.hasClass('selected')
                 ) || addingFromToolbar
               )
             ) {
@@ -894,22 +900,22 @@ Viewer.prototype.handleUI = function() {
               } else {
                 // Select widget if exists
                 lD.selectObject({
-                  target: $target.find('.designer-widget'),
+                  target: $trigger.find('.designer-widget'),
                   clickPosition: clickPosition,
                 });
               }
-              self.selectObject($target, shiftIsPressed);
+              self.selectObject($trigger, shiftIsPressed);
             } else if (
               (
-                $target.data('subType') === 'zone' ||
+                $trigger.data('subType') === 'zone' ||
                 (
-                  $target.data('subType') === 'frame' &&
-                  $target.is('.designer-region-frame.invalid-region')
+                  $trigger.data('subType') === 'frame' &&
+                  $trigger.is('.designer-region-frame.invalid-region')
                 )
               ) &&
-              $target.hasClass('designer-region') &&
+              $trigger.hasClass('designer-region') &&
               (
-                !$target.hasClass('selected') ||
+                !$trigger.hasClass('selected') ||
                 addingFromToolbar
               )
             ) {
@@ -921,17 +927,17 @@ Viewer.prototype.handleUI = function() {
               } else {
                 // Select zone
                 lD.selectObject({
-                  target: $target,
+                  target: $trigger,
                 });
               }
-              self.selectObject($target, shiftIsPressed);
+              self.selectObject($trigger, shiftIsPressed);
             } else if (
               (
-                $target.hasClass('designer-element') ||
-                $target.hasClass('designer-element-group')
+                $trigger.hasClass('designer-element') ||
+                $trigger.hasClass('designer-element-group')
               ) &&
               (
-                !$target.hasClass('selected') ||
+                !$trigger.hasClass('selected') ||
                 addingFromToolbar
               )
             ) {
@@ -943,15 +949,15 @@ Viewer.prototype.handleUI = function() {
               } else {
                 // Select element if exists
                 lD.selectObject({
-                  target: $target,
+                  target: $trigger,
                   clickPosition: clickPosition,
                 });
               }
-              self.selectObject($target, shiftIsPressed);
+              self.selectObject($trigger, shiftIsPressed);
             } else if (
-              $target.hasClass('group-select-overlay') &&
+              $trigger.hasClass('group-select-overlay') &&
               (
-                !$target.parent().hasClass('selected') ||
+                !$trigger.parent().hasClass('selected') ||
                 addingFromToolbar
               )
             ) {
@@ -963,14 +969,14 @@ Viewer.prototype.handleUI = function() {
               } else {
                 // Select element if exists
                 lD.selectObject({
-                  target: $target.parent(),
+                  target: $trigger.parent(),
                   clickPosition: clickPosition,
                 });
               }
-              self.selectObject($target.parent(), shiftIsPressed);
+              self.selectObject($trigger.parent(), shiftIsPressed);
             } else if (
-              $target.hasClass('designer-element-group') &&
-              $target.hasClass('editing')
+              $trigger.hasClass('designer-element-group') &&
+              $trigger.hasClass('editing')
             ) {
               // If we're editing, and select on group, deselect other elements
               lD.selectObject();
@@ -989,46 +995,46 @@ Viewer.prototype.handleUI = function() {
           }
 
           if (
-            $target.data('subType') === 'playlist' &&
-            !$target.hasClass('playlist-dynamic') &&
-            $target.hasClass('editable')
+            $trigger.data('subType') === 'playlist' &&
+            !$trigger.hasClass('playlist-dynamic') &&
+            $trigger.hasClass('editable')
           ) {
             // Edit region if it's a playlist
-            playlistEditorBtnClick($target.attr('id'));
+            playlistEditorBtnClick($trigger.attr('id'));
           } else if (
             // Select static widget region
-            $target.data('subType') === 'frame' &&
-            $target.hasClass('designer-region') &&
-            $target.find('.designer-widget').length > 0
+            $trigger.data('subType') === 'frame' &&
+            $trigger.hasClass('designer-region') &&
+            $trigger.find('.designer-widget').length > 0
           ) {
             lD.selectObject({
-              target: $target,
+              target: $trigger,
             });
-            self.selectObject($target, shiftIsPressed);
+            self.selectObject($trigger, shiftIsPressed);
           } else if (
-            $target.hasClass('group-select-overlay') &&
-            !$target.hasClass('editing')
+            $trigger.hasClass('group-select-overlay') &&
+            !$trigger.hasClass('editing')
           ) {
             self.editGroup(
-              $target.parents('.designer-element-group'),
+              $trigger.parents('.designer-element-group'),
             );
           } else if (
-            $target.data('type') === 'element' &&
-            $target.data('subType') === 'text' &&
-            $target.hasClass('editable') &&
-            $target.hasClass('selected')
+            $trigger.data('type') === 'element' &&
+            $trigger.data('subType') === 'text' &&
+            $trigger.hasClass('editable') &&
+            $trigger.hasClass('selected')
           ) {
             const element = lD.getObjectByTypeAndId(
               'element',
-              $target.attr('id'),
-              'widget_' + $target.data('regionId') +
-                '_' + $target.data('widgetId'),
+              $trigger.attr('id'),
+              'widget_' + $trigger.data('regionId') +
+                '_' + $trigger.data('widgetId'),
             );
 
             self.editText(element);
           } else if (
-            $target.data('type') != undefined &&
-            $target.data('subType') != undefined
+            $trigger.data('type') != undefined &&
+            $trigger.data('subType') != undefined
           ) {
             // Move out from group editing
             lD.selectObject();
@@ -1079,13 +1085,27 @@ Viewer.prototype.handleUI = function() {
   $viewerContainerParent
     .off('mouseup.viewer')
     .on('mouseup.viewer', function(e) {
+      const $target = $(e.target);
+
+      // If not in interactive mode, cancel event
+      if (!lD.interactiveMode) {
+        $viewerContainerParent.off('mouseup.viewer');
+        return;
+      }
+
+      // If we're not in create action mode, stop
+      if (self.creatingAction === false) {
+        return;
+      }
+
+      // If target is not valid, and we're creating line
+      // stop and remove it, keep event
       if (
-        !lD.interactiveMode ||
-        !$(e.target).is('.viewer-object-select') ||
-        self.creatingAction === false
+        self.creatingAction &&
+        !$target.is('.viewer-object-select')
       ) {
         // Remove temp line
-        self.removeActionLine('action_line_tempAction');
+        self.removeActionLine('action_line_temp');
 
         // Finish creating action
         self.stopCreatingActionLine();
@@ -1095,14 +1115,37 @@ Viewer.prototype.handleUI = function() {
 
       e.stopPropagation();
 
+      const trigger = self.actionLines['action_line_temp'].trigger;
+      const targetType = $target.data('type');
+      const targetId = $target.data(targetType + 'Id');
+      let actionType = 'next'; // Default to next
+
+      // Get default action type based on the target
+      // If it's frame and not playlist, default to navigate to widget
+      if ($target.data('subType') === 'frame') {
+        actionType = 'navWidget';
+      }
+
+      app.propertiesPanel.createEditAction({
+        actionType: actionType,
+        source: trigger.type,
+        sourceId: trigger.id,
+        target: targetType,
+        targetId: targetId,
+      });
+
       // Update target
-      const newLineId = self.updateActionLineTargets(
-        'action_line_tempAction',
-        null,
-        $(e.target).attr('id'),
+      self.updateActionLineTargets(
+        'action_line_temp',
+        self.actionLines['action_line_temp'].trigger,
+        {
+          type: targetType,
+          id: targetId,
+        },
       );
 
-      self.updateActionLine(newLineId);
+      // Update all action lines
+      self.updateActionLine();
 
       // Finish creating action
       self.stopCreatingActionLine();
@@ -4463,38 +4506,104 @@ Viewer.prototype.handleActionsUI = function() {
 
 /**
  * Start to create Action Line
- * @param {object} triggerId
+ * @param {object} $trigger
  */
 Viewer.prototype.startCreatingActionLine = function(
-  triggerId,
+  $trigger,
+  startPos = {},
 ) {
-  return;
-
   const self = this;
-  const $trigger = $('#' + triggerId);
-  const $targetHelper = $('<div id="addActionTargetHelper"></div>')
-    .css({
-      width: '10px',
-      height: '10px',
-      position: 'absolute',
-    })
-    .appendTo('body');
+  const app = self.parent;
+
+  const updateHelperPosition = function($helper, pos) {
+    const containerOffset = $helper.parent().offset();
+    const helperWidth = $helper.outerWidth();
+    const helperHeight = $helper.outerHeight();
+
+    // If there's no container or helper, stop
+    if (!containerOffset || !$helper) {
+      return;
+    }
+
+    $helper.css({
+      left: (pos.x - containerOffset.left - helperWidth/2) + 'px',
+      top: (pos.y - containerOffset.top - helperHeight/2) + 'px',
+    });
+  };
+
+  // Make sure trigger is of a valid type
+  if ($trigger.data('type') === 'element') {
+    // If it's element, check if it's in a group
+    if ($trigger.parents('[data-type="element-group"]').length > 0) {
+      // In group, change target to group instead
+      $trigger = $trigger.parents('[data-type="element-group"]');
+    }
+  } else if (
+    !['screen', 'region', 'widget', 'element-group']
+      .includes($trigger.data('type'))
+  ) {
+    // If it's not in the list of selectable objects, skip
+    console.log('not in the list of selectable objects, skip');
+    return;
+  }
+
+  // If we're editing an action in the form
+  // or we're already creating an action
+  // STOP
+  if (
+    !$.isEmptyObject(app.actionManager.editing) ||
+    self.creatingAction === true
+  ) {
+    return;
+  }
+
+  self.creatingAction = true;
+
+  // Create target helper
+  const $targetHelper =
+    $(`<div data-helper-id="addActionTargetHelper" data-type="helper"></div>`)
+      .css({
+        width: '10px',
+        height: '10px',
+        position: 'absolute',
+      })
+      .appendTo(self.DOMObject);
+
+  const triggerType = $trigger.data('type');
+  const triggerId = (['element', 'element-group'].includes(triggerType)) ?
+    $trigger.attr('id') :
+    $trigger.data(triggerType + 'Id');
 
   self.addActionLine(
-    $trigger.attr('id'),
-    'addActionTargetHelper',
-    'action_line_tempAction',
+    {
+      type: triggerType,
+      id: triggerId,
+    },
+    {
+      type: 'helper',
+      id: 'addActionTargetHelper',
+    },
+    'action_line_temp',
   );
 
   $(document).on('mousemove.addActionLine', function(ev) {
-    $targetHelper.css({
-      left: ev.clientX + 'px',
-      top: ev.clientY + 'px',
+    // If we're not adding the line anymore, stop event
+    if (!self.creatingAction || !app.interactiveMode) {
+      $(document).off('mousemove.addActionLine');
+    }
+
+    // Update helper position
+    updateHelperPosition($targetHelper, {
+      x: ev.pageX,
+      y: ev.pageY,
     });
 
     // Update action
-    self.updateActionLine('action_line_tempAction');
+    self.updateActionLine('action_line_temp');
   });
+
+  // Update helper position - first run
+  updateHelperPosition($targetHelper, startPos);
 };
 
 
@@ -4502,14 +4611,13 @@ Viewer.prototype.startCreatingActionLine = function(
  * Stop creating Action Line
  */
 Viewer.prototype.stopCreatingActionLine = function() {
-  return;
   this.creatingAction = false;
 
   // Remove event
   $(document).off('mousemove.addActionLine');
 
   // Remove helper
-  $('#addActionTargetHelper')
+  this.DOMObject.find('[data-helper-id="addActionTargetHelper"]')
     .remove();
 };
 
@@ -4625,6 +4733,14 @@ Viewer.prototype.addActionLine = function(
       }
     });
 
+  // If there's a temporary line, and we're not adding it, remove it
+  if (
+    actionId != 'action_line_temp' &&
+    this.actionLines.hasOwnProperty('action_line_temp')
+  ) {
+    this.removeActionLine('action_line_temp');
+  }
+
   // Update when creating
   this.updateActionLine(actionId);
 };
@@ -4638,6 +4754,12 @@ Viewer.prototype.updateActionLine = function(
 ) {
   const self = this;
   const app = self.parent;
+  const isTempAction = (
+    !$.isEmptyObject(app.actionManager.editing) &&
+    !app.actionManager.editing.actionId
+  );
+  const actionBeingEdited = (isTempAction) ?
+    'temp_action' : app.actionManager.editing.actionId;
 
   let actionsToUpdate = [];
   // If we have specific action
@@ -4651,8 +4773,9 @@ Viewer.prototype.updateActionLine = function(
 
   for (let index = 0; index < actionsToUpdate.length; index++) {
     const lineId = actionsToUpdate[index];
-    const isActionBeingEdited =
-      app.actionManager.editing.actionId === Number(lineId);
+    const isThisActionBeingEdited = (actionBeingEdited === 'temp_action') ?
+      ('action_line_temp' === lineId) :
+      (actionBeingEdited === Number(lineId));
     const ald = lineDef;
 
     if (!this.actionLines[lineId]) {
@@ -4681,8 +4804,19 @@ Viewer.prototype.updateActionLine = function(
     // Update color
     const normalLineColor = ((this.theme === 'dark') ?
       ald.normalDarkThemeColor : ald.normalLightThemeColor);
-    this.actionLines[lineId].line.color = (isActionBeingEdited) ?
+    this.actionLines[lineId].line.color = (isThisActionBeingEdited) ?
       ald.editedColor : normalLineColor;
+
+    // If any action is being edited
+    // highlight edited and hide others
+    if (actionBeingEdited) {
+      (isThisActionBeingEdited) ?
+        this.actionLines[lineId].line.show() :
+        this.actionLines[lineId].line.hide();
+    } else {
+      // Show all
+      this.actionLines[lineId].line.show();
+    }
 
     // For normal line, if it's too small, set top as anchor
     if (this.actionLines[lineId].type === 'normal') {
@@ -4711,11 +4845,20 @@ Viewer.prototype.updateActionLineTargets = function(
   trigger,
   target,
 ) {
-  // If action line doesn't exist
+  // If we're updating temporaty action and it doesn't exist yet
   if (
+    actionLineId == 'action_line_temp' &&
+    !this.actionLines[actionLineId]
+  ) {
+    this.addActionLine(trigger, target, actionLineId);
+
+    return;
+  } else if (
     !actionLineId ||
     !this.actionLines[actionLineId]
   ) {
+    // If action line doesn't exist
+    // or we're passing an empty action line id
     return;
   }
 
@@ -4736,9 +4879,16 @@ Viewer.prototype.updateActionLineTargets = function(
     $trigger.length === 0 ||
     $target.length === 0
   ) {
-    console.info('Invalid trigger or target!');
+    // Invalid trigger or target
+    // Hide line for now
+    this.actionLines[actionLineId].line.hide();
     return;
+  } else {
+    this.actionLines[actionLineId].line.show();
   }
+
+  this.actionLines[actionLineId].trigger = trigger;
+  this.actionLines[actionLineId].target = target;
 
   // If target is same as trigger, set as circular line
   if ($trigger[0] === $target[0]) {
