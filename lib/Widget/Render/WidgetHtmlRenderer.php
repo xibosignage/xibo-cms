@@ -862,7 +862,7 @@ class WidgetHtmlRenderer
                     'extends' => [
                         'override' => $moduleTemplate->extends?->override,
                         'with' => $moduleTemplate->extends?->with,
-                        'escapeHtml' => $moduleTemplate->extends?->escapeHtml,
+                        'escapeHtml' => $moduleTemplate->extends?->escapeHtml ?? true,
                     ],
                 ];
             } else if ($extension !== null) {
@@ -875,7 +875,7 @@ class WidgetHtmlRenderer
                     'extends' => [
                         'override' => $moduleTemplate->extends?->override,
                         'with' => $moduleTemplate->extends?->with,
-                        'escapeHtml' => $moduleTemplate->extends?->escapeHtml,
+                        'escapeHtml' => $moduleTemplate->extends?->escapeHtml ?? true,
                     ],
                 ];
 

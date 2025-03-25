@@ -259,9 +259,12 @@ class MenuBoard implements \JsonSerializable
     {
         $options = array_merge([
             'validate' => true,
+            'audit' => true
         ], $options);
 
-        $this->getLog()->debug('Saving ' . $this);
+        if ($options['audit']) {
+            $this->getLog()->debug('Saving ' . $this);
+        }
 
         if ($options['validate']) {
             $this->validate();

@@ -2167,7 +2167,10 @@ Viewer.prototype.renderElementContent = function(
         }
 
         // Escape HTML
-        convertedProperties.escapeHtml = template?.extends?.escapeHtml;
+        convertedProperties.escapeHtml =
+          (template?.extends?.escapeHtml === undefined) ?
+            true : template.extends.escapeHtml;
+
 
         // Compile hbs template with data
         let hbsHtml = hbsTemplate(convertedProperties);
@@ -3375,11 +3378,13 @@ Viewer.prototype.saveElementGroupProperties = function(
  * @param {object} element - Element object
  * @param {boolean} multiSelect - Select another object
  * @param {boolean} removeEditFromGroup
+ * @param {boolean} blockMoveable
  */
 Viewer.prototype.selectObject = function(
   element = null,
   multiSelect = false,
   removeEditFromGroup = true,
+  blockMoveable = false,
 ) {
   const self = this;
 
@@ -3415,7 +3420,7 @@ Viewer.prototype.selectObject = function(
   }
 
   // Update moveable
-  this.updateMoveable(true);
+  this.updateMoveable(true, blockMoveable);
 
   // Handle context menu on multiselect
   if (multiSelect) {
@@ -3442,9 +3447,11 @@ Viewer.prototype.selectObject = function(
 /**
  * Update moveable
  * @param {boolean} updateTarget
+ * @param {boolean} forceDisable
  */
 Viewer.prototype.updateMoveable = function(
   updateTarget = false,
+  forceDisable = false,
 ) {
   // On read only mode, or moveable is not defined
   //  don't update
@@ -3459,6 +3466,13 @@ Viewer.prototype.updateMoveable = function(
   const $selectedObject = this.DOMObject.find('.selected');
   const multipleSelected = ($selectedObject.length > 1);
 
+  // Reset all disabled moveables
+  // and add to current if we need to disable it
+  this.DOMObject.find('.moveable-disabled')
+    .removeClass('moveable-disabled');
+  (forceDisable) &&
+    $selectedObject.addClass('moveable-disabled');
+
   // Update moveable if we have a selected element, and is not a drawerWidget
   // If we're selecting a widget with no edit permissions don't update moveable
   if (
@@ -3468,6 +3482,7 @@ Viewer.prototype.updateMoveable = function(
       $.contains(document, $selectedObject[0]) &&
       !$selectedObject.hasClass('drawerWidget') &&
       $selectedObject.hasClass('editable') &&
+      !forceDisable &&
       lD.selectedObject.isEditable
     )
   ) {

@@ -82,8 +82,13 @@
                                     {{ inline.dropdown("userId", "single", title, "", null, "userId", "userName", helpText, "pagedSelect", "", "", "", attributes) }}
                                 </div>
                                 <div class="tab-pane" id="advanced">
-                                    {% set title %}{% trans "From Date" %}{% endset %}
-                                    {{ inline.date("fromDt", title) }}
+                                    {% set helpText = "Set the time to start searching for logs based on the interval "
+                                        ~ "filter. Leave empty to start from the current time." %}
+                                    {% set title %}
+                                        {% trans "Date" %}
+                                        <i class="fa fa-info-circle ml-1" title="{% trans helpText %}"></i>
+                                    {% endset %}
+                                    {{ inline.dateTime("fromDt", title, 'now'|date("Y-m-d H:i:s"), "", "", "", "") }}
 
                                     {% set title %}{% trans "Channel" %}{% endset %}
                                     {{ inline.input("channel", title) }}

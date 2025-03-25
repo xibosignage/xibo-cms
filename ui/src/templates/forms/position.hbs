@@ -1,7 +1,9 @@
 <div class="tab-pane" id="positionTab">
     {{#eq type 'region'}}
         {{> inputs/hidden id="type" value=regionType customClass="position-input" }}
-        {{> inputs/hidden id="name" value=regionName customClass="position-input" }}
+        {{#neq regionType 'playlist'}}
+            {{> inputs/hidden id="name" value=regionName customClass="position-input" }}
+        {{/neq}}
     {{/eq}}
 
     {{> button id="bringToView" type="btn-block btn-outline-success inline-btn d-none mb-2" name=trans.positionTab.bringToView }}

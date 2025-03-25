@@ -2963,6 +2963,15 @@ window.updateDatePicker = function($element, date, format, triggerChange) {
       } else {
         $element[0]._flatpickr.setDate(date);
       }
+    } else {
+      // If flatpickr is (still) not initialised
+      $element.val(
+        (!moment(date, format).isValid()) ?
+          '' : moment(date, format).format(systemDateFormat),
+      );
+      if (triggerChange) {
+        $element.trigger('change');
+      }
     }
   } else if (calendarType == 'Jalali') {
     if (date == '') {

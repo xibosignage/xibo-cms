@@ -267,8 +267,14 @@ PropertiesPanel.prototype.save = function(
           // Update layout
           app.layout.updateData(data.data);
 
+          // Render top bar to update layout changes
+          app.topbar.render();
+
           // Render viewer to reflect changes
           app.viewer.render(true);
+
+          // Render layer manager
+          app.viewer.layerManager.render();
         } else {
           // Reload data, and refresh viewer if layout
           // or if we're saving an element
@@ -652,6 +658,8 @@ PropertiesPanel.prototype.render = function(
       ) {
         dataToRender.showExitTransition = true;
       }
+
+      dataToRender.regionOptions = target.options;
 
       if (
         target.subType === 'frame' &&
@@ -2345,6 +2353,9 @@ PropertiesPanel.prototype.renderActionTab = function(
       dataType: 'json',
       data: {
         layoutId: app.mainObjectId,
+        start: 0,
+        // set a maximum number of actions to be returned
+        length: 1000,
       },
     }).done(function(res) {
       // Filter actions by groups
@@ -2600,10 +2611,10 @@ PropertiesPanel.prototype.openEditAction = function(action) {
   // Only show playlists?
   let targetFilters = ['layout', 'regions'];
   if (
-    ['next', 'previous'].indexOf(actionData.actionType) != -1 &&
-    actionData.target === 'region'
+    ['next', 'previous'].indexOf(actionData.actionType) != -1
   ) {
-    targetFilters = ['playlist'];
+    targetFilters = (actionData.target === 'region') ?
+      ['playlist'] : ['layout'];
   }
 
   app.populateDropdownWithLayoutElements(

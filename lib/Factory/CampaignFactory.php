@@ -406,6 +406,10 @@ class CampaignFactory extends BaseFactory
             $params['cyclePlaybackEnabled'] = $sanitizedFilter->getInt('cyclePlaybackEnabled');
         }
 
+        if ($sanitizedFilter->getInt('excludeMedia', ['default' => 0]) == 1) {
+            $body .= ' AND `campaign`.type != \'media\' ';
+        }
+
         // Sorting?
         $order = '';
         if (is_array($sortOrder))

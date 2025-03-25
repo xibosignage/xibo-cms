@@ -49,7 +49,7 @@ const XiboPlayer = function() {
       // or if we are not in preview and have empty data on Widget (like text)
       // do not run ajax use that data instead
       if (String(currentWidget.url) !== 'null') {
-        let ajaxOptions = {
+        const ajaxOptions = {
           method: 'GET',
           url: currentWidget.url,
         };
@@ -628,8 +628,7 @@ const XiboPlayer = function() {
         $template?.data('extends-override');
       elemCopy.dataOverrideWith =
         $template?.data('extends-with');
-      elemCopy.escapeHtml =
-        $template?.data('escape-html');
+      elemCopy.escapeHtml = ($template?.data('escape-html') === 1);
 
       if (String(elemCopy.dataOverride).length > 0 &&
         String(elemCopy.dataOverrideWith).length > 0

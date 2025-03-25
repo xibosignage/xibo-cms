@@ -244,6 +244,14 @@
                     {% set title = "Embedded Web Server allow WAN?"|trans %}
                     {% set helpText = "Should we allow access to the Player Embedded Web Server from WAN? You may need to adjust the device firewall to allow external traffic"|trans %}
                     {{ forms.checkbox("embeddedServerAllowWan", title, displayProfile.getSetting("embeddedServerAllowWan"), helpText) }}
+
+                    {% set title = "Use Multiple Video Decoders"|trans %}
+                    {% set helpText = "Should the Player try to use Multiple Video Decoders when preparing and showing Video content."|trans %}
+                    {% set options = [
+                        { id: "on", value: "On"|trans },
+                        { id: "off", value: "Off"|trans }
+                    ] %}
+                    {{ forms.dropdown("isUseMultipleVideoDecoders", "single", title, displayProfile.getSetting("isUseMultipleVideoDecoders", "on"), options, "id", "value", helpText) }}
                 </div>
 
                 <div class="tab-pane" id="timers">

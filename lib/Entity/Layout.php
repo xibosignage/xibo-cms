@@ -891,7 +891,8 @@ class Layout implements \JsonSerializable
             'import' => false,
             'appendCountOnDuplicate' => false,
             'setModifiedDt' => true,
-            'auditMessage' => null,
+            'auditMessage' => 'Saved',
+            'type' => null
         ], $options);
 
         if ($options['validate']) {
@@ -1099,7 +1100,9 @@ class Layout implements \JsonSerializable
         }
 
         // Validation
-        if (empty($this->layout) || strlen($this->layout) > 50 || strlen($this->layout) < 1) {
+        // Layout created from media follows the media character limit
+        if ((empty($this->layout) || strlen($this->layout) > 50 || strlen($this->layout) < 1)
+            && $options['type'] !== 'media') {
             throw new InvalidArgumentException(
                 __('Layout Name must be between 1 and 50 characters'),
                 'name'

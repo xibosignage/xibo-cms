@@ -3029,6 +3029,7 @@ lD.addModuleToPlaylist = function(
               {
                 refreshEditor: true,
                 resetPropertiesPanelOpenedTab: true,
+                reloadToolbar: true,
               }).catch(console.debug);
 
             resolve();
@@ -3039,6 +3040,7 @@ lD.addModuleToPlaylist = function(
             {
               refreshEditor: true,
               resetPropertiesPanelOpenedTab: true,
+              reloadToolbar: true,
             }).catch(console.debug);
 
           resolve();
@@ -3257,6 +3259,7 @@ lD.openUploadForm = function({
       currentWorkingFolderId: lD.folderId,
       showWidgetDates: false,
       folderSelector: true,
+      multi: false,
     },
     uploadDoneEvent: function(data) {
       // If the upload is successful, increase the number of uploads
@@ -3990,9 +3993,9 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
       const $viewerRegion =
         lD.viewer.DOMObject.find('#' + layoutObject.id);
       lD.selectObject({
-        target: lD.viewer.DOMObject.find('#' + layoutObject.id),
+        target: $viewerRegion,
       });
-      lD.viewer.selectObject($viewerRegion);
+      lD.viewer.selectObject($viewerRegion, false, true, true);
     } else if (target.data('action') == 'Ungroup') {
       // Get widget
       const elementsWidget =
@@ -5691,12 +5694,15 @@ lD.editDrawerWidget = function(actionData, actionEditMode = true) {
   // Target
   const $target = actionEditMode ? $widgetInViewer : null;
 
-  lD.selectObject({
-    target: $target,
-    forceSelect: true,
-  });
+  // Select only if we have target
+  if ($target) {
+    lD.selectObject({
+      target: $target,
+      forceSelect: true,
+    });
+  }
 
-  // Select element in viewer
+  // Select element in viewer ( or deselect )
   lD.viewer.selectObject($target);
 
   // 4. Open property panel with drawer widget or same object

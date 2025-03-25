@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -347,6 +347,7 @@ class DisplayProfileFactory extends BaseFactory
                 ['name' => 'updateEndWindow', 'default' => '00:00'],
                 ['name' => 'embeddedServerAllowWan', 'default' => 0, 'type' => 'checkbox'],
                 ['name' => 'serverPort', 'default' => 9696],
+                ['name' => 'isUseMultipleVideoDecoders', 'default' => 'default', 'type' => 'string'],
             ],
             'sssp' => [
                 ['name' => 'emailAddress', 'default' => ''],
@@ -384,6 +385,7 @@ class DisplayProfileFactory extends BaseFactory
                 ['name' => 'updateEndWindow', 'default' => '00:00'],
                 ['name' => 'embeddedServerAllowWan', 'default' => 0, 'type' => 'checkbox'],
                 ['name' => 'serverPort', 'default' => 9696],
+                ['name' => 'isUseMultipleVideoDecoders', 'default' => 'default', 'type' => 'string'],
             ],
             'chromeOS' => [
                 ['name' => 'licenceCode', 'default' => ''],
@@ -404,6 +406,7 @@ class DisplayProfileFactory extends BaseFactory
                 ['name' => 'dayPartId', 'default' => null],
                 ['name' => 'logLevel', 'default' => 'error'],
                 ['name' => 'elevateLogsUntil', 'default' => 0, 'type' => 'int'],
+                ['name' => 'sendCurrentLayoutAsStatusUpdate', 'default' => 0, 'type' => 'checkbox'],
                 ['name' => 'screenShotRequestInterval', 'default' => 0, 'type' => 'int'],
                 [
                     'name' => 'screenShotSize',
