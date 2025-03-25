@@ -652,20 +652,26 @@ body.editor-opened #content-wrapper .page-content>.row {
             outline-offset: -4px;
         }
 
-        /* TODO: Change this values */
-        .action-screen-helper {
-            width: 100px;
-            height: 50px;
-            background: #337ab7;
-            color: white;
+        /* TODO: Not final*/
+        .action-layout-dock-control {
             position: absolute;
-            left: 6px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: bold;
-            bottom: 6px;
-            border-radius: 8px;
+            left: 0;
+            bottom: 0;
+
+            .action-screen-helper {
+                background: #337ab7;
+                color: white;
+                width: 100px;
+                height: 50px;
+                position: relative;
+                left: 6px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                font-weight: bold;
+                bottom: 6px;
+                border-radius: 8px;
+            }
         }
     }
 
@@ -1567,6 +1573,49 @@ body.editor-opened #content-wrapper .page-content>.row {
 
         .moveable-disabled {
             outline: 1px solid $xibo-color-primary-l60;
+        }
+    }
+
+    .selected-action-trigger {
+        outline: 4px solid $xibo-color-accent !important;
+        outline-offset: 0 !important;
+
+        .trigger-add-button {
+            position: absolute;
+            cursor: pointer;
+            top: 50%;
+            left: 100%;
+            transform: translateY(-50%);
+            background: $xibo-color-accent;
+            color: white;
+            border-radius: 8px;
+            width: 22px;
+            height: 22px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 16px;
+        }
+
+        &.selected-action-trigger-alt {
+            .trigger-add-button {
+                left: 0;
+                transform: translate(-100%, -50%);
+            }
+        }
+    }
+
+    .action-trigger-adding .trigger-add-button {
+        display: none;
+    }
+
+    .selected-action-trigger.action-screen-helper {
+        outline: 2px solid $xibo-color-accent !important;
+
+        .trigger-add-button {
+            top: 0%;
+            left: 50%;
+            transform: translate(-50%, -50%);
         }
     }
 

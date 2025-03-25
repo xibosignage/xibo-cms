@@ -686,6 +686,7 @@ Viewer.prototype.handleUI = function() {
       const $trigger = $(e.target).hasClass('viewer-object-select') ?
         $(e.target) : $(e.currentTarget);
 
+      // Interactive mode handling
       if (
         lD.interactiveMode
       ) {
@@ -693,14 +694,7 @@ Viewer.prototype.handleUI = function() {
           self.creatingAction === false &&
           $.isEmptyObject(app.actionManager.editing)
         ) {
-          // Create temporary control for arrow
-          self.startCreatingActionLine(
-            $trigger,
-            {
-              x: e.pageX,
-              y: e.pageY,
-            },
-          );
+          self.selectActionTrigger($trigger);
         }
 
         return;
@@ -1147,8 +1141,8 @@ Viewer.prototype.handleUI = function() {
       // Update all action lines
       self.updateActionLine();
 
-      // Finish creating action
-      self.stopCreatingActionLine();
+      // Finish creating action, and remove trigger selection
+      self.stopCreatingActionLine(true);
     });
 
   // Handle fullscreen button
@@ -4471,13 +4465,15 @@ Viewer.prototype.handleActionsUI = function() {
   const self = this;
   const app = self.parent;
 
-  // Add screen control
+  // Add Layout dock control
   self.DOMObject.append(
-    `<div 
-      class="action-screen-helper"
-      data-type="screen"
-      data-screen-id=${app.mainObjectId}>
-      Layout
+    `<div class="action-layout-dock-control">
+      <div 
+        class="action-screen-helper viewer-object-select"
+        data-type="screen"
+        data-screen-id=${app.mainObjectId}>
+        Layout
+      </div>
     </div>`,
   );
 
@@ -4502,6 +4498,66 @@ Viewer.prototype.handleActionsUI = function() {
         });
       }
     });
+};
+
+
+/**
+ * Select action trigger
+ * @param {object} trigger - Trigger object, null to deselect only
+ */
+Viewer.prototype.selectActionTrigger = function(
+  trigger = null,
+) {
+  const self = this;
+  const $trigger = $(trigger);
+
+  // If it's selected already, do nothing
+  if ($trigger.hasClass('selected-action-trigger')) {
+    return;
+  }
+
+  // Deselect other action objects
+  this.DOMObject.find('.selected-action-trigger')
+    .removeClass('selected-action-trigger selected-action-trigger-alt')
+    .find('.trigger-add-button').remove();
+
+  // Check if it's one of the layout main containers
+  if (
+    $trigger.hasClass('layout-wrapper') ||
+    $trigger.hasClass('layout-player')
+  ) {
+    return;
+  }
+
+  // Add selected class
+  $trigger.addClass('selected-action-trigger');
+
+  // Add plus button
+  const $plusBtn = $(`<div class="trigger-add-button">
+    <i class="far fa-plus"></i></div>`);
+  $plusBtn.appendTo($trigger)
+    .on('mousedown.viewer', function(ev) {
+      ev.preventDefault();
+
+      // Create temporary control for arrow
+      self.startCreatingActionLine(
+        $trigger,
+        {
+          x: ev.pageX,
+          y: ev.pageY,
+        },
+      );
+    });
+
+  // Check if button is fully visible
+  const viewerRect = this.DOMObject[0].getBoundingClientRect();
+  const buttonRect = $plusBtn[0].getBoundingClientRect();
+  if (
+    viewerRect.right < buttonRect.right
+  ) {
+    // Outside, add class to trigger
+    $trigger.addClass('selected-action-trigger-alt');
+  }
 };
 
 /**
@@ -4539,11 +4595,16 @@ Viewer.prototype.startCreatingActionLine = function(
       $trigger = $trigger.parents('[data-type="element-group"]');
     }
   } else if (
-    !['screen', 'region', 'widget', 'element-group']
+    $trigger.hasClass('group-select-overlay')
+  ) {
+    // Element group
+    $trigger = $trigger.parents('[data-type="element-group"]');
+  } else if (
+    !['screen', 'region', 'widget']
       .includes($trigger.data('type'))
   ) {
     // If it's not in the list of selectable objects, skip
-    console.log('not in the list of selectable objects, skip');
+    console.info('not in the list of selectable objects, skip');
     return;
   }
 
@@ -4558,6 +4619,9 @@ Viewer.prototype.startCreatingActionLine = function(
   }
 
   self.creatingAction = true;
+
+  // Add extra class to the trigger
+  $trigger.addClass('action-trigger-adding');
 
   // Create target helper
   const $targetHelper =
@@ -4610,11 +4674,25 @@ Viewer.prototype.startCreatingActionLine = function(
 /**
  * Stop creating Action Line
  */
-Viewer.prototype.stopCreatingActionLine = function() {
+Viewer.prototype.stopCreatingActionLine = function(
+  removeTriggerSelection = false,
+) {
   this.creatingAction = false;
 
   // Remove event
   $(document).off('mousemove.addActionLine');
+
+  // Remove extra class from selected trigger
+  // Add extra class to the trigger
+  this.DOMObject.find('.action-trigger-adding')
+    .removeClass('action-trigger-adding');
+
+  // Remove trigger selection?
+  if (removeTriggerSelection) {
+    this.DOMObject.find('.selected-action-trigger')
+      .removeClass('selected-action-trigger selected-action-trigger-alt')
+      .find('.trigger-add-button').remove();
+  }
 
   // Remove helper
   this.DOMObject.find('[data-helper-id="addActionTargetHelper"]')
@@ -4637,11 +4715,12 @@ Viewer.prototype.addActionLine = function(
   const triggerType = (trigger.type === 'layout') ?
     'screen' : trigger.type;
 
-  const $trigger = (triggerType == 'element' || triggerType == 'elementGroup') ?
-    this.DOMObject.find('#' + trigger.id) :
-    this.DOMObject.find(`[data-type="${triggerType}"]` +
-      `[data-${triggerType}-id="${trigger.id}"]`);
-  const $target = (target.type == 'element' || target.type == 'elementGroup') ?
+  const $trigger =
+    (triggerType == 'element' || triggerType == 'element-group') ?
+      this.DOMObject.find('#' + trigger.id) :
+      this.DOMObject.find(`[data-type="${triggerType}"]` +
+        `[data-${triggerType}-id="${trigger.id}"]`);
+  const $target = (target.type == 'element' || target.type == 'element-group') ?
     this.DOMObject.find('#' + target.id) :
     this.DOMObject
       .find(`[data-type="${target.type}"]` +
@@ -4653,13 +4732,13 @@ Viewer.prototype.addActionLine = function(
   ) {
     console.info('Invalid trigger or target!');
     ($trigger.length === 0) &&
-      console.log(`[data-type="${triggerType}"]` +
+      console.info(`[data-type="${triggerType}"]` +
       `[data-${triggerType}-id="${trigger.id}"]`);
     ($target.length === 0) &&
-      console.log(`[data-type="${target.type}"]` +
+      console.info(`[data-type="${target.type}"]` +
         `[data-${target.type}-id="${target.id}"]`);
     ($trigger[0] === $target[0]) &&
-        console.log(`Same: [data-type="${target.type}"]` +
+        console.info(`Same: [data-type="${target.type}"]` +
           `[data-${target.type}-id="${target.id}"]`);
     return;
   }
@@ -4865,11 +4944,11 @@ Viewer.prototype.updateActionLineTargets = function(
   const triggerType = (trigger.type === 'layout') ?
     'screen' : trigger.type;
 
-  const $trigger =(triggerType == 'element' || triggerType == 'elementGroup') ?
+  const $trigger =(triggerType == 'element' || triggerType == 'element-group') ?
     this.DOMObject.find('#' + trigger.id) :
     this.DOMObject.find(`[data-type="${triggerType}"]` +
       `[data-${triggerType}-id="${trigger.id}"]`);
-  const $target = (target.type == 'element' || target.type == 'elementGroup') ?
+  const $target = (target.type == 'element' || target.type == 'element-group') ?
     this.DOMObject.find('#' + target.id) :
     this.DOMObject
       .find(`[data-type="${target.type}"]` +

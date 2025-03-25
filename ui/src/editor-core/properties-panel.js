@@ -2348,7 +2348,28 @@ PropertiesPanel.prototype.renderActions = function(
   // Add action button handling
   self.DOMObject.find('.actions-content button[data-action="add"]')
     .on('click', function() {
-      self.createEditAction();
+      const $trigger = app.viewer.DOMObject.find('.selected-action-trigger');
+      const actionData = {};
+
+      // If it's an element group
+      if ($trigger.hasClass('group-select-overlay')) {
+        const $elGroup = $trigger.parents('.designer-element-group');
+        actionData.source = $elGroup.data('type');
+        actionData.sourceId = $elGroup.attr('id');
+      } else if ($trigger.hasClass('designer-element')) {
+        actionData.source = $trigger.data('type');
+        actionData.sourceId = $trigger.attr('id');
+      } else {
+        actionData.source = $trigger.data('type');
+        actionData.sourceId = $trigger.data(actionData.source + 'Id');
+      }
+
+      // Remove active status from trigger
+      app.viewer.DOMObject.find('.selected-action-trigger')
+        .removeClass('selected-action-trigger selected-action-trigger-alt')
+        .find('.trigger-add-button').remove();
+
+      self.createEditAction(actionData);
     });
 };
 
@@ -2525,64 +2546,6 @@ PropertiesPanel.prototype.createEditAction = function(
     $typeInput.val(typeInputValue);
   };
 
-  // TODO: Open or edit drawer widget
-  /*
-  const handleEditWidget = function(dropdownValue) {
-    const $dropdownParent = $dropdown.parent();
-
-    const removeDeleteButton = function() {
-      // Remove delete widget button
-      $dropdown.siblings('.delete-widget-btn').remove();
-
-      // Remove class from container
-      $dropdownParent.removeClass('delete-active');
-    };
-
-    if (dropdownValue === 'create') {
-      // Create new
-      lD.viewer.addActionEditArea(actionData, 'create');
-
-      removeDeleteButton();
-    } else if (dropdownValue != '' && dropdownValue != null) {
-      // Update action widget data
-      actionData.widgetId = dropdownValue;
-
-      // Edit existing
-      lD.viewer.addActionEditArea(actionData, 'edit');
-
-      // Show delete button on dropdown
-      if ($dropdown.siblings('.delete-widget-btn').length === 0) {
-        const $deleteBtn = $(
-          '<div class="btn btn-danger delete-widget-btn" title="' +
-          editorsTrans.actions.deleteWidget + '">' +
-          editorsTrans.actions.deleteWidget +
-          '</div>',
-        ).on('click', function() {
-          const widgetId = $dropdown.val();
-          const drawerId = lD.getObjectByTypeAndId('drawer').regionId;
-
-          removeDeleteButton();
-
-          lD.deleteObject(
-            'widget',
-            widgetId,
-            drawerId,
-            true,
-          );
-        });
-
-        // Append to dropdown parent
-        $dropdownParent.append($deleteBtn);
-
-        // Add class to container
-        $dropdownParent.addClass('delete-active');
-      }
-    } else {
-      removeDeleteButton();
-    }
-  };
-  */
-
   // Handle trigger and target change
   $newActionContainer.find('[name="sourceId"], [name="targetId"]')
     .on('change', function(e) {
@@ -2637,9 +2600,8 @@ PropertiesPanel.prototype.createEditAction = function(
     },
   );
 
-  // Highlight on viewer
-  (actionData.actionId) &&
-    app.viewer.updateActionLine();
+  // Update action lines
+  app.viewer.updateActionLine();
 
   // Run xiboInitialise on form
   XiboInitialise('.action-edit-form');
