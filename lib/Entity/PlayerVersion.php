@@ -23,11 +23,12 @@ namespace Xibo\Entity;
 
 
 use Carbon\Carbon;
-use Illuminate\Support\Str;
+use Slim\Http\ServerRequest;
 use Symfony\Component\Filesystem\Filesystem;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\HttpsDetect;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -218,7 +219,7 @@ class PlayerVersion implements \JsonSerializable
     /**
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
-    public function unpack(string $libraryFolder): static
+    public function unpack(string $libraryFolder, ServerRequest $request): static
     {
         // ChromeOS
         // Unpack the `.chrome` file as a tar/gz, validate its signature, extract it into the library folder
@@ -292,32 +293,29 @@ class PlayerVersion implements \JsonSerializable
             $zip->close();
 
             // Update manifest.json
-            $manifest = file_get_contents($folder . '/manifest.json');
+            $manifest = json_decode(file_get_contents($folder . '/manifest.json'), true);
 
             $isXiboThemed = $this->config->getThemeConfig('app_name', 'Xibo') === 'Xibo';
             if (!$isXiboThemed) {
-                $manifest = Str::replace(
-                    'Xibo Digital Signage',
-                    $this->config->getThemeConfig('theme_title'),
-                    $manifest
-                );
-                $manifest = Str::replace(
-                    'https://xibosignage.com/chromeos',
-                    $this->config->getThemeConfig('theme_url'),
-                    $manifest
-                );
-                $manifest = Str::replace(
-                    'xibo-chromeos',
-                    $this->config->getThemeConfig('app_name') . '-chromeos',
-                    $manifest
-                );
+                $manifest['id'] = $this->config->getThemeConfig('theme_url');
+                $manifest['name'] = $this->config->getThemeConfig('theme_name');
+                $manifest['description'] = $this->config->getThemeConfig('theme_title');
+                $manifest['short_name'] = $this->config->getThemeConfig('app_name') . '-chromeos';
             }
 
-            // Update asset URLs
-            $manifest = Str::replace('assets/icons/512x512.png', $this->config->uri('img/512x512.png'), $manifest);
-            $manifest = Str::replace('assets/icons/192x192.png', $this->config->uri('img/192x192.png'), $manifest);
+            // Start URL if we're running in a sub-folder.
+            $manifest['start_url'] = (new HttpsDetect())->getBaseUrl($request) . '/pwa';
 
-            file_put_contents($folder . '/manifest.json', $manifest);
+            // Update asset URLs
+            for ($i = 0; $i < count($manifest['icons']); $i++) {
+                if ($manifest['icons'][$i]['sizes'] == '512x512') {
+                    $manifest['icons'][$i]['src'] = $this->config->uri('img/512x512.png');
+                } else {
+                    $manifest['icons'][$i]['src'] = $this->config->uri('img/192x192.png');
+                }
+            }
+
+            file_put_contents($folder . '/manifest.json', json_encode($manifest));
 
             // Unlink our decrypted file
             unlink($libraryFolder . 'playersoftware/' . $this->versionId);

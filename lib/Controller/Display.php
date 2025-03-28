@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -2938,7 +2938,7 @@ class Display extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         $user_code = $sanitizedParams->getString('user_code');
-        $cmsAddress = (new HttpsDetect())->getUrl();
+        $cmsAddress = (new HttpsDetect())->getBaseUrl($request);
         $cmsKey = $this->getConfig()->getSetting('SERVER_KEY');
 
         if ($user_code == '') {

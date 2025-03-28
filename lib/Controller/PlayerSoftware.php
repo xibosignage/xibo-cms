@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -596,7 +596,7 @@ class PlayerSoftware extends Base
         $uploadService = new UploadService($libraryFolder . 'temp/', $options, $this->getLog(), $this->getState());
         $uploadHandler = $uploadService->createUploadHandler();
 
-        $uploadHandler->setPostProcessor(function ($file, $uploadHandler) use ($libraryFolder) {
+        $uploadHandler->setPostProcessor(function ($file, $uploadHandler) use ($libraryFolder, $request) {
             // Return right away if the file already has an error.
             if (!empty($file->error)) {
                 $this->getState()->setCommitState(false);
@@ -638,7 +638,7 @@ class PlayerSoftware extends Base
             rename($filePath, $libraryFolder . 'playersoftware/' . $playerSoftware->fileName);
 
             // Unpack if necessary
-            $playerSoftware->unpack($libraryFolder);
+            $playerSoftware->unpack($libraryFolder, $request);
 
             // return
             $file->id = $playerSoftware->versionId;
