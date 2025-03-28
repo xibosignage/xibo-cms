@@ -377,8 +377,8 @@
         <div class="row">
             <input type="number" value="{{ top }}" class="col-3 form-control androidDimensionInput" name="dimensionTop" id="dimensionTop" placeholder="{% endverbatim %}{{ "Top"|trans }}{% verbatim %}"></input>
             <input type="number" value="{{ left }}" class="col-3 form-control androidDimensionInput" name="dimensionLeft" id="dimensionLeft" placeholder="{% endverbatim %}{{ "Left"|trans }}{% verbatim %}"></input>
-            <input type="number" value="{{ width }}" class="col-3 form-control androidDimensionInput" name="dimensionWidth" id="dimensionWidth" placeholder="{% endverbatim %}{{ "Width"|trans }}{% verbatim %}"></input>
-            <input type="number" value="{{ height }}" class="col-3 form-control androidDimensionInput" name="dimensionHeight" id="dimensionHeight" placeholder="{% endverbatim %}{{ "Height"|trans }}{% verbatim %}"></input>
+            <input type="number" value="{{ width }}" class="col-3 form-control androidDimensionInput" min="0" name="dimensionWidth" id="dimensionWidth" placeholder="{% endverbatim %}{{ "Width"|trans }}{% verbatim %}"></input>
+            <input type="number" value="{{ height }}" class="col-3 form-control androidDimensionInput" min="0" name="dimensionHeight" id="dimensionHeight" placeholder="{% endverbatim %}{{ "Height"|trans }}{% verbatim %}"></input>
         </div>
     </script>
 {% endverbatim %}
