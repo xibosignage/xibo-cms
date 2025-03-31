@@ -652,25 +652,146 @@ body.editor-opened #content-wrapper .page-content>.row {
             outline-offset: -4px;
         }
 
-        /* TODO: Not final*/
         .action-layout-dock-control {
             position: absolute;
-            left: 0;
-            bottom: 0;
+            left: 6px;
+            bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: calc(100% - 12px);
 
             .action-screen-helper {
-                background: #337ab7;
-                color: white;
-                width: 100px;
-                height: 50px;
-                position: relative;
-                left: 6px;
+                cursor: pointer;
                 display: flex;
-                justify-content: center;
+                position: relative;
+                height: 40px;
+                max-width: 200px;
+                padding: 8px 18px;
                 align-items: center;
-                font-weight: bold;
-                bottom: 6px;
-                border-radius: 8px;
+                flex-shrink: 0;
+                border-radius: 3px;
+                opacity: 0.9;
+                background-color: $xibo-color-neutral-0;
+                color: $xibo-color-primary;
+                font-size: 20px;
+                font-style: normal;
+                font-weight: 700;
+                line-height: normal;
+                border: 1px solid $xibo-color-primary-l30;
+
+                & > div.action-screen-helper-label {
+                    white-space: nowrap;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    pointer-events: none;
+                }
+
+                &:hover {
+                    opacity: 1;
+                    border: 1px solid $xibo-color-primary-l60;
+                }
+            }
+
+            .action-layout-dock-recents {
+                display: flex;
+                align-items: center;
+                height: 40px;
+                gap: 12px;
+                overflow-y: hidden;
+                overflow-x: hidden;
+                scrollbar-width: thin !important;
+
+                &:hover {
+                    overflow-x: auto;
+                }
+
+                .action-screen-helper {
+                    position: relative;
+                    cursor: unset;
+                    background-color: $xibo-color-neutral-0;
+                    color: $xibo-color-neutral-900;
+                    height: 100%;
+                    font-size: 16px;
+                    font-style: normal;
+                    font-weight: 400;
+                    line-height: 24px;
+
+                    & > i.delete-btn {
+                        cursor: pointer;
+                        position: absolute;
+                        top: 3px;
+                        right: 3px;
+                        font-size: 13px;
+                    }
+                }
+            }
+
+            .action-layout-dock-search {
+                position: relative;
+
+                .action-layout-dock-search-button {
+                    background-color: $xibo-color-neutral-0;
+                    color: $xibo-color-primary;
+                    display: flex;
+                    width: 40px;
+                    height: 40px;
+                    padding: 4px;
+                    align-items: center;
+                    gap: 10px;
+                    flex-shrink: 0;
+    
+                    i {
+                        font-size: 32px;
+                        flex-shrink: 0;
+                        color: $xibo-color-primary;
+                    }
+                }
+    
+                .action-layout-dock-search-results-container {
+                    position: absolute;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 12px;
+                    width: 292px;
+                    z-index: $layout-dock-results-z-index;
+                    align-items: flex-start;
+                    border-radius: 3px;
+                    border: 1px solid $xibo-color-primary-l60;
+                    background: $xibo-color-neutral-100;
+                    top: -4px;
+                    left: 0;
+                    transform: translate(0, -100%);
+                    @include box-shadow(0px 4px 10px 0px rgba(0, 0, 0, 0.25));
+                    padding: 10px;
+
+                    .action-layout-dock-search-results {
+                        overflow-y: auto;
+                        max-height: 120px;
+                        width: 100%;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 8px;
+
+                        .action-layout-dock-option {
+                            cursor: pointer;
+                            background: $xibo-color-neutral-100;
+                            min-height: 24px;
+                            white-space: nowrap;
+                            overflow: hidden;
+                            text-overflow: ellipsis;
+        
+                            &:hover {
+                                font-weight: bold;
+                                background: $xibo-color-neutral-0;
+                            }
+                        }
+                    }
+
+                    .action-layout-dock-search-find {
+                        width: 100%;
+                    }
+                }
             }
         }
     }

@@ -39,6 +39,8 @@ const viewerElementContentTemplate =
   require('../templates/viewer-element-content.hbs');
 const viewerPlaylistControlsTemplate =
   require('../templates/viewer-playlist-controls.hbs');
+const viewerActionLayoutDockTemplate =
+  require('../templates/viewer-action-layout-dock.hbs');
 const drawThrottle = 60;
 const drawElementThrottle = 30;
 const lineDef = {
@@ -1092,11 +1094,17 @@ Viewer.prototype.handleUI = function() {
         return;
       }
 
+      const trigger = self.actionLines['action_line_temp'].trigger;
+      const targetType = $target.data('type');
+      const targetId = $target.data(targetType + 'Id');
+      let actionType = 'next'; // Default to next
+
       // If target is not valid, and we're creating line
       // stop and remove it, keep event
       if (
         self.creatingAction &&
-        !$target.is('.viewer-object-select')
+        !$target.is('.viewer-object-select') ||
+        targetId === undefined
       ) {
         // Remove temp line
         self.removeActionLine('action_line_temp');
@@ -1109,17 +1117,13 @@ Viewer.prototype.handleUI = function() {
 
       e.stopPropagation();
 
-      const trigger = self.actionLines['action_line_temp'].trigger;
-      const targetType = $target.data('type');
-      const targetId = $target.data(targetType + 'Id');
-      let actionType = 'next'; // Default to next
-
       // Get default action type based on the target
       // If it's frame and not playlist, default to navigate to widget
       if ($target.data('subType') === 'frame') {
         actionType = 'navWidget';
       }
 
+      // If target is not valid
       app.propertiesPanel.createEditAction({
         actionType: actionType,
         source: trigger.type,
@@ -4466,16 +4470,10 @@ Viewer.prototype.handleActionsUI = function() {
   const app = self.parent;
 
   // Add Layout dock control
-  self.DOMObject.append(
-    `<div class="action-layout-dock-control">
-      <div 
-        class="action-screen-helper viewer-object-select"
-        data-type="screen"
-        data-screen-id=${app.mainObjectId}>
-        Layout
-      </div>
-    </div>`,
-  );
+  self.DOMObject.append(viewerActionLayoutDockTemplate({
+    currentLayoutId: app.mainObjectId,
+    trans: editorsTrans.actions,
+  }));
 
   // Create lines for existing actions
   app.actionManager.getAllActions(app.mainObjectId)
@@ -4497,6 +4495,9 @@ Viewer.prototype.handleActionsUI = function() {
           );
         });
       }
+
+      // Handle Layout dock
+      self.handleLayoutDock(data);
     });
 };
 
@@ -4630,6 +4631,7 @@ Viewer.prototype.startCreatingActionLine = function(
         width: '10px',
         height: '10px',
         position: 'absolute',
+        'pointer-events': 'none',
       })
       .appendTo(self.DOMObject);
 
@@ -5032,6 +5034,205 @@ Viewer.prototype.removeActionLine = function(actionLineId) {
       removeLine(lineId);
     }
   }
+};
+
+/**
+ * Handle Layout Dock
+ * @param {object[]} actions
+ */
+Viewer.prototype.handleLayoutDock = function(actions) {
+  const self = this;
+  const recentLayouts = new Set();
+  const recentLayoutsHelper = new Set();
+  const numLayoutsSearch = 10;
+
+  const $searchButton =
+    self.DOMObject.find('.action-layout-dock-search-button');
+  const $dockResults =
+      self.DOMObject.find('.action-layout-dock-search-results-container');
+  const $recentsContainer =
+    self.DOMObject.find('.action-layout-dock-recents');
+  const localStorageRecents =
+    JSON.parse(localStorage.getItem('layoutDockRecents'));
+
+  const addLayoutToRecents = function(layoutData) {
+    // Check if layout is already added to recents
+    if ($recentsContainer
+      .find(`[data-layout-id="${layoutData.code}"]`)
+      .length === 0
+    ) {
+      // Add to recents
+      const $recent = $(`<div
+        class="action-screen-helper viewer-object-select"
+        data-type="screen"
+        data-layout-id="${layoutData.code}"
+        title="${layoutData.name}">
+        <div class="action-screen-helper-label">
+          [${layoutData.code}] ${layoutData.name}
+        </div>
+        <i class="fas fa-close delete-btn"
+          title="${editorsTrans.actions.removeFromRecents}"></i>
+      </div>`);
+
+      const saveToStorage = function(recents) {
+        localStorage.setItem(
+          'layoutDockRecents',
+          JSON.stringify(recents),
+        );
+      };
+
+      // Append to container
+      $recent.appendTo($recentsContainer);
+
+      // Handle remove button
+      $recent.on('click', 'i.delete-btn', (ev) => {
+        $(ev.currentTarget).parent().remove();
+        recentLayouts.delete(String(layoutData.code));
+        saveToStorage(recentLayouts);
+      });
+
+      // Add to local storage
+      recentLayouts.add(String(layoutData.code));
+      saveToStorage(recentLayouts);
+
+      // Show container
+      $recentsContainer.show();
+    }
+  };
+
+  const getLayoutsWithCode = function(filter = {}) {
+    return new Promise(function(resolve, reject) {
+      $.get(urlsForApi.layout.codeSearch.url, filter).done(function(res) {
+        if (res.data) {
+          resolve(res.data);
+        } else {
+          reject(new Error('No layouts returned!'));
+        }
+      });
+    });
+  };
+
+  const populateSearchResults = _.debounce(function(search, page = 0) {
+    // Empty container if first page
+    (page === 0) &&
+      $dockResults.find('.action-layout-dock-search-results')
+        .empty();
+
+    // Create filter
+    const filter = {
+      start: page * numLayoutsSearch,
+      length: numLayoutsSearch,
+    };
+
+    // Add search
+    (search) && (filter.code = search);
+
+    // Search for Layouts with code
+    getLayoutsWithCode(filter).then((layouts) => {
+      const $results =
+        $dockResults.find('.action-layout-dock-search-results');
+
+      // Process each layout
+      layouts.forEach((layout) => {
+        const $option = $(`<div class="action-layout-dock-option"
+          data-layout-code="${layout.code}"
+          data-layout-name="${layout.layout}">
+          [${layout.code}] ${layout.layout}</div>`);
+
+        $option.appendTo($results).on('click', (ev) => {
+          const layoutData = $(ev.currentTarget).data();
+
+          addLayoutToRecents({
+            code: layoutData.layoutCode,
+            name: layoutData.layoutName,
+          });
+
+          // Hide back the results
+          $dockResults.hide();
+
+          // Remove previous results
+          $dockResults.find('.action-layout-dock-search-results')
+            .empty();
+        });
+      });
+
+      // Handle lazy load on scroll
+      $results.off('scroll').on('scroll', () => {
+        if (
+          $results.scrollTop() + $results.innerHeight() >=
+          $results[0].scrollHeight &&
+          layouts.length > 0
+        ) {
+          populateSearchResults(search, ++page);
+        }
+      });
+    });
+  }, 200);
+
+  // Hide containers by default
+  $dockResults.hide();
+  $recentsContainer.hide();
+
+  // Check if we have existing actions with Navigate to Layout
+  // and add those layouts to recents
+  if (actions) {
+    Object.values(actions).forEach((action) => {
+      if (action.actionType === 'navLayout' && action.layoutCode) {
+        recentLayoutsHelper.add(String(action.layoutCode));
+      }
+    });
+  }
+
+  // Check if we have layouts on local storage
+  if (localStorageRecents) {
+    localStorageRecents.forEach((localStorageLayout) => {
+      recentLayoutsHelper.add(localStorageLayout);
+    });
+  }
+
+  // If we have recent layouts on load, add them to list
+  localStorage.removeItem('layoutDockRecents');
+  if (recentLayoutsHelper.size > 0) {
+    recentLayoutsHelper.forEach((code) => {
+      getLayoutsWithCode({
+        code: code,
+        length: 1,
+      }).then((layouts) => {
+        const layout = layouts[0];
+        // Make sure it's the same layout
+        // if so, add to recents
+        (code === layout.code) &&
+          addLayoutToRecents({
+            code: layout.code,
+            name: layout.layout,
+          });
+      });
+    });
+  }
+
+  // Handle dock control button
+  $searchButton.on('click', () => {
+    const isOn = $dockResults.is(':visible');
+    $dockResults.hide();
+
+    // If it's not showing already
+    if (!isOn) {
+      $dockResults.find('.action-layout-dock-search-find')
+        .on('keyup', (ev) => {
+          populateSearchResults(ev.currentTarget.value);
+        });
+
+      // Show initial results
+      populateSearchResults();
+
+      // Show the results
+      $dockResults.show();
+    } else {
+      // Remove previous results
+      $dockResults.find('.action-layout-dock-search-results')
+        .empty();
+    }
+  });
 };
 
 module.exports = Viewer;

@@ -4646,6 +4646,9 @@ lD.toggleInteractiveMode = function(enable = true) {
 
     // Mark main editor container as in Interactive mode
     lD.editorContainer.addClass('interactive-mode');
+
+    // Hide Layer Manager
+    lD.viewer.layerManager.setVisible(false);
   } else { // Disable
     // Remove Interactive mode from main editor container
     lD.editorContainer.removeClass('interactive-mode');

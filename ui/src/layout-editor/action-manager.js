@@ -79,6 +79,10 @@ ActionManager.prototype.addAction = function($form, layoutId) {
   // Add layout Id
   dataToSave.layoutId = layoutId;
 
+  // If source is types screen, change it to layout
+  (dataToSave.source === 'screen') &&
+    (dataToSave.source = 'layout');
+
   return new Promise((resolve, reject) => {
     $.ajax({
       url: urlsForApi.actions.add.url,

@@ -60,11 +60,11 @@ const actionTypesAndRules = {
   },
   navLayout: {
     targetTypeFilter: ['layouts', 'regions', 'playlists'],
-    subType: 'navLayout',
+    subTypeFixed: 'navLayout',
   },
   navWidget: {
     targetTypeFilter: ['layouts', 'regions'],
-    subType: 'navWidget',
+    subTypeFixed: 'navWidget',
   },
 };
 
@@ -2396,7 +2396,7 @@ PropertiesPanel.prototype.createEditAction = function(
     .map((action) => {
       // Set action type helper
       if (
-        actionTypesAndRules[action].subType === actionData.actionType ||
+        actionTypesAndRules[action].subTypeFixed === actionData.actionType ||
         actionTypesAndRules[action].targetType === actionData.target &&
         actionTypesAndRules[action].subType === actionData.actionType
       ) {
