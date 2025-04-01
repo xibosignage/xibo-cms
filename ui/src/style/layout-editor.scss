@@ -699,12 +699,8 @@ body.editor-opened #content-wrapper .page-content>.row {
                 height: 40px;
                 gap: 12px;
                 overflow-y: hidden;
-                overflow-x: hidden;
+                overflow-x: auto;
                 scrollbar-width: thin !important;
-
-                &:hover {
-                    overflow-x: auto;
-                }
 
                 .action-screen-helper {
                     position: relative;

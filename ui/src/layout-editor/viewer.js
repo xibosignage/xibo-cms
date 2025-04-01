@@ -5063,7 +5063,7 @@ Viewer.prototype.handleLayoutDock = function(actions) {
     ) {
       // Add to recents
       const $recent = $(`<div
-        class="action-screen-helper viewer-object-select"
+        class="action-screen-helper action-screen-recent"
         data-type="screen"
         data-layout-id="${layoutData.code}"
         title="${layoutData.name}">
@@ -5089,6 +5089,10 @@ Viewer.prototype.handleLayoutDock = function(actions) {
         $(ev.currentTarget).parent().remove();
         recentLayouts.delete(String(layoutData.code));
         saveToStorage(recentLayouts);
+
+        // Check if it's the last recent, if so, hide container
+        (recentLayouts.size === 0) &&
+          $recentsContainer.hide();
       });
 
       // Add to local storage
@@ -5112,7 +5116,11 @@ Viewer.prototype.handleLayoutDock = function(actions) {
     });
   };
 
-  const populateSearchResults = _.debounce(function(search, page = 0) {
+  const populateSearchResultsDebounce = _.debounce(function(search, page = 0) {
+    populateSearchResults(search, page);
+  }, 200);
+
+  const populateSearchResults = function(search, page = 0) {
     // Empty container if first page
     (page === 0) &&
       $dockResults.find('.action-layout-dock-search-results')
@@ -5131,6 +5139,18 @@ Viewer.prototype.handleLayoutDock = function(actions) {
     getLayoutsWithCode(filter).then((layouts) => {
       const $results =
         $dockResults.find('.action-layout-dock-search-results');
+
+      // If no results, show message
+      if (
+        layouts.length === 0 &&
+        $results.find('.action-layout-dock-option').length === 0
+      ) {
+        $results.append(`<div class="error-message">
+          ${editorsTrans.actions.noResults}</div>`);
+      } else {
+        $results.find(`.error_message`)
+          .remove();
+      }
 
       // Process each layout
       layouts.forEach((layout) => {
@@ -5163,11 +5183,11 @@ Viewer.prototype.handleLayoutDock = function(actions) {
           $results[0].scrollHeight &&
           layouts.length > 0
         ) {
-          populateSearchResults(search, ++page);
+          populateSearchResultsDebounce(search, ++page);
         }
       });
     });
-  }, 200);
+  };
 
   // Hide containers by default
   $dockResults.hide();
@@ -5219,11 +5239,11 @@ Viewer.prototype.handleLayoutDock = function(actions) {
     if (!isOn) {
       $dockResults.find('.action-layout-dock-search-find')
         .on('keyup', (ev) => {
-          populateSearchResults(ev.currentTarget.value);
+          populateSearchResultsDebounce(ev.currentTarget.value, 0);
         });
 
       // Show initial results
-      populateSearchResults();
+      populateSearchResults(null, 0);
 
       // Show the results
       $dockResults.show();
@@ -5231,6 +5251,9 @@ Viewer.prototype.handleLayoutDock = function(actions) {
       // Remove previous results
       $dockResults.find('.action-layout-dock-search-results')
         .empty();
+
+      // Empty search field
+      $dockResults.find('.action-layout-dock-search-find').val('');
     }
   });
 };
