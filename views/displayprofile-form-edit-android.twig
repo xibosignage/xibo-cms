@@ -229,7 +229,7 @@
 
                     {% set title = "Action Bar Display Duration"|trans %}
                     {% set helpText = "How long should the Action Bar be shown for, in seconds?"|trans %}
-                    {{ forms.number("actionBarDisplayDuration", title, displayProfile.getSetting("actionBarDisplayDuration"), helpText) }}
+                    {{ forms.number("actionBarDisplayDuration", title, displayProfile.getSetting("actionBarDisplayDuration"), helpText, "", "", "", "", "0") }}
 
                     {% set title = "Action Bar Intent"|trans %}
                     {% set helpText = "When set to Run Intent, which intent should be run. Format is: Action|ExtraKey,ExtraMsg"|trans %}
@@ -241,7 +241,7 @@
 
                     {% set title = "Start delay for device start up"|trans %}
                     {% set helpText = "The number of seconds to wait before starting the application after the device has started. Minimum 10."|trans %}
-                    {{ forms.number("startOnBootDelay", title, displayProfile.getSetting("startOnBootDelay"), helpText) }}
+                    {{ forms.number("startOnBootDelay", title, displayProfile.getSetting("startOnBootDelay"), helpText, "", "", "", "", "10") }}
 
                     {% if theme.getSetting('DISPLAY_PROFILE_CURRENT_LAYOUT_STATUS_ENABLED', 0) == 1 %}
                         {% set title = "Notify current layout"|trans %}
@@ -256,7 +256,7 @@
                     {% if theme.getSetting('DISPLAY_PROFILE_SCREENSHOT_INTERVAL_ENABLED', 0) == 1 %}
                         {% set title = "Screen shot interval"|trans %}
                         {% set helpText = "The duration between status screen shots in minutes. 0 to disable. Warning: This is bandwidth intensive."|trans %}
-                        {{ forms.number("screenShotRequestInterval", title, displayProfile.getSetting("screenShotRequestInterval"), helpText) }}
+                        {{ forms.number("screenShotRequestInterval", title, displayProfile.getSetting("screenShotRequestInterval"), helpText, "", "", "", "", "0") }}
                     {% endif %}
 
                     {% set title = "Action for Screen Shot Intent"|trans %}
@@ -265,7 +265,7 @@
 
                     {% set title = "Screen Shot Size"|trans %}
                     {% set helpText = "The size of the largest dimension. Empty or 0 means the screen size."|trans %}
-                    {{ forms.input("screenShotSize", title, displayProfile.getSetting("screenShotSize"), helpText) }}
+                    {{ forms.number("screenShotSize", title, displayProfile.getSetting("screenShotSize"), helpText, "", "", "", "", "0") }}
 
                     {% set title = "WebView Plugin State"|trans %}
                     {% set helpText = "What plugin state should be used when starting a web view."|trans %}
@@ -295,7 +295,7 @@
 
                     {% set title = "Embedded Web Server Port"|trans %}
                     {% set helpText = "The port number to use for the embedded web server on the Player. Only change this if there is a port conflict reported on the status screen."|trans %}
-                    {{ forms.number("serverPort", title, displayProfile.getSetting("serverPort"), helpText) }}
+                    {{ forms.number("serverPort", title, displayProfile.getSetting("serverPort"), helpText, "", "", "", "", "0") }}
 
                     {% set title = "Embedded Web Server allow WAN?"|trans %}
                     {% set helpText = "Should we allow access to the Player Embedded Web Server from WAN? You may need to adjust the device firewall to allow external traffic"|trans %}
@@ -316,7 +316,7 @@
 
                     {% set title = "Maximum Region Count"|trans %}
                     {% set helpText = "This setting is a memory limit protection setting which will stop rendering regions beyond the limit set. Leave at 0 for no limit."|trans %}
-                    {{ forms.number("maxRegionCount", title, displayProfile.getSetting("maxRegionCount"), helpText) }}
+                    {{ forms.number("maxRegionCount", title, displayProfile.getSetting("maxRegionCount"), helpText, "", "", "", "", "0") }}
 
                     {% set title = "Video Engine"|trans %}
                     {% set helpText = "Select which video engine should be used to playback video. ExoPlayer is usually better, but if you experience issues you can revert back to Android Media Player. HLS always uses ExoPlayer. Available from v3 R300."|trans %}
