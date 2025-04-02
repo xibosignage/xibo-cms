@@ -5042,18 +5042,19 @@ Viewer.prototype.removeActionLine = function(actionLineId) {
  */
 Viewer.prototype.handleLayoutDock = function(actions) {
   const self = this;
+  const app = self.parent;
   const recentLayouts = new Set();
   const recentLayoutsHelper = new Set();
   const numLayoutsSearch = 10;
 
+  const $dockControl =
+    self.DOMObject.find('.action-layout-dock-control');
   const $searchButton =
     self.DOMObject.find('.action-layout-dock-search-button');
   const $dockResults =
       self.DOMObject.find('.action-layout-dock-search-results-container');
   const $recentsContainer =
     self.DOMObject.find('.action-layout-dock-recents');
-  const localStorageRecents =
-    JSON.parse(localStorage.getItem('layoutDockRecents'));
 
   const addLayoutToRecents = function(layoutData) {
     // Check if layout is already added to recents
@@ -5068,18 +5069,11 @@ Viewer.prototype.handleLayoutDock = function(actions) {
         data-layout-id="${layoutData.code}"
         title="${layoutData.name}">
         <div class="action-screen-helper-label">
-          [${layoutData.code}] ${layoutData.name}
+          ${layoutData.code}
         </div>
         <i class="fas fa-close delete-btn"
           title="${editorsTrans.actions.removeFromRecents}"></i>
       </div>`);
-
-      const saveToStorage = function(recents) {
-        localStorage.setItem(
-          'layoutDockRecents',
-          JSON.stringify(recents),
-        );
-      };
 
       // Append to container
       $recent.appendTo($recentsContainer);
@@ -5088,16 +5082,14 @@ Viewer.prototype.handleLayoutDock = function(actions) {
       $recent.on('click', 'i.delete-btn', (ev) => {
         $(ev.currentTarget).parent().remove();
         recentLayouts.delete(String(layoutData.code));
-        saveToStorage(recentLayouts);
 
         // Check if it's the last recent, if so, hide container
         (recentLayouts.size === 0) &&
           $recentsContainer.hide();
       });
 
-      // Add to local storage
+      // Add to recents
       recentLayouts.add(String(layoutData.code));
-      saveToStorage(recentLayouts);
 
       // Show container
       $recentsContainer.show();
@@ -5140,6 +5132,16 @@ Viewer.prototype.handleLayoutDock = function(actions) {
       const $results =
         $dockResults.find('.action-layout-dock-search-results');
 
+      // Filter current layout and layouts added to recents
+      layouts = layouts.filter(
+        (layout) => {
+          return layout.layout != app.layout.name &&
+            !recentLayouts.has(layout.code);
+        });
+
+      // Filter added layouts
+      layouts = layouts.filter((layout) => !recentLayouts.has(layout.code));
+
       // If no results, show message
       if (
         layouts.length === 0 &&
@@ -5156,8 +5158,7 @@ Viewer.prototype.handleLayoutDock = function(actions) {
       layouts.forEach((layout) => {
         const $option = $(`<div class="action-layout-dock-option"
           data-layout-code="${layout.code}"
-          data-layout-name="${layout.layout}">
-          [${layout.code}] ${layout.layout}</div>`);
+          data-layout-name="${layout.layout}">${layout.code}</div>`);
 
         $option.appendTo($results).on('click', (ev) => {
           const layoutData = $(ev.currentTarget).data();
@@ -5173,6 +5174,10 @@ Viewer.prototype.handleLayoutDock = function(actions) {
           // Remove previous results
           $dockResults.find('.action-layout-dock-search-results')
             .empty();
+
+          // Remove custom overlay
+          $dockControl.find('.custom-overlay-action-layout-dock-search')
+            .remove();
         });
       });
 
@@ -5203,15 +5208,7 @@ Viewer.prototype.handleLayoutDock = function(actions) {
     });
   }
 
-  // Check if we have layouts on local storage
-  if (localStorageRecents) {
-    localStorageRecents.forEach((localStorageLayout) => {
-      recentLayoutsHelper.add(localStorageLayout);
-    });
-  }
-
   // If we have recent layouts on load, add them to list
-  localStorage.removeItem('layoutDockRecents');
   if (recentLayoutsHelper.size > 0) {
     recentLayoutsHelper.forEach((code) => {
       getLayoutsWithCode({
@@ -5247,6 +5244,23 @@ Viewer.prototype.handleLayoutDock = function(actions) {
 
       // Show the results
       $dockResults.show();
+
+      // Keyboard shortcut event
+      $('body').off('keydown.dockSearch')
+        .on('keydown.dockSearch', function(handler) {
+          // Delete ( Del or Backspace )
+          if (handler.key == 'Escape') {
+            $searchButton.trigger('click');
+          }
+        });
+
+      // Show overlay
+      const $customOverlay = $('.custom-overlay').clone();
+      $customOverlay
+        .addClass('custom-overlay-action-layout-dock-search')
+        .on('click', function() {
+          $searchButton.trigger('click');
+        }).css('opacity', 0).appendTo($dockControl).show();
     } else {
       // Remove previous results
       $dockResults.find('.action-layout-dock-search-results')
@@ -5254,6 +5268,13 @@ Viewer.prototype.handleLayoutDock = function(actions) {
 
       // Empty search field
       $dockResults.find('.action-layout-dock-search-find').val('');
+
+      // Remove custom overlay
+      $dockControl.find('.custom-overlay-action-layout-dock-search')
+        .remove();
+
+      // Remove keyboard shortcut event
+      $('body').off('keydown.dockSearch');
     }
   });
 };

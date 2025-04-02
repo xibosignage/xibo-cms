@@ -11,7 +11,14 @@
             <i class="fas fa-table-columns"></i>
         </button>
         <div class="action-layout-dock-search-results-container" style="display: none;">
-            <input type="text" class="action-layout-dock-search-find" placeholder="{{trans.searchforALayout}}">
+            <div class="action-layout-dock-search-find-container input-info-container">
+                <input type="text" class="action-layout-dock-search-find" placeholder="{{trans.searchforALayout}}">
+                <i class="fa fa-question-circle input-info tooltip-always-on"
+                    data-toggle="tooltip" 
+                    data-placement="top"
+                    title="{{trans.searchforLayoutsHelpText}}">
+                </i>
+            </div>
             <div class="action-layout-dock-search-results"></div>
         </div>
     </div>

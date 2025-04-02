@@ -664,8 +664,10 @@ body.editor-opened #content-wrapper .page-content>.row {
             .action-screen-helper {
                 cursor: pointer;
                 display: flex;
+                justify-content: center;
                 position: relative;
                 height: 40px;
+                min-width: 100px;
                 max-width: 200px;
                 padding: 8px 18px;
                 align-items: center;
@@ -714,11 +716,16 @@ body.editor-opened #content-wrapper .page-content>.row {
                     line-height: 24px;
 
                     & > i.delete-btn {
+                        display: none;
                         cursor: pointer;
                         position: absolute;
                         top: 3px;
                         right: 3px;
                         font-size: 13px;
+                    }
+
+                    &:hover > i.delete-btn {
+                        display: unset;
                     }
                 }
             }
@@ -748,30 +755,40 @@ body.editor-opened #content-wrapper .page-content>.row {
                     position: absolute;
                     display: flex;
                     flex-direction: column;
-                    gap: 12px;
                     width: 292px;
                     z-index: $layout-dock-results-z-index;
                     align-items: flex-start;
                     border-radius: 3px;
-                    border: 1px solid $xibo-color-primary-l60;
                     background: $xibo-color-neutral-100;
                     top: -4px;
                     left: 0;
                     transform: translate(0, -100%);
                     @include box-shadow(0px 4px 10px 0px rgba(0, 0, 0, 0.25));
-                    padding: 10px;
+                    scrollbar-color: $xibo-color-neutral-700 $xibo-color-neutral-100;
+
+                    .action-layout-dock-search-find-container {
+                        width: 100%;
+                        padding: 6px;
+                        display: flex;
+
+                        .action-layout-dock-search-find {
+                            width: 100%;
+                            @include box-shadow(inset 0 1px 1px rgba(0, 0, 0, .075));
+                            border: 1px solid $xibo-color-neutral-600;
+                            border-radius: 4px;
+                            outline: none;
+                        }
+                    }
 
                     .action-layout-dock-search-results {
                         overflow-y: auto;
                         max-height: 120px;
                         width: 100%;
-                        display: flex;
-                        flex-direction: column;
-                        gap: 8px;
 
                         .action-layout-dock-option {
                             cursor: pointer;
                             background: $xibo-color-neutral-100;
+                            padding: 6px 12px;
                             min-height: 24px;
                             white-space: nowrap;
                             overflow: hidden;
@@ -779,13 +796,14 @@ body.editor-opened #content-wrapper .page-content>.row {
         
                             &:hover {
                                 font-weight: bold;
-                                background: $xibo-color-neutral-0;
+                                color: $xibo-color-neutral-0;
+                                background: $bootstrap-theme-main-color;
                             }
                         }
-                    }
 
-                    .action-layout-dock-search-find {
-                        width: 100%;
+                        .error-message {
+                            padding: 6px 12px;
+                        }
                     }
                 }
             }
