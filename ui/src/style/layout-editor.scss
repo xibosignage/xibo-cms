@@ -704,7 +704,7 @@ body.editor-opened #content-wrapper .page-content>.row {
                 overflow-x: auto;
                 scrollbar-width: thin !important;
 
-                .action-screen-helper {
+                .action-screen-recent {
                     position: relative;
                     cursor: unset;
                     background-color: $xibo-color-neutral-0;
@@ -724,7 +724,7 @@ body.editor-opened #content-wrapper .page-content>.row {
                         font-size: 13px;
                     }
 
-                    &:hover > i.delete-btn {
+                    &:not(.action-target):hover > i.delete-btn {
                         display: unset;
                     }
                 }

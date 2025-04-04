@@ -4656,7 +4656,6 @@ lD.toggleInteractiveMode = function(enable = true) {
     // Remove action being edited from the action manager
     lD.actionManager.editing = {};
 
-    // TODO: Remove action components
     // Remove action lines
     this.viewer.removeActionLine();
   }

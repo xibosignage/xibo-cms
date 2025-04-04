@@ -59,11 +59,11 @@ const actionTypesAndRules = {
     subType: 'previous',
   },
   navLayout: {
-    targetTypeFilter: ['layouts', 'regions', 'playlists'],
+    targetTypeFilter: ['layouts'],
     subTypeFixed: 'navLayout',
   },
   navWidget: {
-    targetTypeFilter: ['layouts', 'regions'],
+    targetTypeFilter: ['playlists', 'regions'],
     subTypeFixed: 'navWidget',
   },
 };
@@ -2447,7 +2447,8 @@ PropertiesPanel.prototype.createEditAction = function(
       return;
     }
 
-    const subType = actionTypesAndRules[actionType].subType;
+    const subType = actionTypesAndRules[actionType].subType ||
+      actionTypesAndRules[actionType].subTypeFixed;
     const targetTypeFilters = actionTypesAndRules[actionType].targetTypeFilter;
 
     // Update hidden field
@@ -2464,6 +2465,15 @@ PropertiesPanel.prototype.createEditAction = function(
           filters: ['drawerWidgets'],
         },
       );
+    }
+
+    // If navigate to layout, target is current layout
+    // and hide the controller
+    if (actionType == 'navLayout') {
+      $newActionContainer.find('.action-edit-form-target').hide();
+      actionData.targetId = app.layout.layoutId;
+    } else {
+      $newActionContainer.find('.action-edit-form-target').show();
     }
 
     app.populateDropdownWithLayoutElements(
@@ -2547,14 +2557,18 @@ PropertiesPanel.prototype.createEditAction = function(
   };
 
   // Handle trigger and target change
-  $newActionContainer.find('[name="sourceId"], [name="targetId"]')
+  $newActionContainer
+    .find('[name="sourceId"], [name="targetId"], [name="layoutCode"]')
     .on('change', function(e) {
       updateTypeValue($(e.currentTarget));
 
+      const actionType =
+        $newActionContainer.find('[name="actionTypeHelper"]').val();
       const source = $newActionContainer.find('[name="source"]').val();
       const sourceId = $newActionContainer.find('[name="sourceId"]').val();
       const target = $newActionContainer.find('[name="target"]').val();
       const targetId = $newActionContainer.find('[name="targetId"]').val();
+      const layoutCode = $newActionContainer.find('[name="layoutCode"]').val();
 
       app.viewer.updateActionLineTargets(
         (actionData.actionId) ? actionData.actionId : 'action_line_temp',
@@ -2563,9 +2577,10 @@ PropertiesPanel.prototype.createEditAction = function(
           id: sourceId,
         },
         {
-          type: target,
-          id: targetId,
+          type: (actionType != 'navLayout') ? target : 'screen',
+          id: (actionType != 'navLayout') ? targetId : layoutCode,
         },
+        (actionType === 'navLayout'), // targetIsDockRecent?
       );
     });
 
@@ -2678,8 +2693,10 @@ PropertiesPanel.prototype.createPreviewAction = function(
         id: actionData.sourceId,
       },
       {
-        type: actionData.target,
-        id: actionData.targetId,
+        type: (actionData.actionType != 'navLayout') ?
+          actionData.target : 'screen',
+        id: (actionData.actionType != 'navLayout') ?
+          actionData.targetId : actionData.layoutCode,
       },
     );
     app.viewer.updateActionLine();

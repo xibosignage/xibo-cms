@@ -298,12 +298,6 @@ LayerManager.prototype.renderWithDebounce = _.debounce(function(
  */
 LayerManager.prototype.render = function(reset) {
   const self = this;
-  const app = this.parent;
-
-  // Don't render in interactive mode
-  if (app.interactiveMode) {
-    return;
-  }
 
   // Create layers data structure
   this.createStructure().then((res) => {

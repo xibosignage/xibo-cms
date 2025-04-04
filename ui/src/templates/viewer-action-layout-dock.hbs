@@ -1,14 +1,15 @@
 <div class="action-layout-dock-control">
     <div class="action-screen-helper viewer-object-select"
         data-type="screen"
-        data-screen-id="{{currentLayoutId}}"
-        title="{{currentLayoutId}}">
+        data-screen-id="{{currentLayoutId}}">
         <div class="action-screen-helper-label">{{trans.currentLayout}}</div>
     </div>
     <div class="action-layout-dock-recents" style="display: none;"></div>
     <div class="action-layout-dock-search">
         <button type="button" class="btn btn-sm btn-light action-layout-dock-search-button" title="{{trans.searchforLayouts}}">
-            <i class="fas fa-table-columns"></i>
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="28" viewBox="0 0 32 28" fill="none">
+                <path fill-rule="evenodd" clip-rule="evenodd" d="M4 0C1.79375 0 0 1.79375 0 4V24C0 26.2063 1.79375 28 4 28H28C30.2062 28 32 26.2063 32 24V4C32 1.79375 30.2062 0 28 0H4ZM4 24V12.0009H7.99859V24H4ZM11.9986 12.0009H28V24H11.9986V12.0009ZM28.2003 4.00363H3.98991V8.02297H28.2003V4.00363Z" fill="#1775F6"/>
+            </svg>
         </button>
         <div class="action-layout-dock-search-results-container" style="display: none;">
             <div class="action-layout-dock-search-find-container input-info-container">

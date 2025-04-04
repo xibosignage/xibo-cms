@@ -54,6 +54,7 @@ const lineDef = {
   circularStartSocket: 'top',
   circularEndSocket: 'right',
   pathNormal: 'fluid',
+  pathDock: 'grid',
   pathCircular: 'grid',
   gravityNormal: 'auto',
   gravityCircular: 'auto',
@@ -1096,15 +1097,18 @@ Viewer.prototype.handleUI = function() {
 
       const trigger = self.actionLines['action_line_temp'].trigger;
       const targetType = $target.data('type');
-      const targetId = $target.data(targetType + 'Id');
+      let targetId = $target.data(targetType + 'Id');
       let actionType = 'next'; // Default to next
+      let layoutCode;
 
       // If target is not valid, and we're creating line
       // stop and remove it, keep event
       if (
         self.creatingAction &&
-        !$target.is('.viewer-object-select') ||
-        targetId === undefined
+        !(
+          $target.is('.viewer-object-select') ||
+          $target.is('.action-screen-helper')
+        ) || targetId === undefined
       ) {
         // Remove temp line
         self.removeActionLine('action_line_temp');
@@ -1121,6 +1125,10 @@ Viewer.prototype.handleUI = function() {
       // If it's frame and not playlist, default to navigate to widget
       if ($target.data('subType') === 'frame') {
         actionType = 'navWidget';
+      } else if ($target.data('subType') === 'layout-code') {
+        actionType = 'navLayout';
+        layoutCode = targetId;
+        targetId = app.layout.layoutId;
       }
 
       // If target is not valid
@@ -1130,6 +1138,7 @@ Viewer.prototype.handleUI = function() {
         sourceId: trigger.id,
         target: targetType,
         targetId: targetId,
+        layoutCode: layoutCode,
       });
 
       // Update target
@@ -4478,26 +4487,28 @@ Viewer.prototype.handleActionsUI = function() {
   // Create lines for existing actions
   app.actionManager.getAllActions(app.mainObjectId)
     .then(function(data) {
-      if (
-        !$.isEmptyObject(data)
-      ) {
-        Object.entries(data).forEach(([id, action]) => {
-          self.addActionLine(
-            {
-              type: action.source,
-              id: action.sourceId,
-            },
-            {
-              type: action.target,
-              id: action.targetId,
-            },
-            id,
-          );
-        });
-      }
-
       // Handle Layout dock
-      self.handleLayoutDock(data);
+      self.handleLayoutDock(data).then(() => {
+        if (
+          !$.isEmptyObject(data)
+        ) {
+          Object.entries(data).forEach(([id, action]) => {
+            self.addActionLine(
+              {
+                type: action.source,
+                id: action.sourceId,
+              },
+              {
+                type: (action.actionType != 'navLayout') ?
+                  action.target : 'screen',
+                id: (action.actionType != 'navLayout') ?
+                  action.targetId : action.layoutCode,
+              },
+              id,
+            );
+          });
+        }
+      });
     });
 };
 
@@ -4706,11 +4717,13 @@ Viewer.prototype.stopCreatingActionLine = function(
  * @param {object} trigger
  * @param {object} target
  * @param {string} actionId
+ * @param {boolean} targetIsDockRecent
  */
 Viewer.prototype.addActionLine = function(
   trigger,
   target,
   actionId,
+  targetIsDockRecent = false,
 ) {
   const self = this;
   const app = self.parent;
@@ -4727,6 +4740,33 @@ Viewer.prototype.addActionLine = function(
     this.DOMObject
       .find(`[data-type="${target.type}"]` +
         `[data-${target.type}-id="${target.id}"]`);
+
+  // If target is a dock recent, and it's not added
+  // add it to the dock here
+  if (targetIsDockRecent && $target.length === 0) {
+    self.getLayoutsWithCode({
+      code: target.id,
+      length: 1,
+    }).then((layouts) => {
+      const layout = layouts[0];
+      // Make sure it's the same layout
+      // if so, add to recents
+      (target.id === layout.code) &&
+        self.addLayoutToRecents({
+          code: layout.code,
+          name: layout.layout,
+        });
+
+      self.addActionLine(
+        trigger,
+        target,
+        actionId,
+        targetIsDockRecent,
+      );
+    });
+
+    return;
+  }
 
   if (
     $trigger.length === 0 ||
@@ -4757,6 +4797,8 @@ Viewer.prototype.addActionLine = function(
             lineDef.normalLightThemeColor,
           size: 3,
           startPlug: 'square',
+          endSocket:
+            ($target.hasClass('action-screen-helper')) ? 'top' : 'auto',
         },
       ),
       trigger: trigger,
@@ -4784,6 +4826,10 @@ Viewer.prototype.addActionLine = function(
       type: 'circular',
     };
   }
+
+  // Add classes to trigger and target
+  $trigger.addClass('action-trigger');
+  $target.addClass('action-target');
 
   // Add data to line SVG
   const lineID = this.actionLines[actionId].line._id;
@@ -4865,9 +4911,11 @@ Viewer.prototype.updateActionLine = function(
 
     // Set defaults for normal and circular
     if (this.actionLines[lineId].type === 'normal') {
-      this.actionLines[lineId].line.startSocket = 'auto';
-      this.actionLines[lineId].line.endSocket = 'auto';
       this.actionLines[lineId].line.path = lineDef.pathNormal;
+      this.actionLines[lineId].line.startSocketGravity = lineDef.gravityNormal;
+      this.actionLines[lineId].line.endSocketGravity = lineDef.gravityNormal;
+    } else if (this.actionLines[lineId].type === 'dock') {
+      this.actionLines[lineId].line.path = lineDef.pathDock;
       this.actionLines[lineId].line.startSocketGravity = lineDef.gravityNormal;
       this.actionLines[lineId].line.endSocketGravity = lineDef.gravityNormal;
     } else {
@@ -4920,18 +4968,22 @@ Viewer.prototype.updateActionLine = function(
  * @param {string} actionLineId
  * @param {object} trigger
  * @param {object} target
+ * @param {boolean} targetIsDockRecent
  */
 Viewer.prototype.updateActionLineTargets = function(
   actionLineId,
   trigger,
   target,
+  targetIsDockRecent = false,
 ) {
+  const self = this;
+
   // If we're updating temporaty action and it doesn't exist yet
   if (
     actionLineId == 'action_line_temp' &&
     !this.actionLines[actionLineId]
   ) {
-    this.addActionLine(trigger, target, actionLineId);
+    this.addActionLine(trigger, target, actionLineId, targetIsDockRecent);
 
     return;
   } else if (
@@ -4956,6 +5008,33 @@ Viewer.prototype.updateActionLineTargets = function(
       .find(`[data-type="${target.type}"]` +
         `[data-${target.type}-id="${target.id}"]`);
 
+  // If target is a dock recent, and it's not added
+  // add it to the dock here
+  if (targetIsDockRecent && $target.length === 0) {
+    self.getLayoutsWithCode({
+      code: target.id,
+      length: 1,
+    }).then((layouts) => {
+      const layout = layouts[0];
+      // Make sure it's the same layout
+      // if so, add to recents
+      (target.id === layout.code) &&
+        self.addLayoutToRecents({
+          code: layout.code,
+          name: layout.layout,
+        });
+
+      self.updateActionLineTargets(
+        actionLineId,
+        trigger,
+        target,
+        targetIsDockRecent,
+      );
+    });
+
+    return;
+  }
+
   if (
     $trigger.length === 0 ||
     $target.length === 0
@@ -4970,6 +5049,12 @@ Viewer.prototype.updateActionLineTargets = function(
 
   this.actionLines[actionLineId].trigger = trigger;
   this.actionLines[actionLineId].target = target;
+
+  // Remove classes from previous trigger/target
+  $(this.actionLines[actionLineId].line.start)
+    .removeClass('action-trigger');
+  $(this.actionLines[actionLineId].line.end)
+    .removeClass('action-target');
 
   // If target is same as trigger, set as circular line
   if ($trigger[0] === $target[0]) {
@@ -4987,12 +5072,28 @@ Viewer.prototype.updateActionLineTargets = function(
       lineDef.gravityCircular;
     this.actionLines[actionLineId].line.endSocketGravity =
       lineDef.gravityCircular;
+  } else if (
+    $trigger.hasClass('action-screen-helper') &&
+    $target.hasClass('action-screen-helper')
+  ) {
+    // Trigger and target belong to the layout dock
+    this.actionLines[actionLineId].line.start = $trigger[0];
+    this.actionLines[actionLineId].line.end = $target[0];
+    this.actionLines[actionLineId].line.startSocket = 'top',
+    this.actionLines[actionLineId].line.endSocket = 'top',
+    this.actionLines[actionLineId].type = 'dock';
+    this.actionLines[actionLineId].line.path = lineDef.pathDock;
+    this.actionLines[actionLineId].line.startSocketGravity =
+      lineDef.gravityCircular;
+    this.actionLines[actionLineId].line.endSocketGravity =
+      lineDef.gravityCircular;
   } else {
     // Normal line
     this.actionLines[actionLineId].line.start = $trigger[0];
     this.actionLines[actionLineId].line.end = $target[0];
     this.actionLines[actionLineId].line.startSocket = 'auto',
-    this.actionLines[actionLineId].line.endSocket = 'auto',
+    this.actionLines[actionLineId].line.endSocket =
+      ($target.hasClass('action-screen-helper')) ? 'top' : 'auto',
     this.actionLines[actionLineId].type = 'normal';
     this.actionLines[actionLineId].line.path = lineDef.pathNormal;
     this.actionLines[actionLineId].line.startSocketGravity =
@@ -5000,6 +5101,10 @@ Viewer.prototype.updateActionLineTargets = function(
     this.actionLines[actionLineId].line.endSocketGravity =
       lineDef.gravityNormal;
   }
+
+  // Add classes to trigger and target
+  $trigger.addClass('action-trigger');
+  $target.addClass('action-target');
 
   return this.actionLines[actionLineId];
 };
@@ -5039,13 +5144,14 @@ Viewer.prototype.removeActionLine = function(actionLineId) {
 /**
  * Handle Layout Dock
  * @param {object[]} actions
+ * @return {Promise[]} - Promise
  */
 Viewer.prototype.handleLayoutDock = function(actions) {
   const self = this;
   const app = self.parent;
   const recentLayouts = new Set();
-  const recentLayoutsHelper = new Set();
   const numLayoutsSearch = 10;
+  const promiseArray = [];
 
   const $dockControl =
     self.DOMObject.find('.action-layout-dock-control');
@@ -5055,58 +5161,6 @@ Viewer.prototype.handleLayoutDock = function(actions) {
       self.DOMObject.find('.action-layout-dock-search-results-container');
   const $recentsContainer =
     self.DOMObject.find('.action-layout-dock-recents');
-
-  const addLayoutToRecents = function(layoutData) {
-    // Check if layout is already added to recents
-    if ($recentsContainer
-      .find(`[data-layout-id="${layoutData.code}"]`)
-      .length === 0
-    ) {
-      // Add to recents
-      const $recent = $(`<div
-        class="action-screen-helper action-screen-recent"
-        data-type="screen"
-        data-layout-id="${layoutData.code}"
-        title="${layoutData.name}">
-        <div class="action-screen-helper-label">
-          ${layoutData.code}
-        </div>
-        <i class="fas fa-close delete-btn"
-          title="${editorsTrans.actions.removeFromRecents}"></i>
-      </div>`);
-
-      // Append to container
-      $recent.appendTo($recentsContainer);
-
-      // Handle remove button
-      $recent.on('click', 'i.delete-btn', (ev) => {
-        $(ev.currentTarget).parent().remove();
-        recentLayouts.delete(String(layoutData.code));
-
-        // Check if it's the last recent, if so, hide container
-        (recentLayouts.size === 0) &&
-          $recentsContainer.hide();
-      });
-
-      // Add to recents
-      recentLayouts.add(String(layoutData.code));
-
-      // Show container
-      $recentsContainer.show();
-    }
-  };
-
-  const getLayoutsWithCode = function(filter = {}) {
-    return new Promise(function(resolve, reject) {
-      $.get(urlsForApi.layout.codeSearch.url, filter).done(function(res) {
-        if (res.data) {
-          resolve(res.data);
-        } else {
-          reject(new Error('No layouts returned!'));
-        }
-      });
-    });
-  };
 
   const populateSearchResultsDebounce = _.debounce(function(search, page = 0) {
     populateSearchResults(search, page);
@@ -5128,7 +5182,7 @@ Viewer.prototype.handleLayoutDock = function(actions) {
     (search) && (filter.code = search);
 
     // Search for Layouts with code
-    getLayoutsWithCode(filter).then((layouts) => {
+    self.getLayoutsWithCode(filter).then((layouts) => {
       const $results =
         $dockResults.find('.action-layout-dock-search-results');
 
@@ -5136,11 +5190,11 @@ Viewer.prototype.handleLayoutDock = function(actions) {
       layouts = layouts.filter(
         (layout) => {
           return layout.layout != app.layout.name &&
-            !recentLayouts.has(layout.code);
+            !($recentsContainer
+              .find(`.action-screen-recent
+                [data-sub-type="layout-code"]
+                [data-screen-id="${layout.code}"]`) > 0);
         });
-
-      // Filter added layouts
-      layouts = layouts.filter((layout) => !recentLayouts.has(layout.code));
 
       // If no results, show message
       if (
@@ -5163,7 +5217,7 @@ Viewer.prototype.handleLayoutDock = function(actions) {
         $option.appendTo($results).on('click', (ev) => {
           const layoutData = $(ev.currentTarget).data();
 
-          addLayoutToRecents({
+          self.addLayoutToRecents({
             code: layoutData.layoutCode,
             name: layoutData.layoutName,
           });
@@ -5203,27 +5257,31 @@ Viewer.prototype.handleLayoutDock = function(actions) {
   if (actions) {
     Object.values(actions).forEach((action) => {
       if (action.actionType === 'navLayout' && action.layoutCode) {
-        recentLayoutsHelper.add(String(action.layoutCode));
+        recentLayouts.add(String(action.layoutCode));
       }
     });
   }
 
   // If we have recent layouts on load, add them to list
-  if (recentLayoutsHelper.size > 0) {
-    recentLayoutsHelper.forEach((code) => {
-      getLayoutsWithCode({
-        code: code,
-        length: 1,
-      }).then((layouts) => {
-        const layout = layouts[0];
-        // Make sure it's the same layout
-        // if so, add to recents
-        (code === layout.code) &&
-          addLayoutToRecents({
-            code: layout.code,
-            name: layout.layout,
-          });
-      });
+  if (recentLayouts.size > 0) {
+    recentLayouts.forEach((code) => {
+      promiseArray.push(new Promise(function(resolve, reject) {
+        self.getLayoutsWithCode({
+          code: code,
+          length: 1,
+        }).then((layouts) => {
+          const layout = layouts[0];
+          // Make sure it's the same layout
+          // if so, add to recents
+          (code === layout.code) &&
+            self.addLayoutToRecents({
+              code: layout.code,
+              name: layout.layout,
+            });
+
+          resolve();
+        });
+      }));
     });
   }
 
@@ -5277,6 +5335,77 @@ Viewer.prototype.handleLayoutDock = function(actions) {
       $('body').off('keydown.dockSearch');
     }
   });
+
+  $recentsContainer.off('scroll').on('scroll', () => {
+    self.updateActionLine();
+  });
+
+  return Promise.all(promiseArray);
+};
+
+/**
+ * Handle Layout Dock
+ * @param {object} filter
+ * @return {Promise[]} - Promise
+ */
+Viewer.prototype.getLayoutsWithCode = function(filter = {}) {
+  return new Promise(function(resolve, reject) {
+    $.get(urlsForApi.layout.codeSearch.url, filter).done(function(res) {
+      if (res.data) {
+        resolve(res.data);
+      } else {
+        reject(new Error('No layouts returned!'));
+      }
+    });
+  });
+};
+
+/**
+ * Handle Layout Dock
+ * @param {object} layoutData
+ * @return {Promise[]} - Promise
+ */
+Viewer.prototype.addLayoutToRecents = function(layoutData) {
+  const self = this;
+  const $recentsContainer =
+    self.DOMObject.find('.action-layout-dock-recents');
+
+  // Check if layout is already added to recents
+  if ($recentsContainer
+    .find(`[data-layout-id="${layoutData.code}"]`)
+    .length === 0
+  ) {
+    // Add to recents
+    const $recent = $(`<div
+      class="action-screen-helper action-screen-recent"
+      data-type="screen"
+      data-sub-type="layout-code"
+      data-screen-id="${layoutData.code}"
+      title="${layoutData.name}">
+      <div class="action-screen-helper-label">
+        ${layoutData.code}
+      </div>
+      <i class="fas fa-close delete-btn"
+        title="${editorsTrans.actions.removeFromRecents}"></i>
+    </div>`);
+
+    // Append to container
+    $recent.appendTo($recentsContainer);
+
+    // Handle remove button
+    $recent.on('click', 'i.delete-btn', (ev) => {
+      $(ev.currentTarget).parent().remove();
+
+      // Check if it's the last recent, if so, hide container
+      ($recentsContainer.find('.action-screen-recent').size === 0) &&
+        $recentsContainer.hide();
+
+      self.updateActionLine();
+    });
+
+    // Show container
+    $recentsContainer.show();
+  }
 };
 
 module.exports = Viewer;
