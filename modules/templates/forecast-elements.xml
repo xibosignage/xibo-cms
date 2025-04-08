@@ -173,6 +173,9 @@ return value + '%';
                 <helpText>Fit to selected area instead of using the font size?</helpText>
                 <default>0</default>
             </property>
+            <property id="fontFamily" type="hidden">
+                <default>weathericons</default>
+            </property>
         </properties>
         <stencil>
             <hbs><![CDATA[

@@ -109,15 +109,15 @@
 
                         {% set title %}{% trans "Display Order" %}{% endset %}
                         {% set helpText %}{% trans "Please select the order this event should appear in relation to others when there is more than one event scheduled" %}{% endset %}
-                        {{ forms.number("displayOrder", title, "", helpText, 'displayOrder-control') }}
+                        {{ forms.number("displayOrder", title, "", helpText, 'displayOrder-control', '', '', '', '0') }}
 
                         {% set title %}{% trans "Priority" %}{% endset %}
                         {% set helpText %}{% trans "Sets the event priority - events with the highest priority play in preference to lower priority events." %}{% endset %}
-                        {{ forms.number("isPriority", title, "", helpText, 'priority-control') }}
+                        {{ forms.number("isPriority", title, "", helpText, 'priority-control', '', '', '', '0') }}
 
                         {% set title %}{% trans "Maximum plays per hour" %}{% endset %}
                         {% set helpText %}{% trans "Limit the number of times this event will play per hour on each display. For unlimited plays set to 0." %}{{ forms.playerCompat("R308", "", "", "", "R306", "") }}{% endset %}
-                        {{ forms.number("maxPlaysPerHour", title, 0, helpText, 'max-plays-control') }}
+                        {{ forms.number("maxPlaysPerHour", title, 0, helpText, 'max-plays-control', '', '', '', '0') }}
 
                         {% set title %}{% trans "Run at CMS Time?" %}{% endset %}
                         {% set helpText %}{% trans "When selected, your event will run according to the timezone set on the CMS, otherwise the event will run at Display local time" %}{% endset %}

@@ -30,11 +30,13 @@
                     </div>
                 {{/if}}
 
-                {{> inputs/hidden value=region.zIndex id="zIndex" }}
-                {{> inputs/hidden value=region.top id="top" }}
-                {{> inputs/hidden value=region.left id="left" }}
-                {{> inputs/hidden value=region.width id="width" }}
-                {{> inputs/hidden value=region.height id="height" }}
+                {{#neq region.type 'playlist' }}
+                    {{> inputs/hidden value=region.zIndex id="zIndex" }}
+                    {{> inputs/hidden value=region.top id="top" }}
+                    {{> inputs/hidden value=region.left id="left" }}
+                    {{> inputs/hidden value=region.width id="width" }}
+                    {{> inputs/hidden value=region.height id="height" }}
+                {{/neq}}
             </div>
         </form>
     </div>

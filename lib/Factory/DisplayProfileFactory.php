@@ -406,6 +406,7 @@ class DisplayProfileFactory extends BaseFactory
                 ['name' => 'dayPartId', 'default' => null],
                 ['name' => 'logLevel', 'default' => 'error'],
                 ['name' => 'elevateLogsUntil', 'default' => 0, 'type' => 'int'],
+                ['name' => 'sendCurrentLayoutAsStatusUpdate', 'default' => 0, 'type' => 'checkbox'],
                 ['name' => 'screenShotRequestInterval', 'default' => 0, 'type' => 'int'],
                 [
                     'name' => 'screenShotSize',

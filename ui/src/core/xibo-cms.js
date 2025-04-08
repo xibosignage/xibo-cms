@@ -2956,7 +2956,10 @@ window.updateDatePicker = function($element, date, format, triggerChange) {
       }
     } else {
       // If flatpickr is (still) not initialised
-      $element.val(moment(date).format(systemDateFormat));
+      $element.val(
+        (!moment(date, format).isValid()) ?
+          '' : moment(date, format).format(systemDateFormat),
+      );
       if (triggerChange) {
         $element.trigger('change');
       }

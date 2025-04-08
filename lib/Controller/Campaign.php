@@ -253,6 +253,7 @@ class Campaign extends Base
             'layoutId' => $parsedParams->getInt('layoutId'),
             'logicalOperator' => $parsedParams->getString('logicalOperator'),
             'logicalOperatorName' => $parsedParams->getString('logicalOperatorName'),
+            'excludeMedia' => $parsedParams->getInt('excludeMedia'),
         ];
 
         $embed = ($parsedParams->getString('embed') !== null) ? explode(',', $parsedParams->getString('embed')) : [];

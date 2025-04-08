@@ -19,6 +19,7 @@ $(function() {
           name: params.term,
           start: 0,
           length: 10,
+          excludeMedia: 1,
           columns: [
             {
               data: 'isLayoutSpecific',

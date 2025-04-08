@@ -299,6 +299,9 @@ PropertiesPanel.prototype.save = function(
 
           // Render viewer to reflect changes
           app.viewer.render(true);
+
+          // Render layer manager
+          app.viewer.layerManager.render();
         } else {
           // Reload data, and refresh viewer if layout
           // or if we're saving an element
