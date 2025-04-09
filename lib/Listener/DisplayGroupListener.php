@@ -29,10 +29,14 @@ use Xibo\Event\MediaDeleteEvent;
 use Xibo\Event\MediaFullLoadEvent;
 use Xibo\Event\ParsePermissionEntityEvent;
 use Xibo\Event\TagDeleteEvent;
+use Xibo\Event\TagEditEvent;
 use Xibo\Event\TriggerTaskEvent;
 use Xibo\Event\UserDeleteEvent;
+use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * DisplayGroup events
@@ -45,6 +49,12 @@ class DisplayGroupListener
      * @var DisplayGroupFactory
      */
     private $displayGroupFactory;
+
+    /**
+     * @var DisplayFactory
+     */
+    private $displayFactory;
+
     /**
      * @var StorageServiceInterface
      */
@@ -52,13 +62,16 @@ class DisplayGroupListener
 
     /**
      * @param DisplayGroupFactory $displayGroupFactory
+     * @param DisplayFactory $displayFactory
      * @param StorageServiceInterface $storageService
      */
     public function __construct(
         DisplayGroupFactory $displayGroupFactory,
+        DisplayFactory $displayFactory,
         StorageServiceInterface $storageService
     ) {
         $this->displayGroupFactory = $displayGroupFactory;
+        $this->displayFactory = $displayFactory;
         $this->storageService = $storageService;
     }
 
@@ -74,6 +87,7 @@ class DisplayGroupListener
         $dispatcher->addListener(ParsePermissionEntityEvent::$NAME . 'displayGroup', [$this, 'onParsePermissions']);
         $dispatcher->addListener(FolderMovingEvent::$NAME, [$this, 'onFolderMoving']);
         $dispatcher->addListener(TagDeleteEvent::$NAME, [$this, 'onTagDelete']);
+        $dispatcher->addListener(TagEditEvent::$NAME, [$this, 'onTagEdit']);
 
         return $this;
     }
@@ -219,6 +233,38 @@ class DisplayGroupListener
                 new TriggerTaskEvent('\Xibo\XTR\MaintenanceRegularTask', 'DYNAMIC_DISPLAY_GROUP_ASSESSED'),
                 TriggerTaskEvent::$NAME
             );
+        }
+    }
+
+    /**
+     * Update dynamic display groups' dynamicCriteriaTags when a tag is edited from the tag administration.
+     *
+     * @param TagEditEvent $event
+     * @return void
+     * @throws NotFoundException
+     * @throws GeneralException
+     */
+    public function onTagEdit(TagEditEvent $event): void
+    {
+        // Retrieve all dynamic display groups
+        $displayGroups = $this->displayGroupFactory->getByIsDynamic(1);
+
+        foreach ($displayGroups as $displayGroup) {
+            // Convert the tag string into an array for easier processing
+            $tags = explode(',', $displayGroup->dynamicCriteriaTags);
+
+            $displayGroup->setDisplayFactory($this->displayFactory);
+
+            foreach ($tags as &$tag) {
+                // If the current tag matches the old tag, replace it with the new one
+                if (trim($tag) == $event->getOldTag()) {
+                    $tag = $event->getNewTag();
+
+                    // Convert the updated tag array back to a string and update the field
+                    $displayGroup->dynamicCriteriaTags = implode(',', $tags);
+                    $displayGroup->save();
+                }
+            }
         }
     }
 }
