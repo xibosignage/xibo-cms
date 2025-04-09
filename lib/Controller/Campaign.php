@@ -863,6 +863,7 @@ class Campaign extends Base
 
         $campaign->campaign = $parsedRequestParams->getString('name');
         $campaign->folderId = $parsedRequestParams->getInt('folderId', ['default' => $campaign->folderId]);
+        $campaign->modifiedBy = $this->getUser()->getId();
 
         if ($campaign->hasPropertyChanged('folderId')) {
             if ($campaign->folderId === 1) {
