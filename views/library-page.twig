@@ -104,7 +104,7 @@
                             {{ inline.dropdown("type", "single", title, "", [{"type": none, "name": ""}]|merge(modules), "type", "name") }}
 
                             {% set title %}{% trans "Retired" %}{% endset %}
-                            {% set values = [{id: 1, value: "Yes"}, {id: 0, value: "No"}] %}
+                            {% set values = [{id: 0, value: "No"}, {id: 1, value: "Yes"}] %}
                             {{ inline.dropdown("retired", "single", title, 0, values, "id", "value") }}
 
                             {{ inline.hidden("folderId") }}
