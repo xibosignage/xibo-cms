@@ -256,11 +256,18 @@ class DisplayGroupListener
             $displayGroup->setDisplayFactory($this->displayFactory);
 
             foreach ($tags as &$tag) {
-                // If the current tag matches the old tag, replace it with the new one
-                if (trim($tag) == $event->getOldTag()) {
-                    $tag = $event->getNewTag();
+                $tag = trim($tag);
 
-                    // Convert the updated tag array back to a string and update the field
+                // Split tag into name and value (e.g. "tagName|tagValue")
+                $parts = explode('|', $tag, 2);
+                $tagName = $parts[0];
+                $tagValue = $parts[1] ?? null;
+
+                // If tag name matches the old tag, update the name while keeping the value (if any)
+                if ($tagName == $event->getOldTag()) {
+                    $tagName = $event->getNewTag();
+                    $tag = $tagValue !== null ? $tagName . '|' . $tagValue : $tagName;
+
                     $displayGroup->dynamicCriteriaTags = implode(',', $tags);
                     $displayGroup->save();
                 }
