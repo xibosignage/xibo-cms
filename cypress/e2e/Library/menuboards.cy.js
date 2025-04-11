@@ -49,6 +49,26 @@ describe('Menuboards', function() {
     cy.contains('Added Menu Board');
   });
 
+  it('should cancel adding a menuboard', function() {
+    cy.visit('/menuboard/view');
+
+    // Click on the Add Menuboard button
+    cy.contains('Add Menu Board').click();
+
+    cy.get('.modal input#name')
+      .type('Cypress Test Menuboard ' + testRun + '_1');
+    cy.get('.modal input#code')
+      .type('MENUBOARD');
+    cy.get('.modal textarea#description')
+      .type('Menuboard Description');
+
+    // Click cancel
+    cy.get('.modal #dialog_btn_1').click();
+
+    // Check if you are back to the view page
+    cy.url().should('include', '/menuboard/view');
+  });
+
   it('searches and edit existing menuboard', function() {
     // Create a new menuboard and then search for it and delete it
     cy.createMenuboard('Cypress Test Menuboard ' + testRun).then((res) => {
