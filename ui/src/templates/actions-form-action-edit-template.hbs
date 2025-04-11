@@ -25,7 +25,28 @@
     {{> forms/inputs/dropdown id="targetId" value=targetId title=trans.target customClass="action-edit-form-target action-form-input" options=(arr (obj name="" title="")) optionsTitle="title" optionsValue="name" helpText=trans.targetHelpText }}
 
     {{!-- For nav widget only --}}
-    {{> forms/inputs/dropdown id="widgetId" value=widgetId title=trans.widgetToLoad customClass="action-edit-form-target action-form-input" options=(arr (obj name="" title="") (obj name="create" title=trans.createNewDrawerWidget)) optionsTitle="title" optionsValue="name" helpText=trans.widgetToLoadHelpText visibility='[{ "type": "and", "conditions": [{ "field": "actionTypeHelper", "type": "eq", "value": "navWidget" }, { "field": "targetId", "type": "neq", "value": "" }] }]' }}
+    <label class="control-label action-target-widget-edit-label action-target-widget-component"><strong>{{trans.widgetToLoad}}</strong></label>
+    <div class="input-info-container action-target-widget-component">
+        {{>forms/inputs/add-ons/helpText helpText=trans.widgetToLoadHelpText}}
+    </div>
+    {{> forms/inputs/hidden id="widgetId" value=widgetId customClass="action-target-widget-id" }}
+    {{#if widgetId}}
+        <div class="action-target-widget-edit-container action-target-widget-component">
+            <div class="action-target-widget-edit-name">{{widgetId}}</div>
+            <button class="btn btn-success" type="button" data-action="edit-widget" title="{{trans.editActionTargetWidget}}">
+                <i class="fa fa-edit"></i>
+            </button>
+            <button class="btn btn-danger" type="button" data-action="delete-widget" title="{{trans.deleteActionTargetWidget}}">
+                <i class="fa fa-trash"></i>
+            </button>
+        </div>
+    {{else}}
+        <div class="action-target-widget-add-container action-target-widget-component">
+            <button class="btn btn-block btn-primary" type="button" data-action="add-widget" title="{{trans.createActionTargetWidget}}">
+                <i class="fa fa-plus"></i><span class="pl-2">{{trans.createActionTargetWidget}}</span>
+            </button>
+        </div>
+    {{/if}}
 
     {{!-- For nav layout only --}}
     {{> forms/inputs/dropdown id="layoutCode" value=layoutCode title=trans.layoutCode customClass="action-form-input" selectType="pagedSelect"

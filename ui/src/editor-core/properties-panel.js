@@ -36,6 +36,7 @@ const formTemplates = {
   region: require('../templates/forms/region.hbs'),
   layout: require('../templates/forms/layout.hbs'),
   position: require('../templates/forms/position.hbs'),
+  message: require('../templates/forms/inputs/message.hbs'),
 };
 const actionTypesAndRules = {
   nextLayout: {
@@ -110,6 +111,7 @@ PropertiesPanel.prototype.save = function(
     showErrorMessages = true,
     callback = null,
     callbackNoWait = null,
+    forceSave = false,
   } = {},
 ) {
   const app = this.parent;
@@ -119,8 +121,18 @@ PropertiesPanel.prototype.save = function(
   let savingElementGroup = false;
 
   // If target isn't set, use selected object
+  // If it's interactiveEditWidgetMode, use action widget
   if (!target) {
-    target = app.selectedObject;
+    if (app.interactiveEditWidgetMode) {
+      target = app.getObjectByTypeAndId(
+        'widget',
+        'widget_' + app.layout.drawer.regionId +
+          '_' + app.actionManager.editing.widgetId,
+        'drawer',
+      );
+    } else {
+      target = app.selectedObject;
+    }
   }
 
   // Check if target is region
@@ -213,7 +225,11 @@ PropertiesPanel.prototype.save = function(
   if (
     formFieldsToSave.length > 0 &&
     formFieldsToSave.valid() &&
-    formOldData != formNewData // if form data is the same, don't save
+    // if form data is the same, don't save if not forced
+    (
+      formOldData != formNewData ||
+      forceSave
+    )
   ) {
     app.common.showLoadingScreen();
 
@@ -510,6 +526,9 @@ PropertiesPanel.prototype.render = function(
       .toggleClass('properties-panel-opened', true);
   }
 
+  const isEmptyActionWidget =
+    (app.interactiveEditWidgetMode && target.type === 'layout');
+
   // If target is an element, change it to the widget
   // and save the element in a new variable
   if (target.type === 'element') {
@@ -624,7 +643,9 @@ PropertiesPanel.prototype.render = function(
     }
 
     // Render template
-    const htmlTemplate = formTemplates[target.type];
+    const htmlTemplate = (isEmptyActionWidget) ?
+      formTemplates['message'] :
+      formTemplates[target.type];
 
     // Extend element with translation
     $.extend(res.data, {
@@ -639,10 +660,35 @@ PropertiesPanel.prototype.render = function(
     ) {
       // Render save button
       buttons = formHelpers.widgetFormRenderButtons(formTemplates.buttons);
+    } else if (
+      app.interactiveEditWidgetMode
+    ) {
+      // If target is widget, we're editing
+      // show continue button
+      if (target.type === 'widget') {
+        buttons['continue'] = {
+          name: propertiesPanelTrans.actions.continueAction,
+          type: 'btn-primary',
+          action: 'continueEditActionWidget',
+        };
+      } else {
+        // We're adding a widget, show cancel
+        buttons['cancel'] = {
+          name: propertiesPanelTrans.actions.cancelAction,
+          type: 'btn-outline-primary',
+          action: 'cancelEditActionWidget',
+        };
+      }
     }
 
     // Data to be rendered
-    const dataToRender = res.data;
+    const dataToRender = (isEmptyActionWidget) ?
+      {
+        customClass: 'no-widget-action-edit-message',
+        variante: 'primary',
+        title: propertiesPanelTrans.actions.createWidgetInZoneMessage,
+      } :
+      res.data;
 
     // If we have a widget, add the widgetId to the data
     if (target.type === 'widget') {
@@ -662,7 +708,7 @@ PropertiesPanel.prototype.render = function(
 
     // If the form is a layout
     // Add imageDownloadUrl and libraryAddUrl to the data
-    if (target.type === 'layout') {
+    if (target.type === 'layout' && !app.interactiveEditWidgetMode) {
       dataToRender.imageDownloadUrl = imageDownloadUrl;
       dataToRender.libraryAddUrl = libraryAddUrl;
 
@@ -2130,6 +2176,7 @@ PropertiesPanel.prototype.initPanelFields = function(
 
   // Handle Auto Save
   // (only when working in the layout editor)
+  // and if not using the interactive add widget mode
   if (
     !readOnlyModeOn &&
     (
@@ -2367,6 +2414,8 @@ PropertiesPanel.prototype.renderActions = function(
         actionData.sourceId = $trigger.data(actionData.source + 'Id');
       }
 
+      actionData.newAction = true;
+
       // Remove active status from trigger
       app.viewer.DOMObject.find('.selected-action-trigger')
         .removeClass('selected-action-trigger selected-action-trigger-alt')
@@ -2374,17 +2423,24 @@ PropertiesPanel.prototype.renderActions = function(
 
       self.createEditAction(actionData);
     });
+
+  // If we were editing an action, open it
+  if (!$.isEmptyObject(app.actionManager.editing)) {
+    self.createEditAction(app.actionManager.editing);
+  }
 };
 
 /**
  * Add new action editform
  * @param {object} actionData
  * @param {object} $target - Target container to be replaced
+ * @param {object} actionNeedsValidateToCancel
  * @return {boolean} false if unsuccessful
  */
 PropertiesPanel.prototype.createEditAction = function(
   actionData = {},
   $target,
+  actionNeedsValidateToCancel = false,
 ) {
   const self = this;
   const app = self.parent;
@@ -2399,9 +2455,12 @@ PropertiesPanel.prototype.createEditAction = function(
     .map((action) => {
       // Set action type helper
       if (
-        actionTypesAndRules[action].subTypeFixed === actionData.actionType ||
-        actionTypesAndRules[action].targetType === actionData.target &&
-        actionTypesAndRules[action].subType === actionData.actionType
+        actionData.actionType != undefined &&
+        (
+          actionTypesAndRules[action].subTypeFixed === actionData.actionType ||
+          actionTypesAndRules[action].targetType === actionData.target &&
+          actionTypesAndRules[action].subType === actionData.actionType
+        )
       ) {
         actionData.actionTypeHelper = action;
       }
@@ -2444,7 +2503,30 @@ PropertiesPanel.prototype.createEditAction = function(
     },
   );
 
-  const updateActionType = function(actionType) {
+  const updateActionDataObj = function() {
+    const actionType =
+      $newActionContainer.find('[name="actionTypeHelper"]').val();
+    const source = $newActionContainer.find('[name="source"]').val();
+    const sourceId = $newActionContainer.find('[name="sourceId"]').val();
+    const target = $newActionContainer.find('[name="target"]').val();
+    const targetId = $newActionContainer.find('[name="targetId"]').val();
+    const layoutCode = $newActionContainer.find('[name="layoutCode"]').val();
+    const widgetId = $newActionContainer.find('[name="widgetId"]').val();
+
+    // Update local action data
+    actionData.actionType = actionType;
+    actionData.source = source;
+    actionData.sourceId = sourceId;
+    actionData.target = target;
+    actionData.targetId = targetId;
+    actionData.layoutCode = layoutCode;
+    actionData.widgetId = widgetId;
+
+    // Update action manager side
+    app.actionManager.editing = actionData;
+  };
+
+  const updateActionType = function(actionType, updateTargetDropdown = true) {
     // If no action type is defined, skip
     if (!actionType) {
       return;
@@ -2453,21 +2535,11 @@ PropertiesPanel.prototype.createEditAction = function(
     const subType = actionTypesAndRules[actionType].subType ||
       actionTypesAndRules[actionType].subTypeFixed;
     const targetTypeFilters = actionTypesAndRules[actionType].targetTypeFilter;
+    const targetId = $newActionContainer.find('[name="targetId"]').val();
 
     // Update hidden field
     if (subType) {
       $newActionContainer.find('[name="actionType"]').val(subType);
-    }
-
-    if (actionType == 'navWidget') {
-      // Populate dropdowns with drawer elements
-      app.populateDropdownWithLayoutElements(
-        $newActionContainer.find('[name="widgetId"]'),
-        {
-          value: actionData.widgetId,
-          filters: ['drawerWidgets'],
-        },
-      );
     }
 
     // If navigate to layout, target is current layout
@@ -2479,14 +2551,68 @@ PropertiesPanel.prototype.createEditAction = function(
       $newActionContainer.find('.action-edit-form-target').show();
     }
 
-    app.populateDropdownWithLayoutElements(
-      $newActionContainer.find('[name="targetId"]'),
-      {
-        typeInput: 'target',
-        value: actionData.targetId,
-        filters: targetTypeFilters,
-      },
-    );
+    // Handle navigate to widget
+    if (actionType == 'navWidget' && targetId) {
+      // Show navWidget controls
+      $newActionContainer.find('.action-target-widget-component').show();
+      if (actionData.widgetId) {
+        // Handle edit and delete buttons
+        $newActionContainer
+          .find('[type="button"][data-action="edit-widget"]')
+          .on('click', function(e) {
+            app.toggleInteractiveEditWidgetMode(
+              true,
+              actionData,
+              {
+                adding: false,
+              },
+            );
+          });
+        $newActionContainer
+          .find('[type="button"][data-action="delete-widget"]')
+          .on('click', function(e) {
+            // Deselect object first
+            app.selectObject();
+            app.layout.deleteObject('widget', actionData.widgetId).then(() => {
+              actionData.widgetId = null;
+              app.reloadData(app.layout, {
+                refreshEditor: false,
+              }).then(() => {
+                self.createEditAction(actionData, $newActionContainer, true);
+              });
+            });
+          });
+      } else {
+        // Handle create widget button
+        $newActionContainer
+          .find('[type="button"][data-action="add-widget"]')
+          .on('click', function(e) {
+            app.toggleInteractiveEditWidgetMode(
+              true,
+              actionData,
+              {
+                adding: true,
+              },
+            );
+          });
+      }
+    } else {
+      // Hide navWidget controls
+      $newActionContainer.find('.action-target-widget-component').hide();
+    }
+
+    if (updateTargetDropdown) {
+      app.populateDropdownWithLayoutElements(
+        $newActionContainer.find('[name="targetId"]'),
+        {
+          typeInput: 'target',
+          value: actionData.targetId,
+          filters: targetTypeFilters,
+        },
+      );
+    }
+
+    updateActionDataObj();
   };
 
   // Handle action type change
@@ -2496,7 +2622,6 @@ PropertiesPanel.prototype.createEditAction = function(
     const actionType = $(e.currentTarget).val();
     updateActionType(actionType);
   });
-  updateActionType($actionTypeHelperInput.val());
 
   // If trigger type is webhook
   // set source as "screen"
@@ -2505,6 +2630,8 @@ PropertiesPanel.prototype.createEditAction = function(
       $newActionContainer.find('[name="source"]').val('screen');
       $newActionContainer.find('[name="sourceId"]').val(app.mainObjectId)
         .trigger('change');
+
+      updateActionDataObj();
     }
   };
 
@@ -2534,20 +2661,6 @@ PropertiesPanel.prototype.createEditAction = function(
 
     let typeInputValue = $target.find(':selected').data('type');
 
-    const $form = $typeInput.parents('form');
-    // If input is target, and widgetId has value
-    // then update the widget drawer edit element
-    const $widgetIDInput = $form.find('[name=widgetId]');
-
-    // Update widgetId
-    if (
-      $widgetIDInput.length > 0 &&
-      $widgetIDInput.val() != '' &&
-      getDrawerWidgets
-    ) {
-      // Call update widget drawer edit element
-      handleEditWidget($widgetIDInput.val());
-    }
     // For target, if target is layout, change it to screen
     if ($typeInput.attr('id') === 'input_target' &&
       typeInputValue === 'layout'
@@ -2557,6 +2670,9 @@ PropertiesPanel.prototype.createEditAction = function(
 
     // Update type value
     $typeInput.val(typeInputValue);
+
+    updateActionType($actionTypeHelperInput.val(), false);
+    updateActionDataObj();
   };
 
   // Handle trigger and target change
@@ -2595,8 +2711,20 @@ PropertiesPanel.prototype.createEditAction = function(
       // Save action
       self.saveAction($newActionContainer);
     } else if (btnAction === 'close') {
-      // Close action
-      self.closeEditAction($newActionContainer);
+      const editingAction = app.actionManager.editing;
+
+      if (actionNeedsValidateToCancel) {
+        self.saveAction($newActionContainer);
+      } else {
+        // If action started without widget created
+        // and there's a widget Id, delete it
+        if (editingAction.startedWithNoWidget && editingAction.widgetId) {
+          app.layout.deleteObject('widget', editingAction.widgetId);
+        }
+
+        // Close action
+        self.closeEditAction($newActionContainer);
+      }
     }
   });
 
@@ -2606,6 +2734,13 @@ PropertiesPanel.prototype.createEditAction = function(
   // Add editing status
   app.actionManager.editing = actionData;
   $actionsContent.addClass('editing-action');
+
+  // Save initial widget id if exists
+  if (actionData.newAction) {
+    app.actionManager.editing.startedWithNoWidget =
+      (actionData.widgetId == null);
+    actionData.newAction = false;
+  }
 
   // Form conditions
   forms.setConditions($newActionContainer, null, 'actions');
@@ -2620,6 +2755,9 @@ PropertiesPanel.prototype.createEditAction = function(
 
   // Update action lines
   app.viewer.updateActionLine();
+
+  // Update action type on start
+  updateActionType($actionTypeHelperInput.val());
 
   // Run xiboInitialise on form
   XiboInitialise('.action-edit-form');
@@ -2638,6 +2776,8 @@ PropertiesPanel.prototype.createPreviewAction = function(
   const self = this;
   const app = self.parent;
   const actionManager = app.actionManager;
+  const $actionsList =
+    self.DOMObject.find('.actions-list');
 
   // Send the layout code search URL with the action
   actionData.layoutCodeSearchURL = urlsForApi.layout.codeSearch.url;
@@ -2660,21 +2800,33 @@ PropertiesPanel.prototype.createPreviewAction = function(
   // Add action id to container
   $actionContainer.attr('data-action-id', actionData.actionId);
 
+  // Check if action was already added
+  $target = (!$target) ?
+    $actionsList.find(
+      '.action-view[data-action-id=' + actionData.actionId + ']',
+    ) : $target;
+
   // Add action to container
   // or replace target
-  ($target) ?
+  ($target.length > 0) ?
     $target.replaceWith($actionContainer) :
-    $actionContainer.prependTo(self.DOMObject.find('.actions-list'));
+    $actionContainer.prependTo($actionsList);
 
   // Handle buttons
   $actionContainer.find('[type="button"]').on('click', function(e) {
     const btnAction = $(e.currentTarget).data('action');
+    const actionData = $actionContainer.data();
 
     if (btnAction === 'delete') {
       actionManager.deleteAction(
-        $actionContainer.data(),
+        actionData,
       ).then((wasRemoved) => {
         if (wasRemoved) {
+          // Remove widget from drawer if action has widgetId
+          if (actionData.widgetId) {
+            app.layout.deleteObject('widget', actionData.widgetId);
+          }
+
           // Remove action line
           app.viewer.removeActionLine($actionContainer.data('actionId'));
 
@@ -3102,6 +3254,36 @@ PropertiesPanel.prototype.showTab = function(tabSelector, save = true) {
     // Save selector
     (save) && (self.openTabOnRender = tabSelectorAux);
   }
+};
+
+/**
+ * Save action widget form and continue
+ */
+PropertiesPanel.prototype.continueEditActionWidget = function() {
+  const app = this.parent;
+
+  // Save at least once to prevent adding an invalid widget
+  this.save({
+    forceSave: true,
+    callback: function() {
+      app.toggleInteractiveEditWidgetMode(false);
+    },
+  });
+};
+
+/**
+ * Cancel action widget edit and go back to interactive mode
+ */
+PropertiesPanel.prototype.cancelEditActionWidget = function() {
+  const app = this.parent;
+
+  // Toggle mode off and revert changes
+  app.toggleInteractiveEditWidgetMode(
+    false,
+    null,
+    {
+      cancelChanges: true,
+    });
 };
 
 module.exports = PropertiesPanel;

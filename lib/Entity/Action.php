@@ -190,23 +190,20 @@ class Action implements \JsonSerializable
             throw new InvalidArgumentException(__('Please select a Region'), 'targetId');
         }
 
-        // on edit, we should validate other parameters.
-        if ($this->actionId != null) {
-            if ($this->triggerType === 'webhook' && $this->triggerCode === null) {
-                throw new InvalidArgumentException(__('Please provide trigger code'), 'triggerCode');
-            }
+        if ($this->triggerType === 'webhook' && $this->triggerCode === null) {
+            throw new InvalidArgumentException(__('Please provide trigger code'), 'triggerCode');
+        }
 
-            if (!in_array($this->triggerType, ['touch', 'webhook'])) {
-                throw new InvalidArgumentException(__('Invalid trigger type'), 'triggerType');
-            }
+        if (!in_array($this->triggerType, ['touch', 'webhook'])) {
+            throw new InvalidArgumentException(__('Invalid trigger type'), 'triggerType');
+        }
 
-            if ($this->actionType === 'navLayout' && $this->layoutCode == '') {
-                throw new InvalidArgumentException(__('Please enter Layout code'), 'layoutCode');
-            }
+        if ($this->actionType === 'navLayout' && $this->layoutCode == '') {
+            throw new InvalidArgumentException(__('Please enter Layout code'), 'layoutCode');
+        }
 
-            if ($this->actionType === 'navWidget' && $this->widgetId == null) {
-                throw new InvalidArgumentException(__('Please select a Widget'), 'widgetId');
-            }
+        if ($this->actionType === 'navWidget' && $this->widgetId == null) {
+            throw new InvalidArgumentException(__('Please create a Widget to be loaded'), 'widgetId');
         }
     }
 

@@ -289,6 +289,10 @@ Viewer.prototype.render = function(forceReload = false, targets = {}) {
           $target.data('widgetRegion');
         const regionToRender = lD.layout.regions[regionId];
 
+        if (!regionToRender) {
+          return;
+        }
+
         // Add region template to viewer
         this.DOMObject.find('#regions').append(viewerRegionTemplate(
           regionToRender,
@@ -443,6 +447,10 @@ Viewer.prototype.render = function(forceReload = false, targets = {}) {
   // Interactive controls
   if (lD.interactiveMode) {
     this.handleActionsUI();
+  }
+
+  if (lD.interactiveEditWidgetMode) {
+    this.handleActionEditWidgetUI();
   }
 
   // If we are selecting an element in a group,
@@ -1131,7 +1139,6 @@ Viewer.prototype.handleUI = function() {
         targetId = app.layout.layoutId;
       }
 
-      // If target is not valid
       app.propertiesPanel.createEditAction({
         actionType: actionType,
         source: trigger.type,
@@ -1139,6 +1146,7 @@ Viewer.prototype.handleUI = function() {
         target: targetType,
         targetId: targetId,
         layoutCode: layoutCode,
+        newAction: true,
       });
 
       // Update target
@@ -3099,7 +3107,12 @@ Viewer.prototype.initSelecto = function(groupEditing = false, groupContainer) {
   const app = this.parent;
 
   // If we're using interactive mode, don't use selecto
-  if (app.interactiveMode) {
+  if (app.interactiveMode || app.interactiveEditWidgetMode) {
+    if (this.selecto) {
+      this.selecto.destroy();
+      this.selecto = null;
+    }
+
     return;
   }
 
@@ -3135,6 +3148,7 @@ Viewer.prototype.initSelecto = function(groupEditing = false, groupContainer) {
   // Destroy previous selecto
   if (this.selecto) {
     this.selecto.destroy();
+    this.selecto = null;
   }
 
   this.selecto = new Selecto({
@@ -4039,141 +4053,6 @@ Viewer.prototype.updateRegionContent = function(
 };
 
 /**
- * Add new widget action element
- * @param {object} actionData - Action data
- * @param {string} createOrEdit - Create or edit action
- */
-Viewer.prototype.addActionEditArea = function(
-  actionData,
-  createOrEdit,
-) {
-  const self = this;
-  const $layoutContainer = this.DOMObject.find('.viewer-object.layout');
-  const createOverlayArea = function(type) {
-    self.actionDropMode = true;
-
-    // If target is "screen", use "layout" to highlight
-    const targetType =
-      (actionData.target === 'screen') ? 'layout' : actionData.target;
-
-    // Create overlay area
-    const $actionArea = $(viewerActionEditRegionTemplate({
-      drawer: lD.layout.drawer,
-      target: targetType,
-      type: type,
-    }));
-
-    // Set background to be the same as the layout
-    $actionArea.css({
-      'background-color': lD.layout.backgroundColor,
-    });
-
-    // Get target
-    const $targetRegion = self.parent.getObjectByTypeAndId(
-      targetType,
-      targetType + '_' + actionData.targetId,
-    );
-
-    // Update drawer dimensions to match target
-    if (targetType === 'region') {
-      lD.layout.drawer.dimensions = $targetRegion.dimensions;
-      // Set the z index of the drawer to be over the target region
-      lD.layout.drawer.zIndex = $targetRegion.zIndex + 1;
-    } else if (targetType === 'layout') {
-      lD.layout.drawer.dimensions = {
-        width: lD.layout.width,
-        height: lD.layout.height,
-        top: 0,
-        left: 0,
-      };
-      // Set the z index to 0
-      lD.layout.drawer.zIndex = 0;
-    }
-
-    // Save dimensions to the DOM object
-    $actionArea.data('targetRegionDimensions', lD.layout.drawer.dimensions);
-    $actionArea.data('targetRegionzIndex', lD.layout.drawer.zIndex);
-
-    // Add after region or
-    // if layout, add inside regions in the layout as first element
-    if (targetType === 'region') {
-      $actionArea.insertAfter(self.DOMObject.find('#' + $targetRegion.id));
-    } else if (targetType === 'layout') {
-      $layoutContainer.find('#regions').prepend($actionArea);
-    }
-
-    return $actionArea;
-  };
-
-  if (createOrEdit === 'create') {
-    // Create add action area
-    const $actionArea = createOverlayArea('create');
-
-    // Add label to action area
-    $actionArea.html('<div class="action-label">' +
-      viewerTrans.addWidget +
-      '</div>');
-
-    // Click to add widget
-    $actionArea.on('click', () => {
-      lD.selectObject({
-        target: $actionArea,
-      });
-    });
-
-    // Create droppable area
-    $actionArea.droppable({
-      greedy: true,
-      tolerance: 'pointer',
-      accept: function(draggable) {
-        // Check target
-        return lD.common.hasTarget(draggable, 'drawer');
-      },
-      drop: _.debounce(function(event, ui) {
-        lD.dropItemAdd(event.target, ui.draggable[0]);
-      }, 200),
-    });
-
-    // Refresh edit form
-    lD.editDrawerWidget(
-      {},
-      false,
-    );
-  } else if (createOrEdit === 'edit') {
-    // Create action edit area
-    const $actionArea = createOverlayArea('edit');
-
-    // Get widget from drawer be loaded
-    const widgetToRender = lD.getObjectByTypeAndId(
-      'widget',
-      'widget_' + lD.layout.drawer.regionId + '_' + actionData.widgetId,
-      'drawer',
-    );
-
-    // Render region with widget
-    this.renderRegion(
-      lD.layout.drawer,
-      widgetToRender,
-      (actionData.target === 'layout'),
-    );
-
-    // Clear action edit mode on properties panel
-    lD.propertiesPanel.DOMObject.removeClass('action-edit-mode');
-
-    // Edit on click
-    $actionArea.on('click', () => {
-      // Open widget edit form
-      lD.editDrawerWidget(
-        actionData,
-      );
-    });
-  }
-
-  // Update viewer
-  this.update();
-};
-
-/**
  * Remove object from viewer
  * @param {string} objectType - Object type
  * @param {string} objectId - Object ID
@@ -4489,6 +4368,17 @@ Viewer.prototype.handleActionsUI = function() {
     .then(function(data) {
       // Handle Layout dock
       self.handleLayoutDock(data).then(() => {
+        // If there's already an action being edited
+        // add it to the data object
+        if (
+          !$.isEmptyObject(app.actionManager.editing)
+        ) {
+          const actionId = (app.actionManager.editing.actionId) ?
+            app.actionManager.editing.actionId :
+            'action_line_temp';
+          data[actionId] = app.actionManager.editing;
+        }
+
         if (
           !$.isEmptyObject(data)
         ) {
@@ -4512,6 +4402,151 @@ Viewer.prototype.handleActionsUI = function() {
     });
 };
 
+/**
+ * Handle action edit widget
+ */
+Viewer.prototype.handleActionEditWidgetUI = function() {
+  const self = this;
+  const app = self.parent;
+  const actionData = app.actionManager.editing;
+  const actionAreaIndexZIndex = 1040;
+  const targetRegion =
+    app.getObjectByTypeAndId('region', actionData.targetId);
+  const actionAreaIndex = (targetRegion.zIndex + 1 > actionAreaIndexZIndex) ?
+    (targetRegion.zIndex + 1) :
+    actionAreaIndexZIndex;
+  const $layoutContainer = this.DOMObject.find('.viewer-object.layout');
+
+  const createOverlayArea = function(type) {
+    self.actionDropMode = true;
+
+    // If target is "screen", use "layout" to highlight
+    const targetType =
+      (actionData.target === 'screen') ? 'layout' : actionData.target;
+
+    // Create overlay area
+    const $actionArea = $(viewerActionEditRegionTemplate({
+      drawer: app.layout.drawer,
+      target: targetType,
+      type: type,
+    }));
+
+    // Set background to be the same as the layout
+    $actionArea.css({
+      'background-color': app.layout.backgroundColor,
+    });
+
+    // Update drawer dimensions to match target
+    if (targetType === 'region') {
+      app.layout.drawer.dimensions = targetRegion.dimensions;
+      // Set the z index of the drawer to be over the target region
+      app.layout.drawer.zIndex = (actionAreaIndex + 1);
+    } else if (targetType === 'layout') {
+      app.layout.drawer.dimensions = {
+        width: app.layout.width,
+        height: app.layout.height,
+        top: 0,
+        left: 0,
+      };
+      // Set the z index to 0
+      app.layout.drawer.zIndex = 0;
+    }
+
+    // Show overlay
+    const $customOverlay = $('.custom-overlay').clone();
+    $customOverlay
+      .addClass('custom-overlay-action-widget-edit')
+      .css({
+        opacity: 0.6,
+        zIndex: actionAreaIndex,
+      }).appendTo($layoutContainer);
+
+    $customOverlay.show();
+
+    // Save dimensions to the DOM object
+    $actionArea.data('targetRegionDimensions', app.layout.drawer.dimensions);
+    $actionArea.data('targetRegionzIndex', app.layout.drawer.zIndex);
+
+    // Add after region or
+    // if layout, add inside regions in the layout as first element
+    if (targetType === 'region') {
+      $actionArea.insertAfter(self.DOMObject.find('#' + targetRegion.id));
+    } else if (targetType === 'layout') {
+      $layoutContainer.find('#regions').prepend($actionArea);
+    }
+
+    return $actionArea;
+  };
+
+  // No widget created yet, add overlay and drop zone
+  if (!actionData.widgetId) {
+    // Create add action area
+    const $actionArea = createOverlayArea('create');
+
+    // Add label to action area
+    $actionArea.html('<div class="action-label">' +
+      viewerTrans.addWidget +
+      '</div>');
+
+    // Click to add widget
+    $actionArea.on('click', () => {
+      app.selectObject({
+        target: $actionArea,
+      });
+    });
+
+    // Create droppable area
+    $actionArea.droppable({
+      greedy: true,
+      tolerance: 'pointer',
+      accept: function(draggable) {
+        // Check target
+        return app.common.hasTarget(draggable, 'drawer');
+      },
+      drop: _.debounce(function(event, ui) {
+        app.dropItemAdd(event.target, ui.draggable[0]).then((res) => {
+          if (res?.id) {
+            actionData.widgetId = res.id;
+            app.actionManager.editing.widgetId = res.id;
+
+            app.selectedObject.id = 'widget_' +
+            app.layout.drawer.regionId + '_' +
+              res.id;
+            app.selectedObject.type = 'widget';
+
+            // Reload Data, then viewer+PP
+            app.reloadData(app.layout, {
+              refreshEditor: true,
+              reloadViewer: false,
+            }).then(() => {
+              self.render(true);
+            });
+          }
+        });
+      }, 200),
+    });
+  } else {
+    // Create action edit area
+    createOverlayArea('edit');
+
+    // Get widget from drawer be loaded
+    const widgetToRender = app.getObjectByTypeAndId(
+      'widget',
+      'widget_' + app.layout.drawer.regionId + '_' + actionData.widgetId,
+      'drawer',
+    );
+
+    // Render region with widget
+    this.renderRegion(
+      app.layout.drawer,
+      widgetToRender,
+      (actionData.target === 'layout'),
+    );
+  }
+
+  // Update viewer
+  this.update();
+};
 
 /**
  * Select action trigger
@@ -4682,7 +4717,6 @@ Viewer.prototype.startCreatingActionLine = function(
   // Update helper position - first run
   updateHelperPosition($targetHelper, startPos);
 };
-
 
 /**
  * Stop creating Action Line

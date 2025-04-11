@@ -106,9 +106,16 @@ const Toolbar = function(
  * Initialize toolbar
  * @param {object} [options] - options
  * @param {boolean=} [options.isPlaylist] - is it a playlist toolbar?
+ * - are we editing a action widget?
  */
-Toolbar.prototype.init = function({isPlaylist = false} = {}) {
+Toolbar.prototype.init = function(
+  {
+    isPlaylist = false,
+    updateViewerAfterRendering = false,
+  } = {},
+) {
   const self = this;
+  const app = self.parent;
 
   // Modules to be used in Widgets
   let moduleListFiltered = [];
@@ -127,7 +134,7 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
     // Show/hide modules based on showIn property
     if (
       el.showIn == 'playlist' && !isPlaylist ||
-      el.showIn == 'layout' && isPlaylist ||
+      el.showIn == 'layout' && (isPlaylist || app.interactiveEditWidgetMode) ||
       el.showIn == 'none'
     ) {
       return;
@@ -278,7 +285,7 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
     },
     {
       name: 'global',
-      disabled: isPlaylist ? true : false,
+      disabled: (isPlaylist || app.interactiveEditWidgetMode) ? true : false,
       itemName: toolbarTrans.menuItems.globalElementsName,
       itemIcon: 'font',
       itemTitle: toolbarTrans.menuItems.globalElementsTitle,
@@ -522,7 +529,7 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
     },
     {
       name: 'layout_templates',
-      disabled: isPlaylist,
+      disabled: (isPlaylist || app.interactiveEditWidgetMode),
       itemName: toolbarTrans.menuItems.layoutTemplateName,
       itemIcon: 'object-group',
       itemTitle: toolbarTrans.menuItems.layoutTemplateTitle,
@@ -550,6 +557,14 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
       itemCount: 0,
     },
   ];
+
+  // Remove playlists if we're in action widget edit mode
+  if (app.interactiveEditWidgetMode) {
+    defaultMenuItems.splice(
+      defaultMenuItems.findIndex((item) => item.name === 'playlists'),
+      1,
+    );
+  }
 
   // Menu items
   this.menuItems = defaultMenuItems;
@@ -635,13 +650,17 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
     }
 
     // Render
-    self.render();
+    self.render({
+      updateViewerAfterRendering,
+    });
   }).catch(function(jqXHR, textStatus, errorThrown) {
     console.error(jqXHR, textStatus, errorThrown);
     console.error(errorMessagesTrans.getProvidersFailed);
 
     // Render
-    self.render();
+    self.render({
+      updateViewerAfterRendering,
+    });
   });
 
   // Get media providers
@@ -990,7 +1009,10 @@ Toolbar.prototype.savePrefs = _.debounce(function(clearPrefs = false) {
  * Render toolbar
  * @param {bool=} savePrefs - Save preferences
  */
-Toolbar.prototype.render = function({savePrefs = true} = {}) {
+Toolbar.prototype.render = function({
+  savePrefs = true,
+  updateViewerAfterRendering = false,
+} = {}) {
   const self = this;
   const app = this.parent;
 
@@ -999,6 +1021,7 @@ Toolbar.prototype.render = function({savePrefs = true} = {}) {
     // Initialize toolbar
     this.init({
       isPlaylist: this.isPlaylist,
+      updateViewerAfterRendering: updateViewerAfterRendering,
     });
 
     // Stop running
@@ -1161,6 +1184,12 @@ Toolbar.prototype.render = function({savePrefs = true} = {}) {
         (app.viewer) && app.viewer.update();
       }
     });
+
+  // Force update viewer dimensions after toolbar renders
+  // to avoid viewer with wrong dimensions
+  if (updateViewerAfterRendering) {
+    app.viewer.update();
+  }
 };
 
 /**
@@ -1492,6 +1521,11 @@ Toolbar.prototype.handleDroppables = function(draggable, customClasses = '') {
     if (app.common.hasTarget(draggable, 'frame')) {
       // Drop to frame region
       selectorBuild.push('.designer-region[data-sub-type="frame"].droppable');
+    }
+
+    if (app.common.hasTarget(draggable, 'zone')) {
+      // Drop to frame region
+      selectorBuild.push('.designer-region[data-sub-type="zone"].droppable');
     }
 
     if (app.common.hasTarget(draggable, 'zone')) {
@@ -3601,11 +3635,14 @@ Toolbar.prototype.loadTemplates = function(
           // or elements and stencils if we are in playlist editor
           if (
             el.showIn == 'playlist' && !self.isPlaylist ||
-            el.showIn == 'layout' && self.isPlaylist ||
+            el.showIn == 'layout' &&
+              (self.isPlaylist || app.interactiveEditWidgetMode) ||
             el.showIn == 'templateEditor' && !app.templateEditMode ||
             el.showIn == 'none' ||
-            el.type === 'element' && self.isPlaylist ||
-            el.type === 'element-group' && self.isPlaylist
+            el.type === 'element' &&
+              (self.isPlaylist || app.interactiveEditWidgetMode) ||
+            el.type === 'element-group' &&
+              (self.isPlaylist || app.interactiveEditWidgetMode)
           ) {
             continue;
           } else {

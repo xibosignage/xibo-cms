@@ -628,10 +628,6 @@ body.editor-opened #content-wrapper .page-content>.row {
                 outline-offset: -3px;
             }
 
-            &[data-target="region"] {
-                margin: 12px 0 0 12px;
-            }
-
             .action-label {
                 color: $xibo-color-neutral-0;
                 font-weight: bold;
@@ -643,7 +639,12 @@ body.editor-opened #content-wrapper .page-content>.row {
             }
 
             &.ui-droppable-active {
-                @include z-index-set($designer-select-z-index);
+                background-color: $xibo-color-accent !important;
+                opacity: 0.8;
+
+                &:hover, &.ui-droppable-hover {
+                    opacity: 1;
+                }
             }
         }
 
@@ -892,7 +893,7 @@ body.editor-opened #content-wrapper .page-content>.row {
         display: none;
     }
 
-    &.interactive-mode {
+    &.interactive-mode, &.interactive-edit-widget-mode {
         #fullscreenBtn, #layerManagerBtn {
             display: none !important;
         }
@@ -916,6 +917,22 @@ body.editor-opened #content-wrapper .page-content>.row {
                 @include border-radius(4px);
             }
 
+        }
+    }
+
+    &.interactive-edit-widget-mode {
+        .editor-top-bar {
+            .back-button, .layout-action-menu {
+                display: none;
+            }
+
+            #layoutInfo > span {
+                cursor: initial;
+            }
+
+            .layout-info-name:hover {
+                border-bottom: none;
+            }
         }
     }
 }
@@ -1034,6 +1051,20 @@ body.editor-opened #content-wrapper .page-content>.row {
                 
                         .error-message, .warning-message {
                             display: none;
+                        }
+                    }
+
+                    .action-target-widget-edit-container, .action-target-widget-add-container {
+                        padding: 0 12px;
+                        margin-bottom: 8px;
+                    }
+
+                    .action-target-widget-edit-container {
+                        display: flex;
+                        gap: 4px;
+
+                        .action-target-widget-edit-name {
+                            flex: 1;
                         }
                     }
 
@@ -1268,6 +1299,14 @@ body.editor-opened #content-wrapper .page-content>.row {
 
             table td span.label {
                 white-space: inherit;
+            }
+
+            .no-widget-action-edit-message {
+                padding: 8px;
+
+                .alert {
+                    min-height: 120px;
+                }
             }
         }
 

@@ -119,6 +119,11 @@ Topbar.prototype.render = function() {
 
   // Setup layout edit form.
   this.DOMObject.find('#layoutInfo').off('click').on('click', function() {
+    // If in interactive edit mode, don't open form
+    if (app.interactiveEditWidgetMode) {
+      return;
+    }
+
     // Pop open the layout edit form.
     XiboFormRender(urlsForApi.layout.editForm.url.replace(
       ':id',

@@ -31,6 +31,8 @@ const ActionManager = function(parent) {
   this.actions = {};
 
   this.editing = {};
+
+  this.widgetEditing = null;
 };
 
 /**
