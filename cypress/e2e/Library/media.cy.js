@@ -14,7 +14,7 @@ describe('Media Admin', function() {
       cy.contains('Add media (URL)').click();
   
       cy.get('#url')
-        .type('https://file-examples.com/storage/fee47d30d267f6756977e34/2017/04/file_example_MP4_1920_18MG.mp4');
+        .type('https://file-examples.com/storage/fef7a0384867fa86095088c/2017/04/file_example_MP4_480_1_5MG.mp4');
       
       cy.get('#optionalName')
         .type('Cypress Test Media ' + testRun);
@@ -31,41 +31,42 @@ describe('Media Admin', function() {
       cy.get('#libraryItems tbody tr:nth-child(1) td:nth-child(2)').contains('Cypress Test Media ' + testRun);
     });
   
-    // it('should cancel adding a non-dynamic playlist', function() {
-    //   cy.visit('/playlist/view');
+    it('should cancel adding a media', function() {
+      cy.visit('/library/view');
   
-    //   // Click on the Add Playlist button
-    //   cy.contains('Add Playlist').click();
+      // Click on the Add Playlist button
+      cy.contains('Add media (URL)').click();
   
-    //   cy.get('.modal input#name')
-    //     .type('Cypress Test Playlist ' + testRun);
+      cy.get('#url')
+        .type('https://file-examples.com/storage/fef7a0384867fa86095088c/2017/04/file_example_MP4_480_1_5MG.mp4');
+      
+      cy.get('#optionalName')
+        .type('Cypress Test Media ' + testRun);
   
-    //   // Click cancel
-    //   cy.get('#dialog_btn_1').click();
+      // Click cancel
+      cy.get('#dialog_btn_1').click();
   
-    //   // Check if you are back to the view page
-    //   cy.url().should('include', '/playlist/view');
-    // });
+      // Check if you are back to the view page
+      cy.url().should('include', '/library/view');
+    });
   
-    // it('should show a list of Playlists', function() {
-    //   // Wait for playlist grid reload
-    //   cy.server();
-    //   cy.route('/playlist?draw=1&*').as('playlistGridLoad');
+    it('should show a list of Media', function() {
+      // Wait for playlist grid reload
+      cy.intercept('/library?draw=1&*').as('mediaGridLoad');
   
-    //   cy.visit('/playlist/view').then(function() {
-    //     cy.wait('@playlistGridLoad');
-    //     cy.get('#playlists');
-    //   });
-    // });
+      cy.visit('/library/view').then(function() {
+        cy.wait('@mediaGridLoad');
+        cy.get('#libraryItems');
+      });
+    });
   
     // it('selects multiple playlists and delete them', function() {
     //   // Create a new playlist and then search for it and delete it
     //   cy.createNonDynamicPlaylist('Cypress Test Playlist ' + testRun).then(() => {
-    //     cy.server();
-    //     cy.route('/playlist?draw=2&*').as('playlistGridLoad');
+    //     cy.intercept('/library?draw=1&*').as('mediaGridLoad');
   
     //     // Delete all test playlists
-    //     cy.visit('/playlist/view');
+    //     cy.visit('/library/view');
   
     //     // Clear filter and search for text playlists
     //     cy.get('#Filter input[name="name"]')
