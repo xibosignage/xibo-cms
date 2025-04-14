@@ -60,33 +60,31 @@ describe('Media Admin', function() {
       });
     });
   
-    // it('selects multiple playlists and delete them', function() {
-    //   // Create a new playlist and then search for it and delete it
-    //   cy.createNonDynamicPlaylist('Cypress Test Playlist ' + testRun).then(() => {
-    //     cy.intercept('/library?draw=1&*').as('mediaGridLoad');
+    it('selects multiple media and delete them', function() {
+      // Create a new playlist and then search for it and delete it
+        cy.intercept('/library?draw=1&*').as('mediaGridLoad');
   
-    //     // Delete all test playlists
-    //     cy.visit('/library/view');
+        // Delete all test playlists
+        cy.visit('/library/view');
   
-    //     // Clear filter and search for text playlists
-    //     cy.get('#Filter input[name="name"]')
-    //       .clear()
-    //       .type('Cypress Test Playlist');
+        // Clear filter and search for text playlists
+        cy.get('#media')
+          .clear()
+          .type('Cypress Test Media');
   
-    //     // Wait for 2nd playlist grid reload
-    //     cy.wait('@playlistGridLoad');
+        // Wait for 1st playlist grid reload
+        cy.wait('@mediaGridLoad');
   
-    //     // Select all
-    //     cy.get('button[data-toggle="selectAll"]').click();
+        // Select all
+        cy.get('button[data-toggle="selectAll"]').click();
   
-    //     // Delete all
-    //     cy.get('.dataTables_info button[data-toggle="dropdown"]').click({force: true});
-    //     cy.get('.dataTables_info a[data-button-id="playlist_button_delete"]').click({force: true});
+        // Delete all
+        cy.get('.dataTables_info button[data-toggle="dropdown"]').click({force: true});
+        cy.get('.dataTables_info a[data-button-id="content_button_delete"]').click({force: true});
   
-    //     cy.get('button.save-button').click();
+        cy.get('button.save-button').click();
   
-    //     // Modal should contain one successful delete at least
-    //     cy.get('.modal-body').contains(': Success');
-    //   });
-    // });
+        // Modal should contain one successful delete at least
+        cy.get('.modal-body').contains(': Success');
+      });
   });
