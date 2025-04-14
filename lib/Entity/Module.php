@@ -389,6 +389,16 @@ class Module implements \JsonSerializable
         } else {
             $info = new \getID3();
             $file = $info->analyze($file);
+
+            // Log error if duration is missing
+            if (!isset($file['playtime_seconds'])) {
+                $errorMessage = isset($file['error'])
+                    ? implode('; ', $file['error'])
+                    : 'Unknown';
+                $this->getLog()->error('fetchDurationOrDefaultFromFile; Missing playtime_seconds in analyzed 
+                file. Error: ' . $errorMessage);
+            }
+
             return intval($file['playtime_seconds'] ?? $this->defaultDuration);
         }
     }
