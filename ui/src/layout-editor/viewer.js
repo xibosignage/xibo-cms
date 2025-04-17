@@ -45,7 +45,9 @@ const drawThrottle = 60;
 const drawElementThrottle = 30;
 const lineDef = {
   normalWidth: 3,
-  hoverWidth: 5,
+  hoverWidth: 3,
+  plugSizeNormal: 2,
+  plugSizeHover: 2,
   editedColor: '#EB7857',
   normalLightThemeColor: '#74ACFA',
   normalDarkThemeColor: '#1775F6',
@@ -705,7 +707,7 @@ Viewer.prototype.handleUI = function() {
           self.creatingAction === false &&
           $.isEmptyObject(app.actionManager.editing)
         ) {
-          self.selectActionTrigger($trigger);
+          self.selectActionTrigger($trigger, e);
         }
 
         return;
@@ -1090,7 +1092,7 @@ Viewer.prototype.handleUI = function() {
   $viewerContainerParent
     .off('mouseup.viewer')
     .on('mouseup.viewer', function(e) {
-      const $target = $(e.target);
+      let $target = $(e.target);
 
       // If not in interactive mode, cancel event
       if (!lD.interactiveMode) {
@@ -1104,7 +1106,14 @@ Viewer.prototype.handleUI = function() {
       }
 
       const trigger = self.actionLines['action_line_temp'].trigger;
-      const targetType = $target.data('type');
+      let targetType = $target.data('type');
+
+      // If target is widget, move to its region
+      if (targetType === 'widget') {
+        $target = $target.parent();
+        targetType = $target.data('type');
+      }
+
       let targetId = $target.data(targetType + 'Id');
       let actionType = 'next'; // Default to next
       let layoutCode;
@@ -4360,6 +4369,7 @@ Viewer.prototype.handleActionsUI = function() {
   // Add Layout dock control
   self.DOMObject.append(viewerActionLayoutDockTemplate({
     currentLayoutId: app.mainObjectId,
+    currentLayoutName: app.layout.name,
     trans: editorsTrans.actions,
   }));
 
@@ -4554,9 +4564,18 @@ Viewer.prototype.handleActionEditWidgetUI = function() {
  */
 Viewer.prototype.selectActionTrigger = function(
   trigger = null,
+  event,
 ) {
   const self = this;
-  const $trigger = $(trigger);
+  // Check if trigger is frame with widget
+  const isFrameWithWidget =
+    $(trigger).is('.designer-region[data-sub-type="frame"]') &&
+    $(trigger).find('.designer-widget').length > 0;
+
+  // If trigger is a region with widget, select widget instead
+  const $trigger = (isFrameWithWidget) ?
+    $(trigger).find('.designer-widget') :
+    $(trigger);
 
   // If it's selected already, do nothing
   if ($trigger.hasClass('selected-action-trigger')) {
@@ -4565,13 +4584,18 @@ Viewer.prototype.selectActionTrigger = function(
 
   // Deselect other action objects
   this.DOMObject.find('.selected-action-trigger')
-    .removeClass('selected-action-trigger selected-action-trigger-alt')
+    .removeClass('selected-action-trigger trigger-hovering')
     .find('.trigger-add-button').remove();
+  this.DOMObject.find('.selected-action-trigger-parent')
+    .removeClass('selected-action-trigger-parent');
 
   // Check if it's one of the layout main containers
   if (
     $trigger.hasClass('layout-wrapper') ||
-    $trigger.hasClass('layout-player')
+    $trigger.hasClass('layout-player') ||
+    // We skip elements for now
+    $trigger.hasClass('designer-element') ||
+    $trigger.hasClass('group-select-overlay')
   ) {
     return;
   }
@@ -4579,9 +4603,14 @@ Viewer.prototype.selectActionTrigger = function(
   // Add selected class
   $trigger.addClass('selected-action-trigger');
 
+  // Mark region to disable overlay if needed
+  if (isFrameWithWidget) {
+    $(trigger).addClass('selected-action-trigger-parent');
+  }
+
   // Add plus button
   const $plusBtn = $(`<div class="trigger-add-button">
-    <i class="far fa-plus"></i></div>`);
+    <i class="fa fa-plus-circle"></i></div>`);
   $plusBtn.appendTo($trigger)
     .on('mousedown.viewer', function(ev) {
       ev.preventDefault();
@@ -4596,15 +4625,78 @@ Viewer.prototype.selectActionTrigger = function(
       );
     });
 
-  // Check if button is fully visible
-  const viewerRect = this.DOMObject[0].getBoundingClientRect();
-  const buttonRect = $plusBtn[0].getBoundingClientRect();
-  if (
-    viewerRect.right < buttonRect.right
-  ) {
-    // Outside, add class to trigger
-    $trigger.addClass('selected-action-trigger-alt');
+  // Handle mouse hover plus position
+  const mousePos = {x: event.pageX, y: event.pageY};
+  function updateTriggerPosition() {
+    // Stop running if not selected and hovering
+    if (
+      !$trigger.hasClass('selected-action-trigger') ||
+      !$trigger.hasClass('trigger-hovering') ||
+      $trigger.hasClass('action-screen-helper')
+    ) {
+      return;
+    }
+
+    const offset = $trigger.offset();
+    const width = $trigger.outerWidth();
+    const height = $trigger.outerHeight();
+
+    // Get mouse relative coordinates
+    const relativeX = mousePos.x - offset.left;
+    const relativeY = mousePos.y - offset.top;
+
+    // Calculate distances to each side of the element
+    const distLeft = relativeX;
+    const distRight = width - relativeX;
+    const distTop = relativeY;
+    const distBottom = height - relativeY;
+
+    // Determine which distance is smallest
+    const minDistance = Math.min(distLeft, distRight, distTop, distBottom);
+    let closestEdge = '';
+    if (minDistance === distTop) {
+      closestEdge = 'top';
+    } else if (minDistance === distBottom) {
+      closestEdge = 'bottom';
+    } else if (minDistance === distLeft) {
+      closestEdge = 'left';
+    } else if (minDistance === distRight) {
+      closestEdge = 'right';
+    }
+
+    // Save closest edge
+    $trigger.attr('data-trigger-pos', closestEdge);
+
+    // Call again in the next animation frame
+    requestAnimationFrame(updateTriggerPosition);
   }
+
+  function startTrigger() {
+    $trigger.addClass('trigger-hovering');
+    $trigger.on('mousemove.edgeDetect', function(e) {
+      mousePos.x = e.pageX;
+      mousePos.y = e.pageY;
+    });
+
+    updateTriggerPosition();
+  }
+
+  $trigger.on('mouseenter', function() {
+    if (
+      $trigger.hasClass('selected-action-trigger') &&
+      !$trigger.hasClass('action-screen-helper')
+    ) {
+      startTrigger();
+    }
+  }).on('mouseleave', function() {
+    if ($trigger.hasClass('selected-action-trigger')) {
+      $trigger.removeClass('trigger-hovering');
+      $trigger.off('mousemove.edgeDetect');
+    }
+  }).addClass('trigger-hovering');
+
+  // Start the update loop
+  startTrigger();
 };
 
 /**
@@ -4737,8 +4829,10 @@ Viewer.prototype.stopCreatingActionLine = function(
   // Remove trigger selection?
   if (removeTriggerSelection) {
     this.DOMObject.find('.selected-action-trigger')
-      .removeClass('selected-action-trigger selected-action-trigger-alt')
+      .removeClass('selected-action-trigger trigger-hovering')
       .find('.trigger-add-button').remove();
+    this.DOMObject.find('.selected-action-trigger-parent')
+      .removeClass('selected-action-trigger-parent');
   }
 
   // Remove helper
@@ -4813,33 +4907,15 @@ Viewer.prototype.addActionLine = function(
     ($target.length === 0) &&
       console.info(`[data-type="${target.type}"]` +
         `[data-${target.type}-id="${target.id}"]`);
-    ($trigger[0] === $target[0]) &&
-        console.info(`Same: [data-type="${target.type}"]` +
-          `[data-${target.type}-id="${target.id}"]`);
     return;
   }
 
   // Create line
-  if ($trigger[0] != $target[0]) {
-    this.actionLines[actionId] = {
-      line: new LeaderLine(
-        $trigger[0],
-        $target[0],
-        {
-          color: (this.theme === 'dark') ?
-            lineDef.normalDarkThemeColor :
-            lineDef.normalLightThemeColor,
-          size: 3,
-          startPlug: 'square',
-          endSocket:
-            ($target.hasClass('action-screen-helper')) ? 'top' : 'auto',
-        },
-      ),
-      trigger: trigger,
-      target: target,
-      type: 'normal',
-    };
-  } else {
+  if (
+    $trigger[0] === $target[0] ||
+    $target.has($trigger).length > 0 ||
+    $trigger.has($target).length > 0
+  ) {
     this.actionLines[actionId] = {
       line: new LeaderLine(
         LeaderLine.pointAnchor($target[0], lineDef.circularStartPos),
@@ -4848,16 +4924,74 @@ Viewer.prototype.addActionLine = function(
           color: (this.theme === 'dark') ?
             lineDef.normalDarkThemeColor :
             lineDef.normalLightThemeColor,
-          size: 3,
+          size: lineDef.normalWidth,
+          startPlugSize: lineDef.plugSizeNormal,
+          endPlugSize: lineDef.plugSizeNormal,
           startSocket: lineDef.circularStartSocket,
           endSocket: lineDef.circularEndSocket,
-          startPlug: 'square',
+          startPlug: 'disc',
+          endPlug: 'arrow3',
           path: lineDef.pathCircular,
         },
       ),
       trigger: trigger,
       target: target,
       type: 'circular',
+    };
+  } else if (
+    $trigger.hasClass('action-screen-helper') &&
+    $target.hasClass('action-screen-helper')
+  ) {
+    this.actionLines[actionId] = {
+      line: new LeaderLine(
+        $trigger[0],
+        $target[0],
+        {
+          color: (this.theme === 'dark') ?
+            lineDef.normalDarkThemeColor :
+            lineDef.normalLightThemeColor,
+          size: lineDef.normalWidth,
+          startPlugSize: lineDef.plugSizeNormal,
+          endPlugSize: lineDef.plugSizeNormal,
+          startSocket: 'top',
+          endSocket: 'top',
+          path: lineDef.pathDock,
+          startSocketGravity:
+            lineDef.gravityCircular,
+          endSocketGravity:
+            lineDef.gravityCircular,
+          startPlug: 'disc',
+          endPlug: 'arrow3',
+          endSocket:
+            ($target.hasClass('action-screen-helper')) ? 'top' : 'auto',
+
+        },
+      ),
+      trigger: trigger,
+      target: target,
+      type: 'dock',
+    };
+  } else {
+    this.actionLines[actionId] = {
+      line: new LeaderLine(
+        $trigger[0],
+        $target[0],
+        {
+          color: (this.theme === 'dark') ?
+            lineDef.normalDarkThemeColor :
+            lineDef.normalLightThemeColor,
+          size: lineDef.normalWidth,
+          startPlugSize: lineDef.plugSizeNormal,
+          endPlugSize: lineDef.plugSizeNormal,
+          startPlug: 'disc',
+          endPlug: 'arrow3',
+          endSocket:
+            ($target.hasClass('action-screen-helper')) ? 'top' : 'auto',
+        },
+      ),
+      trigger: trigger,
+      target: target,
+      type: 'normal',
     };
   }
 
@@ -4872,13 +5006,21 @@ Viewer.prototype.addActionLine = function(
   // Handle line events
   $lineSVG.addClass('xibo-editor-action-line')
     .attr('data-action-id', actionId)
-    .on('mouseenter', () => {
+    .on('mouseenter', 'path', () => {
       this.actionLines[actionId].line.size =
         lineDef.hoverWidth;
+      this.actionLines[actionId].line.startPlugSize =
+        lineDef.plugSizeHover;
+      this.actionLines[actionId].line.endPlugSize =
+        lineDef.plugSizeHover;
     })
-    .on('mouseleave', () => {
+    .on('mouseleave', 'path', () => {
       this.actionLines[actionId].line.size =
         lineDef.normalWidth;
+      this.actionLines[actionId].line.startPlugSize =
+        lineDef.plugSizeNormal;
+      this.actionLines[actionId].line.endPlugSize =
+        lineDef.plugSizeNormal;
     })
     .on('click', (ev) => {
       const actionData = $(ev.currentTarget).data();
@@ -4917,7 +5059,8 @@ Viewer.prototype.updateActionLine = function(
   const app = self.parent;
   const isTempAction = (
     !$.isEmptyObject(app.actionManager.editing) &&
-    !app.actionManager.editing.actionId
+    !app.actionManager.editing.actionId ||
+    actionLineId === 'action_line_temp'
   );
   const actionBeingEdited = (isTempAction) ?
     'temp_action' : app.actionManager.editing.actionId;
@@ -4979,20 +5122,6 @@ Viewer.prototype.updateActionLine = function(
     } else {
       // Show all
       this.actionLines[lineId].line.show();
-    }
-
-    // For normal line, if it's too small, set top as anchor
-    if (this.actionLines[lineId].type === 'normal') {
-      const minDimension = 100;
-      const boundingBox = $('svg.xibo-editor-action-line')[0].getBBox();
-      if (
-        boundingBox.width < minDimension &&
-        boundingBox.height < minDimension
-      ) {
-        this.actionLines[lineId].line.startSocket = 'top';
-        this.actionLines[lineId].line.endSocket = 'top';
-        this.actionLines[lineId].line.path = lineDef.pathCircular;
-      }
     }
   }
 };
@@ -5091,7 +5220,11 @@ Viewer.prototype.updateActionLineTargets = function(
     .removeClass('action-target');
 
   // If target is same as trigger, set as circular line
-  if ($trigger[0] === $target[0]) {
+  if (
+    $trigger[0] === $target[0] ||
+    $target.has($trigger).length > 0 ||
+    $trigger.has($target).length > 0
+  ) {
     this.actionLines[actionLineId].line.start =
       LeaderLine.pointAnchor($target[0], lineDef.circularStartPos);
     this.actionLines[actionLineId].line.end =
@@ -5225,9 +5358,10 @@ Viewer.prototype.handleLayoutDock = function(actions) {
         (layout) => {
           return layout.layout != app.layout.name &&
             !($recentsContainer
-              .find(`.action-screen-recent
-                [data-sub-type="layout-code"]
-                [data-screen-id="${layout.code}"]`) > 0);
+              .find(
+                `.action-screen-recent[data-sub-type="layout-code"]` +
+                `[data-screen-id="${layout.code}"]`,
+              ).length > 0);
         });
 
       // If no results, show message
@@ -5406,7 +5540,7 @@ Viewer.prototype.addLayoutToRecents = function(layoutData) {
 
   // Check if layout is already added to recents
   if ($recentsContainer
-    .find(`[data-layout-id="${layoutData.code}"]`)
+    .find(`[data-screen-id="${layoutData.code}"]`)
     .length === 0
   ) {
     // Add to recents
@@ -5431,7 +5565,7 @@ Viewer.prototype.addLayoutToRecents = function(layoutData) {
       $(ev.currentTarget).parent().remove();
 
       // Check if it's the last recent, if so, hide container
-      ($recentsContainer.find('.action-screen-recent').size === 0) &&
+      ($recentsContainer.find('.action-screen-recent').length === 0) &&
         $recentsContainer.hide();
 
       self.updateActionLine();

@@ -195,29 +195,15 @@ Topbar.prototype.render = function() {
     });
   }
 
-  // TODO: Interactive control ( design pending )
+  // Interactive control ( design pending )
   const toggleControl = function(enable = true) {
-    const $allOptions = self.DOMObject.find('.interactive-control label');
-
-    // Disable all
-    $allOptions.removeClass('active');
-    $allOptions.find('input').prop('checked', false);
-
-    const selectPropId = enable ? '#interactiveOn' : '#interactiveOff';
-
-    $allOptions.find('input' + selectPropId).prop('checked', true);
-    $allOptions.find('input' + selectPropId).closest('label')
-      .addClass('active');
+    self.DOMObject.find('.interactive-control').attr('data-status',
+      (enable) ? 'on' : 'off');
   };
   // Handle toggle button
-  self.DOMObject.find('.interactive-control label input')
-    .off().on('click', function(ev) {
-      // Don't switch if we clicked the active button
-      if ($(ev.currentTarget).parent().is('.active')) {
-        return;
-      }
-
-      app.toggleInteractiveMode($(ev.currentTarget).is('#interactiveOn'));
+  self.DOMObject.find('.interactive-control')
+    .off().on('click', function() {
+      app.toggleInteractiveMode(!app.interactiveMode);
       toggleControl(app.interactiveMode);
     });
   // Call on start

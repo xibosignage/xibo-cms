@@ -2418,8 +2418,10 @@ PropertiesPanel.prototype.renderActions = function(
 
       // Remove active status from trigger
       app.viewer.DOMObject.find('.selected-action-trigger')
-        .removeClass('selected-action-trigger selected-action-trigger-alt')
+        .removeClass('selected-action-trigger trigger-hovering')
         .find('.trigger-add-button').remove();
+      app.viewer.DOMObject.find('.selected-action-trigger-parent')
+        .removeClass('selected-action-trigger-parent');
 
       self.createEditAction(actionData);
     });
@@ -2497,8 +2499,6 @@ PropertiesPanel.prototype.createEditAction = function(
         'regions',
         'playlists',
         'widgets',
-        'elements',
-        'elementGroups',
       ],
     },
   );
@@ -2556,9 +2556,31 @@ PropertiesPanel.prototype.createEditAction = function(
       // Show navWidget controls
       $newActionContainer.find('.action-target-widget-component').show();
       if (actionData.widgetId) {
+        const $dropdownBtn = $newActionContainer
+          .find('.action-target-widget-dropdown-button');
+        function toggleDropdown() {
+          $dropdownBtn.find('.action-target-widget-dropdown-container')
+            .toggleClass('active');
+        }
+
+        $dropdownBtn
+          .on('click', function(e) {
+            toggleDropdown();
+            app.editorContainer.on('click.dismiss', function(e2) {
+              if (
+                !$(e2.target)
+                  .hasClass('action-target-widget-dropdown-button') &&
+                $(e2.target).parents('.action-target-widget-dropdown-button')
+                  .length === 0
+              ) {
+                app.editorContainer.off('click.dismiss');
+                toggleDropdown();
+              }
+            });
+          });
         // Handle edit and delete buttons
         $newActionContainer
-          .find('[type="button"][data-action="edit-widget"]')
+          .find('.action-edit-widget-btn[data-action="edit-widget"]')
           .on('click', function(e) {
             app.toggleInteractiveEditWidgetMode(
               true,
@@ -2569,7 +2591,7 @@ PropertiesPanel.prototype.createEditAction = function(
             );
           });
         $newActionContainer
-          .find('[type="button"][data-action="delete-widget"]')
+          .find('.action-edit-widget-btn[data-action="delete-widget"]')
           .on('click', function(e) {
             // Deselect object first
             app.selectObject();
@@ -2585,7 +2607,7 @@ PropertiesPanel.prototype.createEditAction = function(
       } else {
         // Handle create widget button
         $newActionContainer
-          .find('[type="button"][data-action="add-widget"]')
+          .find('.action-edit-widget-btn[data-action="add-widget"]')
           .on('click', function(e) {
             app.toggleInteractiveEditWidgetMode(
               true,
@@ -2704,7 +2726,7 @@ PropertiesPanel.prototype.createEditAction = function(
     });
 
   // Handle buttons
-  $newActionContainer.find('[type="button"]').on('click', function(e) {
+  $newActionContainer.find('.action-btn').on('click', function(e) {
     const btnAction = $(e.currentTarget).data('action');
 
     if (btnAction === 'save') {
@@ -2779,6 +2801,33 @@ PropertiesPanel.prototype.createPreviewAction = function(
   const $actionsList =
     self.DOMObject.find('.actions-list');
 
+  function getObjectName(id, type) {
+    let name;
+    if (type === 'layout') {
+      name = app.layout.name;
+    } else if (type === 'drawerWidget') {
+      name = app.getObjectByTypeAndId(
+        'widget',
+        'widget_' + app.layout.drawer.regionId +
+          '_' + actionData.widgetId,
+        'drawer',
+      ).widgetName;
+    } else if (type === 'region') {
+      name = app.getObjectByTypeAndId(
+        'region',
+        'region_' + id,
+      ).name;
+    } else if (type === 'widget') {
+      name = app.getObjectByTypeAndId(
+        'widget',
+        id,
+        'search',
+      ).widgetName;
+    }
+
+    return name;
+  }
+
   // Send the layout code search URL with the action
   actionData.layoutCodeSearchURL = urlsForApi.layout.codeSearch.url;
 
@@ -2790,6 +2839,22 @@ PropertiesPanel.prototype.createPreviewAction = function(
         title: propertiesPanelTrans.actions[action],
       };
     });
+
+  // Get names for trigger, target and widgetId
+  if (actionData.sourceId) {
+    actionData.sourceName =
+      getObjectName(actionData.sourceId, actionData.source);
+  }
+
+  if (actionData.targetId) {
+    actionData.targetName =
+      getObjectName(actionData.targetId, actionData.target);
+  }
+
+  if (actionData.widgetId) {
+    actionData.widgetName =
+      getObjectName(actionData.widgetId, 'drawerWidget');
+  }
 
   // Create action and add to container
   const $actionContainer =
@@ -2813,7 +2878,7 @@ PropertiesPanel.prototype.createPreviewAction = function(
     $actionContainer.prependTo($actionsList);
 
   // Handle buttons
-  $actionContainer.find('[type="button"]').on('click', function(e) {
+  $actionContainer.find('.action-btn').on('click', function(e) {
     const btnAction = $(e.currentTarget).data('action');
     const actionData = $actionContainer.data();
 

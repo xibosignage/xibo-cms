@@ -5272,7 +5272,6 @@ lD.populateDropdownWithLayoutElements = function(
   const getWidgets = filterSet.has('widgets');
   const getLayouts = filterSet.has('layouts');
   const getPlaylists = filterSet.has('playlists');
-  const getDrawerWidgets = filterSet.has('drawerWidgets');
   const getElements = filterSet.has('elements');
   const getElementGroups = filterSet.has('elementGroups');
 
@@ -5331,7 +5330,14 @@ lD.populateDropdownWithLayoutElements = function(
     for (const region of Object.values(lD.layout.regions)) {
       if (
         getRegions &&
-        region.isPlaylist === false
+        // Don't get playlist region here
+        region.isPlaylist === false &&
+        // If we're getting widgets as well
+        // don't get regions with widgets
+        !(
+          region.numWidgets > 0 &&
+          getWidgets
+        )
       ) {
         regionsToAdd.push({
           id: region.regionId,
@@ -5391,21 +5397,6 @@ lD.populateDropdownWithLayoutElements = function(
       );
       for (const playlist of playlistsToAdd) {
         addObjectToDropdown(playlist);
-      }
-    }
-  }
-
-  // Add drawer widgets to dropdown
-  if (getDrawerWidgets) {
-    // Check if we have any widget array
-    if (lD.layout.drawer.widgets) {
-      // Add widgets to dropdown
-      for (const widget of Object.values(lD.layout.drawer.widgets)) {
-        addObjectToDropdown({
-          id: widget.widgetId,
-          name: widget.widgetName,
-          type: 'widget',
-        });
       }
     }
   }

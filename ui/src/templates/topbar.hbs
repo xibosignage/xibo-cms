@@ -50,22 +50,20 @@
 
         {{!-- Right menu --}}
         <ul class="layout-action-menu nav">
+            {{!-- Interactive control --}}
+            <li class="nav-item interactive-control" data-status="off">
+                <div class="interactive-control-container">
+                    <i class="fa fa-paper-plane"></i>
+                    <div class="interactive-control-label">{{trans.interactiveToggle.mode}}</div>
+                    <div class="interactive-control-status-on">{{trans.interactiveToggle.on}}</div>
+                    <div class="interactive-control-status-off">{{trans.interactiveToggle.off}}</div>
+                </div>
+            </li>
 
             {{!-- Layout select dropdown --}}
             <li>
                 <div id="layoutJumpListContainer" data-toggle="tooltip" data-placement="bottom" data-container=".editor-top-bar" data-title="{{trans.changeLayout}}"
                     class="navbar-btn d-none">
-                </div>
-            </li>
-
-            <li class="nav-item interactive-control p-2">
-                <div class="btn-group btn-group-toggle" data-toggle="buttons">
-                    <label class="btn btn-outline-info active">
-                        <input type="radio" name="options" id="interactiveOn" autocomplete="off" checked>On
-                    </label>
-                    <label class="btn btn-outline-info">
-                        <input type="radio" name="options" id="interactiveOff" autocomplete="off">Off
-                    </label>
                 </div>
             </li>
 

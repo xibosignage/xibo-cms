@@ -1,8 +1,9 @@
 <div class="action-layout-dock-control">
     <div class="action-screen-helper viewer-object-select"
         data-type="screen"
-        data-screen-id="{{currentLayoutId}}">
-        <div class="action-screen-helper-label">{{trans.currentLayout}}</div>
+        data-screen-id="{{currentLayoutId}}"
+        title="{{trans.currentLayout}}">
+        <div class="action-screen-helper-label">{{currentLayoutName}}</div>
     </div>
     <div class="action-layout-dock-recents" style="display: none;"></div>
     <div class="action-layout-dock-search">
@@ -15,7 +16,8 @@
             <div class="action-layout-dock-search-find-container input-info-container">
                 <input type="text" class="action-layout-dock-search-find" placeholder="{{trans.searchforALayout}}">
                 <i class="fa fa-question-circle input-info tooltip-always-on"
-                    data-toggle="tooltip" 
+                    data-toggle="tooltip"
+                    data-container=".action-layout-dock-search-results-container"
                     data-placement="top"
                     title="{{trans.searchforLayoutsHelpText}}">
                 </i>

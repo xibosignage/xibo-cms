@@ -658,9 +658,10 @@ body.editor-opened #content-wrapper .page-content>.row {
             left: 6px;
             bottom: 6px;
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 12px;
             width: calc(100% - 12px);
+            height: 40px;
 
             .action-screen-helper {
                 cursor: pointer;
@@ -670,7 +671,7 @@ body.editor-opened #content-wrapper .page-content>.row {
                 height: 40px;
                 min-width: 100px;
                 max-width: 200px;
-                padding: 8px 18px;
+                padding: 8px 16px;
                 align-items: center;
                 flex-shrink: 0;
                 border-radius: 3px;
@@ -698,19 +699,18 @@ body.editor-opened #content-wrapper .page-content>.row {
 
             .action-layout-dock-recents {
                 display: flex;
-                align-items: center;
-                height: 40px;
+                align-items: flex-start;
                 gap: 12px;
-                overflow-y: hidden;
+                overflow-y: visible;
                 overflow-x: auto;
-                scrollbar-width: thin !important;
+                scrollbar-width: none;
 
                 .action-screen-recent {
                     position: relative;
                     cursor: unset;
                     background-color: $xibo-color-neutral-0;
                     color: $xibo-color-neutral-900;
-                    height: 100%;
+                    height: 40px;
                     font-size: 16px;
                     font-style: normal;
                     font-weight: 400;
@@ -727,6 +727,14 @@ body.editor-opened #content-wrapper .page-content>.row {
 
                     &:not(.action-target):hover > i.delete-btn {
                         display: unset;
+                    }
+                }
+
+                &:hover {
+                    scrollbar-width: initial !important;
+
+                    .action-screen-recent {
+                        margin-bottom: 2px;
                     }
                 }
             }
@@ -754,8 +762,6 @@ body.editor-opened #content-wrapper .page-content>.row {
     
                 .action-layout-dock-search-results-container {
                     position: absolute;
-                    display: flex;
-                    flex-direction: column;
                     width: 292px;
                     z-index: $layout-dock-results-z-index;
                     align-items: flex-start;
@@ -769,7 +775,7 @@ body.editor-opened #content-wrapper .page-content>.row {
 
                     .action-layout-dock-search-find-container {
                         width: 100%;
-                        padding: 6px;
+                        padding: 10px;
                         display: flex;
 
                         .action-layout-dock-search-find {
@@ -778,6 +784,21 @@ body.editor-opened #content-wrapper .page-content>.row {
                             border: 1px solid $xibo-color-neutral-600;
                             border-radius: 4px;
                             outline: none;
+                            color: $xibo-color-neutral-900;
+                            font-size: 14px;
+                            font-style: normal;
+                            font-weight: 400;
+                            line-height: normal;
+                            padding: 6px 40px 6px 14px;
+                        }
+
+                        .input-info {
+                            position: absolute;
+                            right: 24px;
+                            top: 10px;
+                            height: 30px;
+                            display: flex;
+                            align-items: center;
                         }
                     }
 
@@ -1013,39 +1034,114 @@ body.editor-opened #content-wrapper .page-content>.row {
 
                 .actions-content {
                     margin-top: 0;
-                    button[data-action="add"] {
+
+                    .actions-content-button {
                         color: $xibo-color-primary;
                         background-color: $xibo-color-primary-l20;
-                        font-weight: bold;
+                        border: 1px solid $xibo-color-primary-l30;
+                        justify-content: space-between;
+                        font-weight: 600;
                         display: flex;
-                        gap: 8px;
+                        width: 100%;
+                        padding: 10px 12px;
+                        border-radius: 3px;
                         height: 40px;
                         align-items: center;
                         font-size: 16px;
-                        border-color: $xibo-color-primary-l30;
                         margin-top: 8px;
 
                         span.icon {
-                            font-size: 20px;
+                            font-size: 15px;
+                        }
+
+                        &:hover {
+                            color: darken($xibo-color-primary, 5%) !important;
+                            border-color: darken($xibo-color-primary-l30, 5%) !important;
+                            background: darken($xibo-color-primary-l20, 5%) !important;
                         }
                     }
 
                     .action-edit-form, .action-view {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: flex-end;
+                        padding: 10px;
                         margin: 8px 0;
-                        padding: 8px;
-                        background: #FCFCFC;
-                        border: 2px solid #E9E9E9;
-                        border-radius: 4px;
-                
-                        .xibo-form-input .header {
-                            font-size: 20px;
-                            font-weight: bold;
-                            color: $xibo-color-secondary;
+                        gap: 15px;
+                        border-radius: 3px;
+                        border: 1px solid $xibo-color-neutral-300;
+                        background: $xibo-color-neutral-100;
+
+                        .action-group {
+                            display: flex;
+                            flex-direction: column;
+                            align-items: flex-start;
+                            gap: 4px;
+                            align-self: stretch;
+                        }
+
+                        .form-group {
+                            align-self: stretch;
+                            margin-bottom: 0;
+
+                            label {
+                                margin-bottom: 8px;
+                            }
+                        }
+
+                        .action-label, .action-value {
+                            color: #333;
+                            font-size: 14px;
+                            font-style: normal;
+                            font-weight: 700;
+                            line-height: normal;
+                            margin-bottom: 4px;
+                        }
+
+                        .action-value {
+                            font-weight: 400;
                         }
 
                         .action-btn-container {
-                            button i {
-                                margin-right: 8px;
+                            display: flex;
+                            align-items: center;
+                            gap: 12px;
+
+                            .action-btn {
+                                display: flex;
+                                padding: 9px 11px;
+                                align-items: center;
+                                gap: 10px;
+                                font-size: 14px;
+                                border-radius: 2px;
+                                color: $xibo-color-neutral-0;
+                                cursor: pointer;
+
+                                &[data-action="close"] {
+                                    color: $bootstrap-theme-main-color;
+                                    border: 1px solid $bootstrap-theme-main-color;
+
+                                    &:hover {
+                                        background-color: $xibo-color-primary-l20;
+                                    }
+                                }
+
+                                &[data-action="edit"], &[data-action="save"] {
+                                    background: $bootstrap-theme-main-color;
+                                    border: 1px solid $bootstrap-theme-main-color;
+
+                                    &:hover {
+                                        background-color: darken($bootstrap-theme-main-color, 5%);
+                                    }
+                                }
+
+                                &[data-action="delete"] {
+                                    background: $xibo-color-semantic-error;
+
+                                    &:hover {
+                                        background-color: darken($xibo-color-semantic-error, 5%);
+                                    }
+                                }
                             }
                         }
                 
@@ -1054,17 +1150,103 @@ body.editor-opened #content-wrapper .page-content>.row {
                         }
                     }
 
-                    .action-target-widget-edit-container, .action-target-widget-add-container {
-                        padding: 0 12px;
-                        margin-bottom: 8px;
+                    .action-target-widget-add-container {
+                        .action-edit-widget-btn {
+                            display: flex;
+                            cursor: pointer;
+                            height: 33px;
+                            padding: 8px 12px;
+                            justify-content: center;
+                            align-items: center;
+                            gap: 32px;
+                            flex-shrink: 0;
+                            border-radius: 2px;
+                            border: 1px solid $bootstrap-theme-main-color;
+                            color: $bootstrap-theme-main-color;
+                            font-size: 13px;
+                            font-style: normal;
+                            font-weight: 400;
+                            line-height: normal;
+
+                            &:hover {
+                                background-color: $xibo-color-primary-l20;
+                            }
+                        }
                     }
 
                     .action-target-widget-edit-container {
                         display: flex;
-                        gap: 4px;
+                        gap: 6px;
+                        display: flex;
+                        width: 272px;
+                        height: 34px;
+                        padding: 7px 11px 7px 13px;
+                        justify-content: space-between;
+                        align-items: center;
+                        border-radius: 3px;
+                        background: $xibo-color-primary-l20;
 
                         .action-target-widget-edit-name {
                             flex: 1;
+                        }
+
+                        .action-target-widget-dropdown-button {
+                            position: relative;
+                            cursor: pointer;
+                            display: flex;
+                            height: 23px;
+                            width: 26px;
+                            padding: 1px 3px;
+                            align-items: center;
+                            justify-content: center;
+                            gap: 10px;
+                            border-radius: 2px;
+                            border: 1px solid $bootstrap-theme-main-color;
+                            color: $bootstrap-theme-main-color;
+
+                            &:hover {
+                                background-color: $xibo-color-primary-l30;
+                            }
+                        }
+                        .action-target-widget-dropdown-container {
+                            position: absolute;
+                            display: none;
+                            flex-direction: column;
+                            align-items: flex-start;
+                            gap: 2px;
+                            border-radius: 3px;
+                            border: 1px solid $bootstrap-theme-main-color;
+                            background: $xibo-color-neutral-100;
+                            box-shadow: 0px 4px 10px 0px $xibo-color-shadow-2;
+
+                            .action-edit-widget-btn {
+                                cursor: pointer;
+                                display: flex;
+                                height: 32px;
+                                padding: 7px 12px;
+                                align-items: center;
+                                gap: 10px;
+                                align-self: stretch;
+                                color: $xibo-color-neutral-900;
+                                font-size: 14px;
+                                font-style: normal;
+                                font-weight: 400;
+                                line-height: normal;
+                                @include user-select-none();
+
+                                &:hover {
+                                    display: flex;
+                                    flex-shrink: 0;
+                                    background-color: $bootstrap-theme-main-color;
+                                    color: $xibo-color-neutral-0;
+                                }
+                            }
+
+                            &.active {
+                                display: flex;
+                                bottom: 24px;
+                                right: 0;
+                            }
                         }
                     }
 
@@ -1751,31 +1933,65 @@ body.editor-opened #content-wrapper .page-content>.row {
     }
 
     .selected-action-trigger {
-        outline: 4px solid $xibo-color-accent !important;
+        outline: 2px solid $xibo-color-accent !important;
         outline-offset: 0 !important;
 
         .trigger-add-button {
+            display: none;
             position: absolute;
             cursor: pointer;
             top: 50%;
             left: 100%;
-            transform: translateY(-50%);
+            transform: translate(-50%, -50%);
             background: $xibo-color-accent;
             color: white;
-            border-radius: 8px;
-            width: 22px;
-            height: 22px;
-            display: flex;
+            border-radius: 25px;
+            width: 20px;
+            height: 20px;
             justify-content: center;
             align-items: center;
-            font-size: 16px;
+            font-size: 18px;
+            border: 2px solid $xibo-color-accent;
+            z-index: 1;
         }
 
-        &.selected-action-trigger-alt {
-            .trigger-add-button {
-                left: 0;
-                transform: translate(-100%, -50%);
-            }
+        &[data-trigger-pos="top"] .trigger-add-button {
+            top: 50%;
+            left: 100%;
+        }
+
+        &[data-trigger-pos="top"] .trigger-add-button {
+            top: 0;
+            left: 50%;
+        }
+
+        &[data-trigger-pos="left"] .trigger-add-button {
+            top: 50%;
+            left: 0;
+        }
+
+        &[data-trigger-pos="bottom"] .trigger-add-button {
+            top: 100%;
+            left: 50%;
+        }
+
+        &:hover .trigger-add-button{
+            display: flex;
+        }
+    }
+
+    .selected-action-trigger-parent {
+        &:after, &::before {
+            display: none;
+        }
+
+        .selected-action-trigger::after {
+            content: ' ';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
         }
     }
 
@@ -2192,7 +2408,7 @@ body[layout-editor-fs] .moveable-control-box {
     z-index: $viewer-layer-editor-z-index;
 
     path {
-        pointer-events: all !important;
+        pointer-events: stroke !important;
         cursor: pointer;
     }
 }

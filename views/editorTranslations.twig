@@ -42,9 +42,9 @@
                     elements: "{{ "Elements"|trans }}",
                     elementGroups: "{{ "Element Groups"|trans }}",
                     deleteWidget: "{{ "Delete"|trans }}",
-                    currentLayout: "{{ "Layout"|trans }}",
+                    currentLayout: "{{ "Current Layout"|trans }}",
                     searchforLayouts: "{{ "Search for Layouts"|trans }}",
-                    searchforLayoutsHelpText: "{{ "Search for Layouts using the layout Code. If not set, it needs to be added to those Layout properties in the edit form."|trans }}",
+                    searchforLayoutsHelpText: "{{ "Search for Layouts by the Code Identifier. Layouts must have a Code Identifier set in the Layout Edit form before creating a Navigate to Layout Action Type."|trans }}",
                     searchforALayout: "{{ "Search for Layouts by Code"|trans }}",
                     noResults: "{{ "No results"|trans }}",
                     removeFromRecents: "{{ "Remove Layout from recents"|trans }}",
@@ -185,7 +185,7 @@
                     targetHelpText: "{{ "If your Widget is a Shell Command you can select to target 'Screen' to run the command without affecting any Zones. For all other Widgets select 'Zone' as target." |trans }}",
                     touch: "{{ "Touch/Click" |trans }}",
                     webhook: "{{ "Web hook" |trans }}",
-                    addAction: "{{ "Add Action" |trans }}",
+                    addAction: "{{ "Add an Action" |trans }}",
                     editAction: "{{ "Edit" |trans }}",
                     saveAction: "{{ "Save" |trans }}",
                     continueAction: "{{ "Continue" |trans }}",
@@ -209,8 +209,8 @@
                     layoutCode: "{{ "Layout Code" |trans }}",
                     layoutCodeHelpText: "{{ "Please enter the Code identifier for the Layout as assigned in the Add / Edit Layout form." |trans }}",
                     createActionTargetWidget: "{{ "Create Widget" |trans }}",
-                    editActionTargetWidget: "{{ "Edit Widget" |trans }}",
-                    deleteActionTargetWidget: "{{ "Delete Widget" |trans }}",
+                    editActionTargetWidget: "{{ "Edit" |trans }}",
+                    deleteActionTargetWidget: "{{ "Delete" |trans }}",
                     createWidgetInZoneMessage: "{{ "Add a widget from the Toolbox to the target area!" |trans }}",
                 },
                 positionTab: {
@@ -465,7 +465,12 @@
                 dimensions: "{{ "Dimensions" |trans }}",
                 dimensionsDetail: "{{ "Layout dimensions"|trans }}",
                 layoutActions: "{{ "Layout Actions:"|trans }}",
-                onlyMyLayouts: "{{ "My Layouts?"|trans }}"
+                onlyMyLayouts: "{{ "My Layouts?"|trans }}",
+                interactiveToggle: {
+                    mode: "{{ "Interactive Mode"|trans }}",
+                    on: "{{ "ON"|trans }}",
+                    off: "{{ "OFF"|trans }}",
+                }
             };
 
             var historyManagerTrans = {

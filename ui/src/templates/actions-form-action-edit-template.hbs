@@ -1,10 +1,4 @@
 <form class="action-edit-form">
-    {{#if actionTitle}}
-        {{> forms/inputs/header title=(lookup trans actionTitle) customClass="action-form-input" }}
-    {{/if}}
-
-    <strong>DEBUG_ID: {{actionId}}</strong>
-
     {{> forms/inputs/hidden value=actionType id="actionType"}}
     {{> forms/inputs/dropdown value=actionTypeHelper title=trans.actionType id="actionTypeHelper" customClass="action-form-input" options=actionTypeOptions optionsTitle="title" optionsValue="name"}}
 
@@ -25,28 +19,36 @@
     {{> forms/inputs/dropdown id="targetId" value=targetId title=trans.target customClass="action-edit-form-target action-form-input" options=(arr (obj name="" title="")) optionsTitle="title" optionsValue="name" helpText=trans.targetHelpText }}
 
     {{!-- For nav widget only --}}
-    <label class="control-label action-target-widget-edit-label action-target-widget-component"><strong>{{trans.widgetToLoad}}</strong></label>
-    <div class="input-info-container action-target-widget-component">
-        {{>forms/inputs/add-ons/helpText helpText=trans.widgetToLoadHelpText}}
+    <div class="form-group action-target-widget-component">
+        <label class="control-label action-target-widget-edit-label"><strong>{{trans.widgetToLoad}}</strong></label>
+        <div class="input-info-container">
+            {{>forms/inputs/add-ons/helpText helpText=trans.widgetToLoadHelpText}}
+        </div>
+        {{> forms/inputs/hidden id="widgetId" value=widgetId customClass="action-target-widget-id" }}
+        {{#if widgetId}}
+            <div class="action-target-widget-edit-container">
+                <div class="action-target-widget-edit-name">{{widgetId}}</div>
+                <div class="action-target-widget-dropdown-button">
+                    <i class="fa fa-ellipsis"></i>
+
+                    <div class="action-target-widget-dropdown-container">
+                        <div class="action-edit-widget-btn" data-action="delete-widget">
+                            {{trans.deleteActionTargetWidget}}
+                        </div>
+                        <div class="action-edit-widget-btn" data-action="edit-widget">
+                            {{trans.editActionTargetWidget}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {{else}}
+            <div class="action-target-widget-add-container">
+                <div class="action-edit-widget-btn" data-action="add-widget">
+                    {{trans.createActionTargetWidget}}
+                </div>
+            </div>
+        {{/if}}
     </div>
-    {{> forms/inputs/hidden id="widgetId" value=widgetId customClass="action-target-widget-id" }}
-    {{#if widgetId}}
-        <div class="action-target-widget-edit-container action-target-widget-component">
-            <div class="action-target-widget-edit-name">{{widgetId}}</div>
-            <button class="btn btn-success" type="button" data-action="edit-widget" title="{{trans.editActionTargetWidget}}">
-                <i class="fa fa-edit"></i>
-            </button>
-            <button class="btn btn-danger" type="button" data-action="delete-widget" title="{{trans.deleteActionTargetWidget}}">
-                <i class="fa fa-trash"></i>
-            </button>
-        </div>
-    {{else}}
-        <div class="action-target-widget-add-container action-target-widget-component">
-            <button class="btn btn-block btn-primary" type="button" data-action="add-widget" title="{{trans.createActionTargetWidget}}">
-                <i class="fa fa-plus"></i><span class="pl-2">{{trans.createActionTargetWidget}}</span>
-            </button>
-        </div>
-    {{/if}}
 
     {{!-- For nav layout only --}}
     {{> forms/inputs/dropdown id="layoutCode" value=layoutCode title=trans.layoutCode customClass="action-form-input" selectType="pagedSelect"
@@ -67,11 +69,11 @@
     <div class="alert alert-danger error-message w-100"></div>
 
     <div class="action-btn-container">
-        <button class="btn btn-block btn-success" type="button" data-action="save">
-            <i class="fa fa-save"></i>{{trans.saveAction}}
-        </button>
-        <button class="btn btn-block btn-outline-dark" type="button" data-action="close">
-            <i class="fa fa-times"></i>{{trans.cancelAction}}
-        </button>
+        <div class="action-btn" data-action="close">
+            {{trans.cancelAction}}
+        </div>
+        <div class="action-btn" data-action="save">
+            {{trans.saveAction}}
+        </div>
     </div>
 </form>
