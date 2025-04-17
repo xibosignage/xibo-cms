@@ -101,7 +101,7 @@
                         {{ forms.dropdown("method", "single", title, "", options, "typeid", "type", helpText) }}
 
                         {% set title %}{% trans "URI" %}{% endset %}
-                        {% set helpText %}{% trans "URL to the Remote DataSet for GET and POST." %}{% endset %}
+                        {% set helpText %}{% trans "The URI of the Remote Dataset used for GET and POST." %}{% endset %}
                         {{ forms.input("uri", title, "", helpText, "", "required") }}
 
                         <div class="form-group row">
