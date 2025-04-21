@@ -1101,8 +1101,7 @@ class Layout implements \JsonSerializable
 
         // Validation
         // Layout created from media follows the media character limit
-        if ((empty($this->layout) || strlen($this->layout) > 50 || strlen($this->layout) < 1)
-            && $options['type'] !== 'media') {
+        if (empty($this->layout) || strlen($this->layout) > 50 || strlen($this->layout) < 1) {
             throw new InvalidArgumentException(
                 __('Layout Name must be between 1 and 50 characters'),
                 'name'
