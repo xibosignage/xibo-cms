@@ -3545,7 +3545,8 @@ class Layout extends Base
         $layout->schemaVersion = Environment::$XLF_VERSION;
         $layout->folderId = ($type === 'media') ? $media->folderId : $playlist->folderId;
 
-        $layout->save(['type' => $type]);
+        // Media files have their own validation so we can skip
+        $layout->save(['validate' => false]);
 
         $draft = $this->layoutFactory->checkoutLayout($layout);
 
