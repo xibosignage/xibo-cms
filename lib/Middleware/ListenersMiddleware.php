@@ -116,6 +116,7 @@ class ListenersMiddleware implements MiddlewareInterface
         // Listen for event that affect Display Groups
         (new DisplayGroupListener(
             $c->get('displayGroupFactory'),
+            $c->get('displayFactory'),
             $c->get('store')
         ))
             ->useLogger($c->get('logger'))
