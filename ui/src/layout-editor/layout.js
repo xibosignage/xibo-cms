@@ -460,7 +460,8 @@ Layout.prototype.publish = function() {
         // Redirect to the new published layout ( read only mode )
         window.location.href =
           urlsForApi.layout.designer.url.replace(
-            ':id', res.data.layoutId) + '?vM=1';
+            ':id', res.data.layoutId) + '?vM=1' +
+            (lD.templateEditMode ? '&isTemplateEditor=1' : '');
       });
     } else {
       lD.common.hideLoadingScreen();
