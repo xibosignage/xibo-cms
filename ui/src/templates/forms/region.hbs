@@ -27,6 +27,8 @@
                 {{#if showExitTransition}}
                     <div class="tab-pane" id="transitionTab">
                         {{> inputs/dropdown value=(getOption regionOptions "transitionType") options=(arrMerge (arr (obj code='' transition='Off')) transitions.out) optionsTitle="transition" optionsValue="code" id="transitionType" title=trans.region.exitTransitionTitle helpText=trans.region.exitTransitionHelpText }}
+                        {{> inputs/number value=(getOption regionOptions "transitionDuration") id=duration name="transitionDuration" title=trans.region.exitTransitionDurationTitle helpText=trans.region.exitTransitionDurationHelpText visibility='{ "field": "transitionType", "type": "neq", "value": "" }' }}
+                        {{> inputs/dropdown value=(getOption regionOptions "transitionDirection") options=transitions.compassPoints optionsTitle="name" optionsValue="id" id="transitionDirection" title=trans.region.exitTransitionDirectionTitle helpText=trans.region.exitTransitionDirectionHelpText visibility='{ "field": "transitionType", "type": "neq", "value": "" }' }}
                     </div>
                 {{/if}}
 
