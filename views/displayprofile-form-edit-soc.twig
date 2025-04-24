@@ -406,7 +406,7 @@
                             { val: "blockall", text: blockallText }
                         ] %}
                         {% if displayProfile.type == "lg" %}
-                            {% set options = options|merge([{ val: "poweronly", text: poweronlyText }], options) %}
+                            {% set options = options|merge([{ val: "poweronly", text: poweronlyText }]) %}
                         {% endif %}
                         {{ forms.dropdown("keylockLocal", "single", localKeylockTitle, lockOptions.keylock.local, options, "val", "text", localKeylockHelp) }}
                         {{ forms.dropdown("keylockRemote", "single", remoteKeylockTitle, lockOptions.keylock.remote, options, "val", "text", remoteKeylockHelp) }}
