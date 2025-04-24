@@ -2970,7 +2970,7 @@ class Display extends Base
             ]);
         } catch (\Exception $e) {
             $this->getLog()->debug($e->getMessage());
-            throw new InvalidArgumentException(__('Provided user_code does not exist'), 'user_code');
+            throw new InvalidArgumentException(__('The code provided does not match. Please double-check the code shown on the device you are trying to connect.'), 'user_code');
         }
 
         return $this->render($request, $response);
