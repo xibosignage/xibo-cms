@@ -30,6 +30,27 @@ $bottom-bar-height: 38px;
 $timeline-left-margin-width: 140px;
 $timeline-step-height: 22px;
 
+// Help pane
+body.playlist-editor-opened .help-pane {
+    bottom: auto;
+    top: 42px;
+    right: 400px;
+
+    .help-pane-card {
+        right: 40px;
+        top: 30px;
+        position: absolute;
+    }
+
+    .help-pane-icon {
+        padding: 10px 2px;
+
+        i {
+            font-size: 30px;
+        }
+    }
+}
+
 // CSS
 .editor-modal {
     display: block;
