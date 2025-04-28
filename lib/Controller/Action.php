@@ -349,8 +349,8 @@ class Action  extends Base
         }
 
         // restrict to one touch Action per source
-        if ($this->isApi($request)
-            && (!empty($source) && $sourceId !== null && !empty($triggerType))
+        if (
+            (!empty($source) && $sourceId !== null && !empty($triggerType))
             && $this->actionFactory->checkIfActionExist($source, $sourceId, $triggerType)
         ) {
             throw new InvalidArgumentException(__('Action with specified Trigger Type already exists'), 'triggerType');

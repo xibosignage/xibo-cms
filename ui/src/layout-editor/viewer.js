@@ -218,6 +218,7 @@ Viewer.prototype.getLayoutOrientation = function(width, height) {
  * @param {object} targets - Reload only targets
 */
 Viewer.prototype.render = function(forceReload = false, targets = {}) {
+  const self = this;
   const renderOnlyTargets = (!$.isEmptyObject(targets));
 
   // Check background colour and set theme
@@ -474,6 +475,9 @@ Viewer.prototype.render = function(forceReload = false, targets = {}) {
   // Refresh on window resize
   $(window).on('resize', _.debounce(function() {
     lD.viewer.update();
+    if (lD.interactiveMode) {
+      self.updateActionLine();
+    }
   }, drawThrottle));
 
   // Update moveable

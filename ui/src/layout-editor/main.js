@@ -4706,15 +4706,15 @@ lD.toggleInteractiveEditWidgetMode = function(
     refreshEditor: true,
     reloadViewer: false,
     reloadToolbar: false,
-  });
+  }).then(() => {
+    // Update toolbar
+    self.toolbar.render({
+      updateViewerAfterRendering: true,
+    });
 
-  // Update toolbar
-  self.toolbar.render({
-    updateViewerAfterRendering: true,
+    // Update viewer
+    self.viewer.render(true);
   });
-
-  // Update viewer
-  self.viewer.render(true);
 };
 
 /**

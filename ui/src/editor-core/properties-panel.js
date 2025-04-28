@@ -2831,9 +2831,24 @@ PropertiesPanel.prototype.createPreviewAction = function(
   // Send the layout code search URL with the action
   actionData.layoutCodeSearchURL = urlsForApi.layout.codeSearch.url;
 
+  // Set action type name as actionType by default
+  actionData.actionTypeName = actionData.actionType;
+
   // Add action types
   actionData.actionTypeOptions = Object.keys(actionTypesAndRules)
     .map((action) => {
+      // For actions like next and previous
+      // get the real name for translation purposes
+      if (
+        (
+          actionData.actionType === 'next' ||
+          actionData.actionType === 'previous'
+        ) && actionTypesAndRules[action].subType === actionData.actionType &&
+        actionTypesAndRules[action].targetType === actionData.target
+      ) {
+        actionData.actionTypeName = action;
+      }
+
       return {
         name: action,
         title: propertiesPanelTrans.actions[action],
