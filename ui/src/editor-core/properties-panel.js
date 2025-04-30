@@ -1925,7 +1925,9 @@ PropertiesPanel.prototype.initFields = function(
   forms.setConditions(
     self.DOMObject.find('form'),
     data,
-    (elementProperties) ? target.elementId : target.widgetId,
+    (elementProperties) ?
+      target.elementId :
+      (target.type === 'region' ? target.regionId : target.widgetId),
     (target.parent && target.parent.isTopLevel != undefined) ?
       target.parent.isTopLevel : true,
   );
