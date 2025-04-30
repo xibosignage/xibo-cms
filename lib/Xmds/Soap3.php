@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -89,12 +89,8 @@ class Soap3 extends Soap
             $this->logBandwidth($display->displayId, Bandwidth::$REGISTER, strlen($active));
 
             $this->getLog()->debug($active, $display->displayId);
-            
-            // Phone Home?
-            $this->phoneHome();
 
             return $active;
-
         } catch (NotFoundException $e) {
             $this->getLog()->error('Attempt to register a Version 3 Display with key %s.', $hardwareKey);
 
