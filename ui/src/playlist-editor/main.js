@@ -205,6 +205,12 @@ pE.loadEditor = function(
           pE.editorContainer.find('#playlist-timeline'),
         );
 
+        // Move help control to the header
+        $('#help-pane').insertAfter(
+          pE.editorContainer.parents('.editor-modal')
+            .find('.editor-modal-header .modal-header--left'),
+        );
+
         // Append manager to the modal container
         $('#layout-manager').appendTo('#playlist-editor');
 
@@ -819,6 +825,10 @@ pE.close = function() {
       }
     }
   };
+
+  // Move help control back to the top level
+  this.editorContainer.parents('.editor-modal')
+    .find('.editor-modal-header #help-pane').prependTo('body');
 
   // Clear loaded vars
   this.mainObjectId = '';
