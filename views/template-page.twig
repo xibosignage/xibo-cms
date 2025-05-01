@@ -223,6 +223,7 @@
                 // compile tree folder modal and append it to Form
                 var folderTreeModal = templates['folder-tree'];
                 var treeConfig = {"container": "container-folder-form-tree", "modal": "folder-tree-form-modal"};
+                treeConfig.trans = translations.folderTree;
                 $("body").append(folderTreeModal(treeConfig));
 
                 $("#folder-tree-form-modal").on('hidden.bs.modal', function () {
