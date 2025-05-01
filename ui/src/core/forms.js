@@ -5069,6 +5069,10 @@ window.forms = {
         if ($(element).hasClass('dateControl')) {
           // Places the error label date controller
           error.insertAfter(element.parent());
+        } else if (
+          $(element).siblings('.validation-error-container').length > 0
+        ) {
+          error.appendTo($(element).siblings('.validation-error-container'));
         } else {
           // Places the error label after the invalid element
           error.insertAfter(element);
