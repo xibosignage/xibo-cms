@@ -124,7 +124,7 @@ pE.loadEditor = function(
   showExternalPlaylistMessage = false,
 ) {
   // Add class to body so we can use CSS specifically on it
-  (!inline) && $('body').addClass('editor-opened');
+  (!inline) && $('body').addClass('editor-opened playlist-editor-opened');
 
   pE.common.showLoadingScreen();
 
@@ -206,6 +206,12 @@ pE.loadEditor = function(
         // Initialize timeline
         pE.timeline = new PlaylistTimeline(
           pE.editorContainer.find('#playlist-timeline'),
+        );
+
+        // Move help control to the header
+        $('#help-pane').insertAfter(
+          pE.editorContainer.parents('.editor-modal')
+            .find('.editor-modal-header .modal-header--left'),
         );
 
         // Append manager to the modal container
@@ -864,6 +870,10 @@ pE.close = function() {
     }
   };
 
+  // Move help control back to the top level
+  this.editorContainer.parents('.editor-modal')
+    .find('.editor-modal-header #help-pane').prependTo('body');
+
   // Clear loaded vars
   this.mainObjectId = '';
   deleteObjectProperties(this.playlist);
@@ -887,7 +897,8 @@ pE.close = function() {
   $('#editor-container').empty();
 
   // Remove editing class from body
-  (!this.inline) && $('body').removeClass('editor-opened');
+  (!this.inline) && $('body')
+    .removeClass('editor-opened playlist-editor-opened');
 };
 
 /**
