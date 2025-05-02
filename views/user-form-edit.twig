@@ -156,37 +156,120 @@
                     </div>
                     {% if currentUser.userTypeId == 1 %}
                         <div class="tab-pane" id="notifications">
-                            {% set title %}{% trans "Receive System Notifications?" %}{% endset %}
-                            {% set helpText %}{% trans "Should this User receive system notifications?" %}{% endset %}
-                            {{ forms.checkbox("isSystemNotification", title, user.isSystemNotification, helpText) }}
+                            <table class="table table-bordered">
+                                <thead>
+                                <tr>
+                                    <th>{{ "Notification Type"|trans }}</th>
+                                    <th>
+                                        {% trans "Enabled?" %}
+                                        <i class="fa fa-info-circle" title="{{ "Check this box to give this User access to this Notification." }}"></i>
+                                    </th>
+                                    <th>
+                                        {% trans "Inherited?" %}
+                                        <i class="fa fa-info-circle" title="{{ "If checked this User already has access to this Notification due to the User Groups they belong to." }}"></i>
+                                    </th>
+                                </tr>
+                                </thead>
 
-                            {% set title %}{% trans "Receive Display Notifications?" %}{% endset %}
-                            {% set helpText %}{% trans "Should this User receive Display notifications for Displays they have permission to see?" %}{% endset %}
-                            {{ forms.checkbox("isDisplayNotification", title, user.isDisplayNotification, helpText) }}
-
-                            {% set title %}{% trans "Receive DataSet Notifications?" %}{% endset %}
-                            {% set helpText %}{% trans "Should this User receive DataSet notification emails?" %}{% endset %}
-                            {{ forms.checkbox("isDataSetNotification", title, user.isDataSetNotification, helpText) }}
-
-                            {% set title %}{% trans "Receive Layout Notifications?" %}{% endset %}
-                            {% set helpText %}{% trans "Should this User receive Layout notification emails?" %}{% endset %}
-                            {{ forms.checkbox("isLayoutNotification", title, user.isLayoutNotification, helpText) }}
-
-                            {% set title %}{% trans "Receive Library Notifications?" %}{% endset %}
-                            {% set helpText %}{% trans "Should this User receive Library notification emails?" %}{% endset %}
-                            {{ forms.checkbox("isLibraryNotification", title, user.isLibraryNotification, helpText) }}
-
-                            {% set title %}{% trans "Receive Report Notifications?" %}{% endset %}
-                            {% set helpText %}{% trans "Should this User receive Report notification emails?" %}{% endset %}
-                            {{ forms.checkbox("isReportNotification", title, user.isReportNotification, helpText) }}
-
-                            {% set title %}{% trans "Receive Schedule Notifications?" %}{% endset %}
-                            {% set helpText %}{% trans "Should this User receive Schedule notification emails?" %}{% endset %}
-                            {{ forms.checkbox("isScheduleNotification", title, user.isScheduleNotification, helpText) }}
-
-                            {% set title %}{% trans "Receive Custom Notifications?" %}{% endset %}
-                            {% set helpText %}{% trans "Should this User receive notifications emails for Notifications manually created in CMS?" %}{% endset %}
-                            {{ forms.checkbox("isCustomNotification", title, user.isCustomNotification, helpText) }}
+                                <tbody class="feature-group">
+                                    <tr class="feature-row">
+                                        <td>
+                                            {{ "System"|trans }}<br/>
+                                            {{ "Should this User receive Layout notification emails?"|trans }}
+                                        </td>
+                                        <td>
+                                            <input type="checkbox" name="isSystemNotification" {% if user.isSystemNotification == 1 %}checked{% endif %}>
+                                        </td>
+                                        <td>
+                                            <input type="checkbox" class="inherit-group" disabled {% if user.isNotificationEnabled('system', true) %}checked{% endif %}>
+                                        </td>
+                                    </tr>
+                                    <tr class="feature-row">
+                                        <td>
+                                            {{ "Display"|trans }}<br/>
+                                            {{ "Should this User receive Display notifications for Displays they have permission to see?"|trans }}
+                                        </td>
+                                        <td>
+                                            <input type="checkbox" name="isDisplayNotification" {% if user.isDisplayNotification == 1 %}checked{% endif %}>
+                                        </td>
+                                        <td>
+                                            <input type="checkbox" class="inherit-group" disabled {% if user.isNotificationEnabled('display', true) %}checked{% endif %}>
+                                        </td>
+                                    </tr>
+                                    <tr class="feature-row">
+                                        <td>
+                                            {{ "DataSet"|trans }}<br/>
+                                            {{ "Should this User receive DataSet notification emails?"|trans }}
+                                        </td>
+                                        <td>
+                                            <input type="checkbox" name="isDataSetNotification" {% if user.isDataSetNotification == 1 %}checked{% endif %}>
+                                        </td>
+                                        <td>
+                                            <input type="checkbox" class="inherit-group" disabled {% if user.isNotificationEnabled('dataset', true) %}checked{% endif %}>
+                                        </td>
+                                    </tr>
+                                    <tr class="feature-row">
+                                        <td>
+                                            {{ "Layout"|trans }}<br/>
+                                            {{ "Should this User receive Layout notification emails?"|trans }}
+                                        </td>
+                                        <td>
+                                            <input type="checkbox" name="isLayoutNotification" {% if user.isLayoutNotification == 1 %}checked{% endif %}>
+                                        </td>
+                                        <td>
+                                            <input type="checkbox" class="inherit-group" disabled {% if user.isNotificationEnabled('layout', true) %}checked{% endif %}>
+                                        </td>
+                                    </tr>
+                                    <tr class="feature-row">
+                                        <td>
+                                            {{ "Library"|trans }}<br/>
+                                            {{ "Should this User receive Library notification emails?"|trans }}
+                                        </td>
+                                        <td>
+                                            <input type="checkbox" name="isLibraryNotification" {% if user.isLibraryNotification == 1 %}checked{% endif %}>
+                                        </td>
+                                        <td>
+                                            <input type="checkbox" class="inherit-group" disabled {% if user.isNotificationEnabled('library', true) %}checked{% endif %}>
+                                        </td>
+                                    </tr>
+                                    <tr class="feature-row">
+                                        <td>
+                                            {{ "Reports"|trans }}<br/>
+                                            {{ "Should this User receive Report notification emails?"|trans }}
+                                        </td>
+                                        <td>
+                                            <input type="checkbox" name="isReportNotification" {% if user.isReportNotification == 1 %}checked{% endif %}>
+                                        </td>
+                                        <td>
+                                            <input type="checkbox" class="inherit-group" disabled {% if user.isNotificationEnabled('report', true) %}checked{% endif %}>
+                                        </td>
+                                    </tr>
+                                    <tr class="feature-row">
+                                        <td>
+                                            {{ "Schedule"|trans }}<br/>
+                                            {{ "Should this User receive Schedule notification emails?"|trans }}
+                                        </td>
+                                        <td>
+                                            <input type="checkbox" name="isScheduleNotification" {% if user.isScheduleNotification == 1 %}checked{% endif %}>
+                                        </td>
+                                        <td>
+                                            <input type="checkbox" class="inherit-group" disabled {% if user.isNotificationEnabled('schedule', true) %}checked{% endif %}>
+                                        </td>
+                                    </tr>
+                                    <tr class="feature-row">
+                                        <td>
+                                            {{ "Custom"|trans }}<br/>
+                                            {{ "Should this User receive notifications emails for Notifications manually created in CMS?"|trans }}
+                                        </td>
+                                        <td>
+                                            <input type="checkbox" name="isCustomNotification" {% if user.isCustomNotification == 1 %}checked{% endif %}>
+                                        </td>
+                                        <td>
+                                            <input type="checkbox" class="inherit-group" disabled {% if user.isNotificationEnabled('custom', true) %}checked{% endif %}>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
                     {% endif %}
 
