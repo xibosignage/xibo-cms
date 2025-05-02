@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -68,21 +68,6 @@ class Wsdl
      */
     public static function getRoot(): string
     {
-        # Check REQUEST_URI is set. IIS doesn't set it, so we need to build it
-        # Attribution:
-        # Code snippet from http://support.ecenica.com/web-hosting/scripting/troubleshooting-scripting-errors/how-to-fix-server-request_uri-php-error-on-windows-iis/
-        # Released under BSD License
-        # Copyright (c) 2009, Ecenica Limited All rights reserved.
-        if (!isset($_SERVER['REQUEST_URI'])) {
-            $_SERVER['REQUEST_URI'] = $_SERVER['PHP_SELF'];
-            if (isset($_SERVER['QUERY_STRING'])) {
-                $_SERVER['REQUEST_URI'] .= '?' . $_SERVER['QUERY_STRING'];
-            }
-        }
-        ## End Code Snippet
-
-        $request = explode('?', htmlentities($_SERVER['REQUEST_URI'], ENT_QUOTES, 'UTF-8'));
-
-        return ((new HttpsDetect())->getUrl()) . '/' . ltrim($request[0], '/');
+        return (new HttpsDetect())->getBaseUrl();
     }
 }
