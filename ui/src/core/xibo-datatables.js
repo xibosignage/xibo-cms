@@ -1041,6 +1041,7 @@ window.initJsTreeAjax = function(
     const treeConfig = {
       container: 'container-folder-form-tree',
       modal: 'folder-tree-form-modal',
+      trans: translations.folderTree,
     };
 
     // append to body, instead of the form as it

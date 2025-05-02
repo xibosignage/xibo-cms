@@ -276,6 +276,7 @@ window.openUploadForm = function(options) {
         $('body').append(folderTreeModal({
           container: 'container-folder-form-tree',
           modal: 'folder-tree-form-modal',
+          trans: translations.folderTree,
         }));
 
         $('#folder-tree-form-modal').on('hidden.bs.modal', function(ev) {

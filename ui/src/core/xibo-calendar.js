@@ -2410,7 +2410,7 @@ const configureCriteriaFields = function(dialog) {
         class: 'form-control',
         name: 'criteria_metric[]',
         type: 'text',
-        value: '',
+        value: selectedMetric,
       });
     } else {
       // Create a dropdown or handle as a text input if only one metric
