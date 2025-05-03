@@ -71,7 +71,7 @@
     "blueimp-file-upload": "^10.32.0",
     "blueimp-load-image": "~5.16.0",
     "bootbox": "^6.0.0",
-    "bootstrap": "^4.6.2",
+    "bootstrap": "^5.0.1",
     "bootstrap-calendar": "~0.2.4",
     "bootstrap-colorpicker": "~2.5.2",
     "bootstrap-select": ">=1.13.18",
