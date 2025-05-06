@@ -1830,7 +1830,9 @@ class Widget extends Base
                     if ($property->type === 'message') {
                         continue;
                     }
-                    $property->setValueByType($elementProperties);
+
+                    // Isolate properties per element
+                    $property->setValueByType($elementProperties, null, true);
 
                     // Process properties from the mediaSelector component
                     if ($property->type === 'mediaSelector') {
