@@ -5334,9 +5334,11 @@ lD.populateDropdownWithLayoutElements = function(
         region.isPlaylist === false &&
         // If we're getting widgets as well
         // don't get regions with widgets
+        // if value is the region, add it still
         !(
           region.numWidgets > 0 &&
-          getWidgets
+          getWidgets &&
+          region.regionId != value
         )
       ) {
         regionsToAdd.push({

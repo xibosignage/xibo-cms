@@ -4873,6 +4873,12 @@ Viewer.prototype.addActionLine = function(
       .find(`[data-type="${target.type}"]` +
         `[data-${target.type}-id="${target.id}"]`);
 
+  // Remove line with same aciton id from the DOM
+  // if it exists
+  if ($('.leader-line[data-action-id=' + actionId + ']').length > 0) {
+    $('.leader-line[data-action-id=' + actionId + ']').remove();
+  }
+
   // If target is a dock recent, and it's not added
   // add it to the dock here
   if (targetIsDockRecent && $target.length === 0) {
@@ -4911,6 +4917,10 @@ Viewer.prototype.addActionLine = function(
     ($target.length === 0) &&
       console.info(`[data-type="${target.type}"]` +
         `[data-${target.type}-id="${target.id}"]`);
+
+    // Remove action line since it's invalid
+    self.removeActionLine(actionId);
+
     return;
   }
 
@@ -5090,6 +5100,28 @@ Viewer.prototype.updateActionLine = function(
       return;
     }
 
+    // Check if start and end detached from DOM
+    // and update those elements if so
+    const $detachedStart = $(this.actionLines[lineId].line.start);
+    const startId = $detachedStart.attr('id');
+    if (
+      $detachedStart.closest('html').length == 0 &&
+      startId
+    ) {
+      const $newstart = $('#' + startId);
+      this.actionLines[lineId].line.start = $newstart[0];
+    }
+
+    const $detachedEnd = $(this.actionLines[lineId].line.end);
+    const endId = $detachedEnd.attr('id');
+    if (
+      $detachedEnd.closest('html').length == 0 &&
+      endId
+    ) {
+      const $newEnd = $('#' + endId);
+      this.actionLines[lineId].line.end = $newEnd[0];
+    }
+
     // Set defaults for normal and circular
     if (this.actionLines[lineId].type === 'normal') {
       this.actionLines[lineId].line.path = lineDef.pathNormal;
@@ -5127,6 +5159,20 @@ Viewer.prototype.updateActionLine = function(
       // Show all
       this.actionLines[lineId].line.show();
     }
+  }
+
+  // If action id is not specified
+  // try to find rogue lines and remove them
+  if (!actionLineId) {
+    $('.leader-line').each((_idx, line) => {
+      const lineId = $(line).data('actionId');
+      if (
+        actionsToUpdate.indexOf(String(lineId)) === -1
+      ) {
+        // Remove rogue line
+        $(line).remove();
+      }
+    });
   }
 };
 
@@ -5177,7 +5223,7 @@ Viewer.prototype.updateActionLineTargets = function(
 
   // If target is a dock recent, and it's not added
   // add it to the dock here
-  if (targetIsDockRecent && $target.length === 0) {
+  if (targetIsDockRecent && $target.length === 0 && target.id) {
     self.getLayoutsWithCode({
       code: target.id,
       length: 1,
@@ -5289,7 +5335,11 @@ Viewer.prototype.removeActionLine = function(actionLineId) {
   const removeLine = function(lineId) {
     // Remove action line if it exists
     if (self.actionLines[lineId]) {
-      self.actionLines[lineId].line.remove();
+      try {
+        self.actionLines[lineId].line.remove();
+      } catch (e) {
+        console.warn('Line could not be removed:', e);
+      }
       delete self.actionLines[lineId];
     }
   };
@@ -5309,6 +5359,9 @@ Viewer.prototype.removeActionLine = function(actionLineId) {
       const lineId = allLines[index];
       removeLine(lineId);
     }
+
+    // Remove rogue lines
+    $('.leader-line').remove();
   }
 };
 

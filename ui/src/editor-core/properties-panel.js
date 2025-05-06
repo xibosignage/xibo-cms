@@ -2512,6 +2512,8 @@ PropertiesPanel.prototype.createEditAction = function(
     const targetId = $newActionContainer.find('[name="targetId"]').val();
     const layoutCode = $newActionContainer.find('[name="layoutCode"]').val();
     const widgetId = $newActionContainer.find('[name="widgetId"]').val();
+    const triggerCode = $newActionContainer.find('[name="triggerCode"]').val();
+    const triggerType = $newActionContainer.find('[name="triggerType"]').val();
 
     // Update local action data
     actionData.actionType = actionType;
@@ -2521,6 +2523,8 @@ PropertiesPanel.prototype.createEditAction = function(
     actionData.targetId = targetId;
     actionData.layoutCode = layoutCode;
     actionData.widgetId = widgetId;
+    actionData.triggerCode = triggerCode;
+    actionData.triggerType = triggerType;
 
     // Update action manager side
     app.actionManager.editing = actionData;
@@ -2649,11 +2653,12 @@ PropertiesPanel.prototype.createEditAction = function(
   // set source as "screen"
   const updateSource = function(triggerType) {
     if (triggerType == 'webhook') {
-      $newActionContainer.find('[name="source"]').val('screen');
+      $newActionContainer.find('[name="source"]').val('layout');
       $newActionContainer.find('[name="sourceId"]').val(app.mainObjectId)
         .trigger('change');
 
-      updateActionDataObj();
+      actionData.source = 'layout';
+      actionData.sourceId = app.mainObjectId;
     }
   };
 

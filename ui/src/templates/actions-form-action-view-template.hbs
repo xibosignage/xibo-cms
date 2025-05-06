@@ -14,20 +14,20 @@
             <div class="action-label">{{trans.triggerCode}}</div>
             <div class="action-value">{{triggerCode}}</div>
         </div>
-    {{/if}}
-
-    {{#if sourceId}}
-        <div class="action-group">
-            <div class="action-label">{{trans.triggerTarget}}</div>
-            <div class="action-value">
-                {{#if sourceName}}
-                    "{{sourceName}}"
-                {{else}}
-                    {{sourceId}}
-                {{/if}}
-                ({{lookup trans.targetsAndSources source}})
+    {{else}}
+        {{#if sourceId}}
+            <div class="action-group">
+                <div class="action-label">{{trans.triggerTarget}}</div>
+                <div class="action-value">
+                    {{#if sourceName}}
+                        "{{sourceName}}"
+                    {{else}}
+                        {{sourceId}}
+                    {{/if}}
+                    ({{lookup trans.targetsAndSources source}})
+                </div>
             </div>
-        </div>
+        {{/if}}
     {{/if}}
 
     {{#neq actionType "navLayout"}}
