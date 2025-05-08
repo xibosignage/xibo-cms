@@ -2423,7 +2423,9 @@ PropertiesPanel.prototype.renderActions = function(
       app.viewer.DOMObject.find('.selected-action-trigger-parent')
         .removeClass('selected-action-trigger-parent');
 
-      self.createEditAction(actionData);
+      self.createEditAction(actionData, null, {
+        newAction: true,
+      });
     });
 
   // If we were editing an action, open it
@@ -2436,16 +2438,21 @@ PropertiesPanel.prototype.renderActions = function(
  * Add new action editform
  * @param {object} actionData
  * @param {object} $target - Target container to be replaced
- * @param {object} actionNeedsValidateToCancel
+ * @param {object/boolean=} [options.actionNeedsValidateToCancel = false]
+ * @param {object/boolean=} [options.newAction = false]
  * @return {boolean} false if unsuccessful
  */
 PropertiesPanel.prototype.createEditAction = function(
   actionData = {},
-  $target,
-  actionNeedsValidateToCancel = false,
+  $target = null,
+  {
+    actionNeedsValidateToCancel = false,
+    newAction = false,
+  } = {},
 ) {
   const self = this;
   const app = self.parent;
+  const actionManager = app.actionManager;
   const $actionsContent = self.DOMObject.find('.actions-content');
   const $actionsList = self.DOMObject.find('.actions-list');
 
@@ -2476,6 +2483,7 @@ PropertiesPanel.prototype.createEditAction = function(
   // Create action and add to container
   const $newActionContainer =
     $(actionFormActionEditTemplate($.extend({}, actionData, {
+      newAction: newAction,
       trans: propertiesPanelTrans.actions,
     })));
 
@@ -2604,7 +2612,9 @@ PropertiesPanel.prototype.createEditAction = function(
               app.reloadData(app.layout, {
                 refreshEditor: false,
               }).then(() => {
-                self.createEditAction(actionData, $newActionContainer, true);
+                self.createEditAction(actionData, $newActionContainer, {
+                  actionNeedsValidateToCancel: true,
+                });
               });
             });
           });
@@ -2737,6 +2747,25 @@ PropertiesPanel.prototype.createEditAction = function(
     if (btnAction === 'save') {
       // Save action
       self.saveAction($newActionContainer);
+    } else if (btnAction === 'delete') {
+      actionManager.deleteAction(
+        actionData,
+      ).then((wasRemoved) => {
+        if (wasRemoved) {
+          // Remove widget from drawer if action has widgetId
+          if (actionData.widgetId) {
+            app.layout.deleteObject('widget', actionData.widgetId);
+          }
+
+          // Remove action line
+          app.viewer.removeActionLine($newActionContainer.data('actionId'));
+
+          // Remove action container
+          $newActionContainer.remove();
+
+          $actionsContent.removeClass('editing-action');
+        }
+      });
     } else if (btnAction === 'close') {
       const editingAction = app.actionManager.editing;
 

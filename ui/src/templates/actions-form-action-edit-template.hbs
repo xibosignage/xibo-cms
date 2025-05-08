@@ -69,11 +69,18 @@
     <div class="alert alert-danger error-message w-100"></div>
 
     <div class="action-btn-container">
-        <div class="action-btn" data-action="close">
-            {{trans.cancelAction}}
+        <div class="right-buttons">
+            <div class="action-btn" data-action="close">
+                {{trans.cancelAction}}
+            </div>
+            <div class="action-btn" data-action="save">
+                {{trans.saveAction}}
+            </div>
         </div>
-        <div class="action-btn" data-action="save">
-            {{trans.saveAction}}
-        </div>
+        {{#unless newAction}}
+            <div class="action-btn" data-action="delete">
+                {{trans.deleteAction}}
+            </div>
+        {{/unless}}
     </div>
 </form>

@@ -1159,6 +1159,7 @@ Viewer.prototype.handleUI = function() {
         target: targetType,
         targetId: targetId,
         layoutCode: layoutCode,
+      }, null, {
         newAction: true,
       });
 
