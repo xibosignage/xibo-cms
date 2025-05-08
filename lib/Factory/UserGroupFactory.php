@@ -187,7 +187,14 @@ class UserGroupFactory extends BaseFactory
      */
     public function checkNotificationEmailPreferences(int $userId, string $type): bool
     {
-        $groups = $this->query(null, ['disableUserCheck' => 1, 'userId' => $userId, 'notificationType' => $type]);
+        // We should include all groups this user is in (including their user specific one).
+        // therefore isUserSpecific should be -1 otherwise it defaults to 0.
+        $groups = $this->query(null, [
+            'disableUserCheck' => 1,
+            'isUserSpecific' => -1,
+            'userId' => $userId,
+            'notificationType' => $type,
+        ]);
 
         return count($groups) > 0;
     }
