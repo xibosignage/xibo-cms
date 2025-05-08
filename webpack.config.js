@@ -23,6 +23,7 @@ const path = require('path');
 const webpack = require('webpack');
 const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const TerserPlugin = require('terser-webpack-plugin');
 
 const config = {
   // Add common Configurations
@@ -273,97 +274,104 @@ const pageConfig = Object.assign({}, config, {
   ],
 });
 
-const moduleConfig = Object.assign({}, config, {
-  entry: {
-    bundle: './modules/src/player_bundle.js',
-  },
-  output: {
-    path: path.resolve(__dirname, 'modules'),
-    filename: '[name].min.js',
-  },
-  target: ['web', 'es5'],
-  module: {
-    rules: [
-      {
-        test: /\.m?js$/,
-        exclude: /node_modules/,
-        use: {
-          loader: 'babel-loader',
-          options: {
-            sourceType: 'unambiguous',
-            presets: [
-              [
-                '@babel/preset-env',
-                {
-                  corejs: '3.32',
-                  useBuiltIns: 'usage',
-                  targets: 'defaults',
-                },
+const moduleConfig = function(env, argv) {
+  console.log('webpack env: ', env);
+  return Object.assign({}, config, {
+    entry: {
+      bundle: './modules/src/player_bundle.js',
+    },
+    output: {
+      path: path.resolve(__dirname, 'modules'),
+      filename: '[name].min.js',
+    },
+    optimization: {
+      minimize: !(env.local),
+    },
+    target: ['web', 'es5'],
+    module: {
+      rules: [
+        {
+          test: /\.m?js$/,
+          exclude: /node_modules/,
+          use: {
+            loader: 'babel-loader',
+            options: {
+              sourceType: 'unambiguous',
+              presets: [
+                [
+                  '@babel/preset-env',
+                  {
+                    corejs: '3.32',
+                    useBuiltIns: 'usage',
+                    targets: 'defaults',
+                  },
+                ],
               ],
-            ],
-            plugins: [
-              [
-                'polyfill-corejs3',
-                {
-                  method: 'usage-global',
-                  version: '3.32',
-                },
+              plugins: [
+                [
+                  'polyfill-corejs3',
+                  {
+                    method: 'usage-global',
+                    version: '3.32',
+                  },
+                ],
+                '@babel/plugin-transform-nullish-coalescing-operator',
+                '@babel/plugin-bugfix-v8-spread-parameters-in-optional-chaining',
+                '@babel/plugin-transform-optional-chaining',
+                '@babel/plugin-transform-arrow-functions',
+                '@babel/plugin-transform-object-rest-spread',
+                '@babel/plugin-transform-spread',
+                '@babel/plugin-transform-parameters',
+                '@babel/plugin-transform-destructuring',
+                '@babel/plugin-transform-block-scoping',
+                '@babel/plugin-transform-template-literals',
               ],
-              '@babel/plugin-transform-nullish-coalescing-operator',
-              '@babel/plugin-bugfix-v8-spread-parameters-in-optional-chaining',
-              '@babel/plugin-transform-optional-chaining',
-              '@babel/plugin-transform-arrow-functions',
-              '@babel/plugin-transform-object-rest-spread',
-              '@babel/plugin-transform-spread',
-              '@babel/plugin-transform-parameters',
-              '@babel/plugin-transform-destructuring',
-              '@babel/plugin-transform-block-scoping',
-              '@babel/plugin-transform-template-literals',
-            ],
+            },
           },
         },
-      },
-      {
-        test: /\.(css)$/,
-        use: [
-          'style-loader',
-          'css-loader',
-        ],
-      },
-    ],
-  },
-  plugins: [
-    new webpack.ProvidePlugin({
-      $: 'jquery',
-      jQuery: 'jquery',
-    }),
-    new CleanWebpackPlugin({
-      cleanOnceBeforeBuildPatterns: ['modules/*.min.js'],
-    }),
-    new CopyWebpackPlugin({
-      patterns: [
-        // Copy directory contents to {output}/
         {
-          from: 'node_modules/pdfjs-dist/es5/build/pdf.worker.js',
-          to: 'assets/pdfjs/pdf.worker.js',
+          test: /\.(css)$/,
+          use: [
+            'style-loader',
+            'css-loader',
+          ],
         },
       ],
-    }),
-  ],
-});
+    },
+    plugins: [
+      new webpack.ProvidePlugin({
+        $: 'jquery',
+        jQuery: 'jquery',
+      }),
+      new CleanWebpackPlugin({
+        cleanOnceBeforeBuildPatterns: ['modules/*.min.js'],
+      }),
+      new CopyWebpackPlugin({
+        patterns: [
+          // Copy directory contents to {output}/
+          {
+            from: 'node_modules/pdfjs-dist/es5/build/pdf.worker.js',
+            to: 'assets/pdfjs/pdf.worker.js',
+          },
+        ],
+      }),
+    ],
+  });
+}
 
 module.exports = (env, argv) => {
+  const _moduleConfigFn = moduleConfig(env, argv);
   if (argv.mode === 'development') {
     mainConfig.devtool = 'source-map';
-    moduleConfig.devtool = 'source-map';
+    _moduleConfigFn.devtool = 'source-map';
     pageConfig.devtool = 'source-map';
   }
 
   if (argv.mode === 'production') {
     mainConfig.devtool = false;
-    moduleConfig.devtool = false;
+    _moduleConfigFn.devtool = false;
     pageConfig.devtool = false;
   }
 
-  return [mainConfig, pageConfig, moduleConfig];
+  return [mainConfig, pageConfig, _moduleConfigFn];
 };
