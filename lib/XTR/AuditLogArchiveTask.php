@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -28,6 +28,7 @@ use Xibo\Entity\User;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Support\Exception\TaskRunException;
@@ -61,7 +62,10 @@ class AuditLogArchiveTask implements TaskInterface
         return $this;
     }
 
-    /** @inheritdoc */
+    /**
+     * @inheritDoc
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
     public function run()
     {
         $maxPeriods = intval($this->getOption('maxPeriods', 1));
@@ -77,9 +81,55 @@ class AuditLogArchiveTask implements TaskInterface
             $this->appendRunMessage('maxAge: ' . $maxAge->format(DateFormatHelper::getSystemFormat()));
 
             // Delete all audit log messages older than the configured number of months
-            $this->store->update('DELETE FROM `auditlog` WHERE logDate < :logDate', [
-                'logDate' => $maxAge->format('U')
-            ]);
+            // use a prepared statement for this, and delete the records in a loop
+            $deleteStatement = $this->store->getConnection()->prepare('
+                DELETE FROM `auditlog`
+                 WHERE `logDate` < :logDate
+                LIMIT :limit
+            ');
+
+            // Convert to a simple type so that we can pass by reference to bindParam.
+            // Load in other options for deleting
+            $maxage = $maxAge->format('U');
+            $limit = intval($this->getOption('deleteLimit', 1000));
+            $maxAttempts = intval($this->getOption('maxDeleteAttempts', -1));
+            $deleteSleep = intval($this->getOption('deleteSleep', 5));
+
+            // Bind params
+            $deleteStatement->bindParam(':logDate', $maxage, \PDO::PARAM_STR);
+            $deleteStatement->bindParam(':limit', $limit, \PDO::PARAM_INT);
+
+            try {
+                $i = 0;
+                $rows = 1;
+
+                while ($rows > 0) {
+                    $i++;
+
+                    // Run delete statement
+                    $deleteStatement->execute();
+
+                    // Find out how many rows we've deleted
+                    $rows = $deleteStatement->rowCount();
+
+                    // We shouldn't be in a transaction, but commit anyway just in case
+                    $this->store->commitIfNecessary();
+
+                    // Give SQL time to recover
+                    if ($rows > 0) {
+                        $this->log->debug('Archive delete effected ' . $rows . ' rows, sleeping.');
+                        sleep($deleteSleep);
+                    }
+
+                    // Break if we've exceeded the maximum attempts, assuming that has been provided
+                    if ($maxAttempts > -1 && $i >= $maxAttempts) {
+                        break;
+                    }
+                }
+            } catch (\PDOException $e) {
+                $this->log->error($e->getMessage());
+                throw new GeneralException('Archive rows cannot be deleted.');
+            }
         } else {
             $this->appendRunMessage('# ' . __('AuditLog Archive'));
             $this->appendRunMessage('maxAge: ' . $maxAge->format(DateFormatHelper::getSystemFormat()));

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -197,9 +197,11 @@ class EmailNotificationsTask implements TaskInterface
      * @param UserNotification $notification
      * @return bool
      */
-    private function checkEmailPreferences(UserNotification $notification)
+    private function checkEmailPreferences(UserNotification $notification): bool
     {
-        $groupType = $notification->getTypeForGroup();
-        return $this->userGroupFactory->checkNotificationEmailPreferences($notification->userId, $groupType);
+        return $this->userGroupFactory->checkNotificationEmailPreferences(
+            $notification->userId,
+            $notification->getTypeForGroup()
+        );
     }
 }

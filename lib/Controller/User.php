@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -836,6 +836,7 @@ class User extends Base
             $user->homeFolderId = $sanitizedParams->getInt('homeFolderId');
         }
 
+        // Some configuration is only avaialble to super admins.
         if ($this->getUser()->isSuperAdmin()) {
             $user->userTypeId = $sanitizedParams->getInt('userTypeId');
             if ($user->retired === 1) {

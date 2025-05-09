@@ -57,9 +57,6 @@ const Viewer = function(parent, container) {
   // Element dimensions inside the viewer container
   this.containerObjectDimensions = null;
 
-  // State of the inline editor (  0: off, 1: on, 2: edit )
-  this.inlineEditorState = 0;
-
   // If the viewer is currently playing the preview
   this.previewPlaying = false;
 
@@ -2543,11 +2540,6 @@ Viewer.prototype.stopPreview = function() {
 Viewer.prototype.toggleFullscreen = function() {
   const app = this.parent;
 
-  // If inline editor is opened, needs to be saved/closed
-  if (this.inlineEditorState == 2) {
-    // Close editor content
-    this.closeInlineEditorContent();
-  }
   // Was preview playing?
   const previewWasPlaying = this.previewPlaying;
 
@@ -4357,7 +4349,32 @@ Viewer.prototype.editText = function(
     // Get text and set it for the text field
     const $textArea =
       lD.propertiesPanel.DOMObject.find('textarea[name=text]');
-    $textArea.val($editable.html());
+
+    // Convert HTML to plain text with newlines
+    const tempDiv = $('<div>').html($editable.html());
+    let plainText = '';
+
+    tempDiv.contents().each(function(_idx, el) {
+      if (el.nodeType === 3) {
+        // Text node, just add to plain text
+        plainText += el.nodeValue;
+      } else if (el.nodeType === 1 && el.nodeName === 'DIV') {
+        // Element node, type div, need to process line breaks
+        const $div = $(el);
+
+        if ($div.html().toLowerCase() === '<br>' || !$div.text().trim()) {
+          plainText += '\n';
+        } else {
+          plainText += $div.text() + '\n';
+        }
+      }
+    });
+
+    // Add text back to text area, remove extra \n if exists
+    $textArea.val(
+      plainText.endsWith('\n') ?
+        plainText.slice(0, -1) : plainText,
+    );
 
     // Save property
     lD.propertiesPanel.saveElement(
@@ -4367,7 +4384,15 @@ Viewer.prototype.editText = function(
 
     // Remove listener
     $editable[0].removeEventListener('blur', saveOnBlur);
-  };
+  }
+
+  // Convert plain text to HTML to be edited
+  const htmlFromText = $editable.html()
+    .split('\n')
+    .map((line) => `<div>${line || '<br>'}</div>`)
+    .join('');
+
+  $editable.html(htmlFromText);
 
   // Enable editing
   $editable[0].contentEditable = true;
