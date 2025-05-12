@@ -2480,6 +2480,12 @@ PropertiesPanel.prototype.createEditAction = function(
       };
     });
 
+  // Get widget name if exists
+  if (actionData.widgetId) {
+    actionData.widgetName =
+      app.getObjectName('drawerWidget', actionData.widgetId);
+  }
+
   // Create action and add to container
   const $newActionContainer =
     $(actionFormActionEditTemplate($.extend({}, actionData, {
@@ -2835,33 +2841,6 @@ PropertiesPanel.prototype.createPreviewAction = function(
   const $actionsList =
     self.DOMObject.find('.actions-list');
 
-  function getObjectName(id, type) {
-    let name;
-    if (type === 'layout') {
-      name = app.layout.name;
-    } else if (type === 'drawerWidget') {
-      name = app.getObjectByTypeAndId(
-        'widget',
-        'widget_' + app.layout.drawer.regionId +
-          '_' + actionData.widgetId,
-        'drawer',
-      ).widgetName;
-    } else if (type === 'region') {
-      name = app.getObjectByTypeAndId(
-        'region',
-        'region_' + id,
-      ).name;
-    } else if (type === 'widget') {
-      name = app.getObjectByTypeAndId(
-        'widget',
-        id,
-        'search',
-      ).widgetName;
-    }
-
-    return name;
-  }
-
   // Send the layout code search URL with the action
   actionData.layoutCodeSearchURL = urlsForApi.layout.codeSearch.url;
 
@@ -2892,17 +2871,17 @@ PropertiesPanel.prototype.createPreviewAction = function(
   // Get names for trigger, target and widgetId
   if (actionData.sourceId) {
     actionData.sourceName =
-      getObjectName(actionData.sourceId, actionData.source);
+      app.getObjectName(actionData.source, actionData.sourceId);
   }
 
   if (actionData.targetId) {
     actionData.targetName =
-      getObjectName(actionData.targetId, actionData.target);
+      app.getObjectName(actionData.target, actionData.targetId);
   }
 
   if (actionData.widgetId) {
     actionData.widgetName =
-      getObjectName(actionData.widgetId, 'drawerWidget');
+      app.getObjectName('drawerWidget', actionData.widgetId);
   }
 
   // Create action and add to container

@@ -27,7 +27,13 @@
         {{> forms/inputs/hidden id="widgetId" value=widgetId customClass="action-target-widget-id" }}
         {{#if widgetId}}
             <div class="action-target-widget-edit-container">
-                <div class="action-target-widget-edit-name">{{widgetId}}</div>
+                <div class="action-target-widget-edit-name" title="[{{widgetId}}] {{widgetName}}">
+                    {{#if widgetName}}
+                        "{{widgetName}}"
+                    {{else}}
+                        {{widgetId}}
+                    {{/if}}
+                </div>
                 <div class="action-target-widget-dropdown-button">
                     <i class="fa fa-ellipsis"></i>
 

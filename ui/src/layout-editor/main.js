@@ -1297,6 +1297,7 @@ lD.deleteSelectedObject = function() {
   const selectedInViewer = lD.viewer.getMultipleSelected();
 
   // Prevent delete if it doesn't have permissions
+  // or when editing an action widget
   if (
     (
       lD.selectedObject.isDeletable === false &&
@@ -1305,7 +1306,8 @@ lD.deleteSelectedObject = function() {
     (
       selectedInViewer.multiple === true &&
       selectedInViewer.canBeDeleted == false
-    )
+    ) ||
+    lD.interactiveEditWidgetMode
   ) {
     return;
   }
@@ -3332,11 +3334,11 @@ lD.clearTemporaryData = function() {
 };
 
 /**
- * Get element from the main object ( Layout )
- * @param {string} type - Type of the element
- * @param {number} id - Id of the element
- * @param {number} auxId - Auxiliary id of the element
- * @return {Object} element
+ * Get target object from the main object ( Layout )
+ * @param {string} type - Type of the target object
+ * @param {number} id - Id of the target object
+ * @param {number} auxId - Auxiliary id of the target object
+ * @return {Object} target object
  */
 lD.getObjectByTypeAndId = function(type, id, auxId) {
   let targetObject = {};
@@ -3410,6 +3412,40 @@ lD.getObjectByTypeAndId = function(type, id, auxId) {
   }
 
   return targetObject;
+};
+
+/**
+ * Get object name from the main object ( Layout )
+ * @param {string} type - Type of the object
+ * @param {number} id - Id of the object
+ * @return {Object} object
+ */
+lD.getObjectName = function(type, id) {
+  const self = this;
+  let name;
+  if (type === 'layout') {
+    name = self.layout.name;
+  } else if (type === 'drawerWidget') {
+    name = self.getObjectByTypeAndId(
+      'widget',
+      'widget_' + self.layout.drawer.regionId +
+        '_' + id,
+      'drawer',
+    ).widgetName;
+  } else if (type === 'region') {
+    name = self.getObjectByTypeAndId(
+      'region',
+      'region_' + id,
+    ).name;
+  } else if (type === 'widget') {
+    name = self.getObjectByTypeAndId(
+      'widget',
+      id,
+      'search',
+    ).widgetName;
+  }
+
+  return name;
 };
 
 /**
