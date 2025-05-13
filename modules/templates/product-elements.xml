@@ -263,7 +263,7 @@ if (
         name = name + '' + properties.suffix;
     }
 
-    $productContainer.find('div').append(name);
+    $productContainer.find('div').html(name);
 }
 
 if(properties.fitToArea) {
