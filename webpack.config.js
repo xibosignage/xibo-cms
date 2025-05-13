@@ -273,7 +273,7 @@ const pageConfig = Object.assign({}, config, {
   ],
 });
 
-const moduleConfig = function(env, argv) {
+const moduleConfig = function(env) {
   console.log('webpack env: ', env);
   return Object.assign({}, config, {
     entry: {
@@ -315,7 +315,8 @@ const moduleConfig = function(env, argv) {
                   },
                 ],
                 '@babel/plugin-transform-nullish-coalescing-operator',
-                '@babel/plugin-bugfix-v8-spread-parameters-in-optional-chaining',
+                '@babel/plugin-bugfix-v8-spread' +
+                'parameters-in-optional-chaining',
                 '@babel/plugin-transform-optional-chaining',
                 '@babel/plugin-transform-arrow-functions',
                 '@babel/plugin-transform-object-rest-spread',
@@ -356,7 +357,7 @@ const moduleConfig = function(env, argv) {
       }),
     ],
   });
-}
+};
 
 module.exports = (env, argv) => {
   const _moduleConfigFn = moduleConfig(env, argv);
