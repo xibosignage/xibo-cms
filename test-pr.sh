@@ -121,68 +121,6 @@ echo "Containers starting, waiting for ready event"
 docker exec -t test-pr-web-"$SERVER_PORT" /bin/bash -c "/usr/local/bin/wait-for-command.sh -q -t 300 -c \"nc -z localhost 80\""
 docker exec -t test-pr-web-"$SERVER_PORT" /bin/bash -c "chown -R www-data.www-data /var/www/cms"
 docker exec --user www-data -t test-pr-web-"$SERVER_PORT" /bin/bash -c "cd /var/www/cms; /usr/bin/php bin/run.php 1"
-#
-#docker cp 4.0.5/custom/settings-custom.php test-pr-web-"$SERVER_PORT":/var/www/cms/custom/settings-custom.php
-
-# The settings-custom.php file contains information about the connectors, including the API key and base URL for Pixabay, Alpha Voltage, and SSP connectors
-#docker cp 4.0.5/custom/help-links.yaml test-pr-web-"$SERVER_PORT":/var/www/cms/custom/help-links.yaml
-#docker cp 4.0.5/custom/TestConnector.php test-pr-web-"$SERVER_PORT":/var/www/cms/custom/TestConnector.php
-#docker cp 4.0.5/custom/test-connector.json test-pr-web-"$SERVER_PORT":/var/www/cms/custom/test-connector.json
-#docker cp 4.0.5/custom/emergency_alert_cap.xml test-pr-web-"$SERVER_PORT":/var/www/cms/custom/emergency_alert_cap.xml
-#docker cp 4.0.5/lib/XTR/SeedDatabaseTask.php test-pr-web-"$SERVER_PORT":/var/www/cms/lib/XTR/SeedDatabaseTask.php
-#docker cp 4.0.5/modules/templates/event-static.xml test-pr-web-"$SERVER_PORT":/var/www/cms/modules/templates/event-static.xml
-#docker cp 4.0.5/lib/XTR/dataset.csv test-pr-web-"$SERVER_PORT":/var/www/cms/web/theme/default/img/dataset.csv
-
-#https://github.com/xibosignageltd/qa/issues/275
-#docker cp 4.0.5/custom/emergency_alert_cap.xml test-pr-web-"$SERVER_PORT":/var/www/cms/web/theme/default/img/emergency_alert_cap.xml
-
-#https://github.com/xibosignageltd/qa/issues/278
-#https://rosetta.xibosignage.com/t/057854-migrating-a-v3-module-to-v4-layoutdesigner-javascript-function/3672/12
-#docker cp 4.0.5/custom/cbs-weeklyflyer.connector test-pr-web-"$SERVER_PORT":/var/www/cms/custom/cbs-weeklyflyer.connector
-#docker cp 4.0.5/custom/WeeklyFlyerConnector.php test-pr-web-"$SERVER_PORT":/var/www/cms/custom/WeeklyFlyerConnector.php
-#docker cp 4.0.5/modules/cbs-weeklyflyer.xml test-pr-web-"$SERVER_PORT":/var/www/cms/modules/cbs-weeklyflyer.xml
-
-#docker exec test-pr-db-"$SERVER_PORT" mysql -ucms -pjenkins cms -e "Select * FROM  connectors"
-
-#
-## Enable Currency Module
-docker exec test-pr-db-"$SERVER_PORT" mysql -ucms -pjenkins cms -e "UPDATE module SET enabled = 1, previewEnabled = 1  WHERE moduleId = 'core-currencies'"
-#
-## Update CMS Secret Key
-docker exec test-pr-db-"$SERVER_PORT" mysql -ucms -pjenkins cms -e "UPDATE \`setting\` SET \`value\`='2eqb4sp1' WHERE \`setting\`='SERVER_KEY' LIMIT 1"
-#
-## Enable Stocks Module
-docker exec test-pr-db-"$SERVER_PORT" mysql -ucms -pjenkins cms -e "UPDATE module SET enabled = 1, previewEnabled = 1  WHERE moduleId = 'core-stocks'"
-#
-## Stocks and Currency APIKEY with Alpha Vantage
-docker exec test-pr-db-"$SERVER_PORT" mysql -ucms -pjenkins cms -e "UPDATE connectors SET isEnabled = 1, settings = '{\"apiKey\":\"N6CWL6CXSLUDXAWK\",\"isPaidPlan\":0,\"cachePeriod\":3600}' WHERE connectorId =6"
-
-## pixabay
-docker exec test-pr-db-"$SERVER_PORT" mysql -ucms -pjenkins cms -e "UPDATE connectors SET isEnabled = 1, settings = '{\"apiKey\":\"22666304-606f0cfa93854d20faf7edee\"}' WHERE connectorId = 1"
-#
-## Enable Weather Module
-docker exec test-pr-db-"$SERVER_PORT" mysql -ucms -pjenkins cms -e "UPDATE module SET enabled = 1, previewEnabled = 1  WHERE moduleId = 'core-forecastio'"
-#
-## Setup APIKEY with Open Weather Map
-docker exec test-pr-db-"$SERVER_PORT" mysql -ucms -pjenkins cms -e "UPDATE connectors SET isEnabled = 1, settings = '{\"owmApiKey\":\"0cddfb55e2f3ee6c107149bea476bc5a\",\"owmIsPaidPlan\":1,\"cachePeriod\":3600}' WHERE connectorId = 7"
-#
-## Run SEED DB Task to populate data
-docker exec test-pr-db-"$SERVER_PORT" mysql -ucms -pjenkins cms -e "INSERT INTO task (name, class, status, isActive, configFile, options, schedule) VALUES ('Seed Database', '\\\\Xibo\\\\XTR\\\\SeedDatabaseTask', 2, 1, '/tasks/seed-database.task', '{}', '* * * * * *')"
-docker exec --user www-data -t test-pr-web-"$SERVER_PORT" /bin/bash -c "cd /var/www/cms; /usr/bin/php bin/run.php \"Seed Database\""
-# Run SEED Database Task
-docker exec --user www-data -t test-pr-web-"$SERVER_PORT" /bin/bash -c "cd /var/www/cms; /usr/bin/php bin/run.php 19"
-#docker exec --user www-data -t test-pr-web-"$SERVER_PORT" /bin/bash -c "cd /var/www/cms; vendor/bin/phinx migrate"
-
-#
-## Run Widget Sync Task To load data in Dataset schedules on the player
-#docker exec --user www-data -t test-pr-web-"$SERVER_PORT" /bin/bash -c "cd /var/www/cms; /usr/bin/php bin/run.php 9"
-## Run Report Schedule Task To generate saved report for proff of play report
-#docker exec --user www-data -t test-pr-web-"$SERVER_PORT" /bin/bash -c "cd /var/www/cms; /usr/bin/php bin/run.php 10"
-
-
-# Enable Xibo Exchange in Application
-#Go to Application and enable it manually
-
 sleep 5
 
 echo "CMS running on port $SERVER_PORT"

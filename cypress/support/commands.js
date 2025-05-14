@@ -871,7 +871,7 @@ Cypress.Commands.add('openOptionsMenu', () => {
   cy.get('.navbar-submenu')
     .should('be.visible')
     .within(() => {
-      cy.get('#optionsContainerTop')
+      cy.get('i[data-title="Options"]')
         .should('be.visible')
         .and('not.be.disabled')
         .click({force: true})
