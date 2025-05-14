@@ -315,7 +315,7 @@ const moduleConfig = function(env) {
                   },
                 ],
                 '@babel/plugin-transform-nullish-coalescing-operator',
-                '@babel/plugin-bugfix-v8-spread' +
+                '@babel/plugin-bugfix-v8-spread-' +
                 'parameters-in-optional-chaining',
                 '@babel/plugin-transform-optional-chaining',
                 '@babel/plugin-transform-arrow-functions',
