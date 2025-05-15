@@ -401,6 +401,12 @@ Layout.prototype.checkout = function() {
       lD.editorContainer.removeClass('view-mode');
       lD.editorContainer.find('#read-only-message').remove();
 
+      // If we're in interactive mode
+      // move back to edit mode
+      if (lD.interactiveMode) {
+        lD.toggleInteractiveMode(false, false);
+      }
+
       // Reload layout
       lD.reloadData(res.data,
         {

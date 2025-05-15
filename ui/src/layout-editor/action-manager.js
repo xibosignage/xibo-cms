@@ -28,10 +28,7 @@ const confirmationModalTemplate =
  */
 const ActionManager = function(parent) {
   this.parent = parent;
-  this.actions = {};
-
   this.editing = {};
-
   this.widgetEditing = null;
 };
 
@@ -40,7 +37,6 @@ const ActionManager = function(parent) {
  * @return {Promise}
   */
 ActionManager.prototype.getAllActions = function(layoutId) {
-  const self = this;
   return new Promise((resolve, reject) => {
     $.ajax({
       url: urlsForApi.actions.get.url,
@@ -51,13 +47,13 @@ ActionManager.prototype.getAllActions = function(layoutId) {
       },
     }).done(function(res) {
       // Add actions to array
-      self.actions = res.data.reduce((accumulator, action) => {
+      const actions = res.data.reduce((accumulator, action) => {
         accumulator[action.actionId] = action;
         return accumulator;
       }, {});
 
       // Resolve with data
-      resolve(self.actions);
+      resolve(actions);
     }).fail(function(_data) {
       toastr.error(
         errorMessagesTrans.actionsGetFailed,
@@ -113,8 +109,6 @@ ActionManager.prototype.saveAction = function($form, actionId) {
     ':id',
     actionId,
   );
-
-  // TODO: Check if action hasn't changed
 
   return new Promise((resolve, reject) => {
     $.ajax({

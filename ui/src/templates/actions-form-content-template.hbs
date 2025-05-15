@@ -1,11 +1,13 @@
 <div class="actions-container">
     <div class="actions-content">
-        <button class="actions-content-button" type="button" data-action="add">
-            <span>{{trans.addAction}}</span>
-            <span class="icon">
-                <i class="fa fa-plus"></i>
-            </span>
-        </button>
+        {{#unless readOnly}}
+            <button class="actions-content-button" type="button" data-action="add">
+                <span>{{trans.addAction}}</span>
+                <span class="icon">
+                    <i class="fa fa-plus"></i>
+                </span>
+            </button>
+        {{/unless}}
 
         <div class="actions-list"></div>
     </div>

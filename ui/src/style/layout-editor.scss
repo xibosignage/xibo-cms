@@ -1156,6 +1156,10 @@ body.editor-opened #content-wrapper .page-content>.row {
                         }
                     }
 
+                    .action-view:hover {
+                        border-color: $xibo-color-accent;
+                    }
+
                     .action-target-widget-add-container {
                         .action-edit-widget-btn {
                             display: flex;
@@ -1947,6 +1951,17 @@ body.editor-opened #content-wrapper .page-content>.row {
 
         .moveable-disabled {
             outline: 1px solid $xibo-color-primary-l60;
+        }
+    }
+
+    .highlighted-action-object {
+        &.action-screen-helper {
+            border-color: $xibo-color-accent !important;
+        }
+
+        &:not(.action-screen-helper) {
+            outline: 1px solid $xibo-color-accent !important;
+            outline-offset: 0 !important;
         }
     }
 

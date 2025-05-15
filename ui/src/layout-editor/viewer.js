@@ -708,6 +708,7 @@ Viewer.prototype.handleUI = function() {
         lD.interactiveMode
       ) {
         if (
+          !app.readOnlyMode &&
           self.creatingAction === false &&
           $.isEmptyObject(app.actionManager.editing)
         ) {
@@ -4376,6 +4377,7 @@ Viewer.prototype.handleActionsUI = function() {
     currentLayoutId: app.mainObjectId,
     currentLayoutName: app.layout.name,
     trans: editorsTrans.actions,
+    readOnly: app.readOnlyMode,
   }));
 
   // Create lines for existing actions
@@ -4874,7 +4876,7 @@ Viewer.prototype.addActionLine = function(
       .find(`[data-type="${target.type}"]` +
         `[data-${target.type}-id="${target.id}"]`);
 
-  // Remove line with same aciton id from the DOM
+  // Remove line with same action id from the DOM
   // if it exists
   if ($('.leader-line[data-action-id=' + actionId + ']').length > 0) {
     $('.leader-line[data-action-id=' + actionId + ']').remove();
@@ -4882,7 +4884,7 @@ Viewer.prototype.addActionLine = function(
 
   // If target is a dock recent, and it's not added
   // add it to the dock here
-  if (targetIsDockRecent && $target.length === 0) {
+  if (targetIsDockRecent && $target.length === 0 && target.id) {
     self.getLayoutsWithCode({
       code: target.id,
       length: 1,
@@ -4911,16 +4913,56 @@ Viewer.prototype.addActionLine = function(
     $trigger.length === 0 ||
     $target.length === 0
   ) {
-    console.info('Invalid trigger or target!');
-    ($trigger.length === 0) &&
-      console.info(`[data-type="${triggerType}"]` +
-      `[data-${triggerType}-id="${trigger.id}"]`);
-    ($target.length === 0) &&
-      console.info(`[data-type="${target.type}"]` +
-        `[data-${target.type}-id="${target.id}"]`);
+    const tryAgainDeltaTime = 300;
+    const missingTrigger = ($trigger.length === 0);
+    const missingTarget = ($target.length === 0);
+    let tryAgain = false;
 
-    // Remove action line since it's invalid
-    self.removeActionLine(actionId);
+    // Try to get the trigger and target at least once again
+    if (
+      missingTrigger &&
+      trigger.id &&
+      trigger.loop != true
+    ) {
+      trigger.loop = true;
+      tryAgain = true;
+    }
+
+    if (
+      missingTarget &&
+      target.id &&
+      target.loop != true
+    ) {
+      target.loop = true;
+      tryAgain = true;
+    }
+
+    if (tryAgain) {
+      (missingTrigger) &&
+        console.info(`No Trigger ${trigger.type}: ${trigger.id}`);
+      (missingTarget) &&
+        console.info(`No Target ${target.type}: ${target.id}`);
+      console.info('Trying again!');
+
+      setTimeout(() => {
+        self.addActionLine(
+          trigger,
+          target,
+          actionId,
+          targetIsDockRecent,
+        );
+      }, tryAgainDeltaTime);
+    } else {
+      (missingTrigger && trigger.id) &&
+        console.info(`Missing trigger: [data-type="${triggerType}"]` +
+        `[data-${triggerType}-id="${trigger.id}"]`);
+      (missingTarget && target.id) &&
+        console.info(`Missing target: [data-type="${target.type}"]` +
+          `[data-${target.type}-id="${target.id}"]`);
+
+      // Remove action line since it's invalid
+      self.removeActionLine(actionId);
+    }
 
     return;
   }
@@ -5153,12 +5195,16 @@ Viewer.prototype.updateActionLine = function(
     // If any action is being edited
     // highlight edited and hide others
     if (actionBeingEdited) {
-      (isThisActionBeingEdited) ?
-        this.actionLines[lineId].line.show() :
+      if (isThisActionBeingEdited) {
+        this.actionLines[lineId].line.show();
+        this.highlightAction(lineId);
+      } else {
         this.actionLines[lineId].line.hide();
+      }
     } else {
       // Show all
       this.actionLines[lineId].line.show();
+      this.highlightAction();
     }
   }
 
@@ -5324,6 +5370,9 @@ Viewer.prototype.updateActionLineTargets = function(
   $trigger.addClass('action-trigger');
   $target.addClass('action-target');
 
+  // Update action line
+  this.updateActionLine();
+
   return this.actionLines[actionLineId];
 };
 
@@ -5365,6 +5414,35 @@ Viewer.prototype.removeActionLine = function(actionLineId) {
     $('.leader-line').remove();
   }
 };
+
+/**
+ * Highlight action on viewer
+ * @param {string} actionId
+ */
+Viewer.prototype.highlightAction = function(
+  actionId,
+) {
+  const self = this;
+  const normalLineColor = ((self.theme === 'dark') ?
+    lineDef.normalDarkThemeColor : lineDef.normalLightThemeColor);
+
+  // Remove highlight from all the action first
+  $('.highlighted-action-object')
+    .removeClass('highlighted-action-object');
+  for (const key of Object.keys(self.actionLines)) {
+    self.actionLines[key].line.color = normalLineColor;
+  }
+
+  // Highlight if enable
+  if (actionId) {
+    this.actionLines[actionId].line.color = lineDef.editedColor;
+    $(self.actionLines[actionId].line.start)
+      .addClass('highlighted-action-object');
+    $(self.actionLines[actionId].line.end)
+      .addClass('highlighted-action-object');
+  }
+};
+
 
 /**
  * Handle Layout Dock

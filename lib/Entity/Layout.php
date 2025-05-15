@@ -2940,6 +2940,11 @@ class Layout implements \JsonSerializable
                 $action->layoutId = $newLayout->layoutId;
             }
 
+            // if action target (screen) was old layout, update with new id
+            if ($action->targetId === $originalLayout->layoutId && $action->target == 'screen') {
+                $action->targetId = $newLayout->layoutId;
+            }
+
             // if we had targetId (regionId) then switch it
             if ($action->targetId != null) {
                 foreach ($combinedRegionIds as $old => $new) {
@@ -2976,6 +2981,11 @@ class Layout implements \JsonSerializable
                 // switch layoutId
                 if ($action->layoutId === $originalLayout->layoutId) {
                     $action->layoutId = $newLayout->layoutId;
+                }
+
+                // if action target (screen) was old layout, update with new id
+                if ($action->targetId === $originalLayout->layoutId && $action->target == 'screen') {
+                    $action->targetId = $newLayout->layoutId;
                 }
 
                 // if we had targetId (regionId) then switch it
@@ -3025,6 +3035,11 @@ class Layout implements \JsonSerializable
                         $action->layoutId = $newLayout->layoutId;
                     }
 
+                    // if action target (screen) was old layout, update with new id
+                    if ($action->targetId === $originalLayout->layoutId && $action->target == 'screen') {
+                        $action->targetId = $newLayout->layoutId;
+                    }
+
                     // if we had targetId (regionId) then switch it
                     if ($action->targetId != null) {
                         foreach ($combinedRegionIds as $old => $new) {
@@ -3036,7 +3051,6 @@ class Layout implements \JsonSerializable
 
                     // switch Action widgetId
                     if ($action->widgetId != null) {
-
                         foreach ($combinedWidgetIds as $old => $new) {
                             if ($old == $action->widgetId && $action->actionType == 'navWidget') {
                                 $action->widgetId = $new;

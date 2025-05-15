@@ -30,7 +30,7 @@
         {{/if}}
     {{/if}}
 
-    {{#neq actionType "navLayout"}}
+    {{#if showTarget}}
         {{#if targetId}}
             {{!-- Set layout name as screen --}}
             {{#eq target "layout"}}
@@ -51,7 +51,7 @@
                 </div>
             </div>
         {{/if}}
-    {{/neq}}
+    {{/if}}
 
     {{#if widgetId}}
         <div class="action-group">
@@ -74,12 +74,14 @@
         </div>
     {{/if}}
 
-    <div class="action-btn-container">
-        <div class="action-btn" data-action="edit" title="{{trans.editAction}}">
-            {{trans.editAction}}
+    {{#unless readOnly}}
+        <div class="action-btn-container">
+            <div class="action-btn" data-action="edit" title="{{trans.editAction}}">
+                {{trans.editAction}}
+            </div>
+            <div class="action-btn" data-action="delete" title="{{trans.deleteAction}}">
+                {{trans.deleteAction}}
+            </div>
         </div>
-        <div class="action-btn" data-action="delete" title="{{trans.deleteAction}}">
-            {{trans.deleteAction}}
-        </div>
-    </div>
+    {{/unless}}
 </div>

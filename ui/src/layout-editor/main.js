@@ -4629,8 +4629,12 @@ lD.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
 /**
  * Interactive mode
  * @param {boolean} enable - True to lock, false to unlock
+ * @param {boolean} refresh - Refresh containers after toggle
  */
-lD.toggleInteractiveMode = function(enable = true) {
+lD.toggleInteractiveMode = function(
+  enable = true,
+  refresh = true,
+) {
   this.interactiveMode = enable;
 
   if (enable) { // Enable
@@ -4656,11 +4660,12 @@ lD.toggleInteractiveMode = function(enable = true) {
   }
 
   // Render editor and containers containers
-  this.refreshEditor({
-    reloadToolbar: true,
-    reloadViewer: true,
-    reloadPropertiesPanel: true,
-  });
+  (refresh) &&
+    this.refreshEditor({
+      reloadToolbar: true,
+      reloadViewer: true,
+      reloadPropertiesPanel: true,
+    });
 };
 
 /**
@@ -4668,7 +4673,6 @@ lD.toggleInteractiveMode = function(enable = true) {
  * @param {boolean} enable - True to lock, false to unlock
  * @param {object} action - The action being edited
  * @param {boolean} [adding=false] - Are we adding a new one? (VS editing)
- * @param {boolean} [cancelChanges=false]
  *  - Revert widget to original state or delete?
  */
 lD.toggleInteractiveEditWidgetMode = function(
@@ -4676,7 +4680,6 @@ lD.toggleInteractiveEditWidgetMode = function(
   action = {},
   {
     adding = false,
-    cancelChanges = false,
   } = {},
 ) {
   const self = this;

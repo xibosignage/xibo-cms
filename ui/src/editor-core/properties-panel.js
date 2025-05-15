@@ -2350,13 +2350,9 @@ PropertiesPanel.prototype.saveRegion = function(
 /**
  * Render actions
  * @param {object} object
- * @param {object/boolean=} [options.readOnlyMode = false]
  */
 PropertiesPanel.prototype.renderActions = function(
   object,
-  {
-    readOnlyMode = false,
-  } = {},
 ) {
   const self = this;
   const app = this.parent;
@@ -2374,6 +2370,7 @@ PropertiesPanel.prototype.renderActions = function(
     form: actionsFormContentTemplate({
       objectType: object.type,
       trans: propertiesPanelTrans.actions,
+      readOnly: app.readOnlyMode,
     }),
     trans: propertiesPanelTrans,
   };
@@ -2427,6 +2424,24 @@ PropertiesPanel.prototype.renderActions = function(
         newAction: true,
       });
     });
+
+  // Handle hover to highlight action on viewer
+  self.DOMObject.find('.actions-list').on(
+    'mouseenter',
+    '.action-view',
+    function(ev) {
+      const actionId = $(ev.currentTarget).data('actionId');
+      app.viewer.highlightAction(actionId);
+    },
+  );
+
+  self.DOMObject.find('.actions-list').on(
+    'mouseleave',
+    '.action-view',
+    function(ev) {
+      app.viewer.highlightAction();
+    },
+  );
 
   // If we were editing an action, open it
   if (!$.isEmptyObject(app.actionManager.editing)) {
@@ -2552,6 +2567,7 @@ PropertiesPanel.prototype.createEditAction = function(
 
     const subType = actionTypesAndRules[actionType].subType ||
       actionTypesAndRules[actionType].subTypeFixed;
+    const targetType = actionTypesAndRules[actionType].targetType;
     const targetTypeFilters = actionTypesAndRules[actionType].targetTypeFilter;
     const targetId = $newActionContainer.find('[name="targetId"]').val();
 
@@ -2560,9 +2576,10 @@ PropertiesPanel.prototype.createEditAction = function(
       $newActionContainer.find('[name="actionType"]').val(subType);
     }
 
-    // If navigate to layout, target is current layout
+    // If navigate to layout, or target type is screen
+    // target is current layout
     // and hide the controller
-    if (actionType == 'navLayout') {
+    if (actionType == 'navLayout' || targetType === 'screen') {
       $newActionContainer.find('.action-edit-form-target').hide();
       actionData.targetId = app.layout.layoutId;
     } else {
@@ -2769,7 +2786,12 @@ PropertiesPanel.prototype.createEditAction = function(
           // Remove action container
           $newActionContainer.remove();
 
+          // Remove edit status
           $actionsContent.removeClass('editing-action');
+          app.actionManager.editing = {};
+
+          // Update all other action lines
+          app.viewer.updateActionLine();
         }
       });
     } else if (btnAction === 'close') {
@@ -2887,7 +2909,13 @@ PropertiesPanel.prototype.createPreviewAction = function(
   // Create action and add to container
   const $actionContainer =
     $(actionFormActionViewTemplate($.extend({}, actionData, {
+      showTarget: !(
+        actionData.actionTypeName === 'navLayout' ||
+        actionData.actionTypeName === 'nextLayout' ||
+        actionData.actionTypeName === 'previousLayout'
+      ),
       trans: propertiesPanelTrans.actions,
+      readOnly: app.readOnlyMode,
     })));
 
   // Add action id to container
@@ -2962,6 +2990,12 @@ PropertiesPanel.prototype.createPreviewAction = function(
 PropertiesPanel.prototype.openEditAction = function(actionId) {
   const self = this;
   const app = self.parent;
+
+  // Don't open when in read mode
+  if (app.readOnlyMode) {
+    return;
+  }
+
   const $action = self.DOMObject
     .find('.action-view[data-action-id=' + actionId + ']');
   const $actionsContent = this.DOMObject.find('.actions-content');
