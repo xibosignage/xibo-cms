@@ -2995,12 +2995,22 @@ class Layout extends Base
                 $draft->publishDraft();
                 $draft->load();
 
-                // Make sure widget actions are valid before allowing publish
+                // Make sure actions from all levels are valid before allowing publish
+                // Layout Actions
+                foreach ($draft->actions as $action) {
+                    $action->validate();
+                }
+
                 /** @var Region[] $allRegions */
                 $allRegions = array_merge($draft->regions, $draft->drawers);
 
                 // Region Actions
                 foreach ($allRegions as $region) {
+                    // Interactive Actions on Region
+                    foreach ($region->actions as $action) {
+                        $action->validate();
+                    }
+
                     // Widget Actions
                     foreach ($region->getPlaylist()->widgets as $widget) {
                         // Interactive Actions on Widget
