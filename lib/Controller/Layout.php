@@ -2995,6 +2995,21 @@ class Layout extends Base
                 $draft->publishDraft();
                 $draft->load();
 
+                // Make sure widget actions are valid before allowing publish
+                /** @var Region[] $allRegions */
+                $allRegions = array_merge($draft->regions, $draft->drawers);
+
+                // Region Actions
+                foreach ($allRegions as $region) {
+                    // Widget Actions
+                    foreach ($region->getPlaylist()->widgets as $widget) {
+                        // Interactive Actions on Widget
+                        foreach ($widget->actions as $action) {
+                            $action->validate();
+                        }
+                    }
+                }
+
                 // We also build the XLF at this point, and if we have a problem we prevent publishing and raise as an
                 // error message
                 $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true, 'exceptionOnEmptyRegion' => false]);
