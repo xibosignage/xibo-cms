@@ -505,6 +505,11 @@ class Display extends Base
             'xmrRegistered' => $parsedQueryParams->getInt('xmrRegistered'),
             'isPlayerSupported' => $parsedQueryParams->getInt('isPlayerSupported'),
             'displayGroupIds' => $parsedQueryParams->getIntArray('displayGroupIds'),
+            'displayType' => $parsedQueryParams->getString('displayType'),
+            'rdmDeviceId' => $parsedQueryParams->getInt('rdmDeviceId'),
+            'rdmDeviceName' => $parsedQueryParams->getString('rdmDeviceName'),
+            'rdmDeviceType' => $parsedQueryParams->getString('rdmDeviceType'),
+            'cmsConnected' => $parsedQueryParams->getInt('cmsConnected')
         ];
     }
 
@@ -654,6 +659,41 @@ class Display extends Base
      *       name="isPlayerSupported",
      *       in="query",
      *       description="Filter by whether the player is supported (1 or 0)",
+     *       type="integer",
+     *       required=false
+     *    ),
+     *  @SWG\Parameter(
+     *       name="displayType",
+     *       in="query",
+     *       description="Filter by displayType",
+     *       type="string",
+     *       required=false
+     *    ),
+     *  @SWG\Parameter(
+     *       name="rdmDeviceId",
+     *       in="query",
+     *       description="Filter by rdmDeviceId",
+     *       type="integer",
+     *       required=false
+     *    ),
+     *  @SWG\Parameter(
+     *       name="rdmDeviceName",
+     *       in="query",
+     *       description="Filter by rdmDeviceName",
+     *       type="string",
+     *       required=false
+     *    ),
+     *  @SWG\Parameter(
+     *       name="rdmDeviceType",
+     *       in="query",
+     *       description="Filter by rdmDeviceType",
+     *       type="string",
+     *       required=false
+     *    ),
+     *  @SWG\Parameter(
+     *       name="cmsConnected",
+     *       in="query",
+     *       description="Filter by whether the cms is connected (1 or 0)",
      *       type="integer",
      *       required=false
      *    ),

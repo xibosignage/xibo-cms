@@ -2783,6 +2783,41 @@
                         "description": "Filter by whether the player is supported (1 or 0)",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "displayType",
+                        "in": "query",
+                        "description": "Filter by display type",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "rdmDeviceId",
+                        "in": "query",
+                        "description": "Filter by RDM device ID",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "rdmDeviceName",
+                        "in": "query",
+                        "description": "Filter by RDM device name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "rdmDeviceType",
+                        "in": "query",
+                        "description": "Filter by RDM device type",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "cmsConnected",
+                        "in": "query",
+                        "description": "Filter by whether the cms is connected (1 or 0)",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
