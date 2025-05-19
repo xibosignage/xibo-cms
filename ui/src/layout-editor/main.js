@@ -466,11 +466,6 @@ lD.selectObject =
         target.hasClass('ui-droppable-active')
       );
 
-      const dropToActionTarget = (
-        target &&
-        target.hasClass('ui-droppable-actions-target')
-      );
-
       const dropToElementAndElGroup = (
         target &&
         (
@@ -510,7 +505,6 @@ lD.selectObject =
           dropToDrawer ||
           dropToZone ||
           dropToWidget ||
-          dropToActionTarget ||
           dropToElementAndElGroup ||
           dropToImagePlaceholder
         )
@@ -4740,6 +4734,9 @@ lD.toggleInteractiveEditWidgetMode = function(
 
     // Turn interactive mode back on
     self.interactiveMode = true;
+
+    // Make sure there's nothing selected
+    self.selectObject();
   }
 
   // Make sure we reinitialize toolbar

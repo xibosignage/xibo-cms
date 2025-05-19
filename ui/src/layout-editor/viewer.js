@@ -788,14 +788,6 @@ Viewer.prototype.handleUI = function() {
       // Click on layout or layout wrapper to clear selection
       // or add item to the layout
       if (
-        $trigger.hasClass('ui-droppable-actions-target')
-      ) {
-        // Add action to the selected object
-        lD.selectObject({
-          target: $trigger,
-          forceSelect: true,
-        });
-      } else if (
         (
           $trigger.hasClass('designer-region-zone') ||
           $trigger.hasClass('designer-region-playlist') ||
@@ -4505,11 +4497,34 @@ Viewer.prototype.handleActionEditWidgetUI = function() {
       viewerTrans.addWidget +
       '</div>');
 
+    const addItem = function(target, draggable) {
+      app.dropItemAdd(target, draggable).then((res) => {
+        if (res?.id) {
+          actionData.widgetId = res.id;
+          app.actionManager.editing.widgetId = res.id;
+
+          app.selectedObject.id = 'widget_' +
+          app.layout.drawer.regionId + '_' +
+            res.id;
+          app.selectedObject.type = 'widget';
+
+          // Reload Data, then viewer+PP
+          app.reloadData(app.layout, {
+            refreshEditor: true,
+            reloadViewer: false,
+          }).then(() => {
+            self.render(true);
+          });
+        }
+      });
+    };
+
     // Click to add widget
     $actionArea.on('click', () => {
-      app.selectObject({
-        target: $actionArea,
-      });
+      // Card needs to be selected
+      if (!$.isEmptyObject(app.toolbar.selectedCard)) {
+        addItem($actionArea, app.toolbar.selectedCard);
+      }
     });
 
     // Create droppable area
@@ -4521,25 +4536,7 @@ Viewer.prototype.handleActionEditWidgetUI = function() {
         return app.common.hasTarget(draggable, 'drawer');
       },
       drop: _.debounce(function(event, ui) {
-        app.dropItemAdd(event.target, ui.draggable[0]).then((res) => {
-          if (res?.id) {
-            actionData.widgetId = res.id;
-            app.actionManager.editing.widgetId = res.id;
-
-            app.selectedObject.id = 'widget_' +
-            app.layout.drawer.regionId + '_' +
-              res.id;
-            app.selectedObject.type = 'widget';
-
-            // Reload Data, then viewer+PP
-            app.reloadData(app.layout, {
-              refreshEditor: true,
-              reloadViewer: false,
-            }).then(() => {
-              self.render(true);
-            });
-          }
-        });
+        addItem(event.target, ui.draggable[0]);
       }, 200),
     });
   } else {
