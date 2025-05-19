@@ -76,6 +76,7 @@ window.lD = {
 
   // Interactive edit widget mode
   interactiveEditWidgetMode: false,
+  interactiveEditWidgetModeType: 0, // 0 - Adding, 1 - Editing
 
   // Exit url (based on layout or template editing)
   exitURL: urlsForApi.layout.list.url,
@@ -4687,6 +4688,8 @@ lD.toggleInteractiveEditWidgetMode = function(
 
   if (enable) { // Enable
     if (!adding) { // Edit
+      self.interactiveEditWidgetModeType = 1;
+
       // Save temporary widget so it can be loaded
       self.viewer.saveTemporaryObject(
         'widget_' +
@@ -4704,6 +4707,8 @@ lD.toggleInteractiveEditWidgetMode = function(
       // Save widget properties
       self.actionManager.widgetEditing = action.widgetId;
     } else { // Add
+      self.interactiveEditWidgetModeType = 0;
+
       // Deselect all objects
       self.selectObject({
         reloadPropertiesPanel: false,

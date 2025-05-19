@@ -654,6 +654,7 @@ PropertiesPanel.prototype.render = function(
 
     // Create buttons object for the external playlist editor
     let buttons = {};
+    let saveInitFormState = false;
     if (
       self.parent.mainObjectType == 'playlist' &&
       self.parent.inline === false
@@ -663,20 +664,27 @@ PropertiesPanel.prototype.render = function(
     } else if (
       app.interactiveEditWidgetMode
     ) {
-      // If target is widget, we're editing
+      const isEdit = (target.type === 'widget');
+      saveInitFormState = isEdit;
+
+      // show cancel
+      buttons['cancel'] = {
+        name: propertiesPanelTrans.actions.cancelAction,
+        type: 'btn-outline-primary',
+        action: 'cancelEditActionWidget',
+        subAction: (
+          app.interactiveEditWidgetModeType == 1 ?
+            'revertChanges' :
+            'deleteWidget'),
+      };
+
+      // If target is existing widget, we're editing
       // show continue button
-      if (target.type === 'widget') {
+      if (isEdit) {
         buttons['continue'] = {
           name: propertiesPanelTrans.actions.continueAction,
           type: 'btn-primary',
           action: 'continueEditActionWidget',
-        };
-      } else {
-        // We're adding a widget, show cancel
-        buttons['cancel'] = {
-          name: propertiesPanelTrans.actions.cancelAction,
-          type: 'btn-outline-primary',
-          action: 'cancelEditActionWidget',
         };
       }
     }
@@ -1950,6 +1958,14 @@ PropertiesPanel.prototype.render = function(
     // Init fields ( for non elements )
     (!isElement) &&
       self.initPanelFields(target, res.data, false);
+
+    // Save loading form state to restore later
+    if (saveInitFormState) {
+      const $form = self.DOMObject.find('form');
+      const serializedInputs = $form.find('[name]')
+        .filter('.tab-pane:not(#positionTab) [name]').serialize();
+      $form.data('initFormState', serializedInputs);
+    }
   }).fail(function(data) {
     // Clear request var after response
     self.renderRequest = undefined;
@@ -3400,17 +3416,55 @@ PropertiesPanel.prototype.continueEditActionWidget = function() {
 
 /**
  * Cancel action widget edit and go back to interactive mode
+ * @param {object} widget - Widget being saved/added
+ * @param {boolean} mode - Delete or just cancel?
  */
-PropertiesPanel.prototype.cancelEditActionWidget = function() {
+PropertiesPanel.prototype.cancelEditActionWidget = function(
+  widget,
+  mode,
+) {
   const app = this.parent;
+  const self = this;
 
-  // Toggle mode off and revert changes
-  app.toggleInteractiveEditWidgetMode(
-    false,
-    null,
-    {
-      cancelChanges: true,
+  // Check if we're editing or adding widget
+  if (mode === 'deleteWidget') {
+    // Delete widget
+    app.layout.deleteObject(
+      'widget',
+      widget.widgetId,
+      false,
+      false,
+    ).then(() => {
+      // Clear widget id from action
+      app.actionManager.editing.widgetId = '';
+
+      // Toggle mode off and revert changes
+      app.toggleInteractiveEditWidgetMode(
+        false,
+        null);
     });
+  } else if (mode === 'revertChanges') {
+    // Check if we have serialized form data
+    const $form = self.DOMObject.find('form');
+    const initFormData = $form.data('initFormState');
+
+    // Revert changes for action widget
+    app.historyManager.addChange(
+      'saveForm',
+      'widget',
+      widget.widgetId, // targetId
+      '', // oldValues
+      initFormData, // newValues
+      {
+        addToHistory: false,
+      },
+    ).then(() => {
+      // Toggle mode off and revert changes
+      app.toggleInteractiveEditWidgetMode(
+        false,
+        null);
+    });
+  }
 };
 
 module.exports = PropertiesPanel;
