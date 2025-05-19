@@ -55,9 +55,6 @@
 
     dialog.closest('.modal').addClass('rdm-modal');
 
-    // Initialize summary filter
-    let filter;
-
     // Make the CMS Display Datatable
     let displayTable;
 
@@ -143,9 +140,8 @@
       searchDelay: 3000,
       order: [[ 0, 'asc']],
       ajax: {
-        url: $rdmConnector.data('proxyUrl').replace(':method', 'getConnectedDevices'),
+        url: "{{ url_for("display.search") }}",
         data: function (d) {
-          console.log('currentUrl', currentUrl)
           $.extend(d, $('#cms-display-filter').serializeObject());
         }
       },

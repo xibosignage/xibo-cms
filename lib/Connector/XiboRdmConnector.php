@@ -275,79 +275,12 @@ class XiboRdmConnector implements ConnectorInterface
     }
 
     /**
-     * Get the list of saved RDM displays in CMS
-     * @throws NotFoundException
-     */
-    public function getRdmDisplays(SanitizerInterface $params): array
-    {
-//        $displays = array_map(function($display) {
-//            return [
-//                'displayId' => $display->displayId,
-//                'displayName' => $display->display,
-//                'rdmDeviceId' => $display->rdmDeviceId,
-//                'macAddress' => $display->macAddress,
-//                'manufacturer' => $display->manufacturer,
-//                'brand' => $display->brand,
-//                'model' => $display->model
-//            ];
-//        }, $this->displayFactory->query('', $params));
-
-        $displays = $this->displayFactory->query(null, [
-            'display' => $params->getString('deviceName'),
-            'displayId' => $params->getString('deviceId'),
-            'displayType' => $params->getString('deviceType')
-        ]);
-
-        $this->getLogger()->debug('getRdmDevices: ' . json_encode($displays));
-
-        return [
-            'data' => $displays,
-            'recordsTotal' => count($displays)
-        ];
-
-
-        $this->displays = $displays;
-
-        return $this->displays;
-    }
-
-    /**
      * Get the list of connected devices
      * @throws NotFoundException
      */
     public function getConnectedDevices(SanitizerInterface $params): array
     {
-        if ($params->getString('sourceFilter') === 'myAccountDevices') {
-            $devices = $this->getRdmDevices($params);
-        } else {
-            $devices = $this->getRdmDisplays($params);
-        }
 
-        return $devices ?? [];
-
-//        $display = [
-//            'displayId' => $params->getInt('displayId'),
-//            'rdmDeviceId' => $params->getString('rdmDeviceId'),
-//            'displayName' => $params->getString('displayName'),
-//            'macAddress' => $params->getString('macAddress')
-//        ];
-//        $displays = array_map(function($display) {
-//            return [
-//                'displayId' => $display->displayId,
-//                'displayName' => $display->display,
-//                'rdmDeviceId' => $display->rdmDeviceId,
-//                'macAddress' => $display->macAddress,
-//                'manufacturer' => $display->manufacturer,
-//                'brand' => $display->brand,
-//                'model' => $display->model
-//            ];
-//        }, $this->displayFactory->query());
-
-//        $this->getLogger()->debug('getRdmDevices: ' . json_encode($displays));
-
-//        $this->displays = $displays;
-
-//        return $this->displays;
     }
 
     /**
@@ -356,7 +289,6 @@ class XiboRdmConnector implements ConnectorInterface
      */
     private function getServiceUrl(): string
     {
-        return $this->getSetting('serviceUrl', 'https://test.xibo.org.uk/api');
-//        return $this->getSetting('serviceUrl', 'http://xibosignage.com');
+        return $this->getSetting('serviceUrl', 'http://xibosignage.com');
     }
 }
