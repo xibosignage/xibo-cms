@@ -4732,6 +4732,8 @@ lD.toggleInteractiveEditWidgetMode = function(
     // Remove action widget being edited from the action manager
     self.actionManager.widgetEditing = null;
 
+    self.viewer.actionDropMode = false;
+
     // Turn interactive mode back on
     self.interactiveMode = true;
 

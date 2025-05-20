@@ -648,6 +648,36 @@ body.editor-opened #content-wrapper .page-content>.row {
             }
         }
 
+        .viewer-object {
+            &.theme-light {
+                .designer-region-drawer::before {
+                    outline-color: $xibo-color-neutral-100;
+                }
+
+                .action-label {
+                    color: $xibo-color-neutral-0;
+                }
+
+                .custom-overlay-action-widget-edit {
+                    background: white;
+                }
+            }
+
+            &.theme-dark {
+                .designer-region-drawer::before {
+                    outline-color: $xibo-color-neutral-700;
+                }
+
+                .action-label {
+                    color: $xibo-color-neutral-900;
+                }
+
+                .custom-overlay-action-widget-edit {
+                    background: black;
+                }
+            }
+        }
+
         .designer-region-zone {
             outline: 2px dashed $xibo-color-region-hover;
             outline-offset: -4px;
@@ -1954,7 +1984,7 @@ body.editor-opened #content-wrapper .page-content>.row {
         }
     }
 
-    .highlighted-action-object {
+    .highlighted-action-object:not([data-type="helper"]) {
         &.action-screen-helper {
             border-color: $xibo-color-accent !important;
         }
@@ -2014,7 +2044,7 @@ body.editor-opened #content-wrapper .page-content>.row {
     }
 
     .selected-action-trigger-parent {
-        &:after, &::before {
+        &::after, &::before {
             display: none;
         }
 

@@ -3425,24 +3425,25 @@ PropertiesPanel.prototype.cancelEditActionWidget = function(
 ) {
   const app = this.parent;
   const self = this;
+  const toggleEditActionOff = function() {
+    // Toggle mode off
+    app.toggleInteractiveEditWidgetMode(
+      false,
+      null);
+  };
 
   // Check if we're editing or adding widget
-  if (mode === 'deleteWidget') {
+  if (
+    mode === 'deleteWidget' &&
+    widget.type === 'widget'
+  ) {
     // Delete widget
     app.layout.deleteObject(
       'widget',
       widget.widgetId,
       false,
       false,
-    ).then(() => {
-      // Clear widget id from action
-      app.actionManager.editing.widgetId = '';
-
-      // Toggle mode off and revert changes
-      app.toggleInteractiveEditWidgetMode(
-        false,
-        null);
-    });
+    ).then(toggleEditActionOff);
   } else if (mode === 'revertChanges') {
     // Check if we have serialized form data
     const $form = self.DOMObject.find('form');
@@ -3458,12 +3459,10 @@ PropertiesPanel.prototype.cancelEditActionWidget = function(
       {
         addToHistory: false,
       },
-    ).then(() => {
-      // Toggle mode off and revert changes
-      app.toggleInteractiveEditWidgetMode(
-        false,
-        null);
-    });
+    ).then(toggleEditActionOff);
+  } else {
+    // Toggle mode off
+    toggleEditActionOff();
   }
 };
 
