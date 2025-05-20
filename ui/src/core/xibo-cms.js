@@ -262,7 +262,8 @@ window.XiboInitialise = function(scope, options) {
   $(scope + ' .pagedSelect select.form-control').each(function(_idx, el) {
     const $target = $(el);
     const anchor = $target.data('anchorElement');
-    const inModal = $(scope).hasClass('modal');
+    const inModal = $(scope).hasClass('modal') ||
+        $(scope).parents('.modal').length > 0;
     if (anchor !== undefined && anchor !== '') {
       makePagedSelect($target, $(anchor));
     } else if (inModal) {

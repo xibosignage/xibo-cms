@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -23,6 +23,8 @@
 
 namespace Xibo\Helper;
 
+use Slim\Http\ServerRequest;
+
 /**
  * Class HttpsDetect
  * @package Xibo\Helper
@@ -32,10 +34,12 @@ class HttpsDetect
     /**
      * @return string
      */
-    public function getUrl()
+    public function getUrl(): string
     {
         $url = $this->getScheme() . '://' . $this->getHost();
-        if (($this->getScheme() === 'https' && $this->getPort() !== 443) || ($this->getScheme() === 'http' && $this->getPort() !== 80)) {
+        if (($this->getScheme() === 'https' && $this->getPort() !== 443)
+            || ($this->getScheme() === 'http' && $this->getPort() !== 80)
+        ) {
             $url .= sprintf(':%s', $this->getPort());
         }
 
@@ -43,9 +47,37 @@ class HttpsDetect
     }
 
     /**
+     * @param \Slim\Http\ServerRequest|null $request
      * @return string
      */
-    public function getScheme()
+    public function getBaseUrl(?ServerRequest $request = null): string
+    {
+        // Check REQUEST_URI is set. IIS doesn't set it, so we need to build it
+        // Attribution:
+        // Code snippet from http://support.ecenica.com/web-hosting/scripting/troubleshooting-scripting-errors/how-to-fix-server-request_uri-php-error-on-windows-iis/
+        // Released under BSD License
+        // Copyright (c) 2009, Ecenica Limited All rights reserved.
+        if (!isset($_SERVER['REQUEST_URI'])) {
+            $_SERVER['REQUEST_URI'] = $_SERVER['PHP_SELF'];
+            if (isset($_SERVER['QUERY_STRING'])) {
+                $_SERVER['REQUEST_URI'] .= '?' . $_SERVER['QUERY_STRING'];
+            }
+        }
+        // End Code Snippet
+
+        // We use the path, if provided, to remove any known path information
+        // i.e. if we're running in a sub-folder we might be on /xibo/playersoftware
+        // in which case we want to remove /playersoftware to get to /xibo which is the base path.
+        $path = $request?->getUri()?->getPath() ?? '';
+        $request = explode('?', htmlentities($_SERVER['REQUEST_URI'], ENT_QUOTES, 'UTF-8'));
+
+        return str_replace($path, '', $this->getUrl() . '/' . ltrim($request[0], '/'));
+    }
+
+    /**
+     * @return string
+     */
+    public function getScheme(): string
     {
         return ($this->isHttps()) ? 'https' : 'http';
     }
@@ -74,7 +106,7 @@ class HttpsDetect
      * Get Port
      * @return int
      */
-    public function getPort()
+    public function getPort(): int
     {
         if (isset($_SERVER['HTTP_HOST']) && str_contains($_SERVER['HTTP_HOST'], ':')) {
             $hostParts = explode(':', htmlentities($_SERVER['HTTP_HOST'], ENT_QUOTES, 'UTF-8'));
@@ -88,7 +120,7 @@ class HttpsDetect
      * Is HTTPs?
      * @return bool
      */
-    public static function isHttps()
+    public static function isHttps(): bool
     {
         return (
             (isset($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) == 'on') ||
@@ -101,7 +133,7 @@ class HttpsDetect
      * @param \Psr\Http\Message\RequestInterface $request
      * @return bool
      */
-    public static function isShouldIssueSts($config, $request)
+    public static function isShouldIssueSts($config, $request): bool
     {
         // We might need to issue STS headers
         $whiteListLoadBalancers = $config->getSetting('WHITELIST_LOAD_BALANCERS');

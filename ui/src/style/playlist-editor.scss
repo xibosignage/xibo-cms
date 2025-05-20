@@ -21,6 +21,7 @@ $playlist-editor-z-index-background: 1011;
 $playlist-editor-z-index-overlay: 1012;
 $playlist-editor-z-index-select: 1013;
 $playlist-editor-z-index-select-hover: 1014;
+$playlist-editor-z-index-help-button: 1015;
 
 $playlist-editor-timeline-fg-color: $xibo-color-primary;
 $playlist-editor-unsuccess-message-bg-color: $xibo-color-semantic-error;
@@ -140,19 +141,45 @@ $timeline-step-height: 22px;
     }
 
     .editor-modal-header {
-        .modal-header {
-            &--left {
+        height: 50px;
+        padding: 0 1rem;
+        align-items: center;
+        gap: 8px;
+
+        &.modal-header {
+            .modal-header--left {
                 display: flex;
                 column-gap: 10px;
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
+                flex: 1;
 
                 .playlist-info-widgets,
                 .playlist-info-duration {
                     font-size: 1.5rem;
                     line-height: 1;
                     font-weight: bold;
+                }
+            }
+
+            .help-pane {
+                position: relative;
+                z-index: initial;
+                
+                .help-pane-card {
+                    right: 40px;
+                    top: 30px;
+                    position: absolute;
+                    z-index: $playlist-editor-z-index-help-button;
+                }
+            
+                .help-pane-icon {
+                    padding: 10px 2px;
+            
+                    i {
+                        font-size: 30px;
+                    }
                 }
             }
         }

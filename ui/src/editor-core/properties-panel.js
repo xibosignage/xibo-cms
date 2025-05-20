@@ -1318,6 +1318,12 @@ PropertiesPanel.prototype.render = function(
             positionProperties.rotation = targetAux.rotation;
           }
         } else if (target.type === 'region') {
+          // If we don't have target dimensions, stop rendering
+          // position tab
+          if (!target.dimensions) {
+            return;
+          }
+
           positionProperties = {
             type: 'region',
             regionType: target.subType,
@@ -1329,6 +1335,12 @@ PropertiesPanel.prototype.render = function(
             zIndex: target.zIndex,
           };
         } else {
+          // If we don't have target dimensions, stop rendering
+          // position tab
+          if (!target.parent.dimensions) {
+            return;
+          }
+
           positionProperties = {
             type: 'region',
             regionType: target.parent.subType,
@@ -1925,7 +1937,9 @@ PropertiesPanel.prototype.initFields = function(
   forms.setConditions(
     self.DOMObject.find('form'),
     data,
-    (elementProperties) ? target.elementId : target.widgetId,
+    (elementProperties) ?
+      target.elementId :
+      (target.type === 'region' ? target.regionId : target.widgetId),
     (target.parent && target.parent.isTopLevel != undefined) ?
       target.parent.isTopLevel : true,
   );

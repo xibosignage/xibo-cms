@@ -47,6 +47,7 @@
     </div>
 
     <script type="text/javascript" nonce="{{ cspNonce }}">
+        var timezones = {{ timeZones|json_encode|raw }};
         $(document).ready(function() {
             // Load the editor to populate the modal
             pE.loadEditor();

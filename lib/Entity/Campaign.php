@@ -824,7 +824,8 @@ class Campaign implements \JsonSerializable
                     startDt = :startDt,
                     endDt = :endDt,
                     folderId = :folderId,
-                    permissionsFolderId = :permissionsFolderId
+                    permissionsFolderId = :permissionsFolderId,
+                    modifiedBy = :modifiedBy
              WHERE campaignID = :campaignId
         ', [
             'campaignId' => $this->campaignId,
@@ -844,6 +845,7 @@ class Campaign implements \JsonSerializable
             'ref5' => empty($this->ref5) ? null : $this->ref5,
             'folderId' => $this->folderId,
             'permissionsFolderId' => $this->permissionsFolderId,
+            'modifiedBy' => $this->modifiedBy,
         ]);
     }
 

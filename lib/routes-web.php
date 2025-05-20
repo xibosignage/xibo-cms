@@ -563,7 +563,6 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
 
 $app->get('/application/authorize', ['\Xibo\Controller\Applications','authorizeRequest'])->setName('application.authorize.request');
 $app->post('/application/authorize', ['\Xibo\Controller\Applications','authorize'])->setName('application.authorize');
-$app->delete('/application/revoke/{id}/{userId}', ['\Xibo\Controller\Applications', 'revokeAccess'])->setName('application.revoke');
 
 //
 // module

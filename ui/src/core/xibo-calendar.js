@@ -2238,38 +2238,42 @@ const setupSelectForSchedule = function(dialog) {
     dataObj['isDisplaySpecific'] = -1;
     dataObj['forSchedule'] = 1;
 
-    $.ajax({
-      url: $displaySelect.data('searchUrl'),
-      type: 'GET',
-      data: dataObj,
-    }).then(function(data) {
-      // create the option and append to Select2
-      data.data.forEach((object) => {
-        const option = new Option(
-          object[$displaySelect.data('textProperty')],
-          object[$displaySelect.data('idProperty')],
-          true,
-          true,
+    // Skip populating the Display select input if no display
+    // or display group filter is provided
+    if (addFormDisplayGroup.length > 0) {
+      $.ajax({
+        url: $displaySelect.data('searchUrl'),
+        type: 'GET',
+        data: dataObj,
+      }).then(function(data) {
+        // create the option and append to Select2
+        data.data.forEach((object) => {
+          const option = new Option(
+            object[$displaySelect.data('textProperty')],
+            object[$displaySelect.data('idProperty')],
+            true,
+            true,
+          );
+          $displaySelect.append(option);
+        });
+
+        // Trigger change but skip auto save
+        $displaySelect.trigger(
+          'change',
+          [{
+            skipSave: true,
+          }],
         );
-        $displaySelect.append(option);
-      });
 
-      // Trigger change but skip auto save
-      $displaySelect.trigger(
-        'change',
-        [{
-          skipSave: true,
-        }],
-      );
-
-      // manually trigger the `select2:select` event
-      $displaySelect.trigger({
-        type: 'select2:select',
-        params: {
-          data: data,
-        },
+        // manually trigger the `select2:select` event
+        $displaySelect.trigger({
+          type: 'select2:select',
+          params: {
+            data: data,
+          },
+        });
       });
-    });
+    }
   }
 
   $('#mediaId, #playlistId', dialog).on('select2:select', function(event) {
@@ -2406,7 +2410,7 @@ const configureCriteriaFields = function(dialog) {
         class: 'form-control',
         name: 'criteria_metric[]',
         type: 'text',
-        value: '',
+        value: selectedMetric,
       });
     } else {
       // Create a dropdown or handle as a text input if only one metric
