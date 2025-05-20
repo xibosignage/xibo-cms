@@ -56,20 +56,20 @@ describe('Dataset', function() {
     // Select and configure the dataset
     cy.get('#configureTab .select2-selection').click();
     cy.wait('@loadDatasets');
-    cy.get('.select2-container--open input[type="search"]').type('Dataset');
-    cy.get('.select2-container--open').contains('Dataset').first().click();
+    cy.get('.select2-container--open input[type="search"]').type('8 items');
+    cy.get('.select2-container--open').contains('8 items').first().click();
 
     cy.get('[name="lowerLimit"]').clear().type('1');
     cy.get('[name="upperLimit"]').clear().type('10');
     cy.get('.order-clause-row > :nth-child(2) > .form-control').first().select('Col1', {force: true});
     cy.get('.order-clause-row > .btn').click();
-    cy.get('.order-clause-row > :nth-child(2) > .form-control').last().select('Col1', {force: true});
+    cy.get('.order-clause-row > :nth-child(2) > .form-control').last().select('Col2', {force: true});
 
     // Open Appearance Tab
     cy.get('.nav-link[href="#appearanceTab"]').click();
 
     // Ensure dataset has exactly two columns
-    cy.get('#columnsOut li').should('have.length', 1);
+    cy.get('#columnsOut li').should('have.length', 2);
 
     // Move columns to "Columns Selected"
     cy.get('#columnsOut').first().trigger('mousedown', {which: 1}).trigger('mousemove', {which: 1, pageX: 583, pageY: 440});

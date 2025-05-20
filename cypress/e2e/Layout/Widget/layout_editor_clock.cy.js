@@ -80,7 +80,7 @@ describe('Clock Analogue Widget', function() {
     cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_clock-analogue"]').parents('.designer-region').click();
     cy.get('.widget-form .nav-link[href="#advancedTab"]').click();
     cy.get('#advancedTab input[name="name"]').should('have.attr', 'value').and('equal', 'newName');
-    cy.get('#advancedTab input[name="duration"]').should('have.attr', 'value').and('equal', '5');
+    cy.get('#advancedTab input[name="duration"]').should('have.attr', 'value').and('equal', '12');
 
     // Delete
     cy.get('#layout-viewer .designer-region .widget-preview[data-type="widget_clock-analogue"]')

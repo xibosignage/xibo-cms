@@ -36,31 +36,27 @@ describe('Layout Editor Options', function() {
     cy.get('#layout-viewer').should('be.visible');
 
     // Publish layout
-    // cy.openOptionsMenu();
-    cy.get('i[data-title="Options"]').click({force: true});
+    cy.openOptionsMenu();
     cy.get('#publishLayout').click({force: true});
     cy.get('button.btn-bb-Publish').click();
-    cy.get('div[class="toast-message"]').should('have.text','Published');
 
-    // cy.wait('@layoutStatus').then((interception) => {
-    //   expect(interception.response.statusCode).to.eq(200);
-    //   // Check if the publishedStatus is "Published"
-    //   const layoutData = interception.response.body.data[0];
-    //   expect(layoutData).to.have.property('publishedStatus', 'Published');
-    // });
+    cy.wait('@layoutStatus').then((interception) => {
+      expect(interception.response.statusCode).to.eq(200);
+      // Check if the publishedStatus is "Published"
+      const layoutData = interception.response.body.data[0];
+      expect(layoutData).to.have.property('publishedStatus', 'Published');
+    });
 
     // Checkout published layout
-    // cy.openOptionsMenu();
-    cy.get('i[data-title="Options"]').click({force: true});
+    cy.openOptionsMenu();
     cy.get('#checkoutLayout').click({force: true});
-    cy.get('div[class="toast-message"]').should('have.text','Checked out');
 
-    // cy.wait('@layoutStatus').then((interception) => {
-    //   expect(interception.response.statusCode).to.eq(200);
-    //   // Check if the publishedStatus is back to "Draft"
-    //   const layoutData = interception.response.body.data[0];
-    //   expect(layoutData).to.have.property('publishedStatus', 'Draft');
-    // });
+    cy.wait('@layoutStatus').then((interception) => {
+      expect(interception.response.statusCode).to.eq(200);
+      // Check if the publishedStatus is back to "Draft"
+      const layoutData = interception.response.body.data[0];
+      expect(layoutData).to.have.property('publishedStatus', 'Draft');
+    });
 
     // Capture layout name before discarding draft layout
     cy.get('.layout-info-name span')
