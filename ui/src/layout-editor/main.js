@@ -3793,12 +3793,15 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
   lD.editorContainer.append(
     contextMenuTemplate(Object.assign(layoutObject, {
       trans: contextMenuTrans,
+      editor: 'layout',
       canBeCopied: canBeCopied,
       canHaveNewConfig: canHaveNewConfig,
       canChangeLayer: canChangeLayer,
       canUngroup: canUngroup,
       canEditText: canEditText,
       widget: singleWidget,
+      isEditableWidget: singleWidget?.isEditable,
+      canAttachAudio: singleWidget?.canAttachAudio,
       isElementBased: (
         layoutObject.type === 'element' ||
         layoutObject.type === 'element-group'
@@ -3838,9 +3841,10 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
 
   // Handle buttons
   lD.editorContainer.find('.context-menu .context-menu-btn').click((ev) => {
-    const target = $(ev.currentTarget);
+    const $target = $(ev.currentTarget);
+    const widgetProperty = $target.hasClass('widget-property');
 
-    if (target.data('action') == 'Delete') {
+    if ($target.data('action') == 'Delete') {
       let auxId = null;
 
       // Delete element
@@ -3900,13 +3904,13 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
         showConfirmationModal,
         deleteObjectType,
       );
-    } else if (target.data('action') == 'Move') {
+    } else if ($target.data('action') == 'Move') {
       // Move widget in the timeline
       lD.layout.moveWidgetInRegion(
-        layoutObject.regionId, layoutObject.id, target.data('actionType'),
+        layoutObject.regionId, layoutObject.id, $target.data('actionType'),
       );
-    } else if (target.data('action') == 'Layer') {
-      const actionType = target.data('actionType');
+    } else if ($target.data('action') == 'Layer') {
+      const actionType = $target.data('actionType');
       const originalLayer = (layoutObject.type === 'region') ?
         layoutObject.zIndex :
         layoutObject.layer;
@@ -3983,12 +3987,12 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
           updateObjectsInFrontTargetLayer: updateLayerAboveTarget,
         },
       );
-    } else if (target.data('action') == 'Copy') {
+    } else if ($target.data('action') == 'Copy') {
       lD.duplicateObject(layoutObject);
-    } else if (target.data('action') == 'editPlaylist') {
+    } else if ($target.data('action') == 'editPlaylist') {
       // Open playlist editor
       lD.openPlaylistEditor(layoutObject.playlists.playlistId, layoutObject);
-    } else if (target.data('action') == 'editFrame') {
+    } else if ($target.data('action') == 'editFrame') {
       // Select widget frame to edit it
       const $viewerRegion =
         lD.viewer.DOMObject.find('#' + layoutObject.id);
@@ -3996,7 +4000,7 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
         target: $viewerRegion,
       });
       lD.viewer.selectObject($viewerRegion, false, true, true);
-    } else if (target.data('action') == 'Ungroup') {
+    } else if ($target.data('action') == 'Ungroup') {
       // Get widget
       const elementsWidget =
         lD.getObjectByTypeAndId('widget', objAuxId, 'canvas');
@@ -4060,7 +4064,7 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
             refreshEditor: true,
           });
       });
-    } else if (target.data('action') == 'newConfig') {
+    } else if ($target.data('action') == 'newConfig') {
       const elementsToMove = [];
       const groupsToMove = [];
 
@@ -4118,16 +4122,16 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
           );
         });
       });
-    } else if (target.data('action') == 'editText') {
+    } else if ($target.data('action') == 'editText') {
       lD.viewer.editText(layoutObject);
-    } else if (target.data('action') == 'convertPlaylist') {
+    } else if ($target.data('action') == 'convertPlaylist') {
       lD.convertPlaylist(
         layoutObject.playlists.playlistId,
         layoutObject.playlists.name,
       );
     } else {
-      const property = target.data('property');
-      const propertyType = target.data('propertyType');
+      const property = $target.data('property');
+      const propertyType = $target.data('propertyType');
 
       // If we're editing permissions and it's a frame ( or zone )
       // edit the widget's permissions instead
@@ -4154,8 +4158,13 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
           lD.getObjectByTypeAndId('widget', objAuxId, 'canvas');
         canvasWidget.editPropertyForm('Permissions');
       } else {
+        let targetObj = layoutObject;
+        if (widgetProperty) {
+          targetObj = Object.values(layoutObject.widgets)[0];
+        }
+
         // Call normal edit form
-        layoutObject.editPropertyForm(
+        targetObj.editPropertyForm(
           property,
           propertyType,
         );
