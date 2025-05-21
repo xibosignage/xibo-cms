@@ -236,8 +236,6 @@ class DisplayFactory extends BaseFactory
                   display.display,
                   display.defaultLayoutId,
                   display.rdmDeviceId,
-                  display.rdmDeviceName,
-                  display.rdmDeviceType,
                   display.displayTypeId,
                   display.venueId,
                   display.address,
@@ -507,18 +505,8 @@ class DisplayFactory extends BaseFactory
             $params['rdmDeviceId'] = $parsedBody->getInt('rdmDeviceId', $filterBy);
         }
 
-        if ($parsedBody->getString('rdmDeviceName', $filterBy) != '') {
-            $body .= ' AND `display`.rdmDeviceName LIKE :rdmDeviceName ';
-            $params['rdmDeviceName'] = $parsedBody->getString('rdmDeviceName', $filterBy);
-        }
-
-        if ($parsedBody->getString('rdmDeviceType', $filterBy) != '') {
-            $body .= ' AND `display`.rdmDeviceType LIKE :rdmDeviceType ';
-            $params['rdmDeviceType'] = $parsedBody->getString('rdmDeviceType', $filterBy);
-        }
-
         if ($parsedBody->getInt('cmsConnected') === 1) {
-            $body .= ' AND `display`.rdmDeviceId != 0 AND `display`.rdmDeviceId is NOT NULL ';
+            $body .= ' AND `display`.rdmDeviceId != 0 OR `display`.rdmDeviceId is NOT NULL ';
         } else if ($parsedBody->getInt('cmsConnected') === 0) {
             $body .= ' AND `display`.rdmDeviceId = 0 OR `display`.rdmDeviceId is NULL ';
         }

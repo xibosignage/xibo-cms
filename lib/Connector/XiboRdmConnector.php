@@ -136,7 +136,7 @@ class XiboRdmConnector implements ConnectorInterface
             throw new InvalidArgumentException(__('Connector Key cannot be empty'), 'cmsPsk');
         }
 
-        $this->getLogger()->debug('getAvailableDevices: Requesting available devices.');
+        $this->getLogger()->info('getAvailableDevices: Requesting available devices.');
 
         try {
             $request = $this->getClient()->post($this->getServiceUrl() . '/rdm/cms/connect', [
@@ -183,7 +183,7 @@ class XiboRdmConnector implements ConnectorInterface
      * @throws GuzzleException
      * @throws InvalidArgumentException
      */
-    public function getRdmDevices(SanitizerInterface $params): ?array
+    public function getRdmDevices(SanitizerInterface $params, $enableSearch = true): ?array
     {
         $cmsPsk = $this->getSetting('cmsPsk');
 
@@ -191,19 +191,28 @@ class XiboRdmConnector implements ConnectorInterface
             throw new InvalidArgumentException(__('Connector Key cannot be empty'), 'cmsPsk');
         }
 
-        $this->getLogger()->debug('getRdmDevices: Requesting available devices.');
+        $this->getLogger()->info('getRdmDevices: Requesting available devices.');
 
         try {
+            $query = [
+                'cmsConnected' => $params->getInt('cmsConnected'),
+            ];
+
+            if ($enableSearch) {
+                $searchParams = [
+                    'deviceName' => $params->getString('deviceName'),
+                    'id' => $params->getInt('id'),
+                    'type' => $params->getString('type'),
+                ];
+
+                $query = array_merge($query, $searchParams);
+            }
+
             $response = $this->getClient()->get($this->getServiceUrl() . '/rdm', [
                 'headers' => [
                     'X-CMS-PSK-KEY' => $cmsPsk
                 ],
-                'query' => [
-                    'cmsConnected' => $params->getInt('cmsConnected'),
-                    'deviceName' => $params->getString('deviceName'),
-                    'id' => $params->getInt('deviceId'),
-                    'type' => $params->getString('deviceType'),
-                ],
+                'query' => $query
             ]);
 
             $this->devices = json_decode($response->getBody()->getContents(), true);
@@ -229,38 +238,37 @@ class XiboRdmConnector implements ConnectorInterface
     /**
      * Manual match between CMS display and Portal device
      * @param SanitizerInterface $params
-     * @return mixed
      * @throws GeneralException
      * @throws GuzzleException
      */
-    public function setRdmDevice(SanitizerInterface $params): mixed
+    public function setRdmDevice(SanitizerInterface $params): void
     {
         try {
+            $this->getLogger()->info('setRdmDevice: ' . json_encode($params));
+
             $display = [
                 'displayId' => $params->getInt('displayId'),
-                'rdmDeviceId' => $params->getString('rdmDeviceId'),
-                'displayName' => $params->getString('displayName'),
-                'macAddress' => $params->getString('macAddress')
+                'rdmDeviceId' => $params->getInt('rdmDeviceId'),
             ];
 
             $response = $this->getClient()->post($this->getServiceUrl() . '/rdm/cms/connect/manual', [
                 'headers' => [
                     'X-CMS-PSK-KEY' => $this->getSetting('cmsPsk')
                 ],
-                'query' => [
+                'json' => [
                     'display' => $display
                 ]
             ]);
 
-            $data = json_decode($response->getBody(), true);
-            $device = json_decode($data, true);
+            if ($response->getStatusCode() === 204) {
+                // Save the rdmDeviceId of the displays
+                $cmsDisplay = $this->displayFactory->query(null, ['displayId' => $display['displayId']])[0];
+                $cmsDisplay->rdmDeviceId = $display['rdmDeviceId'];
+                $cmsDisplay->save();
 
-            // Save the rdmDeviceId of the displays
-            $cmsDisplay = $this->displayFactory->query(null, ['displayId' => $device['displayId']])[0];
-            $cmsDisplay->rdmDeviceId = $device['rdmDeviceId'];
-            $cmsDisplay->save();
-
-            return $data;
+                $this->getLogger()->info('setRdmDevice: Linked device ID ' . $display['displayId'] .
+                    ' with display ID ' . $display['rdmDeviceId']);
+            }
         } catch (RequestException $e) {
             $this->getLogger()->error('setDevices: e = ' . $e->getMessage());
             $message = json_decode($e->getResponse()->getBody()->getContents(), true);
@@ -275,12 +283,87 @@ class XiboRdmConnector implements ConnectorInterface
     }
 
     /**
-     * Get the list of connected devices
+     * Get the list of saved RDM displays in CMS for auto-connection
      * @throws NotFoundException
      */
-    public function getConnectedDevices(SanitizerInterface $params): array
+    public function getRdmDisplays(): array
     {
+        $displays = array_map(function($display) {
+            return [
+                'displayId' => $display->displayId,
+                'macAddress' => $display->macAddress,
+            ];
+        }, $this->displayFactory->query(null, ['cmsConnected' => 0]));
 
+        $this->displays = $displays;
+
+        $this->getLogger()->info('getRdmDisplays: ' . json_encode($displays));
+
+        return $this->displays;
+    }
+
+    /**
+     * Get linked displays and devices
+     * @throws NotFoundException
+     */
+    public function getDisplaysAndDevices(SanitizerInterface $params): array
+    {
+        $source = $params->getString('sourceFilter');
+        $cmsDisplays = [];
+        $devices = [];
+
+        // Fetch CMS displays or devices based on the source
+        if ($source === 'cmsDisplay') {
+            $cmsDisplays = $this->displayFactory->query(null, [
+                'cmsConnected' => 1,
+                'displayId' => 1,
+                'display' => $params->getString('display'),
+            ]);
+
+            $this->getLogger()->info('getDisplaysAndDevices: CMS Displays - ' . json_encode($cmsDisplays));
+
+            // Return immediately if no CMS displays found
+            if (empty($cmsDisplays)) {
+                return [
+                    "data" => [],
+                    "draw" => 0,
+                    "recordsTotal" => 0,
+                    "recordsFiltered" => 0
+                ];
+            }
+
+            $devices = $this->getRdmDevices($params, false);
+        } else {
+            $devices = $this->getRdmDevices($params);
+
+            $this->getLogger()->info('getDisplaysAndDevices: Devices - ' . json_encode($devices));
+
+            // Return immediately if no devices found
+            if (empty($devices)) {
+                return $devices;
+            }
+
+            $cmsDisplays = $this->displayFactory->query(null, ['cmsConnected' => 1]);
+        }
+
+        // Prepare a mapping of CMS displays for quick lookup
+        $cmsDisplayMap = [];
+
+        foreach ($cmsDisplays as $cmsDisplay) {
+            $cmsDisplayMap[$cmsDisplay->displayId] = $cmsDisplay;
+        }
+
+        // Process and decorate devices with CMS display data
+        foreach ($devices['data'] as &$device) {
+            $matchingCmsDisplay = $cmsDisplayMap[$device['cmsDisplayId']] ?? null;
+
+            $device['display'] = $matchingCmsDisplay->display ?? '';
+            $device['manufacturer'] = $matchingCmsDisplay->manufacturer ?? '';
+
+            $this->getLogger()->info('getDisplaysAndDevices: Processed Device - ' . json_encode($device));
+        }
+
+        return $devices;
     }
 
     /**

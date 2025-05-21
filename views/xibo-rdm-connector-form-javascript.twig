@@ -57,8 +57,13 @@
 
     // Make the CMS Display Datatable
     let displayTable;
+    let cmsDisplayTable = $('#unlinked-cms-display');
+    let selectedDisplay = {
+      id: '',
+      name: ''
+    };
 
-    displayTable = $('#unlinked-cms-display').DataTable({
+    displayTable = cmsDisplayTable.DataTable({
       language: dataTablesLanguage,
       dom: dataTablesTemplate,
       serverSide: false,
@@ -78,11 +83,11 @@
         { data: 'displayId', responsivePriority: 1 },
         { data: 'manufacturer', responsivePriority: 1 },
         {
-          data: '',
           responsivePriority: 1,
           render: function(data, type, row) {
-            return '<p id="cms_' + row.displayId + '" class="text-primary text-center mr-3">' +
-              '<i class="fa fa-link mr-1" aria-hidden="true"></i> Link</p>';
+            return '<p id="cms_' + row.displayId + '" class="text-primary text-center mr-3 cms-link" ' +
+              'data-id="' + row.displayId + '" data-name="' + row.display + '" style="cursor: pointer;">'
+              + '<i class="fa fa-link mr-1" aria-hidden="true"></i> Link</p>';
           }
         },
       ],
@@ -93,8 +98,13 @@
 
     // Make the Account Device Datatable
     let deviceTable;
+    let rdmDeviceTable = $('#unlinked-rdm-devices');
+    let selectedDevice = {
+      id: '',
+      name: ''
+    };
 
-    deviceTable = $('#unlinked-rdm-devices').DataTable({
+    deviceTable = rdmDeviceTable.DataTable({
       language: dataTablesLanguage,
       dom: dataTablesTemplate,
       serverSide: false,
@@ -111,10 +121,10 @@
       },
       columns: [
         {
-          data: '',
           responsivePriority: 1,
           render: function(data, type, row) {
-            return '<p id="rdm_' + row.id + '" class="text-primary text-center">' +
+            return '<p id="rdm_' + row.id + '" class="text-primary text-center rdm-link" ' +
+              'data-id="' + row.id + '" data-name="' + row.device + '" style="cursor: pointer;">' +
               '<i class="fa fa-link" aria-hidden="true"></i> Link</p>';
           }
         },
@@ -140,16 +150,21 @@
       searchDelay: 3000,
       order: [[ 0, 'asc']],
       ajax: {
-        url: "{{ url_for("display.search") }}",
+        url: $rdmConnector.data('proxyUrl').replace(':method', 'getDisplaysAndDevices'),
         data: function (d) {
           $.extend(d, $('#cms-display-filter').serializeObject());
         }
       },
       columns: [
         { data: 'display', responsivePriority: 1 },
-        { data: 'displayId', responsivePriority: 1 },
+        { data: 'cmsDisplayId', responsivePriority: 1 },
         { data: 'manufacturer', responsivePriority: 1 },
-        { data: '', responsivePriority: 1 },
+        {
+          responsivePriority: 1,
+          render: function(data, type, row) {
+            return '<i class="fa text-primary fa-link " aria-hidden="true"></i>';
+          }
+        },
         { data: 'device', responsivePriority: 1 },
         { data: 'id', responsivePriority: 1 },
         { data: 'type', responsivePriority: 1 },
@@ -158,6 +173,21 @@
 
     linkedDeviceTable.on('draw', dataTableDraw);
     linkedDeviceTable.on('processing.dt', dataTableProcessing);
+
+    // Hide filters
+    let deviceNameFilters = $('.linkedDeviceName, .linkedDeviceId');
+    let displayNameFilters = $('.linkedDisplayName, .linkedDisplayId');
+    deviceNameFilters.hide();
+
+    function triggerFilter(selectedValue) {
+      if (selectedValue === 'cmsDisplay') {
+        displayNameFilters.show();
+        deviceNameFilters.hide();
+      } else {
+        deviceNameFilters.show();
+        displayNameFilters.hide();
+      }
+    }
 
     // Watch for filter input changes in CMS Display table
     $('#connector-display-filter select, #connector-display-filter input').on('change', function(e) {
@@ -170,9 +200,101 @@
     });
 
     // Watch for filter input changes in linked table
-    $('#cms-display-filter select, #cms-display-filter input').on('change', function(e) {
+    $('#cms-display-filter select#sourceFilter').on('change', function(e) {
+      triggerFilter($(this).val());
       linkedDeviceTable.ajax.reload();
     });
+
+    $('#cms-display-filter input, #cms-display-filter select#type').on('change', function(e) {
+      linkedDeviceTable.ajax.reload();
+    });
+
+    // Manual linking
+    cmsDisplayTable.on('click', '.cms-link', function () {
+      selectedDisplay = {
+        id: $(this).data('id'),
+        name: $(this).data('name')
+      };
+
+      // Validate selection
+      if (selectedDevice.id !== '') {
+        linkRdmDevice(selectedDisplay, selectedDevice)
+      }
+    });
+
+    rdmDeviceTable.on('click', '.rdm-link', function () {
+      selectedDevice = {
+        id: $(this).data('id'),
+        name: $(this).data('name')
+      };
+
+      // Validate selection
+      if (selectedDisplay.id !== '') {
+        linkRdmDevice(selectedDisplay, selectedDevice)
+      }
+    });
+
+    function linkRdmDevice(display, device) {
+      adjustModalZIndex(1040);
+
+      const dialog = bootbox.dialog({
+        message: `<div class="text-center">Do you want to link<br>
+                    <span style="display: inline-block; margin-top: 10px;"><strong>${display.name}</strong></span><br>
+                    <span style="display: block; margin: 10px 0;">to</span><strong>${device.name}</strong>?</div>`,
+        closeButton: false,
+        centerVertical: true,
+        size: 'small',
+        buttons: {
+          cancel: {
+            label: translations.cancel,
+            className: 'btn-white btn-bb-cancel',
+            callback: function(res) {
+              adjustModalZIndex(1050)
+            }
+          },
+          link: {
+            label: translations.link,
+            className: 'btn-primary test btn-bb-link',
+            callback: function(res) {
+              $.ajax({
+                url: $rdmConnector.data('proxyUrl').replace(':method', 'setRdmDevice'),
+                type: 'POST',
+                data: JSON.stringify({
+                  displayId: display.id,
+                  rdmDeviceId: device.id,
+                }),
+                contentType: 'application/json',
+                success: function(response) {
+                  toastr.info('Link Successful!');
+                  displayTable.ajax.reload();
+                  deviceTable.ajax.reload();
+                },
+                error: function(error) {
+                  toastr.error('Failed to link device. Please try again.');
+                }
+              });
+
+              resetSelection();
+
+              // Revert z-index changes
+              adjustModalZIndex(1050)
+            }
+          }
+        }
+      }).attr('id', Date.now());
+    }
+
+    function resetSelection() {
+      selectedDisplay.id = '';
+      selectedDisplay.name = '';
+      selectedDevice.id = '';
+      selectedDevice.name = '';
+    }
+
+    // Adjust z-index for stacked modals
+    function adjustModalZIndex(zIndex) {
+      $('.rdm-modal').css('z-index', zIndex);
+    }
   };
 
 </script>
@@ -209,10 +331,10 @@
                                   {% set title %}{% trans "Type" %}{% endset %}
                                   {% set options = [
                                       { optionid: "", option: "All" },
-                                      { optionid: "sony", option: "Sony Bravia" },
-                                      { optionid: "dsDevices", option: "DSDevices" },
-                                      { optionid: "windows", option: "Windows" },
-                                      { optionid: "chromeOs", option: "Chrome OS" },
+                                      { optionid: "Sony Bravia", option: "Sony Bravia" },
+                                      { optionid: "DSDevices", option: "DSDevices" },
+                                      { optionid: "Windows", option: "Windows" },
+                                      { optionid: "Chrome OS", option: "Chrome OS" },
                                   ] %}
                                   {{ inline.dropdown("displayType", "single", title, "", options, "optionid", "option", helpText) }}
                                   {% set title %}{% trans "ID" %}{% endset %}
@@ -262,9 +384,9 @@
                                     { optionid: "Windows", option: "Windows" },
                                     { optionid: "Chrome Os", option: "Chrome OS" },
                                   ] %}
-                                  {{ inline.dropdown("deviceType", "single", title, "", options, "optionid", "option", helpText) }}
+                                  {{ inline.dropdown("type", "single", title, "", options, "optionid", "option", helpText) }}
                                   {% set title %}{% trans "ID" %}{% endset %}
-                                  {{ inline.input("deviceId", title) }}
+                                  {{ inline.input("id", title) }}
                               </form>
 
                               <!-- MY ACCOUNT DEVICES DATATABLE -->
@@ -301,7 +423,7 @@
               <div class="tab-pane show" id="linkedTab" role="tabpanel" aria-labelledby="linked-tab">
                   <div class="XiboFilterCustom pb-0 mb-0">
                       <div class="FilterDiv" id="connector-rdm-linked-table">
-                          <form id="cms-display-filter" class="form-inline mb-3">
+                          <form id="cms-display-filter" class="form-inline mx-3">
                               {% set title %}{% trans "Source" %}{% endset %}
                               {% set options = [
                                 { optionid: "cmsDisplay", option: "CMS Displays" },
@@ -309,24 +431,29 @@
                               ] %}
                               {{ inline.dropdown("sourceFilter", "single", title, "", options, "optionid", "option", helpText) }}
                               {% set title %}{% trans "Display Name" %}{% endset %}
-                              {{ inline.input("deviceName", title) }}
+                              {{ inline.input("display", title, '', '', 'linkedDisplayName') }}
+                              {% set title %}{% trans "Device Name" %}{% endset %}
+                              {{ inline.input("deviceName", title, '', '', 'linkedDeviceName') }}
                               {% set title %}{% trans "Type" %}{% endset %}
                               {% set options = [
                                 { optionid: "", option: "All" },
-                                { optionid: "sonyBravia", option: "Sony Bravia" },
-                                { optionid: "dsDevices", option: "DSDevices" },
-                                { optionid: "windows", option: "Windows" },
-                                { optionid: "chromeOs", option: "Chrome OS" },
+                                { optionid: "Sony Bravia", option: "Sony Bravia" },
+                                { optionid: "DSDevices", option: "DSDevices" },
+                                { optionid: "Windows", option: "Windows" },
+                                { optionid: "Chrome OS", option: "Chrome OS" },
                               ] %}
-                              {{ inline.dropdown("deviceType", "single", title, "", options, "optionid", "option", helpText) }}
+                              {{ inline.dropdown("type", "single", title, "", options, "optionid", "option", helpText) }}
                               {% set title %}{% trans "ID" %}{% endset %}
-                              {{ inline.input("deviceId", title) }}
+                              {{ inline.input("displayId", title, '', '', 'linkedDisplayId') }}
+                              {% set title %}{% trans "ID" %}{% endset %}
+                              {{ inline.input("id", title, '', '', 'linkedDeviceId') }}
+
                               {{ inline.hidden("cmsConnected", 1) }}
                           </form>
 
                           <!-- CMS DISPLAYS RDM DEVICES DATATABLE -->
                           <div class="XiboData">
-                              <div class="row">
+                              <div class="row p-3">
                                   <div class="col-md-6 p-0">
                                       <h5>{% trans "CMS Displays" %}</h5>
                                   </div>

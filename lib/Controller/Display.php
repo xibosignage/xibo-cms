@@ -507,8 +507,6 @@ class Display extends Base
             'displayGroupIds' => $parsedQueryParams->getIntArray('displayGroupIds'),
             'displayType' => $parsedQueryParams->getString('displayType'),
             'rdmDeviceId' => $parsedQueryParams->getInt('rdmDeviceId'),
-            'rdmDeviceName' => $parsedQueryParams->getString('rdmDeviceName'),
-            'rdmDeviceType' => $parsedQueryParams->getString('rdmDeviceType'),
             'cmsConnected' => $parsedQueryParams->getInt('cmsConnected')
         ];
     }
@@ -674,20 +672,6 @@ class Display extends Base
      *       in="query",
      *       description="Filter by rdmDeviceId",
      *       type="integer",
-     *       required=false
-     *    ),
-     *  @SWG\Parameter(
-     *       name="rdmDeviceName",
-     *       in="query",
-     *       description="Filter by rdmDeviceName",
-     *       type="string",
-     *       required=false
-     *    ),
-     *  @SWG\Parameter(
-     *       name="rdmDeviceType",
-     *       in="query",
-     *       description="Filter by rdmDeviceType",
-     *       type="string",
      *       required=false
      *    ),
      *  @SWG\Parameter(

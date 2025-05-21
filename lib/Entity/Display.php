@@ -170,6 +170,12 @@ class Display implements \JsonSerializable
     public $display;
 
     /**
+     * @SWG\Property(description="The RDM Device ID")
+     * @var int
+     */
+    public $rdmDeviceId;
+
+    /**
      * @SWG\Property(description="The Description of this Display")
      * @var string
      */
@@ -1047,6 +1053,7 @@ class Display implements \JsonSerializable
             'manufacturer' => $this->manufacturer,
             'brand' => $this->brand,
             'model' => $this->model,
+            'rdmDeviceId' => null
         ]);
 
 
@@ -1153,7 +1160,8 @@ class Display implements \JsonSerializable
                     `teamViewerSerial` = :teamViewerSerial,
                     `webkeySerial` = :webkeySerial,
                     `lanIpAddress` = :lanIpAddress,
-                    `syncGroupId` = :syncGroupId
+                    `syncGroupId` = :syncGroupId,
+                    rdmDeviceId = :rdmDeviceId
              WHERE displayid = :displayId
         ', [
             'display' => $this->display,
@@ -1217,6 +1225,7 @@ class Display implements \JsonSerializable
             'manufacturer' => $this->manufacturer,
             'brand' => $this->brand,
             'model' => $this->model,
+            'rdmDeviceId' => $this->rdmDeviceId
         ]);
 
         // Maintain the Display Group

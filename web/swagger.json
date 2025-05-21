@@ -2799,20 +2799,6 @@
                         "type": "integer"
                     },
                     {
-                        "name": "rdmDeviceName",
-                        "in": "query",
-                        "description": "Filter by RDM device name",
-                        "required": false,
-                        "type": "string"
-                    },
-                    {
-                        "name": "rdmDeviceType",
-                        "in": "query",
-                        "description": "Filter by RDM device type",
-                        "required": false,
-                        "type": "string"
-                    },
-                    {
                         "name": "cmsConnected",
                         "in": "query",
                         "description": "Filter by whether the cms is connected (1 or 0)",

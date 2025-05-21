@@ -36,16 +36,6 @@ class AddRdmDeviceIdToDisplayTableMigration extends AbstractMigration
                 'integer',
                 ['after' => 'displayTypeId', 'default' => null, 'null' => true]
             )
-            ->addColumn(
-                'rdmDeviceName',
-                'string',
-                ['after' => 'rdmDeviceId', 'default' => null, 'null' => true]
-            )
-            ->addColumn(
-                'rdmDeviceType',
-                'string',
-                ['after' => 'rdmDeviceName', 'default' => null, 'null' => true]
-            )
             ->save();
     }
 }
