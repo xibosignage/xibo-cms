@@ -30,12 +30,18 @@ class AnonymousUsageEnhancedMigration extends AbstractMigration
 {
     public function change(): void
     {
+        try {
+            $myHour = random_int(0, 23);
+        } catch (Exception) {
+            $myHour = 0;
+        }
+
         $task = $this->table('task');
         $task->insert([
             'name' => 'Anonymous Usage Reporting',
             'class' => '\Xibo\XTR\AnonymousUsageTask',
             'options' => '[]',
-            'schedule' => '0 * * * *',
+            'schedule' => $myHour . ' * * * *',
             'isActive' => '1',
             'configFile' => '/tasks/anonymous-usage.task'
         ])
