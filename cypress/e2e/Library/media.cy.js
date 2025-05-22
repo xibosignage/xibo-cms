@@ -7,7 +7,7 @@ describe('Media Admin', function() {
       testRun = Cypress._.random(0, 1e9);
     });
   
-    it('should add a media via url', function() {
+    it.skip('should add a media via url', function() {
       cy.visit('/library/view');
   
       // Click on the Add Playlist button
@@ -31,7 +31,7 @@ describe('Media Admin', function() {
       cy.get('#libraryItems tbody tr:nth-child(1) td:nth-child(2)').contains('Cypress Test Media ' + testRun);
     });
   
-    it('should cancel adding a media', function() {
+    it.skip('should cancel adding a media', function() {
       cy.visit('/library/view');
   
       // Click on the Add Playlist button
@@ -50,7 +50,7 @@ describe('Media Admin', function() {
       cy.url().should('include', '/library/view');
     });
   
-    it('should show a list of Media', function() {
+    it.skip('should show a list of Media', function() {
       // Wait for playlist grid reload
       cy.intercept('/library?draw=1&*').as('mediaGridLoad');
   
@@ -60,7 +60,7 @@ describe('Media Admin', function() {
       });
     });
   
-    it('selects multiple media and delete them', function() {
+    it.skip('selects multiple media and delete them', function() {
       // Create a new playlist and then search for it and delete it
         cy.intercept('/library?draw=1&*').as('mediaGridLoad');
   

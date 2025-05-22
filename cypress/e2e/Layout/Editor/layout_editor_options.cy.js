@@ -37,7 +37,7 @@ describe('Layout Editor Options', function() {
 
     // Publish layout
     cy.openOptionsMenu();
-    cy.get('#publishLayout').click({force: true});
+    cy.get('#publishLayout').click();
     cy.get('button.btn-bb-Publish').click();
 
     cy.wait('@layoutStatus').then((interception) => {
@@ -49,7 +49,7 @@ describe('Layout Editor Options', function() {
 
     // Checkout published layout
     cy.openOptionsMenu();
-    cy.get('#checkoutLayout').click({force: true});
+    cy.get('#checkoutLayout').click();
 
     cy.wait('@layoutStatus').then((interception) => {
       expect(interception.response.statusCode).to.eq(200);
