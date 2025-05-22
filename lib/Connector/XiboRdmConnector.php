@@ -316,8 +316,9 @@ class XiboRdmConnector implements ConnectorInterface
         if ($source === 'cmsDisplay') {
             $cmsDisplays = $this->displayFactory->query(null, [
                 'cmsConnected' => 1,
-                'displayId' => 1,
+                'displayId' => $params->getInt('displayId'),
                 'display' => $params->getString('display'),
+                'displayType' => $params->getString('type')
             ]);
 
             $this->getLogger()->info('getDisplaysAndDevices: CMS Displays - ' . json_encode($cmsDisplays));

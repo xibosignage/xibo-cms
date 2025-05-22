@@ -235,6 +235,7 @@
     });
 
     function linkRdmDevice(display, device) {
+      // Adjust confirmation dialog modal z-index
       adjustModalZIndex(1040);
 
       const dialog = bootbox.dialog({
@@ -249,6 +250,7 @@
             label: translations.cancel,
             className: 'btn-white btn-bb-cancel',
             callback: function(res) {
+              // Revert modal z-index changes
               adjustModalZIndex(1050)
             }
           },
@@ -276,7 +278,7 @@
 
               resetSelection();
 
-              // Revert z-index changes
+              // Revert modal z-index changes
               adjustModalZIndex(1050)
             }
           }
