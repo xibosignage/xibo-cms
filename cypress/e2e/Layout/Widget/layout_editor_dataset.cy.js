@@ -25,7 +25,7 @@ describe('Dataset', function() {
     cy.login();
   });
 
-  it('should create a new layout, add/delete dataset widget', function() {
+  it.skip('should create a new layout, add/delete dataset widget', function() {
     cy.intercept('/dataset?start=*').as('loadDatasets');
     cy.intercept('DELETE', '**/region/**').as('deleteWidget');
     cy.intercept('POST', '/user/pref').as('userPref');

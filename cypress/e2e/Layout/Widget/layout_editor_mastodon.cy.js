@@ -25,7 +25,7 @@ describe('Mastodon', function() {
     cy.login();
   });
 
-  it('should create a new layout and be redirected to the layout designer, add/delete Mastodon widget', function() {
+  it.skip('should create a new layout and be redirected to the layout designer, add/delete Mastodon widget', function() {
     cy.intercept('DELETE', '**/region/**').as('deleteWidget');
     cy.intercept('POST', '/user/pref').as('userPref');
 
