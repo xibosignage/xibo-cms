@@ -2152,9 +2152,9 @@ window.forms = {
       };
 
       const $inputElements =
-        $(el).find('[name]:not(.color-gradient-hidden).element-property');
+        $(el).find('[name]:not(.color-gradient-hidden)');
       const $hiddenInput =
-        $(el).find('.color-gradient-hidden.element-property');
+        $(el).find('.color-gradient-hidden');
       const $gradientType =
         $inputElements.filter('[name="gradientType"]');
       const $gradientAngle =

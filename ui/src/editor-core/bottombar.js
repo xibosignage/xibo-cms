@@ -64,6 +64,12 @@ Bottombar.prototype.render = function(object, renderMultiple = true) {
         '';
   }
 
+  // In interactive mode, do nothing
+  if (app.interactiveMode || app.interactiveEditWidgetMode) {
+    this.DOMObject.html('');
+    return;
+  }
+
   if (multipleSelected) {
     // Render toolbar for multiple
     this.DOMObject.html(bottomBarViewerTemplate(

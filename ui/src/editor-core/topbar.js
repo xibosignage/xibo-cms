@@ -119,6 +119,11 @@ Topbar.prototype.render = function() {
 
   // Setup layout edit form.
   this.DOMObject.find('#layoutInfo').off('click').on('click', function() {
+    // If in interactive edit mode, don't open form
+    if (app.interactiveEditWidgetMode) {
+      return;
+    }
+
     // Pop open the layout edit form.
     XiboFormRender(urlsForApi.layout.editForm.url.replace(
       ':id',
@@ -189,6 +194,20 @@ Topbar.prototype.render = function() {
       app.toolbar.savePrefs();
     });
   }
+
+  // Interactive control ( design pending )
+  const toggleControl = function(enable = true) {
+    self.DOMObject.find('.interactive-control').attr('data-status',
+      (enable) ? 'on' : 'off');
+  };
+  // Handle toggle button
+  self.DOMObject.find('.interactive-control')
+    .off().on('click', function() {
+      app.toggleInteractiveMode(!app.interactiveMode);
+      toggleControl(app.interactiveMode);
+    });
+  // Call on start
+  toggleControl(app.interactiveMode);
 
   // Update layout status
   this.updateLayoutStatus();

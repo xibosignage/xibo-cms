@@ -50,6 +50,15 @@
 
         {{!-- Right menu --}}
         <ul class="layout-action-menu nav">
+            {{!-- Interactive control --}}
+            <li class="nav-item interactive-control" data-status="off">
+                <div class="interactive-control-container">
+                    <i class="fa fa-paper-plane"></i>
+                    <div class="interactive-control-label">{{trans.interactiveToggle.mode}}</div>
+                    <div class="interactive-control-status-on">{{trans.interactiveToggle.on}}</div>
+                    <div class="interactive-control-status-off">{{trans.interactiveToggle.off}}</div>
+                </div>
+            </li>
 
             {{!-- Layout select dropdown --}}
             <li>

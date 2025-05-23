@@ -106,9 +106,16 @@ const Toolbar = function(
  * Initialize toolbar
  * @param {object} [options] - options
  * @param {boolean=} [options.isPlaylist] - is it a playlist toolbar?
+ * - are we editing a action widget?
  */
-Toolbar.prototype.init = function({isPlaylist = false} = {}) {
+Toolbar.prototype.init = function(
+  {
+    isPlaylist = false,
+    updateViewerAfterRendering = false,
+  } = {},
+) {
   const self = this;
+  const app = self.parent;
 
   // Modules to be used in Widgets
   let moduleListFiltered = [];
@@ -127,7 +134,7 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
     // Show/hide modules based on showIn property
     if (
       el.showIn == 'playlist' && !isPlaylist ||
-      el.showIn == 'layout' && isPlaylist ||
+      el.showIn == 'layout' && (isPlaylist || app.interactiveEditWidgetMode) ||
       el.showIn == 'none'
     ) {
       return;
@@ -230,52 +237,6 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
     return (a.name < b.name) ? -1 : 1;
   });
 
-  // Actions
-  this.interactiveList = [
-    {
-      name: toolbarTrans.interactive.actions.navWidget,
-      icon: 'fa fa-square-o',
-      type: 'navWidget',
-      target: '["frame"]',
-      dataType: '',
-    },
-    {
-      name: toolbarTrans.interactive.actions.navLayout,
-      icon: 'fa fa-desktop',
-      type: 'navLayout',
-      target: '["layout"]',
-      dataType: '',
-    },
-    {
-      name: toolbarTrans.interactive.actions.previousWidget,
-      icon: 'fa fa-caret-square-o-left',
-      type: 'previousWidget',
-      target: '["playlist"]',
-      dataType: '',
-    },
-    {
-      name: toolbarTrans.interactive.actions.nextWidget,
-      icon: 'fa fa-caret-square-o-right',
-      type: 'nextWidget',
-      target: '["playlist"]',
-      dataType: '',
-    },
-    {
-      name: toolbarTrans.interactive.actions.previousLayout,
-      icon: 'fa fa-arrow-circle-left',
-      type: 'previousLayout',
-      target: '["layout"]',
-      dataType: '',
-    },
-    {
-      name: toolbarTrans.interactive.actions.nextLayout,
-      icon: 'fa fa-arrow-circle-right',
-      type: 'nextLayout',
-      target: '["layout"]',
-      dataType: '',
-    },
-  ];
-
   this.defaultFilters = {
     name: {
       value: '',
@@ -324,7 +285,7 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
     },
     {
       name: 'global',
-      disabled: isPlaylist ? true : false,
+      disabled: (isPlaylist || app.interactiveEditWidgetMode) ? true : false,
       itemName: toolbarTrans.menuItems.globalElementsName,
       itemIcon: 'font',
       itemTitle: toolbarTrans.menuItems.globalElementsTitle,
@@ -567,26 +528,8 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
       itemCount: 0,
     },
     {
-      name: 'actions',
-      disabled: isPlaylist ? true : false,
-      iconType: 'actions',
-      itemName: toolbarTrans.menuItems.actionsName,
-      itemIcon: 'paper-plane',
-      itemTitle: toolbarTrans.menuItems.actionsTitle,
-      contentType: 'actions',
-      content: [],
-      filters: {
-        name: {
-          value: '',
-          title: toolbarTrans.searchFilters.search,
-        },
-      },
-      state: '',
-      itemCount: 0,
-    },
-    {
       name: 'layout_templates',
-      disabled: isPlaylist,
+      disabled: (isPlaylist || app.interactiveEditWidgetMode),
       itemName: toolbarTrans.menuItems.layoutTemplateName,
       itemIcon: 'object-group',
       itemTitle: toolbarTrans.menuItems.layoutTemplateTitle,
@@ -614,6 +557,14 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
       itemCount: 0,
     },
   ];
+
+  // Remove playlists if we're in action widget edit mode
+  if (app.interactiveEditWidgetMode) {
+    defaultMenuItems.splice(
+      defaultMenuItems.findIndex((item) => item.name === 'playlists'),
+      1,
+    );
+  }
 
   // Menu items
   this.menuItems = defaultMenuItems;
@@ -699,13 +650,17 @@ Toolbar.prototype.init = function({isPlaylist = false} = {}) {
     }
 
     // Render
-    self.render();
+    self.render({
+      updateViewerAfterRendering,
+    });
   }).catch(function(jqXHR, textStatus, errorThrown) {
     console.error(jqXHR, textStatus, errorThrown);
     console.error(errorMessagesTrans.getProvidersFailed);
 
     // Render
-    self.render();
+    self.render({
+      updateViewerAfterRendering,
+    });
   });
 
   // Get media providers
@@ -1054,7 +1009,10 @@ Toolbar.prototype.savePrefs = _.debounce(function(clearPrefs = false) {
  * Render toolbar
  * @param {bool=} savePrefs - Save preferences
  */
-Toolbar.prototype.render = function({savePrefs = true} = {}) {
+Toolbar.prototype.render = function({
+  savePrefs = true,
+  updateViewerAfterRendering = false,
+} = {}) {
   const self = this;
   const app = this.parent;
 
@@ -1063,6 +1021,7 @@ Toolbar.prototype.render = function({savePrefs = true} = {}) {
     // Initialize toolbar
     this.init({
       isPlaylist: this.isPlaylist,
+      updateViewerAfterRendering: updateViewerAfterRendering,
     });
 
     // Stop running
@@ -1089,6 +1048,10 @@ Toolbar.prototype.render = function({savePrefs = true} = {}) {
     (typeof (lD) != 'undefined' && lD?.readOnlyMode === true) ||
     (app?.readOnlyMode === true);
 
+  const interactiveModeOn =
+    (typeof (lD) != 'undefined' && lD?.interactiveMode === true) ||
+    (app?.interactiveMode === true);
+
   // Deselect selected card on render
   this.selectedCard = {};
 
@@ -1097,7 +1060,7 @@ Toolbar.prototype.render = function({savePrefs = true} = {}) {
 
   const toolbarOpened =
     (this.openedMenu != -1) &&
-    (!readOnlyModeOn);
+    (!readOnlyModeOn && !interactiveModeOn);
 
   // If we have a level limiter and we're over level 2
   // set level at 2
@@ -1126,7 +1089,8 @@ Toolbar.prototype.render = function({savePrefs = true} = {}) {
   this.DOMObject.html(html);
 
   // If read only mode is enabled
-  if (readOnlyModeOn) {
+  // or interactive mode
+  if (readOnlyModeOn || interactiveModeOn) {
     // Hide edit mode fields
     this.DOMObject.find('.hide-on-read-only').hide();
 
@@ -1134,20 +1098,22 @@ Toolbar.prototype.render = function({savePrefs = true} = {}) {
     this.DOMObject.hide();
 
     // Create the read only alert message
-    const $readOnlyMessage =
-      $(`<div id="read-only-message"
-        class="alert alert-info btn text-center navbar-nav"
-        data-container=".editor-bottom-bar" data-toggle="tooltip"
-        data-placement="bottom" data-title="` +
-        layoutEditorTrans.readOnlyModeMessage +
-        `" role="alert"><strong>` + layoutEditorTrans.readOnlyModeTitle +
-        `</strong>&nbsp;` + layoutEditorTrans.readOnlyModeMessage +
-        `</div>`);
+    if (readOnlyModeOn) {
+      const $readOnlyMessage =
+        $(`<div id="read-only-message"
+          class="alert alert-info btn text-center navbar-nav"
+          data-container=".editor-bottom-bar" data-toggle="tooltip"
+          data-placement="bottom" data-title="` +
+          layoutEditorTrans.readOnlyModeMessage +
+          `" role="alert"><strong>` + layoutEditorTrans.readOnlyModeTitle +
+          `</strong>&nbsp;` + layoutEditorTrans.readOnlyModeMessage +
+          `</div>`);
 
-    // Prepend the item to the bottom toolbar's content
-    $readOnlyMessage.prependTo(
-      this.DOMObject.find('.container-toolbar .navbar-collapse'),
-    ).click(lD.layout.checkout);
+      // Prepend the item to the bottom toolbar's content
+      $readOnlyMessage.prependTo(
+        this.DOMObject.find('.container-toolbar .navbar-collapse'),
+      ).click(lD.layout.checkout);
+    }
   } else {
     // Show toolbar
     this.DOMObject.show();
@@ -1218,6 +1184,12 @@ Toolbar.prototype.render = function({savePrefs = true} = {}) {
         (app.viewer) && app.viewer.update();
       }
     });
+
+  // Force update viewer dimensions after toolbar renders
+  // to avoid viewer with wrong dimensions
+  if (updateViewerAfterRendering) {
+    app.viewer.update();
+  }
 };
 
 /**
@@ -1277,31 +1249,6 @@ Toolbar.prototype.loadContent = function(
       contentAlternativeHeader: toolbarTrans.dataWidgets,
       noCardsToShow: toolbarTrans.noWidgetsToShow,
     };
-  } else if (this.menuItems[menu].name === 'actions') {
-    const actionsFiltered = [];
-
-    for (let index = 0; index < this.interactiveList.length; index++) {
-      const item = this.interactiveList[index];
-
-      // Filter items
-      if (
-        this.menuItems[menu].filters.name.value &&
-        !item.name.toLowerCase().includes(
-          this.menuItems[menu].filters.name.value.toLowerCase(),
-        )
-      ) {
-        continue;
-      }
-
-      actionsFiltered.push(item);
-    }
-
-    // Add card to menu content
-    this.menuItems[menu].content = {
-      cards: actionsFiltered,
-      contentHeader: toolbarTrans.actions,
-      noCardsToShow: toolbarTrans.noActionsToShow,
-    };
   }
 
   this.DOMObject.find('#content-' + menu + ', #btn-menu-' + menu)
@@ -1347,7 +1294,6 @@ Toolbar.prototype.createContent = function(
     !forceReload &&
     this.menuItems[menu].contentType != 'modules' &&
     this.menuItems[menu].contentType != 'playlists' &&
-    this.menuItems[menu].contentType != 'actions' &&
     self.DOMObject
       .find(
         '#content-' +
@@ -1531,8 +1477,6 @@ Toolbar.prototype.selectCard = function(card) {
     // For actions, add an extra class
     this.handleDroppables(
       $(card),
-      $(card).data('type') == 'actions' ?
-        'ui-droppable-active ui-droppable-actions-target' : '',
     );
   }
 };
@@ -1577,6 +1521,11 @@ Toolbar.prototype.handleDroppables = function(draggable, customClasses = '') {
     if (app.common.hasTarget(draggable, 'frame')) {
       // Drop to frame region
       selectorBuild.push('.designer-region[data-sub-type="frame"].droppable');
+    }
+
+    if (app.common.hasTarget(draggable, 'zone')) {
+      // Drop to frame region
+      selectorBuild.push('.designer-region[data-sub-type="zone"].droppable');
     }
 
     if (app.common.hasTarget(draggable, 'zone')) {
@@ -1686,7 +1635,7 @@ Toolbar.prototype.deselectCardsAndDropZones = function() {
 
   // Remove drop class from droppable elements
   $('.ui-droppable, .droppable')
-    .removeClass('ui-droppable-active ui-droppable-actions-target');
+    .removeClass('ui-droppable-active');
 
   // Disable multi-select mode
   if (app.editorContainer.hasClass('multi-select')) {
@@ -3686,11 +3635,14 @@ Toolbar.prototype.loadTemplates = function(
           // or elements and stencils if we are in playlist editor
           if (
             el.showIn == 'playlist' && !self.isPlaylist ||
-            el.showIn == 'layout' && self.isPlaylist ||
+            el.showIn == 'layout' &&
+              (self.isPlaylist || app.interactiveEditWidgetMode) ||
             el.showIn == 'templateEditor' && !app.templateEditMode ||
             el.showIn == 'none' ||
-            el.type === 'element' && self.isPlaylist ||
-            el.type === 'element-group' && self.isPlaylist
+            el.type === 'element' &&
+              (self.isPlaylist || app.interactiveEditWidgetMode) ||
+            el.type === 'element-group' &&
+              (self.isPlaylist || app.interactiveEditWidgetMode)
           ) {
             continue;
           } else {

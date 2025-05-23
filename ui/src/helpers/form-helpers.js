@@ -662,7 +662,9 @@ const formHelpers = function() {
         region = this.namespace.mainRegion;
       } else if (this.namespace.selectedObject.type == 'widget') {
         const widget = this.namespace.selectedObject;
-        region = this.namespace.getObjectByTypeAndId('region', widget.regionId);
+        region = (widget.drawerWidget) ?
+          this.namespace.getObjectByTypeAndId('drawer') :
+          this.namespace.getObjectByTypeAndId('region', widget.regionId);
       } else if (this.namespace.selectedObject.type == 'region') {
         region =
           this.namespace.getObjectByTypeAndId(
