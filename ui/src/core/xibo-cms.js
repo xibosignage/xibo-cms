@@ -316,6 +316,7 @@ window.XiboInitialise = function(scope, options) {
         initialize: false,
         remote: {
           url: autoCompleteUrl,
+          cache: false,
           prepare: function(query, settings) {
             settings.data = {tag: query};
             return settings;
