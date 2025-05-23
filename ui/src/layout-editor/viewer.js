@@ -5149,7 +5149,11 @@ Viewer.prototype.updateActionLine = function(
       startId
     ) {
       const $newstart = $('#' + startId);
-      this.actionLines[lineId].line.start = $newstart[0];
+      try {
+        this.actionLines[lineId].line.setOptions({start: $newstart[0]});
+      } catch (e) {
+        console.warn('LeaderLine setOptions failed:', e);
+      }
     }
 
     const $detachedEnd = $(this.actionLines[lineId].line.end);
@@ -5159,7 +5163,11 @@ Viewer.prototype.updateActionLine = function(
       endId
     ) {
       const $newEnd = $('#' + endId);
-      this.actionLines[lineId].line.end = $newEnd[0];
+      try {
+        this.actionLines[lineId].line.setOptions({end: $newEnd[0]});
+      } catch (e) {
+        console.warn('LeaderLine setOptions failed:', e);
+      }
     }
 
     // Set defaults for normal and circular

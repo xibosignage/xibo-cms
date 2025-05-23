@@ -2799,12 +2799,10 @@ PropertiesPanel.prototype.createEditAction = function(
           // Remove action line
           app.viewer.removeActionLine($newActionContainer.data('actionId'));
 
-          // Remove action container
-          $newActionContainer.remove();
-
           // Remove edit status
-          $actionsContent.removeClass('editing-action');
+          // $actionsContent.removeClass('editing-action');
           app.actionManager.editing = {};
+          self.renderActions();
 
           // Update all other action lines
           app.viewer.updateActionLine();
@@ -3067,7 +3065,6 @@ PropertiesPanel.prototype.saveAction = function($actionForm) {
   const self = this;
   const app = self.parent;
   const actionData = $actionForm.data();
-  const $actionsContent = self.DOMObject.find('.actions-content');
 
   $actionForm.find('.error-message').hide();
 
@@ -3076,28 +3073,18 @@ PropertiesPanel.prototype.saveAction = function($actionForm) {
     $actionForm.find('.error-message').html(res.message).show();
   };
 
-  const closeEditAndShowPreview = function(res) {
-    const actionData = res.data;
-
+  const closeEditAndShowPreview = function() {
     // Remove editing status
     app.actionManager.editing = {};
-    $actionsContent.removeClass('editing-action');
 
-    // Create preview using the new data
-    self.createPreviewAction(actionData);
-
-    // Remove action edit form
-    $actionForm.remove();
+    self.renderActions();
   };
 
   if (actionData.actionId) {
     // Save existing action
     app.actionManager.saveAction($actionForm, actionData.actionId)
       .then(
-        (res) => {
-          // Close edit form and show preview
-          closeEditAndShowPreview(res);
-        },
+        closeEditAndShowPreview,
         showErrorMessage,
       );
   } else {
@@ -3443,7 +3430,10 @@ PropertiesPanel.prototype.cancelEditActionWidget = function(
       widget.widgetId,
       false,
       false,
-    ).then(toggleEditActionOff);
+    ).then(() => {
+      app.actionManager.editing.widgetId = null;
+      toggleEditActionOff();
+    });
   } else if (mode === 'revertChanges') {
     // Check if we have serialized form data
     const $form = self.DOMObject.find('form');
