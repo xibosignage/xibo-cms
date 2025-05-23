@@ -205,18 +205,26 @@ class Action  extends Base
             $action->setUnmatchedProperty('regionName', null);
 
             if ($action->actionType === 'navWidget' && $action->widgetId != null) {
-                $widget = $this->widgetFactory->loadByWidgetId($action->widgetId);
-                $module = $this->moduleFactory->getByType($widget->type);
+                try {
+                    $widget = $this->widgetFactory->loadByWidgetId($action->widgetId);
+                    $module = $this->moduleFactory->getByType($widget->type);
 
-                // dynamic field to display in the grid instead of widgetId
-                $action->setUnmatchedProperty('widgetName', $widget->getOptionValue('name', $module->name));
+                    // dynamic field to display in the grid instead of widgetId
+                    $action->setUnmatchedProperty('widgetName', $widget->getOptionValue('name', $module->name));
+                } catch (NotFoundException $e) {
+                    // Widget not found, leave widgetName as null
+                }
             }
 
             if ($action->target === 'region' && $action->targetId != null) {
-                $region = $this->regionFactory->getById($action->targetId);
+                try {
+                    $region = $this->regionFactory->getById($action->targetId);
 
-                // dynamic field to display in the grid instead of regionId
-                $action->setUnmatchedProperty('regionName', $region->name);
+                    // dynamic field to display in the grid instead of regionId
+                    $action->setUnmatchedProperty('regionName', $region->name);
+                } catch (NotFoundException $e) {
+                    // Region not found, leave regionName as null
+                }
             }
         }
 

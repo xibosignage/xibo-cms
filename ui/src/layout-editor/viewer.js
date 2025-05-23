@@ -5431,7 +5431,7 @@ Viewer.prototype.highlightAction = function(
   }
 
   // Highlight if enable
-  if (actionId) {
+  if (actionId && this.actionLines[actionId]) {
     this.actionLines[actionId].line.color = lineDef.editedColor;
     $(self.actionLines[actionId].line.start)
       .addClass('highlighted-action-object');

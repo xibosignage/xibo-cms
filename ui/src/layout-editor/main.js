@@ -3421,23 +3421,29 @@ lD.getObjectName = function(type, id) {
   if (type === 'layout') {
     name = self.layout.name;
   } else if (type === 'drawerWidget') {
-    name = self.getObjectByTypeAndId(
+    const widget = self.getObjectByTypeAndId(
       'widget',
       'widget_' + self.layout.drawer.regionId +
         '_' + id,
       'drawer',
-    ).widgetName;
+    );
+
+    name = widget?.widgetName;
   } else if (type === 'region') {
-    name = self.getObjectByTypeAndId(
+    const region = self.getObjectByTypeAndId(
       'region',
       'region_' + id,
-    ).name;
+    );
+
+    name = region?.name;
   } else if (type === 'widget') {
-    name = self.getObjectByTypeAndId(
+    const widget = self.getObjectByTypeAndId(
       'widget',
       id,
       'search',
-    ).widgetName;
+    );
+
+    name = widget?.widgetName;
   }
 
   return name;
