@@ -39,27 +39,27 @@
                 </div>
             {{/if}}
 
-            {{#eq type "widget"}}
-                {{#if isEditable}}
-                    {{#if canAttachAudio}}
-                        <div class="context-menu-btn" data-title="{{trans.editAudio}}" data-property="Audio" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
-                            <i class="tool-icon-audio"></i><span>{{trans.editAudio}}</span>
-                        </div>
-                    {{/if}}
+            {{#if isEditableWidget}}
+                {{#if canAttachAudio}}
+                    <div class="context-menu-btn widget-property" data-title="{{trans.editAudio}}" data-property="Audio" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
+                        <i class="tool-icon-audio"></i><span>{{trans.editAudio}}</span>
+                    </div>
+                {{/if}}
 
-                    <div class="context-menu-btn" data-title="{{trans.editExpiry}}" data-property="Expiry" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
+                {{#eq editor "playlist"}}
+                    <div class="context-menu-btn widget-property" data-title="{{trans.editExpiry}}" data-property="Expiry" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
                         <i class="tool-icon-expiry"></i><span>{{trans.editExpiry}}</span>
                     </div>
-                
-                    <div class="context-menu-btn" data-title="{{trans.editTransIn}}" data-property="Transition" data-property-type="in" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
+            
+                    <div class="context-menu-btn widget-property" data-title="{{trans.editTransIn}}" data-property="Transition" data-property-type="in" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
                         <i class="tool-icon-transitionIn"></i><span>{{trans.editTransIn}}</span>
                     </div>
                     
-                    <div class="context-menu-btn" data-title="{{trans.editTransOut}}" data-property="Transition" data-property-type="out" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
+                    <div class="context-menu-btn widget-property" data-title="{{trans.editTransOut}}" data-property="Transition" data-property-type="out" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
                         <i class="tool-icon-transitionOut"></i><span>{{trans.editTransOut}}</span>
                     </div>
-                {{/if}}
-            {{/eq}}
+                {{/eq}}
+            {{/if}}
 
             {{#if isPlaylist}}
                 {{#unless isDynamicPlaylist}}
@@ -81,10 +81,10 @@
                         <i class="tool-icon-permissions"></i><span>{{trans.editPermissions}}</span>
                     </div>
                 {{/if}}
-
+            {{else if isPlaylist}}
                 {{#if isPermissionsModifiable}}
-                    <div class="context-menu-btn permissionsBtn" data-title="{{trans.editRegionPermissions}}" data-property="Permissions" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
-                        <i class="tool-icon-permissions"></i><span>{{trans.editRegionPermissions}}</span>
+                    <div class="context-menu-btn permissionsBtn" data-title="{{trans.editPlaylistPermissions}}" data-property="Permissions" data-toggle="tooltip" data-container=".context-menu" data-placement="bottom">
+                        <i class="tool-icon-permissions"></i><span>{{trans.editPlaylistPermissions}}</span>
                     </div>
                 {{/if}}
             {{else if isElementBased}}
