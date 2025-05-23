@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -351,9 +351,10 @@ class DataSetFactory extends BaseFactory
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function callRemoteService(DataSet $dataSet, DataSet $dependant = null, $enableCaching = true)
+    public function callRemoteService(DataSet $dataSet, ?DataSet $dependant = null, $enableCaching = true)
     {
-        $this->getLog()->debug('Calling remote service for DataSet: ' . $dataSet->dataSet . ' and URL ' . $dataSet->uri);
+        $this->getLog()->debug('Calling remote service for DataSet: ' . $dataSet->dataSet
+            . ' and URL ' . $dataSet->uri);
 
         // Record our max memory
         $maxMemory = Environment::getMemoryLimitBytes() / 2;

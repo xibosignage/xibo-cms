@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -75,16 +75,27 @@ class Task implements \JsonSerializable
      * @return \DateTime|string
      * @throws \Exception
      */
-    public function nextRunDate()
+    public function nextRunDate(): \DateTime|string
     {
         try {
-            $cron = CronExpression::factory($this->schedule);
+            try {
+                $cron = new CronExpression($this->schedule);
+            } catch (\Exception $e) {
+                // Try and take the first X characters instead.
+                try {
+                    $cron = new CronExpression(substr($this->schedule, 0, strlen($this->schedule) - 2));
+                } catch (\Exception) {
+                    $this->getLog()->error('nextRunDate: cannot fix CRON syntax error  ' . $this->taskId);
+                    throw $e;
+                }
+            }
 
-            if ($this->lastRunDt == 0)
+            if ($this->lastRunDt == 0) {
                 return (new \DateTime())->format('U');
+            }
 
             return $cron->getNextRunDate(\DateTime::createFromFormat('U', $this->lastRunDt))->format('U');
-        } catch (\RuntimeException $e) {
+        } catch (\Exception) {
             $this->getLog()->error('Invalid CRON expression for TaskId ' . $this->taskId);
 
             $this->status = self::$STATUS_ERROR;

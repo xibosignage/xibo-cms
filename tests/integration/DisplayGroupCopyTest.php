@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -48,7 +48,7 @@ class DisplayGroupCopyTest extends LocalWebTestCase
     {
         parent::setup();
 
-        $this->getLogger()->debug('Setup test for Cache ' . get_class() . ' Test');
+        $this->getLogger()->debug('Setup test for Cache ' . get_class($this) . ' Test');
 
         // Create a couple of displays to use in the test
         $this->display = $this->createDisplay();

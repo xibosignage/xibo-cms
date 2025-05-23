@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -25,20 +25,17 @@ namespace Xibo\Tests\integration\Cache;
 use Carbon\Carbon;
 use Xibo\Entity\Display;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
-use Xibo\OAuth2\Client\Entity\XiboImage;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\OAuth2\Client\Entity\XiboLibrary;
 use Xibo\OAuth2\Client\Entity\XiboPlaylist;
 use Xibo\OAuth2\Client\Entity\XiboRegion;
 use Xibo\OAuth2\Client\Entity\XiboSchedule;
-use Xibo\OAuth2\Client\Entity\XiboText;
 use Xibo\OAuth2\Client\Entity\XiboTicker;
-use Xibo\OAuth2\Client\Entity\XiboVideo;
 use Xibo\Tests\Helper\DisplayHelperTrait;
 use Xibo\Tests\Helper\LayoutHelperTrait;
 use Xibo\Tests\LocalWebTestCase;
-use Xibo\Helper\Random;
 
 /**
  * Class LayoutProofOfPlayXMLMediaInheritWidgetOnTest
@@ -81,7 +78,7 @@ class LayoutProofOfPlayXMLMediaInheritWidgetOnTest extends LocalWebTestCase
     {
         parent::setup();
 
-        $this->getLogger()->debug('Setup test for ' . get_class() .' Test');
+        $this->getLogger()->debug('Setup test for ' . get_class($this) .' Test');
 
         // Set global widget enable stat set to On
         self::$container->get('configService')->changeSetting('WIDGET_STATS_ENABLED_DEFAULT', 'On');

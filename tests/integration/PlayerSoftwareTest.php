@@ -1,28 +1,27 @@
 <?php
-/**
-* Copyright (C) 2022 Xibo Signage Ltd
-*
-* Xibo - Digital Signage - http://www.xibo.org.uk
-*
-* This file is part of Xibo.
-*
-* Xibo is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published by
-* the Free Software Foundation, either version 3 of the License, or
-* any later version.
-*
-* Xibo is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
-*/
+/*
+ * Copyright (C) 2025 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - https://xibosignage.com
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
 namespace Xibo\Tests\integration;
 
 use Xibo\Entity\Display;
-use Xibo\Entity\PlayerVersion;
 use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Entity\XiboDisplayProfile;
@@ -58,7 +57,7 @@ class PlayerSoftwareTest extends LocalWebTestCase
     {
         parent::setup();
 
-        $this->getLogger()->debug('Setup test for  ' . get_class() . ' Test');
+        $this->getLogger()->debug('Setup test for  ' . get_class($this) . ' Test');
 
         // Upload version files
         $uploadVersion = $this->uploadVersionFile(Random::generateString(), PROJECT_ROOT . '/tests/resources/Xibo_for_Android_v1.7_R61.apk');

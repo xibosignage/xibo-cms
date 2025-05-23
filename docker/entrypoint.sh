@@ -353,22 +353,22 @@ fi
 echo "Configure PHP"
 
 # Configure PHP
-sed -i "s/session.gc_maxlifetime = .*$/session.gc_maxlifetime = $CMS_PHP_SESSION_GC_MAXLIFETIME/" /etc/php/8.2/apache2/php.ini
-sed -i "s/post_max_size = .*$/post_max_size = $CMS_PHP_POST_MAX_SIZE/" /etc/php/8.2/apache2/php.ini
-sed -i "s/upload_max_filesize = .*$/upload_max_filesize = $CMS_PHP_UPLOAD_MAX_FILESIZE/" /etc/php/8.2/apache2/php.ini
-sed -i "s/max_execution_time = .*$/max_execution_time = $CMS_PHP_MAX_EXECUTION_TIME/" /etc/php/8.2/apache2/php.ini
-sed -i "s/memory_limit = .*$/memory_limit = $CMS_PHP_MEMORY_LIMIT/" /etc/php/8.2/apache2/php.ini
-sed -i "s/session.cookie_httponly =.*$/session.cookie_httponly = $CMS_PHP_COOKIE_HTTP_ONLY/" /etc/php/8.2/apache2/php.ini
-sed -i "s/session.cookie_samesite =.*$/session.cookie_samesite = $CMS_PHP_COOKIE_SAMESITE/" /etc/php/8.2/apache2/php.ini
-sed -i "s/;session.cookie_secure =.*$/session.cookie_secure = $CMS_PHP_COOKIE_SECURE/" /etc/php/8.2/apache2/php.ini
-sed -i "s/session.gc_maxlifetime = .*$/session.gc_maxlifetime = $CMS_PHP_SESSION_GC_MAXLIFETIME/" /etc/php/8.2/cli/php.ini
-sed -i "s/post_max_size = .*$/post_max_size = $CMS_PHP_POST_MAX_SIZE/" /etc/php/8.2/cli/php.ini
-sed -i "s/upload_max_filesize = .*$/upload_max_filesize = $CMS_PHP_UPLOAD_MAX_FILESIZE/" /etc/php/8.2/cli/php.ini
-sed -i "s/max_execution_time = .*$/max_execution_time = $CMS_PHP_CLI_MAX_EXECUTION_TIME/" /etc/php/8.2/cli/php.ini
-sed -i "s/memory_limit = .*$/memory_limit = $CMS_PHP_CLI_MEMORY_LIMIT/" /etc/php/8.2/cli/php.ini
-sed -i "s/session.cookie_httponly =.*$/session.cookie_httponly = $CMS_PHP_COOKIE_HTTP_ONLY/" /etc/php/8.2/cli/php.ini
-sed -i "s/session.cookie_samesite =.*$/session.cookie_samesite = $CMS_PHP_COOKIE_SAMESITE/" /etc/php/8.2/cli/php.ini
-sed -i "s/;session.cookie_secure =.*$/session.cookie_secure = $CMS_PHP_COOKIE_SECURE/" /etc/php/8.2/cli/php.ini
+sed -i "s/session.gc_maxlifetime = .*$/session.gc_maxlifetime = $CMS_PHP_SESSION_GC_MAXLIFETIME/" /etc/php/8.4/apache2/php.ini
+sed -i "s/post_max_size = .*$/post_max_size = $CMS_PHP_POST_MAX_SIZE/" /etc/php/8.4/apache2/php.ini
+sed -i "s/upload_max_filesize = .*$/upload_max_filesize = $CMS_PHP_UPLOAD_MAX_FILESIZE/" /etc/php/8.4/apache2/php.ini
+sed -i "s/max_execution_time = .*$/max_execution_time = $CMS_PHP_MAX_EXECUTION_TIME/" /etc/php/8.4/apache2/php.ini
+sed -i "s/memory_limit = .*$/memory_limit = $CMS_PHP_MEMORY_LIMIT/" /etc/php/8.4/apache2/php.ini
+sed -i "s/session.cookie_httponly =.*$/session.cookie_httponly = $CMS_PHP_COOKIE_HTTP_ONLY/" /etc/php/8.4/apache2/php.ini
+sed -i "s/session.cookie_samesite =.*$/session.cookie_samesite = $CMS_PHP_COOKIE_SAMESITE/" /etc/php/8.4/apache2/php.ini
+sed -i "s/;session.cookie_secure =.*$/session.cookie_secure = $CMS_PHP_COOKIE_SECURE/" /etc/php/8.4/apache2/php.ini
+sed -i "s/session.gc_maxlifetime = .*$/session.gc_maxlifetime = $CMS_PHP_SESSION_GC_MAXLIFETIME/" /etc/php/8.4/cli/php.ini
+sed -i "s/post_max_size = .*$/post_max_size = $CMS_PHP_POST_MAX_SIZE/" /etc/php/8.4/cli/php.ini
+sed -i "s/upload_max_filesize = .*$/upload_max_filesize = $CMS_PHP_UPLOAD_MAX_FILESIZE/" /etc/php/8.4/cli/php.ini
+sed -i "s/max_execution_time = .*$/max_execution_time = $CMS_PHP_CLI_MAX_EXECUTION_TIME/" /etc/php/8.4/cli/php.ini
+sed -i "s/memory_limit = .*$/memory_limit = $CMS_PHP_CLI_MEMORY_LIMIT/" /etc/php/8.4/cli/php.ini
+sed -i "s/session.cookie_httponly =.*$/session.cookie_httponly = $CMS_PHP_COOKIE_HTTP_ONLY/" /etc/php/8.4/cli/php.ini
+sed -i "s/session.cookie_samesite =.*$/session.cookie_samesite = $CMS_PHP_COOKIE_SAMESITE/" /etc/php/8.4/cli/php.ini
+sed -i "s/;session.cookie_secure =.*$/session.cookie_secure = $CMS_PHP_COOKIE_SECURE/" /etc/php/8.4/cli/php.ini
 
 echo "Configure Apache"
 
