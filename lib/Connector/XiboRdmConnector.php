@@ -288,7 +288,7 @@ class XiboRdmConnector implements ConnectorInterface
      */
     public function getRdmDisplays(): array
     {
-        $displays = array_map(function($display) {
+        $displays = array_map(function ($display) {
             return [
                 'displayId' => $display->displayId,
                 'macAddress' => $display->macAddress,
@@ -326,10 +326,10 @@ class XiboRdmConnector implements ConnectorInterface
             // Return immediately if no CMS displays found
             if (empty($cmsDisplays)) {
                 return [
-                    "data" => [],
-                    "draw" => 0,
-                    "recordsTotal" => 0,
-                    "recordsFiltered" => 0
+                    'data' => [],
+                    'draw' => 0,
+                    'recordsTotal' => 0,
+                    'recordsFiltered' => 0
                 ];
             }
 
@@ -373,6 +373,6 @@ class XiboRdmConnector implements ConnectorInterface
      */
     private function getServiceUrl(): string
     {
-        return $this->getSetting('serviceUrl', 'http://xibosignage.com');
+        return $this->getSetting('serviceUrl', 'https://xibosignage.com');
     }
 }
