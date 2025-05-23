@@ -254,7 +254,7 @@ Cypress.Commands.add('createNonDynamicPlaylist', function(name) {
     body: {
       name: name,
     },
-  }).then((res) => {
+    }).then((res) => {
     return res.body.playlistId;
   });
 });
