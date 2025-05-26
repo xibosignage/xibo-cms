@@ -38,6 +38,11 @@
             <helpText>Should new widgets default to Muted?</helpText>
             <default>1</default>
         </property>
+        <property id="defaultSubtitle" type="checkbox">
+            <title>Default Subtitle?</title>
+            <helpText>Should new widgets default to Enabled Subtitles?</helpText>
+            <default>1</default>
+        </property>
     </settings>
     <properties>
         <property id="uri" type="text" variant="uri" includeInXlf="true">
@@ -54,6 +59,11 @@
             <title>Mute?</title>
             <helpText>Should the video be muted?</helpText>
             <default>%defaultMute%</default>
+        </property>
+        <property id="enableSubtitles" type="checkbox" includeInXlf="true">
+            <title>Enable Subtitles?</title>
+            <helpText>Show subtitles if available in the HLS stream. Note that not all streams include captions, and some may have them permanently embedded in the video.</helpText>
+            <default>%defaultSubtitle%</default>
         </property>
     </properties>
     <preview></preview>
@@ -79,6 +89,7 @@
                 var runOnVisible = function() { video.play(); };
                 (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible);
             });
+            hls.subtitleDisplay = {% if enableSubtitles == 1 %}true{% else %}false{% endif %};
             hls.on(Hls.Events.ERROR, function (event, data) {
                 if (data.fatal) {
                     switch(data.type) {
