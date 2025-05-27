@@ -2436,9 +2436,7 @@ PropertiesPanel.prototype.renderActions = function(
       app.viewer.DOMObject.find('.selected-action-trigger-parent')
         .removeClass('selected-action-trigger-parent');
 
-      self.createEditAction(actionData, null, {
-        newAction: true,
-      });
+      self.createEditAction(actionData, null);
     });
 
   // Handle hover to highlight action on viewer
@@ -2470,7 +2468,6 @@ PropertiesPanel.prototype.renderActions = function(
  * @param {object} actionData
  * @param {object} $target - Target container to be replaced
  * @param {object/boolean=} [options.actionNeedsValidateToCancel = false]
- * @param {object/boolean=} [options.newAction = false]
  * @return {boolean} false if unsuccessful
  */
 PropertiesPanel.prototype.createEditAction = function(
@@ -2478,7 +2475,6 @@ PropertiesPanel.prototype.createEditAction = function(
   $target = null,
   {
     actionNeedsValidateToCancel = false,
-    newAction = false,
   } = {},
 ) {
   const self = this;
@@ -2520,7 +2516,6 @@ PropertiesPanel.prototype.createEditAction = function(
   // Create action and add to container
   const $newActionContainer =
     $(actionFormActionEditTemplate($.extend({}, actionData, {
-      newAction: newAction,
       trans: propertiesPanelTrans.actions,
     })));
 
@@ -2833,11 +2828,10 @@ PropertiesPanel.prototype.createEditAction = function(
   app.actionManager.editing = actionData;
   $actionsContent.addClass('editing-action');
 
-  // Save initial widget id if exists
-  if (actionData.newAction) {
-    app.actionManager.editing.startedWithNoWidget =
-      (actionData.widgetId == null);
-    actionData.newAction = false;
+  // Check if we are in a new action
+  // with no widget id and save state
+  if (actionData.newAction && actionData.widgetId == null) {
+    app.actionManager.editing.startedWithNoWidget = true;
   }
 
   // Form conditions
@@ -3032,10 +3026,6 @@ PropertiesPanel.prototype.closeEditAction = function($action) {
   const self = this;
   const app = self.parent;
   const actionData = $action.data();
-  const $actionsContent = this.DOMObject.find('.actions-content');
-
-  // Remove action form
-  $action.remove();
 
   // Remove line if temporary action
   if (!actionData.actionId) {
@@ -3044,13 +3034,9 @@ PropertiesPanel.prototype.closeEditAction = function($action) {
 
   // Remove editing status
   app.actionManager.editing = {};
-  $actionsContent.removeClass('editing-action');
 
-  // If it's an existing action
-  // render back the preview
-  if (actionData.actionId) {
-    self.createPreviewAction(actionData);
-  }
+  // Render back actions
+  self.renderActions();
 
   // Update all action lines
   app.viewer.updateActionLine();

@@ -1152,7 +1152,6 @@ Viewer.prototype.handleUI = function() {
         target: targetType,
         targetId: targetId,
         layoutCode: layoutCode,
-      }, null, {
         newAction: true,
       });
 
@@ -5189,7 +5188,11 @@ Viewer.prototype.updateActionLine = function(
     this.actionLines[lineId].line.size = ald.normalWidth;
 
     // Update position
-    this.actionLines[lineId].line.position();
+    try {
+      this.actionLines[lineId].line.position();
+    } catch (e) {
+      console.warn('LeaderLine position failed:', e);
+    }
 
     // Update color
     const normalLineColor = ((this.theme === 'dark') ?
