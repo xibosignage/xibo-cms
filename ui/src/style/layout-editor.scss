@@ -1055,7 +1055,7 @@ body.editor-opened #content-wrapper .page-content>.row {
                 display: flex;
                 flex-direction: column;
 
-                .form-content, .actions-content {
+                .form-content {
                     overflow: hidden auto;
                     padding: 0 1rem;
                     margin-top: 0.5rem;
@@ -1064,6 +1064,9 @@ body.editor-opened #content-wrapper .page-content>.row {
 
                 .actions-content {
                     margin-top: 0;
+                    padding: 0 1rem;
+                    flex: 1;
+                    overflow: hidden;
 
                     .actions-content-button {
                         color: $xibo-color-primary;
@@ -1091,11 +1094,20 @@ body.editor-opened #content-wrapper .page-content>.row {
                         }
                     }
 
+                    .actions-list {
+                        overflow-y: auto;
+                        max-height: calc(100% - 56px);
+                        scrollbar-width: thin;
+                        display: flex;
+                        flex-direction: column;
+                        gap: 8px;
+                        margin-top: 8px;
+                    }
+
                     .action-edit-form, .action-view {
                         display: flex;
                         flex-direction: column;
                         padding: 10px;
-                        margin: 8px 0;
                         gap: 15px;
                         border-radius: 3px;
                         border: 1px solid $xibo-color-neutral-300;
