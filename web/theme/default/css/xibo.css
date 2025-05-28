@@ -691,6 +691,10 @@ i.fa.fa-ban.fa-stack-2x {
     color: #ffffff;
 }
 
+.rdm-modal .modal-dialog {
+    max-width: 80% !important;
+}
+
 @media ( max-width: 585px) {
     .board {
         width: 90%;
