@@ -1,0 +1,5 @@
+{
+  "name": "Anonymous Usage",
+  "class": "\\Xibo\\XTR\\AnonymousUsageTask",
+  "options": {}
+}
