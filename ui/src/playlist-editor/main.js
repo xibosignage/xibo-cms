@@ -982,7 +982,12 @@ pE.openContextMenu = function(obj, position = {x: 0, y: 0}) {
     // ( using the object extended with translations )
     pE.editorContainer.append(
       contextMenuTemplate(
-        Object.assign(playlistObject, {trans: contextMenuTrans}),
+        Object.assign(playlistObject, {
+          trans: contextMenuTrans,
+          editor: 'playlist',
+          isEditableWidget: playlistObject.isEditable,
+          canAttachAudio: playlistObject.canAttachAudio,
+        }),
       ),
     );
   }
