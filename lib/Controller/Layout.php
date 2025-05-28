@@ -436,10 +436,10 @@ class Layout extends Base
             );
         }
 
-        // Do we have an 'Enable Stats Collection?' checkbox?
+        // Do we have an 'Enable Layout Stats Collection?' checkbox?
         // If not, we fall back to the default Stats Collection setting.
         if (!$sanitizedParams->hasParam('enableStat')) {
-            $enableStat = $this->getConfig()->getSetting('DISPLAY_PROFILE_STATS_DEFAULT');
+            $enableStat = $this->getConfig()->getSetting('LAYOUT_STATS_ENABLED_DEFAULT');
         }
 
         // Set layout enableStat flag
