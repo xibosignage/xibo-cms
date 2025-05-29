@@ -51,14 +51,22 @@
             {{/if}}
 
             {{#unless readOnlyModeOn}}
-                {{#if object.isPermissionsModifiable}}
-                    <button type="button" id="permissions-btn" class="properties-btn btn btn-sm" data-property="Permissions" 
-                        data-toggle="tooltip" data-container=".editor-bottom-bar" data-placement="top" data-title="{{trans.tools.permissions.description}}">
-                        <i class="tool-icon-permissions card-icon"></i>
-                    </button>
-                {{/if}}
+                {{#eq object.type "element"}}
+                    {{#if widget.isPermissionsModifiable}}
+                        <button type="button" id="permissions-btn" class="properties-btn properties-widget btn btn-sm" data-property="Permissions" 
+                            data-toggle="tooltip" data-container=".editor-bottom-bar" data-placement="top" data-title="{{trans.tools.permissions.description}}">
+                            <i class="tool-icon-permissions card-icon"></i>
+                        </button>
+                    {{/if}}
+                {{/eq}}
 
                 {{#eq object.type "widget"}}
+                    {{#if object.isPermissionsModifiable}}
+                        <button type="button" id="permissions-btn" class="properties-btn btn btn-sm" data-property="Permissions" 
+                            data-toggle="tooltip" data-container=".editor-bottom-bar" data-placement="top" data-title="{{trans.tools.permissions.description}}">
+                            <i class="tool-icon-permissions card-icon"></i>
+                        </button>
+                    {{/if}}
                     {{#if object.isEditable}}
                         {{#if object.canAttachAudio}}
                             <button type="button" id="audio-btn" class="properties-btn btn btn-sm" data-property="Audio" 
@@ -66,17 +74,18 @@
                                 <i class="tool-icon-audio card-icon"></i>
                             </button>
                         {{/if}}
-
-                        <button type="button" id="transitionIn-btn" class="properties-btn btn btn-sm" data-property="Transition" data-property-type="in" 
-                            data-toggle="tooltip" data-container=".editor-bottom-bar" data-placement="top" data-title="{{trans.tools.transitionIn.description}}">
-                            <i class="tool-icon-transitionIn card-icon"></i>
-                        </button>
-
-                        <button type="button" id="transitionOut-btn" class="properties-btn btn btn-sm" data-property="Transition" data-property-type="out" 
-                            data-toggle="tooltip" data-container=".editor-bottom-bar" data-placement="top" data-title="{{trans.tools.transitionOut.description}}">
-                            <i class="tool-icon-transitionOut card-icon"></i>
-                        </button>
                     {{/if}}
+                {{/eq}}
+
+                {{#eq object.type "region"}}
+                    {{#neq object.subType "zone"}}
+                        {{#if object.isPermissionsModifiable}}
+                            <button type="button" id="permissions-btn" class="properties-btn btn btn-sm" data-property="Permissions" 
+                                data-toggle="tooltip" data-container=".editor-bottom-bar" data-placement="top" data-title="{{trans.tools.permissions.description}}">
+                                <i class="tool-icon-permissions card-icon"></i>
+                            </button>
+                        {{/if}}
+                    {{/neq}}
                 {{/eq}}
             {{/unless}}
         </div>
