@@ -91,7 +91,7 @@
                         {% endif %}
 
                         {% set title %}{% trans "Code Identifier" %}{% endset %}
-                        {% set helpText %}{% trans "Enter a string to be used as the Code to identify this Layout when used with Interactive Actions." %}{% endset %}
+                        {% set helpText %}{% trans "Enter letters/numbers, without spaces, which will be used to identify this Layout when creating Interactive Actions." %}{% endset %}
                         {{ forms.input("code", title, layout.code, helpText) }}
 
                         {% set title %}{% trans "Retired" %}{% endset %}

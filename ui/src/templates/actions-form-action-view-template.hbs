@@ -1,0 +1,87 @@
+<div class="action-view">
+    <div class="action-group">
+        <div class="action-label">{{trans.actionType}}</div>
+        <div class="action-value">{{lookup trans actionTypeName}}</div>
+    </div>
+
+    <div class="action-group">
+        <div class="action-label">{{trans.triggerType}}</div>
+        <div class="action-value">{{lookup trans triggerType}}</div>
+    </div>
+
+    {{#if triggerCode}}
+        <div class="action-group">
+            <div class="action-label">{{trans.triggerCode}}</div>
+            <div class="action-value">{{triggerCode}}</div>
+        </div>
+    {{else}}
+        {{#if sourceId}}
+            <div class="action-group">
+                <div class="action-label">{{trans.triggerTarget}}</div>
+                <div class="action-value">
+                    {{#if sourceName}}
+                        "{{sourceName}}"
+                    {{else}}
+                        {{sourceId}}
+                    {{/if}}
+                    ({{lookup trans.targetsAndSources source}})
+                </div>
+            </div>
+        {{/if}}
+    {{/if}}
+
+    {{#if showTarget}}
+        {{#if targetId}}
+            {{!-- Set layout name as screen --}}
+            {{#eq target "layout"}}
+                {{set "targetValue" "screen"}}
+            {{else}}
+                {{set "targetValue" target}}
+            {{/eq}}
+
+            <div class="action-group">
+                <div class="action-label">{{trans.target}}</div>
+                <div class="action-value">
+                    {{#if targetName}}
+                        "{{targetName}}"
+                    {{else}}
+                        {{targetId}}
+                    {{/if}}
+                    ({{lookup trans.targetsAndSources targetValue}})
+                </div>
+            </div>
+        {{/if}}
+    {{/if}}
+
+    {{#if widgetId}}
+        <div class="action-group">
+            <div class="action-label">{{trans.widgetToLoad}}</div>
+            <div class="action-value">
+                {{#if widgetName}}
+                    "{{widgetName}}"
+                {{else}}
+                    {{widgetId}}
+                {{/if}}
+                ({{lookup trans.targetsAndSources 'widget'}})
+            </div>
+        </div>
+    {{/if}}
+
+    {{#if layoutCode}}
+        <div class="action-group">
+            <div class="action-label">{{trans.layoutCode}}</div>
+            <div class="action-value">{{layoutCode}}</div>
+        </div>
+    {{/if}}
+
+    {{#unless readOnly}}
+        <div class="action-btn-container">
+            <div class="action-btn" data-action="edit" title="{{trans.editAction}}">
+                {{trans.editAction}}
+            </div>
+            <div class="action-btn" data-action="delete" title="{{trans.deleteAction}}">
+                {{trans.deleteAction}}
+            </div>
+        </div>
+    {{/unless}}
+</div>

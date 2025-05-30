@@ -39,7 +39,16 @@
                     regions: "{{ "Zones"|trans }}",
                     widgets: "{{ "Widgets"|trans }}",
                     playlists: "{{ "Playlists"|trans }}",
+                    elements: "{{ "Elements"|trans }}",
+                    elementGroups: "{{ "Element Groups"|trans }}",
                     deleteWidget: "{{ "Delete"|trans }}",
+                    currentLayout: "{{ "Current Layout"|trans }}",
+                    searchforLayouts: "{{ "Search for Layouts"|trans }}",
+                    searchforLayoutsHelpText: "{{ "Search for Layouts by the Code Identifier. Layouts must have a Code Identifier set in the Layout Edit form before creating a Navigate to Layout Action Type."|trans }}",
+                    searchforALayout: "{{ "Search for Layouts by Code"|trans }}",
+                    noResults: "{{ "No results"|trans }}",
+                    removeFromRecents: "{{ "Remove Layout from recents"|trans }}",
+                    more: "{{ "Show more"|trans }}",
                     deleteModal: {
                         title: "{{ "Delete Action"|trans }}",
                         message: "{{ "Are you sure you want to delete this action?"|trans }}",
@@ -163,14 +172,7 @@
                 somethingWentWrong: "{{ "Something went wrong!"|trans }}",
                 somethingWentWrongEditPermissions: "{{ "Selected item is not shared with you with edit permission!"|trans }}",
                 actions: {
-                    noActionsToShow: "{{ "No actions to show"|trans }}",
-                    otherActions: "{{ "Other Actions" |trans }}",
                     notDefined: "{{ "* Not Defined"|trans }}",
-                    itemActions: {
-                        layout: "{{ "Layout Actions" |trans }}",
-                        region: "{{ "Zone Actions" |trans }}",
-                        widget: "{{ "Widget Actions" |trans }}",
-                    },
                     targetsAndSources: {
                         layout: "{{ "Layout" |trans }}",
                         region: "{{ "Zone" |trans }}",
@@ -183,10 +185,12 @@
                     targetHelpText: "{{ "If your Widget is a Shell Command you can select to target 'Screen' to run the command without affecting any Zones. For all other Widgets select 'Zone' as target." |trans }}",
                     touch: "{{ "Touch/Click" |trans }}",
                     webhook: "{{ "Web hook" |trans }}",
-                    save: "{{ "Save" |trans }}",
-                    cancel: "{{ "Cancel" |trans }}",
-                    editAction: "{{ "Edit Action" |trans }}",
-                    deleteAction: "{{ "Delete Action" |trans }}",
+                    addAction: "{{ "Add an Action" |trans }}",
+                    editAction: "{{ "Edit" |trans }}",
+                    saveAction: "{{ "Save" |trans }}",
+                    continueAction: "{{ "Continue" |trans }}",
+                    cancelAction: "{{ "Cancel" |trans }}",
+                    deleteAction: "{{ "Delete" |trans }}",
                     nextLayout: "{{ "Next Layout" |trans }}",
                     previousLayout: "{{ "Previous Layout" |trans }}",
                     nextWidget: "{{ "Next Widget" |trans }}",
@@ -194,7 +198,8 @@
                     navLayout: "{{ "Navigate to Layout" |trans }}",
                     navWidget: "{{ "Navigate to Widget" |trans }}",
                     widgetToLoad: "{{ "Widget to Load" |trans }}",
-                    widgetToLoadHelpText: "{{ "Select or create a Widget to be loaded" |trans }}",
+                    widgetToLoadHelpText: "{{ "Create or edit the Widget to be loaded" |trans }}",
+                    actionType: "{{ "Action Type" |trans }}",
                     triggerType: "{{ "Trigger Type" |trans }}",
                     triggerTypeHelpText: "{{ "How should the Player listen for this Action to be triggered?" |trans }}",
                     triggerCode: "{{ "Trigger Code" |trans }}",
@@ -203,7 +208,10 @@
                     triggerTargetHelpText: "{{ "Select the target for the Trigger" |trans }}",
                     layoutCode: "{{ "Layout Code" |trans }}",
                     layoutCodeHelpText: "{{ "Please enter the Code identifier for the Layout as assigned in the Add / Edit Layout form." |trans }}",
-                    createNewDrawerWidget: "{{ "-- Create New --" |trans }}",
+                    createActionTargetWidget: "{{ "Create Widget" |trans }}",
+                    editActionTargetWidget: "{{ "Edit" |trans }}",
+                    deleteActionTargetWidget: "{{ "Delete" |trans }}",
+                    createWidgetInZoneMessage: "{{ "Add a widget from the Toolbox to the target area!" |trans }}",
                 },
                 positionTab: {
                     layer: "{{ "Layer" |trans }}",
@@ -461,7 +469,12 @@
                 dimensions: "{{ "Dimensions" |trans }}",
                 dimensionsDetail: "{{ "Layout dimensions"|trans }}",
                 layoutActions: "{{ "Layout Actions:"|trans }}",
-                onlyMyLayouts: "{{ "My Layouts?"|trans }}"
+                onlyMyLayouts: "{{ "My Layouts?"|trans }}",
+                interactiveToggle: {
+                    mode: "{{ "Interactive Mode"|trans }}",
+                    on: "{{ "ON"|trans }}",
+                    off: "{{ "OFF"|trans }}",
+                }
             };
 
             var historyManagerTrans = {
@@ -560,6 +573,8 @@
                 failedToImportMedia: "{{ "Failed to import media!"|trans }}",
                 canvasWidgetNotShared: "{{ "This Canvas is not shared with you with edit permission!"|trans }}",
                 getProvidersFailed: "{{ "Failed to load media providers!"|trans }}",
+                actionCreateFailed: "{{ "Failed Action creation!"|trans }}",
+                actionsGetFailed: "{{ "Failed to get all actions!"|trans }}",
             };
 
             var widgetStatusTrans = {
@@ -709,25 +724,6 @@
                     opacity: "{{ "Opacity"|trans }}",
                     width: "{{ "Width"|trans }}",
                     height: "{{ "Height"|trans }}",
-                }
-            };
-
-            var actionsTranslations = {
-                tableHeaders: {
-                    name: "{{ "Actions" |trans }}",
-                    id: "{{ "Id"|trans }}",
-                    ownerId: "{{ "Owner Id"|trans }}",
-                    triggerType: "{{ "Trigger Type"|trans }}",
-                    triggerCode: "{{ "Trigger Code"|trans }}",
-                    actionType: "{{ "Action Type"|trans }}",
-                    target: "{{ "Target Type"|trans }}",
-                    targetId: "{{ "Target"|trans }}",
-                    widgetId: "{{ "Widget"|trans }}",
-                    layoutCode: "{{ "Layout Code"|trans }}",
-                },
-                button: {
-                    name: "{{ "Add Action" |trans }}",
-                    description: "{{ "Click to Add a new Action"|trans }}"
                 }
             };
 

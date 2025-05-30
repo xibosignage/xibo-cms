@@ -24,19 +24,49 @@
 const loadingTemplate = require('../templates/loading.hbs');
 const messageTemplate = require('../templates/properties-panel-message.hbs');
 const propertiesPanelTemplate = require('../templates/properties-panel.hbs');
-const actionsFormTabTemplate =
-  require('../templates/actions-form-tab-template.hbs');
 const actionsFormContentTemplate =
   require('../templates/actions-form-content-template.hbs');
-const actionFormObjectTemplate =
-  require('../templates/actions-form-element-template.hbs');
-const actionFormObjectEditTemplate =
-    require('../templates/actions-form-element-edit-template.hbs');
+const actionFormActionEditTemplate =
+  require('../templates/actions-form-action-edit-template.hbs');
+const actionFormActionViewTemplate =
+  require('../templates/actions-form-action-view-template.hbs');
+
 const formTemplates = {
   widget: require('../templates/forms/widget.hbs'),
   region: require('../templates/forms/region.hbs'),
   layout: require('../templates/forms/layout.hbs'),
   position: require('../templates/forms/position.hbs'),
+  message: require('../templates/forms/inputs/message.hbs'),
+};
+const actionTypesAndRules = {
+  nextLayout: {
+    targetType: 'screen',
+    targetTypeFilter: ['layouts'],
+    subType: 'next',
+  },
+  previousLayout: {
+    targetType: 'screen',
+    targetTypeFilter: ['layouts'],
+    subType: 'previous',
+  },
+  nextWidget: {
+    targetType: 'region',
+    targetTypeFilter: ['playlists'],
+    subType: 'next',
+  },
+  previousWidget: {
+    targetType: 'region',
+    targetTypeFilter: ['playlists'],
+    subType: 'previous',
+  },
+  navLayout: {
+    targetTypeFilter: ['layouts'],
+    subTypeFixed: 'navLayout',
+  },
+  navWidget: {
+    targetTypeFilter: ['playlists', 'regions'],
+    subTypeFixed: 'navWidget',
+  },
 };
 
 /**
@@ -60,8 +90,6 @@ const PropertiesPanel = function(parent, container) {
 
   this.openTabOnRender = '';
 
-  this.actionForm = {};
-
   this.toSave = false;
   this.toSaveElementCallback = null;
 };
@@ -83,6 +111,7 @@ PropertiesPanel.prototype.save = function(
     showErrorMessages = true,
     callback = null,
     callbackNoWait = null,
+    forceSave = false,
   } = {},
 ) {
   const app = this.parent;
@@ -92,8 +121,18 @@ PropertiesPanel.prototype.save = function(
   let savingElementGroup = false;
 
   // If target isn't set, use selected object
+  // If it's interactiveEditWidgetMode, use action widget
   if (!target) {
-    target = app.selectedObject;
+    if (app.interactiveEditWidgetMode) {
+      target = app.getObjectByTypeAndId(
+        'widget',
+        'widget_' + app.layout.drawer.regionId +
+          '_' + app.actionManager.editing.widgetId,
+        'drawer',
+      );
+    } else {
+      target = app.selectedObject;
+    }
   }
 
   // Check if target is region
@@ -186,7 +225,11 @@ PropertiesPanel.prototype.save = function(
   if (
     formFieldsToSave.length > 0 &&
     formFieldsToSave.valid() &&
-    formOldData != formNewData // if form data is the same, don't save
+    // if form data is the same, don't save if not forced
+    (
+      formOldData != formNewData ||
+      forceSave
+    )
   ) {
     app.common.showLoadingScreen();
 
@@ -458,14 +501,10 @@ PropertiesPanel.prototype.delete = function(element) {
 /**
  * Render panel
  * @param {Object} target - the element object to be rendered
- * @param {boolean} actionEditMode - render while editing an action
- * @param {boolean} openActionTab - open action tab after rendering
  * @return {boolean} - result status
  */
 PropertiesPanel.prototype.render = function(
   target,
-  actionEditMode = false,
-  openActionTab = false,
 ) {
   const self = this;
   const app = this.parent;
@@ -486,6 +525,9 @@ PropertiesPanel.prototype.render = function(
     this.DOMObject.parents('.editor-modal')
       .toggleClass('properties-panel-opened', true);
   }
+
+  const isEmptyActionWidget =
+    (app.interactiveEditWidgetMode && target.type === 'layout');
 
   // If target is an element, change it to the widget
   // and save the element in a new variable
@@ -557,6 +599,13 @@ PropertiesPanel.prototype.render = function(
   // Show loading template
   this.DOMObject.html(loadingTemplate());
 
+  // Interactive mode
+  if (app.interactiveMode) {
+    // Create actions content
+    this.renderActions();
+    return;
+  }
+
   // Build request path
   let requestPath = urlsForApi[target.type].getForm.url;
   requestPath = requestPath.replace(':id', target[target.type + 'Id']);
@@ -594,7 +643,9 @@ PropertiesPanel.prototype.render = function(
     }
 
     // Render template
-    const htmlTemplate = formTemplates[target.type];
+    const htmlTemplate = (isEmptyActionWidget) ?
+      formTemplates['message'] :
+      formTemplates[target.type];
 
     // Extend element with translation
     $.extend(res.data, {
@@ -603,16 +654,49 @@ PropertiesPanel.prototype.render = function(
 
     // Create buttons object for the external playlist editor
     let buttons = {};
+    let saveInitFormState = false;
     if (
       self.parent.mainObjectType == 'playlist' &&
       self.parent.inline === false
     ) {
       // Render save button
       buttons = formHelpers.widgetFormRenderButtons(formTemplates.buttons);
+    } else if (
+      app.interactiveEditWidgetMode
+    ) {
+      const isEdit = (target.type === 'widget');
+      saveInitFormState = isEdit;
+
+      // show cancel
+      buttons['cancel'] = {
+        name: propertiesPanelTrans.actions.cancelAction,
+        type: 'btn-outline-primary',
+        action: 'cancelEditActionWidget',
+        subAction: (
+          app.interactiveEditWidgetModeType == 1 ?
+            'revertChanges' :
+            'deleteWidget'),
+      };
+
+      // If target is existing widget, we're editing
+      // show continue button
+      if (isEdit) {
+        buttons['continue'] = {
+          name: propertiesPanelTrans.actions.continueAction,
+          type: 'btn-primary',
+          action: 'continueEditActionWidget',
+        };
+      }
     }
 
     // Data to be rendered
-    const dataToRender = res.data;
+    const dataToRender = (isEmptyActionWidget) ?
+      {
+        customClass: 'no-widget-action-edit-message',
+        variante: 'primary',
+        title: propertiesPanelTrans.actions.createWidgetInZoneMessage,
+      } :
+      res.data;
 
     // If we have a widget, add the widgetId to the data
     if (target.type === 'widget') {
@@ -632,7 +716,7 @@ PropertiesPanel.prototype.render = function(
 
     // If the form is a layout
     // Add imageDownloadUrl and libraryAddUrl to the data
-    if (target.type === 'layout') {
+    if (target.type === 'layout' && !app.interactiveEditWidgetMode) {
       dataToRender.imageDownloadUrl = imageDownloadUrl;
       dataToRender.libraryAddUrl = libraryAddUrl;
 
@@ -689,9 +773,6 @@ PropertiesPanel.prototype.render = function(
 
     // Append layout html to the main div
     self.DOMObject.html(html);
-
-    // Mark container as action edit mode
-    self.DOMObject.toggleClass('action-edit-mode', actionEditMode);
 
     // Store the extra data
     self.DOMObject.data('extra', res.extra);
@@ -1142,12 +1223,10 @@ PropertiesPanel.prototype.render = function(
           );
 
           // Also Init fields for the element
-          self.initFields(
+          self.initPanelFields(
             targetAux,
             res.data,
-            actionEditMode,
             true,
-            openActionTab,
           );
 
           // Save element
@@ -1390,7 +1469,7 @@ PropertiesPanel.prototype.render = function(
             (positionProperties.showElementLayer = true);
 
           (targetAux?.type == 'element-group') &&
-              (positionProperties.showElementGroupLayer = true);
+            (positionProperties.showElementGroupLayer = true);
         }
 
         self.DOMObject.find('#advancedTab, #transitionTab').after(
@@ -1854,7 +1933,8 @@ PropertiesPanel.prototype.render = function(
                 mainObject,
                 {
                   reloadPropertiesPanel: false,
-                }).then(() => {
+                },
+              ).then(() => {
                 if (!target.drawerWidget) {
                   app.viewer.renderRegion(
                     app.getObjectByTypeAndId('region', target.regionId),
@@ -1889,7 +1969,15 @@ PropertiesPanel.prototype.render = function(
 
     // Init fields ( for non elements )
     (!isElement) &&
-      self.initFields(target, res.data, actionEditMode, false, openActionTab);
+      self.initPanelFields(target, res.data, false);
+
+    // Save loading form state to restore later
+    if (saveInitFormState) {
+      const $form = self.DOMObject.find('form');
+      const serializedInputs = $form.find('[name]')
+        .filter('.tab-pane:not(#positionTab) [name]').serialize();
+      $form.data('initFormState', serializedInputs);
+    }
   }).fail(function(data) {
     // Clear request var after response
     self.renderRequest = undefined;
@@ -1904,16 +1992,12 @@ PropertiesPanel.prototype.render = function(
  * Initialise the form fields
  * @param {*} target The target object
  * @param {*} data The data to be used
- * @param {boolean} actionEditMode - render while editing an action
  * @param {boolean} elementProperties - render element properties
- * @param {boolean} selectActionTab - select tab for actions
  */
-PropertiesPanel.prototype.initFields = function(
+PropertiesPanel.prototype.initPanelFields = function(
   target,
   data,
-  actionEditMode = false,
   elementProperties = false,
-  selectActionTab = false,
 ) {
   const self = this;
   const app = this.parent;
@@ -1921,7 +2005,7 @@ PropertiesPanel.prototype.initFields = function(
   const targetIsPlaylist =
     (target.type === 'region' && target.subType === 'playlist');
   const readOnlyModeOn =
-    (typeof(lD) != 'undefined' && lD?.readOnlyMode === true) ||
+    (typeof (lD) != 'undefined' && lD?.readOnlyMode === true) ||
     (app?.readOnlyMode === true);
 
   // If layout ( or playlist ) isn't added to data
@@ -2010,18 +2094,6 @@ PropertiesPanel.prototype.initFields = function(
           );
         }
       });
-  }
-
-  // Render action tab
-  if (
-    app.mainObjectType === 'layout' &&
-    !targetIsElement // Filter out elements for now
-  ) {
-    self.renderActionTab(target, {
-      reattach: actionEditMode || selectActionTab,
-      selectAfterRender: selectActionTab,
-      readOnlyMode: readOnlyModeOn,
-    });
   }
 
   // Xibo Init options
@@ -2134,6 +2206,7 @@ PropertiesPanel.prototype.initFields = function(
 
   // Handle Auto Save
   // (only when working in the layout editor)
+  // and if not using the interactive add widget mode
   if (
     !readOnlyModeOn &&
     (
@@ -2201,29 +2274,30 @@ PropertiesPanel.prototype.initFields = function(
       ':not(.element-group-property)' +
       ':not([data-tag-style-input])';
     $(self.DOMObject).find('form').off()
-      .on({
-        'change blur inputChange xiboInputChange': function(_ev, options) {
-          // Check if we skip this field
-          if (skipSave(_ev.currentTarget, _ev)) {
-            return;
-          }
+      .on(
+        {
+          'change blur inputChange xiboInputChange': function(_ev, options) {
+            // Check if we skip this field
+            if (skipSave(_ev.currentTarget, _ev)) {
+              return;
+            }
 
-          // Debounce save based on the object being saved
-          if (!options?.skipSave) {
-            saveDebounced(
-              self.parent.selectedObject,
-            );
-          }
+            // Debounce save based on the object being saved
+            if (!options?.skipSave) {
+              saveDebounced(
+                self.parent.selectedObject,
+              );
+            }
+          },
+          'focus editorFocus': function(_ev) {
+            // Check if we dont skip this field
+            self.toSave = !skipSave(_ev.currentTarget, _ev);
+          },
         },
-        'focus editorFocus': function(_ev) {
-          // Check if we dont skip this field
-          self.toSave = !skipSave(_ev.currentTarget, _ev);
-        },
-      },
-      `.xibo-form-input${skipXiboFormInput} select${skipFormInput}, ` +
-      `.xibo-form-input${skipXiboFormInput} input${skipFormInput}, ` +
-      `.xibo-form-input${skipXiboFormInput} textarea${skipFormInput}, ` +
-      '[name="backgroundImageId"] ',
+        `.xibo-form-input${skipXiboFormInput} select${skipFormInput}, ` +
+        `.xibo-form-input${skipXiboFormInput} input${skipFormInput}, ` +
+        `.xibo-form-input${skipXiboFormInput} textarea${skipFormInput}, ` +
+        '[name="backgroundImageId"] ',
       );
   }
 };
@@ -2304,403 +2378,475 @@ PropertiesPanel.prototype.saveRegion = function(
 };
 
 /**
- * Create action tab
+ * Render actions
  * @param {object} object
- * @param {object/boolean=} [options.reattach = false] - reattach the tab
- * @param {object/boolean=} [options.clearPrevious = false]
- *  - clear previous tab content
- * @param {object/boolean=} [options.selectAfterRender = false]
- *   - select the tab when rendered
- * @param {object/string=} [options.openEditActionAfterRender = null]
- *   - read only mode
- * @param {object/boolean=} [options.readOnlyMode = false]
  */
-PropertiesPanel.prototype.renderActionTab = function(
+PropertiesPanel.prototype.renderActions = function(
   object,
-  {
-    reattach = false,
-    clearPrevious = false,
-    selectAfterRender = false,
-    openEditActionAfterRender = null,
-    readOnlyMode = false,
-  } = {},
 ) {
   const self = this;
   const app = this.parent;
 
+  // If it isn't set, use selected object
+  if (!object) {
+    object = app.selectedObject;
+  }
+
   // Init drawer
-  lD.initDrawer();
+  app.initDrawer();
 
-  // Remove action tab and content
-  if (clearPrevious) {
-    self.DOMObject.find('.nav-tabs .actions-tab').remove();
-    self.DOMObject.find('#actionsTab').remove();
-  }
-
-  // Create tab
-  self.DOMObject.find('.nav-tabs').append(
-    actionsFormTabTemplate({
-      trans: layoutEditorTrans,
+  const propertiesPanelOptions = {
+    style: 'actions',
+    form: actionsFormContentTemplate({
+      objectType: object.type,
+      trans: propertiesPanelTrans.actions,
+      readOnly: app.readOnlyMode,
     }),
-  );
+    trans: propertiesPanelTrans,
+  };
 
-  // Create tab content
-  if (!reattach) {
-    this.actionForm =
-      $(actionsFormContentTemplate({
-        objectType: object.type,
-        trans: propertiesPanelTrans.actions,
-      }));
-  }
+  // Create Actions form content and attach to DOM
+  self.DOMObject.html(propertiesPanelTemplate(propertiesPanelOptions));
 
-  // Attach to DOM
-  this.actionForm.appendTo(this.DOMObject.find('.tab-content'));
-
-  if (!reattach) {
-    // Remove edit area from the viewer
-    lD.viewer.removeActionEditArea();
-
-    // Get actions and populate form containers
-    $.ajax({
-      url: urlsForApi.actions.get.url,
-      type: urlsForApi.actions.get.type,
-      dataType: 'json',
-      data: {
-        layoutId: app.mainObjectId,
-        start: 0,
-        // set a maximum number of actions to be returned
-        length: 1000,
-      },
-    }).done(function(res) {
-      // Filter actions by groups
-      const $itemActionsContainer =
-        self.DOMObject.find('.item-actions');
-      const $otherActionsContainer =
-        self.DOMObject.find('.other-actions');
-
-      const showEmptyMessage = ($container) => {
-        $container.append(
-          $('<div />').addClass('text-center no-actions').text(
-            propertiesPanelTrans.actions.noActionsToShow,
-          ),
-        );
-      };
-
-      if (res.data && res.data.length > 0) {
-        res.data.forEach((action) => {
-          self.addActionToContainer(
+  // Get actions and populate form containers
+  app.actionManager.getAllActions(app.mainObjectId)
+    .then(function(data) {
+      if (
+        !$.isEmptyObject(data)
+      ) {
+        Object.entries(data).forEach(([_id, action]) => {
+          self.createPreviewAction(
             action,
-            object,
-            $itemActionsContainer,
-            $otherActionsContainer,
-            null,
-            !readOnlyMode,
           );
         });
       }
-
-      // If container is empty, show message
-      ($itemActionsContainer.find('.action-element').length == 0) &&
-        showEmptyMessage($itemActionsContainer);
-      ($otherActionsContainer.find('.action-element').length == 0) &&
-        showEmptyMessage($otherActionsContainer);
-
-      // Select tab after render
-      if (selectAfterRender) {
-        self.DOMObject.find('.nav-link, .tab-pane').removeClass('active');
-        self.DOMObject.find('.actions-tab .nav-link, #actionsTab')
-          .addClass('active');
-
-
-        // Open edit action form
-        if (openEditActionAfterRender != null) {
-          self.openEditAction(
-            self.DOMObject.find(
-              '.action-element[data-action-id="' +
-              openEditActionAfterRender +
-              '"]',
-            ),
-          );
-        }
-      }
-    }).fail(function(_data) {
-      toastr.error(
-        errorMessagesTrans.getFormFailed,
-        errorMessagesTrans.error,
-      );
     });
-  } else {
-    // Select tab after render
-    if (selectAfterRender) {
-      self.DOMObject.find('.nav-link, .tab-pane').removeClass('active');
-      self.DOMObject.find('.actions-tab .nav-link, #actionsTab')
-        .addClass('active');
-    }
-  }
-};
 
-/**
- * Add or update action
- * @param {object} action
- * @param {object} selectedObject
- * @param {object} $containerSelected
- * @param {object} $containerOther
- * @param {object} $elementToBeReplaced
- * @param {boolean} editMode
- */
-PropertiesPanel.prototype.addActionToContainer = function(
-  action,
-  selectedObject = lD.selectedObject,
-  $containerSelected = null,
-  $containerOther = null,
-  $elementToBeReplaced = null,
-  editMode = true,
-) {
-  const self = this;
-  const app = this.parent;
-  const selectedType = selectedObject.type;
-  const selectedId = selectedObject[selectedType + 'Id'];
+  // Add action button handling
+  self.DOMObject.find('.actions-content button[data-action="add"]')
+    .on('click', function() {
+      const $trigger = app.viewer.DOMObject.find('.selected-action-trigger');
+      const actionData = {};
 
-  const getObjectName = (objType, objId) => {
-    let auxObjId = '';
-    let nameIndex = 'name';
-
-    // If it's a widget, we need to pass a flag for search the region
-    if (objType === 'widget') {
-      auxObjId = 'search';
-      nameIndex = 'widgetName';
-    }
-
-    // If it's screen, return layout
-    if (objType === 'screen') {
-      objType = 'layout';
-    }
-
-    return (app.getObjectByTypeAndId(objType, objId, auxObjId)) ?
-      app.getObjectByTypeAndId(objType, objId, auxObjId)[nameIndex] :
-      '';
-  };
-
-  // Check if current element is trigger or target for this action
-  action.isTrigger =
-    action.source == selectedType &&
-    action.sourceId == selectedId;
-
-  // If action target is layout/screen, add the id to the targetId
-  if (action.target == 'screen') {
-    action.targetId = app.mainObjectId;
-  }
-
-  // For layout, compare with "screen"
-  const objectType =
-    (selectedType == 'layout') ? 'screen' : selectedType;
-  action.isTarget =
-    action.target == objectType &&
-    action.targetId == selectedId;
-
-  // Create action title
-  action.actionTitle = action.actionType;
-  if (action.actionType == 'next' || action.actionType == 'previous') {
-    action.actionTitle += (action.target == 'screen') ? 'Layout' : 'Widget';
-  }
-
-  // Group actions into element actions and other actions
-  let $targetContainer;
-  if (action.isTrigger || action.isTarget) {
-    $targetContainer = $containerSelected;
-  } else {
-    $targetContainer = $containerOther;
-  }
-
-  // Get name for target and source
-  action.targetName = (action.target) ?
-    getObjectName(action.target, action.targetId) : '';
-  action.sourceName = (action.source) ?
-    getObjectName(action.source, action.sourceId) : '';
-  action.targetType = (
-    action.target === 'region' &&
-    action.source === 'widget' &&
-    ['next', 'previous'].indexOf(action.actionType) != -1
-  ) ? 'playlist' : action.target;
-
-  // Create action and add to container
-  const newAction = actionFormObjectTemplate($.extend({}, action, {
-    trans: propertiesPanelTrans.actions,
-    editMode: editMode,
-  }));
-
-  // Save data and add to container
-  const $newAction = $(newAction).data(action).on('mouseenter',
-    function() {
-      // Highlight action on viewer
-      // if there's no action being edited
-      if (
-        self.DOMObject.find('.action-element-form').length == 0
-      ) {
-        app.viewer.createActionHighlights(action, 0);
+      // If it's an element group
+      if ($trigger.hasClass('group-select-overlay')) {
+        const $elGroup = $trigger.parents('.designer-element-group');
+        actionData.source = $elGroup.data('type');
+        actionData.sourceId = $elGroup.attr('id');
+      } else if ($trigger.hasClass('designer-element')) {
+        actionData.source = $trigger.data('type');
+        actionData.sourceId = $trigger.attr('id');
+      } else {
+        actionData.source = $trigger.data('type');
+        actionData.sourceId = $trigger.data(actionData.source + 'Id');
       }
-    },
-  ).on('mouseleave',
-    function() {
-      // Remove highlight
-      // if there's no action being edited
-      if (
-        self.DOMObject.find('.action-element-form').length == 0
-      ) {
-        app.viewer.clearActionHighlights();
-      }
+
+      actionData.newAction = true;
+
+      // Remove active status from trigger
+      app.viewer.DOMObject.find('.selected-action-trigger')
+        .removeClass('selected-action-trigger trigger-hovering')
+        .find('.trigger-add-button').remove();
+      app.viewer.DOMObject.find('.selected-action-trigger-parent')
+        .removeClass('selected-action-trigger-parent');
+
+      self.createEditAction(actionData, null);
+    });
+
+  // Handle hover to highlight action on viewer
+  self.DOMObject.find('.actions-list').on(
+    'mouseenter',
+    '.action-view',
+    function(ev) {
+      const actionId = $(ev.currentTarget).data('actionId');
+      app.viewer.highlightAction(actionId);
     },
   );
 
-  // Handle buttons
-  if (editMode) {
-    $newAction.find('.action-btn').on('click', function(e) {
-      const btnAction = $(e.currentTarget).data('action');
+  self.DOMObject.find('.actions-list').on(
+    'mouseleave',
+    '.action-view',
+    function(ev) {
+      app.viewer.highlightAction();
+    },
+  );
 
-      if (btnAction == 'delete') {
-        app.deleteAction(
-          $(e.currentTarget).parents('.action-element'),
-        );
-      }
-
-      if (btnAction == 'edit') {
-        self.openEditAction($(e.currentTarget).parents('.action-element'));
-      }
-    });
-  }
-
-  // Replace or add element
-  if ($elementToBeReplaced) {
-    $elementToBeReplaced.replaceWith($newAction);
-  } else {
-    $targetContainer.append($newAction);
+  // If we were editing an action, open it
+  if (!$.isEmptyObject(app.actionManager.editing)) {
+    self.createEditAction(app.actionManager.editing);
   }
 };
 
 /**
- * Open edit action
- * @param {object} action
+ * Add new action editform
+ * @param {object} actionData
+ * @param {object} $target - Target container to be replaced
+ * @param {object/boolean=} [options.actionNeedsValidateToCancel = false]
  * @return {boolean} false if unsuccessful
  */
-PropertiesPanel.prototype.openEditAction = function(action) {
-  const app = this.parent;
+PropertiesPanel.prototype.createEditAction = function(
+  actionData = {},
+  $target = null,
+  {
+    actionNeedsValidateToCancel = false,
+  } = {},
+) {
   const self = this;
-
-  // Remove any opened forms
-  this.DOMObject.find('.action-element-form').remove();
-
-  // Show all hidden actions
-  this.DOMObject.find('.action-element').removeClass('hidden');
-
-  // Get data from action
-  const actionData = action.data();
+  const app = self.parent;
+  const actionManager = app.actionManager;
+  const $actionsContent = self.DOMObject.find('.actions-content');
+  const $actionsList = self.DOMObject.find('.actions-list');
 
   // Send the layout code search URL with the action
   actionData.layoutCodeSearchURL = urlsForApi.layout.codeSearch.url;
 
+  // Add action types
+  actionData.actionTypeOptions = Object.keys(actionTypesAndRules)
+    .map((action) => {
+      // Set action type helper
+      if (
+        actionData.actionType != undefined &&
+        (
+          actionTypesAndRules[action].subTypeFixed === actionData.actionType ||
+          actionTypesAndRules[action].targetType === actionData.target &&
+          actionTypesAndRules[action].subType === actionData.actionType
+        )
+      ) {
+        actionData.actionTypeHelper = action;
+      }
+
+      return {
+        name: action,
+        title: propertiesPanelTrans.actions[action],
+      };
+    });
+
+  // Get widget name if exists
+  if (actionData.widgetId) {
+    actionData.widgetName =
+      app.getObjectName('drawerWidget', actionData.widgetId);
+  }
+
   // Create action and add to container
-  const newAction = actionFormObjectEditTemplate($.extend({}, actionData, {
-    trans: propertiesPanelTrans.actions,
-  }));
+  const $newActionContainer =
+    $(actionFormActionEditTemplate($.extend({}, actionData, {
+      trans: propertiesPanelTrans.actions,
+    })));
 
-  // Hide original action
-  action.addClass('hidden');
+  // Add action id to container
+  $newActionContainer.attr('data-action-id', actionData.actionId);
 
-  // Handle actions on the viewer
-  app.viewer.createActionHighlights(actionData, 1);
-
-  // Add edit form to container after original action
-  const $newActionContainer = $(newAction).insertAfter(action);
+  // Add action to container
+  // or replace target
+  ($target) ?
+    $target.replaceWith($newActionContainer) :
+    $newActionContainer.prependTo($actionsList);
 
   // Populate dropdowns with layout elements
   app.populateDropdownWithLayoutElements(
     $newActionContainer.find('[name="sourceId"]'),
     {
-      $typeInput: $newActionContainer.find('[name="source"]'),
+      typeInput: 'source',
       value: actionData.sourceId,
+      filters: [
+        'layouts',
+        'regions',
+        'playlists',
+        'widgets',
+      ],
     },
-    actionData,
   );
 
-  // Only show playlists?
-  let targetFilters = ['layout', 'regions'];
-  if (
-    ['next', 'previous'].indexOf(actionData.actionType) != -1
-  ) {
-    targetFilters = (actionData.target === 'region') ?
-      ['playlist'] : ['layout'];
-  }
+  const updateActionDataObj = function() {
+    const actionType =
+      $newActionContainer.find('[name="actionTypeHelper"]').val();
+    const source = $newActionContainer.find('[name="source"]').val();
+    const sourceId = $newActionContainer.find('[name="sourceId"]').val();
+    const target = $newActionContainer.find('[name="target"]').val();
+    const targetId = $newActionContainer.find('[name="targetId"]').val();
+    const layoutCode = $newActionContainer.find('[name="layoutCode"]').val();
+    const widgetId = $newActionContainer.find('[name="widgetId"]').val();
+    const triggerCode = $newActionContainer.find('[name="triggerCode"]').val();
+    const triggerType = $newActionContainer.find('[name="triggerType"]').val();
 
-  app.populateDropdownWithLayoutElements(
-    $newActionContainer.find('[name="targetId"]'),
-    {
-      $typeInput: $newActionContainer.find('[name="target"]'),
-      value: actionData.targetId,
-      filters: targetFilters,
-    },
-    actionData,
-  );
+    // Update local action data
+    actionData.actionType = actionType;
+    actionData.source = source;
+    actionData.sourceId = sourceId;
+    actionData.target = target;
+    actionData.targetId = targetId;
+    actionData.layoutCode = layoutCode;
+    actionData.widgetId = widgetId;
+    actionData.triggerCode = triggerCode;
+    actionData.triggerType = triggerType;
 
-  if (actionData.actionType == 'navWidget') {
-    // Populate dropdowns with drawer elements
-    app.populateDropdownWithLayoutElements(
-      $newActionContainer.find('[name="widgetId"]'),
-      {
-        value: actionData.widgetId,
-        filters: ['drawerWidgets'],
-      },
-      actionData,
-    );
-  }
+    // Update action manager side
+    app.actionManager.editing = actionData;
+  };
+
+  const updateActionType = function(actionType, updateTargetDropdown = true) {
+    // If no action type is defined, skip
+    if (!actionType) {
+      return;
+    }
+
+    const subType = actionTypesAndRules[actionType].subType ||
+      actionTypesAndRules[actionType].subTypeFixed;
+    const targetType = actionTypesAndRules[actionType].targetType;
+    const targetTypeFilters = actionTypesAndRules[actionType].targetTypeFilter;
+    const targetId = $newActionContainer.find('[name="targetId"]').val();
+
+    // Update hidden field
+    if (subType) {
+      $newActionContainer.find('[name="actionType"]').val(subType);
+    }
+
+    // If navigate to layout, or target type is screen
+    // target is current layout
+    // and hide the controller
+    if (actionType == 'navLayout' || targetType === 'screen') {
+      $newActionContainer.find('.action-edit-form-target').hide();
+      actionData.targetId = app.layout.layoutId;
+    } else {
+      $newActionContainer.find('.action-edit-form-target').show();
+    }
+
+    // Handle navigate to widget
+    if (actionType == 'navWidget' && targetId) {
+      // Show navWidget controls
+      $newActionContainer.find('.action-target-widget-component').show();
+      if (actionData.widgetId) {
+        const $dropdownBtn = $newActionContainer
+          .find('.action-target-widget-dropdown-button');
+        function toggleDropdown() {
+          $dropdownBtn.find('.action-target-widget-dropdown-container')
+            .toggleClass('active');
+        }
+
+        $dropdownBtn
+          .on('click', function(e) {
+            toggleDropdown();
+            app.editorContainer.on('click.dismiss', function(e2) {
+              if (
+                !$(e2.target)
+                  .hasClass('action-target-widget-dropdown-button') &&
+                $(e2.target).parents('.action-target-widget-dropdown-button')
+                  .length === 0
+              ) {
+                app.editorContainer.off('click.dismiss');
+                toggleDropdown();
+              }
+            });
+          });
+        // Handle edit and delete buttons
+        $newActionContainer
+          .find('.action-edit-widget-btn[data-action="edit-widget"]')
+          .on('click', function(e) {
+            app.toggleInteractiveEditWidgetMode(
+              true,
+              actionData,
+              {
+                adding: false,
+              },
+            );
+          });
+        $newActionContainer
+          .find('.action-edit-widget-btn[data-action="delete-widget"]')
+          .on('click', function(e) {
+            // Deselect object first
+            app.selectObject();
+            app.layout.deleteObject('widget', actionData.widgetId).then(() => {
+              actionData.widgetId = null;
+              app.reloadData(app.layout, {
+                refreshEditor: false,
+              }).then(() => {
+                self.createEditAction(actionData, $newActionContainer, {
+                  actionNeedsValidateToCancel: true,
+                });
+              });
+            });
+          });
+      } else {
+        // Handle create widget button
+        $newActionContainer
+          .find('.action-edit-widget-btn[data-action="add-widget"]')
+          .on('click', function(e) {
+            app.toggleInteractiveEditWidgetMode(
+              true,
+              actionData,
+              {
+                adding: true,
+              },
+            );
+          });
+      }
+    } else {
+      // Hide navWidget controls
+      $newActionContainer.find('.action-target-widget-component').hide();
+    }
+
+    if (updateTargetDropdown) {
+      app.populateDropdownWithLayoutElements(
+        $newActionContainer.find('[name="targetId"]'),
+        {
+          typeInput: 'target',
+          value: actionData.targetId,
+          filters: targetTypeFilters,
+        },
+      );
+    }
+
+    updateActionDataObj();
+  };
+
+  // Handle action type change
+  const $actionTypeHelperInput =
+    $newActionContainer.find('[name="actionTypeHelper"]');
+  $actionTypeHelperInput.on('change', function(e) {
+    const actionType = $(e.currentTarget).val();
+    updateActionType(actionType);
+  });
 
   // If trigger type is webhook
   // set source as "screen"
   const updateSource = function(triggerType) {
     if (triggerType == 'webhook') {
       $newActionContainer.find('[name="source"]').val('layout');
-      $newActionContainer.find('[name="sourceId"]').val(app.mainObjectId);
+      $newActionContainer.find('[name="sourceId"]').val(app.mainObjectId)
+        .trigger('change');
+
+      actionData.source = 'layout';
+      actionData.sourceId = app.mainObjectId;
     }
   };
 
-  updateSource(actionData.triggerType);
-
   // Handle trigger type change
-  $newActionContainer.find('[name="triggerType"]').on('change', function(e) {
+  const $triggerTypeInput = $newActionContainer.find('[name="triggerType"]');
+  $triggerTypeInput.on('change', function(e) {
     const triggerType = $(e.currentTarget).val();
 
     updateSource(triggerType);
   });
+  updateSource(
+    $triggerTypeInput.val(),
+  );
 
-  // Handle buttons
-  $newActionContainer.find('[type="button"]').on('click', function(e) {
-    const btnAction = $(e.currentTarget).data('action');
+  // Update type value
+  const updateTypeValue = function($target) {
+    const typeInput = $target.data('type-input');
+    const $typeInput = self.DOMObject.find(`[name="${typeInput}"]`);
 
-    if (btnAction == 'save') {
-      app.saveAction(action, $newActionContainer);
+    // If there's no typeInput, stop
+    if (
+      !typeInput &&
+      $typeInput.length === 0
+    ) {
+      return;
     }
 
-    if (btnAction == 'cancel') {
-      // Destroy new action
-      $newActionContainer.remove();
+    let typeInputValue = $target.find(':selected').data('type');
 
-      // Remove edit area
-      lD.viewer.removeActionEditArea();
+    // For target, if target is layout, change it to screen
+    if ($typeInput.attr('id') === 'input_target' &&
+      typeInputValue === 'layout'
+    ) {
+      typeInputValue = 'screen';
+    }
 
-      // Remove highlight
-      app.viewer.clearActionHighlights();
+    // Update type value
+    $typeInput.val(typeInputValue);
 
-      // Show original action
-      $(action).removeClass('hidden');
+    updateActionType($actionTypeHelperInput.val(), false);
+    updateActionDataObj();
+  };
 
-      self.closeEditAction(
-        $newActionContainer,
-        $(action),
+  // Handle trigger and target change
+  $newActionContainer
+    .find('[name="sourceId"], [name="targetId"], [name="layoutCode"]')
+    .on('change', function(e) {
+      updateTypeValue($(e.currentTarget));
+
+      const actionType =
+        $newActionContainer.find('[name="actionTypeHelper"]').val();
+      const source = $newActionContainer.find('[name="source"]').val();
+      const sourceId = $newActionContainer.find('[name="sourceId"]').val();
+      const target = $newActionContainer.find('[name="target"]').val();
+      const targetId = $newActionContainer.find('[name="targetId"]').val();
+      const layoutCode = $newActionContainer.find('[name="layoutCode"]').val();
+
+      app.viewer.updateActionLineTargets(
+        (actionData.actionId) ? actionData.actionId : 'action_line_temp',
+        {
+          type: source,
+          id: sourceId,
+        },
+        {
+          type: (actionType != 'navLayout') ? target : 'screen',
+          id: (actionType != 'navLayout') ? targetId : layoutCode,
+        },
+        (actionType === 'navLayout'), // targetIsDockRecent?
       );
+    });
+
+  // Handle buttons
+  $newActionContainer.find('.action-btn').on('click', function(e) {
+    const btnAction = $(e.currentTarget).data('action');
+
+    if (btnAction === 'save') {
+      // Save action
+      self.saveAction($newActionContainer);
+    } else if (btnAction === 'delete') {
+      actionManager.deleteAction(
+        actionData,
+      ).then((wasRemoved) => {
+        if (wasRemoved) {
+          // Remove widget from drawer if action has widgetId
+          if (actionData.widgetId) {
+            app.layout.deleteObject('widget', actionData.widgetId);
+          }
+
+          // Remove action line
+          app.viewer.removeActionLine($newActionContainer.data('actionId'));
+
+          // Remove edit status
+          // $actionsContent.removeClass('editing-action');
+          app.actionManager.editing = {};
+          self.renderActions();
+
+          // Update all other action lines
+          app.viewer.updateActionLine();
+        }
+      });
+    } else if (btnAction === 'close') {
+      const editingAction = app.actionManager.editing;
+
+      if (actionNeedsValidateToCancel) {
+        self.saveAction($newActionContainer);
+      } else {
+        // If action started without widget created
+        // and there's a widget Id, delete it
+        if (editingAction.startedWithNoWidget && editingAction.widgetId) {
+          app.layout.deleteObject('widget', editingAction.widgetId);
+        }
+
+        // Close action
+        self.closeEditAction($newActionContainer);
+      }
     }
   });
 
   // Set actionData to container
   $newActionContainer.data(actionData);
+
+  // Add editing status
+  app.actionManager.editing = actionData;
+  $actionsContent.addClass('editing-action');
+
+  // Check if we are in a new action
+  // with no widget id and save state
+  if (actionData.newAction && actionData.widgetId == null) {
+    app.actionManager.editing.startedWithNoWidget = true;
+  }
 
   // Form conditions
   forms.setConditions($newActionContainer, null, 'actions');
@@ -2713,55 +2859,258 @@ PropertiesPanel.prototype.openEditAction = function(action) {
     },
   );
 
+  // Update action lines
+  app.viewer.updateActionLine();
+
+  // Update action type on start
+  updateActionType($actionTypeHelperInput.val());
+
   // Run xiboInitialise on form
-  XiboInitialise('.action-element-form');
-
-  return true;
+  XiboInitialise('.action-edit-form');
 };
 
 /**
- * Close edit action
- * @param {object} $actionEditContainer
- * @param {object} $originalAction
+ * Add new action preview
+ * @param {object} actionData
+ * @param {object} $target - Target container to be replaced
+ * @return {boolean} false if unsuccessful
  */
-PropertiesPanel.prototype.closeEditAction = function(
-  $actionEditContainer,
-  $originalAction,
+PropertiesPanel.prototype.createPreviewAction = function(
+  actionData = {},
+  $target,
 ) {
-  // Destroy new action
-  $actionEditContainer.remove();
+  const self = this;
+  const app = self.parent;
+  const actionManager = app.actionManager;
+  const $actionsList =
+    self.DOMObject.find('.actions-list');
 
-  // Remove edit area
-  lD.viewer.removeActionEditArea();
+  // Send the layout code search URL with the action
+  actionData.layoutCodeSearchURL = urlsForApi.layout.codeSearch.url;
 
-  // Remove highlight
-  lD.viewer.clearActionHighlights();
+  // Set action type name as actionType by default
+  actionData.actionTypeName = actionData.actionType;
 
-  // Show original action
-  $originalAction.removeClass('hidden');
+  // Add action types
+  actionData.actionTypeOptions = Object.keys(actionTypesAndRules)
+    .map((action) => {
+      // For actions like next and previous
+      // get the real name for translation purposes
+      if (
+        (
+          actionData.actionType === 'next' ||
+          actionData.actionType === 'previous'
+        ) && actionTypesAndRules[action].subType === actionData.actionType &&
+        actionTypesAndRules[action].targetType === actionData.target
+      ) {
+        actionData.actionTypeName = action;
+      }
 
-  // Call close drawer widget
-  // if selected element is a drawer widget
-  lD.closeDrawerWidget();
+      return {
+        name: action,
+        title: propertiesPanelTrans.actions[action],
+      };
+    });
+
+  // Get names for trigger, target and widgetId
+  if (actionData.sourceId) {
+    actionData.sourceName =
+      app.getObjectName(actionData.source, actionData.sourceId);
+  }
+
+  if (actionData.targetId) {
+    actionData.targetName =
+      app.getObjectName(actionData.target, actionData.targetId);
+  }
+
+  if (actionData.widgetId) {
+    actionData.widgetName =
+      app.getObjectName('drawerWidget', actionData.widgetId);
+  }
+
+  // Create action and add to container
+  const $actionContainer =
+    $(actionFormActionViewTemplate($.extend({}, actionData, {
+      showTarget: !(
+        actionData.actionTypeName === 'navLayout' ||
+        actionData.actionTypeName === 'nextLayout' ||
+        actionData.actionTypeName === 'previousLayout'
+      ),
+      trans: propertiesPanelTrans.actions,
+      readOnly: app.readOnlyMode,
+    })));
+
+  // Add action id to container
+  $actionContainer.attr('data-action-id', actionData.actionId);
+
+  // Check if action was already added
+  $target = (!$target) ?
+    $actionsList.find(
+      '.action-view[data-action-id=' + actionData.actionId + ']',
+    ) : $target;
+
+  // Add action to container
+  // or replace target
+  ($target.length > 0) ?
+    $target.replaceWith($actionContainer) :
+    $actionContainer.prependTo($actionsList);
+
+  // Handle buttons
+  $actionContainer.find('.action-btn').on('click', function(e) {
+    const btnAction = $(e.currentTarget).data('action');
+    const actionData = $actionContainer.data();
+
+    if (btnAction === 'delete') {
+      actionManager.deleteAction(
+        actionData,
+      ).then((wasRemoved) => {
+        if (wasRemoved) {
+          // Remove widget from drawer if action has widgetId
+          if (actionData.widgetId) {
+            app.layout.deleteObject('widget', actionData.widgetId);
+          }
+
+          // Remove action line
+          app.viewer.removeActionLine($actionContainer.data('actionId'));
+
+          // Remove action container
+          $actionContainer.remove();
+        }
+      });
+    } else if (btnAction === 'edit') {
+      self.openEditAction(actionData.actionId);
+    }
+  });
+
+  // Update action line
+  if (actionData.actionId) {
+    app.viewer.updateActionLineTargets(
+      actionData.actionId,
+      {
+        type: actionData.source,
+        id: actionData.sourceId,
+      },
+      {
+        type: (actionData.actionType != 'navLayout') ?
+          actionData.target : 'screen',
+        id: (actionData.actionType != 'navLayout') ?
+          actionData.targetId : actionData.layoutCode,
+      },
+    );
+    app.viewer.updateActionLine();
+  }
+
+  // Set actionData to container
+  $actionContainer.data(actionData);
 };
 
 /**
- * Detach action form
+ * Open action to be edited
+ * @param {number} actionId
+ * @return {boolean} false if unsuccessful
  */
-PropertiesPanel.prototype.detachActionsForm = function() {
-  // Remove active class from tab
-  this.actionForm.removeClass('active');
+PropertiesPanel.prototype.openEditAction = function(actionId) {
+  const self = this;
+  const app = self.parent;
 
-  // Detach form
-  this.actionForm.detach();
+  // Don't open when in read mode
+  if (app.readOnlyMode) {
+    return;
+  }
+
+  const $action = self.DOMObject
+    .find('.action-view[data-action-id=' + actionId + ']');
+  const $actionsContent = this.DOMObject.find('.actions-content');
+  const actionData = $action.data();
+
+  // Add editing status
+  app.actionManager.editing = actionData;
+  $actionsContent.addClass('editing-action');
+
+  // Create edit action
+  self.createEditAction(actionData, $action);
 };
 
 /**
- * Attach action form
+ * Close action being edited
+ * @param {object} $action
+ * @return {boolean} false if unsuccessful
  */
-PropertiesPanel.prototype.attachActionsForm = function() {
-  // Re-attach form to the tab content
-  this.DOMObject.find('.tab-content').append(this.actionForm);
+PropertiesPanel.prototype.closeEditAction = function($action) {
+  const self = this;
+  const app = self.parent;
+  const actionData = $action.data();
+
+  // Remove line if temporary action
+  if (!actionData.actionId) {
+    app.viewer.removeActionLine('action_line_temp');
+  }
+
+  // Remove editing status
+  app.actionManager.editing = {};
+
+  // Render back actions
+  self.renderActions();
+
+  // Update all action lines
+  app.viewer.updateActionLine();
+};
+
+/**
+ * Save action and go to preview
+ * @param {object} $actionForm
+ * @return {boolean} false if unsuccessful
+ */
+PropertiesPanel.prototype.saveAction = function($actionForm) {
+  const self = this;
+  const app = self.parent;
+  const actionData = $actionForm.data();
+
+  $actionForm.find('.error-message').hide();
+
+  const showErrorMessage = function(res) {
+    // Add message to form
+    $actionForm.find('.error-message').html(res.message).show();
+  };
+
+  const closeEditAndShowPreview = function() {
+    // Remove editing status
+    app.actionManager.editing = {};
+
+    self.renderActions();
+  };
+
+  if (actionData.actionId) {
+    // Save existing action
+    app.actionManager.saveAction($actionForm, actionData.actionId)
+      .then(
+        closeEditAndShowPreview,
+        showErrorMessage,
+      );
+  } else {
+    // Add new action
+    app.actionManager.addAction($actionForm, app.mainObjectId)
+      .then(
+        (res) => {
+          // Create new action line
+          app.viewer.addActionLine(
+            {
+              type: res.data.source,
+              id: res.data.sourceId,
+            },
+            {
+              type: res.data.target,
+              id: res.data.targetId,
+            },
+            res.data.actionId,
+          );
+
+          // Close edit form and show preview
+          closeEditAndShowPreview(res);
+        },
+        showErrorMessage,
+      );
+  }
 };
 
 /**
@@ -2919,7 +3268,7 @@ PropertiesPanel.prototype.showWidgetControl = function(target) {
         $canvasWidgetSelectorControl
           .find('.canvas-widget-control-dropdown .input-info-container'),
       ).on('click', function(_ev) {
-        lD.addModuleToPlaylist(
+        app.addModuleToPlaylist(
           app.layout.canvas.regionId,
           app.layout.canvas.playlists.playlistId,
           target.subType,
@@ -3034,6 +3383,76 @@ PropertiesPanel.prototype.showTab = function(tabSelector, save = true) {
 
     // Save selector
     (save) && (self.openTabOnRender = tabSelectorAux);
+  }
+};
+
+/**
+ * Save action widget form and continue
+ */
+PropertiesPanel.prototype.continueEditActionWidget = function() {
+  const app = this.parent;
+
+  // Save at least once to prevent adding an invalid widget
+  this.save({
+    forceSave: true,
+    callback: function() {
+      app.toggleInteractiveEditWidgetMode(false);
+    },
+  });
+};
+
+/**
+ * Cancel action widget edit and go back to interactive mode
+ * @param {object} widget - Widget being saved/added
+ * @param {boolean} mode - Delete or just cancel?
+ */
+PropertiesPanel.prototype.cancelEditActionWidget = function(
+  widget,
+  mode,
+) {
+  const app = this.parent;
+  const self = this;
+  const toggleEditActionOff = function() {
+    // Toggle mode off
+    app.toggleInteractiveEditWidgetMode(
+      false,
+      null);
+  };
+
+  // Check if we're editing or adding widget
+  if (
+    mode === 'deleteWidget' &&
+    widget.type === 'widget'
+  ) {
+    // Delete widget
+    app.layout.deleteObject(
+      'widget',
+      widget.widgetId,
+      false,
+      false,
+    ).then(() => {
+      app.actionManager.editing.widgetId = null;
+      toggleEditActionOff();
+    });
+  } else if (mode === 'revertChanges') {
+    // Check if we have serialized form data
+    const $form = self.DOMObject.find('form');
+    const initFormData = $form.data('initFormState');
+
+    // Revert changes for action widget
+    app.historyManager.addChange(
+      'saveForm',
+      'widget',
+      widget.widgetId, // targetId
+      '', // oldValues
+      initFormData, // newValues
+      {
+        addToHistory: false,
+      },
+    ).then(toggleEditActionOff);
+  } else {
+    // Toggle mode off
+    toggleEditActionOff();
   }
 };
 
