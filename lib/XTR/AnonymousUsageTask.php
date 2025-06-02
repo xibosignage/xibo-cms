@@ -143,9 +143,19 @@ class AnonymousUsageTask implements TaskInterface
              WHERE `widget`.`type` = \'subplaylist\'
         ');
         $data['countOfAdCampaigns'] =
-            $this->runQuery('SELECT COUNT(*) AS countOf FROM `campaign` WHERE `type` = \'ad\'');
+            $this->runQuery('
+                SELECT COUNT(*) AS countOf
+                  FROM `campaign`
+                WHERE `type` = \'ad\'
+                  AND `isLayoutSpecific` = 0
+            ');
         $data['countOfListCampaigns'] =
-            $this->runQuery('SELECT COUNT(*) AS countOf FROM `campaign` WHERE `type` = \'list\'');
+            $this->runQuery('
+                SELECT COUNT(*) AS countOf 
+                  FROM `campaign`
+                 WHERE `type` = \'list\'
+                  AND `isLayoutSpecific` = 0
+            ');
         $data['countOfMedia'] =
             $this->runQuery('SELECT COUNT(*) AS countOf FROM `media`');
         $data['countOfPlaylists'] =
