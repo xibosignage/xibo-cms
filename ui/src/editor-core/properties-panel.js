@@ -2707,30 +2707,6 @@ PropertiesPanel.prototype.createEditAction = function(
     updateActionType(actionType);
   });
 
-  // If trigger type is webhook
-  // set source as "screen"
-  const updateSource = function(triggerType) {
-    if (triggerType == 'webhook') {
-      $newActionContainer.find('[name="source"]').val('layout');
-      $newActionContainer.find('[name="sourceId"]').val(app.mainObjectId)
-        .trigger('change');
-
-      actionData.source = 'layout';
-      actionData.sourceId = app.mainObjectId;
-    }
-  };
-
-  // Handle trigger type change
-  const $triggerTypeInput = $newActionContainer.find('[name="triggerType"]');
-  $triggerTypeInput.on('change', function(e) {
-    const triggerType = $(e.currentTarget).val();
-
-    updateSource(triggerType);
-  });
-  updateSource(
-    $triggerTypeInput.val(),
-  );
-
   // Update type value
   const updateTypeValue = function($target) {
     const typeInput = $target.data('type-input');

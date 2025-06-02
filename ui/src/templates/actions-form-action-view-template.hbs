@@ -9,25 +9,23 @@
         <div class="action-value">{{lookup trans triggerType}}</div>
     </div>
 
-    {{#if triggerCode}}
+    <div class="action-group">
+        <div class="action-label">{{trans.triggerCode}}</div>
+        <div class="action-value">{{triggerCode}}</div>
+    </div>
+
+    {{#if sourceId}}
         <div class="action-group">
-            <div class="action-label">{{trans.triggerCode}}</div>
-            <div class="action-value">{{triggerCode}}</div>
-        </div>
-    {{else}}
-        {{#if sourceId}}
-            <div class="action-group">
-                <div class="action-label">{{trans.triggerTarget}}</div>
-                <div class="action-value">
-                    {{#if sourceName}}
-                        "{{sourceName}}"
-                    {{else}}
-                        {{sourceId}}
-                    {{/if}}
-                    ({{lookup trans.targetsAndSources source}})
-                </div>
+            <div class="action-label">{{trans.triggerTarget}}</div>
+            <div class="action-value">
+                {{#if sourceName}}
+                    "{{sourceName}}"
+                {{else}}
+                    {{sourceId}}
+                {{/if}}
+                ({{lookup trans.targetsAndSources source}})
             </div>
-        {{/if}}
+        </div>
     {{/if}}
 
     {{#if showTarget}}
