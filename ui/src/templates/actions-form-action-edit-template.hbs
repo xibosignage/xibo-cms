@@ -6,7 +6,7 @@
     {{> forms/inputs/text id="triggerCode" value=triggerCode title=trans.triggerCode customClass="action-form-input" helpText=trans.triggerCodeHelpText visibility='{ "field": "triggerType", "type": "eq", "value": "webhook" }' }}
 
     {{> forms/inputs/hidden id="source" value=source }}
-    {{> forms/inputs/dropdown id="sourceId" value=sourceId title=trans.triggerTarget customClass='action-edit-form-trigger action-form-input' options=(arr (obj name="" title="")) optionsTitle="title" optionsValue="name" helpText=trans.triggerTargetHelpText visibility='{ "field": "triggerType", "type": "neq", "value": "webhook" }' }}
+    {{> forms/inputs/dropdown id="sourceId" value=sourceId title=trans.triggerTarget customClass='action-edit-form-trigger action-form-input' options=(arr (obj name="" title="")) optionsTitle="title" optionsValue="name" helpText=trans.triggerTargetHelpText }}
 
     {{!-- Set layout name as screen --}}
     {{#eq target "layout"}}

@@ -5419,6 +5419,17 @@ Viewer.prototype.removeActionLine = function(actionLineId) {
     // Remove action line if it exists
     if (self.actionLines[lineId]) {
       try {
+        // Remove classes from previous trigger/target
+        if ($(self.actionLines[actionLineId].line.start).length > 0) {
+          $(self.actionLines[actionLineId].line.start)
+            .removeClass('action-trigger');
+        }
+
+        if ($(self.actionLines[actionLineId].line.end).length > 0) {
+          $(self.actionLines[actionLineId].line.end)
+            .removeClass('action-target');
+        }
+
         self.actionLines[lineId].line.remove();
       } catch (e) {
         console.warn('Line could not be removed:', e);
