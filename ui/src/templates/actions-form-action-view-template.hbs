@@ -9,10 +9,12 @@
         <div class="action-value">{{lookup trans triggerType}}</div>
     </div>
 
-    <div class="action-group">
-        <div class="action-label">{{trans.triggerCode}}</div>
-        <div class="action-value">{{triggerCode}}</div>
-    </div>
+    {{#eq triggerType "webhook"}}
+        <div class="action-group">
+            <div class="action-label">{{trans.triggerCode}}</div>
+            <div class="action-value">{{triggerCode}}</div>
+        </div>
+    {{/eq}}
 
     {{#if sourceId}}
         <div class="action-group">
