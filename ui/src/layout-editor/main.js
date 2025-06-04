@@ -5930,6 +5930,7 @@ lD.handleInputs = function() {
     lD.readOnlyMode == false &&
     lD.playlistEditorOpened === false
   );
+  let deleteTimeout = null;
 
   // Handle keyboard keys
   $('body').off('keydown.editor')
@@ -5948,7 +5949,15 @@ lD.handleInputs = function() {
           ) &&
           allowInputs
         ) {
+          if (deleteTimeout) {
+            return;
+          }
+
           lD.deleteSelectedObject();
+
+          deleteTimeout = setTimeout(() => {
+            deleteTimeout = null;
+          }, 500);
         }
 
         // Undo ( Ctrl + Z )
