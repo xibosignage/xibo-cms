@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -541,9 +541,6 @@ class Soap5 extends Soap4
 
         // Audit our return
         $this->getLog()->debug($returnXml);
-
-        // Phone Home?
-        $this->phoneHome();
 
         return $returnXml;
     }

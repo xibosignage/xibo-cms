@@ -558,8 +558,8 @@
                                 {% endif %}
 
                                 {% if theme.isSettingVisible("PHONE_HOME") %}
-                                    {% set title %}{% trans "Allow usage tracking?" %}{% endset %}
-                                    {% set helpText %}{% trans "Should the CMS send anonymous statistics to help improve the software?" %}{% endset %}
+                                    {% set title %}{% trans "Should the CMS send anonymous statistics to help improve the software?" %}{% endset %}
+                                    {% set helpText %}{% trans "When this is enabled the CMS will periodically send usage information to the software authors so that improvements can be made to the product." %}{% endset %}
 
                                     {{ forms.checkbox("PHONE_HOME", title, theme.getSetting("PHONE_HOME"), helpText, "", "", not theme.isSettingEditable("PHONE_HOME")) }}
                                 {% endif %}
