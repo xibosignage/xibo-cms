@@ -398,7 +398,7 @@ class NationalWeatherServiceConnector implements ConnectorInterface, EmergencyAl
     {
         // Initialize Emergency Alerts schedule criteria parameters but with limited category
         $event->addType('emergency_alert', __('Emergency Alerts'))
-                ->addMetric('status', __('Status'))
+                ->addMetric('emergency_alert_status', __('Status'))
                     ->addCondition([
                         'eq' => __('Equal to')
                     ])
@@ -407,7 +407,7 @@ class NationalWeatherServiceConnector implements ConnectorInterface, EmergencyAl
                         self::TEST_ALERT => __('Test Alerts'),
                         self::NO_ALERT => __('No Alerts')
                     ])
-                ->addMetric('category', __('Category'))
+                ->addMetric('emergency_alert_category', __('Category'))
                     ->addCondition([
                         'eq' => __('Equal to')
                     ])
