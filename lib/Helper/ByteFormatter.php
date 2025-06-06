@@ -24,8 +24,9 @@ class ByteFormatter
      */
     public static function format($size, $precision = 2, $si = false)
     {
-        if ($size == 0)
+        if ($size <= 0) {
             return 0;
+        }
 
         if ($si === false) {
             // IEC prefixes (binary)
