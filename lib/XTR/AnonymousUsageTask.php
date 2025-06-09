@@ -40,7 +40,7 @@ class AnonymousUsageTask implements TaskInterface
 
     public function __construct()
     {
-        $this->url = 'https://test.xibo.org.uk/api/stats/usage';
+        $this->url = 'https://xibosignage.com/api/stats/usage';
     }
 
     /** @inheritdoc */
@@ -133,8 +133,20 @@ class AnonymousUsageTask implements TaskInterface
 
         // Other objects
         $data['countOfFolders'] = $this->runQuery('SELECT COUNT(*) AS countOf FROM `folder`');
-        $data['countOfLayouts'] =
-            $this->runQuery('SELECT COUNT(*) AS countOf FROM `campaign` WHERE isLayoutSpecific = 1');
+        $data['countOfLayouts'] = $this->runQuery('
+            SELECT COUNT(*) AS countOf
+              FROM `campaign`
+             WHERE `isLayoutSpecific` = 1
+                AND `campaignId` NOT IN (
+                    SELECT `lkcampaignlayout`.`campaignId`
+                      FROM `lkcampaignlayout`
+                        INNER JOIN `lktaglayout`
+                        ON `lktaglayout`.`layoutId` = `lkcampaignlayout`.`layoutId`
+                        INNER JOIN `tag`
+                        ON `lktaglayout`.tagId = `tag`.tagId
+                      WHERE `tag`.`tag` = \'template\'
+                )
+        ');
         $data['countOfLayoutsWithPlaylists'] = $this->runQuery('
             SELECT COUNT(DISTINCT `region`.`layoutId`) AS countOf 
               FROM `widget`
