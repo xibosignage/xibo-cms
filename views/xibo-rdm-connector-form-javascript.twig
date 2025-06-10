@@ -75,7 +75,7 @@
       ajax: {
         url: '{{ url_for("display.search") }}',
         data: function (d) {
-          $.extend(d, $('#connector-display-filter').serializeObject(), {'rdmDeviceId': 0});
+          $.extend(d, $('#connector-display-filter').serializeObject(), {'cmsConnected': 0});
         }
       },
       columns: [
