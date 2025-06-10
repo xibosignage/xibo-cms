@@ -120,7 +120,7 @@ class AnonymousUsageTask implements TaskInterface
             $this->runQuery('SELECT COUNT(*) AS countOf FROM `user` WHERE `lastAccessed` > :recently', [
                 'recently' => Carbon::now()->subHours(24)->format('Y-m-d H:i:s'),
             ]);
-        $data['countOfUserGroups '] =
+        $data['countOfUserGroups'] =
             $this->runQuery('SELECT COUNT(*) AS countOf FROM `group` WHERE isUserSpecific = 0');
         $data['countOfUsersWithStatusDashboard'] =
             $this->runQuery('SELECT COUNT(*) AS countOf FROM `user` WHERE homePageId = \'statusdashboard.view\'');
