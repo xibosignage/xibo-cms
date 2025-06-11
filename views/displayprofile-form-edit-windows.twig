@@ -139,11 +139,11 @@
 
                     {% set title = "Width"|trans %}
                     {% set helpText = "The Width of the Display Window. 0 means full width."|trans %}
-                    {{ forms.number("sizeX", title, displayProfile.getSetting("sizeX"), helpText) }}
+                    {{ forms.number("sizeX", title, displayProfile.getSetting("sizeX"), helpText, "", "", "", "", "0") }}
 
                     {% set title = "Height"|trans %}
                     {% set helpText = "The Height of the Display Window. 0 means full height."|trans %}
-                    {{ forms.number("sizeY", title, displayProfile.getSetting("sizeY"), helpText) }}
+                    {{ forms.number("sizeY", title, displayProfile.getSetting("sizeY"), helpText, "", "", "", "", "0") }}
 
                     {% set title = "Left Coordinate"|trans %}
                     {% set helpText = "The left pixel position the display window should be sized from."|trans %}
@@ -156,7 +156,6 @@
                 </div>
 
                 <div class="tab-pane" id="troubleshooting">
-
                     {% set title = "CTRL Key required to access Player Information Screen?"|trans %}
                     {% set helpText = "Should the Player information screen require the CTRL key?"|trans %}
                     {{ forms.checkbox("clientInfomationCtrlKey", title, displayProfile.getSetting("clientInfomationCtrlKey"), helpText) }}
@@ -214,7 +213,7 @@
 
                     {% set title = "Duration for Empty Layouts"|trans %}
                     {% set helpText = "If an empty layout is detected how long (in seconds) should it remain on screen? Must be greater than 1."|trans %}
-                    {{ forms.number("emptyLayoutDuration", title, displayProfile.getSetting("emptyLayoutDuration"), helpText) }}
+                    {{ forms.number("emptyLayoutDuration", title, displayProfile.getSetting("emptyLayoutDuration"), helpText, "", "", "", "", "0") }}
 
                     {% set title = "Enable Mouse"|trans %}
                     {% set helpText = "Enable the mouse."|trans %}
@@ -236,7 +235,7 @@
 
                     {% set title = "Maximum concurrent downloads"|trans %}
                     {% set helpText = "The maximum number of concurrent downloads the Player will attempt."|trans %}
-                    {{ forms.number("maxConcurrentDownloads", title, displayProfile.getSetting("maxConcurrentDownloads"), helpText) }}
+                    {{ forms.number("maxConcurrentDownloads", title, displayProfile.getSetting("maxConcurrentDownloads"), helpText, "", "", "", "", "0") }}
 
                     {% set title = "Shell Command Allow List"|trans %}
                     {% set helpText = "Which shell commands should the Player execute?"|trans %}
@@ -245,7 +244,7 @@
                     {% if theme.getSetting('DISPLAY_PROFILE_SCREENSHOT_INTERVAL_ENABLED', 0) == 1 %}
                         {% set title = "Screen shot interval"|trans %}
                         {% set helpText = "The duration between status screen shots in minutes. 0 to disable. Warning: This is bandwidth intensive."|trans %}
-                        {{ forms.number("screenShotRequestInterval", title, displayProfile.getSetting("screenShotRequestInterval"), helpText) }}
+                        {{ forms.number("screenShotRequestInterval", title, displayProfile.getSetting("screenShotRequestInterval"), helpText, "", "", "", "", "0") }}
                     {% endif %}
 
                     {% set title = "Screen Shot Size"|trans %}
@@ -254,11 +253,11 @@
 
                     {% set title = "Limit the number of log files uploaded concurrently"|trans %}
                     {% set helpText = "The number of log files to upload concurrently. The lower the number the longer it will take, but the better for memory usage."|trans %}
-                    {{ forms.number("maxLogFileUploads", title, displayProfile.getSetting("maxLogFileUploads"), helpText) }}
+                    {{ forms.number("maxLogFileUploads", title, displayProfile.getSetting("maxLogFileUploads"), helpText, "", "", "", "", "0") }}
 
                     {% set title = "Embedded Web Server Port"|trans %}
                     {% set helpText = "The port number to use for the embedded web server on the Player. Only change this if there is a port conflict reported on the status screen."|trans %}
-                    {{ forms.number("embeddedServerPort", title, displayProfile.getSetting("embeddedServerPort"), helpText) }}
+                    {{ forms.number("embeddedServerPort", title, displayProfile.getSetting("embeddedServerPort"), helpText, "", "", "", "", "0") }}
 
                     {% set title = "Embedded Web Server allow WAN?"|trans %}
                     {% set helpText = "Should we allow access to the Player Embedded Web Server from WAN? You may need to adjust the device firewall to allow external traffic"|trans %}

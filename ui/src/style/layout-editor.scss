@@ -1550,10 +1550,16 @@ body.editor-opened #content-wrapper .page-content>.row {
         }
     }
 
-    .viewer-object-select.selected-temp {
-        &::after, &.designer-element-group  .group-select-overlay{
-            @include set-transparent-color(background-color, $xibo-color-primary, 0.4);
-            outline: 2px solid $xibo-color-primary;
+    .viewer-object-select {
+        .selected-temp {
+            &::after, &.designer-element-group  .group-select-overlay{
+                @include set-transparent-color(background-color, $xibo-color-primary, 0.4);
+                outline: 2px solid $xibo-color-primary;
+            }
+        }
+
+        .moveable-disabled {
+            outline: 1px solid $xibo-color-primary-l60;
         }
     }
 

@@ -152,6 +152,15 @@ window.XiboInitDatatables = function(scope, options) {
         // Reset fields
         form[0].reset();
 
+        // Reset non select 2 selects to default option
+        form.find('select:not(.select2-hidden-accessible)')
+          .prop('selectedIndex', 0)
+          .trigger('change');
+
+        // Reset dateControl
+        form.find('.dateControl').val('')
+          .trigger('change');
+
         // Trigger change on select2
         form.find('.select2-hidden-accessible').val('')
           .trigger('change');
@@ -1032,6 +1041,7 @@ window.initJsTreeAjax = function(
     const treeConfig = {
       container: 'container-folder-form-tree',
       modal: 'folder-tree-form-modal',
+      trans: translations.folderTree,
     };
 
     // append to body, instead of the form as it

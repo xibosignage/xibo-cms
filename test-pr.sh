@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Copyright (C) 2024 Xibo Signage Ltd
+# Copyright (C) 2025 Xibo Signage Ltd
 #
 # Xibo - Digital Signage - https://xibosignage.com
 #
@@ -19,29 +19,62 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
 #
-while getopts p:d: option
-do
- case "${option}"
- in
- p) PR_NUMBER=${OPTARG};;
- d) DELETE_MODE=${OPTARG};;
- esac
+
+# Default values
+SERVER_PORT=80
+
+while getopts p:d:s: option; do
+  case "${option}" in
+    p) PR_NUMBER=${OPTARG};;
+    d) DELETE_PORT=${OPTARG};;
+    s) SERVER_PORT=${OPTARG};;
+  esac
 done
 
-if [ "$DELETE_MODE" == "true" ]
-then
-  echo "Deleting containers"
-  docker stop test-pr-web && docker rm test-pr-web
-  docker stop test-pr-xmr && docker rm test-pr-xmr
-  docker stop test-pr-db && docker rm test-pr-db
+# Create a network if it doesn't exist
+NETWORK_NAME="test-pr-network"
+docker network inspect "$NETWORK_NAME" >/dev/null 2>&1 || docker network create "$NETWORK_NAME"
+
+if [ "$DELETE_PORT" == "all" ]; then
+  echo "Deleting all test containers..."
+
+  # Stop and remove all test-pr-* containers
+  docker ps -a --format '{{.Names}}' | grep "^test-pr-" | while read -r container_name; do
+    docker stop "$container_name" && docker rm "$container_name"
+  done
+
+  # Remove network if no containers are using it
+  docker network rm $NETWORK_NAME
+
+  exit
+elif [ -n "$DELETE_PORT" ]; then
+  echo "Deleting containers for port $DELETE_PORT..."
+
+  # Stop and remove containers associated with the specific SERVER_PORT
+  docker ps -a --format '{{.Names}}' | grep "test-pr-.*-$DELETE_PORT" | while read -r container_name; do
+    docker stop "$container_name" && docker rm "$container_name"
+  done
+
+  # Remove network if no containers are using it
+  remaining_containers=$(docker ps -a --format '{{.Names}}' | grep "^test-pr-" | wc -l)
+  if [ "$remaining_containers" -eq 0 ]; then
+    docker network rm $NETWORK_NAME
+  fi
+
   exit
 fi
 
+
+# Pull necessary Docker images
+echo "Pulling Docker images..."
 docker pull mysql:8
 docker pull ghcr.io/xibosignage/xibo-xmr:latest
 docker pull ghcr.io/xibosignage/xibo-cms:test-"$PR_NUMBER"
+docker pull mongo:4.2
 
-docker run --name test-pr-db \
+# Run the MySQL container
+docker run --name test-pr-db-"$SERVER_PORT" \
+  --network "$NETWORK_NAME" \
   -e MYSQL_RANDOM_ROOT_PASSWORD=yes \
   -e MYSQL_DATABASE=cms \
   -e MYSQL_USER=cms \
@@ -49,30 +82,45 @@ docker run --name test-pr-db \
   -d \
   mysql:8
 
-docker run --name test-pr-xmr -d ghcr.io/xibosignage/xibo-xmr:latest
+# Check if MongoDB container exists before creating
+if ! docker ps -a --format '{{.Names}}' | grep -q "test-pr-mongo"; then
+  echo "Starting new MongoDB container..."
+  docker run --name test-pr-mongo \
+    --network "$NETWORK_NAME" \
+    -e MONGO_INITDB_ROOT_USERNAME=root \
+    -e MONGO_INITDB_ROOT_PASSWORD=example \
+    -d \
+    -p 27071:27071 \
+    mongo:4.2
+else
+  echo "MongoDB container already exists, skipping creation."
+fi
 
-# Run the CMS container, adjusting env for CI and copying back in PHP Unit
-docker run --name test-pr-web \
-  -e MYSQL_HOST=test-pr-db \
+docker run --name test-pr-xmr-"$SERVER_PORT" -d ghcr.io/xibosignage/xibo-xmr:latest
+
+# Run the CMS container
+docker run --name test-pr-web-"$SERVER_PORT" \
+  --network "$NETWORK_NAME" \
+  -e MYSQL_HOST=test-pr-db-"$SERVER_PORT" \
   -e MYSQL_USER=cms \
   -e MYSQL_PASSWORD=jenkins \
   -e CMS_DEV_MODE=true \
-  -e XMR_HOST=test-pr-xmr \
+  -e XMR_HOST=test-pr-xmr-"$SERVER_PORT" \
   -e CMS_USAGE_REPORT=false \
   -e INSTALL_TYPE=ci \
   -e MYSQL_BACKUP_ENABLED=false \
-  --link test-pr-db \
-  --link test-pr-xmr \
+  --link test-pr-db-"$SERVER_PORT" \
+  --link test-pr-xmr-"$SERVER_PORT" \
+  --link test-pr-mongo \
+  -p "$SERVER_PORT":80 \
   -d \
   ghcr.io/xibosignage/xibo-cms:test-"$PR_NUMBER"
 
 echo "Containers starting, waiting for ready event"
 
-docker exec -t test-pr-web /bin/bash -c "/usr/local/bin/wait-for-command.sh -q -t 300 -c \"nc -z localhost 80\""
-docker exec -t test-pr-web /bin/bash -c "chown -R www-data.www-data /var/www/cms"
-docker exec --user www-data -t test-pr-web /bin/bash -c "cd /var/www/cms; /usr/bin/php bin/run.php 1"
-
+docker exec -t test-pr-web-"$SERVER_PORT" /bin/bash -c "/usr/local/bin/wait-for-command.sh -q -t 300 -c \"nc -z localhost 80\""
+docker exec -t test-pr-web-"$SERVER_PORT" /bin/bash -c "chown -R www-data.www-data /var/www/cms"
+docker exec --user www-data -t test-pr-web-"$SERVER_PORT" /bin/bash -c "cd /var/www/cms; /usr/bin/php bin/run.php 1"
 sleep 5
 
-echo "CMS running"
-
+echo "CMS running on port $SERVER_PORT"

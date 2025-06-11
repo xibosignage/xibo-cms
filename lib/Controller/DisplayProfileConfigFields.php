@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -907,6 +907,24 @@ trait DisplayProfileConfigFields
                 // Encode option and save it as a string to the lock setting
                 $displayProfile->setSetting('lockOptions', json_encode($lockOptions), $ownConfig, $config);
 
+                // Multiple video decoders
+                if ($sanitizedParams->hasParam('isUseMultipleVideoDecoders')) {
+                    $this->handleChangedSettings(
+                        'isUseMultipleVideoDecoders',
+                        ($ownConfig)
+                            ? $displayProfile->getSetting('isUseMultipleVideoDecoders')
+                            : $display->getSetting('isUseMultipleVideoDecoders'),
+                        $sanitizedParams->getString('isUseMultipleVideoDecoders'),
+                        $changedSettings
+                    );
+                    $displayProfile->setSetting(
+                        'isUseMultipleVideoDecoders',
+                        $sanitizedParams->getString('isUseMultipleVideoDecoders'),
+                        $ownConfig,
+                        $config
+                    );
+                }
+
                 break;
 
             case 'chromeOS':
@@ -957,6 +975,23 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting(
                         'elevateLogsUntil',
                         $sanitizedParams->getDate('elevateLogsUntil')?->format('U'),
+                        $ownConfig,
+                        $config
+                    );
+                }
+
+                if ($sanitizedParams->hasParam('sendCurrentLayoutAsStatusUpdate')) {
+                    $this->handleChangedSettings(
+                        'sendCurrentLayoutAsStatusUpdate',
+                        ($ownConfig)
+                            ? $displayProfile->getSetting('sendCurrentLayoutAsStatusUpdate')
+                            : $display->getSetting('sendCurrentLayoutAsStatusUpdate'),
+                        $sanitizedParams->getCheckbox('sendCurrentLayoutAsStatusUpdate'),
+                        $changedSettings
+                    );
+                    $displayProfile->setSetting(
+                        'sendCurrentLayoutAsStatusUpdate',
+                        $sanitizedParams->getCheckbox('sendCurrentLayoutAsStatusUpdate'),
                         $ownConfig,
                         $config
                     );

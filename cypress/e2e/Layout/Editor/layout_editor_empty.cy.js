@@ -88,8 +88,7 @@ describe('Layout Designer (Empty)', function() {
     });
 
     it.skip('should delete a region using the toolbar bin', () => {
-      cy.server();
-      cy.route('/layout?layoutId=*').as('reloadLayout');
+      cy.intercept('GET', '/layout?layoutId=*').as('reloadLayout');
 
       // Open navigator edit
       cy.get('.editor-bottom-bar #navigator-edit-btn').click();
@@ -119,9 +118,8 @@ describe('Layout Designer (Empty)', function() {
       cy.populateLibraryWithMedia();
 
       // Create and alias for reload Layout
-      cy.server();
-      cy.route('/layout?layoutId=*').as('reloadLayout');
-      cy.route('/library/search?*').as('mediaLoad');
+      cy.intercept('GET', '/layout?layoutId=*').as('reloadLayout');
+      cy.intercept('GET', '/library/search?*').as('mediaLoad');
 
       // Open library search tab
       cy.get('.editor-main-toolbar #btn-menu-0').should('be.visible').click({force: true});

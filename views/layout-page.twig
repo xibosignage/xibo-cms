@@ -107,11 +107,10 @@
                                     {{ inline.hidden("folderId") }}
                                 </div>
                                 <div class="tab-pane" id="advanced-filter" role="tabpanel">
-
                                     {% set title %}{% trans "Retired" %}{% endset %}
-                                    {% set option1 = "Yes"|trans %}
-                                    {% set option2 = "No"|trans %}
-                                    {% set values = [{id: 1, value: option1}, {id: 0, value: option2}] %}
+                                    {% set option1 = "No"|trans %}
+                                    {% set option2 = "Yes"|trans %}
+                                    {% set values = [{id: 0, value: option1}, {id: 1, value: option2}] %}
                                     {{ inline.dropdown("retired", "single", title, 0, values, "id", "value") }}
 
                                     {% set title %}{% trans "Show" %}{% endset %}

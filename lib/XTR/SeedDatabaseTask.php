@@ -321,6 +321,9 @@ class SeedDatabaseTask implements TaskInterface
 
             // Layout for displaygroups.cy.js test
             'disp4_default_layout' => 'export-disp4-default-layout.zip',
+
+            // Layout editor tests
+            'Audio-Video-PDF' => 'export-audio-video-pdf.zip'
         ];
 
         // Get all layouts

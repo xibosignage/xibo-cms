@@ -173,6 +173,9 @@ return value + '%';
                 <helpText>Fit to selected area instead of using the font size?</helpText>
                 <default>0</default>
             </property>
+            <property id="fontFamily" type="hidden">
+                <default>weathericons</default>
+            </property>
         </properties>
         <stencil>
             <hbs><![CDATA[
@@ -415,9 +418,44 @@ if(properties.fitToArea) {
         <stencil>
             <hbs><![CDATA[
 <div class="global-elements-image img-container forecast-elements-background-image weather-bg--{{data.icon}}"
+    data-asset-bg-cloudy="[[assetId=bg-cloudy]]"
+    data-asset-bg-partly-cloudy-day="[[assetId=bg-partly-cloudy-day]]"
+    data-asset-bg-clear-day="[[assetId=bg-clear-day]]"
+    data-asset-bg-fog="[[assetId=bg-fog]]"
+    data-asset-bg-sleet="[[assetId=bg-sleet]]"
+    data-asset-bg-clear-night="[[assetId=bg-clear-night]]"
+    data-asset-bg-partly-cloudy-night="[[assetId=bg-partly-cloudy-night]]"
+    data-asset-bg-rain="[[assetId=bg-rain]]"
+    data-asset-bg-snow="[[assetId=bg-snow]]"
+    data-asset-bg-wind="[[assetId=bg-wind]]"
+    data-asset-forecast-current-2-cloudy="[[assetId=forecast-current-2-cloudy]]"
+    data-asset-forecast-current-2-partly-cloudy-day="[[assetId=forecast-current-2-partly-cloudy-day]]"
+    data-asset-forecast-current-2-clear-day="[[assetId=forecast-current-2-clear-day]]"
+    data-asset-forecast-current-2-fog="[[assetId=forecast-current-2-fog]]"
+    data-asset-forecast-current-2-sleet="[[assetId=forecast-current-2-sleet]]"
+    data-asset-forecast-current-2-clear-night="[[assetId=forecast-current-2-clear-night]]"
+    data-asset-forecast-current-2-partly-cloudy-night="[[assetId=forecast-current-2-partly-cloudy-night]]"
+    data-asset-forecast-current-2-rain="[[assetId=forecast-current-2-rain]]"
+    data-asset-forecast-current-2-snow="[[assetId=forecast-current-2-snow]]"
+    data-asset-forecast-current-2-wind="[[assetId=forecast-current-2-wind]]"
+    data-asset-forecast-3d-cloudy="[[assetId=forecast-3d-cloudy]]"
+    data-asset-forecast-3d-partly-cloudy-day="[[assetId=forecast-3d-partly-cloudy-day]]"
+    data-asset-forecast-3d-clear-day="[[assetId=forecast-3d-clear-day]]"
+    data-asset-forecast-3d-fog="[[assetId=forecast-3d-fog]]"
+    data-asset-forecast-3d-sleet="[[assetId=forecast-3d-sleet]]"
+    data-asset-forecast-3d-clear-night="[[assetId=forecast-3d-clear-night]]"
+    data-asset-forecast-3d-partly-cloudy-night="[[assetId=forecast-3d-partly-cloudy-night]]"
+    data-asset-forecast-3d-rain="[[assetId=forecast-3d-rain]]"
+    data-asset-forecast-3d-snow="[[assetId=forecast-3d-snow]]"
+    data-asset-forecast-3d-wind="[[assetId=forecast-3d-wind]]"
+    data-icon-id="{{data.icon}}"
+    data-icon-prefix="{{iconPrefix}}"
     style="width:100%; height: 100%; overflow: hidden; position: relative;">
     {{set 'bgImg' (weatherBackgroundImage data.icon cloudyImage dayCloudyImage dayClearImage fogImage hailImage nightClearImage nightPartlyCloudyImage rainImage snowImage windImage)}}
-    <img src="{{#if @root.bgImg}}{{@root.bgImg}}{{else}}[[assetId={{iconPrefix}}{{data.icon}}]]{{/if}}"
+    <img src="{{#if @root.bgImg}}{{@root.bgImg}}{{else}}data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNiYAAAAAkAAxkR2eQAAAAASUVORK5CYII={{/if}}"
+        {{#unless @root.bgImg}}
+            data-needs-replacement="1"
+        {{/unless}}
         style="width:100%; height: 100%;
         object-fit: {{objectFit}};
         object-position: {{alignId}} {{valignId}};
@@ -431,6 +469,32 @@ if(properties.fitToArea) {
 </div>
             ]]></hbs>
         </stencil>
+        <onTemplateRender><![CDATA[
+// Get respective data image
+let $imageContainer = $(target).find('.global-elements-image');
+
+if($imageContainer.length <= 0) {
+    return;
+}
+
+if ($imageContainer.find('img').data('needs-replacement') == 1) {
+    let iconPrefix = $imageContainer.data('icon-prefix');
+    let iconId = $imageContainer.data('icon-id');
+    let iconAssetURL = $imageContainer.data('asset-' + iconPrefix + iconId);
+
+    // Replace src in image
+    $imageContainer.find('img').attr('src', iconAssetURL);
+}
+
+// Clear attributes
+Object.values($imageContainer[0].attributes).forEach(function(attr) {
+   if(attr.name.startsWith('data-asset-')) {
+       $imageContainer.removeAttr(attr.name);
+   }
+});
+$imageContainer.removeAttr('data-icon-id data-icon-prefix');
+$imageContainer.find('img').removeAttr('data-needs-replacement');
+        ]]></onTemplateRender>
         <assets>
             <asset id="bg-cloudy" type="path" mimeType="image/jpeg" path="/modules/assets/forecastio/wi-cloudy.jpg"></asset>
             <asset id="bg-partly-cloudy-day" type="path" mimeType="image/jpeg" path="/modules/assets/forecastio/wi-day-cloudy.jpg"></asset>
@@ -442,6 +506,26 @@ if(properties.fitToArea) {
             <asset id="bg-rain" type="path" mimeType="image/jpeg" path="/modules/assets/forecastio/wi-rain.jpg"></asset>
             <asset id="bg-snow" type="path" mimeType="image/jpeg" path="/modules/assets/forecastio/wi-snow.jpg"></asset>
             <asset id="bg-wind" type="path" mimeType="image/jpeg" path="/modules/assets/forecastio/wi-windy.jpg"></asset>
+            <asset id="forecast-current-2-cloudy" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/vector_backgrounds/vector-cloudy.png"></asset>
+            <asset id="forecast-current-2-partly-cloudy-day" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/vector_backgrounds/vector-cloudy.png"></asset>
+            <asset id="forecast-current-2-clear-day" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/vector_backgrounds/vector-day-sunny.png"></asset>
+            <asset id="forecast-current-2-fog" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/vector_backgrounds/vector-fog.png"></asset>
+            <asset id="forecast-current-2-sleet" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/vector_backgrounds/vector-hail.png"></asset>
+            <asset id="forecast-current-2-clear-night" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/vector_backgrounds/vector-night-clear.png"></asset>
+            <asset id="forecast-current-2-partly-cloudy-night" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/vector_backgrounds/vector-night-partly-cloudy.png"></asset>
+            <asset id="forecast-current-2-rain" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/vector_backgrounds/vector-rain.png"></asset>
+            <asset id="forecast-current-2-snow" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/vector_backgrounds/vector-snow.png"></asset>
+            <asset id="forecast-current-2-wind" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/vector_backgrounds/vector-windy.png"></asset>
+            <asset id="forecast-3d-cloudy" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/3d_icons/3d-cloudy.png"></asset>
+            <asset id="forecast-3d-partly-cloudy-day" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/3d_icons/3d-cloudy.png"></asset>
+            <asset id="forecast-3d-clear-day" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/3d_icons/3d-day-sunny.png"></asset>
+            <asset id="forecast-3d-fog" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/3d_icons/3d-fog.png"></asset>
+            <asset id="forecast-3d-sleet" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/3d_icons/3d-hail.png"></asset>
+            <asset id="forecast-3d-clear-night" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/3d_icons/3d-night-clear.png"></asset>
+            <asset id="forecast-3d-partly-cloudy-night" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/3d_icons/3d-night-partly-cloudy.png"></asset>
+            <asset id="forecast-3d-rain" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/3d_icons/3d-rain.png"></asset>
+            <asset id="forecast-3d-snow" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/3d_icons/3d-snow.png"></asset>
+            <asset id="forecast-3d-wind" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/3d_icons/3d-windy.png"></asset>
         </assets>
     </template>
     <template>
@@ -970,16 +1054,6 @@ $(target).find('.date').each(function(_idx, dateEl){
         </stencil>
         <assets>
             <asset id="forecast-current-2" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/forecast-current-2.png" />
-            <asset id="forecast-current-2-cloudy" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/vector_backgrounds/vector-cloudy.png"></asset>
-            <asset id="forecast-current-2-partly-cloudy-day" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/vector_backgrounds/vector-cloudy.png"></asset>
-            <asset id="forecast-current-2-clear-day" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/vector_backgrounds/vector-day-sunny.png"></asset>
-            <asset id="forecast-current-2-fog" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/vector_backgrounds/vector-fog.png"></asset>
-            <asset id="forecast-current-2-sleet" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/vector_backgrounds/vector-hail.png"></asset>
-            <asset id="forecast-current-2-clear-night" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/vector_backgrounds/vector-night-clear.png"></asset>
-            <asset id="forecast-current-2-partly-cloudy-night" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/vector_backgrounds/vector-night-partly-cloudy.png"></asset>
-            <asset id="forecast-current-2-rain" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/vector_backgrounds/vector-rain.png"></asset>
-            <asset id="forecast-current-2-snow" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/vector_backgrounds/vector-snow.png"></asset>
-            <asset id="forecast-current-2-wind" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/vector_backgrounds/vector-windy.png"></asset>
         </assets>
     </template>
     <template>
@@ -1255,16 +1329,6 @@ $(target).find('.date').each(function(_idx, dateEl){
         </stencil>
         <assets>
             <asset id="forecast-current-4" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/forecast/elements/forecast-current-4.png" />
-            <asset id="forecast-3d-cloudy" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/3d_icons/3d-cloudy.png"></asset>
-            <asset id="forecast-3d-partly-cloudy-day" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/3d_icons/3d-cloudy.png"></asset>
-            <asset id="forecast-3d-clear-day" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/3d_icons/3d-day-sunny.png"></asset>
-            <asset id="forecast-3d-fog" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/3d_icons/3d-fog.png"></asset>
-            <asset id="forecast-3d-sleet" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/3d_icons/3d-hail.png"></asset>
-            <asset id="forecast-3d-clear-night" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/3d_icons/3d-night-clear.png"></asset>
-            <asset id="forecast-3d-partly-cloudy-night" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/3d_icons/3d-night-partly-cloudy.png"></asset>
-            <asset id="forecast-3d-rain" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/3d_icons/3d-rain.png"></asset>
-            <asset id="forecast-3d-snow" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/3d_icons/3d-snow.png"></asset>
-            <asset id="forecast-3d-wind" type="path" mimeType="image/png" path="/modules/assets/forecastio/elements/3d_icons/3d-windy.png"></asset>
         </assets>
     </template>
 </templates>

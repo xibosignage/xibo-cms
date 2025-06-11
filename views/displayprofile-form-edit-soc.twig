@@ -200,7 +200,7 @@
 
                     {% set title = "Action Bar Display Duration"|trans %}
                     {% set helpText = "How long should the Action Bar be shown for, in seconds?"|trans %}
-                    {{ forms.number("actionBarDisplayDuration", title, displayProfile.getSetting("actionBarDisplayDuration"), helpText) }}
+                    {{ forms.number("actionBarDisplayDuration", title, displayProfile.getSetting("actionBarDisplayDuration"), helpText, "", "", "", "", "0") }}
 
                     {% if theme.getSetting('DISPLAY_PROFILE_CURRENT_LAYOUT_STATUS_ENABLED', 0) == 1 %}
                         {% set title = "Notify current layout"|trans %}
@@ -214,7 +214,7 @@
                             {{ forms.playerCompat("", "", "R204+", "R208+", "") }}
                         {% endset %}
                         {% set helpText = "The duration between status screen shots in minutes. 0 to disable. Warning: This is bandwidth intensive."|trans %}
-                        {{ forms.number("screenShotRequestInterval", title, displayProfile.getSetting("screenShotRequestInterval"), helpText) }}
+                        {{ forms.number("screenShotRequestInterval", title, displayProfile.getSetting("screenShotRequestInterval"), helpText, "", "", "", "", "0") }}
                     {% endif %}
 
                     {% set title = "Screen Shot Size"|trans %}
@@ -235,15 +235,23 @@
 
                     {% set title = "Send progress while downloading"|trans %}
                     {% set helpText = "How often, in minutes, should the Display send its download progress while it is downloading new content?"|trans %}
-                    {{ forms.number("mediaInventoryTimer", title, displayProfile.getSetting("mediaInventoryTimer"), helpText) }}
+                    {{ forms.number("mediaInventoryTimer", title, displayProfile.getSetting("mediaInventoryTimer"), helpText, "", "", "", "", "0") }}
 
                     {% set title = "Embedded Web Server Port"|trans %}
                     {% set helpText = "The port number to use for the embedded web server on the Player. Only change this if there is a port conflict reported on the status screen."|trans %}
-                    {{ forms.number("serverPort", title, displayProfile.getSetting("serverPort"), helpText) }}
+                    {{ forms.number("serverPort", title, displayProfile.getSetting("serverPort"), helpText, "", "", "", "", "0") }}
 
                     {% set title = "Embedded Web Server allow WAN?"|trans %}
                     {% set helpText = "Should we allow access to the Player Embedded Web Server from WAN? You may need to adjust the device firewall to allow external traffic"|trans %}
                     {{ forms.checkbox("embeddedServerAllowWan", title, displayProfile.getSetting("embeddedServerAllowWan"), helpText) }}
+
+                    {% set title = "Use Multiple Video Decoders"|trans %}
+                    {% set helpText = "Should the Player try to use Multiple Video Decoders when preparing and showing Video content."|trans %}
+                    {% set options = [
+                        { id: "on", value: "On"|trans },
+                        { id: "off", value: "Off"|trans }
+                    ] %}
+                    {{ forms.dropdown("isUseMultipleVideoDecoders", "single", title, displayProfile.getSetting("isUseMultipleVideoDecoders", "on"), options, "id", "value", helpText) }}
                 </div>
 
                 <div class="tab-pane" id="timers">
@@ -398,7 +406,7 @@
                             { val: "blockall", text: blockallText }
                         ] %}
                         {% if displayProfile.type == "lg" %}
-                            {% set options = options|merge([{ val: "poweronly", text: poweronlyText }], options) %}
+                            {% set options = options|merge([{ val: "poweronly", text: poweronlyText }]) %}
                         {% endif %}
                         {{ forms.dropdown("keylockLocal", "single", localKeylockTitle, lockOptions.keylock.local, options, "val", "text", localKeylockHelp) }}
                         {{ forms.dropdown("keylockRemote", "single", remoteKeylockTitle, lockOptions.keylock.remote, options, "val", "text", remoteKeylockHelp) }}

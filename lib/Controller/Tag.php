@@ -25,6 +25,7 @@ namespace Xibo\Controller;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Event\DisplayGroupLoadEvent;
+use Xibo\Event\TagAddEvent;
 use Xibo\Event\TagDeleteEvent;
 use Xibo\Event\TagEditEvent;
 use Xibo\Event\TriggerTaskEvent;
@@ -351,7 +352,7 @@ class Tag extends Base
         $tag->save();
 
         // dispatch Tag add event
-        $event = new TagEditEvent($tag->tagId);
+        $event = new TagAddEvent($tag->tagId);
         $this->getDispatcher()->dispatch($event, $event::$NAME);
 
         // Return
@@ -499,6 +500,7 @@ class Tag extends Base
 
         $values = [];
 
+        $oldTag = $tag->tag;
         $tag->tag = $sanitizedParams->getString('name');
         $tag->isRequired = $sanitizedParams->getCheckbox('isRequired');
         $optionValues = $sanitizedParams->getString('options');
@@ -536,7 +538,7 @@ class Tag extends Base
         $tag->save();
 
         // dispatch Tag edit event
-        $event = new TagEditEvent($tag->tagId);
+        $event = new TagEditEvent($tag->tagId, $oldTag, $tag->tag);
         $this->getDispatcher()->dispatch($event, $event::$NAME);
 
         // Return
@@ -738,7 +740,7 @@ class Tag extends Base
                     $entity->assignTag($tag);
                 }
 
-                $entity->save();
+                $entity->save(['isTagEdit' => true]);
             }
 
             // Once we're done, and if we're a Display entity, we need to calculate the dynamic display groups

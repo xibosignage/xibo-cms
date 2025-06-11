@@ -3187,13 +3187,17 @@ window.forms = {
      * @param {*} baseObject - The base object to replace
      */
   handleFormReplacements: function(container, baseObject) {
+    const regExpMatchBetweenPercent = /%([^%\s]+)%/g;
+
     const replaceHTML = function(htmlString) {
-      htmlString = htmlString.replace(/\%(.*?)\%/g, function(_m, group) {
-        // Replace trimmed match with the value of the base object
-        return group.split('.').reduce((a, b) => {
-          return (a[b]) || `%${b}%`;
-        }, baseObject);
-      });
+      htmlString = htmlString.replace(
+        regExpMatchBetweenPercent,
+        function(_m, group) {
+          // Replace trimmed match with the value of the base object
+          return group.split('.').reduce((a, b) => {
+            return (a[b]) || `%${b}%`;
+          }, baseObject);
+        });
 
       return htmlString;
     };
@@ -3206,8 +3210,11 @@ window.forms = {
         const elementAlternativeTitle = $element.attr('data-original-title');
 
         // If theres title and it contains a replacement special character
-        if (elementTitle && elementTitle.indexOf('%') > -1) {
-          $element.attr('title', replaceHTML(elementTitle));
+        if (elementTitle) {
+          const matches = elementTitle.match(regExpMatchBetweenPercent);
+          if (matches) {
+            $element.attr('title', replaceHTML(elementTitle));
+          }
         }
 
         // If theres an aletrnative title and it
@@ -3216,9 +3223,13 @@ window.forms = {
           elementAlternativeTitle &&
           elementAlternativeTitle.indexOf('%') > -1
         ) {
-          $element.attr(
-            'data-original-title',
-            replaceHTML(elementAlternativeTitle));
+          const matches = elementAlternativeTitle
+            .match(regExpMatchBetweenPercent);
+          if (matches) {
+            $element.attr(
+              'data-original-title',
+              replaceHTML(elementAlternativeTitle));
+          }
         }
       });
 
@@ -3229,8 +3240,11 @@ window.forms = {
         const elementInnerHTML = $element.html();
 
         // If theres inner html and it contains a replacement special character
-        if (elementInnerHTML && elementInnerHTML.indexOf('%') > -1) {
-          $element.html(replaceHTML(elementInnerHTML));
+        if (elementInnerHTML) {
+          const matches = elementInnerHTML.match(regExpMatchBetweenPercent);
+          if (matches) {
+            $element.html(replaceHTML(elementInnerHTML));
+          }
         }
       });
   },
@@ -5055,6 +5069,10 @@ window.forms = {
         if ($(element).hasClass('dateControl')) {
           // Places the error label date controller
           error.insertAfter(element.parent());
+        } else if (
+          $(element).siblings('.validation-error-container').length > 0
+        ) {
+          error.appendTo($(element).siblings('.validation-error-container'));
         } else {
           // Places the error label after the invalid element
           error.insertAfter(element);

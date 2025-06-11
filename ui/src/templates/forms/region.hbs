@@ -17,7 +17,7 @@
                     {{/eq}}
 
                     {{#eq region.type 'frame' }}
-                        {{> inputs/checkbox value=(getOption region.regionOptions "loop") id="loop" title=trans.region.loop helpText=trans.region.loopHelpText customClass="region-input" }}
+                        {{> inputs/checkbox value=(getOption regionOptions "loop") id="loop" title=trans.region.loop helpText=trans.region.loopHelpText customClass="region-input" }}
                         {{> inputs/message messageType="info" title=trans.region.loopMessage1}}
                         {{> inputs/message messageType="info" title=trans.region.loopMessage2}}
                         {{> inputs/message messageType="info" title=trans.region.loopMessage3}}
@@ -26,9 +26,21 @@
 
                 {{#if showExitTransition}}
                     <div class="tab-pane" id="transitionTab">
-                        {{> inputs/dropdown value=(getOption region.regionOptions "transitionType") options=(arrMerge (arr (obj code='' transition='Off')) transitions.out) optionsTitle="transition" optionsValue="code" id="transitionType" title=trans.region.exitTransitionTitle helpText=trans.region.exitTransitionHelpText }}
+                        {{> inputs/dropdown value=(getOption regionOptions "transitionType") options=(arrMerge (arr (obj code='' transition='Off')) transitions.out) optionsTitle="transition" optionsValue="code" id="transitionType" title=trans.region.exitTransitionTitle helpText=trans.region.exitTransitionHelpText }}
+                        {{> inputs/number value=(getOption regionOptions "transitionDuration") id=duration name="transitionDuration" title=trans.region.exitTransitionDurationTitle helpText=trans.region.exitTransitionDurationHelpText visibility='{ "field": "transitionType", "type": "neq", "value": "" }' }}
+                        {{> inputs/dropdown value=(getOption regionOptions "transitionDirection") options=transitions.compassPoints optionsTitle="name" optionsValue="id" id="transitionDirection" title=trans.region.exitTransitionDirectionTitle helpText=trans.region.exitTransitionDirectionHelpText visibility='{ "field": "transitionType", "type": "neq", "value": "" }' }}
                     </div>
                 {{/if}}
+
+                {{#neq region.type 'playlist' }}
+                    {{#neq region.type 'zone' }}
+                        {{> inputs/hidden value=region.zIndex id="zIndex" }}
+                        {{> inputs/hidden value=region.top id="top" }}
+                        {{> inputs/hidden value=region.left id="left" }}
+                        {{> inputs/hidden value=region.width id="width" }}
+                        {{> inputs/hidden value=region.height id="height" }}
+                    {{/neq}}
+                {{/neq}}
             </div>
         </form>
     </div>

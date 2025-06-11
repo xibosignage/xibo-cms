@@ -1694,14 +1694,14 @@ class Widget extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
+     * @return \Slim\Http\Response
+     * @throws \Xibo\Support\Exception\AccessDeniedException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function saveElements(Request $request, Response $response, $id)
+    public function saveElements(Request $request, Response $response, $id): Response
     {
         $widget = $this->widgetFactory->getById($id);
         if (!$this->getUser()->checkEditable($widget)) {
@@ -1747,18 +1747,37 @@ class Widget extends Base
             );
         }
 
-        // Parse the element JSON to see if we need to set `itemsPerPage`
+        // Parse the element JSON
         $slots = [];
         $uniqueSlots = 0;
         $isMediaOnlyWidget = true;
         $maxDuration = 1;
 
-        foreach ($elementJson as $widgetElement) {
-            foreach ($widgetElement['elements'] ?? [] as $element) {
+        foreach ($elementJson as $widgetIndex => $widgetElement) {
+            foreach ($widgetElement['elements'] ?? [] as $elementIndex => $element) {
+                $this->getLog()->debug('saveElements: processing widget index ' . $widgetIndex
+                    . ', element index ' . $elementIndex . ' with id ' . $element['id']);
+
                 $slotNo = 'slot_' . ($element['slot'] ?? 0);
                 if (!in_array($slotNo, $slots)) {
                     $slots[] = $slotNo;
                     $uniqueSlots++;
+                }
+
+                // Handle some of the common properties.
+                $elementParams = $this->getSanitizer([
+                    'elementName' => $element['elementName'],
+                ]);
+                $groupParams = $this->getSanitizer($element['groupProperties'] ?? []);
+
+                // Reassert safely
+                // TODO: we should parse out all of the fields available in the JSON provided.
+                $elementJson[$widgetIndex]['elements'][$elementIndex]['elementName']
+                    = $elementParams->getString('elementName');
+                $elementGroupName = $groupParams->getString('elementGroupName');
+                if (!empty($elementGroupName)) {
+                    $elementJson[$widgetIndex]['elements'][$elementIndex]['groupProperties']['elementGroupName']
+                        = $elementGroupName;
                 }
 
                 // Handle elements with the mediaId property so that media is linked and unlinked correctly.
@@ -1774,6 +1793,72 @@ class Widget extends Base
                     $newMediaIds[] = $mediaId;
                 } else {
                     $isMediaOnlyWidget = false;
+                }
+
+                // Get this elements template
+                $elementTemplate = $this->moduleTemplateFactory->getByTypeAndId('element', $element['id']);
+
+                // Does this template extend another? if so combine their properties
+                if ($elementTemplate->extends !== null) {
+                    $extendedTemplate = $this->moduleTemplateFactory->getByTypeAndId(
+                        'element',
+                        $elementTemplate->extends->template,
+                    );
+
+                    $elementTemplate->properties = array_merge(
+                        $elementTemplate->properties,
+                        $extendedTemplate->properties
+                    );
+                }
+
+                // Process element properties.
+                // Switch from {id:'',value:''} to key/value
+                $elementPropertyParams = [];
+                foreach (($element['properties'] ?? []) as $elementProperty) {
+                    $elementPropertyParams[$elementProperty['id']] = $elementProperty['value'] ?? null;
+                }
+
+                $this->getLog()->debug('saveElements: parsed ' . count($elementPropertyParams)
+                    . ' properties from request, there are ' . count($elementTemplate->properties)
+                    . ' properties defined in the template');
+
+                // Load into a sanitizer
+                $elementProperties = $this->getSanitizer($elementPropertyParams);
+
+                // Process each property against its definition
+                foreach ($elementTemplate->properties as $property) {
+                    if ($property->type === 'message') {
+                        continue;
+                    }
+
+                    // Isolate properties per element
+                    $property->setValueByType($elementProperties, null, true);
+
+                    // Process properties from the mediaSelector component
+                    if ($property->type === 'mediaSelector') {
+                        if (!empty($property->value) && is_numeric($property->value)) {
+                            $mediaId = intval($property->value);
+                            $widget->assignMedia($mediaId);
+                            $newMediaIds[] = $mediaId;
+                        }
+                    }
+                }
+
+                $elementTemplate->validateProperties('save');
+
+                // Convert these back into objects
+                // and reassert new properties.
+                $elementJson[$widgetIndex]['elements'][$elementIndex]['properties'] = [];
+                foreach ($elementTemplate->getPropertyValues(
+                    false,
+                    null,
+                    false,
+                    true
+                ) as $propertyKey => $propertyValue) {
+                    $elementJson[$widgetIndex]['elements'][$elementIndex]['properties'][] = [
+                        'id' => $propertyKey,
+                        'value' => $propertyValue,
+                    ];
                 }
             }
         }
@@ -1794,7 +1879,7 @@ class Widget extends Base
         }
 
         // Save elements
-        $widget->setOptionValue('elements', 'raw', $elements);
+        $widget->setOptionValue('elements', 'raw', json_encode($elementJson));
 
         // Unassign any mediaIds from elements which are no longer used.
         foreach ($existingMediaIds as $existingMediaId) {
@@ -1832,7 +1917,8 @@ class Widget extends Base
         // Successful
         $this->getState()->hydrate([
             'httpStatus' => 204,
-            'message' => __('Saved elements')
+            'message' => __('Saved elements'),
+            'data' => $elementJson,
         ]);
 
         return $this->render($request, $response);

@@ -40,6 +40,8 @@ use Xibo\Helper\Session;
 use Xibo\OAuth\AuthCodeRepository;
 use Xibo\OAuth\RefreshTokenRepository;
 use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\ControllerNotImplemented;
+use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
@@ -596,6 +598,16 @@ class Applications extends Base
         return $this->render($request, $response);
     }
 
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @param $userId
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws ControllerNotImplemented
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     */
     public function revokeAccess(Request $request, Response $response, $id, $userId)
     {
         if ($userId === null) {
@@ -607,6 +619,10 @@ class Applications extends Base
         }
 
         $client = $this->applicationFactory->getClientEntity($id);
+
+        if ($this->getUser()->userId != $userId) {
+            throw new InvalidArgumentException(__('Access denied: You do not own this authorization.'));
+        }
 
         // remove record in lk table
         $this->applicationFactory->revokeAuthorised($userId, $client->key);

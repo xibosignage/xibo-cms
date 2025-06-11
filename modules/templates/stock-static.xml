@@ -75,6 +75,7 @@
             </property>
             <property id="javaScript" type="code" allowLibraryRefs="true" variant="javascript">
                 <title>Optional JavaScript</title>
+                <helpText>Add JavaScript to be included immediately before the closing body tag. Do not use [] array notation as this is reserved for library references. Do not include script tags.</helpText>
             </property>
         </properties>
         <stencil>

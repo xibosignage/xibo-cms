@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -1084,6 +1084,112 @@ class User implements \JsonSerializable, UserEntityInterface
         }
 
         return $count;
+    }
+
+    /**
+     * Is a particular type of notification enabled?
+     *  used by the user edit form
+     * @param string $type The type of notification
+     * @param bool $isGroupOnly If true, only return if a user group has the notification type enabled
+     * @return bool
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function isNotificationEnabled(string $type, bool $isGroupOnly = false): bool
+    {
+        $this->load();
+
+        switch ($type) {
+            case 'system':
+                foreach ($this->groups as $group) {
+                    if ($group->getOriginalValue('isSystemNotification') == 1) {
+                        return true;
+                    }
+                }
+                if ($isGroupOnly) {
+                    return false;
+                } else {
+                    return $this->isSystemNotification;
+                }
+            case 'display':
+                foreach ($this->groups as $group) {
+                    if ($group->getOriginalValue('isDisplayNotification') == 1) {
+                        return true;
+                    }
+                }
+                if ($isGroupOnly) {
+                    return false;
+                } else {
+                    return $this->isDisplayNotification;
+                }
+            case 'dataset':
+                foreach ($this->groups as $group) {
+                    if ($group->getOriginalValue('isDataSetNotification') == 1) {
+                        return true;
+                    }
+                }
+                if ($isGroupOnly) {
+                    return false;
+                } else {
+                    return $this->isDataSetNotification;
+                }
+            case 'layout':
+                foreach ($this->groups as $group) {
+                    if ($group->getOriginalValue('isLayoutNotification') == 1) {
+                        return true;
+                    }
+                }
+                if ($isGroupOnly) {
+                    return false;
+                } else {
+                    return $this->isLayoutNotification;
+                }
+            case 'library':
+                foreach ($this->groups as $group) {
+                    if ($group->getOriginalValue('isLibraryNotification') == 1) {
+                        return true;
+                    }
+                }
+                if ($isGroupOnly) {
+                    return false;
+                } else {
+                    return $this->isLibraryNotification;
+                }
+            case 'report':
+                foreach ($this->groups as $group) {
+                    if ($group->getOriginalValue('isReportNotification') == 1) {
+                        return true;
+                    }
+                }
+                if ($isGroupOnly) {
+                    return false;
+                } else {
+                    return $this->isReportNotification;
+                }
+            case 'schedule':
+                foreach ($this->groups as $group) {
+                    if ($group->getOriginalValue('isScheduleNotification') == 1) {
+                        return true;
+                    }
+                }
+                if ($isGroupOnly) {
+                    return false;
+                } else {
+                    return $this->isScheduleNotification;
+                }
+            case 'custom':
+                foreach ($this->groups as $group) {
+                    if ($group->getOriginalValue('isCustomNotification') == 1) {
+                        return true;
+                    }
+                }
+                if ($isGroupOnly) {
+                    return false;
+                } else {
+                    return $this->isCustomNotification;
+                }
+            default:
+                return false;
+        }
     }
 
     /**

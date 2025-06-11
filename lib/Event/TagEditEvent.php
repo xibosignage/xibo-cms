@@ -30,9 +30,21 @@ class TagEditEvent extends Event
      */
     private $tagId;
 
-    public function __construct(int $tagId)
+    /**
+     * @var string
+     */
+    private $oldTag;
+
+    /**
+     * @var string
+     */
+    private $newTag;
+
+    public function __construct(int $tagId, string $oldTag = null, string $newTag = null)
     {
         $this->tagId = $tagId;
+        $this->oldTag = $oldTag;
+        $this->newTag = $newTag;
     }
 
     /**
@@ -41,5 +53,21 @@ class TagEditEvent extends Event
     public function getTagId(): int
     {
         return $this->tagId;
+    }
+
+    /**
+     * @return string
+     */
+    public function getOldTag(): string
+    {
+        return $this->oldTag;
+    }
+
+    /**
+     * @return string
+     */
+    public function getNewTag(): string
+    {
+        return $this->newTag;
     }
 }

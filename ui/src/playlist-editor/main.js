@@ -34,6 +34,7 @@ const playlistEditorExternalContainerTemplate =
 const messageTemplate = require('../templates/message.hbs');
 const loadingTemplate = require('../templates/loading.hbs');
 const contextMenuTemplate = require('../templates/context-menu.hbs');
+const contextMenuGroupTemplate = require('../templates/context-menu-group.hbs');
 const topbarTemplatePlaylistEditor =
   require('../templates/topbar-playlist-editor.hbs');
 const externalPlaylistMessageTemplate =
@@ -106,6 +107,8 @@ window.pE = {
 
   // Show minimum dimensions message
   showMinDimensionsMessage: false,
+
+  multiSelectMode: false,
 };
 
 /**
@@ -121,7 +124,7 @@ pE.loadEditor = function(
   showExternalPlaylistMessage = false,
 ) {
   // Add class to body so we can use CSS specifically on it
-  (!inline) && $('body').addClass('editor-opened');
+  (!inline) && $('body').addClass('editor-opened playlist-editor-opened');
 
   pE.common.showLoadingScreen();
 
@@ -203,6 +206,12 @@ pE.loadEditor = function(
         // Initialize timeline
         pE.timeline = new PlaylistTimeline(
           pE.editorContainer.find('#playlist-timeline'),
+        );
+
+        // Move help control to the header
+        $('#help-pane').insertAfter(
+          pE.editorContainer.parents('.editor-modal')
+            .find('.editor-modal-header .modal-header--left'),
         );
 
         // Append manager to the modal container
@@ -479,7 +488,7 @@ pE.deleteSelectedObject = function() {
         selectedWidgetsIds.push($(el).data('widgetId'));
       });
 
-    pE.deleteMultipleObjects('widget', selectedWidgetsIds);
+    pE.deleteMultipleObjects('widget', selectedWidgetsIds, true);
   } else {
     pE.deleteObject(
       pE.selectedObject.type,
@@ -572,8 +581,49 @@ pE.deleteObject = function(
  * Delete multiple objects
  * @param {string} objectsType - Type of objects to delete
  * @param {string[]} objectIds - Object ids to delete
+ * @param {boolean=} showConfirmationModal
+ *   - If we need to show a confirmation modal
  */
-pE.deleteMultipleObjects = function(objectsType, objectIds) {
+pE.deleteMultipleObjects = function(
+  objectsType,
+  objectIds,
+  showConfirmationModal = false,
+) {
+  // Create modal before delete element
+  const createDeleteModal = function() {
+    bootbox.hideAll();
+
+    bootbox.dialog({
+      title: deleteModalTrans.multiple.title,
+      message: deleteModalTrans.multiple.message,
+      size: 'large',
+      buttons: {
+        cancel: {
+          label: editorsTrans.no,
+          className: 'btn-white btn-bb-cancel',
+        },
+        confirm: {
+          label: editorsTrans.yes,
+          className: 'btn-danger btn-bb-confirm',
+          callback: function() {
+            // Delete
+            pE.deleteMultipleObjects(
+              objectsType,
+              objectIds,
+              false,
+            );
+          },
+        },
+      },
+    }).attr('data-test', 'deleteMultipleObjectModal');
+  };
+
+  // Show confirmation modal if needed
+  if (showConfirmationModal) {
+    createDeleteModal();
+    return;
+  }
+
   if (objectsType === 'widget') {
     pE.common.showLoadingScreen();
 
@@ -820,6 +870,10 @@ pE.close = function() {
     }
   };
 
+  // Move help control back to the top level
+  this.editorContainer.parents('.editor-modal')
+    .find('.editor-modal-header #help-pane').prependTo('body');
+
   // Clear loaded vars
   this.mainObjectId = '';
   deleteObjectProperties(this.playlist);
@@ -843,7 +897,8 @@ pE.close = function() {
   $('#editor-container').empty();
 
   // Remove editing class from body
-  (!this.inline) && $('body').removeClass('editor-opened');
+  (!this.inline) && $('body')
+    .removeClass('editor-opened playlist-editor-opened');
 };
 
 /**
@@ -893,24 +948,44 @@ pE.getUploadDialogClassName = function() {
  * @param {object=} position - Page menu position
  */
 pE.openContextMenu = function(obj, position = {x: 0, y: 0}) {
+  const self = this;
   const objId = $(obj).attr('id');
   const objType = $(obj).data('type');
+  let playlistObject;
 
   // Don't open context menu in read only mode
   if (typeof(lD) != 'undefined' && lD?.readOnlyMode === true) {
     return;
   }
 
-  // Get object
-  const playlistObject = pE.getObjectByTypeAndId(objType, objId);
+  if (self.multiSelectMode) {
+    const objectsArray = $.makeArray(
+      pE.timeline.DOMObject.find('.multi-selected'),
+    );
 
-  // Create menu and append to the designer div
-  // ( using the object extended with translations )
-  pE.editorContainer.append(
-    contextMenuTemplate(
-      Object.assign(playlistObject, {trans: contextMenuTrans}),
-    ),
-  );
+    // Check if they can be deleted
+    const canBeDeleted = objectsArray.every((el) => {
+      return $(el).is('.deletable, .editable');
+    });
+
+    pE.editorContainer.append(
+      contextMenuGroupTemplate({
+        trans: contextMenuTrans,
+        canBeDeleted: canBeDeleted,
+      }),
+    );
+  } else {
+    // Get object
+    playlistObject = pE.getObjectByTypeAndId(objType, objId);
+
+    // Create menu and append to the designer div
+    // ( using the object extended with translations )
+    pE.editorContainer.append(
+      contextMenuTemplate(
+        Object.assign(playlistObject, {trans: contextMenuTrans}),
+      ),
+    );
+  }
 
   // Set menu position ( and fix page limits )
   const contextMenuWidth =
@@ -940,7 +1015,11 @@ pE.openContextMenu = function(obj, position = {x: 0, y: 0}) {
     const target = $(ev.currentTarget);
 
     if (target.data('action') == 'Delete') {
-      pE.deleteObject(objType, playlistObject[objType + 'Id'], true);
+      if (self.multiSelectMode) {
+        pE.deleteSelectedObject();
+      } else {
+        pE.deleteObject(objType, playlistObject[objType + 'Id'], true);
+      }
     } else {
       playlistObject.editPropertyForm(
         target.data('property'),
@@ -1260,6 +1339,8 @@ pE.toggleMultiselectMode = function(forceSelect = null) {
 
     // Restore toolbar to normal mode
     $mainSideToolbar.css('z-index', 'auto');
+
+    self.multiSelectMode = false;
   };
 
   // Check if needs to be selected or unselected
@@ -1274,6 +1355,9 @@ pE.toggleMultiselectMode = function(forceSelect = null) {
   // Toggle class on button
   $editorContainer.find('.footer-actions [data-action="multi-select"]')
     .toggleClass('multiselect-active', multiSelectFlag);
+
+  // Add status to global var
+  self.multiSelectMode = multiSelectFlag;
 
   if (multiSelectFlag) {
     // Show overlay

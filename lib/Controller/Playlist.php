@@ -1247,10 +1247,17 @@ class Playlist extends Base
             throw new AccessDeniedException();
         }
 
+        // Get a list of timezones
+        $timeZones = [];
+        foreach (DateFormatHelper::timezoneList() as $key => $value) {
+            $timeZones[] = ['id' => $key, 'value' => $value];
+        }
+
         // Pass to view
         $this->getState()->template = 'playlist-form-timeline';
         $this->getState()->setData([
             'playlist' => $playlist,
+            'timeZones' => $timeZones,
         ]);
 
         return $this->render($request, $response);

@@ -436,6 +436,12 @@ class Layout extends Base
             );
         }
 
+        // Do we have an 'Enable Stats Collection?' checkbox?
+        // If not, we fall back to the default Stats Collection setting.
+        if (!$sanitizedParams->hasParam('enableStat')) {
+            $enableStat = $this->getConfig()->getSetting('DISPLAY_PROFILE_STATS_DEFAULT');
+        }
+
         // Set layout enableStat flag
         $layout->enableStat = $enableStat;
 
@@ -3539,7 +3545,8 @@ class Layout extends Base
         $layout->schemaVersion = Environment::$XLF_VERSION;
         $layout->folderId = ($type === 'media') ? $media->folderId : $playlist->folderId;
 
-        $layout->save();
+        // Media files have their own validation so we can skip
+        $layout->save(['validate' => false]);
 
         $draft = $this->layoutFactory->checkoutLayout($layout);
 
@@ -3589,6 +3596,12 @@ class Layout extends Base
 
         // Calculate the duration
         $widget->calculateDuration($module);
+
+        // Set loop for media items with custom duration
+        if ($type === 'media' && $media->mediaType === 'video' && $itemDuration > $media->duration) {
+            $widget->setOptionValue('loop', 'attrib', 1);
+            $widget->save();
+        }
 
         // Assign the widget to the playlist
         $region->getPlaylist()->assignWidget($widget);

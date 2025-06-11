@@ -474,10 +474,17 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
       if (element.properties != undefined) {
         element.properties =
           Object.values(element.properties).map((property) => {
-            return {
+            const propertyToSave = {
               id: property.id,
               value: property.value,
             };
+
+            // For media selector, save value also as mediaId
+            if (property.type === 'mediaSelector' && property.value != '') {
+              propertyToSave.mediaId = property.value;
+            }
+
+            return propertyToSave;
           });
       }
 

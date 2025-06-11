@@ -262,7 +262,8 @@ window.XiboInitialise = function(scope, options) {
   $(scope + ' .pagedSelect select.form-control').each(function(_idx, el) {
     const $target = $(el);
     const anchor = $target.data('anchorElement');
-    const inModal = $(scope).hasClass('modal');
+    const inModal = $(scope).hasClass('modal') ||
+        $(scope).parents('.modal').length > 0;
     if (anchor !== undefined && anchor !== '') {
       makePagedSelect($target, $(anchor));
     } else if (inModal) {
@@ -1655,7 +1656,7 @@ window.XiboFormRender = function(sourceObj, data = null) {
             } else {
               $('#' + fieldAction.field).on(fieldAction.trigger, function(ev) {
                 // Process the actions straight away.
-                const fieldVal = $(ev.currentState).val();
+                const fieldVal = $(ev.currentTarget).val();
 
                 // console.log("Init action with value " + fieldVal);
                 let valueMatch = false;
@@ -2962,6 +2963,15 @@ window.updateDatePicker = function($element, date, format, triggerChange) {
         $element[0]._flatpickr.setDate(date, triggerChange, format);
       } else {
         $element[0]._flatpickr.setDate(date);
+      }
+    } else {
+      // If flatpickr is (still) not initialised
+      $element.val(
+        (!moment(date, format).isValid()) ?
+          '' : moment(date, format).format(systemDateFormat),
+      );
+      if (triggerChange) {
+        $element.trigger('change');
       }
     }
   } else if (calendarType == 'Jalali') {

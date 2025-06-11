@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -105,13 +105,15 @@ trait ModulePropertyTrait
     /**
      * @param bool $decorateForOutput true if we should decorate for output to either the preview or player
      * @param array|null $overrideValues a key/value array of values to use instead the stored property values
-     * @param bool $includeDefaults
+     * @param bool $includeDefaults include default values
+     * @param bool $skipNullProperties skip null properties
      * @return array
      */
     public function getPropertyValues(
         bool $decorateForOutput = true,
         ?array $overrideValues = null,
-        bool $includeDefaults = false
+        bool $includeDefaults = false,
+        bool $skipNullProperties = false,
     ): array {
         $properties = [];
         foreach ($this->properties as $property) {
@@ -119,6 +121,10 @@ trait ModulePropertyTrait
 
             if ($includeDefaults && $value === null) {
                 $value = $property->default ?? null;
+            }
+
+            if ($skipNullProperties && $value === null) {
+                continue;
             }
 
             // TODO: should we cast values to their appropriate field formats.

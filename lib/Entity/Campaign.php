@@ -525,10 +525,16 @@ class Campaign implements \JsonSerializable
             'validate' => true,
             'notify' => true,
             'collectNow' => true,
-            'saveTags' => true
+            'saveTags' => true,
+            'isTagEdit' => false
         ], $options);
 
         $this->getLog()->debug('Saving ' . $this);
+
+        // Manually load display group IDs when editing only campaign tags.
+        if ($options['isTagEdit']) {
+            $this->displayGroupIds = $this->loadDisplayGroupIds();
+        }
 
         if ($options['validate']) {
             $this->validate();
@@ -818,7 +824,8 @@ class Campaign implements \JsonSerializable
                     startDt = :startDt,
                     endDt = :endDt,
                     folderId = :folderId,
-                    permissionsFolderId = :permissionsFolderId
+                    permissionsFolderId = :permissionsFolderId,
+                    modifiedBy = :modifiedBy
              WHERE campaignID = :campaignId
         ', [
             'campaignId' => $this->campaignId,
@@ -838,6 +845,7 @@ class Campaign implements \JsonSerializable
             'ref5' => empty($this->ref5) ? null : $this->ref5,
             'folderId' => $this->folderId,
             'permissionsFolderId' => $this->permissionsFolderId,
+            'modifiedBy' => $this->modifiedBy,
         ]);
     }
 

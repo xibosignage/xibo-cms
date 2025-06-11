@@ -268,8 +268,7 @@ describe('Display Groups', function() {
   it('selects multiple display groups and delete them', function() {
     // Create a new displaygroup and then search for it and delete it
     cy.createDisplaygroup('Cypress Test Displaygroup ' + testRun).then((res) => {
-      cy.server();
-      cy.route('/displaygroup?draw=2&*').as('displaygroupGridLoad');
+      cy.intercept('GET', '/displaygroup?draw=2&*').as('displaygroupGridLoad');
 
       // Delete all test displaygroups
       cy.visit('/displaygroup/view');

@@ -78,6 +78,7 @@
             </property>
             <property id="javaScript" type="code" allowLibraryRefs="true" variant="javascript">
                 <title>Optional JavaScript</title>
+                <helpText>Add JavaScript to be included immediately before the closing body tag. Do not use [] array notation as this is reserved for library references. Do not include script tags.</helpText>
             </property>
         </properties>
         <stencil>
@@ -468,6 +469,7 @@ ol, li {
 
 .calendar-event.concurrent::after {
   border: 1px solid var(--event-text-color);
+  border-left-width: 2px;
   content: " ";
   width: calc(100% - 2px);
   height: calc(100% - 2px);
@@ -916,6 +918,7 @@ ol, li {
 
 .calendar-event.concurrent::after {
   border: 1px solid var(--event-text-color);
+  border-left-width: 2px;
   content: " ";
   width: calc(100% - 2px);
   height: calc(100% - 2px);
@@ -1387,7 +1390,8 @@ ol, li {
 
 .calendar-event.concurrent::after {
   border: 1px solid var(--event-text-color);
-  content: \" \";
+  border-left-width: 2px;
+  content: " ";
   width: calc(100% - 2px);
   height: calc(100% - 2px);
   left: 0px;
@@ -1854,7 +1858,8 @@ ol, li {
 
 .calendar-event.concurrent::after {
   border: 1px solid var(--event-text-color);
-  content: \" \";
+  border-left-width: 2px;
+  content: " ";
   width: calc(100% - 2px);
   height: calc(100% - 2px);
   left: 0px;

@@ -23,6 +23,7 @@ jQuery.fn.extend({
     // Default options
     const defaults = {
       fitTarget: '',
+      fontFamily: '',
       fitScaleAxis: 'x',
       isIcon: false,
     };
@@ -44,7 +45,13 @@ jQuery.fn.extend({
         $(el);
 
       const waitForFontToLoad = function(font, callback) {
-        if (document.fonts.check(font)) {
+        // Wait for font to load
+        // but also make sure target has any dimensions
+        if (
+          $fitTarget.width() > 0 &&
+          $fitTarget.height() > 0 &&
+          document.fonts.check(font)
+        ) {
           callback();
         } else {
           setTimeout(function() {
@@ -54,7 +61,8 @@ jQuery.fn.extend({
       };
 
       if (options.isIcon) {
-        const fontFamily = $fitTarget.css('font-family');
+        const fontFamily = (options.fontFamily) ?
+          options.fontFamily : $fitTarget.css('font-family');
         const maxFontSize = 1000;
         let fontSize = 1;
 

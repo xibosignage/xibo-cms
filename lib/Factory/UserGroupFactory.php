@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -187,7 +187,14 @@ class UserGroupFactory extends BaseFactory
      */
     public function checkNotificationEmailPreferences(int $userId, string $type): bool
     {
-        $groups = $this->query(null, ['disableUserCheck' => 1, 'userId' => $userId, 'notificationType' => $type]);
+        // We should include all groups this user is in (including their user specific one).
+        // therefore isUserSpecific should be -1 otherwise it defaults to 0.
+        $groups = $this->query(null, [
+            'disableUserCheck' => 1,
+            'isUserSpecific' => -1,
+            'userId' => $userId,
+            'notificationType' => $type,
+        ]);
 
         return count($groups) > 0;
     }
@@ -447,8 +454,6 @@ class UserGroupFactory extends BaseFactory
         foreach ($this->getStore()->select('
                 SELECT `group`.groupId, `group`.features 
                   FROM `group`
-                    INNER JOIN `lkusergroup`
-                    ON `lkusergroup`.groupId = `group`.groupId
                  WHERE `group`.groupId = :groupId
                     OR `group`.groupId IN (SELECT groupId FROM lkusergroup WHERE userId = :userId)
             ', [

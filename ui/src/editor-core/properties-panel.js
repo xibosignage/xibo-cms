@@ -144,6 +144,12 @@ PropertiesPanel.prototype.save = function(
       const errorMessage = Object.values(errors).join('</br>');
       // Display message in form
       formHelpers.displayErrorMessage(form, errorMessage, 'danger');
+
+      // Call callback without waiting for the request
+      (callbackNoWait) && callbackNoWait();
+
+      // Mark form as not needed to be saved anymore
+      this.toSave = false;
       return false;
     } else {
       formHelpers.clearErrorMessage(form);
@@ -261,8 +267,14 @@ PropertiesPanel.prototype.save = function(
           // Update layout
           app.layout.updateData(data.data);
 
+          // Render top bar to update layout changes
+          app.topbar.render();
+
           // Render viewer to reflect changes
           app.viewer.render(true);
+
+          // Render layer manager
+          app.viewer.layerManager.render();
         } else {
           // Reload data, and refresh viewer if layout
           // or if we're saving an element
@@ -646,6 +658,8 @@ PropertiesPanel.prototype.render = function(
       ) {
         dataToRender.showExitTransition = true;
       }
+
+      dataToRender.regionOptions = target.options;
 
       if (
         target.subType === 'frame' &&
@@ -1304,6 +1318,12 @@ PropertiesPanel.prototype.render = function(
             positionProperties.rotation = targetAux.rotation;
           }
         } else if (target.type === 'region') {
+          // If we don't have target dimensions, stop rendering
+          // position tab
+          if (!target.dimensions) {
+            return;
+          }
+
           positionProperties = {
             type: 'region',
             regionType: target.subType,
@@ -1315,6 +1335,12 @@ PropertiesPanel.prototype.render = function(
             zIndex: target.zIndex,
           };
         } else {
+          // If we don't have target dimensions, stop rendering
+          // position tab
+          if (!target.parent.dimensions) {
+            return;
+          }
+
           positionProperties = {
             type: 'region',
             regionType: target.parent.subType,
@@ -1911,7 +1937,9 @@ PropertiesPanel.prototype.initFields = function(
   forms.setConditions(
     self.DOMObject.find('form'),
     data,
-    (elementProperties) ? target.elementId : target.widgetId,
+    (elementProperties) ?
+      target.elementId :
+      (target.type === 'region' ? target.regionId : target.widgetId),
     (target.parent && target.parent.isTopLevel != undefined) ?
       target.parent.isTopLevel : true,
   );
@@ -2339,6 +2367,9 @@ PropertiesPanel.prototype.renderActionTab = function(
       dataType: 'json',
       data: {
         layoutId: app.mainObjectId,
+        start: 0,
+        // set a maximum number of actions to be returned
+        length: 1000,
       },
     }).done(function(res) {
       // Filter actions by groups
@@ -2594,10 +2625,10 @@ PropertiesPanel.prototype.openEditAction = function(action) {
   // Only show playlists?
   let targetFilters = ['layout', 'regions'];
   if (
-    ['next', 'previous'].indexOf(actionData.actionType) != -1 &&
-    actionData.target === 'region'
+    ['next', 'previous'].indexOf(actionData.actionType) != -1
   ) {
-    targetFilters = ['playlist'];
+    targetFilters = (actionData.target === 'region') ?
+      ['playlist'] : ['layout'];
   }
 
   app.populateDropdownWithLayoutElements(
