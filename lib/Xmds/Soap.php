@@ -24,6 +24,7 @@ namespace Xibo\Xmds;
 define('BLACKLIST_ALL', "All");
 define('BLACKLIST_SINGLE', "Single");
 
+use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Jenssegers\Date\Date;
 use Slim\Log;
@@ -1898,8 +1899,8 @@ class Soap
     {
         if ($this->getConfig()->getSetting('PHONE_HOME') == 1) {
             // Find out when we last PHONED_HOME :D
-            // If it's been > 7 days since last PHONE_HOME then
-            if ($this->getConfig()->getSetting('PHONE_HOME_DATE') < (time() - (60 * 60 * 24 * 7))) {
+            // If it's been > 1 day since last PHONE_HOME then
+            if ($this->getConfig()->getSetting('PHONE_HOME_DATE') < (time() - (60 * 60 * 24))) {
 
                 if ($this->display->isAuditing()) {
                     $this->getLog()->debug('Phone Home required for displayId ' . $this->display->displayId);
@@ -1908,10 +1909,6 @@ class Soap
                 try {
                     $dbh = $this->getStore()->getConnection();
 
-                    // Retrieve number of displays
-                    $sth = $dbh->prepare('SELECT COUNT(*) AS Cnt FROM `display` WHERE `licensed` = 1');
-                    $sth->execute();
-
                     // Make sure we have a key
                     $key = $this->getConfig()->getSetting('PHONE_HOME_KEY');
                     if (empty($key)) {
@@ -1919,26 +1916,216 @@ class Soap
                     }
 
                     // Set PHONE_HOME_TIME to NOW.
-                    $update = $dbh->prepare('UPDATE `setting` SET `value` = :time WHERE `setting`.`setting` = :setting LIMIT 1');
-                    $update->execute(array(
-                        'time' => time(),
-                        'setting' => 'PHONE_HOME_DATE'
-                    ));
+                    $this->getConfig()->changeSetting('PHONE_HOME_DATE', time());
+
+                    // Patch
+                    // Enhanced usage stats patch from 4.3, with modifications for v2.
+                    // ---------------------------------------------------------------
+                    $data = [
+                        'id' => $key,
+                        'version' => Environment::$WEBSITE_VERSION_NAME,
+                        'accountId' => defined('ACCOUNT_ID') ? constant('ACCOUNT_ID') : null,
+                    ];
+
+                    // What type of install are we?
+                    $data['installType'] = 'legacy';
+                    if (defined('ACCOUNT_ID')) {
+                        $data['installType'] = 'cloud';
+                    }
+
+                    // General settings
+                    $data['calendarType'] = strtolower($this->getConfig()->getSetting('CALENDAR_TYPE'));
+                    $data['defaultLanguage'] = $this->getConfig()->getSetting('DEFAULT_LANGUAGE');
+                    $data['isDetectLanguage'] = $this->getConfig()->getSetting('DETECT_LANGUAGE') == 1 ? 1 : 0;
+
+                    // Connectors
+                    $data['isSspConnector'] = 0;
+                    $data['isDashboardConnector'] = 0;
+
+                    // Displays
+                    $data = array_merge($data, $this->displayStats());
+                    $data['countOfDisplays'] = $this->runQuery(
+                        'SELECT COUNT(*) AS countOf FROM `display` WHERE `lastaccessed` > :recently',
+                        [
+                            'recently' => Carbon::now()->subDays(7)->format('U'),
+                        ]
+                    );
+                    $data['countOfDisplaysTotal'] = $this->runQuery('SELECT COUNT(*) AS countOf FROM `display`');
+                    $data['countOfDisplaysUnAuthorised'] =
+                        $this->runQuery('SELECT COUNT(*) AS countOf FROM `display` WHERE licensed = 0');
+                    $data['countOfDisplayGroups'] =
+                        $this->runQuery('SELECT COUNT(*) AS countOf FROM `displaygroup` WHERE isDisplaySpecific = 0');
+
+                    // Users
+                    $data['countOfUsers'] = $this->runQuery('SELECT COUNT(*) AS countOf FROM `user`');
+                    $data['countOfUsersActiveInLastTwentyFour'] =
+                        $this->runQuery('SELECT COUNT(*) AS countOf FROM `user` WHERE `lastAccessed` > :recently', [
+                            'recently' => Carbon::now()->subHours(24)->format('Y-m-d H:i:s'),
+                        ]);
+                    $data['countOfUserGroups'] =
+                        $this->runQuery('SELECT COUNT(*) AS countOf FROM `group` WHERE isUserSpecific = 0');
+                    $data['countOfUsersWithStatusDashboard'] =
+                        $this->runQuery('SELECT COUNT(*) AS countOf FROM `user` WHERE homePageId = \'statusdashboard.view\'');
+                    $data['countOfUsersWithIconDashboard'] =
+                        $this->runQuery('SELECT COUNT(*) AS countOf FROM `user` WHERE homePageId = \'icondashboard.view\'');
+                    $data['countOfUsersWithMediaDashboard'] =
+                        $this->runQuery('SELECT COUNT(*) AS countOf FROM `user` WHERE homePageId = \'mediamanager.view\'');
+                    $data['countOfUsersWithPlaylistDashboard'] =
+                        $this->runQuery('SELECT COUNT(*) AS countOf FROM `user` WHERE homePageId = \'playlistdashboard.view\'');
+
+                    // Other objects
+                    $data['countOfLayouts'] = $this->runQuery('
+                        SELECT COUNT(*) AS countOf
+                          FROM `campaign`
+                         WHERE `isLayoutSpecific` = 1
+                            AND `campaignId` NOT IN (
+                                SELECT `lkcampaignlayout`.`campaignId`
+                                  FROM `lkcampaignlayout`
+                                    INNER JOIN `lktaglayout`
+                                    ON `lktaglayout`.`layoutId` = `lkcampaignlayout`.`layoutId`
+                                    INNER JOIN `tag`
+                                    ON `lktaglayout`.tagId = `tag`.tagId
+                                  WHERE `tag`.`tag` = \'template\'
+                            )
+                    ');
+                    $data['countOfLayoutsWithPlaylists'] = $this->runQuery('
+                        SELECT COUNT(DISTINCT `region`.`layoutId`) AS countOf 
+                          FROM `widget`
+                            INNER JOIN `playlist` ON `playlist`.`playlistId` = `widget`.`playlistId`
+                            INNER JOIN `region` ON `playlist`.`regionId` = `region`.`regionId`
+                         WHERE `widget`.`type` = \'subplaylist\'
+                    ');
+                    $data['countOfListCampaigns'] =
+                        $this->runQuery('
+                        SELECT COUNT(*) AS countOf 
+                          FROM `campaign`
+                         WHERE `isLayoutSpecific` = 0
+                    ');
+                    $data['countOfMedia'] =
+                        $this->runQuery('SELECT COUNT(*) AS countOf FROM `media`');
+                    $data['countOfPlaylists'] =
+                        $this->runQuery('SELECT COUNT(*) AS countOf FROM `playlist` WHERE `regionId` IS NULL');
+                    $data['countOfDataSets'] =
+                        $this->runQuery('SELECT COUNT(*) AS countOf FROM `dataset`');
+                    $data['countOfRemoteDataSets'] =
+                        $this->runQuery('SELECT COUNT(*) AS countOf FROM `dataset` WHERE `isRemote` = 1');
+                    $data['countOfApplications'] =
+                        $this->runQuery('SELECT COUNT(*) AS countOf FROM `oauth_clients`');
+                    $data['countOfApplicationsUsingClientCredentials'] =
+                        $this->runQuery('SELECT COUNT(*) AS countOf FROM `oauth_clients` WHERE `clientCredentials` = 1');
+                    $data['countOfApplicationsUsingUserCode'] =
+                        $this->runQuery('SELECT COUNT(*) AS countOf FROM `oauth_clients` WHERE `authCode` = 1');
+                    $data['countOfScheduledReports'] =
+                        $this->runQuery('SELECT COUNT(*) AS countOf FROM `reportschedule`');
+                    $data['countOfSavedReports'] =
+                        $this->runQuery('SELECT COUNT(*) AS countOf FROM `saved_report`');
+
+                    // Widgets
+                    $data['countOfImageWidgets'] =
+                        $this->runQuery('SELECT COUNT(*) AS countOf FROM `widget` WHERE `type` = \'image\'');
+                    $data['countOfVideoWidgets'] =
+                        $this->runQuery('SELECT COUNT(*) AS countOf FROM `widget` WHERE `type` = \'video\'');
+                    $data['countOfPdfWidgets'] =
+                        $this->runQuery('SELECT COUNT(*) AS countOf FROM `widget` WHERE `type` = \'pdf\'');
+                    $data['countOfEmbeddedWidgets'] =
+                        $this->runQuery('SELECT COUNT(*) AS countOf FROM `widget` WHERE `type` = \'embedded\'');
+                    $data['countOfCanvasWidgets'] =
+                        $this->runQuery('SELECT COUNT(*) AS countOf FROM `widget` WHERE `type` = \'global\'');
+
+                    // Schedules
+                    $data['countOfSchedulesThisMonth'] = $this->runQuery('
+                        SELECT COUNT(*) AS countOf 
+                          FROM `schedule`
+                         WHERE `fromDt` <= :toDt AND `toDt` > :fromDt
+                    ', [
+                        'fromDt' => Carbon::now()->startOfMonth()->format('U'),
+                        'toDt' => Carbon::now()->endOfMonth()->format('U'),
+                    ]);
+                    $data['countOfSyncSchedulesThisMonth'] = $this->runQuery('
+                        SELECT COUNT(*) AS countOf 
+                          FROM `schedule`
+                         WHERE `fromDt` <= :toDt AND `toDt` > :fromDt
+                            AND `eventTypeId` = 9
+                    ', [
+                        'fromDt' => Carbon::now()->startOfMonth()->format('U'),
+                        'toDt' => Carbon::now()->endOfMonth()->format('U'),
+                    ]);
+                    $data['countOfAlwaysSchedulesThisMonth'] = $this->runQuery('
+                        SELECT COUNT(*) AS countOf 
+                          FROM `schedule`
+                            INNER JOIN `daypart` ON `daypart`.dayPartId = `schedule`.`dayPartId`
+                         WHERE `daypart`.`isAlways` = 1
+                    ');
+                    $data['countOfRecurringSchedules'] =
+                        $this->runQuery('SELECT COUNT(*) AS countOf FROM `schedule` WHERE IFNULL(recurrence_type, \'\') <> \'\'');
+                    $data['countOfDayParts'] =
+                        $this->runQuery('SELECT COUNT(*) AS countOf FROM `daypart`');
 
                     // Use Guzzle to phone home.
                     // we don't care about the response
-                    (new Client())->get($this->getConfig()->getSetting('PHONE_HOME_URL'), $this->getConfig()->getGuzzleProxy([
-                        'query' => [
-                            'id' => $this->getConfig()->getSetting('PHONE_HOME_KEY'),
-                            'version' => Environment::$WEBSITE_VERSION_NAME,
-                            'numClients' => $sth->fetchColumn()
-                        ]
-                    ]));
-
+                    (new Client())->post(
+                        'https://xibosignage.com/api/stats/usage',
+                        $this->getConfig()->getGuzzleProxy([
+                            'json' => $data,
+                        ])
+                    );
                 } catch (\Exception $e) {
                     $this->getLog()->error('Phone Home: ' . $e->getMessage());
                 }
             }
+        }
+    }
+
+    private function displayStats(): array
+    {
+        // Retrieve number of displays
+        $stats = $this->store->select('
+            SELECT client_type, COUNT(*) AS cnt
+              FROM `display`
+             WHERE licensed = 1
+            GROUP BY client_type
+        ', []);
+
+        $counts = [
+            'total' => 0,
+            'android' => 0,
+            'windows' => 0,
+            'linux' => 0,
+            'lg' => 0,
+            'sssp' => 0,
+            'chromeOS' => 0,
+        ];
+        foreach ($stats as $stat) {
+            $counts['total'] += intval($stat['cnt']);
+            $counts[$stat['client_type']] += intval($stat['cnt']);
+        }
+
+        return [
+            'countOfDisplaysAuthorised' => $counts['total'],
+            'countOfAndroid' => $counts['android'],
+            'countOfLinux' => $counts['linux'],
+            'countOfWebos' => $counts['lg'],
+            'countOfWindows' => $counts['windows'],
+            'countOfTizen' => $counts['sssp'],
+            'countOfChromeOS' => $counts['chromeOS'],
+        ];
+    }
+
+    /**
+     * Run a query and return the value of a property
+     * @param string $sql
+     * @param string $property
+     * @param array $params
+     * @return string|null
+     */
+    private function runQuery($sql, $params = [], $property = 'countOf')
+    {
+        try {
+            $record = $this->store->select($sql, $params);
+            return $record[0][$property] ?? null;
+        } catch (\PDOException $PDOException) {
+            $this->getLog()->debug('runQuery: error returning specific stat, e: ' . $PDOException->getMessage());
+            return null;
         }
     }
 
