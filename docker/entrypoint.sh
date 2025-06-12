@@ -246,6 +246,7 @@ then
         /usr/bin/env | sed 's/^\(.*\)$/export \1/g' | grep -E "^export MYSQL" >> /var/www/maintenance.sh
         /usr/bin/env | sed 's/^\(.*\)$/export \1/g' | grep -E "^export MEMCACHED" >> /var/www/maintenance.sh
         echo "export CMS_USE_MEMCACHED=$CMS_USE_MEMCACHED" >> /var/www/maintenance.sh
+        echo "export INSTALL_TYPE=$INSTALL_TYPE" >> /var/www/maintenance.sh
         echo "cd /var/www/cms && /usr/bin/php bin/xtr.php" >> /var/www/maintenance.sh
         chmod 755 /var/www/maintenance.sh
 
