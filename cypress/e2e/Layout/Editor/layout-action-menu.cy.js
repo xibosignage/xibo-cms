@@ -63,11 +63,12 @@ describe('Layout Editor Toolbar (Back button, Interactive Mode, Layout jump list
   });
 
   it('should open and close the layout jump list dropdown safely', () => { // err
-    cy.get('#select2-layoutJumpList-container').should('be.visible')
-      .and('exist');
+    cy.get('#select2-layoutJumpList-container').should('be.visible');
+
     cy.get('#layoutJumpListContainer .select2-selection')
-      .should('be.visible')
-      .and('exist')
+      .should('be.visible');
+
+    cy.get('#layoutJumpListContainer .select2-selection')
       .click();
   });
 
