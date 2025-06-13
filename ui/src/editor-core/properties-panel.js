@@ -2590,6 +2590,19 @@ PropertiesPanel.prototype.createEditAction = function(
       return;
     }
 
+    // If action was navigate to widget and
+    // is not anymore, and we had widget
+    // delete it and remove from action properties
+    if (
+      actionData.actionType === 'navWidget' &&
+      actionType != 'navWidget' &&
+      actionData.widgetId
+    ) {
+      actionData.changedActionTypeNotNavWidget = true;
+    } else if (actionType === 'navWidget') {
+      actionData.changedActionTypeNotNavWidget = false;
+    }
+
     const subType = actionTypesAndRules[actionType].subType ||
       actionTypesAndRules[actionType].subTypeFixed;
     const targetType = actionTypesAndRules[actionType].targetType;
@@ -2767,8 +2780,20 @@ PropertiesPanel.prototype.createEditAction = function(
   // Handle buttons
   $newActionContainer.find('.action-btn').on('click', function(e) {
     const btnAction = $(e.currentTarget).data('action');
+    const editingAction = app.actionManager.editing;
 
     if (btnAction === 'save') {
+      // If we changed action type to !navWidget
+      // and there's a widget Id, delete it
+      if (
+        editingAction.changedActionTypeNotNavWidget &&
+        editingAction.widgetId
+      ) {
+        app.layout.deleteObject('widget', editingAction.widgetId);
+        editingAction.widgetId = null;
+        $newActionContainer.find('.action-target-widget-id').val('');
+      }
+
       // Save action
       self.saveAction($newActionContainer);
     } else if (btnAction === 'delete') {
@@ -2779,6 +2804,7 @@ PropertiesPanel.prototype.createEditAction = function(
           // Remove widget from drawer if action has widgetId
           if (actionData.widgetId) {
             app.layout.deleteObject('widget', actionData.widgetId);
+            actionData.widgetId = null;
           }
 
           // Remove action line
@@ -2794,15 +2820,16 @@ PropertiesPanel.prototype.createEditAction = function(
         }
       });
     } else if (btnAction === 'close') {
-      const editingAction = app.actionManager.editing;
-
       if (actionNeedsValidateToCancel) {
         self.saveAction($newActionContainer);
       } else {
         // If action started without widget created
-        // and there's a widget Id, delete it
-        if (editingAction.startedWithNoWidget && editingAction.widgetId) {
+        if (
+          editingAction.startedWithNoWidget &&
+          editingAction.widgetId
+        ) {
           app.layout.deleteObject('widget', editingAction.widgetId);
+          editingAction.widgetId = null;
         }
 
         // Close action
@@ -2818,9 +2845,9 @@ PropertiesPanel.prototype.createEditAction = function(
   app.actionManager.editing = actionData;
   $actionsContent.addClass('editing-action');
 
-  // Check if we are in a new action
-  // with no widget id and save state
-  if (actionData.newAction && actionData.widgetId == null) {
+  // Check if we start with no widgetId
+  // so we can delete drawer widget on cancel
+  if (actionData.widgetId == null) {
     app.actionManager.editing.startedWithNoWidget = true;
   }
 
@@ -2944,6 +2971,7 @@ PropertiesPanel.prototype.createPreviewAction = function(
           // Remove widget from drawer if action has widgetId
           if (actionData.widgetId) {
             app.layout.deleteObject('widget', actionData.widgetId);
+            actionData.widgetId = null;
           }
 
           // Remove action line
