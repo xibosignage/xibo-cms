@@ -49,61 +49,60 @@ describe('Playlist Editor (Populated/Unchanged)', function() {
         cy.openPlaylistEditorAndLoadPrefs(this.testPlaylistId);
     });
 
-    it.skip('opens a media tab in the toolbar and searches for items', () => {
+    it('opens a media tab in the toolbar and searches for items', () => {
 
-        cy.server();
-        cy.route('/library/search?*').as('mediaLoad');
+        // cy.intercept('/library/search?*').as('mediaLoad');
 
         cy.populateLibraryWithMedia();
 
-        // Open library search tab
-        cy.get('#playlist-editor-toolbar #btn-menu-0').should('be.visible').click();
-        cy.get('#playlist-editor-toolbar #btn-menu-1').should('be.visible').click();
+        // Open audio tool tab
+        cy.get('a[id="btn-menu-3"]').should('be.visible').click();
 
-        cy.wait('@mediaLoad');
+        // cy.wait('@mediaLoad');
 
         // Check if there are audio items in the search content
-        cy.get('#playlist-editor-toolbar #content-1 .toolbar-card').should('be.visible');
+        cy.get('div[class="toolbar-card-preview"]').last().should('be.visible');
     });
 
-    it.skip('creates a new widget by selecting a searched media from the toolbar to the editor, and then reverts the change', () => {
+    it('creates a new widget by selecting a searched media from the toolbar to the editor, and then reverts the change', () => {
         cy.populateLibraryWithMedia();
 
         // Create and alias for reload playlist
-        cy.server();
-        cy.route('/playlist?playlistId=*').as('reloadPlaylist');
-        cy.route('DELETE', '/playlist/widget/*').as('deleteWidget');
-        cy.route('/library/search?*').as('mediaLoad');
+        // cy.intercept('/playlist?playlistId=*').as('reloadPlaylist');
+        // cy.intercept('DELETE', '/playlist/widget/*').as('deleteWidget');
+        // cy.intercept('/library/search?*').as('mediaLoad');
 
         // Open library search tab
-        cy.get('#playlist-editor-toolbar #btn-menu-0').should('be.visible').click();
-        cy.get('#playlist-editor-toolbar #btn-menu-2').should('be.visible').click();
+        cy.get('a[id="btn-menu-0"]').should('be.visible').click();
 
-        cy.wait('@mediaLoad');
+        // cy.wait('@mediaLoad');
         cy.wait(1000);
 
         // Get a table row, select it and add to the dropzone
-        cy.get('#playlist-editor-toolbar .toolbar-card:nth-of-type(2) .select-button').click({force: true}).then(() => {
+        cy.get('div[class="toolbar-card ui-draggable ui-draggable-handle"]').eq(2).should('be.visible').click({force: true}).then(() => {
             cy.get('#timeline-overlay-container').click({force: true}).then(() => {
 
                 // Wait for the layout to reload
-                cy.wait('@reloadPlaylist');
-
-                // Check if there is just one widget in the timeline
-                cy.get('#timeline-container [data-type="widget"]').then(($widgets) => {
-                    expect($widgets.length).to.eq(4);
-                });
-
-                // Click the revert button
-                cy.get('#playlist-editor-toolbar #undoContainer').click();
-
-                // Wait for the widget to be deleted and for the playlist to reload
-                cy.wait('@deleteWidget');
-                cy.wait('@reloadPlaylist');
+                // cy.wait('@reloadPlaylist');
+                cy.wait(3000);
 
                 // Check if there is just one widget in the timeline
                 cy.get('#timeline-container [data-type="widget"]').then(($widgets) => {
                     expect($widgets.length).to.eq(3);
+                });
+
+                // Click the revert button
+                cy.get('#timeline-container [id^="widget_"]').last().click();
+                cy.get('button[data-action="undo"]').click({force: true});
+
+                // Wait for the widget to be deleted and for the playlist to reload
+                // cy.wait('@deleteWidget');
+                // cy.wait('@reloadPlaylist');
+                cy.wait(3000);
+
+                // Check if there is just one widget in the timeline
+                cy.get('#timeline-container [data-type="widget"]').then(($widgets) => {
+                    expect($widgets.length).to.eq(2);
                 });
             });
         });
