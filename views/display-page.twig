@@ -34,6 +34,11 @@
     </div>
 {% endblock %}
 
+{% block headContent %}
+    {# Add page source code bundle ( CSS ) #}
+    <link rel="stylesheet" href="{{ theme.rootUri() }}dist/pages/display-page.bundle.min.css?v={{ version }}&rev={{revision }}">
+{% endblock %}
+
 {% block pageContent %}
     <div class="widget">
         <div class="widget-title">{% trans "Displays" %}</div>
@@ -358,7 +363,7 @@
         };
     </script>
 
-    {# Add page source code bundle ( JS and CSS ) #}
+    {# Add page source code bundle ( JS ) #}
     <script src="{{ theme.rootUri() }}dist/leaflet.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
     <script src="{{ theme.rootUri() }}dist/pages/display-page.bundle.min.js?v={{ version }}&rev={{revision}}" nonce="{{ cspNonce }}"></script>
 {% endblock %}
