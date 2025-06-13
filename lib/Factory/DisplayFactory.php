@@ -235,6 +235,7 @@ class DisplayFactory extends BaseFactory
               SELECT display.displayId,
                   display.display,
                   display.defaultLayoutId,
+                  display.rdmDeviceId,
                   display.displayTypeId,
                   display.venueId,
                   display.address,
@@ -491,6 +492,23 @@ class DisplayFactory extends BaseFactory
         if ($parsedBody->getDate('lastAccessed', ['dateFormat' => 'U']) !== null) {
             $body .= ' AND display.lastAccessed > :lastAccessed ';
             $params['lastAccessed'] = $parsedBody->getDate('lastAccessed', ['dateFormat' => 'U'])->format('U');
+        }
+
+        if ($parsedBody->getString('displayType', $filterBy) != '') {
+            $body .= ' AND (`display`.brand LIKE :displayType OR `display`.model LIKE :displayType OR 
+                `display`.manufacturer LIKE :displayType OR `display`.osVersion LIKE :displayType) ';
+            $params['displayType'] = $parsedBody->getString('displayType', $filterBy);
+        }
+
+        if ($parsedBody->getInt('rdmDeviceId', $filterBy) != '') {
+            $body .= ' AND `display`.rdmDeviceId = :rdmDeviceId ';
+            $params['rdmDeviceId'] = $parsedBody->getInt('rdmDeviceId', $filterBy);
+        }
+
+        if ($parsedBody->getInt('cmsConnected') === 1) {
+            $body .= ' AND `display`.rdmDeviceId != 0 OR `display`.rdmDeviceId is NOT NULL ';
+        } else if ($parsedBody->getInt('cmsConnected') === 0) {
+            $body .= ' AND `display`.rdmDeviceId = 0 OR `display`.rdmDeviceId is NULL ';
         }
 
         // Exclude a group?
