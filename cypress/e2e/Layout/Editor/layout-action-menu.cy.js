@@ -62,7 +62,9 @@ describe('Layout Editor Toolbar (Back button, Interactive Mode, Layout jump list
     cy.get('.interactive-control-status-off').should('not.be.visible');
   });
 
-  it('should open and close the layout jump list dropdown safely', () => {
+  it('should open and close the layout jump list dropdown safely', () => { // err
+    cy.get('#select2-layoutJumpList-container').should('be.visible')
+      .and('exist');
     cy.get('#layoutJumpListContainer .select2-selection')
       .should('be.visible')
       .and('exist')
@@ -70,7 +72,11 @@ describe('Layout Editor Toolbar (Back button, Interactive Mode, Layout jump list
   });
 
   it('Options dropdown menu toggles and contains expected items', () => {
-    cy.get('#optionsContainerTop').click();
+    cy.get('#optionsContainerTop')
+      .should('exist')
+      .should('be.visible')
+      .click();
+
     cy.get('.navbar-submenu-options-container').should('be.visible');
 
     cy.get('#publishLayout').should('be.visible');
@@ -91,13 +97,25 @@ describe('Layout Editor Toolbar (Back button, Interactive Mode, Layout jump list
 
   it('Tooltips and popovers appear on hover', () => {
     // Tooltip
-    cy.get('.layout-info-name').trigger('mouseover');
+    cy.get('.layout-info-name')
+      .should('exist')
+      .should('be.visible')
+      .trigger('mouseover');
     cy.get('.tooltip').should('be.visible');
-    cy.get('.layout-info-name').trigger('mouseout');
+    cy.get('.layout-info-name')
+      .should('exist')
+      .should('be.visible')
+      .trigger('mouseout');
 
     // Popover
-    cy.get('#layout-info-status').trigger('mouseover');
+    cy.get('#layout-info-status')
+      .should('exist')
+      .should('be.visible')
+      .trigger('mouseover');
     cy.get('.popover').should('be.visible');
-    cy.get('#layout-info-status').trigger('mouseout');
+    cy.get('#layout-info-status')
+      .should('exist')
+      .should('be.visible')
+      .trigger('mouseout');
   });
 });
