@@ -143,10 +143,13 @@ window.templates = {
   welcome: {
     welcomeCard:
       require('./src/templates/welcome/welcome-card.hbs'),
-      serviceCard:
+    serviceCard:
       require('./src/templates/welcome/service-card.hbs'),
     othersCard:
       require('./src/templates/welcome/others-card.hbs'),
+    videoModal:
+      require('./src/templates/welcome/video-modal.hbs'),
+    videoModalContent:
+      require('./src/templates/welcome/video-modal-content.hbs'),
   },
 };
-

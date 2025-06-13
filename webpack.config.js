@@ -23,6 +23,7 @@ const path = require('path');
 const webpack = require('webpack');
 const {CleanWebpackPlugin} = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 const config = {
   // Add common Configurations
@@ -167,7 +168,7 @@ const pageConfig = Object.assign({}, config, {
   entry: {
     'display-page': './ui/src/pages/display/display-page.js',
     'schedule-page': './ui/src/pages/schedule/schedule-page.js',
-    'campaign-page': './ui/src/pages/campaign/campaing-page.js',
+    'campaign-page': './ui/src/pages/campaign/campaign-page.js',
     'developer-template-page':
       './ui/src/pages/developer-template/developer-template-page.js',
     'welcome-page': './ui/src/pages/welcome/welcome-page.js',
@@ -192,36 +193,35 @@ const pageConfig = Object.assign({}, config, {
       {
         test: /\.(css)$/,
         use: [
-          'style-loader',
+          MiniCssExtractPlugin.loader,
           'css-loader',
         ],
       },
       {
         test: /\.less$/,
         use: [
-          'style-loader',
+          MiniCssExtractPlugin.loader,
           'css-loader',
           'less-loader',
         ],
       },
       {
         test: /\.s[ac]ss$/i,
-        use: [{
-          loader: 'style-loader', // inject CSS to page
-        }, {
-          loader: 'css-loader', // translates CSS into CommonJS modules
-        }, {
-          loader: 'postcss-loader', // Run post css actions
-          options: {
-            postcssOptions: {
-              plugins: [
-                'autoprefixer',
-              ],
+        use: [
+          MiniCssExtractPlugin.loader,
+          'css-loader', // translates CSS into CommonJS modules
+          {
+            loader: 'postcss-loader', // Run post css actions
+            options: {
+              postcssOptions: {
+                plugins: [
+                  'autoprefixer',
+                ],
+              },
             },
-          },
-        }, {
-          loader: 'sass-loader', // compiles Sass to CSS
-        }],
+          }, {
+            loader: 'sass-loader', // compiles Sass to CSS
+          }],
       },
       {
         test: /\.(woff(2)?|ttf|eot|svg|jpg|gif|png)$/,
@@ -270,6 +270,9 @@ const pageConfig = Object.assign({}, config, {
   },
   plugins: [
     new CleanWebpackPlugin(),
+    new MiniCssExtractPlugin({
+      filename: '[name].bundle.min.css',
+    }),
   ],
 });
 
