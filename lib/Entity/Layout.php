@@ -2769,11 +2769,10 @@ class Layout implements \JsonSerializable
 
         // go through all imported actions on a Layout and replace the source/target Ids with the new ones
         foreach ($layoutActions as $action) {
-            // If the action targets itself, update the target ID, so it continues to reference itself in the new layout
-            if ($action->sourceId == $action->targetId) {
+            // If the action targets the old layout ID, update it so the action now targets the new layout ID
+            if ($action->targetId == $action->layoutId) {
                 $action->targetId = $this->layoutId;
             }
-
             $action->source = 'layout';
             $action->sourceId = $this->layoutId;
             $action->layoutId = $this->layoutId;
@@ -2806,6 +2805,10 @@ class Layout implements \JsonSerializable
 
         // go through all imported actions on a Region and replace the source/target Ids with the new ones
         foreach ($regionActions as $action) {
+            // If the action targets the old layout ID, update it so the action now targets the new layout ID
+            if ($action->targetId == $action->layoutId) {
+                $action->targetId = $this->layoutId;
+            }
             $action->source = 'region';
             $action->layoutId = $this->layoutId;
 
@@ -2840,6 +2843,10 @@ class Layout implements \JsonSerializable
 
         // go through all imported actions on a Widget and replace the source/target Ids with the new ones
         foreach ($widgetActions as $action) {
+            // If the action targets the old layout ID, update it so the action now targets the new layout ID
+            if ($action->targetId == $action->layoutId) {
+                $action->targetId = $this->layoutId;
+            }
             $action->source = 'widget';
             $action->layoutId = $this->layoutId;
 
