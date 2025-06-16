@@ -21,6 +21,7 @@ const templates = {
     require('../templates/form-helpers-menuboard-product.hbs'),
   editorRegionControls:
     require('../templates/forms/inputs/add-ons/richTextRegionControls.hbs'),
+  'php-date-format-table': require('../templates/php-date-format-table.hbs'),
 };
 
 const CKEDITOR_MIN_HEIGHT = 120;
