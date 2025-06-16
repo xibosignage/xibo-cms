@@ -2769,6 +2769,11 @@ class Layout implements \JsonSerializable
 
         // go through all imported actions on a Layout and replace the source/target Ids with the new ones
         foreach ($layoutActions as $action) {
+            // If the action targets itself, update the target ID, so it continues to reference itself in the new layout
+            if ($action->sourceId == $action->targetId) {
+                $action->targetId = $this->layoutId;
+            }
+
             $action->source = 'layout';
             $action->sourceId = $this->layoutId;
             $action->layoutId = $this->layoutId;
