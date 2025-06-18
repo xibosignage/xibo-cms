@@ -666,6 +666,14 @@ i.fa.fa-ban.fa-stack-2x {
     background: transparent;
 }
 
+.board .fault.nav-tabs > li a {
+    z-index: 2;
+}
+
+.board .fault.nav-tabs > li a:hover .round-tabs {
+    background: #fafafa;
+}
+
 .board .tab-pane {
     position: relative;
     /*padding-top: 50px;*/
