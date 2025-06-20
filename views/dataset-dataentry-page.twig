@@ -28,7 +28,7 @@
 
 {% block actionMenu %}
     <div class="widget-action-menu pull-right">
-        <button class="btn btn-success XiboFormButton" title="{% trans "Add a row to the end of this DataSet" %}" href="{{ url_for("dataSet.data.add.form", {"id": dataSet.dataSetId}) }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Row" %}</button>
+        <button class="btn btn-success XiboFormButton addRowButton" title="{% trans "Add a row to the end of this DataSet" %}" href="{{ url_for("dataSet.data.add.form", {"id": dataSet.dataSetId}) }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Row" %}</button>
         <button class="btn btn-primary toggleMultiSelectMode" id="toggleMultiSelectMode" title="{% trans "Click to toggle between Data Edit and Multi Select modes" %}"><i class="fa fa-object-group" aria-hidden="true"></i> <span class="button-text">{% trans "Multi Select Mode" %}</span></button>
         <button class="btn btn-danger d-none deleteSelectedRows" id="deleteSelectedRows" title="{% trans "Click to delete selected rows" %}" disabled="disabled"><i class="fa fa-trash" aria-hidden="true"></i> <span class="button-text">{% trans "Delete Rows" %}</span></button>
         <button class="btn btn-info XiboRedirectButton" href="{{ url_for("dataSet.column.view", {"id": dataSet.dataSetId}) }}"><i class="fa fa-columns" aria-hidden="true"></i> {% trans "View Columns" %}</button>
@@ -286,5 +286,19 @@
                 });
             });
         });
+
+        // handle add row button when we don't have any value columns in the dataset
+        var valueColumns = {{ dataSet.columns|filter(column => column.dataSetColumnTypeId == '1')|json_encode|raw }};
+        var valueColumnsWarningMessage = "{% trans "No value columns have been configured for this dataset. Please configure your columns accordingly." %}";
+        if(valueColumns.length === 0) {
+            // remove class xibo form open to prevent opening the form
+            $('.addRowButton')
+                .addClass('disabled')
+                .removeClass('XiboFormButton')
+                .on('click', function(e) {
+                    // show toast notification
+                    toastr.error(valueColumnsWarningMessage);
+                });
+        }
     </script>
 {% endblock %}
