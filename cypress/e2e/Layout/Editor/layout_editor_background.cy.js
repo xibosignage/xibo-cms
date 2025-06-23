@@ -69,7 +69,7 @@ describe('Layout Editor Background', function() {
   });
 
   // This is failing and a bug reported
-  it.skip('should update the layout resolution', function() {
+  it('should update the layout resolution', function() {
     cy.get(SELECTORS.propertiesPanel).should('be.visible');
     const resName = 'cinema';
 
@@ -82,4 +82,3 @@ describe('Layout Editor Background', function() {
       .and('contain', '4096x2304');
   });
 });
-
