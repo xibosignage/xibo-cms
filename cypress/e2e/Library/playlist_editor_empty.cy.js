@@ -33,9 +33,9 @@ describe('Playlist Editor (Empty)', function() {
         });
     });
 
-    it.skip('should show the droppable zone and toolbar', function() {
+    it('should show the droppable zone and toolbar', function() {
 
-        cy.get('#dropzone-container').should('be.visible');
-        cy.get('#playlist-editor-toolbar nav').should('be.visible');
+        cy.get('#playlist-editor-container').should('be.visible');
+        cy.get('div[class="container-toolbar container-fluid flex-column flex-column justify-content-between"]').should('be.visible');
     });
 });

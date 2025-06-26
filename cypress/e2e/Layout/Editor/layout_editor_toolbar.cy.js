@@ -178,4 +178,3 @@ describe('Layout Editor Toolbar', function() {
       });
   });
 });
-
