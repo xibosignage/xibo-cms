@@ -617,7 +617,7 @@ class LayoutFactory extends BaseFactory
      */
     public function getLinkedFullScreenPlaylistId(int $campaignId): ?int
     {
-        $playlistId = $this->getStore()->select('SELECT `lkplaylistplaylist`.childId
+        $playlistId = $this->getStore()->select('SELECT `lkplaylistplaylist`.childId AS playlistId
                     FROM region
                     INNER JOIN playlist
                         ON `playlist`.regionId = `region`.regionId
