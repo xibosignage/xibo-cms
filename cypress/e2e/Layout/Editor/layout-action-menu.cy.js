@@ -55,67 +55,76 @@ describe('Layout Editor Toolbar (Back button, Interactive Mode, Layout jump list
   it('should toggle Interactive Mode status on click', () => { // done
     cy.get('li.nav-item.interactive-control[data-status="off"]')
       .should(($el) => {
-        expect($el).to.exist;
         expect($el).to.be.visible;
       })
       .click({force: true});
     cy.get('.interactive-control-status-off').should('not.be.visible');
   });
 
-  it('should open and close the layout jump list dropdown safely', () => { // err
-    cy.get('#select2-layoutJumpList-container').should('be.visible');
+  it('should open and close the layout jump list dropdown safely', () => {
+    const layoutName = 'Audio-Video-PDF';
 
-    cy.get('#layoutJumpListContainer .select2-selection')
+    cy.get('#select2-layoutJumpList-container')
       .should('be.visible');
 
+    // Force click because the element intermittently detaches in CI environment
     cy.get('#layoutJumpListContainer .select2-selection')
+      .should('be.visible')
+      .click({force: true});
+
+    // Type into the search input
+    cy.get('.select2-search__field')
+      .should('be.visible')
+      .clear()
+      .type(layoutName, {delay: 100});
+
+    // Click the matching option
+    cy.get('.select2-results__option')
+      .contains(layoutName)
       .click();
   });
 
   it('Options dropdown menu toggles and contains expected items', () => {
     cy.get('#optionsContainerTop')
-      .should('exist')
       .should('be.visible')
       .click();
 
-    cy.get('.navbar-submenu-options-container').should('be.visible');
+    cy.get('.navbar-submenu-options-container')
+      .should('be.visible')
+      .within(() => {
+        cy.get('#publishLayout').should('be.visible');
+        cy.get('#checkoutLayout').should('have.class', 'd-none');
+        cy.get('#discardLayout').should('be.visible');
+        cy.get('#newLayout').should('be.visible');
+        cy.get('#deleteLayout').should('have.class', 'd-none');
+        cy.get('#saveTemplate').should('have.class', 'd-none');
+        cy.get('#scheduleLayout').should('have.class', 'd-none');
+        cy.get('#clearLayout').should('be.visible');
 
-    cy.get('#publishLayout').should('be.visible');
-    cy.get('#checkoutLayout').should('have.class', 'd-none');
-    cy.get('#discardLayout').should('be.visible');
-    cy.get('#newLayout').should('be.visible');
-    cy.get('#deleteLayout').should('have.class', 'd-none');
-    cy.get('#saveTemplate').should('have.class', 'd-none');
-    cy.get('#scheduleLayout').should('have.class', 'd-none');
-    cy.get('#clearLayout').should('be.visible');
+        cy.get('#displayTooltips').should('be.checked');
+        cy.get('#deleteConfirmation').should('be.checked');
+      });
 
-    cy.get('#displayTooltips').should('be.checked');
-    cy.get('#deleteConfirmation').should('be.checked');
-
-    // Close dropdown for cleanup
-    cy.get('#optionsContainerTop').click();
+    // Re-query before closing the dropdown
+    cy.get('#optionsContainerTop').should('be.visible').click();
   });
 
   it('Tooltips and popovers appear on hover', () => {
     // Tooltip
     cy.get('.layout-info-name')
-      .should('exist')
       .should('be.visible')
       .trigger('mouseover');
     cy.get('.tooltip').should('be.visible');
     cy.get('.layout-info-name')
-      .should('exist')
       .should('be.visible')
       .trigger('mouseout');
 
     // Popover
     cy.get('#layout-info-status')
-      .should('exist')
       .should('be.visible')
       .trigger('mouseover');
     cy.get('.popover').should('be.visible');
     cy.get('#layout-info-status')
-      .should('exist')
       .should('be.visible')
       .trigger('mouseout');
   });
