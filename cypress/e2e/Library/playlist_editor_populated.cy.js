@@ -131,7 +131,7 @@ describe('Playlist Editor (Populated)', function() {
             const widgetId = $el.attr('id');
 
             // Click trash container
-            cy.get('div[class="widgetDelete"]').first().click();
+            cy.get('div[class="widgetDelete"]').first().click({force: true});
 
             // Confirm delete on modal
             cy.get('button[class*="btn-bb-confirm"]').click();
