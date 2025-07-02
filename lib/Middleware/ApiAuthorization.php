@@ -128,53 +128,43 @@ class ApiAuthorization implements Middleware
             // If there are no scopes in the JWT, we should not authorise
             // An older client which makes a request with no scopes should get an access token with
             // all scopes configured for the application
-            if (count($scopes) <= 0) {
+            if (!is_array($scopes) || count($scopes) <= 0) {
                 throw new AccessDeniedException();
             }
 
             $logger->debug('Scopes provided with request: ' . count($scopes));
 
-            //iterator, as we need to check all scopes in the request before we deny access.
-            $i = 0;
-            // Only validate scopes if we have been provided some.
-            if (is_array($scopes) && count($scopes) > 0) {
-                foreach ($scopes as $scope) {
-                    // Valid routes
-                    if ($scope !== 'all') {
-                        $logger->debug(
-                            sprintf(
-                                'Test authentication for %s %s against scope %s',
-                                $resource,
-                                $request->getMethod(),
-                                $scope
-                            )
-                        );
+            // Check all scopes in the request before we deny access.
+            $grantAccess = false;
 
-                        // Check the route and request method
-                        try {
-                            $i++;
-                            $checkRoute = $applicationScopeFactory->getById($scope)->checkRoute(
-                                $request->getMethod(),
-                                $resource
-                            );
+            foreach ($scopes as $scope) {
+                // If I have the "all" scope granted then there isn't any need to test further
+                if ($scope === 'all') {
+                    $grantAccess = true;
+                    break;
+                }
 
-                            // if we have access to the requested route, break the loop
-                            if ($checkRoute) {
-                                break;
-                            }
-                        } catch (AccessDeniedException $notFoundException) {
-                            // if we have more scopes, make sure to check all of them for the requested route
-                            // if all scopes were checked and we still don't have access, then throw exception
-                            if ($i === count($scopes)) {
-                                throw new AccessDeniedException(__('Access to this route is denied for this scope'));
-                            } else {
-                                continue;
-                            }
-                        }
-                    }
+                $logger->debug(
+                    sprintf(
+                        'Test authentication for %s %s against scope %s',
+                        $resource,
+                        $request->getMethod(),
+                        $scope
+                    )
+                );
+
+                // Check the route and request method
+                if ($applicationScopeFactory->getById($scope)->checkRoute($request->getMethod(), $resource)) {
+                    $grantAccess = true;
+                    break;
                 }
             }
+
+            if (!$grantAccess) {
+                throw new AccessDeniedException(__('Access to this route is denied for this scope'));
+            }
         } else {
+            // Public request
             $validatedRequest = $validatedRequest->withAttribute('public', true);
         }
 

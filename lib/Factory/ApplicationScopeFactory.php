@@ -82,8 +82,7 @@ class ApplicationScopeFactory extends BaseFactory implements ScopeRepositoryInte
         $entries = [];
         $params = [];
 
-        $select = 'SELECT `oauth_scopes`.id, `oauth_scopes`.description, `oauth_scopes`.useRegex';
-
+        $select = 'SELECT `oauth_scopes`.id, `oauth_scopes`.description ';
         $body = '  FROM `oauth_scopes`';
 
         if ($sanitizedFilter->getString('clientId') != null) {
@@ -110,8 +109,12 @@ class ApplicationScopeFactory extends BaseFactory implements ScopeRepositoryInte
         }
         $limit = '';
         // Paging
-        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
+        if ($filterBy !== null
+            && $sanitizedFilter->getInt('start') !== null
+            && $sanitizedFilter->getInt('length') !== null
+        ) {
+            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', '
+                . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         // The final statements
