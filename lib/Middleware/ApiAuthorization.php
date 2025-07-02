@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -124,6 +124,13 @@ class ApiAuthorization implements Middleware
             /** @var ApplicationScopeFactory $applicationScopeFactory */
             $applicationScopeFactory = $this->app->getContainer()->get('applicationScopeFactory');
             $scopes = $validatedRequest->getAttribute('oauth_scopes');
+
+            // If there are no scopes in the JWT, we should not authorise
+            // An older client which makes a request with no scopes should get an access token with
+            // all scopes configured for the application
+            if (count($scopes) <= 0) {
+                throw new AccessDeniedException();
+            }
 
             $logger->debug('Scopes provided with request: ' . count($scopes));
 
