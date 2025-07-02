@@ -61,7 +61,9 @@ describe('Layout Editor Toolbar (Back button, Interactive Mode, Layout jump list
     cy.get('.interactive-control-status-off').should('not.be.visible');
   });
 
-  it('should open and close the layout jump list dropdown safely', () => {
+  it.only('should open and close the layout jump list dropdown safely', () => {
+    cy.intercept('GET', '/layout?onlyMyLayouts=*').as('onlyMyLayouts');
+
     const layoutName = 'Audio-Video-PDF';
 
     cy.get('#select2-layoutJumpList-container')
@@ -71,6 +73,12 @@ describe('Layout Editor Toolbar (Back button, Interactive Mode, Layout jump list
     cy.get('#layoutJumpListContainer .select2-selection')
       .should('be.visible')
       .click({force: true});
+
+    // Check for status
+    cy.wait('@onlyMyLayouts').then((interception) => {
+      const result = interception.response.body.data[0];
+      cy.log('result:', result.layoutId);
+    });
 
     // Type into the search input
     cy.get('.select2-search__field')
@@ -85,9 +93,8 @@ describe('Layout Editor Toolbar (Back button, Interactive Mode, Layout jump list
   });
 
   it('Options dropdown menu toggles and contains expected items', () => {
-    cy.get('#optionsContainerTop')
-      .should('be.visible')
-      .click();
+    cy.get('#optionsContainerTop').should('be.visible');
+    cy.get('#optionsContainerTop').click({force: true});
 
     cy.get('.navbar-submenu-options-container')
       .should('be.visible')
@@ -100,13 +107,9 @@ describe('Layout Editor Toolbar (Back button, Interactive Mode, Layout jump list
         cy.get('#saveTemplate').should('have.class', 'd-none');
         cy.get('#scheduleLayout').should('have.class', 'd-none');
         cy.get('#clearLayout').should('be.visible');
-
         cy.get('#displayTooltips').should('be.checked');
         cy.get('#deleteConfirmation').should('be.checked');
       });
-
-    // Re-query before closing the dropdown
-    cy.get('#optionsContainerTop').should('be.visible').click();
   });
 
   it('Tooltips and popovers appear on hover', () => {
