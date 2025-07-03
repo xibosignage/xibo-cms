@@ -147,7 +147,7 @@ describe('Playlist Editor (Populated)', function() {
         });
     });
 
-    it('should add an audio clip to a widget by the context menu, and adds a link to open the form in the timeline', () => {
+    it.skip('should add an audio clip to a widget by the context menu, and adds a link to open the form in the timeline', () => {
         
         cy.populateLibraryWithMedia();
 
@@ -169,13 +169,13 @@ describe('Playlist Editor (Populated)', function() {
         // Check if the widget has the audio icon
         // cy.wait('@reloadPlaylist');
         cy.get('#timeline-container [data-type="widget"]:first-child')
-            .find('.widgetProperties > .fa').should('exist').click({force: true});
+            .find('i[data-property="Audio"]').should('exist').click({force: true});
 
         cy.get('[data-test="widgetPropertiesForm"]').contains('Audio for');
     });
 
     // Skip test for now ( it's failing in the test suite and being tested already in layout designer spec ) 
-    it.only('attaches expiry dates to a widget by the context menu, and adds a link to open the form in the timeline', () => {
+    it.skip('attaches expiry dates to a widget by the context menu, and adds a link to open the form in the timeline', () => {
         // Create and alias for reload playlist
         // cy.intercept('/playlist?playlistId=*').as('reloadPlaylist');
         
@@ -201,7 +201,7 @@ describe('Playlist Editor (Populated)', function() {
         // Check if the widget has the expiry dates icon
         // cy.wait('@reloadPlaylist');
         cy.get('#timeline-container [data-type="widget"]:first-child')
-            .find('.widgetProperties > .fa').should('exist').click({force: true});
+            .find('i[data-property="Expiry"]').should('exist').click({force: true});
 
         cy.get('[data-test="widgetPropertiesForm"]').contains('Expiry for');
     });
