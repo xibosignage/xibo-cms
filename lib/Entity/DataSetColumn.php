@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -22,6 +22,7 @@
 
 namespace Xibo\Entity;
 
+use Illuminate\Support\Str;
 use Respect\Validation\Validator as v;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetColumnTypeFactory;
@@ -195,24 +196,39 @@ class DataSetColumn implements \JsonSerializable
      * Validate
      * @throws InvalidArgumentException
      */
-    public function validate($options = [])
+    public function validate($options = []): void
     {
         $options = array_merge([
             'testFormulas' => true,
             'allowSpacesInHeading' => false,
         ], $options);
 
-        if ($this->dataSetId == 0 || $this->dataSetId == '')
+        if ($this->dataSetId == 0 || $this->dataSetId == '') {
             throw new InvalidArgumentException(__('Missing dataSetId'), 'dataSetId');
+        }
 
-        if ($this->dataTypeId == 0 || $this->dataTypeId == '')
+        if ($this->dataTypeId == 0 || $this->dataTypeId == '') {
             throw new InvalidArgumentException(__('Missing dataTypeId'), 'dataTypeId');
+        }
 
-        if ($this->dataSetColumnTypeId == 0 || $this->dataSetColumnTypeId == '')
+        if ($this->dataSetColumnTypeId == 0 || $this->dataSetColumnTypeId == '') {
             throw new InvalidArgumentException(__('Missing dataSetColumnTypeId'), 'dataSetColumnTypeId');
+        }
 
-        if ($this->heading == '')
+        if ($this->heading == '') {
             throw new InvalidArgumentException(__('Please provide a column heading.'), 'heading');
+        }
+
+        // Column heading should not allow reserved/disallowed SQL words
+        if (Str::contains($this->heading, Sql::DISALLOWED_KEYWORDS, true)) {
+            throw new InvalidArgumentException(
+                sprintf(
+                    __('Headings cannot contain reserved words, such as %s'),
+                    implode(', ', Sql::DISALLOWED_KEYWORDS),
+                ),
+                'heading',
+            );
+        }
 
         // We allow spaces here for backwards compatibility, but only on import and edit.
         $additionalCharacters = $options['allowSpacesInHeading'] ? ' ' : '';
@@ -233,8 +249,14 @@ class DataSetColumn implements \JsonSerializable
         $columns = $this->dataSetColumnFactory->getByDataSetId($this->dataSetId);
 
         foreach ($columns as $column) {
-            if ($column->heading == $this->heading && ($this->dataSetColumnId == null || $column->dataSetColumnId != $this->dataSetColumnId))
-                throw new InvalidArgumentException(__('A column already exists with this name, please choose another'), 'heading');
+            if ($column->heading == $this->heading
+                && ($this->dataSetColumnId == null || $column->dataSetColumnId != $this->dataSetColumnId)
+            ) {
+                throw new InvalidArgumentException(
+                    __('A column already exists with this name, please choose another'),
+                    'heading',
+                );
+            }
         }
 
         // Check the actual values
@@ -248,11 +270,18 @@ class DataSetColumn implements \JsonSerializable
             $dataSetColumnType = $this->dataSetColumnTypeFactory->getById($this->dataSetColumnTypeId);
 
             // If we are a remote column, validate we have a field
-            if (strtolower($dataSetColumnType->dataSetColumnType) === 'remote' && ($this->remoteField === '' || $this->remoteField === null))
-                throw new InvalidArgumentException(__('Remote field is required when the column type is set to Remote'), 'remoteField');
-
-        } catch (NotFoundException $e) {
-            throw new InvalidArgumentException(__('Provided DataSet Column Type doesn\'t exist'), 'dataSetColumnTypeId');
+            if (strtolower($dataSetColumnType->dataSetColumnType) === 'remote'
+                && ($this->remoteField === '' || $this->remoteField === null)) {
+                throw new InvalidArgumentException(
+                    __('Remote field is required when the column type is set to Remote'),
+                    'remoteField',
+                );
+            }
+        } catch (NotFoundException) {
+            throw new InvalidArgumentException(
+                __('Provided DataSet Column Type doesn\'t exist'),
+                'dataSetColumnTypeId',
+            );
         }
 
         // Should we validate the list content?
@@ -263,7 +292,7 @@ class DataSetColumn implements \JsonSerializable
             // Add an empty field
             $list[] = '';
 
-            // We can check this is valid by building up a NOT IN sql statement, if we get results.. we know its not good
+            // We can check this is valid by building up a NOT IN sql statement, if we get results we know it's not good
             $select = '';
 
             $dbh = $this->getStore()->getConnection('isolated');
