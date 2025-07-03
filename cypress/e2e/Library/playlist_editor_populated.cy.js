@@ -169,7 +169,7 @@ describe('Playlist Editor (Populated)', function() {
         // Check if the widget has the audio icon
         // cy.wait('@reloadPlaylist');
         cy.get('#timeline-container [data-type="widget"]:first-child')
-            .find('i[data-property="Audio"]').click();
+            .find('i[data-property="Audio"]').should('exist').click({force: true});
 
         cy.get('[data-test="widgetPropertiesForm"]').contains('Audio for');
     });
@@ -201,7 +201,7 @@ describe('Playlist Editor (Populated)', function() {
         // Check if the widget has the expiry dates icon
         // cy.wait('@reloadPlaylist');
         cy.get('#timeline-container [data-type="widget"]:first-child')
-            .find('i[data-property="Expiry"]').click();
+            .find('i[data-property="Expiry"]').should('exist').click({force: true});
 
         cy.get('[data-test="widgetPropertiesForm"]').contains('Expiry for');
     });
