@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -24,7 +24,6 @@ namespace Xibo\Entity;
 
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
-use Xibo\Support\Exception\AccessDeniedException;
 
 /**
  * Class ApplicationScope
@@ -43,11 +42,6 @@ class ApplicationScope implements \JsonSerializable
      * @var string
      */
     public $description;
-
-    /**
-     * @var int
-     */
-    public $useRegex;
 
     /**
      * Entity constructor.
@@ -81,37 +75,37 @@ class ApplicationScope implements \JsonSerializable
         return $this->id;
     }
 
-    public function getSqlOperator()
-    {
-        return ($this->useRegex) ? 'RLIKE' : '=';
-    }
-
     /**
      * Check whether this scope has permission for this route
-     * @param $method
-     * @param $route
-     * @throws AccessDeniedException
+     * @param string $method
+     * @param string $requestedRoute
+     * @return bool
      */
-    public function checkRoute($method, $route)
+    public function checkRoute(string $method, string $requestedRoute): bool
     {
-        $operator = $this->getSqlOperator();
-
-        $route = $this->getStore()->select('
-            SELECT *
+        $routes = $this->getStore()->select('
+            SELECT `route`
               FROM `oauth_scope_routes`
-             WHERE scopeId = :scope
-              AND method '.$operator.' :method
-              AND route '.$operator.' :route
+             WHERE `scopeId` = :scope
+              AND `method` LIKE :method
         ', [
             'scope' => $this->getId(),
-            'method' => $method,
-            'route' => $route
+            'method' => '%' . $method . '%',
         ]);
 
-        if (count($route) <= 0) {
-            throw new AccessDeniedException();
-        } else {
-            return true;
+        $this->getLog()->debug('checkRoute: there are ' . count($routes) . ' potential routes for the scope '
+            . $this->getId() . ' with ' . $method);
+
+        // We need to look through each route and run the regex against our requested route.
+        $grantAccess = false;
+        foreach ($routes as $route) {
+            $regexResult = preg_match($route['route'], $requestedRoute);
+            if ($regexResult === 1) {
+                $grantAccess = true;
+                break;
+            }
         }
+
+        return $grantAccess;
     }
 }
