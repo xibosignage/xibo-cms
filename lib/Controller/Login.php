@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -300,7 +300,7 @@ class Login extends Base
             $this->pool->save($cache);
 
             // Make a link
-            $link = ((new HttpsDetect())->getUrl()) . $routeParser->urlFor('login') . '?nonce=' . $action . '::' . $nonce;
+            $link = ((new HttpsDetect())->getRootUrl()) . $routeParser->urlFor('login') . '?nonce=' . $action . '::' . $nonce;
 
             // Uncomment this to get a debug message showing the link.
             //$this->getLog()->debug('Link is:' . $link);
