@@ -175,28 +175,28 @@ Cypress.Commands.add('checkoutLayout', function(id) {
   });
 });
 
-Cypress.Commands.add('addMediaToLibrary', function(fileName) {
+Cypress.Commands.add('addMediaToLibrary', (fileName) => {
   // Declarations
   const method = 'POST';
   const url = '/api/library';
   const fileType = '*/*';
 
   // Get file from fixtures as binary
-  cy.fixture(fileName, 'binary').then((zipBin) => {
+  return cy.fixture(fileName, 'binary').then((zipBin) => {
     // File in binary format gets converted to blob so it can be sent as Form data
-    const blob = Cypress.Blob.binaryStringToBlob(zipBin, fileType);
+    const fileBlob = Cypress.Blob.binaryStringToBlob(zipBin, fileType);
 
     // Build up the form
     const formData = new FormData();
 
-    formData.set('files[]', blob, fileName); // adding a file to the form
+    formData.set('files[]', fileBlob, fileName); // adding a file to the form
 
     // Perform the request
-    return cy.formRequest(method, url, formData).then((res) => {
-      const parsedJSON = JSON.parse(res);
+    return cy.formRequest(method, url, formData).then((response) => {
+      const { files } = JSON.parse(response);
 
       // Return id
-      return parsedJSON.files[0].name;
+      return files[0].name;
     });
   });
 });
@@ -243,20 +243,16 @@ Cypress.Commands.add('deleteLayout', function(id) {
 });
 
 // Playlist
-Cypress.Commands.add('createNonDynamicPlaylist', function(name) {
-  cy.request({
+Cypress.Commands.add('createNonDynamicPlaylist', (name) => {
+  return cy.request({
     method: 'POST',
     url: '/api/playlist',
-    form: true,
     headers: {
-      Authorization: 'Bearer ' + Cypress.env('accessToken'),
+      Authorization: `Bearer ${Cypress.env('accessToken')}`,
     },
-    body: {
-      name: name,
-    },
-  }).then((res) => {
-    return res.body.playlistId;
-  });
+    body: { name },
+    form: true,
+  }).then((response) => response.body.playlistId);
 });
 
 
@@ -875,7 +871,7 @@ Cypress.Commands.add('openOptionsMenu', () => {
   cy.get('.navbar-submenu')
     .should('be.visible')
     .within(() => {
-      cy.get('#optionsContainerTop')
+      cy.get('i[data-title="Options"]')
         .should('be.visible')
         .and('not.be.disabled')
         .click({force: true})

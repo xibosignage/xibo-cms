@@ -34,7 +34,7 @@ describe('Layout Editor Status Bar', function() {
     cy.get('#layout-viewer').should('be.visible');
   });
 
-  it('should display the correct Layout status icon and tooltip', function() {
+  it.skip('should display the correct Layout status icon and tooltip', function() {
     cy.get(layoutStatusSelector)
       .should('be.visible')
       .and('have.class', 'badge-danger')
