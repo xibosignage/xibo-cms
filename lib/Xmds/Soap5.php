@@ -491,34 +491,39 @@ class Soap5 extends Soap4
         }
 
         if (!empty($display->syncGroupId)) {
-            $syncGroup = $this->syncGroupFactory->getById($display->syncGroupId);
+            try {
+                $syncGroup = $this->syncGroupFactory->getById($display->syncGroupId);
 
-            if ($syncGroup->leadDisplayId === $display->displayId) {
-                $syncNodeValue = 'lead';
-            } else {
-                $leadDisplay = $this->syncGroupFactory->getLeadDisplay($syncGroup->leadDisplayId);
-                $syncNodeValue = $leadDisplay->lanIpAddress;
+                if ($syncGroup->leadDisplayId === $display->displayId) {
+                    $syncNodeValue = 'lead';
+                } else {
+                    $leadDisplay = $this->syncGroupFactory->getLeadDisplay($syncGroup->leadDisplayId);
+                    $syncNodeValue = $leadDisplay->lanIpAddress;
+                }
+
+                $syncNode = $return->createElement('syncGroup');
+                $value = $return->createTextNode($syncNodeValue ?? '');
+                $syncNode->appendChild($value);
+                $displayElement->appendChild($syncNode);
+
+                $syncPublisherPortNode = $return->createElement('syncPublisherPort');
+                $value = $return->createTextNode($syncGroup->syncPublisherPort ?? 9590);
+                $syncPublisherPortNode->appendChild($value);
+                $displayElement->appendChild($syncPublisherPortNode);
+
+                $syncSwitchDelayNode = $return->createElement('syncSwitchDelay');
+                $value = $return->createTextNode($syncGroup->syncSwitchDelay ?? 750);
+                $syncSwitchDelayNode->appendChild($value);
+                $displayElement->appendChild($syncSwitchDelayNode);
+
+                $syncVideoPauseDelayNode = $return->createElement('syncVideoPauseDelay');
+                $value = $return->createTextNode($syncGroup->syncVideoPauseDelay ?? 100);
+                $syncVideoPauseDelayNode->appendChild($value);
+                $displayElement->appendChild($syncVideoPauseDelayNode);
+            } catch (GeneralException $exception) {
+                $this->getLog()->error('registerDisplay: cannot get sync group information, e = '
+                    . $exception->getMessage());
             }
-
-            $syncNode = $return->createElement('syncGroup');
-            $value = $return->createTextNode($syncNodeValue ?? '');
-            $syncNode->appendChild($value);
-            $displayElement->appendChild($syncNode);
-
-            $syncPublisherPortNode = $return->createElement('syncPublisherPort');
-            $value = $return->createTextNode($syncGroup->syncPublisherPort ?? 9590);
-            $syncPublisherPortNode->appendChild($value);
-            $displayElement->appendChild($syncPublisherPortNode);
-
-            $syncSwitchDelayNode = $return->createElement('syncSwitchDelay');
-            $value = $return->createTextNode($syncGroup->syncSwitchDelay ?? 750);
-            $syncSwitchDelayNode->appendChild($value);
-            $displayElement->appendChild($syncSwitchDelayNode);
-
-            $syncVideoPauseDelayNode = $return->createElement('syncVideoPauseDelay');
-            $value = $return->createTextNode($syncGroup->syncVideoPauseDelay ?? 100);
-            $syncVideoPauseDelayNode->appendChild($value);
-            $displayElement->appendChild($syncVideoPauseDelayNode);
         }
 
         $display->save(Display::$saveOptionsMinimum);
