@@ -19,9 +19,9 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-describe('Playlist Editor (Populated)', function() {
+describe('Playlist Editor (Populated/Unchanged)', function() {
 
-    beforeEach(function() {
+    before(function() {
         cy.login();
 
         // Create random name
@@ -40,8 +40,6 @@ describe('Playlist Editor (Populated)', function() {
             cy.addWidgetToPlaylist(res, 'clock', {
                 name: 'Clock Widget'
             });
-
-            cy.openPlaylistEditorAndLoadPrefs(res);
         });
     });
 
@@ -78,9 +76,9 @@ describe('Playlist Editor (Populated)', function() {
 
     });
 
-    it.skip('should revert a saved form to a previous state', () => {
+    it('opens a media tab in the toolbar and searches for items', () => {
 
-        let oldName;
+        // cy.intercept('/library/search?*').as('mediaLoad');
 
         // Create and alias for reload widget
         // cy.intercept('GET', '/playlist/widget/form/edit/*').as('reloadWidget');
@@ -158,9 +156,36 @@ describe('Playlist Editor (Populated)', function() {
         cy.get('#timeline-container [data-type="widget"]').first().should('be.visible').rightclick();
         cy.get('.context-menu-btn[data-property="Audio"]').should('be.visible').click();
 
-        // Select the 1st option
-        cy.get('[data-test="widgetPropertiesForm"] #mediaId > option').eq(1).then(($el) => {
-            cy.get('[data-test="widgetPropertiesForm"] #mediaId').select($el.val());
+        // cy.wait('@mediaLoad');
+        cy.wait(1000);
+
+        // Get a table row, select it and add to the dropzone
+        cy.get('div[class="toolbar-card ui-draggable ui-draggable-handle"]').eq(2).should('be.visible').click({force: true}).then(() => {
+            cy.get('#timeline-overlay-container').click({force: true}).then(() => {
+
+                // Wait for the layout to reload
+                // cy.wait('@reloadPlaylist');
+                cy.wait(3000);
+
+                // Check if there is just one widget in the timeline
+                cy.get('#timeline-container [data-type="widget"]').then(($widgets) => {
+                    expect($widgets.length).to.eq(3);
+                });
+
+                // Click the revert button
+                cy.get('#timeline-container [id^="widget_"]').last().click();
+                cy.get('button[data-action="undo"]').click({force: true});
+
+                // Wait for the widget to be deleted and for the playlist to reload
+                // cy.wait('@deleteWidget');
+                // cy.wait('@reloadPlaylist');
+                cy.wait(3000);
+
+                // Check if there is just one widget in the timeline
+                cy.get('#timeline-container [data-type="widget"]').then(($widgets) => {
+                    expect($widgets.length).to.eq(2);
+                });
+            });
         });
 
         // Save and close the form

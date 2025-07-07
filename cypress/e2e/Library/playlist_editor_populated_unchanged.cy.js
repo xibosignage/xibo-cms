@@ -19,9 +19,9 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-describe('Playlist Editor (Populated/Unchanged)', function() {
+describe('Playlist Editor (Populated)', function() {
 
-    before(function() {
+    beforeEach(function() {
         cy.login();
 
         // Create random name
@@ -35,25 +35,56 @@ describe('Playlist Editor (Populated/Unchanged)', function() {
                 name: 'Embedded Widget'
             });
 
-            // TODO skip so that the test success
-            // cy.addRandomMediaToPlaylist(res);
+            cy.addMediaToLibrary("file/example.zip");
 
             cy.addWidgetToPlaylist(res, 'clock', {
                 name: 'Clock Widget'
             });
+
+            cy.openPlaylistEditorAndLoadPrefs(res);
         });
     });
 
-    beforeEach(function() {
-        cy.login();
-        cy.openPlaylistEditorAndLoadPrefs(this.testPlaylistId);
+    it('changes and saves widget properties', () => {
+        // Create and alias for reload widget
+        // cy.intercept('GET','/playlist/widget/form/edit/*').as('reloadWidget');
+
+        // Select the first widget on timeline ( image )
+        cy.get('#timeline-container [data-type="widget"]').first().click();
+
+        // Wait for the widget to load
+        // cy.wait('@reloadWidget');
+
+        // Type the new name in the input
+        cy.get('a[href="#advancedTab"]').click();
+        cy.get('#properties-panel-form-container input[name="name"]').clear().type('newName');
+
+        // Set a duration
+        cy.get('#properties-panel-form-container input[name="useDuration"]').check();
+        cy.get('#properties-panel-form-container input[name="duration"]').clear().type(12);
+
+        // Save form
+        cy.get('#properties-panel-form-container button[data-action="save"]').click();
+
+        // Should show a notification for the name change
+        // cy.get('.toast-success');
+
+        // Wait for the widget to reload
+        // cy.wait('@reloadWidget');
+
+        // Check if the values are the same entered after reload
+        cy.get('#properties-panel-form-container input[name="name"]').should('have.prop', 'value').and('equal', 'newName');
+        cy.get('#properties-panel-form-container input[name="duration"]').should('have.prop', 'value').and('equal', '12');
+
     });
 
     it('opens a media tab in the toolbar and searches for items', () => {
 
         // cy.intercept('/library/search?*').as('mediaLoad');
 
-        cy.populateLibraryWithMedia();
+        // Create and alias for reload widget
+        // cy.intercept('GET', '/playlist/widget/form/edit/*').as('reloadWidget');
+        // cy.intercept('PUT', '/playlist/widget/*').as('saveWidget');
 
         // Open audio tool tab
         cy.get('a[id="btn-menu-3"]').should('be.visible').click();
@@ -106,5 +137,47 @@ describe('Playlist Editor (Populated/Unchanged)', function() {
                 });
             });
         });
+
+        // Save and close the form
+        cy.get('[data-test="widgetPropertiesForm"] .btn-bb-done').click();
+
+        // Check if the widget has the audio icon
+        // cy.wait('@reloadPlaylist');
+        cy.get('#timeline-container [data-type="widget"]:first-child')
+            .find('i[data-property="Audio"]').click();
+
+        cy.get('[data-test="widgetPropertiesForm"]').contains('Audio for');
+    });
+
+    // Skip test for now ( it's failing in the test suite and being tested already in layout designer spec ) 
+    it('attaches expiry dates to a widget by the context menu, and adds a link to open the form in the timeline', () => {
+        // Create and alias for reload playlist
+        // cy.intercept('/playlist?playlistId=*').as('reloadPlaylist');
+        
+        // Right click to open the context menu and select add audio
+        cy.get('#timeline-container [data-type="widget"]').first().should('be.visible').rightclick();
+        cy.get('.context-menu-btn[data-property="Expiry"]').should('be.visible').click();
+
+        // Add dates
+        cy.get('[data-test="widgetPropertiesForm"] .starttime-control .date-clear-button').click();
+        // cy.get('[data-test="widgetPropertiesForm"] #fromDt').find('input[class="datePickerHelper form-control dateControl dateTime active"]').click();
+        cy.get('div[class="flatpickr-wrapper"]').first().click();
+        cy.get('.flatpickr-calendar.open .dayContainer .flatpickr-day:first').click();
+
+        cy.get('[data-test="widgetPropertiesForm"] .endtime-control .date-clear-button').click();
+        // cy.get('[data-test="widgetPropertiesForm"] #toDt').find('input[class="datePickerHelper form-control dateControl dateTime active"]').click();
+        cy.get('div[class="flatpickr-wrapper"]').last().click();
+        cy.get('.flatpickr-calendar.open .dayContainer .flatpickr-day:first').click();
+
+
+        // Save and close the form
+        cy.get('[data-test="widgetPropertiesForm"] .btn-bb-done').click();
+
+        // Check if the widget has the expiry dates icon
+        // cy.wait('@reloadPlaylist');
+        cy.get('#timeline-container [data-type="widget"]:first-child')
+            .find('i[data-property="Expiry"]').click();
+
+        cy.get('[data-test="widgetPropertiesForm"]').contains('Expiry for');
     });
 });

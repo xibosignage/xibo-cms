@@ -48,7 +48,7 @@ describe('Layout Designer (Empty)', function() {
       });
     });
 
-    it.skip('goes into draft mode when checked out', function() {
+    it('goes into draft mode when checked out', function() {
       // Get the done button from the checkout modal
       cy.get('[data-test="welcomeModal"] button.btn-bb-checkout').click();
 
@@ -56,7 +56,7 @@ describe('Layout Designer (Empty)', function() {
       cy.contains('Checked out ' + layoutTempName);
     });
 
-    it.skip('should prevent a layout edit action, and show a toast message', function() {
+    it('should prevent a layout edit action, and show a toast message', function() {
       // Should contain widget options form
       cy.get('#properties-panel-form-container').contains('Edit Layout');
 
@@ -76,7 +76,7 @@ describe('Layout Designer (Empty)', function() {
       });
     });
 
-    it.skip('should create a new region from within the navigator edit', () => {
+    it('should create a new region from within the navigator edit', () => {
       // Open navigator edit
       cy.get('.editor-bottom-bar #navigator-edit-btn').click();
 
@@ -87,7 +87,7 @@ describe('Layout Designer (Empty)', function() {
       cy.get('#layout-timeline [data-type="region"]').should('have.length', 2);
     });
 
-    it.skip('should delete a region using the toolbar bin', () => {
+    it('should delete a region using the toolbar bin', () => {
       cy.intercept('GET', '/layout?layoutId=*').as('reloadLayout');
 
       // Open navigator edit
@@ -114,7 +114,7 @@ describe('Layout Designer (Empty)', function() {
       });
     });
 
-    it.skip('creates a new widget by selecting a searched media from the toolbar to layout-navigator region', () => {
+    it('creates a new widget by selecting a searched media from the toolbar to layout-navigator region', () => {
       cy.populateLibraryWithMedia();
 
       // Create and alias for reload Layout
@@ -145,7 +145,7 @@ describe('Layout Designer (Empty)', function() {
       });
     });
 
-    it.skip('shows the file upload form by adding a uploadable media from the toolbar to layout-navigator region', () => {
+    it('shows the file upload form by adding a uploadable media from the toolbar to layout-navigator region', () => {
       cy.populateLibraryWithMedia();
 
       // Open toolbar Widgets tab
