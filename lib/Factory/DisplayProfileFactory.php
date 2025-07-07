@@ -125,7 +125,8 @@ class DisplayProfileFactory extends BaseFactory
         $profile->isCustom = 0;
         $profile->config = [];
         $profile->configDefault = [];
-        //$profile->load();
+        // We shoud not call load as it would be recursive due to unknown also being an unknown profile
+        // $profile->load();
         return $profile;
     }
 
