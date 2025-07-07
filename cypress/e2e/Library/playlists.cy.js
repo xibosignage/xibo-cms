@@ -67,8 +67,7 @@ describe('Playlists Admin', function() {
 
   it('should show a list of Playlists', function() {
     // Wait for playlist grid reload
-    cy.server();
-    cy.route('/playlist?draw=1&*').as('playlistGridLoad');
+    cy.intercept('/playlist?draw=1&*').as('playlistGridLoad');
 
     cy.visit('/playlist/view').then(function() {
       cy.wait('@playlistGridLoad');
@@ -79,8 +78,7 @@ describe('Playlists Admin', function() {
   it('selects multiple playlists and delete them', function() {
     // Create a new playlist and then search for it and delete it
     cy.createNonDynamicPlaylist('Cypress Test Playlist ' + testRun).then(() => {
-      cy.server();
-      cy.route('/playlist?draw=2&*').as('playlistGridLoad');
+      cy.intercept('/playlist?draw=2&*').as('playlistGridLoad');
 
       // Delete all test playlists
       cy.visit('/playlist/view');

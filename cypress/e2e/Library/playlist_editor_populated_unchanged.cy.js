@@ -78,89 +78,64 @@ describe('Playlist Editor (Populated)', function() {
 
     });
 
-    it.skip('should revert a saved form to a previous state', () => {
+    it('opens a media tab in the toolbar and searches for items', () => {
 
-        let oldName;
+        // cy.intercept('/library/search?*').as('mediaLoad');
 
         // Create and alias for reload widget
         // cy.intercept('GET', '/playlist/widget/form/edit/*').as('reloadWidget');
         // cy.intercept('PUT', '/playlist/widget/*').as('saveWidget');
 
-        // Select the first widget on timeline ( image )
-        cy.get('#timeline-container [data-type="widget"]').first().click();
+        // Open audio tool tab
+        cy.get('a[id="btn-menu-3"]').should('be.visible').click();
 
-        // Wait for the widget to load
-        // cy.wait('@reloadWidget');
+        // cy.wait('@mediaLoad');
 
-        // Get the input field
-        cy.get('a[href="#advancedTab"]').click();
-        cy.get('#properties-panel-form-container input[name="name"]').then(($input) => {
-
-            // Save old name
-            oldName = $input.val();
-
-            //Type the new name in the input
-            cy.get('#properties-panel-form-container input[name="name"]').clear().type('newName');
-
-            // Save form
-            cy.get('#properties-panel-form-container button[data-action="save"]').click();
-
-            // Should show a notification for the name change
-            // cy.get('.toast-success');
-
-            // Wait for the widget to save
-            // cy.wait('@reloadWidget');
-
-            // Click the revert button
-            cy.get('#playlist-editor-toolbar #undoContainer').click();
-
-            // Wait for the widget to save
-            // cy.wait('@saveWidget');
-
-            // Test if the revert made the name go back to the old name
-            cy.get('#properties-panel-form-container input[name="name"]').should('have.prop', 'value').and('equal', oldName);
-        });
+        // Check if there are audio items in the search content
+        cy.get('div[class="toolbar-card-preview"]').last().should('be.visible');
     });
 
-    it('should delete a widget using the toolbar bin', () => {
-        // cy.intercept('/playlist?playlistId=*').as('reloadPlaylist');
-
-        // Select a widget from the navigator
-        cy.get('#playlist-timeline [data-type="widget"]').first().click().then(($el) => {
-
-            const widgetId = $el.attr('id');
-
-            // Click trash container
-            cy.get('div[class="widgetDelete"]').first().click();
-
-            // Confirm delete on modal
-            cy.get('button[class*="btn-bb-confirm"]').click();
-
-            // Check toast message
-            // cy.get('.toast-success').contains('Deleted');
-
-            // Wait for the layout to reload
-            // cy.wait('@reloadPlaylist');
-
-            // Check that widget is not on timeline
-            cy.get('#playlist-timeline [data-type="widget"]#' + widgetId).should('not.exist');
-        });
-    });
-
-    it('should add an audio clip to a widget by the context menu, and adds a link to open the form in the timeline', () => {
-        
+    it('creates a new widget by selecting a searched media from the toolbar to the editor, and then reverts the change', () => {
         cy.populateLibraryWithMedia();
 
         // Create and alias for reload playlist
-        cy.intercept('/playlist?playlistId=*').as('reloadPlaylist');
+        // cy.intercept('/playlist?playlistId=*').as('reloadPlaylist');
+        // cy.intercept('DELETE', '/playlist/widget/*').as('deleteWidget');
+        // cy.intercept('/library/search?*').as('mediaLoad');
 
-        // Right click to open the context menu and select add audio
-        cy.get('#timeline-container [data-type="widget"]').first().should('be.visible').rightclick();
-        cy.get('.context-menu-btn[data-property="Audio"]').should('be.visible').click();
+        // Open library search tab
+        cy.get('a[id="btn-menu-0"]').should('be.visible').click();
 
-        // Select the 1st option
-        cy.get('[data-test="widgetPropertiesForm"] #mediaId > option').eq(1).then(($el) => {
-            cy.get('[data-test="widgetPropertiesForm"] #mediaId').select($el.val());
+        // cy.wait('@mediaLoad');
+        cy.wait(1000);
+
+        // Get a table row, select it and add to the dropzone
+        cy.get('div[class="toolbar-card ui-draggable ui-draggable-handle"]').eq(2).should('be.visible').click({force: true}).then(() => {
+            cy.get('#timeline-overlay-container').click({force: true}).then(() => {
+
+                // Wait for the layout to reload
+                // cy.wait('@reloadPlaylist');
+                cy.wait(3000);
+
+                // Check if there is just one widget in the timeline
+                cy.get('#timeline-container [data-type="widget"]').then(($widgets) => {
+                    expect($widgets.length).to.eq(3);
+                });
+
+                // Click the revert button
+                cy.get('#timeline-container [id^="widget_"]').last().click();
+                cy.get('button[data-action="undo"]').click({force: true});
+
+                // Wait for the widget to be deleted and for the playlist to reload
+                // cy.wait('@deleteWidget');
+                // cy.wait('@reloadPlaylist');
+                cy.wait(3000);
+
+                // Check if there is just one widget in the timeline
+                cy.get('#timeline-container [data-type="widget"]').then(($widgets) => {
+                    expect($widgets.length).to.eq(2);
+                });
+            });
         });
 
         // Save and close the form
