@@ -44,7 +44,9 @@
                 <li class="nav-item"><a class="nav-link" href="#location" role="tab" data-toggle="tab"><span>{% trans "Details" %}</span></a></li>
                 <li class="nav-item"><a class="nav-link" href="#reference" role="tab" data-toggle="tab"><span>{% trans "Reference" %}</span></a></li>
                 <li class="nav-item"><a class="nav-link" href="#maintenance" role="tab" data-toggle="tab"><span>{% trans "Maintenance" %}</span></a></li>
+                {% if not isWolDisabled %}
                 <li class="nav-item"><a class="nav-link" href="#wol" role="tab" data-toggle="tab"><span>{% trans "Wake on LAN" %}</span></a></li>
+                {% endif %}
                 <li class="nav-item"><a class="nav-link" href="#settings" role="tab" data-toggle="tab"><span>{% trans "Settings" %}</span></a></li>
                 <li class="nav-item"><a class="nav-link" href="#remote" role="tab" data-toggle="tab"><span>{% trans "Remote" %}</span></a></li>
                 <li class="nav-item"><a class="nav-link" href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
@@ -228,6 +230,7 @@
                         {% set helpText %}{% trans "Should this display be tested against the global time out or the Player collection interval?" %}{% endset %}
                         {{ forms.checkbox("alertTimeout", title, display.alertTimeout, helpText) }}
                     </div>
+                    {% if not isWolDisabled %}
                     <div class="tab-pane" id="wol">
 
                         {% set title %}{% trans "Enable Wake on LAN" %}{% endset %}
@@ -251,6 +254,7 @@
                         {% set helpText %}{% trans "Enter a number within the range of 0 to 32 in the following field. Leave the following field empty, if no subnet mask should be used (CIDR = 0). If the remote host\'s broadcast address is unknown: Enter the host name or IP address of the remote host in Broad Cast Address and enter the CIDR subnet mask of the remote host in this field." %}{% endset %}
                         {{ forms.input("cidr", title, display.cidr, helpText) }}
                     </div>
+                    {% endif %}
                     <div class="tab-pane" id="settings">
                         {% set title %}{% trans "Settings Profile?" %}{% endset %}
                         {% set helpText %}{% trans "What display profile should this display use? To use the default profile leave this empty." %}{% endset %}
