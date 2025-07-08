@@ -71,27 +71,27 @@ RUN LC_ALL=C.UTF-8 DEBIAN_FRONTEND=noninteractive apt update && apt upgrade -y &
     netcat \
     iputils-ping \
     gnupg \
-    php8.2 \
-    libapache2-mod-php8.2 \
-    php8.2-gd \
-    php8.2-dom \
-    php8.2-pdo \
-    php8.2-zip \
-    php8.2-mysql \
-    php8.2-gettext \
-    php8.2-soap \
-    php8.2-iconv \
-    php8.2-curl \
-    php8.2-ctype \
-    php8.2-fileinfo \
-    php8.2-xml \
-    php8.2-simplexml \
-    php8.2-mbstring \
-    php8.2-memcached \
-    php8.2-phar \
-    php8.2-opcache \
-    php8.2-mongodb \
-    php8.2-gnupg \
+    php8.4 \
+    libapache2-mod-php8.4 \
+    php8.4-gd \
+    php8.4-dom \
+    php8.4-pdo \
+    php8.4-zip \
+    php8.4-mysql \
+    php8.4-gettext \
+    php8.4-soap \
+    php8.4-iconv \
+    php8.4-curl \
+    php8.4-ctype \
+    php8.4-fileinfo \
+    php8.4-xml \
+    php8.4-simplexml \
+    php8.4-mbstring \
+    php8.4-memcached \
+    php8.4-phar \
+    php8.4-opcache \
+    php8.4-mongodb \
+    php8.4-gnupg \
     tzdata \
     msmtp \
     openssl \
@@ -100,7 +100,7 @@ RUN LC_ALL=C.UTF-8 DEBIAN_FRONTEND=noninteractive apt update && apt upgrade -y &
     && dpkg-reconfigure --frontend noninteractive tzdata \
     && rm -rf /var/lib/apt/lists/*
 
-RUN update-alternatives --set php /usr/bin/php8.2
+RUN update-alternatives --set php /usr/bin/php8.4
 
 # Enable Apache module
 RUN a2enmod rewrite \
@@ -113,16 +113,16 @@ RUN a2enmod rewrite \
 ADD docker/ /
 
 # Update the PHP.ini file
-RUN sed -i "s/error_reporting = .*$/error_reporting = E_ERROR | E_WARNING | E_PARSE/" /etc/php/8.2/apache2/php.ini && \
-    sed -i "s/session.gc_probability = .*$/session.gc_probability = 1/" /etc/php/8.2/apache2/php.ini && \
-    sed -i "s/session.gc_divisor = .*$/session.gc_divisor = 100/" /etc/php/8.2/apache2/php.ini && \
-    sed -i "s/allow_url_fopen = .*$/allow_url_fopen = Off/" /etc/php/8.2/apache2/php.ini && \
-    sed -i "s/expose_php = .*$/expose_php = Off/" /etc/php/8.2/apache2/php.ini && \
-    sed -i "s/error_reporting = .*$/error_reporting = E_ERROR | E_WARNING | E_PARSE/" /etc/php/8.2/cli/php.ini && \
-    sed -i "s/session.gc_probability = .*$/session.gc_probability = 1/" /etc/php/8.2/cli/php.ini && \
-    sed -i "s/session.gc_divisor = .*$/session.gc_divisor = 100/" /etc/php/8.2/cli/php.ini && \
-    sed -i "s/allow_url_fopen = .*$/allow_url_fopen = Off/" /etc/php/8.2/cli/php.ini && \
-    sed -i "s/expose_php = .*$/expose_php = Off/" /etc/php/8.2/cli/php.ini
+RUN sed -i "s/error_reporting = .*$/error_reporting = E_ERROR | E_WARNING | E_PARSE/" /etc/php/8.4/apache2/php.ini && \
+    sed -i "s/session.gc_probability = .*$/session.gc_probability = 1/" /etc/php/8.4/apache2/php.ini && \
+    sed -i "s/session.gc_divisor = .*$/session.gc_divisor = 100/" /etc/php/8.4/apache2/php.ini && \
+    sed -i "s/allow_url_fopen = .*$/allow_url_fopen = Off/" /etc/php/8.4/apache2/php.ini && \
+    sed -i "s/expose_php = .*$/expose_php = Off/" /etc/php/8.4/apache2/php.ini && \
+    sed -i "s/error_reporting = .*$/error_reporting = E_ERROR | E_WARNING | E_PARSE/" /etc/php/8.4/cli/php.ini && \
+    sed -i "s/session.gc_probability = .*$/session.gc_probability = 1/" /etc/php/8.4/cli/php.ini && \
+    sed -i "s/session.gc_divisor = .*$/session.gc_divisor = 100/" /etc/php/8.4/cli/php.ini && \
+    sed -i "s/allow_url_fopen = .*$/allow_url_fopen = Off/" /etc/php/8.4/cli/php.ini && \
+    sed -i "s/expose_php = .*$/expose_php = Off/" /etc/php/8.4/cli/php.ini
 
 # Capture the git commit for this build if we provide one
 ARG GIT_COMMIT=prod
