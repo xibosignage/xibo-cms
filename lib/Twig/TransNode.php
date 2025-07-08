@@ -20,8 +20,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 namespace Xibo\Twig;
+
 use Twig\Compiler;
 use Twig\Node\CheckToStringNode;
 use Twig\Node\Expression\AbstractExpression;
@@ -31,7 +31,6 @@ use Twig\Node\Expression\NameExpression;
 use Twig\Node\Expression\TempNameExpression;
 use Twig\Node\Node;
 use Twig\Node\PrintNode;
-
 
 /**
  * Twig Extension for supporting gettext
@@ -43,7 +42,7 @@ class TransNode extends Node
         ?Node $plural = null,
         ?AbstractExpression $count = null,
         ?Node $notes = null,
-        $lineno,
+        int $lineno = 0,
         $tag = null
     ) {
         $nodes = ['body' => $body];
