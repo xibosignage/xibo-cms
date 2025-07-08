@@ -1,8 +1,8 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -82,8 +82,7 @@ class ApplicationScopeFactory extends BaseFactory implements ScopeRepositoryInte
         $entries = [];
         $params = [];
 
-        $select = 'SELECT `oauth_scopes`.id, `oauth_scopes`.description, `oauth_scopes`.useRegex';
-
+        $select = 'SELECT `oauth_scopes`.id, `oauth_scopes`.description ';
         $body = '  FROM `oauth_scopes`';
 
         if ($sanitizedFilter->getString('clientId') != null) {
@@ -110,8 +109,12 @@ class ApplicationScopeFactory extends BaseFactory implements ScopeRepositoryInte
         }
         $limit = '';
         // Paging
-        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
+        if ($filterBy !== null
+            && $sanitizedFilter->getInt('start') !== null
+            && $sanitizedFilter->getInt('length') !== null
+        ) {
+            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', '
+                . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         // The final statements
@@ -150,19 +153,32 @@ class ApplicationScopeFactory extends BaseFactory implements ScopeRepositoryInte
     /**
      * {@inheritdoc}
      */
-    public function finalizeScopes(array $scopes, $grantType, ClientEntityInterface $clientEntity, $userIdentifier = null)
-    {
-        $this->getLog()->debug('finalizeScopes: provided scopes count = ' . count($scopes));
+    public function finalizeScopes(
+        array $scopes,
+        $grantType,
+        ClientEntityInterface $clientEntity,
+        $userIdentifier = null
+    ): array {
+        /** @var \Xibo\Entity\Application $clientEntity */
+        $countOfScopesRequested = count($scopes);
+        $this->getLog()->debug('finalizeScopes: provided scopes count = ' . $countOfScopesRequested);
 
+        // No scopes have been requested
+        // in this case we should return all scopes configured for the application
+        // this is to maintain backwards compatibility with older implementations which do not
+        // request scopes.
+        if ($countOfScopesRequested <= 0) {
+            return $clientEntity->getScopes();
+        }
+
+        // Scopes have been provided
         $finalScopes = [];
 
-        // $clientEntity->scopes are the valid scopes for this client.
-        // make sure all of the requested scopes are valid
+        // The client entity contains the scopes which are valid for this client
         foreach ($scopes as $scope) {
             // See if we can find it
             $found = false;
 
-            /** @var \Xibo\Entity\Application $clientEntity */
             foreach ($clientEntity->getScopes() as $validScope) {
                 if ($validScope->getIdentifier() === $scope->getIdentifier()) {
                     $found = true;
