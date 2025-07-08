@@ -1,15 +1,18 @@
 <div id="{{serviceId}}" class="service-card">
     <img class="service-card-image" src="{{imageUrl}}" alt="{{serviceId}}">
+    <div class="service-card-image-video-overlay">
+        <i class="fa fa-circle-play"></i>
+    </div>
     <div class="service-card-text">
         <h3>{{title}}</h3>
         <p>{{{text}}}</p>
         <div class="d-flex align-items-center" style="column-gap: 8px; margin-top: auto;">
             {{#if showLink}}
-            <a href="{{firstLink}}" class="btn-rounded btn-orange">Upload Content</a>
+            <a href="{{firstLink}}" class="btn-rounded btn-secondary">Upload Content</a>
             <a href="{{secondLink}}" class="btn-rounded btn-outlined" target="_blank">Schedule Content</a>
             <a href="{{otherLink}}" class="optional-link" target="_blank">Learn More</a>
             {{else}}
-            <a href="{{firstLink}}" class="btn-rounded btn-orange">Get Started</a>
+            <a href="{{firstLink}}" class="btn-rounded btn-secondary">Get Started</a>
             <a href="{{secondLink}}" class="btn-rounded btn-outlined" target="_blank">Learn More</a>
             {{/if}}
         </div>

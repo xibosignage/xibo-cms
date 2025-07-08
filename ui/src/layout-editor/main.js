@@ -44,6 +44,7 @@ const confirmationModalTemplate =
 const Layout = require('../layout-editor/layout.js');
 const Viewer = require('../layout-editor/viewer.js');
 const PropertiesPanel = require('../editor-core/properties-panel.js');
+const ActionManager = require('../layout-editor/action-manager.js');
 const HistoryManager = require('../editor-core/history-manager.js');
 const TemplateManager = require('../layout-editor/template-manager.js');
 const Toolbar = require('../editor-core/toolbar.js');
@@ -70,6 +71,13 @@ window.lD = {
   // Template edit mode
   templateEditMode: false,
 
+  // Interactive mode
+  interactiveMode: false,
+
+  // Interactive edit widget mode
+  interactiveEditWidgetMode: false,
+  interactiveEditWidgetModeType: 0, // 0 - Adding, 1 - Editing
+
   // Exit url (based on layout or template editing)
   exitURL: urlsForApi.layout.list.url,
 
@@ -82,6 +90,9 @@ window.lD = {
 
   // Layout
   layout: {},
+
+  // Action Manager
+  actionManager: {},
 
   // History Manager
   historyManager: {},
@@ -174,6 +185,11 @@ $(() => {
           lD.welcomeScreen();
         }
       }
+
+      // Initialize action manager
+      lD.actionManager = new ActionManager(
+        lD,
+      );
 
       // Initialize template manager
       lD.templateManager = new TemplateManager(
@@ -434,20 +450,20 @@ lD.selectObject =
         lD.common.hasTarget(card, 'playlist')
       );
 
-      const dropToDrawerOrZone = (
+      const dropToDrawer = (
         target &&
-        ['drawer', 'zone'].includes(target.data('subType'))
+        target.data('subType') == 'drawer'
+      );
+
+      const dropToZone = (
+        target &&
+        target.data('subType') == 'zone'
       );
 
       const dropToWidget = (
         target &&
         target.hasClass('designer-widget') &&
         target.hasClass('ui-droppable-active')
-      );
-
-      const dropToActionTarget = (
-        target &&
-        target.hasClass('ui-droppable-actions-target')
       );
 
       const dropToElementAndElGroup = (
@@ -476,13 +492,19 @@ lD.selectObject =
       // Deselect cards and drop zones
       this.toolbar.deselectCardsAndDropZones();
 
+      // If we are in interactiveEditWidgetMode
+      // allow only select drawer
+      if (self.interactiveEditWidgetMode && !dropToDrawer) {
+        return;
+      }
+
       if (
         target &&
         (
           dropToPlaylist ||
-          dropToDrawerOrZone ||
+          dropToDrawer ||
+          dropToZone ||
           dropToWidget ||
-          dropToActionTarget ||
           dropToElementAndElGroup ||
           dropToImagePlaceholder
         )
@@ -547,6 +569,12 @@ lD.selectObject =
           return false;
         }
       };
+
+      // If we are in interactiveEditWidgetMode
+      // allow only select drawer
+      if (lD.interactiveEditWidgetMode && !isInDrawer(target)) {
+        return;
+      }
 
       // If the object is the drawer, skip the rest
       if (target && target.hasClass('designer-region-drawer')) {
@@ -1264,6 +1292,7 @@ lD.deleteSelectedObject = function() {
   const selectedInViewer = lD.viewer.getMultipleSelected();
 
   // Prevent delete if it doesn't have permissions
+  // or when editing an action widget
   if (
     (
       lD.selectedObject.isDeletable === false &&
@@ -1272,7 +1301,8 @@ lD.deleteSelectedObject = function() {
     (
       selectedInViewer.multiple === true &&
       selectedInViewer.canBeDeleted == false
-    )
+    ) ||
+    lD.interactiveEditWidgetMode
   ) {
     return;
   }
@@ -1487,58 +1517,21 @@ lD.deleteObject = function(
       true,
       !drawerWidget, // don't deselect Object if it's a drawer widget
     ).then((_res) => {
-      if (drawerWidget) {
-        // Detach action form
-        lD.propertiesPanel.detachActionsForm();
+      // Remove widget from viewer
+      lD.viewer.removeObject(
+        objectType,
+        objectId,
+      );
 
-        // Remove object manually from drawer (to avoid refresh)
-        delete lD.layout.drawer.widgets[
-          `widget_${lD.layout.drawer.regionId}_${objectId}`
-        ];
+      // Remove object from structure
+      lD.layout.removeFromStructure(
+        objectType,
+        objectId,
+        objectAuxId,
+      );
 
-        // Update dropdown with existing widgets
-        const $actionOpenedForm = lD.propertiesPanel.actionForm.find('form');
-        const actionFormData = $actionOpenedForm.data();
-        lD.populateDropdownWithLayoutElements(
-          $actionOpenedForm.find('[name="widgetId"]'),
-          {
-            value: actionFormData.widgetId,
-            filters: ['drawerWidgets'],
-          },
-          actionFormData,
-        );
-
-        // Deselect object
-        lD.selectObject({
-          target: null,
-          reloadViewer: false,
-          reloadPropertiesPanel: false,
-        });
-        lD.viewer.selectObject();
-
-        // Render properties panel with action tab
-        lD.propertiesPanel.render(
-          lD.selectedObject,
-          false, // Action edit mode
-          true, // Open action tab
-        );
-      } else {
-        // Remove widget from viewer
-        lD.viewer.removeObject(
-          objectType,
-          objectId,
-        );
-
-        // Remove object from structure
-        lD.layout.removeFromStructure(
-          objectType,
-          objectId,
-          objectAuxId,
-        );
-
-        // Check layout status
-        lD.checkLayoutStatus();
-      }
+      // Check layout status
+      lD.checkLayoutStatus();
 
       lD.common.hideLoadingScreen();
     }).catch((error) => { // Fail/error
@@ -1842,7 +1835,7 @@ lD.duplicateObject = function(objectToDuplicate) {
  * @param {object} droppable - Target drop object
  * @param {object} draggable - Dragged object
  * @param {object=} dropPosition - Position of the drop
- * @return {Boolean}
+ * @return {Promise} Promise
  */
 lD.dropItemAdd = function(droppable, draggable, dropPosition) {
   let draggableType = $(draggable).data('type');
@@ -1861,6 +1854,12 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
   const fromProvider = $(draggable).hasClass('from-provider');
   const self = this;
 
+  // If we are in interactiveEditWidgetMode
+  // allow only drop to drawer
+  if (self.interactiveEditWidgetMode && !droppableIsDrawer) {
+    return;
+  }
+
   // Check if we have any pending item drop
   if (self.addItemPromise != null) {
     self.pendingAddedItems++;
@@ -1878,8 +1877,8 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
   this.addItemPromise = new Promise(function(resolve, reject) {
     // When items finished being added
     // mark as resolved on the main promise
-    const itemAdded = function() {
-      resolve();
+    const itemAdded = function(res) {
+      resolve(res);
     };
 
     /**
@@ -2040,7 +2039,9 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           draggable,
           mediaId,
           true,
-        ).then(itemAdded);
+        ).then((_res) => {
+          itemAdded(_res);
+        });
       } else if (droppableIsZone || droppableIsPlaylist) {
         // Get region
         const region =
@@ -2110,42 +2111,6 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           }).then(itemAdded);
         });
       }
-    } else if (draggableType == 'actions') {
-      // Get target type
-      const targetType = (
-        $(droppable).hasClass('layout') || droppable === null
-      ) ?
-        'screen' :
-        $(droppable).data('type');
-
-      // Get target id
-      const targetId = $(droppable).data(targetType + 'Id');
-
-      let actionType = draggableSubType;
-
-      // If action type is nextWidget or nextLayout
-      // change to next
-      actionType =
-        (['nextWidget', 'nextLayout'].includes(draggableSubType)) ?
-          'next' :
-          actionType;
-
-      // If action type is previousWidget or previousLayout
-      // change to previous
-      actionType =
-        (['previousWidget', 'previousLayout'].includes(draggableSubType)) ?
-          'previous' :
-          actionType;
-
-      // Adding action
-      lD.addAction({
-        actionType: actionType,
-        layoutId: lD.layout.layoutId,
-        target: targetType,
-        targetId: targetId,
-      });
-
-      itemAdded();
     } else if (
       draggableType == 'element' ||
       draggableType == 'element-group'
@@ -2897,7 +2862,9 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
           draggableData,
           null,
           true,
-        ).then(itemAdded);
+        ).then((_res) => {
+          itemAdded(_res);
+        });
       } else if (droppableIsZone || droppableIsPlaylist) {
         // Get zone region
         const region =
@@ -2975,8 +2942,8 @@ lD.dropItemAdd = function(droppable, draggable, dropPosition) {
     self.addItemPromise = null;
   });
 
-  // Return flag to show it was executed
-  return true;
+  // Return promise
+  return this.addItemPromise;
 };
 
 /**
@@ -3054,17 +3021,15 @@ lD.addModuleToPlaylist = function(
 
         // The new selected object as the id based
         // on the previous selected region
-        if (!drawerWidget) {
-          lD.viewer.saveTemporaryObject(
-            'widget_' + regionId + '_' + widgetId,
-            'widget',
-            {
-              type: 'widget',
-              parentType: 'region',
-              widgetRegion: 'region_' + regionId,
-            },
-          );
-        }
+        lD.viewer.saveTemporaryObject(
+          'widget_' + regionId + '_' + widgetId,
+          'widget',
+          {
+            type: 'widget',
+            parentType: 'region',
+            widgetRegion: 'region_' + regionId,
+          },
+        );
       };
 
       lD.openUploadForm({
@@ -3156,28 +3121,6 @@ lD.addModuleToPlaylist = function(
             refreshEditor: true,
             resetPropertiesPanelOpenedTab: true,
           }).catch(console.debug);
-      } else {
-        const newWidgetId = res.data.widgetId;
-        // Reload data ( and viewer )
-        (reloadData) && lD.reloadData(
-          lD.layout,
-          {
-            resetPropertiesPanelOpenedTab: true,
-            callBack: () => {
-              const $actionForm =
-                lD.propertiesPanel.DOMObject.find('.action-element-form');
-
-              lD.populateDropdownWithLayoutElements(
-                $actionForm.find('[name=widgetId]'),
-                {
-                  value: newWidgetId,
-                  filters: ['drawerWidgets'],
-                },
-                $actionForm.data(),
-              );
-            },
-          },
-        ).catch(console.debug);
       }
 
       lD.common.hideLoadingScreen();
@@ -3328,52 +3271,36 @@ lD.addMediaToPlaylist = function(
       updateTargetType: 'widget',
     },
   ).then((res) => { // Success
-    if (!drawerWidget) {
-      // Save the new widget as temporary
-      lD.viewer.saveTemporaryObject(
-        'widget_' +
-        res.data.regionId + '_' +
-        res.data.newWidgets[0].widgetId,
-        'widget',
-        {
-          type: 'widget',
-          parentType: 'region',
-          widgetRegion: 'region_' + res.data.regionId,
-          isInDrawer: drawerWidget,
-        },
-      );
+    // Save the new widget as temporary
+    lD.viewer.saveTemporaryObject(
+      'widget_' +
+      res.data.regionId + '_' +
+      res.data.newWidgets[0].widgetId,
+      'widget',
+      {
+        type: 'widget',
+        parentType: 'region',
+        widgetRegion: 'region_' + res.data.regionId,
+        isInDrawer: drawerWidget,
+      },
+    );
 
+    if (!drawerWidget) {
       // Reload data ( and viewer )
       lD.reloadData(lD.layout,
         {
           refreshEditor: true,
           resetPropertiesPanelOpenedTab: true,
         });
+
+      lD.common.hideLoadingScreen();
     } else {
-      const newWidgetId = res.data.newWidgets[0].widgetId;
-      // Reload data ( and viewer )
-      lD.reloadData(
-        lD.layout,
-        {
-          resetPropertiesPanelOpenedTab: true,
-          callBack: () => {
-            const $actionForm =
-              lD.propertiesPanel.DOMObject.find('.action-element-form');
+      lD.common.hideLoadingScreen();
 
-            lD.populateDropdownWithLayoutElements(
-              $actionForm.find('[name=widgetId]'),
-              {
-                value: newWidgetId,
-                filters: ['drawerWidgets'],
-              },
-              $actionForm.data(),
-            );
-          },
-        },
-      );
+      return {
+        id: res.data.newWidgets[0].widgetId,
+      };
     }
-
-    lD.common.hideLoadingScreen();
   }).catch((error) => { // Fail/error
     lD.common.hideLoadingScreen();
 
@@ -3399,20 +3326,14 @@ lD.addMediaToPlaylist = function(
 lD.clearTemporaryData = function() {
   // Hide open tooltips
   lD.editorContainer.find('.tooltip').remove();
-
-  // Clear action highlights on the viewer
-  // if we don't have an action form open
-  if (lD.propertiesPanel.DOMObject.find('.action-element-form').length == 0) {
-    lD.viewer.clearActionHighlights();
-  }
 };
 
 /**
- * Get element from the main object ( Layout )
- * @param {string} type - Type of the element
- * @param {number} id - Id of the element
- * @param {number} auxId - Auxiliary id of the element
- * @return {Object} element
+ * Get target object from the main object ( Layout )
+ * @param {string} type - Type of the target object
+ * @param {number} id - Id of the target object
+ * @param {number} auxId - Auxiliary id of the target object
+ * @return {Object} target object
  */
 lD.getObjectByTypeAndId = function(type, id, auxId) {
   let targetObject = {};
@@ -3486,6 +3407,46 @@ lD.getObjectByTypeAndId = function(type, id, auxId) {
   }
 
   return targetObject;
+};
+
+/**
+ * Get object name from the main object ( Layout )
+ * @param {string} type - Type of the object
+ * @param {number} id - Id of the object
+ * @return {Object} object
+ */
+lD.getObjectName = function(type, id) {
+  const self = this;
+  let name;
+  if (type === 'layout') {
+    name = self.layout.name;
+  } else if (type === 'drawerWidget') {
+    const widget = self.getObjectByTypeAndId(
+      'widget',
+      'widget_' + self.layout.drawer.regionId +
+        '_' + id,
+      'drawer',
+    );
+
+    name = widget?.widgetName;
+  } else if (type === 'region') {
+    const region = self.getObjectByTypeAndId(
+      'region',
+      'region_' + id,
+    );
+
+    name = region?.name;
+  } else if (type === 'widget') {
+    const widget = self.getObjectByTypeAndId(
+      'widget',
+      id,
+      'search',
+    );
+
+    name = widget?.widgetName;
+  }
+
+  return name;
 };
 
 /**
@@ -3692,7 +3653,8 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
   let objAuxId = null;
 
   // Don't open context menu in read only mode
-  if (lD.readOnlyMode) {
+  // or interactive mode
+  if (lD.readOnlyMode || lD.interactiveMode) {
     return;
   }
 
@@ -3793,12 +3755,15 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
   lD.editorContainer.append(
     contextMenuTemplate(Object.assign(layoutObject, {
       trans: contextMenuTrans,
+      editor: 'layout',
       canBeCopied: canBeCopied,
       canHaveNewConfig: canHaveNewConfig,
       canChangeLayer: canChangeLayer,
       canUngroup: canUngroup,
       canEditText: canEditText,
       widget: singleWidget,
+      isEditableWidget: singleWidget?.isEditable,
+      canAttachAudio: singleWidget?.canAttachAudio,
       isElementBased: (
         layoutObject.type === 'element' ||
         layoutObject.type === 'element-group'
@@ -3838,9 +3803,10 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
 
   // Handle buttons
   lD.editorContainer.find('.context-menu .context-menu-btn').click((ev) => {
-    const target = $(ev.currentTarget);
+    const $target = $(ev.currentTarget);
+    const widgetProperty = $target.hasClass('widget-property');
 
-    if (target.data('action') == 'Delete') {
+    if ($target.data('action') == 'Delete') {
       let auxId = null;
 
       // Delete element
@@ -3900,13 +3866,13 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
         showConfirmationModal,
         deleteObjectType,
       );
-    } else if (target.data('action') == 'Move') {
+    } else if ($target.data('action') == 'Move') {
       // Move widget in the timeline
       lD.layout.moveWidgetInRegion(
-        layoutObject.regionId, layoutObject.id, target.data('actionType'),
+        layoutObject.regionId, layoutObject.id, $target.data('actionType'),
       );
-    } else if (target.data('action') == 'Layer') {
-      const actionType = target.data('actionType');
+    } else if ($target.data('action') == 'Layer') {
+      const actionType = $target.data('actionType');
       const originalLayer = (layoutObject.type === 'region') ?
         layoutObject.zIndex :
         layoutObject.layer;
@@ -3983,12 +3949,12 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
           updateObjectsInFrontTargetLayer: updateLayerAboveTarget,
         },
       );
-    } else if (target.data('action') == 'Copy') {
+    } else if ($target.data('action') == 'Copy') {
       lD.duplicateObject(layoutObject);
-    } else if (target.data('action') == 'editPlaylist') {
+    } else if ($target.data('action') == 'editPlaylist') {
       // Open playlist editor
       lD.openPlaylistEditor(layoutObject.playlists.playlistId, layoutObject);
-    } else if (target.data('action') == 'editFrame') {
+    } else if ($target.data('action') == 'editFrame') {
       // Select widget frame to edit it
       const $viewerRegion =
         lD.viewer.DOMObject.find('#' + layoutObject.id);
@@ -3996,7 +3962,7 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
         target: $viewerRegion,
       });
       lD.viewer.selectObject($viewerRegion, false, true, true);
-    } else if (target.data('action') == 'Ungroup') {
+    } else if ($target.data('action') == 'Ungroup') {
       // Get widget
       const elementsWidget =
         lD.getObjectByTypeAndId('widget', objAuxId, 'canvas');
@@ -4060,7 +4026,7 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
             refreshEditor: true,
           });
       });
-    } else if (target.data('action') == 'newConfig') {
+    } else if ($target.data('action') == 'newConfig') {
       const elementsToMove = [];
       const groupsToMove = [];
 
@@ -4118,16 +4084,16 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
           );
         });
       });
-    } else if (target.data('action') == 'editText') {
+    } else if ($target.data('action') == 'editText') {
       lD.viewer.editText(layoutObject);
-    } else if (target.data('action') == 'convertPlaylist') {
+    } else if ($target.data('action') == 'convertPlaylist') {
       lD.convertPlaylist(
         layoutObject.playlists.playlistId,
         layoutObject.playlists.name,
       );
     } else {
-      const property = target.data('property');
-      const propertyType = target.data('propertyType');
+      const property = $target.data('property');
+      const propertyType = $target.data('propertyType');
 
       // If we're editing permissions and it's a frame ( or zone )
       // edit the widget's permissions instead
@@ -4154,8 +4120,13 @@ lD.openContextMenu = function(obj, position = {x: 0, y: 0}) {
           lD.getObjectByTypeAndId('widget', objAuxId, 'canvas');
         canvasWidget.editPropertyForm('Permissions');
       } else {
+        let targetObj = layoutObject;
+        if (widgetProperty) {
+          targetObj = Object.values(layoutObject.widgets)[0];
+        }
+
         // Call normal edit form
-        layoutObject.editPropertyForm(
+        targetObj.editPropertyForm(
           property,
           propertyType,
         );
@@ -4662,6 +4633,145 @@ lD.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
   }).catch(function(jqXHR, textStatus, errorThrown) {
     console.error(jqXHR, textStatus, errorThrown);
     toastr.error(errorMessagesTrans.userLoadPreferencesFailed);
+  });
+};
+
+/**
+ * Interactive mode
+ * @param {boolean} enable - True to lock, false to unlock
+ * @param {boolean} refresh - Refresh containers after toggle
+ */
+lD.toggleInteractiveMode = function(
+  enable = true,
+  refresh = true,
+) {
+  this.interactiveMode = enable;
+
+  if (enable) { // Enable
+    // Deselect all objects
+    this.selectObject({
+      reloadPropertiesPanel: false,
+    });
+
+    // Mark main editor container as in Interactive mode
+    lD.editorContainer.addClass('interactive-mode');
+
+    // Hide Layer Manager
+    lD.viewer.layerManager.setVisible(false);
+  } else { // Disable
+    // Remove Interactive mode from main editor container
+    lD.editorContainer.removeClass('interactive-mode');
+
+    // Remove action being edited from the action manager
+    lD.actionManager.editing = {};
+
+    // Remove action lines
+    this.viewer.removeActionLine();
+  }
+
+  // Render editor and containers containers
+  (refresh) &&
+    this.refreshEditor({
+      reloadToolbar: true,
+      reloadViewer: true,
+      reloadPropertiesPanel: true,
+    });
+};
+
+/**
+ * Interactive edit widget mode
+ * @param {boolean} enable - True to lock, false to unlock
+ * @param {object} action - The action being edited
+ * @param {boolean} [adding=false] - Are we adding a new one? (VS editing)
+ *  - Revert widget to original state or delete?
+ */
+lD.toggleInteractiveEditWidgetMode = function(
+  enable = true,
+  action = {},
+  {
+    adding = false,
+  } = {},
+) {
+  const self = this;
+  self.interactiveEditWidgetMode = enable;
+
+  if (enable) { // Enable
+    if (!adding) { // Edit
+      self.interactiveEditWidgetModeType = 1;
+
+      // Save temporary widget so it can be loaded
+      self.viewer.saveTemporaryObject(
+        'widget_' +
+        self.layout.drawer.regionId + '_' +
+        action.widgetId,
+        'widget',
+        {
+          type: 'widget',
+          parentType: 'region',
+          widgetRegion: 'region_' + self.layout.drawer.regionId,
+          isInDrawer: true,
+        },
+      );
+
+      // Save widget properties
+      self.actionManager.widgetEditing = action.widgetId;
+    } else { // Add
+      self.interactiveEditWidgetModeType = 0;
+
+      // Deselect all objects
+      self.selectObject({
+        reloadPropertiesPanel: false,
+      });
+
+      // We're not editing an existing widget
+      self.actionManager.widgetEditing = null;
+    }
+
+    // Turn off interactve mode temporarily
+    self.interactiveMode = false;
+
+    // Mark main editor container as in Interactive Edit Widget mode
+    self.editorContainer.removeClass('interactive-mode');
+    self.editorContainer.addClass('interactive-edit-widget-mode');
+
+    // Remove action lines from viewer
+    self.viewer.removeActionLine();
+
+    // Change toolbar to widget tab
+    self.toolbar.openedMenu = 0;
+  } else { // Disable
+    // Remove Interactive mode from main editor container
+    self.editorContainer.removeClass('interactive-edit-widget-mode');
+    self.editorContainer.addClass('interactive-mode');
+
+    // Remove action widget being edited from the action manager
+    self.actionManager.widgetEditing = null;
+
+    self.viewer.actionDropMode = false;
+
+    // Turn interactive mode back on
+    self.interactiveMode = true;
+
+    // Make sure there's nothing selected
+    self.selectObject();
+  }
+
+  // Make sure we reinitialize toolbar
+  self.toolbar.initalized = false;
+
+  // Render editor and containers containers
+  self.reloadData(self.layout, {
+    refreshEditor: true,
+    reloadViewer: false,
+    reloadToolbar: false,
+  }).then(() => {
+    // Update toolbar
+    self.toolbar.render({
+      updateViewerAfterRendering: true,
+    });
+
+    // Update viewer
+    self.viewer.render(true);
   });
 };
 
@@ -5200,351 +5310,57 @@ lD.initDrawer = function(data) {
 };
 
 /**
- * Add action
- * @param {object} options - Options for the action
- * @return {boolean} false if unsuccessful
-  */
-lD.addAction = function(options) {
-  const self = this;
-
-  $.ajax({
-    url: urlsForApi.actions.add.url,
-    type: urlsForApi.actions.add.type,
-    data: {
-      actionType: options.actionType,
-      layoutId: options.layoutId,
-      target: options.target,
-      targetId: options.targetId,
-    },
-  }).done(function(_res) {
-    // Render the action tab
-    self.propertiesPanel.renderActionTab(
-      self.selectedObject,
-      {
-        clearPrevious: true,
-        selectAfterRender: true,
-        openEditActionAfterRender: _res?.data?.actionId,
-        openActionTab: _res?.data?.actionId,
-      },
-    );
-  }).fail(function(_data) {
-    toastr.error(
-      errorMessagesTrans.deleteFailed,
-      errorMessagesTrans.error,
-    );
-  });
-
-  return true;
-};
-
-/**
- * Save action
- * @param {object} action - Action to save
- * @param {object} form - Form to get data from
- * @return {boolean} false if unsuccessful
- */
-lD.saveAction = function(action, form) {
-  const actionData = action.data();
-  const self = this;
-  const requestURL = urlsForApi.actions.edit.url.replace(
-    ':id',
-    actionData.actionId,
-  );
-
-  $.ajax({
-    url: requestURL,
-    type: urlsForApi.actions.edit.type,
-    data: $(form).serialize(),
-  }).done(function(_res) {
-    if (_res.success) {
-      // Hide error message
-      $(form).find('.error-message').hide();
-
-      const $hiddenAction =
-        $(form).parent().find('.action-element.hidden');
-      // Close edit form and open action
-      self.propertiesPanel.closeEditAction(
-        $(form),
-        $hiddenAction,
-      );
-
-      // Add new action ( to replace old one )
-      self.propertiesPanel.addActionToContainer(
-        _res.data,
-        lD.selectObject,
-        self.propertiesPanel.DOMObject.find('.item-actions'),
-        self.propertiesPanel.DOMObject.find('.other-actions'),
-        $hiddenAction,
-      );
-    } else {
-      // Add message to form
-      $(form).find('.error-message').html(_res.message).show();
-    }
-  }).fail(function(_data) {
-    // Show error message on console
-    toastr.error(
-      errorMessagesTrans.deleteFailed,
-      errorMessagesTrans.error,
-    );
-  });
-
-  return false;
-};
-
-/**
- * Delete action
- * @param {object} action
-  */
-lD.deleteAction = function(action) {
-  // Show confirmation modal
-  const $modal = $(confirmationModalTemplate(
-    {
-      title: editorsTrans.actions.deleteModal.title,
-      message: editorsTrans.actions.deleteModal.message,
-      buttons: {
-        cancel: {
-          label: editorsTrans.actions.deleteModal.buttons.cancel,
-          class: 'btn-default cancel',
-        },
-        delete: {
-          label: editorsTrans.actions.deleteModal.buttons.delete,
-          class: 'btn-danger confirm',
-        },
-      },
-    },
-  ));
-
-  const removeModal = function() {
-    $modal.modal('hide');
-    // Remove modal
-    $modal.remove();
-
-    // Remove backdrop
-    $('.modal-backdrop.show').remove();
-  };
-
-  // Add modal to the DOM
-  this.editorContainer.append($modal);
-
-  // Show modal
-  $modal.modal('show');
-
-  // Confirm button
-  $modal.find('button.confirm').on('click', function() {
-    const actionData = action.data();
-    const requestURL = urlsForApi.actions.delete.url.replace(
-      ':id',
-      actionData.actionId,
-    );
-
-    $.ajax({
-      url: requestURL,
-      type: urlsForApi.actions.delete.type,
-    }).done(function(_res) {
-      const $actionParent = $(action).parent();
-
-      // Delete action from the form
-      $(action).remove();
-
-      // Check if there are any actions left in the container
-      // and if not, show the "no actions" message
-      if ($actionParent.find('.action-element').length == 0) {
-        $actionParent.append(
-          $('<div />').addClass('text-center no-actions').text(
-            propertiesPanelTrans.actions.noActionsToShow,
-          ),
-        );
-      }
-
-      // Remove modal
-      removeModal();
-    }).fail(function(_data) {
-      toastr.error(
-        errorMessagesTrans.replace('%error%', _data.message),
-        errorMessagesTrans.error,
-      );
-    });
-  });
-
-  // Cancel button
-  $modal.find('button.cancel').on('click', removeModal);
-};
-
-/**
  * Populate dropdown with layout elements
  * @param {object} $dropdown - Dropdown to populate
- * @param {object} Options.$typeInput - Input type to be updated
+ * @param {object} Options.typeInput - Input type to be updated
  * @param {string} Options.value - Initial value for the input
  * @param {string[]} Options.filters - Types to be included
- * @param {object} actionData - Data for the action
  * @return {boolean} false if unsuccessful
  */
 lD.populateDropdownWithLayoutElements = function(
   $dropdown,
   {
-    $typeInput = null,
     value = null,
-    filters = ['layout', 'regions', 'widgets'],
+    typeInput = null,
+    filters = ['layouts', 'regions', 'widgets'],
   } = {},
-  actionData = null,
 ) {
-  const getRegions = filters.indexOf('regions') !== -1;
-  const getWidgets = filters.indexOf('widgets') !== -1;
-  const getLayouts = filters.indexOf('layout') !== -1;
-  const getPlaylists = filters.indexOf('playlist') !== -1;
-  const getDrawerWidgets = filters.indexOf('drawerWidgets') !== -1;
+  const filterSet = new Set(filters);
+  const getRegions = filterSet.has('regions');
+  const getWidgets = filterSet.has('widgets');
+  const getLayouts = filterSet.has('layouts');
+  const getPlaylists = filterSet.has('playlists');
+  const getElements = filterSet.has('elements');
+  const getElementGroups = filterSet.has('elementGroups');
+
+  // Clear non empty dropdown options
+  $dropdown.find('option:not([value=""]), optgroup').remove();
 
   const addGroupToDropdown = function(groupName) {
     // Add group to dropdown
     const $group = $('<optgroup/>', {
-      label: groupName,
+      label: `-- ${groupName} --`,
     });
 
     // Add group to dropdown
     $dropdown.append($group);
   };
 
-  const addElementToDropdown = function(element) {
+  const addObjectToDropdown = function(object) {
+    let objName = object.name;
+    (!objName) ?
+      objName = object.id :
+      objName += ' (' + object.id + ')';
+
     // Create option
     const $option = $('<option/>', {
-      value: element.id,
-      text: element.name + ' (' + element.id + ')',
-      'data-type': element.type,
+      value: object.id,
+      text: objName,
+      'data-type': object.type,
     });
 
     // Add to dropdown
     $dropdown.append($option);
-  };
-
-  // Update type value
-  const updateTypeValue = function() {
-    // If there's no typeInput, stop
-    if (!$typeInput) {
-      return;
-    }
-
-    const $form = $typeInput.parents('form');
-    // If input is target, and widgetId has value
-    // then update the widget drawer edit element
-    const $widgetIDInput = $form.find('[name=widgetId]');
-
-    let typeInputValue = $dropdown.find(':selected').data('type');
-
-    // Update targetId and target
-    // Input fields are prepended with input_
-    if (
-      $typeInput.attr('id') === 'input_target'
-    ) {
-      const dropdownVal = $dropdown.val();
-      // Update targetId and target
-      actionData.targetId = dropdownVal;
-      actionData.target = typeInputValue;
-
-      // Update also on form
-      $form.data('targetId', dropdownVal);
-      $form.data('target', typeInputValue);
-    }
-
-    // Update sourceId and source
-    if (
-      $typeInput.attr('id') === 'input_source'
-    ) {
-      const dropdownVal = $dropdown.val();
-      // Update sourceId and source
-      actionData.sourceId = dropdownVal;
-      actionData.source = typeInputValue;
-
-      // Update also on form
-      $form.data('sourceId', dropdownVal);
-      $form.data('source', typeInputValue);
-    }
-
-    // Update widgetId
-    if (
-      $widgetIDInput.length > 0 &&
-      $widgetIDInput.val() != '' &&
-      getDrawerWidgets
-    ) {
-      // Call update widget drawer edit element
-      handleEditWidget($widgetIDInput.val());
-    }
-
-    // For target, if target is layout, change it to screen
-    if ($typeInput.attr('id') === 'input_target' &&
-      typeInputValue === 'layout'
-    ) {
-      typeInputValue = 'screen';
-    }
-
-    // Update type value
-    $typeInput.val(typeInputValue);
-  };
-
-  // Update highlight on viewer
-  const updateHighlightOnViewer = function() {
-    $typeInput && (actionData[$typeInput.attr('id')] = $typeInput.val());
-    actionData[$dropdown.attr('id')] = $dropdown.val();
-
-    lD.viewer.createActionHighlights(actionData, 1);
-  };
-
-  // Open or edit drawer widget
-  const handleEditWidget = function(dropdownValue) {
-    const $dropdownParent = $dropdown.parent();
-
-    const removeDeleteButton = function() {
-      // Remove delete widget button
-      $dropdown.siblings('.delete-widget-btn').remove();
-
-      // Remove class from container
-      $dropdownParent.removeClass('delete-active');
-    };
-
-    if (dropdownValue === 'create') {
-      // Create new
-      lD.viewer.addActionEditArea(actionData, 'create');
-
-      removeDeleteButton();
-    } else if (dropdownValue != '' && dropdownValue != null) {
-      // Update action widget data
-      actionData.widgetId = dropdownValue;
-
-      // Edit existing
-      lD.viewer.addActionEditArea(actionData, 'edit');
-
-      // Show delete button on dropdown
-      if ($dropdown.siblings('.delete-widget-btn').length === 0) {
-        const $deleteBtn = $(
-          '<div class="btn btn-danger delete-widget-btn" title="' +
-          editorsTrans.actions.deleteWidget + '">' +
-          editorsTrans.actions.deleteWidget +
-          '</div>',
-        ).on('click', function() {
-          const widgetId = $dropdown.val();
-          const drawerId = lD.getObjectByTypeAndId('drawer').regionId;
-
-          removeDeleteButton();
-
-          lD.deleteObject(
-            'widget',
-            widgetId,
-            drawerId,
-            true,
-          );
-        });
-
-        // Append to dropdown parent
-        $dropdownParent.append($deleteBtn);
-
-        // Add class to container
-        $dropdownParent.addClass('delete-active');
-      }
-    } else {
-      // Remove edit area
-      lD.viewer.removeActionEditArea();
-
-      removeDeleteButton();
-    }
   };
 
   // Clear dropdown
@@ -5557,43 +5373,44 @@ lD.populateDropdownWithLayoutElements = function(
       editorsTrans.actions.layouts,
     );
 
-    addElementToDropdown({
+    addObjectToDropdown({
       id: lD.layout.layoutId,
       name: lD.layout.name,
       type: 'layout',
     });
   }
 
-  // Regions
-  const widgets = [];
-  // Region group
-  if (getRegions) {
-    addGroupToDropdown(
-      editorsTrans.actions.regions,
-    );
-  }
-
-  // Playlists
-  if (getPlaylists) {
-    addGroupToDropdown(
-      editorsTrans.actions.playlists,
-    );
-  }
-
   // Get regions and/or widgets
   if (getRegions || getWidgets || getPlaylists) {
+    const widgetsToAdd = [];
+    const regionsToAdd = [];
+    const playlistsToAdd = [];
     for (const region of Object.values(lD.layout.regions)) {
       if (
-        (
-          getRegions &&
-          region.isPlaylist === false
-        ) ||
-        (
-          getPlaylists &&
-          region.isPlaylist === true
+        getRegions &&
+        // Don't get playlist region here
+        region.isPlaylist === false &&
+        // If we're getting widgets as well
+        // don't get regions with widgets
+        // if value is the region, add it still
+        !(
+          region.numWidgets > 0 &&
+          getWidgets &&
+          region.regionId != value
         )
       ) {
-        addElementToDropdown({
+        regionsToAdd.push({
+          id: region.regionId,
+          name: region.name,
+          type: 'region',
+        });
+      }
+
+      if (
+        getPlaylists &&
+        region.isPlaylist === true
+      ) {
+        playlistsToAdd.push({
           id: region.regionId,
           name: region.name,
           type: 'region',
@@ -5603,7 +5420,7 @@ lD.populateDropdownWithLayoutElements = function(
       // Save widgets
       for (const widget of Object.values(region.widgets)) {
         if (getWidgets && region.isPlaylist === false) {
-          widgets.push({
+          widgetsToAdd.push({
             id: widget.widgetId,
             name: widget.widgetName,
             type: 'widget',
@@ -5611,128 +5428,110 @@ lD.populateDropdownWithLayoutElements = function(
         }
       }
     }
-  }
 
-  // Add widgets to dropdown
-  if (getWidgets) {
-    // Widget group
-    addGroupToDropdown(
-      editorsTrans.actions.widgets,
-    );
+    // Widgets - Add header and add to dropdown
+    if (widgetsToAdd.length > 0) {
+      addGroupToDropdown(
+        editorsTrans.actions.widgets,
+      );
+      for (const widget of widgetsToAdd) {
+        addObjectToDropdown(widget);
+      }
+    }
 
-    // Add widgets to dropdown
-    for (const widget of widgets) {
-      addElementToDropdown(widget);
+    // Regions - Add header and add to dropdown
+    if (regionsToAdd.length > 0) {
+      addGroupToDropdown(
+        editorsTrans.actions.regions,
+      );
+
+      for (const region of regionsToAdd) {
+        addObjectToDropdown(region);
+      }
+    }
+
+    // Playlists - Add header and add to dropdown
+    if (playlistsToAdd.length > 0) {
+      addGroupToDropdown(
+        editorsTrans.actions.playlists,
+      );
+      for (const playlist of playlistsToAdd) {
+        addObjectToDropdown(playlist);
+      }
     }
   }
 
-  // Add drawer widgets to dropdown
-  if (getDrawerWidgets) {
-    // Check if we have any widget array
-    if (lD.layout.drawer.widgets) {
-      // Add widgets to dropdown
-      for (const widget of Object.values(lD.layout.drawer.widgets)) {
-        addElementToDropdown({
-          id: widget.widgetId,
-          name: widget.widgetName,
-          type: 'widget',
+  // Add elements or groups to dropdown
+  if (getElements || getElementGroups) {
+    // We need to have a canvas region, with widgets
+    if (
+      !$.isEmptyObject(lD.layout.canvas) &&
+      Object.keys(lD.layout.canvas.widgets).length > 0
+    ) {
+      const elementsToAdd = [];
+      const elementGroupsToAdd = [];
+      for (const widget of Object.values(lD.layout.canvas.widgets)) {
+        // Elements - filter and add to temp array
+        if (getElements && Object.keys(widget.elements).length > 0) {
+          for (const element of Object.values(widget.elements)) {
+            // Check if element doesn't have a group before adding
+            if (!element.groupId) {
+              elementsToAdd.push({
+                id: element.elementId,
+                name: element.elementName,
+                type: 'element',
+              });
+            }
+          }
+        }
+
+        // Elements groups - filter and add to temp array
+        if (getElementGroups && Object.keys(widget.elementGroups).length > 0) {
+          for (const elementGroup of Object.values(widget.elementGroups)) {
+            elementGroupsToAdd.push({
+              id: elementGroup.id,
+              name: elementGroup.elementGroupName,
+              type: 'elementGroup',
+            });
+          }
+        }
+      }
+
+      // Elements - Add header and add to dropdown
+      if (elementsToAdd.length > 0) {
+        addGroupToDropdown(
+          editorsTrans.actions.elements,
+        );
+
+        elementsToAdd.forEach((el) => {
+          addObjectToDropdown(el);
+        });
+      }
+
+      // Elements groups - Add header and add to dropdown
+      if (elementGroupsToAdd.length > 0) {
+        addGroupToDropdown(
+          editorsTrans.actions.elementGroups,
+        );
+
+        elementGroupsToAdd.forEach((elGr) => {
+          addObjectToDropdown(elGr);
         });
       }
     }
   }
 
+  // Set typeInput if exists
+  if (typeInput) {
+    $dropdown.attr('data-type-input', typeInput);
+  }
 
   // Set initial value if provided
   if (value !== null) {
     $dropdown.val(value).trigger('change');
-    updateTypeValue();
-
-    if (getDrawerWidgets) {
-      handleEditWidget($dropdown.val());
-    }
   }
-
-  // Handle dropdown change
-  // and update type
-  $dropdown.off('change').on('change', function() {
-    if (getDrawerWidgets) {
-      // Open/edit widget
-      handleEditWidget($dropdown.val());
-    } else {
-      // Update type and highlight
-      updateTypeValue();
-      updateHighlightOnViewer();
-    }
-  });
 
   return true;
-};
-
-/**
- * Edit drawer widget
- * @param {object} actionData - Data for the action
- * @param {boolean=} actionEditMode - Enter edit mode
- */
-lD.editDrawerWidget = function(actionData, actionEditMode = true) {
-  // 1. Detach actions form to a temporary container or body
-  lD.propertiesPanel.detachActionsForm();
-
-  // 2. Open property panel with drawer widget
-  const widget = lD.getObjectByTypeAndId(
-    'widget',
-    'widget_' + lD.layout.drawer.regionId + '_' + actionData.widgetId,
-    'drawer',
-  );
-
-  // 3. Select widget
-  const $widgetInViewer = lD.viewer.DOMObject
-    .find('#widget_' + lD.layout.drawer.regionId + '_' + actionData.widgetId);
-
-  // Save previous selected object
-  lD.previousSelectedObject = lD.selectedObject;
-
-  // Target
-  const $target = actionEditMode ? $widgetInViewer : null;
-
-  // Select only if we have target
-  if ($target) {
-    lD.selectObject({
-      target: $target,
-      forceSelect: true,
-    });
-  }
-
-  // Select element in viewer ( or deselect )
-  lD.viewer.selectObject($target);
-
-  // 4. Open property panel with drawer widget or same object
-  lD.propertiesPanel.render(
-    actionEditMode ? widget : lD.previousSelectedObject,
-    actionEditMode,
-    true,
-  );
-};
-
-/**
- * Close drawer widget
- */
-lD.closeDrawerWidget = function() {
-  // If previous selected object exists and current selected is a drawer widget
-  if (
-    $.isEmptyObject(lD.previousSelectedObject) === false &&
-    lD.selectedObject.drawerWidget
-  ) {
-    // Select object with previous selected object
-    const selectObjectId = lD.previousSelectedObject.id;
-    lD.selectObject({
-      target: $('#' + selectObjectId),
-      forceSelect: true,
-      reloadViewer: true,
-    });
-  }
-
-  // Clear previous selected object
-  lD.previousSelectedObject = {};
 };
 
 /**
@@ -6131,6 +5930,7 @@ lD.handleInputs = function() {
     lD.readOnlyMode == false &&
     lD.playlistEditorOpened === false
   );
+  let deleteTimeout = null;
 
   // Handle keyboard keys
   $('body').off('keydown.editor')
@@ -6149,7 +5949,15 @@ lD.handleInputs = function() {
           ) &&
           allowInputs
         ) {
+          if (deleteTimeout) {
+            return;
+          }
+
           lD.deleteSelectedObject();
+
+          deleteTimeout = setTimeout(() => {
+            deleteTimeout = null;
+          }, 500);
         }
 
         // Undo ( Ctrl + Z )

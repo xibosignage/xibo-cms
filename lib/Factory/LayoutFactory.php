@@ -617,7 +617,7 @@ class LayoutFactory extends BaseFactory
      */
     public function getLinkedFullScreenPlaylistId(int $campaignId): ?int
     {
-        $playlistId = $this->getStore()->select('SELECT `lkplaylistplaylist`.childId
+        $playlistId = $this->getStore()->select('SELECT `lkplaylistplaylist`.childId AS playlistId
                     FROM region
                     INNER JOIN playlist
                         ON `playlist`.regionId = `region`.regionId
@@ -2113,7 +2113,7 @@ class LayoutFactory extends BaseFactory
     {
         $parsedFilter = $this->getSanitizer($filterBy);
         $params = [];
-        $select = 'SELECT DISTINCT code, `campaign`.CampaignID, `campaign`.permissionsFolderId ';
+        $select = 'SELECT DISTINCT code, `layout`.layout, `campaign`.CampaignID, `campaign`.permissionsFolderId ';
         $body = ' FROM layout INNER JOIN `lkcampaignlayout` ON lkcampaignlayout.LayoutID = layout.LayoutID INNER JOIN `campaign` ON lkcampaignlayout.CampaignID = campaign.CampaignID AND campaign.IsLayoutSpecific = 1 WHERE `layout`.code IS NOT NULL AND `layout`.code <> \'\' ';
 
         // get by Code

@@ -165,4 +165,74 @@
             background-color: $xibo-color-neutral-0;
         }
     }
+
+    .interactive-control {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        font-weight: bold;
+
+        .interactive-control-container {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding-right: 4px;
+            border-radius: 4px;
+            border: 1px solid $xibo-color-primary;
+            color: $xibo-color-primary;
+
+            i {
+                padding: 6px;
+                font-size: 16px;
+                background-color: $xibo-color-primary;
+                color: $xibo-color-neutral-0;
+            }
+        }
+
+        &[data-status="on"] {
+            .interactive-control-container {
+                color: $xibo-color-neutral-0;
+                background-color: darken($xibo-color-primary, 5%) !important;
+                border-color: darken($xibo-color-primary, 5%) !important;
+            }
+
+            i {
+                background-color: darken($xibo-color-primary, 5%) !important;
+            }
+
+            .interactive-control-status-on {
+                display: initial;
+            }
+            .interactive-control-status-off {
+                display: none;
+            }
+        }
+
+        &[data-status="off"] {
+            .interactive-control-container {
+                background-color: $xibo-color-neutral-0;
+            }
+            .interactive-control-status-on {
+                display: none;
+            }
+            .interactive-control-status-off {
+                display: initial;
+            }
+        }
+
+        &:hover {
+            .interactive-control-container {
+                border-color: darken($xibo-color-primary, 5%) !important;
+                color: darken($xibo-color-primary, 5%) !important;
+
+                i {
+                    background-color: darken($xibo-color-primary, 5%) !important;
+                }
+            }
+
+            &[data-status="on"] .interactive-control-container {
+                color: $xibo-color-neutral-0 !important;
+            }
+        }
+    }
 }

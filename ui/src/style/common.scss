@@ -214,7 +214,8 @@ div.tooltip.bs-tooltip-auto {
 .custom-overlay,
 .custom-overlay-clone,
 .loading-overlay,
-.custom-overlay-edit-text {
+.custom-overlay-edit-text,
+.custom-overlay-action-widget-edit {
     display: none;
     position: fixed;
     width: 100%;
@@ -226,7 +227,12 @@ div.tooltip.bs-tooltip-auto {
     z-index: $loading-overlay-z-index;
 }
 
-.custom-overlay-edit-text {
+.custom-overlay-action-widget-edit {
+    position: absolute;
+    background: white;
+}
+
+.custom-overlay-edit-text, .custom-overlay-action-widget-edit {
     display: block !important;
     @include transparent-object(10);
 }

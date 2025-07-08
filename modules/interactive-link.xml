@@ -1,0 +1,303 @@
+<!--
+  ~ Copyright (C) 2025 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - https://xibosignage.com
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<module>
+    <id>core-interactive-link</id>
+    <name>Link</name>
+    <author>Core</author>
+    <description>A module for a link to be used as Trigger for Interactive</description>
+    <icon>fa fa-hourglass-o</icon>
+    <class></class>
+    <type>interactive-link</type>
+    <group id="interactive" icon="fa fa-paper-plane">Interactive</group>
+    <dataType></dataType>
+    <schemaVersion>2</schemaVersion>
+    <assignable>1</assignable>
+    <regionSpecific>1</regionSpecific>
+    <renderAs>html</renderAs>
+    <defaultDuration>60</defaultDuration>
+    <thumbnail>interactive-link-thumb</thumbnail>
+    <startWidth>104</startWidth>
+    <startHeight>66</startHeight>
+    <settings></settings>
+    <properties>
+        <property id="text" type="textArea">
+            <title>Text</title>
+            <default>Link</default>
+        </property>
+        <property id="fontFamily" type="fontSelector">
+            <title>Font Family</title>
+            <helpText>Select a custom font - leave empty to use the default font.</helpText>
+        </property>
+        <property id="fitToArea" type="checkbox">
+            <title>Fit to selection</title>
+            <helpText>Fit to selected area instead of using the font size?</helpText>
+            <default>0</default>
+        </property>
+        <property id="fontSize" type="number">
+            <title>Font Size</title>
+            <default>56</default>
+            <visibility>
+                <test>
+                    <condition field="fitToArea" type="neq">1</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="padding" type="number">
+            <title>Padding</title>
+            <default>8</default>
+            <visibility>
+                <test>
+                    <condition field="fitToArea" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="lineHeight" type="number">
+            <title>Line Height</title>
+            <default>1.2</default>
+            <visibility>
+                <test>
+                    <condition field="fitToArea" type="neq">1</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="bold" type="checkbox">
+            <title>Bold</title>
+            <helpText>Should the text be bold?</helpText>
+            <default>0</default>
+            <visibility>
+                <test>
+                    <condition field="useGradient" type="eq">0</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="italics" type="checkbox">
+            <title>Italics</title>
+            <helpText>Should the text be italicised?</helpText>
+            <default>0</default>
+            <visibility>
+                <test>
+                    <condition field="useGradient" type="eq">0</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="underline" type="checkbox">
+            <title>Underline</title>
+            <helpText>Should the text be underlined?</helpText>
+            <default>0</default>
+            <visibility>
+                <test>
+                    <condition field="useGradient" type="eq">0</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="textWrap" type="checkbox">
+            <title>Text Wrap</title>
+            <helpText>Should the text wrap to the next line?</helpText>
+            <default>0</default>
+            <visibility>
+                <test>
+                    <condition field="fitToArea" type="neq">1</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="fontColor" type="color">
+            <title>Font Colour</title>
+            <default>#1775F6</default>
+            <visibility>
+                <test>
+                    <condition field="useGradient" type="eq">0</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="useGradient" type="checkbox">
+            <title>Use gradient for the text?</title>
+            <helpText>Gradients work well with most fonts. If you use a custom font please ensure you test the Layout on your player.</helpText>
+            <default>0</default>
+        </property>
+        <property id="gradient" type="colorGradient">
+            <title>Font Gradient</title>
+            <default></default>
+            <visibility>
+                <test>
+                    <condition field="useGradient" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="textShadow" type="checkbox">
+            <title>Use Shadow?</title>
+            <default>1</default>
+            <helpText>Should the background have a shadow?</helpText>
+        </property>
+        <property id="textShadowColor" type="color">
+            <title>Text Shadow Colour</title>
+            <default>rgba(0, 0, 0, 0.40)</default>
+            <visibility>
+                <test>
+                    <condition field="textShadow" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="shadowX" type="number">
+            <title>Shadow X Offset</title>
+            <default>2</default>
+            <visibility>
+                <test>
+                    <condition field="textShadow" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="shadowY" type="number">
+            <title>Shadow Y Offset</title>
+            <default>3</default>
+            <visibility>
+                <test>
+                    <condition field="textShadow" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="shadowBlur" type="number">
+            <title>Shadow Blur</title>
+            <default>4</default>
+            <visibility>
+                <test>
+                    <condition field="textShadow" type="eq">1</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="horizontalAlign" type="dropdown">
+            <title>Horizontal Align</title>
+            <default>center</default>
+            <visibility>
+                <test>
+                    <condition field="fitToArea" type="neq">1</condition>
+                </test>
+            </visibility>
+            <options>
+                <option name="flex-start">Left</option>
+                <option name="center">Center</option>
+                <option name="flex-end">Right</option>
+            </options>
+        </property>
+        <property id="verticalAlign" type="dropdown">
+            <title>Vertical Align</title>
+            <default>center</default>
+            <options>
+                <option name="flex-start">Top</option>
+                <option name="center">Middle</option>
+                <option name="flex-end">Bottom</option>
+            </options>
+        </property>
+    </properties>
+    <preview></preview>
+    <stencil>
+        <width id="width">300</width>
+        <height id="height">180</height>
+        <hbs><![CDATA[
+<div class="interactive-link-container" style="
+    display: -webkit-flex;
+    display: flex;
+    {{#if verticalAlign}}align-items: {{verticalAlign}};{{/if}}
+    {{#if fitToArea}}
+        white-space: nowrap;
+        {{#if padding}}padding: {{padding}}px;{{/if}}
+    {{else}}
+        {{#if fontSize}}font-size: {{fontSize}}px;{{/if}}
+        {{#if showOverflow}}overflow: visible;{{else}}overflow: hidden;{{/if}}
+        {{#if horizontalAlign}}
+            justify-content: {{horizontalAlign}};
+        {{/if}}
+        {{#eq horizontalAlign "flex-start"}}text-align: left;{{/eq}}
+        {{#eq horizontalAlign "center"}}text-align: center;{{/eq}}
+        {{#eq horizontalAlign "flex-end"}}text-align: right;{{/eq}}
+    {{/if}}
+    {{#if useBgGradient}}
+        {{parseJSON "gbb" bgGradiend}}
+        {{#eq gbb.type 'linear'}}
+            background: linear-gradient({{gbb.angle}}deg, {{gbb.color1}}, {{gbb.color2}});
+        {{else}}
+            background: radial-gradient(circle, {{gbb.color1}}, {{gbb.color2}});
+        {{/eq}}
+    {{else}}
+        background-color: {{backgroundColor}};
+    {{/if}}
+    {{#if outline}}border: {{outlineWidth}}px solid {{outlineColor}};{{/if}}
+    {{#if roundBorder}}border-radius: {{borderRadius}}px;{{/if}}
+    width: 100%; height: 100%; box-sizing: border-box;
+">
+    <div class="interactive-link" style="
+    {{#if fontFamily}}font-family: {{fontFamily}};{{/if}}
+    {{#if useGradient}}
+        {{parseJSON "gb" gradient}}
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent !important;
+        color: transparent;
+        {{#eq gb.type 'linear'}}
+            background-image: linear-gradient({{gb.angle}}deg, {{gb.color1}}, {{gb.color2}});
+        {{else}}
+            background-image: radial-gradient(circle, {{gb.color1}}, {{gb.color2}});
+        {{/eq}}
+    {{else}}
+        {{#if bold}}font-weight: bold;{{/if}}
+        {{#if italics}}font-style: italic;{{/if}}
+        {{#if underline}}text-decoration: underline;{{/if}}
+        {{#if fontColor}}color: {{fontColor}};{{/if}}
+        {{#if textShadow}}text-shadow: {{shadowX}}px {{shadowY}}px {{shadowBlur}}px {{textShadowColor}};{{/if}}
+    {{/if}}
+    {{#if lineHeight}}line-height: {{lineHeight}};{{/if}}
+    {{#if textWrap}}
+        white-space: normal;
+    {{else}}
+        white-space: nowrap;
+    {{/if}}
+">
+        {{text}}
+    </div>
+</div>
+        ]]></hbs>
+        <style><![CDATA[
+html, body, #content, .interactive-link-container {
+    width: 100%;
+    height: 100%;
+}
+        ]]></style>
+    </stencil>
+        <onRender><![CDATA[
+// Scale text to container
+properties.widgetDesignWidth = 0;
+properties.widgetDesignHeight = 0;
+$(target).xiboLayoutScaler(properties);
+
+if(properties.fitToArea) {
+    // Set target for the text
+    properties.fitTarget = 'div';
+
+    var $selector = $(target).is('.interactive-link-container') ?
+        $(target) : $(target).find('.interactive-link-container');
+
+    // Scale text to container
+    $selector.xiboTextScaler(properties);
+}
+]]></onRender>
+    <assets>
+        <asset id="interactive-link-thumb" type="path" cmsOnly="true" mimeType="image/png" path="/modules/assets/template-thumbnails/interactive/link-thumb.png" />
+    </assets>
+</module>

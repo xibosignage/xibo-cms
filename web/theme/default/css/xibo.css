@@ -666,6 +666,14 @@ i.fa.fa-ban.fa-stack-2x {
     background: transparent;
 }
 
+.board .fault.nav-tabs > li a {
+    z-index: 2;
+}
+
+.board .fault.nav-tabs > li a:hover .round-tabs {
+    background: #fafafa;
+}
+
 .board .tab-pane {
     position: relative;
     /*padding-top: 50px;*/
@@ -1691,4 +1699,16 @@ div.dataTables_wrapper div.dataTables_info {
         flex-basis: 80px;
         line-height: 1.2rem;
     }
+}
+
+/* WELCOME PAGE VARS */
+:root {
+    --welcome-color-gray: #484848;
+    --welcome-color-white: #ffffff;
+    --welcome-color-primary: #0e70f6;
+    --welcome-color-primary-hover: #5DA2FF;
+    --welcome-color-primary-alt: #1775f6;
+    --welcome-color-primary-dark: #0b5ac5;
+    --welcome-color-secondary: #eb7857;
+    --welcome-color-secondary-dark: #bc6046;
 }

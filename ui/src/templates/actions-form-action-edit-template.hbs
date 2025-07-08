@@ -1,0 +1,92 @@
+<form class="action-edit-form">
+    {{> forms/inputs/hidden value=actionType id="actionType"}}
+    {{> forms/inputs/dropdown value=actionTypeHelper title=trans.actionType id="actionTypeHelper" customClass="action-form-input" options=actionTypeOptions optionsTitle="title" optionsValue="name"}}
+
+    {{> forms/inputs/dropdown id="triggerType" value=triggerType title=trans.triggerType customClass="action-edit-form-trigger action-form-input" options=(arr (obj name="touch" title=trans.touch) (obj name="webhook" title=trans.webhook)) optionsTitle="title" optionsValue="name" helpText=trans.triggerTypeHelpText }}
+    {{> forms/inputs/text id="triggerCode" value=triggerCode title=trans.triggerCode customClass="action-form-input" helpText=trans.triggerCodeHelpText visibility='{ "field": "triggerType", "type": "eq", "value": "webhook" }' }}
+
+    {{> forms/inputs/hidden id="source" value=source }}
+    {{> forms/inputs/dropdown id="sourceId" value=sourceId title=trans.triggerTarget customClass='action-edit-form-trigger action-form-input' options=(arr (obj name="" title="")) optionsTitle="title" optionsValue="name" helpText=trans.triggerTargetHelpText }}
+
+    {{!-- Set layout name as screen --}}
+    {{#eq target "layout"}}
+        {{set "targetValue" "screen"}}
+    {{else}}
+        {{set "targetValue" target}}
+    {{/eq}}
+
+    {{> forms/inputs/hidden id="target" value=targetValue customClass="action-form-input" }}
+    {{> forms/inputs/dropdown id="targetId" value=targetId title=trans.target customClass="action-edit-form-target action-form-input" options=(arr (obj name="" title="")) optionsTitle="title" optionsValue="name" helpText=trans.targetHelpText }}
+
+    {{!-- For nav widget only --}}
+    <div class="form-group action-target-widget-component">
+        <label class="control-label action-target-widget-edit-label"><strong>{{trans.widgetToLoad}}</strong></label>
+        <div class="input-info-container">
+            {{>forms/inputs/add-ons/helpText helpText=trans.widgetToLoadHelpText}}
+        </div>
+        {{> forms/inputs/hidden id="widgetId" value=widgetId customClass="action-target-widget-id" }}
+        {{#if widgetId}}
+            <div class="action-target-widget-edit-container">
+                <div class="action-target-widget-edit-name" title="[{{widgetId}}] {{widgetName}}">
+                    {{#if widgetName}}
+                        "{{widgetName}}"
+                    {{else}}
+                        {{widgetId}}
+                    {{/if}}
+                </div>
+                <div class="action-target-widget-dropdown-button">
+                    <i class="fa fa-ellipsis"></i>
+
+                    <div class="action-target-widget-dropdown-container">
+                        <div class="action-edit-widget-btn" data-action="delete-widget">
+                            {{trans.deleteActionTargetWidget}}
+                        </div>
+                        <div class="action-edit-widget-btn" data-action="edit-widget">
+                            {{trans.editActionTargetWidget}}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {{else}}
+            <div class="action-target-widget-add-container">
+                <div class="action-edit-widget-btn" data-action="add-widget">
+                    {{trans.createActionTargetWidget}}
+                </div>
+            </div>
+        {{/if}}
+    </div>
+
+    {{!-- For nav layout only --}}
+    {{> forms/inputs/dropdown id="layoutCode" value=layoutCode title=trans.layoutCode customClass="action-form-input" selectType="pagedSelect"
+        options=(arr (obj name="" title="")) optionsTitle="title" optionsValue="name"
+        visibility='{ "field": "actionTypeHelper", "type": "eq", "value": "navLayout" }'
+        customData=(arr 
+            (obj name="width" value="100%")
+            (obj name="search-url" value=layoutCodeSearchURL)
+            (obj name="search-term" value="code")
+            (obj name="id-property" value="code")
+            (obj name="text-property" value="code")
+            (obj name='initial-value' value=layoutCode)
+            (obj name='initial-key' value="code")
+        )
+        helpText=trans.layoutCodeHelpText
+    }}
+
+    <div class="alert alert-danger error-message w-100"></div>
+
+    <div class="action-btn-container">
+        <div class="right-buttons">
+            <div class="action-btn" data-action="close">
+                {{trans.cancelAction}}
+            </div>
+            <div class="action-btn" data-action="save">
+                {{trans.saveAction}}
+            </div>
+        </div>
+        {{#unless newAction}}
+            <div class="action-btn" data-action="delete">
+                {{trans.deleteAction}}
+            </div>
+        {{/unless}}
+    </div>
+</form>
