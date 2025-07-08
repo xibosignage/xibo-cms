@@ -1482,6 +1482,7 @@ class Display extends Base
             'displayTypes' => $displayTypes,
             'dayParts' => $dayparts,
             'languages' => $languages,
+            'isWolDisabled' => defined('ACCOUNT_ID'),
         ]);
 
         return $this->render($request, $response);
@@ -1854,11 +1855,6 @@ class Display extends Base
         $display->incSchedule = $sanitizedParams->getInt('incSchedule');
         $display->emailAlert = $sanitizedParams->getInt('emailAlert');
         $display->alertTimeout = $sanitizedParams->getCheckbox('alertTimeout');
-        $display->wakeOnLanEnabled = $sanitizedParams->getCheckbox('wakeOnLanEnabled');
-        $display->wakeOnLanTime = $sanitizedParams->getString('wakeOnLanTime');
-        $display->broadCastAddress = $sanitizedParams->getString('broadCastAddress');
-        $display->secureOn = $sanitizedParams->getString('secureOn');
-        $display->cidr = $sanitizedParams->getString('cidr');
         $display->latitude = $sanitizedParams->getDouble('latitude');
         $display->longitude = $sanitizedParams->getDouble('longitude');
         $display->timeZone = $sanitizedParams->getString('timeZone');
@@ -1876,6 +1872,19 @@ class Display extends Base
         $display->ref3 = $sanitizedParams->getString('ref3');
         $display->ref4 = $sanitizedParams->getString('ref4');
         $display->ref5 = $sanitizedParams->getString('ref5');
+
+        // Wake on Lan
+        if (defined('ACCOUNT_ID')) {
+            // WOL is not allowed on a Xibo Cloud CMS
+            // Force disable, but leave the other settings as they are.
+            $display->wakeOnLanEnabled = 0;
+        } else {
+            $display->wakeOnLanEnabled = $sanitizedParams->getCheckbox('wakeOnLanEnabled');
+            $display->wakeOnLanTime = $sanitizedParams->getString('wakeOnLanTime');
+            $display->broadCastAddress = $sanitizedParams->getString('broadCastAddress');
+            $display->secureOn = $sanitizedParams->getString('secureOn');
+            $display->cidr = $sanitizedParams->getString('cidr');
+        }
 
         // Get the display profile and use that to pull in any overrides
         // start with an empty config
