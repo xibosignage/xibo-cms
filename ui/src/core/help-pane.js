@@ -163,26 +163,45 @@ $(function() {
         });
 
         // Submit form
-        $.ajax({
-          url: $form.data('action'),
+        const requestOptions = {
           method: $form.data('method'),
-          data: formData,
-          processData: false,
-          contentType: false,
-          success: function(response) {
+          body: formData,
+        };
+        fetch($form.data('action'), requestOptions)
+          .then((res) => {
+            if (!res.ok) {
+              throw res;
+            }
+
+            if (res.status === 204) {
+              // Nothing more to do
+              return;
+            }
+
+            return response.json();
+          })
+          .then((_res) => {
             // Sucess, go to final screen
             helperStep = 3;
             renderPanelContent();
-          },
-          error: function(xhr) {
-            const message = xhr.responseJSON?.message ||
-              xhr.responseText || translations.helpPane.form.errors.request;
-            $form.find('.feedback-form-error span')
-              .html(message);
-            $form.find('.feedback-form-error')
-              .removeClass('d-none');
-          },
-        });
+          })
+          .catch(async (error) => {
+            let message = translations.helpPane.form.errors.request;
+            try {
+              const data = await error.json();
+              message = data.message || message;
+            } catch {
+              try {
+                const text = await error.text();
+                if (text) {
+                  message = text;
+                }
+              } catch {}
+            }
+
+            $form.find('.feedback-form-error span').html(message);
+            $form.find('.feedback-form-error').removeClass('d-none');
+          });
       });
   };
 
