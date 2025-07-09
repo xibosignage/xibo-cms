@@ -118,14 +118,14 @@ $(function() {
         let isValid = true;
 
         // User name
-        const $userName = $('[name=userName]');
+        const $userName = $form.find('[name=userName]');
         if (!$userName.val().trim()) {
           isValid = false;
           showErrorOnInput($userName, translations.helpPane.form.errors.name);
         }
 
         // Email
-        const $email = $('[name=email]');
+        const $email = $form.find('[name=email]');
         const emailVal = $email.val().trim();
         if (!emailVal || !validateEmail(emailVal)) {
           isValid = false;
@@ -133,7 +133,7 @@ $(function() {
         }
 
         // Message
-        const $message = $('[name=message]');
+        const $message = $form.find('[name=message]');
         if (!$message.val().trim()) {
           isValid = false;
           showErrorOnInput(
@@ -181,6 +181,9 @@ $(function() {
             return response.json();
           })
           .then((_res) => {
+            // Clear file store
+            fileStore = [];
+
             // Sucess, go to final screen
             helperStep = 3;
             renderPanelContent();
@@ -387,6 +390,9 @@ $(function() {
   // Help main button
   $helpButton.on('click', () => {
     if ($helpContainer.is(':visible')) {
+      // Clear file store
+      fileStore = [];
+
       hideHelper();
     } else {
       $helpContainer.show();
