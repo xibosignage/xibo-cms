@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2024 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -108,6 +108,8 @@ class MaintenanceRegularTask implements TaskInterface
     {
         $this->runMessage = '# ' . __('Regular Maintenance') . PHP_EOL . PHP_EOL;
 
+        $this->assertXmrKey();
+
         $this->displayDownEmailAlerts();
 
         $this->licenceSlotValidation();
@@ -129,8 +131,6 @@ class MaintenanceRegularTask implements TaskInterface
         $this->assessDynamicDisplayGroups();
 
         $this->tidyAdCampaignSchedules();
-
-        $this->assertXmrKey();
 
         // Dispatch an event so that consumers can hook into regular maintenance.
         $event = new MaintenanceRegularEvent();
@@ -646,7 +646,7 @@ class MaintenanceRegularTask implements TaskInterface
                 $this->log->error('assertXmrKey: key empty');
             }
         } catch (GuzzleException | \Exception $e) {
-            $this->log->error('cycleXmrKey: failed. E = ' . $e->getMessage());
+            $this->log->error('assertXmrKey: failed. E = ' . $e->getMessage());
         }
     }
 }

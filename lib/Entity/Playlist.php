@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2023 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - https://xibosignage.com
  *
@@ -527,7 +527,7 @@ class Playlist implements \JsonSerializable
 
         // Load permissions
         if ($options['loadPermissions']) {
-            $this->permissions = $this->permissionFactory->getByObjectId(get_class(), $this->playlistId);
+            $this->permissions = $this->permissionFactory->getByObjectId(get_class($this), $this->playlistId);
         }
 
         // Load the widgets

@@ -1,8 +1,8 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
- * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Xibo - Digital Signage - https://xibosignage.com
  *
  * This file is part of Xibo.
  *
@@ -22,7 +22,6 @@
 
 namespace Xibo\Tests\Integration\Widget;
 
-use Xibo\OAuth2\Client\Entity\XiboLocalVideo;
 use Xibo\Tests\Helper\LayoutHelperTrait;
 use Xibo\Tests\LocalWebTestCase;
 
@@ -51,7 +50,7 @@ class MenuBoardWidgetTest extends LocalWebTestCase
     {
         parent::setup();
 
-        $this->getLogger()->debug('Setup for ' . get_class() .' Test');
+        $this->getLogger()->debug('Setup for ' . get_class($this) .' Test');
 
         // Create a Layout
         $this->publishedLayout = $this->createLayout();
@@ -104,7 +103,7 @@ class MenuBoardWidgetTest extends LocalWebTestCase
 
         parent::tearDown();
 
-        $this->getLogger()->debug('Tear down for ' . get_class() .' Test');
+        $this->getLogger()->debug('Tear down for ' . get_class($this) .' Test');
     }
 
     public function testEdit()
