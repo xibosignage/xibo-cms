@@ -96,6 +96,13 @@ $(function() {
       .on('click', (ev) => {
         ev.preventDefault();
 
+        // Show loading
+        $helpContainer.append(
+          $(`<div class="help-pane-loader">
+            <i class="fas fa-spin fa-spinner"></i>
+          </div>`),
+        );
+
         const $form = $help.find('form');
         const formData = new FormData($form[0]);
 
@@ -144,6 +151,10 @@ $(function() {
 
         // If any fields are invalid, show form error message
         if (!isValid) {
+          // Hide loading
+          $helpContainer.find('.help-pane-loader').remove();
+
+          // Show error
           $form.find('.feedback-form-error span')
             .html(translations.helpPane.form.errors.form);
           $form.find('.feedback-form-error')
@@ -184,6 +195,9 @@ $(function() {
             // Clear file store
             fileStore = [];
 
+            // Hide loading
+            $helpContainer.find('.help-pane-loader').remove();
+
             // Sucess, go to final screen
             helperStep = 3;
             renderPanelContent();
@@ -201,6 +215,9 @@ $(function() {
                 }
               } catch {}
             }
+
+            // Hide loading
+            $helpContainer.find('.help-pane-loader').remove();
 
             $form.find('.feedback-form-error span').html(message);
             $form.find('.feedback-form-error').removeClass('d-none');
@@ -267,7 +284,7 @@ $(function() {
         $uploadedFiles.find('.help-pane-upload-file').length;
 
       if (currentUploads + files.length > maxFiles) {
-        alert('Maximum file number exceeded');
+        alert(translations.helpPane.form.errors.maxFiles);
         return;
       }
 
@@ -275,12 +292,16 @@ $(function() {
         const file = files[i];
 
         if (!allowedTypes.includes(file.type)) {
-          alert(`${file.name}: Invalid file type`);
+          alert(
+            file.name + ': ' +
+            translations.helpPane.form.errors.invalidFileType);
           continue;
         }
 
         if (file.size > maxFileSize) {
-          alert(`${file.name}: File too large`);
+          alert(
+            file.name + ': ' +
+            translations.helpPane.form.errors.fileTooLarge);
           continue;
         }
 
@@ -389,6 +410,11 @@ $(function() {
 
   // Help main button
   $helpButton.on('click', () => {
+    // If loader is active, skip
+    if ($helpContainer.find('.help-pane-loader').length > 0) {
+      return;
+    }
+
     if ($helpContainer.is(':visible')) {
       // Clear file store
       fileStore = [];
