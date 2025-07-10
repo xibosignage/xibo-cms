@@ -147,8 +147,10 @@
                         {% set helpText %}{% trans "The timezone for this display, or empty to use the CMS timezone" %}{% endset %}
                         {{ forms.dropdown("timeZone", "single", title, display.timeZone, [{id:"", value:""}]|merge(timeZones), "id", "value", helpText, "selectPicker", "", "", "", attributes) }}
 
+                        {{ forms.message("Configure further details for integration with 3rd parties such as DOOH providers:") }}
+
                         {% set title %}{% trans "Languages" %}{% endset %}
-                        {% set helpText %}{% trans "The Languages supported in this display location" %}{% endset %}
+                        {% set helpText %}{% trans "The languages that the audience viewing this Display are likely to understand" %}{% endset %}
                         {{ forms.dropdown("languages[]", "dropdownmulti", title, display.getLanguages(), languages, "id", "value", helpText, "selectPicker") }}
 
                         {% set title %}{% trans "Display Type" %}{% endset %}
