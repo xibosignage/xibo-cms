@@ -2453,7 +2453,22 @@ class DisplayGroup extends Base
         // Are we a Display Specific Group? If so, then we should restrict the List of commands to those available.
         if ($displayGroup->isDisplaySpecific == 1) {
             $display = $this->displayFactory->getByDisplayGroupId($displayGroup->displayGroupId);
-            $commands = $this->commandFactory->query(null, ['type' => $display[0]->clientType]);
+//            throw new AccessDeniedException(__(json_encode($display[0])));
+
+            $clientType = $display[0]->clientType;
+
+            // Check the android subtype (i.e. Sony, DSDevices, etc.)
+            if ($clientType == 'android') {
+                $manufacturerModel = ($display[0]->manufacturer ?? '') . ' ' . ($display[0]->model ?? '');
+
+                if (preg_match('/sony|bravia/i', $manufacturerModel)) {
+                    $clientType = 'sony';
+                } elseif (preg_match('/dsdevices/i', $manufacturerModel)) {
+                    $clientType = 'dsDevices';
+                }
+            }
+
+            $commands = $this->commandFactory->query(null, ['type' => $clientType]);
         } else {
             $commands = $this->commandFactory->query();
         }
