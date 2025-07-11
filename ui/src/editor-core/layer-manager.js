@@ -1114,9 +1114,7 @@ LayerManager.prototype.updateObjectLayer = function(
       // If we have widgets to save, save all
       widgetsToBeSaved.forEach((widgetToSave) => {
         // Save all elements for widget
-        widgetToSave.saveElements({
-          forceRequest: true,
-        });
+        widgetToSave.saveElements();
       });
     }
 
