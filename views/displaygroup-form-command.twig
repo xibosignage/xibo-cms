@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2025 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -39,8 +39,131 @@
             <form id="displayGroupCommandForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("displayGroup.action.command", {"id": displayGroup.displayGroupId}) }}">
                 {% set title %}{% trans "Command" %}{% endset %}
                 {% set helpText %}{% trans "Pick a command to send to the Player. If the CMS has XMR enabled this will be sent immediately, otherwise it will show an error." %}{% endset %}
-                {{ forms.dropdown("commandId", "single", title, "", commands, "commandId", "command", helpText) }}
+                {{ forms.dropdown("commandId", "single", title, 1, commands, "commandId", "command", helpText) }}
+
+                {% set title %}{% trans "Pro-mode" %}{% endset %}
+                {% set helpText %}{% trans "Switch Mode" %}{% endset %}
+                {{ forms.switch("mode", title, 1, helpText, "", "", "", "", "commandGroup") }}
+
+                {% set title %}{% trans "Screen" %}{% endset %}
+                {% set helpText %}{% trans "Screen" %}{% endset %}
+                {{ forms.switch("screen", title, 1, helpText, "", "", "", "", "commandGroup") }}
+
+                {% set title %}{% trans "Mute" %}{% endset %}
+                {% set helpText %}{% trans "Mute" %}{% endset %}
+                {{ forms.switch("mute", title, 1, helpText, "", "", "", "", "commandGroup") }}
+
+                {% set title %}{% trans "Brightness" %}{% endset %}
+                {% set helpText %}{% trans "Brightness level (0-50)" %}{% endset %}
+                {{ forms.number("brightness", title, "", helpText, "commandGroup", "", "", "50", "0") }}
+
+                {% set title %}{% trans "Rotation" %}{% endset %}
+                {% set helpText %}{% trans "Screen rotation" %}{% endset %}
+                {% set options = [
+                    { id: "90", value: "90°" },
+                    { id: "180", value: "180°" },
+                ] %}
+                {{ forms.dropdown("rotation", "single", title, "", options, "id", "value", helpText, "commandGroup") }}
+
+                {% set title %}{% trans "Options" %}{% endset %}
+                {% set powerScheduleOptions %}{% trans "Options" %}{% endset %}
+                {% set helpText %}{% trans "Set the power schedule to Off, or enable it for Daily or Weekly intervals" %}{% endset %}
+                {% set options = [
+                    { id: "off", value: "Off" },
+                    { id: "daily", value: "Daily" },
+                    { id: "weekly", value: "Weekly" }
+                ] %}
+                {{ forms.dropdown("powerScheduleOptions", "single", title, "", options, "id", "value", helpText, "commandGroup") }}
+
+                {% set helpText %}{% trans "Use the drop-down to select which days of the week it should use the power schedule." %}{% endset %}
+                {% set monday %}{% trans "Monday" %}{% endset %}
+                {% set tuesday %}{% trans "Tuesday" %}{% endset %}
+                {% set wednesday %}{% trans "Wednesday" %}{% endset %}
+                {% set thursday %}{% trans "Thursday" %}{% endset %}
+                {% set friday %}{% trans "Friday" %}{% endset %}
+                {% set saturday %}{% trans "Saturday" %}{% endset %}
+                {% set sunday %}{% trans "Sunday" %}{% endset %}
+                {% set options = [
+                    { id: 1, name: monday },
+                    { id: 2, name: tuesday },
+                    { id: 3, name: wednesday },
+                    { id: 4, name: thursday },
+                    { id: 5, name: friday },
+                    { id: 6, name: saturday },
+                    { id: 7, name: sunday },
+                ] %}
+                {{ forms.dropdown("powerScheduleDays[]", "dropdownmulti", "", "", options, "id", "name", helpText, "power-schedule-days") }}
+
+                {% set title %}{% trans "On Time" %}{% endset %}
+                {% set helpText %}{% trans "Enter the On Time schedule" %}{% endset %}
+                {{ forms.time("onTime", title, "00:00", helpText, "onTime") }}
+
+                {% set title %}{% trans "Off Time" %}{% endset %}
+                {% set helpText %}{% trans "Enter the Off Time schedule." %}{% endset %}
+                {{ forms.time("offTime", title, "00:00", helpText, "offTime") }}
             </form>
         </div>
     </div>
+
+    <script type="text/javascript" nonce="{{ cspNonce }}">
+        $(document).ready(function() {
+            const commands = $('.commandGroup, .onTime, .offTime, .power-schedule-days');
+
+            function hideAndDisableAll() {
+                commands.hide().find('input, select').prop('disabled', true);
+            }
+
+            hideAndDisableAll();
+
+            $('#commandId').on('change', function () {
+                const selectedValue = $(this).find('option:selected').text(); // Get the selected value
+
+                hideAndDisableAll();
+
+                let command;
+
+                // Show specific elements based on the selected value
+                switch (selectedValue) {
+                    case 'Screen':
+                        command = $('input[name="screen"]').closest('.form-group').show();
+                        break;
+                    case 'Rotate':
+                        command = $('select[name="rotation"]').closest('.form-group').show();
+                        break;
+                    case 'Mute':
+                        command = $('input[name="mute"]').closest('.form-group').show();
+                        break;
+                    case 'Pro-mode':
+                        command = $('input[name="mode"]').closest('.form-group').show();
+                        break;
+                    case 'Brightness':
+                        command = $('input[name="brightness"]').closest('.form-group').show();
+                        break;
+                    case 'Power Schedule':
+                        command = $('select[name="powerScheduleOptions"]').closest('.form-group').show();
+                        break;
+                    default:
+                        command = null;
+                }
+
+                if (command) {
+                    command.show().find('input, select').prop('disabled', false);
+                }
+            });
+
+            $('#powerScheduleOptions').on('change', function () {
+                const selectedValue = $(this).val(); // Get the selected value
+
+                if (selectedValue === 'off') {
+                    $('.onTime, .offTime, .power-schedule-days').hide();
+                } else {
+                    if (selectedValue === 'weekly') {
+                        $('.power-schedule-days').show();
+                    }
+
+                    $('.onTime, .offTime').show();
+                }
+            });
+        });
+    </script>
 {% endblock %}

@@ -99,20 +99,22 @@
                     {% set helpText = "If the geolocation of the Display is known, enable to record that location against each proof of play record."|trans %}
                     {{ forms.checkbox("isRecordGeoLocationOnProofOfPlay", title, displayProfile.getSetting("isRecordGeoLocationOnProofOfPlay"), helpText) }}
 
-                    {% set title = "Player Version"|trans %}
-                    {% set helpText = "Set the Player Version to install, making sure that the selected version is suitable for your device"|trans %}
-                    {% set attributes = [
-                        { name: "data-width", value: "300px" },
-                        { name: "data-allow-clear", value: "true" },
-                        { name: "data-placeholder--id", value: null },
-                        { name: "data-placeholder--value", value: "" },
-                        { name: "data-search-url", value: url_for("playersoftware.search") },
-                        { name: "data-search-term", value: "playerShowVersion" },
-                        { name: "data-id-property", value: "versionId" },
-                        { name: "data-text-property", value: "playerShowVersion" },
-                        { name: "data-filter-options", value: '{"playerType":"android"}' }
-                    ] %}
-                    {{ forms.dropdown("versionMediaId", "single", title, displayProfile.getSetting("versionMediaId"), [{versionId:null, playerShowVersion:""}]|merge(versions), "versionId", "playerShowVersion", helpText, "pagedSelect", "", "", "", attributes) }}
+                    {% if displayProfile.name == 'Android' %}
+                        {% set title = "Player Version"|trans %}
+                        {% set helpText = "Set the Player Version to install, making sure that the selected version is suitable for your device"|trans %}
+                        {% set attributes = [
+                            { name: "data-width", value: "300px" },
+                            { name: "data-allow-clear", value: "true" },
+                            { name: "data-placeholder--id", value: null },
+                            { name: "data-placeholder--value", value: "" },
+                            { name: "data-search-url", value: url_for("playersoftware.search") },
+                            { name: "data-search-term", value: "playerShowVersion" },
+                            { name: "data-id-property", value: "versionId" },
+                            { name: "data-text-property", value: "playerShowVersion" },
+                            { name: "data-filter-options", value: '{"playerType":"android"}' }
+                        ] %}
+                        {{ forms.dropdown("versionMediaId", "single", title, displayProfile.getSetting("versionMediaId"), [{versionId:null, playerShowVersion:""}]|merge(versions), "versionId", "playerShowVersion", helpText, "pagedSelect", "", "", "", attributes) }}
+                    {% endif %}
                 </div>
 
                 <div class="tab-pane" id="network">
